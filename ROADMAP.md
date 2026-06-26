@@ -18,19 +18,11 @@
 | 9 | **HR, Attendance & Payroll** | `1a002fb` | StaffEmployee salary structure, GPS Haversine geofence punch-in/out, weekly timesheets, PF/ESI/TDS payroll engine |
 | 10 | **Quality Control & Inspections** | `3854e04` | IS-456 checklist creation, site inspection responses, NCR Kanban board, cube/slump lab tests |
 | 11 | **Client Portal & Reports** | `3cd8c56` | Automated progress report compilation, pure Python PDF generator, approval flows, PDF viewer |
+| 12 | **Equipment & Machinery Tracking** | `52c32b7` | Fleet registry (owned/hired), project deployments, fuel burn logs, maintenance schedules, 4-tab UI console |
 
 ---
 
 ## 🔵 Upcoming Phases
-
-### Phase 12 — Equipment & Machinery Tracking
-**Goal**: Track owned/hired machinery — cranes, excavators, mixers — with deployment, fuel logs, and maintenance schedules.
-
-**Backend models**: `Equipment`, `EquipmentDeployment`, `FuelLog`, `MaintenanceSchedule`
-
-**Frontend**: Fleet list card view, deployment Gantt, fuel burn chart, maintenance calendar
-
----
 
 ### Phase 13 — Safety & Incident Management (HSE)
 **Goal**: OSHA-aligned incident logging, toolbox talks, PPE compliance checks, and LTI/LTIF statistics.
@@ -38,8 +30,6 @@
 **Backend models**: `SafetyIncident`, `ToolboxTalk`, `PPECheck`
 
 **Frontend**: Incident board, LTI vs LTIF trend chart, toolbox talks tracker, PPE compliance gauge
-
----
 
 ### Phase 14 — Advanced Analytics Dashboard
 **Goal**: Cross-project executive KPI dashboard with financial and productivity intelligence.
@@ -51,8 +41,6 @@
 - Material wastage index
 - Subcontractor performance scorecard
 
----
-
 ### Phase 15 — Mobile PWA & Push Notifications
 **Goal**: Progressive Web App shell with offline capability and real-time push alerts.
 
@@ -61,8 +49,6 @@
 - Push notification via Web Push API (NCR alerts, approval reminders, attendance flagging)
 - Offline timesheet entry with background sync on reconnect
 - Mobile-first attendance punch view with live GPS map
-
----
 
 ## Architecture Overview
 
@@ -77,7 +63,8 @@
 │                  FastAPI Backend                      │
 │  Routers: auth · calculators · budgeting · planning  │
 │           drawings · procurement · billing · hr      │
-│           quality · equipment · safety · analytics   │
+│           quality · reports · equipment · safety     │
+│           analytics                                  │
 └──────────────────────┬──────────────────────────────┘
                        │ SQLAlchemy ORM
          ┌─────────────┴─────────────┐
@@ -107,9 +94,12 @@ Each phase has an isolated integration test using a fresh SQLite DB:
 
 ```bash
 cd backend
-python test_phase2.py   # BOQ + Gantt
-python test_phase6.py   # Drawings
-python test_phase7.py   # Procurement
-python test_phase8.py   # Billing
-python test_phase9.py   # HR & Payroll
+python test_phase2.py    # BOQ + Gantt
+python test_phase6.py    # Drawings
+python test_phase7.py    # Procurement
+python test_phase8.py    # Billing
+python test_phase9.py    # HR & Payroll
+python test_phase10.py   # Quality Control
+python test_phase11.py   # Client Portal & Reports
+python test_phase12.py   # Equipment & Machinery
 ```

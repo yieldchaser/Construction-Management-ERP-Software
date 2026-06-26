@@ -1,65 +1,217 @@
-# Walkthrough — Phase 1 & 2 Execution Verification
+# SiteFlow — Full Build Walkthrough (Phases 1–12)
 
-This walkthrough outlines the implementations completed for **Phase 1** and **Phase 2** of **SiteFlow**. All WBS planning scheduler logic, Excel parsing engines, and associated frontend pages are fully established and verified.
-
----
-
-## 🚀 Completed Milestones (Phase 1)
-
-### 1. Backend Verification & SQLite Fallback
-* **Issue**: The integration tests crashed because the FastAPI backend was trying to connect to a local PostgreSQL instance that was not active.
-* **Resolution**: 
-  * Updated [database.py](file:///c:/Users/Dell/Github/Construction-Management-ERP-Software/backend/app/database.py) to dynamically check the driver. If it is SQLite (e.g. during local testing), it boots up with compatible arguments without pool size constraints.
-  * Updated [models.py](file:///c:/Users/Dell/Github/Construction-Management-ERP-Software/backend/app/models.py) to dynamically load column definitions. For SQLite, `UUID` and `JSONB` map to database-agnostic standard `UUID` and `JSON` classes, preventing compilation crashes while preserving native Supabase UUID/JSONB performance in production.
-  * Configured [test_api.py](file:///c:/Users/Dell/Github/Construction-Management-ERP-Software/backend/test_api.py) to remove any stale `test.db` and inject the SQLite connection string in the spawned environment.
-* **Verification Status**: **Passed**. Running `python test_api.py` boots uvicorn, creates tables, and validates:
-  * Health checks (`/`)
-  * OTP requests (`/apis/v3/auth/otp/send`)
-  * Auto-onboarding verification (`/apis/v3/auth/otp/verify`)
-  * Concrete calculators (`/apis/v3/calculators/concrete`)
-  * Steel weight validators (`/apis/v3/calculators/steel`)
-
-### 2. Premium Dark UI Design System
-* **Theme Configuration**: Adjusted [globals.css](file:///c:/Users/Dell/Github/Construction-Management-ERP-Software/frontend/src/app/globals.css) to support Tailwind CSS v4 variables with a dark-slate canvas (`#0E0C15`), glassmorphic containers (`#171520`), hot-pink active borders (`#E8184C`), and indigo highlights (`#7C5CFF`).
-* **Typography Switch**: Configured [layout.tsx](file:///c:/Users/Dell/Github/Construction-Management-ERP-Software/frontend/src/app/layout.tsx) to load and utilize Google's **Inter** font as the primary font family.
-* **Build Check**: **Passed**. Compiling the codebase via `npm.cmd run build` finishes without typescript or lint warnings.
-
-### 3. Responsive Web Pages
-* **Landing Gateway ([page.tsx](file:///c:/Users/Dell/Github/Construction-Management-ERP-Software/frontend/src/app/page.tsx))**: Beautifully displays the 16 core modular sitemaps grouped by construction stage.
-* **Interactive Auth ([login/page.tsx](file:///c:/Users/Dell/Github/Construction-Management-ERP-Software/frontend/src/app/login/page.tsx))**: Standard phone login form with automated OTP verification, developer sandbox bypass info, and countdown timer.
-* **Operations Control ([dashboard/page.tsx](file:///c:/Users/Dell/Github/Construction-Management-ERP-Software/frontend/src/app/c/[company_id]/dashboard/page.tsx))**: Supports active project switcher, live geofence radial radar visualizer, IS-456 steel weight calculator input form, SVG waterfall cashflow chart, dynamic Gantt timeline scheduler, and mapping sync triggers.
-
-### 4. Configuration & Database Scripts
-* **Supabase SQL Schema**: Consolidated the full PostgreSQL DDL script in [schema.sql](file:///c:/Users/Dell/Github/Construction-Management-ERP-Software/context/schema.sql) for direct copy-paste execution.
-* **Environment variables**: Created [.env.example](file:///c:/Users/Dell/Github/Construction-Management-ERP-Software/.env.example) detailing Postgres and Next.js connection strings.
+> This document is the authoritative record of everything built so far. A new AI session should read this file and `implementation_plan.md` before continuing work on the next phase.
 
 ---
 
-## 🚀 Completed Milestones (Phase 2)
+## Phase 1 — Foundation ✅ `7841f73`
 
-### 1. Database Schema Extensions
-* Added `BOQItem`, `ProjectBudget`, `Task`, and `TaskPredecessor` models in [models.py](file:///c:/Users/Dell/Github/Construction-Management-ERP-Software/backend/app/models.py).
-* Maintained SQLite dynamic compatibility checks so that test environments remain lightweight and crash-free.
+### Backend
+- `backend/app/database.py` — Dynamic SQLAlchemy engine: SQLite for local dev, Postgres for production. Pool config skipped for SQLite.
+- `backend/app/models.py` — Base models: `Company`, `Project`, `User`. UUID/JSONB types swap to SQLite-safe equivalents at runtime.
+- `backend/app/main.py` — FastAPI app with `/apis/v3` prefix. CORS enabled. All routers registered here.
+- `backend/app/routers/auth.py` — OTP send/verify flow. Verify auto-creates Company + Project + User on first login.
+- `backend/app/routers/calculators.py` — Concrete mix and steel weight calculators.
+- `backend/test_api.py` — Integration test: health check, OTP, auto-onboarding, calculators.
 
-### 2. Excel BOQ Import & Precision Gating
-* Implemented [budgeting.py](file:///c:/Users/Dell/Github/Construction-Management-ERP-Software/backend/app/routers/budgeting.py) utilizing the `openpyxl` reader to dynamically parse uploaded spreadsheet sheets.
-* Handled falsy index-0 column matches (such as when `item_name` is in column A).
-* Enforced unit-specific float rounding limits: 3 decimals for `kg` (steel weight precision), 0 decimals for `nos/bags/bricks`, and 2 decimals for other items.
+### Frontend
+- `frontend/src/app/globals.css` — Dark glassmorphic design system: `#0E0C15` canvas, `#E8184C` crimson, `#7C5CFF` indigo, Inter font, glass cards.
+- `frontend/src/app/layout.tsx` — Root layout with Inter from Google Fonts.
+- `frontend/src/app/page.tsx` — Landing page: 16-module sitemap grouped by construction stage.
+- `frontend/src/app/login/page.tsx` — Phone + OTP login with countdown timer.
+- `frontend/src/app/c/[company_id]/dashboard/page.tsx` — Main ERP dashboard with sidebar navigation, project switcher, geofence radar, steel calculator, cashflow waterfall chart, and Gantt timeline.
 
-### 3. WBS Gantt Scheduler & Date Chaining
-* Implemented [planning.py](file:///c:/Users/Dell/Github/Construction-Management-ERP-Software/backend/app/routers/planning.py) for activity WBS management.
-* Coded a circular dependency block using DFS (Depth-First Search) traversal.
-* Coded a forward-pass recursive schedule date propagator: shifting a predecessor task immediately recalculates dates for all downstream successor tasks in the dependency chain.
+### Config
+- `context/schema.sql` — Full Supabase Postgres DDL for copy-paste execution.
+- `.env.example` — All required env vars documented.
 
-### 4. Responsive Frontend Workspaces
-* **BOQ Upload Panel ([boq/page.tsx](file:///c:/Users/Dell/Github/Construction-Management-ERP-Software/frontend/src/app/c/[company_id]/p/[project_id]/budgeting/boq/page.tsx))**: Supports drag-and-drop file imports, preview listings of parsed items, and live aggregate budget sum calculations.
-* **Gantt Planning Screen ([gantt/page.tsx](file:///c:/Users/Dell/Github/Construction-Management-ERP-Software/frontend/src/app/c/[company_id]/p/[project_id]/planning/gantt/page.tsx))**: Supports adding tasks, selecting predecessor linkages, listing activities, and editing start dates which automatically trigger scheduling shifts.
+---
 
-### 5. Automation Tests
-* **Verification Status**: **Passed**. Running `python test_phase2.py` validates:
-  * Parse-uploading `.xlsx` file and extracting rows.
-  * Float rounding precision limits (e.g. 10.35712 -> 10.357).
-  * Task start/end automatic duration calculation.
-  * Succession shifting from predecessor dates.
-  * Circular blocks.
+## Phase 2 — BOQ & Gantt Scheduler ✅ `c4bc173`
 
+### Backend
+- `backend/app/models.py` — Added: `BOQItem`, `ProjectBudget`, `Task`, `TaskPredecessor`.
+- `backend/app/routers/budgeting.py` — Excel BOQ importer via `openpyxl`. Unit-aware float rounding: 3dp for `kg`, 0dp for `nos/bags/bricks`, 2dp otherwise.
+- `backend/app/routers/planning.py` — WBS task management. DFS circular-dependency guard. Forward-pass recursive schedule propagator (shifting predecessor shifts all successors).
+- `backend/test_phase2.py` — Tests: Excel parse, float precision, task date chaining, circular block.
+
+### Frontend
+- `frontend/src/app/c/[company_id]/p/[project_id]/budgeting/boq/page.tsx` — Drag-and-drop BOQ upload, item preview, budget sum.
+- `frontend/src/app/c/[company_id]/p/[project_id]/planning/gantt/page.tsx` — Add tasks, predecessor select, date editing with auto-shift.
+
+---
+
+## Phase 3 — Help Center & Blog ✅ `8da0274`
+
+- 292 help articles migrated from original SiteFlow content.
+- `frontend/src/app/help/page.tsx` — Searchable help center index.
+- `frontend/src/app/help/[...slug]/page.tsx` — Dynamic article renderer.
+- `frontend/src/app/blog/page.tsx` & `frontend/src/app/blog/[slug]/page.tsx` — Blog listing and post pages.
+- `frontend/src/app/[slug]/page.tsx` — Generic marketing page renderer.
+
+---
+
+## Phases 4 & 5 — Marketing Pages + ERP Module Stubs ✅ `3a2ccb6`
+
+### Marketing
+- `/SiteFlow-pricing` — Tiered pricing page.
+- `/contact` — Contact form page.
+- `/integrations/tally` — Tally integration landing page.
+- `/products` & `/products/[slug]` — Product feature pages.
+- `/resources` & `/resources/[...slug]` — Resources hub.
+
+### ERP Module Stubs (sidebar links wired in dashboard)
+- `attendance/page.tsx` — Attendance console placeholder.
+- `finance/page.tsx` — Finance module.
+- `dpr/page.tsx` — Daily Progress Report.
+- `crm/page.tsx` — CRM module.
+- `procurement/page.tsx` — Procurement module.
+- `billing/page.tsx` — Billing module.
+- `hr/page.tsx` — HR module.
+
+---
+
+## Phase 6 — Drawings & Versioning ✅ `ea73e00`
+
+### Backend
+- `backend/app/models.py` — Added: `Drawing`, `DrawingRevision`, `DrawingMarkup`.
+- `backend/app/routers/drawings.py` — CRUD for drawings, revision uploads, markup pin coordinates.
+- `backend/test_phase6.py` — Tests: create drawing, upload revision, add markup pin, query revisions.
+
+### Frontend
+- `frontend/src/app/c/[company_id]/p/[project_id]/drawings/page.tsx` — Zoomable SVG blueprint canvas with pan/zoom, markup pin placement, revision history panel, drawing CRUD modals.
+
+---
+
+## Phase 7 — Material Procurement & Inventory ✅ `84188cf`
+
+### Backend
+- `backend/app/models.py` — Added: `MaterialIndent`, `PurchaseOrder`, `GRN`, `GRNItem`, `WarehouseInventory`, `InventoryTransaction`.
+- `backend/app/routers/procurement.py` — Full Indent → PO → GRN workflow. GRN approval triggers `WarehouseInventory` update and logs an `InventoryTransaction`. Issue material deducts stock.
+- `backend/test_phase7.py` — Tests: full Indent→PO→GRN approval chain, inventory balance, issue deduction.
+
+### Frontend
+- `frontend/src/app/c/[company_id]/p/[project_id]/procurement/page.tsx` — 4-tab workspace: Indents, Purchase Orders, GRN, Inventory ledger with live stock balance.
+
+---
+
+## Phase 8 — Subcontractor Billing ✅ `e406d4d`
+
+### Backend
+- `backend/app/models.py` — Added: `Subcontractor`, `WorkOrder`, `RABill`, `RABillItem`, `BillDeduction`, `DebitNote`, `CreditNote`.
+- `backend/app/routers/billing.py` — Work order creation, RA Bill submission with item-level quantities, TDS + Retention deductions computed server-side, Debit/Credit notes, bill approval workflow.
+- Pre/post-tax math: `gross_amount - tds - retention = net_payable`.
+- `backend/test_phase8.py` — Tests: work order, RA bill with deductions, debit note, credit note, approval.
+
+### Frontend
+- `frontend/src/app/c/[company_id]/p/[project_id]/billing/page.tsx` — 4-tab: Subcontractors, Work Orders, RA Bills (with deductions breakdown), Debit/Credit Notes.
+
+---
+
+## Phase 9 — HR, Attendance & Payroll ✅ `1a002fb`
+
+### Backend
+- `backend/app/models.py` — Added: `StaffEmployee`, `AttendancePunch`, `WeeklyTimesheet`, `PayrollRun`.
+- `backend/app/routers/hr.py` — Staff CRUD, GPS Haversine punch-in/out with geofence radius check, weekly timesheet aggregation, payroll run with PF (12%), ESI (3.25%), TDS (10%) deductions.
+- `backend/test_phase9.py` — Tests: employee create, punch-in within geofence, punch-out, timesheet, payroll.
+
+### Frontend
+- `frontend/src/app/c/[company_id]/p/[project_id]/hr/page.tsx` — 4-tab: Staff roster, Attendance punches (with GPS map), Timesheets, Payroll runs.
+
+---
+
+## Phase 10 — Quality Control & Inspections ✅ `3854e04`
+
+### Backend
+- `backend/app/models.py` — Added: `QualityChecklist`, `ChecklistItem`, `SiteInspection`, `InspectionResponse`, `NonConformanceReport`, `LabTest`.
+- `backend/app/routers/quality.py` — Checklist CRUD, inspection creation with item responses, NCR raise/close workflow, lab test logging (cube/slump).
+- `backend/test_phase10.py` — Tests: checklist creation, inspection with responses, NCR lifecycle, lab test.
+
+### Frontend
+- `frontend/src/app/c/[company_id]/p/[project_id]/quality/page.tsx` — 4-tab: Checklists (IS-456 presets), Active Inspections, NCR Kanban board (Open/In Progress/Closed), Lab Tests.
+
+---
+
+## Phase 11 — Client Portal & PDF Progress Reports ✅ `3cd8c56`
+
+### Backend
+- `backend/app/models.py` — Added: `ClientReport`.
+- `backend/app/routers/reports.py` — Report compilation (aggregates BOQ, tasks, billing, quality data per project), PDF generation endpoint, approval workflow (draft → submitted → approved).
+- `backend/app/utils/pdf_generator.py` — Pure Python PDF 1.4 byte-stream generator (no external lib). Renders multi-section progress reports with headers, tables, and footers. Saves to `/static/reports/`.
+- `backend/app/main.py` — Mounts `/static` directory for PDF serving.
+- `backend/test_phase11.py` — Tests: report creation, PDF generation (file exists check), approval flow.
+
+### Frontend
+- `frontend/src/app/c/[company_id]/p/[project_id]/reports/page.tsx` — Report list with status badges, generate PDF button, inline PDF viewer (`<iframe>`), approval actions.
+
+---
+
+## Phase 12 — Equipment & Machinery Tracking ✅ `52c32b7`
+
+### Backend
+- `backend/app/models.py` — Added: `Equipment`, `EquipmentDeployment`, `FuelLog`, `MaintenanceSchedule`.
+- `backend/app/routers/equipment.py` — Fleet CRUD, project deployment (status auto-changes to `deployed`), fuel log with total cost computation, maintenance schedule CRUD.
+- `backend/app/main.py` — Registered `equipment` router.
+- `backend/test_phase12.py` — Tests: add crane + excavator, deploy to project, fuel log, maintenance schedule.
+
+### Frontend
+- `frontend/src/app/c/[company_id]/p/[project_id]/equipment/page.tsx` — 4-tab console: Fleet Cards (category tags, status badges, hourly rate), Deployments (project history), Fuel Logs (burn rate table), Maintenance (service schedule + cost).
+- `frontend/src/app/c/[company_id]/dashboard/page.tsx` — Added "Asset Management" sidebar section with "Equipment Tracking" link.
+
+---
+
+## 🔵 Next: Phase 13 — Safety & Incident Management (HSE)
+
+**Backend models to add**:
+```python
+class SafetyIncident(Base):
+    __tablename__ = "safety_incidents"
+    # id, project_id, incident_type, severity (Near Miss / Minor / Major / Fatal)
+    # description, location, injured_person, lost_time_days
+    # status (open / under_investigation / closed), root_cause, corrective_action
+    # reported_by, reported_at, closed_at
+
+class ToolboxTalk(Base):
+    __tablename__ = "toolbox_talks"
+    # id, project_id, topic, conducted_by, conducted_at, attendee_count, notes
+
+class PPECheck(Base):
+    __tablename__ = "ppe_checks"
+    # id, project_id, checked_by, check_date
+    # total_workers, compliant_workers, non_compliant_items (JSON)
+```
+
+**Backend router** (`backend/app/routers/safety.py`):
+- `POST /safety/incidents` — Log incident
+- `GET /safety/incidents/{project_id}` — List incidents
+- `PATCH /safety/incidents/{incident_id}/close` — Close with root cause
+- `GET /safety/stats/{project_id}` — LTI count, LTIF = (LTI × 200000) / total_manhours
+- `POST /safety/toolbox-talks` — Log toolbox talk
+- `GET /safety/toolbox-talks/{project_id}` — List talks
+- `POST /safety/ppe-checks` — Log PPE compliance check
+- `GET /safety/ppe-checks/{project_id}` — List PPE checks
+
+**Frontend** (`frontend/src/app/c/[company_id]/p/[project_id]/safety/page.tsx`):
+- Tab 1: Incident board (severity-color-coded cards)
+- Tab 2: LTIF trend chart (line chart over months)
+- Tab 3: Toolbox Talks tracker (attendance count, topics)
+- Tab 4: PPE Compliance gauge (compliant % donut chart)
+
+**Sidebar**: Add "HSE / Safety" link in dashboard sidebar under a new "Safety" section.
+
+---
+
+## Key Architectural Notes for New Sessions
+
+| Topic | Detail |
+|---|---|
+| API base URL | `http://localhost:8000/apis/v3` (dev) |
+| Backend port | 8000 (dev) / 8008 (test) |
+| Frontend | Next.js App Router, all pages under `frontend/src/app/` |
+| DB (dev) | SQLite, auto-created by SQLAlchemy `create_all()` |
+| DB (prod) | Supabase Postgres — connection string in `.env` |
+| Test pattern | Each phase has `backend/test_phaseN.py` — boots uvicorn on 8008, runs full CRUD cycle, tears down |
+| Sidebar nav | All sidebar links live in `dashboard/page.tsx` — add new phase links there |
+| UUID handling | `backend/app/models.py` patches `UUID`→`String` and `JSONB`→`JSON` for SQLite at import time |
+| PDF generation | `backend/app/utils/pdf_generator.py` — pure Python, no reportlab, saves to `backend/static/reports/` |
+| Design tokens | `#0E0C15` bg, `#171520` card, `#E8184C` crimson, `#7C5CFF` indigo, `rgba(255,255,255,0.05)` glass |
