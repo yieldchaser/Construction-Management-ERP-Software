@@ -619,3 +619,51 @@ class MaintenanceSchedule(Base):
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Phase 13 — Safety & Incident Management (HSE)
+# ─────────────────────────────────────────────────────────────────────────────
+
+class SafetyIncident(Base):
+    """OSHA-aligned incident records logged per project site."""
+    __tablename__ = "safety_incidents"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
+    incident_type = Column(String(100), nullable=False)      # Near Miss, First Aid, LTI, Fatal
+    severity = Column(String(50), nullable=False)            # Low, Medium, High, Critical
+    description = Column(String, nullable=False)
+    location = Column(String(255), nullable=True)
+    injured_person = Column(String(255), nullable=True)
+    lost_time_days = Column(Integer, default=0, nullable=False)
+    status = Column(String(50), default="open", nullable=False)  # open, under_investigation, closed
+    root_cause = Column(String, nullable=True)
+    corrective_action = Column(String, nullable=True)
+    reported_by = Column(String(255), nullable=False)
+    reported_at = Column(DateTime(timezone=True), nullable=False)
+    closed_at = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
+class ToolboxTalk(Base):
+    """Safety toolbox talk sessions conducted on site."""
+    __tablename__ = "toolbox_talks"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
+    topic = Column(String(255), nullable=False)
+    conducted_by = Column(String(255), nullable=False)
+    conducted_at = Column(DateTime(timezone=True), nullable=False)
+    attendee_count = Column(Integer, default=0, nullable=False)
+    notes = Column(String, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
+class PPECheck(Base):
+    """Personal Protective Equipment compliance audit records per site visit."""
+    __tablename__ = "ppe_checks"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
+    checked_by = Column(String(255), nullable=False)
+    check_date = Column(DateTime(timezone=True), nullable=False)
+    total_workers = Column(Integer, default=0, nullable=False)
+    compliant_workers = Column(Integer, default=0, nullable=False)
+    non_compliant_items = Column(JSONB, default=list, nullable=False)  # e.g. ["No helmet", "No safety vest"]
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
