@@ -64,30 +64,34 @@ export default function LandingPage() {
           </span>
         </div>
 
-        <div className="flex items-center gap-4">
-          <Link
-            href="/blog"
-            className="hidden md:block text-sm font-semibold text-zinc-400 hover:text-white transition-all cursor-pointer"
-          >
-            Blog
-          </Link>
+        {/* Center nav links */}
+        <nav className="hidden lg:flex items-center gap-6">
+          <Link href="/products" className="text-sm text-zinc-400 hover:text-white transition-all">Products</Link>
+          <Link href="/resources" className="text-sm text-zinc-400 hover:text-white transition-all">Resources</Link>
+          <Link href="/blog" className="text-sm text-zinc-400 hover:text-white transition-all">Blog</Link>
+          <Link href="/SiteFlow-pricing" className="text-sm text-zinc-400 hover:text-white transition-all">Pricing</Link>
+          <Link href="/about" className="text-sm text-zinc-400 hover:text-white transition-all">About</Link>
+          <Link href="/contact" className="text-sm text-zinc-400 hover:text-white transition-all">Contact</Link>
+        </nav>
+
+        <div className="flex items-center gap-3">
           <Link
             href="/help"
-            className="hidden md:block text-sm font-semibold text-zinc-400 hover:text-white transition-all cursor-pointer"
+            className="hidden md:flex items-center justify-center rounded-xl bg-white/[0.03] border border-white/10 px-4 py-2 text-sm font-semibold hover:bg-white/[0.06] hover:border-white/20 transition-all cursor-pointer"
           >
-            Help Center
+            Help
           </Link>
           <Link
             href="/login"
-            className="flex items-center justify-center rounded-xl bg-white/[0.03] border border-white/10 px-5 py-2 text-sm font-semibold hover:bg-white/[0.06] hover:border-white/20 transition-all cursor-pointer"
+            className="flex items-center justify-center rounded-xl bg-white/[0.03] border border-white/10 px-4 py-2 text-sm font-semibold hover:bg-white/[0.06] hover:border-white/20 transition-all cursor-pointer"
           >
-            Launch Console
+            Log In
           </Link>
           <Link
             href="/login"
             className="flex items-center justify-center rounded-xl bg-gradient-to-r from-primary to-[#FF3B6C] px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-primary/10 hover:opacity-90 active:scale-[0.98] transition-all cursor-pointer"
           >
-            Start Demo Sandbox
+            Free Trial
           </Link>
         </div>
       </header>

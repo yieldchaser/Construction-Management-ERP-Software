@@ -102,6 +102,14 @@ export default function DashboardPage() {
                     <span>📑</span> BOQ Spreadsheet
                   </Link>
                 </li>
+                <li>
+                  <Link
+                    href={`/c/${companyId}/p/proj-1/crm`}
+                    className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.02] transition-all"
+                  >
+                    <span>🤝</span> CRM & Leads
+                  </Link>
+                </li>
               </ul>
             </div>
 
@@ -112,18 +120,26 @@ export default function DashboardPage() {
               <ul className="space-y-1">
                 <li>
                   <Link
-                    href="#"
-                    className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.02] opacity-60"
+                    href={`/c/${companyId}/p/proj-1/dpr`}
+                    className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.02] transition-all"
                   >
                     <span>👷</span> Daily Progress (DPR)
                   </Link>
                 </li>
                 <li>
                   <Link
-                    href="#"
-                    className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.02] opacity-60"
+                    href={`/c/${companyId}/p/proj-1/procurement`}
+                    className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.02] transition-all"
                   >
-                    <span>🛒</span> RFQ Comparison
+                    <span>🛒</span> Procurement & RFQ
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href={`/c/${companyId}/p/proj-1/attendance`}
+                    className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.02] transition-all"
+                  >
+                    <span>📍</span> Attendance & Payroll
                   </Link>
                 </li>
                 <li>
@@ -144,15 +160,10 @@ export default function DashboardPage() {
               <ul className="space-y-1">
                 <li>
                   <Link
-                    href="#"
-                    onClick={() => setActiveTab("finance")}
-                    className={`flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg transition-all ${
-                      activeTab === "finance"
-                        ? "bg-primary/10 text-primary border-l-2 border-primary"
-                        : "text-zinc-400 hover:text-white hover:bg-white/[0.02]"
-                    }`}
+                    href={`/c/${companyId}/p/proj-1/finance`}
+                    className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.02] transition-all"
                   >
-                    <span>💵</span> Financial Cashflow
+                    <span>💵</span> Finance & Ledger
                   </Link>
                 </li>
                 <li>
