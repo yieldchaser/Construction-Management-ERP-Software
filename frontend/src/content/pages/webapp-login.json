@@ -1,0 +1,12 @@
+{
+  "title": "SiteFlow",
+  "metaTitle": "SiteFlow",
+  "metaDescription": "",
+  "canonical": "",
+  "slug": "webapp-login",
+  "category": null,
+  "type": "pages",
+  "author": "SiteFlow Operations Team",
+  "publishDate": "2026-06-26",
+  "body": "\n Google Tag Manager (noscript) \n\n End Google Tag Manager (noscript) \n<app-root></app-root>\n &lt;div class=\"abs-bg\" id=\"splash\"&gt;\n    &lt;img class=\"logo-rotation\" height=\"75px\" width=\"75px\" src=\"../../../../assets/images/logo.png\" alt=\"\"&gt;\n  &lt;/div&gt; \n<div id=\"splash\" style=\"width: 100%; height: 100dvh; display: flex; justify-content: center; align-items: center;\">\n\n<lottie-player autoplay=\"\" background=\"transparent\" direction=\"1\" loop=\"\" mode=\"normal\" speed=\"1\" src=\"https://lottie.host/64c2ca1f-345d-4f2e-9aba-6dde9a6ef2ba/P8hOX9mmtR.json\" style=\"width: 600px; height: 600px\"></lottie-player>\n</div>\n\n\n\n"
+}

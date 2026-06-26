@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 350">
+  <style>
+    /* Floating animation for the whole head */
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    /* Blooking animation:
+       Eyes and bolts quickly scale vertical to near zero,
+       hold momentarily, and re-open.
+       Using a scale transition creates the closing/opening effect.
+    */
+    @keyframes blink {
+      0%, 90%, 100% { transform: scaleY(1); } /* Eyes open */
+      92%, 98% { transform: scaleY(0.05); } /* Eyes closed (just a thin line visible) */
+    }
+
+    .robot-head {
+      animation: float 3s ease-in-out infinite;
+      transform-origin: center;
+    }
+
+    .blinking-eye {
+      /* Need to set origin for each eye center so they blink in place */
+      transform-origin: center;
+      /* Animation: Name | Duration | Fill | Count */
+      animation: blink 4s ease-in-out infinite;
+    }
+    
+    /* Offset the start of the right eye very slightly for realism,
+       or keep synced for a robotic look. This example keeps them synced. */
+    #left-eye {
+       transform-origin: 145px 185px;
+    }
+    
+    #right-eye {
+       transform-origin: 255px 185px;
+    }
+
+  </style>
+  <g class="robot-head">
+    <path d="M200,80 C120,80 50,110 50,185 C50,260 120,320 200,320 C280,320 350,260 350,185 C350,110 280,80 200,80 Z" fill="none" stroke="white" stroke-width="20"></path>
+    <rect x="130" y="10" width="15" height="60" rx="7.5" fill="white" transform="rotate(-20 137.5 40)"></rect>
+    <rect x="255" y="10" width="15" height="60" rx="7.5" fill="white" transform="rotate(20 262.5 40)"></rect>
+    <circle cx="45" cy="185" r="25" fill="white"></circle>
+    <circle cx="355" cy="185" r="25" fill="white"></circle>
+    <g id="left-eye" class="blinking-eye">
+      <circle cx="145" cy="185" r="45" fill="#d30d52" stroke="white" stroke-width="12"></circle>
+      <path d="M155,155 L125,190 L145,190 L135,215 L165,180 L145,180 L155,155 Z" fill="white" transform="rotate(30 145 185)"></path>
+    </g>
+    <g id="right-eye" class="blinking-eye">
+      <circle cx="255" cy="185" r="45" fill="#d30d52" stroke="white" stroke-width="12"></circle>
+      <path d="M265,155 L235,190 L255,190 L245,215 L275,180 L255,180 L265,155 Z" fill="white" transform="rotate(30 255 185)"></path>
+    </g>
+  </g>
+</svg>

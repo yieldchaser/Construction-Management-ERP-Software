@@ -66,6 +66,18 @@ export default function LandingPage() {
 
         <div className="flex items-center gap-4">
           <Link
+            href="/blog"
+            className="hidden md:block text-sm font-semibold text-zinc-400 hover:text-white transition-all cursor-pointer"
+          >
+            Blog
+          </Link>
+          <Link
+            href="/help"
+            className="hidden md:block text-sm font-semibold text-zinc-400 hover:text-white transition-all cursor-pointer"
+          >
+            Help Center
+          </Link>
+          <Link
             href="/login"
             className="flex items-center justify-center rounded-xl bg-white/[0.03] border border-white/10 px-5 py-2 text-sm font-semibold hover:bg-white/[0.06] hover:border-white/20 transition-all cursor-pointer"
           >
@@ -162,8 +174,18 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-white/5 px-6 py-8 text-center text-xs text-zinc-600">
-        SiteFlow is an independent construction operations platform. All product names, logos, and brands are property of their respective owners.
+      <footer className="border-t border-white/5 px-6 py-8 text-zinc-600">
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+          <p className="text-xs">
+            SiteFlow is an independent construction operations platform. All product names, logos, and brands are property of their respective owners.
+          </p>
+          <div className="flex items-center gap-6 text-xs">
+            <Link href="/blog" className="hover:text-zinc-400 transition-all">Blog</Link>
+            <Link href="/help" className="hover:text-zinc-400 transition-all">Help Center</Link>
+            <Link href="/resources/construction-terms-meanings" className="hover:text-zinc-400 transition-all">Glossary</Link>
+            <Link href="/resources/construction-calculators" className="hover:text-zinc-400 transition-all">Calculators</Link>
+          </div>
+        </div>
       </footer>
     </div>
   );

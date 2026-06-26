@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="250" height="200" viewBox="0 0 250 200">
+  <style>
+    /* Bars sliding in from the left */
+    @keyframes slide-in {
+      0% { transform: scaleX(0); opacity: 0; }
+      20% { transform: scaleX(0); opacity: 0; }
+      100% { transform: scaleX(1); opacity: 1; }
+    }
+    
+    /* Vertical scanner line moving across the timeline */
+    @keyframes scan {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(160px); }
+    }
+
+    .bar { transform-origin: left; animation: slide-in 1.5s ease-out forwards; }
+    .bar-1 { fill: #FFB300; animation-delay: 0.2s; }
+    .bar-2 { fill: #B0BEC5; animation-delay: 0.5s; }
+    .bar-3 { fill: #FFB300; animation-delay: 0.8s; }
+    
+    .scanner-line { 
+      stroke: #F4511E; 
+      stroke-width: 2; 
+      stroke-dasharray: 4; 
+      animation: scan 3s linear infinite; 
+    }
+    .grid-line { stroke: #ECEFF1; stroke-width: 1; }
+  </style>
+  <rect x="10" y="10" width="230" height="160" rx="4" fill="white" stroke="#CFD8DC" stroke-width="1"></rect>
+  <rect x="10" y="10" width="60" height="160" rx="4" fill="#F5F7F8"></rect>
+  <rect x="20" y="35" width="30" height="6" rx="3" fill="#CFD8DC"></rect>
+  <rect x="20" y="65" width="25" height="6" rx="3" fill="#CFD8DC"></rect>
+  <rect x="20" y="95" width="35" height="6" rx="3" fill="#CFD8DC"></rect>
+  <rect x="20" y="125" width="20" height="6" rx="3" fill="#CFD8DC"></rect>
+  <line class="grid-line" x1="100" y1="10" x2="100" y2="170"></line>
+  <line class="grid-line" x1="140" y1="10" x2="140" y2="170"></line>
+  <line class="grid-line" x1="180" y1="10" x2="180" y2="170"></line>
+  <line class="grid-line" x1="220" y1="10" x2="220" y2="170"></line>
+  <rect class="bar bar-1" x="80" y="32" width="60" height="12" rx="6"></rect>
+  <rect class="bar bar-2" x="130" y="62" width="80" height="12" rx="6"></rect>
+  <rect class="bar bar-3" x="110" y="92" width="40" height="12" rx="6"></rect>
+  <line class="scanner-line" x1="75" y1="10" x2="75" y2="170"></line>
+  <rect x="80" y="185" width="100" height="4" rx="2" fill="#ECEFF1"></rect>
+</svg>

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="500" height="300" viewBox="0 0 500 300">
+  <rect width="500" height="300" fill="#f8f9fa" rx="10"></rect>
+  <line x1="80" y1="50" x2="450" y2="50" stroke="#e0e0e0" stroke-width="1"></line>
+  <line x1="80" y1="125" x2="450" y2="125" stroke="#e0e0e0" stroke-width="1"></line>
+  <line x1="80" y1="200" x2="450" y2="200" stroke="#e0e0e0" stroke-width="1"></line>
+  <style>
+    .label { font-family: 'Segoe UI', Tahoma, sans-serif; font-size: 14px; fill: #333; }
+    
+    /* Looping Animation:
+       0-10%: Growing
+       10-80%: Staying still
+       80-90%: Fading/Shrinking out
+       90-100%: Reset
+    */
+    @keyframes growLoop {
+      0% { width: 0; opacity: 0; }
+      5%, 10% { opacity: 1; }
+      80% { width: inherit; opacity: 1; }
+      90%, 100% { width: 0; opacity: 0; }
+    }
+
+    @keyframes fadeInOut {
+      0%, 10% { opacity: 0; }
+      15%, 80% { opacity: 1; }
+      90%, 100% { opacity: 0; }
+    }
+    
+    .budget-bar { 
+      fill: #94a3b8; 
+      animation: growLoop 5s infinite ease-in-out; 
+    }
+    .actual-bar { 
+      fill: #f59e0b; 
+      animation: growLoop 5s infinite ease-in-out;
+    }
+    .value { 
+      font-family: 'Segoe UI', sans-serif; font-size: 12px; font-weight: bold; 
+      animation: fadeInOut 5s infinite ease-in-out;
+    }
+  </style>
+  <rect x="330" y="15" width="12" height="12" fill="#94a3b8"></rect>
+  <text x="350" y="26" class="label" style="font-size: 11px;">Est. Budget</text>
+  <rect x="415" y="15" width="12" height="12" fill="#f59e0b"></rect>
+  <text x="435" y="26" class="label" style="font-size: 11px;">Actual</text>
+  <text x="20" y="95" class="label">Foundation</text>
+  <rect x="100" y="80" height="15" width="320" class="budget-bar" rx="2"></rect>
+  <rect x="100" y="98" height="15" width="345" class="actual-bar" rx="2"></rect>
+  <text x="450" y="110" class="value" fill="#b91c1c">+$25k</text>
+  <text x="20" y="170" class="label">Framing</text>
+  <rect x="100" y="155" height="15" width="280" class="budget-bar" rx="2"></rect>
+  <rect x="100" y="173" height="15" width="240" class="actual-bar" rx="2"></rect>
+  <text x="350" y="185" class="value" fill="#15803d">-$40k</text>
+  <text x="20" y="245" class="label">Electrical</text>
+  <rect x="100" y="230" height="15" width="200" class="budget-bar" rx="2"></rect>
+  <rect x="100" y="248" height="15" width="210" class="actual-bar" rx="2"></rect>
+  <text x="320" y="260" class="value" fill="#b91c1c">+$10k</text>
+  <line x1="100" y1="60" x2="100" y2="280" stroke="#333" stroke-width="2"></line>
+</svg>
