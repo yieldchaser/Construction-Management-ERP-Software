@@ -19,17 +19,11 @@
 | 10 | **Quality Control & Inspections** | `3854e04` | IS-456 checklist creation, site inspection responses, NCR Kanban board, cube/slump lab tests |
 | 11 | **Client Portal & Reports** | `3cd8c56` | Automated progress report compilation, pure Python PDF generator, approval flows, PDF viewer |
 | 12 | **Equipment & Machinery Tracking** | `52c32b7` | Fleet registry (owned/hired), project deployments, fuel burn logs, maintenance schedules, 4-tab UI console |
+| 13 | **Safety & Incident Management (HSE)** | `fa1c470` | OSHA incident board (severity-coded), LTIF rate calculation, toolbox talks tracker, PPE compliance donut gauge |
 
 ---
 
 ## 🔵 Upcoming Phases
-
-### Phase 13 — Safety & Incident Management (HSE)
-**Goal**: OSHA-aligned incident logging, toolbox talks, PPE compliance checks, and LTI/LTIF statistics.
-
-**Backend models**: `SafetyIncident`, `ToolboxTalk`, `PPECheck`
-
-**Frontend**: Incident board, LTI vs LTIF trend chart, toolbox talks tracker, PPE compliance gauge
 
 ### Phase 14 — Advanced Analytics Dashboard
 **Goal**: Cross-project executive KPI dashboard with financial and productivity intelligence.
@@ -102,4 +96,5 @@ python test_phase9.py    # HR & Payroll
 python test_phase10.py   # Quality Control
 python test_phase11.py   # Client Portal & Reports
 python test_phase12.py   # Equipment & Machinery
+python test_phase13.py   # Safety & HSE
 ```

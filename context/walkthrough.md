@@ -160,44 +160,37 @@
 
 ---
 
-## 🔵 Next: Phase 13 — Safety & Incident Management (HSE)
+## Phase 13 — Safety & Incident Management (HSE) ✅ `fa1c470`
 
-**Backend models to add**:
-```python
-class SafetyIncident(Base):
-    __tablename__ = "safety_incidents"
-    # id, project_id, incident_type, severity (Near Miss / Minor / Major / Fatal)
-    # description, location, injured_person, lost_time_days
-    # status (open / under_investigation / closed), root_cause, corrective_action
-    # reported_by, reported_at, closed_at
+### Backend
+- `backend/app/models.py` — Added: `SafetyIncident`, `ToolboxTalk`, `PPECheck`.
+- `backend/app/routers/safety.py` — Incident CRUD (Near Miss/First Aid/LTI/Fatal), incident close with root cause, LTIF stats endpoint (LTIF = LTI × 200,000 / manhours), toolbox talk logging, PPE compliance checks with % computation and validation.
+- `backend/app/main.py` — Registered `safety` router.
+- `backend/test_phase13.py` — Tests: Near Miss log, LTI log, list incidents, close incident, LTIF=2.0, toolbox talk (25 attendees), PPE check (90%), validation (compliant > total → 400).
 
-class ToolboxTalk(Base):
-    __tablename__ = "toolbox_talks"
-    # id, project_id, topic, conducted_by, conducted_at, attendee_count, notes
+### Frontend
+- `frontend/src/app/c/[company_id]/p/[project_id]/safety/page.tsx` — 4-tab HSE console:
+  - **Tab 1 (Incident Board)**: Severity-color-coded cards (red/orange/yellow/green), type badges, close incident modal with root cause form.
+  - **Tab 2 (LTIF & Stats)**: 6 KPI cards, incident type and severity breakdown mini-bar charts, LTIF formula info box.
+  - **Tab 3 (Toolbox Talks)**: Attendee-count cards, log talk modal.
+  - **Tab 4 (PPE Compliance)**: SVG donut gauge (overall average %), per-check progress bars, non-compliant item tags, record check modal.
+- `frontend/src/app/c/[company_id]/dashboard/page.tsx` — Added "Safety" sidebar section with "HSE / Incidents" link.
 
-class PPECheck(Base):
-    __tablename__ = "ppe_checks"
-    # id, project_id, checked_by, check_date
-    # total_workers, compliant_workers, non_compliant_items (JSON)
-```
+---
 
-**Backend router** (`backend/app/routers/safety.py`):
-- `POST /safety/incidents` — Log incident
-- `GET /safety/incidents/{project_id}` — List incidents
-- `PATCH /safety/incidents/{incident_id}/close` — Close with root cause
-- `GET /safety/stats/{project_id}` — LTI count, LTIF = (LTI × 200000) / total_manhours
-- `POST /safety/toolbox-talks` — Log toolbox talk
-- `GET /safety/toolbox-talks/{project_id}` — List talks
-- `POST /safety/ppe-checks` — Log PPE compliance check
-- `GET /safety/ppe-checks/{project_id}` — List PPE checks
+## 🔵 Next: Phase 14 — Advanced Analytics Dashboard
 
-**Frontend** (`frontend/src/app/c/[company_id]/p/[project_id]/safety/page.tsx`):
-- Tab 1: Incident board (severity-color-coded cards)
-- Tab 2: LTIF trend chart (line chart over months)
-- Tab 3: Toolbox Talks tracker (attendance count, topics)
-- Tab 4: PPE Compliance gauge (compliant % donut chart)
+**Goal**: Cross-project executive KPI dashboard.
 
-**Sidebar**: Add "HSE / Safety" link in dashboard sidebar under a new "Safety" section.
+**Features**:
+- S-Curve: Planned vs Actual physical progress (tasks complete % over time)
+- Budget burn-rate and variance chart
+- Labour productivity index (m² per labour-day from DPR data)
+- Material wastage index (ordered vs consumed from procurement)
+- Subcontractor performance scorecard (RA Bill on-time %, NCR count)
+
+**Backend**: New `analytics.py` router — aggregates across BOQ, tasks, billing, quality, HR modules.  
+**Frontend**: New `analytics/page.tsx` — glassmorphic dashboard with SVG charts and KPI tiles.
 
 ---
 
@@ -206,11 +199,12 @@ class PPECheck(Base):
 | Topic | Detail |
 |---|---|
 | API base URL | `http://localhost:8000/apis/v3` (dev) |
-| Backend port | 8000 (dev) / 8008 (test) |
+| Backend port | 8000 (dev), 8015 (Phase 13 test) |
 | Frontend | Next.js App Router, all pages under `frontend/src/app/` |
 | DB (dev) | SQLite, auto-created by SQLAlchemy `create_all()` |
 | DB (prod) | Supabase Postgres — connection string in `.env` |
-| Test pattern | Each phase has `backend/test_phaseN.py` — boots uvicorn on 8008, runs full CRUD cycle, tears down |
+| Test pattern | Each phase has `backend/test_phaseN.py` — seeds DB via `seed_db()`, boots uvicorn with retry loop, runs full CRUD, tears down |
+| UUID in SQLite | Always convert string IDs to `uuid.UUID(id_str)` before filtering or inserting in routers |
 | Sidebar nav | All sidebar links live in `dashboard/page.tsx` — add new phase links there |
 | UUID handling | `backend/app/models.py` patches `UUID`→`String` and `JSONB`→`JSON` for SQLite at import time |
 | PDF generation | `backend/app/utils/pdf_generator.py` — pure Python, no reportlab, saves to `backend/static/reports/` |
