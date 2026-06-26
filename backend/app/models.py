@@ -123,3 +123,34 @@ class TaskPredecessor(Base):
     task_id = Column(UUID(as_uuid=True), ForeignKey("tasks.id", ondelete="CASCADE"), primary_key=True)
     predecessor_id = Column(UUID(as_uuid=True), ForeignKey("tasks.id", ondelete="CASCADE"), primary_key=True)
     type = Column(String(50), default="finish_to_start", nullable=False)
+
+class Drawing(Base):
+    __tablename__ = "drawings"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
+    name = Column(String(255), nullable=False)
+    category = Column(String(50), nullable=False) # e.g. "2D Layout", "3D Layout", "Production File"
+    created_by = Column(UUID(as_uuid=True), ForeignKey("company_team.id"), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+class DrawingRevision(Base):
+    __tablename__ = "drawing_revisions"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    drawing_id = Column(UUID(as_uuid=True), ForeignKey("drawings.id", ondelete="CASCADE"), nullable=False)
+    version_code = Column(String(20), nullable=False) # e.g. "V1", "V2", "V3"
+    file_url = Column(String, nullable=False)
+    approval_status = Column(String(50), default="pending", nullable=False) # e.g. "pending", "approved", "rejected"
+    approved_by = Column(UUID(as_uuid=True), ForeignKey("company_team.id"), nullable=True)
+    comments = Column(String, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+class DrawingPin(Base):
+    __tablename__ = "drawing_pins"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    revision_id = Column(UUID(as_uuid=True), ForeignKey("drawing_revisions.id", ondelete="CASCADE"), nullable=False)
+    x_coordinate = Column(Numeric(6, 2), nullable=False)
+    y_coordinate = Column(Numeric(6, 2), nullable=False)
+    comment = Column(String, nullable=False)
+    tagged_user_id = Column(UUID(as_uuid=True), ForeignKey("company_team.id"), nullable=True)
+    created_by = Column(UUID(as_uuid=True), ForeignKey("company_team.id"), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
