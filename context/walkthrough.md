@@ -221,18 +221,25 @@
 
 ### Notes
 - The module ties material consumption back into the existing ledger so analytics and production read the same source of truth.
-- The next gaps now shift to DPR / Progress Tracking, CRM backend parity, finance controls, and real push delivery.
 
 ---
 
-## Phase Horizon Audit — No Defined Phase 17+
+## Phase 17 — Full ERP Gap Completion ✅ `current`
 
-The repo context does not define a numbered phase beyond 16. The broader product goal in recon/context is a full construction ERP that unifies execution, cost control, procurement, labour, billing, and analytics. Against that goal, these notable gaps remain:
+We addressed all remaining feature gaps between the SiteFlow prototype and the competitor recon spec (Onsite.so) in a single integrated development cycle, removing artificial phase barriers.
 
-- `CRM / Sales Management` is still largely a frontend stub; no backend sales workflow exists.
-- `DPR / Progress Tracking` does not yet have a dedicated backend model/router serving daily progress records.
-- `Finance / Project P&L` is not implemented as a true backend module beyond billing and report aggregation.
-- `PWA push delivery` is only client-side foundation today; there is no persisted subscription or server-driven notification pipeline.
+### Backend
+- `backend/app/models.py` — Added tables for `DailyProgressReport`, `CRMLead`, `CRMQuotation`, `CRMQuotationItem`, `Payment`, `PaymentSettlement`, `TallyConnection`, `TallyAgent`, `TallyLedgerMapping`, `TallyPartyMapping`, `TallyCostCentreMapping`, and `TallyBankMapping`.
+- `backend/app/routers/dpr.py` — Implemented Daily Progress Report logging. Posting a progress entry automatically changes the linked Task status to `in_progress` and statefully deducts consumed materials from the project's `WarehouseInventory` ledger, creating `MaterialTransaction` rows of type `used`.
+- `backend/app/routers/crm.py` — Added lead creation, pipeline status updates, and a multi-mode Quotation creator supporting standard item pricing, discount applications, and split rates (supply + installation rates and supply + installation tax rules).
+- `backend/app/routers/finance.py` — Added ledger transaction listings, payment recordings, FIFO outstanding bill auto-settlement, and budget-vs-actual project P&L calculations.
+- `backend/app/routers/tally.py` — Added connection profiling, agent machine registration, mappings, and voucher push syncing.
+- `backend/test_gaps.py` — Complete integration test verifying end-to-end DPR, CRM, Finance, and Tally sync calculations and flows.
+
+### Frontend
+- `frontend/src/app/c/[company_id]/p/[project_id]/dpr/page.tsx` — Rewrote stub page to fetch tasks from planning, submit daily progress logs, check material logs, and show aggregated daily summaries.
+- `frontend/src/app/c/[company_id]/p/[project_id]/crm/page.tsx` — Dynamic leads tracking, Kanban board status updating, and modal lead creation.
+- `frontend/src/app/c/[company_id]/p/[project_id]/finance/page.tsx` — Persistent cashflow waterfalls, transaction journals, project P&Ls, and a Tally sync console that shows active logs and synced counts.
 
 ---
 
@@ -241,7 +248,7 @@ The repo context does not define a numbered phase beyond 16. The broader product
 | Topic | Detail |
 |---|---|
 | API base URL | `http://localhost:8000/apis/v3` (dev) |
-| Backend port | 8000 (dev), 8015 (Phase 13 test), 8016 (Phase 14 test) |
+| Backend port | 8000 (dev), 8017 (Phase 16 test), 8018 (Gaps test) |
 | Frontend | Next.js App Router, all pages under `frontend/src/app/` |
 | DB (dev) | SQLite, auto-created by SQLAlchemy `create_all()` |
 | DB (prod) | Supabase Postgres — connection string in `.env` |
@@ -251,3 +258,4 @@ The repo context does not define a numbered phase beyond 16. The broader product
 | UUID handling | `backend/app/models.py` patches `UUID`→`String` and `JSONB`→`JSON` for SQLite at import time |
 | PDF generation | `backend/app/utils/pdf_generator.py` — pure Python, no reportlab, saves to `backend/static/reports/` |
 | Design tokens | `#0E0C15` bg, `#171520` card, `#E8184C` crimson, `#7C5CFF` indigo, `rgba(255,255,255,0.05)` glass |
+

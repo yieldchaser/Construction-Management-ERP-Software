@@ -2,7 +2,11 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import os
-from app.routers import auth, calculators, budgeting, planning, drawings, procurement, billing, hr, quality, reports, equipment, safety, analytics, production
+from app.routers import (
+    auth, calculators, budgeting, planning, drawings, procurement,
+    billing, hr, quality, reports, equipment, safety, analytics,
+    production, dpr, crm, finance, tally
+)
 from app.database import engine, Base
 
 # Initialize SQLAlchemy tables if they do not exist
@@ -44,6 +48,10 @@ app.include_router(equipment.router, prefix="/apis/v3")
 app.include_router(safety.router, prefix="/apis/v3")
 app.include_router(analytics.router, prefix="/apis/v3")
 app.include_router(production.router, prefix="/apis/v3")
+app.include_router(dpr.router, prefix="/apis/v3")
+app.include_router(crm.router, prefix="/apis/v3")
+app.include_router(finance.router, prefix="/apis/v3")
+app.include_router(tally.router, prefix="/apis/v3")
 
 @app.get("/")
 def read_root():

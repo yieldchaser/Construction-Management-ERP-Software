@@ -731,3 +731,180 @@ class PPECheck(Base):
     compliant_workers = Column(Integer, default=0, nullable=False)
     non_compliant_items = Column(JSONB, default=list, nullable=False)  # e.g. ["No helmet", "No safety vest"]
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
+class DailyProgressReport(Base):
+    """Daily Progress Report (DPR) tracking daily execution metrics."""
+    __tablename__ = "daily_progress_reports"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
+    task_id = Column(UUID(as_uuid=True), ForeignKey("tasks.id", ondelete="CASCADE"), nullable=True)
+    reported_by = Column(String(255), nullable=False)
+    dpr_date = Column(DateTime(timezone=True), nullable=False)
+    weather = Column(String(100), default="Clear", nullable=False)
+    executed_qty = Column(Numeric(18, 4), nullable=False)
+    workers_deployed = Column(Integer, default=0, nullable=False)
+    materials_consumed = Column(JSONB, default=list, nullable=False)  # List of {"material_name": str, "quantity": float, "unit": str}
+    photos = Column(JSONB, default=list, nullable=False)  # List of image URLs
+    notes = Column(String, nullable=True)
+    issues = Column(String, nullable=True)
+    status = Column(String(50), default="submitted", nullable=False)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
+class CRMLead(Base):
+    """CRM Lead details."""
+    __tablename__ = "crm_leads"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    assignee_id = Column(UUID(as_uuid=True), ForeignKey("company_team.id", ondelete="SET NULL"), nullable=True)
+    lead_date = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+    lead_type = Column(String(100), nullable=False)
+    contact_name = Column(String(255), nullable=False)
+    phone_no = Column(String(20), nullable=False)
+    email = Column(String(255), nullable=True)
+    client_company_name = Column(String(255), nullable=True)
+    address = Column(String, nullable=True)
+    source = Column(String(100), nullable=True)
+    category = Column(String(100), nullable=True)
+    status = Column(String(100), default="New Lead", nullable=False)
+    priority = Column(String(50), default="medium", nullable=False)
+    budget = Column(Numeric(18, 2), default=0.0, nullable=False)
+    description = Column(String, nullable=True)
+    next_follow_up = Column(DateTime(timezone=True), nullable=True)
+    expected_closure = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=func.now(), onupdate=func.now(), nullable=False)
+
+
+class CRMQuotation(Base):
+    """CRM Quotation generated for a Lead."""
+    __tablename__ = "crm_quotations"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    lead_id = Column(UUID(as_uuid=True), ForeignKey("crm_leads.id", ondelete="CASCADE"), nullable=False)
+    subject = Column(String(255), nullable=False)
+    tax_type = Column(String(50), default="bill_level", nullable=False)  # item_level, bill_level
+    status = Column(String(50), default="Draft", nullable=False)  # Draft, Sent, Confirmed, Rejected
+    gst_pct = Column(Numeric(5, 2), default=18.00, nullable=False)
+    discount = Column(Numeric(18, 2), default=0.0, nullable=False)
+    total_amount = Column(Numeric(18, 2), default=0.0, nullable=False)
+    terms = Column(String, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
+class CRMQuotationItem(Base):
+    """Line items inside a CRM Quotation supporting Split Rates."""
+    __tablename__ = "crm_quotation_items"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    quotation_id = Column(UUID(as_uuid=True), ForeignKey("crm_quotations.id", ondelete="CASCADE"), nullable=False)
+    section_name = Column(String(100), nullable=True)
+    item_name = Column(String(255), nullable=False)
+    qty = Column(Numeric(18, 4), nullable=False)
+    unit = Column(String(50), nullable=False)
+    cost_price = Column(Numeric(18, 2), default=0.0, nullable=False)
+    selling_price = Column(Numeric(18, 2), default=0.0, nullable=False)
+    supply_rate = Column(Numeric(18, 2), default=0.0, nullable=False)
+    installation_rate = Column(Numeric(18, 2), default=0.0, nullable=False)
+    supply_tax_pct = Column(Numeric(5, 2), default=18.00, nullable=False)
+    installation_tax_pct = Column(Numeric(5, 2), default=12.00, nullable=False)
+    total_amount = Column(Numeric(18, 2), default=0.0, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
+class Payment(Base):
+    """Receipts or expense payments recorded for a project."""
+    __tablename__ = "payments"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="SET NULL"), nullable=True)
+    party_company_user_id = Column(UUID(as_uuid=True), ForeignKey("company_team.id", ondelete="RESTRICT"), nullable=True)
+    payment_type = Column(String(50), nullable=False)  # in, out
+    amount = Column(Numeric(18, 2), nullable=False)
+    unsettled_amount = Column(Numeric(18, 2), nullable=False)
+    payment_method = Column(String(50), nullable=False)  # Cash, Bank Transfer, Cheque
+    reference_number = Column(String(100), nullable=True)
+    description = Column(String, nullable=True)
+    payment_date = Column(DateTime(timezone=True), nullable=False)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
+class PaymentSettlement(Base):
+    """Settlement mapping between payments and bills."""
+    __tablename__ = "payment_settlements"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    payment_id = Column(UUID(as_uuid=True), ForeignKey("payments.id", ondelete="CASCADE"), nullable=False)
+    bill_id = Column(UUID(as_uuid=True), ForeignKey("bills.id", ondelete="CASCADE"), nullable=False)
+    settled_amount = Column(Numeric(18, 2), nullable=False)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
+class TallyConnection(Base):
+    """Tally connection profile for a company."""
+    __tablename__ = "tally_connections"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), unique=True, nullable=False)
+    tally_company_name = Column(String(255), nullable=False)
+    registered_mobile = Column(String(20), nullable=False)
+    sync_window_start_date = Column(DateTime(timezone=True), nullable=False)
+    voucher_number_template = Column(String(100), default="ONS-{year}-{number}", nullable=False)
+    auto_create_missing_ledgers = Column(Boolean, default=False, nullable=False)
+    round_off_ledger = Column(String(255), nullable=True)
+    default_cash_ledger = Column(String(255), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=func.now(), onupdate=func.now(), nullable=False)
+
+
+class TallyAgent(Base):
+    """Registered desktop sync agents."""
+    __tablename__ = "tally_agents"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    machine_label = Column(String(255), nullable=False)
+    auth_key = Column(String(255), unique=True, nullable=False)
+    status = Column(String(50), default="active", nullable=False)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=func.now(), onupdate=func.now(), nullable=False)
+
+
+class TallyLedgerMapping(Base):
+    """Ledger mappings between SiteFlow transaction types and Tally Ledgers."""
+    __tablename__ = "tally_ledger_mappings"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    onsite_transaction_type = Column(String(100), nullable=False)  # Material Purchase, Subcon Expense, Sales Invoice
+    posting_mode = Column(String(50), default="lumpsum", nullable=False)  # lumpsum, itemwise
+    tally_voucher_type = Column(String(100), nullable=False)  # Purchase, Sales, Payment, Receipt, Journal
+    tally_ledger_name = Column(String(255), nullable=False)
+    freight_ledger = Column(String(255), nullable=True)
+    surcharge_ledger = Column(String(255), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
+class TallyPartyMapping(Base):
+    """Party ledger mappings."""
+    __tablename__ = "tally_party_mappings"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    onsite_party_id = Column(UUID(as_uuid=True), ForeignKey("company_team.id", ondelete="CASCADE"), nullable=False)
+    tally_ledger_name = Column(String(255), nullable=False)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
+class TallyCostCentreMapping(Base):
+    """Project-to-Cost-Centre mappings."""
+    __tablename__ = "tally_cost_centre_mappings"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
+    tally_cost_centre_name = Column(String(255), nullable=False)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
+class TallyBankMapping(Base):
+    """Bank account details to Tally ledger mappings."""
+    __tablename__ = "tally_bank_mappings"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    onsite_bank_account_details = Column(String(255), nullable=False)
+    tally_ledger_name = Column(String(255), nullable=False)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)

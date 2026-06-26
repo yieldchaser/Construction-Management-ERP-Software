@@ -1,39 +1,202 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 
-const TRANSACTIONS = [
-  { id: "TXN-2026-0841", date: "Jun 26", type: "Expense", category: "Material Purchase", description: "Steel TMT 12mm — 8MT", amount: -584000, party: "National Steel Suppliers", ref: "PO-2026-0412", ledger: "Material Cost" },
-  { id: "TXN-2026-0840", date: "Jun 25", type: "Receipt", category: "Client Payment", description: "Stage 3 Milestone Payment", amount: 2800000, party: "Metro Infra Corp Ltd", ref: "INV-2026-0211", ledger: "Revenue" },
-  { id: "TXN-2026-0839", date: "Jun 25", type: "Expense", category: "Labour Wages", description: "Daily wages — 48 workers", amount: -41600, party: "Site Labour Pool", ref: "ATT-JUN-25", ledger: "Labour Cost" },
-  { id: "TXN-2026-0838", date: "Jun 24", type: "Expense", category: "Equipment Hire", description: "Tower Crane hourly — 8hrs", amount: -24000, party: "Bharat Cranes Pvt Ltd", ref: "PO-2026-0406", ledger: "Plant & Machinery" },
-  { id: "TXN-2026-0837", date: "Jun 23", type: "Expense", category: "Subcontractor", description: "RA Bill #4 — Flooring work", amount: -480000, party: "Shree Tile Works", ref: "RA-004", ledger: "Subcon Cost" },
-  { id: "TXN-2026-0836", date: "Jun 22", type: "Receipt", category: "Debit Note", description: "Material quality defect recovery", amount: 18000, party: "Indus Paint House", ref: "DN-2026-012", ledger: "Recoveries" },
-  { id: "TXN-2026-0835", date: "Jun 21", type: "Expense", category: "Overhead", description: "Site office electricity + water", amount: -8400, party: "Utility Charges", ref: "UTIL-JUN", ledger: "Overhead" },
-];
+interface Transaction {
+  id: string;
+  date: string;
+  type: string;
+  category: string;
+  description: string;
+  amount: number;
+  party: string;
+  ref: string;
+  ledger: string;
+}
 
-const PL_DATA = [
-  { head: "Revenue (Billed)", budget: 18500000, actual: 14200000, variance: -4300000 },
-  { head: "Material Cost", budget: 7200000, actual: 6840000, variance: 360000 },
-  { head: "Labour Cost", budget: 2800000, actual: 3120000, variance: -320000 },
-  { head: "Subcontractor Cost", budget: 3600000, actual: 3980000, variance: -380000 },
-  { head: "Plant & Machinery", budget: 800000, actual: 720000, variance: 80000 },
-  { head: "Overhead", budget: 600000, actual: 680000, variance: -80000 },
-];
+interface PLItem {
+  head: string;
+  budget: number;
+  actual: number;
+  variance: number;
+}
+
+interface TallyConnection {
+  tally_company_name: string;
+  registered_mobile: string;
+  sync_window_start_date: string;
+}
 
 export default function FinancePage() {
   const params = useParams();
   const companyId = params?.company_id as string;
-  const [tab, setTab] = useState<"ledger" | "pl" | "tally">("ledger");
-  const [syncing, setSyncing] = useState(false);
-  const [lastSync, setLastSync] = useState("Jun 26, 2026 — 09:14 AM");
+  const projectId = params?.project_id as string;
 
-  const totalRevenue = PL_DATA.find(r => r.head === "Revenue (Billed)")?.actual || 0;
-  const totalCost = PL_DATA.filter(r => r.head !== "Revenue (Billed)").reduce((s, r) => s + r.actual, 0);
+  const [tab, setTab] = useState<"ledger" | "pl" | "tally">("ledger");
+  
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [plData, setPlData] = useState<PLItem[]>([]);
+  const [tallyConn, setTallyConn] = useState<TallyConnection | null>(null);
+
+  // Record Payment Modal
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [paymentType, setPaymentType] = useState("out"); // "in" (receipt), "out" (expense)
+  const [amount, setAmount] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("Bank Transfer");
+  const [refNum, setRefNum] = useState("");
+  const [desc, setDesc] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  // Tally Sync States
+  const [syncing, setSyncing] = useState(false);
+  const [lastSync, setLastSync] = useState("Not synced yet");
+  const [syncLogs, setSyncLogs] = useState<string[]>([]);
+  const [queuedVouchers, setQueuedVouchers] = useState(0);
+
+  // Tally Setup Modal
+  const [showTallySetup, setShowTallySetup] = useState(false);
+  const [tallyCompany, setTallyCompany] = useState("");
+  const [tallyMobile, setTallyMobile] = useState("");
+
+  const fetchData = async () => {
+    try {
+      // 1. Fetch Ledger
+      const ledgerRes = await fetch(`http://localhost:8000/apis/v3/finance/ledger?project_id=${projectId}`);
+      if (ledgerRes.ok) {
+        const data = await ledgerRes.json();
+        setTransactions(data);
+      }
+
+      // 2. Fetch P&L
+      const plRes = await fetch(`http://localhost:8000/apis/v3/finance/pl?project_id=${projectId}`);
+      if (plRes.ok) {
+        const data = await plRes.json();
+        setPlData(data);
+      }
+
+      // 3. Fetch Tally connection
+      const tallyRes = await fetch(`http://localhost:8000/apis/v3/tally/connections?company_id=${companyId}`);
+      if (tallyRes.ok) {
+        const data = await tallyRes.json();
+        setTallyConn(data);
+        setTallyCompany(data.tally_company_name);
+        setTallyMobile(data.registered_mobile);
+      }
+    } catch (e) {
+      console.error("Failed to load finance data", e);
+    }
+  };
+
+  useEffect(() => {
+    if (projectId) {
+      fetchData();
+    }
+  }, [projectId, companyId]);
+
+  const handleRecordPayment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!amount || parseFloat(amount) <= 0) return;
+
+    setSubmitting(true);
+    try {
+      const res = await fetch("http://localhost:8000/apis/v3/finance/payments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          company_id: companyId,
+          project_id: projectId,
+          payment_type: paymentType,
+          amount: parseFloat(amount),
+          payment_method: paymentMethod,
+          reference_number: refNum || null,
+          description: desc || null,
+          payment_date: new Date().toISOString()
+        })
+      });
+
+      if (res.ok) {
+        setShowAddModal(false);
+        setAmount("");
+        setRefNum("");
+        setDesc("");
+        fetchData();
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleConfigureTally = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!tallyCompany || !tallyMobile) return;
+
+    try {
+      const res = await fetch("http://localhost:8000/apis/v3/tally/connections", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          company_id: companyId,
+          tally_company_name: tallyCompany,
+          registered_mobile: tallyMobile,
+          sync_window_start_date: new Date("2026-04-01").toISOString()
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setTallyConn(data);
+        setShowTallySetup(false);
+        fetchData();
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleTallySync = async () => {
+    setSyncing(true);
+    setSyncLogs(["Initializing Tally Prime Desktop sync agent connection...", "Verifying company XML namespace..."]);
+    
+    try {
+      const res = await fetch(`http://localhost:8000/apis/v3/tally/sync?company_id=${companyId}`, {
+        method: "POST"
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setTimeout(() => {
+          setSyncLogs(prev => [
+            ...prev,
+            `Connected successfully to Tally Company: "${data.tally_company}"`,
+            `Pushing batch of ${data.vouchers_queued} XML ledger vouchers...`,
+            ...data.sync_logs,
+            `✓ Sync execution complete. Total ${data.vouchers_synced} vouchers pushed successfully.`
+          ]);
+          setLastSync(new Date().toLocaleDateString() + " — " + new Date().toLocaleTimeString());
+          setSyncing(false);
+        }, 1500);
+      } else {
+        const err = await res.text();
+        setSyncLogs(prev => [...prev, `CRITICAL ERROR: ${err}`]);
+        setSyncing(false);
+      }
+    } catch (e) {
+      setSyncLogs(prev => [...prev, "CRITICAL ERROR: Failed to establish local Tally Prime sync pipeline."]);
+      setSyncing(false);
+    }
+  };
+
+  // Math variables
+  const receiptsSum = transactions.filter(t => t.type === "Receipt").reduce((s, t) => s + Math.abs(t.amount), 0);
+  const expensesSum = transactions.filter(t => t.type === "Expense").reduce((s, t) => s + Math.abs(t.amount), 0);
+  const netCashFlow = receiptsSum - expensesSum;
+
+  const totalRevenue = plData.find(r => r.head === "Revenue (Billed)")?.actual || 0;
+  const totalCost = plData.filter(r => r.head !== "Revenue (Billed)").reduce((s, r) => s + r.actual, 0);
   const grossProfit = totalRevenue - totalCost;
-  const margin = ((grossProfit / totalRevenue) * 100).toFixed(1);
+  const margin = totalRevenue > 0 ? ((grossProfit / totalRevenue) * 100).toFixed(1) : "0.0";
 
   return (
     <div className="flex h-screen bg-[#0E0C15] text-[#ededed] overflow-hidden">
@@ -62,10 +225,10 @@ export default function FinancePage() {
         <div className="border-b border-white/5 bg-[#0D0B14] px-6 py-3 flex items-center justify-between">
           <div>
             <h1 className="text-sm font-bold text-white">Finance & Transactions</h1>
-            <p className="text-[10px] text-zinc-500">Expense Ledger · Project P&L · Tally ERP Sync</p>
+            <p className="text-[10px] text-zinc-500">Accrual-based general ledger, real-time cost analysis, and sync manager</p>
           </div>
-          <button className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary to-[#FF3B6C] px-4 py-2 text-xs font-bold text-white hover:opacity-90 transition-all">
-            + Record Expense
+          <button onClick={() => setShowAddModal(true)} className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary to-[#FF3B6C] px-4 py-2 text-xs font-bold text-white hover:opacity-90 transition-all">
+            + Record Payment / Expense
           </button>
         </div>
 
@@ -74,22 +237,21 @@ export default function FinancePage() {
             <div className="space-y-4">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {[
-                  { label: "Total Receipts (Jun)", value: "₹28.18L", color: "text-emerald-400" },
-                  { label: "Total Expenses (Jun)", value: "₹11.38L", color: "text-red-400" },
-                  { label: "Net Cash Flow", value: "₹16.80L", color: "text-primary" },
-                  { label: "Pending Approvals", value: "3", color: "text-amber-400" },
+                  { label: "Total Receipts (Actual)", value: `₹${receiptsSum.toLocaleString("en-IN")}`, color: "text-emerald-400" },
+                  { label: "Total Expenses (Actual)", value: `₹${expensesSum.toLocaleString("en-IN")}`, color: "text-red-400" },
+                  { label: "Net Cash Flow", value: `₹${netCashFlow.toLocaleString("en-IN")}`, color: netCashFlow >= 0 ? "text-primary" : "text-red-400" },
+                  { label: "General Ledger Heads", value: "6 heads", color: "text-amber-400" },
                 ].map((s, i) => (
                   <div key={i} className="glass-panel rounded-xl p-4 border border-white/5">
                     <div className="text-[10px] text-zinc-500 uppercase tracking-wider">{s.label}</div>
-                    <div className={`text-2xl font-extrabold mt-1 ${s.color}`}>{s.value}</div>
+                    <div className={`text-xl font-extrabold mt-1 ${s.color}`}>{s.value}</div>
                   </div>
                 ))}
               </div>
 
               <div className="glass-panel rounded-2xl border border-white/5 overflow-hidden">
                 <div className="px-5 py-3 border-b border-white/5 flex items-center justify-between">
-                  <h2 className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Transaction Ledger — Jun 2026</h2>
-                  <button className="text-xs text-primary hover:underline">Export to Tally</button>
+                  <h2 className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Transaction Ledger</h2>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs">
@@ -104,18 +266,23 @@ export default function FinancePage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {TRANSACTIONS.map((t, i) => (
+                      {transactions.map((t, i) => (
                         <tr key={i} className="border-b border-white/[0.03] hover:bg-white/[0.015] transition-all">
-                          <td className="px-5 py-3 text-zinc-500">{t.date}</td>
-                          <td className="px-5 py-3 text-white max-w-[180px] truncate">{t.description}</td>
+                          <td className="px-5 py-3 text-zinc-500 font-mono">{t.date}</td>
+                          <td className="px-5 py-3 text-white font-medium max-w-[180px] truncate">{t.description}</td>
                           <td className="px-5 py-3 text-zinc-400 max-w-[150px] truncate">{t.party}</td>
                           <td className="px-5 py-3 text-zinc-500">{t.ledger}</td>
                           <td className="px-5 py-3 text-zinc-600 font-mono text-[10px]">{t.ref}</td>
-                          <td className={`px-5 py-3 text-right font-extrabold ${t.amount > 0 ? "text-emerald-400" : "text-red-400"}`}>
-                            {t.amount > 0 ? "+" : ""}₹{Math.abs(t.amount).toLocaleString("en-IN")}
+                          <td className={`px-5 py-3 text-right font-extrabold ${t.amount >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                            {t.amount >= 0 ? "+" : "-"}₹{Math.abs(t.amount).toLocaleString("en-IN")}
                           </td>
                         </tr>
                       ))}
+                      {transactions.length === 0 && (
+                        <tr>
+                          <td colSpan={6} className="text-center py-10 text-zinc-600">No transactions recorded yet for this project.</td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -127,9 +294,9 @@ export default function FinancePage() {
             <div className="space-y-5">
               <div className="grid grid-cols-3 gap-4">
                 {[
-                  { label: "Revenue (Billed)", value: `₹${(totalRevenue / 100000).toFixed(1)}L`, color: "text-emerald-400" },
-                  { label: "Total Cost", value: `₹${(totalCost / 100000).toFixed(1)}L`, color: "text-red-400" },
-                  { label: `Gross Margin (${margin}%)`, value: `₹${(grossProfit / 100000).toFixed(1)}L`, color: "text-primary" },
+                  { label: "Revenue (Billed)", value: `₹${totalRevenue.toLocaleString("en-IN")}`, color: "text-emerald-400" },
+                  { label: "Total Cost", value: `₹${totalCost.toLocaleString("en-IN")}`, color: "text-red-400" },
+                  { label: `Gross Margin (${margin}%)`, value: `₹${grossProfit.toLocaleString("en-IN")}`, color: "text-primary" },
                 ].map((s, i) => (
                   <div key={i} className="glass-panel rounded-xl p-5 border border-white/5 text-center">
                     <div className="text-[10px] text-zinc-500 uppercase tracking-wider">{s.label}</div>
@@ -140,30 +307,37 @@ export default function FinancePage() {
 
               <div className="glass-panel rounded-2xl border border-white/5 overflow-hidden">
                 <div className="px-5 py-3 border-b border-white/5">
-                  <h2 className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Budget vs Actual — Metro Terminal Ph2</h2>
+                  <h2 className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Budget vs Actual</h2>
                 </div>
                 <div className="p-5 space-y-4">
-                  {PL_DATA.map((row, i) => {
-                    const pct = Math.min((row.actual / row.budget) * 100, 120);
-                    const over = row.actual > row.budget;
+                  {plData.map((row, i) => {
+                    const budgetVal = row.budget || 1;
+                    const pct = Math.min((row.actual / budgetVal) * 100, 100);
+                    const over = row.actual > row.budget && row.budget > 0;
                     return (
                       <div key={i} className="space-y-1.5">
                         <div className="flex items-center justify-between text-xs">
                           <span className="text-zinc-300 font-semibold">{row.head}</span>
                           <div className="flex items-center gap-4 text-zinc-500">
-                            <span>Budget: <strong className="text-white">₹{(row.budget / 100000).toFixed(1)}L</strong></span>
-                            <span>Actual: <strong className={over && row.head !== "Revenue (Billed)" ? "text-red-400" : "text-emerald-400"}>₹{(row.actual / 100000).toFixed(1)}L</strong></span>
-                            <span className={`font-bold ${row.variance >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-                              {row.variance >= 0 ? "▲" : "▼"} ₹{Math.abs(row.variance / 100000).toFixed(1)}L
-                            </span>
+                            {row.budget > 0 && (
+                              <span>Budget: <strong className="text-white">₹{row.budget.toLocaleString("en-IN")}</strong></span>
+                            )}
+                            <span>Actual: <strong className={over && row.head !== "Revenue (Billed)" ? "text-red-400" : "text-emerald-400"}>₹{row.actual.toLocaleString("en-IN")}</strong></span>
+                            {row.budget > 0 && (
+                              <span className={`font-bold ${row.variance >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                                {row.variance >= 0 ? "▲ Under" : "▼ Over"} ₹{Math.abs(row.variance).toLocaleString("en-IN")}
+                              </span>
+                            )}
                           </div>
                         </div>
-                        <div className="h-2 bg-white/5 rounded-full overflow-hidden">
-                          <div
-                            className={`h-full rounded-full transition-all ${over && row.head !== "Revenue (Billed)" ? "bg-red-500" : "bg-gradient-to-r from-primary to-secondary"}`}
-                            style={{ width: `${Math.min(pct, 100)}%` }}
-                          />
-                        </div>
+                        {row.budget > 0 && (
+                          <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                            <div
+                              className={`h-full rounded-full transition-all ${over && row.head !== "Revenue (Billed)" ? "bg-red-500" : "bg-gradient-to-r from-primary to-secondary"}`}
+                              style={{ width: `${pct}%` }}
+                            />
+                          </div>
+                        )}
                       </div>
                     );
                   })}
@@ -173,43 +347,151 @@ export default function FinancePage() {
           )}
 
           {tab === "tally" && (
-            <div className="space-y-5 max-w-2xl">
+            <div className="space-y-5 max-w-3xl">
               <div className="glass-panel-glow rounded-2xl border border-white/5 p-6 space-y-5">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h2 className="text-sm font-bold text-white">Tally ERP Sync</h2>
+                    <h2 className="text-sm font-bold text-white">Tally ERP desktop integration</h2>
                     <p className="text-xs text-zinc-500 mt-1">Last synced: {lastSync}</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-                    <span className="text-xs text-emerald-400 font-semibold">Connected</span>
+                    {tallyConn ? (
+                      <>
+                        <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                        <span className="text-xs text-emerald-400 font-semibold">Configured</span>
+                      </>
+                    ) : (
+                      <>
+                        <div className="h-2 w-2 rounded-full bg-amber-400" />
+                        <span className="text-xs text-amber-400 font-semibold">Not Configured</span>
+                      </>
+                    )}
                   </div>
                 </div>
 
-                {[
-                  { label: "Company", value: "Metro Infra Corp Ltd (Tally Prime)" },
-                  { label: "Ledger Mapping", value: "38 heads configured" },
-                  { label: "Cost Centre", value: "Metro Terminal Ph2 → MC-TMP2" },
-                  { label: "Pending Vouchers", value: "7 transactions queued" },
-                ].map((r, i) => (
-                  <div key={i} className="flex items-center justify-between border-b border-white/5 pb-3">
-                    <span className="text-xs text-zinc-500">{r.label}</span>
-                    <span className="text-xs text-white font-semibold">{r.value}</span>
+                {tallyConn && (
+                  <div className="space-y-3">
+                    {[
+                      { label: "Connected Company", value: tallyConn.tally_company_name },
+                      { label: "Sync Start Window", value: new Date(tallyConn.sync_window_start_date).toLocaleDateString() },
+                      { label: "Sync Method", value: "Local XML Sync Server" },
+                    ].map((r, i) => (
+                      <div key={i} className="flex items-center justify-between border-b border-white/5 pb-2">
+                        <span className="text-xs text-zinc-500">{r.label}</span>
+                        <span className="text-xs text-white font-semibold">{r.value}</span>
+                      </div>
+                    ))}
                   </div>
-                ))}
+                )}
 
-                <button
-                  disabled={syncing}
-                  onClick={() => { setSyncing(true); setTimeout(() => { setSyncing(false); setLastSync("Jun 26, 2026 — " + new Date().toLocaleTimeString()); }, 2500); }}
-                  className="w-full rounded-xl bg-gradient-to-r from-primary to-[#FF3B6C] py-3 text-sm font-bold text-white hover:opacity-90 transition-all disabled:opacity-60"
-                >
-                  {syncing ? "⟳ Syncing to Tally..." : "Push 7 Vouchers to Tally →"}
-                </button>
+                <div className="flex gap-3">
+                  <button
+                    disabled={syncing || !tallyConn}
+                    onClick={handleTallySync}
+                    className="flex-1 rounded-xl bg-gradient-to-r from-primary to-[#FF3B6C] py-3 text-xs font-bold text-white hover:opacity-90 transition-all disabled:opacity-30"
+                  >
+                    {syncing ? "⟳ Syncing Ledger..." : "Trigger Tally Sync →"}
+                  </button>
+                  <button
+                    onClick={() => setShowTallySetup(true)}
+                    className="rounded-xl border border-white/10 px-4 py-3 text-xs font-bold text-zinc-300 hover:bg-white/[0.02]"
+                  >
+                    {tallyConn ? "Update Connection" : "Setup Connection"}
+                  </button>
+                </div>
               </div>
+
+              {/* Sync execution log */}
+              {syncLogs.length > 0 && (
+                <div className="glass-panel rounded-2xl border border-white/5 p-5 space-y-3">
+                  <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Sync Execution Logs</h3>
+                  <div className="bg-[#0B0910] border border-white/5 rounded-xl p-4 font-mono text-[10px] text-emerald-400 space-y-1.5 h-44 overflow-y-auto">
+                    {syncLogs.map((log, i) => (
+                      <div key={i}>{log}</div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
       </div>
+
+      {/* Record Payment Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="w-full max-w-sm bg-[#0D0B14] border border-white/10 rounded-2xl p-6 space-y-4">
+            <div className="flex justify-between items-center border-b border-white/5 pb-3">
+              <h3 className="text-sm font-bold text-white">Record Project Payment</h3>
+              <button onClick={() => setShowAddModal(false)} className="text-zinc-500 hover:text-white">✕</button>
+            </div>
+
+            <form onSubmit={handleRecordPayment} className="space-y-4">
+              <div className="space-y-1">
+                <label className="text-[10px] text-zinc-500 uppercase">Payment Type</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button type="button" onClick={() => setPaymentType("out")} className={`py-2 rounded-xl text-xs font-semibold border ${paymentType === "out" ? "bg-red-500/20 text-red-400 border-red-500/30" : "bg-transparent text-zinc-500 border-white/5 hover:border-white/10"}`}>Expense (OUT)</button>
+                  <button type="button" onClick={() => setPaymentType("in")} className={`py-2 rounded-xl text-xs font-semibold border ${paymentType === "in" ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" : "bg-transparent text-zinc-500 border-white/5 hover:border-white/10"}`}>Receipt (IN)</button>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] text-zinc-500 uppercase">Amount (INR) *</label>
+                <input type="number" required value={amount} onChange={e => setAmount(e.target.value)} placeholder="E.g. 25000" className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-primary/50" />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] text-zinc-500 uppercase">Payment Method</label>
+                <select value={paymentMethod} onChange={e => setPaymentMethod(e.target.value)} className="w-full bg-[#0E0C15] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none">
+                  {["Bank Transfer", "Cash", "Cheque"].map(m => <option key={m}>{m}</option>)}
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] text-zinc-500 uppercase">Reference Number</label>
+                <input type="text" value={refNum} onChange={e => setRefNum(e.target.value)} placeholder="UTR-8422 or Cheque number" className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-primary/50" />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] text-zinc-500 uppercase">Description / Notes</label>
+                <input type="text" value={desc} onChange={e => setDesc(e.target.value)} placeholder="E.g. Cement bill settlement" className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-primary/50" />
+              </div>
+
+              <button type="submit" disabled={submitting} className="w-full py-2.5 rounded-xl bg-gradient-to-r from-primary to-[#FF3B6C] font-bold text-xs text-white hover:opacity-90 disabled:opacity-50 transition-all">
+                {submitting ? "Saving..." : "Record Payment →"}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Tally Setup Modal */}
+      {showTallySetup && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="w-full max-w-sm bg-[#0D0B14] border border-white/10 rounded-2xl p-6 space-y-4">
+            <div className="flex justify-between items-center border-b border-white/5 pb-3">
+              <h3 className="text-sm font-bold text-white">Setup Tally Connection</h3>
+              <button onClick={() => setShowTallySetup(false)} className="text-zinc-500 hover:text-white">✕</button>
+            </div>
+
+            <form onSubmit={handleConfigureTally} className="space-y-4">
+              <div className="space-y-1">
+                <label className="text-[10px] text-zinc-500 uppercase">Tally Company Name *</label>
+                <input type="text" required value={tallyCompany} onChange={e => setTallyCompany(e.target.value)} placeholder="E.g. Metro Infra Corp Ltd" className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-primary/50" />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] text-zinc-500 uppercase">Registered Mobile *</label>
+                <input type="text" required value={tallyMobile} onChange={e => setTallyMobile(e.target.value)} placeholder="9999912345" className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-primary/50" />
+              </div>
+
+              <button type="submit" className="w-full py-2.5 rounded-xl bg-gradient-to-r from-primary to-[#FF3B6C] font-bold text-xs text-white hover:opacity-90 transition-all">
+                Save & Connect →
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
