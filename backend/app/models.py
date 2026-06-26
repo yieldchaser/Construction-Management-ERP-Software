@@ -538,3 +538,23 @@ class MaterialTestResult(Base):
     zone = Column(String(100), nullable=True)
     remarks = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Phase 11 — Client Portal & PDF Progress Reports
+# ─────────────────────────────────────────────────────────────────────────────
+
+class ClientReport(Base):
+    """Client Portal - Generated PDF Progress Reports for clients."""
+    __tablename__ = "client_reports"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
+    report_name = Column(String(255), nullable=False)
+    report_date = Column(DateTime(timezone=True), nullable=False)
+    summary_markdown = Column(String, nullable=True)
+    pdf_url = Column(String(500), nullable=True)
+    generated_by = Column(UUID(as_uuid=True), nullable=True)
+    is_approved = Column(Boolean, default=False, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=func.now(), onupdate=func.now(), nullable=False)
+

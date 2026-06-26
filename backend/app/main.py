@@ -1,11 +1,16 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import auth, calculators, budgeting, planning, drawings, procurement, billing, hr, quality
+from fastapi.staticfiles import StaticFiles
+import os
+from app.routers import auth, calculators, budgeting, planning, drawings, procurement, billing, hr, quality, reports
 from app.database import engine, Base
 
 # Initialize SQLAlchemy tables if they do not exist
 # Note: In production this is handled via Supabase SQL migrations, but for local/SQLite dev it serves as an auto-fallback
 Base.metadata.create_all(bind=engine)
+
+# Ensure static reports directory exists
+os.makedirs("static/reports", exist_ok=True)
 
 app = FastAPI(
     title="SiteFlow - Construction Management API",
@@ -22,6 +27,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
 # Register routers
 app.include_router(auth.router, prefix="/apis/v3")
 app.include_router(calculators.router, prefix="/apis/v3")
@@ -32,6 +39,7 @@ app.include_router(procurement.router, prefix="/apis/v3")
 app.include_router(billing.router, prefix="/apis/v3")
 app.include_router(hr.router, prefix="/apis/v3")
 app.include_router(quality.router, prefix="/apis/v3")
+app.include_router(reports.router, prefix="/apis/v3")
 
 @app.get("/")
 def read_root():
@@ -40,3 +48,4 @@ def read_root():
         "service": "SiteFlow Core API Engine",
         "version": "3.0.0"
     }
+

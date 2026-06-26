@@ -17,19 +17,11 @@
 | 8 | **Subcontractor Billing** | `e406d4d` | Work Orders, RA Bills, TDS/Retention deductions, Debit/Credit Notes, pre/post-tax math |
 | 9 | **HR, Attendance & Payroll** | `1a002fb` | StaffEmployee salary structure, GPS Haversine geofence punch-in/out, weekly timesheets, PF/ESI/TDS payroll engine |
 | 10 | **Quality Control & Inspections** | `3854e04` | IS-456 checklist creation, site inspection responses, NCR Kanban board, cube/slump lab tests |
+| 11 | **Client Portal & Reports** | `3cd8c56` | Automated progress report compilation, pure Python PDF generator, approval flows, PDF viewer |
 
 ---
 
 ## 🔵 Upcoming Phases
-
-### Phase 11 — Client Portal & PDF Progress Reports
-**Goal**: Auto-generate branded PDF reports for clients, with milestone dashboards and financial summaries.
-
-**Backend**: `ClientReport` model; PDF generation endpoint pulling from DPR + BOQ + Finance data
-
-**Frontend**: Report gallery, PDF viewer, share-link generation
-
----
 
 ### Phase 12 — Equipment & Machinery Tracking
 **Goal**: Track owned/hired machinery — cranes, excavators, mixers — with deployment, fuel logs, and maintenance schedules.
