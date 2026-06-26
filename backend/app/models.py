@@ -239,3 +239,85 @@ class MaterialTransaction(Base):
     type = Column(String(50), nullable=False) # received, used, transferred, returned
     source_ref_id = Column(UUID(as_uuid=True), nullable=True) # grn_id, dpr_id, etc.
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+class WorkOrder(Base):
+    __tablename__ = "work_orders"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
+    subcontractor_id = Column(UUID(as_uuid=True), ForeignKey("company_team.id"), nullable=False)
+    wo_number = Column(String(100), nullable=False)
+    wo_date = Column(DateTime(timezone=True), nullable=False)
+    status = Column(String(50), default="active", nullable=False)
+    estimated_work_amount = Column(Numeric(18, 2), default=0.0, nullable=False)
+    terms = Column(String, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+class WorkOrderItem(Base):
+    __tablename__ = "work_order_items"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    wo_id = Column(UUID(as_uuid=True), ForeignKey("work_orders.id", ondelete="CASCADE"), nullable=False)
+    boq_item_id = Column(UUID(as_uuid=True), ForeignKey("boq_items.id", ondelete="SET NULL"), nullable=True)
+    task_id = Column(UUID(as_uuid=True), ForeignKey("tasks.id", ondelete="SET NULL"), nullable=True)
+    quantity = Column(Numeric(18, 4), nullable=False)
+    rate = Column(Numeric(18, 2), nullable=False)
+    amount = Column(Numeric(18, 2), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+class Bill(Base):
+    __tablename__ = "bills"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
+    party_company_user_id = Column(UUID(as_uuid=True), ForeignKey("company_team.id"), nullable=False)
+    invoice_number = Column(String(100), nullable=False)
+    invoice_date = Column(DateTime(timezone=True), nullable=False)
+    due_date = Column(DateTime(timezone=True), nullable=True)
+    invoice_type = Column(String(50), nullable=False) # sale, purchase, subcon
+    status = Column(String(50), default="Unpaid", nullable=False) # Unpaid, Partially Paid, Paid, Cancelled
+    subtotal = Column(Numeric(18, 2), nullable=False)
+    gst_amount = Column(Numeric(18, 2), default=0.0, nullable=False)
+    total_payable = Column(Numeric(18, 2), nullable=False)
+    paid_amount = Column(Numeric(18, 2), default=0.0, nullable=False)
+    approval_flag = Column(String(50), default="pending", nullable=False)
+    is_milestone_fixed_amount = Column(Boolean, default=False, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=func.now(), onupdate=func.now(), nullable=False)
+
+class TransactionDeduction(Base):
+    __tablename__ = "transaction_deductions"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    bill_id = Column(UUID(as_uuid=True), ForeignKey("bills.id", ondelete="CASCADE"), nullable=False)
+    deduction_type = Column(String(100), nullable=False) # TDS, Retention, Security Deposit, Advance Recovery, Material Recovery
+    amount = Column(Numeric(18, 2), nullable=False)
+    percentage = Column(Numeric(5, 2), nullable=True)
+    notes = Column(String, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+class DebitNote(Base):
+    __tablename__ = "debit_notes"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    party_company_user_id = Column(UUID(as_uuid=True), ForeignKey("company_team.id"), nullable=False)
+    notes = Column(String, nullable=True)
+    total_amount = Column(Numeric(18, 2), nullable=False)
+    work_amount = Column(Numeric(18, 2), default=0.0, nullable=False)
+    gst_amount = Column(Numeric(18, 2), default=0.0, nullable=False)
+    bill_id = Column(UUID(as_uuid=True), ForeignKey("bills.id", ondelete="SET NULL"), nullable=True)
+    reference_number = Column(String(100), nullable=True)
+    approval_flag = Column(String(50), default="auto_approved", nullable=False)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+class CreditNote(Base):
+    __tablename__ = "credit_notes"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    party_company_user_id = Column(UUID(as_uuid=True), ForeignKey("company_team.id"), nullable=False)
+    notes = Column(String, nullable=True)
+    total_amount = Column(Numeric(18, 2), nullable=False)
+    bill_id = Column(UUID(as_uuid=True), ForeignKey("bills.id", ondelete="SET NULL"), nullable=True)
+    reference_number = Column(String(100), nullable=True)
+    approval_flag = Column(String(50), default="pending", nullable=False)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
