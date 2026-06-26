@@ -22,12 +22,13 @@
 | 13 | **Safety & Incident Management (HSE)** | `fa1c470` | OSHA incident board (severity-coded), LTIF rate calculation, toolbox talks tracker, PPE compliance donut gauge |
 | 14 | **Advanced Analytics Dashboard** | `current` | Company-level analytics router, S-curve, burn-rate tracking, labour productivity index, material wastage metrics, subcontractor scorecard |
 | 15 | **Mobile PWA & Push Foundations** | `current` | Installable PWA shell, service worker, manifest, mobile attendance punch queue, notification-ready controls, analytics shell integration |
+| 16 | **Production Management** | `current` | Recipe library, batch execution, material consumption tracking, inventory pull-through, production summary dashboard |
 
 ---
 
 ## 🔵 Phase Horizon
 
-No numbered Phase 16+ is defined in the repository context right now. The next work should be driven by parity gaps against the broader Onsite end goal rather than by an existing phase script.
+No numbered Phase 17+ is defined in the repository context right now. The next work should be driven by parity gaps against the broader Onsite end goal rather than by an existing phase script.
 
 ### Product Goal Reference
 The recon and marketing context describe the end goal as a complete construction ERP that connects site teams, project managers, procurement, finance, billing, and analytics in one platform to reduce cost leakages and improve execution across every project.
@@ -36,13 +37,12 @@ The recon and marketing context describe the end goal as a complete construction
 - `CRM / Sales Management` is still frontend-only; there is no backend router or persisted sales workflow.
 - `DPR / Progress Tracking` is still largely static UI; there is no dedicated backend DPR model/router feeding daily progress records.
 - `Finance & Controls / Project P&L` is still missing a dedicated backend finance router and company-level financial workflows beyond billing/report aggregation.
-- `Production Management` does not exist as a dedicated module even though it appears repeatedly in recon/context as part of the target product surface.
 - `PWA push` is notification-ready on the frontend, but production-grade subscription persistence and outbound push delivery infrastructure are not yet present.
 
 ### Recommended Next Phase Candidates
-- Phase 16: Production Management + batch/mix consumption controls
 - Phase 17: CRM / Sales Management backend parity
 - Phase 18: Finance Controls, project P&L, and real execution-linked cashflow workflows
+- Phase 19: DPR / Progress Tracking backend parity
 
 ## Architecture Overview
 

@@ -136,6 +136,14 @@ export default function DashboardPage() {
                 </li>
                 <li>
                   <Link
+                    href={`/c/${companyId}/p/proj-1/production`}
+                    className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.02] transition-all"
+                  >
+                    <span>🏭</span> Production Management
+                  </Link>
+                </li>
+                <li>
+                  <Link
                     href={`/c/${companyId}/p/proj-1/attendance`}
                     className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.02] transition-all"
                   >

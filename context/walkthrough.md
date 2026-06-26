@@ -1,4 +1,4 @@
-# SiteFlow — Full Build Walkthrough (Phases 1–15)
+# SiteFlow — Full Build Walkthrough (Phases 1–16)
 
 > This document is the authoritative record of everything built so far. A new AI session should read this file and `implementation_plan.md` before continuing work on the next phase.
 
@@ -207,14 +207,31 @@
 
 ---
 
-## Phase Horizon Audit — No Defined Phase 16+
+## Phase 16 — Production Management ✅ `current`
 
-The repo context does not define a numbered phase beyond 15. The broader product goal in recon/context is a full construction ERP that unifies execution, cost control, procurement, labour, billing, and analytics. Against that goal, these notable gaps remain:
+### Backend
+- `backend/app/models.py` — Added `ProductionRecipe`, `ProductionRecipeMaterial`, `ProductionBatch`, and `ProductionBatchMaterial`.
+- `backend/app/routers/production.py` — Recipe creation, batch logging, material consumption posting, inventory deduction, and production summary endpoints.
+- `backend/app/main.py` — Registered the production router.
+- `backend/test_phase16.py` — Integration test covering recipe creation, batch logging, inventory deduction, and summary aggregation.
+
+### Frontend
+- `frontend/src/app/c/[company_id]/p/[project_id]/production/page.tsx` — Production command surface with summary cards, batch table, recipe cards, and inventory watch panel.
+- `frontend/src/app/c/[company_id]/dashboard/page.tsx` — Added a Production Management nav link in the project execution area.
+
+### Notes
+- The module ties material consumption back into the existing ledger so analytics and production read the same source of truth.
+- The next gaps now shift to DPR / Progress Tracking, CRM backend parity, finance controls, and real push delivery.
+
+---
+
+## Phase Horizon Audit — No Defined Phase 17+
+
+The repo context does not define a numbered phase beyond 16. The broader product goal in recon/context is a full construction ERP that unifies execution, cost control, procurement, labour, billing, and analytics. Against that goal, these notable gaps remain:
 
 - `CRM / Sales Management` is still largely a frontend stub; no backend sales workflow exists.
 - `DPR / Progress Tracking` does not yet have a dedicated backend model/router serving daily progress records.
 - `Finance / Project P&L` is not implemented as a true backend module beyond billing and report aggregation.
-- `Production Management` appears in recon/product context but has no dedicated route, model set, or workflow in the app.
 - `PWA push delivery` is only client-side foundation today; there is no persisted subscription or server-driven notification pipeline.
 
 ---

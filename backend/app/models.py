@@ -240,6 +240,70 @@ class MaterialTransaction(Base):
     source_ref_id = Column(UUID(as_uuid=True), nullable=True) # grn_id, dpr_id, etc.
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 
+#
+# Phase 16 â€” Production Management, batch recipes & consumption tracking
+#
+
+class ProductionRecipe(Base):
+    __tablename__ = "production_recipes"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
+    recipe_code = Column(String(100), nullable=False)
+    product_name = Column(String(255), nullable=False)
+    mix_type = Column(String(100), nullable=False)
+    unit = Column(String(50), default="m3", nullable=False)
+    target_output_qty = Column(Numeric(18, 4), default=1.0, nullable=False)
+    wastage_pct = Column(Numeric(5, 2), default=5.0, nullable=False)
+    status = Column(String(50), default="active", nullable=False)
+    notes = Column(String, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=func.now(), onupdate=func.now(), nullable=False)
+
+
+class ProductionRecipeMaterial(Base):
+    __tablename__ = "production_recipe_materials"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    recipe_id = Column(UUID(as_uuid=True), ForeignKey("production_recipes.id", ondelete="CASCADE"), nullable=False)
+    material_name = Column(String(255), nullable=False)
+    planned_qty = Column(Numeric(18, 4), nullable=False)
+    unit = Column(String(50), nullable=False)
+    is_optional = Column(Boolean, default=False, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
+class ProductionBatch(Base):
+    __tablename__ = "production_batches"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
+    recipe_id = Column(UUID(as_uuid=True), ForeignKey("production_recipes.id", ondelete="CASCADE"), nullable=False)
+    task_id = Column(UUID(as_uuid=True), ForeignKey("tasks.id", ondelete="SET NULL"), nullable=True)
+    batch_number = Column(String(100), nullable=False)
+    planned_output_qty = Column(Numeric(18, 4), default=0.0, nullable=False)
+    actual_output_qty = Column(Numeric(18, 4), default=0.0, nullable=False)
+    planned_material_qty = Column(Numeric(18, 4), default=0.0, nullable=False)
+    actual_material_qty = Column(Numeric(18, 4), default=0.0, nullable=False)
+    consumption_variance_qty = Column(Numeric(18, 4), default=0.0, nullable=False)
+    status = Column(String(50), default="draft", nullable=False)
+    started_at = Column(DateTime(timezone=True), nullable=True)
+    completed_at = Column(DateTime(timezone=True), nullable=True)
+    notes = Column(String, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=func.now(), onupdate=func.now(), nullable=False)
+
+
+class ProductionBatchMaterial(Base):
+    __tablename__ = "production_batch_materials"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    batch_id = Column(UUID(as_uuid=True), ForeignKey("production_batches.id", ondelete="CASCADE"), nullable=False)
+    material_name = Column(String(255), nullable=False)
+    planned_qty = Column(Numeric(18, 4), nullable=False)
+    actual_qty = Column(Numeric(18, 4), nullable=False)
+    unit = Column(String(50), nullable=False)
+    variance_qty = Column(Numeric(18, 4), default=0.0, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
 class WorkOrder(Base):
     __tablename__ = "work_orders"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)

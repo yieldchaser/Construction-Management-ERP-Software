@@ -28,13 +28,13 @@ SiteFlow is built as a highly scalable monorepo:
 ---
 
 ## Current Status
-Phases 1–15 are implemented in this repository, including analytics and PWA shell foundations. There is no defined Phase 16+ in the current repo context; future work should follow the parity audit in `context/implementation_plan.md`.
+Phases 1–16 are implemented in this repository, including analytics, PWA shell foundations, and production management. There is no defined Phase 17+ in the current repo context; future work should follow the parity audit in `context/implementation_plan.md`.
 
 ## Repository Directory Layout
 * `context/`: session context, roadmap history, audits, calculators, and reverse-engineering notes.
 * `onsiteteams-recon/`: raw competitor bundle resources, HTML assets, sitemaps, and API schemas.
 * `frontend/`: Next.js app-router frontend, including dashboard, project modules, analytics, and PWA shell assets.
-* `backend/`: FastAPI backend with routers for auth, calculators, planning, procurement, billing, HR, quality, reports, equipment, safety, and analytics.
+* `backend/`: FastAPI backend with routers for auth, calculators, planning, procurement, billing, HR, quality, reports, equipment, safety, analytics, and production.
 
 ---
 
