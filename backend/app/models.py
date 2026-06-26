@@ -321,3 +321,122 @@ class CreditNote(Base):
     reference_number = Column(String(100), nullable=True)
     approval_flag = Column(String(50), default="pending", nullable=False)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Phase 9 — Staff Timesheets, Geofenced Attendance & Payroll
+# ─────────────────────────────────────────────────────────────────────────────
+
+class StaffEmployee(Base):
+    """Master record for each staff member employed under a company/project."""
+    __tablename__ = "staff_employees"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=True)
+    name = Column(String(255), nullable=False)
+    employee_code = Column(String(50), nullable=True)
+    designation = Column(String(100), nullable=True)
+    department = Column(String(100), nullable=True)
+    mobile = Column(String(20), nullable=True)
+    basic_salary = Column(Numeric(14, 2), default=0.0, nullable=False)
+    hra = Column(Numeric(14, 2), default=0.0, nullable=False)
+    other_allowances = Column(Numeric(14, 2), default=0.0, nullable=False)
+    pf_employee_pct = Column(Numeric(5, 2), default=12.0, nullable=False)
+    pf_employer_pct = Column(Numeric(5, 2), default=12.0, nullable=False)
+    esi_employee_pct = Column(Numeric(5, 2), default=0.75, nullable=False)
+    esi_employer_pct = Column(Numeric(5, 2), default=3.25, nullable=False)
+    tds_monthly = Column(Numeric(14, 2), default=0.0, nullable=False)
+    is_esi_applicable = Column(Boolean, default=True, nullable=False)
+    status = Column(String(50), default="active", nullable=False)
+    date_of_joining = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=func.now(), onupdate=func.now(), nullable=False)
+
+
+class AttendanceLog(Base):
+    """GPS-stamped punch-in/out record per employee per day."""
+    __tablename__ = "attendance_logs"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    employee_id = Column(UUID(as_uuid=True), ForeignKey("staff_employees.id", ondelete="CASCADE"), nullable=False)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
+    attendance_date = Column(DateTime(timezone=True), nullable=False)
+    punch_in = Column(DateTime(timezone=True), nullable=True)
+    punch_out = Column(DateTime(timezone=True), nullable=True)
+    lat_in = Column(Numeric(10, 7), nullable=True)
+    lng_in = Column(Numeric(10, 7), nullable=True)
+    lat_out = Column(Numeric(10, 7), nullable=True)
+    lng_out = Column(Numeric(10, 7), nullable=True)
+    distance_from_site_m = Column(Numeric(10, 2), nullable=True)
+    is_within_geofence = Column(Boolean, default=False, nullable=False)
+    status = Column(String(50), default="Present", nullable=False)
+    hours_worked = Column(Numeric(5, 2), nullable=True)
+    overtime_hours = Column(Numeric(5, 2), default=0.0, nullable=False)
+    notes = Column(String, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
+class Timesheet(Base):
+    """Weekly timesheet header for one employee."""
+    __tablename__ = "timesheets"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    employee_id = Column(UUID(as_uuid=True), ForeignKey("staff_employees.id", ondelete="CASCADE"), nullable=False)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
+    week_start = Column(DateTime(timezone=True), nullable=False)
+    week_end = Column(DateTime(timezone=True), nullable=False)
+    total_hours = Column(Numeric(6, 2), default=0.0, nullable=False)
+    status = Column(String(50), default="draft", nullable=False)
+    approved_by = Column(UUID(as_uuid=True), nullable=True)
+    notes = Column(String, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=func.now(), onupdate=func.now(), nullable=False)
+
+
+class TimesheetEntry(Base):
+    """One line in a timesheet: date + task + hours logged."""
+    __tablename__ = "timesheet_entries"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    timesheet_id = Column(UUID(as_uuid=True), ForeignKey("timesheets.id", ondelete="CASCADE"), nullable=False)
+    task_id = Column(UUID(as_uuid=True), ForeignKey("tasks.id", ondelete="SET NULL"), nullable=True)
+    entry_date = Column(DateTime(timezone=True), nullable=False)
+    hours = Column(Numeric(5, 2), nullable=False)
+    activity_description = Column(String, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
+class PayrollRun(Base):
+    """Monthly payroll run header for one company+month."""
+    __tablename__ = "payroll_runs"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=True)
+    payroll_month = Column(String(7), nullable=False)
+    run_date = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+    status = Column(String(50), default="draft", nullable=False)
+    total_gross = Column(Numeric(18, 2), default=0.0, nullable=False)
+    total_deductions = Column(Numeric(18, 2), default=0.0, nullable=False)
+    total_net = Column(Numeric(18, 2), default=0.0, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
+class PayrollLineItem(Base):
+    """One employee's computed payslip within a PayrollRun."""
+    __tablename__ = "payroll_line_items"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    payroll_run_id = Column(UUID(as_uuid=True), ForeignKey("payroll_runs.id", ondelete="CASCADE"), nullable=False)
+    employee_id = Column(UUID(as_uuid=True), ForeignKey("staff_employees.id", ondelete="CASCADE"), nullable=False)
+    days_present = Column(Numeric(5, 1), default=0.0, nullable=False)
+    days_in_month = Column(Integer, default=26, nullable=False)
+    gross_salary = Column(Numeric(14, 2), default=0.0, nullable=False)
+    basic = Column(Numeric(14, 2), default=0.0, nullable=False)
+    hra = Column(Numeric(14, 2), default=0.0, nullable=False)
+    other_allowances = Column(Numeric(14, 2), default=0.0, nullable=False)
+    overtime_amount = Column(Numeric(14, 2), default=0.0, nullable=False)
+    pf_employee = Column(Numeric(14, 2), default=0.0, nullable=False)
+    pf_employer = Column(Numeric(14, 2), default=0.0, nullable=False)
+    esi_employee = Column(Numeric(14, 2), default=0.0, nullable=False)
+    esi_employer = Column(Numeric(14, 2), default=0.0, nullable=False)
+    tds = Column(Numeric(14, 2), default=0.0, nullable=False)
+    advance_recovery = Column(Numeric(14, 2), default=0.0, nullable=False)
+    other_deductions = Column(Numeric(14, 2), default=0.0, nullable=False)
+    total_deductions = Column(Numeric(14, 2), default=0.0, nullable=False)
+    net_payable = Column(Numeric(14, 2), default=0.0, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
