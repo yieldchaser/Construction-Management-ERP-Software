@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang=en ><head><meta name="referrer" content="no-referrer"><meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1.0" /><link rel="stylesheet" type="text/css" href="https://static.zohocdn.com/analytics/v3_zr/themes/common/styles/f3/ZALoader.05b6e613ec845b334f4f6fb39df8417a.css"/><title>Zoho Analytics : onsite - Project Health</title><meta name="description" content=""><meta prefix="og: http://ogp.me/ns#" property="og:type"          content="website" /><meta prefix="og: http://ogp.me/ns#" property="og:title"         content="Zoho Analytics" /><meta prefix="og: http://ogp.me/ns#" property="og:description"   content="Analyze your data, create stunning data visualizations, and discover hidden insights in minutes." /><meta prefix="og: http://ogp.me/ns#" property="og:image"         content="https://static.zohocdn.com/analytics/v3_zr/themes/common/images/link-preview.a7a6e5da0ad9a0e542db59a4810eac54.jpg" /><meta name="twitter:card" content="summary" /><meta name="twitter:title" content="Zoho Analytics" /><meta name="twitter:description" content="Analyze your data, create stunning data visualizations, and discover hidden insights in minutes." /><meta name="twitter:image" content="https://static.zohocdn.com/analytics/v3_zr/themes/common/images/link-preview.a7a6e5da0ad9a0e542db59a4810eac54.jpg" /></head><body style='visibility: hidden;'
+class="ZACommonStyles ZAContainer  ZA-6-0-ui"
+data-fontfamily="lato"
+data-show-accessibility-toggle="true"
+data-show-fontsize-option="false"
+data-link="false"
+data-accessibility="false"
+data-cursor-value="0"
+data-zoom="2"
+data-skiptomaincontent="false">
+<div id="ZDBMainLoader" classprefix="zdb" class="zdbLoaded" elname="loadingDiv" zaloader="true"><div class='loadingSpan'><span> <span></span> <span></span> </span><span> <span></span> <span></span> </span><span> <span></span> <span></span> </span></div></div><svg style="display:none">
+<symbol id="close-icon" viewBox="0 0 48 48"> <path class="cls-1" d="M9,13l4-4L25,21,37,9l3,4L28,25,40,37l-3,3L25,28,13,40,9,37,21,25Z"></path> </symbol>
+<symbol id="dot-icon" viewBox="0 0 48 48"> <circle cx="24.5" cy="24.5" r="17.5"></circle>
+</symbol>
+</svg>
+<link rel="stylesheet" type="text/css" id="ZRThemeCss" href="https://static.zohocdn.com/analytics/v3_zr/themes/colors/styles/dayMode.9dec6ed5eac9e0fea7bf938a6b1055f9.css"><div id="ZDBMainBox" style="overflow:hidden; border:0px none;"  ><form name="ZAExportCSVForm" method="POST" action="/zaexport/Analysis.csv" style="display:none;"><input type="hidden" name="ZADO" value=""></form><script nonce="jWNrqyAoHO4PTQSYkJvIIQ==">window.webpackPublicPath='https://static.zohocdn.com/analytics/v3_zr/';</script><script nonce="jWNrqyAoHO4PTQSYkJvIIQ==" crossorigin='anonymous' type="text/javascript" src="https://static.zohocdn.com/analytics/v3_zr/thirdparty/zaclient/js/legacy/runtime_legacy.9a7cc5711413c542b8d7.js"></script><script nonce="jWNrqyAoHO4PTQSYkJvIIQ==" crossorigin='anonymous' type="text/javascript" src="https://static.zohocdn.com/analytics/v3_zr/thirdparty/zaclient/js/legacy/vendor_legacy.d602c634002da23fc594.js"></script><script nonce="jWNrqyAoHO4PTQSYkJvIIQ==" crossorigin='anonymous' type="text/javascript" src="https://static.zohocdn.com/analytics/v3_zr/thirdparty/zaclient/js/legacy/clientlibrary_legacy.07c93f8f1f399cf1fe05.js"></script><div style="display:none"><div id='zdbHeightDiv'></div><div id='zdbWidthDiv'></div><div id='freezeIcon' class='zdbFreezeIcon' tip=Unfreeze ><svg class='svgIcons zdbFreezeSvgIcon'><use xlink:href='#ZR-freeze_Column'></use></svg></div><div id='linkIcon' zdbName='linkIcon' style="display:none;">&nbsp;</div><div id='highlightDIV' class='highlightDIV'></div><div id='zdbMoveMsg' class='zdbMoveDIV'></div><div id='zdbMoveIndicator' class='zdbMoveIndicator'></div><div id='resizeDIV' class='zdbResizeDIV'></div><div id='popupDIV' class='popupDIV'></div><div id='tfDIV' style='visibility:hidden; position:absolute; padding:0px; margin:0px; border:0px; float:left'><input type='text' id='textFField' style='border:1px inset black;'></div><div id="ZDBRESPONSEHOLDER" style="display:none"></div><div style="visibility:hidden;overflow:hidden;position:absolute;width:1px;height:1px" id="gridTmpHolder"></div><div style='display:none;'><form id="ZDBExportIfrForm" name="HIDDENEXPORTFORM" method="POST" needsstate="false" DYNAMICIFRAME="true"></form><div id='zdbCellDIV' zdbname='datacellDIV' style='overflow-x:hidden;white-space:wrap;display:none;'></div><div class='inputField dummyDIV' id='zdbDummyDIV'>To measure the input field width</div><div class='dataCell dummyDIV' id='zdbDummyCell'>To measure the cell height</div><div id='zdbRHTd' style='display:none'></div><div id="zdbRowDiv" zdbname="zdbRowDiv"></div><div style='display:none'><span id='zdbDataSpan' class='tableData' zdbname='dataspan'></span> <DIV>
+<DIV id='zdbRowHeadCell' class='zdbRowHead' zdbname='rowheadcell'></DIV>
+<DIV id='zdbDataCell' class="zdbDataCell" zdbname='datacell' role='cell' tabindex='0'>
+<div id="summaryValue" style='display:block;height:20px;' class="zdbColHeadArea zdbColHeadRenameIcon "></div></DIV>
+<DIV id='zdbFilterHeadCell' class="filterHead" zdbname='filterheadcell'></DIV>
+<DIV id='zdbFilterOptionCell' class='filterCell' zdbname='filterCell'>&nbsp;</DIV>
+<DIV id='zdbFilterCell' class='filterCell' zdbname='filterCell'><input type='text' class='filterInput' elname="filterInput"></DIV>
+</DIV>
+<DIV>
+<DIV id='zdbFillerHCell' class="zdbFillerHDataCell"></DIV>
+<DIV id='zdbFillerVCell' class="zdbFillerVDataCell"></DIV>
+<DIV id='zdbFillerDCell' class="zdbFillerDataCell"></DIV>
+</DIV>
+<div zdbname='colheadcell' id='zdbColHeadCell' class='zdbColHead' role='columnheader' tabindex='0'><div class="zdbColHeadArea zdbColHeadCheck" HIDDEN="true"></div><div class="zdbColHeadArea zdbColHeadType"><svg class="colHeadSvgs" xmlns:xlink="http://www.w3.org/2000/svg"><use class="or" xmlns:xlink="http://www.w3.org/2000/svg" xlink:href="#ZR-text"></use></svg></div><div class="zdbColHeadArea zdbColHeadDisplay" elname="colHeaderEl"></div><div class="zdbColHeadArea zdbColHeadIcon" elname="gridSortIcon"><svg class="svgIcons" style="width:inherit;height:inherit;position:absolute;top:0px;color:inherit;"><use xlink:href=""></use></svg></div><div class="freezeIcon" elname="freezeIcon" tip="Unfreeze"><svg class="svgIcons pinIcon" ><use xlink:href="#ZA-Pin"></use></svg>
+<svg class="svgIcons unPinIcon"><use xlink:href="#ZA-Unpin"></use></svg></div></div></div><div id="ZDBGRIDTPL" elname="gArea" class='zdbGArea' tabindex='0' aria-label='Grid'><div elname="dashScroll" class="dashScrollFreeze" role="table" aria-labelledby="setViewTitle"><div elname='gLeftArea' class='zdbGLeftArea'><div elname="tcArea" class="zdbTcArea" role="columnheader"><div elName="tcAreaRowDiv" class="zdbDataRowDiv" refElName="tcArea"></div></div><div elname="fhArea1" class="zdbFhArea1"  keyDefault=1><div elname="fhArea1RowDiv1" class="zdbDataRowDiv"></div><div elname="fhArea1RowDiv2" class="zdbDataRowDiv"></div></div><div elname="rhArea" class="zdbRhArea"><div elname='leftFocus' class='zdbFocusDIV' tabindex='0'></div><div elname="leftSelect" class="zdbSelect" zdbName='selectOut'><div zdbName='selectIn'></div></div><div elname="leftDropDownIcon" class="iconitem selDropDownBtn" style='display:none;'></div></div></div><div elname='gRightArea' class='zdbGRightArea'><div elname="chArea" class="zdbChArea"><div elName="chAreaRowDiv" class="zdbDataRowDiv" refElName="chArea"></div></div><div elname='filterAreaSection' class='hide'><div elname="fArea1" class="zdbFArea1"  keyDefault=1><div elname="fArea1RowDiv1" class="zdbDataRowDiv"></div><div elname="fArea1RowDiv2" class="zdbDataRowDiv"></div></div><div elname='fArea3' class="zdbFArea3"><div elname='filterBtnArea'><button id="ZDBSHEETFILTERAPPLYBTN" keeptext='true' qaid="ZDBSheetFilterBtn" elname='filterButton' class='za-primary-button'>Apply</button>
+<button qaid="ZDBSheetFilterHideBtn" keeptext='true' type='button' elname='filterCloseButton' id="ZDBSheetFilterCloseBtn" class='za-secondary-button'>Close</button>
+<button qaid="ZDBSheetFilterClearBtn" type='button' keeptext='true' elname='filterClearButton' class='za-secondary-button'>Clear</button>
+<button id="ZDBSHEETFILTERSAVENEWBTN" DELETEORDELETEALLNEEDED="true" keeptext='true' qaid="ZDBSheetFilterSaveBtn" type='button' elname='filterSaveButton' class='za-secondary-button ZASheetFilterSaveButton' 
+func="ZDBEvents.onFilterAreaButtonClick" 
+mode='save' style='display:none'style='display:none'>zrpt.filter.js.SaveNewBtn</button><a qaid="ZDBSheetFilterDropBtn" elname='filterSaveDropButton' class='ZAFilterDropDown za-icon-button' style='display:none'style='display:none' > <svg class="svgIcons">
+<use xlink:href="#ZR-downArrow"></use>
+</svg>
+</a>
+<button type='button' elname='filterDeleteButton' keeptext='true' id="ZDBSheetFilterDeleteBtn" class='za-secondary-button ZASheetFilterDeleteBtn' style='display:none'style='display:none' >Delete Rows</button>
+<span class='za-default-notes zaFilterNotes' elname='zaFilterNotes'> <span elname='filterNoteLabel'></span> <span elname='filterHintDIV' keepText=true class="filterHintDIV"></span> <span elname='filterExampleDIV' keepText=true class="filterExampleDIV" style="padding-left:3px;"></span> </span></div></div></div><div elname='dArea'
+
+class='zdbDArea'><div elname='rightFocus' class='zdbFocusDIV' tabindex='0'></div><div elname="rightSelect" class="zdbSelect" zdbName='selectOut' tabindex='0'><div zdbName='selectIn'></div></div><div elname="rightDropDownIcon" class="iconitem selDropDownBtn" style='display:none;'></div></div></div><div role='button' class='showHideIcon' id="ZDBShowHideBtn" style="margin-top:4px;" showInEmbed=true elname='showHide' tip='Show/Hide/Reorder Column(s)' ><svg class="showHideSvg">
+<use class="or" xmlns:xlink="http://www.w3.org/2000/svg" xlink:href="#DT-dataTypeHide"></use>
+</svg></div><div elname="rhScrollIndicator" class="dbRowHead" style="height:15px;display:none">&nbsp;</div><div elname="scrollIndicator" class="navigationbg zdbScrollBtn" keeptext="true">Press "Page Down" or Click the page scroll to load rows Incrementally -&gt;</div><input elname='keyHandler' class='zdbKeyHandler'/><div class='zdbMODIV' elname='moDiv'></div><svg xmlns:xlink="http://www.w3.org/2000/svg" style="height:0px;width:0px;">
+<defs elname="patternSvgs"></defs></svg>
+<div elname="zrRowCountComp" class="zrRowCountComp"><ul><li class="rowCountMinMaxComp" elname="rowCountMinMaxComp"><a elname="zrRowCountMinMax" tip='Minimize'
+class=" rowCountMin" default="true">
+</a></li><li><div class="showNavigComp" elname="zrNavigComp"><a elname="zrGotoFirst" tip='Go to First Record' class="zrNavFirst">
+<svg class=zrNavSvg>
+<use class="or" xmlns:xlink="http://www.w3.org/2000/svg" xlink:href="#ZR-NavArrow"></use>
+</svg>
+</a>
+<a elname="totalRecordsDiv" class="zrRowCount">
+</a>
+<a elname="zrGotoLast" class="zrNavLast">
+<svg class=zrNavSvg elname="gridGotoLast"  tip='Go to Last Record'>
+<use class="or" xmlns:xlink="http://www.w3.org/2000/svg" xlink:href="#ZR-NavArrow"></use>
+</svg>
+</a></div></li></ul></div></div></div></div><div  id="ZDBDUMMYGRID" class="zdbDIVDummyGrid"><table style="width:100%;height:100%;border:0px;" cellpadding="0" cellspacing="0"><tr height="22px"><td width="23px"> <div style='height:100%;width:100%;position:relative;' class="zdbRowHead"></div></td>
+<td height="23px"> <div style='height:100%;width:100%;background-repeat:repeat-x;position:relative;' class="zdbFillerColHead">&nbsp;</div></td></tr><tr height="2000px"><td height="100%"> <div style='height:100%;width:100%;position:relative;' class="zdbRhFillerRow">&nbsp;</div></td>
+<td height="100%"><div style='height:100%;width:100%;position:relative;' class="zdbFillerDataCell"><svg style="height: 100%;width: 100%;display: block;"><rect height="100%" width="100%" style="fill: url(#ZR-both);"></rect></svg></div></td></tr></table></div><div  id="ZDBDUMMYGRAPH" style="width:100%;height:100%;border:0px;overflow:hidden;"></div><div  id="ZDBBLANKVIEW" class="zdbDIVDummyGrid"></div><div id="ZDBInlineOptsDiv" class="inlineBorder greytexture" style="width:100%; height: 100%;" dialogholder="true" dlgtype="inline"><div  inlinediv="mainDialogDiv" style="width:auto; height: 100%; overflow: auto; position: relative;"><div elname="modelDlg" style="display: none;height:inherit"></div><div elname="dlg" class="mainFixedContr" ><div elname="dlgHeader" class="greytexture" style="width: 100%;  z-index: 5;"><div class="leftContr" elname="dlgBackComp"><div style="margin:25px 0px 0px 0px;"><svg class="svgIconsDefault settingsBack svgIcons" style="float:right;" elname="dlgBack"><use xlink:href="#ZR-navigation"></use></svg></div></div><div class="rightContr"><div class="hdrBg inlineDlgTitle"><span elname="dlgTitle"></span> </div></div></div><div style="padding-top: 70px;"></div><div elname="dlgBody" isDialog="true"></div></div></div></div><div  id="ZDBIPHONEBLANKVIEW" class="zdbDIVDummyGrid"></div><div id = "ZDBIPHONEDASHDIV" class='zdbdviewmode' elname='mainContent' style='position:relative;' isMobile = "true"></div><div isDashBoardDiv="true" class="dashChild" id="ZDBDummyDashChild"
+elname="dlgMain" showtitle="true" configid='-1'  useasfilter="true"  showVMfilter="false" collapseLegend="true" applyDashVMFilter="true" enableAllUserFilters="true" tlColmnMapping="null" desc="false" desclength="false" sbox="false" expenable="false" vud="true" isViewShared="true" style="position:relative">    <div class="dashChildTitleDesc"  elname="dashboardTitleDesc"><div class="dashChildTitleArea" elname="dashChildTitleArea"><div class="dashboardTitleFont" elname="dlgTitle">Title</div><div class="dashboardDescFont" elname="dlgDesc">Description</div></div><div><div class='dashviewoptions' elname='dashViewOptions' tabindex="-1"><div class='dashviewoptionsrow' elname='dashviewoptionsrow'><div class="insightsSwitchOptionViewMode" elname="insightsSwitchOptionViewMode"><button class="za-link-button" aria-label="Link Button" insightAction='viewReport'>View Report</button></div><div class='dashviewoptionsct za-modal-menu-btn focussable' elname="dashViewSortMenu" tip='Sort' tabindex="-1"><div class="dashioSvg dashboardChartSortMenuSvg" addRemoveHovClassNeeded="true"><svg class="svgIconsCommonCls">
+<use class="or" xmlns:xlink="http://www.w3.org/2000/svg" xlink:href="#ZR-dashboardSorting"></use>
+</svg></div></div><div class='dashviewoptionsct focussable' elname="showChartType" tip='Change Chart type' tabindex="-1"><div class="dashioSvg changecharttypeSvg" addRemoveHovClassNeeded="true"><svg class="svgIconsCommonCls">
+<use class="or" xmlns:xlink="http://www.w3.org/2000/svg" xlink:href="#ZR-chartChooser"></use>
+</svg></div></div><div class='dashviewoptionsinsight focussable' elname="insight" tabindex="-1"><div class="dashioSvg" elname="insightSvgTipElement"><svg class="svgIconsCommonCls" style="width: 18px;height: 16px;" addRemoveHovClassNeeded="true">
+<use style="pointer-events:none" class="or maxmin_icon" elname="svgUseElement" xmlns:xlink="http://www.w3.org/2000/svg" xlink:href="#ZA-Zialogo"></use>
+</svg></div></div><div class='dashviewoptionscell cardEdit focussable' elname="cardEdit" tabindex="-1"><div class="dashioSvg" style="width : 18px" tip='Edit'><svg class="svgIconsCommonCls undefined" style="width: 15px;" addRemoveHovClassNeeded="true">
+<use style="pointer-events:none" class="or" xmlns:xlink="http://www.w3.org/2000/svg" xlink:href="#ZR-edit"></use>
+</svg></div></div><div class='dashviewoptionscell openInTab focussable' elname="openViewInTab" tip='Open in new tab' tabindex="-1"><div class='dashioSvg' addRemoveHovClassNeeded="true"><svg class="svgIconsCommonCls">
+<use class="or" xmlns:xlink="http://www.w3.org/2000/svg" xlink:href="#ZR-openNewTab"></use>
+</svg></div></div><div class='dashviewoptionscell maxmin focussable' elname="maxmin" tabindex="-1"><div class="dashioSvg" elname="svgTipElement"  style="width : 18px" tip='Maximize'><svg class="svgIconsCommonCls undefined" style="width: 15px;" addRemoveHovClassNeeded="true">
+<use style="pointer-events:none" class="or maxmin_icon" elname="svgUseElement" xmlns:xlink="http://www.w3.org/2000/svg" xlink:href="#ZR-pageExpand"></use>
+</svg></div></div><div elname="dashVM_moreOptions" class='dashviewoptionscell moreOptions za-modal-menu-btn focussable' tip='More Options' tabindex="-1"><div class='dashioSvg dashviewmoreoptions' addRemoveHovClassNeeded="true"><svg class="svgIconsCommonCls">
+<use class="or" xmlns:xlink="http://www.w3.org/2000/svg" xlink:href="#ZR-more"></use>
+</svg></div></div></div></div><div class='widgetIconDesc' elname="widgetIconDesc"><svg class='svgIconsCommonCls' elname="widSvgInfoIcon">
+<use xmlns:xlink="http://www.w3.org/2000/svg" xlink:href="#ZR-info"></use>
+</svg></div></div></div><div class="dashChildPar" elname="dashChildPar"><div style="width: 100%;height:22px;" elname="tableCompHolder" class="dashChildTableSearchBox"><div elname="dlgSBox" style="float:left;"><ul class="ZRSUl" style="margin-bottom:3px !important;"><li><a elname="SearchBoxEl" disableChild="true">
+<div class="ZRSSearchField"><div id="ZDBSearchButton" class="ZRSSearchIcon" elname="ZRSSearchIcon"></div><input class="font11" elname="ZRSSearchInput" placeholder='Search' tipValue="Search" 
+searchempty="false" tipShown="false"
+type="search" size="15"></div></a></li></ul></div></div><div style="height:400px;" class="dashDivBody" elname="dlgBody"></div><div id="" classprefix="zdb" class="zdbLoaded" elname="loadingDiv" zaloader="true"><div class='loadingSpan'><span> <span></span> <span></span> </span><span> <span></span> <span></span> </span><span> <span></span> <span></span> </span></div></div></div></div></div><div style='display:none' id="ZDBHead" style="position: static;" crmplus-action="alwaysVisibilityHidden"><div style="height:auto; width:auto;" id="ZDBHEADER"><div id="ZDBSampleDiv" style="position:absolute; top:-2000px; left:-2000px; width:200px; height:200px; background:#FFF000; overflow:scroll;"><div style="height:500px; width:500px; background:#000FFF;"></div></div></div><div style="display:none" id="ZDBAjaxResponseStore"></div><div id="ZDBMainLoaderWithText" classprefix="zdb" class="zdbLoaded" elname="loadingDiv" zaloader="true"><div class='loadingSpan'><span> <span></span> <span></span> </span><span> <span></span> <span></span> </span><span> <span></span> <span></span> </span></div><span class="ZDBMainLoaderTxt">Loading</span> </div><div style="display:none;"><svg id="ZDBSVGRoot" width="100%" height="100%" version="1.1" xmlns="http://www.w3.org/2000/svg"> </svg></div><div id="ZDBSVGCONTAINER" style="position:absolute; top:0; left:0; z-index:500; background:none;"></div></div><div id="ZDBBody" style="overflow:hidden; clear: both;"><div id="ZRGarbage" style="display:none;"><div id="ZDBShowHideNavigIconContainer"  width="2" style='display:none'></div></div><div id="ZDBSampleDivForDataSheet"><div class="sampleChildDiv"></div></div><div class="ZDBExpLastChild" style="position: absolute;left: -5000px;top:-5000px;"><label for="ZDBPasteArea"><textarea id="ZDBPasteArea"></textarea></label></div></div><div style="overflow:hidden;display:none; width:1px;height:1px;visibility:hidden;position:absolute;left:0px;top:0px;z-index:100"><div id="ZDBTPLGRIDAREA" style="overflow:scroll;width:70px;height:70px">aa</div></div><div id="ZDBGRIDSTORE" style="display:none"></div><div  class="gsiframeholder" style="display:none; z-index: 1200;"><div class="gsCloseIcon"  style="position: relative; inset-inline-start:795px; top:5px;"><svg class="svgIcons" ><use xlink:href="#ZR-close"></use></svg></div><iframe class="gsiframe" frameborder="0" allowfullscreen="1"></iframe></div><script nonce="jWNrqyAoHO4PTQSYkJvIIQ==" crossorigin='anonymous' src='https://static.zohocdn.com/analytics/v3_zr/compressed/ZAEmbedGridViewInitialLoader.b5853f81ca9149cf97e9cc1d5d5316dc.js' type='text/javascript'></script>
+<script nonce="jWNrqyAoHO4PTQSYkJvIIQ==">var datasheetPageInfo = JSON.parse('{\"isCRMPlusPortal\":false,\"isOPCustomPortal\":false,\"includeTitle\":false,\"includeDesc\":false,\"searchBox\":false,\"isFCPreview\":false,\"autoGenToolBar\":false,\"showVUDToolBar\":true,\"isTabbedDashboard\":false,\"isSlideShow\":false,\"ZiaDownloadOPCheck\":true,\"isZiaDownloadAllowedForUserOP\":true,\"hideHeaderOP\":false,\"NotCRMStandAlone\":false,\"showSocialWidgets\":false,\"needsLogin\":true,\"isNotVUD\":false,\"isPublicView\":false,\"showSocialWidgetsForSlide\":false,\"showSocialWidget\":false,\"showPoweredEle\":true,\"APIFactoryZiaDownload\":false,\"NavType\":\"Folder\",\"PoweredByDisplay\":true,\"viewModeGlobal\":false,\"viewModeParam\":false,\"ISAPPREQ\":false}');
+ZDBGlobal.dataSheetAttributeValues=datasheetPageInfo;
+
+//need param value from request url
+ZDBGlobal.FROMSERVICE ='null';
+
+ZDBGlobal.showCustomizedDashboard = false;
+ZDBGlobal.isNewLayoutNCreatorCheck = true;
+ZDBGlobal.isTooltipRemove = false;
+ZDBGlobal.isHideEditDeleteAggForCreator = false;
+ZDBGlobal.LANDINGPAGE = "ZDBDataSheetView"; //can't remove from here As need in documentReadyState method //NO I18N
+ZDBGlobal.zuID = -20;//can't remove from here As need in documentReadyState method
+
+ZDBGlobal.isPublicUser = true;//can't remove from here As need in documentReadyState method
+
+ZDBGlobal.readOnlyMode = false;//can't remove from here As need in documentReadyState method
+ZDBGlobal.isViewListEmbbeding = false;
+ZDBGlobal.tabLayer = '1';
+ZDBGlobal.tabLayerFromReq = 'null';
+
+ZDBGlobal.isRTL = false;
+ZDBGlobal.ISRTLENABLED = false;
+ZDBGlobal.showInvokeOptionDlg=true;
+ZDBGlobal.IS_ONPREMISE_BUILD= false;
+ZDBGlobal.IS_POSTGRES_BUILD= false;
+//TODO : To merge and use only one variable (IS_OP_OEM & ISOPOEMBUILD)
+ZDBGlobal.IS_OP_OEM= false;
+ZDBGlobal.ISOPOEMBUILD= false;
+ZDBGlobal.IS_JIRASWOP_PLUGIN= false;
+ZDBGlobal.IS_VECTORWISE_USER= false;
+ZDBGlobal.IS_CSTORE_USER= false;
+ZDBGlobal.IS_SAS_BUILD= true;
+ZDBGlobal.ISREBRANDLOADER =  0;
+ZDBGlobal.IS_FORMULACOL_LOOKUP_ENABLED_FORDB= true;
+ZDBGlobal.enableZIA=true;
+ZDBGlobal._ZVER_='101';
+ZDBGlobal.PRODUCTNAME='Zoho Analytics';
+ZDBGlobal.EXPBROWSERTXT='Zoho Analytics';
+ZDBGlobal.checkForVersion=false;
+ZDBGlobal.fontFolder = 'f3';
+ZDBGlobal.oldURL="";
+ZDBGlobal.showCommentsAfterOpenView = false;
+ZDBGlobal.showZiaInStandAlone = false;
+ZDBGlobal.isZShowSlideReq=null;
+ZDBGlobal.SLIDESHOW_ID='null';
+ZDBGlobal.SLIDESHOW_KEY='null';
+
+ZDBEmbed.removeToolbar = false
+ZDBEmbed.viewTitle = false
+ZDBEmbed.viewDesc = false
+ZDBEmbed.searchBox = false
+ZDBEmbed.isFCPreview = false
+ZALandingPageInterface.loadDatasheetView("VUD","217576000002384987","217576000030305670","Project Health","AnalysisView",false,false,false,true,true,false,"91da178fbf277eebf59b792ab58dcb3343875571ccd107250363c72b2983b1c9",null,null,"217576000030329933",null,false,"\x22company\x22.\x22id\x22=\x273adb36bd\-40b5\-4303\-ace5\-c1c570e095f6\x27",true,false,null,null,null,"__en__US____",null,true,true,null,null,true,true,true,false,true,{},"false",null,null,null,null,false,false,true,null,false,"false","{}",'',false,false,null,null, false, false, 'null' ,'-1','', false, '', false, false, null, null, true, false, false, 'null','null', '', '');
+ZALandingPageInterface.setupDirectShare('null');</script></div></body></html>
+

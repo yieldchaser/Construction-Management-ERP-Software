@@ -1,0 +1,78 @@
+﻿# ONSITETEAMS COMPLETE API MAP
+# Base: https://api.onsiteteams.in/apis/v3
+# Auth headers: Authorization (Bearer JWT), Project-Company-Id, Project-Id, Version-Code: 171
+
+## NAMESPACES DISCOVERED
+- /list/          — main data listing
+- /stats/         — statistics/summaries  
+- /chart/         — chart data
+- /dashboard/     — dashboard endpoints
+- /subcon/        — subcontractor module
+- /payroll/       — payroll module
+- /transaction/   — transaction module
+- /sales-expense/ — sales & expense module
+- /payment-in-out/— payment tracking
+- /unbilled-material/ — unbilled materials
+- /count/         — count endpoints
+
+## CONFIRMED WORKING ENDPOINTS
+
+### Company Level
+/list/companyuser?company_id=
+/list/companyuser?company_id=&priority_type=customer
+/list/companyuser?company_id=&priority_type=material_supplier
+/list/companybankaccount?company_id=
+/list/all/project?company_id=
+/list/mom/project?company_id=
+/list/todo/project?company_id=
+/list/todo/assignee?company_id=
+/list/subcategory?company_id=&type=[todo|task|material|expense|attendance|workforce|progress]
+/stats/company?company_id=
+/sales-expense/stats/companylevel?company_id=
+/payment-in-out/stats/companylevel?company_id=
+
+### Project Level
+/list/attendance?project_id=
+/list/materialrequest?project_id=
+/list/invoice?project_id=
+/list/partyearning?project_id=
+/list/materialstock?project_id=&company_id=
+/list/mom?company_id=&project_id=
+/list/purchaseorder?project_id=&company_id=
+/list/equipment?project_id=&company_id=
+/list/design?project_id=&company_id=
+/list/payroll?project_id=&company_id=
+/list/party-member?project_id=&hidden=0
+/list/salesorder?project_id=&count=
+/list/image?project_id=
+/list/project/root/folder?project_id=
+/list/project/material?project_id=
+/list/project/material?project_id=&status=[transferred_in|transferred_out|received|used|purchased|returned]
+/list/team-member?project_id=
+/list/team-member?is_key_personnel=1&project_id=
+/list/all/transaction?project_id=
+/list/payment-request?project_id=
+/list/todo?project_id=&company_id=
+/list/billingactivity?workorder_id=
+/subcon/list/workorder/projectlevel?project_id=
+/subcon/list/workorder?project_id=
+/dashboard/detail/project/{project_id}
+/dashboard/task-date/stats/{project_id}
+/chart/expense/feature-wise?project_id=
+/chart/weekly/attendace?project_id=
+/stats/progress/billingactivity?workorder_id=
+/sales-expense/stats/projectlevel?project_id=&company_id=
+/payment-in-out/stats/projectlevel?project_id=&company_id=
+/transaction/stats/approval/count?project_id=
+/unbilled-material/count?project_id=
+/count/pending-to-receive/material?project_id=
+/payroll/attendance/stats/projectlevel?project_id=&start_date=&end_date=&hidden=0&type=labour
+
+## MATERIAL STATUS VALUES (confirmed valid)
+transferred_in, transferred_out, received, used, purchased, returned
+
+## PAYROLL TYPE VALUES (only confirmed)
+labour
+
+## COMPANYUSER PRIORITY TYPES (confirmed)
+customer, material_supplier (others likely: labour_contractor, vendor, subcontractor)
