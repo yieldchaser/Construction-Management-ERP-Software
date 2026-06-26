@@ -90,6 +90,16 @@ export default function FinancePage() {
   };
 
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      const queryParams = new URLSearchParams(window.location.search);
+      const queryTab = queryParams.get("tab");
+      if (queryTab && ["ledger", "pl", "tally"].includes(queryTab)) {
+        setTab(queryTab as "ledger" | "pl" | "tally");
+      }
+    }
+  }, []);
+
+  useEffect(() => {
     if (projectId) {
       fetchData();
     }

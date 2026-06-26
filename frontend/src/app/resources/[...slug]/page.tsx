@@ -5,15 +5,16 @@ import { getContentItemBySlug, getContentItems } from "@/lib/content";
 import { Metadata } from "next";
 
 interface RouteParams {
-  params: {
+  params: Promise<{
     slug: string[];
-  };
+  }>;
 }
 
 export async function generateMetadata({ params }: RouteParams): Promise<Metadata> {
-  const slugPath = params.slug.join("/");
+  const { slug } = await params;
+  const slugPath = slug.join("/");
   let article = await getContentItemBySlug("resources", slugPath);
-  if (!article && params.slug.length === 1) {
+  if (!article && slug.length === 1) {
     article = await getContentItemBySlug("resources", `${slugPath}/${slugPath}`);
   }
 
@@ -29,10 +30,11 @@ export async function generateMetadata({ params }: RouteParams): Promise<Metadat
 }
 
 export default async function ResourcePage({ params }: RouteParams) {
-  const slugPath = params.slug.join("/");
+  const { slug } = await params;
+  const slugPath = slug.join("/");
   let article = await getContentItemBySlug("resources", slugPath);
   
-  if (!article && params.slug.length === 1) {
+  if (!article && slug.length === 1) {
     article = await getContentItemBySlug("resources", `${slugPath}/${slugPath}`);
   }
 
@@ -42,7 +44,7 @@ export default async function ResourcePage({ params }: RouteParams) {
 
   const allResources = await getContentItems("resources");
   const relatedResources = allResources.filter(
-    (r) => r.slug !== slugPath && r.slug.startsWith(params.slug[0])
+    (r) => r.slug !== slugPath && r.slug.startsWith(slug[0])
   );
 
   return (

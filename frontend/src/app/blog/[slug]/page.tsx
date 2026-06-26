@@ -5,13 +5,14 @@ import { getContentItemBySlug, getContentItems } from "@/lib/content";
 import { Metadata } from "next";
 
 interface RouteParams {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 }
 
 export async function generateMetadata({ params }: RouteParams): Promise<Metadata> {
-  const article = await getContentItemBySlug("blog", params.slug);
+  const { slug } = await params;
+  const article = await getContentItemBySlug("blog", slug);
 
   if (!article) return { title: "Blog Post Not Found - SiteFlow" };
 
@@ -19,13 +20,14 @@ export async function generateMetadata({ params }: RouteParams): Promise<Metadat
     title: `${article.title} - SiteFlow Blog`,
     description: article.metaDescription,
     alternates: {
-      canonical: `https://siteflow.com/blog/${params.slug}`,
+      canonical: `https://siteflow.com/blog/${slug}`,
     },
   };
 }
 
 export default async function BlogPostPage({ params }: RouteParams) {
-  const article = await getContentItemBySlug("blog", params.slug);
+  const { slug } = await params;
+  const article = await getContentItemBySlug("blog", slug);
 
   if (!article) {
     notFound();
@@ -33,7 +35,7 @@ export default async function BlogPostPage({ params }: RouteParams) {
 
   const allPosts = await getContentItems("blog");
   const recentPosts = allPosts
-    .filter((post) => post.slug !== params.slug)
+    .filter((post) => post.slug !== slug)
     .slice(0, 4);
 
   return (

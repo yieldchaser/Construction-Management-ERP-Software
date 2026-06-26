@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 
@@ -147,9 +147,19 @@ const VENDORS = [
 export default function ProcurementPage() {
   const { company_id, project_id } = useParams();
   const companyId = company_id || "demo-company";
-  const projectId = project_id || "proj-1";
+  const projectId = project_id || "d0000000-0000-0000-0000-000000000001";
 
   const [tab, setTab] = useState<"po" | "indent" | "inventory" | "ledger" | "vendors">("po");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const queryParams = new URLSearchParams(window.location.search);
+      const queryTab = queryParams.get("tab");
+      if (queryTab && ["po", "indent", "inventory", "ledger", "vendors"].includes(queryTab)) {
+        setTab(queryTab as "po" | "indent" | "inventory" | "ledger" | "vendors");
+      }
+    }
+  }, []);
 
   // State managers
   const [indents, setIndents] = useState<Indent[]>(INITIAL_INDENTS);

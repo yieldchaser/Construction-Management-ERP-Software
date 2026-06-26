@@ -9,40 +9,40 @@ export default function LandingPage() {
       section: "Pre-Construction",
       color: "border-primary/30 text-primary",
       items: [
-        { name: "Planning & Gantt", desc: "Infinite horizontal scheduler timeline" },
-        { name: "Sales (CRM) & Quotation", desc: "Lead tracking & margin logic checks" },
-        { name: "Design Management", desc: "CAD/PDF blueprints with Snag-pin dropping" },
-        { name: "BOQ & Budgeting", desc: "Live Excel BOQ parsing and limits allocation" },
+        { name: "Planning & Gantt", desc: "Infinite horizontal scheduler timeline", path: "planning" },
+        { name: "Sales (CRM) & Quotation", desc: "Lead tracking & margin logic checks", path: "crm" },
+        { name: "Design Management", desc: "CAD/PDF blueprints with Snag-pin dropping", path: "drawings" },
+        { name: "BOQ & Budgeting", desc: "Live Excel BOQ parsing and limits allocation", path: "budgeting" },
       ],
     },
     {
       section: "Project Execution",
       color: "border-secondary/30 text-secondary",
       items: [
-        { name: "Progress Tracking (DPR)", desc: "Daily field reports with GPS photo validation" },
-        { name: "Quality Management", desc: "Checklists gating subsequent task runs" },
-        { name: "Procurement & RFQ", desc: "Automated RFQ side-by-side comparison matrix" },
-        { name: "Production & Concrete Mix", desc: "Automatic ingredient recipe deduction" },
+        { name: "Progress Tracking (DPR)", desc: "Daily field reports with GPS photo validation", path: "dpr" },
+        { name: "Quality Management", desc: "Checklists gating subsequent task runs", path: "quality" },
+        { name: "Procurement & RFQ", desc: "Automated RFQ side-by-side comparison matrix", path: "procurement?tab=po" },
+        { name: "Production & Concrete Mix", desc: "Automatic ingredient recipe deduction", path: "production" },
       ],
     },
     {
       section: "Resource Management",
       color: "border-success/30 text-success",
       items: [
-        { name: "Labour & Attendance", desc: "PostGIS geofenced face-scan attendance verification" },
-        { name: "Subcon RA Billing", desc: "DPR quantity-based automated claim generation" },
-        { name: "Asset & Equipment runtime", desc: "Fuel issues, runtime metrics & maintenance limits" },
-        { name: "Material Warehouse", desc: "Store issues, stock levels, and low-inventory warnings" },
+        { name: "Labour & Attendance", desc: "PostGIS geofenced face-scan attendance verification", path: "attendance" },
+        { name: "Subcon RA Billing", desc: "DPR quantity-based automated claim generation", path: "billing?tab=ra-bills" },
+        { name: "Asset & Equipment runtime", desc: "Fuel issues, runtime metrics & maintenance limits", path: "equipment" },
+        { name: "Material Warehouse", desc: "Store issues, stock levels, and low-inventory warnings", path: "procurement?tab=inventory" },
       ],
     },
     {
       section: "Finance & Integrations",
       color: "border-info/30 text-info",
       items: [
-        { name: "Real-time Project P&L", desc: "Automated cashflow metrics and waterfall charting" },
-        { name: "Vendor Billing & Three-Way Match", desc: "Rate discrepancy matching against PO & GRN" },
-        { name: "Debit / Credit Notes", desc: "Materials and quality defect chargeback ledgers" },
-        { name: "Tally / Zoho Integration", desc: "Sync mappings directly to desktop Tally XML agents" },
+        { name: "Real-time Project P&L", desc: "Automated cashflow metrics and waterfall charting", path: "finance?tab=pl" },
+        { name: "Vendor Billing & Three-Way Match", desc: "Rate discrepancy matching against PO & GRN", path: "procurement?tab=ledger" },
+        { name: "Debit / Credit Notes", desc: "Materials and quality defect chargeback ledgers", path: "billing?tab=notes" },
+        { name: "Tally / Zoho Integration", desc: "Sync mappings directly to desktop Tally XML agents", path: "finance?tab=tally" },
       ],
     },
   ];
@@ -147,10 +147,14 @@ export default function LandingPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {sec.items.map((item, itemIdx) => (
-                  <div key={itemIdx} className="p-4 rounded-xl bg-white/[0.01] border border-white/5 space-y-1 hover:bg-white/[0.03] transition-all">
+                  <Link
+                    key={itemIdx}
+                    href={`/c/e0000000-0000-0000-0000-000000000000/p/d0000000-0000-0000-0000-000000000001/${item.path}`}
+                    className="p-4 rounded-xl bg-white/[0.01] border border-white/5 space-y-1 hover:bg-white/[0.03] hover:border-white/10 active:scale-[0.98] transition-all cursor-pointer block"
+                  >
                     <h3 className="font-semibold text-white text-sm">{item.name}</h3>
                     <p className="text-xs text-zinc-500">{item.desc}</p>
-                  </div>
+                  </Link>
                 ))}
               </div>
             </div>

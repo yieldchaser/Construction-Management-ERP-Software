@@ -5,15 +5,16 @@ import { getContentItemBySlug, getContentItems } from "@/lib/content";
 import { Metadata } from "next";
 
 interface RouteParams {
-  params: {
+  params: Promise<{
     slug: string[];
-  };
+  }>;
 }
 
 export async function generateMetadata({ params }: RouteParams): Promise<Metadata> {
-  const slugPath = params.slug.join("/");
+  const { slug } = await params;
+  const slugPath = slug.join("/");
   let article = await getContentItemBySlug("help", slugPath);
-  if (!article && params.slug.length === 1) {
+  if (!article && slug.length === 1) {
     article = await getContentItemBySlug("help", `${slugPath}/${slugPath}`);
   }
 
@@ -29,11 +30,12 @@ export async function generateMetadata({ params }: RouteParams): Promise<Metadat
 }
 
 export default async function HelpArticlePage({ params }: RouteParams) {
-  const slugPath = params.slug.join("/");
+  const { slug } = await params;
+  const slugPath = slug.join("/");
   let article = await getContentItemBySlug("help", slugPath);
   
   // Fallback for single category slug (e.g. /help/attendance-payroll)
-  if (!article && params.slug.length === 1) {
+  if (!article && slug.length === 1) {
     article = await getContentItemBySlug("help", `${slugPath}/${slugPath}`);
   }
 
@@ -42,7 +44,7 @@ export default async function HelpArticlePage({ params }: RouteParams) {
   }
 
   const allHelpItems = await getContentItems("help");
-  const category = article.category || params.slug[0];
+  const category = article.category || slug[0];
 
   // List of other articles in the same category
   const categoryArticles = allHelpItems.filter(

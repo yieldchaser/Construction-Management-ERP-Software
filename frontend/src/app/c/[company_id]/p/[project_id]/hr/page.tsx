@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 
@@ -127,36 +127,212 @@ export default function HRPayrollPage() {
   const projectId = params?.project_id as string;
 
   const [tab, setTab] = useState<"employees" | "attendance" | "timesheets" | "payroll">("employees");
-  const [employees] = useState<Employee[]>(MOCK_EMPLOYEES);
-  const [attendance] = useState<AttendanceRecord[]>(MOCK_ATTENDANCE);
-  const [selectedDate] = useState("2026-06-26");
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
+  const [timesheets, setTimesheets] = useState<Timesheet[]>([
+    { id: "TS-01", employeeId: "E-01", employeeName: "Ramesh Kumar", weekStart: "2026-06-16", weekEnd: "2026-06-22", totalHours: 47.5, status: "approved" },
+    { id: "TS-02", employeeId: "E-02", employeeName: "Priya Shah", weekStart: "2026-06-16", weekEnd: "2026-06-22", totalHours: 44.0, status: "submitted" },
+    { id: "TS-03", employeeId: "E-03", employeeName: "Sanjay Yadav", weekStart: "2026-06-23", weekEnd: "2026-06-29", totalHours: 18.5, status: "draft" },
+  ]);
+  const [selectedDate, setSelectedDate] = useState("2026-06-26");
   const [payrollMonth, setPayrollMonth] = useState("2026-06");
   const [daysInMonth, setDaysInMonth] = useState(26);
   const [payrollRun, setPayrollRun] = useState<PayrollRun | null>(null);
   const [showAddEmp, setShowAddEmp] = useState(false);
   const [selectedPayslip, setSelectedPayslip] = useState<PayslipLine | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  // Timesheets mock
-  const timesheets: Timesheet[] = [
-    { id: "TS-01", employeeId: "E-01", employeeName: "Ramesh Kumar", weekStart: "2026-06-16", weekEnd: "2026-06-22", totalHours: 47.5, status: "approved" },
-    { id: "TS-02", employeeId: "E-02", employeeName: "Priya Shah", weekStart: "2026-06-16", weekEnd: "2026-06-22", totalHours: 44.0, status: "submitted" },
-    { id: "TS-03", employeeId: "E-03", employeeName: "Sanjay Yadav", weekStart: "2026-06-23", weekEnd: "2026-06-29", totalHours: 18.5, status: "draft" },
-  ];
+  // New employee form state
+  const [empForm, setEmpForm] = useState({
+    name: "",
+    code: "",
+    designation: "",
+    department: "",
+    mobile: "",
+    basic: "18000",
+    hra: "3600",
+    allowances: "1800",
+    tds: "0",
+    joined: new Date().toISOString().split("T")[0]
+  });
 
-  const handleRunPayroll = () => {
-    // Days present = attendance count (mock: all 4 employees present today → assume monthly)
-    const daysPresent: Record<string, number> = { "E-01": 25, "E-02": 26, "E-03": 24, "E-04": 23 };
-    const payslips = computePayslips(employees, daysPresent, daysInMonth);
-    const totalGross = payslips.reduce((a, p) => a + p.gross, 0);
-    const totalDeductions = payslips.reduce((a, p) => a + p.totalDeductions, 0);
-    const totalNet = payslips.reduce((a, p) => a + p.netPayable, 0);
-    setPayrollRun({
-      id: "PR-01", month: payrollMonth, status: "finalized",
-      totalGross: Math.round(totalGross * 100) / 100,
-      totalDeductions: Math.round(totalDeductions * 100) / 100,
-      totalNet: Math.round(totalNet * 100) / 100,
-      payslips,
-    });
+  const fetchEmployees = async () => {
+    if (!projectId) return;
+    try {
+      const res = await fetch(`http://localhost:8000/apis/v3/hr/employees/${projectId}`);
+      if (res.ok) {
+        const data = await res.json();
+        const mapped = data.map((emp: any) => ({
+          id: emp.id,
+          name: emp.name,
+          code: emp.employee_code || "",
+          designation: emp.designation || "",
+          department: emp.department || "",
+          mobile: emp.mobile || "",
+          basic: emp.basic_salary,
+          hra: emp.hra,
+          allowances: emp.other_allowances,
+          grossMonthly: emp.basic_salary + emp.hra + emp.other_allowances,
+          pfPct: emp.pf_employee_pct,
+          esiApplicable: emp.is_esi_applicable,
+          tdsMonthly: emp.tds_monthly,
+          status: emp.status === "active" ? "active" : "inactive",
+          joined: emp.date_of_joining ? emp.date_of_joining.split("T")[0] : "",
+        }));
+        setEmployees(mapped);
+      }
+    } catch (e) {
+      console.error("Failed to fetch employees", e);
+    }
+  };
+
+  const fetchAttendance = async () => {
+    if (!projectId) return;
+    try {
+      const res = await fetch(`http://localhost:8000/apis/v3/hr/attendance/${projectId}/${selectedDate}`);
+      if (res.ok) {
+        const data = await res.json();
+        const mapped = data.map((att: any) => ({
+          id: att.id,
+          employeeId: att.employee_id,
+          employeeName: "", // Dynamic lookup in render
+          date: att.attendance_date.split("T")[0],
+          punchIn: att.punch_in ? new Date(att.punch_in).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) : "",
+          punchOut: att.punch_out ? new Date(att.punch_out).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) : "",
+          hoursWorked: att.hours_worked || 0,
+          overtime: att.overtime_hours || 0,
+          withinGeofence: att.is_within_geofence,
+          status: att.status,
+          distanceFromSite: att.distance_from_site_m ? Math.round(att.distance_from_site_m) : null,
+        }));
+        setAttendance(mapped);
+      }
+    } catch (e) {
+      console.error("Failed to fetch attendance", e);
+    }
+  };
+
+  useEffect(() => {
+    if (projectId) {
+      fetchEmployees();
+    }
+  }, [projectId]);
+
+  useEffect(() => {
+    if (projectId && selectedDate) {
+      fetchAttendance();
+    }
+  }, [projectId, selectedDate, employees.length]);
+
+  const handleSaveEmployee = async () => {
+    try {
+      const res = await fetch("http://localhost:8000/apis/v3/hr/employees", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          company_id: companyId,
+          project_id: projectId,
+          name: empForm.name,
+          employee_code: empForm.code,
+          designation: empForm.designation,
+          department: empForm.department,
+          mobile: empForm.mobile,
+          basic_salary: parseFloat(empForm.basic) || 0,
+          hra: parseFloat(empForm.hra) || 0,
+          other_allowances: parseFloat(empForm.allowances) || 0,
+          pf_employee_pct: 12.0,
+          pf_employer_pct: 12.0,
+          esi_employee_pct: 0.75,
+          esi_employer_pct: 3.25,
+          tds_monthly: parseFloat(empForm.tds) || 0,
+          is_esi_applicable: parseFloat(empForm.basic) < 21000,
+          date_of_joining: empForm.joined ? new Date(empForm.joined).toISOString() : null,
+        }),
+      });
+      if (res.ok) {
+        setShowAddEmp(false);
+        fetchEmployees();
+        setEmpForm({
+          name: "",
+          code: "",
+          designation: "",
+          department: "",
+          mobile: "",
+          basic: "18000",
+          hra: "3600",
+          allowances: "1800",
+          tds: "0",
+          joined: new Date().toISOString().split("T")[0]
+        });
+      }
+    } catch (e) {
+      console.error("Failed to save employee", e);
+    }
+  };
+
+  const handleTimesheetAction = async (tsId: string, action: "submit" | "approve") => {
+    try {
+      const res = await fetch(`http://localhost:8000/apis/v3/hr/timesheets/${tsId}/${action}`, {
+        method: "PATCH"
+      });
+      if (res.ok) {
+        setTimesheets(prev => prev.map(ts => ts.id === tsId ? { ...ts, status: action === "submit" ? "submitted" : "approved" } : ts));
+      }
+    } catch (e) {
+      console.error("Failed to update timesheet", e);
+      // Fallback update in case of mock timesheet ID
+      setTimesheets(prev => prev.map(ts => ts.id === tsId ? { ...ts, status: action === "submit" ? "submitted" : "approved" } : ts));
+    }
+  };
+
+  const handleRunPayroll = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("http://localhost:8000/apis/v3/hr/payroll/run", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          company_id: companyId,
+          project_id: projectId,
+          payroll_month: payrollMonth,
+          days_in_month: daysInMonth
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const mappedPayslips = data.payslips.map((p: any) => ({
+          employeeId: p.employee_id,
+          employeeName: p.employee_name,
+          designation: p.designation || "Staff",
+          daysPresent: p.days_present,
+          daysInMonth: p.days_in_month,
+          gross: p.gross_salary,
+          basic: p.basic,
+          hra: p.hra,
+          allowances: p.other_allowances,
+          pfEmployee: p.pf_employee,
+          pfEmployer: p.pf_employer,
+          esiEmployee: p.esi_employee,
+          esiEmployer: p.esi_employer,
+          tds: p.tds,
+          totalDeductions: p.total_deductions,
+          netPayable: p.net_payable
+        }));
+        setPayrollRun({
+          id: data.id,
+          month: data.payroll_month,
+          status: data.status,
+          totalGross: data.total_gross,
+          totalDeductions: data.total_deductions,
+          totalNet: data.total_net,
+          payslips: mappedPayslips
+        });
+      }
+    } catch (e) {
+      console.error("Failed to run payroll", e);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const tabClass = (t: string) =>
@@ -322,24 +498,28 @@ export default function HRPayrollPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/[0.03]">
-                    {attendance.map(rec => (
-                      <tr key={rec.id} className="hover:bg-white/[0.02] transition-colors">
-                        <td className="px-3 py-3 font-semibold text-white">{rec.employeeName}</td>
-                        <td className="px-3 py-3 font-mono text-green-400">{rec.punchIn || "—"}</td>
-                        <td className="px-3 py-3 font-mono text-zinc-400">{rec.punchOut || <span className="text-yellow-500 animate-pulse">Active</span>}</td>
-                        <td className="px-3 py-3 text-white font-bold">{rec.hoursWorked > 0 ? `${rec.hoursWorked}h` : "—"}</td>
-                        <td className="px-3 py-3 text-orange-400">{rec.overtime > 0 ? `+${rec.overtime.toFixed(2)}h` : "—"}</td>
-                        <td className="px-3 py-3 text-zinc-400">
-                          {rec.distanceFromSite != null ? `${rec.distanceFromSite}m` : "—"}
-                        </td>
-                        <td className="px-3 py-3">
-                          {rec.withinGeofence
-                            ? <span className="flex items-center gap-1 text-green-400 font-bold"><span className="h-1.5 w-1.5 rounded-full bg-green-400 inline-block" />Inside</span>
-                            : <span className="flex items-center gap-1 text-yellow-400 font-bold"><span className="h-1.5 w-1.5 rounded-full bg-yellow-400 inline-block" />Outside</span>}
-                        </td>
-                        <td className="px-3 py-3"><span className={statusBadge(rec.status)}>{rec.status}</span></td>
-                      </tr>
-                    ))}
+                    {attendance.map(rec => {
+                      const emp = employees.find(e => e.id === rec.employeeId);
+                      const empName = emp ? emp.name : "Staff Member";
+                      return (
+                        <tr key={rec.id} className="hover:bg-white/[0.02] transition-colors">
+                          <td className="px-3 py-3 font-semibold text-white">{empName}</td>
+                          <td className="px-3 py-3 font-mono text-green-400">{rec.punchIn || "—"}</td>
+                          <td className="px-3 py-3 font-mono text-zinc-400">{rec.punchOut || <span className="text-yellow-500 animate-pulse">Active</span>}</td>
+                          <td className="px-3 py-3 text-white font-bold">{rec.hoursWorked > 0 ? `${rec.hoursWorked}h` : "—"}</td>
+                          <td className="px-3 py-3 text-orange-400">{rec.overtime > 0 ? `+${rec.overtime.toFixed(2)}h` : "—"}</td>
+                          <td className="px-3 py-3 text-zinc-400">
+                            {rec.distanceFromSite != null ? `${rec.distanceFromSite}m` : "—"}
+                          </td>
+                          <td className="px-3 py-3">
+                            {rec.withinGeofence
+                              ? <span className="flex items-center gap-1 text-green-400 font-bold"><span className="h-1.5 w-1.5 rounded-full bg-green-400 inline-block" />Inside</span>
+                              : <span className="flex items-center gap-1 text-yellow-400 font-bold"><span className="h-1.5 w-1.5 rounded-full bg-yellow-400 inline-block" />Outside</span>}
+                          </td>
+                          <td className="px-3 py-3"><span className={statusBadge(rec.status)}>{rec.status}</span></td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -392,10 +572,20 @@ export default function HRPayrollPage() {
                         <td className="px-4 py-3">
                           <div className="flex gap-2">
                             {ts.status === "draft" && (
-                              <button className="text-[10px] px-2 py-1 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20">Submit</button>
+                              <button
+                                onClick={() => handleTimesheetAction(ts.id, "submit")}
+                                className="text-[10px] px-2 py-1 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20"
+                              >
+                                Submit
+                              </button>
                             )}
                             {ts.status === "submitted" && (
-                              <button className="text-[10px] px-2 py-1 rounded bg-green-500/10 text-green-400 border border-green-500/20 hover:bg-green-500/20">Approve</button>
+                              <button
+                                onClick={() => handleTimesheetAction(ts.id, "approve")}
+                                className="text-[10px] px-2 py-1 rounded bg-green-500/10 text-green-400 border border-green-500/20 hover:bg-green-500/20"
+                              >
+                                Approve
+                              </button>
                             )}
                             <button className="text-[10px] px-2 py-1 rounded bg-white/5 text-zinc-400 border border-white/10 hover:bg-white/10">View</button>
                           </div>
@@ -576,26 +766,36 @@ export default function HRPayrollPage() {
             </div>
             <div className="grid grid-cols-2 gap-3 text-xs">
               {[
-                ["Full Name", "text", "Ramesh Kumar"],
-                ["Employee Code", "text", "EMP-005"],
-                ["Designation", "text", "Site Supervisor"],
-                ["Department", "text", "Civil"],
-                ["Mobile", "tel", "9876543210"],
-                ["Basic Salary (₹)", "number", "18000"],
-                ["HRA (₹)", "number", "3600"],
-                ["Other Allowances (₹)", "number", "1800"],
-                ["TDS/Month (₹)", "number", "0"],
-                ["Date of Joining", "date", ""],
-              ].map(([label, type, placeholder]) => (
+                { label: "Full Name", type: "text", key: "name", placeholder: "Ramesh Kumar" },
+                { label: "Employee Code", type: "text", key: "code", placeholder: "EMP-005" },
+                { label: "Designation", type: "text", key: "designation", placeholder: "Site Supervisor" },
+                { label: "Department", type: "text", key: "department", placeholder: "Civil" },
+                { label: "Mobile", type: "tel", key: "mobile", placeholder: "9876543210" },
+                { label: "Basic Salary (₹)", type: "number", key: "basic", placeholder: "18000" },
+                { label: "HRA (₹)", type: "number", key: "hra", placeholder: "3600" },
+                { label: "Other Allowances (₹)", type: "number", key: "allowances", placeholder: "1800" },
+                { label: "TDS/Month (₹)", type: "number", key: "tds", placeholder: "0" },
+                { label: "Date of Joining", type: "date", key: "joined", placeholder: "" },
+              ].map(({ label, type, key, placeholder }) => (
                 <div key={label}>
                   <label className="text-[10px] text-zinc-500 uppercase font-bold block mb-1">{label}</label>
-                  <input type={type} placeholder={placeholder}
-                    className="w-full bg-[#0E0C15] border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs" />
+                  <input
+                    type={type}
+                    placeholder={placeholder}
+                    value={(empForm as any)[key]}
+                    onChange={(e) => setEmpForm({ ...empForm, [key]: e.target.value })}
+                    className="w-full bg-[#0E0C15] border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                  />
                 </div>
               ))}
             </div>
             <div className="flex gap-3 mt-5">
-              <button className="flex-1 py-2 bg-primary rounded-lg text-white text-sm font-bold hover:bg-primary/90 transition-all">Save Employee</button>
+              <button
+                onClick={handleSaveEmployee}
+                className="flex-1 py-2 bg-primary rounded-lg text-white text-sm font-bold hover:bg-primary/90 transition-all"
+              >
+                Save Employee
+              </button>
               <button onClick={() => setShowAddEmp(false)} className="px-4 py-2 rounded-lg border border-white/10 text-zinc-400 text-sm hover:text-white hover:border-white/20">Cancel</button>
             </div>
           </div>

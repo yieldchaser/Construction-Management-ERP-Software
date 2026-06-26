@@ -5,7 +5,7 @@ import { getContentItemBySlug } from "@/lib/content";
 import { Metadata } from "next";
 
 interface RouteParams {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }
 
 // Pages that have dedicated routes — skip generic rendering
@@ -15,8 +15,9 @@ const SKIP_SLUGS = new Set([
 ]);
 
 export async function generateMetadata({ params }: RouteParams): Promise<Metadata> {
-  if (SKIP_SLUGS.has(params.slug)) return { title: "SiteFlow" };
-  const page = await getContentItemBySlug("pages", params.slug);
+  const { slug } = await params;
+  if (SKIP_SLUGS.has(slug)) return { title: "SiteFlow" };
+  const page = await getContentItemBySlug("pages", slug);
   if (!page) return { title: "Not Found — SiteFlow" };
   return {
     title: page.metaTitle || page.title,
@@ -26,9 +27,10 @@ export async function generateMetadata({ params }: RouteParams): Promise<Metadat
 }
 
 export default async function GenericPage({ params }: RouteParams) {
-  if (SKIP_SLUGS.has(params.slug)) notFound();
+  const { slug } = await params;
+  if (SKIP_SLUGS.has(slug)) notFound();
 
-  const page = await getContentItemBySlug("pages", params.slug);
+  const page = await getContentItemBySlug("pages", slug);
   if (!page) notFound();
 
   return (

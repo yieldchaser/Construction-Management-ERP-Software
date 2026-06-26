@@ -5,13 +5,14 @@ import { getContentItemBySlug, getContentItems } from "@/lib/content";
 import { Metadata } from "next";
 
 interface RouteParams {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 }
 
 export async function generateMetadata({ params }: RouteParams): Promise<Metadata> {
-  const article = await getContentItemBySlug("products", params.slug);
+  const { slug } = await params;
+  const article = await getContentItemBySlug("products", slug);
 
   if (!article) return { title: "Product Features Not Found - SiteFlow" };
 
@@ -19,20 +20,21 @@ export async function generateMetadata({ params }: RouteParams): Promise<Metadat
     title: `${article.title} - SiteFlow Platform`,
     description: article.metaDescription,
     alternates: {
-      canonical: `https://siteflow.com/products/${params.slug}`,
+      canonical: `https://siteflow.com/products/${slug}`,
     },
   };
 }
 
 export default async function ProductFeaturePage({ params }: RouteParams) {
-  const article = await getContentItemBySlug("products", params.slug);
+  const { slug } = await params;
+  const article = await getContentItemBySlug("products", slug);
 
   if (!article) {
     notFound();
   }
 
   const allProducts = await getContentItems("products");
-  const otherProducts = allProducts.filter((p) => p.slug !== params.slug);
+  const otherProducts = allProducts.filter((p) => p.slug !== slug);
 
   return (
     <div className="min-h-screen bg-[#0E0C15] text-[#ededed] pb-20 relative">

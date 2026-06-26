@@ -113,12 +113,12 @@ const CATEGORIES = ["All", "2D Layout", "3D Layout", "Production File"];
 export default function DrawingsPage() {
   const { company_id, project_id } = useParams();
   const companyId = company_id || "demo-company";
-  const projectId = project_id || "proj-1";
+  const projectId = project_id || "d0000000-0000-0000-0000-000000000001";
 
-  const [drawings, setDrawings] = useState<Drawing[]>(INITIAL_DRAWINGS);
+  const [drawings, setDrawings] = useState<Drawing[]>([]);
   const [selectedCategory, setSelectedCategory] = useState("All");
-  const [activeDrawingId, setActiveDrawingId] = useState(INITIAL_DRAWINGS[0].id);
-  const [activeRevIndex, setActiveRevIndex] = useState(1); // Default to V2 (index 1) for the first drawing
+  const [activeDrawingId, setActiveDrawingId] = useState<string>("");
+  const [activeRevIndex, setActiveRevIndex] = useState(0);
   const [selectedPinId, setSelectedPinId] = useState<string | null>(null);
 
   // New Pin Modal State
@@ -129,14 +129,72 @@ export default function DrawingsPage() {
 
   // New Revision Modal State
   const [showAddRevModal, setShowAddRevModal] = useState(false);
-  const [newRevCode, setNewRevCode] = useState("V3");
+  const [newRevCode, setNewRevCode] = useState("V2");
   const [newRevComment, setNewRevComment] = useState("");
 
   const canvasRef = useRef<HTMLDivElement>(null);
 
-  const activeDrawing = drawings.find((d) => d.id === activeDrawingId) || drawings[0];
+  const fetchDrawings = async () => {
+    try {
+      const res = await fetch(`http://localhost:8000/apis/v3/drawings?project_id=${projectId}`);
+      if (res.ok) {
+        const data = await res.json();
+        const mapped = data.map((d: any) => ({
+          id: d.id,
+          name: d.name,
+          category: d.category,
+          createdAt: d.created_at ? d.created_at.split("T")[0] : "",
+          createdBy: "Admin / Designer",
+          revisions: d.revisions.map((r: any) => ({
+            id: r.id,
+            version: r.version_code,
+            fileUrl: r.file_url,
+            status: r.approval_status,
+            comments: r.comments || "",
+            date: r.created_at ? r.created_at.split("T")[0] : "",
+            approvedBy: r.approved_by ? "Dharmesh S (Auditor)" : undefined,
+            pins: r.pins.map((p: any) => ({
+              id: p.id,
+              x: p.x_coordinate,
+              y: p.y_coordinate,
+              comment: p.comment,
+              user: "Engineer",
+              date: p.created_at ? new Date(p.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' }) : "Today"
+            }))
+          }))
+        }));
+        setDrawings(mapped);
+        if (mapped.length > 0) {
+          setActiveDrawingId((prev) => {
+            if (mapped.some((item: any) => item.id === prev)) {
+              return prev;
+            }
+            return mapped[0].id;
+          });
+        }
+      }
+    } catch (e) {
+      console.error("Failed to fetch drawings", e);
+    }
+  };
+
+  useEffect(() => {
+    if (projectId) {
+      fetchDrawings();
+    }
+  }, [projectId]);
+
+  const activeDrawing = drawings.find((d) => d.id === activeDrawingId) || drawings[0] || {
+    id: "",
+    name: "No drawings selected",
+    category: "",
+    createdAt: "",
+    createdBy: "",
+    revisions: [{ id: "", version: "", fileUrl: "", status: "pending", comments: "Select or upload a blueprint sheet.", date: "", pins: [] }]
+  };
+
   // Ensure active revision index is safe
-  const activeRev = activeDrawing.revisions[activeRevIndex] || activeDrawing.revisions[activeDrawing.revisions.length - 1];
+  const activeRev = activeDrawing.revisions[activeRevIndex] || activeDrawing.revisions[activeDrawing.revisions.length - 1] || { id: "", version: "", pins: [], status: "pending", comments: "", date: "" };
 
   const filteredDrawings = selectedCategory === "All"
     ? drawings
@@ -144,7 +202,7 @@ export default function DrawingsPage() {
 
   // Handle clicking on the canvas to place a pin
   const handleCanvasClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!canvasRef.current) return;
+    if (!canvasRef.current || !activeDrawing.id) return;
     const rect = canvasRef.current.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
@@ -155,86 +213,76 @@ export default function DrawingsPage() {
     setShowAddPinModal(true);
   };
 
-  const submitNewPin = () => {
-    if (!newPinComment.trim()) return;
+  const submitNewPin = async () => {
+    if (!newPinComment.trim() || !activeRev.id) return;
 
-    const newPin = {
-      id: `pin-${Date.now()}`,
-      x: parseFloat(tempCoords.x.toFixed(1)),
-      y: parseFloat(tempCoords.y.toFixed(1)),
-      comment: newPinComment,
-      user: newPinUser,
-      date: "Today"
-    };
-
-    setDrawings(prev => prev.map(d => {
-      if (d.id === activeDrawingId) {
-        const updatedRevs = d.revisions.map((r, idx) => {
-          const targetIndex = activeDrawing.revisions.indexOf(activeRev);
-          if (idx === targetIndex) {
-            return {
-              ...r,
-              pins: [...r.pins, newPin]
-            };
-          }
-          return r;
-        });
-        return { ...d, revisions: updatedRevs };
+    try {
+      const res = await fetch(`http://localhost:8000/apis/v3/drawings/revisions/${activeRev.id}/pins`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          x_coordinate: parseFloat(tempCoords.x.toFixed(1)),
+          y_coordinate: parseFloat(tempCoords.y.toFixed(1)),
+          comment: newPinComment,
+          tagged_user_id: null,
+          created_by: null
+        })
+      });
+      if (res.ok) {
+        const pinData = await res.json();
+        await fetchDrawings();
+        setSelectedPinId(pinData.id);
+        setShowAddPinModal(false);
       }
-      return d;
-    }));
-
-    setSelectedPinId(newPin.id);
-    setShowAddPinModal(false);
+    } catch (e) {
+      console.error("Failed to place pin", e);
+    }
   };
 
-  const submitNewRevision = () => {
-    if (!newRevComment.trim()) return;
+  const submitNewRevision = async () => {
+    if (!newRevComment.trim() || !activeDrawing.id) return;
 
-    const newRevision = {
-      id: `rev-${activeDrawingId}-${newRevCode.toLowerCase()}`,
-      version: newRevCode,
-      fileUrl: `/images/drawings/floor_${newRevCode.toLowerCase()}.pdf`,
-      status: "pending",
-      comments: newRevComment,
-      date: new Date().toISOString().split("T")[0],
-      pins: []
-    };
-
-    setDrawings(prev => prev.map(d => {
-      if (d.id === activeDrawingId) {
-        return {
-          ...d,
-          revisions: [...d.revisions, newRevision]
-        };
+    try {
+      const res = await fetch(`http://localhost:8000/apis/v3/drawings/${activeDrawing.id}/revisions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          version_code: newRevCode,
+          file_url: `/images/drawings/floor_${newRevCode.toLowerCase()}.pdf`,
+          comments: newRevComment
+        })
+      });
+      if (res.ok) {
+        await fetchDrawings();
+        setShowAddRevModal(false);
+        setNewRevComment("");
+        // Select newest revision
+        setActiveRevIndex(activeDrawing.revisions.length);
       }
-      return d;
-    }));
-
-    // Switch to newly created revision
-    setActiveRevIndex(activeDrawing.revisions.length);
-    setShowAddRevModal(false);
-    setNewRevComment("");
+    } catch (e) {
+      console.error("Failed to submit revision", e);
+    }
   };
 
-  const approveCurrentRevision = (status: "approved" | "rejected") => {
-    setDrawings(prev => prev.map(d => {
-      if (d.id === activeDrawingId) {
-        const updatedRevs = d.revisions.map((r, idx) => {
-          const targetIndex = activeDrawing.revisions.indexOf(activeRev);
-          if (idx === targetIndex) {
-            return {
-              ...r,
-              status: status,
-              approvedBy: "Dharmesh S (Auditor)"
-            };
-          }
-          return r;
-        });
-        return { ...d, revisions: updatedRevs };
+  const approveCurrentRevision = async (status: "approved" | "rejected") => {
+    if (!activeRev.id) return;
+
+    try {
+      const res = await fetch(`http://localhost:8000/apis/v3/drawings/revisions/${activeRev.id}/approve`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          approval_status: status,
+          approved_by: null,
+          comments: "Audited on site"
+        })
+      });
+      if (res.ok) {
+        await fetchDrawings();
       }
-      return d;
-    }));
+    } catch (e) {
+      console.error("Failed to audit revision", e);
+    }
   };
 
   return (

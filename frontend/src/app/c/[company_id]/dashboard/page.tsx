@@ -8,16 +8,27 @@ export default function DashboardPage() {
   const params = useParams();
   const companyId = params?.company_id as string;
 
-  const [activeProject, setActiveProject] = useState("proj-1");
+  const [activeProject, setActiveProject] = useState("d0000000-0000-0000-0000-000000000001");
   const [tallySyncStatus, setTallySyncStatus] = useState("Connected");
   const [isSyncing, setIsSyncing] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
 
+  // Steel calculator states
+  const [diameter, setDiameter] = useState(12);
+  const [barCount, setBarCount] = useState(10);
+  const [barLength, setBarLength] = useState(3);
+  const [wastagePercent, setWastagePercent] = useState(5);
+
+  const standardUnitWeight = (diameter * diameter) / 162.89; // kg/m
+  const totalBarLength = barCount * barLength; // meters
+  const totalWeightNoWastage = totalBarLength * standardUnitWeight; // kg
+  const reinforcementWeight = totalWeightNoWastage * (1 + wastagePercent / 100); // kg
+
   // Projects list
   const projects = [
-    { id: "proj-1", name: "Metro Terminal (Phase 2)", code: "MET-02", city: "Mumbai" },
-    { id: "proj-2", name: "Bypass Highway Flyover", code: "HWY-FLY", city: "Pune" },
-    { id: "proj-3", name: "Alpha Premium Residences", code: "ALF-RES", city: "Delhi" },
+    { id: "d0000000-0000-0000-0000-000000000001", name: "Metro Terminal (Phase 2)", code: "MET-02", city: "Mumbai" },
+    { id: "d0000000-0000-0000-0000-000000000002", name: "Bypass Highway Flyover", code: "HWY-FLY", city: "Pune" },
+    { id: "d0000000-0000-0000-0000-000000000003", name: "Alpha Premium Residences", code: "ALF-RES", city: "Delhi" },
   ];
 
   const activeProjDetails = projects.find(p => p.id === activeProject) || projects[0];
@@ -104,7 +115,7 @@ export default function DashboardPage() {
                 </li>
                 <li>
                   <Link
-                    href={`/c/${companyId}/p/proj-1/crm`}
+                    href={`/c/${companyId}/p/${activeProject}/crm`}
                     className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.02] transition-all"
                   >
                     <span>🤝</span> CRM & Leads
@@ -120,7 +131,7 @@ export default function DashboardPage() {
               <ul className="space-y-1">
                 <li>
                   <Link
-                    href={`/c/${companyId}/p/proj-1/dpr`}
+                    href={`/c/${companyId}/p/${activeProject}/dpr`}
                     className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.02] transition-all"
                   >
                     <span>👷</span> Daily Progress (DPR)
@@ -128,7 +139,7 @@ export default function DashboardPage() {
                 </li>
                 <li>
                   <Link
-                    href={`/c/${companyId}/p/proj-1/procurement`}
+                    href={`/c/${companyId}/p/${activeProject}/procurement`}
                     className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.02] transition-all"
                   >
                     <span>🛒</span> Procurement & RFQ
@@ -136,7 +147,7 @@ export default function DashboardPage() {
                 </li>
                 <li>
                   <Link
-                    href={`/c/${companyId}/p/proj-1/production`}
+                    href={`/c/${companyId}/p/${activeProject}/production`}
                     className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.02] transition-all"
                   >
                     <span>🏭</span> Production Management
@@ -144,7 +155,7 @@ export default function DashboardPage() {
                 </li>
                 <li>
                   <Link
-                    href={`/c/${companyId}/p/proj-1/attendance`}
+                    href={`/c/${companyId}/p/${activeProject}/attendance`}
                     className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.02] transition-all"
                   >
                     <span>📍</span> Attendance & Payroll
@@ -152,7 +163,7 @@ export default function DashboardPage() {
                 </li>
                 <li>
                   <Link
-                    href={`/c/${companyId}/p/proj-1/drawings`}
+                    href={`/c/${companyId}/p/${activeProject}/drawings`}
                     className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.02] transition-all"
                   >
                     <span>📐</span> Drawings & Revisions
@@ -160,7 +171,7 @@ export default function DashboardPage() {
                 </li>
                 <li>
                   <Link
-                    href={`/c/${companyId}/p/proj-1/hr`}
+                    href={`/c/${companyId}/p/${activeProject}/hr`}
                     className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.02] transition-all"
                   >
                     <span>👷</span> HR & Payroll
@@ -168,7 +179,7 @@ export default function DashboardPage() {
                 </li>
                 <li>
                   <Link
-                    href={`/c/${companyId}/p/proj-1/quality`}
+                    href={`/c/${companyId}/p/${activeProject}/quality`}
                     className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.02] transition-all"
                   >
                     <span>🛡️</span> Quality &amp; NCR
@@ -184,7 +195,7 @@ export default function DashboardPage() {
               <ul className="space-y-1">
                 <li>
                   <Link
-                    href={`/c/${companyId}/p/proj-1/reports`}
+                    href={`/c/${companyId}/p/${activeProject}/reports`}
                     className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.02] transition-all"
                   >
                     <span>📊</span> Progress Reports
@@ -200,7 +211,7 @@ export default function DashboardPage() {
               <ul className="space-y-1">
                 <li>
                   <Link
-                    href={`/c/${companyId}/p/proj-1/equipment`}
+                    href={`/c/${companyId}/p/${activeProject}/equipment`}
                     className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.02] transition-all"
                   >
                     <span>🚜</span> Equipment Tracking
@@ -216,7 +227,7 @@ export default function DashboardPage() {
               <ul className="space-y-1">
                 <li>
                   <Link
-                    href={`/c/${companyId}/p/proj-1/safety`}
+                    href={`/c/${companyId}/p/${activeProject}/safety`}
                     className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.02] transition-all"
                   >
                     <span>🦺</span> HSE / Incidents
@@ -248,7 +259,7 @@ export default function DashboardPage() {
               <ul className="space-y-1">
                 <li>
                   <Link
-                    href={`/c/${companyId}/p/proj-1/finance`}
+                    href={`/c/${companyId}/p/${activeProject}/finance`}
                     className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.02] transition-all"
                   >
                     <span>💵</span> Finance & Ledger
@@ -256,7 +267,7 @@ export default function DashboardPage() {
                 </li>
                 <li>
                   <Link
-                    href={`/c/${companyId}/p/proj-1/billing`}
+                    href={`/c/${companyId}/p/${activeProject}/billing`}
                     className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.02] transition-all"
                   >
                     <span>🧾</span> Work Orders & RA Bills
@@ -396,12 +407,16 @@ export default function DashboardPage() {
                   <form className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1">
                       <label className="text-xs text-zinc-400">Diameter (D in mm)</label>
-                      <select className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary">
-                        <option>8 mm</option>
-                        <option>10 mm</option>
-                        <option selected>12 mm</option>
-                        <option>16 mm</option>
-                        <option>20 mm</option>
+                      <select
+                        value={diameter}
+                        onChange={(e) => setDiameter(Number(e.target.value))}
+                        className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary"
+                      >
+                        <option value={8}>8 mm</option>
+                        <option value={10}>10 mm</option>
+                        <option value={12}>12 mm</option>
+                        <option value={16}>16 mm</option>
+                        <option value={20}>20 mm</option>
                       </select>
                     </div>
 
@@ -409,7 +424,8 @@ export default function DashboardPage() {
                       <label className="text-xs text-zinc-400">Main Bar Count</label>
                       <input
                         type="number"
-                        defaultValue={10}
+                        value={barCount}
+                        onChange={(e) => setBarCount(Number(e.target.value))}
                         className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary"
                       />
                     </div>
@@ -418,7 +434,8 @@ export default function DashboardPage() {
                       <label className="text-xs text-zinc-400">Length/Height (meters)</label>
                       <input
                         type="number"
-                        defaultValue={3}
+                        value={barLength}
+                        onChange={(e) => setBarLength(Number(e.target.value))}
                         className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary"
                       />
                     </div>
@@ -427,7 +444,8 @@ export default function DashboardPage() {
                       <label className="text-xs text-zinc-400">Structural Wastage %</label>
                       <input
                         type="number"
-                        defaultValue={5}
+                        value={wastagePercent}
+                        onChange={(e) => setWastagePercent(Number(e.target.value))}
                         className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary"
                       />
                     </div>
@@ -436,15 +454,15 @@ export default function DashboardPage() {
                   <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 flex flex-wrap gap-6 items-center justify-between text-xs">
                     <div>
                       <span className="text-zinc-500 block uppercase font-medium">Standard Unit Weight</span>
-                      <span className="font-bold text-white text-base">0.884 kg/m</span>
+                      <span className="font-bold text-white text-base">{standardUnitWeight.toFixed(3)} kg/m</span>
                     </div>
                     <div>
                       <span className="text-zinc-500 block uppercase font-medium">Total Bar length</span>
-                      <span className="font-bold text-white text-base">37.5 meters</span>
+                      <span className="font-bold text-white text-base">{totalBarLength.toFixed(1)} meters</span>
                     </div>
                     <div>
                       <span className="text-zinc-500 block uppercase font-medium">Reinforcement weight</span>
-                      <span className="font-bold text-primary text-base">34.81 kg</span>
+                      <span className="font-bold text-primary text-base">{reinforcementWeight.toFixed(2)} kg</span>
                     </div>
                   </div>
                 </div>

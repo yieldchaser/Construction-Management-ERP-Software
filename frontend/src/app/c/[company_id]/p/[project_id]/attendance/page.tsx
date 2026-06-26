@@ -43,11 +43,30 @@ const PUNCH_QUEUE_KEY = "siteflow-punch-queue";
 export default function AttendancePage() {
   const params = useParams();
   const companyId = params?.company_id as string;
+  const projectId = params?.project_id as string || "d0000000-0000-0000-0000-000000000001";
   const [tab, setTab] = useState<"today" | "payroll">("today");
   const [date] = useState("Jun 26, 2026");
   const [isOnline, setIsOnline] = useState(true);
   const [queuedPunches, setQueuedPunches] = useState<PunchRecord[]>([]);
   const [syncMessage, setSyncMessage] = useState("Mobile punch queue ready");
+  const [employees, setEmployees] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchEmps = async () => {
+      try {
+        const res = await fetch(`http://localhost:8000/apis/v3/hr/employees/${projectId}`);
+        if (res.ok) {
+          const data = await res.json();
+          setEmployees(data);
+        }
+      } catch (e) {
+        console.error("Failed to load employees for punch selection", e);
+      }
+    };
+    if (projectId) {
+      fetchEmps();
+    }
+  }, [projectId]);
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -117,6 +136,9 @@ export default function AttendancePage() {
   };
 
   const queuePunch = async (mode: "IN" | "OUT") => {
+    const targetEmpId = employees[0]?.id || "e0000000-0000-0000-0000-000000000100";
+    const empName = employees[0]?.name || "Ramesh Kumar";
+
     const location = await captureLocation();
     const punch: PunchRecord = {
       id: `${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
@@ -135,7 +157,30 @@ export default function AttendancePage() {
       return;
     }
 
-    setSyncMessage(`${mode === "IN" ? "Punch in" : "Punch out"} recorded from ${location.label}`);
+    try {
+      const res = await fetch("http://localhost:8000/apis/v3/hr/attendance/punch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          employee_id: targetEmpId,
+          project_id: projectId,
+          lat: parseFloat(location.lat),
+          lng: parseFloat(location.lng),
+          punch_type: mode.toLowerCase(),
+          notes: `Punch from browser at ${location.label}`
+        }),
+      });
+      if (res.ok) {
+        setSyncMessage(`${mode === "IN" ? "Punch in" : "Punch out"} recorded successfully for ${empName}!`);
+      } else {
+        const errorData = await res.json();
+        setSyncMessage(`Punch rejected: ${errorData.detail || "Geofence violation"}`);
+      }
+    } catch (e) {
+      setSyncMessage("Offline / server connection lost. Saved to queue.");
+      const nextQueue = [punch, ...queuedPunches];
+      persistQueue(nextQueue);
+    }
   };
 
   const flushQueue = () => {

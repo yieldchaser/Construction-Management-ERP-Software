@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 
@@ -94,14 +94,130 @@ const INITIAL_NOTES: DebitCreditNote[] = [
 export default function SubcontractorBillingPage() {
   const { company_id, project_id } = useParams();
   const companyId = company_id || "demo-company";
-  const projectId = project_id || "proj-1";
+  const projectId = project_id || "d0000000-0000-0000-0000-000000000001";
 
   const [tab, setTab] = useState<"wo" | "ra-bills" | "notes">("ra-bills");
 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const queryParams = new URLSearchParams(window.location.search);
+      const queryTab = queryParams.get("tab");
+      if (queryTab && ["wo", "ra-bills", "notes"].includes(queryTab)) {
+        setTab(queryTab as "wo" | "ra-bills" | "notes");
+      }
+    }
+  }, []);
+
   // State managers
-  const [workOrders, setWorkOrders] = useState<WorkOrder[]>(INITIAL_WORK_ORDERS);
-  const [bills, setBills] = useState<Bill[]>(INITIAL_BILLS);
-  const [notes, setNotes] = useState<DebitCreditNote[]>(INITIAL_NOTES);
+  const [workOrders, setWorkOrders] = useState<WorkOrder[]>([]);
+  const [bills, setBills] = useState<Bill[]>([]);
+  const [notes, setNotes] = useState<DebitCreditNote[]>([]);
+
+  // Subcontractor mapping for UUIDs
+  const SUBCON_MAP: Record<string, string> = {
+    "Karan Masonry Works": "e0000000-0000-0000-0000-000000000201",
+    "Apex Bar-Bending Co": "e0000000-0000-0000-0000-000000000202",
+    "Metro Plumbing Services": "e0000000-0000-0000-0000-000000000203",
+  };
+
+  const SUBCON_IDS: Record<string, string> = {
+    "e0000000-0000-0000-0000-000000000201": "Karan Masonry Works",
+    "e0000000-0000-0000-0000-000000000202": "Apex Bar-Bending Co",
+    "e0000000-0000-0000-0000-000000000203": "Metro Plumbing Services",
+  };
+
+  const fetchWorkOrders = async () => {
+    try {
+      const res = await fetch(`http://localhost:8000/apis/v3/billing/work-orders?project_id=${projectId}`);
+      if (res.ok) {
+        const data = await res.json();
+        const mapped = data.map((wo: any) => ({
+          id: wo.id,
+          woNumber: wo.wo_number,
+          subcontractor: SUBCON_IDS[wo.subcontractor_id] || "Karan Masonry Works",
+          item: wo.items && wo.items.length > 0 ? wo.items[0].description || wo.terms : wo.terms || "Subcontractor Works",
+          value: wo.estimated_work_amount,
+          status: wo.status === "active" ? "Active" : wo.status,
+          date: wo.wo_date ? wo.wo_date.split("T")[0] : "",
+        }));
+        setWorkOrders(mapped);
+      }
+    } catch (e) {
+      console.error("Failed to fetch work orders", e);
+    }
+  };
+
+  const fetchBills = async () => {
+    try {
+      const res = await fetch(`http://localhost:8000/apis/v3/billing/bills?project_id=${projectId}&invoice_type=subcon`);
+      if (res.ok) {
+        const data = await res.json();
+        const mapped = data.map((bill: any) => ({
+          id: bill.id,
+          invoiceNumber: bill.invoice_number,
+          invoiceDate: bill.invoice_date ? bill.invoice_date.split("T")[0] : "",
+          subcontractor: SUBCON_IDS[bill.party_company_user_id] || "Karan Masonry Works",
+          subtotal: bill.subtotal,
+          gstAmount: bill.gst_amount,
+          totalPayable: bill.total_payable,
+          preTax: bill.is_milestone_fixed_amount,
+          status: bill.status === "Unpaid" ? "pending" : (bill.status === "Paid" ? "approved" : "rejected"),
+          deductions: bill.deductions.map((d: any) => ({
+            type: d.deduction_type,
+            amount: d.amount,
+            rate: d.percentage,
+            notes: d.notes
+          }))
+        }));
+        setBills(mapped);
+      }
+    } catch (e) {
+      console.error("Failed to fetch bills", e);
+    }
+  };
+
+  const fetchNotes = async () => {
+    try {
+      const dnRes = await fetch(`http://localhost:8000/apis/v3/billing/debit-notes?project_id=${projectId}`);
+      const cnRes = await fetch(`http://localhost:8000/apis/v3/billing/credit-notes?project_id=${projectId}`);
+      let allNotes: DebitCreditNote[] = [];
+      if (dnRes.ok) {
+        const dnData = await dnRes.json();
+        allNotes = allNotes.concat(dnData.map((n: any) => ({
+          id: n.id,
+          type: "debit",
+          subcontractor: SUBCON_IDS[n.party_company_user_id] || "Karan Masonry Works",
+          amount: n.total_amount,
+          notes: n.notes || "",
+          date: n.created_at ? n.created_at.split("T")[0] : "",
+          status: n.approval_flag === "auto_approved" ? "approved" : "pending"
+        })));
+      }
+      if (cnRes.ok) {
+        const cnData = await cnRes.json();
+        allNotes = allNotes.concat(cnData.map((n: any) => ({
+          id: n.id,
+          type: "credit",
+          subcontractor: SUBCON_IDS[n.party_company_user_id] || "Karan Masonry Works",
+          amount: n.total_amount,
+          notes: n.notes || "",
+          date: n.created_at ? n.created_at.split("T")[0] : "",
+          status: n.approval_flag === "approved" ? "approved" : "pending"
+        })));
+      }
+      setNotes(allNotes);
+    } catch (e) {
+      console.error("Failed to fetch debit/credit notes", e);
+    }
+  };
+
+  useEffect(() => {
+    if (projectId) {
+      fetchWorkOrders();
+      fetchBills();
+      fetchNotes();
+    }
+  }, [projectId]);
 
   // New Work Order Modal & Forms
   const [showWOModal, setShowWOModal] = useState(false);
@@ -168,46 +284,76 @@ export default function SubcontractorBillingPage() {
     newBillPreTax
   );
 
-  const handleCreateWO = () => {
-    const newWO: WorkOrder = {
-      id: `WO-${Date.now()}`,
-      woNumber: newWONum,
-      subcontractor: newWOSub,
-      item: newWOItem,
-      value: newWOValue,
-      status: "Active",
-      date: new Date().toISOString().split("T")[0]
-    };
-    setWorkOrders([newWO, ...workOrders]);
-    setShowWOModal(false);
-    setNewWOItem("");
-    setNewWONum(`WO-2026-00${workOrders.length + 4}`);
+  const handleCreateWO = async () => {
+    const subconId = SUBCON_MAP[newWOSub] || "e0000000-0000-0000-0000-000000000201";
+    try {
+      const res = await fetch("http://localhost:8000/apis/v3/billing/work-orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          company_id: companyId,
+          project_id: projectId,
+          subcontractor_id: subconId,
+          wo_number: newWONum,
+          wo_date: new Date().toISOString(),
+          items: [
+            {
+              boq_item_id: null,
+              task_id: null,
+              quantity: 1,
+              rate: newWOValue
+            }
+          ],
+          terms: newWOItem
+        })
+      });
+      if (res.ok) {
+        fetchWorkOrders();
+        setShowWOModal(false);
+        setNewWOItem("");
+        setNewWONum(`WO-2026-${Math.floor(1000 + Math.random() * 9000)}`);
+      }
+    } catch (e) {
+      console.error("Failed to create work order", e);
+    }
   };
 
-  const handleCreateBill = () => {
-    const newBill: Bill = {
-      id: `B-${Date.now()}`,
-      invoiceNumber: newBillNum,
-      invoiceDate: new Date().toISOString().split("T")[0],
-      subcontractor: newBillSub,
-      subtotal: newBillSubtotal,
-      gstAmount: preview.gstAmt,
-      totalPayable: preview.totalPayable,
-      preTax: newBillPreTax,
-      status: "pending",
-      deductions: [
-        { type: "TDS", rate: newBillTdsPct, amount: preview.tdsAmt, notes: `${newBillTdsPct}% TDS (Sec 194C)` },
-        { type: "Retention", rate: newBillRetentionPct, amount: preview.retentionAmt, notes: `${newBillRetentionPct}% ${newBillPreTax ? 'Pre' : 'Post'}-tax retention` }
-      ]
-    };
+  const handleCreateBill = async () => {
+    const subconId = SUBCON_MAP[newBillSub] || "e0000000-0000-0000-0000-000000000201";
+    const deductions: Array<{ deduction_type: string; amount: number; percentage: number | null; notes: string }> = [
+      { deduction_type: "TDS", amount: preview.tdsAmt, percentage: newBillTdsPct, notes: `${newBillTdsPct}% TDS (Sec 194C)` },
+      { deduction_type: "Retention", amount: preview.retentionAmt, percentage: newBillRetentionPct, notes: `${newBillRetentionPct}% ${newBillPreTax ? 'Pre' : 'Post'}-tax retention` }
+    ];
 
     if (newBillAdvanceRecovery > 0) {
-      newBill.deductions.push({ type: "Advance Recovery", amount: newBillAdvanceRecovery, notes: "Advance Return adjustment" });
+      deductions.push({ deduction_type: "Advance Recovery", amount: newBillAdvanceRecovery, percentage: null, notes: "Advance Return adjustment" });
     }
 
-    setBills([newBill, ...bills]);
-    setShowBillModal(false);
-    setNewBillNum(`RA-BILL-00${bills.length + 3}`);
+    try {
+      const res = await fetch("http://localhost:8000/apis/v3/billing/bills", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          company_id: companyId,
+          project_id: projectId,
+          party_company_user_id: subconId,
+          invoice_number: newBillNum,
+          invoice_date: new Date().toISOString(),
+          invoice_type: "subcon",
+          subtotal: newBillSubtotal,
+          gst_pct: newBillGstPct,
+          deductions: deductions,
+          pre_tax_deductions: newBillPreTax
+        })
+      });
+      if (res.ok) {
+        fetchBills();
+        setShowBillModal(false);
+        setNewBillNum(`RA-BILL-${Math.floor(1000 + Math.random() * 9000)}`);
+      }
+    } catch (e) {
+      console.error("Failed to create bill", e);
+    }
   };
 
   const handleApproveBill = (id: string) => {
