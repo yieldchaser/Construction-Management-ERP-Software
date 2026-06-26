@@ -154,3 +154,88 @@ class DrawingPin(Base):
     tagged_user_id = Column(UUID(as_uuid=True), ForeignKey("company_team.id"), nullable=True)
     created_by = Column(UUID(as_uuid=True), ForeignKey("company_team.id"), nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+class MaterialIndent(Base):
+    __tablename__ = "material_indents"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
+    requested_by = Column(UUID(as_uuid=True), ForeignKey("company_team.id"), nullable=True)
+    indent_number = Column(String(100), nullable=False)
+    status = Column(String(50), default="pending", nullable=False) # pending, approved, ordered, rejected
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+class MaterialIndentItem(Base):
+    __tablename__ = "material_indent_items"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    indent_id = Column(UUID(as_uuid=True), ForeignKey("material_indents.id", ondelete="CASCADE"), nullable=False)
+    material_name = Column(String(255), nullable=False)
+    quantity = Column(Numeric(18, 4), nullable=False)
+    unit = Column(String(50), nullable=False)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+class PurchaseOrder(Base):
+    __tablename__ = "purchase_orders"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
+    vendor_id = Column(UUID(as_uuid=True), ForeignKey("company_team.id"), nullable=True)
+    po_number = Column(String(100), nullable=False)
+    po_date = Column(DateTime(timezone=True), nullable=False)
+    status = Column(String(50), default="draft", nullable=False) # draft, sent, partial, received, closed
+    gross_amount = Column(Numeric(18, 2), default=0.0, nullable=False)
+    tax_amount = Column(Numeric(18, 2), default=0.0, nullable=False)
+    total_amount = Column(Numeric(18, 2), default=0.0, nullable=False)
+    approval_flag = Column(String(50), default="pending", nullable=False) # pending, approved, rejected
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+class PurchaseOrderItem(Base):
+    __tablename__ = "purchase_order_items"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    po_id = Column(UUID(as_uuid=True), ForeignKey("purchase_orders.id", ondelete="CASCADE"), nullable=False)
+    material_name = Column(String(255), nullable=False)
+    quantity = Column(Numeric(18, 4), nullable=False)
+    unit = Column(String(50), nullable=False)
+    rate = Column(Numeric(18, 2), nullable=False)
+    tax_pct = Column(Numeric(5, 2), default=18.00, nullable=False)
+    total_amount = Column(Numeric(18, 2), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+class GoodsReceiptNote(Base):
+    __tablename__ = "goods_receipt_notes"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
+    po_id = Column(UUID(as_uuid=True), ForeignKey("purchase_orders.id", ondelete="CASCADE"), nullable=False)
+    grn_number = Column(String(100), nullable=False)
+    received_date = Column(DateTime(timezone=True), nullable=False)
+    received_by = Column(UUID(as_uuid=True), ForeignKey("company_team.id"), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+class GRNItem(Base):
+    __tablename__ = "grn_items"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    grn_id = Column(UUID(as_uuid=True), ForeignKey("goods_receipt_notes.id", ondelete="CASCADE"), nullable=False)
+    po_item_id = Column(UUID(as_uuid=True), ForeignKey("purchase_order_items.id", ondelete="CASCADE"), nullable=False)
+    received_qty = Column(Numeric(18, 4), nullable=False)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+class WarehouseInventory(Base):
+    __tablename__ = "warehouse_inventory"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
+    material_name = Column(String(255), nullable=False)
+    on_hand_qty = Column(Numeric(18, 4), default=0.0, nullable=False)
+    reserved_qty = Column(Numeric(18, 4), default=0.0, nullable=False)
+    unit = Column(String(50), nullable=False)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+class MaterialTransaction(Base):
+    __tablename__ = "material_transactions"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
+    material_name = Column(String(255), nullable=False)
+    qty = Column(Numeric(18, 4), nullable=False)
+    type = Column(String(50), nullable=False) # received, used, transferred, returned
+    source_ref_id = Column(UUID(as_uuid=True), nullable=True) # grn_id, dpr_id, etc.
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
