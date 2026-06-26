@@ -1,4 +1,4 @@
-# SiteFlow — Full Build Walkthrough (Phases 1–12)
+# SiteFlow — Full Build Walkthrough (Phases 1–15)
 
 > This document is the authoritative record of everything built so far. A new AI session should read this file and `implementation_plan.md` before continuing work on the next phase.
 
@@ -178,19 +178,44 @@
 
 ---
 
-## 🔵 Next: Phase 14 — Advanced Analytics Dashboard
+## Phase 14 — Advanced Analytics Dashboard ✅ `current`
 
-**Goal**: Cross-project executive KPI dashboard.
+### Backend
+- `backend/app/routers/analytics.py` — New company-level analytics router aggregating across budgets, tasks, billing, attendance, procurement, material usage, and NCRs.
+- `backend/app/main.py` — Registered `analytics` router.
+- `backend/test_phase14.py` — Integration test covering S-curve, burn-rate, labour productivity, material wastage, and subcontractor scorecard calculations.
 
-**Features**:
-- S-Curve: Planned vs Actual physical progress (tasks complete % over time)
-- Budget burn-rate and variance chart
-- Labour productivity index (m² per labour-day from DPR data)
-- Material wastage index (ordered vs consumed from procurement)
-- Subcontractor performance scorecard (RA Bill on-time %, NCR count)
+### Frontend
+- `frontend/src/app/c/[company_id]/analytics/page.tsx` — Executive KPI dashboard with S-curve visualization, burn chart, project scoreboard, labour intelligence, material leakage panel, and subcontractor scorecard.
+- `frontend/src/app/c/[company_id]/dashboard/page.tsx` — Added "Executive Intelligence" sidebar section with Analytics Dashboard link.
 
-**Backend**: New `analytics.py` router — aggregates across BOQ, tasks, billing, quality, HR modules.  
-**Frontend**: New `analytics/page.tsx` — glassmorphic dashboard with SVG charts and KPI tiles.
+---
+
+## Phase 15 — Mobile PWA & Push Foundations ✅ `current`
+
+### Frontend
+- `frontend/public/manifest.json` — Installable PWA manifest.
+- `frontend/public/sw.js` — Service worker for shell caching, offline navigation fallback, and notification handling.
+- `frontend/src/components/pwa/PwaBootstrap.tsx` — Automatic service worker registration from the app shell.
+- `frontend/src/components/pwa/PwaControls.tsx` — Install prompt and notification-permission controls.
+- `frontend/src/app/layout.tsx` — Added PWA metadata, viewport theme color, and global bootstrap hook.
+- `frontend/src/app/c/[company_id]/p/[project_id]/attendance/page.tsx` — Added mobile-friendly offline punch queue with local persistence and sync-ready workflow.
+
+### Notes
+- This phase establishes the installable shell, offline attendance capture path, and notification-ready client foundation.
+- Production-grade push subscription persistence and backend delivery are still future parity work.
+
+---
+
+## Phase Horizon Audit — No Defined Phase 16+
+
+The repo context does not define a numbered phase beyond 15. The broader product goal in recon/context is a full construction ERP that unifies execution, cost control, procurement, labour, billing, and analytics. Against that goal, these notable gaps remain:
+
+- `CRM / Sales Management` is still largely a frontend stub; no backend sales workflow exists.
+- `DPR / Progress Tracking` does not yet have a dedicated backend model/router serving daily progress records.
+- `Finance / Project P&L` is not implemented as a true backend module beyond billing and report aggregation.
+- `Production Management` appears in recon/product context but has no dedicated route, model set, or workflow in the app.
+- `PWA push delivery` is only client-side foundation today; there is no persisted subscription or server-driven notification pipeline.
 
 ---
 
@@ -199,7 +224,7 @@
 | Topic | Detail |
 |---|---|
 | API base URL | `http://localhost:8000/apis/v3` (dev) |
-| Backend port | 8000 (dev), 8015 (Phase 13 test) |
+| Backend port | 8000 (dev), 8015 (Phase 13 test), 8016 (Phase 14 test) |
 | Frontend | Next.js App Router, all pages under `frontend/src/app/` |
 | DB (dev) | SQLite, auto-created by SQLAlchemy `create_all()` |
 | DB (prod) | Supabase Postgres — connection string in `.env` |

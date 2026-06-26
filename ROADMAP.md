@@ -20,29 +20,29 @@
 | 11 | **Client Portal & Reports** | `3cd8c56` | Automated progress report compilation, pure Python PDF generator, approval flows, PDF viewer |
 | 12 | **Equipment & Machinery Tracking** | `52c32b7` | Fleet registry (owned/hired), project deployments, fuel burn logs, maintenance schedules, 4-tab UI console |
 | 13 | **Safety & Incident Management (HSE)** | `fa1c470` | OSHA incident board (severity-coded), LTIF rate calculation, toolbox talks tracker, PPE compliance donut gauge |
+| 14 | **Advanced Analytics Dashboard** | `current` | Company-level analytics router, S-curve, burn-rate tracking, labour productivity index, material wastage metrics, subcontractor scorecard |
+| 15 | **Mobile PWA & Push Foundations** | `current` | Installable PWA shell, service worker, manifest, mobile attendance punch queue, notification-ready controls, analytics shell integration |
 
 ---
 
-## 🔵 Upcoming Phases
+## 🔵 Phase Horizon
 
-### Phase 14 — Advanced Analytics Dashboard
-**Goal**: Cross-project executive KPI dashboard with financial and productivity intelligence.
+No numbered Phase 16+ is defined in the repository context right now. The next work should be driven by parity gaps against the broader Onsite end goal rather than by an existing phase script.
 
-**Features**:
-- S-Curve: Planned vs Actual physical progress over time
-- Budget burn-rate and variance chart
-- Labour productivity index (m² per labour-day)
-- Material wastage index
-- Subcontractor performance scorecard
+### Product Goal Reference
+The recon and marketing context describe the end goal as a complete construction ERP that connects site teams, project managers, procurement, finance, billing, and analytics in one platform to reduce cost leakages and improve execution across every project.
 
-### Phase 15 — Mobile PWA & Push Notifications
-**Goal**: Progressive Web App shell with offline capability and real-time push alerts.
+### Audit Findings
+- `CRM / Sales Management` is still frontend-only; there is no backend router or persisted sales workflow.
+- `DPR / Progress Tracking` is still largely static UI; there is no dedicated backend DPR model/router feeding daily progress records.
+- `Finance & Controls / Project P&L` is still missing a dedicated backend finance router and company-level financial workflows beyond billing/report aggregation.
+- `Production Management` does not exist as a dedicated module even though it appears repeatedly in recon/context as part of the target product surface.
+- `PWA push` is notification-ready on the frontend, but production-grade subscription persistence and outbound push delivery infrastructure are not yet present.
 
-**Features**:
-- Service worker + `manifest.json` for installability
-- Push notification via Web Push API (NCR alerts, approval reminders, attendance flagging)
-- Offline timesheet entry with background sync on reconnect
-- Mobile-first attendance punch view with live GPS map
+### Recommended Next Phase Candidates
+- Phase 16: Production Management + batch/mix consumption controls
+- Phase 17: CRM / Sales Management backend parity
+- Phase 18: Finance Controls, project P&L, and real execution-linked cashflow workflows
 
 ## Architecture Overview
 
@@ -59,6 +59,7 @@
 │           drawings · procurement · billing · hr      │
 │           quality · reports · equipment · safety     │
 │           analytics                                  │
+│           pwa shell / attendance offline queue       │
 └──────────────────────┬──────────────────────────────┘
                        │ SQLAlchemy ORM
          ┌─────────────┴─────────────┐
@@ -97,4 +98,5 @@ python test_phase10.py   # Quality Control
 python test_phase11.py   # Client Portal & Reports
 python test_phase12.py   # Equipment & Machinery
 python test_phase13.py   # Safety & HSE
+python test_phase14.py   # Advanced Analytics Dashboard
 ```

@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import os
-from app.routers import auth, calculators, budgeting, planning, drawings, procurement, billing, hr, quality, reports, equipment, safety
+from app.routers import auth, calculators, budgeting, planning, drawings, procurement, billing, hr, quality, reports, equipment, safety, analytics
 from app.database import engine, Base
 
 # Initialize SQLAlchemy tables if they do not exist
@@ -42,6 +42,7 @@ app.include_router(quality.router, prefix="/apis/v3")
 app.include_router(reports.router, prefix="/apis/v3")
 app.include_router(equipment.router, prefix="/apis/v3")
 app.include_router(safety.router, prefix="/apis/v3")
+app.include_router(analytics.router, prefix="/apis/v3")
 
 @app.get("/")
 def read_root():
@@ -50,4 +51,3 @@ def read_root():
         "service": "SiteFlow Core API Engine",
         "version": "3.0.0"
     }
-

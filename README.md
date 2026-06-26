@@ -1,4 +1,4 @@
-# 🌊 SiteFlow — Construction Management Platform
+# SiteFlow — Construction Management Platform
 
 SiteFlow is a world-class, highly secure, and visually stunning Construction Management Platform designed for builders, contractors, architects, infrastructure firms, and interior design companies. 
 
@@ -27,16 +27,14 @@ SiteFlow is built as a highly scalable monorepo:
 
 ---
 
-## 📁 Repository Directory Layout
-* `context/`: System specifications, mathematical calculators, and database DDL rules.
-  * [`implementation_plan.md`](file:///context/implementation_plan.md) — Master DDL schemas, module routes, and execution milestones.
-  * [`recon_audit_assurance.md`](file:///context/recon_audit_assurance.md) — Sitemaps, audit checklists, and security protocols.
-  * [`deep_recon_report.md`](file:///context/deep_recon_report.md) — Angular bundle mappings and reverse-engineered file patterns.
-  * [`verify_calculators.py`](file:///context/verify_calculators.py) — Unit test suite validating all mathematical formulas.
-  * [`niche_logic_summary.txt`](file:///context/niche_logic_summary.txt) — Comprehensive scan of competitor business scenarios (GST adjustments, retainage, etc.).
-* `onsiteteams-recon/`: Raw competitor bundle resources (Angular source maps, HTML assets, sitemaps, and API schemas).
-* `frontend/` *(Upcoming)*: Next.js frontend portal codebase.
-* `backend/` *(Upcoming)*: FastAPI backend microservice.
+## Current Status
+Phases 1–15 are implemented in this repository, including analytics and PWA shell foundations. There is no defined Phase 16+ in the current repo context; future work should follow the parity audit in `context/implementation_plan.md`.
+
+## Repository Directory Layout
+* `context/`: session context, roadmap history, audits, calculators, and reverse-engineering notes.
+* `onsiteteams-recon/`: raw competitor bundle resources, HTML assets, sitemaps, and API schemas.
+* `frontend/`: Next.js app-router frontend, including dashboard, project modules, analytics, and PWA shell assets.
+* `backend/`: FastAPI backend with routers for auth, calculators, planning, procurement, billing, HR, quality, reports, equipment, safety, and analytics.
 
 ---
 

@@ -1,0 +1,17 @@
+{
+  "name": "SiteFlow Construction ERP",
+  "short_name": "SiteFlow",
+  "description": "Construction management ERP for project execution, analytics, and field productivity.",
+  "start_url": "/login",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0E0C15",
+  "theme_color": "#E8184C",
+  "icons": [
+    {
+      "src": "/images/recon/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
