@@ -558,3 +558,64 @@ class ClientReport(Base):
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), default=func.now(), onupdate=func.now(), nullable=False)
 
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Phase 12 — Equipment & Machinery Tracking
+# ─────────────────────────────────────────────────────────────────────────────
+
+class Equipment(Base):
+    """Assets/Machinery fleet owned or hired by the company."""
+    __tablename__ = "equipment"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    name = Column(String(255), nullable=False)
+    code = Column(String(100), unique=True, nullable=False)
+    category = Column(String(100), nullable=False)        # Excavator, Crane, Mixer, Generator, etc.
+    ownership_type = Column(String(50), nullable=False)     # Owned, Hired
+    status = Column(String(50), default="available", nullable=False) # available, deployed, maintenance, inactive
+    hourly_rate = Column(Numeric(12, 2), default=0.0, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=func.now(), onupdate=func.now(), nullable=False)
+
+
+class EquipmentDeployment(Base):
+    """Deployment history of a machinery asset to a specific construction project."""
+    __tablename__ = "equipment_deployments"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    equipment_id = Column(UUID(as_uuid=True), ForeignKey("equipment.id", ondelete="CASCADE"), nullable=False)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
+    start_date = Column(DateTime(timezone=True), nullable=False)
+    end_date = Column(DateTime(timezone=True), nullable=True)
+    remarks = Column(String, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
+class FuelLog(Base):
+    """Fuel refilling logs for heavy machinery to compute burn rates."""
+    __tablename__ = "equipment_fuel_logs"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    equipment_id = Column(UUID(as_uuid=True), ForeignKey("equipment.id", ondelete="CASCADE"), nullable=False)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
+    logged_date = Column(DateTime(timezone=True), nullable=False)
+    liters = Column(Numeric(10, 2), nullable=False)
+    cost_per_liter = Column(Numeric(10, 2), nullable=False)
+    total_cost = Column(Numeric(14, 2), nullable=False)
+    odometer_hours = Column(Numeric(12, 2), nullable=True)  # odometer reading or engine hours run
+    remarks = Column(String, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
+class MaintenanceSchedule(Base):
+    """Routine service and repair logs for heavy fleet machinery."""
+    __tablename__ = "equipment_maintenance_schedules"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    equipment_id = Column(UUID(as_uuid=True), ForeignKey("equipment.id", ondelete="CASCADE"), nullable=False)
+    service_type = Column(String(100), nullable=False)      # Routine Oil Change, Brake Overhaul, etc.
+    scheduled_date = Column(DateTime(timezone=True), nullable=False)
+    completed_date = Column(DateTime(timezone=True), nullable=True)
+    cost = Column(Numeric(14, 2), default=0.0, nullable=False)
+    status = Column(String(50), default="scheduled", nullable=False) # scheduled, completed, overdue
+    remarks = Column(String, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+

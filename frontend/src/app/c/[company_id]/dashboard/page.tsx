@@ -187,6 +187,22 @@ export default function DashboardPage() {
 
             <div>
               <span className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider block px-3 mb-2">
+                Asset Management
+              </span>
+              <ul className="space-y-1">
+                <li>
+                  <Link
+                    href={`/c/${companyId}/p/proj-1/equipment`}
+                    className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.02] transition-all"
+                  >
+                    <span>🚜</span> Equipment Tracking
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <span className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider block px-3 mb-2">
                 Finance & Ledgers
               </span>
               <ul className="space-y-1">
