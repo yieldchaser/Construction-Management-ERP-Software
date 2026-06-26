@@ -1,80 +1,73 @@
-# Implementation Plan — Phase 2: Project Onboarding & BOQ Import
+# Phase 11 — Client Portal & PDF Progress Reports
 
-This plan details the design and implementation of Phase 2: building the Excel-based Bill of Quantities (BOQ) parser, setting up budget allocations, and creating the project scheduling/planning interfaces.
-
----
-
-## 🛠️ Technical Strategy & Design
-
-1. **Excel Parser Library**: Use **`openpyxl`** in FastAPI. It is lightweight, handles `.xlsx` files natively, and parses column headers (e.g. "Description", "Unit", "Qty", "Rate") with low memory usage.
-2. **Database Schema Additions**:
-   * Add `BOQItem` and `ProjectBudget` models.
-   * Add `Task` and `TaskPredecessor` models.
-   * Expose automatic SQLite / PostgreSQL dynamic compile overrides in `models.py`.
-3. **Budget Parsing & Matching Logic**:
-   * Parse rows. Map column headers dynamically to support flexible customer templates (case-insensitive checks for 'item name', 'qty', 'unit', 'rate').
-   * Validate that values are numeric; apply quantity rounding limits.
-   * Create associated `ProjectBudget` summation automatically.
-4. **Task Scheduling & Planning Logic**:
-   * Build APIs to list, create, update, and delete tasks.
-   * Implement automated end-date computation based on duration and start date.
-   * Check for circular dependencies when adding/modifying predecessors (e.g. Task A -> Task B -> Task A).
-
----
+## Goal
+Enable site managers to automatically compile and generate progress reports for clients, summarizing project scope, task timelines, billing records, procurement activity, and quality indicators, and outputting them into a portable PDF format.
 
 ## Proposed Changes
 
-### Backend Component
-
-#### [MODIFY] [requirements.txt](file:///c:/Users/Dell/Github/Construction-Management-ERP-Software/backend/requirements.txt)
-* Append `openpyxl>=3.1.2` for reading uploaded spreadsheet files.
+### Backend
 
 #### [MODIFY] [models.py](file:///c:/Users/Dell/Github/Construction-Management-ERP-Software/backend/app/models.py)
-* Add `BOQItem` schema.
-* Add `ProjectBudget` schema.
-* Add `Task` schema.
-* Add `TaskPredecessor` link table schema.
+Add the `ClientReport` table to store report metadata and file links.
+```python
+class ClientReport(Base):
+    """Client Portal - Generated PDF Progress Reports for clients."""
+    __tablename__ = "client_reports"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
+    report_name = Column(String(255), nullable=False)
+    report_date = Column(DateTime(timezone=True), nullable=False)
+    summary_markdown = Column(String, nullable=True)
+    pdf_url = Column(String(500), nullable=True)
+    generated_by = Column(UUID(as_uuid=True), nullable=True)
+    is_approved = Column(Boolean, default=False, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=func.now(), onupdate=func.now(), nullable=False)
+```
 
-#### [NEW] [budgeting.py](file:///c:/Users/Dell/Github/Construction-Management-ERP-Software/backend/app/routers/budgeting.py)
-* Expose `POST /apis/v3/budgeting/boq/import` for file uploads.
-* Expose `GET /apis/v3/budgeting/boq` to list items.
-* Expose `POST /apis/v3/budgeting/allocation` to set budget parameters.
+#### [NEW] [pdf_generator.py](file:///c:/Users/Dell/Github/Construction-Management-ERP-Software/backend/app/utils/pdf_generator.py)
+Create a pure-Python, zero-dependency PDF generator that outputs standard PDF 1.4 syntax.
+- Formats structured pages.
+- Includes a title header, timestamp, and sections for:
+  - Timeline & Execution Progress
+  - Financials & Billing
+  - Quality Control & NCRs
+  - Summary Notes
 
-#### [NEW] [planning.py](file:///c:/Users/Dell/Github/Construction-Management-ERP-Software/backend/app/routers/planning.py)
-* Expose `GET /apis/v3/planning/tasks` to fetch project WBS (Work Breakdown Structure).
-* Expose `POST /apis/v3/planning/tasks` to create new tasks.
-* Expose `PUT /apis/v3/planning/tasks/{task_id}` to reschedule.
-* Expose `POST /apis/v3/planning/tasks/{task_id}/predecessors` to set dependencies.
+#### [NEW] [reports.py](file:///c:/Users/Dell/Github/Construction-Management-ERP-Software/backend/app/routers/reports.py)
+Implement report router:
+- `POST /reports/generate/{project_id}`: Renders aggregated stats from tasks, subcontractor bills, indents, and inspections. Invokes `pdf_generator`, stores PDF on disk, and logs to database.
+- `GET /reports/{project_id}`: Lists reports.
+- `PATCH /reports/{report_id}/approve`: Approves a report for client viewing.
+- `GET /reports/{report_id}/download`: Serves the generated PDF file using FastAPI's `FileResponse`.
 
 #### [MODIFY] [main.py](file:///c:/Users/Dell/Github/Construction-Management-ERP-Software/backend/app/main.py)
-* Register `budgeting` and `planning` routers.
+- Register `reports` router under `/apis/v3`.
+- Mount static reports directory so generated files can be downloaded.
 
 ---
 
-### Frontend Component
+### Frontend
 
-#### [NEW] [budgeting/boq/page.tsx](file:///c:/Users/Dell/Github/Construction-Management-ERP-Software/frontend/src/app/c/%5Bcompany_id%5D/p/%5Bproject_id%5D/budgeting/boq/page.tsx)
-* Upload panel supporting drag-and-drop of `.xlsx` files.
-* Spreadsheet preview table showing parsed rows, errors, and mappings.
-* Commit button writing to database.
+#### [NEW] [page.tsx](file:///c:/Users/Dell/Github/Construction-Management-ERP-Software/frontend/src/app/c/[company_id]/p/[project_id]/reports/page.tsx)
+Build a glassmorphic report dashboard:
+- **Left Column**: List of reports (approved and draft) with status badges and timestamps. Includes a "Generate Report" modal.
+- **Right Column**: Live PDF viewer using an iframe or direct PDF viewer container, with buttons to Download PDF and Approve Report.
+- Uses crimson highlights and dark glassmorphic panels.
 
-#### [NEW] [planning/gantt/page.tsx](file:///c:/Users/Dell/Github/Construction-Management-ERP-Software/frontend/src/app/c/%5Bcompany_id%5D/p/%5Bproject_id%5D/planning/gantt/page.tsx)
-* Full-scale interactive Gantt scheduler.
-* Add/Edit Task slide-over panels.
-* Predecessor assignment form.
+#### [MODIFY] [page.tsx](file:///c:/Users/Dell/Github/Construction-Management-ERP-Software/frontend/src/app/c/[company_id]/dashboard/page.tsx)
+- Add "Client Portal" sidebar item with a link to the reports page.
 
 ---
 
 ## Verification Plan
 
 ### Automated Tests
-* Write `backend/test_phase2.py` to:
-  * Generate a dummy Excel BOQ file using `openpyxl`.
-  * Upload the file to `/apis/v3/budgeting/boq/import` and assert success.
-  * Fetch BOQ list and verify calculations (`amount = qty * rate`).
-  * Create a task sequence (Task A -> Task B) and verify start/end calculations.
-  * Try creating a circular dependency and assert validation failure (status `400`).
+- Create `backend/test_phase11.py` to:
+  1. Generate a report for a project.
+  2. Fetch the report list.
+  3. Validate the PDF download endpoint returns a valid `%PDF` payload.
+  4. Toggle approval and verify status changes.
 
-### Manual Verification
-* Run frontend in dev mode and test the drag-and-drop BOQ upload screen.
-* Drag task sliders in the Gantt interface to verify visual scheduling shifts.
+- Run the tests with `python backend/test_phase11.py`.
+- Run frontend compilation build check with `npm run build` via command prompt.
