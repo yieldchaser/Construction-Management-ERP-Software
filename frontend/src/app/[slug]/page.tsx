@@ -86,7 +86,7 @@ export default async function GenericPage({ params }: RouteParams) {
       <footer className="border-t border-white/5 px-6 py-8 text-zinc-600">
         <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-xs">
-            © 2026 SiteFlow — Abeyaantrix Technology Pvt Ltd. All rights reserved.
+            © 2026 SiteFlow. All rights reserved.
           </p>
           <div className="flex items-center gap-5 text-xs">
             <Link href="/privacy" className="hover:text-zinc-400 transition-all">Privacy</Link>

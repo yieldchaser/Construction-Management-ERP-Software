@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 
 const OFFICES = [
-  { city: "Delhi (HQ)", address: "Abeyaantrix Technology Pvt Ltd, New Delhi, India", flag: "🇮🇳" },
+  { city: "Delhi (HQ)", address: "SiteFlow Offices, New Delhi, India", flag: "🇮🇳" },
   { city: "Dubai", address: "Serving UAE, Qatar & Saudi Arabia clients", flag: "🇦🇪" },
 ];
 
