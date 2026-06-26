@@ -440,3 +440,101 @@ class PayrollLineItem(Base):
     total_deductions = Column(Numeric(14, 2), default=0.0, nullable=False)
     net_payable = Column(Numeric(14, 2), default=0.0, nullable=False)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Phase 10 — Quality Control, Site Inspections & Snag Lists
+# ─────────────────────────────────────────────────────────────────────────────
+
+class QualityChecklist(Base):
+    """Master checklist template (e.g. IS 456 concrete work checklist)."""
+    __tablename__ = "quality_checklists"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    title = Column(String(255), nullable=False)
+    category = Column(String(100), nullable=True)        # Concrete, Masonry, Electrical, etc.
+    is_code_reference = Column(String(100), nullable=True)  # IS 456, IS 1786, etc.
+    description = Column(String, nullable=True)
+    is_active = Column(Boolean, default=True, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
+class ChecklistItem(Base):
+    """Individual checkpoint within a QualityChecklist."""
+    __tablename__ = "checklist_items"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    checklist_id = Column(UUID(as_uuid=True), ForeignKey("quality_checklists.id", ondelete="CASCADE"), nullable=False)
+    sequence = Column(Integer, default=1, nullable=False)
+    description = Column(String, nullable=False)
+    acceptable_criteria = Column(String, nullable=True)   # e.g. "Cover ≥ 40mm"
+    is_mandatory = Column(Boolean, default=True, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
+class SiteInspection(Base):
+    """One inspection event (checklist instance) at a location/task."""
+    __tablename__ = "site_inspections"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
+    checklist_id = Column(UUID(as_uuid=True), ForeignKey("quality_checklists.id", ondelete="RESTRICT"), nullable=False)
+    task_id = Column(UUID(as_uuid=True), ForeignKey("tasks.id", ondelete="SET NULL"), nullable=True)
+    inspected_by = Column(UUID(as_uuid=True), nullable=True)   # user_id ref
+    zone = Column(String(100), nullable=True)                   # e.g. "Floor 3 - Grid C-D"
+    inspection_date = Column(DateTime(timezone=True), nullable=False)
+    status = Column(String(50), default="pending", nullable=False)  # pending, pass, fail, partial
+    pass_count = Column(Integer, default=0, nullable=False)
+    fail_count = Column(Integer, default=0, nullable=False)
+    na_count = Column(Integer, default=0, nullable=False)
+    overall_remarks = Column(String, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=func.now(), onupdate=func.now(), nullable=False)
+
+
+class InspectionResponse(Base):
+    """Per-item pass/fail response within a SiteInspection."""
+    __tablename__ = "inspection_responses"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    inspection_id = Column(UUID(as_uuid=True), ForeignKey("site_inspections.id", ondelete="CASCADE"), nullable=False)
+    checklist_item_id = Column(UUID(as_uuid=True), ForeignKey("checklist_items.id", ondelete="CASCADE"), nullable=False)
+    result = Column(String(10), nullable=False)   # Pass, Fail, NA
+    remarks = Column(String, nullable=True)
+    photo_url = Column(String, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
+class NCR(Base):
+    """Non-Conformance Report raised against a project or inspection."""
+    __tablename__ = "ncrs"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
+    inspection_id = Column(UUID(as_uuid=True), ForeignKey("site_inspections.id", ondelete="SET NULL"), nullable=True)
+    ncr_number = Column(String(50), nullable=False)
+    title = Column(String(255), nullable=False)
+    description = Column(String, nullable=True)
+    severity = Column(String(50), default="Major", nullable=False)  # Minor, Major, Critical
+    raised_by = Column(UUID(as_uuid=True), nullable=True)
+    assigned_to = Column(UUID(as_uuid=True), nullable=True)
+    due_date = Column(DateTime(timezone=True), nullable=True)
+    status = Column(String(50), default="open", nullable=False)   # open, under_review, closed
+    resolution_notes = Column(String, nullable=True)
+    closed_at = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=func.now(), onupdate=func.now(), nullable=False)
+
+
+class MaterialTestResult(Base):
+    """Lab/field test results for materials (cube strength, slump, compaction)."""
+    __tablename__ = "material_test_results"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
+    test_type = Column(String(100), nullable=False)      # Cube Test, Slump Test, Compaction Test, etc.
+    material = Column(String(100), nullable=True)         # Concrete M25, Steel Fe500, etc.
+    sample_ref = Column(String(100), nullable=True)
+    test_date = Column(DateTime(timezone=True), nullable=False)
+    result_value = Column(Numeric(12, 3), nullable=False)
+    unit = Column(String(20), nullable=True)              # MPa, mm, %
+    min_acceptable = Column(Numeric(12, 3), nullable=True)
+    max_acceptable = Column(Numeric(12, 3), nullable=True)
+    is_pass = Column(Boolean, nullable=True)              # auto-computed or manual
+    zone = Column(String(100), nullable=True)
+    remarks = Column(String, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
