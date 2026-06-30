@@ -33,6 +33,54 @@ export default async function GenericPage({ params }: RouteParams) {
   const page = await getContentItemBySlug("pages", slug);
   if (!page) notFound();
 
+  const isCustomLayout = slug === "about";
+
+  if (isCustomLayout) {
+    return (
+      <div className="min-h-screen bg-[#0E0C15] text-[#ededed] pb-20 relative">
+        <header className="sticky top-0 z-50 glass-panel border-b border-white/5 px-6 py-4 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-[#E8184C] to-[#7C5CFF] font-sans font-bold text-white shadow-md">
+              S
+            </div>
+            <span className="text-lg font-bold tracking-tight text-white">
+              Site<span className="text-primary">Flow</span>
+            </span>
+          </Link>
+          <div className="flex items-center gap-5">
+            <Link href="/products" className="hidden md:block text-sm text-zinc-400 hover:text-white transition-all">Products</Link>
+            <Link href="/blog" className="hidden md:block text-sm text-zinc-400 hover:text-white transition-all">Blog</Link>
+            <Link href="/help" className="hidden md:block text-sm text-zinc-400 hover:text-white transition-all">Help</Link>
+            <Link
+              href="/login"
+              className="rounded-xl bg-gradient-to-r from-primary to-[#FF3B6C] px-5 py-2 text-sm font-bold text-white hover:opacity-90 transition-all"
+            >
+              Get Started
+            </Link>
+          </div>
+        </header>
+
+        <main className="w-full">
+          <div dangerouslySetInnerHTML={{ __html: page.body }} />
+        </main>
+
+        <footer className="border-t border-white/5 px-6 py-8 text-zinc-600">
+          <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+            <p className="text-xs">
+              © 2026 SiteFlow. All rights reserved.
+            </p>
+            <div className="flex items-center gap-5 text-xs">
+              <Link href="/privacy" className="hover:text-zinc-400 transition-all">Privacy</Link>
+              <Link href="/terms" className="hover:text-zinc-400 transition-all">Terms</Link>
+              <Link href="/contact" className="hover:text-zinc-400 transition-all">Contact</Link>
+              <Link href="/blog" className="hover:text-zinc-400 transition-all">Blog</Link>
+            </div>
+          </div>
+        </footer>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#0E0C15] text-[#ededed] pb-20 relative">
       {/* Background glow */}
