@@ -38,3 +38,5 @@ export default function RootLayout({
     </html>
   );
 }
+
+// Trigger Vercel rebuild to apply environment variables
