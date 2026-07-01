@@ -39,4 +39,4 @@ export default function RootLayout({
   );
 }
 
-// Trigger Vercel rebuild to apply correct Render backend URL
+// Trigger Vercel rebuild for Render backend URL updated
