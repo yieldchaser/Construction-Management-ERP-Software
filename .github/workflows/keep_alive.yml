@@ -1,0 +1,15 @@
+name: Keep Alive Backend
+
+on:
+  schedule:
+    # Runs every 10 minutes to prevent Render free tier from spinning down
+    - cron: '*/10 * * * *'
+  workflow_dispatch: # Allows manual triggering from the GitHub UI
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Render Backend
+        run: |
+          curl -i -s https://construction-erp-backend.onrender.com/
