@@ -116,6 +116,36 @@ for pid in [PROJ_1, PROJ_2, PROJ_3]:
         db.commit()
         print(f"Seeded Budget for Project {pid}.")
 
+# Seed Employees
+employees_data = [
+    (uuid.UUID("e0000000-0000-0000-0000-000000000100"), "Ramesh Kumar", "EMP-001", "Site Engineer", "Civil", "+919876543210"),
+    (uuid.UUID("e0000000-0000-0000-0000-000000000101"), "Suresh Patel", "EMP-002", "Carpenter", "Civil", "+919876543211"),
+    (uuid.UUID("e0000000-0000-0000-0000-000000000102"), "Mohan Verma", "EMP-003", "Helper", "Civil", "+919876543212"),
+    (uuid.UUID("e0000000-0000-0000-0000-000000000103"), "Dinesh Yadav", "EMP-004", "Electrician", "Electrical", "+919876543213"),
+    (uuid.UUID("e0000000-0000-0000-0000-000000000104"), "Arjun Singh", "EMP-005", "Plumber", "Plumbing", "+919876543214"),
+    (uuid.UUID("e0000000-0000-0000-0000-000000000105"), "Ravi Tiwari", "EMP-006", "Mason", "Civil", "+919876543215"),
+    (uuid.UUID("e0000000-0000-0000-0000-000000000106"), "Santosh Rawat", "EMP-007", "Helper", "Civil", "+919876543216"),
+    (uuid.UUID("e0000000-0000-0000-0000-000000000107"), "Vikram Joshi", "EMP-008", "Site Engineer", "Civil", "+919876543217"),
+]
+
+for eid, emp_name, code, desig, dept, phone in employees_data:
+    emp = db.query(models.StaffEmployee).filter(models.StaffEmployee.id == eid).first()
+    if not emp:
+        emp = models.StaffEmployee(
+            id=eid,
+            company_id=COMPANY_ID,
+            project_id=PROJ_1,
+            name=emp_name,
+            employee_code=code,
+            designation=desig,
+            department=dept,
+            mobile=phone,
+            status="active"
+        )
+        db.add(emp)
+        db.commit()
+        print(f"Seeded StaffEmployee {emp_name}.")
+
 # Seed Inventory for Project 1 & 2
 for pid in [PROJ_1, PROJ_2]:
     materials = [

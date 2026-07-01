@@ -178,6 +178,14 @@ def add_drawing_revision(drawing_id: UUID, req: RevisionCreateRequest, db: Sessi
     if not drawing:
         raise HTTPException(status_code=404, detail="Drawing not found")
     
+    # Check for duplicate version code
+    existing_rev = db.query(DrawingRevision).filter(
+        DrawingRevision.drawing_id == drawing_id,
+        DrawingRevision.version_code == req.version_code
+    ).first()
+    if existing_rev:
+        raise HTTPException(status_code=400, detail=f"Revision version code '{req.version_code}' already exists for this drawing.")
+
     revision = DrawingRevision(
         drawing_id=drawing_id,
         version_code=req.version_code,

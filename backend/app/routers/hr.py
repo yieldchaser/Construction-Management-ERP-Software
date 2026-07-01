@@ -107,6 +107,8 @@ class PunchRequest(BaseModel):
     lat: float = Field(..., ge=-90, le=90)
     lng: float = Field(..., ge=-180, le=180)
     punch_type: str = Field(..., pattern="^(in|out)$")
+    shift_multiplier: Optional[float] = 1.0
+    location_verified: Optional[bool] = True
     notes: Optional[str] = None
 
 
@@ -124,6 +126,8 @@ class AttendanceResponse(BaseModel):
     status: str
     hours_worked: Optional[float]
     overtime_hours: float
+    shift_multiplier: float
+    location_verified: bool
     created_at: datetime
 
     class Config:
@@ -268,6 +272,8 @@ def punch(payload: PunchRequest, db: Session = Depends(get_db)):
             distance_from_site_m=Decimal(str(distance_m)) if distance_m is not None else None,
             is_within_geofence=within_geofence,
             status="Present" if within_geofence else "Present (Off-Site)",
+            shift_multiplier=Decimal(str(payload.shift_multiplier or 1.0)),
+            location_verified=payload.location_verified if payload.location_verified is not None else True,
             notes=payload.notes
         )
         db.add(log)
@@ -289,6 +295,11 @@ def punch(payload: PunchRequest, db: Session = Depends(get_db)):
         log.punch_out = now
         log.lat_out = Decimal(str(payload.lat))
         log.lng_out = Decimal(str(payload.lng))
+
+        if payload.shift_multiplier is not None:
+            log.shift_multiplier = Decimal(str(payload.shift_multiplier))
+        if payload.location_verified is not None:
+            log.location_verified = payload.location_verified
 
         # Compute hours worked
         if log.punch_in:
@@ -377,11 +388,11 @@ def approve_timesheet(ts_id: uuid.UUID, db: Session = Depends(get_db)):
 
 # ─── Payroll Engine ──────────────────────────────────────────────────────────
 
-def _compute_payslip(emp: StaffEmployee, days_present: float, days_in_month: int) -> dict:
+def _compute_payslip(emp: StaffEmployee, days_present: float, days_in_month: int, overtime_hours: float = 0.0) -> dict:
     """
     Compute one employee's payslip.
 
-    Gross = (Basic + HRA + OtherAllowances) * (days_present / days_in_month)
+    Gross = (Basic + HRA + OtherAllowances) * (days_present / days_in_month) + OvertimePay
     PF employee  = Basic * pf_employee_pct%   (on prorated basic)
     PF employer  = Basic * pf_employer_pct%
     ESI employee = Gross * esi_employee_pct%  (only if is_esi_applicable)
@@ -391,13 +402,18 @@ def _compute_payslip(emp: StaffEmployee, days_present: float, days_in_month: int
     """
     ratio = days_present / days_in_month if days_in_month > 0 else 0
     full_gross = float(emp.basic_salary) + float(emp.hra) + float(emp.other_allowances)
-    gross = round(full_gross * ratio, 2)
+    
+    # Overtime Calculation
+    ot_rate = (float(emp.basic_salary) / days_in_month / 8.0) * 1.5 if days_in_month > 0 else 0.0
+    ot_amount = round(float(overtime_hours) * ot_rate, 2)
+
+    gross = round(full_gross * ratio, 2) + ot_amount
     basic_pro = round(float(emp.basic_salary) * ratio, 2)
 
     pf_emp = round(basic_pro * float(emp.pf_employee_pct) / 100, 2)
     pf_er  = round(basic_pro * float(emp.pf_employer_pct) / 100, 2)
 
-    if emp.is_esi_applicable and full_gross <= 21000:
+    if emp.is_esi_applicable and (full_gross + ot_amount) <= 21000:
         esi_emp = round(gross * float(emp.esi_employee_pct) / 100, 2)
         esi_er  = round(gross * float(emp.esi_employer_pct) / 100, 2)
     else:
@@ -414,7 +430,7 @@ def _compute_payslip(emp: StaffEmployee, days_present: float, days_in_month: int
         "basic": basic_pro,
         "hra": round(float(emp.hra) * ratio, 2),
         "other_allowances": round(float(emp.other_allowances) * ratio, 2),
-        "overtime_amount": 0.0,
+        "overtime_amount": ot_amount,
         "pf_employee": pf_emp,
         "pf_employer": pf_er,
         "esi_employee": esi_emp,
@@ -469,9 +485,30 @@ def run_payroll(payload: PayrollRunCreate, db: Session = Depends(get_db)):
             AttendanceLog.status.in_(["Present", "Present (Off-Site)"])
         ).count()
 
-        days_present = float(att_count) if att_count > 0 else payload.days_in_month  # default full month
+        # Sum overtime hours this month
+        total_ot = db.query(func.sum(AttendanceLog.overtime_hours)).filter(
+            AttendanceLog.employee_id == emp.id,
+            AttendanceLog.attendance_date >= month_start,
+            AttendanceLog.attendance_date < month_end
+        ).scalar() or 0.0
 
-        calc = _compute_payslip(emp, days_present, payload.days_in_month)
+        # Handle joining mid-month
+        if emp.date_of_joining:
+            joining_date = emp.date_of_joining.replace(tzinfo=None)
+            if joining_date > month_start:
+                if joining_date < month_end:
+                    days_remaining = (month_end - joining_date).days
+                    default_days = min(float(days_remaining), float(payload.days_in_month))
+                else:
+                    default_days = 0.0
+            else:
+                default_days = float(payload.days_in_month)
+        else:
+            default_days = float(payload.days_in_month)
+
+        days_present = float(att_count) if att_count > 0 else default_days
+
+        calc = _compute_payslip(emp, days_present, payload.days_in_month, float(total_ot))
         line = PayrollLineItem(
             payroll_run_id=run.id,
             employee_id=emp.id,

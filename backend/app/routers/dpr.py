@@ -6,7 +6,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import DailyProgressReport, Task, WarehouseInventory, MaterialTransaction, Project
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 router = APIRouter(
     prefix="/dpr",
@@ -15,7 +15,7 @@ router = APIRouter(
 
 class MaterialConsumptionSchema(BaseModel):
     material_name: str
-    quantity: float
+    quantity: float = Field(..., gt=0)
     unit: str
 
 class DPRCreateRequest(BaseModel):

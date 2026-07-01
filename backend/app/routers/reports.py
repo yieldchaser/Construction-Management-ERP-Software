@@ -65,8 +65,9 @@ def generate_report(
     # 2. Query Billing & Financials
     billing_wo_count = db.query(WorkOrder).filter(WorkOrder.project_id == project_id).count()
     subcon_bills = db.query(Bill).filter(Bill.project_id == project_id, Bill.invoice_type == "subcon").all()
-    billing_ra_count = len(subcon_bills)
-    total_certified = sum(b.total_payable for b in subcon_bills)
+    approved_subcon_bills = [b for b in subcon_bills if b.approval_flag and b.approval_flag.lower() in ("approved", "auto_approved")]
+    billing_ra_count = len(approved_subcon_bills)
+    total_certified = sum(b.total_payable for b in approved_subcon_bills)
     billing_certified_net = f"{total_certified:.2f}"
 
     # 3. Query Procurement

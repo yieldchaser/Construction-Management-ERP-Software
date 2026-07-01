@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.models import Payment, PaymentSettlement, Bill, PayrollRun, PayrollLineItem, StaffEmployee, ProjectBudget, Project, CompanyTeam, User
+from app.models import Payment, PaymentSettlement, Bill, PayrollRun, PayrollLineItem, StaffEmployee, ProjectBudget, Project, CompanyTeam, User, Equipment, EquipmentDeployment, FuelLog
 from pydantic import BaseModel
 
 router = APIRouter(
@@ -174,7 +174,7 @@ def get_ledger(project_id: uuid.UUID, db: Session = Depends(get_db)):
                 type="Receipt" if p.payment_type == "in" else "Expense",
                 category="Client Payment" if p.payment_type == "in" else "Direct Payment",
                 description=p.description or ("Receipt Payment" if p.payment_type == "in" else "Expense Payment"),
-                amount=float(p.amount) if p.payment_type == "in" else -float(p.amount),
+                amount=float(p.unsettled_amount) if p.payment_type == "in" else -float(p.unsettled_amount),
                 party=party_name,
                 ref=p.reference_number or "",
                 ledger="Revenue" if p.payment_type == "in" else "General Ledger"
@@ -276,8 +276,20 @@ def get_project_pl(project_id: uuid.UUID, db: Session = Depends(get_db)):
         Bill.invoice_type == "subcon"
     ).scalar() or 0.0
 
-    # 5. Plant & Machinery (Equipment log rates or stubs)
-    equipment_actual = 0.0 # Standard machinery cost stub for fallback, or fuel log costs if exists
+    # 5. Plant & Machinery (Equipment deployment cost + fuel costs)
+    deployments = db.query(EquipmentDeployment).filter(EquipmentDeployment.project_id == proj_uuid).all()
+    dep_cost = 0.0
+    for dep in deployments:
+        eq = db.query(Equipment).filter(Equipment.id == dep.equipment_id).first()
+        if eq and eq.hourly_rate:
+            rate = float(eq.hourly_rate)
+            end = dep.end_date if dep.end_date else datetime.utcnow()
+            hours = (end - dep.start_date).total_seconds() / 3600.0
+            dep_cost += max(0.0, hours * rate)
+
+    fuel_logs = db.query(FuelLog).filter(FuelLog.project_id == proj_uuid).all()
+    fuel_cost = sum(float(log.total_cost or 0.0) for log in fuel_logs)
+    equipment_actual = dep_cost + fuel_cost
 
     # Variance: for Revenue, variance = Actual - Budget. For Cost, variance = Budget - Actual.
     # To keep it standard: return positive variance for positive variance outcomes, negative for cost overruns.
@@ -320,3 +332,18 @@ def get_project_pl(project_id: uuid.UUID, db: Session = Depends(get_db)):
         )
     ]
     return pl_data
+
+
+@router.patch("/approve/{transaction_id}")
+def approve_transaction(transaction_id: uuid.UUID, db: Session = Depends(get_db)):
+    bill = db.query(Bill).filter(Bill.id == transaction_id).first()
+    if bill:
+        bill.approval_flag = "approved"
+        db.commit()
+        return {"status": "success", "message": "Bill approved successfully", "type": "bill"}
+    
+    payment = db.query(Payment).filter(Payment.id == transaction_id).first()
+    if payment:
+        return {"status": "success", "message": "Payment confirmed", "type": "payment"}
+        
+    raise HTTPException(status_code=404, detail="Transaction not found")

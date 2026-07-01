@@ -127,9 +127,15 @@ export default function ClientReportsPage() {
           <div className="pt-2 pb-1 px-3 text-[10px] font-bold text-zinc-600 uppercase tracking-wider">
             Client Portal
           </div>
-          <div className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg bg-primary/10 text-primary border-l-2 border-primary">
+          <div className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg bg-white/[0.06] text-white font-semibold shadow-sm">
             <span>📊</span> Progress Reports
           </div>
+          <Link
+            href={`/c/${companyId}/p/${projectId}/reports/calculators`}
+            className="flex items-center gap-2 px-3 py-2 text-xs text-zinc-400 hover:text-white hover:bg-white/[0.03] rounded-lg transition-all"
+          >
+            <span>🔩</span> Construction Calculators
+          </Link>
         </nav>
       </aside>
 

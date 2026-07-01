@@ -4,7 +4,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.models import TallyConnection, TallyAgent, TallyLedgerMapping, TallyPartyMapping, TallyCostCentreMapping, TallyBankMapping, Company, Bill, Payment
+from app.models import TallyConnection, TallyAgent, TallyLedgerMapping, TallyPartyMapping, TallyCostCentreMapping, TallyBankMapping, Company, Bill, Payment, CompanyTeam, User
 from pydantic import BaseModel
 
 router = APIRouter(
@@ -197,34 +197,103 @@ def sync_tally_vouchers(company_id: uuid.UUID, db: Session = Depends(get_db)):
             detail="Tally connection must be configured before starting synchronization."
         )
 
-    # 1. Fetch unsynced transactions (simulate fetching bills and payments)
-    bills = db.query(Bill).filter(Bill.company_id == comp_uuid, Bill.status != "Cancelled").all()
-    payments = db.query(Payment).filter(Payment.company_id == comp_uuid).all()
+    # 1. Fetch unsynced transactions
+    bills = db.query(Bill).filter(
+        Bill.company_id == comp_uuid,
+        Bill.status != "Cancelled",
+        Bill.tally_synced == False
+    ).all()
+    
+    payments = db.query(Payment).filter(
+        Payment.company_id == comp_uuid,
+        Payment.tally_synced == False
+    ).all()
 
     sync_payloads = []
     
-    # 2. Simulate formatting voucher XML envelope
+    # 2. Format voucher XML envelope with dynamic mappings
     for b in bills:
+        # Resolve party name
+        party_name = None
+        if b.party_company_user_id:
+            party_map = db.query(TallyPartyMapping).filter(
+                TallyPartyMapping.company_id == comp_uuid,
+                TallyPartyMapping.onsite_party_id == b.party_company_user_id
+            ).first()
+            if party_map:
+                party_name = party_map.tally_ledger_name
+            else:
+                team_member = db.query(CompanyTeam).filter(CompanyTeam.id == b.party_company_user_id).first()
+                if team_member:
+                    user = db.query(User).filter(User.id == team_member.user_id).first()
+                    if user:
+                        party_name = user.name
+        
+        if not party_name:
+            party_name = "Client Ledger" if b.invoice_type == "sale" else "Vendor Ledger"
+
+        # Resolve cost center mapping if project is configured
+        cost_centre = None
+        cc_map = db.query(TallyCostCentreMapping).filter(
+            TallyCostCentreMapping.company_id == comp_uuid,
+            TallyCostCentreMapping.project_id == b.project_id
+        ).first()
+        if cc_map:
+            cost_centre = cc_map.tally_cost_centre_name
+
         sync_payloads.append({
             "voucher_type": "Sales" if b.invoice_type == "sale" else "Purchase",
             "voucher_number": b.invoice_number,
             "date": b.invoice_date.strftime("%Y%m%d") if b.invoice_date else "",
             "amount": float(b.total_payable),
-            "party": "Client Ledger" if b.invoice_type == "sale" else "Vendor Ledger",
+            "party": party_name,
+            "cost_centre": cost_centre,
             "narrations": f"SiteFlow Sync Invoice {b.invoice_number}."
         })
+        b.tally_synced = True
+        db.add(b)
 
     for p in payments:
+        # Resolve party name
+        party_name = None
+        if p.party_company_user_id:
+            party_map = db.query(TallyPartyMapping).filter(
+                TallyPartyMapping.company_id == comp_uuid,
+                TallyPartyMapping.onsite_party_id == p.party_company_user_id
+            ).first()
+            if party_map:
+                party_name = party_map.tally_ledger_name
+            else:
+                team_member = db.query(CompanyTeam).filter(CompanyTeam.id == p.party_company_user_id).first()
+                if team_member:
+                    user = db.query(User).filter(User.id == team_member.user_id).first()
+                    if user:
+                        party_name = user.name
+        
+        if not party_name:
+            # Fallback to bank/cash mappings
+            bank_map = db.query(TallyBankMapping).filter(TallyBankMapping.company_id == comp_uuid).first()
+            if bank_map:
+                party_name = bank_map.tally_ledger_name
+            elif conn.default_cash_ledger:
+                party_name = conn.default_cash_ledger
+            else:
+                party_name = "Bank / Cash"
+
         sync_payloads.append({
             "voucher_type": "Receipt" if p.payment_type == "in" else "Payment",
             "voucher_number": p.reference_number or f"REF-{p.id}",
             "date": p.payment_date.strftime("%Y%m%d") if p.payment_date else "",
             "amount": float(p.amount),
-            "party": "Bank / Cash",
+            "party": party_name,
             "narrations": p.description or f"SiteFlow Sync Payment."
         })
+        p.tally_synced = True
+        db.add(p)
 
-    # Output details of mock Tally sync execution
+    db.commit()
+
+    # Output details of Tally sync execution
     return {
         "success": True,
         "tally_company": conn.tally_company_name,

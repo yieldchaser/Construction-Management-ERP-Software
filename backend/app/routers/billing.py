@@ -308,7 +308,7 @@ def create_bill(req: BillCreateRequest, db: Session = Depends(get_db)):
 
     # Calculate pre-determined deduction amounts
     if req.pre_tax_deductions:
-        # Pre-Tax Calculations (Deductions subtract from taxable subtotal first)
+        # Pre-Tax Calculations (Deductions subtract from taxable subtotal first, but GST is on gross)
         for d in req.deductions:
             item_amt = 0.0
             if d.percentage:
@@ -318,9 +318,8 @@ def create_bill(req: BillCreateRequest, db: Session = Depends(get_db)):
             ded_amt += item_amt
             deduction_details.append((d, item_amt))
 
-        taxable_amount = req.subtotal - ded_amt
-        gst_amount = taxable_amount * (req.gst_pct / 100.0)
-        total_payable = taxable_amount + gst_amount
+        gst_amount = req.subtotal * (req.gst_pct / 100.0)
+        total_payable = req.subtotal - ded_amt + gst_amount
     else:
         # Post-Tax Calculations (GST calculated on subtotal first, deductions subtracted from gross total)
         gst_amount = req.subtotal * (req.gst_pct / 100.0)

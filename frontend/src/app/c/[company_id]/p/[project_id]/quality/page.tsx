@@ -474,7 +474,7 @@ export default function QualityPage() {
             ["labtests", "🧪", "Lab Tests"],
           ] as const).map(([key, icon, label]) => (
             <button key={key} onClick={() => setTab(key)}
-              className={`w-full text-left flex items-center gap-2 px-3 py-2 text-xs font-semibold rounded-lg transition-all ${tab === key ? "bg-primary/10 text-primary border-l-2 border-primary" : "text-zinc-400 hover:text-white hover:bg-white/[0.03]"}`}>
+              className={`w-full text-left flex items-center gap-2 px-3 py-2 text-xs font-semibold rounded-lg transition-all ${tab === key ? "bg-white/[0.06] text-white font-semibold shadow-sm" : "text-zinc-400 hover:text-white hover:bg-white/[0.03]"}`}>
               <span>{icon}</span> {label}
             </button>
           ))}

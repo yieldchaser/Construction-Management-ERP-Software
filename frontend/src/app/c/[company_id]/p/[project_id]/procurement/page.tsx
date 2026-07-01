@@ -9,13 +9,15 @@ interface IndentItem {
   name: string;
   qty: number;
   unit: string;
+  specOverride?: string;
+  photoUrl?: string;
 }
 
 interface Indent {
   id: string;
   indentNumber: string;
   items: IndentItem[];
-  status: "pending" | "approved" | "ordered";
+  status: "pending" | "approved" | "ordered" | "rejected";
   requestedBy: string;
   date: string;
 }
@@ -40,13 +42,23 @@ interface PO {
   date: string;
 }
 
+interface GRNItem {
+  name: string;
+  qty: number;
+  unit: string;
+  rate: number;
+}
+
 interface GRN {
   id: string;
   grnNumber: string;
   poNumber: string;
+  vendor: string;
   receivedDate: string;
   receivedBy: string;
-  items: { name: string; qty: number; unit: string }[];
+  items: GRNItem[];
+  isBilled: boolean;
+  gatePhotoUrl?: string;
 }
 
 interface InventoryItem {
@@ -67,14 +79,13 @@ interface Transaction {
   date: string;
 }
 
-// Initial Data
 const INITIAL_INDENTS: Indent[] = [
   {
     id: "IND-01",
     indentNumber: "IND-2026-001",
     items: [
-      { name: "UltraTech Cement", qty: 150, unit: "bags" },
-      { name: "TMT Steel 16mm", qty: 5.5, unit: "tons" }
+      { name: "UltraTech Cement", qty: 150, unit: "bags", specOverride: "Grade 53 OPC Cement", photoUrl: "https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=500" },
+      { name: "TMT Steel 16mm", qty: 5.5, unit: "tons", specOverride: "Fe 550D TMT Steel Rebar" }
     ],
     status: "approved",
     requestedBy: "Suresh R (Project Manager)",
@@ -124,11 +135,50 @@ const INITIAL_POS: PO[] = [
   }
 ];
 
+const INITIAL_GRNS: GRN[] = [
+  {
+    id: "GRN-01",
+    grnNumber: "GRN-2026-004",
+    poNumber: "PO-2026-041",
+    vendor: "National Steel Suppliers",
+    receivedDate: "2026-06-18",
+    receivedBy: "Amit K (Site Engineer)",
+    items: [
+      { name: "TMT Steel 16mm", qty: 4.0, unit: "tons", rate: 62000 }
+    ],
+    isBilled: true
+  },
+  {
+    id: "GRN-02",
+    grnNumber: "GRN-2026-005",
+    poNumber: "PO-2026-041",
+    vendor: "National Steel Suppliers",
+    receivedDate: "2026-06-23",
+    receivedBy: "Amit K (Site Engineer)",
+    items: [
+      { name: "TMT Steel 16mm", qty: 1.5, unit: "tons", rate: 62000 }
+    ],
+    isBilled: false
+  },
+  {
+    id: "GRN-03",
+    grnNumber: "GRN-2026-006",
+    poNumber: "PO-2026-042",
+    vendor: "Shree Cement Traders",
+    receivedDate: "2026-06-26",
+    receivedBy: "Suresh R (Project PM)",
+    items: [
+      { name: "UltraTech Cement", qty: 80, unit: "bags", rate: 410 }
+    ],
+    isBilled: false
+  }
+];
+
 const INITIAL_INVENTORY: InventoryItem[] = [
   { name: "TMT Steel 16mm", onHand: 12.5, reserved: 4.0, unit: "tons", minAlertThreshold: 5.0 },
-  { name: "UltraTech Cement", onHand: 85.0, reserved: 50.0, unit: "bags", minAlertThreshold: 100.0 }, // Under threshold -> trigger alert!
+  { name: "UltraTech Cement", onHand: 85.0, reserved: 50.0, unit: "bags", minAlertThreshold: 100.0 }, 
   { name: "Traditional Clay Bricks", onHand: 14000, reserved: 3000, unit: "nos", minAlertThreshold: 5000 },
-  { name: "Fine River Sand", onHand: 8.5, reserved: 0.0, unit: "m³", minAlertThreshold: 10.0 } // Under threshold
+  { name: "Fine River Sand", onHand: 8.5, reserved: 0.0, unit: "m³", minAlertThreshold: 10.0 }
 ];
 
 const INITIAL_TRANSACTIONS: Transaction[] = [
@@ -144,19 +194,32 @@ const VENDORS = [
   { id: "V004", name: "Indus Paint House", category: "Paints & Chemicals", rating: 3.9, city: "Chennai", status: "On Hold" }
 ];
 
+const RFQ_DATA = {
+  "UltraTech Cement": [
+    { vendor: "Shree Cement Traders", rate: 410, delivery: 2, terms: "30 Days Credit", isL1: true },
+    { vendor: "National Cement & Co", rate: 425, delivery: 1, terms: "Cash on Delivery", isL1: false },
+    { vendor: "Ultratech Direct Dist", rate: 430, delivery: 3, terms: "45 Days Credit", isL1: false },
+  ],
+  "TMT Steel 16mm": [
+    { vendor: "National Steel Suppliers", rate: 62000, delivery: 3, terms: "45 Days Credit", isL1: true },
+    { vendor: "Apex Steel Industries", rate: 63500, delivery: 2, terms: "30 Days Credit", isL1: false },
+    { vendor: "Tata Astrum Dealer", rate: 65000, delivery: 1, terms: "Cash on Delivery", isL1: false },
+  ]
+};
+
 export default function ProcurementPage() {
   const { company_id, project_id } = useParams();
   const companyId = company_id || "demo-company";
   const projectId = project_id || "d0000000-0000-0000-0000-000000000001";
 
-  const [tab, setTab] = useState<"po" | "indent" | "inventory" | "ledger" | "vendors">("po");
+  const [tab, setTab] = useState<"po" | "indent" | "inventory" | "ledger" | "unbilled">("po");
 
   useEffect(() => {
     if (typeof window !== "undefined") {
       const queryParams = new URLSearchParams(window.location.search);
       const queryTab = queryParams.get("tab");
-      if (queryTab && ["po", "indent", "inventory", "ledger", "vendors"].includes(queryTab)) {
-        setTab(queryTab as "po" | "indent" | "inventory" | "ledger" | "vendors");
+      if (queryTab && ["po", "indent", "inventory", "ledger", "unbilled"].includes(queryTab)) {
+        setTab(queryTab as any);
       }
     }
   }, []);
@@ -166,31 +229,36 @@ export default function ProcurementPage() {
   const [pos, setPos] = useState<PO[]>(INITIAL_POS);
   const [inventory, setInventory] = useState<InventoryItem[]>(INITIAL_INVENTORY);
   const [transactions, setTransactions] = useState<Transaction[]>(INITIAL_TRANSACTIONS);
+  const [grns, setGrns] = useState<GRN[]>(INITIAL_GRNS);
 
-  // Modal control states
+  // Modal and drawer control states
   const [showIndentModal, setShowIndentModal] = useState(false);
   const [showPOModal, setShowPOModal] = useState(false);
   const [showGRNModal, setShowGRNModal] = useState(false);
   const [showUseModal, setShowUseModal] = useState(false);
-
+  const [showRFQDrawer, setShowRFQDrawer] = useState(false);
+  const [selectedRFQItem, setSelectedRFQItem] = useState<"UltraTech Cement" | "TMT Steel 16mm">("UltraTech Cement");
   // New Indent form state
   const [newIndentNum, setNewIndentNum] = useState("IND-2026-003");
   const [newIndentMaterial, setNewIndentMaterial] = useState("UltraTech Cement");
   const [newIndentQty, setNewIndentQty] = useState(50);
   const [newIndentUnit, setNewIndentUnit] = useState("bags");
+  const [newIndentSpec, setNewIndentSpec] = useState("");
+  const [newIndentPhoto, setNewIndentPhoto] = useState("");
 
-  // New PO form state
+  // New PO form state (Multi-item support)
   const [newPONum, setNewPONum] = useState("PO-2026-043");
   const [newPOVendor, setNewPOVendor] = useState("Shree Cement Traders");
-  const [newPOMaterial, setNewPOMaterial] = useState("UltraTech Cement");
-  const [newPOQty, setNewPOQty] = useState(100);
-  const [newPORate, setNewPORate] = useState(410);
+  const [poFormItems, setPoFormItems] = useState<POItem[]>([
+    { name: "UltraTech Cement", qty: 100, unit: "bags", rate: 410 }
+  ]);
 
   // GRN form state
-  const [activePOForGRN, setActivePOForGRN] = useState<PO | null>(null);
+  const [selectedPOForGRN, setSelectedPOForGRN] = useState<PO | null>(null);
   const [grnNum, setGrnNum] = useState("GRN-2026-010");
-  const [receivedQty, setReceivedQty] = useState<number>(0);
-
+  const [grnItemsChecked, setGrnItemsChecked] = useState<Record<string, boolean>>({});
+  const [grnReceivedQtys, setGrnReceivedQtys] = useState<Record<string, string>>({});
+  const [grnGatePhoto, setGrnGatePhoto] = useState("");
   // Material usage form state
   const [useMaterialName, setUseMaterialName] = useState("UltraTech Cement");
   const [useQty, setUseQty] = useState(10);
@@ -201,14 +269,21 @@ export default function ProcurementPage() {
     const newIndent: Indent = {
       id: `IND-${Date.now()}`,
       indentNumber: newIndentNum,
-      items: [{ name: newIndentMaterial, qty: newIndentQty, unit: newIndentUnit }],
+      items: [{ 
+        name: newIndentMaterial, 
+        qty: newIndentQty, 
+        unit: newIndentUnit, 
+        specOverride: newIndentSpec || undefined,
+        photoUrl: newIndentPhoto || undefined 
+      }],
       status: "pending",
       requestedBy: "Amit K (Site Engineer)",
       date: new Date().toISOString().split("T")[0]
     };
     setIndents([newIndent, ...indents]);
     setShowIndentModal(false);
-    // Auto increment default serial
+    setNewIndentSpec("");
+    setNewIndentPhoto("");
     setNewIndentNum(`IND-2026-0${indents.length + 4}`);
   };
 
@@ -222,9 +297,12 @@ export default function ProcurementPage() {
     }));
   };
 
-  // Add Purchase Order Submission
+  // Add Purchase Order Submission (Multi-item support)
   const handleCreatePO = () => {
-    const gross = newPOQty * newPORate;
+    let gross = 0;
+    poFormItems.forEach(item => {
+      gross += item.qty * item.rate;
+    });
     const tax = gross * 0.18;
     const total = gross + tax;
 
@@ -232,7 +310,7 @@ export default function ProcurementPage() {
       id: `PO-${Date.now()}`,
       poNumber: newPONum,
       vendor: newPOVendor,
-      items: [{ name: newPOMaterial, qty: newPOQty, unit: newPOMaterial.includes("Cement") ? "bags" : "tons", rate: newPORate }],
+      items: poFormItems,
       grossAmount: gross,
       taxAmount: tax,
       totalAmount: total,
@@ -242,6 +320,7 @@ export default function ProcurementPage() {
     };
     setPos([newPO, ...pos]);
     setShowPOModal(false);
+    setPoFormItems([{ name: "UltraTech Cement", qty: 100, unit: "bags", rate: 410 }]);
     setNewPONum(`PO-2026-0${pos.length + 43}`);
   };
 
@@ -249,690 +328,835 @@ export default function ProcurementPage() {
   const handleApprovePO = (id: string) => {
     setPos(prev => prev.map(po => {
       if (po.id === id) {
-        return { ...po, status: "sent", approvalFlag: "approved" };
+        return { ...po, approvalFlag: "approved", status: "sent" };
       }
       return po;
     }));
   };
 
-  // Trigger GRN (Receipt of goods) -> Updates inventory and transactions
-  const handleCreateGRN = () => {
-    if (!activePOForGRN) return;
-    const poItem = activePOForGRN.items[0];
-
-    // 1. Update PO Status
-    setPos(prev => prev.map(p => {
-      if (p.id === activePOForGRN.id) {
-        return { ...p, status: "received" };
-      }
-      return p;
-    }));
-
-    // 2. Increment Warehouse Inventory (on_hand_qty)
-    setInventory(prev => {
-      const exists = prev.some(i => i.name === poItem.name);
-      if (exists) {
-        return prev.map(i => {
-          if (i.name === poItem.name) {
-            return { ...i, onHand: i.onHand + receivedQty };
-          }
-          return i;
-        });
-      } else {
-        return [...prev, { name: poItem.name, onHand: receivedQty, reserved: 0, unit: poItem.unit, minAlertThreshold: 50 }];
-      }
+  // Initialize GRN items
+  const handleOpenGRNModal = (po: PO) => {
+    setSelectedPOForGRN(po);
+    const checks: Record<string, boolean> = {};
+    const qtys: Record<string, string> = {};
+    po.items.forEach((item, idx) => {
+      checks[idx.toString()] = true;
+      qtys[idx.toString()] = item.qty.toString();
     });
-
-    // 3. Log Material Transaction
-    const newTxn: Transaction = {
-      id: `TXN-${Date.now()}`,
-      materialName: poItem.name,
-      qty: receivedQty,
-      unit: poItem.unit,
-      type: "received",
-      sourceRef: grnNum,
-      date: new Date().toISOString().split("T")[0]
-    };
-    setTransactions([newTxn, ...transactions]);
-
-    setShowGRNModal(false);
-    setActivePOForGRN(null);
-    setGrnNum(`GRN-2026-0${transactions.length + 11}`);
+    setGrnItemsChecked(checks);
+    setGrnReceivedQtys(qtys);
+    setGrnGatePhoto("");
+    setShowGRNModal(true);
   };
 
-  // Log Material Usage (Used on Site) -> Deducts inventory and logs transaction
-  const handleLogUsage = () => {
-    if (useQty <= 0) return;
+  // GRN submission
+  const handleCreateGRN = () => {
+    if (!selectedPOForGRN) return;
+    
+    const receivedItems = selectedPOForGRN.items
+      .filter((_, idx) => grnItemsChecked[idx.toString()])
+      .map((item, idx) => ({
+        name: item.name,
+        qty: parseFloat(grnReceivedQtys[idx.toString()] || "0"),
+        unit: item.unit,
+        rate: item.rate
+      }));
 
-    // 1. Decrement Inventory onHand levels
-    setInventory(prev => prev.map(i => {
-      if (i.name === useMaterialName) {
-        const remaining = Math.max(0, i.onHand - useQty);
-        return { ...i, onHand: remaining };
-      }
-      return i;
+    if (receivedItems.length === 0) return;
+
+    // Create GRN record
+    const newGRN: GRN = {
+      id: `GRN-${Date.now()}`,
+      grnNumber: grnNum,
+      poNumber: selectedPOForGRN.poNumber,
+      vendor: selectedPOForGRN.vendor,
+      receivedDate: new Date().toISOString().split("T")[0],
+      receivedBy: "Amit K (Site Engineer)",
+      items: receivedItems,
+      isBilled: false,
+      gatePhotoUrl: grnGatePhoto || undefined
+    };
+
+    // Create GRN transactions
+    const newTxns = receivedItems.map((item, idx) => ({
+      id: `TXN-${Date.now()}-${idx}`,
+      materialName: item.name,
+      qty: item.qty,
+      unit: item.unit,
+      type: "received" as const,
+      sourceRef: grnNum,
+      date: new Date().toISOString().split("T")[0]
     }));
 
-    // 2. Log Transaction
+    // Update inventory
+    setInventory(prev => prev.map(inv => {
+      const match = receivedItems.find(i => i.name === inv.name);
+      if (match) {
+        return { ...inv, onHand: inv.onHand + match.qty };
+      }
+      return inv;
+    }));
+
+    setGrns([newGRN, ...grns]);
+    setTransactions([...newTxns, ...transactions]);
+    
+    // Update PO Status
+    setPos(prev => prev.map(po => {
+      if (po.id === selectedPOForGRN.id) {
+        return { ...po, status: "received" as const };
+      }
+      return po;
+    }));
+
+    setShowGRNModal(false);
+    setSelectedPOForGRN(null);
+  };
+
+  // Record material usage
+  const handleRecordUsage = () => {
+    const qty = parseFloat(useQty as any) || 0;
+    if (qty <= 0) return;
+
+    // Save transaction
     const newTxn: Transaction = {
       id: `TXN-${Date.now()}`,
       materialName: useMaterialName,
-      qty: useQty,
-      unit: useMaterialName.includes("Cement") ? "bags" : useMaterialName.includes("Bricks") ? "nos" : "tons",
+      qty,
+      unit: useMaterialName.includes("Cement") ? "bags" : "tons",
       type: "used",
       sourceRef: useSourceRef,
       date: new Date().toISOString().split("T")[0]
     };
+
+    // Update inventory
+    setInventory(prev => prev.map(inv => {
+      if (inv.name === useMaterialName) {
+        return { ...inv, onHand: inv.onHand - qty };
+      }
+      return inv;
+    }));
+
     setTransactions([newTxn, ...transactions]);
     setShowUseModal(false);
   };
 
+  // Mark GRN as billed (Unbilled Materials tracker action)
+  const handleMarkAsBilled = (grnId: string) => {
+    setGrns(prev => prev.map(g => g.id === grnId ? { ...g, isBilled: true } : g));
+  };
+
+  // 3-way matching check helper
+  const getThreeWayMatchStatus = (grn: GRN) => {
+    const matchingPO = pos.find(p => p.poNumber === grn.poNumber);
+    if (!matchingPO) return { match: false, text: "No PO Found" };
+    
+    let match = true;
+    let reason = "";
+
+    grn.items.forEach(gItem => {
+      const poItem = matchingPO.items.find(p => p.name === gItem.name);
+      if (!poItem) {
+        match = false;
+        reason = "Item mismatch";
+      } else {
+        if (poItem.rate !== gItem.rate) {
+          match = false;
+          reason = "Rate mismatch";
+        }
+        if (gItem.qty > poItem.qty) {
+          match = false;
+          reason = "Qty excess";
+        }
+      }
+    });
+
+    return { match, text: match ? "3-Way Match Verified" : `Mismatch: ${reason}` };
+  };
+  // Compute unbilled GRNs grouped by vendor
+  const unbilledGRNs = grns.filter(g => !g.isBilled);
+  const unbilledByVendor = unbilledGRNs.reduce<Record<string, { vendor: string; grns: GRN[]; totalValue: number }>>((acc, g) => {
+    if (!acc[g.vendor]) acc[g.vendor] = { vendor: g.vendor, grns: [], totalValue: 0 };
+    acc[g.vendor].grns.push(g);
+    acc[g.vendor].totalValue += g.items.reduce((s, i) => s + i.qty * i.rate, 0);
+    return acc;
+  }, {});
+
   return (
-    <div className="flex h-screen bg-[#0E0C15] text-[#ededed] overflow-hidden font-sans">
-      
+    <div className="flex h-screen bg-[#0E0C15] text-[#ededed] overflow-hidden">
       {/* Sidebar Navigation */}
-      <aside className="w-56 border-r border-white/5 bg-[#0B0910] flex flex-col shrink-0">
-        <div className="p-4 flex items-center gap-2.5 border-b border-white/5">
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-tr from-[#E8184C] to-[#7C5CFF] font-bold text-white text-xs">S</div>
-          <span className="font-bold text-white text-sm tracking-tight">SiteFlow</span>
+      <aside className="w-64 border-r border-white/5 bg-[#0B0910] flex flex-col justify-between h-full shrink-0">
+        <div className="flex flex-col overflow-y-auto flex-1">
+          <div className="p-6 flex items-center gap-3 border-b border-white/5">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-tr from-[#E8184C] to-[#7C5CFF] font-sans font-bold text-white">S</div>
+            <span className="font-bold text-white tracking-tight">SiteFlow Console</span>
+          </div>
+
+          <nav className="p-4 space-y-2">
+            <Link href={`/c/${companyId}/dashboard`} className="flex items-center gap-2.5 px-3 py-2 text-xs text-zinc-400 hover:text-white hover:bg-white/[0.02] rounded-lg">
+              <span>←</span> Back to Dashboard
+            </Link>
+            <div className="pt-4">
+              <span className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider block px-3 mb-2">Procurement Ledger</span>
+              <ul className="space-y-1">
+                {["po", "indent", "inventory", "ledger"].map(tId => (
+                  <li key={tId}>
+                    <button onClick={() => setTab(tId as any)} className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg text-left ${tab === tId ? "bg-white/[0.06] text-white font-semibold shadow-sm" : "text-zinc-400 hover:text-white hover:bg-white/[0.02]"}`}>
+                      <span>{tId === "po" ? "📄" : tId === "indent" ? "📥" : tId === "inventory" ? "📦" : "🧾"}</span> {tId.toUpperCase()}
+                    </button>
+                  </li>
+                ))}
+                <li>
+                  <button onClick={() => setTab("unbilled")} className={`w-full flex items-center justify-between px-3 py-2 text-xs font-semibold rounded-lg text-left ${tab === "unbilled" ? "bg-white/[0.06] text-white font-semibold shadow-sm" : "text-zinc-400 hover:text-white hover:bg-white/[0.02]"}`}>
+                    <span className="flex items-center gap-2.5"><span>⚠️</span> UNBILLED MATERIALS</span>
+                    {unbilledGRNs.length > 0 && <span className="text-[9px] px-1.5 py-0.5 bg-amber-500 text-black rounded-full font-bold">{unbilledGRNs.length}</span>}
+                  </button>
+                </li>
+              </ul>
+            </div>
+          </nav>
         </div>
-        <nav className="p-3 flex-1 overflow-y-auto space-y-1">
-          <Link href={`/c/${companyId}/dashboard`} className="flex items-center gap-2 px-3 py-2 text-xs text-zinc-400 hover:text-white hover:bg-white/[0.03] rounded-lg transition-all">
-            ← Dashboard
-          </Link>
-          <div className="pt-2 pb-1 px-3 text-[10px] font-bold text-zinc-600 uppercase tracking-wider">Procurement</div>
-          {[
-            { key: "po", label: "Purchase Orders", icon: "📋" },
-            { key: "indent", label: "Material Indents", icon: "📑" },
-            { key: "inventory", label: "Warehouse Inventory", icon: "📦" },
-            { key: "ledger", label: "Transaction Ledger", icon: "⚖️" },
-            { key: "vendors", label: "Vendor Directory", icon: "🏭" },
-          ].map((item) => (
-            <button
-              key={item.key}
-              onClick={() => setTab(item.key as typeof tab)}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg transition-all text-left cursor-pointer ${
-                tab === item.key
-                  ? "bg-primary/10 text-primary border-l-2 border-primary"
-                  : "text-zinc-400 hover:text-white hover:bg-white/[0.02]"
-              }`}
-            >
-              <span>{item.icon}</span> {item.label}
-            </button>
-          ))}
-        </nav>
       </aside>
 
-      {/* Main Container */}
-      <div className="flex-1 flex flex-col overflow-hidden relative">
-        {/* Glow Effects */}
-        <div className="absolute top-[-10%] right-[-10%] h-[50vw] w-[50vw] rounded-full bg-[#E8184C] opacity-[0.02] blur-[120px] pointer-events-none" />
-        <div className="absolute bottom-[-10%] left-[-10%] h-[50vw] w-[50vw] rounded-full bg-[#7C5CFF] opacity-[0.02] blur-[120px] pointer-events-none" />
-
-        {/* Topbar */}
-        <div className="border-b border-white/5 bg-[#0D0B14] px-6 py-3.5 flex items-center justify-between z-10">
-          <div>
-            <h1 className="text-sm font-bold text-white uppercase tracking-wider">Procurement & Warehouse</h1>
-            <p className="text-[10px] text-zinc-500">IND-to-PO Workflows & Stateful Inventory Stock Logs</p>
+      {/* Main Framework */}
+      <main className="flex-1 flex flex-col overflow-hidden h-full">
+        <header className="h-16 border-b border-white/5 px-8 flex items-center justify-between bg-[#0B0910] shrink-0">
+          <div className="flex items-center gap-4">
+            <h1 className="text-sm font-bold text-white uppercase tracking-wider">Site Material Procurement</h1>
+            <span className="h-4 w-px bg-white/10" />
+            <span className="text-xs font-medium text-zinc-400">Onsite.so-inspired drawer workflows</span>
           </div>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setShowUseModal(true)}
-              className="rounded-xl border border-white/10 px-4 py-2 text-xs font-bold hover:bg-white/[0.05] transition-all cursor-pointer"
-            >
-              - Log Stock Usage
+          <div className="flex gap-2">
+            <button onClick={() => { setSelectedRFQItem("UltraTech Cement"); setShowRFQDrawer(true); }} className="px-4 py-2 border border-[#7C5CFF]/30 hover:bg-[#7C5CFF]/10 rounded-xl text-xs font-bold text-primary transition-all">
+              ⚡ Compare RFQs
             </button>
-            <button
-              onClick={() => {
-                if (tab === "indent") setShowIndentModal(true);
-                else setShowPOModal(true);
-              }}
-              className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary to-[#FF3B6C] px-4 py-2 text-xs font-bold text-white hover:opacity-90 transition-all cursor-pointer shadow-lg shadow-primary/10"
-            >
-              {tab === "indent" ? "+ Create Indent" : "+ New Purchase Order"}
+            <button onClick={() => setShowIndentModal(true)} className="px-4 py-2 border border-white/10 hover:bg-white/5 rounded-xl text-xs font-bold text-white transition-all">
+              + Material Indent
+            </button>
+            <button onClick={() => setShowPOModal(true)} className="px-4 py-2 border border-white/10 hover:bg-white/5 rounded-xl text-xs font-bold text-white transition-all">
+              + Purchase Order
+            </button>
+            <button onClick={() => setShowUseModal(true)} className="px-4 py-2 bg-gradient-to-r from-primary to-[#FF3B6C] rounded-xl text-xs font-bold text-white hover:opacity-90 transition-all shadow-lg">
+              Log Usage -
             </button>
           </div>
-        </div>
+        </header>
 
-        {/* Workspace body */}
-        <div className="flex-1 overflow-y-auto p-6 z-10">
+        {/* Content Workspace */}
+        <div className="flex-1 overflow-y-auto p-8 space-y-6">
+          
+          {/* TAB 1: INDENTS / REQUISITIONS */}
+          {tab === "indent" && (
+            <div className="space-y-4">
+              <h2 className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Indent & Requisitions (Stock Contextual)</h2>
+              <div className="grid gap-4 md:grid-cols-2">
+                {indents.map((ind) => (
+                  <div key={ind.id} className="glass-panel p-5 rounded-2xl border border-white/5 bg-[#14121F] space-y-4">
+                    <div className="flex justify-between items-center text-xs">
+                      <strong className="text-white font-extrabold">{ind.indentNumber}</strong>
+                      <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${
+                        ind.status === "approved" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                      }`}>{ind.status}</span>
+                    </div>
 
-          {/* TAB: Purchase Orders */}
-          {tab === "po" && (
-            <div className="space-y-6">
-              {/* Stats overview */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {[
-                  { label: "Total PO Value", value: "₹3.41L", sub: "Approved spend", color: "text-white" },
-                  { label: "Pending Approvals", value: "1 Draft", sub: "PO-2026-042", color: "text-amber-400" },
-                  { label: "Materials Ordered", value: "2 categories", sub: "Steel & Cement", color: "text-blue-400" },
-                  { label: "Spent Month-to-date", value: "₹2.92L", sub: "Remaining Budget: ₹1.2L", color: "text-primary" }
-                ].map((s, idx) => (
-                  <div key={idx} className="glass-panel p-4 rounded-xl border border-white/5">
-                    <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider block">{s.label}</span>
-                    <span className={`text-2xl font-extrabold mt-1 block ${s.color}`}>{s.value}</span>
-                    <span className="text-[10px] text-zinc-600 block mt-0.5">{s.sub}</span>
+                    <div className="space-y-2 border-t border-white/5 pt-3">
+                      {ind.items.map((item, i) => {
+                        // Find current warehouse stock context directly on indent card (Screen 5720)
+                        const stock = inventory.find(inv => inv.name === item.name);
+                        return (
+                          <div key={i} className="text-xs flex justify-between items-center">
+                            <div>
+                              <span className="text-zinc-300 block font-bold">{item.name} (Req Qty: {item.qty} {item.unit})</span>
+                              {item.specOverride && <span className="text-[10px] text-zinc-500 block">Spec: {item.specOverride}</span>}
+                              {item.photoUrl && (
+                                <button onClick={() => alert("Preview item photo proof")} className="text-[9px] text-primary underline mt-1 block">
+                                  🖼️ View item photo proof
+                                </button>
+                              )}
+                            </div>
+                            <div className="text-right">
+                              <span className="text-[9px] uppercase text-zinc-500 block">Warehouse Stock</span>
+                              <strong className={`font-mono font-bold ${stock && stock.onHand < stock.minAlertThreshold ? "text-red-400" : "text-emerald-400"}`}>
+                                {stock ? `${stock.onHand} ${stock.unit}` : "No stock logs"}
+                              </strong>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {ind.status === "pending" && (
+                      <div className="flex gap-2 justify-end border-t border-white/5 pt-3">
+                        <button onClick={() => handleApproveIndent(ind.id)} className="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 rounded-lg text-[10px] font-bold">
+                          👍 Approve Indent
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
-
-              {/* PO List */}
-              <div className="glass-panel border border-white/5 rounded-2xl overflow-hidden">
-                <div className="px-5 py-4 border-b border-white/5">
-                  <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-400">Project Purchase Orders</h2>
-                </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-xs text-left">
-                    <thead>
-                      <tr className="border-b border-white/5 text-zinc-500">
-                        <th className="px-5 py-3 font-bold">PO Number</th>
-                        <th className="px-5 py-3 font-bold">Vendor</th>
-                        <th className="px-5 py-3 font-bold">Material Item</th>
-                        <th className="px-5 py-3 font-bold">Total Amount</th>
-                        <th className="px-5 py-3 font-bold">Approval</th>
-                        <th className="px-5 py-3 font-bold">Delivery Status</th>
-                        <th className="px-5 py-3 font-bold text-right">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {pos.map((po) => (
-                        <tr key={po.id} className="border-b border-white/[0.02] hover:bg-white/[0.015] transition-all">
-                          <td className="px-5 py-3.5 font-mono text-primary font-bold">{po.poNumber}</td>
-                          <td className="px-5 py-3.5 text-white font-semibold">{po.vendor}</td>
-                          <td className="px-5 py-3.5 text-zinc-400">
-                            {po.items.map((i, idx) => (
-                              <span key={idx}>{i.name} — {i.qty} {i.unit}</span>
-                            ))}
-                          </td>
-                          <td className="px-5 py-3.5 font-bold text-white">₹{po.totalAmount.toLocaleString()}</td>
-                          <td className="px-5 py-3.5">
-                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                              po.approvalFlag === "approved"
-                                ? "bg-green-500/10 text-green-400 border border-green-500/20"
-                                : "bg-amber-500/10 text-amber-400 border border-amber-500/20"
-                            }`}>
-                              {po.approvalFlag}
-                            </span>
-                          </td>
-                          <td className="px-5 py-3.5">
-                            <span className="text-zinc-400 font-semibold">{po.status.toUpperCase()}</span>
-                          </td>
-                          <td className="px-5 py-3.5 text-right space-x-2">
-                            {po.approvalFlag === "pending" && (
-                              <button
-                                onClick={() => handleApprovePO(po.id)}
-                                className="bg-green-600 hover:bg-green-500 text-white rounded-lg px-2.5 py-1 text-[10px] font-bold transition-all cursor-pointer"
-                              >
-                                ✓ Approve PO
-                              </button>
-                            )}
-                            {po.approvalFlag === "approved" && po.status === "sent" && (
-                              <button
-                                onClick={() => {
-                                  setActivePOForGRN(po);
-                                  setReceivedQty(po.items[0].qty);
-                                  setShowGRNModal(true);
-                                }}
-                                className="bg-secondary hover:bg-[#8B73FF] text-white rounded-lg px-2.5 py-1 text-[10px] font-bold transition-all cursor-pointer"
-                              >
-                                📥 Log GRN Receipt
-                              </button>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
             </div>
           )}
 
-          {/* TAB: Material Indents */}
-          {tab === "indent" && (
-            <div className="space-y-6">
-              <div className="glass-panel border border-white/5 rounded-2xl overflow-hidden">
-                <div className="px-5 py-4 border-b border-white/5">
-                  <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-400">Material Request Indents</h2>
-                </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-xs text-left">
-                    <thead>
-                      <tr className="border-b border-white/5 text-zinc-500">
-                        <th className="px-5 py-3 font-bold">Indent ID</th>
-                        <th className="px-5 py-3 font-bold">Requested By</th>
-                        <th className="px-5 py-3 font-bold">Requested Material</th>
-                        <th className="px-5 py-3 font-bold">Date</th>
-                        <th className="px-5 py-3 font-bold">Status</th>
-                        <th className="px-5 py-3 font-bold text-right">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {indents.map((ind) => (
-                        <tr key={ind.id} className="border-b border-white/[0.02] hover:bg-white/[0.015] transition-all">
-                          <td className="px-5 py-3.5 font-mono text-secondary font-bold">{ind.indentNumber}</td>
-                          <td className="px-5 py-3.5 text-white font-semibold">{ind.requestedBy}</td>
-                          <td className="px-5 py-3.5 text-zinc-400">
-                            {ind.items.map((i, idx) => (
-                              <span key={idx}>{i.name} — {i.qty} {i.unit}</span>
-                            ))}
-                          </td>
-                          <td className="px-5 py-3.5 text-zinc-500">{ind.date}</td>
-                          <td className="px-5 py-3.5">
-                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                              ind.status === "approved"
-                                ? "bg-green-500/10 text-green-400 border border-green-500/20"
-                                : ind.status === "ordered"
-                                ? "bg-blue-500/10 text-blue-400 border border-blue-500/20"
-                                : "bg-amber-500/10 text-amber-400 border border-amber-500/20"
-                            }`}>
-                              {ind.status}
-                            </span>
-                          </td>
-                          <td className="px-5 py-3.5 text-right">
-                            {ind.status === "pending" && (
-                              <button
-                                onClick={() => handleApproveIndent(ind.id)}
-                                className="bg-primary hover:opacity-90 text-white rounded-lg px-2.5 py-1 text-[10px] font-bold transition-all cursor-pointer"
-                              >
-                                Approve Request
-                              </button>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* TAB: Warehouse Inventory */}
-          {tab === "inventory" && (
-            <div className="space-y-6">
-              
-              {/* Alert notification panels for low stock */}
-              <div className="space-y-2">
-                {inventory.map((item, idx) => {
-                  const isLow = item.onHand < item.minAlertThreshold;
-                  if (!isLow) return null;
-                  return (
-                    <div key={idx} className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3 flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="text-lg">⚠️</span>
-                        <div className="text-xs">
-                          <span className="font-extrabold text-amber-400">Low Stock Alert: </span>
-                          <span>{item.name} is currently at <strong>{item.onHand} {item.unit}</strong> (Threshold: {item.minAlertThreshold} {item.unit}). Create a material indent immediately.</span>
-                        </div>
+          {/* TAB 2: PURCHASE ORDERS */}
+          {tab === "po" && (
+            <div className="space-y-4">
+              <h2 className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Purchase Orders</h2>
+              <div className="grid gap-4 md:grid-cols-2">
+                {pos.map((po) => (
+                  <div key={po.id} className="glass-panel p-5 rounded-2xl border border-white/5 bg-[#14121F] space-y-4">
+                    <div className="flex justify-between items-center text-xs">
+                      <div>
+                        <strong className="text-white font-extrabold">{po.poNumber}</strong>
+                        <span className="text-[10px] text-zinc-500 block mt-0.5">Vendor: {po.vendor}</span>
                       </div>
-                      <button
-                        onClick={() => {
-                          setNewIndentMaterial(item.name);
-                          setNewIndentQty(item.minAlertThreshold * 2);
-                          setNewIndentUnit(item.unit);
-                          setShowIndentModal(true);
-                        }}
-                        className="bg-amber-500 text-black px-3 py-1 rounded-lg text-[10px] font-bold hover:bg-amber-400 transition-all cursor-pointer"
-                      >
-                        Reorder Stock
-                      </button>
+                      <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${
+                        po.status === "received" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "bg-primary/10 text-primary border border-primary/20"
+                      }`}>{po.status}</span>
+                    </div>
+
+                    <div className="border-t border-white/5 pt-3 text-xs space-y-1">
+                      {po.items.map((item, i) => (
+                        <div key={i} className="flex justify-between text-zinc-300">
+                          <span>{item.name}</span>
+                          <span>{item.qty} {item.unit} @ ₹{item.rate}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="flex justify-between items-end border-t border-white/5 pt-3">
+                      <div>
+                        <span className="text-[9px] uppercase text-zinc-500 block">Total Amount</span>
+                        <strong className="text-sm text-white font-extrabold">₹{po.totalAmount.toLocaleString()}</strong>
+                      </div>
+                      
+                      <div className="flex gap-2">
+                        {po.approvalFlag === "pending" && (
+                          <button onClick={() => handleApprovePO(po.id)} className="px-3 py-1.5 bg-primary/10 hover:bg-primary/20 border border-primary/20 text-primary rounded-lg text-[10px] font-bold">
+                            Approve PO
+                          </button>
+                        )}
+                        {po.status === "sent" && po.approvalFlag === "approved" && (
+                          <button onClick={() => handleOpenGRNModal(po)} className="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 rounded-lg text-[10px] font-bold">
+                            🚚 Record GRN (Checklist)
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* TAB 3: INVENTORY */}
+          {tab === "inventory" && (
+            <div className="space-y-4">
+              <h2 className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Real-time Warehouse Stock Balance</h2>
+              <div className="glass-panel border border-white/5 rounded-2xl overflow-hidden">
+                <table className="w-full text-xs text-left">
+                  <thead className="bg-white/[0.02] text-zinc-500 border-b border-white/5">
+                    <tr>
+                      <th className="px-5 py-3 font-semibold">Material Item</th>
+                      <th className="px-5 py-3 font-semibold">Physical Stock</th>
+                      <th className="px-5 py-3 font-semibold">Reserved Stock</th>
+                      <th className="px-5 py-3 font-semibold">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {inventory.map((inv, idx) => (
+                      <tr key={idx} className="border-b border-white/[0.03] hover:bg-white/[0.015] transition-all">
+                        <td className="px-5 py-3 font-bold text-white">{inv.name}</td>
+                        <td className={`px-5 py-3 font-mono font-bold ${inv.onHand < 0 ? "text-red-400 font-extrabold" : "text-zinc-200"}`}>
+                          {inv.onHand} {inv.unit}
+                        </td>
+                        <td className="px-5 py-3 text-zinc-500 font-mono">{inv.reserved} {inv.unit}</td>
+                        <td className="px-5 py-3">
+                          {inv.onHand < 0 ? (
+                            <span className="px-2 py-0.5 rounded bg-red-500/10 border border-red-500/20 text-red-400 font-bold uppercase text-[9px]">Negative stock context</span>
+                          ) : inv.onHand < inv.minAlertThreshold ? (
+                            <span className="px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 text-amber-400 font-bold uppercase text-[9px]">Reorder Alert</span>
+                          ) : (
+                            <span className="px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-bold uppercase text-[9px]">Healthy</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 4: LEDGER */}
+          {tab === "ledger" && (
+            <div className="space-y-4">
+              <h2 className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Inventory Transactions</h2>
+              <div className="glass-panel border border-white/5 rounded-2xl overflow-hidden">
+                <table className="w-full text-xs text-left">
+                  <thead className="bg-white/[0.02] text-zinc-500 border-b border-white/5">
+                    <tr>
+                      <th className="px-5 py-3 font-semibold">Material</th>
+                      <th className="px-5 py-3 font-semibold">Transaction Qty</th>
+                      <th className="px-5 py-3 font-semibold">Type</th>
+                      <th className="px-5 py-3 font-semibold">Reference</th>
+                      <th className="px-5 py-3 font-semibold">Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {transactions.map((txn, idx) => (
+                      <tr key={idx} className="border-b border-white/[0.03] hover:bg-white/[0.015] transition-all">
+                        <td className="px-5 py-3 font-bold text-white">{txn.materialName}</td>
+                        <td className={`px-5 py-3 font-mono font-bold ${txn.type === "used" ? "text-amber-400" : "text-emerald-400"}`}>
+                          {txn.type === "used" ? "-" : "+"}{txn.qty} {txn.unit}
+                        </td>
+                        <td className="px-5 py-3 capitalize">{txn.type}</td>
+                        <td className="px-5 py-3 text-zinc-400 font-mono">{txn.sourceRef}</td>
+                        <td className="px-5 py-3 text-zinc-500">{txn.date}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 5: UNBILLED MATERIALS TRACKER */}
+          {tab === "unbilled" && (
+            <div className="space-y-5">
+              <div className="flex items-start justify-between">
+                <div>
+                  <h2 className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Unbilled Materials Tracker</h2>
+                  <p className="text-[10px] text-zinc-600 mt-1 max-w-lg">GRNs received from vendors but not yet linked to a Material Purchase invoice. Review and mark as billed to reconcile Accounts Payable. Unmatched GRNs inflate stock figures without a corresponding payable.</p>
+                </div>
+                {unbilledGRNs.length === 0 && (
+                  <span className="text-[10px] px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-full font-bold">✓ All GRNs Reconciled</span>
+                )}
+              </div>
+
+              {/* Summary Strip */}
+              <div className="grid grid-cols-3 gap-4">
+                <div className="bg-[#14121F] border border-white/5 rounded-xl p-4">
+                  <span className="text-[9px] uppercase text-zinc-500 tracking-wider block">Unbilled GRN Count</span>
+                  <strong className={`text-xl font-extrabold mt-1 block ${unbilledGRNs.length > 0 ? "text-amber-400" : "text-emerald-400"}`}>{unbilledGRNs.length}</strong>
+                </div>
+                <div className="bg-[#14121F] border border-white/5 rounded-xl p-4">
+                  <span className="text-[9px] uppercase text-zinc-500 tracking-wider block">Unbilled Value (est.)</span>
+                  <strong className={`text-xl font-extrabold mt-1 block font-mono ${unbilledGRNs.length > 0 ? "text-amber-400" : "text-emerald-400"}`}>
+                    ₹{unbilledGRNs.reduce((s, g) => s + g.items.reduce((a, i) => a + i.qty * i.rate, 0), 0).toLocaleString()}
+                  </strong>
+                </div>
+                <div className="bg-[#14121F] border border-white/5 rounded-xl p-4">
+                  <span className="text-[9px] uppercase text-zinc-500 tracking-wider block">Vendors Pending</span>
+                  <strong className="text-xl font-extrabold mt-1 block text-zinc-200">{Object.keys(unbilledByVendor).length}</strong>
+                </div>
+              </div>
+
+              {/* Vendor-grouped GRN cards */}
+              {Object.values(unbilledByVendor).length === 0 ? (
+                <div className="text-center py-14 text-zinc-600 text-xs">No unbilled GRNs. All received goods have matching invoices.</div>
+              ) : (
+                Object.values(unbilledByVendor).map(group => (
+                  <div key={group.vendor} className="bg-[#0F0D18] border border-white/5 rounded-2xl overflow-hidden">
+                    {/* Vendor header */}
+                    <div className="flex items-center justify-between px-5 py-3 bg-amber-500/5 border-b border-amber-500/10">
+                      <div className="flex items-center gap-3">
+                        <span className="text-[9px] font-extrabold uppercase tracking-widest text-amber-500">⚠ Unbilled</span>
+                        <span className="text-xs font-bold text-white">{group.vendor}</span>
+                        <span className="text-[9px] text-zinc-500">{group.grns.length} GRN{group.grns.length > 1 ? "s" : ""} pending</span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-[9px] text-zinc-500 block">Est. Unbilled Value</span>
+                        <strong className="text-sm font-extrabold text-amber-400 font-mono">₹{group.totalValue.toLocaleString()}</strong>
+                      </div>
+                    </div>
+
+                    {/* Individual GRN rows */}
+                    <table className="w-full text-xs text-left">
+                      <thead>
+                        <tr className="border-b border-white/5 text-zinc-500 font-bold uppercase tracking-wider text-[9px]">
+                          <th className="px-5 py-2.5 font-semibold">GRN No.</th>
+                          <th className="px-5 py-2.5 font-semibold">Received Date</th>
+                          <th className="px-5 py-2.5 font-semibold">Items</th>
+                          <th className="px-5 py-2.5 text-center font-semibold">3-Way Match Check</th>
+                          <th className="px-5 py-2.5 text-right font-semibold">Value</th>
+                          <th className="px-5 py-2.5 text-right font-semibold">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {group.grns.map(grn => {
+                          const grnValue = grn.items.reduce((s, i) => s + i.qty * i.rate, 0);
+                          const threeWay = getThreeWayMatchStatus(grn);
+                          return (
+                            <tr key={grn.id} className="border-b border-white/[0.03] hover:bg-white/[0.015] transition-all">
+                              <td className="px-5 py-3">
+                                <span className="font-mono font-bold text-white">{grn.grnNumber}</span>
+                                <span className="block text-[9px] text-zinc-600 mt-0.5">PO: {grn.poNumber}</span>
+                              </td>
+                              <td className="px-5 py-3 text-zinc-400">{grn.receivedDate}</td>
+                              <td className="px-5 py-3">
+                                {grn.items.map((item, i) => (
+                                  <div key={i} className="text-zinc-300">
+                                    {item.name}: <span className="font-mono font-bold">{item.qty} {item.unit}</span> @ ₹{item.rate.toLocaleString()}
+                                  </div>
+                                ))}
+                              </td>
+                              <td className="px-5 py-3 text-center">
+                                <span className={`inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded-full border ${threeWay.match ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" : "bg-red-500/10 border-red-500/20 text-red-400"}`}>
+                                  {threeWay.match ? "✓" : "⚠️"} {threeWay.text}
+                                </span>
+                              </td>
+                              <td className="px-5 py-3 text-right font-mono font-bold text-amber-400">₹{grnValue.toLocaleString("en-IN")}</td>
+                              <td className="px-5 py-3 text-right">
+                                <button
+                                  onClick={() => handleMarkAsBilled(grn.id)}
+                                  className="px-3 py-1.5 text-[10px] font-bold bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 rounded-lg transition-all"
+                                >
+                                  ✓ Mark as Billed
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                ))
+              )}
+
+              {/* Already-billed GRNs reference section */}
+              {grns.filter(g => g.isBilled).length > 0 && (
+                <div className="mt-6">
+                  <h3 className="text-[10px] uppercase font-bold text-zinc-600 tracking-wider mb-3">✓ Reconciled GRNs (Billed)</h3>
+                  <div className="bg-[#0F0D18] border border-white/5 rounded-2xl overflow-hidden opacity-60">
+                    <table className="w-full text-xs">
+                      <tbody>
+                        {grns.filter(g => g.isBilled).map(grn => (
+                          <tr key={grn.id} className="border-b border-white/[0.03]">
+                            <td className="px-5 py-3 font-mono font-bold text-zinc-400">{grn.grnNumber}</td>
+                            <td className="px-5 py-3 text-zinc-500">{grn.vendor}</td>
+                            <td className="px-5 py-3 text-zinc-600">{grn.receivedDate}</td>
+                            <td className="px-5 py-3 text-right">
+                              <span className="text-[9px] px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 rounded-full font-bold">BILLED</span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </main>
+
+      {/* Add Indent Modal Drawer (Specs & Photo proof overrides per item) */}
+      {showIndentModal && (
+        <div className="fixed inset-0 z-50 bg-[#000]/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[#0C0A12] border border-white/10 rounded-2xl w-full max-w-md shadow-2xl p-6 space-y-4 text-xs">
+            <div className="flex justify-between items-center border-b border-white/5 pb-2">
+              <h3 className="text-xs font-extrabold text-white">Create Material Indent (Requisition)</h3>
+              <button onClick={() => setShowIndentModal(false)} className="text-zinc-400 hover:text-white">✕</button>
+            </div>
+
+            <div className="space-y-3">
+              <div className="space-y-1">
+                <label className="text-zinc-400">Indent Number</label>
+                <input type="text" value={newIndentNum} onChange={(e) => setNewIndentNum(e.target.value)} className="w-full bg-[#16121F] border border-white/10 rounded-lg p-2 text-white" />
+              </div>
+              
+              <div className="space-y-1">
+                <label className="text-zinc-400">Material Item</label>
+                <select value={newIndentMaterial} onChange={(e) => setNewIndentMaterial(e.target.value)} className="w-full bg-[#16121F] border border-white/10 rounded-lg p-2 text-white">
+                  <option value="UltraTech Cement">UltraTech Cement</option>
+                  <option value="TMT Steel 16mm">TMT Steel 16mm</option>
+                  <option value="Traditional Clay Bricks">Traditional Clay Bricks</option>
+                  <option value="Fine River Sand">Fine River Sand</option>
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-zinc-400">Required Quantity</label>
+                  <input type="number" value={newIndentQty} onChange={(e) => setNewIndentQty(parseFloat(e.target.value) || 0)} className="w-full bg-[#16121F] border border-white/10 rounded-lg p-2 text-white" />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-zinc-400">Unit</label>
+                  <input type="text" value={newIndentUnit} onChange={(e) => setNewIndentUnit(e.target.value)} className="w-full bg-[#16121F] border border-white/10 rounded-lg p-2 text-white" />
+                </div>
+              </div>
+
+              {/* Item-level Spec & Photo override (Screen 5761-5762) */}
+              <div className="space-y-1">
+                <label className="text-zinc-400">Line-Item Custom Specification Override</label>
+                <input type="text" value={newIndentSpec} onChange={(e) => setNewIndentSpec(e.target.value)} className="w-full bg-[#16121F] border border-white/10 rounded-lg p-2 text-white" placeholder="Grade 53 OPC Cement, Fe 550D Rebars..." />
+              </div>
+
+              <div className="space-y-2 border-t border-white/5 pt-3">
+                <span className="text-zinc-500 font-bold block">Attach Item Photo proof</span>
+                <div className="flex items-center gap-3">
+                  <button type="button" onClick={() => setNewIndentPhoto("https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=500")} className="px-3 py-1.5 bg-[#1C182A] border border-white/10 rounded-lg text-zinc-400 hover:text-white">
+                    📷 Take Item Photo
+                  </button>
+                  {newIndentPhoto && <span className="text-emerald-400 font-bold">✓ Captured</span>}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-2 justify-end border-t border-white/5 pt-4">
+              <button onClick={() => setShowIndentModal(false)} className="px-4 py-2 bg-zinc-800 text-zinc-400 hover:text-white rounded-xl">Cancel</button>
+              <button onClick={handleCreateIndent} className="px-5 py-2.5 bg-primary text-white font-bold rounded-xl">Submit Indent</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Log GRN PO Checklist Modal (Screen 5767-5768) */}
+      {showGRNModal && selectedPOForGRN && (
+        <div className="fixed inset-0 z-50 bg-[#000]/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[#0C0A12] border border-white/10 rounded-2xl w-full max-w-lg shadow-2xl p-6 space-y-4 text-xs">
+            <div className="flex justify-between items-center border-b border-white/5 pb-2">
+              <div>
+                <h3 className="text-xs font-extrabold text-white">Record Goods Receipt Note (GRN)</h3>
+                <p className="text-[10px] text-zinc-500 mt-0.5">PO: {selectedPOForGRN.poNumber} · Vendor: {selectedPOForGRN.vendor}</p>
+              </div>
+              <button onClick={() => { setShowGRNModal(false); setSelectedPOForGRN(null); }} className="text-zinc-400 hover:text-white">✕</button>
+            </div>
+
+            <div className="space-y-3">
+              <div className="space-y-1">
+                <label className="text-zinc-400">GRN Serial Number</label>
+                <input type="text" value={grnNum} onChange={(e) => setGrnNum(e.target.value)} className="w-full bg-[#16121F] border border-white/10 rounded-lg p-2 text-white" />
+              </div>
+
+              {/* Checklist list of PO items (Screen 5768) */}
+              <div className="space-y-2">
+                <span className="text-zinc-400 font-bold block uppercase tracking-wider text-[10px]">Select Delivered PO Items</span>
+                {selectedPOForGRN.items.map((item, idx) => {
+                  const idxStr = idx.toString();
+                  return (
+                    <div key={idx} className="p-3 bg-[#120F1A] border border-white/5 rounded-xl flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={grnItemsChecked[idxStr] || false}
+                          onChange={(e) => setGrnItemsChecked({ ...grnItemsChecked, [idxStr]: e.target.checked })}
+                          className="accent-primary h-4 w-4 rounded cursor-pointer"
+                        />
+                        <span className="text-white font-bold">{item.name}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-zinc-500">Rec Qty:</span>
+                        <input
+                          type="number"
+                          value={grnReceivedQtys[idxStr] || "0"}
+                          onChange={(e) => setGrnReceivedQtys({ ...grnReceivedQtys, [idxStr]: e.target.value })}
+                          disabled={!grnItemsChecked[idxStr]}
+                          className="bg-[#1C182A] border border-white/10 rounded px-2 py-1 text-white w-20 text-center font-bold disabled:opacity-50"
+                        />
+                        <span className="text-zinc-400">{item.unit}</span>
+                      </div>
                     </div>
                   );
                 })}
               </div>
 
-              {/* Inventory Table */}
-              <div className="glass-panel border border-white/5 rounded-2xl overflow-hidden">
-                <div className="px-5 py-4 border-b border-white/5">
-                  <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-400">Warehouse Inventory On Hand</h2>
-                </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-xs text-left">
-                    <thead>
-                      <tr className="border-b border-white/5 text-zinc-500">
-                        <th className="px-5 py-3 font-bold">Material Name</th>
-                        <th className="px-5 py-3 font-bold">Quantity On Hand</th>
-                        <th className="px-5 py-3 font-bold">Quantity Reserved</th>
-                        <th className="px-5 py-3 font-bold">Unit Type</th>
-                        <th className="px-5 py-3 font-bold">Minimum Threshold</th>
-                        <th className="px-5 py-3 font-bold">Status Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {inventory.map((item, idx) => {
-                        const isLow = item.onHand < item.minAlertThreshold;
-                        return (
-                          <tr key={idx} className="border-b border-white/[0.02] hover:bg-white/[0.015] transition-all">
-                            <td className="px-5 py-3.5 text-white font-extrabold">{item.name}</td>
-                            <td className={`px-5 py-3.5 font-mono font-extrabold ${isLow ? "text-amber-400" : "text-white"}`}>
-                              {item.onHand.toLocaleString()}
-                            </td>
-                            <td className="px-5 py-3.5 font-mono text-zinc-400">{item.reserved.toLocaleString()}</td>
-                            <td className="px-5 py-3.5 text-zinc-500 font-semibold">{item.unit}</td>
-                            <td className="px-5 py-3.5 font-mono text-zinc-600">{item.minAlertThreshold.toLocaleString()}</td>
-                            <td className="px-5 py-3.5">
-                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                                isLow
-                                  ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
-                                  : "bg-green-500/10 text-green-400 border border-green-500/20"
-                              }`}>
-                                {isLow ? "Low Stock" : "Sufficient"}
-                              </span>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
+              {/* Gate Entry Photo Upload */}
+              <div className="space-y-1">
+                <label className="text-zinc-400 font-bold block">GRN Gate Entry / Challan Photo</label>
+                <input type="file" accept="image/*"
+                  onChange={e => {
+                    const f = e.target.files?.[0];
+                    if (f) setGrnGatePhoto("https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=500");
+                  }}
+                  className="w-full bg-[#16121F] border border-white/10 rounded-lg p-2 text-zinc-400 text-xs" />
+                {grnGatePhoto && <span className="text-emerald-400 font-bold mt-1 block">✓ Photo Attached</span>}
               </div>
             </div>
-          )}
 
-          {/* TAB: Transactions Ledger */}
-          {tab === "ledger" && (
-            <div className="space-y-6">
-              <div className="glass-panel border border-white/5 rounded-2xl overflow-hidden">
-                <div className="px-5 py-4 border-b border-white/5">
-                  <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-400">Material Transaction logs</h2>
-                </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-xs text-left">
-                    <thead>
-                      <tr className="border-b border-white/5 text-zinc-500">
-                        <th className="px-5 py-3 font-bold">Transaction ID</th>
-                        <th className="px-5 py-3 font-bold">Material Name</th>
-                        <th className="px-5 py-3 font-bold">Quantity</th>
-                        <th className="px-5 py-3 font-bold">Unit Type</th>
-                        <th className="px-5 py-3 font-bold">Movement Type</th>
-                        <th className="px-5 py-3 font-bold">Source Reference</th>
-                        <th className="px-5 py-3 font-bold">Date</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {transactions.map((txn) => (
-                        <tr key={txn.id} className="border-b border-white/[0.02] hover:bg-white/[0.015] transition-all">
-                          <td className="px-5 py-3.5 font-mono text-zinc-500">{txn.id}</td>
-                          <td className="px-5 py-3.5 text-white font-semibold">{txn.materialName}</td>
-                          <td className={`px-5 py-3.5 font-mono font-bold ${txn.type === "received" ? "text-green-400" : "text-red-400"}`}>
-                            {txn.type === "received" ? "+" : "-"}{txn.qty}
-                          </td>
-                          <td className="px-5 py-3.5 text-zinc-500">{txn.unit}</td>
-                          <td className="px-5 py-3.5">
-                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                              txn.type === "received"
-                                ? "bg-green-500/10 text-green-400 border border-green-500/20"
-                                : "bg-red-500/10 text-red-400 border border-red-500/20"
-                            }`}>
-                              {txn.type}
-                            </span>
-                          </td>
-                          <td className="px-5 py-3.5 text-zinc-400 font-medium">{txn.sourceRef}</td>
-                          <td className="px-5 py-3.5 text-zinc-500">{txn.date}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+            <div className="flex gap-2 justify-end border-t border-white/5 pt-4">
+              <button onClick={() => { setShowGRNModal(false); setSelectedPOForGRN(null); }} className="px-4 py-2 bg-zinc-800 text-zinc-400 hover:text-white rounded-xl">Cancel</button>
+              <button onClick={handleCreateGRN} className="px-5 py-2.5 bg-primary text-white font-bold rounded-xl">Record GRN Items</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Log Material Usage Drawer */}
+      {showUseModal && (
+        <div className="fixed inset-0 z-50 bg-[#000]/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[#0C0A12] border border-white/10 rounded-2xl w-full max-w-md shadow-2xl p-6 space-y-4 text-xs">
+            <div className="flex justify-between items-center border-b border-white/5 pb-2">
+              <h3 className="text-xs font-extrabold text-white">Log Site Material Usage</h3>
+              <button onClick={() => setShowUseModal(false)} className="text-zinc-400 hover:text-white">✕</button>
+            </div>
+
+            <div className="space-y-3">
+              <div className="space-y-1">
+                <label className="text-zinc-400">Select Material Item</label>
+                <select value={useMaterialName} onChange={(e) => setUseMaterialName(e.target.value)} className="w-full bg-[#16121F] border border-white/10 rounded-lg p-2 text-white">
+                  <option value="UltraTech Cement">UltraTech Cement</option>
+                  <option value="TMT Steel 16mm">TMT Steel 16mm</option>
+                  <option value="Traditional Clay Bricks">Traditional Clay Bricks</option>
+                  <option value="Fine River Sand">Fine River Sand</option>
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-zinc-400">Usage Quantity</label>
+                <input type="number" value={useQty} onChange={(e) => setUseQty(parseFloat(e.target.value) || 0)} className="w-full bg-[#16121F] border border-white/10 rounded-lg p-2 text-white" />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-zinc-400">Consumption Reference (Location / Lorry No.)</label>
+                <input type="text" value={useSourceRef} onChange={(e) => setUseSourceRef(e.target.value)} className="w-full bg-[#16121F] border border-white/10 rounded-lg p-2 text-white" />
               </div>
             </div>
-          )}
 
-          {/* TAB: Vendor Directory */}
-          {tab === "vendors" && (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-              {VENDORS.map((v) => (
-                <div key={v.id} className="glass-panel p-5 border border-white/5 rounded-2xl space-y-3 hover:border-white/10 transition-all">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="text-sm font-bold text-white">{v.name}</h3>
-                      <span className="text-[10px] text-zinc-500">{v.category} · {v.city}</span>
+            <div className="flex gap-2 justify-end border-t border-white/5 pt-4">
+              <button onClick={() => setShowUseModal(false)} className="px-4 py-2 bg-zinc-800 text-zinc-400 hover:text-white rounded-xl">Cancel</button>
+              <button onClick={handleRecordUsage} className="px-5 py-2.5 bg-primary text-white font-bold rounded-xl">Record Usage</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* PO Creation modal */}
+      {showPOModal && (
+        <div className="fixed inset-0 z-50 bg-[#000]/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[#0C0A12] border border-white/10 rounded-2xl w-full max-w-md shadow-2xl p-6 space-y-4 text-xs font-sans max-h-[85vh] overflow-y-auto">
+            <div className="flex justify-between items-center border-b border-white/5 pb-2">
+              <h3 className="text-xs font-extrabold text-white">Create Purchase Order (PO)</h3>
+              <button onClick={() => setShowPOModal(false)} className="text-zinc-400 hover:text-white">✕</button>
+            </div>
+
+            <div className="space-y-3">
+              <div className="space-y-1">
+                <label className="text-zinc-400 font-bold">PO Number</label>
+                <input type="text" value={newPONum} onChange={(e) => setNewPONum(e.target.value)} className="w-full bg-[#16121F] border border-white/10 rounded-lg p-2 text-white" />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-zinc-400 font-bold">Supplier Vendor</label>
+                <select value={newPOVendor} onChange={(e) => setNewPOVendor(e.target.value)} className="w-full bg-[#16121F] border border-white/10 rounded-lg p-2 text-white">
+                  {VENDORS.map(v => (
+                    <option key={v.id} value={v.name}>{v.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Multi-item list form */}
+              <div className="space-y-2 border-t border-white/5 pt-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-zinc-400 font-bold uppercase tracking-wider text-[9px]">PO Line Items</span>
+                  <button type="button" onClick={() => setPoFormItems([...poFormItems, { name: "TMT Steel 16mm", qty: 10, unit: "tons", rate: 62000 }])}
+                    className="text-[9px] text-primary font-bold hover:underline">+ Add Item Line</button>
+                </div>
+                {poFormItems.map((item, idx) => (
+                  <div key={idx} className="bg-black/25 p-3 rounded-lg border border-white/5 space-y-2 relative">
+                    <button type="button" onClick={() => setPoFormItems(poFormItems.filter((_, i) => i !== idx))}
+                      className="absolute top-2 right-2 text-zinc-500 hover:text-red-400">✕</button>
+                    <div className="space-y-1">
+                      <label className="text-zinc-500 text-[9px]">Item Name</label>
+                      <select value={item.name}
+                        onChange={e => {
+                          const next = [...poFormItems];
+                          next[idx].name = e.target.value;
+                          next[idx].unit = e.target.value.includes("Cement") ? "bags" : "tons";
+                          setPoFormItems(next);
+                        }}
+                        className="w-full bg-[#16121F] border border-white/10 rounded p-1 text-white text-[11px]">
+                        <option value="UltraTech Cement">UltraTech Cement</option>
+                        <option value="TMT Steel 16mm">TMT Steel 16mm</option>
+                      </select>
                     </div>
-                    <span className="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-0.5 rounded-full font-bold">
-                      {v.status}
-                    </span>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="space-y-1">
+                        <label className="text-zinc-500 text-[9px]">Quantity ({item.unit})</label>
+                        <input type="number" value={item.qty}
+                          onChange={e => { const next = [...poFormItems]; next[idx].qty = parseFloat(e.target.value) || 0; setPoFormItems(next); }}
+                          className="w-full bg-[#16121F] border border-white/10 rounded p-1 text-white text-[11px]" />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-zinc-500 text-[9px]">Rate (₹)</label>
+                        <input type="number" value={item.rate}
+                          onChange={e => { const next = [...poFormItems]; next[idx].rate = parseFloat(e.target.value) || 0; setPoFormItems(next); }}
+                          className="w-full bg-[#16121F] border border-white/10 rounded p-1 text-white text-[11px]" />
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-center justify-between text-xs border-t border-white/5 pt-3 mt-3">
-                    <span className="text-zinc-500">Rating: <strong className="text-amber-400">★ {v.rating}</strong></span>
-                    <button className="text-primary font-bold hover:underline">View Ledger →</button>
-                  </div>
-                </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex gap-2 justify-end border-t border-white/5 pt-4">
+              <button onClick={() => setShowPOModal(false)} className="px-4 py-2 bg-zinc-800 text-zinc-400 hover:text-white rounded-xl">Cancel</button>
+              <button onClick={handleCreatePO} className="px-5 py-2.5 bg-primary text-white font-bold rounded-xl">Save PO Draft</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* RFQ Comparison Drawer */}
+      {showRFQDrawer && (
+        <div className="fixed inset-0 z-50 bg-[#000]/60 backdrop-blur-sm flex items-center justify-end">
+          <div className="bg-[#0C0A12] border-l border-white/10 w-full max-w-xl h-full shadow-2xl flex flex-col overflow-hidden text-xs">
+            <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between bg-[#0F0D16]">
+              <div>
+                <span className="text-[9px] uppercase tracking-wider font-extrabold text-primary">RFQ Analysis Center</span>
+                <h2 className="text-base font-extrabold text-white mt-1">Vendor Quote Comparisons</h2>
+              </div>
+              <button onClick={() => setShowRFQDrawer(false)} className="text-zinc-400 hover:text-white">✕ Close</button>
+            </div>
+
+            <div className="p-6 border-b border-white/5 bg-[#14121F] flex items-center gap-2">
+              <span className="text-zinc-400 font-bold">Select Material Item:</span>
+              {["UltraTech Cement", "TMT Steel 16mm"].map((item) => (
+                <button key={item} onClick={() => setSelectedRFQItem(item as any)}
+                  className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all ${selectedRFQItem === item ? "bg-primary text-white" : "bg-white/5 text-zinc-400 hover:text-white"}`}>
+                  {item}
+                </button>
               ))}
             </div>
-          )}
 
-        </div>
-      </div>
+            <div className="flex-1 p-6 overflow-y-auto space-y-6">
+              <div className="grid grid-cols-3 gap-4">
+                {(RFQ_DATA[selectedRFQItem] || []).map((quote, idx) => (
+                  <div key={idx} className={`border rounded-2xl p-4 space-y-4 relative flex flex-col justify-between ${quote.isL1 ? "border-emerald-500/30 bg-emerald-500/[0.02]" : "border-white/5 bg-white/[0.01]"}`}>
+                    {quote.isL1 && (
+                      <span className="absolute -top-2.5 left-4 bg-emerald-500 text-black text-[8px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider">L1 Preferred</span>
+                    )}
+                    <div className="space-y-1">
+                      <h4 className="font-bold text-white text-xs">{quote.vendor}</h4>
+                      <span className="text-[9px] text-zinc-500">Commercial terms</span>
+                    </div>
 
-      {/* Modal: Create Material Indent */}
-      {showIndentModal && (
-        <div className="fixed inset-0 bg-[#0E0C15]/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="glass-panel w-full max-w-md border border-white/10 rounded-3xl p-6 space-y-4">
-            <div>
-              <h3 className="text-sm font-extrabold text-white">Create Material Indent</h3>
-              <p className="text-xs text-zinc-400 mt-1">Submit a site request for raw construction materials.</p>
-            </div>
+                    <div className="space-y-2 font-mono text-[10px]">
+                      <div className="flex justify-between border-b border-white/5 pb-1">
+                        <span className="text-zinc-500">Rate:</span>
+                        <strong className={quote.isL1 ? "text-emerald-400" : "text-white"}>₹{quote.rate.toLocaleString()}/unit</strong>
+                      </div>
+                      <div className="flex justify-between border-b border-white/5 pb-1">
+                        <span className="text-zinc-500">Delivery:</span>
+                        <strong className="text-white">{quote.delivery} days</strong>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-zinc-500">Payment:</span>
+                        <strong className="text-white">{quote.terms}</strong>
+                      </div>
+                    </div>
 
-            <div className="space-y-3">
-              <div>
-                <label className="text-[10px] uppercase font-bold text-zinc-500 block mb-1">Indent Serial Number</label>
-                <input
-                  type="text"
-                  value={newIndentNum}
-                  onChange={(e) => setNewIndentNum(e.target.value)}
-                  className="w-full bg-[#171520] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-secondary font-mono"
-                />
+                    <button onClick={() => { setNewPOVendor(quote.vendor); setPoFormItems([{ name: selectedRFQItem, qty: 100, unit: selectedRFQItem.includes("Cement") ? "bags" : "tons", rate: quote.rate }]); setShowRFQDrawer(false); setShowPOModal(true); }}
+                      className={`w-full py-1.5 rounded-xl font-bold text-[9px] uppercase tracking-wider transition-all ${quote.isL1 ? "bg-emerald-500 text-black font-extrabold" : "bg-[#1C182A] border border-white/10 text-zinc-400 hover:text-white"}`}>
+                      Select Vendor
+                    </button>
+                  </div>
+                ))}
               </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-[10px] uppercase font-bold text-zinc-500 block mb-1">Select Material</label>
-                  <select
-                    value={newIndentMaterial}
-                    onChange={(e) => setNewIndentMaterial(e.target.value)}
-                    className="w-full bg-[#171520] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-secondary"
-                  >
-                    <option value="UltraTech Cement">UltraTech Cement</option>
-                    <option value="TMT Steel 16mm">TMT Steel 16mm</option>
-                    <option value="Traditional Clay Bricks">Traditional Clay Bricks</option>
-                    <option value="Fine River Sand">Fine River Sand</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="text-[10px] uppercase font-bold text-zinc-500 block mb-1">Quantity</label>
-                  <input
-                    type="number"
-                    value={newIndentQty}
-                    onChange={(e) => setNewIndentQty(parseInt(e.target.value))}
-                    className="w-full bg-[#171520] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-secondary"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="flex gap-3 justify-end pt-2">
-              <button onClick={() => setShowIndentModal(false)} className="px-4 py-2 rounded-xl border border-white/10 text-xs font-bold hover:bg-white/[0.05] cursor-pointer">Cancel</button>
-              <button onClick={handleCreateIndent} className="bg-primary hover:opacity-90 text-white px-5 py-2 rounded-xl text-xs font-bold cursor-pointer">Place Request</button>
             </div>
           </div>
         </div>
       )}
-
-      {/* Modal: Create Purchase Order */}
-      {showPOModal && (
-        <div className="fixed inset-0 bg-[#0E0C15]/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="glass-panel w-full max-w-md border border-white/10 rounded-3xl p-6 space-y-4">
-            <div>
-              <h3 className="text-sm font-extrabold text-white">Create Purchase Order (PO)</h3>
-              <p className="text-xs text-zinc-400 mt-1">Issue a formal purchase order to a registered vendor.</p>
-            </div>
-
-            <div className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-[10px] uppercase font-bold text-zinc-500 block mb-1">PO Number</label>
-                  <input
-                    type="text"
-                    value={newPONum}
-                    onChange={(e) => setNewPONum(e.target.value)}
-                    className="w-full bg-[#171520] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-secondary font-mono"
-                  />
-                </div>
-                <div>
-                  <label className="text-[10px] uppercase font-bold text-zinc-500 block mb-1">Select Vendor</label>
-                  <select
-                    value={newPOVendor}
-                    onChange={(e) => setNewPOVendor(e.target.value)}
-                    className="w-full bg-[#171520] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-secondary font-semibold"
-                  >
-                    <option value="Shree Cement Traders">Shree Cement Traders</option>
-                    <option value="National Steel Suppliers">National Steel Suppliers</option>
-                    <option value="RajBuild Hardware">RajBuild Hardware</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-2">
-                <div className="col-span-2">
-                  <label className="text-[10px] uppercase font-bold text-zinc-500 block mb-1">Material Name</label>
-                  <select
-                    value={newPOMaterial}
-                    onChange={(e) => setNewPOMaterial(e.target.value)}
-                    className="w-full bg-[#171520] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-secondary"
-                  >
-                    <option value="UltraTech Cement">UltraTech Cement</option>
-                    <option value="TMT Steel 16mm">TMT Steel 16mm</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="text-[10px] uppercase font-bold text-zinc-500 block mb-1">Quantity</label>
-                  <input
-                    type="number"
-                    value={newPOQty}
-                    onChange={(e) => setNewPOQty(parseInt(e.target.value))}
-                    className="w-full bg-[#171520] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="text-[10px] uppercase font-bold text-zinc-500 block mb-1">Negotiated Rate (₹)</label>
-                <input
-                  type="number"
-                  value={newPORate}
-                  onChange={(e) => setNewPORate(parseInt(e.target.value))}
-                  className="w-full bg-[#171520] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none"
-                />
-              </div>
-            </div>
-
-            <div className="flex gap-3 justify-end pt-2">
-              <button onClick={() => setShowPOModal(false)} className="px-4 py-2 rounded-xl border border-white/10 text-xs font-bold hover:bg-white/[0.05] cursor-pointer">Cancel</button>
-              <button onClick={handleCreatePO} className="bg-primary hover:opacity-90 text-white px-5 py-2 rounded-xl text-xs font-bold cursor-pointer">Submit PO</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal: Log Goods Receipt Note (GRN) */}
-      {showGRNModal && activePOForGRN && (
-        <div className="fixed inset-0 bg-[#0E0C15]/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="glass-panel w-full max-w-md border border-white/10 rounded-3xl p-6 space-y-4">
-            <div>
-              <h3 className="text-sm font-extrabold text-white">Log Goods Receipt (GRN)</h3>
-              <p className="text-xs text-zinc-400 mt-1">
-                Record incoming materials delivery for <strong>{activePOForGRN.poNumber}</strong>.
-              </p>
-            </div>
-
-            <div className="space-y-3">
-              <div>
-                <label className="text-[10px] uppercase font-bold text-zinc-500 block mb-1">GRN Serial ID</label>
-                <input
-                  type="text"
-                  value={grnNum}
-                  onChange={(e) => setGrnNum(e.target.value)}
-                  className="w-full bg-[#171520] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none font-mono"
-                />
-              </div>
-
-              <div>
-                <label className="text-[10px] uppercase font-bold text-zinc-500 block mb-1">
-                  Received Quantity ({activePOForGRN.items[0].name})
-                </label>
-                <input
-                  type="number"
-                  value={receivedQty}
-                  onChange={(e) => setReceivedQty(parseFloat(e.target.value))}
-                  className="w-full bg-[#171520] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-secondary font-bold font-mono"
-                />
-                <span className="text-[10px] text-zinc-500 mt-1 block">PO Ordered Qty: {activePOForGRN.items[0].qty} {activePOForGRN.items[0].name.includes("Cement") ? "bags" : "tons"}</span>
-              </div>
-            </div>
-
-            <div className="flex gap-3 justify-end pt-2">
-              <button onClick={() => { setShowGRNModal(false); setActivePOForGRN(null); }} className="px-4 py-2 rounded-xl border border-white/10 text-xs font-bold hover:bg-white/[0.05] cursor-pointer">Cancel</button>
-              <button onClick={handleCreateGRN} className="bg-secondary hover:opacity-90 text-white px-5 py-2 rounded-xl text-xs font-bold cursor-pointer">Submit Receipt</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal: Log Stock Usage */}
-      {showUseModal && (
-        <div className="fixed inset-0 bg-[#0E0C15]/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="glass-panel w-full max-w-md border border-white/10 rounded-3xl p-6 space-y-4">
-            <div>
-              <h3 className="text-sm font-extrabold text-white">Log Material Usage (Deduction)</h3>
-              <p className="text-xs text-zinc-400 mt-1">Deduct stock from store for construction activities.</p>
-            </div>
-
-            <div className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-[10px] uppercase font-bold text-zinc-500 block mb-1">Select Material</label>
-                  <select
-                    value={useMaterialName}
-                    onChange={(e) => setUseMaterialName(e.target.value)}
-                    className="w-full bg-[#171520] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-secondary"
-                  >
-                    <option value="UltraTech Cement">UltraTech Cement</option>
-                    <option value="TMT Steel 16mm">TMT Steel 16mm</option>
-                    <option value="Traditional Clay Bricks">Traditional Clay Bricks</option>
-                    <option value="Fine River Sand">Fine River Sand</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="text-[10px] uppercase font-bold text-zinc-500 block mb-1">Quantity to Use</label>
-                  <input
-                    type="number"
-                    value={useQty}
-                    onChange={(e) => setUseQty(parseFloat(e.target.value))}
-                    className="w-full bg-[#171520] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-secondary"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="text-[10px] uppercase font-bold text-zinc-500 block mb-1">Usage Reference (DPR / Location)</label>
-                <input
-                  type="text"
-                  value={useSourceRef}
-                  onChange={(e) => setUseSourceRef(e.target.value)}
-                  className="w-full bg-[#171520] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-secondary"
-                />
-              </div>
-            </div>
-
-            <div className="flex gap-3 justify-end pt-2">
-              <button onClick={() => setShowUseModal(false)} className="px-4 py-2 rounded-xl border border-white/10 text-xs font-bold hover:bg-white/[0.05] cursor-pointer">Cancel</button>
-              <button onClick={handleLogUsage} className="bg-primary hover:opacity-90 text-white px-5 py-2 rounded-xl text-xs font-bold cursor-pointer">Deduct Stock</button>
-            </div>
-          </div>
-        </div>
-      )}
-
     </div>
   );
 }

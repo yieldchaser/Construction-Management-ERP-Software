@@ -13,6 +13,24 @@ export default function DashboardPage() {
   const [isSyncing, setIsSyncing] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
 
+  // Project setup wizard state
+  const [isWizardOpen, setIsWizardOpen] = useState(false);
+  const [wizardStep, setWizardStep] = useState(1);
+  const [wizardData, setWizardData] = useState({
+    name: "",
+    code: "",
+    address: "",
+    city: "",
+    attendance_radius_meters: 500,
+    teamMember: ""
+  });
+
+  const [projects, setProjects] = useState([
+    { id: "d0000000-0000-0000-0000-000000000001", name: "Metro Terminal (Phase 2)", code: "MET-02", city: "Mumbai", address: "Andheri East Metro Line", attendance_radius_meters: 500, status: "Ongoing", health: "Healthy", startDate: "2026-01-01", endDate: "2026-12-31" },
+    { id: "d0000000-0000-0000-0000-000000000002", name: "Bypass Highway Flyover", code: "HWY-FLY", city: "Pune", address: "NH-4 Bypass Crossing", attendance_radius_meters: 300, status: "Ongoing", health: "Warning", startDate: "2026-02-15", endDate: "2027-01-10" },
+    { id: "d0000000-0000-0000-0000-000000000003", name: "Alpha Premium Residences", code: "ALF-RES", city: "Delhi", address: "Sector 62, Dwarka", attendance_radius_meters: 500, status: "Ongoing", health: "Critical", startDate: "2025-10-01", endDate: "2026-09-30" },
+  ]);
+
   // Steel calculator states
   const [diameter, setDiameter] = useState(12);
   const [barCount, setBarCount] = useState(10);
@@ -24,14 +42,8 @@ export default function DashboardPage() {
   const totalWeightNoWastage = totalBarLength * standardUnitWeight; // kg
   const reinforcementWeight = totalWeightNoWastage * (1 + wastagePercent / 100); // kg
 
-  // Projects list
-  const projects = [
-    { id: "d0000000-0000-0000-0000-000000000001", name: "Metro Terminal (Phase 2)", code: "MET-02", city: "Mumbai" },
-    { id: "d0000000-0000-0000-0000-000000000002", name: "Bypass Highway Flyover", code: "HWY-FLY", city: "Pune" },
-    { id: "d0000000-0000-0000-0000-000000000003", name: "Alpha Premium Residences", code: "ALF-RES", city: "Delhi" },
-  ];
-
   const activeProjDetails = projects.find(p => p.id === activeProject) || projects[0];
+
 
   const handleSyncTally = () => {
     setIsSyncing(true);
@@ -62,6 +74,7 @@ export default function DashboardPage() {
             <select
               value={activeProject}
               onChange={(e) => setActiveProject(e.target.value)}
+              suppressHydrationWarning={true}
               className="w-full bg-[#15121F] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white focus:outline-none focus:border-primary"
             >
               {projects.map((p) => (
@@ -70,6 +83,16 @@ export default function DashboardPage() {
                 </option>
               ))}
             </select>
+            <button
+              onClick={() => {
+                setWizardData({ name: "", code: "", address: "", city: "", attendance_radius_meters: 500, teamMember: "" });
+                setWizardStep(1);
+                setIsWizardOpen(true);
+              }}
+              className="w-full mt-2 flex items-center justify-center gap-1.5 bg-primary/20 hover:bg-primary/30 border border-primary/30 rounded-lg py-1.5 text-[11px] font-semibold text-primary transition-all cursor-pointer"
+            >
+              ➕ New Project
+            </button>
           </div>
 
           {/* Module Links */}
@@ -85,7 +108,7 @@ export default function DashboardPage() {
                     onClick={() => setActiveTab("overview")}
                     className={`flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg transition-all ${
                       activeTab === "overview"
-                        ? "bg-primary/10 text-primary border-l-2 border-primary"
+                        ? "bg-white/[0.06] text-white font-semibold shadow-sm"
                         : "text-zinc-400 hover:text-white hover:bg-white/[0.02]"
                     }`}
                   >
@@ -98,7 +121,7 @@ export default function DashboardPage() {
                     onClick={() => setActiveTab("scheduler")}
                     className={`flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg transition-all ${
                       activeTab === "scheduler"
-                        ? "bg-primary/10 text-primary border-l-2 border-primary"
+                        ? "bg-white/[0.06] text-white font-semibold shadow-sm"
                         : "text-zinc-400 hover:text-white hover:bg-white/[0.02]"
                     }`}
                   >
@@ -107,8 +130,8 @@ export default function DashboardPage() {
                 </li>
                 <li>
                   <Link
-                    href="#"
-                    className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.02] opacity-60"
+                    href={`/c/${companyId}/p/${activeProject}/budgeting/boq`}
+                    className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.02] transition-all"
                   >
                     <span>📑</span> BOQ Spreadsheet
                   </Link>
@@ -201,6 +224,14 @@ export default function DashboardPage() {
                     <span>📊</span> Progress Reports
                   </Link>
                 </li>
+                <li>
+                  <Link
+                    href={`/c/${companyId}/p/${activeProject}/reports/calculators`}
+                    className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.02] transition-all"
+                  >
+                    <span>🔩</span> Construction Calculators
+                  </Link>
+                </li>
               </ul>
             </div>
 
@@ -279,7 +310,7 @@ export default function DashboardPage() {
                     onClick={() => setActiveTab("tally")}
                     className={`flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg transition-all ${
                       activeTab === "tally"
-                        ? "bg-primary/10 text-primary border-l-2 border-primary"
+                        ? "bg-white/[0.06] text-white font-semibold shadow-sm"
                         : "text-zinc-400 hover:text-white hover:bg-white/[0.02]"
                     }`}
                   >
@@ -356,42 +387,115 @@ export default function DashboardPage() {
         <div className="flex-1 overflow-y-auto p-8 space-y-8">
           {activeTab === "overview" && (
             <>
-              {/* Stats Row */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div className="rounded-xl glass-panel p-6 space-y-2">
-                  <div className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Attendance Roster</div>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-3xl font-extrabold text-white">42</span>
-                    <span className="text-xs text-success font-medium">● 38 In Geofence</span>
+              {/* Zoho Operational Summary Dashboard Counters */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="rounded-xl border border-white/5 bg-[#0B0910] p-5 flex flex-col justify-center items-center text-center">
+                  <span className="text-[11px] font-bold text-red-500 uppercase tracking-wider block mb-1">Not Started Projects</span>
+                  <span className="text-3xl font-black text-white">0</span>
+                </div>
+                <div className="rounded-xl border border-white/5 bg-[#0B0910] p-5 flex flex-col justify-center items-center text-center border-b-2 border-b-success">
+                  <span className="text-[11px] font-bold text-success uppercase tracking-wider block mb-1">Ongoing Projects</span>
+                  <span className="text-3xl font-black text-white">{projects.length}</span>
+                </div>
+                <div className="rounded-xl border border-white/5 bg-[#0B0910] p-5 flex flex-col justify-center items-center text-center">
+                  <span className="text-[11px] font-bold text-yellow-500 uppercase tracking-wider block mb-1">Onhold Projects</span>
+                  <span className="text-3xl font-black text-white">0</span>
+                </div>
+                <div className="rounded-xl border border-white/5 bg-[#0B0910] p-5 flex flex-col justify-center items-center text-center">
+                  <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">Completed Projects</span>
+                  <span className="text-3xl font-black text-white">0</span>
+                </div>
+              </div>
+
+              {/* Project Health & Zoho Sheets Grid Layout */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Gauge widget */}
+                <div className="rounded-2xl border border-white/5 bg-[#0B0910] p-6 flex flex-col justify-between items-center text-center">
+                  <div className="w-full flex justify-between items-center border-b border-white/5 pb-3">
+                    <span className="text-xs font-bold text-white uppercase tracking-wider">Project Health Index</span>
+                    <span className="h-2 w-2 rounded-full bg-success shadow-[0_0_8px_#00E5A3]" />
                   </div>
-                  <div className="text-[10px] text-zinc-500">Live head count inside 500m radius</div>
+                  
+                  <div className="relative flex items-center justify-center h-40 w-full mt-4">
+                    {/* Semi-circular gauge chart SVG */}
+                    <svg className="w-48 h-24 overflow-visible" viewBox="0 0 100 50">
+                      <path d="M 10,50 A 40,40 0 0,1 90,50" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="12" strokeLinecap="round" />
+                      <path d="M 10,50 A 40,40 0 0,1 90,50" fill="none" stroke="url(#gaugeGrad)" strokeWidth="12" strokeLinecap="round" strokeDasharray="125" strokeDashoffset="0" />
+                      <defs>
+                        <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                          <stop offset="0%" stopColor="#7C5CFF" />
+                          <stop offset="100%" stopColor="#E8184C" />
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                    <div className="absolute bottom-2 flex flex-col items-center">
+                      <span className="text-2xl font-black text-white">100%</span>
+                      <span className="text-[9px] uppercase font-bold text-zinc-500 tracking-wider">Optimal Operation</span>
+                    </div>
+                  </div>
+                  
+                  <div className="text-[10px] text-zinc-400 mt-2">
+                    All {projects.length} sites are running within planned tolerances.
+                  </div>
                 </div>
 
-                <div className="rounded-xl glass-panel p-6 space-y-2">
-                  <div className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Concrete poured</div>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-3xl font-extrabold text-white">2.8 m³</span>
-                    <span className="text-xs text-zinc-400 font-medium">M20 Nominal</span>
+                {/* Zoho sheet simulation */}
+                <div className="lg:col-span-2 rounded-2xl border border-white/5 bg-[#0B0910] p-6 space-y-4">
+                  <div className="flex flex-wrap justify-between items-center gap-2 border-b border-white/5 pb-3">
+                    <div className="flex items-center gap-3">
+                      <h4 className="text-xs font-extrabold uppercase tracking-wider text-white">📊 Project Operational Summary</h4>
+                      <span className="text-[10px] px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 font-bold font-mono">Zoho Analytics Powered</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-[10px]">
+                      <button className="px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-zinc-300 font-semibold border border-white/5">Filter</button>
+                      <button className="px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-zinc-300 font-semibold border border-white/5">Sort</button>
+                      <button className="px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-zinc-300 font-semibold border border-white/5">More</button>
+                      <input type="text" placeholder="Search..." className="bg-[#15121F] border border-white/10 rounded px-2 py-0.5 w-28 text-white focus:outline-none focus:border-primary" />
+                    </div>
                   </div>
-                  <div className="text-[10px] text-zinc-500">Dry volume: 4.31 m³ (Wastage: 5%)</div>
-                </div>
 
-                <div className="rounded-xl glass-panel p-6 space-y-2">
-                  <div className="text-xs font-bold text-zinc-500 uppercase tracking-widest">TDS Deduct (Pre-tax)</div>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-3xl font-extrabold text-white">1% / 2%</span>
-                    <span className="text-xs text-primary font-medium">Sec 194C</span>
+                  <div className="overflow-x-auto w-full">
+                    <table className="w-full text-left text-xs border-collapse">
+                      <thead>
+                        <tr className="border-b border-white/5 text-zinc-500 font-bold uppercase tracking-wider text-[10px]">
+                          <th className="py-2 px-3">Project Health</th>
+                          <th className="py-2 px-3">Project Name</th>
+                          <th className="py-2 px-3">Start Date</th>
+                          <th className="py-2 px-3">End Date</th>
+                          <th className="py-2 px-3">Project Status</th>
+                          <th className="py-2 px-3">Days Left</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-white/5">
+                        {projects.map((p) => {
+                          const daysLeft = Math.max(0, Math.ceil((new Date(p.endDate || "2026-12-31").getTime() - new Date().getTime()) / (1000 * 3600 * 24)));
+                          return (
+                            <tr key={p.id} className="hover:bg-white/[0.01] transition-colors">
+                              <td className="py-2.5 px-3">
+                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
+                                  p.health === "Healthy" ? "bg-success/10 text-success border-success/20" :
+                                  p.health === "Warning" ? "bg-yellow-500/10 text-yellow-400 border-yellow-500/20" :
+                                  "bg-primary/10 text-primary border-primary/20"
+                                }`}>
+                                  {p.health || "Healthy"}
+                                </span>
+                              </td>
+                              <td className="py-2.5 px-3 font-semibold text-white">{p.name}</td>
+                              <td className="py-2.5 px-3 text-zinc-400 font-mono">{p.startDate || "2026-01-01"}</td>
+                              <td className="py-2.5 px-3 text-zinc-400 font-mono">{p.endDate || "2026-12-31"}</td>
+                              <td className="py-2.5 px-3">
+                                <span className="flex items-center gap-1.5 text-zinc-300">
+                                  <span className="h-1.5 w-1.5 rounded-full bg-success" />
+                                  {p.status || "Ongoing"}
+                                </span>
+                              </td>
+                              <td className="py-2.5 px-3 font-semibold text-white font-mono">{daysLeft} Days</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
                   </div>
-                  <div className="text-[10px] text-zinc-500">Net claim auto-deduct retention enabled</div>
-                </div>
-
-                <div className="rounded-xl glass-panel p-6 space-y-2">
-                  <div className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Project Margin</div>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-3xl font-extrabold text-gradient-accent">22.4%</span>
-                    <span className="text-xs text-success font-medium">↑ Healthy</span>
-                  </div>
-                  <div className="text-[10px] text-zinc-500">Limit alarm set to 18%</div>
                 </div>
               </div>
 
@@ -683,6 +787,187 @@ export default function DashboardPage() {
           )}
         </div>
       </main>
+
+      {/* 2-Step Project Setup Wizard Modal */}
+      {isWizardOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm">
+          <div className="bg-[#0B0910] border border-white/10 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl">
+            {/* Header */}
+            <div className="p-6 border-b border-white/5 flex items-center justify-between bg-white/[0.01]">
+              <div>
+                <h3 className="text-sm font-bold uppercase tracking-wider text-white">Creating Project</h3>
+                <p className="text-[10px] text-zinc-500 mt-0.5">Set up your project workspace in 2 steps</p>
+              </div>
+              <button
+                onClick={() => setIsWizardOpen(false)}
+                className="text-zinc-400 hover:text-white text-sm font-bold cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Step Indicators */}
+            <div className="px-6 py-4 bg-white/[0.02] border-b border-white/5 flex items-center justify-center gap-8">
+              <div className="flex items-center gap-2">
+                <span className={`h-6 w-6 rounded-full flex items-center justify-center text-[10px] font-bold ${wizardStep === 1 ? "bg-primary text-white" : "bg-success text-white"}`}>
+                  {wizardStep > 1 ? "✓" : "1"}
+                </span>
+                <span className={`text-xs font-semibold ${wizardStep === 1 ? "text-white" : "text-zinc-400"}`}>Project Details</span>
+              </div>
+              <div className="h-px w-12 bg-white/10" />
+              <div className="flex items-center gap-2">
+                <span className={`h-6 w-6 rounded-full flex items-center justify-center text-[10px] font-bold ${wizardStep === 2 ? "bg-primary text-white" : "bg-white/5 text-zinc-500"}`}>
+                  2
+                </span>
+                <span className={`text-xs font-semibold ${wizardStep === 2 ? "text-white" : "text-zinc-500"}`}>Add Team Member</span>
+              </div>
+            </div>
+
+            {/* Body */}
+            <div className="p-6 space-y-4">
+              {wizardStep === 1 ? (
+                <>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-[11px] text-zinc-400 font-medium">Project Name</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. MP SITE"
+                        value={wizardData.name}
+                        onChange={(e) => setWizardData({ ...wizardData, name: e.target.value })}
+                        className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-white"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[11px] text-zinc-400 font-medium">Project Code</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. MP-01"
+                        value={wizardData.code}
+                        onChange={(e) => setWizardData({ ...wizardData, code: e.target.value })}
+                        className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-white"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[11px] text-zinc-400 font-medium">Project Address</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. MP ,SATNA"
+                      value={wizardData.address}
+                      onChange={(e) => setWizardData({ ...wizardData, address: e.target.value })}
+                      className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-white"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-[11px] text-zinc-400 font-medium">City</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Satna"
+                        value={wizardData.city}
+                        onChange={(e) => setWizardData({ ...wizardData, city: e.target.value })}
+                        className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-white"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[11px] text-zinc-400 font-medium">Attendance Radius (meters)</label>
+                      <input
+                        type="number"
+                        placeholder="500"
+                        value={wizardData.attendance_radius_meters}
+                        onChange={(e) => setWizardData({ ...wizardData, attendance_radius_meters: Number(e.target.value) })}
+                        className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-white"
+                      />
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="space-y-3">
+                  <div className="space-y-1">
+                    <label className="text-[11px] text-zinc-400 font-medium">Team Member Name</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. PrateekUpadhyay"
+                      value={wizardData.teamMember}
+                      onChange={(e) => setWizardData({ ...wizardData, teamMember: e.target.value })}
+                      className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-white"
+                    />
+                  </div>
+                  <p className="text-[10px] text-zinc-500 italic">
+                    Assigned members can punch attendance and log reports from their mobile app.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="p-6 border-t border-white/5 flex items-center justify-between bg-white/[0.01]">
+              <button
+                onClick={() => {
+                  if (wizardStep === 2) {
+                    setWizardStep(1);
+                  } else {
+                    setIsWizardOpen(false);
+                  }
+                }}
+                className="px-4 py-2 border border-white/10 rounded-lg text-xs font-semibold text-zinc-400 hover:text-white transition-all cursor-pointer"
+              >
+                {wizardStep === 2 ? "Back" : "Cancel"}
+              </button>
+
+              <button
+                onClick={async () => {
+                  if (wizardStep === 1) {
+                    if (!wizardData.name) return alert("Project name is required!");
+                    setWizardStep(2);
+                  } else {
+                    const newProjId = "p-" + Math.random().toString(36).substr(2, 9);
+                    const newProj = {
+                      id: newProjId,
+                      name: wizardData.name,
+                      code: wizardData.code || "PRJ-NEW",
+                      city: wizardData.city || "Mumbai",
+                      address: wizardData.address,
+                      attendance_radius_meters: wizardData.attendance_radius_meters || 500,
+                      status: "Ongoing",
+                      health: "Healthy",
+                      startDate: new Date().toISOString().split('T')[0],
+                      endDate: "2027-12-31"
+                    };
+                    
+                    try {
+                      await fetch(`http://127.0.0.1:8000/apis/v3/planning/projects`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          company_id: companyId,
+                          name: newProj.name,
+                          code: newProj.code,
+                          address: newProj.address,
+                          city: newProj.city,
+                          attendance_radius_meters: newProj.attendance_radius_meters
+                        })
+                      });
+                    } catch (e) {
+                      console.log("fallback save", e);
+                    }
+
+                    setProjects([...projects, newProj]);
+                    setActiveProject(newProjId);
+                    setIsWizardOpen(false);
+                  }
+                }}
+                className="px-5 py-2 rounded-lg bg-primary hover:opacity-90 text-xs font-bold text-white transition-all cursor-pointer"
+              >
+                {wizardStep === 1 ? "Continue" : "Complete & Launch"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

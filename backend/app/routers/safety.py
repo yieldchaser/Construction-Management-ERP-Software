@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import func as sqlfunc
 from app.database import get_db
-from app.models import SafetyIncident, ToolboxTalk, PPECheck, Project
+from app.models import SafetyIncident, ToolboxTalk, PPECheck, Project, AttendanceLog
 from pydantic import BaseModel
 from typing import Optional, List
 from datetime import datetime
@@ -144,13 +144,21 @@ def get_safety_stats(project_id: str, total_manhours: float = 10000.0, db: Sessi
     LTIF = (Number of LTIs × 200,000) / Total Manhours worked
     total_manhours defaults to 10,000 for demo; pass as query param in production.
     """
-    incidents = db.query(SafetyIncident).filter(SafetyIncident.project_id == uuid.UUID(project_id)).all()
+    proj_uuid = uuid.UUID(project_id)
+    incidents = db.query(SafetyIncident).filter(SafetyIncident.project_id == proj_uuid).all()
+
+    # Calculate actual manhours from AttendanceLog
+    actual_hours = db.query(sqlfunc.sum(AttendanceLog.hours_worked)).filter(
+        AttendanceLog.project_id == proj_uuid
+    ).scalar()
+    
+    manhours = float(actual_hours) if actual_hours and float(actual_hours) > 0 else total_manhours
 
     total_incidents = len(incidents)
     lti_incidents = [i for i in incidents if i.incident_type in ("LTI", "Fatal")]
     lti_count = len(lti_incidents)
     total_lost_days = sum(i.lost_time_days for i in lti_incidents)
-    ltif = round((lti_count * 200000) / total_manhours, 2) if total_manhours > 0 else 0.0
+    ltif = round((lti_count * 200000) / manhours, 2) if manhours > 0 else 0.0
 
     # Breakdown by type
     type_breakdown: dict = {}
@@ -172,7 +180,7 @@ def get_safety_stats(project_id: str, total_manhours: float = 10000.0, db: Sessi
         "ltif": ltif,
         "type_breakdown": type_breakdown,
         "severity_breakdown": severity_breakdown,
-        "total_manhours_used": total_manhours,
+        "total_manhours_used": manhours,
     }
 
 

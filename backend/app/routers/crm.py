@@ -210,6 +210,14 @@ def create_quotation(lead_id: uuid.UUID, req: QuotationCreateRequest, db: Sessio
     items_to_add = []
 
     # Calculate item and quotation pricing
+    total_pre_tax_base = sum(item.qty * (item.selling_price + item.supply_rate + item.installation_rate) for item in req.items)
+    discount_ratio = (req.discount / total_pre_tax_base) if (total_pre_tax_base > 0 and req.discount < total_pre_tax_base) else 0.0
+    if req.discount >= total_pre_tax_base:
+        discount_ratio = 1.0
+
+    total_amount = 0.0
+    items_to_add = []
+
     for item in req.items:
         # Base Combined Amount
         unit_price = item.selling_price + item.supply_rate + item.installation_rate
@@ -218,15 +226,25 @@ def create_quotation(lead_id: uuid.UUID, req: QuotationCreateRequest, db: Sessio
         # Calculate item level tax if applicable
         item_tax = 0.0
         if req.tax_type == "item_level":
+            item_discount = item_base * discount_ratio
+            item_discounted_base = item_base - item_discount
+            
             if item.supply_rate > 0 or item.installation_rate > 0:
-                supply_tax = (item.qty * item.supply_rate) * (item.supply_tax_pct / 100.0)
-                install_tax = (item.qty * item.installation_rate) * (item.installation_tax_pct / 100.0)
-                selling_tax = (item.qty * item.selling_price) * (req.gst_pct / 100.0)
+                supply_base = (item.qty * item.supply_rate) * (1.0 - discount_ratio)
+                install_base = (item.qty * item.installation_rate) * (1.0 - discount_ratio)
+                selling_base = (item.qty * item.selling_price) * (1.0 - discount_ratio)
+                
+                supply_tax = supply_base * (item.supply_tax_pct / 100.0)
+                install_tax = install_base * (item.installation_tax_pct / 100.0)
+                selling_tax = selling_base * (req.gst_pct / 100.0)
                 item_tax = supply_tax + install_tax + selling_tax
             else:
-                item_tax = item_base * (req.gst_pct / 100.0)
+                item_tax = item_discounted_base * (req.gst_pct / 100.0)
+            
+            item_total = item_discounted_base + item_tax
+        else:
+            item_total = item_base
         
-        item_total = item_base + item_tax
         total_amount += item_total
 
         q_item = CRMQuotationItem(
@@ -254,8 +272,8 @@ def create_quotation(lead_id: uuid.UUID, req: QuotationCreateRequest, db: Sessio
         tax = discounted * (req.gst_pct / 100.0)
         final_total = discounted + tax
     else:
-        # Discount is directly subtracted from item_level sum
-        final_total = total_amount - req.discount
+        # Discount is already proportionally deducted inside items
+        final_total = total_amount
 
     quot.total_amount = max(final_total, 0.0)
     db.add(quot)

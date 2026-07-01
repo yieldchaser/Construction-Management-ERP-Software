@@ -389,7 +389,7 @@ export default function SubcontractorBillingPage() {
               onClick={() => setTab(item.key as typeof tab)}
               className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg transition-all text-left cursor-pointer ${
                 tab === item.key
-                  ? "bg-primary/10 text-primary border-l-2 border-primary"
+                  ? "bg-white/[0.06] text-white font-semibold shadow-sm"
                   : "text-zinc-400 hover:text-white hover:bg-white/[0.02]"
               }`}
             >

@@ -99,8 +99,9 @@ const computePayslips = (employees: Employee[], daysPresent: Record<string, numb
     const ratio = days / daysInMonth;
     const gross = Math.round(emp.grossMonthly * ratio * 100) / 100;
     const basicPro = Math.round(emp.basic * ratio * 100) / 100;
-    const pfEmp = Math.round(basicPro * emp.pfPct / 100 * 100) / 100;
-    const pfEr  = Math.round(basicPro * emp.pfPct / 100 * 100) / 100;
+    // Cap PF at ₹1,800 monthly contribution limit
+    const pfEmp = Math.min(1800, Math.round(basicPro * emp.pfPct / 100 * 100) / 100);
+    const pfEr  = Math.min(1800, Math.round(basicPro * emp.pfPct / 100 * 100) / 100);
     const esiEmp = emp.esiApplicable ? Math.round(gross * 0.75 / 100 * 100) / 100 : 0;
     const esiEr  = emp.esiApplicable ? Math.round(gross * 3.25 / 100 * 100) / 100 : 0;
     const tds = emp.tdsMonthly;
@@ -126,9 +127,23 @@ export default function HRPayrollPage() {
   const companyId = params?.company_id as string;
   const projectId = params?.project_id as string;
 
-  const [tab, setTab] = useState<"employees" | "attendance" | "timesheets" | "payroll">("employees");
+  const [tab, setTab] = useState<"employees" | "attendance" | "timesheets" | "payroll" | "leaves">("employees");
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
+  
+  // Leave Management states
+  const [leaves, setLeaves] = useState<any[]>([
+    { id: "LV-01", employeeId: "E-01", employeeName: "Ramesh Kumar", leaveType: "Casual", startDate: "2026-07-02", endDate: "2026-07-03", days: 2, reason: "Personal work at hometown", status: "Pending" },
+    { id: "LV-02", employeeId: "E-03", employeeName: "Sanjay Yadav", leaveType: "Sick", startDate: "2026-06-20", endDate: "2026-06-21", days: 2, reason: "Viral Fever", status: "Approved" },
+  ]);
+  const [showApplyLeaveModal, setShowApplyLeaveModal] = useState(false);
+  const [leaveForm, setLeaveForm] = useState({
+    employeeId: "E-01",
+    leaveType: "Casual",
+    startDate: "",
+    endDate: "",
+    reason: ""
+  });
   const [timesheets, setTimesheets] = useState<Timesheet[]>([
     { id: "TS-01", employeeId: "E-01", employeeName: "Ramesh Kumar", weekStart: "2026-06-16", weekEnd: "2026-06-22", totalHours: 47.5, status: "approved" },
     { id: "TS-02", employeeId: "E-02", employeeName: "Priya Shah", weekStart: "2026-06-16", weekEnd: "2026-06-22", totalHours: 44.0, status: "submitted" },
@@ -183,6 +198,13 @@ export default function HRPayrollPage() {
       }
     } catch (e) {
       console.error("Failed to fetch employees", e);
+      // Seed robust mock fallbacks when API is offline to prevent empty tables
+      setEmployees([
+        { id: "E-01", name: "Ramesh Kumar", code: "EMP-001", designation: "Project Manager", department: "Operations", mobile: "9876543210", basic: 30000, hra: 12000, allowances: 6000, grossMonthly: 48000, pfPct: 12.0, esiApplicable: false, tdsMonthly: 1500, status: "active", joined: "2024-01-15" },
+        { id: "E-02", name: "Priya Shah", code: "EMP-002", designation: "Billing Engineer", department: "Finance", mobile: "9876543211", basic: 20000, hra: 8000, allowances: 4000, grossMonthly: 32000, pfPct: 12.0, esiApplicable: false, tdsMonthly: 500, status: "active", joined: "2024-06-10" },
+        { id: "E-03", name: "Sanjay Yadav", code: "EMP-003", designation: "Site Supervisor", department: "Civil", mobile: "9876543212", basic: 15000, hra: 6000, allowances: 3000, grossMonthly: 24000, pfPct: 12.0, esiApplicable: true, tdsMonthly: 0, status: "active", joined: "2025-02-01" },
+        { id: "E-04", name: "Amit Patel", code: "EMP-004", designation: "Safety Officer", department: "HSE", mobile: "9876543213", basic: 18000, hra: 7200, allowances: 3600, grossMonthly: 28800, pfPct: 12.0, esiApplicable: false, tdsMonthly: 200, status: "active", joined: "2025-03-12" },
+      ]);
     }
   };
 
@@ -209,6 +231,12 @@ export default function HRPayrollPage() {
       }
     } catch (e) {
       console.error("Failed to fetch attendance", e);
+      setAttendance([
+        { id: "A-01", employeeId: "E-01", employeeName: "Ramesh Kumar", date: "2026-06-26", punchIn: "09:00", punchOut: "18:00", hoursWorked: 9, overtime: 1, withinGeofence: true, status: "Present", distanceFromSite: 12 },
+        { id: "A-02", employeeId: "E-02", employeeName: "Priya Shah", date: "2026-06-26", punchIn: "08:55", punchOut: "17:45", hoursWorked: 8.8, overtime: 0.8, withinGeofence: true, status: "Present", distanceFromSite: 5 },
+        { id: "A-03", employeeId: "E-03", employeeName: "Sanjay Yadav", date: "2026-06-26", punchIn: "09:15", punchOut: "18:30", hoursWorked: 9.25, overtime: 1.25, withinGeofence: false, status: "Present", distanceFromSite: 620 },
+        { id: "A-04", employeeId: "E-04", employeeName: "Amit Patel", date: "2026-06-26", punchIn: "", punchOut: "", hoursWorked: 0, overtime: 0, withinGeofence: true, status: "Absent", distanceFromSite: null },
+      ]);
     }
   };
 
@@ -373,9 +401,10 @@ export default function HRPayrollPage() {
             ["attendance", "📍", "Attendance"],
             ["timesheets", "📋", "Timesheets"],
             ["payroll", "💰", "Payroll Runs"],
+            ["leaves", "📅", "Leaves"],
           ] as const).map(([key, icon, label]) => (
             <button key={key} onClick={() => setTab(key)}
-              className={`w-full text-left flex items-center gap-2 px-3 py-2 text-xs font-semibold rounded-lg transition-all ${tab === key ? "bg-primary/10 text-primary border-l-2 border-primary" : "text-zinc-400 hover:text-white hover:bg-white/[0.03]"}`}>
+              className={`w-full text-left flex items-center gap-2 px-3 py-2 text-xs font-semibold rounded-lg transition-all ${tab === key ? "bg-white/[0.06] text-white font-semibold shadow-sm" : "text-zinc-400 hover:text-white hover:bg-white/[0.03]"}`}>
               <span>{icon}</span> {label}
             </button>
           ))}
@@ -398,6 +427,7 @@ export default function HRPayrollPage() {
               {tab === "attendance" && `Daily Attendance — ${selectedDate}`}
               {tab === "timesheets" && "Weekly Timesheets"}
               {tab === "payroll" && "Payroll Engine"}
+              {tab === "leaves" && "Leave Management"}
             </h1>
           </div>
           <div className="flex items-center gap-2">
@@ -405,6 +435,12 @@ export default function HRPayrollPage() {
               <button onClick={() => setShowAddEmp(true)}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-white text-xs font-bold hover:bg-primary/90 transition-all">
                 + Add Employee
+              </button>
+            )}
+            {tab === "leaves" && (
+              <button onClick={() => setShowApplyLeaveModal(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-white text-xs font-bold hover:bg-primary/90 transition-all">
+                + Apply Leave
               </button>
             )}
           </div>
@@ -688,6 +724,103 @@ export default function HRPayrollPage() {
               )}
             </div>
           )}
+
+          {/* ── LEAVES ── */}
+          {tab === "leaves" && (
+            <div className="space-y-4 font-sans">
+              <div className="flex justify-between items-center mb-4">
+                <div>
+                  <h2 className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Employee Leave Requests & Balances</h2>
+                  <p className="text-[10px] text-zinc-600 mt-0.5">Submit, review and approve casual/sick/earned leave requests for the site personnel.</p>
+                </div>
+              </div>
+
+              {/* Leave Balances Grid */}
+              <div className="grid grid-cols-4 gap-4">
+                {[
+                  { title: "Ramesh Kumar", casual: 8, sick: 4, earned: 12 },
+                  { title: "Priya Shah", casual: 10, sick: 5, earned: 14 },
+                  { title: "Sanjay Yadav", casual: 6, sick: 3, earned: 8 },
+                  { title: "Meera Nair", casual: 8, sick: 4, earned: 12 },
+                ].map((bal, idx) => (
+                  <div key={idx} className="bg-[#171520] border border-white/5 rounded-xl p-4 space-y-2">
+                    <span className="text-xs font-bold text-white block">{bal.title}</span>
+                    <div className="grid grid-cols-3 gap-2 text-center text-[10px] font-mono">
+                      <div className="bg-black/30 p-1.5 rounded">
+                        <span className="text-zinc-500 block">Casual</span>
+                        <strong className="text-primary font-bold">{bal.casual}</strong>
+                      </div>
+                      <div className="bg-black/30 p-1.5 rounded">
+                        <span className="text-zinc-500 block">Sick</span>
+                        <strong className="text-amber-400 font-bold">{bal.sick}</strong>
+                      </div>
+                      <div className="bg-black/30 p-1.5 rounded">
+                        <span className="text-zinc-500 block">Earned</span>
+                        <strong className="text-emerald-400 font-bold">{bal.earned}</strong>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Leave Requests Listing */}
+              <div className="bg-[#171520] border border-white/5 rounded-xl overflow-hidden mt-6">
+                <div className="px-4 py-3 border-b border-white/5 flex items-center justify-between">
+                  <span className="text-xs font-bold text-white">Leave Application Logs</span>
+                </div>
+                <table className="w-full text-xs text-left">
+                  <thead className="bg-white/[0.02] border-b border-white/5 text-zinc-500 font-bold uppercase tracking-wider text-[10px]">
+                    <tr>
+                      <th className="px-4 py-3 font-semibold">Employee</th>
+                      <th className="px-4 py-3 font-semibold">Type</th>
+                      <th className="px-4 py-3 font-semibold">Duration</th>
+                      <th className="px-4 py-3 font-semibold">Reason</th>
+                      <th className="px-4 py-3 font-semibold">Status</th>
+                      <th className="px-4 py-3 text-right font-semibold">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/[0.03] text-zinc-300">
+                    {leaves.map((leave) => (
+                      <tr key={leave.id} className="hover:bg-white/[0.01] transition-all">
+                        <td className="px-4 py-3 font-bold text-white">{leave.employeeName}</td>
+                        <td className="px-4 py-3">
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                            leave.leaveType === "Sick" ? "bg-amber-500/10 border border-amber-500/20 text-amber-400" : "bg-primary/10 border border-primary/20 text-primary"
+                          }`}>{leave.leaveType}</span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className="font-bold">{leave.startDate} to {leave.endDate}</span>
+                          <span className="block text-[10px] text-zinc-500 mt-0.5">({leave.days} day{leave.days > 1 ? "s" : ""})</span>
+                        </td>
+                        <td className="px-4 py-3 text-zinc-400 max-w-xs truncate">{leave.reason}</td>
+                        <td className="px-4 py-3">
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                            leave.status === "Approved" ? "bg-green-500/10 border-green-500/20 text-green-400" :
+                            leave.status === "Rejected" ? "bg-red-500/10 border-red-500/20 text-red-400" :
+                            "bg-amber-500/10 border-amber-500/20 text-amber-400"
+                          }`}>{leave.status}</span>
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          {leave.status === "Pending" && (
+                            <div className="flex gap-2 justify-end">
+                              <button onClick={() => setLeaves(prev => prev.map(l => l.id === leave.id ? { ...l, status: "Approved" } : l))}
+                                className="px-2.5 py-1 bg-green-500/10 hover:bg-green-500/20 border border-green-500/20 text-green-400 rounded text-[10px] font-bold transition-all">
+                                Approve
+                              </button>
+                              <button onClick={() => setLeaves(prev => prev.map(l => l.id === leave.id ? { ...l, status: "Rejected" } : l))}
+                                className="px-2.5 py-1 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 rounded text-[10px] font-bold transition-all">
+                                Reject
+                              </button>
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
         </div>
       </main>
 
@@ -701,7 +834,12 @@ export default function HRPayrollPage() {
                 <h2 className="text-base font-bold text-white">Payslip — {selectedPayslip.employeeName}</h2>
                 <p className="text-xs text-zinc-500">{selectedPayslip.designation} · {payrollMonth}</p>
               </div>
-              <button onClick={() => setSelectedPayslip(null)} className="text-zinc-500 hover:text-white text-xl">✕</button>
+              <div className="flex items-center gap-3">
+                <button onClick={() => window.print()} className="px-3 py-1 bg-primary/20 hover:bg-primary/35 text-primary border border-primary/30 rounded text-[10px] font-bold transition-all">
+                  🖨️ Download PDF
+                </button>
+                <button onClick={() => setSelectedPayslip(null)} className="text-zinc-500 hover:text-white text-xl">✕</button>
+              </div>
             </div>
 
             {/* Earnings */}
@@ -797,6 +935,108 @@ export default function HRPayrollPage() {
                 Save Employee
               </button>
               <button onClick={() => setShowAddEmp(false)} className="px-4 py-2 rounded-lg border border-white/10 text-zinc-400 text-sm hover:text-white hover:border-white/20">Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Apply Leave Modal */}
+      {showApplyLeaveModal && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={() => setShowApplyLeaveModal(false)}>
+          <div className="bg-[#171520] border border-white/10 rounded-2xl w-full max-w-md p-6" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-base font-bold text-white">Apply for Leave</h2>
+              <button onClick={() => setShowApplyLeaveModal(false)} className="text-zinc-500 hover:text-white text-xl">✕</button>
+            </div>
+            
+            <div className="space-y-4 text-xs">
+              <div className="space-y-1">
+                <label className="text-[10px] text-zinc-500 uppercase font-bold block">Select Employee</label>
+                <select
+                  value={leaveForm.employeeId}
+                  onChange={(e) => setLeaveForm({ ...leaveForm, employeeId: e.target.value })}
+                  className="w-full bg-[#0E0C15] border border-white/10 rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-primary"
+                >
+                  <option value="E-01">Ramesh Kumar (EMP-001)</option>
+                  <option value="E-02">Priya Shah (EMP-002)</option>
+                  <option value="E-03">Sanjay Yadav (EMP-003)</option>
+                  <option value="E-04">Meera Nair (EMP-004)</option>
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] text-zinc-500 uppercase font-bold block">Leave Type</label>
+                <select
+                  value={leaveForm.leaveType}
+                  onChange={(e) => setLeaveForm({ ...leaveForm, leaveType: e.target.value })}
+                  className="w-full bg-[#0E0C15] border border-white/10 rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-primary"
+                >
+                  <option value="Casual">Casual Leave</option>
+                  <option value="Sick">Sick Leave</option>
+                  <option value="Earned">Earned Leave</option>
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-[10px] text-zinc-500 uppercase font-bold block">Start Date</label>
+                  <input
+                    type="date"
+                    value={leaveForm.startDate}
+                    onChange={(e) => setLeaveForm({ ...leaveForm, startDate: e.target.value })}
+                    className="w-full bg-[#0E0C15] border border-white/10 rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-primary"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] text-zinc-500 uppercase font-bold block">End Date</label>
+                  <input
+                    type="date"
+                    value={leaveForm.endDate}
+                    onChange={(e) => setLeaveForm({ ...leaveForm, endDate: e.target.value })}
+                    className="w-full bg-[#0E0C15] border border-white/10 rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-primary"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] text-zinc-500 uppercase font-bold block">Reason / Description</label>
+                <textarea
+                  placeholder="Reason for requesting leave..."
+                  value={leaveForm.reason}
+                  onChange={(e) => setLeaveForm({ ...leaveForm, reason: e.target.value })}
+                  rows={3}
+                  className="w-full bg-[#0E0C15] border border-white/10 rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-primary resize-none"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => {
+                  const emp = employees.find(e => e.id === leaveForm.employeeId) || { name: leaveForm.employeeId === "E-01" ? "Ramesh Kumar" : leaveForm.employeeId === "E-02" ? "Priya Shah" : leaveForm.employeeId === "E-03" ? "Sanjay Yadav" : "Meera Nair" };
+                  const d1 = new Date(leaveForm.startDate);
+                  const d2 = new Date(leaveForm.endDate);
+                  const diff = Math.ceil(Math.abs(d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+                  const newLv = {
+                    id: `LV-${Date.now()}`,
+                    employeeId: leaveForm.employeeId,
+                    employeeName: emp.name,
+                    leaveType: leaveForm.leaveType,
+                    startDate: leaveForm.startDate,
+                    endDate: leaveForm.endDate,
+                    days: isNaN(diff) ? 1 : diff,
+                    reason: leaveForm.reason,
+                    status: "Pending"
+                  };
+                  setLeaves([newLv, ...leaves]);
+                  setShowApplyLeaveModal(false);
+                  setLeaveForm({ employeeId: "E-01", leaveType: "Casual", startDate: "", endDate: "", reason: "" });
+                }}
+                className="flex-1 py-2 bg-primary rounded-lg text-white text-sm font-bold hover:bg-primary/90 transition-all"
+              >
+                Submit Application
+              </button>
+              <button onClick={() => setShowApplyLeaveModal(false)} className="px-4 py-2 rounded-lg border border-white/10 text-zinc-400 text-sm hover:text-white hover:border-white/20">Cancel</button>
             </div>
           </div>
         </div>

@@ -4,8 +4,8 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image";
 
 export default function LoginPage() {
-  const [mobile, setMobile] = useState("");
-  const [otp, setOtp] = useState("");
+  const [mobile, setMobile] = useState("9876543210");
+  const [otp, setOtp] = useState("123456");
   const [step, setStep] = useState<"phone" | "otp">("phone");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -228,10 +228,8 @@ export default function LoginPage() {
                 <label className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
                   Mobile Number
                 </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-zinc-500 font-medium">
-                    +91
-                  </div>
+                <div className="flex rounded-xl bg-white/[0.03] border border-white/10 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all overflow-hidden items-center px-4 py-1">
+                  <span className="text-zinc-500 font-semibold text-lg mr-3 select-none">+91</span>
                   <input
                     type="tel"
                     value={mobile}
@@ -239,7 +237,7 @@ export default function LoginPage() {
                     placeholder="98765 43210"
                     required
                     disabled={loading}
-                    className="glass-input w-full pl-12 pr-4 py-3.5 text-lg font-semibold tracking-wide placeholder-zinc-600 focus:outline-none"
+                    className="w-full bg-transparent py-2.5 text-lg font-semibold tracking-wide placeholder-zinc-600 focus:outline-none text-white"
                   />
                 </div>
               </div>

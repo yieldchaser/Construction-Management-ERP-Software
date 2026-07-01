@@ -157,7 +157,7 @@ export default function CRMPage() {
             { key: "kanban", label: "Kanban Board", icon: "🗂️" },
           ].map(item => (
             <button key={item.key} onClick={() => setTab(item.key as typeof tab)}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg transition-all text-left ${tab === item.key ? "bg-primary/10 text-primary border-l-2 border-primary" : "text-zinc-400 hover:text-white hover:bg-white/[0.02]"}`}>
+              className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg transition-all text-left ${tab === item.key ? "bg-white/[0.06] text-white font-semibold shadow-sm" : "text-zinc-400 hover:text-white hover:bg-white/[0.02]"}`}>
               <span>{item.icon}</span> {item.label}
             </button>
           ))}

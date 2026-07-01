@@ -345,6 +345,7 @@ class Bill(Base):
     paid_amount = Column(Numeric(18, 2), default=0.0, nullable=False)
     approval_flag = Column(String(50), default="pending", nullable=False)
     is_milestone_fixed_amount = Column(Boolean, default=False, nullable=False)
+    tally_synced = Column(Boolean, default=False, nullable=False)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), default=func.now(), onupdate=func.now(), nullable=False)
 
@@ -434,6 +435,8 @@ class AttendanceLog(Base):
     status = Column(String(50), default="Present", nullable=False)
     hours_worked = Column(Numeric(5, 2), nullable=True)
     overtime_hours = Column(Numeric(5, 2), default=0.0, nullable=False)
+    shift_multiplier = Column(Numeric(5, 2), default=1.0, nullable=False)
+    location_verified = Column(Boolean, default=True, nullable=False)
     notes = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 
@@ -825,6 +828,7 @@ class Payment(Base):
     reference_number = Column(String(100), nullable=True)
     description = Column(String, nullable=True)
     payment_date = Column(DateTime(timezone=True), nullable=False)
+    tally_synced = Column(Boolean, default=False, nullable=False)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 
 
@@ -907,4 +911,50 @@ class TallyBankMapping(Base):
     company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
     onsite_bank_account_details = Column(String(255), nullable=False)
     tally_ledger_name = Column(String(255), nullable=False)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Competitor Parity Models
+# ─────────────────────────────────────────────────────────────────────────────
+
+class SubcontractorAttendance(Base):
+    """Logs subcontractor worker attendance count details per labor role per day."""
+    __tablename__ = "subcontractor_attendance_logs"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
+    subcontractor_id = Column(UUID(as_uuid=True), ForeignKey("company_team.id", ondelete="CASCADE"), nullable=False)
+    attendance_date = Column(DateTime(timezone=True), nullable=False)
+    labor_role = Column(String(100), nullable=False)  # Mason, Helper, Supervisor, etc.
+    worker_count = Column(Integer, default=0, nullable=False)
+    shift_multiplier = Column(Numeric(5, 2), default=1.0, nullable=False)
+    overtime_hours = Column(Numeric(5, 2), default=0.0, nullable=False)
+    allowance = Column(Numeric(18, 2), default=0.0, nullable=False)
+    deduction = Column(Numeric(18, 2), default=0.0, nullable=False)
+    notes = Column(String, nullable=True)
+    photo_url = Column(String, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
+class TaskTodo(Base):
+    """Sub-task todos inside WBS execution tasks."""
+    __tablename__ = "task_todos"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    task_id = Column(UUID(as_uuid=True), ForeignKey("tasks.id", ondelete="CASCADE"), nullable=False)
+    title = Column(String(255), nullable=False)
+    is_completed = Column(Boolean, default=False, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
+class TaskComment(Base):
+    """Activity and progress feed logs under a task/WBS item."""
+    __tablename__ = "task_comments"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    task_id = Column(UUID(as_uuid=True), ForeignKey("tasks.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("company_team.id", ondelete="CASCADE"), nullable=False)
+    user_name = Column(String(255), nullable=False)
+    message_text = Column(String, nullable=True)
+    media_url = Column(String, nullable=True)
+    voice_note_url = Column(String, nullable=True)
+    progress_qty_added = Column(Numeric(18, 4), nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
