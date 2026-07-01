@@ -2,7 +2,7 @@ import os
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
-    DATABASE_URL: str = "postgresql://postgres:postgres@localhost:5432/postgres"
+    DATABASE_URL: str = "sqlite:///./test.db"
     SECRET_KEY: str = "supersecretjwtkeyforlocaldevelopmentsiteflowapp2026!"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440  # 24 hours
