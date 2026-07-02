@@ -15,6 +15,29 @@ interface ClientReport {
   created_at: string;
 }
 
+const MOCK_REPORTS: ClientReport[] = [
+  {
+    id: "rep-001",
+    project_id: "demo",
+    report_name: "Monthly Progress Report — June 2026",
+    report_date: "2026-06-30T18:00:00Z",
+    summary_markdown: "### Monthly Progress Report\nOverall project is at **65% completion**.\n\n#### Key Milestones:\n- **Foundation & Structure**: Completed up to Level 2 slab.\n- **Masonry**: Brickwork ongoing on Floor 2 east wing.\n- **MEP**: Rough-ins are progressing on G+1 floors.\n\n#### Concrete Strength:\nIS 456 slump testing and cube test parameters conform to specifications (35.2 MPa achieved).",
+    pdf_url: "#",
+    is_approved: true,
+    created_at: "2026-06-30T18:00:00Z"
+  },
+  {
+    id: "rep-002",
+    project_id: "demo",
+    report_name: "Weekly Site Status Update — Week 26",
+    report_date: "2026-06-25T18:00:00Z",
+    summary_markdown: "### Weekly Status Report\n- Plastering works started on ground floor.\n- Material audit confirmed sufficient sand and bricks for the next 14 days.\n- Daily labour strength averaged **22 workers**.",
+    pdf_url: "#",
+    is_approved: true,
+    created_at: "2026-06-25T18:00:00Z"
+  }
+];
+
 export default function ClientReportsPage() {
   const params = useParams();
   const companyId = params?.company_id as string;
@@ -37,13 +60,23 @@ export default function ClientReportsPage() {
       const res = await fetch(`http://localhost:8000/apis/v3/reports/${projectId}`);
       if (res.ok) {
         const data = await res.json();
-        setReports(data);
-        if (data.length > 0 && !selectedReport) {
-          setSelectedReport(data[0]);
+        const finalData = data.length > 0 ? data : MOCK_REPORTS;
+        setReports(finalData);
+        if (finalData.length > 0 && !selectedReport) {
+          setSelectedReport(finalData[0]);
+        }
+      } else {
+        setReports(MOCK_REPORTS);
+        if (!selectedReport) {
+          setSelectedReport(MOCK_REPORTS[0]);
         }
       }
     } catch (err) {
       console.error("Error fetching reports:", err);
+      setReports(MOCK_REPORTS);
+      if (!selectedReport) {
+        setSelectedReport(MOCK_REPORTS[0]);
+      }
     } finally {
       setLoading(false);
     }

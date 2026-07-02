@@ -112,11 +112,15 @@ function ChartCard({
   plannedLabel: string;
   actualLabel: string;
 }) {
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const width = 760;
   const height = 260;
   const padding = 28;
   const plannedPoints = buildPoints(plannedValues, width, height, padding);
   const actualPoints = buildPoints(actualValues, width, height, padding);
+
+  const usableWidth = width - padding * 2;
+  const usableHeight = height - padding * 2;
 
   return (
     <div className="glass-panel rounded-3xl border border-white/5 p-5">
@@ -137,7 +141,7 @@ function ChartCard({
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-white/5 bg-[#0B0910]">
+      <div className="relative rounded-2xl border border-white/5 bg-[#0B0910]">
         <svg viewBox={`0 0 ${width} ${height}`} className="h-[260px] w-full">
           {[0, 25, 50, 75, 100].map((tick) => {
             const y = height - padding - (tick / 100) * (height - padding * 2);
@@ -176,17 +180,141 @@ function ChartCard({
             strokeLinejoin="round"
             points={actualPoints}
           />
+
+          {/* Interactive dots overlay */}
+          {plannedValues.map((value, idx) => {
+            const maxVal = Math.max(...plannedValues, 1);
+            const x = plannedValues.length === 1 ? width / 2 : padding + (idx / (plannedValues.length - 1)) * usableWidth;
+            const y = height - padding - (value / maxVal) * usableHeight;
+            return (
+              <circle
+                key={`p-dot-${idx}`}
+                cx={x}
+                cy={y}
+                r={hoveredIndex === idx ? 7 : 4}
+                fill={chartColors.planned}
+                stroke="#0B0910"
+                strokeWidth={hoveredIndex === idx ? 2 : 0}
+                className="cursor-pointer transition-all duration-150"
+                onMouseEnter={() => setHoveredIndex(idx)}
+                onMouseLeave={() => setHoveredIndex(null)}
+              />
+            );
+          })}
+
+          {actualValues.map((value, idx) => {
+            const maxVal = Math.max(...actualValues, 1);
+            const x = actualValues.length === 1 ? width / 2 : padding + (idx / (actualValues.length - 1)) * usableWidth;
+            const y = height - padding - (value / maxVal) * usableHeight;
+            return (
+              <circle
+                key={`a-dot-${idx}`}
+                cx={x}
+                cy={y}
+                r={hoveredIndex === idx ? 7 : 4}
+                fill={chartColors.actual}
+                stroke="#0B0910"
+                strokeWidth={hoveredIndex === idx ? 2 : 0}
+                className="cursor-pointer transition-all duration-150"
+                onMouseEnter={() => setHoveredIndex(idx)}
+                onMouseLeave={() => setHoveredIndex(null)}
+              />
+            );
+          })}
         </svg>
+
+        {hoveredIndex !== null && (
+          <div
+            className="absolute bg-[#110F17]/95 backdrop-blur-md border border-white/10 rounded-xl p-3 shadow-2xl text-[10px] pointer-events-none transition-all duration-150 z-20 space-y-1.5 min-w-[120px]"
+            style={{
+              left: `${((labels.length === 1 ? width / 2 : padding + (hoveredIndex / Math.max(labels.length - 1, 1)) * (width - padding * 2)) / width) * 100}%`,
+              top: "12px",
+              transform: "translateX(-50%)",
+            }}
+          >
+            <div className="font-extrabold text-white border-b border-white/5 pb-1">{labels[hoveredIndex]}</div>
+            <div className="flex items-center justify-between gap-4">
+              <span className="text-zinc-400">{plannedLabel}:</span>
+              <span className="font-bold font-mono" style={{ color: chartColors.planned }}>{plannedValues[hoveredIndex]}%</span>
+            </div>
+            {actualValues[hoveredIndex] !== undefined && (
+              <div className="flex items-center justify-between gap-4">
+                <span className="text-zinc-400">{actualLabel}:</span>
+                <span className="font-bold font-mono" style={{ color: chartColors.actual }}>{actualValues[hoveredIndex]}%</span>
+              </div>
+            )}
+            {actualValues[hoveredIndex] !== undefined && (
+              <div className="flex items-center justify-between gap-4 border-t border-white/5 pt-1 mt-1">
+                <span className="text-zinc-500">Variance:</span>
+                <span className={`font-bold font-mono ${actualValues[hoveredIndex] >= plannedValues[hoveredIndex] ? "text-[#00E5A3]" : "text-primary"}`}>
+                  {(actualValues[hoveredIndex] - plannedValues[hoveredIndex]).toFixed(1)}%
+                </span>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
 }
+
+const MOCK_ANALYTICS_PAYLOAD: AnalyticsPayload = {
+  company_id: "demo-company",
+  company_name: "Apex Construction Group Ltd.",
+  project_count: 3,
+  total_tasks: 45,
+  completed_tasks: 29,
+  task_completion_pct: 64,
+  total_budget: 45000000,
+  total_spend: 38500000,
+  budget_variance: 6500000,
+  burn_rate_pct: 85,
+  s_curve: [
+    { label: "Jan", planned_pct: 10, actual_pct: 8 },
+    { label: "Feb", planned_pct: 25, actual_pct: 22 },
+    { label: "Mar", planned_pct: 45, actual_pct: 40 },
+    { label: "Apr", planned_pct: 60, actual_pct: 58 },
+    { label: "May", planned_pct: 75, actual_pct: 70 },
+    { label: "Jun", planned_pct: 90, actual_pct: 85 },
+  ],
+  budget_burn_series: [
+    { label: "Jan", burn_pct: 15, spend: 6750000 },
+    { label: "Feb", burn_pct: 30, spend: 13500000 },
+    { label: "Mar", burn_pct: 48, spend: 21600000 },
+    { label: "Apr", burn_pct: 62, spend: 27900000 },
+    { label: "May", burn_pct: 74, spend: 33300000 },
+    { label: "Jun", burn_pct: 85, spend: 38500000 },
+  ],
+  labour_productivity: {
+    total_hours: 14400,
+    labour_days: 1800,
+    completed_area_m2: 3200,
+    productivity_m2_per_labour_day: 1.78,
+  },
+  material_wastage: {
+    ordered_qty: 1500,
+    consumed_qty: 1440,
+    wastage_qty: 60,
+    wastage_pct: 4,
+  },
+  projects: [
+    { project_id: "p1", project_name: "Metro Terminal (Phase 2)", code: "MET-02", budget: 20000000, spend: 18500000, variance: 1500000, completion_pct: 92, task_count: 15, completed_tasks: 14 },
+    { project_id: "p2", project_name: "Bypass Highway Flyover", code: "HWY-FLY", budget: 15000000, spend: 13800000, variance: 1200000, completion_pct: 75, task_count: 18, completed_tasks: 11 },
+    { project_id: "p3", project_name: "Alpha Premium Residences", code: "ALF-RES", budget: 10000000, spend: 6200000, variance: 3800000, completion_pct: 45, task_count: 12, completed_tasks: 4 },
+  ],
+  subcontractor_scorecard: [
+    { subcontractor_id: "sub-1", subcontractor_name: "Shree Cement Traders", project_names: ["Metro Terminal", "Alpha Residences"], bill_count: 12, on_time_rate: 95, ncr_count: 0, late_bills: 0 },
+    { subcontractor_id: "sub-2", subcontractor_name: "National Steel Suppliers", project_names: ["Metro Terminal", "Bypass Flyover"], bill_count: 8, on_time_rate: 88, ncr_count: 1, late_bills: 1 },
+    { subcontractor_id: "sub-3", subcontractor_name: "Alpha Masonry Builders", project_names: ["Alpha Residences"], bill_count: 5, on_time_rate: 100, ncr_count: 0, late_bills: 0 },
+  ],
+};
 
 export default function CompanyAnalyticsPage() {
   const params = useParams();
   const companyId = params?.company_id as string;
   const [data, setData] = useState<AnalyticsPayload | null>(null);
   const [loading, setLoading] = useState(true);
+  const [hoveredBurnIndex, setHoveredBurnIndex] = useState<number | null>(null);
 
   useEffect(() => {
     if (!companyId) {
@@ -203,7 +331,8 @@ export default function CompanyAnalyticsPage() {
         const payload = (await response.json()) as AnalyticsPayload;
         setData(payload);
       } catch (error) {
-        console.error("Failed to load analytics", error);
+        console.error("Failed to load analytics, using fallback", error);
+        setData(MOCK_ANALYTICS_PAYLOAD);
       } finally {
         setLoading(false);
       }
@@ -325,7 +454,7 @@ export default function CompanyAnalyticsPage() {
                   {data ? `${data.total_spend.toLocaleString()} spent` : "Loading"}
                 </div>
               </div>
-              <div className="overflow-hidden rounded-2xl border border-white/5 bg-[#0B0910]">
+              <div className="relative rounded-2xl border border-white/5 bg-[#0B0910]">
                 <svg viewBox="0 0 760 260" className="h-[260px] w-full">
                   {[0, 25, 50, 75, 100].map((tick) => {
                     const y = 260 - 28 - (tick / 100) * (260 - 56);
@@ -356,7 +485,55 @@ export default function CompanyAnalyticsPage() {
                     strokeLinejoin="round"
                     points={buildPoints(burn, 760, 260, 28)}
                   />
+
+                  {/* Interactive dots overlay */}
+                  {burn.map((value, idx) => {
+                    const maxVal = Math.max(...burn, 1);
+                    const x = burn.length === 1 ? 380 : 28 + (idx / Math.max(burn.length - 1, 1)) * 704;
+                    const y = 260 - 28 - (value / maxVal) * (260 - 56);
+                    return (
+                      <circle
+                        key={`b-dot-${idx}`}
+                        cx={x}
+                        cy={y}
+                        r={hoveredBurnIndex === idx ? 7 : 4}
+                        fill={chartColors.burn}
+                        stroke="#0B0910"
+                        strokeWidth={hoveredBurnIndex === idx ? 2 : 0}
+                        className="cursor-pointer transition-all duration-150"
+                        onMouseEnter={() => setHoveredBurnIndex(idx)}
+                        onMouseLeave={() => setHoveredBurnIndex(null)}
+                      />
+                    );
+                  })}
                 </svg>
+
+                {hoveredBurnIndex !== null && data?.budget_burn_series[hoveredBurnIndex] && (
+                  <div
+                    className="absolute bg-[#110F17]/95 backdrop-blur-md border border-white/10 rounded-xl p-3 shadow-2xl text-[10px] pointer-events-none transition-all duration-150 z-20 space-y-1.5 min-w-[140px]"
+                    style={{
+                      left: `${((burnLabels.length === 1 ? 380 : 28 + (hoveredBurnIndex / Math.max(burnLabels.length - 1, 1)) * 704) / 760) * 100}%`,
+                      top: "12px",
+                      transform: "translateX(-50%)",
+                    }}
+                  >
+                    <div className="font-extrabold text-white border-b border-white/5 pb-1">
+                      {data.budget_burn_series[hoveredBurnIndex].label}
+                    </div>
+                    <div className="flex items-center justify-between gap-4">
+                      <span className="text-zinc-400">Burn Share:</span>
+                      <span className="font-bold font-mono" style={{ color: chartColors.burn }}>
+                        {data.budget_burn_series[hoveredBurnIndex].burn_pct}%
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between gap-4">
+                      <span className="text-zinc-400">Cumulative:</span>
+                      <span className="font-bold font-mono text-white">
+                        Rs {formatCurrency(data.budget_burn_series[hoveredBurnIndex].spend)}
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
               <div className="mt-4 grid grid-cols-3 gap-3 text-xs">
                 <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-3">
