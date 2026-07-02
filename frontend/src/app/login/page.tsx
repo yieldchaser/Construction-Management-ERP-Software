@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
+import { getApiHost } from "@/lib/api";
 
 export default function LoginPage() {
   const [mobile, setMobile] = useState("9876543210");
@@ -41,7 +42,8 @@ export default function LoginPage() {
     }
 
     try {
-      const response = await fetch("http://localhost:8000/apis/v3/auth/otp/send", {
+      const apiHost = getApiHost();
+      const response = await fetch(`${apiHost}/apis/v3/auth/otp/send`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ mobile: formattedMobile }),
@@ -78,7 +80,8 @@ export default function LoginPage() {
     }
 
     try {
-      const response = await fetch("http://localhost:8000/apis/v3/auth/otp/verify", {
+      const apiHost = getApiHost();
+      const response = await fetch(`${apiHost}/apis/v3/auth/otp/verify`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ mobile: formattedMobile, code: otp }),

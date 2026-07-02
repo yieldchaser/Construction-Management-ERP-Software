@@ -1,4 +1,5 @@
 "use client";
+import { getApiHost } from "@/lib/api";
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -324,7 +325,7 @@ export default function CompanyAnalyticsPage() {
     const fetchAnalytics = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`http://localhost:8000/apis/v3/analytics/company/${companyId}`);
+        const response = await fetch(`${getApiHost()}/apis/v3/analytics/company/${companyId}`);
         if (!response.ok) {
           throw new Error(`Analytics request failed: ${response.status}`);
         }

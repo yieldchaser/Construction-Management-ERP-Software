@@ -1,4 +1,5 @@
 "use client";
+import { getApiHost } from "@/lib/api";
 
 import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
@@ -166,11 +167,11 @@ export default function FinancePage() {
 
   const fetchData = async () => {
     try {
-      const plRes = await fetch(`http://localhost:8000/apis/v3/finance/pl?project_id=${projectId}`);
+      const plRes = await fetch(`${getApiHost()}/apis/v3/finance/pl?project_id=${projectId}`);
       if (plRes.ok) {
         setPlData(await plRes.json());
       }
-      const tallyRes = await fetch(`http://localhost:8000/apis/v3/tally/connections?company_id=${companyId}`);
+      const tallyRes = await fetch(`${getApiHost()}/apis/v3/tally/connections?company_id=${companyId}`);
       if (tallyRes.ok) {
         const data = await tallyRes.json();
         setTallyConn(data);
@@ -178,17 +179,17 @@ export default function FinancePage() {
         setTallyMobile(data.registered_mobile);
       }
       // Fetch Bank Accounts
-      const bankRes = await fetch(`http://localhost:8000/apis/v3/finance/accounts/${companyId}`);
+      const bankRes = await fetch(`${getApiHost()}/apis/v3/finance/accounts/${companyId}`);
       if (bankRes.ok) {
         setBankAccounts(await bankRes.json());
       }
       // Fetch Payment Requests
-      const reqRes = await fetch(`http://localhost:8000/apis/v3/finance/payment-requests/${companyId}`);
+      const reqRes = await fetch(`${getApiHost()}/apis/v3/finance/payment-requests/${companyId}`);
       if (reqRes.ok) {
         setPaymentRequests(await reqRes.json());
       }
       // Fetch Employees for party dropdown
-      const empRes = await fetch(`http://localhost:8000/apis/v3/hr/employees/${projectId}`);
+      const empRes = await fetch(`${getApiHost()}/apis/v3/hr/employees/${projectId}`);
       if (empRes.ok) {
         setUsersList(await empRes.json());
       }
@@ -263,7 +264,7 @@ export default function FinancePage() {
   const handleAddBankAccount = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const res = await fetch(`http://localhost:8000/apis/v3/finance/accounts/${companyId}`, {
+      const res = await fetch(`${getApiHost()}/apis/v3/finance/accounts/${companyId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -289,7 +290,7 @@ export default function FinancePage() {
   const handleCreatePaymentRequest = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const res = await fetch(`http://localhost:8000/apis/v3/finance/payment-requests/${companyId}`, {
+      const res = await fetch(`${getApiHost()}/apis/v3/finance/payment-requests/${companyId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

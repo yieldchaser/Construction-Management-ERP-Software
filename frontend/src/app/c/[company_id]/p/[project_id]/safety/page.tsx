@@ -1,9 +1,10 @@
 'use client';
+import { getApiHost } from '@/lib/api';
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 
-const API = 'http://localhost:8000/apis/v3';
+const API = `${getApiHost()}/apis/v3`;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Incident {

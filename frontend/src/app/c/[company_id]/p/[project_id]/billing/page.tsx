@@ -1,4 +1,5 @@
 "use client";
+import { getApiHost } from "@/lib/api";
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
@@ -128,7 +129,7 @@ export default function SubcontractorBillingPage() {
 
   const fetchWorkOrders = async () => {
     try {
-      const res = await fetch(`http://localhost:8000/apis/v3/billing/work-orders?project_id=${projectId}`);
+      const res = await fetch(`${getApiHost()}/apis/v3/billing/work-orders?project_id=${projectId}`);
       if (res.ok) {
         const data = await res.json();
         const mapped = data.map((wo: any) => ({
@@ -149,7 +150,7 @@ export default function SubcontractorBillingPage() {
 
   const fetchBills = async () => {
     try {
-      const res = await fetch(`http://localhost:8000/apis/v3/billing/bills?project_id=${projectId}&invoice_type=subcon`);
+      const res = await fetch(`${getApiHost()}/apis/v3/billing/bills?project_id=${projectId}&invoice_type=subcon`);
       if (res.ok) {
         const data = await res.json();
         const mapped = data.map((bill: any) => ({
@@ -178,8 +179,8 @@ export default function SubcontractorBillingPage() {
 
   const fetchNotes = async () => {
     try {
-      const dnRes = await fetch(`http://localhost:8000/apis/v3/billing/debit-notes?project_id=${projectId}`);
-      const cnRes = await fetch(`http://localhost:8000/apis/v3/billing/credit-notes?project_id=${projectId}`);
+      const dnRes = await fetch(`${getApiHost()}/apis/v3/billing/debit-notes?project_id=${projectId}`);
+      const cnRes = await fetch(`${getApiHost()}/apis/v3/billing/credit-notes?project_id=${projectId}`);
       let allNotes: DebitCreditNote[] = [];
       if (dnRes.ok) {
         const dnData = await dnRes.json();
@@ -287,7 +288,7 @@ export default function SubcontractorBillingPage() {
   const handleCreateWO = async () => {
     const subconId = SUBCON_MAP[newWOSub] || "e0000000-0000-0000-0000-000000000201";
     try {
-      const res = await fetch("http://localhost:8000/apis/v3/billing/work-orders", {
+      const res = await fetch(`${getApiHost()}/apis/v3/billing/work-orders`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -330,7 +331,7 @@ export default function SubcontractorBillingPage() {
     }
 
     try {
-      const res = await fetch("http://localhost:8000/apis/v3/billing/bills", {
+      const res = await fetch(`${getApiHost()}/apis/v3/billing/bills`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

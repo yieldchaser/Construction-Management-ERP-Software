@@ -1,4 +1,5 @@
 "use client";
+import { getApiHost } from "@/lib/api";
 
 import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
@@ -122,7 +123,7 @@ export default function BOQPage() {
     formData.append("project_id", projectId);
     formData.append("file", file);
     try {
-      const res = await fetch("http://localhost:8000/apis/v3/budgeting/boq/import", { method: "POST", body: formData });
+      const res = await fetch(`${getApiHost()}/apis/v3/budgeting/boq/import`, { method: "POST", body: formData });
       const data = await res.json();
       if (res.ok && data.success) {
         setImportMsg("BOQ imported successfully!");

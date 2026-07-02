@@ -1,4 +1,5 @@
 "use client";
+import { getApiHost } from "@/lib/api";
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
@@ -80,7 +81,7 @@ export default function CRMPage() {
       let allQuots: any[] = [];
       for (const l of leadsList) {
         if (l.id.startsWith("lead-")) continue; // Skip mock leads
-        const qRes = await fetch(`http://localhost:8000/apis/v3/crm/leads/${l.id}/quotations`);
+        const qRes = await fetch(`${getApiHost()}/apis/v3/crm/leads/${l.id}/quotations`);
         if (qRes.ok) {
           const qData = await qRes.json();
           allQuots = [...allQuots, ...qData.map((item: any) => ({ ...item, client_name: l.client_company_name || l.contact_name }))];
@@ -94,7 +95,7 @@ export default function CRMPage() {
 
   const fetchLeads = async () => {
     try {
-      const res = await fetch(`http://localhost:8000/apis/v3/crm/leads?company_id=${companyId}`);
+      const res = await fetch(`${getApiHost()}/apis/v3/crm/leads?company_id=${companyId}`);
       if (res.ok) {
         const data = await res.json();
         setLeads(data.length > 0 ? data : MOCK_LEADS);
@@ -127,7 +128,7 @@ export default function CRMPage() {
     setErrorMsg("");
 
     try {
-      const res = await fetch("http://localhost:8000/apis/v3/crm/leads", {
+      const res = await fetch(`${getApiHost()}/apis/v3/crm/leads`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -186,7 +187,7 @@ export default function CRMPage() {
         installation_rate: 0.0,
       }));
 
-      const res = await fetch(`http://localhost:8000/apis/v3/crm/leads/${newQuot.leadId}/quotations`, {
+      const res = await fetch(`${getApiHost()}/apis/v3/crm/leads/${newQuot.leadId}/quotations`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -222,7 +223,7 @@ export default function CRMPage() {
     // Optimistic local update first (works even offline)
     setLeads(prev => prev.map(l => l.id === leadId ? { ...l, status: newStatus } : l));
     try {
-      await fetch(`http://localhost:8000/apis/v3/crm/leads/${leadId}`, {
+      await fetch(`${getApiHost()}/apis/v3/crm/leads/${leadId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus })

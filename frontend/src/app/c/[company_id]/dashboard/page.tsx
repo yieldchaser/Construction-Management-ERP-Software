@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { getApiHost } from "@/lib/api";
 
 export default function DashboardPage() {
   const params = useParams();
@@ -61,12 +62,13 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (companyId) {
-      fetch(`http://localhost:8000/apis/v3/analytics/company/${companyId}/operational`)
+      const apiHost = getApiHost();
+      fetch(`${apiHost}/apis/v3/analytics/company/${companyId}/operational`)
         .then((res) => res.json())
         .then((data) => setOperationalData(data))
         .catch((err) => console.error("Failed to fetch operational stats", err));
 
-      fetch(`http://localhost:8000/apis/v3/analytics/company/${companyId}/financial`)
+      fetch(`${apiHost}/apis/v3/analytics/company/${companyId}/financial`)
         .then((res) => res.json())
         .then((data) => setFinancialData(data))
         .catch((err) => console.error("Failed to fetch financial stats", err));
@@ -311,6 +313,14 @@ export default function DashboardPage() {
                     className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.02] transition-all"
                   >
                     <span>🤝</span> CRM & Leads
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href={`/c/${companyId}/p/${activeProject}/planning/gantt`}
+                    className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.02] transition-all"
+                  >
+                    <span>📅</span> WBS Gantt Timeline
                   </Link>
                 </li>
               </ul>

@@ -1,4 +1,5 @@
 "use client";
+import { getApiHost } from "@/lib/api";
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
@@ -97,14 +98,14 @@ export default function EquipmentTrackingPage() {
       setLoading(true);
       setError("");
       
-      const fleetRes = await fetch(`http://localhost:8000/apis/v3/equipment/${companyId}`);
+      const fleetRes = await fetch(`${getApiHost()}/apis/v3/equipment/${companyId}`);
       if (fleetRes.ok) {
         const fleetData = await fleetRes.json();
         setFleet(fleetData);
         // Try fetching maintenance logs for all equipment
         try {
           const maintenancePromises = fleetData.map((eq: any) =>
-            fetch(`http://localhost:8000/apis/v3/equipment/maintenance-schedules/${eq.id}`).then(res => res.ok ? res.json() : [])
+            fetch(`${getApiHost()}/apis/v3/equipment/maintenance-schedules/${eq.id}`).then(res => res.ok ? res.json() : [])
           );
           const maintenanceResults = await Promise.all(maintenancePromises);
           setMaintenanceLogs(maintenanceResults.flat());
@@ -114,11 +115,11 @@ export default function EquipmentTrackingPage() {
       } else {
         throw new Error("Fleet API failed");
       }
-      const depRes = await fetch(`http://localhost:8000/apis/v3/equipment/deployments/${projectId}`);
+      const depRes = await fetch(`${getApiHost()}/apis/v3/equipment/deployments/${projectId}`);
       if (depRes.ok) {
         setDeployments(await depRes.json());
       }
-      const fuelRes = await fetch(`http://localhost:8000/apis/v3/equipment/fuel-logs/${projectId}`);
+      const fuelRes = await fetch(`${getApiHost()}/apis/v3/equipment/fuel-logs/${projectId}`);
       if (fuelRes.ok) {
         setFuelLogs(await fuelRes.json());
       }
@@ -156,7 +157,7 @@ export default function EquipmentTrackingPage() {
     e.preventDefault();
     if (!eqName.trim() || !eqCode.trim()) return;
     try {
-      const res = await fetch("http://localhost:8000/apis/v3/equipment", {
+      const res = await fetch(`${getApiHost()}/apis/v3/equipment`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -183,7 +184,7 @@ export default function EquipmentTrackingPage() {
   const handleStartMachinery = async () => {
     if (!activeDeployingEq || !startMeterVal) return;
     try {
-      const res = await fetch("http://localhost:8000/apis/v3/equipment/deploy", {
+      const res = await fetch(`${getApiHost()}/apis/v3/equipment/deploy`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -211,7 +212,7 @@ export default function EquipmentTrackingPage() {
       // Find active deployment
       const dep = deployments.find(d => d.equipment_id === activeStoppingEq.id && d.end_date === null);
       if (!dep) return;
-      const res = await fetch(`http://localhost:8000/apis/v3/equipment/deployments/${dep.id}/return`, {
+      const res = await fetch(`${getApiHost()}/apis/v3/equipment/deployments/${dep.id}/return`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -245,7 +246,7 @@ export default function EquipmentTrackingPage() {
       const odoVal = fuelOdo ? parseFloat(fuelOdo) : null;
       const total = litersVal * rateVal;
 
-      const res = await fetch("http://localhost:8000/apis/v3/equipment/fuel-log", {
+      const res = await fetch(`${getApiHost()}/apis/v3/equipment/fuel-log`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

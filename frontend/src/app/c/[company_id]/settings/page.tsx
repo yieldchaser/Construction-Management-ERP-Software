@@ -1,4 +1,5 @@
 "use client";
+import { getApiHost } from "@/lib/api";
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -69,7 +70,7 @@ export default function CompanySettingsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const apiHost = "http://localhost:8000";
+  const apiHost = `${getApiHost()}`;
 
   useEffect(() => {
     if (!company_id) return;

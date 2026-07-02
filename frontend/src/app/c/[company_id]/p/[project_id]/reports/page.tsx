@@ -1,4 +1,5 @@
 "use client";
+import { getApiHost } from "@/lib/api";
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
@@ -57,7 +58,7 @@ export default function ClientReportsPage() {
   const fetchReports = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`http://localhost:8000/apis/v3/reports/${projectId}`);
+      const res = await fetch(`${getApiHost()}/apis/v3/reports/${projectId}`);
       if (res.ok) {
         const data = await res.json();
         const finalData = data.length > 0 ? data : MOCK_REPORTS;
@@ -97,7 +98,7 @@ export default function ClientReportsPage() {
     try {
       setSubmitting(true);
       setError("");
-      const res = await fetch(`http://localhost:8000/apis/v3/reports/generate/${projectId}`, {
+      const res = await fetch(`${getApiHost()}/apis/v3/reports/generate/${projectId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -125,7 +126,7 @@ export default function ClientReportsPage() {
 
   const handleApproveReport = async (reportId: string) => {
     try {
-      const res = await fetch(`http://localhost:8000/apis/v3/reports/${reportId}/approve`, {
+      const res = await fetch(`${getApiHost()}/apis/v3/reports/${reportId}/approve`, {
         method: "PATCH",
       });
       if (res.ok) {
@@ -259,7 +260,7 @@ export default function ClientReportsPage() {
                       </button>
                     )}
                     <a
-                      href={`http://localhost:8000/apis/v3/reports/${selectedReport.id}/download`}
+                      href={`${getApiHost()}/apis/v3/reports/${selectedReport.id}/download`}
                       download
                       className="rounded-xl bg-white/5 hover:bg-white/10 text-white border border-white/10 px-4 py-2 text-xs font-bold transition-all text-center"
                     >
@@ -283,7 +284,7 @@ export default function ClientReportsPage() {
                 {/* Embedded PDF Viewer */}
                 <div className="flex-1 glass-panel rounded-2xl border border-white/5 overflow-hidden bg-zinc-950 flex flex-col min-h-[400px]">
                   <iframe
-                    src={`http://localhost:8000/apis/v3/reports/${selectedReport.id}/download#toolbar=0`}
+                    src={`${getApiHost()}/apis/v3/reports/${selectedReport.id}/download#toolbar=0`}
                     className="w-full h-full border-0"
                     title={selectedReport.report_name}
                   />

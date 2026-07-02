@@ -1,4 +1,5 @@
 "use client";
+import { getApiHost } from "@/lib/api";
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
@@ -204,7 +205,7 @@ export default function ProductionPage() {
     const fetchSummary = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`http://localhost:8000/apis/v3/production/summary?project_id=${projectId}`);
+        const response = await fetch(`${getApiHost()}/apis/v3/production/summary?project_id=${projectId}`);
         if (!response.ok) {
           throw new Error(`Production summary request failed: ${response.status}`);
         }

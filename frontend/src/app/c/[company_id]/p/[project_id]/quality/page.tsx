@@ -1,4 +1,5 @@
 "use client";
+import { getApiHost } from "@/lib/api";
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -187,11 +188,11 @@ export default function QualityPage() {
   const loadAll = async () => {
     let currentChecklists: Checklist[] = [];
     try {
-      const clRes = await fetch(`http://localhost:8000/apis/v3/quality/checklists/${companyId}`);
+      const clRes = await fetch(`${getApiHost()}/apis/v3/quality/checklists/${companyId}`);
       if (clRes.ok) {
         const clData = await clRes.json();
         currentChecklists = await Promise.all(clData.map(async (cl: any) => {
-          const itemsRes = await fetch(`http://localhost:8000/apis/v3/quality/checklists/${cl.id}/items`);
+          const itemsRes = await fetch(`${getApiHost()}/apis/v3/quality/checklists/${cl.id}/items`);
           let items: ChecklistItem[] = [];
           if (itemsRes.ok) {
             const itemsData = await itemsRes.json();
@@ -218,7 +219,7 @@ export default function QualityPage() {
     }
 
     try {
-      const inspRes = await fetch(`http://localhost:8000/apis/v3/quality/inspections/${projectId}`);
+      const inspRes = await fetch(`${getApiHost()}/apis/v3/quality/inspections/${projectId}`);
       if (inspRes.ok) {
         const inspData = await inspRes.json();
         const mapped = inspData.map((insp: any) => {
@@ -245,7 +246,7 @@ export default function QualityPage() {
 
   const fetchNcrs = async () => {
     try {
-      const res = await fetch(`http://localhost:8000/apis/v3/quality/ncr/${projectId}`);
+      const res = await fetch(`${getApiHost()}/apis/v3/quality/ncr/${projectId}`);
       if (res.ok) {
         const data = await res.json();
         const mapped = data.map((n: any) => ({
@@ -269,7 +270,7 @@ export default function QualityPage() {
 
   const fetchLabTests = async () => {
     try {
-      const res = await fetch(`http://localhost:8000/apis/v3/quality/material-tests/${projectId}`);
+      const res = await fetch(`${getApiHost()}/apis/v3/quality/material-tests/${projectId}`);
       if (res.ok) {
         const data = await res.json();
         const mapped = data.map((t: any) => ({
@@ -316,7 +317,7 @@ export default function QualityPage() {
     try {
       const action = newStatus === "under_review" ? "review" : "close";
       const body = newStatus === "closed" ? JSON.stringify({ resolution_notes: "Resolved and verified on-site." }) : undefined;
-      const res = await fetch(`http://localhost:8000/apis/v3/quality/ncr/${id}/${action}`, {
+      const res = await fetch(`${getApiHost()}/apis/v3/quality/ncr/${id}/${action}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body
@@ -331,7 +332,7 @@ export default function QualityPage() {
 
   const handleCreateNCR = async () => {
     try {
-      const res = await fetch("http://localhost:8000/apis/v3/quality/ncr", {
+      const res = await fetch(`${getApiHost()}/apis/v3/quality/ncr`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -361,7 +362,7 @@ export default function QualityPage() {
 
   const handleCreateTest = async () => {
     try {
-      const res = await fetch("http://localhost:8000/apis/v3/quality/material-tests", {
+      const res = await fetch(`${getApiHost()}/apis/v3/quality/material-tests`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -399,7 +400,7 @@ export default function QualityPage() {
   const handleCreateInspection = async () => {
     if (!inspForm.checklistId) return;
     try {
-      const res = await fetch("http://localhost:8000/apis/v3/quality/inspections", {
+      const res = await fetch(`${getApiHost()}/apis/v3/quality/inspections`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -433,7 +434,7 @@ export default function QualityPage() {
     }));
 
     try {
-      const res = await fetch(`http://localhost:8000/apis/v3/quality/inspections/${selectedInspection.id}/respond`, {
+      const res = await fetch(`${getApiHost()}/apis/v3/quality/inspections/${selectedInspection.id}/respond`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ responses })

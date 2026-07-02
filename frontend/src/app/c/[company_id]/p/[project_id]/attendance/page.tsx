@@ -1,4 +1,5 @@
 "use client";
+import { getApiHost } from "@/lib/api";
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
@@ -114,7 +115,7 @@ export default function AttendancePage() {
 
   const fetchProjectSettings = async () => {
     try {
-      const res = await fetch(`http://localhost:8000/apis/v3/planning/projects/${projectId}`);
+      const res = await fetch(`${getApiHost()}/apis/v3/planning/projects/${projectId}`);
       if (res.ok) {
         const data = await res.json();
         setProjectSettings(data);
@@ -127,7 +128,7 @@ export default function AttendancePage() {
   const handleSaveSettings = async () => {
     setIsSavingSettings(true);
     try {
-      const res = await fetch(`http://localhost:8000/apis/v3/planning/projects/${projectId}`, {
+      const res = await fetch(`${getApiHost()}/apis/v3/planning/projects/${projectId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(projectSettings)
@@ -170,7 +171,7 @@ export default function AttendancePage() {
   // Load employees and logs
   const fetchEmpsAndLogs = async () => {
     try {
-      const res = await fetch(`http://localhost:8000/apis/v3/hr/employees/${projectId}`);
+      const res = await fetch(`${getApiHost()}/apis/v3/hr/employees/${projectId}`);
       if (res.ok) {
         const data = await res.json();
         setEmployees(data);
@@ -179,7 +180,7 @@ export default function AttendancePage() {
         }
       }
       
-      const logRes = await fetch(`http://localhost:8000/apis/v3/hr/attendance/${projectId}/${date}`);
+      const logRes = await fetch(`${getApiHost()}/apis/v3/hr/attendance/${projectId}/${date}`);
       if (logRes.ok) {
         const logs = await logRes.json();
         setDbLogs(logs);
@@ -294,7 +295,7 @@ export default function AttendancePage() {
     }
 
     try {
-      const res = await fetch("http://localhost:8000/apis/v3/hr/attendance/punch", {
+      const res = await fetch(`${getApiHost()}/apis/v3/hr/attendance/punch`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -350,7 +351,7 @@ export default function AttendancePage() {
           notes: row.notes,
           photo_url: subconPhoto || null,
         };
-        await fetch("http://localhost:8000/apis/v3/subcon/attendance", {
+        await fetch(`${getApiHost()}/apis/v3/subcon/attendance`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
