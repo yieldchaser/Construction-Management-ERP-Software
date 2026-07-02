@@ -42,7 +42,10 @@ def seed_db(company_id, project_id, task_id, user_id, team_id):
     sys.path.append(os.path.dirname(os.path.abspath(__file__)))
     os.environ["DATABASE_URL"] = f"sqlite:///./{DB_FILE}"
 
-    from app.database import SessionLocal, engine
+    from sqlalchemy import create_engine
+    from sqlalchemy.orm import sessionmaker
+    engine = create_engine(f"sqlite:///./{DB_FILE}", connect_args={"check_same_thread": False})
+    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     from app import models
 
     models.Base.metadata.create_all(bind=engine)

@@ -19,6 +19,7 @@ from datetime import datetime, date
 from decimal import Decimal
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
 from app.database import get_db

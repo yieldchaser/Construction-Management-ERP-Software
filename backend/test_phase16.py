@@ -16,7 +16,7 @@ import subprocess
 import requests
 from datetime import datetime
 
-BASE = "http://127.0.0.1:8017/apis/v3"
+BASE = "http://127.0.0.1:8016/apis/v3"
 DB_FILE = "test_phase16.db"
 
 
@@ -25,14 +25,14 @@ def start_server():
     env["DATABASE_URL"] = f"sqlite:///./{DB_FILE}"
     proc = subprocess.Popen(
         [sys.executable, "-m", "uvicorn", "app.main:app",
-         "--host", "127.0.0.1", "--port", "8017", "--log-level", "error"],
+         "--host", "127.0.0.1", "--port", "8016", "--log-level", "error"],
         env=env,
         cwd=os.path.dirname(os.path.abspath(__file__)),
     )
     for _ in range(30):
         time.sleep(1)
         try:
-            if requests.get("http://127.0.0.1:8017/").status_code == 200:
+            if requests.get("http://127.0.0.1:8016/").status_code == 200:
                 return proc
         except Exception:
             pass
@@ -44,7 +44,10 @@ def seed_db(company_obj, project_obj):
     sys.path.append(os.path.dirname(os.path.abspath(__file__)))
     os.environ["DATABASE_URL"] = f"sqlite:///./{DB_FILE}"
 
-    from app.database import SessionLocal, engine
+    from sqlalchemy import create_engine
+    from sqlalchemy.orm import sessionmaker
+    engine = create_engine(f"sqlite:///./{DB_FILE}", connect_args={"check_same_thread": False})
+    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     from app import models
 
     models.Base.metadata.create_all(bind=engine)

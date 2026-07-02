@@ -318,7 +318,7 @@ def create_bill(req: BillCreateRequest, db: Session = Depends(get_db)):
             ded_amt += item_amt
             deduction_details.append((d, item_amt))
 
-        gst_amount = req.subtotal * (req.gst_pct / 100.0)
+        gst_amount = (req.subtotal - ded_amt) * (req.gst_pct / 100.0)
         total_payable = req.subtotal - ded_amt + gst_amount
     else:
         # Post-Tax Calculations (GST calculated on subtotal first, deductions subtracted from gross total)

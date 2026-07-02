@@ -18,7 +18,10 @@ def test_phase6():
     os.environ["DATABASE_URL"] = f"sqlite:///{db_path}"
     sys.path.append(os.path.dirname(os.path.abspath(__file__)))
     
-    from app.database import SessionLocal, engine
+    from sqlalchemy import create_engine
+    from sqlalchemy.orm import sessionmaker
+    engine = create_engine(f"sqlite:///{db_path}", connect_args={"check_same_thread": False})
+    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     from app import models
 
     # Create all tables (including drawings)
@@ -50,7 +53,7 @@ def test_phase6():
     env["PYTHONPATH"] = os.path.dirname(os.path.abspath(__file__))
     env["DATABASE_URL"] = f"sqlite:///{db_path}"
     proc = subprocess.Popen(
-        ["uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", "8000"],
+        ["python", "-m", "uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", "8004"],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,
@@ -61,7 +64,7 @@ def test_phase6():
     time.sleep(5)
     
     try:
-        base_url = "http://127.0.0.1:8000"
+        base_url = "http://127.0.0.1:8004"
         
         # 1. Create a drawing (Auto-creates V1 revision)
         print("\nTesting Create Drawing...")

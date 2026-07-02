@@ -18,7 +18,10 @@ def test_phase7():
     os.environ["DATABASE_URL"] = f"sqlite:///{db_path}"
     sys.path.append(os.path.dirname(os.path.abspath(__file__)))
     
-    from app.database import SessionLocal, engine
+    from sqlalchemy import create_engine
+    from sqlalchemy.orm import sessionmaker
+    engine = create_engine(f"sqlite:///{db_path}", connect_args={"check_same_thread": False})
+    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     from app import models
 
     # Create all tables (including procurement)
@@ -51,7 +54,7 @@ def test_phase7():
     env["PYTHONPATH"] = os.path.dirname(os.path.abspath(__file__))
     env["DATABASE_URL"] = f"sqlite:///{db_path}"
     proc = subprocess.Popen(
-        ["uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", "8005"],
+        ["python", "-m", "uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", "8005"],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,

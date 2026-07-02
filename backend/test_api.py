@@ -16,7 +16,7 @@ def test_backend():
     env["PYTHONPATH"] = os.path.dirname(os.path.abspath(__file__))
     env["DATABASE_URL"] = f"sqlite:///{db_path}"
     proc = subprocess.Popen(
-        ["uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", "8000"],
+        ["python", "-m", "uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", "8020"],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,
@@ -27,7 +27,7 @@ def test_backend():
     time.sleep(5)
     
     try:
-        base_url = "http://127.0.0.1:8000"
+        base_url = "http://127.0.0.1:8020"
         
         # 1. Health Check
         print("Testing health check endpoint...")
