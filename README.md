@@ -30,14 +30,19 @@ SiteFlow is an outcome-driven, high-fidelity ERP workspace tailored to the India
 
 ## Key Features
 
+* **📊 Dual-Mode Company Dashboard**: Dynamic tabs split between **Operational Overview** (switchable chart types for project health, 7-day labor attendance, and GRN counts) and **Financial Summary** (KPI cards, SVG revenue/expense/margin charts, expense distribution, and project-level financial table).
+* **🔀 25-Type Chart Switcher**: Every dashboard chart features a floating 5×5 icon picker matching the reference app — switch between Pie, Donut, Bar, Stacked Bar, Grouped Bar, Line, Smooth Line, Line with Markers, Area, Smooth Area, Scatter, Heatmap, Table view, and more with one click.
 * **🧮 Interactive Subcontractor Billing**: Real-time invoice calculators supporting pre-tax and post-tax works contract deduction configurations with automatic Indian GST and TDS presets.
 * **📍 Geofenced Mobile PWA Attendance**: GPS geofencing utilizing Haversine coordinate validation with Hinglish/Tamil localization and offline local storage backup for field workers.
 * **⏱️ Daily Activity & Timesheet Logger**: High-fidelity daily activity scheduler with start/stop times, reactive duration calculations, WBS task links, remarks, and file attachments.
-* **📈 Dual-Mode Company Dashboard**: Dynamic tabs split between **Operational Overview** (project health, 7-day labor attendance sparklines, 7-day GRN receipt counts) and **Financial Summary**.
-* **🎨 Theme-Aware custom Scrollbars**: Adaptive thin WebKit scrollbar tracks with a global `☀️` / `🌙` header toggle for a seamless dark-to-light transition.
+* **📋 CRM Quotations Module**: Full-featured quotations tab with create/view modals, status tracking (Draft → Sent → Accepted/Rejected), and line-item cost breakdowns per client.
+* **🏢 Company Settings & Branch Management**: Multi-branch company configuration with per-branch contact details, settings controls for employee restrictions, and geofence enforcement toggles.
+* **🧑‍💼 HR Leaves & Payroll**: Leave request and approval workflows connected to staff directory, with monthly payroll runs covering Basic, HRA, Allowances, PF, ESI, and TDS.
+* **🚀 Guided Onboarding Wizard**: 2-step stepper modal for project setup replacing the old blank-form flow — collects project details and assigns a team member before creation.
 * **📅 WBS Gantt Timelines**: Forward-pass Critical Path Method (CPM) scheduler calculating early/late starts, finishes, and total task floats with circular dependency protection.
 * **📦 CPWD Material Quantification**: Built-in concrete mix estimators (IS 456), rebar reinforcement steel weight calculators (IS 1786), brick masonry logs, and wall paint area estimators.
 * **🔒 Multi-Tenant Data Isolation**: Direct row-level security and company-scoped keys ensuring strict data division between tenants while permitting overlapping sequence numbers.
+* **🎨 Theme-Aware Custom Scrollbars**: Adaptive thin WebKit scrollbar tracks with a global `☀️` / `🌙` header toggle for a seamless dark-to-light transition.
 
 ---
 
@@ -58,18 +63,21 @@ graph TD
         C1 --> C2[Math Engine / IS 456]
         C1 --> C3[Deduction & Tax Engine]
         C1 --> C4[PostGIS Geofence Validator]
+        C1 --> C5[Analytics & Financial Engine]
     end
 
     subgraph DataStore ["Data Store (Supabase PostgreSQL)"]
         C2 --> D1[(Company & Project Tables)]
         C3 --> D1
         C4 --> D2[(Geofenced Coordinates)]
+        C5 --> D3[(Bills & Financial Records)]
     end
 
     subgraph ERP ["ERP Integration & Analytics"]
         D1 --> E1[Tally Prime Desktop Sync]
         D1 --> E2[Zoho Books Sync]
-        D1 --> E3[Executive Analytics Dashboard]
+        D3 --> E3[Executive Analytics Dashboard]
+        D3 --> E4[Financial KPI Dashboard]
     end
 
     classDef site fill:#E8184C,stroke:#333,stroke-width:2px,color:#fff;
@@ -78,9 +86,9 @@ graph TD
     classDef integrations fill:#0B0910,stroke:#E8184C,stroke-width:1px,color:#ededed;
     
     class A1,A2,A3,B1 site;
-    class C1,C2,C3,C4 core;
-    class D1,D2 db;
-    class E1,E2,E3 integrations;
+    class C1,C2,C3,C4,C5 core;
+    class D1,D2,D3 db;
+    class E1,E2,E3,E4 integrations;
 ```
 
 ---
@@ -241,11 +249,16 @@ SiteFlow features a state-of-the-art **glassmorphic canvas** with full support f
 
 ### 1. Company Dashboard (`/c/[company_id]/dashboard`)
 - **Operational Tab**:
-  - **Project Health Index Gauge**: Displays real-time operation percentages.
-  - **SVG Sparkline Charts**: Displays past 7 days staff attendance and raw GRN material receipts count.
-  - **Project Summary Grid**: Shows start/end dates, progress bar indicators, and customer details.
+  - **Project Health Chart**: Displays health breakdown (Healthy / Warning / Critical) across all sites with a **25-type chart switcher** — switch between Bar, Pie, Donut, Line, Area, Scatter, and Table views.
+  - **Last 7 Days Attendance**: Sparkline chart of daily present/absent counts with full chart type switching (bar, stacked bar, line, area, scatter, pie, donut, table).
+  - **Last 7 Days Material GRNs**: Sparkline of daily goods receipt counts with the same 25-type chart picker.
+  - **Project Operational Summary**: Table showing all projects with health badge, progress bar, start/end dates, and customer name.
 - **Financial Tab**:
-  - Consolidates material and site security resources including: WBS Gantt Schedulers, IS-456 Steel Calculators, and Geofence Guard radar systems.
+  - **KPI Cards**: Advance Paid, Amount To Pay (Unpaid Purchases), Amount To Receive (Unpaid Sales), Advance Received — all derived live from the Bills ledger.
+  - **SVG Revenue / Expense / Margin Charts**: Monthly trend sparklines for Sales, Purchase Expenses, and Gross Margin.
+  - **Expense Type Distribution**: Horizontal bar breakdown of expense categories (Materials, Labour, Equipment, etc.).
+  - **Project Financial Summary Table**: Per-project revenue, costs, margin %, and advance details.
+  - **Engineering Calculators** (bottom): IS-1786 Steel weight calculator and Haversine geofence distance guard.
 
 ### 2. Executive Analytics (`/c/[company_id]/analytics`)
 - **Interactive S-Curve Chart**: Renders planned progress vs. actual progress using SVG coordinates. Hovering on coordinates displays a glassmorphic tooltip with planned %, actual %, and variance calculations.
@@ -261,21 +274,36 @@ SiteFlow features a state-of-the-art **glassmorphic canvas** with full support f
   - Live billing calculator preview supporting pre-tax and post-tax deductions.
   - Indian taxation presets: **GST** (18% Works Contract, 12% Infra, 5% Housing) and **TDS** (1% Section 194C Individual, 2% Section 194C Corporate, 0.1% Section 194Q).
   - Debit/Credit Notes Ledger for material recovery deductions.
+- **CRM (`/crm`)**:
+  - Lead management with kanban-style pipeline and client contact registry.
+  - **Quotations tab**: Create, view, and manage quotations with status workflow (Draft → Sent → Accepted / Rejected), line-item cost breakdowns, and client assignment.
 - **Planning & Gantt (`/planning/gantt`)**:
   - Interactive Gantt chart schedule viewer with critical path tracking.
-- **CRM (`/crm`)**: Lead management, client contacts, and quotation templates (Villa vs. Commercial).
 - **DPR (`/dpr`)**: Daily progress reporting, delay tracking, and supervisor photo attachments.
 - **Drawings (`/drawings`)**: Version-controlled construction blueprint registry.
 - **Equipment (`/equipment`)**: Heavy machinery (Excavators, Transit Mixers) fuel logs and run hours.
 - **Finance (`/finance`)**: Cash flow projections, petty cash receipts, and supplier ledgers.
-- **HR (`/hr`)**: Site staff directory, monthly payroll runs (Basic, HRA, Allowances, PF, ESI, TDS calculations), and the high-fidelity **Daily Timesheet Logger** drawer log creator.
+- **HR (`/hr`)**:
+  - Site staff directory with department and designation management.
+  - Monthly payroll runs (Basic, HRA, Allowances, PF, ESI, TDS calculations) and the **Daily Timesheet Logger** drawer.
+  - **Leave Management**: Staff leave requests and manager approval/rejection workflow.
 - **Procurement (`/procurement`)**: Material indents, Purchase Orders (PO), and Goods Receipt Notes (GRN) with approval gates.
 - **Production (`/production`)**: Task-level work quantities (masonry, tiling, concrete).
 - **Quality (`/quality`)**: Concrete slump test logs, cube strength registers, and checklists.
 - **Reports (`/reports`)**: Auto-generated PDF/Excel summaries of material waste, daily reports, and labor.
 - **Safety (`/safety`)**: Site hazard reporting, PPE audit checklists, and toolbox talk logs.
 
-### 3. Public Website Integrations Hub (`/integrations`)
+### 4. Company Settings (`/c/[company_id]/settings`)
+- **General Settings**: Company profile, contact info, and legal details.
+- **Branch Management**: Add and manage multiple company branches with individual address and contact details.
+- **Restrictions & Controls**: Toggle company-wide rules such as employee self-edit access, geofence enforcement, and attendance visibility.
+
+### 5. Onboarding Wizard
+- 2-step guided stepper modal for first-time project creation.
+- **Step 1**: Project details (name, code, city, address, geofence radius).
+- **Step 2**: Team member assignment before project goes live.
+
+### 6. Public Website Integrations Hub (`/integrations`)
 - Interactive search engine and category selector pills (Accounting, Communication, Storage, Analytics, Field & Site).
 - Full active configuration panel for **Tally ERP** link, and request forms for planned modules (WhatsApp Business, Zoho, QuickBooks, Google Drive).
 
@@ -308,3 +336,9 @@ Attendance logs are validated using the Haversine formula to compute the distanc
 
 **Q: What accounting systems can SiteFlow sync with?**
 Out-of-the-box integrations exist for **Tally Prime** (via local XML sync gateway) and **Zoho Books** (via client-side REST API configurations).
+
+**Q: How does the Financial Dashboard get its data?**
+The `/apis/v3/analytics/company/{id}/financial` endpoint aggregates from the Bills ledger using `invoice_type` — `sale` for revenue, `purchase` for costs, `subcon` for subcontractor expenses — giving real-time KPIs, monthly trends, and per-project breakdowns without any manual entry.
+
+**Q: How does the chart type switcher work?**
+Each chart card in the dashboard has a floating **5×5 chart type picker** (25 options). Clicking the bar-chart icon opens the grid; selecting any type (Pie, Donut, Line, Area, Scatter, Stacked Bar, Table, etc.) instantly re-renders the chart using pure SVG — no external charting library required. The picker closes automatically on outside click.
