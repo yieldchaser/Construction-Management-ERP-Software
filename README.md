@@ -6,6 +6,85 @@ By replacing scattered Excel sheets, manual paper registers, and WhatsApp thread
 
 ---
 
+## 📊 System Architecture & Data Flow
+
+Below is a detailed graph showing how data flows from site personnel (geofenced mobile apps) to office personnel (executive analytics) and accounts sync services:
+
+```mermaid
+graph TD
+    subgraph Jobsite (Mobile PWA)
+        A1[GPS Geofenced Punch-in] --> B1[Local DB Backup / Sync]
+        A2[Daily Progress Photos] --> B1
+        A3[Material Receipts / GRN] --> B1
+    end
+
+    subgraph SiteFlow Core Engine (Backend FastAPI)
+        B1 -- REST API HTTPS --> C1[API Router Gateway]
+        C1 --> C2[Math Engine / IS 456]
+        C1 --> C3[Deduction & Tax Engine]
+        C1 --> C4[PostGIS Geofence Validator]
+    end
+
+    subgraph Data Store (Supabase PostgreSQL)
+        C2 --> D1[(Company & Project Tables)]
+        C3 --> D1
+        C4 --> D2[(Geofenced Coordinates)]
+    end
+
+    subgraph ERP Integration & Analytics
+        D1 --> E1[Tally Prime Desktop Sync]
+        D1 --> E2[Zoho Books Sync]
+        D1 --> E3[Executive Analytics Dashboard]
+    end
+
+    classDef site fill:#E8184C,stroke:#333,stroke-width:2px,color:#fff;
+    classDef core fill:#7C5CFF,stroke:#333,stroke-width:2px,color:#fff;
+    classDef db fill:#171520,stroke:#555,stroke-width:2px,color:#fff;
+    classDef integrations fill:#0B0910,stroke:#E8184C,stroke-width:1px,color:#ededed;
+    
+    class A1,A2,A3,B1 site;
+    class C1,C2,C3,C4 core;
+    class D1,D2 db;
+    class E1,E2,E3 integrations;
+```
+
+---
+
+## 🧮 Subcontractor Billing & Deductions Flow Chart
+
+SiteFlow implements a robust financial engine to compute subcontractor RA bills, applying GST and TDS (Section 194C/194Q) with custom tax deduction sequencing:
+
+```mermaid
+flowchart TD
+    Start[Subcontractor Submits Bill] --> Input[Input Base Subtotal]
+    
+    Input --> Choice{Pre-Tax Deductions?}
+    
+    Choice -- Yes (Pre-Tax) --> PreTDS[Deduct TDS 1% / 2%]
+    PreTDS --> PreRet[Deduct Retention %]
+    PreRet --> PreAdv[Recover Advances / Material Notes]
+    PreAdv --> PreTaxable[Calculate Taxable Base]
+    PreTaxable --> PreGST[Apply GST 18% / 12% / 5%]
+    PreGST --> NetPayablePre[Calculate Net Payable]
+    
+    Choice -- No (Post-Tax / Default) --> PostGST[Apply GST on Subtotal]
+    PostGST --> PostGross[Gross Post-GST Value]
+    PostGross --> PostTDS[Deduct TDS on Base Subtotal]
+    PostGross --> PostRet[Deduct Retention on Gross Value]
+    PostTDS & PostRet --> PostAdv[Recover Advances / Material Notes]
+    PostAdv --> NetPayablePost[Calculate Net Payable]
+
+    classDef action fill:#7C5CFF,stroke:#333,color:#fff;
+    classDef choice fill:#E8184C,stroke:#333,color:#fff;
+    classDef output fill:#059669,stroke:#333,color:#fff;
+    
+    class Start,Input,PreTDS,PreRet,PreAdv,PreTaxable,PreGST,PostGST,PostGross,PostTDS,PostRet,PostAdv action;
+    class Choice choice;
+    class NetPayablePre,NetPayablePost output;
+```
+
+---
+
 ## 🎨 Premium UI/UX & Design Philosophy
 SiteFlow features a state-of-the-art **glassmorphic dark-mode canvas** optimized for long hours of office operations:
 * **Background Canvas**: `#0E0C15` (Deep space slate-black)
@@ -13,17 +92,6 @@ SiteFlow features a state-of-the-art **glassmorphic dark-mode canvas** optimized
 * **Active Highlight**: `#E8184C` (Hot pink / crimson for active indicators and CTAs)
 * **Secondary Highlight**: `#7C5CFF` (Interactive purple for sub-elements and navigation tabs)
 * **Typography**: Clean, editorial-style **Inter** font with tight letter spacing for high data readability.
-
----
-
-## 🚀 System Architecture & Stack
-SiteFlow is built as a highly scalable monorepo:
-1. **Frontend**: Next.js 14+ (App Router, React, TypeScript, Tailwind CSS)
-2. **Backend**: FastAPI (Python 3.10+, Uvicorn)
-3. **Database**: Supabase (PostgreSQL + PostGIS for geofenced spatial indexing)
-4. **Third-Party Integrations**: 
-   * **Tally Prime Sync**: Via a lightweight desktop agent posting direct vouchers locally.
-   * **Zoho Books**: Direct REST API ledger synchronization.
 
 ---
 
@@ -68,25 +136,6 @@ SiteFlow is built as a highly scalable monorepo:
 ### 3. Public Website Integrations Hub (`/integrations`)
 - Interactive search engine and category selector pills (Accounting, Communication, Storage, Analytics, Field & Site).
 - Full active configuration panel for **Tally ERP** link, and request forms for planned modules (WhatsApp Business, Zoho, QuickBooks, Google Drive).
-
----
-
-## 🧮 14 Embedded Mathematical Calculators (IS 456:2000 Compliant)
-SiteFlow implements and verifies all calculators as pure, deterministic functions:
-1. **Steel Reinforcement**: Calculates stirrups, slab bar counts, and column lap weights using $W = \frac{D^2}{162.89}$ standard unit weight.
-2. **Concrete Volume & nominal mix splits**: Cement, sand, and aggregate requirements for M7.5, M10, M15, M20, and M25 grades (M30+ blocks to engineered mix designs).
-3. **Ready Mix Concrete (RMC)**: Calculates transit mixer load count ($6\text{ m}^3$ / $7\text{ m}^3$ sizes).
-4. **House Estimator**: Structure, finishing, MEP, interior cost splits with floor multipliers ($+12\%$ per floor) and commercial project adjustments ($+10\%$).
-5. **Brick & Mortar**: Calculates brick count, dry mortar volume factor ($1.33$), and cement/sand mix split ratios.
-6. **Paint, Putty & Primer**: Total room area, standard window/door deductions, and coverage outputs based on economy, premium, and luxury grades.
-7. **Tile & Flooring**: Calculates floor tile counts including grout joint widths ($2\text{mm}$ / $3\text{mm}$) and standard $10\%$ wastage.
-8. **Plastering**: Dry volume plaster calculations ($12\text{mm}$, $15\text{mm}$, $20\text{mm}$ thickness) and mix split.
-9. **Waterproofing**: Calculated volume requirement based on coat depth and specific surface area coverage.
-10. **Sales Invoice Retentions & Deductions**: Enforces pre-tax and post-tax retention calculations, TDS (Section 194C/194J) deductions, and net payable calculations.
-11. **Indian Payroll CTC Splits**: Calculates gross salary, Basic, HRA, PF Employee/Employer matches, and ad-hoc salary advance recoveries.
-12. **Labor Attendance Shift Multipliers**: Supports $0.25$, $0.50$, $0.75$, $1.00$ shift multipliers and overtime hours.
-13. **Split Rate Supply + Installation**: Split tax percentages (e.g. $18\%$ supply tax, $12\%$ installation labor tax) for fit-out projects.
-14. **Milestone Claim Billing**: Fixed lumpsum vs. percentage-based claim estimations.
 
 ---
 
