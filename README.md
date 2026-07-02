@@ -1,5 +1,5 @@
 <p align="center">
-  <img width="100%" alt="SiteFlow Banner" src="https://asset.acho.io/github/img/banner.gif" />
+  <img width="100%" alt="SiteFlow Banner" src="siteflow_banner.png" />
 </p>
 
 <p align="center">
