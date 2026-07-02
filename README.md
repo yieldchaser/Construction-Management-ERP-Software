@@ -1,14 +1,14 @@
 # SiteFlow — Premium Construction Management ERP Platform
 
-SiteFlow is a world-class, highly secure, and visually stunning Construction Management ERP Platform designed for developers, builders, contractors, architects, infrastructure firms, and interior design companies. 
+SiteFlow is an enterprise-grade, highly secure, and visually stunning Construction Management ERP Platform designed for developers, builders, contractors, architects, infrastructure firms, and project management consultancies (PMC).
 
-By replacing scattered Excel sheets, manual paper registers, and WhatsApp threads with a single unified workspace, SiteFlow provides absolute visibility over budgets, progress tracking, procurement, labor attendance, and subcontractor billing.
+By replacing scattered spreadsheets, paper registers, and untracked messaging with a unified real-time workspace, SiteFlow provides absolute visibility over budgets, schedule timelines, procurement workflows, labor attendance, and subcontractor billing.
 
 ---
 
 ## 📊 System Architecture & Data Flow
 
-Below is a detailed graph showing how data flows from site personnel (geofenced mobile apps) to office personnel (executive analytics) and accounts sync services:
+SiteFlow synchronizes field operations with back-office accounting systems (Tally Prime, Zoho Books) via a robust PostgreSQL datastore and FastAPI calculation core:
 
 ```mermaid
 graph TD
@@ -50,15 +50,46 @@ graph TD
 
 ---
 
-## 🧮 Subcontractor Billing & Deductions Flow Chart
+## 🧮 Industry-Specific Construction Engineering Formulas & Processes
 
-SiteFlow implements a robust financial engine to compute subcontractor RA bills, applying GST and TDS (Section 194C/194Q) with custom tax deduction sequencing:
+SiteFlow embeds standardized civil engineering codes, CPWD specifications, and Indian statutory tax rules within its calculation core.
+
+### 1. Concrete Mix & Material Estimation (IS 456:2000)
+To convert wet concrete volume into the raw materials (cement, sand, aggregate) required, SiteFlow uses a dry volume conversion factor of **$1.54$** (to account for voids and shrinkage during wet mixing):
+$$\text{Dry Volume} = \text{Wet Volume} \times 1.54$$
+
+Material breakdowns are computed based on standard nominal mix ratios (Cement : Sand : Coarse Aggregate) specified under **CPWD Standards**:
+* **M5 (1:5:10)** | **M7.5 (1:4:8)** | **M10 (1:3:6)** | **M15 (1:2:4)** | **M20 (1:1.5:3)** | **M25 (1:1:2)**
+
+#### Material Quantification Formulas:
+* **Cement Bags** (assuming $50\text{ kg}$ per bag, density of $1440\text{ kg/m}^3$, corresponding to volume $0.0347\text{ m}^3$):
+  $$\text{Cement (bags)} = \frac{\text{Dry Volume} \times \text{Cement Ratio}}{\text{Sum of Mix Ratios} \times 0.0347}$$
+* **Sand Volume ($m^3$):**
+  $$\text{Sand Volume} = \frac{\text{Dry Volume} \times \text{Sand Ratio}}{\text{Sum of Mix Ratios}}$$
+* **Coarse Aggregate Volume ($m^3$):**
+  $$\text{Aggregate Volume} = \frac{\text{Dry Volume} \times \text{Coarse Aggregate Ratio}}{\text{Sum of Mix Ratios}}$$
+
+---
+
+### 2. TMT Rebar Structural Weight Calculation (IS 1786)
+Reinforcement steel rebar weight is estimated using nominal diameters according to the Indian Standard unit weight formula:
+$$w = \frac{d^2}{162.2} \text{ kg/m}$$
+*Where $d$ is the rebar diameter in millimeters.*
+
+Total weight (including lap length and waste margins) is computed as:
+$$W_{\text{total}} = \sum \left( L_i \times N_i \times \frac{d_i^2}{162.2} \right) \times (1 + \text{Wastage Pct})$$
+*Where $L_i$ is the length of bar $i$ in meters, and $N_i$ is the count of bars.*
+
+---
+
+### 3. Subcontractor Billing Tax Deduction Engine
+Subcontractor Running Account (RA) bills are calculated under two distinct prioritization sequences depending on the Works Contract terms:
 
 ```mermaid
 flowchart TD
     Start[Subcontractor Submits Bill] --> Input[Input Base Subtotal]
-    
-    Input --> Choice{Pre-Tax Deductions?}
+    Choice{Pre-Tax Deductions?}
+    Input --> Choice
     
     Choice -- Yes (Pre-Tax) --> PreTDS[Deduct TDS 1% / 2%]
     PreTDS --> PreRet[Deduct Retention %]
@@ -83,23 +114,51 @@ flowchart TD
     class NetPayablePre,NetPayablePost output;
 ```
 
+#### Formula Case A: Pre-Tax Deductions (TDS & Retention on Base)
+Under this mode, security deductions and tax withholdings are subtracted to establish a net taxable base *prior* to applying GST (often used when subcontractors supply raw materials subject to offset):
+1. **TDS Withholding** (Section 194C / 194Q): $\text{TDS} = S \times \text{TDS Pct}$ (e.g., 2% for Corporate, 1% for Individual).
+2. **Retention Money**: $\text{Retention} = S \times \text{Retention Pct}$ (e.g., 5% held as security deposit).
+3. **Net Taxable Base**: $TB = S - \text{TDS} - \text{Retention} - A$ (where $A$ is the mobilization advance recovery).
+4. **GST Amount**: $\text{GST} = TB \times \text{GST Pct}$ (typically 18% for Works Contract).
+5. **Net Payable**: $\text{Net Payable} = TB + \text{GST}$.
+
+#### Formula Case B: Post-Tax Deductions (Standard Indian Works Contract)
+GST is calculated on the raw subtotal first, and deductions are calculated on their respective base values before being subtracted:
+1. **GST Amount**: $\text{GST} = S \times \text{GST Pct}$ (applied on raw base subtotal).
+2. **Gross Bill Total**: $G = S + \text{GST}$.
+3. **TDS Withholding**: $\text{TDS} = S \times \text{TDS Pct}$ (calculated on base subtotal).
+4. **Retention Money**: $\text{Retention} = G \times \text{Retention Pct}$ (calculated on gross post-GST total).
+5. **Net Payable**: $\text{Net Payable} = G - \text{TDS} - \text{Retention} - A$.
+
+---
+
+### 4. Planning & Scheduling Critical Path Method (CPM)
+For WBS task networks, SiteFlow computes the schedule passes to define task floats and establish the critical path:
+* **Early Finish (EF):** $\text{EF} = \text{Early Start (ES)} + \text{Duration}$
+* **Late Start (LS):** $\text{LS} = \text{Late Finish (LF)} - \text{Duration}$
+* **Total Float (TF):** $\text{TF} = \text{LF} - \text{EF} = \text{LS} - \text{ES}$
+
+*Tasks with $\text{Total Float} = 0$ are designated as Critical Path tasks, meaning any delay in their execution directly pushes back the final project completion date.*
+
 ---
 
 ## 🎨 Premium UI/UX & Design Philosophy
+
 SiteFlow features a state-of-the-art **glassmorphic dark-mode canvas** optimized for long hours of office operations:
 * **Background Canvas**: `#0E0C15` (Deep space slate-black)
 * **Card Containers**: `#171520` with borders of `rgba(255, 255, 255, 0.06)` and `backdrop-filter: blur(12px)`
-* **Active Highlight**: `#E8184C` (Hot pink / crimson for active indicators and CTAs)
-* **Secondary Highlight**: `#7C5CFF` (Interactive purple for sub-elements and navigation tabs)
+* **Active Highlights**: `#E8184C` (Hot pink / crimson for active indicators and CTAs)
+* **Secondary Highlights**: `#7C5CFF` (Interactive purple for sub-elements and navigation tabs)
 * **Typography**: Clean, editorial-style **Inter** font with tight letter spacing for high data readability.
 
 ---
 
 ## 📂 Project Directory Structure
-* `context/`: Session context, roadmap history, audits, calculators, and reverse-engineering notes.
-* `onsiteteams-recon/`: Raw competitor bundle resources, HTML assets, sitemaps, and API schemas.
-* `frontend/`: Next.js app-router frontend, including dashboard, project modules, analytics, and PWA shell assets.
-* `backend/`: FastAPI backend with routers for auth, calculators, planning, procurement, billing, HR, quality, reports, equipment, safety, analytics, and production.
+
+* [context/](file:///C:/Users/Dell/Github/Construction-Management-ERP-Software/context/) — Session context, roadmap history, audits, calculators, and reverse-engineering notes.
+* [onsiteteams-recon/](file:///C:/Users/Dell/Github/Construction-Management-ERP-Software/onsiteteams-recon/) — Raw competitor bundle resources, HTML assets, sitemaps, and API schemas.
+* [frontend/](file:///C:/Users/Dell/Github/Construction-Management-ERP-Software/frontend/) — Next.js app-router frontend, including dashboard, project modules, analytics, and PWA shell assets.
+* [backend/](file:///C:/Users/Dell/Github/Construction-Management-ERP-Software/backend/) — FastAPI backend with routers for auth, calculators, planning, procurement, billing, HR, quality, reports, equipment, safety, analytics, and production.
 
 ---
 
@@ -140,8 +199,9 @@ SiteFlow features a state-of-the-art **glassmorphic dark-mode canvas** optimized
 ---
 
 ## 🔒 Multi-Tenant Data Security & Isolation
+
 SiteFlow is built from the ground up for strict multi-tenant isolation:
-* **Direct Company Linkage**: All transactional tables (`purchase_orders`, `material_indents`, `goods_receipt_notes`, `work_orders`, `equipment_registry`, `bills`) carry `company_id` columns with foreign keys referencing `companies(id) ON DELETE CASCADE`.
+* **Direct Company Linkage**: All transactional tables carry `company_id` columns with foreign keys referencing `companies(id) ON DELETE CASCADE`.
 * **Company-Scoped Unique Keys**: Numbers like PO, GRN, and Indents are unique *only within the company context* (`UNIQUE(company_id, po_number)`), permitting standard sequence numbering (e.g. `PO-001`) to coexist across separate tenants.
 * **Client Invoice Integrity**: Unique partial indices are enforced on outgoing client tax invoices to prevent duplicate numbers:
   ```sql
@@ -149,16 +209,6 @@ SiteFlow is built from the ground up for strict multi-tenant isolation:
   ON bills (company_id, invoice_number) 
   WHERE invoice_type = 'sale';
   ```
-
----
-
-## 🧼 Competitor Content Cleansing & Git Scrubbing
-To ensure all competitor metadata has been removed:
-1. **Name scrubbing**: All Indian personal names, client companies, and project identifiers originally referenced on competitor materials were scrubbed from code comments, blog databases, and help documentation.
-2. **Git History Purge**: Re-written using `git-filter-repo` to permanently eliminate personal and competitor references from previous commits:
-   ```bash
-   git filter-repo --force --replace-text <git_replacements.txt>
-   ```
 
 ---
 
@@ -191,5 +241,5 @@ npm run dev
 # Start backend FastAPI server
 cd backend
 pip install -r requirements.txt
-uvicorn main:app --reload
+python -m uvicorn main:app --reload
 ```
