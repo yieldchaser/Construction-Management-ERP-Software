@@ -12,26 +12,26 @@ SiteFlow synchronizes field operations with back-office accounting systems (Tall
 
 ```mermaid
 graph TD
-    subgraph Jobsite (Mobile PWA)
+    subgraph Jobsite ["Jobsite (Mobile PWA)"]
         A1[GPS Geofenced Punch-in] --> B1[Local DB Backup / Sync]
         A2[Daily Progress Photos] --> B1
         A3[Material Receipts / GRN] --> B1
     end
 
-    subgraph SiteFlow Core Engine (Backend FastAPI)
+    subgraph CoreEngine ["SiteFlow Core Engine (Backend FastAPI)"]
         B1 -- REST API HTTPS --> C1[API Router Gateway]
         C1 --> C2[Math Engine / IS 456]
         C1 --> C3[Deduction & Tax Engine]
         C1 --> C4[PostGIS Geofence Validator]
     end
 
-    subgraph Data Store (Supabase PostgreSQL)
+    subgraph DataStore ["Data Store (Supabase PostgreSQL)"]
         C2 --> D1[(Company & Project Tables)]
         C3 --> D1
         C4 --> D2[(Geofenced Coordinates)]
     end
 
-    subgraph ERP Integration & Analytics
+    subgraph ERP ["ERP Integration & Analytics"]
         D1 --> E1[Tally Prime Desktop Sync]
         D1 --> E2[Zoho Books Sync]
         D1 --> E3[Executive Analytics Dashboard]
@@ -265,37 +265,3 @@ SiteFlow is built from the ground up for strict multi-tenant isolation:
   ON bills (company_id, invoice_number) 
   WHERE invoice_type = 'sale';
   ```
-
----
-
-## ⚡ Setup & Local Running Instructions
-
-### 1. Environment Configurations
-Copy the `.env.example` file to `.env` in the root folder and configure the connection parameters:
-```bash
-cp .env.example .env
-```
-Ensure the following variables are specified:
-* `DATABASE_URL`: PostgreSQL connection string.
-* `SUPABASE_URL`: Supabase project URL endpoint.
-* `SUPABASE_ANON_KEY`: Supabase Client Anonymous API key.
-
-### 2. Database Migrations
-Deploy the PostgreSQL schema script directly to your Supabase SQL Editor:
-```bash
-# Run migrations using Supabase CLI
-supabase db push
-```
-
-### 3. Start Development Servers
-```bash
-# Start frontend Next.js server
-cd frontend
-npm install
-npm run dev
-
-# Start backend FastAPI server
-cd backend
-pip install -r requirements.txt
-python -m uvicorn main:app --reload
-```
