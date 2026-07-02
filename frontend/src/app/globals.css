@@ -160,3 +160,75 @@ body {
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite linear;
 }
+
+/* Light Theme Contrast Overrides for Tailwind Utility Classes */
+:root.light-theme .text-zinc-400 {
+  color: #475569 !important; /* Slate 600 */
+}
+:root.light-theme .text-zinc-500 {
+  color: #64748B !important; /* Slate 500 */
+}
+:root.light-theme .text-zinc-600 {
+  color: #334155 !important; /* Slate 700 */
+}
+:root.light-theme .text-zinc-700 {
+  color: #1e293b !important; /* Slate 800 */
+}
+:root.light-theme .text-white {
+  color: #0F172A !important; /* Slate 900 */
+}
+:root.light-theme .hover\:text-white:hover {
+  color: #0F172A !important;
+}
+:root.light-theme .hover\:bg-white\/\[0\.02\]:hover {
+  background-color: rgba(15, 23, 42, 0.04) !important;
+}
+:root.light-theme .hover\:bg-white\/\[0\.03\]:hover {
+  background-color: rgba(15, 23, 42, 0.05) !important;
+}
+:root.light-theme .hover\:bg-white\/\[0\.04\]:hover {
+  background-color: rgba(15, 23, 42, 0.06) !important;
+}
+:root.light-theme .bg-white\/\[0\.01\] {
+  background-color: rgba(15, 23, 42, 0.01) !important;
+}
+:root.light-theme .bg-white\/\[0\.02\] {
+  background-color: rgba(15, 23, 42, 0.02) !important;
+}
+:root.light-theme .bg-white\/\[0\.03\] {
+  background-color: rgba(15, 23, 42, 0.03) !important;
+}
+:root.light-theme .bg-white\/\[0\.04\] {
+  background-color: rgba(15, 23, 42, 0.04) !important;
+}
+:root.light-theme .bg-white\/\[0\.06\] {
+  background-color: rgba(15, 23, 42, 0.08) !important;
+}
+:root.light-theme .border-white\/5 {
+  border-color: rgba(15, 23, 42, 0.08) !important;
+}
+:root.light-theme .border-white\/10 {
+  border-color: rgba(15, 23, 42, 0.12) !important;
+}
+:root.light-theme .bg-[#15121F] {
+  background-color: var(--elevated) !important;
+}
+:root.light-theme .bg-[#0B0910] {
+  background-color: var(--sidebar) !important;
+}
+:root.light-theme .bg-[#171520] {
+  background-color: var(--card) !important;
+}
+:root.light-theme .bg-[#252131] {
+  background-color: var(--elevated) !important;
+}
+:root.light-theme .border-r {
+  border-color: var(--border) !important;
+}
+:root.light-theme .border-b {
+  border-color: var(--border) !important;
+}
+:root.light-theme .border {
+  border-color: var(--border) !important;
+}
+
