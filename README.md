@@ -1,6 +1,6 @@
-# SiteFlow — Construction Management Platform
+# SiteFlow — Premium Construction Management ERP Platform
 
-SiteFlow is a world-class, highly secure, and visually stunning Construction Management Platform designed for builders, contractors, architects, infrastructure firms, and interior design companies. 
+SiteFlow is a world-class, highly secure, and visually stunning Construction Management ERP Platform designed for developers, builders, contractors, architects, infrastructure firms, and interior design companies. 
 
 By replacing scattered Excel sheets, manual paper registers, and WhatsApp threads with a single unified workspace, SiteFlow provides absolute visibility over budgets, progress tracking, procurement, labor attendance, and subcontractor billing.
 
@@ -18,8 +18,8 @@ SiteFlow features a state-of-the-art **glassmorphic dark-mode canvas** optimized
 
 ## 🚀 System Architecture & Stack
 SiteFlow is built as a highly scalable monorepo:
-1. **Frontend**: Next.js 14+ (React, TypeScript, Tailwind CSS)
-2. **Backend**: FastAPI (Python)
+1. **Frontend**: Next.js 14+ (App Router, React, TypeScript, Tailwind CSS)
+2. **Backend**: FastAPI (Python 3.10+, Uvicorn)
 3. **Database**: Supabase (PostgreSQL + PostGIS for geofenced spatial indexing)
 4. **Third-Party Integrations**: 
    * **Tally Prime Sync**: Via a lightweight desktop agent posting direct vouchers locally.
@@ -27,14 +27,47 @@ SiteFlow is built as a highly scalable monorepo:
 
 ---
 
-## Current Status
-Phases 1–16 are implemented in this repository, including analytics, PWA shell foundations, and production management. There is no defined Phase 17+ in the current repo context; future work should follow the parity audit in `context/implementation_plan.md`.
-
-## Repository Directory Layout
-* `context/`: session context, roadmap history, audits, calculators, and reverse-engineering notes.
-* `onsiteteams-recon/`: raw competitor bundle resources, HTML assets, sitemaps, and API schemas.
+## 📂 Project Directory Structure
+* `context/`: Session context, roadmap history, audits, calculators, and reverse-engineering notes.
+* `onsiteteams-recon/`: Raw competitor bundle resources, HTML assets, sitemaps, and API schemas.
 * `frontend/`: Next.js app-router frontend, including dashboard, project modules, analytics, and PWA shell assets.
 * `backend/`: FastAPI backend with routers for auth, calculators, planning, procurement, billing, HR, quality, reports, equipment, safety, analytics, and production.
+
+---
+
+## 📍 In-Depth Subpage & Feature Map
+
+### 1. Executive Analytics (`/c/[company_id]/analytics`)
+- **Interactive S-Curve Chart**: Renders planned progress vs. actual progress using SVG coordinates. Hovering on coordinates displays a glassmorphic tooltip with planned %, actual %, and variance calculations.
+- **Interactive Budget Burn Chart**: Plots cumulative spend against total project budget. Hovering displays the exact burn share percentage and Rupees (INR) spent.
+- **Project Scoreboard**: Live comparison table detailing project budget, cumulative spend, completion status, and active tasks.
+
+### 2. Project Modules (`/c/[company_id]/p/[project_id]/`)
+- **Attendance & Payroll (`/attendance`)**:
+  - GPS-tagged punch-in / punch-out geofencing with local storage backup.
+  - Localization support for **English**, **Hinglish**, **Hindi**, and **Tamil** for site staff.
+  - Multi-level shift calculations (0.25, 0.50, 0.75, 1.00 shifts) and overtime hours.
+- **Subcontractor Billing (`/billing`)**:
+  - Live billing calculator preview supporting pre-tax and post-tax deductions.
+  - Indian taxation presets: **GST** (18% Works Contract, 12% Infra, 5% Housing) and **TDS** (1% Section 194C Individual, 2% Section 194C Corporate, 0.1% Section 194Q).
+  - Debit/Credit Notes Ledger for material recovery deductions.
+- **Planning & Gantt (`/planning/gantt`)**:
+  - Interactive Gantt chart schedule viewer with critical path tracking.
+- **CRM (`/crm`)**: Lead management, client contacts, and quotation templates (Villa vs. Commercial).
+- **DPR (`/dpr`)**: Daily progress reporting, delay tracking, and supervisor photo attachments.
+- **Drawings (`/drawings`)**: Version-controlled construction blueprint registry.
+- **Equipment (`/equipment`)**: Heavy machinery (Excavators, Transit Mixers) fuel logs and run hours.
+- **Finance (`/finance`)**: Cash flow projections, petty cash receipts, and supplier ledgers.
+- **HR (`/hr`)**: Site staff salary payouts, advance register, and role assignments.
+- **Procurement (`/procurement`)**: Material indents, Purchase Orders (PO), and Goods Receipt Notes (GRN) with approval gates.
+- **Production (`/production`)**: Task-level work quantities (masonry, tiling, concrete).
+- **Quality (`/quality`)**: Concrete slump test logs, cube strength registers, and checklists.
+- **Reports (`/reports`)**: Auto-generated PDF/Excel summaries of material waste, daily reports, and labor.
+- **Safety (`/safety`)**: Site hazard reporting, PPE audit checklists, and toolbox talk logs.
+
+### 3. Public Website Integrations Hub (`/integrations`)
+- Interactive search engine and category selector pills (Accounting, Communication, Storage, Analytics, Field & Site).
+- Full active configuration panel for **Tally ERP** link, and request forms for planned modules (WhatsApp Business, Zoho, QuickBooks, Google Drive).
 
 ---
 
@@ -70,8 +103,17 @@ SiteFlow is built from the ground up for strict multi-tenant isolation:
 
 ---
 
+## 🧼 Competitor Content Cleansing & Git Scrubbing
+To ensure all competitor metadata has been removed:
+1. **Name scrubbing**: All Indian personal names, client companies, and project identifiers originally referenced on competitor materials were scrubbed from code comments, blog databases, and help documentation.
+2. **Git History Purge**: Re-written using `git-filter-repo` to permanently eliminate personal and competitor references from previous commits:
+   ```bash
+   git filter-repo --force --replace-text <git_replacements.txt>
+   ```
+
+---
+
 ## ⚡ Setup & Local Running Instructions
-*(Follow these steps once monorepo modules are initialized)*
 
 ### 1. Environment Configurations
 Copy the `.env.example` file to `.env` in the root folder and configure the connection parameters:

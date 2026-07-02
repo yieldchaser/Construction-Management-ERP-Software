@@ -734,32 +734,122 @@ export default function SubcontractorBillingPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-[10px] uppercase font-bold text-zinc-500 block mb-1">TDS Rate (%)</label>
-                    <input
-                      type="number"
-                      value={newBillTdsPct}
-                      onChange={(e) => setNewBillTdsPct(parseInt(e.target.value))}
-                      className="w-full bg-[#171520] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none"
-                    />
+                    <label className="text-[10px] uppercase font-bold text-zinc-500 block mb-1">TDS Rate Preset</label>
+                    <div className="flex gap-1 mb-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setNewBillTdsPct(1)}
+                        className={`px-1.5 py-0.5 rounded text-[8px] font-bold border transition-all cursor-pointer ${
+                          newBillTdsPct === 1
+                            ? "bg-primary border-primary text-white"
+                            : "bg-white/[0.02] border-white/5 text-zinc-400 hover:text-white"
+                        }`}
+                      >
+                        1% (194C Indiv)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setNewBillTdsPct(2)}
+                        className={`px-1.5 py-0.5 rounded text-[8px] font-bold border transition-all cursor-pointer ${
+                          newBillTdsPct === 2
+                            ? "bg-primary border-primary text-white"
+                            : "bg-white/[0.02] border-white/5 text-zinc-400 hover:text-white"
+                        }`}
+                      >
+                        2% (194C Corp)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setNewBillTdsPct(0.1)}
+                        className={`px-1.5 py-0.5 rounded text-[8px] font-bold border transition-all cursor-pointer ${
+                          newBillTdsPct === 0.1
+                            ? "bg-primary border-primary text-white"
+                            : "bg-white/[0.02] border-white/5 text-zinc-400 hover:text-white"
+                        }`}
+                      >
+                        0.1% (194Q)
+                      </button>
+                    </div>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        step="0.1"
+                        value={newBillTdsPct}
+                        onChange={(e) => setNewBillTdsPct(parseFloat(e.target.value) || 0)}
+                        className="w-full bg-[#171520] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-secondary font-mono"
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 text-[10px]">%</span>
+                    </div>
                   </div>
+
+                  <div>
+                    <label className="text-[10px] uppercase font-bold text-zinc-500 block mb-1">GST Rate Preset</label>
+                    <div className="flex gap-1 mb-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setNewBillGstPct(18)}
+                        className={`px-1.5 py-0.5 rounded text-[8px] font-bold border transition-all cursor-pointer ${
+                          newBillGstPct === 18
+                            ? "bg-secondary border-secondary text-white"
+                            : "bg-white/[0.02] border-white/5 text-zinc-400 hover:text-white"
+                        }`}
+                      >
+                        18% (Works Contract)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setNewBillGstPct(12)}
+                        className={`px-1.5 py-0.5 rounded text-[8px] font-bold border transition-all cursor-pointer ${
+                          newBillGstPct === 12
+                            ? "bg-secondary border-secondary text-white"
+                            : "bg-white/[0.02] border-white/5 text-zinc-400 hover:text-white"
+                        }`}
+                      >
+                        12% (Infra)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setNewBillGstPct(5)}
+                        className={`px-1.5 py-0.5 rounded text-[8px] font-bold border transition-all cursor-pointer ${
+                          newBillGstPct === 5
+                            ? "bg-secondary border-secondary text-white"
+                            : "bg-white/[0.02] border-white/5 text-zinc-400 hover:text-white"
+                        }`}
+                      >
+                        5% (Housing)
+                      </button>
+                    </div>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        value={newBillGstPct}
+                        onChange={(e) => setNewBillGstPct(parseInt(e.target.value) || 0)}
+                        className="w-full bg-[#171520] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-secondary font-mono"
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 text-[10px]">%</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="text-[10px] uppercase font-bold text-zinc-500 block mb-1">Retention (%)</label>
                     <input
                       type="number"
                       value={newBillRetentionPct}
-                      onChange={(e) => setNewBillRetentionPct(parseInt(e.target.value))}
-                      className="w-full bg-[#171520] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none"
+                      onChange={(e) => setNewBillRetentionPct(parseInt(e.target.value) || 0)}
+                      className="w-full bg-[#171520] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none font-mono"
                     />
                   </div>
                   <div>
-                    <label className="text-[10px] uppercase font-bold text-zinc-500 block mb-1">Advance return (₹)</label>
+                    <label className="text-[10px] uppercase font-bold text-zinc-500 block mb-1">Advance Return (₹)</label>
                     <input
                       type="number"
                       value={newBillAdvanceRecovery}
-                      onChange={(e) => setNewBillAdvanceRecovery(parseInt(e.target.value))}
-                      className="w-full bg-[#171520] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none"
+                      onChange={(e) => setNewBillAdvanceRecovery(parseInt(e.target.value) || 0)}
+                      className="w-full bg-[#171520] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none font-mono"
                     />
                   </div>
                 </div>
