@@ -142,6 +142,62 @@ For WBS task networks, SiteFlow computes the schedule passes to define task floa
 
 ---
 
+### 5. Brick & Block Masonry Quantity Estimator (CPWD)
+SiteFlow quantifies clay brick or fly-ash block requirements for masonry walls.
+* **Standard modular brick size**: $190 \times 90 \times 90\text{ mm}$ (Nominal size with mortar is $200 \times 100 \times 100\text{ mm}$).
+* **Standard brick constant**: $500\text{ bricks per } m^3$ of masonry wall.
+* **Dry Mortar volume factor**: $1.33$ (accounts for dry volume void ratio and joint wastage).
+* **Mortar wet volume fraction**: Typically $30\%$ of total wall masonry volume.
+
+#### Calculation Formulas:
+* **Total Brick Count ($N$):**
+  $$N = \text{Wall Length} \times \text{Wall Height} \times \text{Wall Thickness} \times 500$$
+* **Dry Mortar Volume ($V_{\text{dry}}$):**
+  $$V_{\text{dry}} = (\text{Wall Length} \times \text{Wall Height} \times \text{Wall Thickness}) \times 0.30 \times 1.33$$
+* **Cement & Sand split for Mortar Mix** (e.g., 1:4 or 1:6 ratios):
+  $$\text{Cement (bags)} = \frac{V_{\text{dry}} \times \text{Cement Ratio}}{\text{Sum of Mix Ratios} \times 0.0347}$$
+  $$\text{Sand Volume } (m^3) = \frac{V_{\text{dry}} \times \text{Sand Ratio}}{\text{Sum of Mix Ratios}}$$
+
+---
+
+### 6. Paint & Wall Coverage Quantification
+SiteFlow computes the volume of primer, putties, and finish paint required for drywall, masonry plaster, and concrete surfaces:
+* **Single-coat coverage area rate:** $A_{\text{cov}}$ (e.g., $14\text{ m}^2/\text{liter}$ for acrylic emulsion).
+* **Double-coat coverage factor:** $1.9$ (first coat absorbs more, second coat is lighter).
+
+#### Calculation Formula:
+$$\text{Paint Volume (liters)} = \frac{\text{Wall Surface Area} \times \text{Number of Coats}}{\text{Single Coat Coverage Rate} \times \text{Absorption Factor}}$$
+
+---
+
+### 7. Geofenced Site Labor Shift & Attendance Payroll Math
+SiteFlow logs and calculates labor payroll based on GPS verification status, daily wage rates, shift multipliers, and overtime calculations:
+* **Location Verification Status:** Determined by Haversine distance from geofence center (verified if $d \le R_{\text{geofence}}$).
+* **Shift Multipliers:** Allows standard shift increments ($0.25, 0.50, 0.75, 1.00, 1.25$ shifts).
+
+#### Daily Labor Compensation Formula:
+$$\text{Daily Payout} = (\text{Daily Wage} \times \text{Shift Multiplier}) + (\text{Overtime Hours} \times \text{Hourly OT Rate}) + \text{Allowances} - \text{Deductions}$$
+
+---
+
+### 8. Heavy Equipment Fuel Consumption & Utilization Math
+Fuel consumption efficiency and machinery run hours are computed for active equipment (Tractor, Transit Mixer, Excavator):
+* **Hourly Consumption Rate ($R_{\text{fuel}}$):**
+  $$R_{\text{fuel}} = \frac{\text{Fuel Consumed (liters)}}{\text{Final Run Hours} - \text{Initial Run Hours}}$$
+* **Idle Time Utilization %:**
+  $$\text{Utilization Pct} = \frac{\text{Working Hours}}{\text{Total Available Shift Hours}} \times 100$$
+
+---
+
+### 9. Concrete Cube Compressive Strength compliance (IS 516)
+SiteFlow processes concrete compressive strength testing registers (7-day and 28-day sample crushing loads):
+* **Compressive Strength ($f_c$ in $N/mm^2$):**
+  $$f_c = \frac{\text{Peak Failure Load (N)}}{\text{Cube Area } (150 \times 150 \text{ mm}^2)} = \frac{P}{22500}$$
+* **7-Day Compliance Check:** Must be $\ge 65\%$ of the target characteristic compressive strength ($f_{ck}$).
+* **28-Day Compliance Check:** Must be $\ge 100\%$ of the target characteristic compressive strength ($f_{ck}$).
+
+---
+
 ## 🎨 Premium UI/UX & Design Philosophy
 
 SiteFlow features a state-of-the-art **glassmorphic dark-mode canvas** optimized for long hours of office operations:
