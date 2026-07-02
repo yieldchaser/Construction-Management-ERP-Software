@@ -97,6 +97,97 @@ export default function DashboardPage() {
   const [barLength, setBarLength] = useState(3);
   const [wastagePercent, setWastagePercent] = useState(5);
 
+  // ── Chart type switcher ────────────────────────────────────────────────────
+  const [openPicker, setOpenPicker] = useState<string | null>(null);
+  const [ctHealth, setCtHealth] = useState("bar");
+  const [ctAttendance, setCtAttendance] = useState("bar");
+  const [ctMaterial, setCtMaterial] = useState("bar");
+
+  // Close picker when clicking outside
+  useEffect(() => {
+    if (!openPicker) return;
+    const close = () => setOpenPicker(null);
+    const t = setTimeout(() => document.addEventListener("click", close), 0);
+    return () => { clearTimeout(t); document.removeEventListener("click", close); };
+  }, [openPicker]);
+
+  // Mini SVG icons for each chart type in the picker grid
+  const chartTypeIcon = (id: string, active: boolean) => {
+    const c = active ? "#7C5CFF" : "#6b7280";
+    switch (id) {
+      case "pie": return <svg viewBox="0 0 18 18" width="16" height="16"><path d="M9,9L9,2A7,7,0,0,1,16,9Z" fill={c}/><path d="M9,9L16,9A7,7,0,0,1,4.5,14.6Z" fill={c} opacity="0.6"/><path d="M9,9L4.5,14.6A7,7,0,1,1,9,2Z" fill={c} opacity="0.3"/></svg>;
+      case "donut": return <svg viewBox="0 0 18 18" width="16" height="16"><path d="M9,2A7,7,0,0,1,16,9" stroke={c} fill="none" strokeWidth="3.5"/><path d="M16,9A7,7,0,0,1,4.5,14.6" stroke={c} fill="none" strokeWidth="3.5" opacity="0.6"/><path d="M4.5,14.6A7,7,0,1,1,9,2" stroke={c} fill="none" strokeWidth="3.5" opacity="0.3"/></svg>;
+      case "funnel": case "funnel2": case "funnel_ring": return <svg viewBox="0 0 18 18" width="16" height="16"><polygon points="2,2 16,2 11,10 11,16 7,16 7,10" fill={c} opacity="0.7"/></svg>;
+      case "bar": case "bar_col": case "grouped_col": return <svg viewBox="0 0 18 18" width="16" height="16"><rect x="1" y="10" width="4" height="7" rx="0.5" fill={c}/><rect x="7" y="6" width="4" height="11" rx="0.5" fill={c} opacity="0.8"/><rect x="13" y="3" width="4" height="14" rx="0.5" fill={c} opacity="0.6"/></svg>;
+      case "stacked": case "stacked_bar": return <svg viewBox="0 0 18 18" width="16" height="16"><rect x="1" y="12" width="4" height="5" rx="0.5" fill={c}/><rect x="1" y="8" width="4" height="4" rx="0.5" fill={c} opacity="0.5"/><rect x="7" y="9" width="4" height="8" rx="0.5" fill={c} opacity="0.9"/><rect x="7" y="5" width="4" height="4" rx="0.5" fill={c} opacity="0.45"/><rect x="13" y="6" width="4" height="11" rx="0.5" fill={c} opacity="0.8"/><rect x="13" y="2" width="4" height="4" rx="0.5" fill={c} opacity="0.4"/></svg>;
+      case "grouped": return <svg viewBox="0 0 18 18" width="16" height="16"><rect x="1" y="9" width="2.5" height="8" rx="0.5" fill={c}/><rect x="4" y="5" width="2.5" height="12" rx="0.5" fill={c} opacity="0.5"/><rect x="8" y="6" width="2.5" height="11" rx="0.5" fill={c}/><rect x="11" y="3" width="2.5" height="14" rx="0.5" fill={c} opacity="0.5"/></svg>;
+      case "scatter": case "scatter2": case "scatter3": case "scatter_ring": case "scatter_group": return <svg viewBox="0 0 18 18" width="16" height="16"><circle cx="3" cy="14" r="2" fill={c}/><circle cx="7" cy="9" r="2" fill={c} opacity="0.7"/><circle cx="12" cy="12" r="2" fill={c} opacity="0.9"/><circle cx="15" cy="5" r="2" fill={c} opacity="0.5"/><circle cx="5" cy="5" r="2" fill={c} opacity="0.8"/></svg>;
+      case "line": case "cross": return <svg viewBox="0 0 18 18" width="16" height="16"><polyline points="1,14 5,8 9,11 13,4 17,7" stroke={c} fill="none" strokeWidth="2"/><line x1="1" y1="17" x2="17" y2="17" stroke={c} strokeWidth="1" opacity="0.3"/></svg>;
+      case "smooth": return <svg viewBox="0 0 18 18" width="16" height="16"><path d="M1,14 C4,14 4,6 8,9 C12,12 12,3 17,6" stroke={c} fill="none" strokeWidth="2"/><line x1="1" y1="17" x2="17" y2="17" stroke={c} strokeWidth="1" opacity="0.3"/></svg>;
+      case "line_pt": return <svg viewBox="0 0 18 18" width="16" height="16"><polyline points="1,14 5,8 9,11 13,4 17,7" stroke={c} fill="none" strokeWidth="1.5"/><circle cx="1" cy="14" r="1.5" fill={c}/><circle cx="5" cy="8" r="1.5" fill={c}/><circle cx="9" cy="11" r="1.5" fill={c}/><circle cx="13" cy="4" r="1.5" fill={c}/><circle cx="17" cy="7" r="1.5" fill={c}/></svg>;
+      case "smooth_pt": return <svg viewBox="0 0 18 18" width="16" height="16"><path d="M1,14 C4,14 4,6 8,9 C12,12 12,3 17,6" stroke={c} fill="none" strokeWidth="1.5"/><circle cx="1" cy="14" r="1.5" fill={c}/><circle cx="8" cy="9" r="1.5" fill={c}/><circle cx="17" cy="6" r="1.5" fill={c}/></svg>;
+      case "area": case "area_pt": return <svg viewBox="0 0 18 18" width="16" height="16"><polygon points="1,17 1,14 5,8 9,11 13,4 17,7 17,17" fill={c} opacity="0.25"/><polyline points="1,14 5,8 9,11 13,4 17,7" stroke={c} fill="none" strokeWidth="1.5"/></svg>;
+      case "smooth_area": case "smooth_area_pt": return <svg viewBox="0 0 18 18" width="16" height="16"><path d="M1,14 C4,14 4,6 8,9 C12,12 12,3 17,6" stroke={c} fill="none" strokeWidth="1.5"/><path d="M1,17 L1,14 C4,14 4,6 8,9 C12,12 12,3 17,6 L17,17 Z" fill={c} opacity="0.25"/></svg>;
+      case "sunburst": case "rose": return <svg viewBox="0 0 18 18" width="16" height="16"><circle cx="9" cy="9" r="2.5" fill={c}/><path d="M9,2 L9,5.5 M14.2,4.8 L11.4,6.6 M14.2,13.2 L11.4,11.4 M9,16 L9,12.5 M3.8,13.2 L6.6,11.4 M3.8,4.8 L6.6,6.6" stroke={c} strokeWidth="1.5" strokeLinecap="round"/></svg>;
+      case "filter": case "heatmap": case "grid": return <svg viewBox="0 0 18 18" width="16" height="16"><rect x="1" y="1" width="7" height="7" rx="1" fill={c} opacity="0.8"/><rect x="10" y="1" width="7" height="7" rx="1" fill={c} opacity="0.3"/><rect x="1" y="10" width="7" height="7" rx="1" fill={c} opacity="0.4"/><rect x="10" y="10" width="7" height="7" rx="1" fill={c} opacity="0.9"/></svg>;
+      case "table": return <svg viewBox="0 0 18 18" width="16" height="16"><rect x="1" y="1" width="16" height="16" rx="1.5" stroke={c} fill="none" strokeWidth="1.2"/><line x1="1" y1="5.5" x2="17" y2="5.5" stroke={c} strokeWidth="1.2"/><line x1="1" y1="10" x2="17" y2="10" stroke={c} strokeWidth="1.2"/><line x1="1" y1="14.5" x2="17" y2="14.5" stroke={c} strokeWidth="1.2"/><line x1="6" y1="5.5" x2="6" y2="17" stroke={c} strokeWidth="1.2"/><line x1="12" y1="5.5" x2="12" y2="17" stroke={c} strokeWidth="1.2"/></svg>;
+      default: return <svg viewBox="0 0 18 18" width="16" height="16"><rect x="2" y="2" width="14" height="14" rx="2" fill="none" stroke={c} strokeWidth="1.2" opacity="0.5"/></svg>;
+    }
+  };
+
+  // Chart picker popup (5×5 grid matching reference app)
+  const renderChartPicker = (pickerId: string, activeType: string, setType: (t: string) => void) => {
+    if (openPicker !== pickerId) return null;
+    const ALL = [
+      "pie","donut","funnel","funnel2","bar",
+      "stacked","grouped","scatter","line","smooth",
+      "line_pt","smooth_pt","area","smooth_area","area_pt",
+      "smooth_area_pt","filter","grouped_col","sunburst","rose",
+      "scatter2","scatter3","cross","heatmap","table"
+    ];
+    return (
+      <div className="absolute top-8 right-0 z-50 bg-[#1A1726] border border-white/10 rounded-xl p-3 shadow-2xl" onClick={e => e.stopPropagation()}>
+        <div className="grid grid-cols-5 gap-1.5">
+          {ALL.map(ct => (
+            <button key={ct} onClick={() => { setType(ct); setOpenPicker(null); }} title={ct.replace(/_/g," ")}
+              className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all hover:bg-white/10 border ${
+                activeType === ct ? "bg-primary/20 border-primary/40" : "border-transparent hover:border-white/10"
+              }`}>
+              {chartTypeIcon(ct, activeType === ct)}
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  // Reusable chart header with type switcher icon buttons
+  const renderChartHeader = (title: string, pickerId: string, activeType: string, setType: (t: string) => void) => (
+    <div className="w-full flex justify-between items-center border-b border-white/5 pb-3">
+      <span className="text-xs font-bold text-white uppercase tracking-wider">{title}</span>
+      <div className="flex items-center gap-0.5 relative">
+        <button className="p-1.5 rounded text-zinc-600 hover:text-zinc-400 hover:bg-white/5 transition-all" title="Sort">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M1 3h11M3 6.5h7M5 10h3"/></svg>
+        </button>
+        <div className="relative">
+          <button onClick={e => { e.stopPropagation(); setOpenPicker(openPicker === pickerId ? null : pickerId); }}
+            className={`p-1.5 rounded transition-all ${
+              openPicker === pickerId ? "bg-primary/20 text-primary" : "text-zinc-600 hover:text-zinc-400 hover:bg-white/5"
+            }`} title="Change chart type">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="currentColor">
+              <rect x="1" y="8" width="3" height="4" rx="0.5"/><rect x="5" y="5" width="3" height="7" rx="0.5"/><rect x="9" y="2" width="3" height="10" rx="0.5"/>
+            </svg>
+          </button>
+          {renderChartPicker(pickerId, activeType, setType)}
+        </div>
+        <button className="p-1.5 rounded text-zinc-600 hover:text-zinc-400 hover:bg-white/5 transition-all" title="Fullscreen">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 4.5V2h2.5M8.5 2H11v2.5M11 8.5V11H8.5M4.5 11H2V8.5"/></svg>
+        </button>
+        <button className="p-1.5 rounded text-zinc-600 hover:text-zinc-400 hover:bg-white/5 transition-all font-bold leading-none" title="More options">⋮</button>
+      </div>
+    </div>
+  );
+
   const standardUnitWeight = (diameter * diameter) / 162.0; // kg/m — IS 800 standard: D²/162
   const totalBarLength = barCount * barLength; // meters
   const totalWeightNoWastage = totalBarLength * standardUnitWeight; // kg
@@ -512,34 +603,115 @@ export default function DashboardPage() {
 
                   {/* Project Health & Operational Summary */}
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Gauge widget */}
-                    <div className="rounded-2xl border border-white/5 bg-[#0B0910] p-6 flex flex-col justify-between items-center text-center">
-                      <div className="w-full flex justify-between items-center border-b border-white/5 pb-3">
-                        <span className="text-xs font-bold text-white uppercase tracking-wider">Project Health Index</span>
-                        <span className="h-2 w-2 rounded-full bg-success shadow-[0_0_8px_#00E5A3]" />
-                      </div>
-                      
-                      <div className="relative flex items-center justify-center h-40 w-full mt-4">
-                        {/* Semi-circular gauge chart SVG */}
-                        <svg className="w-48 h-24 overflow-visible" viewBox="0 0 100 50">
-                          <path d="M 10,50 A 40,40 0 0,1 90,50" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="12" strokeLinecap="round" />
-                          <path d="M 10,50 A 40,40 0 0,1 90,50" fill="none" stroke="url(#gaugeGrad)" strokeWidth="12" strokeLinecap="round" strokeDasharray="125" strokeDashoffset="0" />
-                          <defs>
-                            <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                              <stop offset="0%" stopColor="#7C5CFF" />
-                              <stop offset="100%" stopColor="#E8184C" />
-                            </linearGradient>
-                          </defs>
-                        </svg>
-                        <div className="absolute bottom-2 flex flex-col items-center">
-                          <span className="text-2xl font-black text-white">100%</span>
-                          <span className="text-[9px] uppercase font-bold text-zinc-500 tracking-wider">Optimal Operation</span>
-                        </div>
-                      </div>
-                      
-                      <div className="text-[10px] text-zinc-400 mt-2">
-                        All {projects.length} sites are running within planned tolerances.
-                      </div>
+                    {/* Project Health Chart — chart type switchable */}
+                    <div className="rounded-2xl border border-white/5 bg-[#0B0910] p-6 space-y-4 relative">
+                      {renderChartHeader("Project Health", "health", ctHealth, setCtHealth)}
+                      {(() => {
+                        const hc = operationalData?.health_counts ?? { Healthy: 0, Warning: 0, Critical: 0 };
+                        const segments = [
+                          { label: "Healthy", value: hc.Healthy ?? 0, color: "#00E5A3" },
+                          { label: "Warning", value: hc.Warning ?? 0, color: "#EAB308" },
+                          { label: "Critical", value: hc.Critical ?? 0, color: "#E8184C" },
+                        ];
+                        const total = segments.reduce((s, d) => s + d.value, 0) || 1;
+                        const maxV = Math.max(...segments.map(s => s.value), 1);
+
+                        if (ctHealth === "table") return (
+                          <div className="space-y-2 pt-2">
+                            {segments.map(s => (
+                              <div key={s.label} className="flex items-center justify-between px-3 py-2 rounded-lg bg-white/[0.02] border border-white/5">
+                                <div className="flex items-center gap-2"><div className="h-2 w-2 rounded-full" style={{background:s.color}}/><span className="text-xs text-zinc-300">{s.label}</span></div>
+                                <span className="font-bold text-white font-mono text-sm">{s.value}</span>
+                              </div>
+                            ))}
+                            <div className="flex justify-between px-3 py-1 text-[10px] text-zinc-500"><span>Total Projects</span><span className="font-bold text-white">{total}</span></div>
+                          </div>
+                        );
+
+                        if (ctHealth === "pie" || ctHealth === "donut") {
+                          let cumAngle = -90;
+                          const ro = ctHealth === "donut" ? 36 : 42, ri = 22;
+                          const paths = segments.map(s => {
+                            const angle = (s.value / total) * 360 || 0;
+                            const r1 = cumAngle * Math.PI / 180, r2 = (cumAngle + angle) * Math.PI / 180;
+                            const cx = 50, cy = 50;
+                            const x1 = cx + ro * Math.cos(r1), y1 = cy + ro * Math.sin(r1);
+                            const x2 = cx + ro * Math.cos(r2), y2 = cy + ro * Math.sin(r2);
+                            const laf = angle > 180 ? 1 : 0;
+                            const d = ctHealth === "donut"
+                              ? `M${x1.toFixed(1)},${y1.toFixed(1)} A${ro},${ro} 0 ${laf},1 ${x2.toFixed(1)},${y2.toFixed(1)} L${(cx+ri*Math.cos(r2)).toFixed(1)},${(cy+ri*Math.sin(r2)).toFixed(1)} A${ri},${ri} 0 ${laf},0 ${(cx+ri*Math.cos(r1)).toFixed(1)},${(cy+ri*Math.sin(r1)).toFixed(1)} Z`
+                              : `M${cx},${cy} L${x1.toFixed(1)},${y1.toFixed(1)} A${ro},${ro} 0 ${laf},1 ${x2.toFixed(1)},${y2.toFixed(1)} Z`;
+                            cumAngle += angle;
+                            return { d, color: s.color, label: s.label, value: s.value };
+                          });
+                          return (
+                            <div className="flex items-center gap-4 pt-2">
+                              <div className="relative flex-shrink-0">
+                                <svg viewBox="0 0 100 100" className="w-28 h-28">{paths.map((p,i) => <path key={i} d={p.d} fill={p.color} opacity="0.85"/>)}</svg>
+                                {ctHealth === "donut" && <div className="absolute inset-0 flex flex-col items-center justify-center"><span className="text-[9px] text-zinc-500">Total</span><span className="text-xl font-black text-white">{total}</span></div>}
+                              </div>
+                              <div className="space-y-2">{segments.map(s => (<div key={s.label} className="flex items-center gap-2 text-xs"><div className="h-2 w-2 rounded-full flex-shrink-0" style={{background:s.color}}/><span className="text-zinc-400">{s.label}</span><span className="font-bold text-white ml-auto pl-3">{s.value}</span></div>))}</div>
+                            </div>
+                          );
+                        }
+
+                        if (ctHealth === "scatter" || ctHealth === "scatter2" || ctHealth === "scatter3") {
+                          const W=200, H=80;
+                          const pts = segments.map((s,i) => ({ x: 30+i*70, y: H-5-((s.value/maxV)*(H-15)) }));
+                          return (
+                            <svg viewBox={`0 0 ${W} ${H+12}`} className="w-full" style={{height:"9rem"}}>
+                              <line x1="10" y1={H} x2={W-10} y2={H} stroke="#ffffff10" strokeWidth="1"/>
+                              {pts.map((p,i) => <circle key={i} cx={p.x} cy={p.y} r="6" fill={segments[i].color} opacity="0.8"/>)}
+                              {segments.map((s,i) => <text key={i} x={pts[i].x} y={H+11} fill="#6b7280" fontSize="7" textAnchor="middle">{s.label}</text>)}
+                            </svg>
+                          );
+                        }
+
+                        if (ctHealth === "line" || ctHealth === "smooth" || ctHealth === "line_pt" || ctHealth === "smooth_pt") {
+                          const W=200, H=80;
+                          const pts = segments.map((s,i) => ({ x: 30+i*70, y: H-5-((s.value/maxV)*(H-15)) }));
+                          const polyPts = pts.map(p=>`${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
+                          return (
+                            <svg viewBox={`0 0 ${W} ${H+12}`} className="w-full" style={{height:"9rem"}}>
+                              <line x1="10" y1={H} x2={W-10} y2={H} stroke="#ffffff10" strokeWidth="1"/>
+                              <polyline points={polyPts} fill="none" stroke="#7C5CFF" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round"/>
+                              {pts.map((p,i)=><circle key={i} cx={p.x} cy={p.y} r="4" fill={segments[i].color} stroke="#0B0910" strokeWidth="1.5"/>)}
+                              {segments.map((s,i)=><text key={i} x={pts[i].x} y={H+11} fill="#6b7280" fontSize="7" textAnchor="middle">{s.label}</text>)}
+                            </svg>
+                          );
+                        }
+
+                        if (ctHealth === "area" || ctHealth === "smooth_area" || ctHealth === "area_pt" || ctHealth === "smooth_area_pt") {
+                          const W=200, H=80;
+                          const pts = segments.map((s,i) => ({ x: 30+i*70, y: H-5-((s.value/maxV)*(H-15)) }));
+                          const polyPts = pts.map(p=>`${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
+                          const areaPts = [`10,${H}`,...pts.map(p=>`${p.x.toFixed(1)},${p.y.toFixed(1)}`),`${W-10},${H}`].join(" ");
+                          return (
+                            <svg viewBox={`0 0 ${W} ${H+12}`} className="w-full" style={{height:"9rem"}}>
+                              <defs><linearGradient id="hAreaG" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor="#7C5CFF" stopOpacity="0.4"/><stop offset="100%" stopColor="#7C5CFF" stopOpacity="0.02"/></linearGradient></defs>
+                              <line x1="10" y1={H} x2={W-10} y2={H} stroke="#ffffff10" strokeWidth="1"/>
+                              <polygon points={areaPts} fill="url(#hAreaG)"/>
+                              <polyline points={polyPts} fill="none" stroke="#7C5CFF" strokeWidth="2" strokeLinejoin="round"/>
+                              {pts.map((p,i)=><circle key={i} cx={p.x} cy={p.y} r="3.5" fill={segments[i].color}/>)}
+                              {segments.map((s,i)=><text key={i} x={pts[i].x} y={H+11} fill="#6b7280" fontSize="7" textAnchor="middle">{s.label}</text>)}
+                            </svg>
+                          );
+                        }
+
+                        // Default: horizontal bar chart per health category
+                        return (
+                          <div className="space-y-3 pt-2">
+                            <div className="text-[9px] text-zinc-500 uppercase tracking-wider font-bold">Project Health Count</div>
+                            {segments.map(s => (
+                              <div key={s.label} className="space-y-1">
+                                <div className="flex justify-between text-xs"><span className="text-zinc-400">{s.label}</span><span className="font-bold font-mono" style={{color:s.color}}>{s.value}</span></div>
+                                <div className="h-5 bg-white/[0.02] rounded overflow-hidden"><div className="h-full rounded transition-all" style={{width:`${(s.value/maxV)*100}%`,background:s.color,opacity:0.75}}/></div>
+                              </div>
+                            ))}
+                            <div className="text-[9px] text-zinc-500 text-center pt-1">Project Health</div>
+                          </div>
+                        );
+                      })()}
                     </div>
 
                     {/* Project Operational Summary */}
@@ -600,61 +772,225 @@ export default function DashboardPage() {
 
                   {/* Sparklines Grid */}
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    {/* Last 7 Days Attendance */}
-                    <div className="rounded-2xl border border-white/5 bg-[#0B0910] p-6 space-y-4">
-                      <div className="border-b border-white/5 pb-3">
-                        <h4 className="text-xs font-bold uppercase tracking-wider text-white">👷 Last 7 Days Attendance</h4>
-                      </div>
-                      <div className="flex h-36 items-end justify-between gap-2 pt-4">
-                        {(operationalData?.attendance_series ?? [
-                          { date: "06-26", present: 8, absent: 1 },
-                          { date: "06-27", present: 9, absent: 0 },
-                          { date: "06-28", present: 6, absent: 3 },
-                          { date: "06-29", present: 8, absent: 1 },
-                          { date: "06-30", present: 7, absent: 2 },
-                          { date: "07-01", present: 9, absent: 0 },
+                    {/* Last 7 Days Attendance — chart type switchable */}
+                    <div className="rounded-2xl border border-white/5 bg-[#0B0910] p-6 space-y-3">
+                      {renderChartHeader("\uD83D\uDC77 Last 7 Days Attendance", "attendance", ctAttendance, setCtAttendance)}
+                      {(() => {
+                        const attData = operationalData?.attendance_series ?? [
+                          { date: "06-26", present: 8, absent: 1 }, { date: "06-27", present: 9, absent: 0 },
+                          { date: "06-28", present: 6, absent: 3 }, { date: "06-29", present: 8, absent: 1 },
+                          { date: "06-30", present: 7, absent: 2 }, { date: "07-01", present: 9, absent: 0 },
                           { date: "07-02", present: 8, absent: 1 },
-                        ]).map((day: any, idx: number) => {
-                          const total = (day.present ?? 0) + (day.absent ?? 0);
-                          const presHeight = total > 0 ? ((day.present ?? 0) / 10) * 100 : 0;
+                        ];
+                        const maxVal = Math.max(...attData.map((d: any) => (d.present??0)+(d.absent??0)), 1);
+                        const H=90, W=200;
+                        const pts = attData.map((d: any, i: number) => ({ x: 10+(i/Math.max(attData.length-1,1))*(W-20), y: H-5-((d.present??0)/maxVal*(H-15)) }));
+                        const polyPts = pts.map((p: any) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
+                        const areaPts = [`10,${H}`,...pts.map((p: any) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`),`${W-10},${H}`].join(" ");
+
+                        if (ctAttendance === "table") return (
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-xs"><thead><tr className="border-b border-white/5 text-zinc-500 font-bold uppercase text-[9px]">
+                              <th className="py-1.5 px-2 text-left">Date</th><th className="py-1.5 px-2 text-right text-success">Present</th><th className="py-1.5 px-2 text-right text-red-400">Absent</th>
+                            </tr></thead><tbody className="divide-y divide-white/[0.03]">
+                              {attData.map((d: any, i: number) => (<tr key={i} className="hover:bg-white/[0.01]"><td className="py-1.5 px-2 font-mono text-zinc-400">{d.date}</td><td className="py-1.5 px-2 text-right font-bold text-success">{d.present??0}</td><td className="py-1.5 px-2 text-right font-bold text-red-400">{d.absent??0}</td></tr>))}
+                            </tbody></table>
+                          </div>
+                        );
+
+                        if (ctAttendance === "line" || ctAttendance === "smooth" || ctAttendance === "line_pt" || ctAttendance === "smooth_pt") return (
+                          <svg viewBox={`0 0 ${W} ${H+12}`} className="w-full" style={{height:"9rem"}}>
+                            <defs><linearGradient id="attLG" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stopColor="#00E5A3"/><stop offset="100%" stopColor="#7C5CFF"/></linearGradient></defs>
+                            <line x1="10" y1={H} x2={W-10} y2={H} stroke="#ffffff10" strokeWidth="1"/>
+                            <polyline points={polyPts} fill="none" stroke="url(#attLG)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round"/>
+                            {pts.map((p: any, i: number) => <circle key={i} cx={p.x} cy={p.y} r="3" fill="#00E5A3" stroke="#0B0910" strokeWidth="1.5"/>)}
+                            {attData.map((d: any, i: number) => <text key={i} x={pts[i].x} y={H+11} fill="#6b7280" fontSize="6" textAnchor="middle">{d.date.slice(-5)}</text>)}
+                          </svg>
+                        );
+
+                        if (ctAttendance === "area" || ctAttendance === "smooth_area" || ctAttendance === "area_pt" || ctAttendance === "smooth_area_pt") return (
+                          <svg viewBox={`0 0 ${W} ${H+12}`} className="w-full" style={{height:"9rem"}}>
+                            <defs><linearGradient id="attAG" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor="#00E5A3" stopOpacity="0.4"/><stop offset="100%" stopColor="#00E5A3" stopOpacity="0.02"/></linearGradient></defs>
+                            <line x1="10" y1={H} x2={W-10} y2={H} stroke="#ffffff10" strokeWidth="1"/>
+                            <polygon points={areaPts} fill="url(#attAG)"/>
+                            <polyline points={polyPts} fill="none" stroke="#00E5A3" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round"/>
+                            {pts.map((p: any, i: number) => <circle key={i} cx={p.x} cy={p.y} r="2.5" fill="#00E5A3"/>)}
+                            {attData.map((d: any, i: number) => <text key={i} x={pts[i].x} y={H+11} fill="#6b7280" fontSize="6" textAnchor="middle">{d.date.slice(-5)}</text>)}
+                          </svg>
+                        );
+
+                        if (ctAttendance === "scatter" || ctAttendance === "scatter2" || ctAttendance === "scatter3") return (
+                          <svg viewBox={`0 0 ${W} ${H+12}`} className="w-full" style={{height:"9rem"}}>
+                            <line x1="10" y1={H} x2={W-10} y2={H} stroke="#ffffff10" strokeWidth="1"/>
+                            {pts.map((p: any, i: number) => <circle key={i} cx={p.x} cy={p.y} r="5" fill="#00E5A3" opacity="0.8"/>)}
+                            {attData.map((d: any, i: number) => <text key={i} x={pts[i].x} y={H+11} fill="#6b7280" fontSize="6" textAnchor="middle">{d.date.slice(-5)}</text>)}
+                          </svg>
+                        );
+
+                        if (ctAttendance === "pie" || ctAttendance === "donut") {
+                          const totP = attData.reduce((s: number, d: any)=>s+(d.present??0),0);
+                          const totA = attData.reduce((s: number, d: any)=>s+(d.absent??0),0);
+                          const grand = totP+totA||1;
+                          const ro = ctAttendance==="donut"?35:42, ri=22;
+                          const angP=(totP/grand)*360;
+                          const r1=-90*Math.PI/180, r2=(-90+angP)*Math.PI/180;
+                          const cx=50,cy=50;
+                          const x1o=cx+ro*Math.cos(r1),y1o=cy+ro*Math.sin(r1);
+                          const x2o=cx+ro*Math.cos(r2),y2o=cy+ro*Math.sin(r2);
+                          const laf=angP>180?1:0;
+                          const r3=(-90+360)*Math.PI/180;
+                          const x3o=cx+ro*Math.cos(r3),y3o=cy+ro*Math.sin(r3);
+                          const pathP=ctAttendance==="donut"
+                            ?`M${x1o.toFixed(1)},${y1o.toFixed(1)} A${ro},${ro} 0 ${laf},1 ${x2o.toFixed(1)},${y2o.toFixed(1)} L${(cx+ri*Math.cos(r2)).toFixed(1)},${(cy+ri*Math.sin(r2)).toFixed(1)} A${ri},${ri} 0 ${laf},0 ${(cx+ri*Math.cos(r1)).toFixed(1)},${(cy+ri*Math.sin(r1)).toFixed(1)} Z`
+                            :`M${cx},${cy} L${x1o.toFixed(1)},${y1o.toFixed(1)} A${ro},${ro} 0 ${laf},1 ${x2o.toFixed(1)},${y2o.toFixed(1)} Z`;
+                          const pathA=ctAttendance==="donut"
+                            ?`M${x2o.toFixed(1)},${y2o.toFixed(1)} A${ro},${ro} 0 ${1-laf},1 ${x3o.toFixed(1)},${y3o.toFixed(1)} L${(cx+ri*Math.cos(r3)).toFixed(1)},${(cy+ri*Math.sin(r3)).toFixed(1)} A${ri},${ri} 0 ${1-laf},0 ${(cx+ri*Math.cos(r2)).toFixed(1)},${(cy+ri*Math.sin(r2)).toFixed(1)} Z`
+                            :`M${cx},${cy} L${x2o.toFixed(1)},${y2o.toFixed(1)} A${ro},${ro} 0 ${1-laf},1 ${x3o.toFixed(1)},${y3o.toFixed(1)} Z`;
                           return (
-                            <div key={idx} className="flex-1 flex flex-col items-center gap-2">
-                              <div className="w-full bg-white/[0.02] rounded h-24 relative flex items-end">
-                                <div className="bg-success/60 w-full rounded-b" style={{ height: `${presHeight}%` }} />
+                            <div className="flex items-center gap-4 pt-1">
+                              <div className="relative flex-shrink-0">
+                                <svg viewBox="0 0 100 100" className="w-24 h-24"><path d={pathP} fill="#00E5A3" opacity="0.85"/><path d={pathA} fill="#E8184C" opacity="0.6"/></svg>
+                                {ctAttendance==="donut"&&<div className="absolute inset-0 flex flex-col items-center justify-center"><span className="text-[9px] text-zinc-500">Present</span><span className="font-black text-white text-base">{totP}</span></div>}
                               </div>
-                              <span className="text-[9px] text-zinc-500 font-mono">{day.date.slice(-5)}</span>
+                              <div className="space-y-2 text-xs">
+                                <div className="flex items-center gap-2"><div className="h-2 w-2 rounded-full bg-success"/><span className="text-zinc-400">Present</span><span className="font-bold text-success ml-auto pl-3">{totP}</span></div>
+                                <div className="flex items-center gap-2"><div className="h-2 w-2 rounded-full bg-red-400"/><span className="text-zinc-400">Absent</span><span className="font-bold text-red-400 ml-auto pl-3">{totA}</span></div>
+                              </div>
                             </div>
                           );
-                        })}
-                      </div>
+                        }
+
+                        if (ctAttendance === "stacked" || ctAttendance === "stacked_bar") return (
+                          <div className="flex items-end justify-between gap-1.5" style={{height:"9rem"}}>
+                            {attData.map((d: any, idx: number) => {
+                              const p=d.present??0, a=d.absent??0;
+                              return (<div key={idx} className="flex-1 flex flex-col items-center gap-1">
+                                <div className="w-full flex flex-col-reverse overflow-hidden rounded" style={{height:"7rem",background:"rgba(255,255,255,0.02)"}}>
+                                  <div style={{height:`${(p/maxVal)*100}%`,background:"#00E5A3",opacity:0.75}}/>
+                                  <div style={{height:`${(a/maxVal)*100}%`,background:"#E8184C",opacity:0.55}}/>
+                                </div>
+                                <span className="text-[8px] text-zinc-500 font-mono">{d.date.slice(-5)}</span>
+                              </div>);
+                            })}
+                          </div>
+                        );
+
+                        // Default: bar
+                        return (
+                          <div className="flex items-end justify-between gap-1.5" style={{height:"9rem"}}>
+                            {attData.map((d: any, idx: number) => {
+                              const presHeight=((d.present??0)/maxVal)*100;
+                              return (<div key={idx} className="flex-1 flex flex-col items-center gap-1">
+                                <div className="w-full bg-white/[0.02] rounded flex items-end" style={{height:"7rem"}}>
+                                  <div className="bg-success/60 w-full rounded-b" style={{height:`${presHeight}%`}}/>
+                                </div>
+                                <span className="text-[8px] text-zinc-500 font-mono">{d.date.slice(-5)}</span>
+                              </div>);
+                            })}
+                          </div>
+                        );
+                      })()}
                     </div>
 
-                    {/* Last 7 Days Material Received */}
-                    <div className="rounded-2xl border border-white/5 bg-[#0B0910] p-6 space-y-4">
-                      <div className="border-b border-white/5 pb-3">
-                        <h4 className="text-xs font-bold uppercase tracking-wider text-white">📦 Last 7 Days Material Received (GRNs)</h4>
-                      </div>
-                      <div className="flex h-36 items-end justify-between gap-2 pt-4">
-                        {(operationalData?.material_series ?? [
-                          { date: "06-26", count: 2 },
-                          { date: "06-27", count: 4 },
-                          { date: "06-28", count: 1 },
-                          { date: "06-29", count: 3 },
-                          { date: "06-30", count: 0 },
-                          { date: "07-01", count: 5 },
+                    {/* Last 7 Days Material Received — chart type switchable */}
+                    <div className="rounded-2xl border border-white/5 bg-[#0B0910] p-6 space-y-3">
+                      {renderChartHeader("\uD83D\uDCE6 Last 7 Days Material Received (GRNs)", "material", ctMaterial, setCtMaterial)}
+                      {(() => {
+                        const matData = operationalData?.material_series ?? [
+                          { date: "06-26", count: 2 }, { date: "06-27", count: 4 },
+                          { date: "06-28", count: 1 }, { date: "06-29", count: 3 },
+                          { date: "06-30", count: 0 }, { date: "07-01", count: 5 },
                           { date: "07-02", count: 2 },
-                        ]).map((day: any, idx: number) => {
-                          const countHeight = ((day.count ?? 0) / 6) * 100;
+                        ];
+                        const maxVal = Math.max(...matData.map((d: any) => d.count??0), 1);
+                        const H=90, W=200;
+                        const pts = matData.map((d: any, i: number) => ({ x: 10+(i/Math.max(matData.length-1,1))*(W-20), y: H-5-((d.count??0)/maxVal*(H-15)) }));
+                        const polyPts = pts.map((p: any) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
+                        const areaPts = [`10,${H}`,...pts.map((p: any) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`),`${W-10},${H}`].join(" ");
+
+                        if (ctMaterial === "table") return (
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-xs"><thead><tr className="border-b border-white/5 text-zinc-500 font-bold uppercase text-[9px]">
+                              <th className="py-1.5 px-2 text-left">Date</th><th className="py-1.5 px-2 text-right text-primary">GRNs Received</th>
+                            </tr></thead><tbody className="divide-y divide-white/[0.03]">
+                              {matData.map((d: any, i: number) => (<tr key={i} className="hover:bg-white/[0.01]"><td className="py-1.5 px-2 font-mono text-zinc-400">{d.date}</td><td className="py-1.5 px-2 text-right font-bold text-primary">{d.count??0}</td></tr>))}
+                            </tbody></table>
+                          </div>
+                        );
+
+                        if (ctMaterial === "line" || ctMaterial === "smooth" || ctMaterial === "line_pt" || ctMaterial === "smooth_pt") return (
+                          <svg viewBox={`0 0 ${W} ${H+12}`} className="w-full" style={{height:"9rem"}}>
+                            <defs><linearGradient id="matLG" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stopColor="#7C5CFF"/><stop offset="100%" stopColor="#E8184C"/></linearGradient></defs>
+                            <line x1="10" y1={H} x2={W-10} y2={H} stroke="#ffffff10" strokeWidth="1"/>
+                            <polyline points={polyPts} fill="none" stroke="url(#matLG)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round"/>
+                            {pts.map((p: any, i: number) => <circle key={i} cx={p.x} cy={p.y} r="3" fill="#7C5CFF" stroke="#0B0910" strokeWidth="1.5"/>)}
+                            {matData.map((d: any, i: number) => <text key={i} x={pts[i].x} y={H+11} fill="#6b7280" fontSize="6" textAnchor="middle">{d.date.slice(-5)}</text>)}
+                          </svg>
+                        );
+
+                        if (ctMaterial === "area" || ctMaterial === "smooth_area" || ctMaterial === "area_pt" || ctMaterial === "smooth_area_pt") return (
+                          <svg viewBox={`0 0 ${W} ${H+12}`} className="w-full" style={{height:"9rem"}}>
+                            <defs><linearGradient id="matAG" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor="#7C5CFF" stopOpacity="0.4"/><stop offset="100%" stopColor="#7C5CFF" stopOpacity="0.02"/></linearGradient></defs>
+                            <line x1="10" y1={H} x2={W-10} y2={H} stroke="#ffffff10" strokeWidth="1"/>
+                            <polygon points={areaPts} fill="url(#matAG)"/>
+                            <polyline points={polyPts} fill="none" stroke="#7C5CFF" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round"/>
+                            {pts.map((p: any, i: number) => <circle key={i} cx={p.x} cy={p.y} r="2.5" fill="#7C5CFF"/>)}
+                            {matData.map((d: any, i: number) => <text key={i} x={pts[i].x} y={H+11} fill="#6b7280" fontSize="6" textAnchor="middle">{d.date.slice(-5)}</text>)}
+                          </svg>
+                        );
+
+                        if (ctMaterial === "scatter" || ctMaterial === "scatter2" || ctMaterial === "scatter3") return (
+                          <svg viewBox={`0 0 ${W} ${H+12}`} className="w-full" style={{height:"9rem"}}>
+                            <line x1="10" y1={H} x2={W-10} y2={H} stroke="#ffffff10" strokeWidth="1"/>
+                            {pts.map((p: any, i: number) => <circle key={i} cx={p.x} cy={p.y} r="5" fill="#7C5CFF" opacity="0.8"/>)}
+                            {matData.map((d: any, i: number) => <text key={i} x={pts[i].x} y={H+11} fill="#6b7280" fontSize="6" textAnchor="middle">{d.date.slice(-5)}</text>)}
+                          </svg>
+                        );
+
+                        if (ctMaterial === "pie" || ctMaterial === "donut") {
+                          const total = matData.reduce((s: number, d: any) => s + (d.count??0), 0) || 1;
+                          const COLORS = ["#7C5CFF","#E8184C","#00E5A3","#EAB308","#3B82F6","#F97316","#EC4899"];
+                          let cumAngle = -90;
+                          const ro = ctMaterial==="donut"?35:42, ri=22;
+                          const arcs = matData.map((d: any, i: number) => {
+                            const angle = ((d.count??0)/total)*360||0;
+                            const r1=cumAngle*Math.PI/180, r2=(cumAngle+angle)*Math.PI/180;
+                            const cx=50,cy=50;
+                            const x1=cx+ro*Math.cos(r1),y1=cy+ro*Math.sin(r1);
+                            const x2=cx+ro*Math.cos(r2),y2=cy+ro*Math.sin(r2);
+                            const laf=angle>180?1:0;
+                            const path=ctMaterial==="donut"
+                              ?`M${x1.toFixed(1)},${y1.toFixed(1)} A${ro},${ro} 0 ${laf},1 ${x2.toFixed(1)},${y2.toFixed(1)} L${(cx+ri*Math.cos(r2)).toFixed(1)},${(cy+ri*Math.sin(r2)).toFixed(1)} A${ri},${ri} 0 ${laf},0 ${(cx+ri*Math.cos(r1)).toFixed(1)},${(cy+ri*Math.sin(r1)).toFixed(1)} Z`
+                              :`M${cx},${cy} L${x1.toFixed(1)},${y1.toFixed(1)} A${ro},${ro} 0 ${laf},1 ${x2.toFixed(1)},${y2.toFixed(1)} Z`;
+                            cumAngle+=angle;
+                            return { path, color: COLORS[i%COLORS.length], label: d.date, value: d.count??0 };
+                          });
                           return (
-                            <div key={idx} className="flex-1 flex flex-col items-center gap-2">
-                              <div className="w-full bg-white/[0.02] rounded h-24 relative flex items-end">
-                                <div className="bg-primary/60 w-full rounded-b" style={{ height: `${countHeight}%` }} />
+                            <div className="flex items-center gap-3 pt-1">
+                              <div className="relative flex-shrink-0">
+                                <svg viewBox="0 0 100 100" className="w-24 h-24">{arcs.map((a: any, i: number)=><path key={i} d={a.path} fill={a.color} opacity="0.85"/>)}</svg>
+                                {ctMaterial==="donut"&&<div className="absolute inset-0 flex flex-col items-center justify-center"><span className="text-[9px] text-zinc-500">GRNs</span><span className="font-black text-white text-base">{total}</span></div>}
                               </div>
-                              <span className="text-[9px] text-zinc-500 font-mono">{day.date.slice(-5)}</span>
+                              <div className="space-y-1 text-[10px]">{arcs.map((a: any)=><div key={a.label} className="flex items-center gap-1.5"><div className="h-1.5 w-1.5 rounded-full flex-shrink-0" style={{background:a.color}}/><span className="text-zinc-400 font-mono">{a.label}</span><span className="font-bold text-white ml-auto pl-2">{a.value}</span></div>)}</div>
                             </div>
                           );
-                        })}
-                      </div>
+                        }
+
+                        // Default: bar
+                        return (
+                          <div className="flex items-end justify-between gap-1.5" style={{height:"9rem"}}>
+                            {matData.map((d: any, idx: number) => {
+                              const countHeight=((d.count??0)/maxVal)*100;
+                              return (<div key={idx} className="flex-1 flex flex-col items-center gap-1">
+                                <div className="w-full bg-white/[0.02] rounded flex items-end" style={{height:"7rem"}}>
+                                  <div className="bg-primary/60 w-full rounded-b" style={{height:`${countHeight}%`}}/>
+                                </div>
+                                <span className="text-[8px] text-zinc-500 font-mono">{d.date.slice(-5)}</span>
+                              </div>);
+                            })}
+                          </div>
+                        );
+                      })()}
                     </div>
                   </div>
                 </>
