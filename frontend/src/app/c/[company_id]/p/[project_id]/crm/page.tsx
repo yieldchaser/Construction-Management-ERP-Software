@@ -46,7 +46,7 @@ export default function CRMPage() {
   const companyId = params?.company_id as string;
 
   const [leads, setLeads] = useState<Lead[]>([]);
-  const [tab, setTab] = useState<"pipeline" | "kanban">("pipeline");
+  const [tab, setTab] = useState<"pipeline" | "kanban" | "quotations">("pipeline");
   const [selectedStage, setSelectedStage] = useState("All");
 
   // Lead modal states
@@ -61,8 +61,36 @@ export default function CRMPage() {
   const [category, setCategory] = useState("Civil");
   const [description, setDescription] = useState("");
 
+  // Quotation states
+  const [quotations, setQuotations] = useState<any[]>([]);
+  const [showAddQuotModal, setShowAddQuotModal] = useState(false);
+  const [newQuot, setNewQuot] = useState({
+    subject: "",
+    leadId: "",
+    discount: "0",
+    terms: "",
+    items: [{ name: "", qty: "1", unit: "Nos", price: "0" }]
+  });
+
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+
+  const fetchQuotationsForLeads = async (leadsList: Lead[]) => {
+    try {
+      let allQuots: any[] = [];
+      for (const l of leadsList) {
+        if (l.id.startsWith("lead-")) continue; // Skip mock leads
+        const qRes = await fetch(`http://localhost:8000/apis/v3/crm/leads/${l.id}/quotations`);
+        if (qRes.ok) {
+          const qData = await qRes.json();
+          allQuots = [...allQuots, ...qData.map((item: any) => ({ ...item, client_name: l.client_company_name || l.contact_name }))];
+        }
+      }
+      setQuotations(allQuots);
+    } catch (e) {
+      console.error("Failed to load quotations", e);
+    }
+  };
 
   const fetchLeads = async () => {
     try {
@@ -70,6 +98,9 @@ export default function CRMPage() {
       if (res.ok) {
         const data = await res.json();
         setLeads(data.length > 0 ? data : MOCK_LEADS);
+        if (data.length > 0) {
+          fetchQuotationsForLeads(data);
+        }
       } else {
         setLeads(MOCK_LEADS);
       }
@@ -135,6 +166,58 @@ export default function CRMPage() {
     }
   };
 
+  const handleCreateQuotation = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newQuot.subject || !newQuot.leadId) {
+      setErrorMsg("Subject and Lead are required");
+      return;
+    }
+    setSubmitting(true);
+    setErrorMsg("");
+    try {
+      const formattedItems = newQuot.items.map(item => ({
+        section_name: "Items",
+        item_name: item.name,
+        qty: parseFloat(item.qty),
+        unit: item.unit,
+        selling_price: parseFloat(item.price),
+        cost_price: parseFloat(item.price),
+        supply_rate: parseFloat(item.price),
+        installation_rate: 0.0,
+      }));
+
+      const res = await fetch(`http://localhost:8000/apis/v3/crm/leads/${newQuot.leadId}/quotations`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          subject: newQuot.subject,
+          discount: parseFloat(newQuot.discount),
+          terms: newQuot.terms || null,
+          items: formattedItems
+        }),
+      });
+
+      if (res.ok) {
+        setShowAddQuotModal(false);
+        setNewQuot({
+          subject: "",
+          leadId: "",
+          discount: "0",
+          terms: "",
+          items: [{ name: "", qty: "1", unit: "Nos", price: "0" }]
+        });
+        fetchLeads();
+      } else {
+        const err = await res.text();
+        setErrorMsg(`Error: ${err}`);
+      }
+    } catch (e) {
+      setErrorMsg("Failed to create quotation");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const handleUpdateStatus = async (leadId: string, newStatus: string) => {
     // Optimistic local update first (works even offline)
     setLeads(prev => prev.map(l => l.id === leadId ? { ...l, status: newStatus } : l));
@@ -165,6 +248,7 @@ export default function CRMPage() {
           {[
             { key: "pipeline", label: "Lead Pipeline", icon: "🤝" },
             { key: "kanban", label: "Kanban Board", icon: "🗂️" },
+            { key: "quotations", label: "Quotation List", icon: "📑" },
           ].map(item => (
             <button key={item.key} onClick={() => setTab(item.key as typeof tab)}
               className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg transition-all text-left ${tab === item.key ? "bg-white/[0.06] text-white font-semibold shadow-sm" : "text-zinc-400 hover:text-white hover:bg-white/[0.02]"}`}>
@@ -177,12 +261,20 @@ export default function CRMPage() {
       <div className="flex-1 flex flex-col overflow-hidden">
         <div className="border-b border-white/5 bg-[#0D0B14] px-6 py-3 flex items-center justify-between">
           <div>
-            <h1 className="text-sm font-bold text-white">CRM & Lead Management</h1>
+            <h1 className="text-sm font-bold text-white">
+              {tab === "quotations" ? "Pre-sales Quotation Registry" : "CRM & Lead Management"}
+            </h1>
             <p className="text-[10px] text-zinc-500">Pipeline: ₹{(totalPipelineValue / 100000).toFixed(2)}L active value</p>
           </div>
-          <button onClick={() => setShowAddModal(true)} className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary to-[#FF3B6C] px-4 py-2 text-xs font-bold text-white hover:opacity-90 transition-all">
-            + Add Lead
-          </button>
+          {tab === "quotations" ? (
+            <button onClick={() => setShowAddQuotModal(true)} className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary to-[#FF3B6C] px-4 py-2 text-xs font-bold text-white hover:opacity-90 transition-all cursor-pointer">
+              + Create Quotation
+            </button>
+          ) : (
+            <button onClick={() => setShowAddModal(true)} className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary to-[#FF3B6C] px-4 py-2 text-xs font-bold text-white hover:opacity-90 transition-all cursor-pointer">
+              + Add Lead
+            </button>
+          )}
         </div>
 
         <div className="flex-1 overflow-y-auto p-6 space-y-5">
@@ -303,6 +395,58 @@ export default function CRMPage() {
               })}
             </div>
           )}
+
+          {tab === "quotations" && (
+            <div className="space-y-4">
+              <div className="text-xs text-zinc-500">View and print customer quotations, track status, and convert to projects.</div>
+              <div className="glass-panel rounded-2xl border border-white/5 bg-[#14121F] overflow-hidden">
+                <table className="w-full text-xs text-left">
+                  <thead>
+                    <tr className="border-b border-white/5 text-zinc-500 font-bold uppercase tracking-wider text-[9px]">
+                      <th className="px-5 py-3">Created At</th>
+                      <th className="px-5 py-3">Lead Subject</th>
+                      <th className="px-5 py-3">Client Company / Contact</th>
+                      <th className="px-5 py-3 text-right">Discount</th>
+                      <th className="px-5 py-3 text-right">Total Amount</th>
+                      <th className="px-5 py-3">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {quotations.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="text-center p-8 text-zinc-500">
+                          No quotations found. Click "+ Create Quotation" to add one.
+                        </td>
+                      </tr>
+                    ) : (
+                      quotations.map((q) => (
+                        <tr key={q.id} className="border-t border-white/5 hover:bg-white/[0.015]">
+                          <td className="px-5 py-3 text-zinc-500 font-mono">
+                            {new Date(q.created_at).toLocaleDateString("en-IN")}
+                          </td>
+                          <td className="px-5 py-3 font-semibold text-white">{q.subject}</td>
+                          <td className="px-5 py-3 text-zinc-300">{q.client_name}</td>
+                          <td className="px-5 py-3 text-right text-zinc-400 font-mono">₹{q.discount.toLocaleString("en-IN")}</td>
+                          <td className="px-5 py-3 text-right text-emerald-400 font-bold font-mono">₹{q.total_amount.toLocaleString("en-IN")}</td>
+                          <td className="px-5 py-3">
+                            <span className={`px-2 py-0.5 rounded text-[8px] font-bold border ${
+                              q.status === "Approved"
+                                ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+                                : q.status === "Declined"
+                                ? "bg-red-500/10 border-red-500/20 text-red-400"
+                                : "bg-amber-500/10 border-amber-500/20 text-amber-400"
+                            }`}>
+                              {q.status.toUpperCase()}
+                            </span>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -376,6 +520,110 @@ export default function CRMPage() {
               <button type="submit" disabled={submitting} className="w-full py-2.5 rounded-xl bg-gradient-to-r from-primary to-[#FF3B6C] font-bold text-xs text-white hover:opacity-90 disabled:opacity-50 transition-all">
                 {submitting ? "Adding..." : "Add Lead →"}
               </button>
+            </form>
+          </div>
+        </div>
+      )}
+      {/* Create Quotation Modal */}
+      {showAddQuotModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="w-full max-w-lg bg-[#0D0B14] border border-white/10 rounded-2xl p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center border-b border-white/5 pb-3">
+              <h3 className="text-sm font-bold text-white">Create Pre-sales Quotation</h3>
+              <button onClick={() => setShowAddQuotModal(false)} className="text-zinc-500 hover:text-white cursor-pointer">✕</button>
+            </div>
+
+            {errorMsg && <p className="text-xs text-red-400 bg-red-500/10 p-2 rounded">{errorMsg}</p>}
+
+            <form onSubmit={handleCreateQuotation} className="space-y-4 text-xs">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-[10px] text-zinc-500 uppercase font-semibold">Quotation Subject *</label>
+                  <input type="text" value={newQuot.subject} onChange={e => setNewQuot({ ...newQuot, subject: e.target.value })} placeholder="e.g. Structure Construction Quote" className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none" required />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] text-zinc-500 uppercase font-semibold">Link to CRM Lead *</label>
+                  <select
+                    value={newQuot.leadId}
+                    onChange={e => setNewQuot({ ...newQuot, leadId: e.target.value })}
+                    required
+                    className="w-full bg-[#0E0C15] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none"
+                  >
+                    <option value="">Select CRM Lead</option>
+                    {leads.map(l => (
+                      <option key={l.id} value={l.id}>{l.client_company_name || l.contact_name} ({l.lead_type})</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-[10px] text-zinc-500 uppercase font-semibold">Discount (INR)</label>
+                  <input type="number" value={newQuot.discount} onChange={e => setNewQuot({ ...newQuot, discount: e.target.value })} className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none" />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] text-zinc-500 uppercase font-semibold">Terms & Conditions</label>
+                  <input type="text" value={newQuot.terms} onChange={e => setNewQuot({ ...newQuot, terms: e.target.value })} placeholder="e.g. 50% advance, balance on slab layout" className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none" />
+                </div>
+              </div>
+
+              <div className="space-y-2 border-t border-white/5 pt-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Line Items</span>
+                  <button
+                    type="button"
+                    onClick={() => setNewQuot({ ...newQuot, items: [...newQuot.items, { name: "", qty: "1", unit: "Nos", price: "0" }] })}
+                    className="text-[#7C5CFF] font-bold hover:underline"
+                  >
+                    + Add Item
+                  </button>
+                </div>
+
+                {newQuot.items.map((item, idx) => (
+                  <div key={idx} className="grid grid-cols-4 gap-2 items-end">
+                    <div className="space-y-1">
+                      <label className="text-[9px] text-zinc-500">Item Name</label>
+                      <input type="text" value={item.name} onChange={e => {
+                        const updated = [...newQuot.items];
+                        updated[idx].name = e.target.value;
+                        setNewQuot({ ...newQuot, items: updated });
+                      }} placeholder="e.g. RCC M25 Concrete" className="w-full bg-white/[0.02] border border-white/10 rounded-lg px-2.5 py-1.5 text-[11px] text-white focus:outline-none" required />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[9px] text-zinc-500">Qty</label>
+                      <input type="number" value={item.qty} onChange={e => {
+                        const updated = [...newQuot.items];
+                        updated[idx].qty = e.target.value;
+                        setNewQuot({ ...newQuot, items: updated });
+                      }} className="w-full bg-white/[0.02] border border-white/10 rounded-lg px-2.5 py-1.5 text-[11px] text-white focus:outline-none" required />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[9px] text-zinc-500">Unit</label>
+                      <input type="text" value={item.unit} onChange={e => {
+                        const updated = [...newQuot.items];
+                        updated[idx].unit = e.target.value;
+                        setNewQuot({ ...newQuot, items: updated });
+                      }} className="w-full bg-white/[0.02] border border-white/10 rounded-lg px-2.5 py-1.5 text-[11px] text-white focus:outline-none" required />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[9px] text-zinc-500">Price (₹)</label>
+                      <input type="number" value={item.price} onChange={e => {
+                        const updated = [...newQuot.items];
+                        updated[idx].price = e.target.value;
+                        setNewQuot({ ...newQuot, items: updated });
+                      }} className="w-full bg-white/[0.02] border border-white/10 rounded-lg px-2.5 py-1.5 text-[11px] text-white focus:outline-none" required />
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex gap-2 justify-end border-t border-white/5 pt-4">
+                <button type="button" onClick={() => setShowAddQuotModal(false)} className="px-4 py-2 bg-zinc-800 text-zinc-400 hover:text-white rounded-xl">Cancel</button>
+                <button type="submit" className="px-5 py-2.5 bg-gradient-to-r from-primary to-[#FF3B6C] text-white font-bold rounded-xl hover:opacity-90">
+                  Save Quotation
+                </button>
+              </div>
             </form>
           </div>
         </div>

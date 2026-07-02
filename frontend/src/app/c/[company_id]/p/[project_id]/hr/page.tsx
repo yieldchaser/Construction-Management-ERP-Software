@@ -292,6 +292,51 @@ export default function HRPayrollPage() {
     }
   };
 
+  const fetchLeaves = async () => {
+    if (!companyId) return;
+    try {
+      const res = await fetch(`http://localhost:8000/apis/v3/hr/leaves/${companyId}`);
+      if (res.ok) {
+        const data = await res.json();
+        const mapped = data.map((l: any) => ({
+          id: l.id,
+          employeeId: "E-01",
+          employeeName: l.employee_name,
+          leaveType: l.leave_type,
+          startDate: l.start_date.split("T")[0],
+          endDate: l.end_date.split("T")[0],
+          days: l.days_count,
+          reason: "Request submitted via Central HRPortal",
+          status: l.status
+        }));
+        setLeaves(mapped);
+      }
+    } catch (e) {
+      console.error("Failed to fetch leaves", e);
+    }
+  };
+
+  const handleUpdateLeaveStatus = async (leaveId: string, nextStatus: string) => {
+    try {
+      const res = await fetch(`http://localhost:8000/apis/v3/hr/leaves/approve/${leaveId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: nextStatus })
+      });
+      if (res.ok) {
+        fetchLeaves();
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  useEffect(() => {
+    if (companyId && tab === "leaves") {
+      fetchLeaves();
+    }
+  }, [companyId, tab]);
+
   useEffect(() => {
     if (projectId) {
       fetchEmployees();
@@ -1151,11 +1196,11 @@ export default function HRPayrollPage() {
                         <td className="px-4 py-3 text-right">
                           {leave.status === "Pending" && (
                             <div className="flex gap-2 justify-end">
-                              <button onClick={() => setLeaves(prev => prev.map(l => l.id === leave.id ? { ...l, status: "Approved" } : l))}
+                              <button onClick={() => handleUpdateLeaveStatus(leave.id, "Approved")}
                                 className="px-2.5 py-1 bg-green-500/10 hover:bg-green-500/20 border border-green-500/20 text-green-400 rounded text-[10px] font-bold transition-all">
                                 Approve
                               </button>
-                              <button onClick={() => setLeaves(prev => prev.map(l => l.id === leave.id ? { ...l, status: "Rejected" } : l))}
+                              <button onClick={() => handleUpdateLeaveStatus(leave.id, "Rejected")}
                                 className="px-2.5 py-1 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 rounded text-[10px] font-bold transition-all">
                                 Reject
                               </button>
@@ -1360,25 +1405,32 @@ export default function HRPayrollPage() {
 
             <div className="flex gap-3 mt-6">
               <button
-                onClick={() => {
+                onClick={async () => {
                   const emp = employees.find(e => e.id === leaveForm.employeeId) || { name: leaveForm.employeeId === "E-01" ? "Ramesh Kumar" : leaveForm.employeeId === "E-02" ? "Priya Shah" : leaveForm.employeeId === "E-03" ? "Sanjay Yadav" : "Meera Nair" };
                   const d1 = new Date(leaveForm.startDate);
                   const d2 = new Date(leaveForm.endDate);
                   const diff = Math.ceil(Math.abs(d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-                  const newLv = {
-                    id: `LV-${Date.now()}`,
-                    employeeId: leaveForm.employeeId,
-                    employeeName: emp.name,
-                    leaveType: leaveForm.leaveType,
-                    startDate: leaveForm.startDate,
-                    endDate: leaveForm.endDate,
-                    days: isNaN(diff) ? 1 : diff,
-                    reason: leaveForm.reason,
-                    status: "Pending"
-                  };
-                  setLeaves([newLv, ...leaves]);
-                  setShowApplyLeaveModal(false);
-                  setLeaveForm({ employeeId: "E-01", leaveType: "Casual", startDate: "", endDate: "", reason: "" });
+                  try {
+                    const res = await fetch(`http://localhost:8000/apis/v3/hr/leaves/${companyId}`, {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        project_id: projectId || null,
+                        employee_name: emp.name,
+                        leave_type: leaveForm.leaveType,
+                        start_date: new Date(leaveForm.startDate).toISOString(),
+                        end_date: new Date(leaveForm.endDate).toISOString(),
+                        days_count: isNaN(diff) ? 1.0 : parseFloat(diff.toString())
+                      })
+                    });
+                    if (res.ok) {
+                      fetchLeaves();
+                      setShowApplyLeaveModal(false);
+                      setLeaveForm({ employeeId: "E-01", leaveType: "Casual", startDate: "", endDate: "", reason: "" });
+                    }
+                  } catch (e) {
+                    console.error("Failed to apply leave", e);
+                  }
                 }}
                 className="flex-1 py-2 bg-primary rounded-lg text-white text-sm font-bold hover:bg-primary/90 transition-all"
               >

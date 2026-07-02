@@ -25,7 +25,7 @@ from pydantic import BaseModel, Field
 from app.database import get_db
 from app.models import (
     StaffEmployee, AttendanceLog, Timesheet,
-    TimesheetEntry, PayrollRun, PayrollLineItem, Project
+    TimesheetEntry, PayrollRun, PayrollLineItem, Project, LeaveRequest
 )
 
 router = APIRouter(prefix="/hr", tags=["HR, Attendance & Payroll"])
@@ -630,3 +630,66 @@ def get_payslips(run_id: uuid.UUID, db: Session = Depends(get_db)):
             "net_payable": float(line.net_payable),
         })
     return result
+
+
+from pydantic import BaseModel
+
+class LeaveRequestCreate(BaseModel):
+    project_id: Optional[uuid.UUID] = None
+    employee_name: str
+    leave_type: str
+    start_date: datetime
+    end_date: datetime
+    days_count: float
+
+class LeaveRequestResponse(BaseModel):
+    id: uuid.UUID
+    company_id: uuid.UUID
+    project_id: Optional[uuid.UUID]
+    employee_name: str
+    leave_type: str
+    start_date: datetime
+    end_date: datetime
+    days_count: float
+    status: str
+    applied_on: datetime
+
+    class Config:
+        from_attributes = True
+
+class LeaveStatusUpdate(BaseModel):
+    status: str
+
+
+@router.get("/leaves/{company_id}", response_model=List[LeaveRequestResponse])
+def list_leaves(company_id: uuid.UUID, db: Session = Depends(get_db)):
+    return db.query(LeaveRequest).filter(LeaveRequest.company_id == company_id).all()
+
+
+@router.post("/leaves/{company_id}", response_model=LeaveRequestResponse)
+def create_leave_request(company_id: uuid.UUID, data: LeaveRequestCreate, db: Session = Depends(get_db)):
+    new_leave = LeaveRequest(
+        company_id=company_id,
+        project_id=data.project_id,
+        employee_name=data.employee_name,
+        leave_type=data.leave_type,
+        start_date=data.start_date,
+        end_date=data.end_date,
+        days_count=data.days_count
+    )
+    db.add(new_leave)
+    db.commit()
+    db.refresh(new_leave)
+    return new_leave
+
+
+@router.put("/leaves/approve/{leave_id}", response_model=LeaveRequestResponse)
+def update_leave_status(leave_id: uuid.UUID, data: LeaveStatusUpdate, db: Session = Depends(get_db)):
+    leave = db.query(LeaveRequest).filter(LeaveRequest.id == leave_id).first()
+    if not leave:
+        raise HTTPException(status_code=404, detail="Leave request not found")
+    
+    leave.status = data.status
+    db.commit()
+    db.refresh(leave)
+    return leave

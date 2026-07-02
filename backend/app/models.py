@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import Column, String, ForeignKey, DateTime, Integer, Boolean, Table, Numeric
+from sqlalchemy import Column, String, ForeignKey, DateTime, Integer, Boolean, Table, Numeric, Float
 from sqlalchemy.sql import func
 from app.database import Base, engine
 
@@ -20,6 +20,13 @@ class Company(Base):
     currency_decimal_places = Column(Integer, default=2, nullable=False)
     quantity_decimal_places = Column(Integer, default=3, nullable=False)
     back_dated_limit_days = Column(Integer, default=7, nullable=False)
+    negative_stock_lock = Column(Boolean, default=False, server_default="0", nullable=False)
+    bom_restriction = Column(Boolean, default=False, server_default="0", nullable=False)
+    po_restriction = Column(Boolean, default=False, server_default="0", nullable=False)
+    material_request_restriction = Column(Boolean, default=False, server_default="0", nullable=False)
+    negative_balance_warning = Column(Boolean, default=False, server_default="0", nullable=False)
+    custom_pdf_template_enabled = Column(Boolean, default=False, server_default="0", nullable=False)
+    google_sheets_auth_phone = Column(String(50), nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), default=func.now(), onupdate=func.now(), nullable=False)
 
@@ -960,4 +967,78 @@ class TaskComment(Base):
     media_url = Column(String, nullable=True)
     voice_note_url = Column(String, nullable=True)
     progress_qty_added = Column(Numeric(18, 4), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
+class BankAccount(Base):
+    __tablename__ = "bank_accounts"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    account_holder_name = Column(String(255), nullable=False)
+    bank_name = Column(String(255), nullable=False)
+    account_number = Column(String(50), nullable=False)
+    ifsc_code = Column(String(20), nullable=False)
+    upi_id = Column(String(100), nullable=True)
+    balance = Column(Float, default=0.0, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
+class Quotation(Base):
+    __tablename__ = "quotations"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    subject = Column(String(255), nullable=False)
+    client_name = Column(String(255), nullable=False)
+    estimated_amount = Column(Float, default=0.0, nullable=False)
+    status = Column(String(50), default="Draft", nullable=False) # Draft, Sent, Won, Lost
+    expiry_date = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
+class LeaveRequest(Base):
+    __tablename__ = "leave_requests"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="SET NULL"), nullable=True)
+    employee_name = Column(String(255), nullable=False)
+    leave_type = Column(String(100), nullable=False) # Sick, Casual, Earned, etc.
+    start_date = Column(DateTime(timezone=True), nullable=False)
+    end_date = Column(DateTime(timezone=True), nullable=False)
+    days_count = Column(Float, nullable=False)
+    status = Column(String(50), default="Pending", nullable=False) # Pending, Approved, Rejected
+    applied_on = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
+class ApprovalRule(Base):
+    __tablename__ = "approval_rules"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    feature_type = Column(String(100), nullable=False) # purchase_order, material_request, expense
+    min_amount = Column(Float, default=0.0, nullable=False)
+    max_amount = Column(Float, nullable=True)
+    levels = Column(Integer, default=1, nullable=False)
+    approvers = Column(String, nullable=False) # comma-separated emails/names
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
+class Holiday(Base):
+    __tablename__ = "holidays"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    name = Column(String(255), nullable=False)
+    date = Column(DateTime(timezone=True), nullable=False)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
+class PaymentRequest(Base):
+    __tablename__ = "payment_requests"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="SET NULL"), nullable=True)
+    party_company_user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    party_name = Column(String(255), nullable=False)
+    amount = Column(Float, nullable=False)
+    details = Column(String, nullable=True)
+    status = Column(String(50), default="Pending", nullable=False) # Pending, Paid, Rejected
+    due_date = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)

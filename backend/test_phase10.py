@@ -49,8 +49,10 @@ def seed_db(company_id_raw, project_id_raw):
     conn = sqlite3.connect(DB_FILE)
     conn.execute(
         "INSERT INTO companies (id, name, currency_decimal_places, quantity_decimal_places, "
-        "back_dated_limit_days, created_at, updated_at) "
-        "VALUES (?, 'QC Test Co', 2, 3, 7, datetime('now'), datetime('now'))",
+        "back_dated_limit_days, negative_stock_lock, bom_restriction, po_restriction, "
+        "material_request_restriction, negative_balance_warning, custom_pdf_template_enabled, "
+        "created_at, updated_at) "
+        "VALUES (?, 'QC Test Co', 2, 3, 7, 0, 0, 0, 0, 0, 0, datetime('now'), datetime('now'))",
         (company_id_raw,)
     )
     conn.execute(
@@ -231,7 +233,12 @@ def test_phase10():
         proc.terminate()
         proc.wait()
         if os.path.exists(DB_FILE):
-            os.remove(DB_FILE)
+            for _ in range(5):
+                try:
+                    os.remove(DB_FILE)
+                    break
+                except PermissionError:
+                    time.sleep(0.5)
 
 
 if __name__ == "__main__":

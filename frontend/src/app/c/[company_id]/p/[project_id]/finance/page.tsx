@@ -119,7 +119,7 @@ export default function FinancePage() {
   const companyId = params?.company_id as string;
   const projectId = params?.project_id as string;
 
-  const [tab, setTab] = useState<"ledger" | "party" | "cashbook" | "pl" | "tally" | "costvar">("ledger");
+  const [tab, setTab] = useState<"ledger" | "party" | "cashbook" | "pl" | "tally" | "costvar" | "payment_requests" | "accounts">("ledger");
   
   const [transactions, setTransactions] = useState<Transaction[]>(INITIAL_TRANSACTIONS);
   const [plData, setPlData] = useState<PLItem[]>([]);
@@ -140,6 +140,15 @@ export default function FinancePage() {
   const [costCode, setCostCode] = useState("1.2.1 Site Conveyance");
   const [submitting, setSubmitting] = useState(false);
   const [photoUrl, setPhotoUrl] = useState<string>("");
+
+  // Bank Accounts & Payment Requests states
+  const [bankAccounts, setBankAccounts] = useState<any[]>([]);
+  const [paymentRequests, setPaymentRequests] = useState<any[]>([]);
+  const [showAddBankModal, setShowAddBankModal] = useState(false);
+  const [newBank, setNewBank] = useState({ name: "", holder: "", number: "", ifsc: "", upi: "", balance: "" });
+  const [showAddRequestModal, setShowAddRequestModal] = useState(false);
+  const [newRequest, setNewRequest] = useState({ partyId: "", amount: "", details: "", dueDate: "" });
+  const [usersList, setUsersList] = useState<any[]>([]);
 
   // Tally Sync States
   const [syncing, setSyncing] = useState(false);
@@ -168,6 +177,21 @@ export default function FinancePage() {
         setTallyCompany(data.tally_company_name);
         setTallyMobile(data.registered_mobile);
       }
+      // Fetch Bank Accounts
+      const bankRes = await fetch(`http://localhost:8000/apis/v3/finance/accounts/${companyId}`);
+      if (bankRes.ok) {
+        setBankAccounts(await bankRes.json());
+      }
+      // Fetch Payment Requests
+      const reqRes = await fetch(`http://localhost:8000/apis/v3/finance/payment-requests/${companyId}`);
+      if (reqRes.ok) {
+        setPaymentRequests(await reqRes.json());
+      }
+      // Fetch Employees for party dropdown
+      const empRes = await fetch(`http://localhost:8000/apis/v3/hr/employees/${projectId}`);
+      if (empRes.ok) {
+        setUsersList(await empRes.json());
+      }
     } catch (e) {
       console.error("Failed to load finance data", e);
     }
@@ -177,7 +201,7 @@ export default function FinancePage() {
     if (typeof window !== "undefined") {
       const queryParams = new URLSearchParams(window.location.search);
       const queryTab = queryParams.get("tab");
-      if (queryTab && ["ledger", "party", "cashbook", "pl", "tally", "costvar"].includes(queryTab)) {
+      if (queryTab && ["ledger", "party", "cashbook", "pl", "tally", "costvar", "payment_requests", "accounts"].includes(queryTab)) {
         setTab(queryTab as any);
       }
     }
@@ -233,6 +257,57 @@ export default function FinancePage() {
     }));
     if (selectedVoucher && selectedVoucher.id === id) {
       setSelectedVoucher({ ...selectedVoucher, status: "Approved" as const, settled_amount: selectedVoucher.amount, balance_due: 0 });
+    }
+  };
+
+  const handleAddBankAccount = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const res = await fetch(`http://localhost:8000/apis/v3/finance/accounts/${companyId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          account_holder_name: newBank.holder,
+          bank_name: newBank.name,
+          account_number: newBank.number,
+          ifsc_code: newBank.ifsc,
+          upi_id: newBank.upi || null,
+          balance: parseFloat(newBank.balance) || 0.0,
+        }),
+      });
+      if (res.ok) {
+        const added = await res.json();
+        setBankAccounts([...bankAccounts, added]);
+        setNewBank({ name: "", holder: "", number: "", ifsc: "", upi: "", balance: "" });
+        setShowAddBankModal(false);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleCreatePaymentRequest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const res = await fetch(`http://localhost:8000/apis/v3/finance/payment-requests/${companyId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          party_company_user_id: newRequest.partyId,
+          project_id: projectId || null,
+          amount: parseFloat(newRequest.amount),
+          details: newRequest.details,
+          due_date: newRequest.dueDate ? new Date(newRequest.dueDate).toISOString() : null,
+        }),
+      });
+      if (res.ok) {
+        const added = await res.json();
+        setPaymentRequests([...paymentRequests, added]);
+        setNewRequest({ partyId: "", amount: "", details: "", dueDate: "" });
+        setShowAddRequestModal(false);
+      }
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -342,7 +417,9 @@ export default function FinancePage() {
           {[
             { key: "ledger", label: "Transaction Ledger", icon: "📒" },
             { key: "party", label: "Party Ledgers", icon: "👥" },
-            { key: "cashbook", label: "Cash Book / Bank", icon: "🏦" },
+            { key: "payment_requests", label: "Payment Requests", icon: "✉️" },
+            { key: "accounts", label: "Cash & Bank Accounts", icon: "🏦" },
+            { key: "cashbook", label: "Cash Book Statement", icon: "📖" },
             { key: "pl", label: "Project P&L", icon: "📊" },
             { key: "tally", label: "Tally Sync Gateway", icon: "🔗" },
             { key: "costvar", label: "Cost Variance Report", icon: "⚠️" },
@@ -360,7 +437,7 @@ export default function FinancePage() {
         <header className="h-14 border-b border-white/5 bg-[#0D0B14] px-6 flex items-center justify-between shrink-0">
           <div>
             <h1 className="text-sm font-bold text-white">
-              {tab === "ledger" ? "Accrual Ledger" : tab === "party" ? "Party-wise Ledgers" : tab === "cashbook" ? "Cash Book (Bank Ledger)" : tab === "pl" ? "Project P&L" : tab === "tally" ? "Tally Sync Gateway" : "Cost Variance Report"}
+              {tab === "ledger" ? "Accrual Ledger" : tab === "party" ? "Party-wise Ledgers" : tab === "payment_requests" ? "Payment Requests Ledger" : tab === "accounts" ? "Company Cash & Bank Accounts" : tab === "cashbook" ? "Cash Book (Bank Ledger)" : tab === "pl" ? "Project P&L" : tab === "tally" ? "Tally Sync Gateway" : "Cost Variance Report"}
             </h1>
             <p className="text-[10px] text-zinc-500">Real-time sequential approval tracking & running balance ledger</p>
           </div>
@@ -370,13 +447,37 @@ export default function FinancePage() {
               + Create Voucher ▾
             </button>
             {isDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-72 bg-[#0B0910]/95 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl p-4 z-50 space-y-4 text-left">
+              <div className="absolute right-0 mt-2 w-80 bg-[#0B0910]/95 backdrop-blur-md border border-white/10 rounded-2xl shadow-2xl p-5 z-50 space-y-4 text-left max-h-[420px] overflow-y-auto">
                 <div>
-                  <div className="text-[10px] font-bold text-primary uppercase tracking-widest border-b border-white/5 pb-1 mb-2">Voucher Class</div>
-                  <div className="grid grid-cols-2 gap-1 text-[11px]">
-                    {["Expense", "Receipt", "Debit Note", "Credit Note", "Party to Party", "Internal Transfer"].map(type => (
+                  <div className="text-[9px] font-bold text-[#00E5A3] uppercase tracking-widest border-b border-white/5 pb-1 mb-2">Payment</div>
+                  <div className="grid grid-cols-2 gap-1.5 text-[11px]">
+                    {["Payment In", "Payment Out", "Debit Note", "Credit Note", "Party to Party", "Internal Transfer", "Upload Payments"].map(type => (
                       <button key={type} onClick={() => { setSelectedTxnType(type as any); setPartyName(""); setIsDropdownOpen(false); setShowAddModal(true); }}
-                        className="py-1 px-2 text-left rounded-lg text-zinc-400 hover:text-primary hover:bg-primary/10 transition-all text-xs cursor-pointer font-medium">
+                        className="py-1 px-2 text-left rounded-lg text-zinc-400 hover:text-[#00E5A3] hover:bg-[#00E5A3]/10 transition-all text-xs cursor-pointer font-semibold">
+                        + {type}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <div className="text-[9px] font-bold text-[#7C5CFF] uppercase tracking-widest border-b border-white/5 pb-1 mb-2">Sales</div>
+                  <div className="grid grid-cols-2 gap-1.5 text-[11px]">
+                    {["Sales Invoice", "Material Sales"].map(type => (
+                      <button key={type} onClick={() => { setSelectedTxnType(type as any); setPartyName(""); setIsDropdownOpen(false); setShowAddModal(true); }}
+                        className="py-1 px-2 text-left rounded-lg text-zinc-400 hover:text-[#7C5CFF] hover:bg-[#7C5CFF]/10 transition-all text-xs cursor-pointer font-semibold">
+                        + {type}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <div className="text-[9px] font-bold text-[#FF3B6C] uppercase tracking-widest border-b border-white/5 pb-1 mb-2">Expense</div>
+                  <div className="grid grid-cols-2 gap-1.5 text-[11px]">
+                    {["Material Purchase", "Material Return", "Material Transfer", "Sub Con Bill", "Other Expense", "Equipment Expense"].map(type => (
+                      <button key={type} onClick={() => { setSelectedTxnType(type as any); setPartyName(""); setIsDropdownOpen(false); setShowAddModal(true); }}
+                        className="py-1 px-2 text-left rounded-lg text-zinc-400 hover:text-[#FF3B6C] hover:bg-[#FF3B6C]/10 transition-all text-xs cursor-pointer font-semibold">
                         + {type}
                       </button>
                     ))}
@@ -529,6 +630,120 @@ export default function FinancePage() {
                     ))}
                   </tbody>
                 </table>
+              </div>
+            </div>
+          )}
+
+          {/* ── PAYMENT REQUESTS TAB ── */}
+          {tab === "payment_requests" && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <div className="text-xs text-zinc-500">Record and track internal payment requests, milestone requests, and supplier payments.</div>
+                <button
+                  onClick={() => setShowAddRequestModal(true)}
+                  className="bg-[#7C5CFF] text-white text-xs font-bold px-4 py-2.5 rounded-xl cursor-pointer"
+                >
+                  + Create Payment Request
+                </button>
+              </div>
+
+              <div className="glass-panel rounded-2xl border border-white/5 bg-[#14121F] overflow-hidden">
+                <table className="w-full text-xs text-left">
+                  <thead>
+                    <tr className="border-b border-white/5 text-zinc-500 font-bold uppercase tracking-wider text-[9px]">
+                      <th className="px-5 py-3">Created At</th>
+                      <th className="px-5 py-3">Party Name</th>
+                      <th className="px-5 py-3">Requested Amount</th>
+                      <th className="px-5 py-3">Particulars / Details</th>
+                      <th className="px-5 py-3">Status</th>
+                      <th className="px-5 py-3">Due Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paymentRequests.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="text-center p-8 text-zinc-500">
+                          No active payment requests found.
+                        </td>
+                      </tr>
+                    ) : (
+                      paymentRequests.map((req) => (
+                        <tr key={req.id} className="border-t border-white/5 hover:bg-white/[0.015]">
+                          <td className="px-5 py-3 text-zinc-500 font-mono">
+                            {new Date(req.created_at).toLocaleDateString("en-IN")}
+                          </td>
+                          <td className="px-5 py-3 font-semibold text-white">{req.party_name}</td>
+                          <td className="px-5 py-3 text-white font-bold font-mono">₹{req.amount.toLocaleString("en-IN")}</td>
+                          <td className="px-5 py-3 text-zinc-400">{req.details}</td>
+                          <td className="px-5 py-3">
+                            <span className={`px-2 py-0.5 rounded text-[8px] font-bold border ${
+                              req.status === "Approved" || req.status === "Paid"
+                                ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+                                : req.status === "Rejected"
+                                ? "bg-red-500/10 border-red-500/20 text-red-400"
+                                : "bg-amber-500/10 border-amber-500/20 text-amber-400"
+                            }`}>
+                              {req.status.toUpperCase()}
+                            </span>
+                          </td>
+                          <td className="px-5 py-3 text-zinc-400 font-mono">
+                            {req.due_date ? new Date(req.due_date).toLocaleDateString("en-IN") : "Immediate"}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* ── CASH & BANK ACCOUNTS TAB ── */}
+          {tab === "accounts" && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <div className="text-xs text-zinc-500">List and manage central business bank accounts, UPI configurations, and cash balances.</div>
+                <button
+                  onClick={() => setShowAddBankModal(true)}
+                  className="bg-[#7C5CFF] text-white text-xs font-bold px-4 py-2.5 rounded-xl cursor-pointer"
+                >
+                  + Add Bank Account
+                </button>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {/* Default Cash Wallet Card */}
+                <div className="glass-panel border border-white/5 bg-[#14121F] p-5 rounded-2xl space-y-4">
+                  <div className="flex justify-between items-center">
+                    <div className="font-bold text-white text-xs uppercase tracking-wider text-zinc-400">Cash Wallet Account</div>
+                    <span className="text-[9px] bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full font-bold">Cash Account</span>
+                  </div>
+                  <div>
+                    <div className="text-2xl font-black text-white font-mono">₹{netCashFlow.toLocaleString("en-IN")}</div>
+                    <div className="text-[10px] text-zinc-500 mt-1">Available physical cash at site</div>
+                  </div>
+                  <div className="border-t border-white/5 pt-3 flex justify-between text-[10px] text-zinc-400 font-mono">
+                    <span>A/c Holder: Project Wallet</span>
+                    <span>IFSC: N/A</span>
+                  </div>
+                </div>
+
+                {bankAccounts.map((acc) => (
+                  <div key={acc.id} className="glass-panel border border-white/5 bg-[#14121F] p-5 rounded-2xl space-y-4">
+                    <div className="flex justify-between items-center">
+                      <div className="font-bold text-white text-xs uppercase tracking-wider text-zinc-400">{acc.bank_name}</div>
+                      <span className="text-[9px] bg-[#7C5CFF]/10 border border-[#7C5CFF]/20 text-[#7C5CFF] px-2 py-0.5 rounded-full font-bold">Bank Account</span>
+                    </div>
+                    <div>
+                      <div className="text-2xl font-black text-white font-mono">₹{acc.balance.toLocaleString("en-IN")}</div>
+                      <div className="text-[10px] text-zinc-500 mt-1">A/c Number: <span className="font-semibold text-zinc-300 font-mono">{acc.account_number}</span></div>
+                    </div>
+                    <div className="border-t border-white/5 pt-3 flex justify-between text-[10px] text-zinc-400">
+                      <span>Holder: {acc.account_holder_name}</span>
+                      <span>IFSC: {acc.ifsc_code}</span>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           )}
@@ -843,6 +1058,116 @@ export default function FinancePage() {
                 <button type="button" onClick={() => setShowAddModal(false)} className="px-4 py-2 bg-zinc-800 text-zinc-400 hover:text-white rounded-xl">Cancel</button>
                 <button type="submit" disabled={submitting} className="px-5 py-2.5 bg-gradient-to-r from-primary to-[#FF3B6C] text-white font-bold rounded-xl hover:opacity-90">
                   {submitting ? "Saving..." : "Record Voucher"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {/* ── Add Bank Account Modal ── */}
+      {showAddBankModal && (
+        <div className="fixed inset-0 z-50 bg-[#000]/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[#0C0A12] border border-white/10 rounded-2xl w-full max-w-md shadow-2xl p-6 space-y-4 text-xs">
+            <div className="flex justify-between items-center border-b border-white/5 pb-2">
+              <h3 className="text-sm font-extrabold text-white">Add Central Bank Account</h3>
+              <button onClick={() => setShowAddBankModal(false)} className="text-zinc-400 hover:text-white cursor-pointer">✕</button>
+            </div>
+
+            <form onSubmit={handleAddBankAccount} className="space-y-3 font-sans">
+              <div className="space-y-1">
+                <label className="text-zinc-400 font-bold">Bank Name</label>
+                <input type="text" value={newBank.name} onChange={e => setNewBank({ ...newBank, name: e.target.value })} required placeholder="e.g. HDFC Bank"
+                  className="w-full bg-[#16121F] border border-white/10 rounded-lg p-2.5 text-white text-xs" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-zinc-400 font-bold">Account Holder Name</label>
+                <input type="text" value={newBank.holder} onChange={e => setNewBank({ ...newBank, holder: e.target.value })} required placeholder="e.g. SiteFlow Corp Ltd"
+                  className="w-full bg-[#16121F] border border-white/10 rounded-lg p-2.5 text-white text-xs" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-zinc-400 font-bold">Account Number</label>
+                  <input type="text" value={newBank.number} onChange={e => setNewBank({ ...newBank, number: e.target.value })} required placeholder="A/c No."
+                    className="w-full bg-[#16121F] border border-white/10 rounded-lg p-2.5 text-white text-xs" />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-zinc-400 font-bold">IFSC Code</label>
+                  <input type="text" value={newBank.ifsc} onChange={e => setNewBank({ ...newBank, ifsc: e.target.value })} required placeholder="IFSC"
+                    className="w-full bg-[#16121F] border border-white/10 rounded-lg p-2.5 text-white text-xs font-mono" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-zinc-400 font-bold">UPI ID (Optional)</label>
+                  <input type="text" value={newBank.upi} onChange={e => setNewBank({ ...newBank, upi: e.target.value })} placeholder="e.g. pay@upi"
+                    className="w-full bg-[#16121F] border border-white/10 rounded-lg p-2.5 text-white text-xs" />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-zinc-400 font-bold">Opening Balance (₹)</label>
+                  <input type="number" value={newBank.balance} onChange={e => setNewBank({ ...newBank, balance: e.target.value })} placeholder="Opening balance"
+                    className="w-full bg-[#16121F] border border-white/10 rounded-lg p-2.5 text-white text-xs" />
+                </div>
+              </div>
+
+              <div className="flex gap-2 justify-end border-t border-white/5 pt-4">
+                <button type="button" onClick={() => setShowAddBankModal(false)} className="px-4 py-2 bg-zinc-800 text-zinc-400 hover:text-white rounded-xl">Cancel</button>
+                <button type="submit" className="px-5 py-2.5 bg-gradient-to-r from-primary to-[#FF3B6C] text-white font-bold rounded-xl hover:opacity-90">
+                  Save Account
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── Create Payment Request Modal ── */}
+      {showAddRequestModal && (
+        <div className="fixed inset-0 z-50 bg-[#000]/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[#0C0A12] border border-white/10 rounded-2xl w-full max-w-md shadow-2xl p-6 space-y-4 text-xs">
+            <div className="flex justify-between items-center border-b border-white/5 pb-2">
+              <h3 className="text-sm font-extrabold text-white">Create Payment Request</h3>
+              <button onClick={() => setShowAddRequestModal(false)} className="text-zinc-400 hover:text-white cursor-pointer">✕</button>
+            </div>
+
+            <form onSubmit={handleCreatePaymentRequest} className="space-y-3 font-sans">
+              <div className="space-y-1">
+                <label className="text-zinc-400 font-bold">Requesting Party (Employee / Vendor)</label>
+                <select
+                  value={newRequest.partyId}
+                  onChange={e => setNewRequest({ ...newRequest, partyId: e.target.value })}
+                  required
+                  className="w-full bg-[#16121F] border border-white/10 rounded-lg p-2.5 text-white text-xs"
+                >
+                  <option value="">Select Party</option>
+                  {usersList.map((u: any) => (
+                    <option key={u.id} value={u.id}>{u.name} ({u.role || "Employee"})</option>
+                  ))}
+                  {/* Fallback to transactions parties if userList is empty */}
+                  {usersList.length === 0 && Array.from(new Set(transactions.map(t => t.party))).map((p, idx) => (
+                    <option key={idx} value="00000000-0000-0000-0000-000000000000">{p}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-1">
+                <label className="text-zinc-400 font-bold">Requested Amount (₹)</label>
+                <input type="number" value={newRequest.amount} onChange={e => setNewRequest({ ...newRequest, amount: e.target.value })} required placeholder="Amount"
+                  className="w-full bg-[#16121F] border border-white/10 rounded-lg p-2.5 text-white text-xs font-mono" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-zinc-400 font-bold">Due Date (Optional)</label>
+                <input type="date" value={newRequest.dueDate} onChange={e => setNewRequest({ ...newRequest, dueDate: e.target.value })}
+                  className="w-full bg-[#16121F] border border-white/10 rounded-lg p-2.5 text-white text-xs" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-zinc-400 font-bold">Request Details / Particulars</label>
+                <textarea value={newRequest.details} onChange={e => setNewRequest({ ...newRequest, details: e.target.value })} required placeholder="Provide detail reason for this payment request..."
+                  className="w-full bg-[#16121F] border border-white/10 rounded-lg p-2.5 text-white text-xs h-20 outline-none resize-none" />
+              </div>
+
+              <div className="flex gap-2 justify-end border-t border-white/5 pt-4">
+                <button type="button" onClick={() => setShowAddRequestModal(false)} className="px-4 py-2 bg-zinc-800 text-zinc-400 hover:text-white rounded-xl">Cancel</button>
+                <button type="submit" className="px-5 py-2.5 bg-gradient-to-r from-primary to-[#FF3B6C] text-white font-bold rounded-xl hover:opacity-90">
+                  Submit Request
                 </button>
               </div>
             </form>

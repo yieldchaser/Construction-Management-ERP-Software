@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.models import Payment, PaymentSettlement, Bill, PayrollRun, PayrollLineItem, StaffEmployee, ProjectBudget, Project, CompanyTeam, User, Equipment, EquipmentDeployment, FuelLog
+from app.models import Payment, PaymentSettlement, Bill, PayrollRun, PayrollLineItem, StaffEmployee, ProjectBudget, Project, CompanyTeam, User, Equipment, EquipmentDeployment, FuelLog, BankAccount, PaymentRequest
 from pydantic import BaseModel
 
 router = APIRouter(
@@ -347,3 +347,123 @@ def approve_transaction(transaction_id: uuid.UUID, db: Session = Depends(get_db)
         return {"status": "success", "message": "Payment confirmed", "type": "payment"}
         
     raise HTTPException(status_code=404, detail="Transaction not found")
+
+
+class BankAccountCreate(BaseModel):
+    account_holder_name: str
+    bank_name: str
+    account_number: str
+    ifsc_code: str
+    upi_id: Optional[str] = None
+    balance: float = 0.0
+
+class BankAccountResponse(BaseModel):
+    id: uuid.UUID
+    company_id: uuid.UUID
+    account_holder_name: str
+    bank_name: str
+    account_number: str
+    ifsc_code: str
+    upi_id: Optional[str]
+    balance: float
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class PaymentRequestCreate(BaseModel):
+    party_company_user_id: uuid.UUID
+    project_id: Optional[uuid.UUID] = None
+    amount: float
+    details: str
+    due_date: Optional[datetime] = None
+
+class PaymentRequestResponse(BaseModel):
+    id: uuid.UUID
+    company_id: uuid.UUID
+    project_id: Optional[uuid.UUID]
+    party_company_user_id: uuid.UUID
+    party_name: str
+    amount: float
+    details: str
+    status: str
+    due_date: Optional[datetime]
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+@router.get("/accounts/{company_id}", response_model=List[BankAccountResponse])
+def get_bank_accounts(company_id: uuid.UUID, db: Session = Depends(get_db)):
+    return db.query(BankAccount).filter(BankAccount.company_id == company_id).all()
+
+
+@router.post("/accounts/{company_id}", response_model=BankAccountResponse)
+def create_bank_account(company_id: uuid.UUID, data: BankAccountCreate, db: Session = Depends(get_db)):
+    new_acc = BankAccount(
+        company_id=company_id,
+        account_holder_name=data.account_holder_name,
+        bank_name=data.bank_name,
+        account_number=data.account_number,
+        ifsc_code=data.ifsc_code,
+        upi_id=data.upi_id,
+        balance=data.balance
+    )
+    db.add(new_acc)
+    db.commit()
+    db.refresh(new_acc)
+    return new_acc
+
+
+@router.get("/payment-requests/{company_id}", response_model=List[PaymentRequestResponse])
+def get_payment_requests(company_id: uuid.UUID, db: Session = Depends(get_db)):
+    requests = db.query(PaymentRequest).filter(PaymentRequest.company_id == company_id).all()
+    # Populate party_name if possible
+    res = []
+    for r in requests:
+        user = db.query(User).filter(User.id == r.party_company_user_id).first()
+        party_name = user.name if user else "Unknown Party"
+        res.append(PaymentRequestResponse(
+            id=r.id,
+            company_id=r.company_id,
+            project_id=r.project_id,
+            party_company_user_id=r.party_company_user_id,
+            party_name=party_name,
+            amount=r.amount,
+            details=r.details,
+            status=r.status,
+            due_date=r.due_date,
+            created_at=r.created_at
+        ))
+    return res
+
+
+@router.post("/payment-requests/{company_id}", response_model=PaymentRequestResponse)
+def create_payment_request(company_id: uuid.UUID, data: PaymentRequestCreate, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.id == data.party_company_user_id).first()
+    party_name = user.name if user else "Unknown Party"
+    new_req = PaymentRequest(
+        company_id=company_id,
+        project_id=data.project_id,
+        party_company_user_id=data.party_company_user_id,
+        party_name=party_name,
+        amount=data.amount,
+        details=data.details,
+        due_date=data.due_date
+    )
+    db.add(new_req)
+    db.commit()
+    db.refresh(new_req)
+    return PaymentRequestResponse(
+        id=new_req.id,
+        company_id=new_req.company_id,
+        project_id=new_req.project_id,
+        party_company_user_id=new_req.party_company_user_id,
+        party_name=party_name,
+        amount=new_req.amount,
+        details=new_req.details,
+        status=new_req.status,
+        due_date=new_req.due_date,
+        created_at=new_req.created_at
+    )
