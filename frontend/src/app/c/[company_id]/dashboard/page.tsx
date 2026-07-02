@@ -37,7 +37,7 @@ export default function DashboardPage() {
   const [barLength, setBarLength] = useState(3);
   const [wastagePercent, setWastagePercent] = useState(5);
 
-  const standardUnitWeight = (diameter * diameter) / 162.89; // kg/m
+  const standardUnitWeight = (diameter * diameter) / 162.0; // kg/m — IS 800 standard: D²/162
   const totalBarLength = barCount * barLength; // meters
   const totalWeightNoWastage = totalBarLength * standardUnitWeight; // kg
   const reinforcementWeight = totalWeightNoWastage * (1 + wastagePercent / 100); // kg

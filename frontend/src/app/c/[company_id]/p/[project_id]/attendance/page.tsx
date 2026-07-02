@@ -7,8 +7,12 @@ import PwaControls from "@/components/pwa/PwaControls";
 
 const STATUS_MAP: Record<string, string> = {
   Present: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+  present: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
   Absent: "bg-red-500/10 text-red-400 border-red-500/20",
+  absent: "bg-red-500/10 text-red-400 border-red-500/20",
   "Half Day": "bg-amber-500/10 text-amber-400 border-amber-500/20",
+  half_day: "bg-amber-500/10 text-amber-400 border-amber-500/20",
+  "half day": "bg-amber-500/10 text-amber-400 border-amber-500/20",
 };
 
 const SUBCONTRACTORS = [

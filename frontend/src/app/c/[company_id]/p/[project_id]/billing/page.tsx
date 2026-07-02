@@ -60,13 +60,13 @@ const INITIAL_BILLS: Bill[] = [
     subcontractor: "Karan Masonry Works",
     subtotal: 100000,
     gstAmount: 18000,
-    totalPayable: 100100, // Post-tax deductions
+    totalPayable: 100100, // Gross 118,000 − TDS 2% (2,000) − Advance (10,000) − Retention 5% on gross (5,900) = 100,100
     preTax: false,
     status: "approved",
     deductions: [
       { type: "TDS", rate: 2, amount: 2000, notes: "Section 194C" },
       { type: "Advance Recovery", amount: 10000, notes: "Advance return" },
-      { type: "Retention", rate: 5, amount: 5900, notes: "5% post-tax retention" }
+      { type: "Retention", rate: 5, amount: 5900, notes: "5% of gross (post-GST) retention" }
     ]
   },
   {
@@ -76,12 +76,12 @@ const INITIAL_BILLS: Bill[] = [
     subcontractor: "Apex Bar-Bending Co",
     subtotal: 80000,
     gstAmount: 14400,
-    totalPayable: 88800, // Post-tax: 80,000 + 14,400 (94,400) - 2% TDS on sub (1,600) - 5% retention on gross (4,720) = 88,080. Wait, here: 88,800 is sample.
+    totalPayable: 88080, // Gross 94,400 − TDS 2% on sub (1,600) − Retention 5% on gross (4,720) = 88,080
     preTax: false,
     status: "pending",
     deductions: [
-      { type: "TDS", rate: 2, amount: 1600 },
-      { type: "Retention", rate: 5, amount: 4000 }
+      { type: "TDS", rate: 2, amount: 1600, notes: "Section 194C" },
+      { type: "Retention", rate: 5, amount: 4720, notes: "5% of gross (post-GST) retention" }
     ]
   }
 ];

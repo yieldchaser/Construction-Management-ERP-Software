@@ -12,4 +12,4 @@ jobs:
     steps:
       - name: Ping Render Backend
         run: |
-          curl -i -s https://construction-erp-backend.onrender.com/
+          curl -i -s https://construction-erp-backend-73vm.onrender.com/

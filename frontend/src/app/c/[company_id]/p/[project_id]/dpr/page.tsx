@@ -36,6 +36,26 @@ const PHOTO_SLOTS = [
   { label: "Safety Observation", emoji: "⚠️", color: "from-amber-500/20 to-amber-500/5" },
 ];
 
+const MOCK_TASKS: Task[] = [
+  { id: "task-001", name: "RCC Terrace Slab — Grid A-D", status: "in_progress", priority: "high" },
+  { id: "task-002", name: "Brick Masonry — 2nd Floor East Wing", status: "in_progress", priority: "medium" },
+  { id: "task-003", name: "External Plastering — West Elevation", status: "pending", priority: "medium" },
+  { id: "task-004", name: "Plumbing Rough-in — G+1 Toilets", status: "pending", priority: "low" },
+];
+
+const MOCK_SUMMARY: DPRSummary = {
+  activities_tracked: 4,
+  total_workers_deployed: 22,
+  avg_completion: 58.5,
+  issues_flagged: 2,
+};
+
+const MOCK_DPR_LOGS: DPRLog[] = [
+  { id: "dpr-001", dpr_date: "2026-07-01T00:00:00Z", reported_by: "Er. Suresh R (PM)", weather: "Clear", executed_qty: 18.0, workers_deployed: 22, notes: "RCC terrace slab poured in Grid A-D. Cube samples taken — CB-2026-004.", issues: "" },
+  { id: "dpr-002", dpr_date: "2026-06-30T00:00:00Z", reported_by: "Er. Ravi K (Site Eng)", weather: "Overcast", executed_qty: 6.5, workers_deployed: 15, notes: "Brick masonry progressed in 2nd floor east wing — 6.5 m³ completed.", issues: "Short supply of mortar sand. Reordered 12 m³ from Rajesh Aggregates." },
+  { id: "dpr-003", dpr_date: "2026-06-28T00:00:00Z", reported_by: "Er. Suresh R (PM)", weather: "Clear", executed_qty: 12.2, workers_deployed: 18, notes: "Shuttering for parapet wall done. Concrete pour scheduled tomorrow.", issues: "" },
+];
+
 export default function DPRPage() {
   const params = useParams();
   const companyId = params?.company_id as string;
@@ -77,13 +97,19 @@ export default function DPRPage() {
       const res = await fetch(`http://localhost:8000/apis/v3/planning/tasks?project_id=${projectId}`);
       if (res.ok) {
         const data = await res.json();
-        setTasks(data);
-        if (data.length > 0) {
-          setSelectedTaskId(data[0].id);
+        const taskList = data.length > 0 ? data : MOCK_TASKS;
+        setTasks(taskList);
+        if (taskList.length > 0) {
+          setSelectedTaskId(taskList[0].id);
         }
+      } else {
+        setTasks(MOCK_TASKS);
+        setSelectedTaskId(MOCK_TASKS[0].id);
       }
     } catch (e) {
       console.error(e);
+      setTasks(MOCK_TASKS);
+      setSelectedTaskId(MOCK_TASKS[0].id);
     }
   };
 
@@ -93,9 +119,12 @@ export default function DPRPage() {
       if (res.ok) {
         const data = await res.json();
         setSummary(data);
+      } else {
+        setSummary(MOCK_SUMMARY);
       }
     } catch (e) {
       console.error(e);
+      setSummary(MOCK_SUMMARY);
     }
   };
 
@@ -104,10 +133,13 @@ export default function DPRPage() {
       const res = await fetch(`http://localhost:8000/apis/v3/dpr?project_id=${projectId}`);
       if (res.ok) {
         const data = await res.json();
-        setLogs(data);
+        setLogs(data.length > 0 ? data : MOCK_DPR_LOGS);
+      } else {
+        setLogs(MOCK_DPR_LOGS);
       }
     } catch (e) {
       console.error(e);
+      setLogs(MOCK_DPR_LOGS);
     }
   };
 

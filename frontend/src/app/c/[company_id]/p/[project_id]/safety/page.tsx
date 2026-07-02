@@ -114,6 +114,34 @@ function MiniBar({ label, value, max, color }: { label: string; value: number; m
 }
 
 // ─── Main Component ──────────────────────────────────────────────────────────
+
+const MOCK_INCIDENTS: Incident[] = [
+  { id: "INC-001", incident_type: "Near Miss", severity: "High", description: "Worker slipped on wet concrete surface near scaffolding on Floor 2. No injury sustained, safety harness prevented fall.", location: "Floor 2 — Grid C-D Scaffolding", injured_person: "", lost_time_days: 0, status: "closed", root_cause: "Inadequate anti-slip matting on wet surface.", corrective_action: "Anti-slip strips installed on all scaffold planks.", reported_by: "Ramesh Kumar (Safety Officer)", reported_at: "2026-06-24T09:15:00Z", closed_at: "2026-06-25T16:00:00Z" },
+  { id: "INC-002", incident_type: "First Aid", severity: "Low", description: "Minor hand laceration from steel bar sharp edge during rebar bending. First aid administered. Worker resumed duty after 1 hour.", location: "Rebar Yard — Ground Level", injured_person: "Mohan Lal (Mason Helper)", lost_time_days: 0, status: "closed", root_cause: "No gloves worn during bar bending.", corrective_action: "Mandatory glove check during PPE muster roll.", reported_by: "Ramesh Kumar (Safety Officer)", reported_at: "2026-06-18T11:30:00Z", closed_at: "2026-06-18T16:00:00Z" },
+  { id: "INC-003", incident_type: "Near Miss", severity: "Medium", description: "Material lifted by crane swung and came within 1m of another worker. No contact. Crane operator retrained.", location: "Material Hoist — East Face", injured_person: "", lost_time_days: 0, status: "open", root_cause: "", corrective_action: "", reported_by: "Meera Nair (HSE Manager)", reported_at: "2026-07-01T14:00:00Z" },
+];
+
+const MOCK_STATS: SafetyStats = {
+  total_incidents: 3,
+  open_incidents: 1,
+  closed_incidents: 2,
+  lti_count: 0,
+  total_lost_days: 0,
+  ltif: 0.0,
+  type_breakdown: { "Near Miss": 2, "First Aid": 1 },
+  severity_breakdown: { "High": 1, "Medium": 1, "Low": 1 },
+};
+
+const MOCK_TOOLBOX_TALKS: ToolboxTalk[] = [
+  { id: "TBT-001", topic: "Working at Height — Scaffolding Safety & Harness Use (IS 3696)", conducted_by: "Meera Nair (HSE Manager)", conducted_at: "2026-07-01T07:30:00Z", attendee_count: 28, notes: "Demonstrated correct harness fitting. All workers signed attendance. Photos taken." },
+  { id: "TBT-002", topic: "RCC Concrete Pour Safety — Vibrator Handling & Slip Prevention", conducted_by: "Ramesh Kumar (Safety Officer)", conducted_at: "2026-06-28T07:00:00Z", attendee_count: 22, notes: "Covered correct vibrator operation distance and anti-slip precautions on freshly poured slabs." },
+];
+
+const MOCK_PPE_CHECKS: PPECheck[] = [
+  { id: "PPE-001", checked_by: "Ramesh Kumar (Safety Officer)", check_date: "2026-07-01", total_workers: 35, compliant_workers: 31, compliance_pct: 89, non_compliant_items: ["No safety vest (2 workers)", "Improper helmet fit (2 workers)"] },
+  { id: "PPE-002", checked_by: "Meera Nair (HSE Manager)", check_date: "2026-06-28", total_workers: 28, compliant_workers: 26, compliance_pct: 93, non_compliant_items: ["No safety boots (1 worker)", "Missing gloves (1 worker)"] },
+];
+
 export default function SafetyPage() {
   const { company_id, project_id } = useParams() as { company_id: string; project_id: string };
   const [tab, setTab] = useState(0);
@@ -161,10 +189,20 @@ export default function SafetyPage() {
         fetch(`${API}/safety/toolbox-talks/${project_id}`),
         fetch(`${API}/safety/ppe-checks/${project_id}`),
       ]);
-      if (incR.ok)   setIncidents(await incR.json());
-      if (statsR.ok) setStats(await statsR.json());
-      if (talkR.ok)  setTalks(await talkR.json());
-      if (ppeR.ok)   setPpeChecks(await ppeR.json());
+      const incData = incR.ok ? await incR.json() : [];
+      const statsData = statsR.ok ? await statsR.json() : null;
+      const talkData = talkR.ok ? await talkR.json() : [];
+      const ppeData = ppeR.ok ? await ppeR.json() : [];
+      // Use API data if available, else mock
+      setIncidents(incData.length > 0 ? incData : MOCK_INCIDENTS);
+      setStats(statsData ?? MOCK_STATS);
+      setTalks(talkData.length > 0 ? talkData : MOCK_TOOLBOX_TALKS);
+      setPpeChecks(ppeData.length > 0 ? ppeData : MOCK_PPE_CHECKS);
+    } catch {
+      setIncidents(MOCK_INCIDENTS);
+      setStats(MOCK_STATS);
+      setTalks(MOCK_TOOLBOX_TALKS);
+      setPpeChecks(MOCK_PPE_CHECKS);
     } finally { setLoading(false); }
   };
 

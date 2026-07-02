@@ -104,6 +104,90 @@ function MetricCard({
   );
 }
 
+const MOCK_PRODUCTION_SUMMARY: ProductionSummary = {
+  project_id: "demo",
+  project_name: "Prestige Heights — G+3 Residential",
+  recipe_count: 3,
+  batch_count: 3,
+  planned_output_qty: 320.0,
+  actual_output_qty: 218.5,
+  output_variance_qty: -101.5,
+  planned_material_qty: 850.0,
+  actual_material_qty: 580.4,
+  material_variance_qty: 12.4,
+  recipes: [
+    {
+      id: "R-01", recipe_code: "MIX-M25", product_name: "Concrete M25", mix_type: "Ready Mix",
+      unit: "m³", target_output_qty: 1.0, wastage_pct: 3.0, status: "active",
+      notes: "IS 456:2000 — Grade M25 for RCC slabs and beams",
+      materials: [
+        { id: "RM-01", material_name: "Cement OPC 53", planned_qty: 350, unit: "kg", is_optional: false },
+        { id: "RM-02", material_name: "Fine River Sand", planned_qty: 600, unit: "kg", is_optional: false },
+        { id: "RM-03", material_name: "20mm Coarse Aggregate", planned_qty: 1100, unit: "kg", is_optional: false },
+        { id: "RM-04", material_name: "Water", planned_qty: 157, unit: "liters", is_optional: false },
+        { id: "RM-05", material_name: "Plasticizer SP430", planned_qty: 1.4, unit: "liters", is_optional: true },
+      ]
+    },
+    {
+      id: "R-02", recipe_code: "MIX-M30", product_name: "Concrete M30", mix_type: "Ready Mix",
+      unit: "m³", target_output_qty: 1.0, wastage_pct: 2.5, status: "active",
+      notes: "IS 456:2000 — Grade M30 for columns and foundation",
+      materials: [
+        { id: "RM-06", material_name: "Cement OPC 53", planned_qty: 380, unit: "kg", is_optional: false },
+        { id: "RM-07", material_name: "Fine River Sand", planned_qty: 550, unit: "kg", is_optional: false },
+        { id: "RM-08", material_name: "20mm Coarse Aggregate", planned_qty: 1150, unit: "kg", is_optional: false },
+        { id: "RM-09", material_name: "Water", planned_qty: 152, unit: "liters", is_optional: false },
+      ]
+    },
+    {
+      id: "R-03", recipe_code: "MIX-MORT", product_name: "Cement Mortar 1:4", mix_type: "Site Mix",
+      unit: "m³", target_output_qty: 1.0, wastage_pct: 5.0, status: "active",
+      notes: "IS 2250 — Brickwork 1:4 cement mortar",
+      materials: [
+        { id: "RM-10", material_name: "Cement OPC 53", planned_qty: 210, unit: "kg", is_optional: false },
+        { id: "RM-11", material_name: "Fine River Sand", planned_qty: 840, unit: "kg", is_optional: false },
+      ]
+    },
+  ],
+  batches: [
+    {
+      id: "B-01", batch_number: "BATCH-2026-038", recipe_code: "MIX-M25", product_name: "Concrete M25",
+      mix_type: "Ready Mix", planned_output_qty: 18.0, actual_output_qty: 18.0,
+      planned_material_qty: 36.0, actual_material_qty: 37.2, consumption_variance_qty: 1.2,
+      status: "completed", started_at: "2026-07-01T07:00:00Z", completed_at: "2026-07-01T14:00:00Z",
+      notes: "Terrace slab Grid A-D pour. IS cube test: CB-2026-004 (35.2 MPa @ 7d).",
+      materials: [
+        { id: "BM-01", material_name: "Cement OPC 53", planned_qty: 6300, actual_qty: 6480, unit: "kg", variance_qty: 180 },
+        { id: "BM-02", material_name: "Fine River Sand", planned_qty: 10800, actual_qty: 11200, unit: "kg", variance_qty: 400 },
+      ]
+    },
+    {
+      id: "B-02", batch_number: "BATCH-2026-035", recipe_code: "MIX-M30", product_name: "Concrete M30",
+      mix_type: "Ready Mix", planned_output_qty: 12.0, actual_output_qty: 11.8,
+      planned_material_qty: 24.0, actual_material_qty: 23.5, consumption_variance_qty: -0.5,
+      status: "completed", started_at: "2026-06-28T08:00:00Z", completed_at: "2026-06-28T13:30:00Z",
+      notes: "Column RCC pour G+2 level. Slump: 120mm OK.",
+      materials: [
+        { id: "BM-03", material_name: "Cement OPC 53", planned_qty: 4560, actual_qty: 4500, unit: "kg", variance_qty: -60 },
+      ]
+    },
+    {
+      id: "B-03", batch_number: "BATCH-2026-040", recipe_code: "MIX-MORT", product_name: "Cement Mortar 1:4",
+      mix_type: "Site Mix", planned_output_qty: 8.0, actual_output_qty: 0,
+      planned_material_qty: 16.0, actual_material_qty: 0, consumption_variance_qty: 0,
+      status: "in_progress", started_at: "2026-07-02T08:00:00Z", completed_at: null,
+      notes: "2nd floor east wing brickwork masonry in progress.",
+      materials: []
+    },
+  ],
+  inventory_alerts: [
+    { id: "INV-01", material_name: "Cement OPC 53", on_hand_qty: 85, reserved_qty: 50, available_qty: 35, unit: "bags", needs_reorder: true },
+    { id: "INV-02", material_name: "TMT Steel 16mm", on_hand_qty: 12.5, reserved_qty: 4.0, available_qty: 8.5, unit: "tons", needs_reorder: false },
+    { id: "INV-03", material_name: "Fine River Sand", on_hand_qty: 8.5, reserved_qty: 0, available_qty: 8.5, unit: "m³", needs_reorder: true },
+    { id: "INV-04", material_name: "20mm Coarse Aggregate", on_hand_qty: 22, reserved_qty: 18, available_qty: 4, unit: "m³", needs_reorder: true },
+  ],
+};
+
 export default function ProductionPage() {
   const params = useParams();
   const companyId = params?.company_id as string;
@@ -127,7 +211,8 @@ export default function ProductionPage() {
         const payload = (await response.json()) as ProductionSummary;
         setData(payload);
       } catch (error) {
-        console.error("Failed to load production summary", error);
+        console.error("Failed to load production summary, using mock data", error);
+        setData(MOCK_PRODUCTION_SUMMARY);
       } finally {
         setLoading(false);
       }

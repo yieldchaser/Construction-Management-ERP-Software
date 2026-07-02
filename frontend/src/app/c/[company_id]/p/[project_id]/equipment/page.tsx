@@ -53,7 +53,7 @@ export default function EquipmentTrackingPage() {
   const companyId = params?.company_id as string;
   const projectId = params?.project_id as string;
 
-  const [activeTab, setActiveTab] = useState<"fleet" | "timeline" | "odologs">("fleet");
+  const [activeTab, setActiveTab] = useState<"fleet" | "timeline" | "odologs" | "maintenance">("fleet");
   
   // Data states
   const [fleet, setFleet] = useState<Equipment[]>([]);
@@ -99,7 +99,18 @@ export default function EquipmentTrackingPage() {
       
       const fleetRes = await fetch(`http://localhost:8000/apis/v3/equipment/${companyId}`);
       if (fleetRes.ok) {
-        setFleet(await fleetRes.json());
+        const fleetData = await fleetRes.json();
+        setFleet(fleetData);
+        // Try fetching maintenance logs for all equipment
+        try {
+          const maintenancePromises = fleetData.map((eq: any) =>
+            fetch(`http://localhost:8000/apis/v3/equipment/maintenance-schedules/${eq.id}`).then(res => res.ok ? res.json() : [])
+          );
+          const maintenanceResults = await Promise.all(maintenancePromises);
+          setMaintenanceLogs(maintenanceResults.flat());
+        } catch {
+          setMaintenanceLogs([]);
+        }
       } else {
         throw new Error("Fleet API failed");
       }
@@ -337,7 +348,8 @@ export default function EquipmentTrackingPage() {
           {[
             { id: "fleet", label: "Fleet Inventory", emoji: "🚜" },
             { id: "timeline", label: "Usage & Refuel Timeline", emoji: "⛽" },
-            { id: "odologs", label: "Odometer Run Logs", emoji: "📊" }
+            { id: "odologs", label: "Odometer Run Logs", emoji: "📊" },
+            { id: "maintenance", label: "Maintenance Schedule", emoji: "🔧" }
           ].map((t) => (
             <button key={t.id} onClick={() => { setActiveTab(t.id as any); }} className={`flex items-center gap-1.5 py-2 border-b-2 transition-all ${activeTab === t.id ? "border-primary text-white" : "border-transparent text-zinc-400 hover:text-white"}`}>
               <span>{t.emoji}</span> {t.label}
@@ -577,6 +589,69 @@ export default function EquipmentTrackingPage() {
                   </div>
                 );
               })()}
+
+              {activeTab === "maintenance" && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Maintenance Schedule & Service Logs</h3>
+                    <span className="text-[10px] text-zinc-600">{maintenanceLogs.length} schedule entries</span>
+                  </div>
+
+                  <div className="bg-[#0F0D18] border border-white/5 rounded-2xl overflow-hidden">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="border-b border-white/5 text-zinc-500 text-left">
+                          <th className="px-5 py-3 font-semibold">Equipment</th>
+                          <th className="px-5 py-3 font-semibold">Service Type</th>
+                          <th className="px-5 py-3 font-semibold">Scheduled Date</th>
+                          <th className="px-5 py-3 font-semibold">Completed Date</th>
+                          <th className="px-5 py-3 text-right font-semibold">Est. Cost</th>
+                          <th className="px-5 py-3 text-center font-semibold">Status</th>
+                          <th className="px-5 py-3 font-semibold">Remarks</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {maintenanceLogs.length === 0 ? (
+                          <tr><td colSpan={7} className="px-5 py-10 text-center text-zinc-600">No maintenance schedules recorded.</td></tr>
+                        ) : maintenanceLogs.map((log) => {
+                          const eq = fleet.find(e => e.id === log.equipment_id);
+                          const isOverdue = log.completed_date === null && new Date(log.scheduled_date) < new Date();
+                          return (
+                            <tr key={log.id} className="border-b border-white/[0.03] hover:bg-white/[0.015] transition-all">
+                              <td className="px-5 py-3">
+                                <span className="font-bold text-white">{eq?.name ?? "Unknown"}</span>
+                                <span className="block text-[9px] text-zinc-600">{eq?.code} · {eq?.category}</span>
+                              </td>
+                              <td className="px-5 py-3 text-zinc-300 font-medium">{log.service_type}</td>
+                              <td className="px-5 py-3 text-zinc-400">{new Date(log.scheduled_date).toLocaleDateString()}</td>
+                              <td className="px-5 py-3 text-zinc-400">
+                                {log.completed_date ? new Date(log.completed_date).toLocaleDateString() : <span className="text-zinc-600">—</span>}
+                              </td>
+                              <td className="px-5 py-3 text-right font-mono font-bold text-white">
+                                {log.cost > 0 ? `₹${log.cost.toLocaleString()}` : <span className="text-zinc-600">—</span>}
+                              </td>
+                              <td className="px-5 py-3 text-center">
+                                <span className={`text-[9px] font-bold px-2 py-0.5 rounded border ${
+                                  log.status === "Completed" || log.completed_date
+                                    ? "bg-green-500/10 border-green-500/20 text-green-400"
+                                    : isOverdue
+                                      ? "bg-red-500/10 border-red-500/20 text-red-400 animate-pulse"
+                                      : "bg-yellow-500/10 border-yellow-500/20 text-yellow-400"
+                                }`}>
+                                  {log.completed_date ? "Completed" : isOverdue ? "Overdue" : log.status}
+                                </span>
+                              </td>
+                              <td className="px-5 py-3 text-zinc-500 italic max-w-xs truncate" title={log.remarks || ""}>
+                                {log.remarks || "—"}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
             </>
           )}
         </div>

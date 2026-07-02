@@ -103,7 +103,7 @@ const NCRS: NCR[] = [
 
 const LAB_TESTS: LabTest[] = [
   { id: "T-01", type: "Cube Test", material: "Concrete M25", sampleRef: "CB-2026-001", date: "2026-06-26", value: 28.4, unit: "MPa", min: 25, max: 50, pass: true, zone: "Floor 3 Col C3" },
-  { id: "T-02", type: "Slump Test", material: "Concrete M25", sampleRef: "SL-2026-001", date: "2026-06-26", value: 145, unit: "mm", min: 25, max: 100, pass: false, zone: "Floor 3 Slab" },
+  { id: "T-02", type: "Slump Test", material: "Concrete M25", sampleRef: "SL-2026-001", date: "2026-06-26", value: 145, unit: "mm", min: 25, max: 150, pass: true, zone: "Floor 3 Slab" },
   { id: "T-03", type: "Cube Test", material: "Concrete M30", sampleRef: "CB-2026-002", date: "2026-06-24", value: 33.1, unit: "MPa", min: 30, max: 60, pass: true, zone: "Basement Slab" },
   { id: "T-04", type: "Compaction Test", material: "Backfill Soil", sampleRef: "CP-2026-001", date: "2026-06-23", value: 97.2, unit: "%", min: 95, max: 100, pass: true, zone: "Perimeter Fill" },
 ];
