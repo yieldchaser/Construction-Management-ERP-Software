@@ -148,6 +148,9 @@ class TimesheetEntryCreate(BaseModel):
     entry_date: datetime
     hours: float = Field(..., gt=0, le=24)
     activity_description: Optional[str] = None
+    start_time: Optional[datetime] = None
+    end_time: Optional[datetime] = None
+    duration: Optional[int] = None # in minutes
 
 
 class TimesheetResponse(BaseModel):
@@ -160,6 +163,24 @@ class TimesheetResponse(BaseModel):
     status: str
     notes: Optional[str]
     created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class TimesheetEntryResponse(BaseModel):
+    id: uuid.UUID
+    timesheet_id: uuid.UUID
+    task_id: Optional[uuid.UUID]
+    entry_date: datetime
+    hours: float
+    activity_description: Optional[str]
+    start_time: Optional[datetime]
+    end_time: Optional[datetime]
+    duration: Optional[int]
+    created_at: datetime
+    employee_name: Optional[str] = None
+    employee_id: Optional[uuid.UUID] = None
 
     class Config:
         from_attributes = True
@@ -348,7 +369,12 @@ def add_timesheet_entry(ts_id: uuid.UUID, payload: TimesheetEntryCreate, db: Ses
     if ts.status not in ("draft", "rejected"):
         raise HTTPException(status_code=400, detail=f"Cannot add entries to timesheet in status '{ts.status}'")
 
-    entry = TimesheetEntry(timesheet_id=ts_id, **payload.model_dump())
+    entry_data = payload.model_dump()
+    if entry_data.get("start_time") and entry_data.get("end_time") and not entry_data.get("duration"):
+        delta = entry_data["end_time"] - entry_data["start_time"]
+        entry_data["duration"] = int(delta.total_seconds() / 60)
+
+    entry = TimesheetEntry(timesheet_id=ts_id, **entry_data)
     db.add(entry)
 
     # Recompute total_hours
@@ -358,7 +384,35 @@ def add_timesheet_entry(ts_id: uuid.UUID, payload: TimesheetEntryCreate, db: Ses
     ts.total_hours = Decimal(str(round(existing_hours + payload.hours, 2)))
     db.commit()
     db.refresh(entry)
-    return {"id": str(entry.id), "timesheet_total_hours": float(ts.total_hours)}
+    return {
+        "id": str(entry.id), 
+        "timesheet_total_hours": float(ts.total_hours),
+        "start_time": entry.start_time.isoformat() if entry.start_time else None,
+        "end_time": entry.end_time.isoformat() if entry.end_time else None,
+        "duration": entry.duration
+    }
+
+
+@router.get("/timesheets/project/{project_id}", response_model=List[TimesheetEntryResponse])
+def list_project_timesheet_entries(project_id: uuid.UUID, db: Session = Depends(get_db)):
+    results = db.query(
+        TimesheetEntry,
+        StaffEmployee.name.label("employee_name"),
+        Timesheet.employee_id.label("employee_id")
+    ).select_from(TimesheetEntry)\
+     .join(Timesheet, TimesheetEntry.timesheet_id == Timesheet.id)\
+     .join(StaffEmployee, Timesheet.employee_id == StaffEmployee.id)\
+     .filter(Timesheet.project_id == project_id)\
+     .order_by(TimesheetEntry.entry_date.desc())\
+     .all()
+    
+    response = []
+    for entry, emp_name, emp_id in results:
+        res = TimesheetEntryResponse.model_validate(entry)
+        res.employee_name = emp_name
+        res.employee_id = emp_id
+        response.append(res)
+    return response
 
 
 @router.patch("/timesheets/{ts_id}/submit", response_model=TimesheetResponse)

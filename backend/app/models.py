@@ -466,6 +466,9 @@ class TimesheetEntry(Base):
     entry_date = Column(DateTime(timezone=True), nullable=False)
     hours = Column(Numeric(5, 2), nullable=False)
     activity_description = Column(String, nullable=True)
+    start_time = Column(DateTime(timezone=True), nullable=True)
+    end_time = Column(DateTime(timezone=True), nullable=True)
+    duration = Column(Integer, nullable=True) # in minutes
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 
 

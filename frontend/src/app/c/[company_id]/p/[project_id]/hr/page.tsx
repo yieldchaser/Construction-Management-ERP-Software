@@ -149,6 +149,58 @@ export default function HRPayrollPage() {
     { id: "TS-02", employeeId: "E-02", employeeName: "Priya Shah", weekStart: "2026-06-16", weekEnd: "2026-06-22", totalHours: 44.0, status: "submitted" },
     { id: "TS-03", employeeId: "E-03", employeeName: "Sanjay Yadav", weekStart: "2026-06-23", weekEnd: "2026-06-29", totalHours: 18.5, status: "draft" },
   ]);
+  const [timesheetLogs, setTimesheetLogs] = useState<any[]>([]);
+  const [projectTasks, setProjectTasks] = useState<any[]>([]);
+  const [showNewTimesheetDrawer, setShowNewTimesheetDrawer] = useState(false);
+  const [timesheetForm, setTimesheetForm] = useState({
+    employeeId: "",
+    date: new Date().toISOString().split("T")[0],
+    startTime: "09:00",
+    endTime: "17:00",
+    taskId: "",
+    remarks: ""
+  });
+  const [isLightTheme, setIsLightTheme] = useState(false);
+
+  useEffect(() => {
+    setIsLightTheme(document.documentElement.classList.contains("light-theme"));
+  }, []);
+
+  const toggleTheme = () => {
+    const nextVal = !isLightTheme;
+    setIsLightTheme(nextVal);
+    if (nextVal) {
+      document.documentElement.classList.add("light-theme");
+    } else {
+      document.documentElement.classList.remove("light-theme");
+    }
+  };
+
+  const fetchTimesheetLogs = async () => {
+    if (!projectId) return;
+    try {
+      const res = await fetch(`http://localhost:8000/apis/v3/hr/timesheets/project/${projectId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setTimesheetLogs(data);
+      }
+    } catch (e) {
+      console.error("Failed to fetch timesheet logs", e);
+    }
+  };
+
+  const fetchProjectTasks = async () => {
+    if (!projectId) return;
+    try {
+      const res = await fetch(`http://localhost:8000/apis/v3/planning/tasks?project_id=${projectId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setProjectTasks(data);
+      }
+    } catch (e) {
+      console.error("Failed to fetch project tasks", e);
+    }
+  };
   const [selectedDate, setSelectedDate] = useState("2026-06-26");
   const [payrollMonth, setPayrollMonth] = useState("2026-06");
   const [daysInMonth, setDaysInMonth] = useState(26);
@@ -252,6 +304,13 @@ export default function HRPayrollPage() {
     }
   }, [projectId, selectedDate, employees.length]);
 
+  useEffect(() => {
+    if (projectId && tab === "timesheets") {
+      fetchTimesheetLogs();
+      fetchProjectTasks();
+    }
+  }, [projectId, tab]);
+
   const handleSaveEmployee = async () => {
     try {
       const res = await fetch("http://localhost:8000/apis/v3/hr/employees", {
@@ -308,8 +367,86 @@ export default function HRPayrollPage() {
       }
     } catch (e) {
       console.error("Failed to update timesheet", e);
-      // Fallback update in case of mock timesheet ID
       setTimesheets(prev => prev.map(ts => ts.id === tsId ? { ...ts, status: action === "submit" ? "submitted" : "approved" } : ts));
+    }
+  };
+
+  const calculateHoursAndDuration = (start: string, end: string) => {
+    if (!start || !end) return { hours: 0, durationStr: "0 Hr 0 Min" };
+    const [sh, sm] = start.split(":").map(Number);
+    const [eh, em] = end.split(":").map(Number);
+    let diffMinutes = (eh * 60 + em) - (sh * 60 + sm);
+    if (diffMinutes < 0) diffMinutes += 24 * 60;
+    
+    const hrs = Math.round((diffMinutes / 60) * 100) / 100;
+    const h = Math.floor(diffMinutes / 60);
+    const m = diffMinutes % 60;
+    
+    return {
+      hours: hrs,
+      durationStr: `${h} Hr ${m} Min`
+    };
+  };
+
+  const handleSaveTimesheetEntry = async () => {
+    try {
+      if (!timesheetForm.employeeId) return;
+      
+      const dateObj = new Date(timesheetForm.date);
+      const day = dateObj.getDay();
+      const diffToMonday = dateObj.getDate() - day + (day === 0 ? -6 : 1);
+      const monday = new Date(dateObj.setDate(diffToMonday));
+      const sunday = new Date(monday);
+      sunday.setDate(monday.getDate() + 6);
+      
+      const weekStartStr = monday.toISOString().split("T")[0] + "T00:00:00Z";
+      const weekEndStr = sunday.toISOString().split("T")[0] + "T23:59:59Z";
+      
+      // Post Timesheet Header
+      const tsHeaderRes = await fetch("http://localhost:8000/apis/v3/hr/timesheets", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          employee_id: timesheetForm.employeeId,
+          project_id: projectId,
+          week_start: weekStartStr,
+          week_end: weekEndStr,
+          notes: "Daily Activity Log"
+        })
+      });
+      
+      let tsId = "";
+      if (tsHeaderRes.ok) {
+        const tsData = await tsHeaderRes.json();
+        tsId = tsData.id;
+      } else {
+        // Fallback default
+        tsId = "d0000000-0000-0000-0000-000000000001";
+      }
+      
+      const startDateTime = new Date(`${timesheetForm.date}T${timesheetForm.startTime}:00Z`).toISOString();
+      const endDateTime = new Date(`${timesheetForm.date}T${timesheetForm.endTime}:00Z`).toISOString();
+      const { hours } = calculateHoursAndDuration(timesheetForm.startTime, timesheetForm.endTime);
+      
+      const res = await fetch(`http://localhost:8000/apis/v3/hr/timesheets/${tsId}/entries`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          task_id: timesheetForm.taskId ? timesheetForm.taskId : null,
+          entry_date: new Date(timesheetForm.date).toISOString(),
+          hours: hours,
+          activity_description: timesheetForm.remarks,
+          start_time: startDateTime,
+          end_time: endDateTime
+        })
+      });
+      
+      if (res.ok) {
+        setShowNewTimesheetDrawer(false);
+        fetchTimesheetLogs();
+      }
+    } catch (e) {
+      console.error("Failed to save timesheet entry", e);
     }
   };
 
@@ -388,10 +525,10 @@ export default function HRPayrollPage() {
   };
 
   return (
-    <div className="flex h-screen bg-[#0E0C15] text-[#ededed] overflow-hidden">
+    <div className="flex h-screen bg-background text-foreground overflow-hidden">
       {/* Sidebar */}
-      <aside className="w-56 border-r border-white/5 bg-[#0B0910] flex flex-col shrink-0">
-        <div className="p-5 border-b border-white/5 flex items-center gap-2.5">
+      <aside className="w-56 border-r border-border-custom bg-sidebar flex flex-col shrink-0">
+        <div className="p-5 border-b border-border-custom flex items-center gap-2.5">
           <div className="h-7 w-7 rounded-lg bg-gradient-to-tr from-[#E8184C] to-[#7C5CFF] flex items-center justify-center font-bold text-white text-xs">S</div>
           <span className="font-bold text-white text-sm">SiteFlow HR</span>
         </div>
@@ -420,7 +557,7 @@ export default function HRPayrollPage() {
       {/* Main */}
       <main className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <header className="h-14 border-b border-white/5 px-6 flex items-center justify-between bg-[#0B0910] shrink-0">
+        <header className="h-14 border-b border-border-custom px-6 flex items-center justify-between bg-sidebar shrink-0">
           <div className="flex items-center gap-3">
             <h1 className="text-sm font-bold text-white uppercase tracking-widest">
               {tab === "employees" && "Staff Directory"}
@@ -431,15 +568,24 @@ export default function HRPayrollPage() {
             </h1>
           </div>
           <div className="flex items-center gap-2">
+            {/* Theme Toggle */}
+            <button
+              onClick={toggleTheme}
+              className="flex items-center justify-center h-8 w-8 rounded-lg bg-white/[0.04] border border-border-custom text-zinc-400 hover:text-white transition-all cursor-pointer"
+              title="Toggle Theme"
+            >
+              {isLightTheme ? "🌙" : "☀️"}
+            </button>
+
             {tab === "employees" && (
               <button onClick={() => setShowAddEmp(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-white text-xs font-bold hover:bg-primary/90 transition-all">
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-white text-xs font-bold hover:bg-primary/90 transition-all cursor-pointer">
                 + Add Employee
               </button>
             )}
             {tab === "leaves" && (
               <button onClick={() => setShowApplyLeaveModal(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-white text-xs font-bold hover:bg-primary/90 transition-all">
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-white text-xs font-bold hover:bg-primary/90 transition-all cursor-pointer">
                 + Apply Leave
               </button>
             )}
@@ -582,18 +728,27 @@ export default function HRPayrollPage() {
 
           {/* ── TIMESHEETS ── */}
           {tab === "timesheets" && (
-            <div className="space-y-4">
+            <div className="space-y-8">
+              {/* Weekly Summary */}
               <div className="bg-[#171520] border border-white/5 rounded-xl overflow-hidden">
                 <div className="px-4 py-3 border-b border-white/5 flex items-center justify-between">
-                  <span className="text-xs font-bold text-white">Weekly Timesheets</span>
-                  <button className="px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-bold border border-primary/20 hover:bg-primary/20 transition-all">
-                    + New Timesheet
+                  <span className="text-xs font-bold text-white uppercase tracking-wider">Weekly Timesheet Approvals</span>
+                  <button
+                    onClick={() => {
+                      if (employees.length > 0) {
+                        setTimesheetForm(prev => ({ ...prev, employeeId: employees[0].id }));
+                      }
+                      setShowNewTimesheetDrawer(true);
+                    }}
+                    className="px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-bold border border-primary/20 hover:bg-primary/20 transition-all"
+                  >
+                    ⚡ Log Daily Activity
                   </button>
                 </div>
                 <table className="w-full text-xs">
                   <thead className="bg-white/[0.02] border-b border-white/5">
                     <tr>
-                      {["Employee", "Week", "Total Hours", "Status", "Actions"].map(h => (
+                      {["Employee", "Week Range", "Total Hours", "Status", "Actions"].map(h => (
                         <th key={h} className="text-left px-4 py-2.5 text-[10px] font-bold text-zinc-500 uppercase tracking-wider">{h}</th>
                       ))}
                     </tr>
@@ -631,6 +786,199 @@ export default function HRPayrollPage() {
                   </tbody>
                 </table>
               </div>
+
+              {/* Daily Log Entries */}
+              <div className="bg-[#171520] border border-white/5 rounded-xl overflow-hidden">
+                <div className="px-4 py-3 border-b border-white/5">
+                  <span className="text-xs font-bold text-white uppercase tracking-wider">👷 Daily Activity & Timesheet Logs</span>
+                </div>
+                {timesheetLogs.length === 0 ? (
+                  <div className="p-8 text-center text-zinc-500 text-xs">
+                    No daily timesheet entries logged yet. Click "Log Daily Activity" to start.
+                  </div>
+                ) : (
+                  <table className="w-full text-xs">
+                    <thead className="bg-white/[0.02] border-b border-white/5">
+                      <tr>
+                        {["Date", "Employee", "Start Time", "End Time", "Duration", "Hours", "Activity / Task", "Remarks"].map(h => (
+                          <th key={h} className="text-left px-4 py-2.5 text-[10px] font-bold text-zinc-500 uppercase tracking-wider">{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/[0.03]">
+                      {timesheetLogs.map((log: any) => {
+                        const taskName = projectTasks.find(t => t.id === log.task_id)?.name || "General Work";
+                        const formattedDate = new Date(log.entry_date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+                        
+                        let durationStr = "—";
+                        if (log.duration) {
+                          const h = Math.floor(log.duration / 60);
+                          const m = log.duration % 60;
+                          durationStr = `${h} Hr ${m} Min`;
+                        }
+                        
+                        const fmtTime = (iso: string) => {
+                          if (!iso) return "—";
+                          return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                        };
+
+                        return (
+                          <tr key={log.id} className="hover:bg-white/[0.02] transition-colors">
+                            <td className="px-4 py-3 font-mono text-zinc-400">{formattedDate}</td>
+                            <td className="px-4 py-3 font-semibold text-white">{log.employee_name || "Staff"}</td>
+                            <td className="px-4 py-3 font-mono text-green-400">{fmtTime(log.start_time)}</td>
+                            <td className="px-4 py-3 font-mono text-zinc-400">{fmtTime(log.end_time)}</td>
+                            <td className="px-4 py-3 text-white font-semibold font-mono">{durationStr}</td>
+                            <td className="px-4 py-3 font-bold text-blue-400 font-mono">{log.hours}h</td>
+                            <td className="px-4 py-3">
+                              <span className="px-2 py-0.5 rounded bg-white/5 border border-white/5 text-[10px] text-zinc-300">
+                                {taskName}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-zinc-400 max-w-[200px] truncate" title={log.activity_description}>
+                              {log.activity_description || "—"}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+
+              {/* sliding New Timesheet Drawer */}
+              {showNewTimesheetDrawer && (
+                <div className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-sm">
+                  <div className="w-full max-w-md h-full bg-[#0E0C15] border-l border-white/10 p-6 flex flex-col justify-between overflow-y-auto">
+                    <div className="space-y-6">
+                      <div className="flex justify-between items-center border-b border-white/5 pb-4">
+                        <div>
+                          <h3 className="text-sm font-bold text-white">Log Timesheet Entry</h3>
+                          <p className="text-[10px] text-zinc-500">Record daily hour logs & activity details</p>
+                        </div>
+                        <button
+                          onClick={() => setShowNewTimesheetDrawer(false)}
+                          className="text-zinc-500 hover:text-white text-lg font-bold"
+                        >
+                          ✕
+                        </button>
+                      </div>
+
+                      <div className="space-y-4">
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] text-zinc-500 font-bold uppercase block">Employee / Party Name</label>
+                          <select
+                            value={timesheetForm.employeeId}
+                            onChange={(e) => setTimesheetForm(prev => ({ ...prev, employeeId: e.target.value }))}
+                            className="w-full bg-[#171520] border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-primary"
+                          >
+                            <option value="">Select Employee</option>
+                            {employees.map(e => (
+                              <option key={e.id} value={e.id}>{e.name} ({e.designation})</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] text-zinc-500 font-bold uppercase block">Date</label>
+                          <input
+                            type="date"
+                            value={timesheetForm.date}
+                            onChange={(e) => setTimesheetForm(prev => ({ ...prev, date: e.target.value }))}
+                            className="w-full bg-[#171520] border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-primary"
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-1.5">
+                            <label className="text-[10px] text-zinc-500 font-bold uppercase block">Start Time</label>
+                            <input
+                              type="time"
+                              value={timesheetForm.startTime}
+                              onChange={(e) => setTimesheetForm(prev => ({ ...prev, startTime: e.target.value }))}
+                              className="w-full bg-[#171520] border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-primary"
+                            />
+                          </div>
+                          <div className="space-y-1.5">
+                            <label className="text-[10px] text-zinc-500 font-bold uppercase block">Stop Time</label>
+                            <input
+                              type="time"
+                              value={timesheetForm.endTime}
+                              onChange={(e) => setTimesheetForm(prev => ({ ...prev, endTime: e.target.value }))}
+                              className="w-full bg-[#171520] border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-primary"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Calculated Duration display */}
+                        <div className="p-3.5 rounded-lg bg-white/[0.02] border border-white/5 flex justify-between items-center text-xs">
+                          <div>
+                            <span className="text-[10px] text-zinc-500 uppercase block font-bold">Calculated Duration</span>
+                            <span className="text-white font-extrabold font-mono text-sm">
+                              {calculateHoursAndDuration(timesheetForm.startTime, timesheetForm.endTime).durationStr}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-[10px] text-zinc-500 uppercase block font-bold text-right">Hours Logged</span>
+                            <span className="text-primary font-black font-mono text-sm block text-right">
+                              {calculateHoursAndDuration(timesheetForm.startTime, timesheetForm.endTime).hours}h
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] text-zinc-500 font-bold uppercase block">Project Task / Activity</label>
+                          <select
+                            value={timesheetForm.taskId}
+                            onChange={(e) => setTimesheetForm(prev => ({ ...prev, taskId: e.target.value }))}
+                            className="w-full bg-[#171520] border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-primary"
+                          >
+                            <option value="">Select Project Task (Optional)</option>
+                            {projectTasks.map(t => (
+                              <option key={t.id} value={t.id}>{t.name}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] text-zinc-500 font-bold uppercase block">Remarks / Notes</label>
+                          <textarea
+                            value={timesheetForm.remarks}
+                            onChange={(e) => setTimesheetForm(prev => ({ ...prev, remarks: e.target.value }))}
+                            rows={3}
+                            placeholder="Enter remarks or details of work done..."
+                            className="w-full bg-[#171520] border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-primary resize-none"
+                          />
+                        </div>
+
+                        {/* File Upload Attachment Placeholder */}
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] text-zinc-500 font-bold uppercase block">Attachments</label>
+                          <div className="border border-dashed border-white/10 rounded-lg p-4 text-center cursor-pointer hover:bg-white/[0.01] transition-all">
+                            <span className="text-xl">📎</span>
+                            <span className="text-[10px] text-zinc-500 block mt-1">Upload files, logs or PDF proof</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-4 border-t border-white/5 pt-4 mt-6">
+                      <button
+                        onClick={() => setShowNewTimesheetDrawer(false)}
+                        className="flex-1 px-4 py-2 border border-white/10 rounded-lg text-xs font-bold text-zinc-400 hover:text-white transition-all"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleSaveTimesheetEntry}
+                        className="flex-1 px-4 py-2 bg-gradient-to-r from-primary to-[#FF3B6C] rounded-lg text-xs font-bold text-white shadow-lg shadow-primary/20 transition-all hover:brightness-110"
+                      >
+                        Save Entry
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

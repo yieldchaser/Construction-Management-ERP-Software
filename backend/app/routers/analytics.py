@@ -380,3 +380,118 @@ def get_company_analytics(company_id: uuid.UUID, db: Session = Depends(get_db)):
         "projects": project_summary,
         "subcontractor_scorecard": subcontractor_scorecard,
     }
+
+
+@router.get("/company/{company_id}/operational")
+def get_company_operational_analytics(company_id: uuid.UUID, db: Session = Depends(get_db)):
+    company = db.query(Company).filter(Company.id == company_id).first()
+    if not company:
+        raise HTTPException(status_code=404, detail="Company not found")
+
+    projects = db.query(Project).filter(Project.company_id == company_id).all()
+    project_ids = [p.id for p in projects]
+
+    # Calculate Project Health and Progress
+    project_summary = []
+    health_counts = {"Healthy": 0, "Warning": 0, "Critical": 0, "Onhold": 0, "Completed": 0}
+    status_counts = {"Not Started": 0, "Ongoing": 0, "Onhold": 0, "Completed": 0}
+
+    for p in projects:
+        # Determine status
+        p_status = p.status or "Ongoing"
+        if p_status in status_counts:
+            status_counts[p_status] += 1
+        else:
+            status_counts["Ongoing"] += 1
+
+        # Budget vs Spend
+        budget = db.query(ProjectBudget).filter(ProjectBudget.project_id == p.id).first()
+        budget_total = 0.0
+        if budget:
+            budget_total = (
+                _to_float(budget.material_budget)
+                + _to_float(budget.labour_budget)
+                + _to_float(budget.subcon_budget)
+                + _to_float(budget.equipment_budget)
+            )
+        spend = sum(_to_float(b.total_payable) for b in db.query(Bill).filter(Bill.project_id == p.id).all())
+
+        # Determine Health
+        if p_status == "Completed":
+            health = "Completed"
+        elif p_status == "Onhold":
+            health = "Onhold"
+        elif spend > budget_total and budget_total > 0:
+            health = "Critical"
+        elif spend > 0.9 * budget_total and budget_total > 0:
+            health = "Warning"
+        else:
+            health = "Healthy"
+        
+        if health in health_counts:
+            health_counts[health] += 1
+
+        # Task Progress
+        tasks = db.query(Task).filter(Task.project_id == p.id).all()
+        total_tasks = len(tasks)
+        completed_tasks = sum(1 for t in tasks if (t.status or "").lower() in COMPLETED_TASK_STATUSES)
+        progress_pct = round((completed_tasks / total_tasks) * 100, 1) if total_tasks else 0.0
+
+        project_summary.append({
+            "project_id": str(p.id),
+            "project_name": p.name,
+            "code": p.code or "—",
+            "status": p_status,
+            "health": health,
+            "start_date": p.start_date.split("T")[0] if isinstance(p.start_date, str) else p.start_date.strftime("%Y-%m-%d") if p.start_date else "—",
+            "end_date": p.end_date.split("T")[0] if isinstance(p.end_date, str) else p.end_date.strftime("%Y-%m-%d") if p.end_date else "—",
+            "progress": progress_pct,
+            "customer_name": p.customer_name or "—",
+            "key_personnel": "Supervisor"
+        })
+
+    # Last 7 Days Attendance Sparkline
+    attendance_series = []
+    # Last 7 Days Material Received Sparkline
+    material_series = []
+    
+    today = datetime.utcnow().date()
+    for i in range(6, -1, -1):
+        target_date = today - timedelta(days=i)
+        date_str = target_date.strftime("%Y-%m-%d")
+        
+        # Attendance counts
+        att_logs = db.query(AttendanceLog).filter(
+            AttendanceLog.project_id.in_(project_ids),
+            func.date(AttendanceLog.attendance_date) == target_date
+        ).all() if project_ids else []
+        
+        present = sum(1 for log in att_logs if log.status in ("Present", "Present (Off-Site)"))
+        absent = sum(1 for log in att_logs if log.status == "Absent")
+        
+        attendance_series.append({
+            "date": date_str,
+            "present": present,
+            "absent": absent
+        })
+
+        # Material receipt logs count
+        mat_txs = db.query(MaterialTransaction).filter(
+            MaterialTransaction.project_id.in_(project_ids),
+            func.date(MaterialTransaction.created_at) == target_date,
+            MaterialTransaction.type == "received"
+        ).count() if project_ids else 0
+        
+        material_series.append({
+            "date": date_str,
+            "count": mat_txs
+        })
+
+    return {
+        "company_id": str(company_id),
+        "health_counts": health_counts,
+        "status_counts": status_counts,
+        "attendance_series": attendance_series,
+        "material_series": material_series,
+        "projects": project_summary
+    }

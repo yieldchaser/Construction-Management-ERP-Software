@@ -12,6 +12,32 @@ export default function DashboardPage() {
   const [tallySyncStatus, setTallySyncStatus] = useState("Connected");
   const [isSyncing, setIsSyncing] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
+  const [overviewTab, setOverviewTab] = useState<"operational" | "financial">("operational");
+  const [operationalData, setOperationalData] = useState<any>(null);
+  const [isLightTheme, setIsLightTheme] = useState(false);
+
+  useEffect(() => {
+    setIsLightTheme(document.documentElement.classList.contains("light-theme"));
+  }, []);
+
+  const toggleTheme = () => {
+    const nextVal = !isLightTheme;
+    setIsLightTheme(nextVal);
+    if (nextVal) {
+      document.documentElement.classList.add("light-theme");
+    } else {
+      document.documentElement.classList.remove("light-theme");
+    }
+  };
+
+  useEffect(() => {
+    if (companyId) {
+      fetch(`http://localhost:8000/apis/v3/analytics/company/${companyId}/operational`)
+        .then((res) => res.json())
+        .then((data) => setOperationalData(data))
+        .catch((err) => console.error("Failed to fetch operational stats", err));
+    }
+  }, [companyId]);
 
   // Project setup wizard state
   const [isWizardOpen, setIsWizardOpen] = useState(false);
@@ -54,9 +80,9 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="flex h-screen bg-[#0E0C15] text-[#ededed] overflow-hidden">
+    <div className="flex h-screen bg-background text-foreground overflow-hidden">
       {/* Sidebar Navigation */}
-      <aside className="w-64 border-r border-white/5 bg-[#0B0910] flex flex-col justify-between h-full shrink-0">
+      <aside className="w-64 border-r border-border-custom bg-sidebar flex flex-col justify-between h-full shrink-0">
         <div className="flex flex-col overflow-y-auto flex-1">
           {/* Header */}
           <div className="p-6 flex items-center gap-3 border-b border-white/5">
@@ -345,7 +371,7 @@ export default function DashboardPage() {
       {/* Main Workspace Frame */}
       <main className="flex-1 flex flex-col overflow-hidden h-full">
         {/* Top Header */}
-        <header className="h-16 border-b border-white/5 px-8 flex items-center justify-between bg-[#0B0910] shrink-0">
+        <header className="h-16 border-b border-border-custom px-8 flex items-center justify-between bg-sidebar shrink-0">
           <div className="flex items-center gap-4">
             <h1 className="text-lg font-bold text-white uppercase tracking-wider">
               {activeProjDetails.name}
@@ -357,8 +383,17 @@ export default function DashboardPage() {
           </div>
 
           <div className="flex items-center gap-4">
+            {/* Theme Toggle */}
+            <button
+              onClick={toggleTheme}
+              className="flex items-center justify-center h-8 w-8 rounded-lg bg-white/[0.04] border border-border-custom text-zinc-400 hover:text-white transition-all cursor-pointer"
+              title="Toggle Theme"
+            >
+              {isLightTheme ? "🌙" : "☀️"}
+            </button>
+
             {/* Tally Connection status dot */}
-            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.02] border border-white/5 text-xs text-zinc-400">
+            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.02] border border-border-custom text-xs text-zinc-400">
               <span className="h-2 w-2 rounded-full bg-success" />
               <span>Tally Agent: {tallySyncStatus}</span>
             </div>
@@ -366,7 +401,7 @@ export default function DashboardPage() {
             <button
               onClick={handleSyncTally}
               disabled={isSyncing}
-              className="flex items-center justify-center gap-1.5 rounded-lg bg-secondary/15 hover:bg-secondary/25 border border-secondary/20 px-3.5 py-1.5 text-xs font-semibold text-secondary transition-all"
+              className="flex items-center justify-center gap-1.5 rounded-lg bg-secondary/15 hover:bg-secondary/25 border border-secondary/20 px-3.5 py-1.5 text-xs font-semibold text-secondary transition-all cursor-pointer"
             >
               {isSyncing ? (
                 <>
@@ -387,222 +422,314 @@ export default function DashboardPage() {
         <div className="flex-1 overflow-y-auto p-8 space-y-8">
           {activeTab === "overview" && (
             <>
-              {/* Zoho Operational Summary Dashboard Counters */}
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-                <div className="rounded-xl border border-white/5 bg-[#0B0910] p-5 flex flex-col justify-center items-center text-center">
-                  <span className="text-[11px] font-bold text-red-500 uppercase tracking-wider block mb-1">Not Started Projects</span>
-                  <span className="text-3xl font-black text-white">0</span>
-                </div>
-                <div className="rounded-xl border border-white/5 bg-[#0B0910] p-5 flex flex-col justify-center items-center text-center border-b-2 border-b-success">
-                  <span className="text-[11px] font-bold text-success uppercase tracking-wider block mb-1">Ongoing Projects</span>
-                  <span className="text-3xl font-black text-white">{projects.length}</span>
-                </div>
-                <div className="rounded-xl border border-white/5 bg-[#0B0910] p-5 flex flex-col justify-center items-center text-center">
-                  <span className="text-[11px] font-bold text-yellow-500 uppercase tracking-wider block mb-1">Onhold Projects</span>
-                  <span className="text-3xl font-black text-white">0</span>
-                </div>
-                <div className="rounded-xl border border-white/5 bg-[#0B0910] p-5 flex flex-col justify-center items-center text-center">
-                  <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">Completed Projects</span>
-                  <span className="text-3xl font-black text-white">0</span>
-                </div>
+              {/* Tab Selector */}
+              <div className="flex border-b border-white/5 pb-2 gap-4 shrink-0">
+                <button
+                  onClick={() => setOverviewTab("operational")}
+                  className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${
+                    overviewTab === "operational"
+                      ? "bg-primary/15 text-primary border border-primary/30"
+                      : "text-zinc-400 hover:text-white"
+                  }`}
+                >
+                  📊 Operational Dashboard
+                </button>
+                <button
+                  onClick={() => setOverviewTab("financial")}
+                  className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${
+                    overviewTab === "financial"
+                      ? "bg-secondary/15 text-secondary border border-secondary/30"
+                      : "text-zinc-400 hover:text-white"
+                  }`}
+                >
+                  💵 Financial Summary
+                </button>
               </div>
 
-              {/* Project Health & Zoho Sheets Grid Layout */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Gauge widget */}
-                <div className="rounded-2xl border border-white/5 bg-[#0B0910] p-6 flex flex-col justify-between items-center text-center">
-                  <div className="w-full flex justify-between items-center border-b border-white/5 pb-3">
-                    <span className="text-xs font-bold text-white uppercase tracking-wider">Project Health Index</span>
-                    <span className="h-2 w-2 rounded-full bg-success shadow-[0_0_8px_#00E5A3]" />
-                  </div>
-                  
-                  <div className="relative flex items-center justify-center h-40 w-full mt-4">
-                    {/* Semi-circular gauge chart SVG */}
-                    <svg className="w-48 h-24 overflow-visible" viewBox="0 0 100 50">
-                      <path d="M 10,50 A 40,40 0 0,1 90,50" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="12" strokeLinecap="round" />
-                      <path d="M 10,50 A 40,40 0 0,1 90,50" fill="none" stroke="url(#gaugeGrad)" strokeWidth="12" strokeLinecap="round" strokeDasharray="125" strokeDashoffset="0" />
-                      <defs>
-                        <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                          <stop offset="0%" stopColor="#7C5CFF" />
-                          <stop offset="100%" stopColor="#E8184C" />
-                        </linearGradient>
-                      </defs>
-                    </svg>
-                    <div className="absolute bottom-2 flex flex-col items-center">
-                      <span className="text-2xl font-black text-white">100%</span>
-                      <span className="text-[9px] uppercase font-bold text-zinc-500 tracking-wider">Optimal Operation</span>
+              {overviewTab === "operational" && (
+                <>
+                  {/* Operational Summary Counters */}
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div className="rounded-xl border border-white/5 bg-[#0B0910] p-5 flex flex-col justify-center items-center text-center">
+                      <span className="text-[11px] font-bold text-red-500 uppercase tracking-wider block mb-1">Not Started Projects</span>
+                      <span className="text-3xl font-black text-white">
+                        {operationalData?.status_counts?.["Not Started"] ?? 0}
+                      </span>
                     </div>
-                  </div>
-                  
-                  <div className="text-[10px] text-zinc-400 mt-2">
-                    All {projects.length} sites are running within planned tolerances.
-                  </div>
-                </div>
-
-                {/* Zoho sheet simulation */}
-                <div className="lg:col-span-2 rounded-2xl border border-white/5 bg-[#0B0910] p-6 space-y-4">
-                  <div className="flex flex-wrap justify-between items-center gap-2 border-b border-white/5 pb-3">
-                    <div className="flex items-center gap-3">
-                      <h4 className="text-xs font-extrabold uppercase tracking-wider text-white">📊 Project Operational Summary</h4>
-                      <span className="text-[10px] px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 font-bold font-mono">Zoho Analytics Powered</span>
+                    <div className="rounded-xl border border-white/5 bg-[#0B0910] p-5 flex flex-col justify-center items-center text-center border-b-2 border-b-success">
+                      <span className="text-[11px] font-bold text-success uppercase tracking-wider block mb-1">Ongoing Projects</span>
+                      <span className="text-3xl font-black text-white">
+                        {operationalData?.status_counts?.["Ongoing"] ?? projects.length}
+                      </span>
                     </div>
-                    <div className="flex items-center gap-2 text-[10px]">
-                      <button className="px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-zinc-300 font-semibold border border-white/5">Filter</button>
-                      <button className="px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-zinc-300 font-semibold border border-white/5">Sort</button>
-                      <button className="px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-zinc-300 font-semibold border border-white/5">More</button>
-                      <input type="text" placeholder="Search..." className="bg-[#15121F] border border-white/10 rounded px-2 py-0.5 w-28 text-white focus:outline-none focus:border-primary" />
+                    <div className="rounded-xl border border-white/5 bg-[#0B0910] p-5 flex flex-col justify-center items-center text-center">
+                      <span className="text-[11px] font-bold text-yellow-500 uppercase tracking-wider block mb-1">Onhold Projects</span>
+                      <span className="text-3xl font-black text-white">
+                        {operationalData?.status_counts?.["Onhold"] ?? 0}
+                      </span>
+                    </div>
+                    <div className="rounded-xl border border-white/5 bg-[#0B0910] p-5 flex flex-col justify-center items-center text-center">
+                      <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">Completed Projects</span>
+                      <span className="text-3xl font-black text-white">
+                        {operationalData?.status_counts?.["Completed"] ?? 0}
+                      </span>
                     </div>
                   </div>
 
-                  <div className="overflow-x-auto w-full">
-                    <table className="w-full text-left text-xs border-collapse">
-                      <thead>
-                        <tr className="border-b border-white/5 text-zinc-500 font-bold uppercase tracking-wider text-[10px]">
-                          <th className="py-2 px-3">Project Health</th>
-                          <th className="py-2 px-3">Project Name</th>
-                          <th className="py-2 px-3">Start Date</th>
-                          <th className="py-2 px-3">End Date</th>
-                          <th className="py-2 px-3">Project Status</th>
-                          <th className="py-2 px-3">Days Left</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-white/5">
-                        {projects.map((p) => {
-                          const daysLeft = Math.max(0, Math.ceil((new Date(p.endDate || "2026-12-31").getTime() - new Date().getTime()) / (1000 * 3600 * 24)));
-                          return (
-                            <tr key={p.id} className="hover:bg-white/[0.01] transition-colors">
-                              <td className="py-2.5 px-3">
-                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
-                                  p.health === "Healthy" ? "bg-success/10 text-success border-success/20" :
-                                  p.health === "Warning" ? "bg-yellow-500/10 text-yellow-400 border-yellow-500/20" :
-                                  "bg-primary/10 text-primary border-primary/20"
-                                }`}>
-                                  {p.health || "Healthy"}
-                                </span>
-                              </td>
-                              <td className="py-2.5 px-3 font-semibold text-white">{p.name}</td>
-                              <td className="py-2.5 px-3 text-zinc-400 font-mono">{p.startDate || "2026-01-01"}</td>
-                              <td className="py-2.5 px-3 text-zinc-400 font-mono">{p.endDate || "2026-12-31"}</td>
-                              <td className="py-2.5 px-3">
-                                <span className="flex items-center gap-1.5 text-zinc-300">
-                                  <span className="h-1.5 w-1.5 rounded-full bg-success" />
-                                  {p.status || "Ongoing"}
-                                </span>
-                              </td>
-                              <td className="py-2.5 px-3 font-semibold text-white font-mono">{daysLeft} Days</td>
+                  {/* Project Health & Operational Summary */}
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    {/* Gauge widget */}
+                    <div className="rounded-2xl border border-white/5 bg-[#0B0910] p-6 flex flex-col justify-between items-center text-center">
+                      <div className="w-full flex justify-between items-center border-b border-white/5 pb-3">
+                        <span className="text-xs font-bold text-white uppercase tracking-wider">Project Health Index</span>
+                        <span className="h-2 w-2 rounded-full bg-success shadow-[0_0_8px_#00E5A3]" />
+                      </div>
+                      
+                      <div className="relative flex items-center justify-center h-40 w-full mt-4">
+                        {/* Semi-circular gauge chart SVG */}
+                        <svg className="w-48 h-24 overflow-visible" viewBox="0 0 100 50">
+                          <path d="M 10,50 A 40,40 0 0,1 90,50" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="12" strokeLinecap="round" />
+                          <path d="M 10,50 A 40,40 0 0,1 90,50" fill="none" stroke="url(#gaugeGrad)" strokeWidth="12" strokeLinecap="round" strokeDasharray="125" strokeDashoffset="0" />
+                          <defs>
+                            <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                              <stop offset="0%" stopColor="#7C5CFF" />
+                              <stop offset="100%" stopColor="#E8184C" />
+                            </linearGradient>
+                          </defs>
+                        </svg>
+                        <div className="absolute bottom-2 flex flex-col items-center">
+                          <span className="text-2xl font-black text-white">100%</span>
+                          <span className="text-[9px] uppercase font-bold text-zinc-500 tracking-wider">Optimal Operation</span>
+                        </div>
+                      </div>
+                      
+                      <div className="text-[10px] text-zinc-400 mt-2">
+                        All {projects.length} sites are running within planned tolerances.
+                      </div>
+                    </div>
+
+                    {/* Project Operational Summary */}
+                    <div className="lg:col-span-2 rounded-2xl border border-white/5 bg-[#0B0910] p-6 space-y-4">
+                      <div className="flex flex-wrap justify-between items-center gap-2 border-b border-white/5 pb-3">
+                        <div className="flex items-center gap-3">
+                          <h4 className="text-xs font-extrabold uppercase tracking-wider text-white">📊 Project Operational Summary</h4>
+                          <span className="text-[10px] px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 font-bold font-mono">Real-time Stats</span>
+                        </div>
+                      </div>
+
+                      <div className="overflow-x-auto w-full">
+                        <table className="w-full text-left text-xs border-collapse">
+                          <thead>
+                            <tr className="border-b border-white/5 text-zinc-500 font-bold uppercase tracking-wider text-[10px]">
+                              <th className="py-2 px-3">Project Health</th>
+                              <th className="py-2 px-3">Project Name</th>
+                              <th className="py-2 px-3">Start Date</th>
+                              <th className="py-2 px-3">End Date</th>
+                              <th className="py-2 px-3">Progress</th>
+                              <th className="py-2 px-3">Customer</th>
                             </tr>
+                          </thead>
+                          <tbody className="divide-y divide-white/5">
+                            {(operationalData?.projects ?? projects).map((p: any) => {
+                              const prog = p.progress ?? 0;
+                              return (
+                                <tr key={p.project_id ?? p.id} className="hover:bg-white/[0.01] transition-colors">
+                                  <td className="py-2.5 px-3">
+                                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
+                                      (p.health ?? "Healthy") === "Healthy" ? "bg-success/10 text-success border-success/20" :
+                                      (p.health ?? "Healthy") === "Warning" ? "bg-yellow-500/10 text-yellow-400 border-yellow-500/20" :
+                                      "bg-primary/10 text-primary border-primary/20"
+                                    }`}>
+                                      {p.health ?? "Healthy"}
+                                    </span>
+                                  </td>
+                                  <td className="py-2.5 px-3 font-semibold text-white">{p.project_name ?? p.name}</td>
+                                  <td className="py-2.5 px-3 text-zinc-400 font-mono">{p.start_date || "—"}</td>
+                                  <td className="py-2.5 px-3 text-zinc-400 font-mono">{p.end_date || "—"}</td>
+                                  <td className="py-2.5 px-3">
+                                    <div className="flex items-center gap-2">
+                                      <div className="w-16 bg-white/5 rounded-full h-1.5 overflow-hidden">
+                                        <div className="bg-primary h-full rounded-full" style={{ width: `${prog}%` }} />
+                                      </div>
+                                      <span className="font-mono text-[10px] text-zinc-400">{prog}%</span>
+                                    </div>
+                                  </td>
+                                  <td className="py-2.5 px-3 font-semibold text-white">{p.customer_name ?? "—"}</td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Sparklines Grid */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    {/* Last 7 Days Attendance */}
+                    <div className="rounded-2xl border border-white/5 bg-[#0B0910] p-6 space-y-4">
+                      <div className="border-b border-white/5 pb-3">
+                        <h4 className="text-xs font-bold uppercase tracking-wider text-white">👷 Last 7 Days Attendance</h4>
+                      </div>
+                      <div className="flex h-36 items-end justify-between gap-2 pt-4">
+                        {(operationalData?.attendance_series ?? [
+                          { date: "06-26", present: 8, absent: 1 },
+                          { date: "06-27", present: 9, absent: 0 },
+                          { date: "06-28", present: 6, absent: 3 },
+                          { date: "06-29", present: 8, absent: 1 },
+                          { date: "06-30", present: 7, absent: 2 },
+                          { date: "07-01", present: 9, absent: 0 },
+                          { date: "07-02", present: 8, absent: 1 },
+                        ]).map((day: any, idx: number) => {
+                          const total = (day.present ?? 0) + (day.absent ?? 0);
+                          const presHeight = total > 0 ? ((day.present ?? 0) / 10) * 100 : 0;
+                          return (
+                            <div key={idx} className="flex-1 flex flex-col items-center gap-2">
+                              <div className="w-full bg-white/[0.02] rounded h-24 relative flex items-end">
+                                <div className="bg-success/60 w-full rounded-b" style={{ height: `${presHeight}%` }} />
+                              </div>
+                              <span className="text-[9px] text-zinc-500 font-mono">{day.date.slice(-5)}</span>
+                            </div>
                           );
                         })}
-                      </tbody>
-                    </table>
+                      </div>
+                    </div>
+
+                    {/* Last 7 Days Material Received */}
+                    <div className="rounded-2xl border border-white/5 bg-[#0B0910] p-6 space-y-4">
+                      <div className="border-b border-white/5 pb-3">
+                        <h4 className="text-xs font-bold uppercase tracking-wider text-white">📦 Last 7 Days Material Received (GRNs)</h4>
+                      </div>
+                      <div className="flex h-36 items-end justify-between gap-2 pt-4">
+                        {(operationalData?.material_series ?? [
+                          { date: "06-26", count: 2 },
+                          { date: "06-27", count: 4 },
+                          { date: "06-28", count: 1 },
+                          { date: "06-29", count: 3 },
+                          { date: "06-30", count: 0 },
+                          { date: "07-01", count: 5 },
+                          { date: "07-02", count: 2 },
+                        ]).map((day: any, idx: number) => {
+                          const countHeight = ((day.count ?? 0) / 6) * 100;
+                          return (
+                            <div key={idx} className="flex-1 flex flex-col items-center gap-2">
+                              <div className="w-full bg-white/[0.02] rounded h-24 relative flex items-end">
+                                <div className="bg-primary/60 w-full rounded-b" style={{ height: `${countHeight}%` }} />
+                              </div>
+                              <span className="text-[9px] text-zinc-500 font-mono">{day.date.slice(-5)}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {overviewTab === "financial" && (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                  {/* Steel calculator widget */}
+                  <div className="lg:col-span-2 rounded-2xl glass-panel p-6 space-y-6">
+                    <div className="flex justify-between items-center border-b border-white/5 pb-4">
+                      <h3 className="font-bold text-sm uppercase tracking-wider text-white">IS-456 Steel weight calculator</h3>
+                      <span className="text-xs text-zinc-500">Live API Verification</span>
+                    </div>
+
+                    <form className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="text-xs text-zinc-400">Diameter (D in mm)</label>
+                        <select
+                          value={diameter}
+                          onChange={(e) => setDiameter(Number(e.target.value))}
+                          className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary"
+                        >
+                          <option value={8}>8 mm</option>
+                          <option value={10}>10 mm</option>
+                          <option value={12}>12 mm</option>
+                          <option value={16}>16 mm</option>
+                          <option value={20}>20 mm</option>
+                        </select>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-xs text-zinc-400">Main Bar Count</label>
+                        <input
+                          type="number"
+                          value={barCount}
+                          onChange={(e) => setBarCount(Number(e.target.value))}
+                          className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-xs text-zinc-400">Length/Height (meters)</label>
+                        <input
+                          type="number"
+                          value={barLength}
+                          onChange={(e) => setBarLength(Number(e.target.value))}
+                          className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-xs text-zinc-400">Structural Wastage %</label>
+                        <input
+                          type="number"
+                          value={wastagePercent}
+                          onChange={(e) => setWastagePercent(Number(e.target.value))}
+                          className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary"
+                        />
+                      </div>
+                    </form>
+
+                    <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 flex flex-wrap gap-6 items-center justify-between text-xs">
+                      <div>
+                        <span className="text-zinc-500 block uppercase font-medium">Standard Unit Weight</span>
+                        <span className="font-bold text-white text-base">{standardUnitWeight.toFixed(3)} kg/m</span>
+                      </div>
+                      <div>
+                        <span className="text-zinc-500 block uppercase font-medium">Total Bar length</span>
+                        <span className="font-bold text-white text-base">{totalBarLength.toFixed(1)} meters</span>
+                      </div>
+                      <div>
+                        <span className="text-zinc-500 block uppercase font-medium">Reinforcement weight</span>
+                        <span className="font-bold text-primary text-base">{reinforcementWeight.toFixed(2)} kg</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Geofencing monitoring panel */}
+                  <div className="rounded-2xl glass-panel p-6 space-y-6 flex flex-col">
+                    <div className="flex justify-between items-center border-b border-white/5 pb-4 shrink-0">
+                      <h3 className="font-bold text-sm uppercase tracking-wider text-white">Geofence Guard</h3>
+                      <span className="h-2 w-2 rounded-full bg-success" />
+                    </div>
+
+                    <div className="flex-1 flex flex-col justify-center items-center py-6 space-y-4">
+                      {/* Simulated Geofence radar visualizer */}
+                      <div className="relative h-32 w-32 rounded-full border border-success/30 flex items-center justify-center bg-success/5">
+                        <div className="absolute inset-2 rounded-full border border-dashed border-success/40 animate-pulse" />
+                        <div className="absolute h-1.5 w-1.5 bg-success rounded-full" />
+                        <span className="absolute top-8 left-10 h-2 w-2 bg-success rounded-full shadow-[0_0_10px_#00E5A3] animate-ping" />
+                        <span className="absolute bottom-6 right-8 h-2 w-2 bg-success rounded-full" />
+                        <span className="absolute top-12 right-6 h-2 w-2 bg-red-500 rounded-full" />
+                      </div>
+
+                      <div className="text-center space-y-1">
+                        <span className="text-xs font-semibold text-white">Attendance coordinates matched</span>
+                        <p className="text-[10px] text-zinc-500 max-w-[200px]">
+                          Project Center geofence limits set to 500m radius.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="text-xs border-t border-white/5 pt-4 flex justify-between text-zinc-400 shrink-0">
+                      <span>1 Alert: Out-of-bounds punch-in</span>
+                      <button className="text-primary font-bold hover:underline">Review</button>
+                    </div>
                   </div>
                 </div>
-              </div>
-
-              {/* Main Content Panels */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Steel calculator / DPR validation widget */}
-                <div className="lg:col-span-2 rounded-2xl glass-panel p-6 space-y-6">
-                  <div className="flex justify-between items-center border-b border-white/5 pb-4">
-                    <h3 className="font-bold text-sm uppercase tracking-wider text-white">IS-456 Steel weight calculator</h3>
-                    <span className="text-xs text-zinc-500">Live API Verification</span>
-                  </div>
-
-                  <form className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <label className="text-xs text-zinc-400">Diameter (D in mm)</label>
-                      <select
-                        value={diameter}
-                        onChange={(e) => setDiameter(Number(e.target.value))}
-                        className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary"
-                      >
-                        <option value={8}>8 mm</option>
-                        <option value={10}>10 mm</option>
-                        <option value={12}>12 mm</option>
-                        <option value={16}>16 mm</option>
-                        <option value={20}>20 mm</option>
-                      </select>
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-xs text-zinc-400">Main Bar Count</label>
-                      <input
-                        type="number"
-                        value={barCount}
-                        onChange={(e) => setBarCount(Number(e.target.value))}
-                        className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary"
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-xs text-zinc-400">Length/Height (meters)</label>
-                      <input
-                        type="number"
-                        value={barLength}
-                        onChange={(e) => setBarLength(Number(e.target.value))}
-                        className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary"
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-xs text-zinc-400">Structural Wastage %</label>
-                      <input
-                        type="number"
-                        value={wastagePercent}
-                        onChange={(e) => setWastagePercent(Number(e.target.value))}
-                        className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary"
-                      />
-                    </div>
-                  </form>
-
-                  <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 flex flex-wrap gap-6 items-center justify-between text-xs">
-                    <div>
-                      <span className="text-zinc-500 block uppercase font-medium">Standard Unit Weight</span>
-                      <span className="font-bold text-white text-base">{standardUnitWeight.toFixed(3)} kg/m</span>
-                    </div>
-                    <div>
-                      <span className="text-zinc-500 block uppercase font-medium">Total Bar length</span>
-                      <span className="font-bold text-white text-base">{totalBarLength.toFixed(1)} meters</span>
-                    </div>
-                    <div>
-                      <span className="text-zinc-500 block uppercase font-medium">Reinforcement weight</span>
-                      <span className="font-bold text-primary text-base">{reinforcementWeight.toFixed(2)} kg</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Geofencing monitoring panel */}
-                <div className="rounded-2xl glass-panel p-6 space-y-6 flex flex-col">
-                  <div className="flex justify-between items-center border-b border-white/5 pb-4 shrink-0">
-                    <h3 className="font-bold text-sm uppercase tracking-wider text-white">Geofence Guard</h3>
-                    <span className="h-2 w-2 rounded-full bg-success" />
-                  </div>
-
-                  <div className="flex-1 flex flex-col justify-center items-center py-6 space-y-4">
-                    {/* Simulated Geofence radar visualizer */}
-                    <div className="relative h-32 w-32 rounded-full border border-success/30 flex items-center justify-center bg-success/5">
-                      <div className="absolute inset-2 rounded-full border border-dashed border-success/40 animate-pulse" />
-                      <div className="absolute h-1.5 w-1.5 bg-success rounded-full" />
-                      {/* Active points */}
-                      <span className="absolute top-8 left-10 h-2 w-2 bg-success rounded-full shadow-[0_0_10px_#00E5A3] animate-ping" />
-                      <span className="absolute bottom-6 right-8 h-2 w-2 bg-success rounded-full" />
-                      <span className="absolute top-12 right-6 h-2 w-2 bg-red-500 rounded-full" /> {/* worker out of fence */}
-                    </div>
-
-                    <div className="text-center space-y-1">
-                      <span className="text-xs font-semibold text-white">Attendance coordinates matched</span>
-                      <p className="text-[10px] text-zinc-500 max-w-[200px]">
-                        Project Center geofence limits set to 500m radius.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="text-xs border-t border-white/5 pt-4 flex justify-between text-zinc-400 shrink-0">
-                    <span>1 Alert: Out-of-bounds punch-in</span>
-                    <button className="text-primary font-bold hover:underline">Review</button>
-                  </div>
-                </div>
-              </div>
+              )}
             </>
           )}
 
