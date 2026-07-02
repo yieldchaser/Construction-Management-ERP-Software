@@ -12,6 +12,7 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import Date, cast, func
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -463,7 +464,7 @@ def get_company_operational_analytics(company_id: uuid.UUID, db: Session = Depen
         # Attendance counts
         att_logs = db.query(AttendanceLog).filter(
             AttendanceLog.project_id.in_(project_ids),
-            func.date(AttendanceLog.attendance_date) == target_date
+            cast(AttendanceLog.attendance_date, Date) == target_date
         ).all() if project_ids else []
         
         present = sum(1 for log in att_logs if log.status in ("Present", "Present (Off-Site)"))
@@ -478,7 +479,7 @@ def get_company_operational_analytics(company_id: uuid.UUID, db: Session = Depen
         # Material receipt logs count
         mat_txs = db.query(MaterialTransaction).filter(
             MaterialTransaction.project_id.in_(project_ids),
-            func.date(MaterialTransaction.created_at) == target_date,
+            cast(MaterialTransaction.created_at, Date) == target_date,
             MaterialTransaction.type == "received"
         ).count() if project_ids else 0
         
