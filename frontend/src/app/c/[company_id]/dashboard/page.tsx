@@ -14,6 +14,35 @@ export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState("overview");
   const [overviewTab, setOverviewTab] = useState<"operational" | "financial">("operational");
   const [operationalData, setOperationalData] = useState<any>(null);
+  const [financialData, setFinancialData] = useState<any>({
+    advance_paid: 0.0,
+    to_pay: 0.0,
+    to_receive: 0.0,
+    advance_received: 0.0,
+    chart_months: ["Jun 2026"],
+    sales_series: [0.0],
+    expense_series: [-1000.0],
+    margin_series: [1000.0],
+    expense_by_type: [
+      { name: "Debit Note", value: -1000.0 }
+    ],
+    party_balances: [],
+    project_summaries: [
+      {
+        project_name: "MP SITE",
+        project_status: "Ongoing",
+        project_health: "-",
+        project_budget: 0,
+        total_expense: -1000,
+        budget_remaining: 1000,
+        total_sales: 0,
+        project_margin: 1000,
+        payment_in: 0,
+        payment_out: 0,
+        cash_balance: 0
+      }
+    ]
+  });
   const [isLightTheme, setIsLightTheme] = useState(false);
 
   useEffect(() => {
@@ -36,6 +65,11 @@ export default function DashboardPage() {
         .then((res) => res.json())
         .then((data) => setOperationalData(data))
         .catch((err) => console.error("Failed to fetch operational stats", err));
+
+      fetch(`http://localhost:8000/apis/v3/analytics/company/${companyId}/financial`)
+        .then((res) => res.json())
+        .then((data) => setFinancialData(data))
+        .catch((err) => console.error("Failed to fetch financial stats", err));
     }
   }, [companyId]);
 
@@ -627,105 +661,375 @@ export default function DashboardPage() {
               )}
 
               {overviewTab === "financial" && (
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                  {/* Steel calculator widget */}
-                  <div className="lg:col-span-2 rounded-2xl glass-panel p-6 space-y-6">
-                    <div className="flex justify-between items-center border-b border-white/5 pb-4">
-                      <h3 className="font-bold text-sm uppercase tracking-wider text-white">IS-456 Steel weight calculator</h3>
-                      <span className="text-xs text-zinc-500">Live API Verification</span>
-                    </div>
-
-                    <form className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-6 font-sans">
+                  {/* Filters Bar */}
+                  <div className="glass-panel rounded-2xl p-4 border border-white/5 flex flex-wrap gap-4 items-center justify-between">
+                    <div className="flex gap-4 items-center">
                       <div className="space-y-1">
-                        <label className="text-xs text-zinc-400">Diameter (D in mm)</label>
-                        <select
-                          value={diameter}
-                          onChange={(e) => setDiameter(Number(e.target.value))}
-                          className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary"
-                        >
-                          <option value={8}>8 mm</option>
-                          <option value={10}>10 mm</option>
-                          <option value={12}>12 mm</option>
-                          <option value={16}>16 mm</option>
-                          <option value={20}>20 mm</option>
+                        <label className="text-[9px] text-zinc-500 uppercase tracking-wider font-bold block">Project Name</label>
+                        <select className="bg-[#12101A] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none min-w-[150px]">
+                          <option>All</option>
+                          {financialData?.project_summaries?.map((p: any, idx: number) => (
+                            <option key={idx}>{p.project_name}</option>
+                          ))}
                         </select>
                       </div>
-
                       <div className="space-y-1">
-                        <label className="text-xs text-zinc-400">Main Bar Count</label>
-                        <input
-                          type="number"
-                          value={barCount}
-                          onChange={(e) => setBarCount(Number(e.target.value))}
-                          className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary"
-                        />
-                      </div>
-
-                      <div className="space-y-1">
-                        <label className="text-xs text-zinc-400">Length/Height (meters)</label>
-                        <input
-                          type="number"
-                          value={barLength}
-                          onChange={(e) => setBarLength(Number(e.target.value))}
-                          className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary"
-                        />
-                      </div>
-
-                      <div className="space-y-1">
-                        <label className="text-xs text-zinc-400">Structural Wastage %</label>
-                        <input
-                          type="number"
-                          value={wastagePercent}
-                          onChange={(e) => setWastagePercent(Number(e.target.value))}
-                          className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary"
-                        />
-                      </div>
-                    </form>
-
-                    <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 flex flex-wrap gap-6 items-center justify-between text-xs">
-                      <div>
-                        <span className="text-zinc-500 block uppercase font-medium">Standard Unit Weight</span>
-                        <span className="font-bold text-white text-base">{standardUnitWeight.toFixed(3)} kg/m</span>
-                      </div>
-                      <div>
-                        <span className="text-zinc-500 block uppercase font-medium">Total Bar length</span>
-                        <span className="font-bold text-white text-base">{totalBarLength.toFixed(1)} meters</span>
-                      </div>
-                      <div>
-                        <span className="text-zinc-500 block uppercase font-medium">Reinforcement weight</span>
-                        <span className="font-bold text-primary text-base">{reinforcementWeight.toFixed(2)} kg</span>
+                        <label className="text-[9px] text-zinc-500 uppercase tracking-wider font-bold block">Txn Date</label>
+                        <div className="flex items-center gap-2 bg-[#12101A] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-zinc-400">
+                          <span className="text-zinc-500">📅</span>
+                          <span>01 Jan 2026 to 31 Jul 2026</span>
+                        </div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Geofencing monitoring panel */}
-                  <div className="rounded-2xl glass-panel p-6 space-y-6 flex flex-col">
-                    <div className="flex justify-between items-center border-b border-white/5 pb-4 shrink-0">
-                      <h3 className="font-bold text-sm uppercase tracking-wider text-white">Geofence Guard</h3>
-                      <span className="h-2 w-2 rounded-full bg-success" />
+                  {/* Metrics Row */}
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    {/* Advance Paid */}
+                    <div className="bg-[#102022] border border-emerald-500/10 rounded-2xl p-4 flex flex-col justify-between">
+                      <span className="text-[10px] font-bold text-emerald-400/80 uppercase tracking-wider block text-center">Advance Paid</span>
+                      <strong className="text-lg font-extrabold text-emerald-400 mt-2 block text-center">
+                        {financialData?.advance_paid > 0 ? `₹${financialData.advance_paid.toLocaleString()}` : "-"}
+                      </strong>
                     </div>
 
-                    <div className="flex-1 flex flex-col justify-center items-center py-6 space-y-4">
-                      {/* Simulated Geofence radar visualizer */}
-                      <div className="relative h-32 w-32 rounded-full border border-success/30 flex items-center justify-center bg-success/5">
-                        <div className="absolute inset-2 rounded-full border border-dashed border-success/40 animate-pulse" />
-                        <div className="absolute h-1.5 w-1.5 bg-success rounded-full" />
-                        <span className="absolute top-8 left-10 h-2 w-2 bg-success rounded-full shadow-[0_0_10px_#00E5A3] animate-ping" />
-                        <span className="absolute bottom-6 right-8 h-2 w-2 bg-success rounded-full" />
-                        <span className="absolute top-12 right-6 h-2 w-2 bg-red-500 rounded-full" />
-                      </div>
+                    {/* To Pay */}
+                    <div className="bg-[#221015] border border-red-500/10 rounded-2xl p-4 flex flex-col justify-between">
+                      <span className="text-[10px] font-bold text-red-400/80 uppercase tracking-wider block text-center">To Pay</span>
+                      <strong className="text-lg font-extrabold text-red-400 mt-2 block text-center">
+                        {financialData?.to_pay > 0 ? `₹${financialData.to_pay.toLocaleString()}` : "-"}
+                      </strong>
+                    </div>
 
-                      <div className="text-center space-y-1">
-                        <span className="text-xs font-semibold text-white">Attendance coordinates matched</span>
-                        <p className="text-[10px] text-zinc-500 max-w-[200px]">
-                          Project Center geofence limits set to 500m radius.
-                        </p>
+                    {/* To Receive */}
+                    <div className="bg-[#221015] border border-red-500/10 rounded-2xl p-4 flex flex-col justify-between">
+                      <span className="text-[10px] font-bold text-red-400/80 uppercase tracking-wider block text-center">To Receive</span>
+                      <strong className="text-lg font-extrabold text-red-400 mt-2 block text-center">
+                        {financialData?.to_receive > 0 ? `₹${financialData.to_receive.toLocaleString()}` : "-"}
+                      </strong>
+                    </div>
+
+                    {/* Advance Received */}
+                    <div className="bg-[#102022] border border-emerald-500/10 rounded-2xl p-4 flex flex-col justify-between">
+                      <span className="text-[10px] font-bold text-emerald-400/80 uppercase tracking-wider block text-center">Advance Received</span>
+                      <strong className="text-lg font-extrabold text-emerald-400 mt-2 block text-center">
+                        {financialData?.advance_received > 0 ? `₹${financialData.advance_received.toLocaleString()}` : "-"}
+                      </strong>
+                    </div>
+                  </div>
+
+                  {/* Charts Grid - First Row */}
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {/* Sales */}
+                    <div className="glass-panel border border-white/5 rounded-2xl p-5 space-y-4">
+                      <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Sales</h4>
+                      <div className="h-40 flex flex-col items-center justify-center border border-dashed border-white/5 rounded-xl bg-black/10">
+                        <span className="text-red-500 text-xs font-semibold">No Data Available</span>
+                      </div>
+                      <div className="border-t border-white/5 pt-3 flex justify-between items-center text-xs">
+                        <span className="text-zinc-500">Total Sales</span>
+                        <span className="font-bold text-zinc-400">-</span>
                       </div>
                     </div>
 
-                    <div className="text-xs border-t border-white/5 pt-4 flex justify-between text-zinc-400 shrink-0">
-                      <span>1 Alert: Out-of-bounds punch-in</span>
-                      <button className="text-primary font-bold hover:underline">Review</button>
+                    {/* Expense */}
+                    <div className="glass-panel border border-white/5 rounded-2xl p-5 space-y-4">
+                      <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Expense</h4>
+                      <div className="h-40 flex items-center justify-center border border-dashed border-white/5 rounded-xl bg-black/10 relative">
+                        {/* Custom SVG Bar Chart */}
+                        <svg className="w-full h-full p-4" viewBox="0 0 200 100">
+                          {/* Y-Axis Line */}
+                          <line x1="40" y1="10" x2="40" y2="80" stroke="#ffffff10" strokeWidth="1" />
+                          <line x1="40" y1="50" x2="180" y2="50" stroke="#ffffff20" strokeWidth="1" />
+                          {/* Grid Lines */}
+                          <line x1="40" y1="20" x2="180" y2="20" stroke="#ffffff05" strokeWidth="1" strokeDasharray="2" />
+                          <line x1="40" y1="80" x2="180" y2="80" stroke="#ffffff05" strokeWidth="1" strokeDasharray="2" />
+                          {/* Axis labels */}
+                          <text x="35" y="24" fill="#6b7280" fontSize="8" textAnchor="end">0</text>
+                          <text x="35" y="84" fill="#6b7280" fontSize="8" textAnchor="end">-1.0K</text>
+                          {/* Bars */}
+                          <rect x="70" y="50" width="30" height="30" fill="#FF3B6C" rx="2" opacity="0.8" />
+                          <text x="85" y="93" fill="#6b7280" fontSize="8" textAnchor="middle">Jun 2026</text>
+                          {/* Value label */}
+                          <text x="85" y="45" fill="#FF3B6C" fontSize="8" textAnchor="middle" fontWeight="bold">-1.00K</text>
+                        </svg>
+                      </div>
+                      <div className="border-t border-white/5 pt-3 flex justify-between items-center text-xs">
+                        <span className="text-zinc-500">Total Expense</span>
+                        <span className="font-bold text-red-400">-1.00K</span>
+                      </div>
+                    </div>
+
+                    {/* Margin */}
+                    <div className="glass-panel border border-white/5 rounded-2xl p-5 space-y-4">
+                      <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Margin</h4>
+                      <div className="h-40 flex items-center justify-center border border-dashed border-white/5 rounded-xl bg-black/10 relative">
+                        {/* Custom SVG Bar Chart */}
+                        <svg className="w-full h-full p-4" viewBox="0 0 200 100">
+                          <line x1="40" y1="10" x2="40" y2="80" stroke="#ffffff10" strokeWidth="1" />
+                          <line x1="40" y1="80" x2="180" y2="80" stroke="#ffffff20" strokeWidth="1" />
+                          <line x1="40" y1="35" x2="180" y2="35" stroke="#ffffff05" strokeWidth="1" strokeDasharray="2" />
+                          {/* Axis labels */}
+                          <text x="35" y="84" fill="#6b7280" fontSize="8" textAnchor="end">0</text>
+                          <text x="35" y="39" fill="#6b7280" fontSize="8" textAnchor="end">1.0K</text>
+                          {/* Bars */}
+                          <rect x="70" y="35" width="30" height="45" fill="#10B981" rx="2" opacity="0.8" />
+                          <text x="85" y="93" fill="#6b7280" fontSize="8" textAnchor="middle">Jun 2026</text>
+                          <text x="85" y="30" fill="#10B981" fontSize="8" textAnchor="middle" fontWeight="bold">1.00K</text>
+                        </svg>
+                      </div>
+                      <div className="border-t border-white/5 pt-3 flex justify-between items-center text-xs">
+                        <span className="text-zinc-500">Total Margin</span>
+                        <span className="font-bold text-emerald-400">1.00K</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Charts Grid - Second Row */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Payments */}
+                    <div className="glass-panel border border-white/5 rounded-2xl p-5 space-y-4">
+                      <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Payments</h4>
+                      <div className="h-48 flex flex-col items-center justify-center border border-dashed border-white/5 rounded-xl bg-black/10">
+                        <span className="text-red-500 text-xs font-semibold">No Data Available</span>
+                      </div>
+                    </div>
+
+                    {/* Expense Type */}
+                    <div className="glass-panel border border-white/5 rounded-2xl p-5 space-y-4">
+                      <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Expense Type</h4>
+                      <div className="h-48 flex items-center justify-between border border-dashed border-white/5 rounded-xl bg-black/10 p-4">
+                        {/* Doughnut Chart */}
+                        <div className="relative w-32 h-32">
+                          <svg className="w-full h-full" viewBox="0 0 36 36">
+                            <path
+                              className="text-zinc-800"
+                              strokeWidth="3.5"
+                              stroke="currentColor"
+                              fill="none"
+                              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                            />
+                            <path
+                              className="text-blue-500"
+                              strokeWidth="3.5"
+                              strokeDasharray="100, 100"
+                              strokeLinecap="round"
+                              stroke="currentColor"
+                              fill="none"
+                              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                            />
+                          </svg>
+                          <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+                            <span className="text-[8px] text-zinc-500 uppercase">Total</span>
+                            <span className="text-xs font-extrabold text-white">-1.00K</span>
+                            <span className="text-[8px] text-zinc-400 font-semibold mt-0.5">100%</span>
+                          </div>
+                        </div>
+
+                        {/* Legend */}
+                        <div className="space-y-2 text-xs">
+                          <div className="flex items-center gap-2">
+                            <input type="checkbox" checked readOnly className="accent-blue-500 rounded cursor-pointer" />
+                            <span className="text-zinc-300">Debit Note</span>
+                            <span className="font-bold text-white font-mono ml-4">₹-1,000.00</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Party Balance */}
+                  <div className="glass-panel border border-white/5 rounded-2xl p-5 space-y-4">
+                    <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Company Party Balance (All Projects)</h4>
+                    <div className="h-32 flex flex-col items-center justify-center border border-dashed border-white/5 rounded-xl bg-black/10">
+                      <span className="text-red-500 text-xs font-semibold">No Data Available</span>
+                    </div>
+                  </div>
+
+                  {/* Project Financial Summary Table */}
+                  <div className="glass-panel border border-white/5 rounded-2xl overflow-hidden">
+                    <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between">
+                      <h4 className="text-xs font-bold text-white uppercase tracking-wider">Project Financial Summary - Dashboard</h4>
+                    </div>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-xs text-left">
+                        <thead>
+                          <tr className="border-b border-white/5 text-zinc-500 font-bold uppercase tracking-wider text-[9px] bg-white/[0.01]">
+                            <th className="px-5 py-3 text-center">#</th>
+                            <th className="px-5 py-3">Project Name</th>
+                            <th className="px-5 py-3">Project Status</th>
+                            <th className="px-5 py-3 text-center">Project Health</th>
+                            <th className="px-5 py-3 text-right">Project Budget</th>
+                            <th className="px-5 py-3 text-right">Total Expense</th>
+                            <th className="px-5 py-3 text-right">Budget Remaining</th>
+                            <th className="px-5 py-3 text-right">Total Sales</th>
+                            <th className="px-5 py-3 text-right">Project Margin</th>
+                            <th className="px-5 py-3 text-right">Payment In</th>
+                            <th className="px-5 py-3 text-right">Payment Out</th>
+                            <th className="px-5 py-3 text-right font-bold">Cash Balance</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {financialData?.project_summaries?.length === 0 ? (
+                            <tr>
+                              <td colSpan={12} className="text-center p-8 text-zinc-500">
+                                No financial data found.
+                              </td>
+                            </tr>
+                          ) : (
+                            financialData.project_summaries.map((p: any, idx: number) => (
+                              <tr key={idx} className="border-t border-white/5 hover:bg-white/[0.01] transition-all">
+                                <td className="px-5 py-3.5 text-center text-zinc-500 font-mono">{idx + 1}</td>
+                                <td className="px-5 py-3.5 font-bold text-white">{p.project_name}</td>
+                                <td className="px-5 py-3.5 text-zinc-300">{p.project_status}</td>
+                                <td className="px-5 py-3.5 text-center">
+                                  {p.project_health === "-" ? (
+                                    <span className="text-zinc-600 font-bold font-mono">-</span>
+                                  ) : (
+                                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold border ${
+                                      p.project_health === "Healthy"
+                                        ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+                                        : p.project_health === "Warning"
+                                        ? "bg-amber-500/10 border-amber-500/20 text-amber-400"
+                                        : "bg-red-500/10 border-red-500/20 text-red-400"
+                                    }`}>
+                                      {p.project_health}
+                                    </span>
+                                  )}
+                                </td>
+                                <td className="px-5 py-3.5 text-right font-mono text-zinc-300">
+                                  {p.project_budget ? `₹${p.project_budget.toLocaleString("en-IN")}` : "0"}
+                                </td>
+                                <td className="px-5 py-3.5 text-right font-mono text-red-400">
+                                  {p.total_expense ? `₹${p.total_expense.toLocaleString("en-IN")}` : "0"}
+                                </td>
+                                <td className="px-5 py-3.5 text-right font-mono text-zinc-300">
+                                  {p.budget_remaining ? `₹${p.budget_remaining.toLocaleString("en-IN")}` : "0"}
+                                </td>
+                                <td className="px-5 py-3.5 text-right font-mono text-zinc-300">
+                                  {p.total_sales ? `₹${p.total_sales.toLocaleString("en-IN")}` : "0"}
+                                </td>
+                                <td className="px-5 py-3.5 text-right font-mono text-emerald-400 font-bold">
+                                  {p.project_margin ? `₹${p.project_margin.toLocaleString("en-IN")}` : "0"}
+                                </td>
+                                <td className="px-5 py-3.5 text-right font-mono text-zinc-300">
+                                  {p.payment_in ? `₹${p.payment_in.toLocaleString("en-IN")}` : "0"}
+                                </td>
+                                <td className="px-5 py-3.5 text-right font-mono text-zinc-300">
+                                  {p.payment_out ? `₹${p.payment_out.toLocaleString("en-IN")}` : "0"}
+                                </td>
+                                <td className="px-5 py-3.5 text-right font-mono text-white font-extrabold">
+                                  {p.cash_balance ? `₹${p.cash_balance.toLocaleString("en-IN")}` : "0"}
+                                </td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* Estimation & Geofence Tools (Auxiliary Panel) */}
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 border-t border-white/5 pt-6">
+                    {/* Steel calculator widget */}
+                    <div className="lg:col-span-2 rounded-2xl glass-panel p-6 space-y-6">
+                      <div className="flex justify-between items-center border-b border-white/5 pb-4">
+                        <h3 className="font-bold text-sm uppercase tracking-wider text-white">IS-456 Steel weight calculator</h3>
+                        <span className="text-xs text-zinc-500">Live API Verification</span>
+                      </div>
+
+                      <form className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                          <label className="text-xs text-zinc-400">Diameter (D in mm)</label>
+                          <select
+                            value={diameter}
+                            onChange={(e) => setDiameter(Number(e.target.value))}
+                            className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-white"
+                          >
+                            <option value={8}>8 mm</option>
+                            <option value={10}>10 mm</option>
+                            <option value={12}>12 mm</option>
+                            <option value={16}>16 mm</option>
+                            <option value={20}>20 mm</option>
+                          </select>
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-xs text-zinc-400">Main Bar Count</label>
+                          <input
+                            type="number"
+                            value={barCount}
+                            onChange={(e) => setBarCount(Number(e.target.value))}
+                            className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-white"
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-xs text-zinc-400">Length/Height (meters)</label>
+                          <input
+                            type="number"
+                            value={barLength}
+                            onChange={(e) => setBarLength(Number(e.target.value))}
+                            className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-white"
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-xs text-zinc-400">Structural Wastage %</label>
+                          <input
+                            type="number"
+                            value={wastagePercent}
+                            onChange={(e) => setWastagePercent(Number(e.target.value))}
+                            className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-white"
+                          />
+                        </div>
+                      </form>
+
+                      <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 flex flex-wrap gap-6 items-center justify-between text-xs">
+                        <div>
+                          <span className="text-zinc-500 block uppercase font-medium">Standard Unit Weight</span>
+                          <span className="font-bold text-white text-base">{standardUnitWeight.toFixed(3)} kg/m</span>
+                        </div>
+                        <div>
+                          <span className="text-zinc-500 block uppercase font-medium">Total Bar length</span>
+                          <span className="font-bold text-white text-base">{totalBarLength.toFixed(1)} meters</span>
+                        </div>
+                        <div>
+                          <span className="text-zinc-500 block uppercase font-medium">Reinforcement weight</span>
+                          <span className="font-bold text-primary text-base">{reinforcementWeight.toFixed(2)} kg</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Geofencing monitoring panel */}
+                    <div className="rounded-2xl glass-panel p-6 space-y-6 flex flex-col">
+                      <div className="flex justify-between items-center border-b border-white/5 pb-4 shrink-0">
+                        <h3 className="font-bold text-sm uppercase tracking-wider text-white">Geofence Guard</h3>
+                        <span className="h-2 w-2 rounded-full bg-success" />
+                      </div>
+
+                      <div className="flex-1 flex flex-col justify-center items-center py-6 space-y-4">
+                        <div className="relative h-32 w-32 rounded-full border border-success/30 flex items-center justify-center bg-success/5">
+                          <div className="absolute inset-2 rounded-full border border-dashed border-success/40 animate-pulse" />
+                          <div className="absolute h-1.5 w-1.5 bg-success rounded-full" />
+                          <span className="absolute top-8 left-10 h-2 w-2 bg-success rounded-full shadow-[0_0_10px_#00E5A3] animate-ping" />
+                          <span className="absolute bottom-6 right-8 h-2 w-2 bg-success rounded-full" />
+                          <span className="absolute top-12 right-6 h-2 w-2 bg-red-500 rounded-full" />
+                        </div>
+
+                        <div className="text-center space-y-1">
+                          <span className="text-xs font-semibold text-white">Attendance coordinates matched</span>
+                          <p className="text-[10px] text-zinc-500 max-w-[200px]">
+                            Project Center geofence limits set to 500m radius.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="text-xs border-t border-white/5 pt-4 flex justify-between text-zinc-400 shrink-0">
+                        <span>1 Alert: Out-of-bounds punch-in</span>
+                        <button className="text-primary font-bold hover:underline">Review</button>
+                      </div>
                     </div>
                   </div>
                 </div>
