@@ -85,15 +85,15 @@ export default function DashboardPage() {
       <aside className="w-64 border-r border-border-custom bg-sidebar flex flex-col justify-between h-full shrink-0">
         <div className="flex flex-col overflow-y-auto flex-1">
           {/* Header */}
-          <div className="p-6 flex items-center gap-3 border-b border-white/5">
+          <div className="p-6 flex items-center gap-3 border-b border-border-custom">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-tr from-[#E8184C] to-[#7C5CFF] font-sans font-bold text-white">
               S
             </div>
-            <span className="font-bold text-white tracking-tight">SiteFlow Console</span>
+            <span className="font-bold text-foreground tracking-tight">SiteFlow Console</span>
           </div>
 
           {/* Project Switcher */}
-          <div className="p-4 border-b border-white/5 bg-white/[0.01]">
+          <div className="p-4 border-b border-border-custom bg-foreground/[0.01]">
             <label className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider block mb-1.5">
               Active Project Context
             </label>
@@ -101,7 +101,7 @@ export default function DashboardPage() {
               value={activeProject}
               onChange={(e) => setActiveProject(e.target.value)}
               suppressHydrationWarning={true}
-              className="w-full bg-[#15121F] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white focus:outline-none focus:border-primary"
+              className="w-full bg-elevated border border-border-custom rounded-lg px-2 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary"
             >
               {projects.map((p) => (
                 <option key={p.id} value={p.id}>
