@@ -32,6 +32,9 @@ SiteFlow is an outcome-driven, high-fidelity ERP workspace tailored to the India
 
 * **🧮 Interactive Subcontractor Billing**: Real-time invoice calculators supporting pre-tax and post-tax works contract deduction configurations with automatic Indian GST and TDS presets.
 * **📍 Geofenced Mobile PWA Attendance**: GPS geofencing utilizing Haversine coordinate validation with Hinglish/Tamil localization and offline local storage backup for field workers.
+* **⏱️ Daily Activity & Timesheet Logger**: High-fidelity daily activity scheduler with start/stop times, reactive duration calculations, WBS task links, remarks, and file attachments.
+* **📈 Dual-Mode Company Dashboard**: Dynamic tabs split between **Operational Overview** (project health, 7-day labor attendance sparklines, 7-day GRN receipt counts) and **Financial Summary**.
+* **🎨 Theme-Aware custom Scrollbars**: Adaptive thin WebKit scrollbar tracks with a global `☀️` / `🌙` header toggle for a seamless dark-to-light transition.
 * **📅 WBS Gantt Timelines**: Forward-pass Critical Path Method (CPM) scheduler calculating early/late starts, finishes, and total task floats with circular dependency protection.
 * **📦 CPWD Material Quantification**: Built-in concrete mix estimators (IS 456), rebar reinforcement steel weight calculators (IS 1786), brick masonry logs, and wall paint area estimators.
 * **🔒 Multi-Tenant Data Isolation**: Direct row-level security and company-scoped keys ensuring strict data division between tenants while permitting overlapping sequence numbers.
@@ -210,11 +213,17 @@ $$f_c = \frac{\text{Peak Failure Load (N)}}{\text{Cube Area } (150 \times 150 \t
 
 ## 🎨 Premium UI/UX & Design Philosophy
 
-SiteFlow features a state-of-the-art **glassmorphic dark-mode canvas** optimized for long hours of office operations:
-* **Background Canvas**: `#0E0C15` (Deep space slate-black)
-* **Card Containers**: `#171520` with borders of `rgba(255, 255, 255, 0.06)` and `backdrop-filter: blur(12px)`
-* **Active Highlights**: `#E8184C` (Hot pink / crimson for active indicators and CTAs)
-* **Secondary Highlights**: `#7C5CFF` (Interactive purple for sub-elements and navigation tabs)
+SiteFlow features a state-of-the-art **glassmorphic canvas** with full support for light and dark modes:
+* **Dark Theme Specs**:
+  - **Background Canvas**: `#0E0C15` (Deep space slate-black)
+  - **Card Containers**: `#171520` with borders of `rgba(255, 255, 255, 0.06)` and `backdrop-filter: blur(12px)`
+  - **Active Highlights**: `#E8184C` (Hot pink / crimson for active indicators and CTAs)
+  - **Secondary Highlights**: `#7C5CFF` (Interactive purple for sub-elements and navigation tabs)
+* **Light Theme Specs**:
+  - **Background Canvas**: `#F8F9FD` (Off-white porcelain slate)
+  - **Card Containers**: `#FFFFFF` with borders of `rgba(15, 23, 42, 0.08)`
+  - **Sidebar Navigation**: `#F1F4FA` (Light gray-blue)
+* **Styled WebKit Scrollbars**: Replaces raw browser sliders with a custom `6px` rounded scrollbar thumb. The thumb automatically transitions between semi-transparent white (`rgba(255, 255, 255, 0.1)`) and slate (`rgba(15, 23, 42, 0.12)`) based on active themes to guarantee high visual elegance.
 * **Typography**: Clean, editorial-style **Inter** font with tight letter spacing for high data readability.
 
 ---
@@ -230,12 +239,20 @@ SiteFlow features a state-of-the-art **glassmorphic dark-mode canvas** optimized
 
 ## 📍 In-Depth Subpage & Feature Map
 
-### 1. Executive Analytics (`/c/[company_id]/analytics`)
+### 1. Company Dashboard (`/c/[company_id]/dashboard`)
+- **Operational Tab**:
+  - **Project Health Index Gauge**: Displays real-time operation percentages.
+  - **SVG Sparkline Charts**: Displays past 7 days staff attendance and raw GRN material receipts count.
+  - **Project Summary Grid**: Shows start/end dates, progress bar indicators, and customer details.
+- **Financial Tab**:
+  - Consolidates material and site security resources including: WBS Gantt Schedulers, IS-456 Steel Calculators, and Geofence Guard radar systems.
+
+### 2. Executive Analytics (`/c/[company_id]/analytics`)
 - **Interactive S-Curve Chart**: Renders planned progress vs. actual progress using SVG coordinates. Hovering on coordinates displays a glassmorphic tooltip with planned %, actual %, and variance calculations.
 - **Interactive Budget Burn Chart**: Plots cumulative spend against total project budget. Hovering displays the exact burn share percentage and Rupees (INR) spent.
 - **Project Scoreboard**: Live comparison table detailing project budget, cumulative spend, completion status, and active tasks.
 
-### 2. Project Modules (`/c/[company_id]/p/[project_id]/`)
+### 3. Project Modules (`/c/[company_id]/p/[project_id]/`)
 - **Attendance & Payroll (`/attendance`)**:
   - GPS-tagged punch-in / punch-out geofencing with local storage backup.
   - Localization support for **English**, **Hinglish**, **Hindi**, and **Tamil** for site staff.
@@ -251,7 +268,7 @@ SiteFlow features a state-of-the-art **glassmorphic dark-mode canvas** optimized
 - **Drawings (`/drawings`)**: Version-controlled construction blueprint registry.
 - **Equipment (`/equipment`)**: Heavy machinery (Excavators, Transit Mixers) fuel logs and run hours.
 - **Finance (`/finance`)**: Cash flow projections, petty cash receipts, and supplier ledgers.
-- **HR (`/hr`)**: Site staff salary payouts, advance register, and role assignments.
+- **HR (`/hr`)**: Site staff directory, monthly payroll runs (Basic, HRA, Allowances, PF, ESI, TDS calculations), and the high-fidelity **Daily Timesheet Logger** drawer log creator.
 - **Procurement (`/procurement`)**: Material indents, Purchase Orders (PO), and Goods Receipt Notes (GRN) with approval gates.
 - **Production (`/production`)**: Task-level work quantities (masonry, tiling, concrete).
 - **Quality (`/quality`)**: Concrete slump test logs, cube strength registers, and checklists.
