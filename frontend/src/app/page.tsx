@@ -116,7 +116,7 @@ export default function LandingPage() {
             href="/login"
             className="w-full sm:w-auto flex items-center justify-center rounded-xl bg-gradient-to-r from-primary to-[#FF3B6C] px-8 py-4 text-base font-bold text-white shadow-xl shadow-primary/20 hover:opacity-90 active:scale-[0.98] transition-all cursor-pointer"
           >
-            Enter Sandbox Environment
+            Explore Live Console
           </Link>
           <a
             href="#modules"
@@ -162,20 +162,20 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Sandbox Access Banner */}
+      {/* Console Demo Access Banner */}
       <section className="max-w-4xl mx-auto px-6 py-16">
         <div className="rounded-3xl bg-radial from-[#1C1832] to-[#121020] border border-white/10 p-12 text-center space-y-6 relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-full bg-cover opacity-10 pointer-events-none" />
-          <h2 className="text-3xl font-bold text-white">Ready to test the SiteFlow Sandbox?</h2>
+          <h2 className="text-3xl font-bold text-white">Ready to Experience SiteFlow?</h2>
           <p className="text-zinc-400 text-sm max-w-md mx-auto">
-            Experience automatic OTP bypass login, interactive local calculators, and instant ledger matching interfaces with full demo permissions.
+            Access the full suite of interactive calculators, ledger matching dashboards, and staff attendance features instantly with demo permissions.
           </p>
           <div className="pt-2">
             <Link
               href="/login"
               className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-secondary to-[#9C85FF] px-8 py-3.5 text-sm font-bold text-white shadow-lg shadow-secondary/15 hover:opacity-90 active:scale-[0.98] transition-all cursor-pointer"
             >
-              Launch Dashboard Sandbox
+              Launch Console Demo
             </Link>
           </div>
         </div>

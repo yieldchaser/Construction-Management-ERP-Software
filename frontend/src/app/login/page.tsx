@@ -326,9 +326,9 @@ export default function LoginPage() {
             </form>
           )}
 
-          {/* Quick Sandbox / Developer Helper Notice */}
+          {/* Quick Console Demo / Developer Helper Notice */}
           <div className="rounded-xl border border-white/5 bg-white/[0.02] p-4 text-xs text-zinc-500 space-y-2">
-            <span className="font-semibold text-zinc-400 block">⚡ Dev-Sandbox Environment Mode:</span>
+            <span className="font-semibold text-zinc-400 block">⚡ Developer Console Demo Mode:</span>
             <p>
               Use any valid 10-digit phone number. Enter code <code className="text-secondary font-mono font-bold">123456</code> to bypass and auto-onboard user and company profiles.
             </p>
