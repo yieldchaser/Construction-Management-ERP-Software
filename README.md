@@ -1,14 +1,46 @@
-# SiteFlow — Premium Construction Management ERP Platform
+<p align="center">
+  <img width="100%" alt="SiteFlow Banner" src="https://asset.acho.io/github/img/banner.gif" />
+</p>
 
-SiteFlow is an enterprise-grade, highly secure, and visually stunning Construction Management ERP Platform designed for developers, builders, contractors, architects, infrastructure firms, and project management consultancies (PMC).
+<p align="center">
+  <a href="https://github.com/yieldchaser/Construction-Management-ERP-Software/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="MIT License" /></a>
+  <a href="https://construction-management-erp-softwar-ten.vercel.app"><img src="https://img.shields.io/badge/Live_Site-Vercel-success?style=flat-square&logo=vercel" alt="Live Site" /></a>
+  <a href="https://construction-erp-backend-73vm.onrender.com"><img src="https://img.shields.io/badge/Live_API-Render-009688?style=flat-square&logo=fastapi&logoColor=white" alt="Live API" /></a>
+  <img src="https://img.shields.io/badge/Next.js-15_App_Router-black?style=flat-square&logo=next.js" alt="Next.js" />
+  <img src="https://img.shields.io/badge/PostgreSQL-Supabase-3ECF8E?style=flat-square&logo=supabase&logoColor=white" alt="Supabase" />
+</p>
 
-By replacing scattered spreadsheets, paper registers, and untracked messaging with a unified real-time workspace, SiteFlow provides absolute visibility over budgets, schedule timelines, procurement workflows, labor attendance, and subcontractor billing.
+<p align="center">
+  <img src="https://img.shields.io/badge/Works_Contracts-Indian_Tax_Presets-E8184C?style=flat-square" alt="Indian Tax Presets" />
+  <img src="https://img.shields.io/badge/IS_456:2000-Concrete_Math-7C5CFF?style=flat-square" alt="IS 456 Concrete Math" />
+  <img src="https://img.shields.io/badge/IS_1786-Steel_Weight-blue?style=flat-square" alt="IS 1786 Steel Weight" />
+  <img src="https://img.shields.io/badge/Haversine-Geofenced_Attendance-orange?style=flat-square" alt="Geofenced Attendance" />
+  <img src="https://img.shields.io/badge/CPWD_Standards-Plaster_&_Brick-059669?style=flat-square" alt="CPWD Standards" />
+</p>
+
+<p align="center"><em>SiteFlow is the premium, enterprise-grade Construction Management ERP designed specifically for developers, builders, contractors, and project management consultancies.</em></p>
+
+---
+
+## Overview
+
+SiteFlow is an outcome-driven, high-fidelity ERP workspace tailored to the Indian construction industry. By consolidating scattered Excel sheets, manual site registers, and geofenced field operations into a single real-time glassmorphic canvas, SiteFlow delivers absolute control over engineering BOQ spreadsheets, subcontractor RA billing math, CPWD-compliant material estimation, purchase order workflows, and executive schedule timelines. It integrates directly with Tally Prime and Zoho Books ledger cards to automate back-office reconciliation.
+
+---
+
+## Key Features
+
+* **🧮 Interactive Subcontractor Billing**: Real-time invoice calculators supporting pre-tax and post-tax works contract deduction configurations with automatic Indian GST and TDS presets.
+* **📍 Geofenced Mobile PWA Attendance**: GPS geofencing utilizing Haversine coordinate validation with Hinglish/Tamil localization and offline local storage backup for field workers.
+* **📅 WBS Gantt Timelines**: Forward-pass Critical Path Method (CPM) scheduler calculating early/late starts, finishes, and total task floats with circular dependency protection.
+* **📦 CPWD Material Quantification**: Built-in concrete mix estimators (IS 456), rebar reinforcement steel weight calculators (IS 1786), brick masonry logs, and wall paint area estimators.
+* **🔒 Multi-Tenant Data Isolation**: Direct row-level security and company-scoped keys ensuring strict data division between tenants while permitting overlapping sequence numbers.
 
 ---
 
 ## 📊 System Architecture & Data Flow
 
-SiteFlow synchronizes field operations with back-office accounting systems (Tally Prime, Zoho Books) via a robust PostgreSQL datastore and FastAPI calculation core:
+SiteFlow maps jobsite inputs (materials, attendance, progress photos) directly to core calculation engines and accounting records:
 
 ```mermaid
 graph TD
@@ -55,35 +87,30 @@ graph TD
 SiteFlow embeds standardized civil engineering codes, CPWD specifications, and Indian statutory tax rules within its calculation core.
 
 ### 1. Concrete Mix & Material Estimation (IS 456:2000)
-To convert wet concrete volume into the raw materials (cement, sand, aggregate) required, SiteFlow uses a dry volume conversion factor of **$1.54$** (to account for voids and shrinkage during wet mixing):
+To convert wet concrete volume into raw material quantities, SiteFlow applies a dry volume conversion factor of **$1.54$** to account for void ratios and mixing shrinkage:
 $$\text{Dry Volume} = \text{Wet Volume} \times 1.54$$
 
-Material breakdowns are computed based on standard nominal mix ratios (Cement : Sand : Coarse Aggregate) specified under **CPWD Standards**:
+Quantification breaks down cement, sand, and coarse aggregates using CPWD-compliant mix ratios:
 * **M5 (1:5:10)** | **M7.5 (1:4:8)** | **M10 (1:3:6)** | **M15 (1:2:4)** | **M20 (1:1.5:3)** | **M25 (1:1:2)**
 
-#### Material Quantification Formulas:
-* **Cement Bags** (assuming $50\text{ kg}$ per bag, density of $1440\text{ kg/m}^3$, corresponding to volume $0.0347\text{ m}^3$):
-  $$\text{Cement (bags)} = \frac{\text{Dry Volume} \times \text{Cement Ratio}}{\text{Sum of Mix Ratios} \times 0.0347}$$
-* **Sand Volume ($m^3$):**
-  $$\text{Sand Volume} = \frac{\text{Dry Volume} \times \text{Sand Ratio}}{\text{Sum of Mix Ratios}}$$
-* **Coarse Aggregate Volume ($m^3$):**
-  $$\text{Aggregate Volume} = \frac{\text{Dry Volume} \times \text{Coarse Aggregate Ratio}}{\text{Sum of Mix Ratios}}$$
+$$\text{Cement (bags)} = \frac{\text{Dry Volume} \times \text{Cement Ratio}}{\text{Sum of Mix Ratios} \times 0.0347 \text{ m}^3\text{/bag}}$$
+$$\text{Sand Volume } (m^3) = \frac{\text{Dry Volume} \times \text{Sand Ratio}}{\text{Sum of Mix Ratios}}$$
+$$\text{Coarse Aggregate Volume } (m^3) = \frac{\text{Dry Volume} \times \text{Coarse Aggregate Ratio}}{\text{Sum of Mix Ratios}}$$
 
 ---
 
-### 2. TMT Rebar Structural Weight Calculation (IS 1786)
-Reinforcement steel rebar weight is estimated using nominal diameters according to the Indian Standard unit weight formula:
+### 2. TMT Rebar Weight Calculations (IS 1786)
+Reinforcement steel rebar weight is calculated using standard nominal diameters according to the Indian Standard unit weight formula:
 $$w = \frac{d^2}{162.2} \text{ kg/m}$$
 *Where $d$ is the rebar diameter in millimeters.*
 
-Total weight (including lap length and waste margins) is computed as:
+Total reinforcement requirements (incorporating lap length and waste multipliers) are calculated as:
 $$W_{\text{total}} = \sum \left( L_i \times N_i \times \frac{d_i^2}{162.2} \right) \times (1 + \text{Wastage Pct})$$
-*Where $L_i$ is the length of bar $i$ in meters, and $N_i$ is the count of bars.*
 
 ---
 
 ### 3. Subcontractor Billing Tax Deduction Engine
-Subcontractor Running Account (RA) bills are calculated under two distinct prioritization sequences depending on the Works Contract terms:
+SiteFlow computes subcontractor Running Account (RA) bills according to two distinct prioritization structures depending on contract terms:
 
 ```mermaid
 flowchart TD
@@ -114,87 +141,70 @@ flowchart TD
     class NetPayablePre,NetPayablePost output;
 ```
 
-#### Formula Case A: Pre-Tax Deductions (TDS & Retention on Base)
-Under this mode, security deductions and tax withholdings are subtracted to establish a net taxable base *prior* to applying GST (often used when subcontractors supply raw materials subject to offset):
-1. **TDS Withholding** (Section 194C / 194Q): $\text{TDS} = S \times \text{TDS Pct}$ (e.g., 2% for Corporate, 1% for Individual).
-2. **Retention Money**: $\text{Retention} = S \times \text{Retention Pct}$ (e.g., 5% held as security deposit).
-3. **Net Taxable Base**: $TB = S - \text{TDS} - \text{Retention} - A$ (where $A$ is the mobilization advance recovery).
-4. **GST Amount**: $\text{GST} = TB \times \text{GST Pct}$ (typically 18% for Works Contract).
+#### Pre-Tax Deductions (TDS & Retention on Base)
+TDS and security retentions are subtracted *before* applying GST (applicable when subcontractor materials are offset):
+1. **TDS Withholding**: $\text{TDS} = S \times \text{TDS Pct}$ (e.g. Section 194C 1% or 2%).
+2. **Retention Money**: $\text{Retention} = S \times \text{Retention Pct}$.
+3. **Net Taxable Base**: $TB = S - \text{TDS} - \text{Retention} - A$ (where $A$ is the advance recovery).
+4. **GST Amount**: $\text{GST} = TB \times \text{GST Pct}$ (Works Contract 18%).
 5. **Net Payable**: $\text{Net Payable} = TB + \text{GST}$.
 
-#### Formula Case B: Post-Tax Deductions (Standard Indian Works Contract)
-GST is calculated on the raw subtotal first, and deductions are calculated on their respective base values before being subtracted:
-1. **GST Amount**: $\text{GST} = S \times \text{GST Pct}$ (applied on raw base subtotal).
+#### Post-Tax Deductions (Standard Works Contract)
+GST is applied directly to the base subtotal, and deductions are subtracted from the gross total:
+1. **GST Amount**: $\text{GST} = S \times \text{GST Pct}$.
 2. **Gross Bill Total**: $G = S + \text{GST}$.
-3. **TDS Withholding**: $\text{TDS} = S \times \text{TDS Pct}$ (calculated on base subtotal).
-4. **Retention Money**: $\text{Retention} = G \times \text{Retention Pct}$ (calculated on gross post-GST total).
+3. **TDS Withholding**: $\text{TDS} = S \times \text{TDS Pct}$.
+4. **Retention Money**: $\text{Retention} = G \times \text{Retention Pct}$.
 5. **Net Payable**: $\text{Net Payable} = G - \text{TDS} - \text{Retention} - A$.
 
 ---
 
 ### 4. Planning & Scheduling Critical Path Method (CPM)
-For WBS task networks, SiteFlow computes the schedule passes to define task floats and establish the critical path:
+Task timelines calculate network floats to isolate schedule risks:
 * **Early Finish (EF):** $\text{EF} = \text{Early Start (ES)} + \text{Duration}$
 * **Late Start (LS):** $\text{LS} = \text{Late Finish (LF)} - \text{Duration}$
 * **Total Float (TF):** $\text{TF} = \text{LF} - \text{EF} = \text{LS} - \text{ES}$
 
-*Tasks with $\text{Total Float} = 0$ are designated as Critical Path tasks, meaning any delay in their execution directly pushes back the final project completion date.*
+*Tasks with $\text{Total Float} = 0$ represent the Critical Path; any delay to these tasks directly impacts the project completion date.*
 
 ---
 
 ### 5. Brick & Block Masonry Quantity Estimator (CPWD)
-SiteFlow quantifies clay brick or fly-ash block requirements for masonry walls.
-* **Standard modular brick size**: $190 \times 90 \times 90\text{ mm}$ (Nominal size with mortar is $200 \times 100 \times 100\text{ mm}$).
+* **Modular brick size**: $190 \times 90 \times 90\text{ mm}$ (Nominal size with mortar: $200 \times 100 \times 100\text{ mm}$).
 * **Standard brick constant**: $500\text{ bricks per } m^3$ of masonry wall.
-* **Dry Mortar volume factor**: $1.33$ (accounts for dry volume void ratio and joint wastage).
+* **Dry Mortar volume factor**: $1.33$ (shrinkage & joint waste multiplier).
 * **Mortar wet volume fraction**: Typically $30\%$ of total wall masonry volume.
 
-#### Calculation Formulas:
-* **Total Brick Count ($N$):**
-  $$N = \text{Wall Length} \times \text{Wall Height} \times \text{Wall Thickness} \times 500$$
-* **Dry Mortar Volume ($V_{\text{dry}}$):**
-  $$V_{\text{dry}} = (\text{Wall Length} \times \text{Wall Height} \times \text{Wall Thickness}) \times 0.30 \times 1.33$$
-* **Cement & Sand split for Mortar Mix** (e.g., 1:4 or 1:6 ratios):
-  $$\text{Cement (bags)} = \frac{V_{\text{dry}} \times \text{Cement Ratio}}{\text{Sum of Mix Ratios} \times 0.0347}$$
-  $$\text{Sand Volume } (m^3) = \frac{V_{\text{dry}} \times \text{Sand Ratio}}{\text{Sum of Mix Ratios}}$$
+$$\text{Total Brick Count } (N) = \text{Wall Length} \times \text{Wall Height} \times \text{Wall Thickness} \times 500$$
+$$V_{\text{dry}} = (\text{Wall Length} \times \text{Wall Height} \times \text{Wall Thickness}) \times 0.30 \times 1.33$$
+$$\text{Cement (bags)} = \frac{V_{\text{dry}} \times \text{Cement Ratio}}{\text{Sum of Mix Ratios} \times 0.0347}$$
+$$\text{Sand Volume } (m^3) = \frac{V_{\text{dry}} \times \text{Sand Ratio}}{\text{Sum of Mix Ratios}}$$
 
 ---
 
 ### 6. Paint & Wall Coverage Quantification
-SiteFlow computes the volume of primer, putties, and finish paint required for drywall, masonry plaster, and concrete surfaces:
-* **Single-coat coverage area rate:** $A_{\text{cov}}$ (e.g., $14\text{ m}^2/\text{liter}$ for acrylic emulsion).
-* **Double-coat coverage factor:** $1.9$ (first coat absorbs more, second coat is lighter).
-
-#### Calculation Formula:
 $$\text{Paint Volume (liters)} = \frac{\text{Wall Surface Area} \times \text{Number of Coats}}{\text{Single Coat Coverage Rate} \times \text{Absorption Factor}}$$
 
 ---
 
 ### 7. Geofenced Site Labor Shift & Attendance Payroll Math
-SiteFlow logs and calculates labor payroll based on GPS verification status, daily wage rates, shift multipliers, and overtime calculations:
-* **Location Verification Status:** Determined by Haversine distance from geofence center (verified if $d \le R_{\text{geofence}}$).
-* **Shift Multipliers:** Allows standard shift increments ($0.25, 0.50, 0.75, 1.00, 1.25$ shifts).
+* **Haversine Distance**: $d \le R_{\text{geofence}}$ is verified.
+* **Shift Multipliers**: Standard shift fractions ($0.25, 0.50, 0.75, 1.00, 1.25$ shifts).
 
-#### Daily Labor Compensation Formula:
-$$\text{Daily Payout} = (\text{Daily Wage} \times \text{Shift Multiplier}) + (\text{Overtime Hours} \times \text{Hourly OT Rate}) + \text{Allowances} - \text{Deductions}$$
+$$\text{Daily Labor Compensation} = (\text{Daily Wage} \times \text{Shift Multiplier}) + (\text{Overtime Hours} \times \text{Hourly OT Rate}) + \text{Allowances} - \text{Deductions}$$
 
 ---
 
 ### 8. Heavy Equipment Fuel Consumption & Utilization Math
-Fuel consumption efficiency and machinery run hours are computed for active equipment (Tractor, Transit Mixer, Excavator):
-* **Hourly Consumption Rate ($R_{\text{fuel}}$):**
-  $$R_{\text{fuel}} = \frac{\text{Fuel Consumed (liters)}}{\text{Final Run Hours} - \text{Initial Run Hours}}$$
-* **Idle Time Utilization %:**
-  $$\text{Utilization Pct} = \frac{\text{Working Hours}}{\text{Total Available Shift Hours}} \times 100$$
+$$R_{\text{fuel}} = \frac{\text{Fuel Consumed (liters)}}{\text{Final Run Hours} - \text{Initial Run Hours}}$$
+$$\text{Utilization Pct} = \frac{\text{Working Hours}}{\text{Total Available Shift Hours}} \times 100$$
 
 ---
 
-### 9. Concrete Cube Compressive Strength compliance (IS 516)
-SiteFlow processes concrete compressive strength testing registers (7-day and 28-day sample crushing loads):
-* **Compressive Strength ($f_c$ in $N/mm^2$):**
-  $$f_c = \frac{\text{Peak Failure Load (N)}}{\text{Cube Area } (150 \times 150 \text{ mm}^2)} = \frac{P}{22500}$$
-* **7-Day Compliance Check:** Must be $\ge 65\%$ of the target characteristic compressive strength ($f_{ck}$).
-* **28-Day Compliance Check:** Must be $\ge 100\%$ of the target characteristic compressive strength ($f_{ck}$).
+### 9. Compressive Cube Strength Compliance (IS 516 / IS 456)
+$$f_c = \frac{\text{Peak Failure Load (N)}}{\text{Cube Area } (150 \times 150 \text{ mm}^2)} = \frac{P}{22500}$$
+* **7-Day Compliance Check**: Compressive strength $f_c \ge 0.65 \times f_{ck}$.
+* **28-Day Compliance Check**: Compressive strength $f_c \ge 1.00 \times f_{ck}$.
 
 ---
 
@@ -265,3 +275,19 @@ SiteFlow is built from the ground up for strict multi-tenant isolation:
   ON bills (company_id, invoice_number) 
   WHERE invoice_type = 'sale';
   ```
+
+---
+
+## 🙋 Frequently Asked Questions (FAQ)
+
+**Q: Which Indian standard codes are embedded in the calculation core?**
+SiteFlow integrates **IS 456:2000** for concrete grade material quantification and **IS 1786** for reinforcement rebar unit weight calculations. For concrete testing compliance, compressive checks are performed against **IS 516** limits.
+
+**Q: How does the system compute Works Contract GST and TDS deductions?**
+Auditors can switch between pre-tax and post-tax deduction priorities inside the RA bill creator. Preset buttons apply GST rules (18% for Work Contracts, 12% for Infrastructure, 5% for Housing) and TDS parameters (1% Section 194C Individual, 2% Section 194C Corporate, 0.1% Section 194Q for purchases of goods).
+
+**Q: How is attendance geofenced and verified for offsite workers?**
+Attendance logs are validated using the Haversine formula to compute the distance between the mobile device's GPS coordinates and the pre-configured project center coordinate. Punch-ins exceeding the geofence radius are flagged as offsite. Offline local storage caching allows site labor to punch in even during network dropouts, syncing once connectivity is restored.
+
+**Q: What accounting systems can SiteFlow sync with?**
+Out-of-the-box integrations exist for **Tally Prime** (via local XML sync gateway) and **Zoho Books** (via client-side REST API configurations).
