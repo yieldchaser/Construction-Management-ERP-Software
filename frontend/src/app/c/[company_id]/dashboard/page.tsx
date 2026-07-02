@@ -107,8 +107,9 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!openPicker) return;
     const close = () => setOpenPicker(null);
-    const t = setTimeout(() => document.addEventListener("click", close), 0);
-    return () => { clearTimeout(t); document.removeEventListener("click", close); };
+    // Use mousedown (not click) so it's consistent with picker button onMouseDown handlers
+    const t = setTimeout(() => document.addEventListener("mousedown", close), 0);
+    return () => { clearTimeout(t); document.removeEventListener("mousedown", close); };
   }, [openPicker]);
 
   // Mini SVG icons for each chart type in the picker grid
@@ -146,13 +147,24 @@ export default function DashboardPage() {
       "scatter2","scatter3","cross","heatmap","table"
     ];
     return (
-      <div className="absolute top-8 right-0 z-50 bg-[#1A1726] border border-white/10 rounded-xl p-3 shadow-2xl" onClick={e => e.stopPropagation()}>
+      // Positioned relative to the OUTER buttons row (not the tiny trigger div)
+      // right-0 = flush with right edge of buttons row; top-full = just below it
+      <div
+        style={{ position: "absolute", top: "calc(100% + 6px)", right: 0, zIndex: 9999, width: 264 }}
+        className="bg-[#1A1726] border border-white/10 rounded-xl p-3 shadow-2xl"
+        onClick={e => e.stopPropagation()}
+        onMouseDown={e => e.stopPropagation()}
+      >
         <div className="grid grid-cols-5 gap-1.5">
           {ALL.map(ct => (
-            <button key={ct} onClick={() => { setType(ct); setOpenPicker(null); }} title={ct.replace(/_/g," ")}
+            <button
+              key={ct}
+              onMouseDown={e => { e.stopPropagation(); e.preventDefault(); setType(ct); setOpenPicker(null); }}
+              title={ct.replace(/_/g," ")}
               className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all hover:bg-white/10 border ${
                 activeType === ct ? "bg-primary/20 border-primary/40" : "border-transparent hover:border-white/10"
-              }`}>
+              }`}
+            >
               {chartTypeIcon(ct, activeType === ct)}
             </button>
           ))}
@@ -162,28 +174,34 @@ export default function DashboardPage() {
   };
 
   // Reusable chart header with type switcher icon buttons
+  // The picker is rendered INSIDE the outer buttons-row div (which has relative)
+  // so the popup is anchored to that div, not the tiny individual button.
   const renderChartHeader = (title: string, pickerId: string, activeType: string, setType: (t: string) => void) => (
     <div className="w-full flex justify-between items-center border-b border-white/5 pb-3">
       <span className="text-xs font-bold text-white uppercase tracking-wider">{title}</span>
+      {/* relative here is the positioning context for the picker popup */}
       <div className="flex items-center gap-0.5 relative">
         <button className="p-1.5 rounded text-zinc-600 hover:text-zinc-400 hover:bg-white/5 transition-all" title="Sort">
           <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M1 3h11M3 6.5h7M5 10h3"/></svg>
         </button>
-        <div className="relative">
-          <button onClick={e => { e.stopPropagation(); setOpenPicker(openPicker === pickerId ? null : pickerId); }}
-            className={`p-1.5 rounded transition-all ${
-              openPicker === pickerId ? "bg-primary/20 text-primary" : "text-zinc-600 hover:text-zinc-400 hover:bg-white/5"
-            }`} title="Change chart type">
-            <svg width="13" height="13" viewBox="0 0 13 13" fill="currentColor">
-              <rect x="1" y="8" width="3" height="4" rx="0.5"/><rect x="5" y="5" width="3" height="7" rx="0.5"/><rect x="9" y="2" width="3" height="10" rx="0.5"/>
-            </svg>
-          </button>
-          {renderChartPicker(pickerId, activeType, setType)}
-        </div>
+        {/* Chart type toggle button — no inner relative wrapper needed any more */}
+        <button
+          onMouseDown={e => { e.stopPropagation(); e.preventDefault(); setOpenPicker(openPicker === pickerId ? null : pickerId); }}
+          className={`p-1.5 rounded transition-all ${
+            openPicker === pickerId ? "bg-primary/20 text-primary" : "text-zinc-600 hover:text-zinc-400 hover:bg-white/5"
+          }`}
+          title="Change chart type"
+        >
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="currentColor">
+            <rect x="1" y="8" width="3" height="4" rx="0.5"/><rect x="5" y="5" width="3" height="7" rx="0.5"/><rect x="9" y="2" width="3" height="10" rx="0.5"/>
+          </svg>
+        </button>
         <button className="p-1.5 rounded text-zinc-600 hover:text-zinc-400 hover:bg-white/5 transition-all" title="Fullscreen">
           <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 4.5V2h2.5M8.5 2H11v2.5M11 8.5V11H8.5M4.5 11H2V8.5"/></svg>
         </button>
         <button className="p-1.5 rounded text-zinc-600 hover:text-zinc-400 hover:bg-white/5 transition-all font-bold leading-none" title="More options">⋮</button>
+        {/* Picker popup — anchored here, wide enough for 5 columns */}
+        {renderChartPicker(pickerId, activeType, setType)}
       </div>
     </div>
   );
