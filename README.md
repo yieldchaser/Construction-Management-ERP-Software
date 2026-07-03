@@ -43,6 +43,13 @@ SiteFlow is an outcome-driven, high-fidelity ERP workspace tailored to the India
 * **📦 CPWD Material Quantification**: Built-in concrete mix estimators (IS 456), rebar reinforcement steel weight calculators (IS 1786), brick masonry logs, and wall paint area estimators.
 * **🔒 Multi-Tenant Data Isolation**: Direct row-level security and company-scoped keys ensuring strict data division between tenants while permitting overlapping sequence numbers.
 * **🎨 Theme-Aware Custom Scrollbars**: Adaptive thin WebKit scrollbar tracks with a global `☀️` / `🌙` header toggle for a seamless dark-to-light transition.
+* **📉 Asset Depreciation Engine**: Straight-line, reducing balance, and written-down-value depreciation schedules with monthly ledger entries and book value tracking.
+* **🔗 3-Way Matching**: Automated reconciliation of Purchase Orders, GRNs, and Vendor Invoices with variance detection and mismatch flagging.
+* **♻️ Material Wastage & Scrap Audit**: Track scrap, offcuts, damaged, expired, and stolen materials with estimated value, reason logging, photo URLs, and status workflow.
+* **💬 Site Chat & MOM**: Project-level chat groups with general, site, finance, and safety types. Support for text, media, voice notes, and Minutes of Meeting (MOM) entries.
+* **🧩 Custom Fields Engine**: Dynamic custom field definitions for projects, tasks, bills, invoices, leads, and vendors with text, number, date, select, and checkbox types.
+* **📋 Statutory Compliance Reports**: PF, ESI, BOCW, TDS, Professional Tax, and Income Tax monthly return filing with contribution tracking and acknowledgment numbers.
+* **😊 Face Recognition Attendance**: Face verification audit trail for attendance punches with confidence scores, geofence validation, and image logging.
 
 ---
 
@@ -241,7 +248,7 @@ SiteFlow features a state-of-the-art **glassmorphic canvas** with full support f
 * [context/](file:///C:/Users/Dell/Github/Construction-Management-ERP-Software/context/) — Session context, roadmap history, audits, calculators, and reverse-engineering notes.
 * [onsiteteams-recon/](file:///C:/Users/Dell/Github/Construction-Management-ERP-Software/onsiteteams-recon/) — Raw competitor bundle resources, HTML assets, sitemaps, and API schemas.
 * [frontend/](file:///C:/Users/Dell/Github/Construction-Management-ERP-Software/frontend/) — Next.js app-router frontend, including dashboard, project modules, analytics, and PWA shell assets.
-* [backend/](file:///C:/Users/Dell/Github/Construction-Management-ERP-Software/backend/) — FastAPI backend with routers for auth, calculators, planning, procurement, billing, HR, quality, reports, equipment, safety, analytics, and production.
+ * [backend/](file:///C:/Users/Dell/Github/Construction-Management-ERP-Software/backend/) — FastAPI backend with routers for auth, calculators, planning, procurement, billing, HR, quality, reports, equipment, safety, analytics, production, assets, three-way matching, wastage, chat, custom fields, statutory, and face recognition.
 
 ---
 
@@ -292,6 +299,13 @@ SiteFlow features a state-of-the-art **glassmorphic canvas** with full support f
 - **Quality (`/quality`)**: Concrete slump test logs, cube strength registers, and checklists.
 - **Reports (`/reports`)**: Auto-generated PDF/Excel summaries of material waste, daily reports, and labor.
 - **Safety (`/safety`)**: Site hazard reporting, PPE audit checklists, and toolbox talk logs.
+- **Asset Depreciation (`/depreciation`)**: Depreciation schedule management with multiple methods and monthly ledger entries.
+- **3-Way Matching (`/three-way`)**: PO-GRN-Invoice reconciliation with variance detection and approval workflow.
+- **Material Wastage (`/wastage`)**: Scrap, offcut, damage, expiry, and theft tracking with value estimation and status progression.
+- **Chat & MOM (`/chat`)**: Project-level group chat with text, media, voice notes, and Minutes of Meeting support.
+- **Custom Fields (`/custom-fields`)**: Dynamic custom field creation and value assignment across entities.
+- **Statutory Reports (`/statutory`)**: PF, ESI, BOCW, TDS compliance filing with contribution tracking.
+- **Face Recognition (`/face-recognition`)**: Face verification audit trail for attendance punches with confidence scores and geofence validation.
 
 ### 4. Company Settings (`/c/[company_id]/settings`)
 - **General Settings**: Company profile, contact info, and legal details.

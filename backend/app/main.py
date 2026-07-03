@@ -5,7 +5,8 @@ import os
 from app.routers import (
     auth, calculators, budgeting, planning, drawings, procurement,
     billing, hr, quality, reports, equipment, safety, analytics,
-    production, dpr, crm, finance, tally, subcon_attendance, settings
+    production, dpr, crm, finance, tally, subcon_attendance, settings,
+    assets, three_way, wastage, chat, custom_fields, statutory, face_recognition
 )
 from app.database import engine, Base
 
@@ -54,6 +55,13 @@ app.include_router(finance.router, prefix="/apis/v3")
 app.include_router(tally.router, prefix="/apis/v3")
 app.include_router(subcon_attendance.router, prefix="/apis/v3")
 app.include_router(settings.router, prefix="/apis/v3")
+app.include_router(assets.router, prefix="/apis/v3")
+app.include_router(three_way.router, prefix="/apis/v3")
+app.include_router(wastage.router, prefix="/apis/v3")
+app.include_router(chat.router, prefix="/apis/v3")
+app.include_router(custom_fields.router, prefix="/apis/v3")
+app.include_router(statutory.router, prefix="/apis/v3")
+app.include_router(face_recognition.router, prefix="/apis/v3")
 
 @app.get("/")
 def read_root():

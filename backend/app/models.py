@@ -1042,3 +1042,204 @@ class PaymentRequest(Base):
     status = Column(String(50), default="Pending", nullable=False) # Pending, Paid, Rejected
     due_date = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Competitor Parity — Asset Depreciation
+# ─────────────────────────────────────────────────────────────────────────────
+
+class AssetDepreciationSchedule(Base):
+    """Depreciation schedule configuration per company asset."""
+    __tablename__ = "asset_depreciation_schedules"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    asset_id = Column(UUID(as_uuid=True), ForeignKey("equipment.id", ondelete="CASCADE"), nullable=False)
+    method = Column(String(50), default="straight_line", nullable=False) # straight_line, reducing_balance, written_down_value
+    useful_life_years = Column(Integer, nullable=False)
+    salvage_value = Column(Numeric(14, 2), default=0.0, nullable=False)
+    depreciation_pct = Column(Numeric(5, 2), default=10.0, nullable=False)
+    start_date = Column(DateTime(timezone=True), nullable=False)
+    is_active = Column(Boolean, default=True, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=func.now(), onupdate=func.now(), nullable=False)
+
+
+class AssetDepreciationEntry(Base):
+    """Monthly depreciation ledger entry for an asset."""
+    __tablename__ = "asset_depreciation_entries"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    schedule_id = Column(UUID(as_uuid=True), ForeignKey("asset_depreciation_schedules.id", ondelete="CASCADE"), nullable=False)
+    asset_id = Column(UUID(as_uuid=True), ForeignKey("equipment.id", ondelete="CASCADE"), nullable=False)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="SET NULL"), nullable=True)
+    entry_date = Column(DateTime(timezone=True), nullable=False)
+    depreciation_amount = Column(Numeric(14, 2), nullable=False)
+    accumulated_depreciation = Column(Numeric(14, 2), nullable=False)
+    book_value = Column(Numeric(14, 2), nullable=False)
+    notes = Column(String, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Competitor Parity — 3-Way Matching (PO ↔ GRN ↔ Invoice)
+# ─────────────────────────────────────────────────────────────────────────────
+
+class ThreeWayMatch(Base):
+    """Reconciliation record linking PO, GRN, and Vendor Invoice."""
+    __tablename__ = "three_way_matches"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
+    po_id = Column(UUID(as_uuid=True), ForeignKey("purchase_orders.id", ondelete="CASCADE"), nullable=False)
+    grn_id = Column(UUID(as_uuid=True), ForeignKey("goods_receipt_notes.id", ondelete="CASCADE"), nullable=False)
+    invoice_id = Column(UUID(as_uuid=True), ForeignKey("bills.id", ondelete="SET NULL"), nullable=True)
+    match_status = Column(String(50), default="pending", nullable=False) # pending, matched, mismatch, approved
+    po_amount = Column(Numeric(18, 2), nullable=False)
+    grn_qty = Column(Numeric(18, 4), nullable=False)
+    invoiced_amount = Column(Numeric(18, 2), nullable=False)
+    variance_amount = Column(Numeric(18, 2), default=0.0, nullable=False)
+    variance_reason = Column(String, nullable=True)
+    matched_by = Column(UUID(as_uuid=True), nullable=True)
+    matched_at = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=func.now(), onupdate=func.now(), nullable=False)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Competitor Parity — Material Wastage / Scrap Audit
+# ─────────────────────────────────────────────────────────────────────────────
+
+class MaterialWastage(Base):
+    """Wastage / scrap / offcut log for materials on a project."""
+    __tablename__ = "material_wastage"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
+    material_name = Column(String(255), nullable=False)
+    wastage_type = Column(String(100), nullable=False) # scrap, offcut, damaged, expired, theft
+    quantity = Column(Numeric(18, 4), nullable=False)
+    unit = Column(String(50), nullable=False)
+    estimated_value = Column(Numeric(14, 2), default=0.0, nullable=False)
+    reason = Column(String, nullable=True)
+    reported_by = Column(String(255), nullable=True)
+    photo_urls = Column(JSONB, default=list, nullable=False)
+    task_id = Column(UUID(as_uuid=True), ForeignKey("tasks.id", ondelete="SET NULL"), nullable=True)
+    status = Column(String(50), default="reported", nullable=False) # reported, reviewed, approved, disposed
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Competitor Parity — Chat Groups & MOM
+# ─────────────────────────────────────────────────────────────────────────────
+
+class ChatGroup(Base):
+    """Project-level chat group for site teams."""
+    __tablename__ = "chat_groups"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
+    name = Column(String(255), nullable=False)
+    group_type = Column(String(50), default="general", nullable=False) # general, site, finance, safety
+    created_by = Column(UUID(as_uuid=True), ForeignKey("company_team.id"), nullable=True)
+    is_archived = Column(Boolean, default=False, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
+class ChatMessage(Base):
+    """Individual message inside a chat group."""
+    __tablename__ = "chat_messages"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    group_id = Column(UUID(as_uuid=True), ForeignKey("chat_groups.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("company_team.id"), nullable=True)
+    user_name = Column(String(255), nullable=True)
+    message_text = Column(String, nullable=True)
+    media_url = Column(String, nullable=True)
+    voice_note_url = Column(String, nullable=True)
+    is_mom = Column(Boolean, default=False, nullable=False)
+    mom_date = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Competitor Parity — Custom Fields Engine
+# ─────────────────────────────────────────────────────────────────────────────
+
+class CustomField(Base):
+    """Dynamic custom field definition for entities."""
+    __tablename__ = "custom_fields"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    entity_type = Column(String(100), nullable=False) # project, task, bill, invoice, lead, vendor, customer
+    field_name = Column(String(100), nullable=False)
+    field_label = Column(String(255), nullable=False)
+    field_type = Column(String(50), nullable=False) # text, number, date, select, multiselect, checkbox
+    is_required = Column(Boolean, default=False, nullable=False)
+    options = Column(JSONB, default=list, nullable=False) # for select/multiselect
+    display_order = Column(Integer, default=0, nullable=False)
+    is_active = Column(Boolean, default=True, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
+class CustomFieldValue(Base):
+    """Stored value for a custom field on a specific record."""
+    __tablename__ = "custom_field_values"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    field_id = Column(UUID(as_uuid=True), ForeignKey("custom_fields.id", ondelete="CASCADE"), nullable=False)
+    entity_type = Column(String(100), nullable=False)
+    entity_id = Column(UUID(as_uuid=True), nullable=False)
+    value_text = Column(String, nullable=True)
+    value_number = Column(Numeric(18, 4), nullable=True)
+    value_date = Column(DateTime(timezone=True), nullable=True)
+    value_json = Column(JSONB, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=func.now(), onupdate=func.now(), nullable=False)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Competitor Parity — Statutory Reports (PF / ESI / BOCW / TDS)
+# ─────────────────────────────────────────────────────────────────────────────
+
+class StatutoryReport(Base):
+    """PF, ESI, BOCW, TDS monthly return filing records."""
+    __tablename__ = "statutory_reports"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="SET NULL"), nullable=True)
+    report_type = Column(String(50), nullable=False) # pf, esi, bocw, tds, pt, it
+    return_period = Column(String(7), nullable=False) # YYYY-MM
+    total_employees = Column(Integer, default=0, nullable=False)
+    total_wages = Column(Numeric(18, 2), default=0.0, nullable=False)
+    pf_employee_contribution = Column(Numeric(14, 2), default=0.0, nullable=False)
+    pf_employer_contribution = Column(Numeric(14, 2), default=0.0, nullable=False)
+    esi_employee_contribution = Column(Numeric(14, 2), default=0.0, nullable=False)
+    esi_employer_contribution = Column(Numeric(14, 2), default=0.0, nullable=False)
+    bocw_cess = Column(Numeric(14, 2), default=0.0, nullable=False)
+    tds_deducted = Column(Numeric(14, 2), default=0.0, nullable=False)
+    filed_at = Column(DateTime(timezone=True), nullable=True)
+    filed_by = Column(String(255), nullable=True)
+    acknowledgment_number = Column(String(100), nullable=True)
+    status = Column(String(50), default="draft", nullable=False) # draft, filed, overdue
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=func.now(), onupdate=func.now(), nullable=False)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Competitor Parity — Face Recognition Attendance Logs
+# ─────────────────────────────────────────────────────────────────────────────
+
+class FaceRecognitionLog(Base):
+    """Face verification audit trail for attendance punches."""
+    __tablename__ = "face_recognition_logs"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
+    employee_id = Column(UUID(as_uuid=True), ForeignKey("staff_employees.id", ondelete="CASCADE"), nullable=False)
+    punch_type = Column(String(10), nullable=False) # in, out
+    face_verified = Column(Boolean, default=False, nullable=False)
+    confidence_score = Column(Numeric(5, 2), nullable=True)
+    image_url = Column(String, nullable=True)
+    lat = Column(Numeric(10, 7), nullable=True)
+    lng = Column(Numeric(10, 7), nullable=True)
+    is_within_geofence = Column(Boolean, default=False, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
