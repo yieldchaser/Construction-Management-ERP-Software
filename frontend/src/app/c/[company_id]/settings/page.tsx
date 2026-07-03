@@ -147,6 +147,17 @@ export default function CompanySettingsPage() {
 
   const [gstinError, setGstinError] = useState(false);
 
+  const FEATURE_LABELS: Record<string, string> = {
+    purchase_order: "Purchase Orders (PO)",
+    material_request: "Material Requests",
+    expense: "Expenses & Petty Cash",
+    ra_bill: "RA / Subcontractor Bills",
+    client_invoice: "Client Invoices",
+    debit_note: "Debit Notes",
+    credit_note: "Credit Notes",
+    timesheet: "Timesheets",
+  };
+
   const handleAddBranch = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -567,6 +578,11 @@ export default function CompanySettingsPage() {
                         <option value="purchase_order">Purchase Orders (PO)</option>
                         <option value="material_request">Material Requests</option>
                         <option value="expense">Expenses & Petty Cash</option>
+                        <option value="ra_bill">RA / Subcontractor Bills</option>
+                        <option value="client_invoice">Client Invoices</option>
+                        <option value="debit_note">Debit Notes</option>
+                        <option value="credit_note">Credit Notes</option>
+                        <option value="timesheet">Timesheets</option>
                       </select>
                     </div>
                     <div className="space-y-1">
@@ -635,7 +651,7 @@ export default function CompanySettingsPage() {
                   rules.map((r) => (
                     <div key={r.id} className="glass-panel border border-white/5 bg-[#0E0C15] p-5 rounded-2xl flex items-center justify-between">
                       <div className="space-y-1.5">
-                        <div className="text-xs font-bold text-white capitalize">{r.feature_type.replace("_", " ")} Approval</div>
+                         <div className="text-xs font-bold text-white capitalize">{FEATURE_LABELS[r.feature_type] || r.feature_type.replace("_", " ")}</div>
                         <div className="text-[11px] text-zinc-500">
                           Threshold: <span className="font-semibold text-zinc-300">Rs {r.min_amount}</span> {r.max_amount ? `to Rs ${r.max_amount}` : "+"}
                         </div>
