@@ -591,7 +591,7 @@ export default function ProductionPage() {
                     <div className="mt-3 h-2 rounded-full bg-white/5">
                       <div
                         className={`h-2 rounded-full ${item.needs_reorder ? "bg-red-400" : "bg-gradient-to-r from-primary to-emerald-400"}`}
-                        style={{ width: `${Math.max(Math.min((item.available_qty / Math.max(item.on_hand_qty || 1, 1)) * 100, 100), 4)}%` }}
+                        style={{ width: `${Math.max(Math.min((item.available_qty / Math.max(item.on_hand_qty + item.reserved_qty, 1)) * 100, 100), 4)}%` }}
                       />
                     </div>
                     <div className="mt-2 text-[10px] uppercase tracking-[0.18em] text-zinc-500">
