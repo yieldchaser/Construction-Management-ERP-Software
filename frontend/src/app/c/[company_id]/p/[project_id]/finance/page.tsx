@@ -315,14 +315,31 @@ export default function FinancePage() {
   const handleTriggerSync = async () => {
     setSyncing(true);
     setSyncLogs([]);
-    setTimeout(() => {
+    try {
+      const apiHost = getApiHost();
+      const res = await fetch(`${apiHost}/apis/v3/tally/sync?company_id=${companyId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSyncLogs([
+          `[${new Date().toLocaleTimeString()}] Handshake successful with Tally Gateway.`,
+          `[${new Date().toLocaleTimeString()}] ${data.message || "Pushed approved vouchers successfully."}`,
+        ]);
+      } else {
+        setSyncLogs([
+          `[${new Date().toLocaleTimeString()}] Sync failed: HTTP ${res.status}`,
+        ]);
+      }
+    } catch (err) {
       setSyncLogs([
-        `[${new Date().toLocaleTimeString()}] Handshake successful with Tally Gateway.`,
-        `[${new Date().toLocaleTimeString()}] Pushed approved vouchers successfully.`,
+        `[${new Date().toLocaleTimeString()}] Sync error: Network unavailable`,
       ]);
+    } finally {
       setLastSync(new Date().toLocaleString());
       setSyncing(false);
-    }, 1500);
+    }
   };
 
   // Math & Ledgers compilation

@@ -243,11 +243,11 @@ export default function DPRPage() {
           {/* Dashboard Quick Stats Cards */}
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
             {[
-              { label: "Site Staff Present", value: summary.total_workers_deployed || "8 Present", desc: "Clocked via geofence", color: "border-primary/20 bg-primary/5 text-primary" },
-              { label: "Equipment Used", value: "2 Active", desc: "Excavators deployed", color: "border-secondary/20 bg-secondary/5 text-secondary" },
-              { label: "Subcon Updates", value: "3 Tasks updated", desc: "Logged by Krishna subcon", color: "border-emerald-500/20 bg-emerald-500/5 text-emerald-400" },
-              { label: "Material Received", value: "150 Bags Cement", desc: "GRN-2026-004 logged", color: "border-amber-500/20 bg-amber-500/5 text-amber-400" },
-              { label: "Material Used Today", value: "45 Bags Cement", desc: "RCC casting consumed", color: "border-purple-500/20 bg-purple-500/5 text-purple-400" }
+              { label: "Site Staff Present", value: summary.total_workers_deployed || "—", desc: "Clocked via geofence", color: "border-primary/20 bg-primary/5 text-primary" },
+              { label: "Equipment Used", value: logs.length > 0 ? `${logs.length} Reports` : "0 Active", desc: "DPR reports logged", color: "border-secondary/20 bg-secondary/5 text-secondary" },
+              { label: "Subcon Updates", value: logs.filter((l: any) => l.subcon_name).length > 0 ? `${logs.filter((l: any) => l.subcon_name).length} Updates` : "0 Tasks updated", desc: "Logged by subcontractors", color: "border-emerald-500/20 bg-emerald-500/5 text-emerald-400" },
+              { label: "Material Received", value: logs.reduce((sum: number, l: any) => sum + (l.material_received || 0), 0) > 0 ? `${logs.reduce((sum: number, l: any) => sum + (l.material_received || 0), 0)} Units` : "No GRNs today", desc: "Material inward logged", color: "border-amber-500/20 bg-amber-500/5 text-amber-400" },
+              { label: "Material Used Today", value: logs.reduce((sum: number, l: any) => sum + (l.material_used || 0), 0) > 0 ? `${logs.reduce((sum: number, l: any) => sum + (l.material_used || 0), 0)} Units` : "No consumption logged", desc: "On-site consumption", color: "border-purple-500/20 bg-purple-500/5 text-purple-400" }
             ].map((card, idx) => (
               <div key={idx} className={`p-4 rounded-2xl border ${card.color} flex flex-col justify-between h-28 shadow-sm`}>
                 <span className="text-[10px] uppercase font-bold tracking-wider opacity-70">{card.label}</span>
