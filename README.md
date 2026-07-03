@@ -30,82 +30,61 @@ SiteFlow is an outcome-driven, high-fidelity ERP workspace tailored to the India
 
 ## Key Features
 
-* **📊 Dual-Mode Company Dashboard**: Dynamic tabs split between **Operational Overview** (switchable chart types for project health, 7-day labor attendance, and GRN counts) and **Financial Summary** (KPI cards, SVG revenue/expense/margin charts, expense distribution, and project-level financial table).
-* **🔀 25-Type Chart Switcher**: Every dashboard chart features a floating 5×5 icon picker matching the reference app — switch between Pie, Donut, Bar, Stacked Bar, Grouped Bar, Line, Smooth Line, Line with Markers, Area, Smooth Area, Scatter, Heatmap, Table view, and more with one click.
-* **🧮 Interactive Subcontractor Billing**: Real-time invoice calculators supporting pre-tax and post-tax works contract deduction configurations with automatic Indian GST and TDS presets.
-* **📍 Geofenced Mobile PWA Attendance**: GPS geofencing utilizing Haversine coordinate validation with Hinglish/Tamil localization and offline local storage backup for field workers.
-* **⏱️ Daily Activity & Timesheet Logger**: High-fidelity daily activity scheduler with start/stop times, reactive duration calculations, WBS task links, remarks, and file attachments.
-* **📋 CRM Quotations Module**: Full-featured quotations tab with create/view modals, status tracking (Draft → Sent → Accepted/Rejected), and line-item cost breakdowns per client.
-* **🏢 Company Settings & Branch Management**: Multi-branch company configuration with per-branch contact details, settings controls for employee restrictions, and geofence enforcement toggles.
-* **🧑‍💼 HR Leaves & Payroll**: Leave request and approval workflows connected to staff directory, with monthly payroll runs covering Basic, HRA, Allowances, PF, ESI, and TDS.
-* **🚀 Guided Onboarding Wizard**: 2-step stepper modal for project setup replacing the old blank-form flow — collects project details and assigns a team member before creation.
-* **📅 WBS Gantt Timelines**: Forward-pass Critical Path Method (CPM) scheduler calculating early/late starts, finishes, and total task floats with circular dependency protection.
-* **📦 CPWD Material Quantification**: Built-in concrete mix estimators (IS 456), rebar reinforcement steel weight calculators (IS 1786), brick masonry logs, and wall paint area estimators.
-* **🔒 Multi-Tenant Data Isolation**: Direct row-level security and company-scoped keys ensuring strict data division between tenants while permitting overlapping sequence numbers.
-* **🎨 Theme-Aware Custom Scrollbars**: Adaptive thin WebKit scrollbar tracks with a global `☀️` / `🌙` header toggle for a seamless dark-to-light transition.
-* **📉 Asset Depreciation Engine**: Straight-line, reducing balance, and written-down-value depreciation schedules with monthly ledger entries and book value tracking.
-* **🔗 3-Way Matching**: Automated reconciliation of Purchase Orders, GRNs, and Vendor Invoices with variance detection and mismatch flagging.
-* **♻️ Material Wastage & Scrap Audit**: Track scrap, offcuts, damaged, expired, and stolen materials with estimated value, reason logging, photo URLs, and status workflow.
-* **💬 Site Chat & MOM**: Project-level chat groups with general, site, finance, and safety types. Support for text, media, voice notes, and Minutes of Meeting (MOM) entries.
-* **🧩 Custom Fields Engine**: Dynamic custom field definitions for projects, tasks, bills, invoices, leads, and vendors with text, number, date, select, and checkbox types.
-* **📋 Statutory Compliance Reports**: PF, ESI, BOCW, TDS, Professional Tax, and Income Tax monthly return filing with contribution tracking and acknowledgment numbers.
-* **😊 Face Recognition Attendance**: Face verification audit trail for attendance punches with confidence scores, geofence validation, and image logging.
+### Core Platform
+- **📊 Dual-Mode Company Dashboard**: Operational and Financial tabs with live KPI cards, SVG trend charts, expense distribution, and project-level summary tables.
+- **🔀 25-Type Chart Switcher**: Every dashboard chart supports instant switching between Bar, Pie, Donut, Line, Smooth Line, Area, Scatter, Heatmap, Table, and more.
+- **🚀 Guided Onboarding Wizard**: 2-step stepper modal for project creation — collects project details and assigns team members before go-live.
+- **🏢 Multi-Branch Settings**: Company profile, branch management, approval workflow rules, and geofence enforcement toggles.
+- **🔒 Multi-Tenant Data Isolation**: Row-level security, company-scoped unique keys, and strict data division between tenants.
+
+### Field Operations
+- **📍 Geofenced Mobile PWA Attendance**: GPS punch-in/out with Haversine validation, offline local storage backup, and multi-language support (English, Hinglish, Hindi, Tamil).
+- **⏱️ Daily Activity & Timesheet Logger**: Start/stop time tracking, reactive duration calculations, WBS task links, remarks, and file attachments.
+- **📋 CRM & Quotations**: Lead management, kanban-style pipeline, client contact registry, and full quotation lifecycle (Draft → Sent → Accepted/Rejected).
+- **📅 WBS Gantt Timelines**: Forward-pass Critical Path Method (CPM) scheduler with early/late starts, finishes, total float, and circular dependency protection.
+- **📐 Drawings & RFI**: Version-controlled blueprint registry with revision locking, pin-based RFI/Clash/Observation overlay, and approval workflows.
+- **📱 Progressive Web App**: Installable shell with offline queue for punches and sync log.
+
+### Finance & Compliance
+- **🧮 Subcontractor RA Billing**: Real-time invoice calculators with pre-tax/post-tax deduction priorities, automatic Indian GST and TDS presets (Section 194C, 194Q), and debit/credit note ledgers.
+- **💰 Finance & Cashbook**: Payment recording, ledger entries, P&L statements, bank account management, and payment request workflows.
+- **📋 Statutory Reports**: PF, ESI, BOCW, TDS, Professional Tax, and Income Tax monthly return filing with contribution tracking and acknowledgment numbers.
+- **🧾 Purchase-to-Pay**: Material indents, multi-item purchase orders, goods receipt notes (GRN), inventory tracking, and approval gates.
+- **📉 Asset Depreciation**: Straight-line, reducing balance, and written-down-value depreciation schedules with monthly ledger entries.
+- **🔗 3-Way Matching**: Automated PO-GRN-Invoice reconciliation with variance detection and approve/reject workflow.
+- **♻️ Material Wastage**: Scrap, offcut, damage, expiry, and theft tracking with value estimation, reason logging, and photo attachments.
+- **💬 Site Chat & MOM**: Project-level group chat with text, media, voice notes, and Minutes of Meeting (MOM) entries.
+- **🧩 Custom Fields Engine**: Dynamic field definitions for projects, tasks, bills, invoices, leads, and vendors.
+
+### HR & Payroll
+- **🧑‍💼 Employee Directory**: Site staff and office staff management with designation, department, and mobile tracking.
+- **📅 Leave Management**: Leave request, approval/rejection workflows, and leave type configuration.
+- **🧾 Payroll Runs**: Monthly payroll processing with Basic, HRA, Allowances, PF (employee + employer), ESI, and TDS calculations.
+- **😊 Face Recognition Attendance**: Face verification audit trail with confidence scores, geofence validation, and image logging.
+
+### Quality & Safety
+- **✅ Quality Inspections**: IS-code checklist library, site inspections, non-conformance reports (NCR), and material lab test logs.
+- **🦺 Safety Management**: Site hazard reporting, PPE audit checklists, and toolbox talk logs.
+
+### Analytics & Reporting
+- **📈 Executive Analytics**: Interactive S-curve progress charts and budget burn charts with hover tooltips.
+- **📑 Client Progress Reports**: Auto-generated progress reports with approval workflow and PDF download.
+- **📊 Production Tracking**: Task-level work quantities, recipe management, batch logging, and inventory alerts.
+
+### Integrations
+- **🔗 Tally Prime**: Direct XML sync gateway for voucher push and pull.
+- **☁️ Zoho Books**: Client-side REST API configuration for ledger synchronization.
+- **📦 Planned Integrations**: WhatsApp Business, Google Drive, QuickBooks.
 
 ---
 
-## 📊 System Architecture & Data Flow
-
-SiteFlow maps jobsite inputs (materials, attendance, progress photos) directly to core calculation engines and accounting records:
-
-```mermaid
-graph TD
-    subgraph Jobsite ["Jobsite (Mobile PWA)"]
-        A1[GPS Geofenced Punch-in] --> B1[Local DB Backup / Sync]
-        A2[Daily Progress Photos] --> B1
-        A3[Material Receipts / GRN] --> B1
-    end
-
-    subgraph CoreEngine ["SiteFlow Core Engine (Backend FastAPI)"]
-        B1 -- REST API HTTPS --> C1[API Router Gateway]
-        C1 --> C2[Math Engine / IS 456]
-        C1 --> C3[Deduction & Tax Engine]
-        C1 --> C4[PostGIS Geofence Validator]
-        C1 --> C5[Analytics & Financial Engine]
-    end
-
-    subgraph DataStore ["Data Store (Supabase PostgreSQL)"]
-        C2 --> D1[(Company & Project Tables)]
-        C3 --> D1
-        C4 --> D2[(Geofenced Coordinates)]
-        C5 --> D3[(Bills & Financial Records)]
-    end
-
-    subgraph ERP ["ERP Integration & Analytics"]
-        D1 --> E1[Tally Prime Desktop Sync]
-        D1 --> E2[Zoho Books Sync]
-        D3 --> E3[Executive Analytics Dashboard]
-        D3 --> E4[Financial KPI Dashboard]
-    end
-
-    classDef site fill:#E8184C,stroke:#333,stroke-width:2px,color:#fff;
-    classDef core fill:#7C5CFF,stroke:#333,stroke-width:2px,color:#fff;
-    classDef db fill:#171520,stroke:#555,stroke-width:2px,color:#fff;
-    classDef integrations fill:#0B0910,stroke:#E8184C,stroke-width:1px,color:#ededed;
-    
-    class A1,A2,A3,B1 site;
-    class C1,C2,C3,C4,C5 core;
-    class D1,D2,D3 db;
-    class E1,E2,E3,E4 integrations;
-```
-
----
-
-## 🧮 Industry-Specific Construction Engineering Formulas & Processes
+## 🧮 Indian Construction Engineering & Tax Engine
 
 SiteFlow embeds standardized civil engineering codes, CPWD specifications, and Indian statutory tax rules within its calculation core.
 
-### 1. Concrete Mix & Material Estimation (IS 456:2000)
-To convert wet concrete volume into raw material quantities, SiteFlow applies a dry volume conversion factor of **$1.54$** to account for void ratios and mixing shrinkage:
+### Concrete Mix & Material Estimation (IS 456:2000)
+To convert wet concrete volume into raw material quantities, SiteFlow applies a dry volume conversion factor of **1.54** to account for void ratios and mixing shrinkage:
+
 $$\text{Dry Volume} = \text{Wet Volume} \times 1.54$$
 
 Quantification breaks down cement, sand, and coarse aggregates using CPWD-compliant mix ratios:
@@ -115,19 +94,18 @@ $$\text{Cement (bags)} = \frac{\text{Dry Volume} \times \text{Cement Ratio}}{\te
 $$\text{Sand Volume } (m^3) = \frac{\text{Dry Volume} \times \text{Sand Ratio}}{\text{Sum of Mix Ratios}}$$
 $$\text{Coarse Aggregate Volume } (m^3) = \frac{\text{Dry Volume} \times \text{Coarse Aggregate Ratio}}{\text{Sum of Mix Ratios}}$$
 
----
-
-### 2. TMT Rebar Weight Calculations (IS 1786)
+### TMT Rebar Weight Calculations (IS 1786)
 Reinforcement steel rebar weight is calculated using standard nominal diameters according to the Indian Standard unit weight formula:
+
 $$w = \frac{d^2}{162.2} \text{ kg/m}$$
+
 *Where $d$ is the rebar diameter in millimeters.*
 
 Total reinforcement requirements (incorporating lap length and waste multipliers) are calculated as:
+
 $$W_{\text{total}} = \sum \left( L_i \times N_i \times \frac{d_i^2}{162.2} \right) \times (1 + \text{Wastage Pct})$$
 
----
-
-### 3. Subcontractor Billing Tax Deduction Engine
+### Subcontractor Billing Tax Deduction Engine
 SiteFlow computes subcontractor Running Account (RA) bills according to two distinct prioritization structures depending on contract terms:
 
 ```mermaid
@@ -175,9 +153,7 @@ GST is applied directly to the base subtotal, and deductions are subtracted from
 4. **Retention Money**: $\text{Retention} = G \times \text{Retention Pct}$.
 5. **Net Payable**: $\text{Net Payable} = G - \text{TDS} - \text{Retention} - A$.
 
----
-
-### 4. Planning & Scheduling Critical Path Method (CPM)
+### Planning & Scheduling Critical Path Method (CPM)
 Task timelines calculate network floats to isolate schedule risks:
 * **Early Finish (EF):** $\text{EF} = \text{Early Start (ES)} + \text{Duration}$
 * **Late Start (LS):** $\text{LS} = \text{Late Finish (LF)} - \text{Duration}$
@@ -185,9 +161,7 @@ Task timelines calculate network floats to isolate schedule risks:
 
 *Tasks with $\text{Total Float} = 0$ represent the Critical Path; any delay to these tasks directly impacts the project completion date.*
 
----
-
-### 5. Brick & Block Masonry Quantity Estimator (CPWD)
+### Brick & Block Masonry Quantity Estimator (CPWD)
 * **Modular brick size**: $190 \times 90 \times 90\text{ mm}$ (Nominal size with mortar: $200 \times 100 \times 100\text{ mm}$).
 * **Standard brick constant**: $500\text{ bricks per } m^3$ of masonry wall.
 * **Dry Mortar volume factor**: $1.33$ (shrinkage & joint waste multiplier).
@@ -198,28 +172,20 @@ $$V_{\text{dry}} = (\text{Wall Length} \times \text{Wall Height} \times \text{Wa
 $$\text{Cement (bags)} = \frac{V_{\text{dry}} \times \text{Cement Ratio}}{\text{Sum of Mix Ratios} \times 0.0347}$$
 $$\text{Sand Volume } (m^3) = \frac{V_{\text{dry}} \times \text{Sand Ratio}}{\text{Sum of Mix Ratios}}$$
 
----
-
-### 6. Paint & Wall Coverage Quantification
+### Paint & Wall Coverage Quantification
 $$\text{Paint Volume (liters)} = \frac{\text{Wall Surface Area} \times \text{Number of Coats}}{\text{Single Coat Coverage Rate} \times \text{Absorption Factor}}$$
 
----
-
-### 7. Geofenced Site Labor Shift & Attendance Payroll Math
+### Geofenced Site Labor Shift & Attendance Payroll Math
 * **Haversine Distance**: $d \le R_{\text{geofence}}$ is verified.
 * **Shift Multipliers**: Standard shift fractions ($0.25, 0.50, 0.75, 1.00, 1.25$ shifts).
 
 $$\text{Daily Labor Compensation} = (\text{Daily Wage} \times \text{Shift Multiplier}) + (\text{Overtime Hours} \times \text{Hourly OT Rate}) + \text{Allowances} - \text{Deductions}$$
 
----
-
-### 8. Heavy Equipment Fuel Consumption & Utilization Math
+### Heavy Equipment Fuel Consumption & Utilization Math
 $$R_{\text{fuel}} = \frac{\text{Fuel Consumed (liters)}}{\text{Final Run Hours} - \text{Initial Run Hours}}$$
 $$\text{Utilization Pct} = \frac{\text{Working Hours}}{\text{Total Available Shift Hours}} \times 100$$
 
----
-
-### 9. Compressive Cube Strength Compliance (IS 516 / IS 456)
+### Compressive Cube Strength Compliance (IS 516 / IS 456)
 $$f_c = \frac{\text{Peak Failure Load (N)}}{\text{Cube Area } (150 \times 150 \text{ mm}^2)} = \frac{P}{22500}$$
 * **7-Day Compliance Check**: Compressive strength $f_c \ge 0.65 \times f_{ck}$.
 * **28-Day Compliance Check**: Compressive strength $f_c \ge 1.00 \times f_{ck}$.
@@ -248,101 +214,106 @@ SiteFlow features a state-of-the-art **glassmorphic canvas** with full support f
 * [context/](file:///C:/Users/Dell/Github/Construction-Management-ERP-Software/context/) — Session context, roadmap history, audits, calculators, and reverse-engineering notes.
 * [onsiteteams-recon/](file:///C:/Users/Dell/Github/Construction-Management-ERP-Software/onsiteteams-recon/) — Raw competitor bundle resources, HTML assets, sitemaps, and API schemas.
 * [frontend/](file:///C:/Users/Dell/Github/Construction-Management-ERP-Software/frontend/) — Next.js app-router frontend, including dashboard, project modules, analytics, and PWA shell assets.
- * [backend/](file:///C:/Users/Dell/Github/Construction-Management-ERP-Software/backend/) — FastAPI backend with routers for auth, calculators, planning, procurement, billing, HR, quality, reports, equipment, safety, analytics, production, assets, three-way matching, wastage, chat, custom fields, statutory, and face recognition.
+* [backend/](file:///C:/Users/Dell/Github/Construction-Management-ERP-Software/backend/) — FastAPI backend with routers for auth, calculators, planning, procurement, billing, HR, quality, reports, equipment, safety, analytics, production, assets, three-way matching, wastage, chat, custom fields, statutory, and face recognition.
 
 ---
 
-## 📍 In-Depth Subpage & Feature Map
+## 📋 Module Reference
 
 ### 1. Company Dashboard (`/c/[company_id]/dashboard`)
-- **Operational Tab**:
-  - **Project Health Chart**: Displays health breakdown (Healthy / Warning / Critical) across all sites with a **25-type chart switcher** — switch between Bar, Pie, Donut, Line, Area, Scatter, and Table views.
-  - **Last 7 Days Attendance**: Sparkline chart of daily present/absent counts with full chart type switching (bar, stacked bar, line, area, scatter, pie, donut, table).
-  - **Last 7 Days Material GRNs**: Sparkline of daily goods receipt counts with the same 25-type chart picker.
-  - **Project Operational Summary**: Table showing all projects with health badge, progress bar, start/end dates, and customer name.
-- **Financial Tab**:
-  - **KPI Cards**: Advance Paid, Amount To Pay (Unpaid Purchases), Amount To Receive (Unpaid Sales), Advance Received — all derived live from the Bills ledger.
-  - **SVG Revenue / Expense / Margin Charts**: Monthly trend sparklines for Sales, Purchase Expenses, and Gross Margin.
-  - **Expense Type Distribution**: Horizontal bar breakdown of expense categories (Materials, Labour, Equipment, etc.).
-  - **Project Financial Summary Table**: Per-project revenue, costs, margin %, and advance details.
-  - **Engineering Calculators** (bottom): IS-1786 Steel weight calculator and Haversine geofence distance guard.
+- **Operational Tab**: Project health breakdown, 7-day attendance sparkline, 7-day GRN sparkline, project operational summary table. All charts support 25-type switching.
+- **Financial Tab**: KPI cards (advances, payables, receivables), SVG revenue/expense/margin trends, expense distribution, project financial summary, and engineering calculators.
 
 ### 2. Executive Analytics (`/c/[company_id]/analytics`)
-- **Interactive S-Curve Chart**: Renders planned progress vs. actual progress using SVG coordinates. Hovering on coordinates displays a glassmorphic tooltip with planned %, actual %, and variance calculations.
-- **Interactive Budget Burn Chart**: Plots cumulative spend against total project budget. Hovering displays the exact burn share percentage and Rupees (INR) spent.
-- **Project Scoreboard**: Live comparison table detailing project budget, cumulative spend, completion status, and active tasks.
+- Interactive S-curve progress chart with glassmorphic tooltips.
+- Budget burn chart with cumulative spend visualization.
+- Project scoreboard with budget vs. actual comparison.
 
 ### 3. Project Modules (`/c/[company_id]/p/[project_id]/`)
-- **Attendance & Payroll (`/attendance`)**:
-  - GPS-tagged punch-in / punch-out geofencing with local storage backup.
-  - Localization support for **English**, **Hinglish**, **Hindi**, and **Tamil** for site staff.
-  - Multi-level shift calculations (0.25, 0.50, 0.75, 1.00 shifts) and overtime hours.
-- **Subcontractor Billing (`/billing`)**:
-  - Live billing calculator preview supporting pre-tax and post-tax deductions.
-  - Indian taxation presets: **GST** (18% Works Contract, 12% Infra, 5% Housing) and **TDS** (1% Section 194C Individual, 2% Section 194C Corporate, 0.1% Section 194Q).
-  - Debit/Credit Notes Ledger for material recovery deductions.
-- **CRM (`/crm`)**:
-  - Lead management with kanban-style pipeline and client contact registry.
-  - **Quotations tab**: Create, view, and manage quotations with status workflow (Draft → Sent → Accepted / Rejected), line-item cost breakdowns, and client assignment.
-- **Planning & Gantt (`/planning/gantt`)**:
-  - Interactive Gantt chart schedule viewer with critical path tracking.
-- **DPR (`/dpr`)**: Daily progress reporting, delay tracking, and supervisor photo attachments.
-- **Drawings (`/drawings`)**: Version-controlled construction blueprint registry.
-- **Equipment (`/equipment`)**: Heavy machinery (Excavators, Transit Mixers) fuel logs and run hours.
-- **Finance (`/finance`)**: Cash flow projections, petty cash receipts, and supplier ledgers.
-- **HR (`/hr`)**:
-  - Site staff directory with department and designation management.
-  - Monthly payroll runs (Basic, HRA, Allowances, PF, ESI, TDS calculations) and the **Daily Timesheet Logger** drawer.
-  - **Leave Management**: Staff leave requests and manager approval/rejection workflow.
-- **Procurement (`/procurement`)**: Material indents, Purchase Orders (PO), and Goods Receipt Notes (GRN) with approval gates.
-- **Production (`/production`)**: Task-level work quantities (masonry, tiling, concrete).
-- **Quality (`/quality`)**: Concrete slump test logs, cube strength registers, and checklists.
-- **Reports (`/reports`)**: Auto-generated PDF/Excel summaries of material waste, daily reports, and labor.
-- **Safety (`/safety`)**: Site hazard reporting, PPE audit checklists, and toolbox talk logs.
-- **Asset Depreciation (`/depreciation`)**: Depreciation schedule management with multiple methods and monthly ledger entries.
-- **3-Way Matching (`/three-way`)**: PO-GRN-Invoice reconciliation with variance detection and approval workflow.
-- **Material Wastage (`/wastage`)**: Scrap, offcut, damage, expiry, and theft tracking with value estimation and status progression.
-- **Chat & MOM (`/chat`)**: Project-level group chat with text, media, voice notes, and Minutes of Meeting support.
-- **Custom Fields (`/custom-fields`)**: Dynamic custom field creation and value assignment across entities.
-- **Statutory Reports (`/statutory`)**: PF, ESI, BOCW, TDS compliance filing with contribution tracking.
-- **Face Recognition (`/face-recognition`)**: Face verification audit trail for attendance punches with confidence scores and geofence validation.
+- **Attendance & Payroll (`/attendance`)**: GPS geofenced punch-in/out, Haversine validation, offline backup, multi-language support, shift multipliers, overtime calculations.
+- **Subcontractor Billing (`/billing`)**: Real-time RA bill calculator, pre-tax/post-tax deduction modes, Indian GST/TDS presets, debit/credit notes ledger.
+- **CRM (`/crm`)**: Lead pipeline, client registry, quotation creation and lifecycle management.
+- **Planning & Gantt (`/planning/gantt`)**: Interactive WBS timeline, CPM scheduling, task float calculations.
+- **DPR (`/dpr`)**: Daily progress reports, delay tracking, photo attachments.
+- **Drawings (`/drawings`)**: Version-controlled blueprints, revision history, RFI/Clash/Observation pin overlay, approval workflows.
+- **Equipment (`/equipment`)**: Fuel logs, run hours, deployment tracking.
+- **Finance (`/finance`)**: Payment recording, ledger, P&L, bank accounts, payment requests, Tally sync.
+- **HR (`/hr`)**: Employee directory, leave management, monthly payroll, timesheets, face recognition attendance.
+- **Procurement (`/procurement`)**: Material indents, purchase orders, GRNs, inventory, unbilled material tracking.
+- **Production (`/production`)**: Work quantity tracking, recipe management, batch logging, inventory alerts.
+- **Quality (`/quality`)**: IS-code checklists, inspections, NCRs, lab test logs.
+- **Reports (`/reports`)**: Progress report generation, approval workflow, PDF download.
+- **Safety (`/safety`)**: Hazard reporting, PPE audits, toolbox talks.
+- **Asset Depreciation (`/depreciation`)**: Multiple depreciation methods, monthly ledger entries.
+- **3-Way Matching (`/three-way`)**: PO-GRN-Invoice reconciliation, variance detection, approval workflow.
+- **Material Wastage (`/wastage`)**: Scrap tracking, value estimation, status progression.
+- **Chat & MOM (`/chat`)**: Project chat groups, text/media/voice notes, Minutes of Meeting.
+- **Custom Fields (`/custom-fields`)**: Dynamic field definitions across entities.
+- **Statutory Reports (`/statutory`)**: PF, ESI, BOCW, TDS compliance filing.
+- **Face Recognition (`/face-recognition`)**: Face verification audit trail with confidence scores.
 
-### 4. Recent Improvements & Bug Fixes
-- **Critical security/bug fixes**:
-  - Replaced hardcoded `127.0.0.1:8000` references with dynamic `getApiHost()` across dashboard, drawings, procurement, and finance.
-  - Replaced fake `setTimeout` Tally sync simulations with real `POST /apis/v3/tally/sync` endpoints.
-  - Replaced unsafe `new Function()` eval in Gantt formula parser with safe mathematical expression parser.
-  - Debounced settings page `handleUpdateSettings` to 800ms to prevent API flood on keystrokes.
-  - Fixed timezone bug in holiday date submission (`new Date(date).toISOString()` was storing previous day).
-  - Fixed inventory bar width calculation in production (`available/(on_hand+reserved)` instead of `available/on_hand`).
-- **Backend API connections**:
-  - **Drawings**: Blueprint & RFI system now fetches from `/apis/v3/drawings`, persists pins via `/revisions/{id}/pins`, publishes revisions via `/revisions`, and toggles lock status via `/approve`.
-  - **Procurement**: Material indents, POs, GRNs, and inventory now load from `/apis/v3/procurement/*`. Create/approve operations persist to backend with demo fallback on failure.
-  - **Finance**: Record Payment and Approve Voucher now POST to `/apis/v3/finance/payments` and `/apis/v3/finance/approve/{id}` with FIFO auto-settlement against open bills.
-  - **Reports & Quality**: Added `isOffline` state tracking with amber banners when backend is unavailable.
-- **UX enhancements**:
-  - Billing page now displays CGST/SGST/IGST split for Indian GST compliance.
-  - Settings page includes GSTIN format validation with regex and inline error messages.
-  - Settings page shows save status feedback (`saving`/`saved`/`error`) instead of silent writes.
-  - Equipment page adds form validation for required fields with inline error display.
-  - Attendance page adds `navigator.onLine` detection and offline banner.
-  - DPR quick stats now derive dynamically from logs instead of hardcoded strings.
-  - CRM and Reports pages now show true empty states instead of demo data when API returns no records.
-  - Approval rule types expanded to include RA bills, client invoices, debit/credit notes, and timesheets.
-
-### 5. Company Settings (`/c/[company_id]/settings`)
-- **General Settings**: Company profile, contact info, and legal details.
-- **Branch Management**: Add and manage multiple company branches with individual address and contact details.
-- **Restrictions & Controls**: Toggle company-wide rules such as employee self-edit access, geofence enforcement, and attendance visibility.
+### 4. Company Settings (`/c/[company_id]/settings`)
+- **General Settings**: Company profile, contact info, GSTIN validation, currency and quantity decimal precision.
+- **Branch Management**: Multi-branch configuration with individual addresses and contacts.
+- **Restrictions & Controls**: Employee self-edit, geofence enforcement, back-dated entry limits, negative stock lock, BOM/PO restrictions.
+- **Approval Workflows**: Configurable approval rules for POs, material requests, expenses, RA bills, client invoices, debit/credit notes, and timesheets.
 
 ### 5. Onboarding Wizard
-- 2-step guided stepper modal for first-time project creation.
+- 2-step guided stepper for first-time project creation.
 - **Step 1**: Project details (name, code, city, address, geofence radius).
 - **Step 2**: Team member assignment before project goes live.
 
-### 6. Public Website Integrations Hub (`/integrations`)
-- Interactive search engine and category selector pills (Accounting, Communication, Storage, Analytics, Field & Site).
-- Full active configuration panel for **Tally ERP** link, and request forms for planned modules (WhatsApp Business, Zoho, QuickBooks, Google Drive).
+### 6. Integrations Hub (`/integrations`)
+- Interactive search and category filtering (Accounting, Communication, Storage, Analytics, Field & Site).
+- Active configuration panel for **Tally ERP**.
+- Request forms for planned integrations: WhatsApp Business, Zoho Books, QuickBooks, Google Drive.
+
+---
+
+## 🏗 System Architecture & Data Flow
+
+SiteFlow maps jobsite inputs (materials, attendance, progress photos) directly to core calculation engines and accounting records:
+
+```mermaid
+graph TD
+    subgraph Jobsite ["Jobsite (Mobile PWA)"]
+        A1[GPS Geofenced Punch-in] --> B1[Local DB Backup / Sync]
+        A2[Daily Progress Photos] --> B1
+        A3[Material Receipts / GRN] --> B1
+    end
+
+    subgraph CoreEngine ["SiteFlow Core Engine (Backend FastAPI)"]
+        B1 -- REST API HTTPS --> C1[API Router Gateway]
+        C1 --> C2[Math Engine / IS 456]
+        C1 --> C3[Deduction & Tax Engine]
+        C1 --> C4[PostGIS Geofence Validator]
+        C1 --> C5[Analytics & Financial Engine]
+    end
+
+    subgraph DataStore ["Data Store (Supabase PostgreSQL)"]
+        C2 --> D1[(Company & Project Tables)]
+        C3 --> D1
+        C4 --> D2[(Geofenced Coordinates)]
+        C5 --> D3[(Bills & Financial Records)]
+    end
+
+    subgraph ERP ["ERP Integration & Analytics"]
+        D1 --> E1[Tally Prime Desktop Sync]
+        D1 --> E2[Zoho Books Sync]
+        D3 --> E3[Executive Analytics Dashboard]
+        D3 --> E4[Financial KPI Dashboard]
+    end
+
+    classDef site fill:#E8184C,stroke:#333,stroke-width:2px,color:#fff;
+    classDef core fill:#7C5CFF,stroke:#333,stroke-width:2px,color:#fff;
+    classDef db fill:#171520,stroke:#555,stroke-width:2px,color:#fff;
+    classDef integrations fill:#0B0910,stroke:#E8184C,stroke-width:1px,color:#ededed;
+    
+    class A1,A2,A3,B1 site;
+    class C1,C2,C3,C4,C5 core;
+    class D1,D2,D3 db;
+    class E1,E2,E3,E4 integrations;
+```
 
 ---
 
@@ -357,6 +328,44 @@ SiteFlow is built from the ground up for strict multi-tenant isolation:
   ON bills (company_id, invoice_number) 
   WHERE invoice_type = 'sale';
   ```
+
+---
+
+## 🚀 Technology Stack
+
+| Layer | Technology |
+|-------|-----------|
+| **Frontend** | Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS |
+| **Backend** | FastAPI (Python 3.12), SQLAlchemy 2.0, Pydantic v2 |
+| **Database** | Supabase PostgreSQL (production), SQLite (local dev) |
+| **Deployment** | Vercel (frontend), Render (backend) |
+| **PWA** | Service Worker, offline queue, geolocation API |
+| **Charts** | Pure SVG (no external charting library) |
+| **Authentication** | JWT-based with company-scoped tokens |
+
+---
+
+## 📡 API Reference
+
+The backend exposes a versioned REST API under `/apis/v3/`. Key endpoint groups:
+
+| Module | Base Path |
+|--------|-----------|
+| **Planning & Gantt** | `/apis/v3/planning/*` |
+| **Procurement** | `/apis/v3/procurement/indents`, `/pos`, `/grns`, `/inventory` |
+| **Billing** | `/apis/v3/billing/work-orders`, `/bills`, `/bills/summary` |
+| **HR** | `/apis/v3/hr/employees`, `/attendance`, `/leaves`, `/timesheets`, `/payroll` |
+| **Finance** | `/apis/v3/finance/payments`, `/approve/{id}`, `/ledger`, `/pl` |
+| **Quality** | `/apis/v3/quality/checklists`, `/inspections`, `/ncr`, `/material-tests` |
+| **Reports** | `/apis/v3/reports/{project_id}`, `/generate/{project_id}`, `/approve` |
+| **Drawings** | `/apis/v3/drawings`, `/revisions`, `/pins` |
+| **Equipment** | `/apis/v3/equipment` |
+| **Safety** | `/apis/v3/safety/*` |
+| **Analytics** | `/apis/v3/analytics/company/{id}/operational`, `/financial` |
+| **Tally Sync** | `/apis/v3/tally/sync`, `/connections` |
+| **Settings** | `/apis/v3/settings/company/{id}` |
+
+Full OpenAPI schema available at: `https://construction-erp-backend-73vm.onrender.com/openapi.json`
 
 ---
 
