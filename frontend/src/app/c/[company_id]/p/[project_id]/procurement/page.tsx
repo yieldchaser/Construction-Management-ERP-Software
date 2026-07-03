@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { getApiHost } from "@/lib/api";
 
 // Types
 interface IndentItem {
@@ -225,11 +226,90 @@ export default function ProcurementPage() {
   }, []);
 
   // State managers
-  const [indents, setIndents] = useState<Indent[]>(INITIAL_INDENTS);
-  const [pos, setPos] = useState<PO[]>(INITIAL_POS);
-  const [inventory, setInventory] = useState<InventoryItem[]>(INITIAL_INVENTORY);
-  const [transactions, setTransactions] = useState<Transaction[]>(INITIAL_TRANSACTIONS);
-  const [grns, setGrns] = useState<GRN[]>(INITIAL_GRNS);
+  const [indents, setIndents] = useState<Indent[]>([]);
+  const [pos, setPos] = useState<PO[]>([]);
+  const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [grns, setGrns] = useState<GRN[]>([]);
+  const [isOffline, setIsOffline] = useState(false);
+
+  const fetchProcurementData = async () => {
+    try {
+      const apiHost = getApiHost();
+      const [indentsRes, posRes, grnsRes, invRes] = await Promise.all([
+        fetch(`${apiHost}/apis/v3/procurement/indents?project_id=${projectId}`),
+        fetch(`${apiHost}/apis/v3/procurement/pos?project_id=${projectId}`),
+        fetch(`${apiHost}/apis/v3/procurement/grns?project_id=${projectId}`),
+        fetch(`${apiHost}/apis/v3/procurement/inventory?project_id=${projectId}`),
+      ]);
+
+      if (indentsRes.ok) {
+        const data = await indentsRes.json();
+        const mapped = data.map((ind: any) => ({
+          id: ind.id,
+          indentNumber: ind.indent_number,
+          items: (ind.items || []).map((item: any) => ({ name: item.material_name, qty: item.quantity, unit: item.unit })),
+          status: ind.status,
+          requestedBy: "Auto-synced",
+          date: ind.created_at ? ind.created_at.split("T")[0] : "",
+        }));
+        setIndents(mapped);
+      }
+      if (posRes.ok) {
+        const data = await posRes.json();
+        const mapped = data.map((po: any) => ({
+          id: po.id,
+          poNumber: po.po_number,
+          vendor: "Vendor",
+          items: (po.items || []).map((item: any) => ({ name: item.material_name, qty: item.quantity, unit: item.unit, rate: item.rate })),
+          grossAmount: po.gross_amount,
+          taxAmount: po.tax_amount,
+          totalAmount: po.total_amount,
+          status: po.status,
+          approvalFlag: po.approval_flag,
+          date: po.po_date ? po.po_date.split("T")[0] : "",
+        }));
+        setPos(mapped);
+      }
+      if (grnsRes.ok) {
+        const data = await grnsRes.json();
+        const mapped = data.map((grn: any) => ({
+          id: grn.id,
+          grnNumber: grn.grn_number,
+          poNumber: "",
+          vendor: "",
+          receivedDate: grn.received_date ? grn.received_date.split("T")[0] : "",
+          receivedBy: "Auto-synced",
+          items: (grn.items || []).map((item: any) => ({ name: "", qty: item.received_qty, unit: "", rate: 0 })),
+          isBilled: false,
+        }));
+        setGrns(mapped);
+      }
+      if (invRes.ok) {
+        const data = await invRes.json();
+        const mapped = data.map((inv: any) => ({
+          name: inv.material_name,
+          onHand: inv.on_hand_qty,
+          reserved: inv.reserved_qty,
+          unit: inv.unit,
+          minAlertThreshold: 0,
+        }));
+        setInventory(mapped);
+      }
+      setIsOffline(false);
+    } catch (err) {
+      console.error("Procurement API unavailable, using demo data", err);
+      setIsOffline(true);
+      setIndents(INITIAL_INDENTS);
+      setPos(INITIAL_POS);
+      setGrns(INITIAL_GRNS);
+      setInventory(INITIAL_INVENTORY);
+    }
+  };
+
+  useEffect(() => {
+    fetchProcurementData();
+  }, [projectId]);
 
   // Modal and drawer control states
   const [showIndentModal, setShowIndentModal] = useState(false);
@@ -265,7 +345,7 @@ export default function ProcurementPage() {
   const [useSourceRef, setUseSourceRef] = useState("DPR Column C-1 concrete pour");
 
   // Add Material Indent Submission
-  const handleCreateIndent = () => {
+  const handleCreateIndent = async () => {
     const newIndent: Indent = {
       id: `IND-${Date.now()}`,
       indentNumber: newIndentNum,
@@ -280,6 +360,27 @@ export default function ProcurementPage() {
       requestedBy: "Amit K (Site Engineer)",
       date: new Date().toISOString().split("T")[0]
     };
+
+    try {
+      const apiHost = getApiHost();
+      const res = await fetch(`${apiHost}/apis/v3/procurement/indents`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          company_id: companyId,
+          project_id: projectId,
+          indent_number: newIndentNum,
+          items: [{ material_name: newIndentMaterial, quantity: newIndentQty, unit: newIndentUnit }],
+        }),
+      });
+      if (res.ok) {
+        const saved = await res.json();
+        newIndent.id = saved.id;
+      }
+    } catch (err) {
+      console.error("Indent create error, using local only:", err);
+    }
+
     setIndents([newIndent, ...indents]);
     setShowIndentModal(false);
     setNewIndentSpec("");
@@ -288,7 +389,16 @@ export default function ProcurementPage() {
   };
 
   // Approve Indent
-  const handleApproveIndent = (id: string) => {
+  const handleApproveIndent = async (id: string) => {
+    try {
+      const apiHost = getApiHost();
+      await fetch(`${apiHost}/apis/v3/procurement/indents/${id}/approve`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" }
+      });
+    } catch (err) {
+      console.error("Indent approve error:", err);
+    }
     setIndents(prev => prev.map(ind => {
       if (ind.id === id) {
         return { ...ind, status: "approved" };
@@ -298,7 +408,7 @@ export default function ProcurementPage() {
   };
 
   // Add Purchase Order Submission (Multi-item support)
-  const handleCreatePO = () => {
+  const handleCreatePO = async () => {
     let gross = 0;
     poFormItems.forEach(item => {
       gross += item.qty * item.rate;
@@ -318,6 +428,28 @@ export default function ProcurementPage() {
       approvalFlag: "pending",
       date: new Date().toISOString().split("T")[0]
     };
+
+    try {
+      const apiHost = getApiHost();
+      const res = await fetch(`${apiHost}/apis/v3/procurement/pos`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          company_id: companyId,
+          project_id: projectId,
+          po_number: newPONum,
+          po_date: new Date().toISOString().split("T")[0],
+          items: poFormItems.map(item => ({ material_name: item.name, quantity: item.qty, unit: item.unit, rate: item.rate })),
+        }),
+      });
+      if (res.ok) {
+        const saved = await res.json();
+        newPO.id = saved.id;
+      }
+    } catch (err) {
+      console.error("PO create error, using local only:", err);
+    }
+
     setPos([newPO, ...pos]);
     setShowPOModal(false);
     setPoFormItems([{ name: "UltraTech Cement", qty: 100, unit: "bags", rate: 410 }]);
@@ -325,7 +457,16 @@ export default function ProcurementPage() {
   };
 
   // Approve PO
-  const handleApprovePO = (id: string) => {
+  const handleApprovePO = async (id: string) => {
+    try {
+      const apiHost = getApiHost();
+      await fetch(`${apiHost}/apis/v3/procurement/pos/${id}/approve`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" }
+      });
+    } catch (err) {
+      console.error("PO approve error:", err);
+    }
     setPos(prev => prev.map(po => {
       if (po.id === id) {
         return { ...po, approvalFlag: "approved", status: "sent" };
@@ -350,7 +491,7 @@ export default function ProcurementPage() {
   };
 
   // GRN submission
-  const handleCreateGRN = () => {
+  const handleCreateGRN = async () => {
     if (!selectedPOForGRN) return;
     
     const receivedItems = selectedPOForGRN.items
@@ -364,7 +505,6 @@ export default function ProcurementPage() {
 
     if (receivedItems.length === 0) return;
 
-    // Create GRN record
     const newGRN: GRN = {
       id: `GRN-${Date.now()}`,
       grnNumber: grnNum,
@@ -377,7 +517,6 @@ export default function ProcurementPage() {
       gatePhotoUrl: grnGatePhoto || undefined
     };
 
-    // Create GRN transactions
     const newTxns = receivedItems.map((item, idx) => ({
       id: `TXN-${Date.now()}-${idx}`,
       materialName: item.name,
@@ -388,7 +527,24 @@ export default function ProcurementPage() {
       date: new Date().toISOString().split("T")[0]
     }));
 
-    // Update inventory
+    try {
+      const apiHost = getApiHost();
+      await fetch(`${apiHost}/apis/v3/procurement/grns`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          company_id: companyId,
+          project_id: projectId,
+          po_id: selectedPOForGRN.id,
+          grn_number: grnNum,
+          received_date: new Date().toISOString().split("T")[0],
+          items: receivedItems.map((item, idx) => ({ po_item_id: `placeholder-${idx}`, received_qty: item.qty })),
+        }),
+      });
+    } catch (err) {
+      console.error("GRN create error, using local only:", err);
+    }
+
     setInventory(prev => prev.map(inv => {
       const match = receivedItems.find(i => i.name === inv.name);
       if (match) {
@@ -400,7 +556,6 @@ export default function ProcurementPage() {
     setGrns([newGRN, ...grns]);
     setTransactions([...newTxns, ...transactions]);
     
-    // Update PO Status
     setPos(prev => prev.map(po => {
       if (po.id === selectedPOForGRN.id) {
         return { ...po, status: "received" as const };
@@ -519,6 +674,11 @@ export default function ProcurementPage() {
 
       {/* Main Framework */}
       <main className="flex-1 flex flex-col overflow-hidden h-full">
+        {isOffline && (
+          <div className="px-6 py-2.5 bg-amber-500/10 border-b border-amber-500/20 text-amber-400 text-xs">
+            Using demo procurement data — backend connection unavailable
+          </div>
+        )}
         <header className="h-16 border-b border-white/5 px-8 flex items-center justify-between bg-[#0B0910] shrink-0">
           <div className="flex items-center gap-4">
             <h1 className="text-sm font-bold text-white uppercase tracking-wider">Site Material Procurement</h1>

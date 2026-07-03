@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { getApiHost } from "@/lib/api";
 
 type PinCategory = "RFI" | "Clash" | "Observation" | "Approval";
 type RevStatus = "current" | "superseded" | "locked";
@@ -125,16 +126,18 @@ const REV_META: Record<RevStatus, { label: string; badge: string; dot: string; i
 };
 
 export default function DrawingsPage() {
-  const { company_id } = useParams();
+  const { company_id, project_id } = useParams();
   const companyId = (company_id as string) || "demo";
+  const projectId = (project_id as string) || "d0000000-0000-0000-0000-000000000001";
 
   const [tab, setTab] = useState<"drawings" | "files">("drawings");
   const [drawings, setDrawings] = useState<Drawing[]>(DEMO);
-  const [activeDrawingId, setActiveDrawingId] = useState(DEMO[0].id);
-  const [activeRevId, setActiveRevId] = useState(DEMO[0].revisions[0].id);
+  const [activeDrawingId, setActiveDrawingId] = useState<string>(DEMO[0].id);
+  const [activeRevId, setActiveRevId] = useState<string>(DEMO[0].revisions[0].id);
   const [selectedPinId, setSelectedPinId] = useState<string | null>(null);
   const [filterCat, setFilterCat] = useState<string>("All");
   const [imgLoaded, setImgLoaded] = useState(false);
+  const [isOffline, setIsOffline] = useState(false);
 
   // Add pin modal
   const [showPinModal, setShowPinModal] = useState(false);
@@ -149,6 +152,70 @@ export default function DrawingsPage() {
   const [newRevComment, setNewRevComment] = useState("");
 
   const canvasRef = useRef<HTMLDivElement>(null);
+
+  const fetchDrawings = async () => {
+    try {
+      const apiHost = getApiHost();
+      const res = await fetch(`${apiHost}/apis/v3/drawings?project_id=${projectId}`);
+      if (res.ok) {
+        const data = await res.json();
+        const mapped: Drawing[] = data.map((d: any) => ({
+          id: d.id,
+          name: d.name,
+          category: d.category,
+          createdAt: d.created_at ? d.created_at.split("T")[0] : "",
+          revisions: (d.revisions || []).map((r: any) => ({
+            id: r.id,
+            version: r.version_code,
+            fileUrl: r.file_url,
+            status: r.approval_status === "approved" ? "current" : (r.approval_status === "rejected" ? "locked" : "superseded"),
+            comments: r.comments || "",
+            date: r.created_at ? r.created_at.split("T")[0] : "",
+            uploadedBy: "Auto-synced",
+            pins: (r.pins || []).map((p: any) => ({
+              id: p.id,
+              seq: 0,
+              x: p.x_coordinate,
+              y: p.y_coordinate,
+              category: "Observation",
+              comment: p.comment,
+              photoAttached: false,
+              user: "System",
+              date: p.created_at ? p.created_at.split("T")[0] : "",
+              resolved: false,
+            })),
+            approvedBy: r.approved_by ? "Approver" : undefined,
+          })).sort((a: Revision, b: Revision) => {
+            const numA = parseInt(a.version.replace(/\D/g, "")) || 0;
+            const numB = parseInt(b.version.replace(/\D/g, "")) || 0;
+            return numB - numA;
+          }),
+        }));
+        setDrawings(mapped);
+        if (mapped.length > 0 && !activeDrawingId) {
+          const first = mapped[0];
+          setActiveDrawingId(first.id);
+          const cur = first.revisions.find((r: Revision) => r.status === "current") ?? first.revisions[0];
+          setActiveRevId(cur.id);
+        }
+        setIsOffline(false);
+      } else {
+        throw new Error(`HTTP ${res.status}`);
+      }
+    } catch (err) {
+      console.error("Failed to fetch drawings, using demo data", err);
+      setIsOffline(true);
+      setDrawings(DEMO);
+      if (!activeDrawingId) {
+        setActiveDrawingId(DEMO[0].id);
+        setActiveRevId(DEMO[0].revisions[0].id);
+      }
+    }
+  };
+
+  useEffect(() => {
+    fetchDrawings();
+  }, [projectId]);
 
   const activeDrawing = drawings.find(d => d.id === activeDrawingId)!;
   const activeRev = activeDrawing?.revisions.find(r => r.id === activeRevId);
@@ -187,10 +254,10 @@ export default function DrawingsPage() {
     setShowPinModal(true);
   };
 
-  const handleAddPin = () => {
+  const handleAddPin = async () => {
     if (!newPinComment.trim() || !activeRev) return;
     const nextSeq = (activeRev.pins.reduce((m, p) => Math.max(m, p.seq), 0)) + 1;
-    const pin: RFIPin = {
+    const pinData = {
       id: `pin-${Date.now()}`, seq: nextSeq,
       x: tempXY.x, y: tempXY.y,
       category: newPinCat, comment: newPinComment,
@@ -198,9 +265,29 @@ export default function DrawingsPage() {
       user: "Current User", date: new Date().toLocaleDateString("en-IN"),
       resolved: false,
     };
+
+    try {
+      const apiHost = getApiHost();
+      const res = await fetch(`${apiHost}/apis/v3/drawings/revisions/${activeRev.id}/pins`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          x_coordinate: tempXY.x,
+          y_coordinate: tempXY.y,
+          comment: newPinComment,
+          created_by: "current-user",
+        }),
+      });
+      if (!res.ok) throw new Error("Failed to save pin");
+      const saved = await res.json();
+      pinData.id = saved.id;
+    } catch (err) {
+      console.error("Pin save error, using local only:", err);
+    }
+
     setDrawings(prev => prev.map(d => d.id !== activeDrawingId ? d : {
       ...d,
-      revisions: d.revisions.map(r => r.id !== activeRevId ? r : { ...r, pins: [...r.pins, pin] })
+      revisions: d.revisions.map(r => r.id !== activeRevId ? r : { ...r, pins: [...r.pins, pinData] })
     }));
     setShowPinModal(false);
   };
@@ -214,8 +301,8 @@ export default function DrawingsPage() {
     }));
   };
 
-  const handlePublishRevision = () => {
-    if (!newRevCode.trim()) return;
+  const handlePublishRevision = async () => {
+    if (!newRevCode.trim() || !activeDrawing) return;
     const newRev: Revision = {
       id: `rev-${Date.now()}`,
       version: newRevCode.toUpperCase(),
@@ -226,7 +313,25 @@ export default function DrawingsPage() {
       uploadedBy: "Current User",
       pins: [],
     };
-    // Auto-supersede the previous current revision
+
+    try {
+      const apiHost = getApiHost();
+      const res = await fetch(`${apiHost}/apis/v3/drawings/${activeDrawingId}/revisions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          version_code: newRevCode.toUpperCase(),
+          file_url: newRev.fileUrl,
+          comments: newRev.comments,
+        }),
+      });
+      if (!res.ok) throw new Error("Failed to publish revision");
+      const saved = await res.json();
+      newRev.id = saved.id;
+    } catch (err) {
+      console.error("Revision publish error, using local only:", err);
+    }
+
     setDrawings(prev => prev.map(d => d.id !== activeDrawingId ? d : {
       ...d,
       revisions: [newRev, ...d.revisions.map(r =>
@@ -239,7 +344,21 @@ export default function DrawingsPage() {
     setNewRevCode(""); setNewRevComment("");
   };
 
-  const handleToggleLock = (revId: string) => {
+  const handleToggleLock = async (revId: string) => {
+    const newStatus = activeRev?.status === "locked" ? "superseded" : "locked";
+    try {
+      const apiHost = getApiHost();
+      await fetch(`${apiHost}/apis/v3/drawings/revisions/${revId}/approve`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          approval_status: newStatus === "locked" ? "approved" : "rejected",
+          approved_by: "current-user",
+        }),
+      });
+    } catch (err) {
+      console.error("Lock toggle error:", err);
+    }
     setDrawings(prev => prev.map(d => d.id !== activeDrawingId ? d : {
       ...d,
       revisions: d.revisions.map(r => {
@@ -253,6 +372,11 @@ export default function DrawingsPage() {
 
   return (
     <div className="flex h-screen bg-[#0E0C15] text-[#ededed] overflow-hidden">
+      {isOffline && (
+        <div className="fixed top-4 right-4 z-50 p-4 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-2xl text-xs max-w-md">
+          Using demo drawings — backend connection unavailable
+        </div>
+      )}
       {/* ── Sidebar ── */}
       <aside className="w-60 shrink-0 border-r border-white/5 bg-[#0B0910] flex flex-col overflow-hidden">
         <div className="px-5 py-4 border-b border-white/5 flex items-center gap-2.5">
