@@ -427,6 +427,11 @@ export default function AttendancePage() {
         </div>
 
         <div className="flex-1 overflow-y-auto p-6 space-y-5">
+          {!isOnline && (
+            <div className="p-3 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-xl text-xs flex items-center gap-2">
+              <span>⚠️</span> You are offline. Showing cached data. Some actions may be delayed.
+            </div>
+          )}
           {tab === "today" && (
             <>
               {/* Sub tabs and date picker */}

@@ -92,6 +92,7 @@ export default function EquipmentTrackingPage() {
   const [eqRate, setEqRate] = useState("0");
 
   const [error, setError] = useState("");
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
   const loadData = async () => {
     try {
@@ -156,7 +157,14 @@ export default function EquipmentTrackingPage() {
 
   const handleAddEquipment = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!eqName.trim() || !eqCode.trim()) return;
+    const errs: Record<string, string> = {};
+    if (!eqName.trim()) errs.eqName = "Equipment name is required";
+    if (!eqCode.trim()) errs.eqCode = "Equipment code is required";
+    if (Object.keys(errs).length > 0) {
+      setValidationErrors(errs);
+      return;
+    }
+    setValidationErrors({});
     try {
       const res = await fetch(`${getApiHost()}/apis/v3/equipment`, {
         method: "POST",
@@ -174,10 +182,15 @@ export default function EquipmentTrackingPage() {
         setIsAddEqOpen(false);
         setEqName("");
         setEqCode("");
+        setEqRate("0");
         loadData();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setError(data.detail || "Failed to add equipment");
       }
     } catch (err) {
       console.error(err);
+      setError("Network error while adding equipment");
     }
   };
 

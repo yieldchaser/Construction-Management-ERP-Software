@@ -203,7 +203,7 @@ export default function CompanySettingsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: newHoliday.name,
-          date: new Date(newHoliday.date).toISOString(),
+          date: newHoliday.date ? `${newHoliday.date}T00:00:00` : null,
         }),
       });
       if (res.ok) {
