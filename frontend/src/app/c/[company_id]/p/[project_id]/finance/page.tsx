@@ -220,33 +220,56 @@ export default function FinancePage() {
     if (!amount || amtVal <= 0 || !partyName.trim()) return;
 
     setSubmitting(true);
-    const newTxn: Transaction = {
-      id: `TXN-${Date.now()}`,
-      date: new Date().toISOString().split("T")[0],
-      type: selectedTxnType,
-      category: selectedTxnType,
-      description: desc || `Recorded ${selectedTxnType} voucher`,
-      amount: amtVal,
-      party: partyName,
-      ref: refNum || `ONS-V-${Date.now().toString().slice(-4)}`,
-      ref_invoice: ["Debit Note", "Credit Note"].includes(selectedTxnType) ? refInvoice : undefined,
-      ledger: selectedTxnType,
-      status: "Pending", 
-      cost_code: costCode,
-      photo_url: photoUrl || undefined,
-      settled_amount: 0,
-      balance_due: amtVal
-    };
+    const paymentType = selectedTxnType === "Receipt" ? "in" : "out";
 
-    setTransactions([newTxn, ...transactions]);
-    setShowAddModal(false);
-    setAmount("");
-    setPartyName("");
-    setRefNum("");
-    setRefInvoice("");
-    setDesc("");
-    setPhotoUrl("");
-    setSubmitting(false);
+    try {
+      const apiHost = getApiHost();
+      const res = await fetch(`${apiHost}/apis/v3/finance/payments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          company_id: companyId,
+          project_id: projectId,
+          payment_type: paymentType,
+          amount: amtVal,
+          payment_method: "Cash",
+          reference_number: refNum || `ONS-V-${Date.now().toString().slice(-4)}`,
+          description: desc || `Recorded ${selectedTxnType} voucher`,
+          payment_date: new Date().toISOString()
+        }),
+      });
+
+      const newTxn: Transaction = {
+        id: res.ok ? `TXN-${Date.now()}` : `TXN-${Date.now()}-local`,
+        date: new Date().toISOString().split("T")[0],
+        type: selectedTxnType,
+        category: selectedTxnType,
+        description: desc || `Recorded ${selectedTxnType} voucher`,
+        amount: amtVal,
+        party: partyName,
+        ref: refNum || `ONS-V-${Date.now().toString().slice(-4)}`,
+        ref_invoice: ["Debit Note", "Credit Note"].includes(selectedTxnType) ? refInvoice : undefined,
+        ledger: selectedTxnType,
+        status: "Pending",
+        cost_code: costCode,
+        photo_url: photoUrl || undefined,
+        settled_amount: 0,
+        balance_due: amtVal
+      };
+
+      setTransactions([newTxn, ...transactions]);
+      setShowAddModal(false);
+      setAmount("");
+      setPartyName("");
+      setRefNum("");
+      setRefInvoice("");
+      setDesc("");
+      setPhotoUrl("");
+    } catch (err) {
+      console.error("Failed to record payment", err);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleApproveVoucher = async (id: string) => {
