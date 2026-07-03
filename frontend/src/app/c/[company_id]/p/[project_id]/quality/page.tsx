@@ -152,6 +152,7 @@ export default function QualityPage() {
   const [inspections, setInspections] = useState<Inspection[]>([]);
   const [ncrs, setNcrs] = useState<NCR[]>([]);
   const [labTests, setLabTests] = useState<LabTest[]>([]);
+  const [isOffline, setIsOffline] = useState(false);
 
   const [selectedInspection, setSelectedInspection] = useState<Inspection | null>(null);
   const [activeInspectionItems, setActiveInspectionItems] = useState<ChecklistItem[]>([]);
@@ -213,9 +214,13 @@ export default function QualityPage() {
           };
         }));
         setChecklists(currentChecklists);
+        setIsOffline(false);
+      } else {
+        throw new Error(`HTTP ${clRes.status}`);
       }
     } catch (e) {
       console.error("Failed to fetch checklists", e);
+      setIsOffline(true);
     }
 
     try {
@@ -527,6 +532,12 @@ export default function QualityPage() {
             )}
           </div>
         </header>
+
+        {isOffline && (
+          <div className="px-6 py-2.5 bg-amber-500/10 border-b border-amber-500/20 text-amber-400 text-xs">
+            Using demo quality data — backend connection unavailable
+          </div>
+        )}
 
         <div className="flex-1 overflow-y-auto p-6">
 

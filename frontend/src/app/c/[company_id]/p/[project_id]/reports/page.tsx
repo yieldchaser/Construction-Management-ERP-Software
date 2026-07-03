@@ -196,6 +196,12 @@ export default function ClientReportsPage() {
           </button>
         </div>
 
+        {isOffline && (
+          <div className="px-6 py-2.5 bg-amber-500/10 border-b border-amber-500/20 text-amber-400 text-xs">
+            Using demo reports — backend connection unavailable
+          </div>
+        )}
+
         {/* Workspace Layout */}
         <div className="flex-1 flex overflow-hidden">
           {/* Left Panel: Report Gallery */}
