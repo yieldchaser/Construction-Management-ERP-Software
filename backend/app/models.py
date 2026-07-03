@@ -1155,9 +1155,20 @@ class ChatMessage(Base):
     message_text = Column(String, nullable=True)
     media_url = Column(String, nullable=True)
     voice_note_url = Column(String, nullable=True)
+    image_urls = Column(JSONB, nullable=True)
     is_mom = Column(Boolean, default=False, nullable=False)
     mom_date = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
+class ChatGroupMember(Base):
+    """Member inside a chat group with role-based access."""
+    __tablename__ = "chat_group_members"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    group_id = Column(UUID(as_uuid=True), ForeignKey("chat_groups.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("company_team.id", ondelete="CASCADE"), nullable=False)
+    role = Column(String(50), default="member", nullable=False)  # admin, member, viewer
+    joined_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 
 
 # ─────────────────────────────────────────────────────────────────────────────

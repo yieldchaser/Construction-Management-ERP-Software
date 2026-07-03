@@ -19,7 +19,18 @@ interface Report {
   filed_by?: string;
   acknowledgment_number?: string;
   status: string;
+  due_date?: string;
+  days_overdue: number;
+  penalty_estimate: number;
   created_at: string;
+}
+
+interface PenaltyEstimate {
+  report_type: string;
+  return_period: string;
+  total_wages: number;
+  due_date?: string;
+  estimated_penalty: number;
 }
 
 export default function StatutoryPage() {
@@ -31,6 +42,8 @@ export default function StatutoryPage() {
   const [showModal, setShowModal] = useState(false);
   const [filterType, setFilterType] = useState("");
   const [message, setMessage] = useState("");
+  const [showPenalty, setShowPenalty] = useState(false);
+  const [penaltyData, setPenaltyData] = useState<PenaltyEstimate | null>(null);
 
   const [form, setForm] = useState({
     report_type: "pf",
@@ -58,6 +71,47 @@ export default function StatutoryPage() {
     const id = setTimeout(() => fetchReports(), 0);
     return () => clearTimeout(id);
   }, [companyId, filterType]);
+
+  const handleAutoPopulate = async () => {
+    const reportType = form.report_type;
+    const returnPeriod = form.return_period;
+    if (!returnPeriod) { setMessage("Please enter return period first"); return; }
+    try {
+      const url = `${getApiHost()}/apis/v3/statutory/${companyId}/auto-populate?report_type=${reportType}&return_period=${returnPeriod}${projectId ? `&project_id=${projectId}` : ""}`;
+      const res = await fetch(url);
+      if (res.ok) {
+        const data = await res.json();
+        setForm({
+          report_type: data.report_type,
+          return_period: data.return_period,
+          total_employees: data.total_employees,
+          total_wages: Number(data.total_wages),
+          pf_employee_contribution: Number(data.pf_employee_contribution),
+          pf_employer_contribution: Number(data.pf_employer_contribution),
+          esi_employee_contribution: Number(data.esi_employee_contribution),
+          esi_employer_contribution: Number(data.esi_employer_contribution),
+          bocw_cess: Number(data.bocw_cess),
+          tds_deducted: Number(data.tds_deducted),
+          filed_by: "",
+        });
+        setMessage("Auto-populated from employee data");
+      }
+    } catch (_e) { void _e; setMessage("Error auto-populating"); }
+  };
+
+  const handleEstimatePenalty = async () => {
+    const returnPeriod = form.return_period;
+    if (!returnPeriod) { setMessage("Please enter return period first"); return; }
+    try {
+      const url = `${getApiHost()}/apis/v3/statutory/${companyId}/penalty?report_type=${form.report_type}&return_period=${returnPeriod}&total_wages=${form.total_wages}`;
+      const res = await fetch(url);
+      if (res.ok) {
+        const data = await res.json();
+        setPenaltyData(data);
+        setShowPenalty(true);
+      }
+    } catch (_e2) { void _e2; setMessage("Error estimating penalty"); }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -189,9 +243,14 @@ export default function StatutoryPage() {
                     <td className="px-6 py-4">₹{Number(r.bocw_cess).toLocaleString()}</td>
                     <td className="px-6 py-4">₹{Number(r.tds_deducted).toLocaleString()}</td>
                     <td className="px-6 py-4">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[r.status]}`}>{r.status}</span>
+                      <div>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[r.status]}`}>{r.status}</span>
+                        {r.days_overdue > 0 && (
+                          <span className="ml-2 text-[10px] text-red-400">{r.days_overdue}d overdue</span>
+                        )}
+                      </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 flex gap-2">
                       {r.status === "draft" && (
                         <button onClick={() => handleFile(r.id)} className="px-3 py-1 bg-blue-500/10 text-blue-400 rounded-lg text-xs font-medium hover:bg-blue-500/20 transition-all">File</button>
                       )}
@@ -202,6 +261,20 @@ export default function StatutoryPage() {
             </tbody>
           </table>
         </div>
+
+        {showPenalty && penaltyData && (
+          <div className="mt-6 bg-white/5 border border-white/10 rounded-2xl p-6">
+            <h3 className="text-lg font-bold text-white mb-4">Penalty Estimate</h3>
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div><span className="text-zinc-400">Report Type:</span> <span className="text-white">{penaltyData.report_type}</span></div>
+              <div><span className="text-zinc-400">Period:</span> <span className="text-white">{penaltyData.return_period}</span></div>
+              <div><span className="text-zinc-400">Total Wages:</span> <span className="text-white">₹{Number(penaltyData.total_wages).toLocaleString()}</span></div>
+              <div><span className="text-zinc-400">Due Date:</span> <span className="text-white">{penaltyData.due_date ? new Date(penaltyData.due_date as string).toLocaleDateString() : "-"}</span></div>
+              <div><span className="text-zinc-400">Estimated Penalty:</span> <span className="text-red-400 font-medium">₹{Number(penaltyData.estimated_penalty).toLocaleString()}</span></div>
+            </div>
+            <button onClick={() => setShowPenalty(false)} className="mt-4 px-4 py-2 bg-white/10 hover:bg-white/15 text-white rounded-xl text-sm font-semibold">Close</button>
+          </div>
+        )}
 
         {showModal && (
           <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
@@ -224,6 +297,10 @@ export default function StatutoryPage() {
                     <label className="block text-xs font-medium text-zinc-400 mb-1">Return Period (YYYY-MM)</label>
                     <input type="text" required placeholder="2026-06" className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-white" value={form.return_period} onChange={(e) => setForm({...form, return_period: e.target.value})} />
                   </div>
+                </div>
+                <div className="flex gap-3">
+                  <button type="button" onClick={handleAutoPopulate} className="px-4 py-2 bg-zinc-500/10 text-zinc-300 rounded-xl text-xs font-medium hover:bg-zinc-500/20 transition-all">Auto-fill from Employees</button>
+                  <button type="button" onClick={handleEstimatePenalty} className="px-4 py-2 bg-amber-500/10 text-amber-400 rounded-xl text-xs font-medium hover:bg-amber-500/20 transition-all">Estimate Penalty</button>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>

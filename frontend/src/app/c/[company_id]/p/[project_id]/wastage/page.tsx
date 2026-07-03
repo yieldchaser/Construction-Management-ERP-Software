@@ -12,6 +12,7 @@ interface Wastage {
   estimated_value: number;
   reason?: string;
   reported_by?: string;
+  photo_urls?: string[];
   status: string;
   created_at: string;
 }
@@ -158,6 +159,13 @@ export default function WastagePage() {
                   )}
                 </div>
                 <div className="mt-4 pt-4 border-t border-white/5 flex gap-2">
+                  {r.photo_urls && r.photo_urls.length > 0 && (
+                    <div className="flex gap-2 mb-3">
+                      {r.photo_urls.map((url, i) => (
+                        <img key={i} src={url} alt="" className="w-16 h-16 rounded-lg object-cover border border-white/10" />
+                      ))}
+                    </div>
+                  )}
                   {r.status === "reported" && (
                     <button onClick={() => updateStatus(r.id, "reviewed")} className="flex-1 px-3 py-1.5 bg-blue-500/10 text-blue-400 rounded-lg text-xs font-medium hover:bg-blue-500/20 transition-all">Review</button>
                   )}
