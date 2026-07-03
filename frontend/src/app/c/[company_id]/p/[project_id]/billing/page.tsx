@@ -257,6 +257,10 @@ export default function SubcontractorBillingPage() {
     }
   }, [projectId]);
 
+  const [towers, setTowers] = useState<Array<{ id: string; tower_name: string; tower_code: string }>>([]);
+  const [selectedTower, setSelectedTower] = useState<string>("all");
+  const [pnlData, setPnlData] = useState<any[]>([]);
+
   useEffect(() => {
     fetchPNL();
   }, [selectedTower]);
@@ -267,10 +271,6 @@ export default function SubcontractorBillingPage() {
   const [newWOSub, setNewWOSub] = useState("Karan Masonry Works");
   const [newWOItem, setNewWOItem] = useState("");
   const [newWOValue, setNewWOValue] = useState(150000);
-
-  const [towers, setTowers] = useState<Array<{ id: string; tower_name: string; tower_code: string }>>([]);
-  const [selectedTower, setSelectedTower] = useState<string>("all");
-  const [pnlData, setPnlData] = useState<any[]>([]);
 
   // New Bill Modal & Forms
   const [showBillModal, setShowBillModal] = useState(false);
