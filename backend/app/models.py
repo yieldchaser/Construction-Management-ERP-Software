@@ -1042,3 +1042,128 @@ class PaymentRequest(Base):
     status = Column(String(50), default="Pending", nullable=False) # Pending, Paid, Rejected
     due_date = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Phase 17 — Advanced Subcontractor, Procurement, Labour & Multi-Tower
+# ─────────────────────────────────────────────────────────────────────────────
+
+class WorkOrderAmendment(Base):
+    __tablename__ = "work_order_amendments"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    wo_id = Column(UUID(as_uuid=True), ForeignKey("work_orders.id", ondelete="CASCADE"), nullable=False)
+    amendment_number = Column(Integer, nullable=False)
+    amended_fields = Column(JSONB, nullable=False)
+    amended_by = Column(String(255), nullable=True)
+    amended_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+    reason = Column(String, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+class SubcontractorPerformance(Base):
+    __tablename__ = "subcontractor_performance"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
+    subcontractor_id = Column(UUID(as_uuid=True), ForeignKey("company_team.id", ondelete="CASCADE"), nullable=False)
+    period_start = Column(DateTime(timezone=True), nullable=False)
+    period_end = Column(DateTime(timezone=True), nullable=False)
+    on_time_pct = Column(Numeric(5, 2), default=0.0, nullable=False)
+    billing_accuracy_pct = Column(Numeric(5, 2), default=0.0, nullable=False)
+    quality_score = Column(Numeric(5, 2), default=0.0, nullable=False)
+    tasks_completed = Column(Integer, default=0, nullable=False)
+    tasks_delayed = Column(Integer, default=0, nullable=False)
+    total_billed = Column(Numeric(18, 2), default=0.0, nullable=False)
+    disputes_count = Column(Integer, default=0, nullable=False)
+    notes = Column(String, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=func.now(), onupdate=func.now(), nullable=False)
+
+class VendorPerformance(Base):
+    __tablename__ = "vendor_performance"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
+    vendor_id = Column(UUID(as_uuid=True), ForeignKey("company_team.id"), nullable=True)
+    vendor_name = Column(String(255), nullable=False)
+    total_pos = Column(Integer, default=0, nullable=False)
+    total_grns = Column(Integer, default=0, nullable=False)
+    on_time_deliveries = Column(Integer, default=0, nullable=False)
+    quality_issues = Column(Integer, default=0, nullable=False)
+    avg_delay_days = Column(Numeric(5, 2), default=0.0, nullable=False)
+    last_updated = Column(DateTime(timezone=True), default=func.now(), onupdate=func.now(), nullable=False)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+class RFQ(Base):
+    __tablename__ = "rfqs"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
+    rfq_number = Column(String(100), nullable=False)
+    status = Column(String(50), default="draft", nullable=False) # draft, sent, closed
+    valid_until = Column(DateTime(timezone=True), nullable=True)
+    notes = Column(String, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=func.now(), onupdate=func.now(), nullable=False)
+
+class RFQItem(Base):
+    __tablename__ = "rfq_items"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    rfq_id = Column(UUID(as_uuid=True), ForeignKey("rfqs.id", ondelete="CASCADE"), nullable=False)
+    material_name = Column(String(255), nullable=False)
+    quantity = Column(Numeric(18, 4), nullable=False)
+    unit = Column(String(50), nullable=False)
+    specifications = Column(String, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+class RFQQuote(Base):
+    __tablename__ = "rfq_quotes"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    rfq_id = Column(UUID(as_uuid=True), ForeignKey("rfqs.id", ondelete="CASCADE"), nullable=False)
+    vendor_id = Column(UUID(as_uuid=True), ForeignKey("company_team.id"), nullable=True)
+    vendor_name = Column(String(255), nullable=False)
+    item_id = Column(UUID(as_uuid=True), ForeignKey("rfq_items.id", ondelete="CASCADE"), nullable=False)
+    quoted_rate = Column(Numeric(18, 2), nullable=False)
+    delivery_days = Column(Integer, nullable=True)
+    terms = Column(String, nullable=True)
+    validity_days = Column(Integer, default=30, nullable=False)
+    submitted_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+class ProjectTower(Base):
+    __tablename__ = "project_towers"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
+    tower_name = Column(String(100), nullable=False)
+    tower_code = Column(String(50), nullable=False)
+    status = Column(String(50), default="Ongoing", nullable=False)
+    start_date = Column(DateTime(timezone=True), nullable=True)
+    end_date = Column(DateTime(timezone=True), nullable=True)
+    budget = Column(Numeric(18, 2), default=0.0, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+class BOCWRecord(Base):
+    __tablename__ = "bocw_records"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
+    contractor_id = Column(UUID(as_uuid=True), ForeignKey("company_team.id"), nullable=True)
+    contractor_name = Column(String(255), nullable=False)
+    month_year = Column(String(7), nullable=False) # YYYY-MM
+    workers_count = Column(Integer, default=0, nullable=False)
+    wages_paid = Column(Numeric(18, 2), default=0.0, nullable=False)
+    contribution_amount = Column(Numeric(18, 2), default=0.0, nullable=False)
+    acknowledgement_number = Column(String(100), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+class MusterRoll(Base):
+    __tablename__ = "muster_rolls"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
+    contractor_id = Column(UUID(as_uuid=True), ForeignKey("company_team.id"), nullable=True)
+    date = Column(DateTime(timezone=True), nullable=False)
+    labor_role = Column(String(100), nullable=False)
+    workers_present = Column(Integer, default=0, nullable=False)
+    workers_absent = Column(Integer, default=0, nullable=False)
+    hours_worked = Column(Numeric(5, 2), default=0.0, nullable=False)
+    overtime_hours = Column(Numeric(5, 2), default=0.0, nullable=False)
+    notes = Column(String, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
