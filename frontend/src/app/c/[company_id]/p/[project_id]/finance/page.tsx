@@ -273,14 +273,28 @@ export default function FinancePage() {
   };
 
   const handleApproveVoucher = async (id: string) => {
-    setTransactions(prev => prev.map(t => {
-      if (t.id === id) {
-        return { ...t, status: "Approved" as const, settled_amount: t.amount, balance_due: 0 };
+    try {
+      const apiHost = getApiHost();
+      const res = await fetch(`${apiHost}/apis/v3/finance/approve/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setTransactions(prev => prev.map(t => {
+          if (t.id === id) {
+            return { ...t, status: "Approved" as const, settled_amount: t.amount, balance_due: 0 };
+          }
+          return t;
+        }));
+        if (selectedVoucher?.id === id) {
+          setSelectedVoucher({ ...selectedVoucher, status: "Approved" as const, settled_amount: selectedVoucher.amount, balance_due: 0 });
+        }
+      } else {
+        console.error("Approval failed:", res.status);
       }
-      return t;
-    }));
-    if (selectedVoucher && selectedVoucher.id === id) {
-      setSelectedVoucher({ ...selectedVoucher, status: "Approved" as const, settled_amount: selectedVoucher.amount, balance_due: 0 });
+    } catch (err) {
+      console.error("Approval error:", err);
     }
   };
 
