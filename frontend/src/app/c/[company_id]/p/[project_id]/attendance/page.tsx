@@ -99,6 +99,16 @@ export default function AttendancePage() {
   
   const [date, setDate] = useState("2026-06-30");
   const [isOnline, setIsOnline] = useState(true);
+  useEffect(() => {
+    const updateOnline = () => setIsOnline(navigator.onLine);
+    updateOnline();
+    window.addEventListener("online", updateOnline);
+    window.addEventListener("offline", updateOnline);
+    return () => {
+      window.removeEventListener("online", updateOnline);
+      window.removeEventListener("offline", updateOnline);
+    };
+  }, []);
   const [queuedPunches, setQueuedPunches] = useState<PunchRecord[]>([]);
   const [syncMessage, setSyncMessage] = useState("Mobile punch queue ready");
 
