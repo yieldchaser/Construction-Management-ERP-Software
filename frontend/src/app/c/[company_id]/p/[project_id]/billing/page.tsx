@@ -157,6 +157,26 @@ export default function SubcontractorBillingPage() {
     }
   };
 
+  const fetchTowers = async () => {
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/towers/${projectId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setTowers(data.map((t: any) => ({ id: t.id, tower_name: t.tower_name, tower_code: t.tower_code })));
+      }
+    } catch (e) { console.error(e); }
+  };
+
+  const fetchPNL = async () => {
+    try {
+      const url = selectedTower === "all"
+        ? `${getApiHost()}/apis/v3/towers/${projectId}/consolidated-pnl`
+        : `${getApiHost()}/apis/v3/towers/${selectedTower}/consolidated-pnl`;
+      const res = await fetch(url);
+      if (res.ok) setPnlData(await res.json());
+    } catch (e) { console.error(e); }
+  };
+
   const fetchBills = async () => {
     try {
       const res = await fetch(`${getApiHost()}/apis/v3/billing/bills?project_id=${projectId}&invoice_type=subcon`);
@@ -233,8 +253,13 @@ export default function SubcontractorBillingPage() {
       fetchWorkOrders();
       fetchBills();
       fetchNotes();
+      fetchTowers();
     }
   }, [projectId]);
+
+  useEffect(() => {
+    fetchPNL();
+  }, [selectedTower]);
 
   // New Work Order Modal & Forms
   const [showWOModal, setShowWOModal] = useState(false);
@@ -242,6 +267,10 @@ export default function SubcontractorBillingPage() {
   const [newWOSub, setNewWOSub] = useState("Karan Masonry Works");
   const [newWOItem, setNewWOItem] = useState("");
   const [newWOValue, setNewWOValue] = useState(150000);
+
+  const [towers, setTowers] = useState<Array<{ id: string; tower_name: string; tower_code: string }>>([]);
+  const [selectedTower, setSelectedTower] = useState<string>("all");
+  const [pnlData, setPnlData] = useState<any[]>([]);
 
   // New Bill Modal & Forms
   const [showBillModal, setShowBillModal] = useState(false);
@@ -429,15 +458,21 @@ export default function SubcontractorBillingPage() {
             <h1 className="text-sm font-bold text-white uppercase tracking-wider">Subcontractor Billing & WOs</h1>
             <p className="text-[10px] text-zinc-500">RA Billing Engine · Post-tax & Pre-tax Retentions · TDS Auditor Logs</p>
           </div>
-          <button
-            onClick={() => {
-              if (tab === "wo") setShowWOModal(true);
-              else setShowBillModal(true);
-            }}
-            className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary to-[#FF3B6C] px-4 py-2 text-xs font-bold text-white hover:opacity-90 transition-all cursor-pointer shadow-lg shadow-primary/10"
-          >
-            {tab === "wo" ? "+ Create Work Order" : "+ Submit RA Bill"}
-          </button>
+          <div className="flex items-center gap-3">
+            <select value={selectedTower} onChange={(e) => setSelectedTower(e.target.value)} className="bg-[#171520] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none">
+              <option value="all">All Towers/Phases</option>
+              {towers.map((t) => <option key={t.id} value={t.id}>{t.tower_name} ({t.tower_code})</option>)}
+            </select>
+            <button
+              onClick={() => {
+                if (tab === "wo") setShowWOModal(true);
+                else setShowBillModal(true);
+              }}
+              className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary to-[#FF3B6C] px-4 py-2 text-xs font-bold text-white hover:opacity-90 transition-all cursor-pointer shadow-lg shadow-primary/10"
+            >
+              {tab === "wo" ? "+ Create Work Order" : "+ Submit RA Bill"}
+            </button>
+          </div>
         </div>
 
         {/* Workspace Body */}
@@ -506,7 +541,43 @@ export default function SubcontractorBillingPage() {
                                   {d.type}: ₹{d.amount.toLocaleString()}
                                 </span>
                               ))}
-                            </div>
+              </div>
+
+              {/* Tower-wise P&L Summary */}
+              {pnlData.length > 0 && (
+                <div className="glass-panel border border-white/5 rounded-2xl overflow-hidden">
+                  <div className="px-5 py-4 border-b border-white/5">
+                    <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-400">Tower-wise P&L Breakdown</h2>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs text-left">
+                      <thead>
+                        <tr className="border-b border-white/5 text-zinc-500">
+                          <th className="px-5 py-3 font-bold">Tower/Phase</th>
+                          <th className="px-5 py-3 font-bold text-right">Budget</th>
+                          <th className="px-5 py-3 font-bold text-right">PO Value</th>
+                          <th className="px-5 py-3 font-bold text-right">WO Value</th>
+                          <th className="px-5 py-3 font-bold text-right">Billed</th>
+                          <th className="px-5 py-3 font-bold text-right">Variance</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {pnlData.map((p) => (
+                          <tr key={p.tower_id} className="border-b border-white/[0.02] hover:bg-white/[0.015] transition-all">
+                            <td className="px-5 py-3.5 text-white font-semibold">{p.tower_name}</td>
+                            <td className="px-5 py-3.5 text-right font-mono text-zinc-300">₹{(p.budget || 0).toLocaleString()}</td>
+                            <td className="px-5 py-3.5 text-right font-mono text-amber-400">₹{(p.total_po_value || 0).toLocaleString()}</td>
+                            <td className="px-5 py-3.5 text-right font-mono">₹{(p.total_wo_value || 0).toLocaleString()}</td>
+                            <td className="px-5 py-3.5 text-right font-mono text-primary">₹{(p.total_billed || 0).toLocaleString()}</td>
+                            <td className="px-5 py-3.5 text-right font-mono text-zinc-400">₹{((p.budget || 0) - (p.total_billed || 0)).toLocaleString()}</td>
+                          </tr>
+                        ))}
+                        {pnlData.length === 0 && <tr><td colSpan={6} className="px-5 py-6 text-center text-zinc-600">No tower data yet.</td></tr>}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
                           </td>
                           <td className="px-5 py-3.5">
                             <span className="text-zinc-500 font-bold uppercase text-[10px]">{bill.preTax ? "Pre-Tax" : "Post-Tax"}</span>

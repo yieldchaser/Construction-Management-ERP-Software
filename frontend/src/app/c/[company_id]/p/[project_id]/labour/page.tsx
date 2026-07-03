@@ -1,0 +1,291 @@
+"use client";
+import React, { useState, useEffect } from "react";
+import Link from "next/link";
+import { useParams } from "next/navigation";
+import { getApiHost } from "@/lib/api";
+
+interface ReliabilityScore {
+  id: string;
+  contractor_id: string;
+  contractor_name: string;
+  period_start: string;
+  period_end: string;
+  on_time_pct: number;
+  billing_accuracy_pct: number;
+  quality_score: number;
+  tasks_completed: number;
+  tasks_delayed: number;
+  total_billed: number;
+  disputes_count: number;
+}
+
+interface BOCWRecord {
+  id: string;
+  contractor_name: string;
+  month_year: string;
+  workers_count: number;
+  wages_paid: number;
+  contribution_amount: number;
+  acknowledgement_number: string | null;
+  created_at: string;
+}
+
+interface MusterRollEntry {
+  id: string;
+  contractor_id: string | null;
+  date: string;
+  labor_role: string;
+  workers_present: number;
+  workers_absent: number;
+  hours_worked: number;
+  overtime_hours: number;
+  notes: string | null;
+}
+
+export default function LabourPage() {
+  const { company_id, project_id } = useParams();
+  const companyId = company_id || "demo-company";
+  const projectId = project_id || "d0000000-0000-0000-0000-000000000001";
+
+  const [activeTab, setActiveTab] = useState<"reliability" | "bocw" | "muster">("reliability");
+  const [reliability, setReliability] = useState<ReliabilityScore[]>([]);
+  const [bocw, setBocw] = useState<BOCWRecord[]>([]);
+  const [muster, setMuster] = useState<MusterRollEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const [showMusterModal, setShowMusterModal] = useState(false);
+  const [musterDate, setMusterDate] = useState(new Date().toISOString().split("T")[0]);
+  const [musterRole, setMusterRole] = useState("Mason");
+  const [musterPresent, setMusterPresent] = useState(20);
+  const [musterAbsent, setMusterAbsent] = useState(2);
+  const [musterHours, setMusterHours] = useState(8);
+  const [musterOT, setMusterOT] = useState(0);
+  const [musterNotes, setMusterNotes] = useState("");
+
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const [relRes, bocwRes, mRes] = await Promise.all([
+        fetch(`${getApiHost()}/apis/v3/labour/reliability/${projectId}`),
+        fetch(`${getApiHost()}/apis/v3/labour/bocw/${projectId}`),
+        fetch(`${getApiHost()}/apis/v3/labour/muster-roll/${projectId}`),
+      ]);
+      if (relRes.ok) setReliability(await relRes.json());
+      if (bocwRes.ok) setBocw(await bocwRes.json());
+      if (mRes.ok) setMuster(await mRes.json());
+    } catch (e) { console.error(e); }
+    setLoading(false);
+  };
+
+  useEffect(() => { if (projectId) fetchData(); }, [projectId]);
+
+  const handleMusterSubmit = async () => {
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/labour/muster-roll`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          company_id: companyId,
+          project_id: projectId,
+          date: new Date(musterDate).toISOString(),
+          labor_role: musterRole,
+          workers_present: musterPresent,
+          workers_absent: musterAbsent,
+          hours_worked: musterHours,
+          overtime_hours: musterOT,
+          notes: musterNotes || null,
+        }),
+      });
+      if (res.ok) { fetchData(); setShowMusterModal(false); }
+    } catch (e) { console.error(e); }
+  };
+
+  const handleBOCWExport = async () => {
+    window.open(`${getApiHost()}/apis/v3/labour/bocw/${projectId}/export`, "_blank");
+  };
+
+  return (
+    <div className="flex h-screen bg-[#0E0C15] text-[#ededed] overflow-hidden font-sans">
+      <aside className="w-56 border-r border-white/5 bg-[#0B0910] flex flex-col shrink-0">
+        <div className="p-4 flex items-center gap-2.5 border-b border-white/5">
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-tr from-[#E8184C] to-[#7C5CFF] font-bold text-white text-xs">S</div>
+          <span className="font-bold text-white text-sm tracking-tight">SiteFlow</span>
+        </div>
+        <nav className="p-3 flex-1 overflow-y-auto space-y-1">
+          <Link href={`/c/${companyId}/p/${projectId}`} className="flex items-center gap-2 px-3 py-2 text-xs text-zinc-400 hover:text-white hover:bg-white/[0.03] rounded-lg transition-all">
+            ← Dashboard
+          </Link>
+          <div className="pt-2 pb-1 px-3 text-[10px] font-bold text-zinc-600 uppercase tracking-wider">Labour</div>
+          {[
+            { key: "reliability" as const, label: "Reliability Scores" },
+            { key: "bocw" as const, label: "BOCW Records" },
+            { key: "muster" as const, label: "Muster Roll" },
+          ].map((item) => (
+            <button key={item.key} onClick={() => setActiveTab(item.key)} className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg transition-all text-left cursor-pointer ${activeTab === item.key ? "bg-white/[0.06] text-white" : "text-zinc-400 hover:text-white hover:bg-white/[0.02]"}`}>
+              {item.label}
+            </button>
+          ))}
+        </nav>
+      </aside>
+
+      <div className="flex-1 flex flex-col overflow-hidden relative font-sans">
+        <div className="absolute top-[-10%] right-[-10%] h-[50vw] w-[50vw] rounded-full bg-[#7C5CFF] opacity-[0.02] blur-[120px] pointer-events-none" />
+        <div className="border-b border-white/5 bg-[#0D0B14] px-6 py-3.5 flex items-center justify-between z-10">
+          <div>
+            <h1 className="text-sm font-bold text-white uppercase tracking-wider">Labour Management</h1>
+            <p className="text-[10px] text-zinc-500">Contractor reliability · BOCW compliance · Muster rolls</p>
+          </div>
+          {activeTab === "muster" && <button onClick={() => setShowMusterModal(true)} className="px-4 py-2 rounded-xl bg-gradient-to-r from-primary to-[#FF3B6C] text-xs font-bold text-white hover:opacity-90 cursor-pointer">+ Add Muster</button>}
+          {activeTab === "bocw" && <button onClick={handleBOCWExport} className="px-4 py-2 rounded-xl border border-white/10 text-xs font-bold hover:bg-white/[0.05] cursor-pointer">Export CSV</button>}
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-6 z-10">
+          {loading && <div className="text-xs text-zinc-400">Loading...</div>}
+
+          {activeTab === "reliability" && (
+            <div className="space-y-4">
+              {reliability.map((r) => {
+                const reliabilityScore = ((r.on_time_pct + r.billing_accuracy_pct + r.quality_score) / 3).toFixed(1);
+                const scoreColor = Number(reliabilityScore) >= 80 ? "text-green-400" : Number(reliabilityScore) >= 60 ? "text-amber-400" : "text-red-400";
+                return (
+                  <div key={r.id} className="glass-panel p-5 rounded-2xl border border-white/5">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h3 className="text-sm font-bold text-white">{r.contractor_name}</h3>
+                        <p className="text-[10px] text-zinc-500">{r.period_start?.split("T")[0]} – {r.period_end?.split("T")[0]}</p>
+                      </div>
+                      <div className="text-right">
+                        <span className={`text-3xl font-extrabold ${scoreColor}`}>{reliabilityScore}%</span>
+                        <p className="text-[10px] text-zinc-500">Reliability</p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-4 gap-4 mt-4">
+                      <div className="bg-white/[0.02] rounded-xl p-3 text-center">
+                        <span className="text-[10px] text-zinc-500 block">On-Time</span>
+                        <span className="text-sm font-bold text-green-400">{r.on_time_pct.toFixed(1)}%</span>
+                      </div>
+                      <div className="bg-white/[0.02] rounded-xl p-3 text-center">
+                        <span className="text-[10px] text-zinc-500 block">Billing Accuracy</span>
+                        <span className="text-sm font-bold text-blue-400">{r.billing_accuracy_pct.toFixed(1)}%</span>
+                      </div>
+                      <div className="bg-white/[0.02] rounded-xl p-3 text-center">
+                        <span className="text-[10px] text-zinc-500 block">Quality</span>
+                        <span className="text-sm font-bold text-secondary">{r.quality_score.toFixed(1)}%</span>
+                      </div>
+                      <div className="bg-white/[0.02] rounded-xl p-3 text-center">
+                        <span className="text-[10px] text-zinc-500 block">Disputes</span>
+                        <span className="text-sm font-bold text-amber-400">{r.disputes_count}</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+              {reliability.length === 0 && <div className="glass-panel p-8 rounded-2xl border border-white/5 text-center text-zinc-600 text-xs">No reliability data yet.</div>}
+            </div>
+          )}
+
+          {activeTab === "bocw" && (
+            <div className="glass-panel border border-white/5 rounded-2xl overflow-hidden">
+              <div className="px-5 py-4 border-b border-white/5">
+                <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-400">BOCW Records</h2>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs text-left">
+                  <thead><tr className="border-b border-white/5 text-zinc-500"><th className="px-5 py-3 font-bold">Contractor</th><th className="px-5 py-3 font-bold">Month</th><th className="px-5 py-3 font-bold text-right">Workers</th><th className="px-5 py-3 font-bold text-right">Wages Paid</th><th className="px-5 py-3 font-bold text-right">Contribution</th><th className="px-5 py-3 font-bold">Ack. No.</th></tr></thead>
+                  <tbody>
+                    {bocw.map((r) => (
+                      <tr key={r.id} className="border-b border-white/[0.02] hover:bg-white/[0.015] transition-all">
+                        <td className="px-5 py-3.5 text-white font-semibold">{r.contractor_name}</td>
+                        <td className="px-5 py-3.5 text-zinc-400">{r.month_year}</td>
+                        <td className="px-5 py-3.5 text-right font-mono">{r.workers_count}</td>
+                        <td className="px-5 py-3.5 text-right font-mono">₹{r.wages_paid.toLocaleString()}</td>
+                        <td className="px-5 py-3.5 text-right font-mono">₹{r.contribution_amount.toLocaleString()}</td>
+                        <td className="px-5 py-3.5 text-zinc-400">{r.acknowledgement_number || "—"}</td>
+                      </tr>
+                    ))}
+                    {bocw.length === 0 && <tr><td colSpan={6} className="px-5 py-8 text-center text-zinc-600">No BOCW records yet.</td></tr>}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "muster" && (
+            <div className="glass-panel border border-white/5 rounded-2xl overflow-hidden">
+              <div className="px-5 py-4 border-b border-white/5">
+                <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-400">Muster Roll</h2>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs text-left">
+                  <thead><tr className="border-b border-white/5 text-zinc-500"><th className="px-5 py-3 font-bold">Date</th><th className="px-5 py-3 font-bold">Role</th><th className="px-5 py-3 font-bold text-right">Present</th><th className="px-5 py-3 font-bold text-right">Absent</th><th className="px-5 py-3 font-bold text-right">Hours</th><th className="px-5 py-3 font-bold text-right">OT</th><th className="px-5 py-3 font-bold">Notes</th></tr></thead>
+                  <tbody>
+                    {muster.map((m) => (
+                      <tr key={m.id} className="border-b border-white/[0.02] hover:bg-white/[0.015] transition-all">
+                        <td className="px-5 py-3.5 text-zinc-300">{m.date}</td>
+                        <td className="px-5 py-3.5 text-white font-semibold">{m.labor_role}</td>
+                        <td className="px-5 py-3.5 text-right font-mono text-green-400">{m.workers_present}</td>
+                        <td className="px-5 py-3.5 text-right font-mono text-red-400">{m.workers_absent}</td>
+                        <td className="px-5 py-3.5 text-right font-mono">{m.hours_worked}h</td>
+                        <td className="px-5 py-3.5 text-right font-mono text-amber-400">{m.overtime_hours}h</td>
+                        <td className="px-5 py-3.5 text-zinc-400">{m.notes || "—"}</td>
+                      </tr>
+                    ))}
+                    {muster.length === 0 && <tr><td colSpan={7} className="px-5 py-8 text-center text-zinc-600">No muster roll entries yet.</td></tr>}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {showMusterModal && (
+        <div className="fixed inset-0 bg-[#0E0C15]/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="glass-panel w-full max-w-md border border-white/10 rounded-3xl p-6 space-y-4">
+            <div><h3 className="text-sm font-extrabold text-white">Add Muster Roll Entry</h3></div>
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[10px] uppercase font-bold text-zinc-500 block mb-1">Date</label>
+                  <input type="date" value={musterDate} onChange={(e) => setMusterDate(e.target.value)} className="w-full bg-[#171520] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none" />
+                </div>
+                <div>
+                  <label className="text-[10px] uppercase font-bold text-zinc-500 block mb-1">Labor Role</label>
+                  <select value={musterRole} onChange={(e) => setMusterRole(e.target.value)} className="w-full bg-[#171520] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none"><option>Mason</option><option>Helper</option><option>Supervisor</option><option>Steel Fixer</option><option>Electrician</option></select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[10px] uppercase font-bold text-zinc-500 block mb-1">Present</label>
+                  <input type="number" value={musterPresent} onChange={(e) => setMusterPresent(parseInt(e.target.value) || 0)} className="w-full bg-[#171520] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none" />
+                </div>
+                <div>
+                  <label className="text-[10px] uppercase font-bold text-zinc-500 block mb-1">Absent</label>
+                  <input type="number" value={musterAbsent} onChange={(e) => setMusterAbsent(parseInt(e.target.value) || 0)} className="w-full bg-[#171520] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[10px] uppercase font-bold text-zinc-500 block mb-1">Hours Worked</label>
+                  <input type="number" step="0.5" value={musterHours} onChange={(e) => setMusterHours(parseFloat(e.target.value) || 0)} className="w-full bg-[#171520] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none" />
+                </div>
+                <div>
+                  <label className="text-[10px] uppercase font-bold text-zinc-500 block mb-1">Overtime</label>
+                  <input type="number" step="0.5" value={musterOT} onChange={(e) => setMusterOT(parseFloat(e.target.value) || 0)} className="w-full bg-[#171520] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none" />
+                </div>
+              </div>
+              <div>
+                <label className="text-[10px] uppercase font-bold text-zinc-500 block mb-1">Notes</label>
+                <textarea value={musterNotes} onChange={(e) => setMusterNotes(e.target.value)} rows={2} className="w-full bg-[#171520] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none" />
+              </div>
+            </div>
+            <div className="flex gap-3 justify-end pt-2">
+              <button onClick={() => setShowMusterModal(false)} className="px-4 py-2 rounded-xl border border-white/10 text-xs font-bold hover:bg-white/[0.05] cursor-pointer">Cancel</button>
+              <button onClick={handleMusterSubmit} className="bg-primary hover:opacity-90 text-white px-5 py-2 rounded-xl text-xs font-bold cursor-pointer">Save</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
