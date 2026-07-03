@@ -307,7 +307,30 @@ SiteFlow features a state-of-the-art **glassmorphic canvas** with full support f
 - **Statutory Reports (`/statutory`)**: PF, ESI, BOCW, TDS compliance filing with contribution tracking.
 - **Face Recognition (`/face-recognition`)**: Face verification audit trail for attendance punches with confidence scores and geofence validation.
 
-### 4. Company Settings (`/c/[company_id]/settings`)
+### 4. Recent Improvements & Bug Fixes
+- **Critical security/bug fixes**:
+  - Replaced hardcoded `127.0.0.1:8000` references with dynamic `getApiHost()` across dashboard, drawings, procurement, and finance.
+  - Replaced fake `setTimeout` Tally sync simulations with real `POST /apis/v3/tally/sync` endpoints.
+  - Replaced unsafe `new Function()` eval in Gantt formula parser with safe mathematical expression parser.
+  - Debounced settings page `handleUpdateSettings` to 800ms to prevent API flood on keystrokes.
+  - Fixed timezone bug in holiday date submission (`new Date(date).toISOString()` was storing previous day).
+  - Fixed inventory bar width calculation in production (`available/(on_hand+reserved)` instead of `available/on_hand`).
+- **Backend API connections**:
+  - **Drawings**: Blueprint & RFI system now fetches from `/apis/v3/drawings`, persists pins via `/revisions/{id}/pins`, publishes revisions via `/revisions`, and toggles lock status via `/approve`.
+  - **Procurement**: Material indents, POs, GRNs, and inventory now load from `/apis/v3/procurement/*`. Create/approve operations persist to backend with demo fallback on failure.
+  - **Finance**: Record Payment and Approve Voucher now POST to `/apis/v3/finance/payments` and `/apis/v3/finance/approve/{id}` with FIFO auto-settlement against open bills.
+  - **Reports & Quality**: Added `isOffline` state tracking with amber banners when backend is unavailable.
+- **UX enhancements**:
+  - Billing page now displays CGST/SGST/IGST split for Indian GST compliance.
+  - Settings page includes GSTIN format validation with regex and inline error messages.
+  - Settings page shows save status feedback (`saving`/`saved`/`error`) instead of silent writes.
+  - Equipment page adds form validation for required fields with inline error display.
+  - Attendance page adds `navigator.onLine` detection and offline banner.
+  - DPR quick stats now derive dynamically from logs instead of hardcoded strings.
+  - CRM and Reports pages now show true empty states instead of demo data when API returns no records.
+  - Approval rule types expanded to include RA bills, client invoices, debit/credit notes, and timesheets.
+
+### 5. Company Settings (`/c/[company_id]/settings`)
 - **General Settings**: Company profile, contact info, and legal details.
 - **Branch Management**: Add and manage multiple company branches with individual address and contact details.
 - **Restrictions & Controls**: Toggle company-wide rules such as employee self-edit access, geofence enforcement, and attendance visibility.
