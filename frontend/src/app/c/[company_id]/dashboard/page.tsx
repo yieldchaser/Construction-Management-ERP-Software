@@ -216,12 +216,25 @@ export default function DashboardPage() {
   const activeProjDetails = projects.find(p => p.id === activeProject) || projects[0];
 
 
-  const handleSyncTally = () => {
+  const handleSyncTally = async () => {
     setIsSyncing(true);
-    setTimeout(() => {
+    try {
+      const apiHost = getApiHost();
+      const res = await fetch(`${apiHost}/apis/v3/tally/sync?company_id=${companyId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setTallySyncStatus(`Synced ${data.message || "Successfully"}`);
+      } else {
+        setTallySyncStatus("Sync Failed");
+      }
+    } catch (e) {
+      setTallySyncStatus("Sync Error");
+    } finally {
       setIsSyncing(false);
-      setTallySyncStatus("Synced Just Now");
-    }, 2000);
+    }
   };
 
   return (
@@ -1758,21 +1771,25 @@ export default function DashboardPage() {
                     };
                     
                     try {
-                      await fetch(`http://127.0.0.1:8000/apis/v3/planning/projects`, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                          company_id: companyId,
-                          name: newProj.name,
-                          code: newProj.code,
-                          address: newProj.address,
-                          city: newProj.city,
-                          attendance_radius_meters: newProj.attendance_radius_meters
-                        })
-                      });
-                    } catch (e) {
-                      console.log("fallback save", e);
-                    }
+                       const apiHost = getApiHost();
+                       const res = await fetch(`${apiHost}/apis/v3/planning/projects`, {
+                         method: "POST",
+                         headers: { "Content-Type": "application/json" },
+                         body: JSON.stringify({
+                           company_id: companyId,
+                           name: newProj.name,
+                           code: newProj.code,
+                           address: newProj.address,
+                           city: newProj.city,
+                           attendance_radius_meters: newProj.attendance_radius_meters
+                         })
+                       });
+                       if (!res.ok) {
+                         console.error("Failed to create project", res.status);
+                       }
+                     } catch (e) {
+                       console.error("Project creation error", e);
+                     }
 
                     setProjects([...projects, newProj]);
                     setActiveProject(newProjId);

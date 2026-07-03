@@ -125,6 +125,7 @@ export default function EquipmentTrackingPage() {
       }
     } catch (err) {
       console.error("Error loading equipment data, using fallback mock data:", err);
+      setError("Using demo data — backend connection unavailable");
       // Fallback mocks
       setFleet([
         { id: "EQ-01", company_id: companyId, name: "JCB Excavator 3DX", code: "JCB-001", category: "Excavator", ownership_type: "Owned", status: "Active", hourly_rate: 1500, created_at: "2026-06-01" },
@@ -360,6 +361,11 @@ export default function EquipmentTrackingPage() {
 
         {/* Workspace */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
+          {error && (
+            <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-2xl text-xs">
+              {error}
+            </div>
+          )}
           {loading ? (
             <div className="text-zinc-500 text-xs text-center py-20">Loading machinery logs...</div>
           ) : (

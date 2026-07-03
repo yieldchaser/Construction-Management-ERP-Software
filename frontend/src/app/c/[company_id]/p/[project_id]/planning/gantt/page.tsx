@@ -86,10 +86,45 @@ interface CommentItem {
 const evaluateFormula = (str: string): number => {
   try {
     if (!str || !str.trim()) return 0;
-    const cleaned = str.replace(/[^0-9+\-*/().\s]/g, "");
+    const cleaned = str.replace(/[^0-9+\-*/().\s]/g, "").trim();
     if (!cleaned) return 0;
-    const evaluated = new Function(`return ${cleaned}`)();
-    return typeof evaluated === "number" && !isNaN(evaluated) ? evaluated : 0;
+    const tokens = cleaned.split(/\s+/);
+    const stack: number[] = [];
+    const ops: string[] = [];
+    const precedence: Record<string, number> = { '+': 1, '-': 1, '*': 2, '/': 2 };
+    const applyOp = () => {
+      if (stack.length < 2 || ops.length === 0) return;
+      const op = ops.pop()!;
+      const b = stack.pop()!;
+      const a = stack.pop()!;
+      let r = 0;
+      switch (op) {
+        case '+': r = a + b; break;
+        case '-': r = a - b; break;
+        case '*': r = a * b; break;
+        case '/': r = b === 0 ? 0 : a / b; break;
+      }
+      stack.push(r);
+    };
+    for (let i = 0; i < tokens.length; i++) {
+      const t = tokens[i];
+      if (t === '(') {
+        ops.push(t);
+      } else if (t === ')') {
+        while (ops.length > 0 && ops[ops.length - 1] !== '(') applyOp();
+        if (ops.length > 0) ops.pop();
+      } else if (precedence[t] !== undefined) {
+        while (ops.length > 0 && precedence[ops[ops.length - 1]] !== undefined && precedence[ops[ops.length - 1]] >= precedence[t]) {
+          applyOp();
+        }
+        ops.push(t);
+      } else {
+        const n = parseFloat(t);
+        if (!isNaN(n)) stack.push(n);
+      }
+    }
+    while (ops.length > 0) applyOp();
+    return stack.length > 0 && !isNaN(stack[0]) ? stack[0] : 0;
   } catch {
     return 0;
   }
@@ -127,6 +162,7 @@ export default function GanttSchedulerPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [mainTab, setMainTab] = useState<"wbs" | "milestones" | "baseline" | "lookahead">("wbs");
+  const [isOffline, setIsOffline] = useState(false);
 
   // Form states for creating task
   const [taskName, setTaskName] = useState("");
@@ -165,14 +201,21 @@ export default function GanttSchedulerPage() {
     try {
       setLoading(true);
       setError("");
+      setIsOffline(false);
       const res = await fetch(`${getApiHost()}/apis/v3/planning/tasks?project_id=${projectId}`);
       if (res.ok) {
         const data = await res.json();
-        setTasks(data.length > 0 ? data : MOCK_WBS_TASKS);
+        if (Array.isArray(data)) {
+          setTasks(data);
+        } else {
+          throw new Error("Invalid response format");
+        }
       } else {
-        setTasks(MOCK_WBS_TASKS);
+        throw new Error(`HTTP ${res.status}`);
       }
     } catch (e) {
+      console.error("API unavailable, using demo data", e);
+      setIsOffline(true);
       setTasks(MOCK_WBS_TASKS);
     } finally {
       setLoading(false);

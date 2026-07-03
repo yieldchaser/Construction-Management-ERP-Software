@@ -3,7 +3,7 @@ import { getApiHost } from "@/lib/api";
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import PwaControls from "@/components/pwa/PwaControls";
 
 interface CompanySettings {
@@ -50,10 +50,13 @@ interface Holiday {
 export default function CompanySettingsPage() {
   const { company_id } = useParams();
   const [settings, setSettings] = useState<CompanySettings | null>(null);
+  const [draft, setDraft] = useState<Partial<CompanySettings>>({});
   const [branches, setBranches] = useState<Branch[]>([]);
   const [rules, setRules] = useState<ApprovalRule[]>([]);
   const [holidays, setHolidays] = useState<Holiday[]>([]);
   const [activeTab, setActiveTab] = useState<"details" | "branches" | "workflow" | "approvals" | "holidays">("details");
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   // Form states for new branch
   const [newBranch, setNewBranch] = useState({ name: "", gstin: "", address: "" });
@@ -107,6 +110,7 @@ export default function CompanySettingsPage() {
 
   const handleUpdateSettings = async (updates: Partial<CompanySettings>) => {
     if (!settings) return;
+    setSaveStatus("saving");
     try {
       const res = await fetch(`${apiHost}/apis/v3/settings/company/${company_id}`, {
         method: "PUT",
@@ -116,11 +120,32 @@ export default function CompanySettingsPage() {
       if (res.ok) {
         const updated = await res.json();
         setSettings(updated);
+        setDraft({});
+        setSaveStatus("saved");
+        setTimeout(() => setSaveStatus("idle"), 2000);
+      } else {
+        setSaveStatus("error");
       }
     } catch (err) {
       console.error(err);
+      setSaveStatus("error");
     }
   };
+
+  const handleDraftChange = useCallback((updates: Partial<CompanySettings>) => {
+    setDraft(prev => ({ ...prev, ...updates }));
+    setSaveStatus("saving");
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      handleUpdateSettings(updates);
+    }, 800);
+  }, [settings, company_id, apiHost]);
+
+  const validateGSTIN = (gstin: string): boolean => {
+    return /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(gstin.toUpperCase());
+  };
+
+  const [gstinError, setGstinError] = useState(false);
 
   const handleAddBranch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -264,6 +289,16 @@ export default function CompanySettingsPage() {
             {error}
           </div>
         )}
+        {saveStatus === "saved" && (
+          <div className="mt-6 p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-2xl">
+            Settings saved successfully
+          </div>
+        )}
+        {saveStatus === "error" && (
+          <div className="mt-6 p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs rounded-2xl">
+            Failed to save settings. Please try again.
+          </div>
+        )}
 
         <div className="mt-8">
           {/* TAB 1: DETAILS */}
@@ -284,8 +319,8 @@ export default function CompanySettingsPage() {
                   <label className="text-[10px] uppercase tracking-wider text-zinc-500 font-bold">Legal Business Name</label>
                   <input
                     type="text"
-                    value={settings.legal_business_name || ""}
-                    onChange={(e) => handleUpdateSettings({ legal_business_name: e.target.value })}
+                    value={draft.legal_business_name ?? settings?.legal_business_name ?? ""}
+                    onChange={(e) => handleDraftChange({ legal_business_name: e.target.value })}
                     className="w-full bg-white/[0.02] border border-white/10 focus:border-[#7C5CFF] focus:ring-1 focus:ring-[#7C5CFF] rounded-xl px-4 py-2.5 text-xs text-white transition-all outline-none"
                     placeholder="Enter Legal Entity Name"
                   />
@@ -294,18 +329,29 @@ export default function CompanySettingsPage() {
                   <label className="text-[10px] uppercase tracking-wider text-zinc-500 font-bold">GSTIN</label>
                   <input
                     type="text"
-                    value={settings.gstin || ""}
-                    onChange={(e) => handleUpdateSettings({ gstin: e.target.value })}
-                    className="w-full bg-white/[0.02] border border-white/10 focus:border-[#7C5CFF] focus:ring-1 focus:ring-[#7C5CFF] rounded-xl px-4 py-2.5 text-xs text-white transition-all outline-none"
+                    value={draft.gstin ?? settings?.gstin ?? ""}
+                    onChange={(e) => {
+                      const v = e.target.value.toUpperCase();
+                      handleDraftChange({ gstin: v });
+                      if (v && !validateGSTIN(v)) {
+                        setGstinError(true);
+                      } else {
+                        setGstinError(false);
+                      }
+                    }}
+                    className={`w-full bg-white/[0.02] border rounded-xl px-4 py-2.5 text-xs text-white transition-all outline-none ${gstinError ? "border-rose-500 focus:border-rose-500" : "border-white/10 focus:border-[#7C5CFF] focus:ring-1 focus:ring-[#7C5CFF]"}`}
                     placeholder="Enter 15-digit GSTIN"
                   />
+                  {gstinError && (
+                    <p className="text-[10px] text-rose-400 mt-1">Invalid GSTIN format. Expected: 2 digits + 5 letters + 4 digits + 1 letter + 1 digit/letter + Z + 1 digit/letter</p>
+                  )}
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-[10px] uppercase tracking-wider text-zinc-500 font-bold">Primary Address</label>
                   <input
                     type="text"
-                    value={settings.billing_address || ""}
-                    onChange={(e) => handleUpdateSettings({ billing_address: e.target.value })}
+                    value={draft.billing_address ?? settings?.billing_address ?? ""}
+                    onChange={(e) => handleDraftChange({ billing_address: e.target.value })}
                     className="w-full bg-white/[0.02] border border-white/10 focus:border-[#7C5CFF] focus:ring-1 focus:ring-[#7C5CFF] rounded-xl px-4 py-2.5 text-xs text-white transition-all outline-none"
                     placeholder="Enter Business Address"
                   />
@@ -404,7 +450,7 @@ export default function CompanySettingsPage() {
                   </div>
                   <select
                     value={settings.currency_decimal_places}
-                    onChange={(e) => handleUpdateSettings({ currency_decimal_places: Number(e.target.value) })}
+                     onChange={(e) => handleDraftChange({ currency_decimal_places: Number(e.target.value) })}
                     className="bg-[#0B0910] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white"
                   >
                     <option value={0}>0 Decimals</option>
@@ -422,7 +468,7 @@ export default function CompanySettingsPage() {
                   </div>
                   <select
                     value={settings.quantity_decimal_places}
-                    onChange={(e) => handleUpdateSettings({ quantity_decimal_places: Number(e.target.value) })}
+                     onChange={(e) => handleDraftChange({ quantity_decimal_places: Number(e.target.value) })}
                     className="bg-[#0B0910] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white"
                   >
                     <option value={0}>0 Decimals</option>
@@ -442,7 +488,7 @@ export default function CompanySettingsPage() {
                   <input
                     type="number"
                     value={settings.back_dated_limit_days}
-                    onChange={(e) => handleUpdateSettings({ back_dated_limit_days: Number(e.target.value) })}
+                     onChange={(e) => handleDraftChange({ back_dated_limit_days: Number(e.target.value) })}
                     className="w-20 bg-[#0B0910] border border-white/10 rounded-xl px-3 py-1 text-xs text-white text-center"
                     min={0}
                     max={180}
@@ -458,7 +504,7 @@ export default function CompanySettingsPage() {
                   <input
                     type="checkbox"
                     checked={settings.negative_stock_lock}
-                    onChange={(e) => handleUpdateSettings({ negative_stock_lock: e.target.checked })}
+                     onChange={(e) => handleDraftChange({ negative_stock_lock: e.target.checked })}
                     className="h-4 w-4 accent-[#7C5CFF]"
                   />
                 </div>
@@ -472,7 +518,7 @@ export default function CompanySettingsPage() {
                   <input
                     type="checkbox"
                     checked={settings.bom_restriction}
-                    onChange={(e) => handleUpdateSettings({ bom_restriction: e.target.checked })}
+                     onChange={(e) => handleDraftChange({ bom_restriction: e.target.checked })}
                     className="h-4 w-4 accent-[#7C5CFF]"
                   />
                 </div>
@@ -486,7 +532,7 @@ export default function CompanySettingsPage() {
                   <input
                     type="checkbox"
                     checked={settings.po_restriction}
-                    onChange={(e) => handleUpdateSettings({ po_restriction: e.target.checked })}
+                     onChange={(e) => handleDraftChange({ po_restriction: e.target.checked })}
                     className="h-4 w-4 accent-[#7C5CFF]"
                   />
                 </div>

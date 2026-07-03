@@ -47,6 +47,7 @@ export default function ClientReportsPage() {
   const [reports, setReports] = useState<ClientReport[]>([]);
   const [selectedReport, setSelectedReport] = useState<ClientReport | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isOffline, setIsOffline] = useState(false);
   
   // Modal states
   const [isOpen, setIsOpen] = useState(false);
@@ -58,22 +59,26 @@ export default function ClientReportsPage() {
   const fetchReports = async () => {
     try {
       setLoading(true);
+      setIsOffline(false);
       const res = await fetch(`${getApiHost()}/apis/v3/reports/${projectId}`);
       if (res.ok) {
         const data = await res.json();
-        const finalData = data.length > 0 ? data : MOCK_REPORTS;
-        setReports(finalData);
-        if (finalData.length > 0 && !selectedReport) {
-          setSelectedReport(finalData[0]);
+        if (Array.isArray(data)) {
+          setReports(data);
+          if (data.length > 0 && !selectedReport) {
+            setSelectedReport(data[0]);
+          } else if (data.length === 0) {
+            setSelectedReport(null);
+          }
+        } else {
+          throw new Error("Invalid response format");
         }
       } else {
-        setReports(MOCK_REPORTS);
-        if (!selectedReport) {
-          setSelectedReport(MOCK_REPORTS[0]);
-        }
+        throw new Error(`HTTP ${res.status}`);
       }
     } catch (err) {
-      console.error("Error fetching reports:", err);
+      console.error("API unavailable, using demo data", err);
+      setIsOffline(true);
       setReports(MOCK_REPORTS);
       if (!selectedReport) {
         setSelectedReport(MOCK_REPORTS[0]);

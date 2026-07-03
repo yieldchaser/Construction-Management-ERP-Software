@@ -76,11 +76,12 @@ export default function CRMPage() {
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
+  const [isOffline, setIsOffline] = useState(false);
+
   const fetchQuotationsForLeads = async (leadsList: Lead[]) => {
     try {
       let allQuots: any[] = [];
       for (const l of leadsList) {
-        if (l.id.startsWith("lead-")) continue; // Skip mock leads
         const qRes = await fetch(`${getApiHost()}/apis/v3/crm/leads/${l.id}/quotations`);
         if (qRes.ok) {
           const qData = await qRes.json();
@@ -98,16 +99,22 @@ export default function CRMPage() {
       const res = await fetch(`${getApiHost()}/apis/v3/crm/leads?company_id=${companyId}`);
       if (res.ok) {
         const data = await res.json();
-        setLeads(data.length > 0 ? data : MOCK_LEADS);
-        if (data.length > 0) {
-          fetchQuotationsForLeads(data);
+        if (Array.isArray(data)) {
+          setLeads(data);
+          if (data.length > 0) {
+            fetchQuotationsForLeads(data);
+          }
+        } else {
+          throw new Error("Invalid response format");
         }
       } else {
-        setLeads(MOCK_LEADS);
+        throw new Error(`HTTP ${res.status}`);
       }
     } catch (e) {
-      console.error(e);
+      console.error("API unavailable, using demo data", e);
+      setIsOffline(true);
       setLeads(MOCK_LEADS);
+      fetchQuotationsForLeads(MOCK_LEADS);
     }
   };
 

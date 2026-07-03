@@ -20,6 +20,9 @@ interface Bill {
   subcontractor: string;
   subtotal: number;
   gstAmount: number;
+  cgstAmount: number;
+  sgstAmount: number;
+  igstAmount: number;
   totalPayable: number;
   deductions: Deduction[];
   preTax: boolean;
@@ -61,7 +64,10 @@ const INITIAL_BILLS: Bill[] = [
     subcontractor: "Karan Masonry Works",
     subtotal: 100000,
     gstAmount: 18000,
-    totalPayable: 100100, // Gross 118,000 − TDS 2% (2,000) − Advance (10,000) − Retention 5% on gross (5,900) = 100,100
+    cgstAmount: 9000,
+    sgstAmount: 9000,
+    igstAmount: 0,
+    totalPayable: 100100,
     preTax: false,
     status: "approved",
     deductions: [
@@ -77,7 +83,10 @@ const INITIAL_BILLS: Bill[] = [
     subcontractor: "Apex Bar-Bending Co",
     subtotal: 80000,
     gstAmount: 14400,
-    totalPayable: 88080, // Gross 94,400 − TDS 2% on sub (1,600) − Retention 5% on gross (4,720) = 88,080
+    cgstAmount: 7200,
+    sgstAmount: 7200,
+    igstAmount: 0,
+    totalPayable: 88080,
     preTax: false,
     status: "pending",
     deductions: [
@@ -153,23 +162,30 @@ export default function SubcontractorBillingPage() {
       const res = await fetch(`${getApiHost()}/apis/v3/billing/bills?project_id=${projectId}&invoice_type=subcon`);
       if (res.ok) {
         const data = await res.json();
-        const mapped = data.map((bill: any) => ({
-          id: bill.id,
-          invoiceNumber: bill.invoice_number,
-          invoiceDate: bill.invoice_date ? bill.invoice_date.split("T")[0] : "",
-          subcontractor: SUBCON_IDS[bill.party_company_user_id] || "Karan Masonry Works",
-          subtotal: bill.subtotal,
-          gstAmount: bill.gst_amount,
-          totalPayable: bill.total_payable,
-          preTax: bill.is_milestone_fixed_amount,
-          status: bill.status === "Unpaid" ? "pending" : (bill.status === "Paid" ? "approved" : "rejected"),
-          deductions: bill.deductions.map((d: any) => ({
-            type: d.deduction_type,
-            amount: d.amount,
-            rate: d.percentage,
-            notes: d.notes
-          }))
-        }));
+        const mapped = data.map((bill: any) => {
+          const gstTotal = parseFloat(bill.gst_amount || 0);
+          const halfGst = gstTotal / 2;
+          return {
+            id: bill.id,
+            invoiceNumber: bill.invoice_number,
+            invoiceDate: bill.invoice_date ? bill.invoice_date.split("T")[0] : "",
+            subcontractor: SUBCON_IDS[bill.party_company_user_id] || "Karan Masonry Works",
+            subtotal: parseFloat(bill.subtotal || 0),
+            gstAmount: gstTotal,
+            cgstAmount: halfGst,
+            sgstAmount: halfGst,
+            igstAmount: 0,
+            totalPayable: parseFloat(bill.total_payable || 0),
+            preTax: bill.is_milestone_fixed_amount,
+            status: bill.status === "Unpaid" ? "pending" : (bill.status === "Paid" ? "approved" : "rejected"),
+            deductions: (bill.deductions || []).map((d: any) => ({
+              type: d.deduction_type,
+              amount: parseFloat(d.amount || 0),
+              rate: d.percentage,
+              notes: d.notes
+            }))
+          };
+        });
         setBills(mapped);
       }
     } catch (e) {
@@ -459,7 +475,7 @@ export default function SubcontractorBillingPage() {
                         <th className="px-5 py-3 font-bold">Bill Number</th>
                         <th className="px-5 py-3 font-bold">Subcontractor</th>
                         <th className="px-5 py-3 font-bold">Billed Subtotal</th>
-                        <th className="px-5 py-3 font-bold">GST Amount</th>
+                        <th className="px-5 py-3 font-bold">GST (CGST+SGST/IGST)</th>
                         <th className="px-5 py-3 font-bold">Deductions (TDS/Retention)</th>
                         <th className="px-5 py-3 font-bold">Deduction Tax Mode</th>
                         <th className="px-5 py-3 font-bold">Net Payable</th>
@@ -473,7 +489,16 @@ export default function SubcontractorBillingPage() {
                           <td className="px-5 py-3.5 font-mono text-primary font-bold">{bill.invoiceNumber}</td>
                           <td className="px-5 py-3.5 text-white font-semibold">{bill.subcontractor}</td>
                           <td className="px-5 py-3.5 font-bold text-zinc-300">₹{bill.subtotal.toLocaleString()}</td>
-                          <td className="px-5 py-3.5 text-zinc-400">₹{bill.gstAmount.toLocaleString()}</td>
+                          <td className="px-5 py-3.5 text-zinc-400">
+                            <div className="flex flex-col">
+                              <span className="text-[10px] text-zinc-500">Total: ₹{bill.gstAmount.toLocaleString()}</span>
+                              {bill.cgstAmount > 0 && <>
+                                <span className="text-[10px] text-emerald-400">CGST {bill.cgstAmount.toLocaleString()}</span>
+                                <span className="text-[10px] text-emerald-400">SGST {bill.sgstAmount.toLocaleString()}</span>
+                              </>}
+                              {bill.igstAmount > 0 && <span className="text-[10px] text-amber-400">IGST {bill.igstAmount.toLocaleString()}</span>}
+                            </div>
+                          </td>
                           <td className="px-5 py-3.5 text-zinc-400 max-w-[200px]">
                             <div className="flex flex-wrap gap-1">
                               {bill.deductions.map((d, idx) => (
