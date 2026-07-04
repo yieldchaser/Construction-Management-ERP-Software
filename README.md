@@ -61,6 +61,8 @@ SiteFlow is an outcome-driven, high-fidelity ERP workspace tailored to the India
 - **📅 Leave Management**: Leave request, approval/rejection workflows, and leave type configuration.
 - **🧾 Payroll Runs**: Monthly payroll processing with Basic, HRA, Allowances, PF (employee + employer), ESI, and TDS calculations.
 - **😊 Face Recognition Attendance**: Face verification audit trail with confidence scores, geofence validation, and image logging.
+- **🏖️ Company Holiday Calendar**: Official company holiday list that automatically credits attendance and resolves salary run offsets.
+- **🎛️ Sliding Workforce Configuration Drawers**: Right-hand sliding side panels for adding new workforce types (mason, helper, wage types), shared Workforce Library catalog, and detailed payroll settings (shift rates, hours, leave templates).
 
 ### Quality & Safety
 - **✅ Quality Inspections**: IS-code checklist library, site inspections, non-conformance reports (NCR), and material lab test logs.
@@ -70,6 +72,9 @@ SiteFlow is an outcome-driven, high-fidelity ERP workspace tailored to the India
 - **📈 Executive Analytics**: Interactive S-curve progress charts and budget burn charts with hover tooltips.
 - **📑 Client Progress Reports**: Auto-generated progress reports with approval workflow and PDF download.
 - **📊 Production Tracking**: Task-level work quantities, recipe management, batch logging, and inventory alerts.
+- **🗃️ 15-Category Reports Dashboard**: Dynamic, company-wide reports directory spanning Sales, Payments, Progress & Task, Purchase, Party Balances, Tax, and Assets.
+- **📅 Period Slider Export Modal**: Smooth sliding selector modal (`< Month >`) supporting custom CSV/Excel downloads matching exact client layouts.
+- **📋 Daily Progress Report (DPR)**: Comprehensive dashboard aggregating To-Dos, material indents, tasks, shifts, aggregate receipts, and active machinery usage schedules.
 
 ### Integrations
 - **🔗 Tally Prime**: Direct XML sync gateway for voucher push and pull.
