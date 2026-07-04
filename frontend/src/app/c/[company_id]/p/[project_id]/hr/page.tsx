@@ -128,10 +128,38 @@ export default function HRPayrollPage() {
   const companyId = params?.company_id as string;
   const projectId = params?.project_id as string;
 
-  const [tab, setTab] = useState<"employees" | "attendance" | "timesheets" | "payroll" | "leaves">("employees");
+  const [tab, setTab] = useState<"employees" | "attendance" | "timesheets" | "payroll" | "leaves" | "holidays">("employees");
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
   
+  // Holidays & Calendar states
+  const [holidays, setHolidays] = useState<any[]>([
+    { id: "H-01", holidayName: "Diwali", date: "2026-07-04", day: "Saturday" }
+  ]);
+  const [showAddHolidayModal, setShowAddHolidayModal] = useState(false);
+  const [holidayForm, setHolidayForm] = useState({ name: "", date: "" });
+  
+  // Workforce Configuration Drawers
+  const [showWorkforceDrawer, setShowWorkforceDrawer] = useState(false);
+  const [showLibraryDrawer, setShowLibraryDrawer] = useState(false);
+  const [showDetailsDrawer, setShowDetailsDrawer] = useState(false);
+  const [selectedEmpDetail, setSelectedEmpDetail] = useState<any>(null);
+  
+  const [workforceForm, setWorkforceForm] = useState({
+    workerType: "",
+    rateType: "Daily",
+    salaryPerShift: "600",
+    shiftHours: "8",
+    costCode: ""
+  });
+  
+  const [toastMsg, setToastMsg] = useState("");
+
+  const triggerLocalToast = (msg: string) => {
+    setToastMsg(msg);
+    setTimeout(() => setToastMsg(""), 3000);
+  };
+
   // Leave Management states
   const [leaves, setLeaves] = useState<any[]>([
     { id: "LV-01", employeeId: "E-01", employeeName: "Ramesh Kumar", leaveType: "Casual", startDate: "2026-07-02", endDate: "2026-07-03", days: 2, reason: "Personal work at hometown", status: "Pending" },
@@ -585,6 +613,7 @@ export default function HRPayrollPage() {
             ["timesheets", "📋", "Timesheets"],
             ["payroll", "💰", "Payroll Runs"],
             ["leaves", "📅", "Leaves"],
+            ["holidays", "🏖️", "Holidays"],
           ] as const).map(([key, icon, label]) => (
             <button key={key} onClick={() => setTab(key)}
               className={`w-full text-left flex items-center gap-2 px-3 py-2 text-xs font-semibold rounded-lg transition-all ${tab === key ? "bg-primary/10 text-white font-semibold shadow-sm" : "text-muted hover:text-foreground hover:bg-white/[0.03]"}`}>
@@ -611,6 +640,7 @@ export default function HRPayrollPage() {
               {tab === "timesheets" && "Weekly Timesheets"}
               {tab === "payroll" && "Payroll Engine"}
               {tab === "leaves" && "Leave Management"}
+              {tab === "holidays" && "Holiday Calendar"}
             </h1>
           </div>
           <div className="flex items-center gap-2">
@@ -624,15 +654,31 @@ export default function HRPayrollPage() {
             </button>
 
             {tab === "employees" && (
-              <button onClick={() => setShowAddEmp(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-white text-xs font-bold hover:bg-primary/90 transition-all cursor-pointer">
-                + Add Employee
-              </button>
+              <>
+                <button onClick={() => setShowLibraryDrawer(true)}
+                  className="px-3 py-1.5 rounded-lg border border-border-custom text-muted text-xs font-bold hover:text-foreground hover:bg-white/[0.03] transition-all cursor-pointer">
+                  Workforce Library
+                </button>
+                <button onClick={() => setShowWorkforceDrawer(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-white text-xs font-bold hover:bg-primary/90 transition-all cursor-pointer">
+                  + Add Workforce
+                </button>
+                <button onClick={() => setShowAddEmp(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/20 text-primary border border-primary/20 text-xs font-bold hover:bg-primary/30 transition-all cursor-pointer">
+                  + Add Staff
+                </button>
+              </>
             )}
             {tab === "leaves" && (
               <button onClick={() => setShowApplyLeaveModal(true)}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-white text-xs font-bold hover:bg-primary/90 transition-all cursor-pointer">
                 + Apply Leave
+              </button>
+            )}
+            {tab === "holidays" && (
+              <button onClick={() => setShowAddHolidayModal(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-white text-xs font-bold hover:bg-primary/90 transition-all cursor-pointer">
+                + Add Holiday
               </button>
             )}
           </div>
@@ -670,7 +716,7 @@ export default function HRPayrollPage() {
                   </thead>
                   <tbody className="divide-y divide-white/[0.03]">
                     {employees.map(emp => (
-                      <tr key={emp.id} className="hover:bg-elevated transition-colors">
+                      <tr key={emp.id} className="hover:bg-elevated transition-colors cursor-pointer" onClick={() => { setSelectedEmpDetail(emp); setShowDetailsDrawer(true); }}>
                         <td className="px-3 py-2.5 font-mono text-muted">{emp.code}</td>
                         <td className="px-3 py-2.5 font-semibold text-white">{emp.name}</td>
                         <td className="px-3 py-2.5 text-zinc-300">{emp.designation}</td>
@@ -1215,6 +1261,45 @@ export default function HRPayrollPage() {
               </div>
             </div>
           )}
+
+          {/* ── HOLIDAYS ── */}
+          {tab === "holidays" && (
+            <div className="space-y-4">
+              <div className="bg-card border border-border-custom rounded-xl p-6">
+                <p className="text-xs text-muted mb-4">Create and manage your official company holiday calendar. Employees will be auto-credited present on these dates.</p>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs text-left">
+                    <thead>
+                      <tr className="border-b border-border-custom text-muted font-semibold text-[10px] uppercase">
+                        <th className="pb-2">Holiday Name</th>
+                        <th className="pb-2">Date</th>
+                        <th className="pb-2">Day</th>
+                        <th className="pb-2 text-right">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/[0.03]">
+                      {holidays.length === 0 ? (
+                        <tr>
+                          <td colSpan={4} className="py-8 text-center text-muted">No holidays added yet.</td>
+                        </tr>
+                      ) : (
+                        holidays.map((h) => (
+                          <tr key={h.id} className="hover:bg-white/[0.01] transition-all">
+                            <td className="py-3 font-semibold text-white">{h.holidayName}</td>
+                            <td className="py-3 text-muted">{h.date}</td>
+                            <td className="py-3 text-muted">{h.day}</td>
+                            <td className="py-3 text-right">
+                              <button onClick={() => setHolidays(holidays.filter(x => x.id !== h.id))} className="text-red-400 hover:text-red-300 text-[10px] font-bold">Delete</button>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </main>
 
@@ -1440,6 +1525,322 @@ export default function HRPayrollPage() {
               <button onClick={() => setShowApplyLeaveModal(false)} className="px-4 py-2 rounded-lg border border-border-custom text-muted text-sm hover:text-foreground hover:border-white/20">Cancel</button>
             </div>
           </div>
+        </div>
+      )}
+      {/* Add Holiday Modal */}
+      {showAddHolidayModal && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={() => setShowAddHolidayModal(false)}>
+          <div className="bg-card border border-border-custom rounded-lg w-full max-w-md p-6" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-base font-bold text-white">Add Company Holiday</h2>
+              <button onClick={() => setShowAddHolidayModal(false)} className="text-muted hover:text-foreground text-xl">✕</button>
+            </div>
+            <div className="space-y-4 text-xs">
+              <div className="space-y-1">
+                <label className="text-[10px] text-muted uppercase font-bold block">Holiday Name</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Independence Day"
+                  value={holidayForm.name}
+                  onChange={(e) => setHolidayForm({ ...holidayForm, name: e.target.value })}
+                  className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-primary"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] text-muted uppercase font-bold block">Holiday Date</label>
+                <input
+                  type="date"
+                  value={holidayForm.date}
+                  onChange={(e) => setHolidayForm({ ...holidayForm, date: e.target.value })}
+                  className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-primary"
+                />
+              </div>
+            </div>
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => {
+                  if (!holidayForm.name || !holidayForm.date) return;
+                  const d = new Date(holidayForm.date);
+                  const dayStr = d.toLocaleDateString('en-US', { weekday: 'long' });
+                  const newH = {
+                    id: "H-" + Date.now(),
+                    holidayName: holidayForm.name,
+                    date: holidayForm.date,
+                    day: dayStr
+                  };
+                  setHolidays([...holidays, newH]);
+                  setShowAddHolidayModal(false);
+                  setHolidayForm({ name: "", date: "" });
+                  triggerLocalToast("Holiday added successfully");
+                }}
+                className="flex-1 py-2 bg-primary rounded-lg text-white text-sm font-bold hover:bg-primary/90 transition-all"
+              >
+                Save Holiday
+              </button>
+              <button onClick={() => setShowAddHolidayModal(false)} className="px-4 py-2 rounded-lg border border-border-custom text-muted text-sm hover:text-foreground hover:border-white/20">Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Workforce Drawer */}
+      {showWorkforceDrawer && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex justify-end animate-fade-in" onClick={() => setShowWorkforceDrawer(false)}>
+          <div className="bg-card w-full max-w-md h-full border-l border-border-custom shadow-2xl p-6 flex flex-col justify-between overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div>
+              <div className="flex items-center justify-between pb-4 border-b border-border-custom mb-5">
+                <h2 className="text-sm font-bold text-white uppercase tracking-wider">Add Workforce</h2>
+                <button onClick={() => setShowWorkforceDrawer(false)} className="text-muted hover:text-white text-lg">✕</button>
+              </div>
+              
+              <div className="space-y-4 text-xs">
+                <div>
+                  <label className="text-[10px] text-muted uppercase font-bold block mb-1">Worker Type (e.g. Mason, Electrician)*</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Mason"
+                    value={workforceForm.workerType}
+                    onChange={e => setWorkforceForm({ ...workforceForm, workerType: e.target.value })}
+                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary"
+                  />
+                </div>
+                
+                <div>
+                  <label className="text-[10px] text-muted uppercase font-bold block mb-1.5">Salary Type</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {["Daily", "Hourly"].map(t => (
+                      <button
+                        key={t}
+                        onClick={() => setWorkforceForm({ ...workforceForm, rateType: t })}
+                        className={`py-2 rounded-lg font-bold border text-xs transition-all ${
+                          workforceForm.rateType === t
+                            ? "bg-primary/10 border-primary text-primary"
+                            : "bg-background border-border-custom text-muted hover:text-foreground"
+                        }`}
+                      >
+                        {t}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[10px] text-muted uppercase font-bold block mb-1">Salary Per Shift (₹)*</label>
+                  <input
+                    type="number"
+                    placeholder="600"
+                    value={workforceForm.salaryPerShift}
+                    onChange={e => setWorkforceForm({ ...workforceForm, salaryPerShift: e.target.value })}
+                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[10px] text-muted uppercase font-bold block mb-1">Shift Hours*</label>
+                  <input
+                    type="number"
+                    placeholder="8"
+                    value={workforceForm.shiftHours}
+                    onChange={e => setWorkforceForm({ ...workforceForm, shiftHours: e.target.value })}
+                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[10px] text-muted uppercase font-bold block mb-1">Cost Code</label>
+                  <select
+                    value={workforceForm.costCode}
+                    onChange={e => setWorkforceForm({ ...workforceForm, costCode: e.target.value })}
+                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary"
+                  >
+                    <option value="">Select Cost Code</option>
+                    <option value="C-101">C-101 (Concrete Foundations)</option>
+                    <option value="C-204">C-204 (Masonry & Brickworks)</option>
+                    <option value="C-509">C-509 (MEP Rough-Ins)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-8 pt-4 border-t border-border-custom">
+              <button
+                onClick={() => {
+                  if (!workforceForm.workerType) return;
+                  triggerLocalToast("Workforce added successfully");
+                  setShowWorkforceDrawer(false);
+                }}
+                className="flex-1 py-2.5 bg-primary text-white font-bold rounded-lg hover:bg-primary/95 text-xs transition-all"
+              >
+                Save
+              </button>
+              <button onClick={() => setShowWorkforceDrawer(false)} className="px-4 py-2.5 rounded-lg border border-border-custom text-muted hover:text-white hover:border-white/20 text-xs">Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Workforce Library Drawer */}
+      {showLibraryDrawer && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex justify-end" onClick={() => setShowLibraryDrawer(false)}>
+          <div className="bg-card w-full max-w-md h-full border-l border-border-custom shadow-2xl p-6 flex flex-col justify-between overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div>
+              <div className="flex items-center justify-between pb-4 border-b border-border-custom mb-5">
+                <h2 className="text-sm font-bold text-white uppercase tracking-wider">Workforce Library</h2>
+                <button onClick={() => setShowLibraryDrawer(false)} className="text-muted hover:text-white text-lg">✕</button>
+              </div>
+
+              <div className="mb-4">
+                <input
+                  type="text"
+                  placeholder="Search Workforce..."
+                  className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-primary"
+                />
+              </div>
+
+              <button
+                onClick={() => {
+                  setShowLibraryDrawer(false);
+                  setShowWorkforceDrawer(true);
+                }}
+                className="w-full py-2 bg-primary/10 border border-primary/20 hover:bg-primary/20 text-primary font-bold rounded-lg text-xs transition-all mb-4"
+              >
+                + Add New Workforce
+              </button>
+
+              <div className="space-y-2 text-xs">
+                <div className="p-3 bg-background border border-border-custom rounded-lg flex items-center justify-between">
+                  <div>
+                    <p className="font-semibold text-white">Mason</p>
+                    <p className="text-[10px] text-muted">Daily Rate · ₹750/shift</p>
+                  </div>
+                  <span className="text-xs text-primary font-bold cursor-pointer hover:underline" onClick={() => { setShowLibraryDrawer(false); triggerLocalToast("Mason selected from Library"); }}>Select</span>
+                </div>
+                <div className="p-3 bg-background border border-border-custom rounded-lg flex items-center justify-between">
+                  <div>
+                    <p className="font-semibold text-white">Electrician</p>
+                    <p className="text-[10px] text-muted">Hourly Rate · ₹120/hr</p>
+                  </div>
+                  <span className="text-xs text-primary font-bold cursor-pointer hover:underline" onClick={() => { setShowLibraryDrawer(false); triggerLocalToast("Electrician selected from Library"); }}>Select</span>
+                </div>
+              </div>
+            </div>
+
+            <button onClick={() => setShowLibraryDrawer(false)} className="w-full py-2.5 rounded-lg border border-border-custom text-muted hover:text-white text-xs mt-6">Close</button>
+          </div>
+        </div>
+      )}
+
+      {/* Payroll Details Drawer */}
+      {showDetailsDrawer && selectedEmpDetail && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex justify-end" onClick={() => setShowDetailsDrawer(false)}>
+          <div className="bg-card w-full max-w-md h-full border-l border-border-custom shadow-2xl p-6 flex flex-col justify-between overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div>
+              <div className="flex items-center justify-between pb-4 border-b border-border-custom mb-5">
+                <div>
+                  <h2 className="text-sm font-bold text-white uppercase tracking-wider">{selectedEmpDetail.name}</h2>
+                  <p className="text-[10px] text-muted font-mono">{selectedEmpDetail.code}</p>
+                </div>
+                <button onClick={() => setShowDetailsDrawer(false)} className="text-muted hover:text-white text-lg">✕</button>
+              </div>
+
+              <div className="space-y-4 text-xs">
+                <div>
+                  <label className="text-[10px] text-muted uppercase font-bold block mb-1">Salary Amount (₹)*</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      defaultValue={selectedEmpDetail.grossMonthly}
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary"
+                    />
+                    <span className="text-xs text-muted shrink-0">per month</span>
+                  </div>
+                  <span className="text-[10px] text-primary cursor-pointer hover:underline mt-1 block">Add Salary Breakup</span>
+                </div>
+
+                <div>
+                  <label className="text-[10px] text-muted uppercase font-bold block mb-1">Shift Timing</label>
+                  <select className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary">
+                    <option>09:00 AM - 05:00 PM</option>
+                    <option>08:00 AM - 04:00 PM</option>
+                    <option>10:00 AM - 06:00 PM</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-[10px] text-muted uppercase font-bold block mb-1">Shift Hours</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      defaultValue="8"
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary"
+                    />
+                    <span className="text-xs text-muted shrink-0">per shift</span>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[10px] text-muted uppercase font-bold block mb-1">Overtime (₹)</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      defaultValue="150"
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary"
+                    />
+                    <span className="text-xs text-muted shrink-0">per hour</span>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[10px] text-muted uppercase font-bold block mb-1">Designation</label>
+                  <input
+                    type="text"
+                    defaultValue={selectedEmpDetail.designation}
+                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[10px] text-muted uppercase font-bold block mb-1">Leave Template</label>
+                  <select className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary">
+                    <option>Standard leave template</option>
+                    <option>Executive leave template</option>
+                    <option>Labour leave template</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-[10px] text-muted uppercase font-bold block mb-1">Cost Code</label>
+                  <select className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary">
+                    <option>C-101 (Concrete Foundations)</option>
+                    <option>C-204 (Masonry & Brickworks)</option>
+                    <option>C-509 (MEP Rough-Ins)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-8 pt-4 border-t border-border-custom">
+              <button
+                onClick={() => {
+                  triggerLocalToast("Details updated successfully");
+                  setShowDetailsDrawer(false);
+                }}
+                className="flex-1 py-2.5 bg-primary text-white font-bold rounded-lg hover:bg-primary/95 text-xs transition-all"
+              >
+                Save
+              </button>
+              <button onClick={() => setShowDetailsDrawer(false)} className="px-4 py-2.5 rounded-lg border border-border-custom text-muted hover:text-white hover:border-white/20 text-xs">Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Local Toast popup */}
+      {toastMsg && (
+        <div className="fixed bottom-6 right-6 bg-card border border-success/30 rounded-lg px-4 py-3 text-xs text-success shadow-lg flex items-center gap-2 z-50 transition-all">
+          <span>⚡</span>
+          <span className="font-semibold">{toastMsg}</span>
         </div>
       )}
     </div>
