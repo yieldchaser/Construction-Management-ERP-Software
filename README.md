@@ -265,6 +265,7 @@ SiteFlow features a state-of-the-art **flat canvas** with full support for light
 - 2-step guided stepper for first-time project creation.
 - **Step 1**: Project details (name, code, city, address, geofence radius).
 - **Step 2**: Team member assignment before project goes live.
+- **⚡ Self-Healing Demo Seeder**: Dynamically populates mock projects, cost codes, and materials if the database is reset or if the demo company session is missing on first-time login.
 
 ### 6. Integrations Hub (`/integrations`)
 - Interactive search and category filtering (Accounting, Communication, Storage, Analytics, Field & Site).
