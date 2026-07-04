@@ -1,7 +1,7 @@
 from uuid import UUID
 from datetime import datetime
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import ProjectTower, ProjectBudget, PurchaseOrder, Bill, WorkOrder
@@ -98,7 +98,7 @@ def create_tower(req: TowerCreateRequest, db: Session = Depends(get_db)):
 
 
 @router.get("/{project_id}/consolidated-pnl", response_model=List[ConsolidatedPNLItem])
-def consolidated_pnl(project_id: UUID, db: Session = Depends(get_db)):
+def consolidated_pnl(project_id: UUID, tower_id: Optional[UUID] = Query(None), db: Session = Depends(get_db)):
     towers = db.query(ProjectTower).filter(ProjectTower.project_id == project_id).all()
 
     if not towers:
@@ -125,6 +125,8 @@ def consolidated_pnl(project_id: UUID, db: Session = Depends(get_db)):
 
     result = []
     for t in towers:
+        if tower_id and t.id != tower_id:
+            continue
         pos = db.query(PurchaseOrder).filter(PurchaseOrder.project_id == project_id).all()
         total_po_value = sum(float(p.total_amount) for p in pos)
         bills = db.query(Bill).filter(Bill.project_id == project_id).all()

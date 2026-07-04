@@ -171,7 +171,7 @@ export default function SubcontractorBillingPage() {
     try {
       const url = selectedTower === "all"
         ? `${getApiHost()}/apis/v3/towers/${projectId}/consolidated-pnl`
-        : `${getApiHost()}/apis/v3/towers/${selectedTower}/consolidated-pnl`;
+        : `${getApiHost()}/apis/v3/towers/${projectId}/consolidated-pnl?tower_id=${selectedTower}`;
       const res = await fetch(url);
       if (res.ok) setPnlData(await res.json());
     } catch (e) { console.error(e); }

@@ -7,7 +7,7 @@ from sqlalchemy import func
 from app.database import get_db
 from app.models import (
     WorkOrder, WorkOrderAmendment, SubcontractorPerformance,
-    WorkOrderItem, Bill, TransactionDeduction
+    WorkOrderItem, Bill, TransactionDeduction, CompanyTeam, User
 )
 from pydantic import BaseModel, Field
 
@@ -107,17 +107,13 @@ def create_amendment(wo_id: UUID, req: AmendmentCreateRequest, db: Session = Dep
 
 # --- Performance Scorecards ---
 
-SUBCON_MAP: dict = {
-    "Karan Masonry Works": "e0000000-0000-0000-0000-000000000201",
-    "Apex Bar-Bending Co": "e0000000-0000-0000-0000-000000000202",
-    "Metro Plumbing Services": "e0000000-0000-0000-0000-000000000203",
-}
 
-SUBCON_NAMES = {
-    "e0000000-0000-0000-0000-000000000201": "Karan Masonry Works",
-    "e0000000-0000-0000-0000-000000000202": "Apex Bar-Bending Co",
-    "e0000000-0000-0000-0000-000000000203": "Metro Plumbing Services",
-}
+def _resolve_subcontractor_name(db: Session, subcontractor_id: UUID) -> str:
+    team = db.query(CompanyTeam).filter(CompanyTeam.id == subcontractor_id).first()
+    if not team:
+        return "Unknown"
+    user = db.query(User).filter(User.id == team.user_id).first()
+    return user.name if user and user.name else "Unknown"
 
 
 @router.get("/scorecards/{project_id}", response_model=List[ScorecardResponse])
@@ -140,7 +136,7 @@ def get_comparative(project_id: UUID, db: Session = Depends(get_db)):
         if sub_id not in grouped:
             grouped[sub_id] = {
                 "subcontractor_id": sc.subcontractor_id,
-                "subcontractor_name": SUBCON_NAMES.get(sub_id, "Unknown"),
+                "subcontractor_name": _resolve_subcontractor_name(db, sc.subcontractor_id),
                 "scorecard_count": 0,
                 "sum_on_time": 0.0,
                 "sum_billing_accuracy": 0.0,

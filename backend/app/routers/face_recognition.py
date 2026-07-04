@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
@@ -96,7 +96,7 @@ def daily_summary(company_id: uuid.UUID, date: str = Query(...), project_id: Opt
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
 
-    next_date = datetime(target_date.year, target_date.month, target_date.day + 1) if target_date.day < 31 else datetime(target_date.year, target_date.month + 1, 1)
+    next_date = target_date + timedelta(days=1)
     query = db.query(FaceRecognitionLog).filter(
         FaceRecognitionLog.company_id == company_id,
         FaceRecognitionLog.created_at >= target_date,

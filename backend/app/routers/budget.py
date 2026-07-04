@@ -45,6 +45,7 @@ class BudgetWithCommitted(BaseModel):
     total_budget: float
     total_committed: float
     total_actual: float
+    total_committed_variance: float
     total_variance: float
 
 
@@ -122,6 +123,7 @@ def get_committed_costs(project_id: UUID, db: Session = Depends(get_db)):
         total_budget=total_budget,
         total_committed=total_committed,
         total_actual=total_actual,
+        total_committed_variance=total_budget - total_committed,
         total_variance=total_budget - total_actual,
     )
 

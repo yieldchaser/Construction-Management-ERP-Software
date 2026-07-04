@@ -71,7 +71,8 @@ def refresh_vendor_performance(db: Session, project_id: UUID, company_id: UUID):
     vendor_map = {}
     for po in pos:
         vendor_id = po.vendor_id
-        vendor_name = po.vendor.name if po.vendor else f"Vendor-{str(vendor_id)[:8]}"
+        team_member = db.query(CompanyTeam).filter(CompanyTeam.id == vendor_id).first()
+        vendor_name = team_member.user.name if team_member and team_member.user else f"Vendor-{str(vendor_id)[:8]}"
         if vendor_id not in vendor_map:
             vendor_map[vendor_id] = {
                 "company_id": company_id,

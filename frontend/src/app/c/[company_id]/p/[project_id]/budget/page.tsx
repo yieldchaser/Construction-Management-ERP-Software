@@ -21,16 +21,8 @@ interface BudgetCommitted {
   total_budget: number;
   total_committed: number;
   total_actual: number;
+  total_committed_variance: number;
   total_variance: number;
-}
-
-interface TowerBudget {
-  tower_id: string | null;
-  tower_name: string;
-  budget: number;
-  committed: number;
-  actual: number;
-  variance: number;
 }
 
 export default function BudgetPage() {
@@ -39,20 +31,14 @@ export default function BudgetPage() {
   const projectId = project_id || "d0000000-0000-0000-0000-000000000001";
 
   const [budget, setBudget] = useState<BudgetCommitted | null>(null);
-  const [towers, setTowers] = useState<TowerBudget[]>([]);
-  const [selectedTower, setSelectedTower] = useState<string>("all");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [budRes, towerRes] = await Promise.all([
-        fetch(`${getApiHost()}/apis/v3/budget/committed/${projectId}`),
-        fetch(`${getApiHost()}/apis/v3/towers/${projectId}`),
-      ]);
+      const budRes = await fetch(`${getApiHost()}/apis/v3/budget/committed/${projectId}`);
       if (budRes.ok) setBudget(await budRes.json());
-      if (towerRes.ok) setTowers(await towerRes.json());
     } catch (e) {
       setError("Failed to load budget data");
     } finally {
@@ -110,7 +96,7 @@ export default function BudgetPage() {
                   { label: "Total Budget", value: `₹${fmt(budget.total_budget)}`, color: "text-white" },
                   { label: "Total Committed", value: `₹${fmt(budget.total_committed)}`, color: "text-amber-400" },
                   { label: "Total Actual", value: `₹${fmt(budget.total_actual)}`, color: "text-primary" },
-                  { label: "Variance", value: `₹${fmt(budget.total_variance)}`, color: budget.total_variance >= 0 ? "text-green-400" : "text-red-400" },
+                  { label: "Committed Variance", value: `₹${fmt(budget.total_committed_variance)}`, color: budget.total_committed_variance >= 0 ? "text-green-400" : "text-red-400" },
                 ].map((s, idx) => (
                   <div key={idx} className="glass-panel p-4 rounded-xl border border-white/5">
                     <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider block">{s.label}</span>
@@ -131,7 +117,8 @@ export default function BudgetPage() {
                         <th className="px-5 py-3 font-bold text-right">Budget</th>
                         <th className="px-5 py-3 font-bold text-right">Committed</th>
                         <th className="px-5 py-3 font-bold text-right">Actual Billed</th>
-                        <th className="px-5 py-3 font-bold text-right">Variance</th>
+                        <th className="px-5 py-3 font-bold text-right">Committed Var.</th>
+                        <th className="px-5 py-3 font-bold text-right">Actual Var.</th>
                         <th className="px-5 py-3 font-bold text-center">Utilization</th>
                       </tr>
                     </thead>
@@ -147,6 +134,7 @@ export default function BudgetPage() {
                           <td className="px-5 py-3.5 text-right font-mono text-zinc-300">₹{fmt(row.b)}</td>
                           <td className="px-5 py-3.5 text-right font-mono text-amber-400">₹{fmt(row.c)}</td>
                           <td className="px-5 py-3.5 text-right font-mono text-primary">₹{fmt(row.a)}</td>
+                          <td className="px-5 py-3.5 text-right font-mono text-zinc-400">₹{fmt(row.b - row.c)}</td>
                           <td className="px-5 py-3.5 text-right font-mono text-zinc-400">₹{fmt(row.b - row.a)}</td>
                           <td className="px-5 py-3.5 text-center">
                             <div className="flex items-center justify-center gap-2">

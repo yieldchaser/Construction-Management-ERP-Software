@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import (
     WorkOrder, CompanyTeam, SubcontractorPerformance,
-    BOCWRecord, MusterRoll, Bill
+    BOCWRecord, MusterRoll, Bill, User
 )
 from pydantic import BaseModel
 import csv
@@ -17,6 +17,16 @@ router = APIRouter(
     prefix="/labour",
     tags=["Labour Management"]
 )
+
+
+def _resolve_contractor_name(db: Session, contractor_id: Optional[UUID]) -> str:
+    if not contractor_id:
+        return "Unknown"
+    team = db.query(CompanyTeam).filter(CompanyTeam.id == contractor_id).first()
+    if not team:
+        return "Unknown"
+    user = db.query(User).filter(User.id == team.user_id).first()
+    return user.name if user and user.name else "Unknown"
 
 
 # --- Schemas ---
@@ -87,19 +97,6 @@ class MusterRollCreate(BaseModel):
     notes: Optional[str] = None
 
 
-RELIABLE_MAP: dict = {
-    "Karan Masonry Works": "e0000000-0000-0000-0000-000000000201",
-    "Apex Bar-Bending Co": "e0000000-0000-0000-0000-000000000202",
-    "Metro Plumbing Services": "e0000000-0000-0000-0000-000000000203",
-}
-
-RELIABLE_NAMES = {
-    "e0000000-0000-0000-0000-000000000201": "Karan Masonry Works",
-    "e0000000-0000-0000-0000-000000000202": "Apex Bar-Bending Co",
-    "e0000000-0000-0000-0000-000000000203": "Metro Plumbing Services",
-}
-
-
 # --- Contractor Reliability ---
 
 @router.get("/reliability/{project_id}", response_model=List[ReliabilityResponse])
@@ -110,13 +107,12 @@ def get_reliability(project_id: UUID, db: Session = Depends(get_db)):
 
     result = []
     for sc in scorecards:
-        sub_id = str(sc.subcontractor_id)
         result.append(ReliabilityResponse(
             id=sc.id,
             company_id=sc.company_id,
             project_id=sc.project_id,
             contractor_id=sc.subcontractor_id,
-            contractor_name=RELIABLE_NAMES.get(sub_id, "Unknown"),
+            contractor_name=_resolve_contractor_name(db, sc.subcontractor_id),
             period_start=sc.period_start,
             period_end=sc.period_end,
             on_time_pct=float(sc.on_time_pct),

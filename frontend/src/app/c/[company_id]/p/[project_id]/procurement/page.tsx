@@ -431,6 +431,15 @@ export default function ProcurementPage() {
 
     try {
       const apiHost = getApiHost();
+      const dupRes = await fetch(`${apiHost}/apis/v3/procurement/duplicate-po-check?company_id=${companyId}&po_number=${encodeURIComponent(newPONum)}`);
+      if (dupRes.ok) {
+        const dupData = await dupRes.json();
+        if (dupData.is_duplicate) {
+          alert(`Duplicate PO number: ${dupData.message}`);
+          return;
+        }
+      }
+
       const res = await fetch(`${apiHost}/apis/v3/procurement/pos`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -665,6 +674,11 @@ export default function ProcurementPage() {
                     <span className="flex items-center gap-2.5"><span>⚠️</span> UNBILLED MATERIALS</span>
                     {unbilledGRNs.length > 0 && <span className="text-[9px] px-1.5 py-0.5 bg-amber-500 text-black rounded-full font-bold">{unbilledGRNs.length}</span>}
                   </button>
+                </li>
+                <li>
+                  <Link href={`/c/${companyId}/p/${projectId}/procurement/vendor-performance`} className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg text-left text-zinc-400 hover:text-white hover:bg-white/[0.02]`}>
+                    <span>📊</span> VENDOR PERFORMANCE
+                  </Link>
                 </li>
               </ul>
             </div>

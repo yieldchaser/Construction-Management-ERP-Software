@@ -231,7 +231,8 @@ SiteFlow features a state-of-the-art **glassmorphic canvas** with full support f
 
 ### 3. Project Modules (`/c/[company_id]/p/[project_id]/`)
 - **Attendance & Payroll (`/attendance`)**: GPS geofenced punch-in/out, Haversine validation, offline backup, multi-language support, shift multipliers, overtime calculations.
-- **Subcontractor Billing (`/billing`)**: Real-time RA bill calculator, pre-tax/post-tax deduction modes, Indian GST/TDS presets, debit/credit notes ledger.
+- **Subcontractor Billing (`/billing`)**: Real-time RA bill calculator, pre-tax/post-tax deduction modes, Indian GST/TDS presets, debit/credit notes ledger, work order amendment version control, tower-wise P&L breakdown.
+- **Subcontractor Performance (`/subcon/scorecards`)**: Performance scorecards with on-time delivery %, billing accuracy %, quality score, and cross-subcontractor comparative analysis.
 - **CRM (`/crm`)**: Lead pipeline, client registry, quotation creation and lifecycle management.
 - **Planning & Gantt (`/planning/gantt`)**: Interactive WBS timeline, CPM scheduling, task float calculations.
 - **DPR (`/dpr`)**: Daily progress reports, delay tracking, photo attachments.
@@ -239,7 +240,7 @@ SiteFlow features a state-of-the-art **glassmorphic canvas** with full support f
 - **Equipment (`/equipment`)**: Fuel logs, run hours, deployment tracking.
 - **Finance (`/finance`)**: Payment recording, ledger, P&L, bank accounts, payment requests, Tally sync.
 - **HR (`/hr`)**: Employee directory, leave management, monthly payroll, timesheets, face recognition attendance.
-- **Procurement (`/procurement`)**: Material indents, purchase orders, GRNs, inventory, unbilled material tracking.
+- **Procurement (`/procurement`)**: Material indents, purchase orders, GRNs, inventory, unbilled material tracking, duplicate PO detection, vendor performance database, RFQ multi-vendor comparison with side-by-side rate/timeline view.
 - **Production (`/production`)**: Work quantity tracking, recipe management, batch logging, inventory alerts.
 - **Quality (`/quality`)**: IS-code checklists, inspections, NCRs, lab test logs.
 - **Reports (`/reports`)**: Progress report generation, approval workflow, PDF download.
@@ -251,6 +252,8 @@ SiteFlow features a state-of-the-art **glassmorphic canvas** with full support f
 - **Custom Fields (`/custom-fields`)**: Dynamic field definitions across entities.
 - **Statutory Reports (`/statutory`)**: PF, ESI, BOCW, TDS compliance filing.
 - **Face Recognition (`/face-recognition`)**: Face verification audit trail with confidence scores.
+- **Labour (`/labour`)**: Contractor reliability scoring, BOCW compliance export, digital muster roll.
+- **Budget (`/budget`)**: Committed cost tracking showing POs raised, work orders issued, and actual invoices side-by-side with budgeted amounts. Multi-tower/phase budget breakdown with consolidated P&L.
 
 ### 4. Company Settings (`/c/[company_id]/settings`)
 - **General Settings**: Company profile, contact info, GSTIN validation, currency and quantity decimal precision.
