@@ -147,7 +147,7 @@ export default function FinancePage() {
   // Record Payment Modal
   const [showAddModal, setShowAddModal] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [selectedTxnType, setSelectedTxnType] = useState<Transaction["type"]>("Expense");
+  const [selectedTxnType, setSelectedTxnType] = useState<any>("Expense");
   const [amount, setAmount] = useState("");
   const [partyName, setPartyName] = useState("");
   const [refNum, setRefNum] = useState("");
@@ -1468,7 +1468,9 @@ export default function FinancePage() {
               <div className="flex justify-between items-center border-b border-border-custom pb-4 mb-5">
                 <div>
                   <h3 className="text-sm font-bold text-white uppercase tracking-wider">
-                    {["Other Expense", "Equipment Expense"].includes(selectedTxnType)
+                    {selectedTxnType === "Upload Payments"
+                      ? "Add Payment"
+                      : ["Other Expense", "Equipment Expense"].includes(selectedTxnType)
                       ? "Add Expense"
                       : ["Material Sales", "Sales Invoice"].includes(selectedTxnType)
                       ? "Material Sales"
@@ -1481,11 +1483,43 @@ export default function FinancePage() {
                 <div className="flex items-center gap-3">
                   <button onClick={() => setShowAddModal(false)} className="text-xs text-muted hover:text-white transition-colors cursor-pointer">Cancel</button>
                   <button onClick={handleRecordPayment} className="bg-primary hover:bg-primary/90 text-white font-bold text-xs px-4 py-1.5 rounded-lg shadow transition-all cursor-pointer">Save</button>
+                  {selectedTxnType === "Upload Payments" && (
+                    <button type="button" className="bg-elevated border border-border-custom hover:bg-elevated/80 text-foreground font-bold text-xs px-3.5 py-1.5 rounded-lg transition-all">Preview</button>
+                  )}
                 </div>
               </div>
 
               {/* Dynamic Form Content */}
-              {["Other Expense", "Equipment Expense"].includes(selectedTxnType) ? (
+              {selectedTxnType === "Upload Payments" ? (
+                /* UPLOAD PAYMENTS SCREEN (Screenshot 2) */
+                <div className="space-y-6 text-xs">
+                  <div className="bg-elevated/45 border border-border-custom p-4 rounded-xl space-y-3">
+                    <div className="flex items-start gap-2.5">
+                      <span className="text-sm">ℹ️</span>
+                      <div className="space-y-1">
+                        <strong className="text-white block">How to import Excel/CSV in Onsite:</strong>
+                        <ol className="list-decimal pl-4 space-y-1 text-muted leading-relaxed">
+                          <li>Remove any unnecessary header rows from the Excel file.</li>
+                          <li>
+                            Ensure the column structure aligns with the{" "}
+                            <span className="text-primary hover:underline font-bold cursor-pointer inline-flex items-center gap-0.5">
+                              Onsite Payment Request template 📥
+                            </span>{" "}
+                            (column names and order of columns need to match exactly with the sample file).
+                          </li>
+                          <li>Upload that file here.</li>
+                        </ol>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="border-2 border-dashed border-border-custom hover:border-primary/50 transition-all rounded-xl p-8 flex flex-col items-center justify-center bg-background cursor-pointer text-center space-y-2">
+                    <span className="text-2xl text-primary">📤</span>
+                    <strong className="text-white font-bold text-xs">Upload Csv</strong>
+                    <span className="text-[9px] text-muted">Supports .csv, .xls, .xlsx formats up to 10MB</span>
+                  </div>
+                </div>
+              ) : ["Other Expense", "Equipment Expense"].includes(selectedTxnType) ? (
                 /* OTHER EXPENSES SCREEN (Screenshot 1) */
                 <div className="space-y-4 text-xs">
                   <div className="flex justify-between items-center bg-background/50 border border-border-custom rounded-lg p-2.5">
@@ -1786,29 +1820,49 @@ export default function FinancePage() {
                   )}
 
                   {transferType === "Cash Deposit" && (
-                    <div>
-                      <label className="text-[10px] text-muted uppercase font-bold block mb-1">To Bank Account</label>
-                      <select
-                        value={toBank}
-                        onChange={e => setToBank(e.target.value)}
-                        className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
-                      >
-                        <option value="Main Savings Account">Main Savings Account (HDFC)</option>
-                      </select>
-                    </div>
+                    <>
+                      <div>
+                        <label className="text-[10px] text-muted uppercase font-bold block mb-1">From</label>
+                        <div className="flex justify-between items-center bg-background/50 border border-border-custom rounded-lg px-3 py-2.5">
+                          <span className="text-white font-medium text-xs">Cash Account (Company Wallet)</span>
+                          <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[9px] font-bold px-2 py-0.5 rounded-full font-mono">₹ 0</span>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-[10px] text-muted uppercase font-bold block mb-1">To Bank Account</label>
+                        <select
+                          value={toBank}
+                          onChange={e => setToBank(e.target.value)}
+                          className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                        >
+                          <option value="Main Savings Account">Main Savings Account (HDFC)</option>
+                          <option value="Escrow Account">Escrow Account (SBI)</option>
+                        </select>
+                      </div>
+                    </>
                   )}
 
                   {transferType === "Cash Withdraw" && (
-                    <div>
-                      <label className="text-[10px] text-muted uppercase font-bold block mb-1">From Bank Account</label>
-                      <select
-                        value={fromBank}
-                        onChange={e => setFromBank(e.target.value)}
-                        className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
-                      >
-                        <option value="Main Savings Account">Main Savings Account (HDFC)</option>
-                      </select>
-                    </div>
+                    <>
+                      <div>
+                        <label className="text-[10px] text-muted uppercase font-bold block mb-1">From Bank Account</label>
+                        <select
+                          value={fromBank}
+                          onChange={e => setFromBank(e.target.value)}
+                          className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                        >
+                          <option value="Main Savings Account">Main Savings Account (HDFC)</option>
+                          <option value="Escrow Account">Escrow Account (SBI)</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-[10px] text-muted uppercase font-bold block mb-1">To</label>
+                        <div className="flex justify-between items-center bg-background/50 border border-border-custom rounded-lg px-3 py-2.5">
+                          <span className="text-white font-medium text-xs">Cash Account (Company Wallet)</span>
+                          <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[9px] font-bold px-2 py-0.5 rounded-full font-mono">₹ 0</span>
+                        </div>
+                      </div>
+                    </>
                   )}
 
                   <div>
