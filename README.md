@@ -48,6 +48,14 @@ SiteFlow is an outcome-driven, high-fidelity ERP workspace tailored to the India
 ### Finance & Compliance
 - **🧮 Subcontractor RA Billing**: Real-time invoice calculators with pre-tax/post-tax deduction priorities, automatic Indian GST and TDS presets (Section 194C, 194Q), and debit/credit note ledgers.
 - **💰 Finance & Cashbook**: Payment recording, ledger entries, P&L statements, bank account management, and payment request workflows.
+- **🛡️ Live Payment & Voucher Approval Gate**: Automatically routes recorded entries to a pending approval workspace. Executives can audit transaction receipts, verify ledger alignments, and approve vouchers with a single click.
+- **📑 14 Competitor Transaction Forms**:
+  - **Internal Transfer**: Supports Bank-to-Bank, Cash Deposit, and Cash Withdraw transfers with live cash wallet balance badges.
+  - **Credit / Debit Notes**: Reference invoice tracking, total amount cards, and automated item line inclusion.
+  - **Party to Party Payment**: Payment From/To double searchable input matching.
+  - **Equipment Expense**: High-fidelity scrolled forms covering Sub Total, Discount, GST selector, Net Amount (with Round Off check), Deductions, Paid Amount, and Balance Due calculations.
+  - **Material Transfer**: Material transfer tracking with project targets, E-Way Bill numbers, vehicle logs, and Transfer Out IDs.
+  - **Sub-Con Workorders**: Standalone subcontractor workorder modal with party selectors, Terms & Conditions links, and media attachments.
 - **📋 Statutory Reports**: PF, ESI, BOCW, TDS, Professional Tax, and Income Tax monthly return filing with contribution tracking and acknowledgment numbers.
 - **🧾 Purchase-to-Pay**: Material indents, multi-item purchase orders, goods receipt notes (GRN), inventory tracking, and approval gates.
 - **📉 Asset Depreciation**: Straight-line, reducing balance, and written-down-value depreciation schedules with monthly ledger entries.
