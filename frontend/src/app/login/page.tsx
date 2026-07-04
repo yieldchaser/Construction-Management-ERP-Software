@@ -185,7 +185,7 @@ export default function LoginPage() {
             S
           </div>
           <span className="text-xl font-bold tracking-tight text-white">
-            Site<span className="text-primary">Flow</span>
+            Site<span className="text-white">Flow</span>
           </span>
         </div>
 
@@ -197,12 +197,12 @@ export default function LoginPage() {
             </h1>
             
             <div className="space-y-2 border-l-2 border-primary/50 pl-4 py-1">
-              <p className="text-foreground text-lg italic leading-relaxed">
+              <p className="text-white/90 text-lg italic leading-relaxed">
                 "{currentTestimonial.quote}"
               </p>
               <div>
                 <h4 className="text-sm font-bold text-white mt-2">{currentTestimonial.name}</h4>
-                <p className="text-xs text-muted">{currentTestimonial.company}</p>
+                <p className="text-white/60 text-xs">{currentTestimonial.company}</p>
               </div>
             </div>
           </div>
@@ -224,7 +224,7 @@ export default function LoginPage() {
         {/* Footer brand logos */}
         <div className="flex flex-wrap items-center gap-x-8 gap-y-4 pt-8 border-t border-border-custom z-10">
           {LOGOS.map((l, idx) => (
-            <span key={idx} className="text-xs font-bold tracking-wider text-muted uppercase">
+            <span key={idx} className="text-xs font-bold tracking-wider text-white/50 uppercase">
               {l}
             </span>
           ))}
@@ -240,8 +240,8 @@ export default function LoginPage() {
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary font-bold text-white">
             S
           </div>
-          <span className="text-lg font-bold tracking-tight text-white">
-            Site<span className="text-primary">Flow</span>
+          <span className="text-lg font-bold tracking-tight text-foreground">
+            Site<span className="text-white">Flow</span>
           </span>
         </div>
 
@@ -262,7 +262,7 @@ export default function LoginPage() {
               </div>
             )}
             
-            <h2 className="text-3xl font-bold tracking-tight text-white">
+            <h2 className="text-3xl font-bold tracking-tight text-foreground">
               {step === "phone" ? "Login & Sign Up" : "Enter Verification Code"}
             </h2>
             <p className="text-muted text-sm">
@@ -294,7 +294,7 @@ export default function LoginPage() {
                     <button
                       type="button"
                       onClick={() => setIsCountryDropdownOpen(!isCountryDropdownOpen)}
-                      className="flex items-center gap-1.5 px-3 py-2 bg-elevated rounded-lg border border-border-custom text-sm font-semibold hover:bg-white/10 transition-all cursor-pointer text-white"
+                      className="flex items-center gap-1.5 px-3 py-2 bg-elevated rounded-lg border border-border-custom text-sm font-semibold hover:bg-elevated/80 transition-all cursor-pointer text-foreground"
                     >
                       <span>🇮🇳</span>
                       <span>{countryCode}</span>
@@ -332,7 +332,7 @@ export default function LoginPage() {
                     placeholder="Mobile Number"
                     required
                     disabled={loading}
-                    className="w-full bg-transparent px-4 py-2 text-base font-semibold tracking-wide placeholder-zinc-600 focus:outline-none text-white"
+                    className="w-full bg-transparent px-4 py-2 text-base font-semibold tracking-wide placeholder-muted focus:outline-none text-foreground"
                   />
                 </div>
               </div>
@@ -340,7 +340,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex justify-center items-center py-4 px-6 rounded-md text-white font-semibold bg-primary shadow-lg hover:opacity-90 active:scale-[0.98] transition-all duration-150 cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
+                className="w-full flex justify-center items-center py-2.5 px-6 rounded-md text-white font-medium bg-primary hover:bg-primary-hover shadow-sm transition-all duration-150 cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
               >
                 {loading ? "Sending OTP..." : "Next"}
               </button>
@@ -391,7 +391,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex justify-center items-center py-4 px-6 rounded-md text-white font-semibold bg-primary shadow-lg hover:opacity-90 active:scale-[0.98] transition-all duration-150 cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
+                className="w-full flex justify-center items-center py-2.5 px-6 rounded-md text-white font-medium bg-primary hover:bg-primary-hover shadow-sm transition-all duration-150 cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
               >
                 {loading ? "Verifying Code..." : "Verify & Log In"}
               </button>

@@ -128,28 +128,28 @@ export default function OnboardingPage() {
             S
           </div>
           <span className="text-xl font-bold tracking-tight text-white">
-            Site<span className="text-primary">Flow</span>
+            Site<span className="text-white">Flow</span>
           </span>
         </div>
 
         {/* Dynamic center layout graphic */}
         <div className="flex flex-1 flex-col justify-center items-start gap-6 z-10">
           <h1 className="text-4xl font-extrabold tracking-tight leading-tight text-white max-w-sm">
-            #1 Construction Application For <span className="text-primary font-semibold">Client invoicing.</span>
+            #1 Construction Application For <span className="text-white font-semibold">Client invoicing.</span>
           </h1>
           
           <div className="space-y-2 border-l-2 border-primary/50 pl-4 py-1">
-            <p className="text-muted text-sm italic">
+            <p className="text-white/80 text-sm italic">
               "Material tracking and department-wise roles assignment have become easy for us. There is no more material wastage and easy PO generation. Love this software."
             </p>
             <div>
               <h4 className="text-xs font-bold text-white">Rocks & logs stone works LLC</h4>
-              <p className="text-[10px] text-muted">Dubai, UAE</p>
+              <p className="text-[10px] text-white/50">Dubai, UAE</p>
             </div>
           </div>
         </div>
 
-        <div className="text-xs text-muted z-10">
+        <div className="text-xs text-white/40 z-10">
           © {new Date().getFullYear()} SiteFlow Inc. Onboarding Assistant.
         </div>
       </div>

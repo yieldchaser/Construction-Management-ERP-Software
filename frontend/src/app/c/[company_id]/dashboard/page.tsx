@@ -1119,7 +1119,7 @@ export default function DashboardPage() {
                     {/* Sales */}
                     <div className="bg-card border border-border-custom rounded-lg border border-border-custom rounded-lg p-5 space-y-4">
                       <h4 className="text-xs font-bold text-muted uppercase tracking-wider">Sales</h4>
-                      <div className="h-40 flex flex-col items-center justify-center border border-dashed border-border-custom rounded-md bg-black/10">
+                      <div className="h-40 flex flex-col items-center justify-center border border-dashed border-border-custom rounded-md bg-transparent">
                         <span className="text-red-500 text-xs font-semibold">No Data Available</span>
                       </div>
                       <div className="border-t border-border-custom pt-3 flex justify-between items-center text-xs">
@@ -1131,7 +1131,7 @@ export default function DashboardPage() {
                     {/* Expense */}
                     <div className="bg-card border border-border-custom rounded-lg border border-border-custom rounded-lg p-5 space-y-4">
                       <h4 className="text-xs font-bold text-muted uppercase tracking-wider">Expense</h4>
-                      <div className="h-40 flex items-center justify-center border border-dashed border-border-custom rounded-md bg-black/10 relative">
+                      <div className="h-40 flex items-center justify-center border border-dashed border-border-custom rounded-md bg-transparent relative">
                         {/* Custom SVG Bar Chart */}
                         <svg className="w-full h-full p-4" viewBox="0 0 200 100">
                           {/* Y-Axis Line */}
@@ -1159,7 +1159,7 @@ export default function DashboardPage() {
                     {/* Margin */}
                     <div className="bg-card border border-border-custom rounded-lg border border-border-custom rounded-lg p-5 space-y-4">
                       <h4 className="text-xs font-bold text-muted uppercase tracking-wider">Margin</h4>
-                      <div className="h-40 flex items-center justify-center border border-dashed border-border-custom rounded-md bg-black/10 relative">
+                      <div className="h-40 flex items-center justify-center border border-dashed border-border-custom rounded-md bg-transparent relative">
                         {/* Custom SVG Bar Chart */}
                         <svg className="w-full h-full p-4" viewBox="0 0 200 100">
                           <line x1="40" y1="10" x2="40" y2="80" stroke="var(--border)" strokeWidth="1" />
@@ -1186,7 +1186,7 @@ export default function DashboardPage() {
                     {/* Payments */}
                     <div className="bg-card border border-border-custom rounded-lg border border-border-custom rounded-lg p-5 space-y-4">
                       <h4 className="text-xs font-bold text-muted uppercase tracking-wider">Payments</h4>
-                      <div className="h-48 flex flex-col items-center justify-center border border-dashed border-border-custom rounded-md bg-black/10">
+                      <div className="h-48 flex flex-col items-center justify-center border border-dashed border-border-custom rounded-md bg-transparent">
                         <span className="text-red-500 text-xs font-semibold">No Data Available</span>
                       </div>
                     </div>
@@ -1194,7 +1194,7 @@ export default function DashboardPage() {
                     {/* Expense Type */}
                     <div className="bg-card border border-border-custom rounded-lg border border-border-custom rounded-lg p-5 space-y-4">
                       <h4 className="text-xs font-bold text-muted uppercase tracking-wider">Expense Type</h4>
-                      <div className="h-48 flex items-center justify-between border border-dashed border-border-custom rounded-md bg-black/10 p-4">
+                      <div className="h-48 flex items-center justify-between border border-dashed border-border-custom rounded-md bg-transparent p-4">
                         {/* Doughnut Chart */}
                         <div className="relative w-32 h-32">
                           <svg className="w-full h-full" viewBox="0 0 36 36">
@@ -1237,7 +1237,7 @@ export default function DashboardPage() {
                   {/* Party Balance */}
                   <div className="bg-card border border-border-custom rounded-lg border border-border-custom rounded-lg p-5 space-y-4">
                     <h4 className="text-xs font-bold text-muted uppercase tracking-wider">Company Party Balance (All Projects)</h4>
-                    <div className="h-32 flex flex-col items-center justify-center border border-dashed border-border-custom rounded-md bg-black/10">
+                    <div className="h-32 flex flex-col items-center justify-center border border-dashed border-border-custom rounded-md bg-transparent">
                       <span className="text-red-500 text-xs font-semibold">No Data Available</span>
                     </div>
                   </div>
