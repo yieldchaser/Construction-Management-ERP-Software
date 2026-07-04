@@ -184,7 +184,8 @@ export default function FinancePage() {
   const [selectedParty, setSelectedParty] = useState<string>("Yash Desai");
   const [showOpeningBalanceDrawer, setShowOpeningBalanceDrawer] = useState(false);
   const [openingBalanceType, setOpeningBalanceType] = useState<"pay" | "receive">("pay");
-  const [openingBalanceAmt, setOpeningBalanceAmt] = useState("8000");
+  const [openingBalances, setOpeningBalances] = useState<Record<string, number>>({ "Yash Desai": 8000 });
+  const [tempAmt, setTempAmt] = useState("8000");
   const [partySearchQuery, setPartySearchQuery] = useState("");
   const [partyFilter, setPartyFilter] = useState("Active");
 
@@ -651,7 +652,7 @@ export default function FinancePage() {
                   <div className="space-y-1 z-10">
                     <span className="text-[10px] font-bold text-emerald-400/80 uppercase tracking-wider block">Advance Paid</span>
                     <strong className="text-xl font-extrabold text-foreground tracking-tight block">
-                      ₹{openingBalanceType === "pay" ? parseInt(openingBalanceAmt).toLocaleString("en-IN") : "0"}
+                      ₹{Object.values(openingBalances).reduce((s, v) => s + v, 0).toLocaleString("en-IN")}
                     </strong>
                   </div>
                   <div className="h-9 w-9 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-400 z-10">
@@ -664,7 +665,7 @@ export default function FinancePage() {
                   <div className="space-y-1 z-10">
                     <span className="text-[10px] font-bold text-red-400/80 uppercase tracking-wider block">To Pay</span>
                     <strong className="text-xl font-extrabold text-foreground tracking-tight block">
-                      ₹{openingBalanceType === "receive" ? parseInt(openingBalanceAmt).toLocaleString("en-IN") : "0"}
+                      ₹{(openingBalanceType === "receive" ? Object.values(openingBalances).reduce((s, v) => s + v, 0) : 0).toLocaleString("en-IN")}
                     </strong>
                   </div>
                   <div className="h-9 w-9 rounded-full bg-red-500/10 flex items-center justify-center text-red-400 z-10">
@@ -733,8 +734,7 @@ export default function FinancePage() {
                       .filter(p => p.party.toLowerCase().includes(partySearchQuery.toLowerCase()))
                       .map(p => {
                         const isSelected = selectedParty === p.party;
-                        const isYash = p.party === "Yash Desai";
-                        const displayBal = isYash ? parseInt(openingBalanceAmt) : p.net_due;
+                        const displayBal = openingBalances[p.party] !== undefined ? openingBalances[p.party] : p.net_due;
                         
                         return (
                           <div
@@ -779,8 +779,8 @@ export default function FinancePage() {
                     const activeP = partyLedgers.find(p => p.party === selectedParty) || partyLedgers[0];
                     if (!activeP) return <div className="text-xs text-muted">No Party Selected</div>;
                     
+                    const netDueVal = openingBalances[activeP.party] !== undefined ? openingBalances[activeP.party] : activeP.net_due;
                     const isYash = activeP.party === "Yash Desai";
-                    const netDueVal = isYash ? parseInt(openingBalanceAmt) : activeP.net_due;
                     
                     return (
                       <div className="flex flex-col h-full justify-between">
@@ -850,9 +850,8 @@ export default function FinancePage() {
                             {/* Option 2: Opening Balance Trigger */}
                             <div
                               onClick={() => {
-                                if (isYash) {
-                                  setShowOpeningBalanceDrawer(true);
-                                }
+                                setTempAmt(String(netDueVal));
+                                setShowOpeningBalanceDrawer(true);
                               }}
                               className="p-4 border border-border-custom rounded-lg bg-input/50 flex justify-between items-center hover:bg-elevated/20 transition-all cursor-pointer"
                             >
@@ -864,7 +863,9 @@ export default function FinancePage() {
                                 </div>
                               </div>
                               <div className="flex items-center gap-2">
-                                <span className="text-[10px] text-primary font-bold">Party Will Pay</span>
+                                <span className="text-[10px] text-primary font-bold">
+                                  {openingBalanceType === "pay" ? "Party Will Pay" : "Party Will Get"}
+                                </span>
                                 <span className="text-xs text-muted">➔</span>
                               </div>
                             </div>
@@ -916,7 +917,10 @@ export default function FinancePage() {
                             Cancel
                           </button>
                           <button
-                            onClick={() => setShowOpeningBalanceDrawer(false)}
+                            onClick={() => {
+                              setOpeningBalances(prev => ({ ...prev, [selectedParty]: parseInt(tempAmt) || 0 }));
+                              setShowOpeningBalanceDrawer(false);
+                            }}
                             className="px-3 py-1 bg-primary hover:bg-primary/90 text-white text-xs font-semibold rounded"
                           >
                             Save
@@ -963,8 +967,8 @@ export default function FinancePage() {
                         </label>
                         <input
                           type="number"
-                          value={openingBalanceAmt}
-                          onChange={(e) => setOpeningBalanceAmt(e.target.value)}
+                          value={tempAmt}
+                          onChange={(e) => setTempAmt(e.target.value)}
                           className="w-full bg-input border border-border-custom rounded-md p-3 text-sm font-semibold text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20"
                         />
                       </div>
