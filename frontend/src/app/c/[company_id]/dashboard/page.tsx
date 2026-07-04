@@ -680,7 +680,7 @@ export default function DashboardPage() {
                             {segments.map(s => (
                               <div key={s.label} className="flex items-center justify-between px-3 py-2 rounded-lg bg-elevated border border-border-custom">
                                 <div className="flex items-center gap-2"><div className="h-2 w-2 rounded-full" style={{background:s.color}}/><span className="text-xs text-zinc-300">{s.label}</span></div>
-                                <span className="font-bold text-white font-mono text-sm">{s.value}</span>
+                                <span className="font-bold text-white font-sans text-sm">{s.value}</span>
                               </div>
                             ))}
                             <div className="flex justify-between px-3 py-1 text-[10px] text-muted"><span>Total Projects</span><span className="font-bold text-white">{total}</span></div>
@@ -763,7 +763,7 @@ export default function DashboardPage() {
                             <div className="text-[9px] text-muted uppercase tracking-wider font-bold">Project Health Count</div>
                             {segments.map(s => (
                               <div key={s.label} className="space-y-1">
-                                <div className="flex justify-between text-xs"><span className="text-muted">{s.label}</span><span className="font-bold font-mono" style={{color:s.color}}>{s.value}</span></div>
+                                <div className="flex justify-between text-xs"><span className="text-muted">{s.label}</span><span className="font-bold font-sans" style={{color:s.color}}>{s.value}</span></div>
                                 <div className="h-5 bg-elevated rounded overflow-hidden"><div className="h-full rounded transition-all" style={{width:`${(s.value/maxV)*100}%`,background:s.color,opacity:0.75}}/></div>
                               </div>
                             ))}
@@ -778,7 +778,7 @@ export default function DashboardPage() {
                       <div className="flex flex-wrap justify-between items-center gap-2 border-b border-border-custom pb-3">
                         <div className="flex items-center gap-3">
                           <h4 className="text-xs font-extrabold uppercase tracking-wider text-white">📊 Project Operational Summary</h4>
-                          <span className="text-[10px] px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 font-bold font-mono">Real-time Stats</span>
+                          <span className="text-[10px] px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 font-bold font-sans">Real-time Stats</span>
                         </div>
                       </div>
 
@@ -816,7 +816,7 @@ export default function DashboardPage() {
                                       <div className="w-16 bg-white/5 rounded-full h-1.5 overflow-hidden">
                                         <div className="bg-primary h-full rounded-full" style={{ width: `${prog}%` }} />
                                       </div>
-                                      <span className="font-mono text-[10px] text-muted">{prog}%</span>
+                                      <span className="font-sans text-[10px] text-muted">{prog}%</span>
                                     </div>
                                   </td>
                                   <td className="py-2.5 px-3 font-semibold text-white">{p.customer_name ?? "—"}</td>
@@ -1227,7 +1227,7 @@ export default function DashboardPage() {
                           <div className="flex items-center gap-2">
                             <input type="checkbox" checked readOnly className="accent-blue-500 rounded cursor-pointer" />
                             <span className="text-zinc-300">Debit Note</span>
-                            <span className="font-bold text-white font-mono ml-4">₹-1,000.00</span>
+                            <span className="font-bold text-white font-sans ml-4">₹-1,000.00</span>
                           </div>
                         </div>
                       </div>
@@ -1293,28 +1293,28 @@ export default function DashboardPage() {
                                     </span>
                                   )}
                                 </td>
-                                <td className="px-5 py-3.5 text-right font-mono text-zinc-300">
+                                <td className="px-5 py-3.5 text-right font-semibold text-zinc-300">
                                   {p.project_budget ? `₹${p.project_budget.toLocaleString("en-IN")}` : "0"}
                                 </td>
-                                <td className="px-5 py-3.5 text-right font-mono text-red-400">
+                                <td className="px-5 py-3.5 text-right font-semibold text-red-400">
                                   {p.total_expense ? `₹${p.total_expense.toLocaleString("en-IN")}` : "0"}
                                 </td>
-                                <td className="px-5 py-3.5 text-right font-mono text-zinc-300">
+                                <td className="px-5 py-3.5 text-right font-semibold text-zinc-300">
                                   {p.budget_remaining ? `₹${p.budget_remaining.toLocaleString("en-IN")}` : "0"}
                                 </td>
-                                <td className="px-5 py-3.5 text-right font-mono text-zinc-300">
+                                <td className="px-5 py-3.5 text-right font-semibold text-zinc-300">
                                   {p.total_sales ? `₹${p.total_sales.toLocaleString("en-IN")}` : "0"}
                                 </td>
-                                <td className="px-5 py-3.5 text-right font-mono text-emerald-400 font-bold">
+                                <td className="px-5 py-3.5 text-right font-bold text-emerald-400">
                                   {p.project_margin ? `₹${p.project_margin.toLocaleString("en-IN")}` : "0"}
                                 </td>
-                                <td className="px-5 py-3.5 text-right font-mono text-zinc-300">
+                                <td className="px-5 py-3.5 text-right font-semibold text-zinc-300">
                                   {p.payment_in ? `₹${p.payment_in.toLocaleString("en-IN")}` : "0"}
                                 </td>
-                                <td className="px-5 py-3.5 text-right font-mono text-zinc-300">
+                                <td className="px-5 py-3.5 text-right font-semibold text-zinc-300">
                                   {p.payment_out ? `₹${p.payment_out.toLocaleString("en-IN")}` : "0"}
                                 </td>
-                                <td className="px-5 py-3.5 text-right font-mono text-white font-extrabold">
+                                <td className="px-5 py-3.5 text-right font-extrabold text-white">
                                   {p.cash_balance ? `₹${p.cash_balance.toLocaleString("en-IN")}` : "0"}
                                 </td>
                               </tr>
