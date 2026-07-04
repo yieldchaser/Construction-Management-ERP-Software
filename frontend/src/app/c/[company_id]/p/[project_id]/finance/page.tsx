@@ -157,6 +157,18 @@ export default function FinancePage() {
   const [submitting, setSubmitting] = useState(false);
   const [photoUrl, setPhotoUrl] = useState<string>("");
 
+  // Dynamic Transaction Options matching competitor UI
+  const [addQtyRate, setAddQtyRate] = useState(false);
+  const [qty, setQty] = useState(1);
+  const [rate, setRate] = useState(0);
+  const [enableGst, setEnableGst] = useState(true);
+  const [gstPercent, setGstPercent] = useState("18");
+  const [items, setItems] = useState<{ id: string; name: string; qty: number; unit: string; rate: number }[]>([]);
+  const [discount, setDiscount] = useState(0);
+  const [addCharges, setAddCharges] = useState(0);
+  const [roundOff, setRoundOff] = useState(false);
+  const [billToShipTo, setBillToShipTo] = useState("Pune Site Office Address");
+
   // Bank Accounts & Payment Requests states
   const [bankAccounts, setBankAccounts] = useState<any[]>([]);
   const [paymentRequests, setPaymentRequests] = useState<any[]>([]);
@@ -1437,137 +1449,387 @@ export default function FinancePage() {
       {/* ── Add Voucher Drawer ── */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-end animate-fade-in" onClick={() => setShowAddModal(false)}>
-          <div className="bg-card w-full max-w-md h-full border-l border-border-custom shadow-2xl p-6 flex flex-col justify-between overflow-y-auto" onClick={e => e.stopPropagation()}>
+          <div className="bg-card w-full max-w-lg h-full border-l border-border-custom shadow-2xl p-6 flex flex-col justify-between overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div>
+              {/* Dynamic Header */}
               <div className="flex justify-between items-center border-b border-border-custom pb-4 mb-5">
                 <div>
-                  <h3 className="text-sm font-bold text-white uppercase tracking-wider">Payment</h3>
-                  <p className="text-[10px] text-muted font-mono mt-0.5">Prestige Developers</p>
+                  <h3 className="text-sm font-bold text-white uppercase tracking-wider">
+                    {["Other Expense", "Equipment Expense"].includes(selectedTxnType)
+                      ? "Add Expense"
+                      : ["Material Sales", "Sales Invoice"].includes(selectedTxnType)
+                      ? "Material Sales"
+                      : ["Material Purchase", "Material Return", "Material Transfer"].includes(selectedTxnType)
+                      ? "Material Purchase"
+                      : selectedTxnType}
+                  </h3>
+                  <p className="text-[10px] text-muted font-mono mt-0.5">PRESTIGE DEVELOPERS</p>
                 </div>
-                <button onClick={() => setShowAddModal(false)} className="text-muted hover:text-white text-lg cursor-pointer">✕</button>
+                <div className="flex items-center gap-3">
+                  <button onClick={() => setShowAddModal(false)} className="text-xs text-muted hover:text-white transition-colors cursor-pointer">Cancel</button>
+                  <button onClick={handleRecordPayment} className="bg-primary hover:bg-primary/90 text-white font-bold text-xs px-4 py-1.5 rounded-lg shadow transition-all cursor-pointer">Save</button>
+                </div>
               </div>
 
-              <form onSubmit={handleRecordPayment} className="space-y-4 text-xs font-sans">
-                <div className="flex justify-between items-center bg-background/50 border border-border-custom rounded-lg p-2.5">
-                  <span className="text-muted text-[10px] font-bold uppercase">Payment Date</span>
-                  <span className="text-white font-semibold font-mono">2026-07-05</span>
-                </div>
+              {/* Dynamic Form Content */}
+              {["Other Expense", "Equipment Expense"].includes(selectedTxnType) ? (
+                /* OTHER EXPENSES SCREEN (Screenshot 1) */
+                <div className="space-y-4 text-xs">
+                  <div className="flex justify-between items-center bg-background/50 border border-border-custom rounded-lg p-2.5">
+                    <div>
+                      <span className="text-muted text-[10px] font-bold uppercase block">Other Expenses</span>
+                      <span className="text-white font-semibold font-mono">05 Jul 2026 #OE-1</span>
+                    </div>
+                    <span className="text-muted cursor-pointer hover:text-white">✏️</span>
+                  </div>
 
-                <div>
-                  <label className="text-[10px] text-muted uppercase font-bold block mb-1">Party Name*</label>
-                  <div className="relative">
+                  <div>
+                    <label className="text-[10px] text-muted uppercase font-bold block mb-1">Party Name</label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={partyName}
+                        onChange={e => setPartyName(e.target.value)}
+                        placeholder="Search or select party..."
+                        className="w-full bg-background border border-border-custom rounded-lg pl-9 pr-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                      />
+                      <span className="absolute left-3 top-2.5 text-muted text-xs">🔍</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="addQtyRate"
+                      checked={addQtyRate}
+                      onChange={e => setAddQtyRate(e.target.checked)}
+                      className="accent-primary h-3.5 w-3.5"
+                    />
+                    <label htmlFor="addQtyRate" className="text-muted font-bold select-none cursor-pointer">Add Quantity and Unit Rate</label>
+                  </div>
+
+                  {addQtyRate && (
+                    <div className="grid grid-cols-2 gap-3 bg-background/25 border border-border-custom/50 rounded-lg p-3">
+                      <div>
+                        <label className="text-[9px] text-muted uppercase font-bold block mb-1">Quantity</label>
+                        <input
+                          type="number"
+                          value={qty}
+                          onChange={e => {
+                            const val = Number(e.target.value);
+                            setQty(val);
+                            setAmount((val * rate).toString());
+                          }}
+                          className="w-full bg-background border border-border-custom rounded-lg px-2.5 py-1.5 text-white text-xs font-mono"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[9px] text-muted uppercase font-bold block mb-1">Unit Rate (₹)</label>
+                        <input
+                          type="number"
+                          value={rate}
+                          onChange={e => {
+                            const val = Number(e.target.value);
+                            setRate(val);
+                            setAmount((qty * val).toString());
+                          }}
+                          className="w-full bg-background border border-border-custom rounded-lg px-2.5 py-1.5 text-white text-xs font-mono"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex gap-4">
+                    <span className="text-[10px] text-primary hover:underline font-bold cursor-pointer">+ Tag Task</span>
+                    <span className="text-[10px] text-primary hover:underline font-bold cursor-pointer">+ Tag Equipment</span>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] text-muted uppercase font-bold block mb-1">Sub Total</label>
+                    <input
+                      type="number"
+                      value={amount || "0"}
+                      onChange={e => setAmount(e.target.value)}
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white font-mono text-sm focus:outline-none focus:border-primary"
+                    />
+                  </div>
+
+                  <div className="flex gap-4">
+                    <span className="text-[10px] text-primary hover:underline font-bold cursor-pointer">+ Add Discount</span>
+                    <span className="text-[10px] text-primary hover:underline font-bold cursor-pointer">+ Add Additional Charges</span>
+                  </div>
+
+                  <div className="space-y-2 border-t border-border-custom/50 pt-3">
+                    <div className="flex items-center justify-between">
+                      <label className="flex items-center gap-2 cursor-pointer text-muted font-bold select-none">
+                        <input
+                          type="checkbox"
+                          checked={enableGst}
+                          onChange={e => setEnableGst(e.target.checked)}
+                          className="accent-primary h-3.5 w-3.5"
+                        />
+                        <span>Enable GST Percent</span>
+                      </label>
+                      {enableGst && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-muted">GST %</span>
+                          <select
+                            value={gstPercent}
+                            onChange={e => setGstPercent(e.target.value)}
+                            className="bg-background border border-border-custom rounded px-2 py-1 text-xs text-white focus:outline-none"
+                          >
+                            <option value="5">5%</option>
+                            <option value="12">12%</option>
+                            <option value="18">18%</option>
+                            <option value="28">28%</option>
+                          </select>
+                        </div>
+                      )}
+                    </div>
+                    {enableGst && (
+                      <div className="flex justify-between items-center bg-background/30 px-3 py-2 rounded-lg border border-border-custom/50">
+                        <span className="text-[10px] text-muted uppercase font-bold">GST Amount (₹)</span>
+                        <span className="font-mono text-white font-bold">
+                          {(Number(amount || 0) * (Number(gstPercent) / 100)).toFixed(2)}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="border-t border-b border-border-custom/50 py-3 flex justify-between items-center cursor-pointer hover:bg-elevated/20 px-2 rounded-lg transition-colors">
+                    <div>
+                      <span className="text-muted block text-[9px] uppercase font-bold">Add Cost Code</span>
+                      <span className="text-white font-semibold block text-xs mt-0.5">{costCode}</span>
+                    </div>
+                    <span className="text-muted text-xs">▶</span>
+                  </div>
+
+                  <div className="bg-elevated/20 border border-border-custom p-4 rounded-xl flex justify-between items-center">
+                    <div>
+                      <span className="text-[10px] text-muted uppercase font-bold block">Total Amount</span>
+                      <strong className="text-white text-base font-mono block mt-0.5">
+                        ₹{(Number(amount || 0) + (enableGst ? Number(amount || 0) * (Number(gstPercent) / 100) : 0)).toLocaleString("en-IN")}
+                      </strong>
+                    </div>
+                    <span className="text-emerald-400 font-extrabold text-[10px] bg-emerald-400/10 px-2.5 py-1 rounded-full border border-emerald-500/20">AUTO CALCULATED</span>
+                  </div>
+                </div>
+              ) : ["Material Sales", "Sales Invoice", "Material Purchase", "Material Return", "Material Transfer"].includes(selectedTxnType) ? (
+                /* MATERIAL SALES / PURCHASES SCREEN (Screenshot 2) */
+                <div className="space-y-4 text-xs">
+                  <div className="flex justify-between items-center bg-background/50 border border-border-custom rounded-lg p-2.5">
+                    <div>
+                      <span className="text-muted text-[10px] font-bold uppercase block">
+                        {["Material Sales", "Sales Invoice"].includes(selectedTxnType) ? "Client Party" : "Vendor Party"}
+                      </span>
+                      <span className="text-white font-semibold font-mono">05 Jul 2026 #MS-0</span>
+                    </div>
+                    <span className="text-muted cursor-pointer hover:text-white">✏️</span>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] text-muted uppercase font-bold block mb-1">
+                      {["Material Sales", "Sales Invoice"].includes(selectedTxnType) ? "Client Name" : "Vendor Name"}
+                    </label>
                     <input
                       type="text"
                       value={partyName}
                       onChange={e => setPartyName(e.target.value)}
-                      required
-                      placeholder="Search or specify vendor party..."
-                      className="w-full bg-background border border-border-custom rounded-lg pl-9 pr-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
-                    />
-                    <span className="absolute left-3 top-2.5 text-muted text-xs">🔍</span>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-[10px] text-muted uppercase font-bold block mb-1">Amount*</label>
-                  <input
-                    type="number"
-                    value={amount}
-                    onChange={e => setAmount(e.target.value)}
-                    required
-                    placeholder="0"
-                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs font-mono text-lg font-bold"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-[10px] text-muted uppercase font-bold block mb-1.5">Payment Method</label>
-                  <div className="flex gap-4">
-                    {["Cash", "Bank Transfer", "Cheque"].map((m) => (
-                      <label key={m} className="flex items-center gap-2 text-muted hover:text-white cursor-pointer select-none">
-                        <input
-                          type="radio"
-                          name="paymentMethod"
-                          defaultChecked={m === "Cash"}
-                          className="accent-primary"
-                        />
-                        <span>{m}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-[10px] text-muted uppercase font-bold block mb-1">Add Cost Code</label>
-                  <select
-                    value={costCode}
-                    onChange={e => setCostCode(e.target.value)}
-                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
-                  >
-                    <option value="1.2.1 Site Conveyance">Select Cost Code</option>
-                    <option value="1.2.1 Site Conveyance">1.2.1 Site Conveyance (Conveyance)</option>
-                    <option value="2.1 Raw Materials">2.1 Raw Materials (Cement/Steel)</option>
-                    <option value="3.5 Subcontractor Labours">3.5 Subcontractor Labours</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="text-[10px] text-muted uppercase font-bold block mb-1">Reference No.</label>
-                  <input
-                    type="text"
-                    value={refNum}
-                    onChange={e => setRefNum(e.target.value)}
-                    placeholder="e.g. PO number, cheque details"
-                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
-                  />
-                </div>
-
-                {["Debit Note", "Credit Note"].includes(selectedTxnType) && (
-                  <div>
-                    <label className="text-[10px] text-muted uppercase font-bold block mb-1">Reference Invoice ID*</label>
-                    <input
-                      type="text"
-                      value={refInvoice}
-                      onChange={e => setRefInvoice(e.target.value)}
-                      required
-                      placeholder="e.g. INV-2026-4412"
+                      placeholder="e.g. Skyline Towers PM, Sai Traders"
                       className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
                     />
                   </div>
-                )}
 
-                <div>
-                  <span className="text-[10px] text-primary hover:underline font-bold cursor-pointer block mb-2">More Details (Optional) ▽</span>
-                  <input
-                    type="text"
-                    value={desc}
-                    onChange={e => setDesc(e.target.value)}
-                    placeholder="Particulars or narration notes..."
-                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
-                  />
-                </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setItems([...items, { id: `item-${Date.now()}`, name: "Cement Bags (Grade 53)", qty: 50, unit: "Bags", rate: 420 }]);
+                      setAmount((50 * 420).toString());
+                    }}
+                    className="w-full py-2.5 border border-dashed border-primary/50 text-primary hover:bg-primary/5 font-bold rounded-lg text-xs transition-all"
+                  >
+                    + Add Item
+                  </button>
 
-                {/* Upload zone */}
-                <div>
-                  <label className="text-[10px] text-muted uppercase font-bold block mb-1">Attachments</label>
+                  {items.length > 0 && (
+                    <div className="border border-border-custom rounded-lg overflow-hidden bg-background/40">
+                      <div className="bg-background/80 border-b border-border-custom px-3 py-1.5 flex justify-between text-[9px] uppercase font-bold text-muted">
+                        <span>Item Name</span>
+                        <span>Total (₹)</span>
+                      </div>
+                      <div className="divide-y divide-border-custom">
+                        {items.map(item => (
+                          <div key={item.id} className="p-3 flex justify-between items-center text-xs">
+                            <div>
+                              <span className="font-semibold text-white block">{item.name}</span>
+                              <span className="text-[10px] text-muted">{item.qty} {item.unit} × ₹{item.rate}</span>
+                            </div>
+                            <span className="font-mono text-white font-bold">₹{(item.qty * item.rate).toLocaleString()}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="space-y-2 border-t border-border-custom/50 pt-3 font-sans">
+                    <div className="flex justify-between">
+                      <span className="text-muted">Item Subtotal</span>
+                      <span className="font-mono text-white">₹{Number(amount || 0).toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted">Tax (GST {gstPercent}%)</span>
+                      <span className="font-mono text-white">₹{(Number(amount || 0) * (Number(gstPercent) / 100)).toLocaleString()}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-4">
+                    <span className="text-[10px] text-primary hover:underline font-bold cursor-pointer">+ Discount</span>
+                    <span className="text-[10px] text-primary hover:underline font-bold cursor-pointer">+ Additional Charges</span>
+                  </div>
+
+                  <div className="flex items-center justify-between border-t border-border-custom/40 pt-2">
+                    <span className="text-xs font-bold text-white uppercase">Total Amount</span>
+                    <div className="flex items-center gap-3">
+                      <label className="flex items-center gap-1.5 cursor-pointer text-muted select-none">
+                        <input
+                          type="checkbox"
+                          checked={roundOff}
+                          onChange={e => setRoundOff(e.target.checked)}
+                          className="accent-primary"
+                        />
+                        <span className="text-[10px]">Round Off</span>
+                      </label>
+                      <strong className="text-white text-base font-mono">
+                        ₹{(Number(amount || 0) * (1 + Number(gstPercent) / 100)).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                      </strong>
+                    </div>
+                  </div>
+
+                  <div className="border border-border-custom rounded-xl p-3 bg-elevated/10 flex justify-between items-center text-xs">
+                    <div>
+                      <span className="text-muted block text-[9px] uppercase font-bold">Bill To / Ship To</span>
+                      <span className="text-white block font-semibold mt-0.5">{billToShipTo}</span>
+                    </div>
+                    <button type="button" className="text-primary hover:underline font-bold text-[10px]">View</button>
+                  </div>
+
+                  {/* Upload zone */}
                   <div className="border border-dashed border-border-custom hover:border-primary/50 transition-all rounded-lg p-5 flex flex-col items-center justify-center bg-background cursor-pointer">
                     <span className="text-base mb-1">📤</span>
                     <span className="text-[11px] text-muted font-medium">Upload Files</span>
-                    <span className="text-[8px] text-muted/60 mt-0.5">PDF, images or doc receipts</span>
                   </div>
                 </div>
-              </form>
-            </div>
+              ) : (
+                /* DEFAULT PAYMENTS / STANDARD VOUCHER DRAWER */
+                <form onSubmit={handleRecordPayment} className="space-y-4 text-xs font-sans">
+                  <div className="flex justify-between items-center bg-background/50 border border-border-custom rounded-lg p-2.5">
+                    <span className="text-muted text-[10px] font-bold uppercase">Payment Date</span>
+                    <span className="text-white font-semibold font-mono">2026-07-05</span>
+                  </div>
 
-            <div className="flex gap-3 mt-8 pt-4 border-t border-border-custom">
-              <button
-                onClick={handleRecordPayment}
-                disabled={submitting}
-                className="flex-1 py-2.5 bg-primary text-white font-bold rounded-lg hover:bg-primary/95 text-xs transition-all"
-              >
-                {submitting ? "Saving..." : "Save"}
-              </button>
-              <button onClick={() => setShowAddModal(false)} className="px-4 py-2.5 rounded-lg border border-border-custom text-muted hover:text-white hover:border-white/20 text-xs">Cancel</button>
+                  <div>
+                    <label className="text-[10px] text-muted uppercase font-bold block mb-1">Party Name*</label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={partyName}
+                        onChange={e => setPartyName(e.target.value)}
+                        required
+                        placeholder="Search or specify vendor party..."
+                        className="w-full bg-background border border-border-custom rounded-lg pl-9 pr-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                      />
+                      <span className="absolute left-3 top-2.5 text-muted text-xs">🔍</span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] text-muted uppercase font-bold block mb-1">Amount*</label>
+                    <input
+                      type="number"
+                      value={amount}
+                      onChange={e => setAmount(e.target.value)}
+                      required
+                      placeholder="0"
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs font-mono text-lg font-bold"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] text-muted uppercase font-bold block mb-1.5">Payment Method</label>
+                    <div className="flex gap-4">
+                      {["Cash", "Bank Transfer", "Cheque"].map((m) => (
+                        <label key={m} className="flex items-center gap-2 text-muted hover:text-white cursor-pointer select-none">
+                          <input
+                            type="radio"
+                            name="paymentMethod"
+                            defaultChecked={m === "Cash"}
+                            className="accent-primary"
+                          />
+                          <span>{m}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] text-muted uppercase font-bold block mb-1">Add Cost Code</label>
+                    <select
+                      value={costCode}
+                      onChange={e => setCostCode(e.target.value)}
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                    >
+                      <option value="1.2.1 Site Conveyance">Select Cost Code</option>
+                      <option value="1.2.1 Site Conveyance">1.2.1 Site Conveyance (Conveyance)</option>
+                      <option value="2.1 Raw Materials">2.1 Raw Materials (Cement/Steel)</option>
+                      <option value="3.5 Subcontractor Labours">3.5 Subcontractor Labours</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] text-muted uppercase font-bold block mb-1">Reference No.</label>
+                    <input
+                      type="text"
+                      value={refNum}
+                      onChange={e => setRefNum(e.target.value)}
+                      placeholder="e.g. PO number, cheque details"
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                    />
+                  </div>
+
+                  {["Debit Note", "Credit Note"].includes(selectedTxnType) && (
+                    <div>
+                      <label className="text-[10px] text-muted uppercase font-bold block mb-1">Reference Invoice ID*</label>
+                      <input
+                        type="text"
+                        value={refInvoice}
+                        onChange={e => setRefInvoice(e.target.value)}
+                        required
+                        placeholder="e.g. INV-2026-4412"
+                        className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                      />
+                    </div>
+                  )}
+
+                  <div>
+                    <span className="text-[10px] text-primary hover:underline font-bold cursor-pointer block mb-2">More Details (Optional) ▽</span>
+                    <input
+                      type="text"
+                      value={desc}
+                      onChange={e => setDesc(e.target.value)}
+                      placeholder="Narration details..."
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] text-muted uppercase font-bold block mb-1">Attachments</label>
+                    <div className="border border-dashed border-border-custom hover:border-primary/50 transition-all rounded-lg p-5 flex flex-col items-center justify-center bg-background cursor-pointer">
+                      <span className="text-base mb-1">📤</span>
+                      <span className="text-[11px] text-muted font-medium">Upload Files</span>
+                    </div>
+                  </div>
+                </form>
+              )}
             </div>
           </div>
         </div>
