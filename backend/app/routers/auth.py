@@ -16,11 +16,6 @@ def _ensure_demo_company(db: Session) -> models.Company:
     if company:
         return company
 
-    existing = db.query(models.Company).first()
-    if existing:
-        db.query(models.Company).delete()
-        db.commit()
-
     company = models.Company(
         id=DEMO_COMPANY_ID,
         name="Demo Construction Ltd",
