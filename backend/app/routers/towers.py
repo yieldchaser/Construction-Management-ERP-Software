@@ -39,6 +39,15 @@ class TowerCreateRequest(BaseModel):
     budget: float = 0.0
 
 
+class TowerUpdateRequest(BaseModel):
+    tower_name: Optional[str] = None
+    tower_code: Optional[str] = None
+    status: Optional[str] = None
+    start_date: Optional[datetime] = None
+    end_date: Optional[datetime] = None
+    budget: Optional[float] = None
+
+
 class ConsolidatedPNLItem(BaseModel):
     tower_id: UUID
     tower_name: str
@@ -95,6 +104,41 @@ def create_tower(req: TowerCreateRequest, db: Session = Depends(get_db)):
         budget=float(tower.budget),
         created_at=tower.created_at,
     )
+
+
+@router.patch("/{tower_id}", response_model=ProjectTowerResponse)
+def update_tower(tower_id: UUID, req: TowerUpdateRequest, db: Session = Depends(get_db)):
+    tower = db.query(ProjectTower).filter(ProjectTower.id == tower_id).first()
+    if not tower:
+        raise HTTPException(status_code=404, detail="Tower not found")
+
+    update_data = req.model_dump(exclude_unset=True)
+    for field, val in update_data.items():
+        setattr(tower, field, val)
+
+    db.commit()
+    db.refresh(tower)
+    return ProjectTowerResponse(
+        id=tower.id,
+        project_id=tower.project_id,
+        tower_name=tower.tower_name,
+        tower_code=tower.tower_code,
+        status=tower.status,
+        start_date=tower.start_date,
+        end_date=tower.end_date,
+        budget=float(tower.budget),
+        created_at=tower.created_at,
+    )
+
+
+@router.delete("/{tower_id}", status_code=204)
+def delete_tower(tower_id: UUID, db: Session = Depends(get_db)):
+    tower = db.query(ProjectTower).filter(ProjectTower.id == tower_id).first()
+    if not tower:
+        raise HTTPException(status_code=404, detail="Tower not found")
+    db.delete(tower)
+    db.commit()
+    return None
 
 
 @router.get("/{project_id}/consolidated-pnl", response_model=List[ConsolidatedPNLItem])

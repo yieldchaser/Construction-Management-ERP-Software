@@ -232,6 +232,7 @@ SiteFlow features a state-of-the-art **glassmorphic canvas** with full support f
 ### 3. Project Modules (`/c/[company_id]/p/[project_id]/`)
 - **Attendance & Payroll (`/attendance`)**: GPS geofenced punch-in/out, Haversine validation, offline backup, multi-language support, shift multipliers, overtime calculations.
 - **Subcontractor Billing (`/billing`)**: Real-time RA bill calculator, pre-tax/post-tax deduction modes, Indian GST/TDS presets, debit/credit notes ledger, work order amendment version control, tower-wise P&L breakdown.
+- **Towers & Phases (`/towers`)**: Multi-tower/project-phase management with individual budgets, status tracking, and consolidated P&L per tower/phase for developer clients.
 - **Subcontractor Performance (`/subcon/scorecards`)**: Performance scorecards with on-time delivery %, billing accuracy %, quality score, and cross-subcontractor comparative analysis.
 - **CRM (`/crm`)**: Lead pipeline, client registry, quotation creation and lifecycle management.
 - **Planning & Gantt (`/planning/gantt`)**: Interactive WBS timeline, CPM scheduling, task float calculations.
