@@ -12,12 +12,12 @@ DEMO_COMPANY_ID = "e0000000-0000-0000-0000-000000000000"
 
 
 def _ensure_demo_company(db: Session) -> models.Company:
-    company = db.query(models.Company).filter(models.Company.id == DEMO_COMPANY_ID).first()
+    company = db.query(models.Company).filter(models.Company.id == uuid.UUID(DEMO_COMPANY_ID)).first()
     if company:
         return company
 
     company = models.Company(
-        id=DEMO_COMPANY_ID,
+        id=uuid.UUID(DEMO_COMPANY_ID),
         name="Demo Construction Ltd",
         legal_business_name="Demo Construction India Private Limited",
         gstin="27AADCD2424B1ZP",
@@ -85,7 +85,7 @@ def verify_otp(request: OTPVerifyRequest, db: Session = Depends(get_db)):
         db.refresh(team_member)
     else:
         if str(team_member.company_id) != DEMO_COMPANY_ID:
-            team_member.company_id = DEMO_COMPANY_ID
+            team_member.company_id = uuid.UUID(DEMO_COMPANY_ID)
             db.commit()
             db.refresh(team_member)
 
