@@ -115,12 +115,21 @@ export default function AttendancePage() {
   // Project Settings Modal State
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isSavingSettings, setIsSavingSettings] = useState(false);
+  const [settingsTab, setSettingsTab] = useState<"details" | "members" | "location">("details");
   const [projectSettings, setProjectSettings] = useState({
     name: "",
     code: "",
-    address: "",
-    city: "",
-    attendance_radius_meters: 500
+    address: "Pune, Pune",
+    city: "Pune",
+    attendance_radius_meters: 500,
+    stage: "Ongoing",
+    category: "Residential",
+    start_date: "2026-01-01",
+    end_date: "2026-12-31",
+    company_branch: "Select Company Address",
+    value: 0,
+    orientation: "North-Facing",
+    dimension: "50x120"
   });
 
   const fetchProjectSettings = async () => {
@@ -967,7 +976,7 @@ export default function AttendancePage() {
       {/* Project Settings Modal */}
       {isSettingsModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-card border border-border-custom rounded-lg w-full max-w-xl shadow-2xl overflow-hidden">
+          <div className="bg-card border border-border-custom rounded-lg w-full max-w-2xl shadow-2xl overflow-hidden">
             {/* Header */}
             <div className="p-6 border-b border-border-custom flex items-center justify-between bg-white/[0.01]">
               <div>
@@ -979,122 +988,214 @@ export default function AttendancePage() {
 
             {/* Modal Tabs */}
             <div className="px-6 py-3 border-b border-border-custom flex items-center gap-4 bg-elevated">
-              <span className="text-xs font-bold text-primary border-b-2 border-primary pb-1">Project Details</span>
-              <span className="text-xs font-bold text-muted cursor-not-allowed">Members</span>
-              <span className="text-xs font-bold text-muted cursor-not-allowed">Location Structure</span>
+              <span
+                onClick={() => setSettingsTab("details")}
+                className={`text-xs font-bold pb-1 cursor-pointer transition-all ${
+                  settingsTab === "details" ? "text-primary border-b-2 border-primary" : "text-muted hover:text-foreground"
+                }`}
+              >
+                Project Details
+              </span>
+              <span
+                onClick={() => setSettingsTab("members")}
+                className={`text-xs font-bold pb-1 cursor-pointer transition-all ${
+                  settingsTab === "members" ? "text-primary border-b-2 border-primary" : "text-muted hover:text-foreground"
+                }`}
+              >
+                Members
+              </span>
+              <span
+                onClick={() => setSettingsTab("location")}
+                className={`text-xs font-bold pb-1 cursor-pointer transition-all ${
+                  settingsTab === "location" ? "text-primary border-b-2 border-primary" : "text-muted hover:text-foreground"
+                }`}
+              >
+                Location Structure
+              </span>
             </div>
 
             {/* Grid Content */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-6 max-h-[60vh] overflow-y-auto">
-              {/* Form Column */}
-              <div className="md:col-span-2 space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="text-[11px] text-muted font-medium">Project Code</label>
-                    <input
-                      type="text"
-                      value={projectSettings.code || ""}
-                      onChange={(e) => setProjectSettings({ ...projectSettings, code: e.target.value })}
-                      className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-white"
-                    />
+            <div className="p-6 max-h-[60vh] overflow-y-auto">
+              {settingsTab === "details" && (
+                <div className="flex flex-col md:flex-row gap-6">
+                  {/* Left Column Avatar */}
+                  <div className="flex flex-col items-center md:items-start shrink-0">
+                    <div className="h-16 w-16 bg-primary rounded-xl flex items-center justify-center text-white text-lg font-bold shadow-md shadow-primary/20">
+                      PD
+                    </div>
+                    <span className="text-[9px] text-muted font-bold uppercase mt-2 block">PROJECT BRAND</span>
                   </div>
-                  <div className="space-y-1">
-                    <label className="text-[11px] text-muted font-medium">Project Name</label>
-                    <input
-                      type="text"
-                      value={projectSettings.name || ""}
-                      onChange={(e) => setProjectSettings({ ...projectSettings, name: e.target.value })}
-                      className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-white"
-                    />
-                  </div>
-                </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="text-[11px] text-muted font-medium">Project Stage</label>
-                    <select className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-white">
-                      <option>Ongoing</option>
-                      <option>Planning</option>
-                      <option>On Hold</option>
-                      <option>Completed</option>
-                    </select>
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[11px] text-muted font-medium">Project Category</label>
-                    <select className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-white">
-                      <option>Infrastructure</option>
-                      <option>Residential</option>
-                      <option>Commercial</option>
-                    </select>
-                  </div>
-                </div>
+                  {/* Form Column */}
+                  <div className="flex-1 space-y-4 text-xs">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="text-[10px] text-muted uppercase font-bold">Project Code</label>
+                        <input
+                          type="text"
+                          value={projectSettings.code || ""}
+                          onChange={(e) => setProjectSettings({ ...projectSettings, code: e.target.value })}
+                          className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] text-muted uppercase font-bold">Project Name</label>
+                        <input
+                          type="text"
+                          value={projectSettings.name || ""}
+                          onChange={(e) => setProjectSettings({ ...projectSettings, name: e.target.value })}
+                          className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                        />
+                      </div>
+                    </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="text-[11px] text-muted font-medium">Start Date</label>
-                    <input type="date" defaultValue="2026-01-01" className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-white font-mono" />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[11px] text-muted font-medium">End Date</label>
-                    <input type="date" defaultValue="2026-12-31" className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-white font-mono" />
-                  </div>
-                </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="text-[10px] text-muted uppercase font-bold">Project Stage</label>
+                        <select
+                          value={projectSettings.stage}
+                          onChange={(e) => setProjectSettings({ ...projectSettings, stage: e.target.value })}
+                          className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                        >
+                          <option value="Ongoing">Ongoing</option>
+                          <option value="Planning">Planning</option>
+                          <option value="On Hold">On Hold</option>
+                          <option value="Completed">Completed</option>
+                        </select>
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] text-muted uppercase font-bold">Project Category</label>
+                        <select
+                          value={projectSettings.category}
+                          onChange={(e) => setProjectSettings({ ...projectSettings, category: e.target.value })}
+                          className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                        >
+                          <option value="Residential">Residential</option>
+                          <option value="Commercial">Commercial</option>
+                          <option value="Infrastructure">Infrastructure</option>
+                        </select>
+                      </div>
+                    </div>
 
-                <div className="space-y-1">
-                  <label className="text-[11px] text-muted font-medium">Project Address</label>
-                  <input
-                    type="text"
-                    value={projectSettings.address || ""}
-                    onChange={(e) => setProjectSettings({ ...projectSettings, address: e.target.value })}
-                    className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-white"
-                  />
-                </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="text-[10px] text-muted uppercase font-bold">Start Date</label>
+                        <input
+                          type="date"
+                          value={projectSettings.start_date}
+                          onChange={(e) => setProjectSettings({ ...projectSettings, start_date: e.target.value })}
+                          className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs font-mono"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] text-muted uppercase font-bold">End Date</label>
+                        <input
+                          type="date"
+                          value={projectSettings.end_date}
+                          onChange={(e) => setProjectSettings({ ...projectSettings, end_date: e.target.value })}
+                          className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs font-mono"
+                        />
+                      </div>
+                    </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="text-[11px] text-muted font-medium">Attendance Radius (meters)</label>
-                    <input
-                      type="number"
-                      value={projectSettings.attendance_radius_meters || 500}
-                      onChange={(e) => setProjectSettings({ ...projectSettings, attendance_radius_meters: Number(e.target.value) })}
-                      className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-white"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[11px] text-muted font-medium">Project Value</label>
-                    <input type="number" defaultValue="0" className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-white" />
-                  </div>
-                </div>
-              </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] text-muted uppercase font-bold">Project Address</label>
+                      <textarea
+                        value={projectSettings.address}
+                        onChange={(e) => setProjectSettings({ ...projectSettings, address: e.target.value })}
+                        rows={2}
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs resize-none"
+                      />
+                    </div>
 
-              {/* Live Geofence Circular Visualizer Column */}
-              <div className="flex flex-col items-center justify-center bg-input/40 border border-border-custom rounded-md p-4 text-center space-y-4">
-                <span className="text-[10px] uppercase font-bold text-muted tracking-wider">Live Geofence Boundary</span>
-                <div className="relative w-40 h-40 rounded-full border border-border-custom flex items-center justify-center bg-black/20 overflow-hidden">
-                  <div 
-                    className="absolute rounded-full bg-primary/10 border border-primary/40 animate-ping"
-                    style={{ 
-                      width: `${Math.min(100, Math.max(20, (projectSettings.attendance_radius_meters || 500) / 10))}%`, 
-                      height: `${Math.min(100, Math.max(20, (projectSettings.attendance_radius_meters || 500) / 10))}%`,
-                      animationDuration: '3s'
-                    }} 
-                  />
-                  <div 
-                    className="absolute rounded-full bg-primary/25 border border-primary/50 transition-all duration-300"
-                    style={{ 
-                      width: `${Math.min(100, Math.max(20, (projectSettings.attendance_radius_meters || 500) / 10))}%`, 
-                      height: `${Math.min(100, Math.max(20, (projectSettings.attendance_radius_meters || 500) / 10))}%` 
-                    }} 
-                  />
-                  <div className="h-3 w-3 rounded-full bg-primary z-10 shadow-lg shadow-primary/50" />
-                  <span className="absolute bottom-2 text-[9px] font-mono text-primary font-bold">
-                    {projectSettings.attendance_radius_meters || 500}m Limit
-                  </span>
+                    <div className="space-y-1">
+                      <label className="text-[10px] text-muted uppercase font-bold">Company Branch</label>
+                      <select
+                        value={projectSettings.company_branch}
+                        onChange={(e) => setProjectSettings({ ...projectSettings, company_branch: e.target.value })}
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                      >
+                        <option value="Select Company Address">Select Company Address</option>
+                        <option value="Pune Main Office">Pune Main Office (Branch #1)</option>
+                        <option value="Mumbai Central">Mumbai Central (Branch #2)</option>
+                      </select>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="text-[10px] text-muted uppercase font-bold">Attendance Radius (meters)</label>
+                        <input
+                          type="number"
+                          value={projectSettings.attendance_radius_meters}
+                          onChange={(e) => setProjectSettings({ ...projectSettings, attendance_radius_meters: Number(e.target.value) })}
+                          className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] text-muted uppercase font-bold">Project Value (₹)</label>
+                        <input
+                          type="number"
+                          value={projectSettings.value}
+                          onChange={(e) => setProjectSettings({ ...projectSettings, value: Number(e.target.value) })}
+                          className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs font-mono"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="text-[10px] text-muted uppercase font-bold">Project Orientation</label>
+                        <input
+                          type="text"
+                          value={projectSettings.orientation}
+                          onChange={(e) => setProjectSettings({ ...projectSettings, orientation: e.target.value })}
+                          placeholder="e.g. North-Facing"
+                          className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] text-muted uppercase font-bold">Project Dimension</label>
+                        <input
+                          type="text"
+                          value={projectSettings.dimension}
+                          onChange={(e) => setProjectSettings({ ...projectSettings, dimension: e.target.value })}
+                          placeholder="e.g. 50x120"
+                          className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <p className="text-[10px] text-muted leading-relaxed max-w-xs">
-                  GPS punches are matched against this dynamic visual limit.
-                </p>
-              </div>
+              )}
+
+              {settingsTab === "members" && (
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] text-muted font-bold uppercase tracking-wider">Authorized Team Members</span>
+                    <button className="bg-primary hover:bg-primary/95 text-white font-bold text-[10px] px-3 py-1.5 rounded-lg transition-all">+ Add Member</button>
+                  </div>
+                  <div className="divide-y divide-border-custom/50 bg-elevated/20 border border-border-custom rounded-xl p-3 text-xs">
+                    <div className="py-2 flex justify-between">
+                      <span className="font-semibold text-white">Yash Desai</span>
+                      <span className="text-muted">Administrator</span>
+                    </div>
+                    <div className="py-2 flex justify-between">
+                      <span className="font-semibold text-white">Ramesh Sharma</span>
+                      <span className="text-muted">Site Engineer</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {settingsTab === "location" && (
+                <div className="space-y-4 text-center py-6">
+                  <span className="text-3xl">📍</span>
+                  <h4 className="text-xs font-bold text-white uppercase tracking-wider">Geofence Boundary Map</h4>
+                  <p className="text-[10px] text-muted max-w-xs mx-auto leading-relaxed">
+                    Geofencing matches GPS punch coordinates to project boundaries within a {projectSettings.attendance_radius_meters}m radius limit.
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Footer */}

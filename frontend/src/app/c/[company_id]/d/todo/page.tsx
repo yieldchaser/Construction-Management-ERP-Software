@@ -68,6 +68,13 @@ export default function ToDoPage() {
   const [newProject, setNewProject] = useState("Skyline Towers");
   const [newType, setNewType] = useState("General");
 
+  // Repeat Settings Modal State
+  const [isRepeatModalOpen, setIsRepeatModalOpen] = useState(false);
+  const [repeatType, setRepeatType] = useState<"weekdays" | "everyday" | "monthdays">("weekdays");
+  const [selectedWeekdays, setSelectedWeekdays] = useState<string[]>(["W"]);
+  const [endsOption, setEndsOption] = useState<"6months" | "date">("6months");
+  const [endsDate, setEndsDate] = useState("2026-12-05");
+
   const apiHost = getApiHost();
 
   useEffect(() => {
@@ -275,7 +282,7 @@ export default function ToDoPage() {
       {/* New To Do Drawer Modal */}
       {isNewTodoOpen && (
         <div className="fixed inset-0 bg-background/80 flex items-center justify-center z-50 p-4">
-          <div className="w-full max-w-md bg-card border border-border-custom rounded-lg overflow-hidden shadow-lg animate-in fade-in zoom-in-95 duration-150">
+          <div className="w-full max-w-md bg-card border border-border-custom rounded-lg overflow-hidden shadow-lg animate-in fade-in zoom-in-95 duration-150 relative">
             <div className="p-6 border-b border-border-custom flex justify-between items-center">
               <h3 className="text-sm font-bold text-white uppercase tracking-wider">Add New To Do</h3>
               <button onClick={() => setIsNewTodoOpen(false)} className="text-muted hover:text-foreground font-bold">×</button>
@@ -345,6 +352,23 @@ export default function ToDoPage() {
                 </div>
               </div>
 
+              {/* Repeat Settings Trigger */}
+              <div className="pt-2 flex items-center justify-between">
+                <div>
+                  <span className="text-xs text-muted block">Repeat Status</span>
+                  <span className="text-[10px] text-primary font-bold">
+                    {repeatType === "weekdays" ? `Every ${selectedWeekdays.join(", ")}` : repeatType === "everyday" ? "Daily task" : "Monthly task"}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsRepeatModalOpen(true)}
+                  className="px-3 py-1 bg-elevated border border-border-custom hover:bg-elevated/80 text-foreground text-xs font-semibold rounded-lg transition-all"
+                >
+                  ⚙️ Repeat Settings
+                </button>
+              </div>
+
               <button
                 type="submit"
                 className="w-full py-2 bg-primary hover:bg-primary-hover text-white font-medium text-sm rounded-md shadow-sm transition-all mt-4 cursor-pointer"
@@ -352,6 +376,125 @@ export default function ToDoPage() {
                 Save To Do
               </button>
             </form>
+
+            {/* Repeat Settings Child Modal Overlay (Screenshot 4) */}
+            {isRepeatModalOpen && (
+              <div className="absolute inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                <div className="bg-card border border-border-custom w-full max-w-sm rounded-xl p-5 space-y-4">
+                  <div className="flex justify-between items-center pb-2 border-b border-border-custom">
+                    <h4 className="text-xs font-bold text-white uppercase tracking-wider">Repeat Settings</h4>
+                    <button type="button" onClick={() => setIsRepeatModalOpen(false)} className="text-muted hover:text-white font-bold">✕</button>
+                  </div>
+
+                  <div className="space-y-4 text-xs">
+                    {/* Repeat Types */}
+                    <div className="flex gap-4">
+                      <label className="flex items-center gap-2 cursor-pointer text-muted hover:text-white select-none">
+                        <input
+                          type="radio"
+                          name="repeatType"
+                          checked={repeatType === "weekdays"}
+                          onChange={() => setRepeatType("weekdays")}
+                          className="accent-primary"
+                        />
+                        <span>Week Days</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer text-muted hover:text-white select-none">
+                        <input
+                          type="radio"
+                          name="repeatType"
+                          checked={repeatType === "everyday"}
+                          onChange={() => setRepeatType("everyday")}
+                          className="accent-primary"
+                        />
+                        <span>Everyday</span>
+                      </label>
+                    </div>
+
+                    {/* Weekdays Selector */}
+                    {repeatType === "weekdays" && (
+                      <div className="space-y-2">
+                        <span className="text-[10px] text-muted uppercase font-bold block">Week Days</span>
+                        <div className="flex justify-between gap-1">
+                          {["S", "M", "T", "W", "T", "F", "S"].map((day, idx) => {
+                            const isSel = selectedWeekdays.includes(day);
+                            return (
+                              <button
+                                type="button"
+                                key={idx}
+                                onClick={() => {
+                                  if (isSel) {
+                                    setSelectedWeekdays(selectedWeekdays.filter(d => d !== day));
+                                  } else {
+                                    setSelectedWeekdays([...selectedWeekdays, day]);
+                                  }
+                                }}
+                                className={`w-8 h-8 rounded-full text-xs font-bold transition-all ${
+                                  isSel ? "bg-primary text-white" : "bg-elevated hover:bg-elevated/80 text-muted"
+                                }`}
+                              >
+                                {day}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Ends settings */}
+                    <div className="space-y-3 pt-2 border-t border-border-custom/50">
+                      <span className="text-[10px] text-muted uppercase font-bold block">Ends</span>
+                      <div className="space-y-2">
+                        <label className="flex items-center gap-2 cursor-pointer text-muted hover:text-white select-none">
+                          <input
+                            type="radio"
+                            name="endsOption"
+                            checked={endsOption === "6months"}
+                            onChange={() => setEndsOption("6months")}
+                            className="accent-primary"
+                          />
+                          <span>End In 6 Months <span className="text-muted/65 font-mono ml-2">(05 Dec 2026)</span></span>
+                        </label>
+
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="radio"
+                            name="endsOption"
+                            checked={endsOption === "date"}
+                            onChange={() => setEndsOption("date")}
+                            className="accent-primary"
+                          />
+                          <span className="text-muted mr-2">End till</span>
+                          <input
+                            type="date"
+                            value={endsDate}
+                            onChange={(e) => setEndsDate(e.target.value)}
+                            className="bg-background border border-border-custom rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-primary font-mono"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 justify-end pt-3 border-t border-border-custom">
+                    <button
+                      type="button"
+                      onClick={() => setIsRepeatModalOpen(false)}
+                      className="px-3.5 py-1.5 bg-zinc-800 text-muted hover:text-white rounded-lg text-xs"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsRepeatModalOpen(false)}
+                      className="px-4 py-1.5 bg-primary text-white font-bold rounded-lg text-xs hover:opacity-90"
+                    >
+                      Save
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

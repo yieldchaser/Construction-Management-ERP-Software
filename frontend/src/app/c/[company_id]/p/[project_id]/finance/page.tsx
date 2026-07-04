@@ -520,13 +520,27 @@ export default function FinancePage() {
             </h1>
             <p className="text-[10px] text-muted">Real-time sequential approval tracking & running balance ledger</p>
           </div>
-          <div className="relative">
+          <div className="flex items-center gap-4 relative">
+            {/* Unbilled Materials Badge */}
+            <div className="hidden sm:flex items-center gap-1.5 cursor-pointer hover:bg-elevated/40 px-2.5 py-1.5 rounded-lg border border-border-custom/50">
+              <span className="text-xs">🛒</span>
+              <span className="text-[10px] text-muted uppercase font-bold tracking-wider">Unbilled Materials</span>
+              <span className="bg-primary/20 text-primary border border-primary/30 text-[9px] font-bold px-1.5 py-0.5 rounded-full">0</span>
+            </div>
+
+            {/* Pending Entries Badge */}
+            <div className="hidden sm:flex items-center gap-1.5 cursor-pointer hover:bg-elevated/40 px-2.5 py-1.5 rounded-lg border border-border-custom/50">
+              <span className="text-xs">🕒</span>
+              <span className="text-[10px] text-muted uppercase font-bold tracking-wider">Pending Entries</span>
+              <span className="bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[9px] font-bold px-1.5 py-0.5 rounded-full">0</span>
+            </div>
+
             <button onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-xs font-bold text-white hover:opacity-90 transition-all cursor-pointer">
-              + Create Voucher ▾
+              className="flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-xs font-bold text-white hover:opacity-90 transition-all cursor-pointer">
+              Create Transaction +
             </button>
             {isDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-80 bg-card/95 backdrop-blur-md border border-border-custom rounded-lg shadow-2xl p-5 z-50 space-y-4 text-left max-h-[420px] overflow-y-auto">
+              <div className="absolute right-0 mt-14 w-80 bg-card/95 backdrop-blur-md border border-border-custom rounded-lg shadow-2xl p-5 z-50 space-y-4 text-left max-h-[420px] overflow-y-auto">
                 <div>
                   <div className="text-[9px] font-bold text-success uppercase tracking-widest border-b border-border-custom pb-1 mb-2">Payment</div>
                   <div className="grid grid-cols-2 gap-1.5 text-[11px]">

@@ -326,17 +326,32 @@ export default function SubconPage() {
                   </div>
 
                   <div>
-                    <label className="text-[10px] text-muted uppercase font-bold block mb-1">Party Type</label>
-                    <select
-                      value={partyForm.type}
-                      onChange={e => setPartyForm({ ...partyForm, type: e.target.value })}
-                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary"
-                    >
-                      <option value="Contractor">Contractor</option>
-                      <option value="Sub Contractor">Sub Contractor</option>
-                      <option value="Labour Contractor">Labour Contractor</option>
-                      <option value="Vendor">Vendor</option>
-                    </select>
+                    <label className="text-[10px] text-muted uppercase font-bold block mb-1">Select Party Type</label>
+                    <div className="border border-border-custom bg-background/50 rounded-lg p-3 space-y-2 max-h-48 overflow-y-auto">
+                      {[
+                        "Client",
+                        "Staff",
+                        "Investor",
+                        "Worker",
+                        "Vendor",
+                        "Labour Contractor",
+                        "Material Supplier",
+                        "Equipment Supplier",
+                        "Other Vendor",
+                        "Contractor"
+                      ].map((type) => (
+                        <label key={type} className="flex items-center justify-between py-1 cursor-pointer hover:bg-elevated/20 px-2 rounded transition-colors select-none text-[11px]">
+                          <span className={partyForm.type === type ? "text-primary font-semibold" : "text-white"}>{type}</span>
+                          <input
+                            type="radio"
+                            name="partyTypeRadio"
+                            checked={partyForm.type === type}
+                            onChange={() => setPartyForm({ ...partyForm, type })}
+                            className="accent-primary h-3.5 w-3.5"
+                          />
+                        </label>
+                      ))}
+                    </div>
                   </div>
 
                   <div className="pt-2">
