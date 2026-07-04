@@ -182,6 +182,13 @@ export default function FinancePage() {
   const [newItemRate, setNewItemRate] = useState("420");
   const [newItemGst, setNewItemGst] = useState("18");
 
+  // Equipment & Material Transfer fields
+  const [paidAmount, setPaidAmount] = useState("0");
+  const [deduction, setDeduction] = useState("0");
+  const [ewayBill, setEwayBill] = useState("");
+  const [vehicleNo, setVehicleNo] = useState("");
+  const [transferOutNo, setTransferOutNo] = useState("0");
+
   // Bank Accounts & Payment Requests states
   const [bankAccounts, setBankAccounts] = useState<any[]>([]);
   const [paymentRequests, setPaymentRequests] = useState<any[]>([]);
@@ -1469,13 +1476,17 @@ export default function FinancePage() {
                 <div>
                   <h3 className="text-sm font-bold text-white uppercase tracking-wider">
                     {selectedTxnType === "Upload Payments"
-                      ? "Add Payment"
-                      : ["Other Expense", "Equipment Expense"].includes(selectedTxnType)
-                      ? "Add Expense"
-                      : ["Material Sales", "Sales Invoice"].includes(selectedTxnType)
-                      ? "Material Sales"
-                      : ["Material Purchase", "Material Return", "Material Transfer"].includes(selectedTxnType)
-                      ? "Material Purchase"
+                      ? "ADD PAYMENT"
+                      : selectedTxnType === "Equipment Expense"
+                      ? "ADD EQUIPMENT EXPENSE"
+                      : selectedTxnType === "Other Expense"
+                      ? "ADD EXPENSE"
+                      : selectedTxnType === "Material Transfer"
+                      ? "MATERIAL TRANSFER"
+                      : selectedTxnType === "Material Purchase"
+                      ? "MATERIAL PURCHASE"
+                      : selectedTxnType === "Material Sales"
+                      ? "MATERIAL SALES"
                       : selectedTxnType}
                   </h3>
                   <p className="text-[10px] text-muted font-mono mt-0.5">PRESTIGE DEVELOPERS</p>
@@ -1519,7 +1530,7 @@ export default function FinancePage() {
                     <span className="text-[9px] text-muted">Supports .csv, .xls, .xlsx formats up to 10MB</span>
                   </div>
                 </div>
-              ) : ["Other Expense", "Equipment Expense"].includes(selectedTxnType) ? (
+              ) : selectedTxnType === "Other Expense" ? (
                 /* OTHER EXPENSES SCREEN (Screenshot 1) */
                 <div className="space-y-4 text-xs">
                   <div className="flex justify-between items-center bg-background/50 border border-border-custom rounded-lg p-2.5">
@@ -1661,7 +1672,207 @@ export default function FinancePage() {
                     <span className="text-emerald-400 font-extrabold text-[10px] bg-emerald-400/10 px-2.5 py-1 rounded-full border border-emerald-500/20">AUTO CALCULATED</span>
                   </div>
                 </div>
-              ) : ["Material Sales", "Sales Invoice", "Material Purchase", "Material Return", "Material Transfer"].includes(selectedTxnType) ? (
+              ) : selectedTxnType === "Equipment Expense" ? (
+                /* EQUIPMENT EXPENSE SCREEN (Screenshot 1 & 3) */
+                <div className="space-y-4 text-xs">
+                  <div className="flex justify-between items-center bg-background/50 border border-border-custom rounded-lg p-2.5">
+                    <div>
+                      <span className="text-muted text-[10px] font-bold uppercase block">Equipment Expense</span>
+                      <span className="text-white font-semibold font-mono">05 Jul 2026 #EE-1</span>
+                    </div>
+                    <span className="text-muted cursor-pointer hover:text-white">✏️</span>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] text-muted uppercase font-bold block mb-1">Party Name</label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={partyName}
+                        onChange={e => setPartyName(e.target.value)}
+                        placeholder="Search or select party..."
+                        className="w-full bg-background border border-border-custom rounded-lg pl-9 pr-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                      />
+                      <span className="absolute left-3 top-2.5 text-muted text-xs">🔍</span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] text-muted uppercase font-bold block mb-1">Date Range</label>
+                    <div className="bg-background border border-border-custom rounded-lg px-3 py-2 text-white flex justify-between items-center cursor-pointer hover:bg-elevated/20">
+                      <span>05/07/2026 - 05/07/2026</span>
+                      <span className="text-muted text-[10px]">▼</span>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="w-full py-2.5 border border-dashed border-primary/50 text-primary hover:bg-primary/5 font-bold rounded-lg text-xs transition-all"
+                  >
+                    + Add Equipment
+                  </button>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[10px] text-muted uppercase font-bold block mb-1">Sub Total</label>
+                      <input
+                        type="number"
+                        value={amount || "0"}
+                        onChange={e => setAmount(e.target.value)}
+                        className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-muted uppercase font-bold block mb-1">Add Discount</label>
+                      <input
+                        type="number"
+                        value={discount || "0"}
+                        onChange={e => setDiscount(Number(e.target.value))}
+                        className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white font-mono"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 border-t border-border-custom/50 pt-3">
+                    <div className="flex items-center justify-between">
+                      <label className="flex items-center gap-2 cursor-pointer text-muted font-bold select-none">
+                        <input
+                          type="checkbox"
+                          checked={enableGst}
+                          onChange={e => setEnableGst(e.target.checked)}
+                          className="accent-primary h-3.5 w-3.5"
+                        />
+                        <span>Enable GST Percent</span>
+                      </label>
+                      {enableGst && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-muted">GST %</span>
+                          <select
+                            value={gstPercent}
+                            onChange={e => setGstPercent(e.target.value)}
+                            className="bg-background border border-border-custom rounded px-2 py-1 text-xs text-white focus:outline-none"
+                          >
+                            <option value="5">5%</option>
+                            <option value="12">12%</option>
+                            <option value="18">18%</option>
+                            <option value="28">28%</option>
+                          </select>
+                        </div>
+                      )}
+                    </div>
+                    {enableGst && (
+                      <div className="flex justify-between items-center bg-background/30 px-3 py-2 rounded-lg border border-border-custom/50">
+                        <span className="text-[10px] text-muted uppercase font-bold">GST Amount (₹)</span>
+                        <span className="font-mono text-white font-bold">
+                          {(Number(amount || 0) * (Number(gstPercent) / 100)).toFixed(2)}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[10px] text-muted uppercase font-bold block mb-1">Total Amount</label>
+                      <input
+                        type="number"
+                        readOnly
+                        value={(Number(amount || 0) - discount + (enableGst ? Number(amount || 0) * (Number(gstPercent) / 100) : 0)).toFixed(0)}
+                        className="w-full bg-background/50 border border-border-custom rounded-lg px-3 py-2 text-white font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-muted uppercase font-bold block mb-1">+ Deduction</label>
+                      <input
+                        type="number"
+                        value={deduction}
+                        onChange={e => setDeduction(e.target.value)}
+                        className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white font-mono"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[10px] text-muted uppercase font-bold block mb-1">Net Amount</label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          readOnly
+                          value={(Number(amount || 0) - discount + (enableGst ? Number(amount || 0) * (Number(gstPercent) / 100) : 0) - Number(deduction)).toFixed(0)}
+                          className="w-full bg-background/50 border border-border-custom rounded-lg px-3 py-2 text-white font-mono"
+                        />
+                        <div className="absolute right-2 top-2 flex items-center gap-1">
+                          <input type="checkbox" id="roundOffCheck" checked={roundOff} onChange={e => setRoundOff(e.target.checked)} className="accent-primary" />
+                          <label htmlFor="roundOffCheck" className="text-[8px] text-muted cursor-pointer font-bold">Round Off</label>
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-muted uppercase font-bold block mb-1">Paid Amount</label>
+                      <input
+                        type="number"
+                        value={paidAmount}
+                        onChange={e => setPaidAmount(e.target.value)}
+                        className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white font-mono"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] text-muted uppercase font-bold block mb-1">Balance Due</label>
+                    <input
+                      type="number"
+                      readOnly
+                      value={Math.max(0, Number(amount || 0) - discount + (enableGst ? Number(amount || 0) * (Number(gstPercent) / 100) : 0) - Number(deduction) - Number(paidAmount)).toFixed(0)}
+                      className="w-full bg-background/30 border border-border-custom rounded-lg px-3 py-2 text-white font-mono font-bold"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] text-muted uppercase font-bold block mb-1">Reference No.</label>
+                    <input
+                      type="text"
+                      value={refNum}
+                      onChange={e => setRefNum(e.target.value)}
+                      placeholder="e.g. REF-EE-001"
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white"
+                    />
+                  </div>
+
+                  <div className="border border-border-custom rounded-xl p-3 bg-elevated/10 flex justify-between items-center text-xs">
+                    <div>
+                      <span className="text-muted block text-[9px] uppercase font-bold">Add Cost Code</span>
+                      <span className="text-white block font-semibold mt-0.5">{costCode}</span>
+                    </div>
+                    <span className="text-muted text-[10px]">▶</span>
+                  </div>
+
+                  <div className="border border-border-custom rounded-xl p-3 bg-elevated/10 flex justify-between items-center text-xs">
+                    <div>
+                      <span className="text-muted block text-[9px] uppercase font-bold">Bill To/Ship To</span>
+                      <span className="text-white block font-semibold mt-0.5">{billToShipTo}</span>
+                    </div>
+                    <span className="text-primary font-bold text-[10px] cursor-pointer" onClick={() => setBillToShipTo("Custom Site Address")}>+ Add</span>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] text-muted uppercase font-bold block mb-1">Note (Optional)</label>
+                    <textarea
+                      value={desc}
+                      onChange={e => setDesc(e.target.value)}
+                      rows={3}
+                      placeholder="Add narration note..."
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white text-xs resize-none"
+                    />
+                  </div>
+
+                  {/* Upload zone */}
+                  <div className="border border-dashed border-border-custom hover:border-primary/50 transition-all rounded-lg p-5 flex flex-col items-center justify-center bg-background cursor-pointer">
+                    <span className="text-base mb-1">📤</span>
+                    <span className="text-[11px] text-muted font-medium">Upload Files</span>
+                  </div>
+                </div>
+              ) : ["Material Sales", "Sales Invoice", "Material Purchase", "Material Return"].includes(selectedTxnType) ? (
                 /* MATERIAL SALES / PURCHASES SCREEN (Screenshot 2) */
                 <div className="space-y-4 text-xs">
                   <div className="flex justify-between items-center bg-background/50 border border-border-custom rounded-lg p-2.5">
@@ -1764,6 +1975,109 @@ export default function FinancePage() {
                   <div className="border border-dashed border-border-custom hover:border-primary/50 transition-all rounded-lg p-5 flex flex-col items-center justify-center bg-background cursor-pointer">
                     <span className="text-base mb-1">📤</span>
                     <span className="text-[11px] text-muted font-medium">Upload Files</span>
+                  </div>
+                </div>
+              ) : selectedTxnType === "Material Transfer" ? (
+                /* MATERIAL TRANSFER SCREEN (Screenshot 2) */
+                <div className="space-y-4 text-xs">
+                  <div className="flex justify-between items-center bg-background/50 border border-border-custom rounded-lg p-2.5">
+                    <div>
+                      <span className="text-muted text-[10px] font-bold uppercase block">Transfer Out No</span>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className="text-white font-semibold font-mono">{transferOutNo}</span>
+                        <span className="text-muted cursor-pointer hover:text-white" onClick={() => {
+                          const val = prompt("Enter Transfer Out No:", transferOutNo);
+                          if (val !== null) setTransferOutNo(val);
+                        }}>✏️</span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-muted text-[10px] font-bold uppercase block">Transfer Date</span>
+                      <span className="text-white font-semibold font-mono">05 Jul 2026</span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] text-muted uppercase font-bold block mb-1">From</label>
+                    <input
+                      type="text"
+                      readOnly
+                      value="Prestige Developers"
+                      className="w-full bg-background/50 border border-border-custom rounded-lg px-3 py-2 text-white text-xs"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] text-muted uppercase font-bold block mb-1">To</label>
+                    <select
+                      value={paymentToParty}
+                      onChange={e => setPaymentToParty(e.target.value)}
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                    >
+                      <option value="">Select Project</option>
+                      <option value="Skyline Premium Towers">Skyline Premium Towers</option>
+                      <option value="Grand Orchard Villas">Grand Orchard Villas</option>
+                    </select>
+                  </div>
+
+                  <div className="flex gap-4">
+                    <span className="text-[10px] text-primary hover:underline font-bold cursor-pointer">+ Add Material</span>
+                    <span className="text-[10px] text-primary hover:underline font-bold cursor-pointer">+ Additional Charges</span>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] text-muted uppercase font-bold block mb-1">Total Amount</label>
+                    <input
+                      type="number"
+                      value={amount}
+                      onChange={e => setAmount(e.target.value)}
+                      placeholder="0"
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white font-mono"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] text-muted uppercase font-bold block mb-1">Reference no.</label>
+                    <input
+                      type="text"
+                      value={refNum}
+                      onChange={e => setRefNum(e.target.value)}
+                      placeholder="e.g. TRF-REF-902"
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] text-muted uppercase font-bold block mb-1">E Way Bill No.</label>
+                    <input
+                      type="text"
+                      value={ewayBill}
+                      onChange={e => setEwayBill(e.target.value)}
+                      placeholder="e.g. 192837461928"
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] text-muted uppercase font-bold block mb-1">Vehicle No.</label>
+                    <input
+                      type="text"
+                      value={vehicleNo}
+                      onChange={e => setVehicleNo(e.target.value)}
+                      placeholder="e.g. MH-12-PQ-1928"
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] text-muted uppercase font-bold block mb-1">Note (Optional)</label>
+                    <textarea
+                      value={desc}
+                      onChange={e => setDesc(e.target.value)}
+                      rows={3}
+                      placeholder="Transfer narration details..."
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white text-xs resize-none"
+                    />
                   </div>
                 </div>
               ) : selectedTxnType === "Internal Transfer" ? (

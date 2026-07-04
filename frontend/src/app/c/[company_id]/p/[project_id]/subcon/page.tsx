@@ -206,69 +206,70 @@ export default function SubconPage() {
         {/* Sub-Con Workorder Modal (Screenshot 3) */}
         {showWOModal && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowWOModal(false)}>
-            <div className="bg-card border border-border-custom rounded-xl w-full max-w-md p-6 relative overflow-hidden" onClick={e => e.stopPropagation()}>
-              <button onClick={() => setShowWOModal(false)} className="absolute top-4 right-4 text-muted hover:text-white text-lg">✕</button>
-
-              <div className="mb-4">
-                <span className="text-[10px] text-muted font-bold uppercase tracking-wider block mb-1">Create Document</span>
-                <div className="flex items-center gap-1.5">
-                  <h3 className="text-sm font-bold text-white">{woForm.title}</h3>
-                  <span className="text-muted text-xs cursor-pointer">✏️</span>
+            <div className="bg-card border border-border-custom rounded-xl w-full max-w-sm p-5 relative overflow-hidden" onClick={e => e.stopPropagation()}>
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h3 className="text-xs font-bold text-white uppercase tracking-wider">Sub-Con Workorder</h3>
+                  <div className="flex items-center gap-1 mt-0.5">
+                    <span className="text-[11px] text-muted font-mono">#WO--1</span>
+                    <span className="text-[10px] text-muted cursor-pointer hover:text-white">✏️</span>
+                  </div>
                 </div>
+                <button onClick={() => setShowWOModal(false)} className="text-muted hover:text-white text-base">✕</button>
               </div>
 
-              <div className="space-y-4 my-5">
+              <div className="space-y-4 my-4 text-xs">
                 <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="text-[10px] text-muted uppercase font-bold">Party Name*</label>
-                    <button
-                      onClick={() => setShowAddPartyDrawer(true)}
-                      className="text-[10px] text-primary hover:underline font-bold"
-                    >
-                      + Add Party
-                    </button>
+                  <label className="text-[9px] text-muted uppercase font-bold block mb-1">Date</label>
+                  <div className="bg-background border border-border-custom rounded-lg px-2.5 py-1.5 text-white flex justify-between items-center cursor-pointer">
+                    <span>2026-07-05</span>
+                    <span className="text-muted text-[10px]">▼</span>
                   </div>
-                  <select
-                    value={woForm.partyName}
-                    onChange={e => setWoForm({ ...woForm, partyName: e.target.value })}
-                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-primary"
-                  >
-                    <option value="">Select Subcontractor Party</option>
-                    {parties.map(p => (
-                      <option key={p.id} value={p.name}>{p.name} ({p.type})</option>
-                    ))}
-                  </select>
                 </div>
 
                 <div>
-                  <label className="text-[10px] text-muted uppercase font-bold block mb-1">Work Order Title</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Masonry work block A"
-                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-primary"
-                  />
+                  <label className="text-[9px] text-muted uppercase font-bold block mb-1">Party Name</label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="Search or select party..."
+                      value={woForm.partyName}
+                      onChange={e => setWoForm({ ...woForm, partyName: e.target.value })}
+                      className="w-full bg-background border border-border-custom rounded-lg pl-3 pr-8 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                    />
+                    {woForm.partyName && (
+                      <button type="button" onClick={() => setWoForm({ ...woForm, partyName: "" })} className="absolute right-2.5 top-2.5 text-muted hover:text-white">✕</button>
+                    )}
+                  </div>
+
+                  {!woForm.partyName && (
+                    <button
+                      type="button"
+                      onClick={() => setShowAddPartyDrawer(true)}
+                      className="w-full mt-2.5 py-3 border border-dashed border-primary/50 text-primary hover:bg-primary/5 font-bold rounded-lg text-xs flex items-center justify-center gap-1 transition-all"
+                    >
+                      <span>+ Create Party</span>
+                    </button>
+                  )}
                 </div>
 
-                <div className="text-left">
-                  <span className="text-xs text-primary font-semibold hover:underline cursor-pointer">+ Add Terms and Conditions</span>
-                </div>
+                <span className="text-[10px] text-primary hover:underline font-bold cursor-pointer block">+ Add Terms and Conditions</span>
 
                 {/* Upload zone */}
                 <div className="border border-dashed border-border-custom hover:border-primary/50 transition-all rounded-lg p-5 flex flex-col items-center justify-center bg-background cursor-pointer">
-                  <span className="text-lg mb-1">📁</span>
-                  <span className="text-[11px] text-muted font-medium">Attach Media</span>
-                  <span className="text-[9px] text-muted/60 mt-0.5">Upload photos, pdf or blueprints</span>
+                  <span className="text-xl mb-1 text-primary">📤</span>
+                  <strong className="text-[11px] text-white font-bold">Attach Media</strong>
                 </div>
               </div>
 
-              <div className="mt-6 flex flex-col gap-2">
+              <div className="mt-5 flex flex-col gap-2">
                 <button
                   onClick={handleCreateWorkorder}
-                  className="w-full py-2.5 bg-primary hover:bg-primary/95 text-white text-xs font-bold rounded-lg transition-all"
+                  className="w-full py-2 bg-primary hover:bg-primary/95 text-white text-xs font-bold rounded-lg transition-all shadow-md"
                 >
                   Create Workorder
                 </button>
-                <button onClick={() => setShowWOModal(false)} className="w-full py-2 text-xs text-muted hover:text-white transition-all">Cancel</button>
+                <button onClick={() => setShowWOModal(false)} className="text-[11px] text-muted hover:text-white font-medium self-center mt-1">close</button>
               </div>
             </div>
           </div>
