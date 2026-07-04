@@ -10,6 +10,32 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 DEMO_COMPANY_ID = "e0000000-0000-0000-0000-000000000000"
 
+
+def _ensure_demo_company(db: Session) -> models.Company:
+    company = db.query(models.Company).filter(models.Company.id == DEMO_COMPANY_ID).first()
+    if company:
+        return company
+
+    existing = db.query(models.Company).first()
+    if existing:
+        db.query(models.Company).delete()
+        db.commit()
+
+    company = models.Company(
+        id=DEMO_COMPANY_ID,
+        name="Demo Construction Ltd",
+        legal_business_name="Demo Construction India Private Limited",
+        gstin="27AADCD2424B1ZP",
+        billing_address="101, Skyline Tower, Andheri East, Mumbai, MH - 400069",
+        currency_decimal_places=2,
+        quantity_decimal_places=3,
+        back_dated_limit_days=7,
+    )
+    db.add(company)
+    db.commit()
+    db.refresh(company)
+    return company
+
 class OTPSendRequest(BaseModel):
     mobile: str = Field(..., example="+919876543210")
 
@@ -41,53 +67,40 @@ def verify_otp(request: OTPVerifyRequest, db: Session = Depends(get_db)):
             id=uuid.uuid4(),
             name="Demo Engineer",
             mobile=request.mobile,
-            email=f"demo_{str(uuid.uuid4())[:8]}@siteflow.co"
+            email=f"demo_{str(uuid.uuid4())[:8]}@siteflow.co",
         )
         db.add(user)
         db.commit()
         db.refresh(user)
 
-    # 2. Check if user has active company membership, else create a demo tenant
-    team_member = db.query(models.CompanyTeam).filter(models.CompanyTeam.user_id == user.id).first()
-    
-    if not team_member:
-        # Check if any company exists in the database
-        company = db.query(models.Company).first()
-        if not company:
-            company = models.Company(
-                id=uuid.UUID(DEMO_COMPANY_ID),
-                name="Demo Construction Ltd",
-                legal_business_name="Demo Construction India Private Limited",
-                gstin="27AADCD2424B1ZP",
-                billing_address="101, Skyline Tower, Andheri East, Mumbai, MH - 400069",
-                currency_decimal_places=2,
-                quantity_decimal_places=3,
-                back_dated_limit_days=7
-            )
-            db.add(company)
-            db.commit()
-            db.refresh(company)
+    # 2. Ensure demo company with the frontend-expected UUID exists
+    company = _ensure_demo_company(db)
 
-        # Map user as a partner (admin) of the company
+    # 3. Ensure user has an active membership for the demo company
+    team_member = db.query(models.CompanyTeam).filter(models.CompanyTeam.user_id == user.id).first()
+    if not team_member:
         team_member = models.CompanyTeam(
             id=uuid.uuid4(),
             company_id=company.id,
             user_id=user.id,
-            priority_type="partner"
+            priority_type="partner",
         )
         db.add(team_member)
         db.commit()
         db.refresh(team_member)
     else:
-        company = db.query(models.Company).filter(models.Company.id == team_member.company_id).first()
+        if str(team_member.company_id) != DEMO_COMPANY_ID:
+            team_member.company_id = DEMO_COMPANY_ID
+            db.commit()
+            db.refresh(team_member)
 
-    # 3. Create access token
+    # 4. Create access token
     access_token = create_access_token(
         data={
             "sub": str(user.id),
-            "company_id": str(company.id),
+            "company_id": DEMO_COMPANY_ID,
             "user_name": user.name,
-            "mobile": user.mobile
+            "mobile": user.mobile,
         }
     )
 
@@ -98,11 +111,11 @@ def verify_otp(request: OTPVerifyRequest, db: Session = Depends(get_db)):
             "id": str(user.id),
             "name": user.name,
             "mobile": user.mobile,
-            "email": user.email
+            "email": user.email,
         },
         "company": {
-            "id": str(company.id),
+            "id": DEMO_COMPANY_ID,
             "name": company.name,
-            "priority_type": team_member.priority_type
-        }
+            "priority_type": team_member.priority_type,
+        },
     }
