@@ -1085,45 +1085,95 @@ export default function FinancePage() {
                 <div className="text-xs text-muted">List and manage central business bank accounts, UPI configurations, and cash balances.</div>
                 <button
                   onClick={() => setShowAddBankModal(true)}
-                  className="bg-primary text-white text-xs font-bold px-4 py-2.5 rounded-md cursor-pointer"
+                  className="bg-primary hover:bg-primary/95 text-white text-xs font-bold px-4 py-2.5 rounded-lg transition-all"
                 >
-                  + Add Bank Account
+                  + New Bank Account
                 </button>
               </div>
 
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {/* Default Cash Wallet Card */}
-                <div className="bg-card border border-border-custom rounded-lg border border-border-custom bg-input p-5 rounded-lg space-y-4">
-                  <div className="flex justify-between items-center">
-                    <div className="font-bold text-white text-xs uppercase tracking-wider text-muted">Cash Wallet Account</div>
-                    <span className="text-[9px] bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full font-bold">Cash Account</span>
-                  </div>
-                  <div>
-                    <div className="text-2xl font-black text-white font-sans">₹{netCashFlow.toLocaleString("en-IN")}</div>
-                    <div className="text-[10px] text-muted mt-1">Available physical cash at site</div>
-                  </div>
-                  <div className="border-t border-border-custom pt-3 flex justify-between text-[10px] text-muted font-mono">
-                    <span>A/c Holder: Project Wallet</span>
-                    <span>IFSC: N/A</span>
-                  </div>
-                </div>
-
-                {bankAccounts.map((acc) => (
-                  <div key={acc.id} className="bg-card border border-border-custom rounded-lg border border-border-custom bg-input p-5 rounded-lg space-y-4">
-                    <div className="flex justify-between items-center">
-                      <div className="font-bold text-white text-xs uppercase tracking-wider text-muted">{acc.bank_name}</div>
-                      <span className="text-[9px] bg-primary/10 border border-primary/10 text-primary px-2 py-0.5 rounded-full font-bold">Bank Account</span>
+              {/* Cash Account Section */}
+              <div className="space-y-3">
+                <p className="text-[10px] text-muted font-bold uppercase tracking-wider">Cash Account</p>
+                <div className="bg-card border border-border-custom rounded-xl p-4 flex items-center justify-between hover:shadow-md transition-all">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-lg bg-green-500/10 flex items-center justify-center text-green-400 text-lg border border-green-500/20">
+                      💵
                     </div>
                     <div>
-                      <div className="text-2xl font-black text-white font-sans">₹{acc.balance.toLocaleString("en-IN")}</div>
-                      <div className="text-[10px] text-muted mt-1">A/c Number: <span className="font-semibold text-zinc-300 font-mono">{acc.account_number}</span></div>
-                    </div>
-                    <div className="border-t border-border-custom pt-3 flex justify-between text-[10px] text-muted">
-                      <span>Holder: {acc.account_holder_name}</span>
-                      <span>IFSC: {acc.ifsc_code}</span>
+                      <h4 className="text-xs font-bold text-white">Cash Account</h4>
+                      <p className="text-[10px] text-muted mt-0.5">Physical vault cash at site</p>
                     </div>
                   </div>
-                ))}
+                  <div className="flex items-center gap-4">
+                    <span className="text-base font-bold text-white">₹{netCashFlow.toLocaleString("en-IN")}</span>
+                    <button className="px-3 py-1.5 bg-sidebar hover:bg-elevated border border-border-custom rounded-lg text-[10px] font-bold text-muted hover:text-foreground transition-all flex items-center gap-1">
+                      View Statement <span className="text-[9px]">↗</span>
+                    </button>
+                    <span className="text-muted cursor-pointer hover:text-white">⋮</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bank Accounts Section */}
+              <div className="space-y-3">
+                <p className="text-[10px] text-muted font-bold uppercase tracking-wider">Bank Accounts</p>
+                <div className="grid gap-4 md:grid-cols-2">
+                  {bankAccounts.length === 0 ? (
+                    <div className="bg-card border border-border-custom rounded-xl p-8 text-center text-muted col-span-2 text-xs">
+                      No bank accounts added yet. Click "+ New Bank Account" to configure one.
+                    </div>
+                  ) : (
+                    bankAccounts.map((acc) => (
+                      <div key={acc.id} className="bg-card border border-border-custom rounded-xl p-5 space-y-4 hover:shadow-md transition-all relative">
+                        <div className="flex justify-between items-start">
+                          <div className="flex items-center gap-2">
+                            <div className="h-8 w-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary text-sm font-bold">
+                              🏦
+                            </div>
+                            <div>
+                              <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                                {acc.bank_name}
+                                <span className="text-[8px] bg-primary/15 text-primary border border-primary/25 px-1.5 py-0.5 rounded-full font-bold">PRIMARY</span>
+                              </div>
+                              <div className="text-[10px] text-muted mt-0.5">A/C: {acc.account_number}</div>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center gap-2">
+                            <button className="px-3 py-1.5 bg-sidebar hover:bg-elevated border border-border-custom rounded-lg text-[10px] font-bold text-muted hover:text-foreground transition-all flex items-center gap-1">
+                              View Statement <span className="text-[9px]">↗</span>
+                            </button>
+                            <span className="text-muted cursor-pointer hover:text-white font-bold p-1">⋮</span>
+                          </div>
+                        </div>
+
+                        {/* Account Details Sub Grid */}
+                        <div className="grid grid-cols-2 gap-3 pt-3 border-t border-border-custom/50 text-[10px]">
+                          <div>
+                            <span className="text-muted block uppercase font-medium text-[8px] tracking-wider">AC Holder</span>
+                            <span className="text-white font-semibold mt-0.5 block">{acc.account_holder_name || "—"}</span>
+                          </div>
+                          <div>
+                            <span className="text-muted block uppercase font-medium text-[8px] tracking-wider">IFSC Code</span>
+                            <span className="text-white font-semibold mt-0.5 block font-mono">{acc.ifsc_code || "—"}</span>
+                          </div>
+                          <div>
+                            <span className="text-muted block uppercase font-medium text-[8px] tracking-wider">UPI</span>
+                            <span className="text-white font-semibold mt-0.5 block">{acc.upi_id || "—"}</span>
+                          </div>
+                          <div>
+                            <span className="text-muted block uppercase font-medium text-[8px] tracking-wider">IBAN No</span>
+                            <span className="text-white font-semibold mt-0.5 block font-mono">Not provided</span>
+                          </div>
+                          <div className="col-span-2">
+                            <span className="text-muted block uppercase font-medium text-[8px] tracking-wider">Opening Balance</span>
+                            <span className="text-white font-bold mt-0.5 block text-xs">₹{acc.balance.toLocaleString("en-IN")}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
               </div>
             </div>
           )}
@@ -1370,187 +1420,386 @@ export default function FinancePage() {
         </div>
       )}
 
-      {/* ── Add Voucher Modal ── */}
+      {/* ── Add Voucher Drawer ── */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-background border border-border-custom rounded-lg w-full max-w-md shadow-2xl p-6 space-y-4 text-xs">
-            <div className="flex justify-between items-center border-b border-border-custom pb-2">
-              <h3 className="text-sm font-extrabold text-white font-sans">Create {selectedTxnType} Voucher</h3>
-              <button onClick={() => setShowAddModal(false)} className="text-muted hover:text-foreground cursor-pointer">✕</button>
-            </div>
-
-            <form onSubmit={handleRecordPayment} className="space-y-3 font-sans">
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="text-muted font-bold">Party / Vendor Name</label>
-                  <input type="text" value={partyName} onChange={e => setPartyName(e.target.value)} required placeholder="e.g. Shree Cement Traders"
-                    className="w-full bg-input border border-border-custom rounded-lg p-2 text-white text-xs" />
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-end animate-fade-in" onClick={() => setShowAddModal(false)}>
+          <div className="bg-card w-full max-w-md h-full border-l border-border-custom shadow-2xl p-6 flex flex-col justify-between overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div>
+              <div className="flex justify-between items-center border-b border-border-custom pb-4 mb-5">
+                <div>
+                  <h3 className="text-sm font-bold text-white uppercase tracking-wider">Payment</h3>
+                  <p className="text-[10px] text-muted font-mono mt-0.5">Prestige Developers</p>
                 </div>
-                <div className="space-y-1">
-                  <label className="text-muted font-bold">Voucher Value (₹)</label>
-                  <input type="number" value={amount} onChange={e => setAmount(e.target.value)} required placeholder="Amount"
-                    className="w-full bg-input border border-border-custom rounded-lg p-2 text-white text-xs font-mono" />
-                </div>
+                <button onClick={() => setShowAddModal(false)} className="text-muted hover:text-white text-lg cursor-pointer">✕</button>
               </div>
 
-              {["Debit Note", "Credit Note"].includes(selectedTxnType) && (
-                <div className="space-y-1">
-                  <label className="text-muted font-bold">Reference Invoice / Voucher ID</label>
-                  <input type="text" value={refInvoice} onChange={e => setRefInvoice(e.target.value)} required placeholder="e.g. INV-2026-4412"
-                    className="w-full bg-input border border-border-custom rounded-lg p-2 text-white text-xs" />
+              <form onSubmit={handleRecordPayment} className="space-y-4 text-xs font-sans">
+                <div className="flex justify-between items-center bg-background/50 border border-border-custom rounded-lg p-2.5">
+                  <span className="text-muted text-[10px] font-bold uppercase">Payment Date</span>
+                  <span className="text-white font-semibold font-mono">2026-07-05</span>
                 </div>
-              )}
 
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="text-muted font-bold">Cost Code Mapping</label>
-                  <select value={costCode} onChange={e => setCostCode(e.target.value)}
-                    className="w-full bg-input border border-border-custom rounded-lg p-2 text-white text-xs">
-                    <option value="1.2.1 Site Conveyance">1.2.1 Site Conveyance</option>
-                    <option value="2.1 Raw Materials">2.1 Raw Materials</option>
+                <div>
+                  <label className="text-[10px] text-muted uppercase font-bold block mb-1">Party Name*</label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={partyName}
+                      onChange={e => setPartyName(e.target.value)}
+                      required
+                      placeholder="Search or specify vendor party..."
+                      className="w-full bg-background border border-border-custom rounded-lg pl-9 pr-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                    />
+                    <span className="absolute left-3 top-2.5 text-muted text-xs">🔍</span>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[10px] text-muted uppercase font-bold block mb-1">Amount*</label>
+                  <input
+                    type="number"
+                    value={amount}
+                    onChange={e => setAmount(e.target.value)}
+                    required
+                    placeholder="0"
+                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs font-mono text-lg font-bold"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[10px] text-muted uppercase font-bold block mb-1.5">Payment Method</label>
+                  <div className="flex gap-4">
+                    {["Cash", "Bank Transfer", "Cheque"].map((m) => (
+                      <label key={m} className="flex items-center gap-2 text-muted hover:text-white cursor-pointer select-none">
+                        <input
+                          type="radio"
+                          name="paymentMethod"
+                          defaultChecked={m === "Cash"}
+                          className="accent-primary"
+                        />
+                        <span>{m}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[10px] text-muted uppercase font-bold block mb-1">Add Cost Code</label>
+                  <select
+                    value={costCode}
+                    onChange={e => setCostCode(e.target.value)}
+                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                  >
+                    <option value="1.2.1 Site Conveyance">Select Cost Code</option>
+                    <option value="1.2.1 Site Conveyance">1.2.1 Site Conveyance (Conveyance)</option>
+                    <option value="2.1 Raw Materials">2.1 Raw Materials (Cement/Steel)</option>
                     <option value="3.5 Subcontractor Labours">3.5 Subcontractor Labours</option>
                   </select>
                 </div>
-                <div className="space-y-1">
-                  <label className="text-muted font-bold">Reference (optional)</label>
-                  <input type="text" value={refNum} onChange={e => setRefNum(e.target.value)} placeholder="PO / Delivery Challan#"
-                    className="w-full bg-input border border-border-custom rounded-lg p-2 text-white text-xs" />
+
+                <div>
+                  <label className="text-[10px] text-muted uppercase font-bold block mb-1">Reference No.</label>
+                  <input
+                    type="text"
+                    value={refNum}
+                    onChange={e => setRefNum(e.target.value)}
+                    placeholder="e.g. PO number, cheque details"
+                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                  />
                 </div>
-              </div>
 
-              <div className="space-y-1">
-                <label className="text-muted font-bold">Description / Narration</label>
-                <input type="text" value={desc} onChange={e => setDesc(e.target.value)} placeholder="Particulars..."
-                  className="w-full bg-input border border-border-custom rounded-lg p-2 text-white text-xs" />
-              </div>
+                {["Debit Note", "Credit Note"].includes(selectedTxnType) && (
+                  <div>
+                    <label className="text-[10px] text-muted uppercase font-bold block mb-1">Reference Invoice ID*</label>
+                    <input
+                      type="text"
+                      value={refInvoice}
+                      onChange={e => setRefInvoice(e.target.value)}
+                      required
+                      placeholder="e.g. INV-2026-4412"
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                    />
+                  </div>
+                )}
 
-              <div className="space-y-1">
-                <label className="text-muted font-bold">Voucher Photo / Receipt Upload</label>
-                <input type="file" accept="image/*,application/pdf"
-                  onChange={e => {
-                    const f = e.target.files?.[0];
-                    if (f) setPhotoUrl("https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=500");
-                  }}
-                  className="w-full bg-input border border-border-custom rounded-lg p-2 text-muted text-xs" />
-              </div>
+                <div>
+                  <span className="text-[10px] text-primary hover:underline font-bold cursor-pointer block mb-2">More Details (Optional) ▽</span>
+                  <input
+                    type="text"
+                    value={desc}
+                    onChange={e => setDesc(e.target.value)}
+                    placeholder="Particulars or narration notes..."
+                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                  />
+                </div>
 
-              <div className="flex gap-2 justify-end border-t border-border-custom pt-4">
-                <button type="button" onClick={() => setShowAddModal(false)} className="px-4 py-2 bg-zinc-800 text-muted hover:text-foreground rounded-md">Cancel</button>
-                <button type="submit" disabled={submitting} className="px-5 py-2.5 bg-primary text-white font-bold rounded-md hover:opacity-90">
-                  {submitting ? "Saving..." : "Record Voucher"}
-                </button>
-              </div>
-            </form>
+                {/* Upload zone */}
+                <div>
+                  <label className="text-[10px] text-muted uppercase font-bold block mb-1">Attachments</label>
+                  <div className="border border-dashed border-border-custom hover:border-primary/50 transition-all rounded-lg p-5 flex flex-col items-center justify-center bg-background cursor-pointer">
+                    <span className="text-base mb-1">📤</span>
+                    <span className="text-[11px] text-muted font-medium">Upload Files</span>
+                    <span className="text-[8px] text-muted/60 mt-0.5">PDF, images or doc receipts</span>
+                  </div>
+                </div>
+              </form>
+            </div>
+
+            <div className="flex gap-3 mt-8 pt-4 border-t border-border-custom">
+              <button
+                onClick={handleRecordPayment}
+                disabled={submitting}
+                className="flex-1 py-2.5 bg-primary text-white font-bold rounded-lg hover:bg-primary/95 text-xs transition-all"
+              >
+                {submitting ? "Saving..." : "Save"}
+              </button>
+              <button onClick={() => setShowAddModal(false)} className="px-4 py-2.5 rounded-lg border border-border-custom text-muted hover:text-white hover:border-white/20 text-xs">Cancel</button>
+            </div>
           </div>
         </div>
       )}
       {/* ── Add Bank Account Modal ── */}
       {showAddBankModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-background border border-border-custom rounded-lg w-full max-w-md shadow-2xl p-6 space-y-4 text-xs">
-            <div className="flex justify-between items-center border-b border-border-custom pb-2">
-              <h3 className="text-sm font-extrabold text-white">Add Central Bank Account</h3>
-              <button onClick={() => setShowAddBankModal(false)} className="text-muted hover:text-foreground cursor-pointer">✕</button>
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-end animate-fade-in" onClick={() => setShowAddBankModal(false)}>
+          <div className="bg-card w-full max-w-md h-full border-l border-border-custom shadow-2xl p-6 flex flex-col justify-between overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div>
+              <div className="flex justify-between items-center border-b border-border-custom pb-4 mb-5">
+                <h3 className="text-sm font-bold text-white uppercase tracking-wider">Add New Account</h3>
+                <button onClick={() => setShowAddBankModal(false)} className="text-muted hover:text-white text-lg cursor-pointer">✕</button>
+              </div>
+
+              <form onSubmit={handleAddBankAccount} className="space-y-4 text-xs font-sans">
+                <div>
+                  <label className="text-[10px] text-muted uppercase font-bold block mb-1">Account Holder Name*</label>
+                  <input
+                    type="text"
+                    value={newBank.holder}
+                    onChange={e => setNewBank({ ...newBank, holder: e.target.value })}
+                    required
+                    placeholder="e.g. YASH DESAI"
+                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[10px] text-muted uppercase font-bold block mb-1">Account Number*</label>
+                  <input
+                    type="text"
+                    value={newBank.number}
+                    onChange={e => setNewBank({ ...newBank, number: e.target.value })}
+                    required
+                    placeholder="e.g. ICIC000239181289"
+                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[10px] text-muted uppercase font-bold block mb-1">IFSC Code*</label>
+                  <input
+                    type="text"
+                    value={newBank.ifsc}
+                    onChange={e => setNewBank({ ...newBank, ifsc: e.target.value })}
+                    required
+                    placeholder="e.g. ICIC000"
+                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs font-mono"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[10px] text-muted uppercase font-bold block mb-1">Bank Name*</label>
+                  <input
+                    type="text"
+                    value={newBank.name}
+                    onChange={e => setNewBank({ ...newBank, name: e.target.value })}
+                    required
+                    placeholder="e.g. ICICI BANK"
+                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[10px] text-muted uppercase font-bold block mb-1">Bank Address</label>
+                  <input
+                    type="text"
+                    value={newBank.upi} // Map temporary local fields safely
+                    onChange={e => setNewBank({ ...newBank, upi: e.target.value })}
+                    placeholder="Bank Branch Address"
+                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[10px] text-muted uppercase font-bold block mb-1">IBAN Number</label>
+                  <input
+                    type="text"
+                    placeholder="Not provided"
+                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[10px] text-muted uppercase font-bold block mb-1">UPI Number (Optional)</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. pay@upi"
+                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                  />
+                </div>
+
+                <div className="pt-2">
+                  <p className="text-[10px] text-muted uppercase font-bold mb-1">Opening Balance:</p>
+                  <div>
+                    <label className="text-[10px] text-muted block mb-1">Amount</label>
+                    <input
+                      type="number"
+                      value={newBank.balance}
+                      onChange={e => setNewBank({ ...newBank, balance: e.target.value })}
+                      placeholder="Opening balance"
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                    />
+                  </div>
+                </div>
+              </form>
             </div>
 
-            <form onSubmit={handleAddBankAccount} className="space-y-3 font-sans">
-              <div className="space-y-1">
-                <label className="text-muted font-bold">Bank Name</label>
-                <input type="text" value={newBank.name} onChange={e => setNewBank({ ...newBank, name: e.target.value })} required placeholder="e.g. HDFC Bank"
-                  className="w-full bg-input border border-border-custom rounded-lg p-2.5 text-white text-xs" />
-              </div>
-              <div className="space-y-1">
-                <label className="text-muted font-bold">Account Holder Name</label>
-                <input type="text" value={newBank.holder} onChange={e => setNewBank({ ...newBank, holder: e.target.value })} required placeholder="e.g. SiteFlow Corp Ltd"
-                  className="w-full bg-input border border-border-custom rounded-lg p-2.5 text-white text-xs" />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="text-muted font-bold">Account Number</label>
-                  <input type="text" value={newBank.number} onChange={e => setNewBank({ ...newBank, number: e.target.value })} required placeholder="A/c No."
-                    className="w-full bg-input border border-border-custom rounded-lg p-2.5 text-white text-xs" />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-muted font-bold">IFSC Code</label>
-                  <input type="text" value={newBank.ifsc} onChange={e => setNewBank({ ...newBank, ifsc: e.target.value })} required placeholder="IFSC"
-                    className="w-full bg-input border border-border-custom rounded-lg p-2.5 text-white text-xs font-mono" />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="text-muted font-bold">UPI ID (Optional)</label>
-                  <input type="text" value={newBank.upi} onChange={e => setNewBank({ ...newBank, upi: e.target.value })} placeholder="e.g. pay@upi"
-                    className="w-full bg-input border border-border-custom rounded-lg p-2.5 text-white text-xs" />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-muted font-bold">Opening Balance (₹)</label>
-                  <input type="number" value={newBank.balance} onChange={e => setNewBank({ ...newBank, balance: e.target.value })} placeholder="Opening balance"
-                    className="w-full bg-input border border-border-custom rounded-lg p-2.5 text-white text-xs" />
-                </div>
-              </div>
-
-              <div className="flex gap-2 justify-end border-t border-border-custom pt-4">
-                <button type="button" onClick={() => setShowAddBankModal(false)} className="px-4 py-2 bg-zinc-800 text-muted hover:text-foreground rounded-md">Cancel</button>
-                <button type="submit" className="px-5 py-2.5 bg-primary text-white font-bold rounded-md hover:opacity-90">
-                  Save Account
-                </button>
-              </div>
-            </form>
+            <div className="flex gap-3 mt-8 pt-4 border-t border-border-custom">
+              <button
+                onClick={handleAddBankAccount}
+                className="flex-1 py-2.5 bg-primary text-white font-bold rounded-lg hover:bg-primary/95 text-xs transition-all"
+              >
+                Save
+              </button>
+              <button onClick={() => setShowAddBankModal(false)} className="px-4 py-2.5 rounded-lg border border-border-custom text-muted hover:text-white hover:border-white/20 text-xs">Cancel</button>
+            </div>
           </div>
         </div>
       )}
 
-      {/* ── Create Payment Request Modal ── */}
+      {/* ── Create Payment Request Drawer ── */}
       {showAddRequestModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-background border border-border-custom rounded-lg w-full max-w-md shadow-2xl p-6 space-y-4 text-xs">
-            <div className="flex justify-between items-center border-b border-border-custom pb-2">
-              <h3 className="text-sm font-extrabold text-white">Create Payment Request</h3>
-              <button onClick={() => setShowAddRequestModal(false)} className="text-muted hover:text-foreground cursor-pointer">✕</button>
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-end animate-fade-in" onClick={() => setShowAddRequestModal(false)}>
+          <div className="bg-card w-full max-w-md h-full border-l border-border-custom shadow-2xl p-6 flex flex-col justify-between overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div>
+              <div className="flex justify-between items-center border-b border-border-custom pb-4 mb-5">
+                <div>
+                  <h3 className="text-sm font-bold text-white uppercase tracking-wider">Payment Requests</h3>
+                  <p className="text-[10px] text-muted font-mono mt-0.5">Voucher: PR-1</p>
+                </div>
+                <button onClick={() => setShowAddRequestModal(false)} className="text-muted hover:text-white text-lg cursor-pointer">✕</button>
+              </div>
+
+              <form onSubmit={handleCreatePaymentRequest} className="space-y-4 text-xs font-sans">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[10px] text-muted uppercase font-bold block mb-1">Request No.*</label>
+                    <input
+                      type="text"
+                      defaultValue="PR-1"
+                      disabled
+                      className="w-full bg-background/50 border border-border-custom rounded-lg px-3 py-2 text-muted focus:outline-none text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-muted uppercase font-bold block mb-1">Date*</label>
+                    <input
+                      type="date"
+                      defaultValue="2026-07-05"
+                      disabled
+                      className="w-full bg-background/50 border border-border-custom rounded-lg px-3 py-2 text-muted focus:outline-none text-xs"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[10px] text-muted uppercase font-bold block mb-1">Party Name*</label>
+                  <select
+                    value={newRequest.partyId}
+                    onChange={e => setNewRequest({ ...newRequest, partyId: e.target.value })}
+                    required
+                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                  >
+                    <option value="">Search or select party...</option>
+                    {usersList.map((u: any) => (
+                      <option key={u.id} value={u.id}>{u.name} ({u.role || "Employee"})</option>
+                    ))}
+                    {usersList.length === 0 && Array.from(new Set(transactions.map(t => t.party))).map((p, idx) => (
+                      <option key={idx} value="00000000-0000-0000-0000-000000000000">{p}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-[10px] text-muted uppercase font-bold block mb-1">Request Type*</label>
+                  <select
+                    defaultValue="Advance against PO"
+                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                  >
+                    <option value="Advance against PO">Advance against PO</option>
+                    <option value="Advance against Subcon Work Order">Advance against Subcon Work Order</option>
+                    <option value="Advance against BOQ">Advance against BOQ</option>
+                    <option value="Advance against Material Purchase">Advance against Material Purchase</option>
+                    <option value="Advance against Subcon Expense">Advance against Subcon Expense</option>
+                    <option value="Advance against Other Expense">Advance against Other Expense</option>
+                    <option value="Advance for Labour">Advance for Labour</option>
+                    <option value="Petty Cash">Petty Cash</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-[10px] text-muted uppercase font-bold block mb-1">Requested Amount (₹)*</label>
+                  <input
+                    type="number"
+                    value={newRequest.amount}
+                    onChange={e => setNewRequest({ ...newRequest, amount: e.target.value })}
+                    required
+                    placeholder="e.g. 15000"
+                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs font-mono"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[10px] text-muted uppercase font-bold block mb-1">Due Date</label>
+                  <input
+                    type="date"
+                    value={newRequest.dueDate}
+                    onChange={e => setNewRequest({ ...newRequest, dueDate: e.target.value })}
+                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[10px] text-muted uppercase font-bold block mb-1">Request Details / Particulars</label>
+                  <textarea
+                    value={newRequest.details}
+                    onChange={e => setNewRequest({ ...newRequest, details: e.target.value })}
+                    placeholder="Provide details for this payment request..."
+                    rows={3}
+                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs resize-none"
+                  />
+                </div>
+
+                {/* Upload zone */}
+                <div>
+                  <label className="text-[10px] text-muted uppercase font-bold block mb-1">Attachments</label>
+                  <div className="border border-dashed border-border-custom hover:border-primary/50 transition-all rounded-lg p-5 flex flex-col items-center justify-center bg-background cursor-pointer">
+                    <span className="text-base mb-1">📤</span>
+                    <span className="text-[11px] text-muted font-medium">Upload Files</span>
+                    <span className="text-[8px] text-muted/60 mt-0.5">PDF, images or doc receipts</span>
+                  </div>
+                </div>
+              </form>
             </div>
 
-            <form onSubmit={handleCreatePaymentRequest} className="space-y-3 font-sans">
-              <div className="space-y-1">
-                <label className="text-muted font-bold">Requesting Party (Employee / Vendor)</label>
-                <select
-                  value={newRequest.partyId}
-                  onChange={e => setNewRequest({ ...newRequest, partyId: e.target.value })}
-                  required
-                  className="w-full bg-input border border-border-custom rounded-lg p-2.5 text-white text-xs"
-                >
-                  <option value="">Select Party</option>
-                  {usersList.map((u: any) => (
-                    <option key={u.id} value={u.id}>{u.name} ({u.role || "Employee"})</option>
-                  ))}
-                  {/* Fallback to transactions parties if userList is empty */}
-                  {usersList.length === 0 && Array.from(new Set(transactions.map(t => t.party))).map((p, idx) => (
-                    <option key={idx} value="00000000-0000-0000-0000-000000000000">{p}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="space-y-1">
-                <label className="text-muted font-bold">Requested Amount (₹)</label>
-                <input type="number" value={newRequest.amount} onChange={e => setNewRequest({ ...newRequest, amount: e.target.value })} required placeholder="Amount"
-                  className="w-full bg-input border border-border-custom rounded-lg p-2.5 text-white text-xs font-mono" />
-              </div>
-              <div className="space-y-1">
-                <label className="text-muted font-bold">Due Date (Optional)</label>
-                <input type="date" value={newRequest.dueDate} onChange={e => setNewRequest({ ...newRequest, dueDate: e.target.value })}
-                  className="w-full bg-input border border-border-custom rounded-lg p-2.5 text-white text-xs" />
-              </div>
-              <div className="space-y-1">
-                <label className="text-muted font-bold">Request Details / Particulars</label>
-                <textarea value={newRequest.details} onChange={e => setNewRequest({ ...newRequest, details: e.target.value })} required placeholder="Provide detail reason for this payment request..."
-                  className="w-full bg-input border border-border-custom rounded-lg p-2.5 text-white text-xs h-20 outline-none resize-none" />
-              </div>
-
-              <div className="flex gap-2 justify-end border-t border-border-custom pt-4">
-                <button type="button" onClick={() => setShowAddRequestModal(false)} className="px-4 py-2 bg-zinc-800 text-muted hover:text-foreground rounded-md">Cancel</button>
-                <button type="submit" className="px-5 py-2.5 bg-primary text-white font-bold rounded-md hover:opacity-90">
-                  Submit Request
-                </button>
-              </div>
-            </form>
+            <div className="flex gap-3 mt-8 pt-4 border-t border-border-custom">
+              <button
+                onClick={handleCreatePaymentRequest}
+                className="flex-1 py-2.5 bg-primary text-white font-bold rounded-lg hover:bg-primary/95 text-xs transition-all"
+              >
+                Save
+              </button>
+              <button onClick={() => setShowAddRequestModal(false)} className="px-4 py-2.5 rounded-lg border border-border-custom text-muted hover:text-white hover:border-white/20 text-xs">Cancel</button>
+            </div>
           </div>
         </div>
       )}
