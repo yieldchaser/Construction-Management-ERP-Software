@@ -73,20 +73,6 @@ app.include_router(budget.router, prefix="/apis/v3")
 app.include_router(library.router, prefix="/apis/v3")
 app.include_router(profile.router, prefix="/apis/v3")
 
-from fastapi import Request
-from fastapi.responses import JSONResponse
-import traceback
-
-@app.exception_handler(Exception)
-async def debug_exception_handler(request: Request, exc: Exception):
-    return JSONResponse(
-        status_code=500,
-        content={
-            "detail": str(exc),
-            "traceback": traceback.format_exc()
-        }
-    )
-
 @app.get("/")
 def read_root():
     return {
