@@ -17,6 +17,7 @@ interface WorkOrder {
   id: string;
   wo_number: string;
   subcontractor: string;
+  subcontractor_name: string;
   status: string;
   estimated_work_amount: number;
 }
@@ -35,12 +36,6 @@ export default function WOAmendmentsPage({ params }: { params: { wo_id: string }
   const [fieldsJson, setFieldsJson] = useState('{"rate": 1200.0, "quantity": 500.0}');
   const [amendedBy, setAmendedBy] = useState("Project Manager");
   const [error, setError] = useState<string | null>(null);
-
-  const SUBCON_NAMES: Record<string, string> = {
-    "e0000000-0000-0000-0000-000000000201": "Karan Masonry Works",
-    "e0000000-0000-0000-0000-000000000202": "Apex Bar-Bending Co",
-    "e0000000-0000-0000-0000-000000000203": "Metro Plumbing Services",
-  };
 
   const fetchAmendments = async () => {
     setLoading(true);
@@ -104,7 +99,7 @@ export default function WOAmendmentsPage({ params }: { params: { wo_id: string }
         <div className="border-b border-white/5 bg-[#0D0B14] px-6 py-3.5 flex items-center justify-between z-10">
           <div>
             <h1 className="text-sm font-bold text-white uppercase tracking-wider">WO Amendment Version Control</h1>
-            <p className="text-[10px] text-zinc-500">{wo ? `${wo.wo_number} · ${SUBCON_NAMES[wo.subcontractor] || wo.subcontractor}` : woId}</p>
+            <p className="text-[10px] text-zinc-500">{wo ? `${wo.wo_number} · ${wo.subcontractor_name}` : woId}</p>
           </div>
           <button onClick={() => setShowModal(true)} className="px-4 py-2 rounded-xl bg-gradient-to-r from-primary to-[#FF3B6C] text-xs font-bold text-white hover:opacity-90 cursor-pointer">+ New Amendment</button>
         </div>

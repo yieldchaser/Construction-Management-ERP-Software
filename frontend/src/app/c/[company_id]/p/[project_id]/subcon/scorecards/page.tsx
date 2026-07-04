@@ -7,6 +7,7 @@ import { getApiHost } from "@/lib/api";
 interface Scorecard {
   id: string;
   subcontractor_id: string;
+  subcontractor_name: string;
   period_start: string;
   period_end: string;
   on_time_pct: number;
@@ -40,12 +41,6 @@ export default function SubconScorecardsPage() {
   const [comparative, setComparative] = useState<ComparativeRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const SUBCON_NAMES: Record<string, string> = {
-    "e0000000-0000-0000-0000-000000000201": "Karan Masonry Works",
-    "e0000000-0000-0000-0000-000000000202": "Apex Bar-Bending Co",
-    "e0000000-0000-0000-0000-000000000203": "Metro Plumbing Services",
-  };
 
   const fetchData = async () => {
     setLoading(true);
@@ -172,10 +167,9 @@ export default function SubconScorecardsPage() {
                 </thead>
                 <tbody>
                   {scorecards.map((sc) => {
-                    const name = SUBCON_NAMES[sc.subcontractor_id] || "Unknown";
                     return (
                       <tr key={sc.id} className="border-b border-white/[0.02] hover:bg-white/[0.015] transition-all">
-                        <td className="px-5 py-3.5 text-white font-semibold">{name}</td>
+                        <td className="px-5 py-3.5 text-white font-semibold">{sc.subcontractor_name}</td>
                         <td className="px-5 py-3.5 text-zinc-400">{sc.period_start?.split("T")[0]} – {sc.period_end?.split("T")[0]}</td>
                         <td className="px-5 py-3.5 text-right font-mono font-bold text-green-400">{fmt(sc.on_time_pct)}</td>
                         <td className="px-5 py-3.5 text-right font-mono font-bold text-blue-400">{fmt(sc.billing_accuracy_pct)}</td>

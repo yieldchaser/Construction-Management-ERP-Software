@@ -42,6 +42,7 @@ class ScorecardResponse(BaseModel):
     company_id: UUID
     project_id: UUID
     subcontractor_id: UUID
+    subcontractor_name: str = "Unknown"
     period_start: datetime
     period_end: datetime
     on_time_pct: float
@@ -121,7 +122,26 @@ def get_scorecards(project_id: UUID, db: Session = Depends(get_db)):
     scorecards = db.query(SubcontractorPerformance).filter(
         SubcontractorPerformance.project_id == project_id
     ).all()
-    return scorecards
+    return [
+        ScorecardResponse(
+            id=sc.id,
+            company_id=sc.company_id,
+            project_id=sc.project_id,
+            subcontractor_id=sc.subcontractor_id,
+            subcontractor_name=_resolve_subcontractor_name(db, sc.subcontractor_id),
+            period_start=sc.period_start,
+            period_end=sc.period_end,
+            on_time_pct=float(sc.on_time_pct),
+            billing_accuracy_pct=float(sc.billing_accuracy_pct),
+            quality_score=float(sc.quality_score),
+            tasks_completed=sc.tasks_completed,
+            tasks_delayed=sc.tasks_delayed,
+            total_billed=float(sc.total_billed),
+            disputes_count=sc.disputes_count,
+            notes=sc.notes,
+        )
+        for sc in scorecards
+    ]
 
 
 @router.get("/scorecards/{project_id}/comparative", response_model=List[ComparativeItem])

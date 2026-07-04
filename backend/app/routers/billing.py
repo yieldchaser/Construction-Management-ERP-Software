@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import (
     WorkOrder, WorkOrderItem, Bill, TransactionDeduction, 
-    DebitNote, CreditNote
+    DebitNote, CreditNote, CompanyTeam, User
 )
 from pydantic import BaseModel, Field
 
@@ -44,6 +44,7 @@ class WOResponse(BaseModel):
     company_id: UUID
     project_id: UUID
     subcontractor_id: UUID
+    subcontractor_name: str = "Unknown"
     wo_number: str
     wo_date: datetime
     status: str
@@ -174,12 +175,16 @@ def get_work_orders(project_id: UUID, db: Session = Depends(get_db)):
                 amount=float(i.amount) if i.amount else float(i.quantity * i.rate)
             ) for i in items
         ]
+        team = db.query(CompanyTeam).filter(CompanyTeam.id == wo.subcontractor_id).first()
+        user = db.query(User).filter(User.id == team.user_id).first() if team else None
+        subcontractor_name = user.name if user and user.name else "Unknown"
         res.append(
             WOResponse(
                 id=wo.id,
                 company_id=wo.company_id,
                 project_id=wo.project_id,
                 subcontractor_id=wo.subcontractor_id,
+                subcontractor_name=subcontractor_name,
                 wo_number=wo.wo_number,
                 wo_date=wo.wo_date,
                 status=wo.status,
