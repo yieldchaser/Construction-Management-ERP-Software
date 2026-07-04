@@ -8,6 +8,8 @@ import uuid
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
+DEMO_COMPANY_ID = "e0000000-0000-0000-0000-000000000000"
+
 class OTPSendRequest(BaseModel):
     mobile: str = Field(..., example="+919876543210")
 
@@ -53,7 +55,7 @@ def verify_otp(request: OTPVerifyRequest, db: Session = Depends(get_db)):
         company = db.query(models.Company).first()
         if not company:
             company = models.Company(
-                id=uuid.uuid4(),
+                id=uuid.UUID(DEMO_COMPANY_ID),
                 name="Demo Construction Ltd",
                 legal_business_name="Demo Construction India Private Limited",
                 gstin="27AADCD2424B1ZP",
