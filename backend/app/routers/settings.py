@@ -115,7 +115,22 @@ class HolidayResponse(BaseModel):
 def get_company_settings(company_id: uuid.UUID, db: Session = Depends(get_db)):
     company = db.query(Company).filter(Company.id == company_id).first()
     if not company:
-        raise HTTPException(status_code=404, detail="Company not found")
+        if str(company_id) == "e0000000-0000-0000-0000-000000000000":
+            company = Company(
+                id=company_id,
+                name="Demo Construction Ltd",
+                legal_business_name="Demo Construction India Private Limited",
+                gstin="27AADCD2424B1ZP",
+                billing_address="101, Skyline Tower, Andheri East, Mumbai, MH - 400069",
+                currency_decimal_places=2,
+                quantity_decimal_places=3,
+                back_dated_limit_days=7,
+            )
+            db.add(company)
+            db.commit()
+            db.refresh(company)
+        else:
+            raise HTTPException(status_code=404, detail="Company not found")
     return company
 
 

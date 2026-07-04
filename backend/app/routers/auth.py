@@ -11,6 +11,32 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 DEMO_COMPANY_ID = "e0000000-0000-0000-0000-000000000000"
 
 
+def _seed_demo_projects(db: Session, company_id: uuid.UUID):
+    PROJ_1 = uuid.UUID("d0000000-0000-0000-0000-000000000001")
+    PROJ_2 = uuid.UUID("d0000000-0000-0000-0000-000000000002")
+    PROJ_3 = uuid.UUID("d0000000-0000-0000-0000-000000000003")
+    
+    project_data = [
+        (PROJ_1, "Metro Terminal (Phase 2)", "MET-02", "Mumbai", "Maharashtra"),
+        (PROJ_2, "Bypass Highway Flyover", "HWY-FLY", "Pune", "Maharashtra"),
+        (PROJ_3, "Alpha Premium Residences", "ALF-RES", "Delhi", "Delhi"),
+    ]
+    
+    for pid, name, code, city, state in project_data:
+        proj = db.query(models.Project).filter(models.Project.id == pid).first()
+        if not proj:
+            proj = models.Project(
+                id=pid,
+                company_id=company_id,
+                name=name,
+                code=code,
+                city=city,
+                state=state,
+                status="Ongoing"
+            )
+            db.add(proj)
+    db.commit()
+
 def _ensure_demo_company(db: Session) -> models.Company:
     company = db.query(models.Company).filter(models.Company.id == uuid.UUID(DEMO_COMPANY_ID)).first()
     if company:
@@ -29,6 +55,8 @@ def _ensure_demo_company(db: Session) -> models.Company:
     db.add(company)
     db.commit()
     db.refresh(company)
+    
+    _seed_demo_projects(db, company.id)
     return company
 
 class OTPSendRequest(BaseModel):
