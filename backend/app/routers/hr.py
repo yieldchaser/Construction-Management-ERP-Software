@@ -15,7 +15,7 @@ Endpoints:
 
 import math
 import uuid
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from decimal import Decimal
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -342,7 +342,7 @@ def daily_attendance(project_id: uuid.UUID, date_str: str, db: Session = Depends
         target = datetime.strptime(date_str, "%Y-%m-%d")
     except ValueError:
         raise HTTPException(status_code=400, detail="date_str must be YYYY-MM-DD")
-    next_day = datetime(target.year, target.month, target.day + 1) if target.day < 28 else datetime(target.year, target.month + 1 if target.month < 12 else 1, 1)
+    next_day = target + timedelta(days=1)
     return db.query(AttendanceLog).filter(
         AttendanceLog.project_id == project_id,
         AttendanceLog.attendance_date >= target,

@@ -174,7 +174,7 @@ def get_ledger(project_id: uuid.UUID, db: Session = Depends(get_db)):
                 type="Receipt" if p.payment_type == "in" else "Expense",
                 category="Client Payment" if p.payment_type == "in" else "Direct Payment",
                 description=p.description or ("Receipt Payment" if p.payment_type == "in" else "Expense Payment"),
-                amount=float(p.unsettled_amount) if p.payment_type == "in" else -float(p.unsettled_amount),
+                amount=float(p.amount) if p.payment_type == "in" else -float(p.amount),
                 party=party_name,
                 ref=p.reference_number or "",
                 ledger="Revenue" if p.payment_type == "in" else "General Ledger"

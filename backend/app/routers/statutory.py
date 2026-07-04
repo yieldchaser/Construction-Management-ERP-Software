@@ -66,7 +66,12 @@ def calculate_due_date(report_type: str, return_period: str) -> Optional[datetim
         elif report_type == "esi":
             return datetime(year, month, 15)
         elif report_type == "tds":
-            return datetime(year, month + 1 if month < 12 else 1, 31 if month == 12 else 30)
+            next_month = month + 1 if month < 12 else 1
+            next_year = year if month < 12 else year + 1
+            day = 31 if month == 12 else 30
+            if next_month == 2:
+                day = 28
+            return datetime(next_year, next_month, day)
         elif report_type == "bocw":
             return datetime(year, month, 15)
         return None
