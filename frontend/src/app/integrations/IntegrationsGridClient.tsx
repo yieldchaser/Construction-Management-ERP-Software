@@ -108,10 +108,10 @@ export function IntegrationsGridClient() {
             placeholder="Search integrations (Tally, WhatsApp, Zoho...)"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full px-5 py-4 pl-12 rounded-2xl bg-white/[0.02] border border-white/10 text-white placeholder-zinc-500 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all text-base shadow-lg"
+            className="w-full px-5 py-4 pl-12 rounded-lg bg-elevated border border-border-custom text-white placeholder-zinc-500 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all text-base shadow-lg"
           />
           <svg
-            className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-500"
+            className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -126,7 +126,7 @@ export function IntegrationsGridClient() {
           {search && (
             <button
               onClick={() => setSearch("")}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-zinc-500 hover:text-white transition-all cursor-pointer"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-muted hover:text-foreground transition-all cursor-pointer"
             >
               Clear
             </button>
@@ -139,10 +139,10 @@ export function IntegrationsGridClient() {
             <button
               key={cat}
               onClick={() => setActiveCategory(cat)}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
+              className={`px-4 py-2 rounded-md text-xs font-bold transition-all border cursor-pointer ${
                 activeCategory === cat
                   ? "bg-primary border-primary text-white shadow-lg shadow-primary/25"
-                  : "bg-white/[0.02] border-white/5 text-zinc-400 hover:text-white hover:border-white/10"
+                  : "bg-elevated border-border-custom text-muted hover:text-foreground hover:border-border-custom"
               }`}
             >
               {cat}
@@ -156,18 +156,18 @@ export function IntegrationsGridClient() {
         {filtered.map((item, idx) => (
           <div
             key={idx}
-            className="rounded-2xl glass-panel p-6 border border-white/5 flex flex-col justify-between hover:border-white/10 hover:shadow-lg transition-all group"
+            className="rounded-lg bg-card border border-border-custom rounded-lg p-6 border border-border-custom flex flex-col justify-between hover:border-border-custom hover:shadow-lg transition-all group"
           >
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-3xl p-2.5 rounded-xl bg-white/[0.03] border border-white/5">
+                <span className="text-3xl p-2.5 rounded-md bg-white/[0.03] border border-border-custom">
                   {item.icon}
                 </span>
                 <span
                   className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${
                     item.status === "active"
                       ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                      : "bg-[#7C5CFF]/10 text-[#7C5CFF] border border-[#7C5CFF]/20"
+                      : "bg-primary/10 text-primary border border-primary/10"
                   }`}
                 >
                   {item.status === "active" ? "Active" : "Planned"}
@@ -177,27 +177,27 @@ export function IntegrationsGridClient() {
                 <h3 className="text-lg font-bold text-white group-hover:text-primary transition-all">
                   {item.name}
                 </h3>
-                <span className="text-[10px] text-zinc-500 uppercase tracking-widest block mt-0.5">
+                <span className="text-[10px] text-muted uppercase tracking-widest block mt-0.5">
                   {item.category}
                 </span>
               </div>
-              <p className="text-zinc-400 text-xs leading-relaxed line-clamp-3">
+              <p className="text-muted text-xs leading-relaxed line-clamp-3">
                 {item.desc}
               </p>
             </div>
 
-            <div className="mt-6 pt-4 border-t border-white/5 flex items-center justify-end">
+            <div className="mt-6 pt-4 border-t border-border-custom flex items-center justify-end">
               {item.status === "active" && item.link ? (
                 <Link
                   href={item.link}
-                  className="text-xs font-bold text-primary hover:text-white transition-all cursor-pointer"
+                  className="text-xs font-bold text-primary hover:text-foreground transition-all cursor-pointer"
                 >
                   Configure Integration &rarr;
                 </Link>
               ) : (
                 <button
                   onClick={() => alert(`Early access request submitted for ${item.name} integration.`)}
-                  className="text-xs font-bold text-zinc-500 hover:text-white transition-all cursor-pointer"
+                  className="text-xs font-bold text-muted hover:text-foreground transition-all cursor-pointer"
                 >
                   Request early access &rarr;
                 </button>
@@ -207,10 +207,10 @@ export function IntegrationsGridClient() {
         ))}
 
         {filtered.length === 0 && (
-          <div className="col-span-full text-center py-12 glass-panel rounded-2xl border border-white/5">
+          <div className="col-span-full text-center py-12 bg-card border border-border-custom rounded-lg rounded-lg border border-border-custom">
             <span className="text-3xl">🔌</span>
             <h3 className="text-lg font-bold text-white mt-3">No integrations found</h3>
-            <p className="text-zinc-500 text-sm mt-1">
+            <p className="text-muted text-sm mt-1">
               Try choosing another category or clearing your search query.
             </p>
           </div>

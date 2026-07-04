@@ -124,7 +124,7 @@ const statusColors: Record<string, string> = {
   pass: "bg-green-500/10 text-green-400 border-green-500/20",
   fail: "bg-red-500/10 text-red-400 border-red-500/20",
   partial: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20",
-  pending: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20",
+  pending: "bg-zinc-500/10 text-muted border-zinc-500/20",
 };
 
 const badge = (label: string, cls: string) => (
@@ -459,17 +459,17 @@ export default function QualityPage() {
 
   const tabBtn = (key: typeof tab, label: string) => (
     <button onClick={() => setTab(key)}
-      className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${tab === key ? "bg-primary/15 text-primary border border-primary/30" : "text-zinc-400 hover:text-white hover:bg-white/[0.04]"}`}>
+      className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${tab === key ? "bg-primary/15 text-primary border border-border-custom" : "text-muted hover:text-foreground hover:bg-white/[0.04]"}`}>
       {label}
     </button>
   );
 
   return (
-    <div className="flex h-screen bg-[#0E0C15] text-[#ededed] overflow-hidden">
+    <div className="flex h-screen bg-background text-foreground overflow-hidden">
       {/* Sidebar */}
-      <aside className="w-56 border-r border-white/5 bg-[#0B0910] flex flex-col shrink-0">
-        <div className="p-5 border-b border-white/5 flex items-center gap-2.5">
-          <div className="h-7 w-7 rounded-lg bg-gradient-to-tr from-[#E8184C] to-[#7C5CFF] flex items-center justify-center font-bold text-white text-xs">S</div>
+      <aside className="w-56 border-r border-border-custom bg-card flex flex-col shrink-0">
+        <div className="p-5 border-b border-border-custom flex items-center gap-2.5">
+          <div className="h-7 w-7 rounded-lg bg-gradient-to-tr bg-primary flex items-center justify-center font-bold text-white text-xs">S</div>
           <span className="font-bold text-white text-sm">Quality Control</span>
         </div>
         <nav className="p-3 flex-1 space-y-1">
@@ -480,20 +480,20 @@ export default function QualityPage() {
             ["labtests", "🧪", "Lab Tests"],
           ] as const).map(([key, icon, label]) => (
             <button key={key} onClick={() => setTab(key)}
-              className={`w-full text-left flex items-center gap-2 px-3 py-2 text-xs font-semibold rounded-lg transition-all ${tab === key ? "bg-white/[0.06] text-white font-semibold shadow-sm" : "text-zinc-400 hover:text-white hover:bg-white/[0.03]"}`}>
+              className={`w-full text-left flex items-center gap-2 px-3 py-2 text-xs font-semibold rounded-lg transition-all ${tab === key ? "bg-primary/10 text-white font-semibold shadow-sm" : "text-muted hover:text-foreground hover:bg-white/[0.03]"}`}>
               <span>{icon}</span> {label}
             </button>
           ))}
-          <div className="pt-4 border-t border-white/5 mt-4">
+          <div className="pt-4 border-t border-border-custom mt-4">
             <Link href={`/c/${companyId}/dashboard`}
-              className="flex items-center gap-2 px-3 py-2 text-xs text-zinc-500 hover:text-white transition-colors rounded-lg hover:bg-white/[0.03]">
+              className="flex items-center gap-2 px-3 py-2 text-xs text-muted hover:text-foreground transition-colors rounded-lg hover:bg-white/[0.03]">
               ← Dashboard
             </Link>
           </div>
         </nav>
 
         {/* Quick stats */}
-        <div className="p-3 border-t border-white/5 space-y-2">
+        <div className="p-3 border-t border-border-custom space-y-2">
           <div className="bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2 flex items-center justify-between">
             <span className="text-[10px] text-red-400 font-bold">Open NCRs</span>
             <span className="text-sm font-bold text-red-400">{openNCRs.length}</span>
@@ -502,8 +502,8 @@ export default function QualityPage() {
             <span className="text-[10px] text-yellow-400 font-bold">Under Review</span>
             <span className="text-sm font-bold text-yellow-400">{reviewNCRs.length}</span>
           </div>
-          <div className="bg-white/[0.03] border border-white/5 rounded-lg px-3 py-2 flex items-center justify-between">
-            <span className="text-[10px] text-zinc-500 font-bold">Failed Tests</span>
+          <div className="bg-white/[0.03] border border-border-custom rounded-lg px-3 py-2 flex items-center justify-between">
+            <span className="text-[10px] text-muted font-bold">Failed Tests</span>
             <span className="text-sm font-bold text-primary">{LAB_TESTS.filter(t => !t.pass).length}</span>
           </div>
         </div>
@@ -511,7 +511,7 @@ export default function QualityPage() {
 
       {/* Main */}
       <main className="flex-1 flex flex-col overflow-hidden">
-        <header className="h-14 border-b border-white/5 px-6 flex items-center justify-between bg-[#0B0910] shrink-0">
+        <header className="h-14 border-b border-border-custom px-6 flex items-center justify-between bg-card shrink-0">
           <h1 className="text-sm font-bold text-white uppercase tracking-widest">
             {tab === "inspections" && "Site Inspections"}
             {tab === "checklists" && "IS-Code Checklist Library"}
@@ -552,8 +552,8 @@ export default function QualityPage() {
                   { label: "Partial", val: inspections.filter(i => i.status === "partial").length, color: "text-yellow-400" },
                   { label: "Fail", val: inspections.filter(i => i.status === "fail").length, color: "text-red-400" },
                 ].map(({ label, val, color }) => (
-                  <div key={label} className="bg-[#171520] border border-white/5 rounded-xl p-4">
-                    <p className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider mb-1">{label}</p>
+                  <div key={label} className="bg-card border border-border-custom rounded-md p-4">
+                    <p className="text-[10px] text-muted uppercase font-bold tracking-wider mb-1">{label}</p>
                     <p className={`text-2xl font-bold ${color}`}>{val}</p>
                   </div>
                 ))}
@@ -565,15 +565,15 @@ export default function QualityPage() {
                   const rate = passRate(insp.passCount, insp.failCount);
                   return (
                     <div key={insp.id} onClick={() => setSelectedInspection(insp)}
-                      className="bg-[#171520] border border-white/5 rounded-xl p-5 cursor-pointer hover:border-primary/20 hover:bg-white/[0.01] transition-all">
+                      className="bg-card border border-border-custom rounded-md p-5 cursor-pointer hover:border-primary/20 hover:bg-white/[0.01] transition-all">
                       <div className="flex items-start justify-between mb-3">
                         <div>
                           <p className="font-bold text-white text-sm">{insp.zone}</p>
-                          <p className="text-xs text-zinc-400 mt-0.5">{insp.checklist}</p>
+                          <p className="text-xs text-muted mt-0.5">{insp.checklist}</p>
                         </div>
                         <div className="flex items-center gap-2">
                           {badge(insp.status.replace("_", " "), statusColors[insp.status])}
-                          <span className="text-[10px] text-zinc-500">{insp.date}</span>
+                          <span className="text-[10px] text-muted">{insp.date}</span>
                         </div>
                       </div>
                       {/* Pass rate bar */}
@@ -585,7 +585,7 @@ export default function QualityPage() {
                         <span className="text-xs font-bold text-zinc-300">{rate}% pass</span>
                         <span className="text-xs text-green-400">✓ {insp.passCount}</span>
                         <span className="text-xs text-red-400">✗ {insp.failCount}</span>
-                        <span className="text-[10px] text-zinc-500">by {insp.inspector}</span>
+                        <span className="text-[10px] text-muted">by {insp.inspector}</span>
                       </div>
                     </div>
                   );
@@ -598,14 +598,14 @@ export default function QualityPage() {
           {tab === "checklists" && (
             <div className="space-y-4">
               {checklists.map(cl => (
-                <div key={cl.id} className="bg-[#171520] border border-white/5 rounded-xl overflow-hidden">
-                  <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between">
+                <div key={cl.id} className="bg-card border border-border-custom rounded-md overflow-hidden">
+                  <div className="px-5 py-4 border-b border-border-custom flex items-center justify-between">
                     <div>
                       <p className="font-bold text-white">{cl.title}</p>
                       <div className="flex items-center gap-2 mt-1">
                         <span className="text-[10px] bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded-full font-bold">{cl.category}</span>
                         <span className="text-[10px] bg-purple-500/10 text-purple-400 border border-purple-500/20 px-2 py-0.5 rounded-full font-bold">{cl.isCode}</span>
-                        <span className="text-[10px] text-zinc-500">{cl.items.length} items</span>
+                        <span className="text-[10px] text-muted">{cl.items.length} items</span>
                       </div>
                     </div>
                     <button
@@ -619,23 +619,23 @@ export default function QualityPage() {
                     </button>
                   </div>
                   <table className="w-full text-xs">
-                    <thead className="bg-white/[0.02] border-b border-white/5">
+                    <thead className="bg-elevated border-b border-border-custom">
                       <tr>
                         {["#", "Checkpoint", "Acceptable Criteria", "Mandatory"].map(h => (
-                          <th key={h} className="text-left px-4 py-2 text-[10px] font-bold text-zinc-500 uppercase tracking-wider">{h}</th>
+                          <th key={h} className="text-left px-4 py-2 text-[10px] font-bold text-muted uppercase tracking-wider">{h}</th>
                         ))}
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-white/[0.03]">
                       {cl.items.map(item => (
                         <tr key={item.id} className="hover:bg-white/[0.01]">
-                          <td className="px-4 py-2.5 text-zinc-500 font-mono">{item.sequence}</td>
+                          <td className="px-4 py-2.5 text-muted font-mono">{item.sequence}</td>
                           <td className="px-4 py-2.5 text-zinc-200">{item.description}</td>
-                          <td className="px-4 py-2.5 text-zinc-400">{item.criteria}</td>
+                          <td className="px-4 py-2.5 text-muted">{item.criteria}</td>
                           <td className="px-4 py-2.5">
                             {item.mandatory
                               ? <span className="text-red-400 font-bold text-[10px]">MANDATORY</span>
-                              : <span className="text-zinc-600 text-[10px]">Optional</span>}
+                              : <span className="text-muted text-[10px]">Optional</span>}
                           </td>
                         </tr>
                       ))}
@@ -654,16 +654,16 @@ export default function QualityPage() {
                 <div className="flex items-center gap-2 mb-3">
                   <div className="h-2 w-2 rounded-full bg-red-400" />
                   <span className="text-xs font-bold text-zinc-300 uppercase tracking-wider">Open</span>
-                  <span className="ml-auto text-xs text-zinc-500">{openNCRs.length}</span>
+                  <span className="ml-auto text-xs text-muted">{openNCRs.length}</span>
                 </div>
                 {openNCRs.map(ncr => (
-                  <div key={ncr.id} className="bg-[#171520] border border-red-500/10 rounded-xl p-4 space-y-2">
+                  <div key={ncr.id} className="bg-card border border-red-500/10 rounded-md p-4 space-y-2">
                     <div className="flex items-center justify-between">
                       {badge(ncr.severity, severityColors[ncr.severity])}
-                      <span className="text-[10px] text-zinc-500 font-mono">{ncr.number}</span>
+                      <span className="text-[10px] text-muted font-mono">{ncr.number}</span>
                     </div>
                     <p className="text-xs font-semibold text-white leading-snug">{ncr.title}</p>
-                    <p className="text-[10px] text-zinc-500">{ncr.zone} · Due {ncr.dueDate}</p>
+                    <p className="text-[10px] text-muted">{ncr.zone} · Due {ncr.dueDate}</p>
                     <button onClick={() => moveNCR(ncr.id, "under_review")}
                       className="w-full text-[10px] py-1 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 font-bold transition-all cursor-pointer">
                       → Move to Review
@@ -677,16 +677,16 @@ export default function QualityPage() {
                 <div className="flex items-center gap-2 mb-3">
                   <div className="h-2 w-2 rounded-full bg-blue-400" />
                   <span className="text-xs font-bold text-zinc-300 uppercase tracking-wider">Under Review</span>
-                  <span className="ml-auto text-xs text-zinc-500">{reviewNCRs.length}</span>
+                  <span className="ml-auto text-xs text-muted">{reviewNCRs.length}</span>
                 </div>
                 {reviewNCRs.map(ncr => (
-                  <div key={ncr.id} className="bg-[#171520] border border-blue-500/10 rounded-xl p-4 space-y-2">
+                  <div key={ncr.id} className="bg-card border border-blue-500/10 rounded-md p-4 space-y-2">
                     <div className="flex items-center justify-between">
                       {badge(ncr.severity, severityColors[ncr.severity])}
-                      <span className="text-[10px] text-zinc-500 font-mono">{ncr.number}</span>
+                      <span className="text-[10px] text-muted font-mono">{ncr.number}</span>
                     </div>
                     <p className="text-xs font-semibold text-white leading-snug">{ncr.title}</p>
-                    <p className="text-[10px] text-zinc-500">{ncr.zone} · Due {ncr.dueDate}</p>
+                    <p className="text-[10px] text-muted">{ncr.zone} · Due {ncr.dueDate}</p>
                     <button onClick={() => moveNCR(ncr.id, "closed")}
                       className="w-full text-[10px] py-1 rounded bg-green-500/10 text-green-400 border border-green-500/20 hover:bg-green-500/20 font-bold transition-all cursor-pointer">
                       ✓ Close NCR
@@ -700,16 +700,16 @@ export default function QualityPage() {
                 <div className="flex items-center gap-2 mb-3">
                   <div className="h-2 w-2 rounded-full bg-green-400" />
                   <span className="text-xs font-bold text-zinc-300 uppercase tracking-wider">Closed</span>
-                  <span className="ml-auto text-xs text-zinc-500">{closedNCRs.length}</span>
+                  <span className="ml-auto text-xs text-muted">{closedNCRs.length}</span>
                 </div>
                 {closedNCRs.map(ncr => (
-                  <div key={ncr.id} className="bg-[#171520] border border-green-500/10 rounded-xl p-4 space-y-2 opacity-70">
+                  <div key={ncr.id} className="bg-card border border-green-500/10 rounded-md p-4 space-y-2 opacity-70">
                     <div className="flex items-center justify-between">
                       {badge(ncr.severity, severityColors[ncr.severity])}
-                      <span className="text-[10px] text-zinc-500 font-mono">{ncr.number}</span>
+                      <span className="text-[10px] text-muted font-mono">{ncr.number}</span>
                     </div>
                     <p className="text-xs font-semibold text-white leading-snug">{ncr.title}</p>
-                    <p className="text-[10px] text-zinc-400 italic">{ncr.resolution}</p>
+                    <p className="text-[10px] text-muted italic">{ncr.resolution}</p>
                     {badge("Closed", statusColors["closed"])}
                   </div>
                 ))}
@@ -728,40 +728,40 @@ export default function QualityPage() {
                   { label: "Failed", val: labTests.filter(t => !t.pass).length, color: "text-red-400" },
                   { label: "Pass Rate", val: labTests.length ? `${Math.round(labTests.filter(t => t.pass).length / labTests.length * 100)}%` : "0%", color: "text-primary" },
                 ].map(({ label, val, color }) => (
-                  <div key={label} className="bg-[#171520] border border-white/5 rounded-xl p-4">
-                    <p className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider mb-1">{label}</p>
+                  <div key={label} className="bg-card border border-border-custom rounded-md p-4">
+                    <p className="text-[10px] text-muted uppercase font-bold tracking-wider mb-1">{label}</p>
                     <p className={`text-2xl font-bold ${color}`}>{val}</p>
                   </div>
                 ))}
               </div>
 
-              <div className="bg-[#171520] border border-white/5 rounded-xl overflow-hidden">
-                <div className="px-5 py-3 border-b border-white/5 flex items-center justify-between">
+              <div className="bg-card border border-border-custom rounded-md overflow-hidden">
+                <div className="px-5 py-3 border-b border-border-custom flex items-center justify-between">
                   <span className="text-xs font-bold text-white">Test Results Log</span>
                   <button onClick={() => setShowTestForm(true)} className="px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-bold border border-primary/20 hover:bg-primary/20 cursor-pointer">+ Log Test</button>
                 </div>
                 <table className="w-full text-xs">
-                  <thead className="bg-white/[0.02] border-b border-white/5">
+                  <thead className="bg-elevated border-b border-border-custom">
                     <tr>
                       {["Test Type", "Material", "Sample Ref", "Date", "Result", "Range", "Zone", "Status"].map(h => (
-                        <th key={h} className="text-left px-4 py-2.5 text-[10px] font-bold text-zinc-500 uppercase tracking-wider">{h}</th>
+                        <th key={h} className="text-left px-4 py-2.5 text-[10px] font-bold text-muted uppercase tracking-wider">{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/[0.03]">
                     {labTests.map(t => (
-                      <tr key={t.id} className="hover:bg-white/[0.02] transition-colors">
+                      <tr key={t.id} className="hover:bg-elevated transition-colors">
                         <td className="px-4 py-3 font-semibold text-white">{t.type}</td>
                         <td className="px-4 py-3 text-zinc-300">{t.material}</td>
-                        <td className="px-4 py-3 font-mono text-zinc-400 text-[10px]">{t.sampleRef}</td>
-                        <td className="px-4 py-3 text-zinc-400">{t.date}</td>
+                        <td className="px-4 py-3 font-mono text-muted text-[10px]">{t.sampleRef}</td>
+                        <td className="px-4 py-3 text-muted">{t.date}</td>
                         <td className="px-4 py-3">
                           <span className={`font-bold text-sm ${t.pass ? "text-green-400" : "text-red-400"}`}>
                             {t.value} {t.unit}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-zinc-500">{t.min}–{t.max} {t.unit}</td>
-                        <td className="px-4 py-3 text-zinc-400">{t.zone}</td>
+                        <td className="px-4 py-3 text-muted">{t.min}–{t.max} {t.unit}</td>
+                        <td className="px-4 py-3 text-muted">{t.zone}</td>
                         <td className="px-4 py-3">
                           {t.pass
                             ? <span className="flex items-center gap-1 text-green-400 font-bold text-[10px]"><span className="h-1.5 w-1.5 rounded-full bg-green-400" />PASS</span>
@@ -781,13 +781,13 @@ export default function QualityPage() {
       {selectedInspection && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
           onClick={() => setSelectedInspection(null)}>
-          <div className="bg-[#171520] border border-white/10 rounded-2xl w-full max-w-xl p-6 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+          <div className="bg-card border border-border-custom rounded-lg w-full max-w-xl p-6 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-5">
               <div>
                 <h2 className="font-bold text-white">{selectedInspection.zone}</h2>
-                <p className="text-xs text-zinc-500">{selectedInspection.checklist} · {selectedInspection.date}</p>
+                <p className="text-xs text-muted">{selectedInspection.checklist} · {selectedInspection.date}</p>
               </div>
-              <button onClick={() => setSelectedInspection(null)} className="text-zinc-500 hover:text-white text-xl cursor-pointer">✕</button>
+              <button onClick={() => setSelectedInspection(null)} className="text-muted hover:text-foreground text-xl cursor-pointer">✕</button>
             </div>
 
             <div className="flex items-center gap-4 mb-5">
@@ -802,9 +802,9 @@ export default function QualityPage() {
               {[
                 { label: "Pass", val: selectedInspection.passCount, color: "text-green-400 bg-green-500/10 border-green-500/20" },
                 { label: "Fail", val: selectedInspection.failCount, color: "text-red-400 bg-red-500/10 border-red-500/20" },
-                { label: "N/A", val: selectedInspection.naCount, color: "text-zinc-400 bg-white/5 border-white/10" },
+                { label: "N/A", val: selectedInspection.naCount, color: "text-muted bg-white/5 border-border-custom" },
               ].map(({ label, val, color }) => (
-                <div key={label} className={`rounded-xl border p-3 text-center ${color}`}>
+                <div key={label} className={`rounded-md border p-3 text-center ${color}`}>
                   <p className="text-xl font-bold">{val}</p>
                   <p className="text-[10px] font-bold uppercase">{label}</p>
                 </div>
@@ -817,14 +817,14 @@ export default function QualityPage() {
 
             {/* Checklist Checkpoints Audit Form */}
             {activeInspectionItems.length > 0 && (
-              <div className="space-y-4 border-t border-white/5 pt-4 mt-4">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400">Verify Checkpoints</h3>
+              <div className="space-y-4 border-t border-border-custom pt-4 mt-4">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-muted">Verify Checkpoints</h3>
                 <div className="space-y-3">
                   {activeInspectionItems.map((item) => (
-                    <div key={item.id} className="p-3 rounded-lg bg-white/[0.02] border border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-3 text-left">
+                    <div key={item.id} className="p-3 rounded-lg bg-elevated border border-border-custom flex flex-col md:flex-row md:items-center justify-between gap-3 text-left">
                       <div className="text-left">
                         <p className="text-xs text-white font-semibold">{item.sequence}. {item.description}</p>
-                        <p className="text-[10px] text-zinc-500 mt-0.5">Criteria: {item.criteria}</p>
+                        <p className="text-[10px] text-muted mt-0.5">Criteria: {item.criteria}</p>
                       </div>
                       <div className="flex gap-1.5 shrink-0">
                         {["Pass", "Fail", "NA"].map((res) => {
@@ -839,8 +839,8 @@ export default function QualityPage() {
                                     ? "bg-green-500/20 border-green-500 text-green-400"
                                     : res === "Fail"
                                     ? "bg-red-500/20 border-red-500 text-red-400"
-                                    : "bg-zinc-500/20 border-zinc-500 text-zinc-400"
-                                  : "bg-white/5 border-white/10 text-zinc-400 hover:text-white"
+                                    : "bg-zinc-500/20 border-zinc-500 text-muted"
+                                  : "bg-white/5 border-border-custom text-muted hover:text-foreground"
                               }`}
                             >
                               {res}
@@ -853,7 +853,7 @@ export default function QualityPage() {
                 </div>
                 <button
                   onClick={handleSubmitAuditResponses}
-                  className="w-full bg-primary hover:bg-primary/95 text-white py-2 rounded-xl text-xs font-bold transition-all mt-4 cursor-pointer"
+                  className="w-full bg-primary hover:bg-primary/95 text-white py-2 rounded-md text-xs font-bold transition-all mt-4 cursor-pointer"
                 >
                   Submit Audit Responses
                 </button>
@@ -865,50 +865,50 @@ export default function QualityPage() {
 
       {/* Modal: Start Site Inspection */}
       {showInspForm && (
-        <div className="fixed inset-0 bg-[#0E0C15]/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="glass-panel w-full max-w-md border border-white/10 rounded-3xl p-6 space-y-4 text-left">
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-card border border-border-custom rounded-lg w-full max-w-md border border-border-custom rounded-md p-6 space-y-4 text-left">
             <div>
               <h3 className="text-sm font-extrabold text-white">Start Site Inspection</h3>
-              <p className="text-xs text-zinc-400 mt-1">Initiate a quality control verification event.</p>
+              <p className="text-xs text-muted mt-1">Initiate a quality control verification event.</p>
             </div>
             <div className="space-y-3">
               <div>
-                <label className="text-[10px] uppercase font-bold text-zinc-500 block mb-1">Select Checklist Template</label>
+                <label className="text-[10px] uppercase font-bold text-muted block mb-1">Select Checklist Template</label>
                 <select
                   value={inspForm.checklistId}
                   onChange={(e) => setInspForm(prev => ({ ...prev, checklistId: e.target.value }))}
-                  className="w-full bg-[#171520] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-secondary font-semibold"
+                  className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none focus:border-secondary font-semibold"
                 >
                   <option value="">-- Choose Template --</option>
                   {checklists.map(cl => (
-                    <option key={cl.id} value={cl.id} className="bg-[#171520] text-white">{cl.title} ({cl.isCode})</option>
+                    <option key={cl.id} value={cl.id} className="bg-card text-white">{cl.title} ({cl.isCode})</option>
                   ))}
                 </select>
               </div>
               <div>
-                <label className="text-[10px] uppercase font-bold text-zinc-500 block mb-1">Location Zone</label>
+                <label className="text-[10px] uppercase font-bold text-muted block mb-1">Location Zone</label>
                 <input
                   type="text"
                   placeholder="Floor 3 Grid C-D"
                   value={inspForm.zone}
                   onChange={(e) => setInspForm(prev => ({ ...prev, zone: e.target.value }))}
-                  className="w-full bg-[#171520] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-secondary"
+                  className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none focus:border-secondary"
                 />
               </div>
               <div>
-                <label className="text-[10px] uppercase font-bold text-zinc-500 block mb-1">Remarks</label>
+                <label className="text-[10px] uppercase font-bold text-muted block mb-1">Remarks</label>
                 <textarea
                   placeholder="Additional inspection instructions..."
                   value={inspForm.overallRemarks}
                   onChange={(e) => setInspForm(prev => ({ ...prev, overallRemarks: e.target.value }))}
                   rows={2}
-                  className="w-full bg-[#171520] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-secondary"
+                  className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none focus:border-secondary"
                 />
               </div>
             </div>
             <div className="flex gap-3 justify-end pt-2">
-              <button onClick={() => setShowInspForm(false)} className="px-4 py-2 rounded-xl border border-white/10 text-xs font-bold hover:bg-white/[0.05] cursor-pointer">Cancel</button>
-              <button onClick={handleCreateInspection} className="bg-primary hover:opacity-90 text-white px-5 py-2 rounded-xl text-xs font-bold cursor-pointer">Start Inspection</button>
+              <button onClick={() => setShowInspForm(false)} className="px-4 py-2 rounded-md border border-border-custom text-xs font-bold hover:bg-white/[0.05] cursor-pointer">Cancel</button>
+              <button onClick={handleCreateInspection} className="bg-primary hover:opacity-90 text-white px-5 py-2 rounded-md text-xs font-bold cursor-pointer">Start Inspection</button>
             </div>
           </div>
         </div>
@@ -916,60 +916,60 @@ export default function QualityPage() {
 
       {/* Modal: Raise NCR */}
       {showNCRForm && (
-        <div className="fixed inset-0 bg-[#0E0C15]/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="glass-panel w-full max-w-md border border-white/10 rounded-3xl p-6 space-y-4 text-left">
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-card border border-border-custom rounded-lg w-full max-w-md border border-border-custom rounded-md p-6 space-y-4 text-left">
             <div>
               <h3 className="text-sm font-extrabold text-white">Raise Non-Conformance Report (NCR)</h3>
-              <p className="text-xs text-zinc-400 mt-1">Issue a formal quality deviation report.</p>
+              <p className="text-xs text-muted mt-1">Issue a formal quality deviation report.</p>
             </div>
             <div className="space-y-3">
               <div>
-                <label className="text-[10px] uppercase font-bold text-zinc-500 block mb-1">Deviation Title</label>
+                <label className="text-[10px] uppercase font-bold text-muted block mb-1">Deviation Title</label>
                 <input
                   type="text"
                   placeholder="Shuttering misalignment >10mm"
                   value={ncrForm.title}
                   onChange={(e) => setNcrForm(prev => ({ ...prev, title: e.target.value }))}
-                  className="w-full bg-[#171520] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-secondary"
+                  className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none focus:border-secondary"
                 />
               </div>
               <div>
-                <label className="text-[10px] uppercase font-bold text-zinc-500 block mb-1">Description / Snags details</label>
+                <label className="text-[10px] uppercase font-bold text-muted block mb-1">Description / Snags details</label>
                 <textarea
                   placeholder="Describe the exact quality issue..."
                   value={ncrForm.description}
                   onChange={(e) => setNcrForm(prev => ({ ...prev, description: e.target.value }))}
                   rows={2}
-                  className="w-full bg-[#171520] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-secondary"
+                  className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none focus:border-secondary"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[10px] uppercase font-bold text-zinc-500 block mb-1">Severity</label>
+                  <label className="text-[10px] uppercase font-bold text-muted block mb-1">Severity</label>
                   <select
                     value={ncrForm.severity}
                     onChange={(e) => setNcrForm(prev => ({ ...prev, severity: e.target.value as any }))}
-                    className="w-full bg-[#171520] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-secondary font-semibold"
+                    className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none focus:border-secondary font-semibold"
                   >
-                    <option value="Minor" className="bg-[#171520] text-white">Minor</option>
-                    <option value="Major" className="bg-[#171520] text-white">Major</option>
-                    <option value="Critical" className="bg-[#171520] text-white">Critical</option>
+                    <option value="Minor" className="bg-card text-white">Minor</option>
+                    <option value="Major" className="bg-card text-white">Major</option>
+                    <option value="Critical" className="bg-card text-white">Critical</option>
                   </select>
                 </div>
                 <div>
-                  <label className="text-[10px] uppercase font-bold text-zinc-500 block mb-1">Due Date</label>
+                  <label className="text-[10px] uppercase font-bold text-muted block mb-1">Due Date</label>
                   <input
                     type="date"
                     value={ncrForm.dueDate}
                     onChange={(e) => setNcrForm(prev => ({ ...prev, dueDate: e.target.value }))}
-                    className="w-full bg-[#171520] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-secondary"
+                    className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none focus:border-secondary"
                   />
                 </div>
               </div>
             </div>
             <div className="flex gap-3 justify-end pt-2">
-              <button onClick={() => setShowNCRForm(false)} className="px-4 py-2 rounded-xl border border-white/10 text-xs font-bold hover:bg-white/[0.05] cursor-pointer">Cancel</button>
-              <button onClick={handleCreateNCR} className="bg-primary hover:opacity-90 text-white px-5 py-2 rounded-xl text-xs font-bold cursor-pointer">Raise NCR</button>
+              <button onClick={() => setShowNCRForm(false)} className="px-4 py-2 rounded-md border border-border-custom text-xs font-bold hover:bg-white/[0.05] cursor-pointer">Cancel</button>
+              <button onClick={handleCreateNCR} className="bg-primary hover:opacity-90 text-white px-5 py-2 rounded-md text-xs font-bold cursor-pointer">Raise NCR</button>
             </div>
           </div>
         </div>
@@ -977,103 +977,103 @@ export default function QualityPage() {
 
       {/* Modal: Log Material Test */}
       {showTestForm && (
-        <div className="fixed inset-0 bg-[#0E0C15]/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="glass-panel w-full max-w-md border border-white/10 rounded-3xl p-6 space-y-4 text-left">
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-card border border-border-custom rounded-lg w-full max-w-md border border-border-custom rounded-md p-6 space-y-4 text-left">
             <div>
               <h3 className="text-sm font-extrabold text-white">Log Material Lab Test</h3>
-              <p className="text-xs text-zinc-400 mt-1">Record on-site / lab compressive, slump, or soil test results.</p>
+              <p className="text-xs text-muted mt-1">Record on-site / lab compressive, slump, or soil test results.</p>
             </div>
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[10px] uppercase font-bold text-zinc-500 block mb-1">Test Type</label>
+                  <label className="text-[10px] uppercase font-bold text-muted block mb-1">Test Type</label>
                   <input
                     type="text"
                     placeholder="Cube Test"
                     value={testForm.type}
                     onChange={(e) => setTestForm(prev => ({ ...prev, type: e.target.value }))}
-                    className="w-full bg-[#171520] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-secondary"
+                    className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none focus:border-secondary"
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] uppercase font-bold text-zinc-500 block mb-1">Material Name</label>
+                  <label className="text-[10px] uppercase font-bold text-muted block mb-1">Material Name</label>
                   <input
                     type="text"
                     placeholder="Concrete M25"
                     value={testForm.material}
                     onChange={(e) => setTestForm(prev => ({ ...prev, material: e.target.value }))}
-                    className="w-full bg-[#171520] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-secondary font-semibold"
+                    className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none focus:border-secondary font-semibold"
                   />
                 </div>
               </div>
               <div className="grid grid-cols-3 gap-2">
                 <div>
-                  <label className="text-[10px] uppercase font-bold text-zinc-500 block mb-1">Result Value</label>
+                  <label className="text-[10px] uppercase font-bold text-muted block mb-1">Result Value</label>
                   <input
                     type="number"
                     step="0.1"
                     value={testForm.value}
                     onChange={(e) => setTestForm(prev => ({ ...prev, value: e.target.value }))}
-                    className="w-full bg-[#171520] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-secondary"
+                    className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none focus:border-secondary"
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] uppercase font-bold text-zinc-500 block mb-1">Unit</label>
+                  <label className="text-[10px] uppercase font-bold text-muted block mb-1">Unit</label>
                   <input
                     type="text"
                     placeholder="MPa"
                     value={testForm.unit}
                     onChange={(e) => setTestForm(prev => ({ ...prev, unit: e.target.value }))}
-                    className="w-full bg-[#171520] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-secondary"
+                    className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none focus:border-secondary"
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] uppercase font-bold text-zinc-500 block mb-1">Sample Ref</label>
+                  <label className="text-[10px] uppercase font-bold text-muted block mb-1">Sample Ref</label>
                   <input
                     type="text"
                     placeholder="CB-001"
                     value={testForm.sampleRef}
                     onChange={(e) => setTestForm(prev => ({ ...prev, sampleRef: e.target.value }))}
-                    className="w-full bg-[#171520] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-secondary"
+                    className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none focus:border-secondary"
                   />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[10px] uppercase font-bold text-zinc-500 block mb-1">Min Acceptable</label>
+                  <label className="text-[10px] uppercase font-bold text-muted block mb-1">Min Acceptable</label>
                   <input
                     type="number"
                     step="0.1"
                     value={testForm.min}
                     onChange={(e) => setTestForm(prev => ({ ...prev, min: e.target.value }))}
-                    className="w-full bg-[#171520] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-secondary"
+                    className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none focus:border-secondary"
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] uppercase font-bold text-zinc-500 block mb-1">Max Acceptable</label>
+                  <label className="text-[10px] uppercase font-bold text-muted block mb-1">Max Acceptable</label>
                   <input
                     type="number"
                     step="0.1"
                     value={testForm.max}
                     onChange={(e) => setTestForm(prev => ({ ...prev, max: e.target.value }))}
-                    className="w-full bg-[#171520] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-secondary"
+                    className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none focus:border-secondary"
                   />
                 </div>
               </div>
               <div>
-                <label className="text-[10px] uppercase font-bold text-zinc-500 block mb-1">Zone / Area Used</label>
+                <label className="text-[10px] uppercase font-bold text-muted block mb-1">Zone / Area Used</label>
                 <input
                   type="text"
                   placeholder="Floor 3 Column C3"
                   value={testForm.zone}
                   onChange={(e) => setTestForm(prev => ({ ...prev, zone: e.target.value }))}
-                  className="w-full bg-[#171520] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-secondary"
+                  className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none focus:border-secondary"
                 />
               </div>
             </div>
             <div className="flex gap-3 justify-end pt-2">
-              <button onClick={() => setShowTestForm(false)} className="px-4 py-2 rounded-xl border border-white/10 text-xs font-bold hover:bg-white/[0.05] cursor-pointer">Cancel</button>
-              <button onClick={handleCreateTest} className="bg-primary hover:opacity-90 text-white px-5 py-2 rounded-xl text-xs font-bold cursor-pointer">Log Test</button>
+              <button onClick={() => setShowTestForm(false)} className="px-4 py-2 rounded-md border border-border-custom text-xs font-bold hover:bg-white/[0.05] cursor-pointer">Cancel</button>
+              <button onClick={handleCreateTest} className="bg-primary hover:opacity-90 text-white px-5 py-2 rounded-md text-xs font-bold cursor-pointer">Log Test</button>
             </div>
           </div>
         </div>

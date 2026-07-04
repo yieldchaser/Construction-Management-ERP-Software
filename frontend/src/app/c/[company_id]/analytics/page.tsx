@@ -124,25 +124,25 @@ function ChartCard({
   const usableHeight = height - padding * 2;
 
   return (
-    <div className="glass-panel rounded-3xl border border-white/5 p-5">
+    <div className="bg-card border border-border-custom rounded-lg rounded-md border border-border-custom p-5">
       <div className="mb-4 flex items-end justify-between gap-4">
         <div>
-          <div className="text-[10px] uppercase tracking-[0.24em] text-zinc-500">{title}</div>
-          <div className="mt-1 text-sm text-zinc-400">{subtitle}</div>
+          <div className="text-[10px] uppercase tracking-[0.24em] text-muted">{title}</div>
+          <div className="mt-1 text-sm text-muted">{subtitle}</div>
         </div>
         <div className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.2em]">
-          <span className="flex items-center gap-1 text-zinc-400">
+          <span className="flex items-center gap-1 text-muted">
             <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: chartColors.planned }} />
             {plannedLabel}
           </span>
-          <span className="flex items-center gap-1 text-zinc-400">
+          <span className="flex items-center gap-1 text-muted">
             <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: chartColors.actual }} />
             {actualLabel}
           </span>
         </div>
       </div>
 
-      <div className="relative rounded-2xl border border-white/5 bg-[#0B0910]">
+      <div className="relative rounded-lg border border-border-custom bg-card">
         <svg viewBox={`0 0 ${width} ${height}`} className="h-[260px] w-full">
           {[0, 25, 50, 75, 100].map((tick) => {
             const y = height - padding - (tick / 100) * (height - padding * 2);
@@ -226,28 +226,28 @@ function ChartCard({
 
         {hoveredIndex !== null && (
           <div
-            className="absolute bg-[#110F17]/95 backdrop-blur-md border border-white/10 rounded-xl p-3 shadow-2xl text-[10px] pointer-events-none transition-all duration-150 z-20 space-y-1.5 min-w-[120px]"
+            className="absolute bg-input/95 backdrop-blur-md border border-border-custom rounded-md p-3 shadow-2xl text-[10px] pointer-events-none transition-all duration-150 z-20 space-y-1.5 min-w-[120px]"
             style={{
               left: `${((labels.length === 1 ? width / 2 : padding + (hoveredIndex / Math.max(labels.length - 1, 1)) * (width - padding * 2)) / width) * 100}%`,
               top: "12px",
               transform: "translateX(-50%)",
             }}
           >
-            <div className="font-extrabold text-white border-b border-white/5 pb-1">{labels[hoveredIndex]}</div>
+            <div className="font-extrabold text-white border-b border-border-custom pb-1">{labels[hoveredIndex]}</div>
             <div className="flex items-center justify-between gap-4">
-              <span className="text-zinc-400">{plannedLabel}:</span>
+              <span className="text-muted">{plannedLabel}:</span>
               <span className="font-bold font-mono" style={{ color: chartColors.planned }}>{plannedValues[hoveredIndex]}%</span>
             </div>
             {actualValues[hoveredIndex] !== undefined && (
               <div className="flex items-center justify-between gap-4">
-                <span className="text-zinc-400">{actualLabel}:</span>
+                <span className="text-muted">{actualLabel}:</span>
                 <span className="font-bold font-mono" style={{ color: chartColors.actual }}>{actualValues[hoveredIndex]}%</span>
               </div>
             )}
             {actualValues[hoveredIndex] !== undefined && (
-              <div className="flex items-center justify-between gap-4 border-t border-white/5 pt-1 mt-1">
-                <span className="text-zinc-500">Variance:</span>
-                <span className={`font-bold font-mono ${actualValues[hoveredIndex] >= plannedValues[hoveredIndex] ? "text-[#00E5A3]" : "text-primary"}`}>
+              <div className="flex items-center justify-between gap-4 border-t border-border-custom pt-1 mt-1">
+                <span className="text-muted">Variance:</span>
+                <span className={`font-bold font-mono ${actualValues[hoveredIndex] >= plannedValues[hoveredIndex] ? "text-success" : "text-primary"}`}>
                   {(actualValues[hoveredIndex] - plannedValues[hoveredIndex]).toFixed(1)}%
                 </span>
               </div>
@@ -349,22 +349,22 @@ export default function CompanyAnalyticsPage() {
   const burnLabels = data?.budget_burn_series.map((point) => point.label) ?? [];
 
   return (
-    <div className="flex min-h-screen bg-[#0E0C15] text-[#ededed]">
-      <aside className="w-64 shrink-0 border-r border-white/5 bg-[#0B0910]">
-        <div className="flex items-center gap-3 border-b border-white/5 p-6">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-tr from-[#E8184C] to-[#7C5CFF] font-bold text-white">
+    <div className="flex min-h-screen bg-background text-foreground">
+      <aside className="w-64 shrink-0 border-r border-border-custom bg-card">
+        <div className="flex items-center gap-3 border-b border-border-custom p-6">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-tr bg-primary font-bold text-white">
             S
           </div>
           <div>
             <div className="text-sm font-bold text-white">SiteFlow</div>
-            <div className="text-[10px] uppercase tracking-[0.24em] text-zinc-500">Executive Analytics</div>
+            <div className="text-[10px] uppercase tracking-[0.24em] text-muted">Executive Analytics</div>
           </div>
         </div>
 
         <nav className="space-y-1 p-4">
           <Link
             href={`/c/${companyId}/dashboard`}
-            className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-zinc-400 transition-colors hover:bg-white/[0.03] hover:text-white"
+            className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-muted transition-colors hover:bg-white/[0.03] hover:text-foreground"
           >
             &larr; Dashboard
           </Link>
@@ -374,10 +374,10 @@ export default function CompanyAnalyticsPage() {
         </nav>
 
         <div className="px-4 pb-4">
-          <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-4">
-            <div className="text-[10px] uppercase tracking-[0.24em] text-zinc-500">Company Scope</div>
+          <div className="rounded-lg border border-border-custom bg-elevated p-4">
+            <div className="text-[10px] uppercase tracking-[0.24em] text-muted">Company Scope</div>
             <div className="mt-1 text-sm font-semibold text-white">{data?.company_name ?? "Loading company..."}</div>
-            <div className="mt-2 text-xs text-zinc-500">
+            <div className="mt-2 text-xs text-muted">
               {data ? `${data.project_count} projects aggregated into one command view` : "Waiting for KPI aggregation"}
             </div>
           </div>
@@ -385,11 +385,11 @@ export default function CompanyAnalyticsPage() {
       </aside>
 
       <main className="flex-1 overflow-y-auto">
-        <header className="flex flex-col gap-4 border-b border-white/5 bg-[#0B0910] px-6 py-5 lg:flex-row lg:items-end lg:justify-between">
+        <header className="flex flex-col gap-4 border-b border-border-custom bg-card px-6 py-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <div className="text-[10px] uppercase tracking-[0.28em] text-zinc-500">Phase 14</div>
+            <div className="text-[10px] uppercase tracking-[0.28em] text-muted">Phase 14</div>
             <h1 className="mt-2 text-2xl font-extrabold tracking-tight text-white">Advanced Analytics Dashboard</h1>
-            <p className="mt-2 max-w-3xl text-sm text-zinc-400">
+            <p className="mt-2 max-w-3xl text-sm text-muted">
               Cross-project KPI view for burn rate, progress cadence, labour productivity, procurement leakage, and subcontractor performance.
             </p>
           </div>
@@ -426,10 +426,10 @@ export default function CompanyAnalyticsPage() {
                 tone: "text-amber-400",
               },
             ].map((card) => (
-              <div key={card.label} className="glass-panel rounded-3xl border border-white/5 p-5">
-                <div className="text-[10px] uppercase tracking-[0.24em] text-zinc-500">{card.label}</div>
+              <div key={card.label} className="bg-card border border-border-custom rounded-lg rounded-md border border-border-custom p-5">
+                <div className="text-[10px] uppercase tracking-[0.24em] text-muted">{card.label}</div>
                 <div className={`mt-3 text-3xl font-black tracking-tight ${card.tone}`}>{card.value}</div>
-                <div className="mt-2 text-xs text-zinc-500">{card.hint}</div>
+                <div className="mt-2 text-xs text-muted">{card.hint}</div>
               </div>
             ))}
           </section>
@@ -445,17 +445,17 @@ export default function CompanyAnalyticsPage() {
               actualLabel="Actual"
             />
 
-            <div className="glass-panel rounded-3xl border border-white/5 p-5">
+            <div className="bg-card border border-border-custom rounded-lg rounded-md border border-border-custom p-5">
               <div className="mb-4 flex items-end justify-between gap-4">
                 <div>
-                  <div className="text-[10px] uppercase tracking-[0.24em] text-zinc-500">Budget Burn</div>
-                  <div className="mt-1 text-sm text-zinc-400">Cumulative spend as a share of total project budget</div>
+                  <div className="text-[10px] uppercase tracking-[0.24em] text-muted">Budget Burn</div>
+                  <div className="mt-1 text-sm text-muted">Cumulative spend as a share of total project budget</div>
                 </div>
-                <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400">
+                <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted">
                   {data ? `${data.total_spend.toLocaleString()} spent` : "Loading"}
                 </div>
               </div>
-              <div className="relative rounded-2xl border border-white/5 bg-[#0B0910]">
+              <div className="relative rounded-lg border border-border-custom bg-card">
                 <svg viewBox="0 0 760 260" className="h-[260px] w-full">
                   {[0, 25, 50, 75, 100].map((tick) => {
                     const y = 260 - 28 - (tick / 100) * (260 - 56);
@@ -511,24 +511,24 @@ export default function CompanyAnalyticsPage() {
 
                 {hoveredBurnIndex !== null && data?.budget_burn_series[hoveredBurnIndex] && (
                   <div
-                    className="absolute bg-[#110F17]/95 backdrop-blur-md border border-white/10 rounded-xl p-3 shadow-2xl text-[10px] pointer-events-none transition-all duration-150 z-20 space-y-1.5 min-w-[140px]"
+                    className="absolute bg-input/95 backdrop-blur-md border border-border-custom rounded-md p-3 shadow-2xl text-[10px] pointer-events-none transition-all duration-150 z-20 space-y-1.5 min-w-[140px]"
                     style={{
                       left: `${((burnLabels.length === 1 ? 380 : 28 + (hoveredBurnIndex / Math.max(burnLabels.length - 1, 1)) * 704) / 760) * 100}%`,
                       top: "12px",
                       transform: "translateX(-50%)",
                     }}
                   >
-                    <div className="font-extrabold text-white border-b border-white/5 pb-1">
+                    <div className="font-extrabold text-white border-b border-border-custom pb-1">
                       {data.budget_burn_series[hoveredBurnIndex].label}
                     </div>
                     <div className="flex items-center justify-between gap-4">
-                      <span className="text-zinc-400">Burn Share:</span>
+                      <span className="text-muted">Burn Share:</span>
                       <span className="font-bold font-mono" style={{ color: chartColors.burn }}>
                         {data.budget_burn_series[hoveredBurnIndex].burn_pct}%
                       </span>
                     </div>
                     <div className="flex items-center justify-between gap-4">
-                      <span className="text-zinc-400">Cumulative:</span>
+                      <span className="text-muted">Cumulative:</span>
                       <span className="font-bold font-mono text-white">
                         Rs {formatCurrency(data.budget_burn_series[hoveredBurnIndex].spend)}
                       </span>
@@ -537,16 +537,16 @@ export default function CompanyAnalyticsPage() {
                 )}
               </div>
               <div className="mt-4 grid grid-cols-3 gap-3 text-xs">
-                <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-3">
-                  <div className="text-[10px] uppercase tracking-[0.2em] text-zinc-500">Projects</div>
+                <div className="rounded-lg border border-border-custom bg-elevated p-3">
+                  <div className="text-[10px] uppercase tracking-[0.2em] text-muted">Projects</div>
                   <div className="mt-2 text-lg font-bold text-white">{data?.project_count ?? "—"}</div>
                 </div>
-                <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-3">
-                  <div className="text-[10px] uppercase tracking-[0.2em] text-zinc-500">Tasks Completed</div>
+                <div className="rounded-lg border border-border-custom bg-elevated p-3">
+                  <div className="text-[10px] uppercase tracking-[0.2em] text-muted">Tasks Completed</div>
                   <div className="mt-2 text-lg font-bold text-white">{data?.completed_tasks ?? "—"}</div>
                 </div>
-                <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-3">
-                  <div className="text-[10px] uppercase tracking-[0.2em] text-zinc-500">Area Delivered</div>
+                <div className="rounded-lg border border-border-custom bg-elevated p-3">
+                  <div className="text-[10px] uppercase tracking-[0.2em] text-muted">Area Delivered</div>
                   <div className="mt-2 text-lg font-bold text-white">{data?.labour_productivity.completed_area_m2 ?? "—"} m2</div>
                 </div>
               </div>
@@ -554,16 +554,16 @@ export default function CompanyAnalyticsPage() {
           </section>
 
           <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-            <div className="glass-panel rounded-3xl border border-white/5 p-5">
+            <div className="bg-card border border-border-custom rounded-lg rounded-md border border-border-custom p-5">
               <div className="flex items-end justify-between gap-4">
                 <div>
-                  <div className="text-[10px] uppercase tracking-[0.24em] text-zinc-500">Project Scoreboard</div>
-                  <div className="mt-1 text-sm text-zinc-400">Budget vs spend and completion by project</div>
+                  <div className="text-[10px] uppercase tracking-[0.24em] text-muted">Project Scoreboard</div>
+                  <div className="mt-1 text-sm text-muted">Budget vs spend and completion by project</div>
                 </div>
               </div>
-              <div className="mt-4 overflow-hidden rounded-2xl border border-white/5">
+              <div className="mt-4 overflow-hidden rounded-lg border border-border-custom">
                 <table className="w-full text-sm">
-                  <thead className="bg-white/[0.02] text-[10px] uppercase tracking-[0.2em] text-zinc-500">
+                  <thead className="bg-elevated text-[10px] uppercase tracking-[0.2em] text-muted">
                     <tr>
                       <th className="px-4 py-3 text-left">Project</th>
                       <th className="px-4 py-3 text-right">Budget</th>
@@ -574,10 +574,10 @@ export default function CompanyAnalyticsPage() {
                   </thead>
                   <tbody>
                     {(data?.projects ?? []).map((project) => (
-                      <tr key={project.project_id} className="border-t border-white/5 hover:bg-white/[0.015]">
+                      <tr key={project.project_id} className="border-t border-border-custom hover:bg-white/[0.015]">
                         <td className="px-4 py-3">
                           <div className="font-semibold text-white">{project.project_name}</div>
-                          <div className="text-[11px] text-zinc-500">{project.code ?? "No code"}</div>
+                          <div className="text-[11px] text-muted">{project.code ?? "No code"}</div>
                         </td>
                         <td className="px-4 py-3 text-right text-zinc-300">Rs {formatCurrency(project.budget)}</td>
                         <td className="px-4 py-3 text-right text-zinc-300">Rs {formatCurrency(project.spend)}</td>
@@ -593,25 +593,25 @@ export default function CompanyAnalyticsPage() {
             </div>
 
             <div className="space-y-6">
-              <div className="glass-panel rounded-3xl border border-white/5 p-5">
-                <div className="text-[10px] uppercase tracking-[0.24em] text-zinc-500">Labour Intelligence</div>
+              <div className="bg-card border border-border-custom rounded-lg rounded-md border border-border-custom p-5">
+                <div className="text-[10px] uppercase tracking-[0.24em] text-muted">Labour Intelligence</div>
                 <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-                  <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-4">
-                    <div className="text-[10px] uppercase tracking-[0.2em] text-zinc-500">Hours Logged</div>
+                  <div className="rounded-lg border border-border-custom bg-elevated p-4">
+                    <div className="text-[10px] uppercase tracking-[0.2em] text-muted">Hours Logged</div>
                     <div className="mt-2 text-2xl font-black text-white">{data?.labour_productivity.total_hours ?? "—"}</div>
                   </div>
-                  <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-4">
-                    <div className="text-[10px] uppercase tracking-[0.2em] text-zinc-500">Labour Days</div>
+                  <div className="rounded-lg border border-border-custom bg-elevated p-4">
+                    <div className="text-[10px] uppercase tracking-[0.2em] text-muted">Labour Days</div>
                     <div className="mt-2 text-2xl font-black text-white">{data?.labour_productivity.labour_days ?? "—"}</div>
                   </div>
                 </div>
               </div>
 
-              <div className="glass-panel rounded-3xl border border-white/5 p-5">
-                <div className="text-[10px] uppercase tracking-[0.24em] text-zinc-500">Material Leakage</div>
+              <div className="bg-card border border-border-custom rounded-lg rounded-md border border-border-custom p-5">
+                <div className="text-[10px] uppercase tracking-[0.24em] text-muted">Material Leakage</div>
                 <div className="mt-4 space-y-3">
                   <div>
-                    <div className="flex items-center justify-between text-xs text-zinc-500">
+                    <div className="flex items-center justify-between text-xs text-muted">
                       <span>Ordered</span>
                       <span>{data?.material_wastage.ordered_qty ?? "—"}</span>
                     </div>
@@ -620,7 +620,7 @@ export default function CompanyAnalyticsPage() {
                     </div>
                   </div>
                   <div>
-                    <div className="flex items-center justify-between text-xs text-zinc-500">
+                    <div className="flex items-center justify-between text-xs text-muted">
                       <span>Consumed</span>
                       <span>{data?.material_wastage.consumed_qty ?? "—"}</span>
                     </div>
@@ -633,7 +633,7 @@ export default function CompanyAnalyticsPage() {
                       />
                     </div>
                   </div>
-                  <div className="text-xs text-zinc-500">
+                  <div className="text-xs text-muted">
                     Wastage: <span className="font-semibold text-amber-400">{data?.material_wastage.wastage_pct ?? "—"}%</span>
                   </div>
                 </div>
@@ -641,16 +641,16 @@ export default function CompanyAnalyticsPage() {
             </div>
           </section>
 
-          <section className="glass-panel rounded-3xl border border-white/5 p-5">
+          <section className="bg-card border border-border-custom rounded-lg rounded-md border border-border-custom p-5">
             <div className="flex items-end justify-between gap-4">
               <div>
-                <div className="text-[10px] uppercase tracking-[0.24em] text-zinc-500">Subcontractor Scorecard</div>
-                <div className="mt-1 text-sm text-zinc-400">On-time bill rate and NCR burden by subcontractor</div>
+                <div className="text-[10px] uppercase tracking-[0.24em] text-muted">Subcontractor Scorecard</div>
+                <div className="mt-1 text-sm text-muted">On-time bill rate and NCR burden by subcontractor</div>
               </div>
             </div>
-            <div className="mt-4 overflow-hidden rounded-2xl border border-white/5">
+            <div className="mt-4 overflow-hidden rounded-lg border border-border-custom">
               <table className="w-full text-sm">
-                <thead className="bg-white/[0.02] text-[10px] uppercase tracking-[0.2em] text-zinc-500">
+                <thead className="bg-elevated text-[10px] uppercase tracking-[0.2em] text-muted">
                   <tr>
                     <th className="px-4 py-3 text-left">Subcontractor</th>
                     <th className="px-4 py-3 text-left">Projects</th>
@@ -661,9 +661,9 @@ export default function CompanyAnalyticsPage() {
                 </thead>
                 <tbody>
                   {(data?.subcontractor_scorecard ?? []).map((row) => (
-                    <tr key={row.subcontractor_id} className="border-t border-white/5 hover:bg-white/[0.015]">
+                    <tr key={row.subcontractor_id} className="border-t border-border-custom hover:bg-white/[0.015]">
                       <td className="px-4 py-3 font-semibold text-white">{row.subcontractor_name}</td>
-                      <td className="px-4 py-3 text-xs text-zinc-400">
+                      <td className="px-4 py-3 text-xs text-muted">
                         {row.project_names.length > 0 ? row.project_names.join(", ") : "No linked projects"}
                       </td>
                       <td className="px-4 py-3 text-right text-zinc-300">{row.bill_count}</td>
@@ -677,7 +677,7 @@ export default function CompanyAnalyticsPage() {
           </section>
 
           {loading && (
-            <div className="rounded-2xl border border-white/5 bg-white/[0.02] px-4 py-3 text-sm text-zinc-400">
+            <div className="rounded-lg border border-border-custom bg-elevated px-4 py-3 text-sm text-muted">
               Loading analytics...
             </div>
           )}

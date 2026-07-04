@@ -415,6 +415,39 @@ def list_project_timesheet_entries(project_id: uuid.UUID, db: Session = Depends(
     return response
 
 
+@router.get("/timesheets/company/{company_id}")
+def list_company_timesheet_entries(company_id: uuid.UUID, db: Session = Depends(get_db)):
+    results = db.query(
+        TimesheetEntry,
+        StaffEmployee.name.label("employee_name"),
+        Timesheet.employee_id.label("employee_id"),
+        Project.name.label("project_name")
+    ).select_from(TimesheetEntry)\
+     .join(Timesheet, TimesheetEntry.timesheet_id == Timesheet.id)\
+     .join(StaffEmployee, Timesheet.employee_id == StaffEmployee.id)\
+     .join(Project, Timesheet.project_id == Project.id)\
+     .filter(Timesheet.company_id == company_id)\
+     .order_by(TimesheetEntry.entry_date.desc())\
+     .all()
+    
+    response = []
+    for entry, emp_name, emp_id, proj_name in results:
+        response.append({
+            "id": str(entry.id),
+            "timesheet_id": str(entry.timesheet_id),
+            "entry_date": entry.entry_date.isoformat(),
+            "hours": float(entry.hours),
+            "activity_description": entry.activity_description,
+            "employee_name": emp_name,
+            "employee_id": str(emp_id),
+            "project_name": proj_name,
+            "start_time": entry.start_time.isoformat() if entry.start_time else None,
+            "end_time": entry.end_time.isoformat() if entry.end_time else None,
+            "duration": entry.duration
+        })
+    return response
+
+
 @router.patch("/timesheets/{ts_id}/submit", response_model=TimesheetResponse)
 def submit_timesheet(ts_id: uuid.UUID, db: Session = Depends(get_db)):
     ts = db.query(Timesheet).filter(Timesheet.id == ts_id).first()

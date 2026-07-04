@@ -66,15 +66,15 @@ export default async function ResourcesIndexPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0E0C15] text-[#ededed] pb-20 relative">
+    <div className="min-h-screen bg-background text-foreground pb-20 relative">
       {/* Background glow */}
-      <div className="absolute top-[-10%] right-[-10%] h-[50vw] w-[50vw] rounded-full bg-[#E8184C] opacity-5 blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] left-[-10%] h-[50vw] w-[50vw] rounded-full bg-[#7C5CFF] opacity-5 blur-[120px] pointer-events-none" />
+      <div className="absolute top-[-10%] right-[-10%] h-[50vw] w-[50vw] rounded-full bg-primary opacity-5 blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] left-[-10%] h-[50vw] w-[50vw] rounded-full bg-primary opacity-5 blur-[120px] pointer-events-none" />
 
       {/* Header */}
-      <header className="sticky top-0 z-50 glass-panel border-b border-white/5 px-6 py-4 flex items-center justify-between">
+      <header className="sticky top-0 z-50 bg-card border border-border-custom rounded-lg border-b border-border-custom px-6 py-4 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-[#E8184C] to-[#7C5CFF] font-sans font-bold text-white shadow-md">
+          <div className="flex h-9 w-9 items-center justify-center rounded-md bg-gradient-to-tr bg-primary font-sans font-bold text-white shadow-md">
             S
           </div>
           <span className="text-lg font-bold tracking-tight text-white">
@@ -84,14 +84,14 @@ export default async function ResourcesIndexPage() {
         <div className="flex items-center gap-4">
           <Link
             href="/blog"
-            className="text-sm font-semibold text-zinc-400 hover:text-white transition-all"
+            className="text-sm font-semibold text-muted hover:text-foreground transition-all"
           >
             Blog
           </Link>
           <span className="text-zinc-700">|</span>
           <Link
             href="/help"
-            className="text-sm font-semibold text-zinc-400 hover:text-white transition-all"
+            className="text-sm font-semibold text-muted hover:text-foreground transition-all"
           >
             Help Center
           </Link>
@@ -106,7 +106,7 @@ export default async function ResourcesIndexPage() {
         <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-white leading-tight">
           SiteFlow Resource Hub
         </h1>
-        <p className="text-zinc-400 text-sm max-w-xl mx-auto">
+        <p className="text-muted text-sm max-w-xl mx-auto">
           Free construction calculators, field case studies, software comparisons,
           and industry glossaries — built by the SiteFlow team.
         </p>
@@ -120,18 +120,18 @@ export default async function ResourcesIndexPage() {
 
           return (
             <section key={key}>
-              <div className="flex items-center gap-3 mb-6 pb-3 border-b border-white/5">
+              <div className="flex items-center gap-3 mb-6 pb-3 border-b border-border-custom">
                 <span className="text-2xl">{meta.icon}</span>
                 <div>
                   <h2 className="text-lg font-extrabold text-white">{meta.label}</h2>
-                  <p className="text-xs text-zinc-500">{meta.desc}</p>
+                  <p className="text-xs text-muted">{meta.desc}</p>
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                 {items.map((r, idx) => (
                   <article
                     key={idx}
-                    className="rounded-2xl glass-panel p-5 flex flex-col justify-between hover:border-white/10 hover:shadow-lg transition-all group border border-white/5"
+                    className="rounded-lg bg-card border border-border-custom rounded-lg p-5 flex flex-col justify-between hover:border-border-custom hover:shadow-lg transition-all group border border-border-custom"
                   >
                     <div className="space-y-2">
                       <h3 className="text-sm font-extrabold text-white group-hover:text-secondary transition-all line-clamp-2 leading-snug">
@@ -139,14 +139,14 @@ export default async function ResourcesIndexPage() {
                           {r.title}
                         </Link>
                       </h3>
-                      <p className="text-zinc-400 text-xs leading-relaxed line-clamp-2">
+                      <p className="text-muted text-xs leading-relaxed line-clamp-2">
                         {r.metaDescription}
                       </p>
                     </div>
-                    <div className="pt-3 mt-4 border-t border-white/5 flex items-center justify-end">
+                    <div className="pt-3 mt-4 border-t border-border-custom flex items-center justify-end">
                       <Link
                         href={`/resources/${r.slug}`}
-                        className="text-xs font-bold text-secondary hover:text-white transition-all cursor-pointer"
+                        className="text-xs font-bold text-secondary hover:text-foreground transition-all cursor-pointer"
                       >
                         View Resource →
                       </Link>
@@ -161,18 +161,18 @@ export default async function ResourcesIndexPage() {
         {/* Other resources */}
         {grouped.other.length > 0 && (
           <section>
-            <div className="flex items-center gap-3 mb-6 pb-3 border-b border-white/5">
+            <div className="flex items-center gap-3 mb-6 pb-3 border-b border-border-custom">
               <span className="text-2xl">📂</span>
               <div>
                 <h2 className="text-lg font-extrabold text-white">More Resources</h2>
-                <p className="text-xs text-zinc-500">Additional tools and content from SiteFlow.</p>
+                <p className="text-xs text-muted">Additional tools and content from SiteFlow.</p>
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               {grouped.other.map((r, idx) => (
                 <article
                   key={idx}
-                  className="rounded-2xl glass-panel p-5 flex flex-col justify-between hover:border-white/10 hover:shadow-lg transition-all group border border-white/5"
+                  className="rounded-lg bg-card border border-border-custom rounded-lg p-5 flex flex-col justify-between hover:border-border-custom hover:shadow-lg transition-all group border border-border-custom"
                 >
                   <div className="space-y-2">
                     <h3 className="text-sm font-extrabold text-white group-hover:text-primary transition-all line-clamp-2 leading-snug">
@@ -180,14 +180,14 @@ export default async function ResourcesIndexPage() {
                         {r.title}
                       </Link>
                     </h3>
-                    <p className="text-zinc-400 text-xs leading-relaxed line-clamp-2">
+                    <p className="text-muted text-xs leading-relaxed line-clamp-2">
                       {r.metaDescription}
                     </p>
                   </div>
-                  <div className="pt-3 mt-4 border-t border-white/5 flex items-center justify-end">
+                  <div className="pt-3 mt-4 border-t border-border-custom flex items-center justify-end">
                     <Link
                       href={`/resources/${r.slug}`}
-                      className="text-xs font-bold text-primary hover:text-white transition-all cursor-pointer"
+                      className="text-xs font-bold text-primary hover:text-foreground transition-all cursor-pointer"
                     >
                       View →
                     </Link>

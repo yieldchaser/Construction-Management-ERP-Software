@@ -1,8 +1,49 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import Image from "next/image";
+import Link from "next/link";
 import { getApiHost } from "@/lib/api";
+
+const TESTIMONIALS = [
+  {
+    title: "#1 Construction Application For Project tracking.",
+    name: "Mr. Mohammad Taqi",
+    company: "Hydro Master, Doha, Qatar",
+    quote: "I can share PDF reports instantly with clients & vendors, streamlining communication. Onsite's intuitive platform provides easy-to-use interface."
+  },
+  {
+    title: "#1 Construction Application For Client invoicing.",
+    name: "Rocks & logs stone works LLC",
+    company: "Dubai, UAE",
+    quote: "Material tracking and department-wise roles assignment have become easy for us. There is no more material wastage and easy PO generation. Love this software."
+  },
+  {
+    title: "#1 Construction Application For Attendance/Payroll",
+    name: "Mr. Manish Kumar",
+    company: "Reidius Infra, Jaipur",
+    quote: "With Onsite, all the progress and cost details are visible in one place. Client discussions became much smoother because we are now talking with actual site data instead of guesses."
+  },
+  {
+    title: "#1 Construction Application For Material management",
+    name: "Mr. Kathirvel",
+    company: "Theeran Avant, Erode, Tamil Nadu",
+    quote: "Managing site teams and tracking work across projects was becoming difficult. With Onsite, site engineers and project managers track progress in one place."
+  },
+  {
+    title: "#1 Construction Application For Cost control",
+    name: "Mr. Hiren Patel",
+    company: "DCC, Mumbai",
+    quote: "SiteFlow helped us monitor spending at activity level instead of discovering overruns later. Financial visibility got much closer to daily execution."
+  }
+];
+
+const LOGOS = [
+  "Hydro Master",
+  "Rocks & Logs",
+  "Reidius Infra",
+  "Theeran Avant",
+  "DCC Mumbai"
+];
 
 export default function LoginPage() {
   const [mobile, setMobile] = useState("9876543210");
@@ -12,6 +53,18 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [timer, setTimer] = useState(30);
+  const [countryCode, setCountryCode] = useState("+91");
+  const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false);
+
+  const [activeTestimonialIdx, setActiveTestimonialIdx] = useState(0);
+
+  // Rotate testimonials
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveTestimonialIdx((prev) => (prev + 1) % TESTIMONIALS.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Countdown timer for OTP resend
   useEffect(() => {
@@ -35,11 +88,7 @@ export default function LoginPage() {
     setError("");
     setMessage("");
 
-    // Normalize phone number (assume +91 if no code)
-    let formattedMobile = mobile;
-    if (!mobile.startsWith("+")) {
-      formattedMobile = `+91${mobile.replace(/\D/g, "")}`;
-    }
+    let formattedMobile = `${countryCode}${mobile}`;
 
     try {
       const apiHost = getApiHost();
@@ -74,10 +123,7 @@ export default function LoginPage() {
     setLoading(true);
     setError("");
 
-    let formattedMobile = mobile;
-    if (!mobile.startsWith("+")) {
-      formattedMobile = `+91${mobile.replace(/\D/g, "")}`;
-    }
+    let formattedMobile = `${countryCode}${mobile}`;
 
     try {
       const apiHost = getApiHost();
@@ -89,15 +135,30 @@ export default function LoginPage() {
 
       const data = await response.json();
       if (response.ok && data.access_token) {
-        setMessage("Authentication successful! Redirecting...");
-        // Store token and details in localStorage for client-side API requests
+        setMessage("Authentication successful! Checking onboarding status...");
         localStorage.setItem("access_token", data.access_token);
         localStorage.setItem("company_id", data.company.id);
         localStorage.setItem("user_id", data.user.id);
         
-        // Redirect to main workspace
+        // Fetch company onboarding status
+        const companyRes = await fetch(`${apiHost}/apis/v3/settings/company/${data.company.id}`, {
+          headers: { "Authorization": `Bearer ${data.access_token}` }
+        });
+        
+        let shouldOnboard = true;
+        if (companyRes.ok) {
+          const companyData = await companyRes.json();
+          if (companyData.onboarding_completed) {
+            shouldOnboard = false;
+          }
+        }
+
         setTimeout(() => {
-          window.location.href = `/c/${data.company.id}/dashboard`;
+          if (shouldOnboard) {
+            window.location.href = `/profile/onboarding`;
+          } else {
+            window.location.href = `/c/${data.company.id}/d/home`;
+          }
         }, 1500);
       } else {
         setError(data.detail || "Invalid OTP code. Please try again.");
@@ -109,17 +170,18 @@ export default function LoginPage() {
     }
   };
 
-  return (
-    <div className="flex min-h-screen w-full bg-[#0E0C15] text-[#ededed]">
-      {/* Graphic Left Panel (Desktop only) */}
-      <div className="relative hidden w-1/2 flex-col justify-between overflow-hidden bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#1A162D] to-[#0E0C15] p-16 lg:flex border-r border-white/5">
-        {/* Animated background glow elements */}
-        <div className="absolute top-[-20%] left-[-20%] h-[70%] w-[70%] rounded-full bg-[#7C5CFF] opacity-10 blur-[120px]" />
-        <div className="absolute bottom-[-20%] right-[-20%] h-[70%] w-[70%] rounded-full bg-[#E8184C] opacity-10 blur-[120px]" />
+  const currentTestimonial = TESTIMONIALS[activeTestimonialIdx];
 
-        {/* Brand Logo & Name */}
+  return (
+    <div className="flex min-h-screen w-full bg-background text-foreground">
+      {/* Testimonials Slide Carousel Left Panel (Desktop only) */}
+      <div className="relative hidden w-1/2 flex-col justify-between overflow-hidden bg-primary p-16 lg:flex border-r border-border-custom">
+        
+        <div className="absolute bottom-[-20%] right-[-20%] h-[70%] w-[70%] rounded-full bg-primary opacity-10 blur-[120px]" />
+
+        {/* Logo */}
         <div className="flex items-center gap-3 z-10">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-[#E8184C] to-[#7C5CFF] font-sans font-bold text-white shadow-lg">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary font-bold text-white shadow-sm">
             S
           </div>
           <span className="text-xl font-bold tracking-tight text-white">
@@ -127,71 +189,55 @@ export default function LoginPage() {
           </span>
         </div>
 
-        {/* Dynamic Center Graphic */}
-        <div className="relative flex flex-1 flex-col justify-center items-start gap-8 z-10">
-          <div className="space-y-4">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary border border-primary/20">
-              ⚡ SiteFlow Core Engine v3.0
-            </span>
+        {/* Carousel Content */}
+        <div className="flex flex-1 flex-col justify-center items-start gap-8 z-10 relative">
+          <div className="space-y-6 transition-all duration-500 ease-in-out min-h-[260px] flex flex-col justify-center">
             <h1 className="text-4xl font-extrabold tracking-tight leading-tight text-white max-w-lg lg:text-5xl">
-              Professional Site & <br />
-              <span className="text-gradient-accent">Operations Control</span>
+              {currentTestimonial.title}
             </h1>
-            <p className="text-zinc-400 text-lg max-w-md">
-              Real-time resource coordination, material ledger settlements, and live field calculators. Built to outperform the rest.
-            </p>
+            
+            <div className="space-y-2 border-l-2 border-primary/50 pl-4 py-1">
+              <p className="text-foreground text-lg italic leading-relaxed">
+                "{currentTestimonial.quote}"
+              </p>
+              <div>
+                <h4 className="text-sm font-bold text-white mt-2">{currentTestimonial.name}</h4>
+                <p className="text-xs text-muted">{currentTestimonial.company}</p>
+              </div>
+            </div>
           </div>
 
-          {/* Simulated Gantt / Geofence Widget */}
-          <div className="w-full max-w-md rounded-2xl glass-panel-glow p-6 space-y-4 transition-all duration-500 hover:border-white/10 hover:shadow-[0_0_50px_rgba(232,24,76,0.05)]">
-            <div className="flex items-center justify-between border-b border-white/5 pb-3">
-              <span className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">Live Site Activity</span>
-              <span className="h-2 w-2 rounded-full bg-success animate-pulse" />
-            </div>
-            
-            <div className="space-y-3">
-              {/* Gantt Bar Row 1 */}
-              <div className="space-y-1">
-                <div className="flex justify-between text-xs">
-                  <span className="text-zinc-300 font-medium">Excavation & Shoring</span>
-                  <span className="text-[#00E5A3]">Active</span>
-                </div>
-                <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
-                  <div className="h-full bg-gradient-to-r from-secondary to-primary w-4/5 rounded-full animate-shimmer" />
-                </div>
-              </div>
-
-              {/* Gantt Bar Row 2 */}
-              <div className="space-y-1">
-                <div className="flex justify-between text-xs">
-                  <span className="text-zinc-300 font-medium">Concrete Pour (M20 grade)</span>
-                  <span className="text-zinc-500">Pending QA</span>
-                </div>
-                <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
-                  <div className="h-full bg-secondary/40 w-1/2 rounded-full" />
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 pt-2 text-xs text-zinc-500 border-t border-white/5 mt-2">
-              <span>📍 Geofence Guard: Active (500m radius)</span>
-            </div>
+          {/* Carousel dots */}
+          <div className="flex gap-2">
+            {TESTIMONIALS.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setActiveTestimonialIdx(i)}
+                className={`h-2.5 rounded-full transition-all duration-300 ${
+                  activeTestimonialIdx === i ? "w-6 bg-primary" : "w-2.5 bg-white/10"
+                }`}
+              />
+            ))}
           </div>
         </div>
 
-        {/* Footer info */}
-        <div className="text-xs text-zinc-600 z-10">
-          © {new Date().getFullYear()} SiteFlow Inc. All rights reserved. Secured by Supabase.
+        {/* Footer brand logos */}
+        <div className="flex flex-wrap items-center gap-x-8 gap-y-4 pt-8 border-t border-border-custom z-10">
+          {LOGOS.map((l, idx) => (
+            <span key={idx} className="text-xs font-bold tracking-wider text-muted uppercase">
+              {l}
+            </span>
+          ))}
         </div>
       </div>
 
       {/* Interactive Form Panel */}
-      <div className="flex w-full flex-col justify-center items-center p-8 lg:w-1/2 bg-[#0E0C15] relative">
-        <div className="absolute top-[20%] right-[10%] h-[50%] w-[50%] rounded-full bg-[#E8184C] opacity-5 blur-[100px] pointer-events-none lg:hidden" />
+      <div className="flex w-full flex-col justify-center items-center p-8 lg:w-1/2 bg-background relative">
         
-        {/* Mobile Header (hidden on desktop) */}
+        
+        {/* Mobile Header */}
         <div className="mb-12 flex items-center gap-3 lg:hidden absolute top-8 left-8">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-tr from-[#E8184C] to-[#7C5CFF] font-sans font-bold text-white">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary font-bold text-white">
             S
           </div>
           <span className="text-lg font-bold tracking-tight text-white">
@@ -201,25 +247,39 @@ export default function LoginPage() {
 
         <div className="w-full max-w-md space-y-8 z-10">
           {/* Header */}
-          <div className="space-y-2">
+          <div className="space-y-4 text-center">
+            {step === "phone" && (
+              <div className="flex justify-center mb-6">
+                {/* Visual phone hand SVG/CSS */}
+                <div className="relative h-28 w-28 bg-card border border-border-custom rounded-full flex items-center justify-center shadow-lg">
+                  
+                  <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-primary">
+                    <rect x="5" y="2" width="14" height="20" rx="2" />
+                    <line x1="12" y1="18" x2="12" y2="18" strokeLinecap="round" strokeWidth="2" />
+                    <path d="M9 5h6" />
+                  </svg>
+                </div>
+              </div>
+            )}
+            
             <h2 className="text-3xl font-bold tracking-tight text-white">
-              {step === "phone" ? "Enter your mobile" : "Enter Verification Code"}
+              {step === "phone" ? "Login & Sign Up" : "Enter Verification Code"}
             </h2>
-            <p className="text-zinc-400 text-sm">
+            <p className="text-muted text-sm">
               {step === "phone"
-                ? "We will send you a 6-digit OTP code to verify your profile."
+                ? "Enter your country code and mobile number to request OTP."
                 : `Enter the code sent to your phone.`}
             </p>
           </div>
 
-          {/* Success / Error Messages */}
+          {/* Messages */}
           {error && (
-            <div className="rounded-lg border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-400">
+            <div className="rounded-lg border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-400 text-center">
               {error}
             </div>
           )}
           {message && (
-            <div className="rounded-lg border border-success/20 bg-success/10 p-4 text-sm text-success">
+            <div className="rounded-lg border border-success/20 bg-success/10 p-4 text-sm text-success text-center">
               {message}
             </div>
           )}
@@ -228,19 +288,51 @@ export default function LoginPage() {
           {step === "phone" && (
             <form onSubmit={handleSendOtp} className="space-y-6">
               <div className="space-y-2">
-                <label className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
-                  Mobile Number
-                </label>
-                <div className="flex rounded-xl bg-white/[0.03] border border-white/10 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all overflow-hidden items-center px-4 py-1">
-                  <span className="text-zinc-500 font-semibold text-lg mr-3 select-none">+91</span>
+                <div className="relative flex rounded-md bg-input border border-border-custom focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all overflow-visible items-center p-1.5">
+                  {/* Country Selector Dropdown */}
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setIsCountryDropdownOpen(!isCountryDropdownOpen)}
+                      className="flex items-center gap-1.5 px-3 py-2 bg-elevated rounded-lg border border-border-custom text-sm font-semibold hover:bg-white/10 transition-all cursor-pointer text-white"
+                    >
+                      <span>🇮🇳</span>
+                      <span>{countryCode}</span>
+                      <span className="text-[10px] opacity-60">▼</span>
+                    </button>
+                    {isCountryDropdownOpen && (
+                      <div className="absolute top-[120%] left-0 w-32 bg-card border border-border-custom rounded-lg shadow-2xl z-50 overflow-hidden">
+                        {[
+                          { code: "+91", flag: "🇮🇳", label: "India" },
+                          { code: "+971", flag: "🇦🇪", label: "UAE" },
+                          { code: "+974", flag: "🇶🇦", label: "Qatar" },
+                          { code: "+966", flag: "🇸🇦", label: "KSA" }
+                        ].map((c) => (
+                          <button
+                            key={c.code}
+                            type="button"
+                            onClick={() => {
+                              setCountryCode(c.code);
+                              setIsCountryDropdownOpen(false);
+                            }}
+                            className="w-full px-3 py-2 text-left text-xs font-semibold hover:bg-primary/20 hover:text-foreground transition-all flex items-center gap-2 cursor-pointer text-foreground"
+                          >
+                            <span>{c.flag}</span>
+                            <span>{c.code}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
                   <input
                     type="tel"
                     value={mobile}
                     onChange={(e) => setMobile(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                    placeholder="98765 43210"
+                    placeholder="Mobile Number"
                     required
                     disabled={loading}
-                    className="w-full bg-transparent py-2.5 text-lg font-semibold tracking-wide placeholder-zinc-600 focus:outline-none text-white"
+                    className="w-full bg-transparent px-4 py-2 text-base font-semibold tracking-wide placeholder-zinc-600 focus:outline-none text-white"
                   />
                 </div>
               </div>
@@ -248,19 +340,22 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex justify-center items-center py-4 px-6 rounded-xl text-white font-semibold bg-gradient-to-r from-primary to-[#FF3B6C] shadow-lg hover:opacity-90 active:scale-[0.98] transition-all duration-150 cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
+                className="w-full flex justify-center items-center py-4 px-6 rounded-md text-white font-semibold bg-primary shadow-lg hover:opacity-90 active:scale-[0.98] transition-all duration-150 cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
               >
-                {loading ? (
-                  <span className="flex items-center gap-2">
-                    <svg className="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24" fill="none">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                    </svg>
-                    Sending OTP...
-                  </span>
-                ) : (
-                  "Request Access Code"
-                )}
+                {loading ? "Sending OTP..." : "Next"}
+              </button>
+
+              <div className="relative flex py-2 items-center">
+                <div className="flex-grow border-t border-border-custom"></div>
+                <span className="flex-shrink mx-4 text-xs font-bold text-muted uppercase tracking-widest">Or</span>
+                <div className="flex-grow border-t border-border-custom"></div>
+              </div>
+
+              <button
+                type="button"
+                className="w-full flex justify-center items-center py-3.5 px-6 rounded-md text-muted font-semibold border border-border-custom hover:bg-elevated hover:text-foreground transition-all cursor-pointer"
+              >
+                Login with App
               </button>
             </form>
           )}
@@ -270,13 +365,13 @@ export default function LoginPage() {
             <form onSubmit={handleVerifyOtp} className="space-y-6">
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <label className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-muted">
                     6-Digit Verification Code
                   </label>
                   <button
                     type="button"
                     onClick={() => setStep("phone")}
-                    className="text-xs font-medium text-secondary hover:text-white transition-colors"
+                    className="text-xs font-medium text-secondary hover:text-foreground transition-colors"
                   >
                     Change Number
                   </button>
@@ -289,29 +384,19 @@ export default function LoginPage() {
                   placeholder="123456"
                   required
                   disabled={loading}
-                  className="glass-input w-full px-4 py-3.5 text-center text-2xl font-bold tracking-widest placeholder-zinc-700"
+                  className="input-field w-full px-4 py-3.5 text-center text-2xl font-bold tracking-widest placeholder-muted"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex justify-center items-center py-4 px-6 rounded-xl text-white font-semibold bg-gradient-to-r from-secondary to-[#9C85FF] shadow-lg hover:opacity-90 active:scale-[0.98] transition-all duration-150 cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
+                className="w-full flex justify-center items-center py-4 px-6 rounded-md text-white font-semibold bg-primary shadow-lg hover:opacity-90 active:scale-[0.98] transition-all duration-150 cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
               >
-                {loading ? (
-                  <span className="flex items-center gap-2">
-                    <svg className="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24" fill="none">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                    </svg>
-                    Verifying Code...
-                  </span>
-                ) : (
-                  "Verify & Log In"
-                )}
+                {loading ? "Verifying Code..." : "Verify & Log In"}
               </button>
 
-              <div className="flex justify-between items-center text-xs text-zinc-500 pt-2">
+              <div className="flex justify-between items-center text-xs text-muted pt-2">
                 <span>Didn't receive code?</span>
                 {timer > 0 ? (
                   <span>Resend in {timer}s</span>
@@ -320,7 +405,7 @@ export default function LoginPage() {
                     type="button"
                     onClick={handleSendOtp}
                     disabled={loading}
-                    className="font-medium text-primary hover:text-white transition-colors"
+                    className="font-medium text-primary hover:text-foreground transition-colors"
                   >
                     Resend Code
                   </button>
@@ -329,11 +414,11 @@ export default function LoginPage() {
             </form>
           )}
 
-          {/* Quick Console Demo / Developer Helper Notice */}
-          <div className="rounded-xl border border-white/5 bg-white/[0.02] p-4 text-xs text-zinc-500 space-y-2">
-            <span className="font-semibold text-zinc-400 block">⚡ Developer Console Demo Mode:</span>
+          {/* Developer Notice */}
+          <div className="rounded-md border border-border-custom bg-elevated p-4 text-xs text-muted space-y-2">
+            <span className="font-semibold text-muted block">⚡ Developer Notice:</span>
             <p>
-              Use any valid 10-digit phone number. Enter code <code className="text-secondary font-mono font-bold">123456</code> to bypass and auto-onboard user and company profiles.
+              Use OTP code <code className="text-secondary font-mono font-bold">123456</code> to log in.
             </p>
           </div>
         </div>

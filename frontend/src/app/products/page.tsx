@@ -13,15 +13,15 @@ export default async function ProductsIndexPage() {
   const products = await getContentItems("products");
 
   return (
-    <div className="min-h-screen bg-[#0E0C15] text-[#ededed] pb-20 relative">
+    <div className="min-h-screen bg-background text-foreground pb-20 relative">
       {/* Background glow */}
-      <div className="absolute top-[-10%] right-[-10%] h-[50vw] w-[50vw] rounded-full bg-[#E8184C] opacity-5 blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] left-[-10%] h-[50vw] w-[50vw] rounded-full bg-[#7C5CFF] opacity-5 blur-[120px] pointer-events-none" />
+      <div className="absolute top-[-10%] right-[-10%] h-[50vw] w-[50vw] rounded-full bg-primary opacity-5 blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] left-[-10%] h-[50vw] w-[50vw] rounded-full bg-primary opacity-5 blur-[120px] pointer-events-none" />
 
       {/* Header */}
-      <header className="sticky top-0 z-50 glass-panel border-b border-white/5 px-6 py-4 flex items-center justify-between">
+      <header className="sticky top-0 z-50 bg-card border border-border-custom rounded-lg border-b border-border-custom px-6 py-4 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-[#E8184C] to-[#7C5CFF] font-sans font-bold text-white shadow-md">
+          <div className="flex h-9 w-9 items-center justify-center rounded-md bg-gradient-to-tr bg-primary font-sans font-bold text-white shadow-md">
             S
           </div>
           <span className="text-lg font-bold tracking-tight text-white">
@@ -31,14 +31,14 @@ export default async function ProductsIndexPage() {
         <div className="flex items-center gap-4">
           <Link
             href="/blog"
-            className="text-sm font-semibold text-zinc-400 hover:text-white transition-all"
+            className="text-sm font-semibold text-muted hover:text-foreground transition-all"
           >
             Blog
           </Link>
           <span className="text-zinc-700">|</span>
           <Link
             href="/help"
-            className="text-sm font-semibold text-zinc-400 hover:text-white transition-all"
+            className="text-sm font-semibold text-muted hover:text-foreground transition-all"
           >
             Help Center
           </Link>
@@ -53,7 +53,7 @@ export default async function ProductsIndexPage() {
         <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-white leading-tight">
           SiteFlow ERP Modules
         </h1>
-        <p className="text-zinc-400 text-sm max-w-xl mx-auto">
+        <p className="text-muted text-sm max-w-xl mx-auto">
           Every module in the SiteFlow platform is designed for real-world
           construction operations — not adapted from a generic enterprise
           template.
@@ -66,7 +66,7 @@ export default async function ProductsIndexPage() {
           {products.map((product, idx) => (
             <article
               key={idx}
-              className="rounded-2xl glass-panel p-6 flex flex-col justify-between hover:border-white/10 hover:shadow-lg transition-all group border border-white/5"
+              className="rounded-lg bg-card border border-border-custom rounded-lg p-6 flex flex-col justify-between hover:border-border-custom hover:shadow-lg transition-all group border border-border-custom"
             >
               <div className="space-y-3">
                 <div className="text-2xl">🏗️</div>
@@ -75,14 +75,14 @@ export default async function ProductsIndexPage() {
                     {product.title}
                   </Link>
                 </h2>
-                <p className="text-zinc-400 text-xs leading-relaxed line-clamp-3">
+                <p className="text-muted text-xs leading-relaxed line-clamp-3">
                   {product.metaDescription}
                 </p>
               </div>
-              <div className="pt-4 mt-6 border-t border-white/5 flex items-center justify-end">
+              <div className="pt-4 mt-6 border-t border-border-custom flex items-center justify-end">
                 <Link
                   href={`/products/${product.slug}`}
-                  className="text-xs font-bold text-primary hover:text-white transition-all cursor-pointer"
+                  className="text-xs font-bold text-primary hover:text-foreground transition-all cursor-pointer"
                 >
                   Explore Module →
                 </Link>

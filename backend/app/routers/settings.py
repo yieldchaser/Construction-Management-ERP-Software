@@ -28,6 +28,10 @@ class CompanySettingsResponse(BaseModel):
     negative_balance_warning: bool
     custom_pdf_template_enabled: bool
     google_sheets_auth_phone: Optional[str]
+    onboarding_segment: Optional[str] = None
+    onboarding_categories: Optional[str] = None
+    onboarding_city: Optional[str] = None
+    onboarding_completed: bool = False
 
     class Config:
         from_attributes = True

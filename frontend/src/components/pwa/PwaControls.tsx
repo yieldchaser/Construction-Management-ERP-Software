@@ -72,12 +72,12 @@ export default function PwaControls() {
   };
 
   return (
-    <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-4 shadow-[0_0_40px_rgba(0,0,0,0.18)]">
+    <div className="rounded-lg border border-border-custom bg-elevated p-4 shadow-[0_0_40px_rgba(0,0,0,0.18)]">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <div className="text-[10px] uppercase tracking-[0.2em] text-zinc-500">Mobile PWA</div>
+          <div className="text-[10px] uppercase tracking-[0.2em] text-muted">Mobile PWA</div>
           <div className="mt-1 text-sm font-semibold text-white">Installable shell and push alerts</div>
-          <div className="mt-1 text-[11px] text-zinc-500">{status}</div>
+          <div className="mt-1 text-[11px] text-muted">{status}</div>
         </div>
         <span
           className={`rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${
@@ -99,7 +99,7 @@ export default function PwaControls() {
         </button>
         <button
           onClick={handleEnableNotifications}
-          className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-[11px] font-bold text-zinc-200 transition-colors hover:bg-white/[0.05]"
+          className="rounded-lg border border-border-custom bg-white/[0.03] px-3 py-2 text-[11px] font-bold text-zinc-200 transition-colors hover:bg-white/[0.05]"
         >
           Enable Push
         </button>

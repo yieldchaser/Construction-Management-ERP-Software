@@ -318,24 +318,24 @@ export default function EquipmentTrackingPage() {
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   return (
-    <div className="flex h-screen bg-[#0E0C15] text-[#ededed] overflow-hidden">
+    <div className="flex h-screen bg-background text-foreground overflow-hidden">
       {/* Sidebar Navigation */}
-      <aside className="w-64 border-r border-white/5 bg-[#0B0910] flex flex-col justify-between h-full shrink-0">
+      <aside className="w-64 border-r border-border-custom bg-card flex flex-col justify-between h-full shrink-0">
         <div className="flex flex-col overflow-y-auto flex-1">
-          <div className="p-6 flex items-center gap-3 border-b border-white/5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-tr from-[#E8184C] to-[#7C5CFF] font-sans font-bold text-white">S</div>
+          <div className="p-6 flex items-center gap-3 border-b border-border-custom">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-tr bg-primary font-sans font-bold text-white">S</div>
             <span className="font-bold text-white tracking-tight">SiteFlow Console</span>
           </div>
 
           <nav className="p-4 space-y-2">
-            <Link href={`/c/${companyId}/dashboard`} className="flex items-center gap-2.5 px-3 py-2 text-xs text-zinc-400 hover:text-white hover:bg-white/[0.02] rounded-lg">
+            <Link href={`/c/${companyId}/dashboard`} className="flex items-center gap-2.5 px-3 py-2 text-xs text-muted hover:text-foreground hover:bg-elevated rounded-lg">
               <span>←</span> Back to Dashboard
             </Link>
             <div className="pt-4">
-              <span className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider block px-3 mb-2">Fleet Management</span>
+              <span className="text-[10px] uppercase font-bold text-muted tracking-wider block px-3 mb-2">Fleet Management</span>
               <ul className="space-y-1">
                 <li>
-                  <Link href="#" className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg bg-white/[0.06] text-white font-semibold shadow-sm">
+                  <Link href="#" className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg bg-primary/10 text-white font-semibold shadow-sm">
                     <span>🚜</span> Equipment & Machinery
                   </Link>
                 </li>
@@ -347,26 +347,26 @@ export default function EquipmentTrackingPage() {
 
       {/* Main Framework */}
       <main className="flex-1 flex flex-col overflow-hidden h-full">
-        <header className="h-16 border-b border-white/5 px-8 flex items-center justify-between bg-[#0B0910] shrink-0">
+        <header className="h-16 border-b border-border-custom px-8 flex items-center justify-between bg-card shrink-0">
           <div className="flex items-center gap-4">
             <h1 className="text-sm font-bold text-white uppercase tracking-wider">Equipment & Machinery Logs</h1>
             <span className="h-4 w-px bg-white/10" />
-            <span className="text-xs font-medium text-zinc-400">GPS verified mileage and refueling timeline</span>
+            <span className="text-xs font-medium text-muted">GPS verified mileage and refueling timeline</span>
           </div>
-          <button onClick={() => setIsAddEqOpen(true)} className="px-4 py-2 bg-gradient-to-r from-primary to-[#FF3B6C] rounded-xl text-xs font-bold text-white hover:opacity-90 transition-all shadow-lg shadow-primary/20">
+          <button onClick={() => setIsAddEqOpen(true)} className="px-4 py-2 bg-primary rounded-md text-xs font-bold text-white hover:opacity-90 transition-all shadow-lg shadow-primary/20">
             + Add Equipment
           </button>
         </header>
 
         {/* Tab Controls */}
-        <div className="border-b border-white/5 bg-[#0D0B14]/40 px-6 py-1.5 flex gap-4 text-xs font-semibold shrink-0">
+        <div className="border-b border-border-custom bg-background/40 px-6 py-1.5 flex gap-4 text-xs font-semibold shrink-0">
           {[
             { id: "fleet", label: "Fleet Inventory", emoji: "🚜" },
             { id: "timeline", label: "Usage & Refuel Timeline", emoji: "⛽" },
             { id: "odologs", label: "Odometer Run Logs", emoji: "📊" },
             { id: "maintenance", label: "Maintenance Schedule", emoji: "🔧" }
           ].map((t) => (
-            <button key={t.id} onClick={() => { setActiveTab(t.id as any); }} className={`flex items-center gap-1.5 py-2 border-b-2 transition-all ${activeTab === t.id ? "border-primary text-white" : "border-transparent text-zinc-400 hover:text-white"}`}>
+            <button key={t.id} onClick={() => { setActiveTab(t.id as any); }} className={`flex items-center gap-1.5 py-2 border-b-2 transition-all ${activeTab === t.id ? "border-primary text-white" : "border-transparent text-muted hover:text-foreground"}`}>
               <span>{t.emoji}</span> {t.label}
             </button>
           ))}
@@ -375,23 +375,23 @@ export default function EquipmentTrackingPage() {
         {/* Workspace */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {error && (
-            <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-2xl text-xs">
+            <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-lg text-xs">
               {error}
             </div>
           )}
           {loading ? (
-            <div className="text-zinc-500 text-xs text-center py-20">Loading machinery logs...</div>
+            <div className="text-muted text-xs text-center py-20">Loading machinery logs...</div>
           ) : (
             <>
               {activeTab === "fleet" && (
                 <div className="space-y-6">
                   {/* Overdue Maintenance Banner Alert */}
                   {maintenanceLogs.filter(m => m.completed_date === null && new Date(m.scheduled_date) < new Date()).length > 0 && (
-                    <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-2xl flex items-start gap-3 text-xs">
+                    <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-lg flex items-start gap-3 text-xs">
                       <span className="text-lg">⚠️</span>
                       <div>
                         <strong className="font-extrabold block text-white">Overdue Maintenance Alert!</strong>
-                        <p className="text-zinc-400 mt-0.5">The following machinery requires immediate servicing to prevent site safety incidents:</p>
+                        <p className="text-muted mt-0.5">The following machinery requires immediate servicing to prevent site safety incidents:</p>
                         <ul className="list-disc pl-5 mt-1.5 space-y-1 font-mono text-[10px]">
                           {maintenanceLogs.filter(m => m.completed_date === null && new Date(m.scheduled_date) < new Date()).map(m => {
                             const eq = fleet.find(e => e.id === m.equipment_id);
@@ -411,7 +411,7 @@ export default function EquipmentTrackingPage() {
                       const activeDep = deployments.find(d => d.equipment_id === eq.id && d.end_date === null);
                       const isOverdue = maintenanceLogs.some(m => m.equipment_id === eq.id && m.completed_date === null && new Date(m.scheduled_date) < new Date());
                       return (
-                        <div key={eq.id} className="glass-panel p-5 rounded-2xl border border-white/5 bg-[#14121F] flex flex-col justify-between space-y-4">
+                        <div key={eq.id} className="bg-card border border-border-custom rounded-lg p-5 rounded-lg border border-border-custom bg-input flex flex-col justify-between space-y-4">
                           <div>
                             <div className="flex justify-between items-start gap-2">
                               <span className="text-xs font-bold text-white line-clamp-1">{eq.name}</span>
@@ -426,12 +426,12 @@ export default function EquipmentTrackingPage() {
                                 </span>
                               </div>
                             </div>
-                            <div className="text-[10px] text-zinc-500 mt-0.5">Code: {eq.code} · Category: {eq.category}</div>
+                            <div className="text-[10px] text-muted mt-0.5">Code: {eq.code} · Category: {eq.category}</div>
                           </div>
 
-                        <div className="border-t border-white/5 pt-3.5 flex justify-between items-center text-xs">
+                        <div className="border-t border-border-custom pt-3.5 flex justify-between items-center text-xs">
                           <div>
-                            <span className="text-[9px] uppercase font-bold text-zinc-500">Hourly Rate</span>
+                            <span className="text-[9px] uppercase font-bold text-muted">Hourly Rate</span>
                             <div className="text-sm font-extrabold text-white mt-0.5">₹{eq.hourly_rate}/hr</div>
                           </div>
                           
@@ -439,14 +439,14 @@ export default function EquipmentTrackingPage() {
                             {activeDep ? (
                               <button
                                 onClick={() => { setActiveStoppingEq(eq); setStopMeterVal(""); setIsStopPhotoCaptured(false); }}
-                                className="text-[10px] bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 px-3 py-1.5 rounded-xl transition-all font-bold"
+                                className="text-[10px] bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 px-3 py-1.5 rounded-md transition-all font-bold"
                               >
                                 ⏹ Stop Wizard
                               </button>
                             ) : (
                               <button
                                 onClick={() => { setActiveDeployingEq(eq); setStartMeterVal(""); setIsStartPhotoCaptured(false); }}
-                                className="text-[10px] bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 px-3 py-1.5 rounded-xl transition-all font-bold"
+                                className="text-[10px] bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 px-3 py-1.5 rounded-md transition-all font-bold"
                               >
                                 ▶ Start Wizard
                               </button>
@@ -454,7 +454,7 @@ export default function EquipmentTrackingPage() {
 
                             <button
                               onClick={() => { setActiveFuelingEq(eq); setFuelLiters(""); setFuelRate(""); }}
-                              className="text-[10px] bg-[#1C182A] border border-white/10 text-zinc-300 hover:text-white px-2.5 py-1.5 rounded-xl transition-all"
+                              className="text-[10px] bg-elevated border border-border-custom text-zinc-300 hover:text-foreground px-2.5 py-1.5 rounded-md transition-all"
                             >
                               ⛽ Refuel
                             </button>
@@ -468,15 +468,15 @@ export default function EquipmentTrackingPage() {
               )}
 
               {activeTab === "timeline" && (
-                <div className="glass-panel border border-white/5 rounded-2xl p-6 space-y-4">
-                  <div className="flex justify-between items-center pb-2 border-b border-white/5">
-                    <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Refuel & Usage Feed</h3>
-                    <div className="text-[10px] text-zinc-500">Chronological machine-ledger timeline</div>
+                <div className="bg-card border border-border-custom rounded-lg border border-border-custom rounded-lg p-6 space-y-4">
+                  <div className="flex justify-between items-center pb-2 border-b border-border-custom">
+                    <h3 className="text-xs font-bold text-muted uppercase tracking-wider">Refuel & Usage Feed</h3>
+                    <div className="text-[10px] text-muted">Chronological machine-ledger timeline</div>
                   </div>
 
                   <div className="space-y-3">
                     {timelineEvents.map((evt) => (
-                      <div key={evt.id} className="p-3.5 rounded-xl border border-white/5 bg-[#120F1A] text-xs flex justify-between items-start gap-4">
+                      <div key={evt.id} className="p-3.5 rounded-md border border-border-custom bg-input text-xs flex justify-between items-start gap-4">
                         <div className="space-y-1">
                           <div className="flex items-center gap-2">
                             <strong className="text-white font-bold">{evt.eqName}</strong>
@@ -486,7 +486,7 @@ export default function EquipmentTrackingPage() {
                           </div>
                           <p className="text-zinc-300 mt-1">{evt.display}</p>
                         </div>
-                        <div className="text-right text-[10px] text-zinc-500">
+                        <div className="text-right text-[10px] text-muted">
                           {new Date(evt.date).toLocaleDateString()} · {new Date(evt.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                         </div>
                       </div>
@@ -534,8 +534,8 @@ export default function EquipmentTrackingPage() {
                 return (
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Odometer / Hour-Meter Run Logs</h3>
-                      <span className="text-[10px] text-zinc-600">{completedRuns.length} completed runs recorded</span>
+                      <h3 className="text-xs font-bold text-muted uppercase tracking-wider">Odometer / Hour-Meter Run Logs</h3>
+                      <span className="text-[10px] text-muted">{completedRuns.length} completed runs recorded</span>
                     </div>
 
                     {/* Summary kpi strip */}
@@ -546,18 +546,18 @@ export default function EquipmentTrackingPage() {
                         { label: "Total Fuel Used", value: completedRuns.reduce((s,r) => s + r.fuelForRun, 0).toFixed(0) + " L", color: "text-amber-400" },
                         { label: "Est. Machine Cost", value: "₹" + completedRuns.reduce((s,r) => s + (r.costForRun || 0), 0).toLocaleString(), color: "text-emerald-400" },
                       ].map(kpi => (
-                        <div key={kpi.label} className="bg-[#14121F] border border-white/5 rounded-xl p-4">
-                          <span className="text-[9px] uppercase text-zinc-500 tracking-wider block">{kpi.label}</span>
+                        <div key={kpi.label} className="bg-input border border-border-custom rounded-md p-4">
+                          <span className="text-[9px] uppercase text-muted tracking-wider block">{kpi.label}</span>
                           <strong className={`text-lg font-extrabold mt-1 block ${kpi.color}`}>{kpi.value}</strong>
                         </div>
                       ))}
                     </div>
 
                     {/* Run log table */}
-                    <div className="bg-[#0F0D18] border border-white/5 rounded-2xl overflow-hidden">
+                    <div className="bg-background border border-border-custom rounded-lg overflow-hidden">
                       <table className="w-full text-xs">
                         <thead>
-                          <tr className="border-b border-white/5 text-zinc-500">
+                          <tr className="border-b border-border-custom text-muted">
                             <th className="px-5 py-3 text-left font-semibold">Equipment</th>
                             <th className="px-5 py-3 text-left font-semibold">Date</th>
                             <th className="px-5 py-3 text-center font-semibold">Start Meter</th>
@@ -570,36 +570,36 @@ export default function EquipmentTrackingPage() {
                         </thead>
                         <tbody>
                           {completedRuns.length === 0 ? (
-                            <tr><td colSpan={8} className="px-5 py-10 text-center text-zinc-600">No completed runs yet. Use Start/Stop Wizard on fleet cards.</td></tr>
+                            <tr><td colSpan={8} className="px-5 py-10 text-center text-muted">No completed runs yet. Use Start/Stop Wizard on fleet cards.</td></tr>
                           ) : completedRuns.map((run, idx) => (
                             <tr key={idx} className="border-b border-white/[0.03] hover:bg-white/[0.015] transition-all">
                               <td className="px-5 py-3">
                                 <span className="font-bold text-white">{run.eq?.name ?? "Unknown"}</span>
-                                <span className="block text-[9px] text-zinc-600">{run.eq?.code} · {run.eq?.category}</span>
+                                <span className="block text-[9px] text-muted">{run.eq?.code} · {run.eq?.category}</span>
                               </td>
-                              <td className="px-5 py-3 text-zinc-400">
+                              <td className="px-5 py-3 text-muted">
                                 {new Date(run.d.start_date).toLocaleDateString()}
-                                <span className="block text-[9px] text-zinc-600">
+                                <span className="block text-[9px] text-muted">
                                   {new Date(run.d.start_date).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})} → {new Date(run.d.end_date!).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}
                                 </span>
                               </td>
-                              <td className="px-5 py-3 text-center font-mono">{run.startReading ?? <span className="text-zinc-600">—</span>}</td>
-                              <td className="px-5 py-3 text-center font-mono">{run.stopReading ?? <span className="text-zinc-600">—</span>}</td>
+                              <td className="px-5 py-3 text-center font-mono">{run.startReading ?? <span className="text-muted">—</span>}</td>
+                              <td className="px-5 py-3 text-center font-mono">{run.stopReading ?? <span className="text-muted">—</span>}</td>
                               <td className="px-5 py-3 text-center">
                                 {run.delta != null
                                   ? <span className="font-bold text-primary">+{run.delta.toFixed(1)}</span>
-                                  : <span className="text-zinc-600">{run.durationHrs.toFixed(2)} hr</span>}
+                                  : <span className="text-muted">{run.durationHrs.toFixed(2)} hr</span>}
                               </td>
                               <td className="px-5 py-3 text-center text-amber-400 font-mono">
-                                {run.fuelForRun > 0 ? `${run.fuelForRun.toFixed(1)} L` : <span className="text-zinc-600">—</span>}
+                                {run.fuelForRun > 0 ? `${run.fuelForRun.toFixed(1)} L` : <span className="text-muted">—</span>}
                               </td>
                               <td className="px-5 py-3 text-center">
                                 {run.efficiency
                                   ? <span className="text-emerald-400 font-mono">{run.efficiency} km/L</span>
-                                  : <span className="text-zinc-600">—</span>}
+                                  : <span className="text-muted">—</span>}
                               </td>
                               <td className="px-5 py-3 text-right font-mono font-bold text-white">
-                                {run.costForRun != null ? `₹${run.costForRun.toLocaleString()}` : <span className="text-zinc-600">—</span>}
+                                {run.costForRun != null ? `₹${run.costForRun.toLocaleString()}` : <span className="text-muted">—</span>}
                               </td>
                             </tr>
                           ))}
@@ -613,14 +613,14 @@ export default function EquipmentTrackingPage() {
               {activeTab === "maintenance" && (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Maintenance Schedule & Service Logs</h3>
-                    <span className="text-[10px] text-zinc-600">{maintenanceLogs.length} schedule entries</span>
+                    <h3 className="text-xs font-bold text-muted uppercase tracking-wider">Maintenance Schedule & Service Logs</h3>
+                    <span className="text-[10px] text-muted">{maintenanceLogs.length} schedule entries</span>
                   </div>
 
-                  <div className="bg-[#0F0D18] border border-white/5 rounded-2xl overflow-hidden">
+                  <div className="bg-background border border-border-custom rounded-lg overflow-hidden">
                     <table className="w-full text-xs">
                       <thead>
-                        <tr className="border-b border-white/5 text-zinc-500 text-left">
+                        <tr className="border-b border-border-custom text-muted text-left">
                           <th className="px-5 py-3 font-semibold">Equipment</th>
                           <th className="px-5 py-3 font-semibold">Service Type</th>
                           <th className="px-5 py-3 font-semibold">Scheduled Date</th>
@@ -632,7 +632,7 @@ export default function EquipmentTrackingPage() {
                       </thead>
                       <tbody>
                         {maintenanceLogs.length === 0 ? (
-                          <tr><td colSpan={7} className="px-5 py-10 text-center text-zinc-600">No maintenance schedules recorded.</td></tr>
+                          <tr><td colSpan={7} className="px-5 py-10 text-center text-muted">No maintenance schedules recorded.</td></tr>
                         ) : maintenanceLogs.map((log) => {
                           const eq = fleet.find(e => e.id === log.equipment_id);
                           const isOverdue = log.completed_date === null && new Date(log.scheduled_date) < new Date();
@@ -640,15 +640,15 @@ export default function EquipmentTrackingPage() {
                             <tr key={log.id} className="border-b border-white/[0.03] hover:bg-white/[0.015] transition-all">
                               <td className="px-5 py-3">
                                 <span className="font-bold text-white">{eq?.name ?? "Unknown"}</span>
-                                <span className="block text-[9px] text-zinc-600">{eq?.code} · {eq?.category}</span>
+                                <span className="block text-[9px] text-muted">{eq?.code} · {eq?.category}</span>
                               </td>
                               <td className="px-5 py-3 text-zinc-300 font-medium">{log.service_type}</td>
-                              <td className="px-5 py-3 text-zinc-400">{new Date(log.scheduled_date).toLocaleDateString()}</td>
-                              <td className="px-5 py-3 text-zinc-400">
-                                {log.completed_date ? new Date(log.completed_date).toLocaleDateString() : <span className="text-zinc-600">—</span>}
+                              <td className="px-5 py-3 text-muted">{new Date(log.scheduled_date).toLocaleDateString()}</td>
+                              <td className="px-5 py-3 text-muted">
+                                {log.completed_date ? new Date(log.completed_date).toLocaleDateString() : <span className="text-muted">—</span>}
                               </td>
                               <td className="px-5 py-3 text-right font-mono font-bold text-white">
-                                {log.cost > 0 ? `₹${log.cost.toLocaleString()}` : <span className="text-zinc-600">—</span>}
+                                {log.cost > 0 ? `₹${log.cost.toLocaleString()}` : <span className="text-muted">—</span>}
                               </td>
                               <td className="px-5 py-3 text-center">
                                 <span className={`text-[9px] font-bold px-2 py-0.5 rounded border ${
@@ -661,7 +661,7 @@ export default function EquipmentTrackingPage() {
                                   {log.completed_date ? "Completed" : isOverdue ? "Overdue" : log.status}
                                 </span>
                               </td>
-                              <td className="px-5 py-3 text-zinc-500 italic max-w-xs truncate" title={log.remarks || ""}>
+                              <td className="px-5 py-3 text-muted italic max-w-xs truncate" title={log.remarks || ""}>
                                 {log.remarks || "—"}
                               </td>
                             </tr>
@@ -679,33 +679,33 @@ export default function EquipmentTrackingPage() {
 
       {/* Start Machinery Wizard */}
       {activeDeployingEq && (
-        <div className="fixed inset-0 z-50 bg-[#000]/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-[#0C0A12] border border-white/10 rounded-2xl w-full max-w-md shadow-2xl p-6 space-y-4">
-            <div className="flex justify-between items-center border-b border-white/5 pb-2">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-background border border-border-custom rounded-lg w-full max-w-md shadow-2xl p-6 space-y-4">
+            <div className="flex justify-between items-center border-b border-border-custom pb-2">
               <h3 className="text-xs font-extrabold text-white">Start Deployment: {activeDeployingEq.name}</h3>
-              <button onClick={() => setActiveDeployingEq(null)} className="text-zinc-400 hover:text-white">✕</button>
+              <button onClick={() => setActiveDeployingEq(null)} className="text-muted hover:text-foreground">✕</button>
             </div>
             
             <div className="space-y-3 text-xs">
               <div className="space-y-1">
-                <label className="text-zinc-400">Odometer / Start Hour Meter Reading</label>
+                <label className="text-muted">Odometer / Start Hour Meter Reading</label>
                 <input
                   type="number"
                   value={startMeterVal}
                   onChange={(e) => setStartMeterVal(e.target.value)}
                   placeholder="e.g. 435"
-                  className="w-full bg-[#16121F] border border-white/10 rounded-lg p-2 text-white"
+                  className="w-full bg-input border border-border-custom rounded-lg p-2 text-white"
                 />
               </div>
 
               {/* Photo scanning viewport */}
               <div className="space-y-2">
-                <span className="text-zinc-500 block">Capture Odometer Photo Proof</span>
+                <span className="text-muted block">Capture Odometer Photo Proof</span>
                 <div className="flex items-center gap-3">
                   <button
                     type="button"
                     onClick={() => setIsStartPhotoCaptured(true)}
-                    className="flex items-center gap-2 px-3 py-1.5 bg-[#1C182A] border border-white/10 rounded-lg text-zinc-400 hover:text-white"
+                    className="flex items-center gap-2 px-3 py-1.5 bg-elevated border border-border-custom rounded-lg text-muted hover:text-foreground"
                   >
                     📷 Take Photo
                   </button>
@@ -714,9 +714,9 @@ export default function EquipmentTrackingPage() {
               </div>
             </div>
 
-            <div className="flex gap-2 justify-end border-t border-white/5 pt-4">
-              <button onClick={() => setActiveDeployingEq(null)} className="px-4 py-2 bg-zinc-800 text-zinc-400 hover:text-white rounded-xl text-xs">Cancel</button>
-              <button onClick={handleStartMachinery} className="px-5 py-2.5 bg-primary text-white font-bold rounded-xl text-xs">Start Machinery</button>
+            <div className="flex gap-2 justify-end border-t border-border-custom pt-4">
+              <button onClick={() => setActiveDeployingEq(null)} className="px-4 py-2 bg-zinc-800 text-muted hover:text-foreground rounded-md text-xs">Cancel</button>
+              <button onClick={handleStartMachinery} className="px-5 py-2.5 bg-primary text-white font-bold rounded-md text-xs">Start Machinery</button>
             </div>
           </div>
         </div>
@@ -724,32 +724,32 @@ export default function EquipmentTrackingPage() {
 
       {/* Stop Machinery Wizard */}
       {activeStoppingEq && (
-        <div className="fixed inset-0 z-50 bg-[#000]/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-[#0C0A12] border border-white/10 rounded-2xl w-full max-w-md shadow-2xl p-6 space-y-4">
-            <div className="flex justify-between items-center border-b border-white/5 pb-2">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-background border border-border-custom rounded-lg w-full max-w-md shadow-2xl p-6 space-y-4">
+            <div className="flex justify-between items-center border-b border-border-custom pb-2">
               <h3 className="text-xs font-extrabold text-white">Stop Deployment: {activeStoppingEq.name}</h3>
-              <button onClick={() => setActiveStoppingEq(null)} className="text-zinc-400 hover:text-white">✕</button>
+              <button onClick={() => setActiveStoppingEq(null)} className="text-muted hover:text-foreground">✕</button>
             </div>
 
             <div className="space-y-3 text-xs">
               <div className="space-y-1">
-                <label className="text-zinc-400">Odometer / Stop Hour Meter Reading</label>
+                <label className="text-muted">Odometer / Stop Hour Meter Reading</label>
                 <input
                   type="number"
                   value={stopMeterVal}
                   onChange={(e) => setStopMeterVal(e.target.value)}
                   placeholder="e.g. 443.5"
-                  className="w-full bg-[#16121F] border border-white/10 rounded-lg p-2 text-white"
+                  className="w-full bg-input border border-border-custom rounded-lg p-2 text-white"
                 />
               </div>
 
               <div className="space-y-2">
-                <span className="text-zinc-500 block">Capture Stop Odometer Photo Proof</span>
+                <span className="text-muted block">Capture Stop Odometer Photo Proof</span>
                 <div className="flex items-center gap-3">
                   <button
                     type="button"
                     onClick={() => setIsStopPhotoCaptured(true)}
-                    className="flex items-center gap-2 px-3 py-1.5 bg-[#1C182A] border border-white/10 rounded-lg text-zinc-400 hover:text-white"
+                    className="flex items-center gap-2 px-3 py-1.5 bg-elevated border border-border-custom rounded-lg text-muted hover:text-foreground"
                   >
                     📷 Take Photo
                   </button>
@@ -765,13 +765,13 @@ export default function EquipmentTrackingPage() {
                   onChange={(e) => setIsGpsLocked(e.target.checked)}
                   className="accent-primary"
                 />
-                <label htmlFor="gpsLock" className="text-zinc-400 select-none cursor-pointer">Verify background GPS authenticity token</label>
+                <label htmlFor="gpsLock" className="text-muted select-none cursor-pointer">Verify background GPS authenticity token</label>
               </div>
             </div>
 
-            <div className="flex gap-2 justify-end border-t border-white/5 pt-4">
-              <button onClick={() => handleStopMachinery(false)} className="px-4 py-2.5 bg-primary text-white font-bold rounded-xl text-xs">Save</button>
-              <button onClick={() => handleStopMachinery(true)} className="px-4 py-2.5 bg-secondary text-white font-bold rounded-xl text-xs">Save & Add Fuel</button>
+            <div className="flex gap-2 justify-end border-t border-border-custom pt-4">
+              <button onClick={() => handleStopMachinery(false)} className="px-4 py-2.5 bg-primary text-white font-bold rounded-md text-xs">Save</button>
+              <button onClick={() => handleStopMachinery(true)} className="px-4 py-2.5 bg-secondary text-white font-bold rounded-md text-xs">Save & Add Fuel</button>
             </div>
           </div>
         </div>
@@ -779,39 +779,39 @@ export default function EquipmentTrackingPage() {
 
       {/* Fuel Log Modal */}
       {activeFuelingEq && (
-        <div className="fixed inset-0 z-50 bg-[#000]/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-[#0C0A12] border border-white/10 rounded-2xl w-full max-w-md shadow-2xl p-6 space-y-4">
-            <div className="flex justify-between items-center border-b border-white/5 pb-2">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-background border border-border-custom rounded-lg w-full max-w-md shadow-2xl p-6 space-y-4">
+            <div className="flex justify-between items-center border-b border-border-custom pb-2">
               <h3 className="text-xs font-extrabold text-white">Log Refueling: {activeFuelingEq.name}</h3>
-              <button onClick={() => setActiveFuelingEq(null)} className="text-zinc-400 hover:text-white">✕</button>
+              <button onClick={() => setActiveFuelingEq(null)} className="text-muted hover:text-foreground">✕</button>
             </div>
 
             <div className="space-y-3 text-xs">
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-zinc-400">Diesel Liters</label>
-                  <input type="number" value={fuelLiters} onChange={(e) => setFuelLiters(e.target.value)} className="w-full bg-[#16121F] border border-white/10 rounded-lg p-2 text-white" placeholder="e.g. 89" />
+                  <label className="text-muted">Diesel Liters</label>
+                  <input type="number" value={fuelLiters} onChange={(e) => setFuelLiters(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-white" placeholder="e.g. 89" />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-zinc-400">Cost per Liter (₹)</label>
-                  <input type="number" value={fuelRate} onChange={(e) => setFuelRate(e.target.value)} className="w-full bg-[#16121F] border border-white/10 rounded-lg p-2 text-white" placeholder="e.g. 90" />
+                  <label className="text-muted">Cost per Liter (₹)</label>
+                  <input type="number" value={fuelRate} onChange={(e) => setFuelRate(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-white" placeholder="e.g. 90" />
                 </div>
               </div>
 
               <div className="space-y-1">
-                <label className="text-zinc-400">Current Odometer Hours (Optional)</label>
-                <input type="number" value={fuelOdo} onChange={(e) => setFuelOdo(e.target.value)} className="w-full bg-[#16121F] border border-white/10 rounded-lg p-2 text-white" placeholder="e.g. 443.5" />
+                <label className="text-muted">Current Odometer Hours (Optional)</label>
+                <input type="number" value={fuelOdo} onChange={(e) => setFuelOdo(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-white" placeholder="e.g. 443.5" />
               </div>
 
               <div className="space-y-1">
-                <label className="text-zinc-400">Remarks / Supplier</label>
-                <input type="text" value={fuelRemarks} onChange={(e) => setFuelRemarks(e.target.value)} className="w-full bg-[#16121F] border border-white/10 rounded-lg p-2 text-white" placeholder="Indian Oil Corp..." />
+                <label className="text-muted">Remarks / Supplier</label>
+                <input type="text" value={fuelRemarks} onChange={(e) => setFuelRemarks(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-white" placeholder="Indian Oil Corp..." />
               </div>
             </div>
 
-            <div className="flex gap-2 justify-end border-t border-white/5 pt-4">
-              <button onClick={() => setActiveFuelingEq(null)} className="px-4 py-2 bg-zinc-800 text-zinc-400 hover:text-white rounded-xl text-xs">Cancel</button>
-              <button onClick={handleLogFuel} className="px-5 py-2.5 bg-primary text-white font-bold rounded-xl text-xs">Log Fuel Refill</button>
+            <div className="flex gap-2 justify-end border-t border-border-custom pt-4">
+              <button onClick={() => setActiveFuelingEq(null)} className="px-4 py-2 bg-zinc-800 text-muted hover:text-foreground rounded-md text-xs">Cancel</button>
+              <button onClick={handleLogFuel} className="px-5 py-2.5 bg-primary text-white font-bold rounded-md text-xs">Log Fuel Refill</button>
             </div>
           </div>
         </div>
@@ -819,34 +819,34 @@ export default function EquipmentTrackingPage() {
 
       {/* Add Equipment Modal */}
       {isAddEqOpen && (
-        <div className="fixed inset-0 z-50 bg-[#000]/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-[#0C0A12] border border-white/10 rounded-2xl w-full max-w-md shadow-2xl p-6 space-y-4">
-            <div className="flex justify-between items-center border-b border-white/5 pb-2">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-background border border-border-custom rounded-lg w-full max-w-md shadow-2xl p-6 space-y-4">
+            <div className="flex justify-between items-center border-b border-border-custom pb-2">
               <h3 className="text-xs font-extrabold text-white">Add Equipment Assets</h3>
-              <button onClick={() => setIsAddEqOpen(false)} className="text-zinc-400 hover:text-white">✕</button>
+              <button onClick={() => setIsAddEqOpen(false)} className="text-muted hover:text-foreground">✕</button>
             </div>
 
             <form onSubmit={handleAddEquipment} className="space-y-3 text-xs">
               <div className="space-y-1">
-                <label className="text-zinc-400">Equipment Name</label>
-                <input type="text" value={eqName} onChange={(e) => setEqName(e.target.value)} className="w-full bg-[#16121F] border border-white/10 rounded-lg p-2 text-white" placeholder="JCB Excavator 3DX" />
+                <label className="text-muted">Equipment Name</label>
+                <input type="text" value={eqName} onChange={(e) => setEqName(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-white" placeholder="JCB Excavator 3DX" />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-zinc-400">Equipment Code</label>
-                  <input type="text" value={eqCode} onChange={(e) => setEqCode(e.target.value)} className="w-full bg-[#16121F] border border-white/10 rounded-lg p-2 text-white" placeholder="JCB-3DX-01" />
+                  <label className="text-muted">Equipment Code</label>
+                  <input type="text" value={eqCode} onChange={(e) => setEqCode(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-white" placeholder="JCB-3DX-01" />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-zinc-400">Hourly Rental Rate (₹)</label>
-                  <input type="number" value={eqRate} onChange={(e) => setEqRate(e.target.value)} className="w-full bg-[#16121F] border border-white/10 rounded-lg p-2 text-white" placeholder="1200" />
+                  <label className="text-muted">Hourly Rental Rate (₹)</label>
+                  <input type="number" value={eqRate} onChange={(e) => setEqRate(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-white" placeholder="1200" />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-zinc-400">Category</label>
-                  <select value={eqCategory} onChange={(e) => setEqCategory(e.target.value)} className="w-full bg-[#16121F] border border-white/10 rounded-lg p-2 text-white">
+                  <label className="text-muted">Category</label>
+                  <select value={eqCategory} onChange={(e) => setEqCategory(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-white">
                     <option value="Excavator">Excavator</option>
                     <option value="Concrete Mixer">Concrete Mixer</option>
                     <option value="Tower Crane">Tower Crane</option>
@@ -854,17 +854,17 @@ export default function EquipmentTrackingPage() {
                   </select>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-zinc-400">Ownership Type</label>
-                  <select value={eqOwnership} onChange={(e) => setEqOwnership(e.target.value)} className="w-full bg-[#16121F] border border-white/10 rounded-lg p-2 text-white">
+                  <label className="text-muted">Ownership Type</label>
+                  <select value={eqOwnership} onChange={(e) => setEqOwnership(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-white">
                     <option value="Owned">Owned</option>
                     <option value="Hired">Hired</option>
                   </select>
                 </div>
               </div>
 
-              <div className="flex gap-2 justify-end border-t border-white/5 pt-4">
-                <button type="button" onClick={() => setIsAddEqOpen(false)} className="px-4 py-2 bg-zinc-800 text-zinc-400 hover:text-white rounded-xl text-xs">Cancel</button>
-                <button type="submit" className="px-5 py-2.5 bg-primary text-white font-bold rounded-xl text-xs">Save Asset</button>
+              <div className="flex gap-2 justify-end border-t border-border-custom pt-4">
+                <button type="button" onClick={() => setIsAddEqOpen(false)} className="px-4 py-2 bg-zinc-800 text-muted hover:text-foreground rounded-md text-xs">Cancel</button>
+                <button type="submit" className="px-5 py-2.5 bg-primary text-white font-bold rounded-md text-xs">Save Asset</button>
               </div>
             </form>
           </div>

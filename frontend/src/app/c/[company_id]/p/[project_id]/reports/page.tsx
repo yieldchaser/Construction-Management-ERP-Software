@@ -147,11 +147,11 @@ export default function ClientReportsPage() {
   };
 
   return (
-    <div className="flex h-screen bg-[#0E0C15] text-[#ededed] overflow-hidden">
+    <div className="flex h-screen bg-background text-foreground overflow-hidden">
       {/* Sidebar */}
-      <aside className="w-56 border-r border-white/5 bg-[#0B0910] flex flex-col shrink-0">
-        <div className="p-4 flex items-center gap-2.5 border-b border-white/5">
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-tr from-[#E8184C] to-[#7C5CFF] font-bold text-white text-xs">
+      <aside className="w-56 border-r border-border-custom bg-card flex flex-col shrink-0">
+        <div className="p-4 flex items-center gap-2.5 border-b border-border-custom">
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-tr bg-primary font-bold text-white text-xs">
             S
           </div>
           <span className="font-bold text-white text-sm tracking-tight">SiteFlow</span>
@@ -159,19 +159,19 @@ export default function ClientReportsPage() {
         <nav className="p-3 flex-1 space-y-1">
           <Link
             href={`/c/${companyId}/dashboard`}
-            className="flex items-center gap-2 px-3 py-2 text-xs text-zinc-400 hover:text-white hover:bg-white/[0.03] rounded-lg transition-all"
+            className="flex items-center gap-2 px-3 py-2 text-xs text-muted hover:text-foreground hover:bg-white/[0.03] rounded-lg transition-all"
           >
             ← Dashboard
           </Link>
-          <div className="pt-2 pb-1 px-3 text-[10px] font-bold text-zinc-600 uppercase tracking-wider">
+          <div className="pt-2 pb-1 px-3 text-[10px] font-bold text-muted uppercase tracking-wider">
             Client Portal
           </div>
-          <div className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg bg-white/[0.06] text-white font-semibold shadow-sm">
+          <div className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg bg-primary/10 text-white font-semibold shadow-sm">
             <span>📊</span> Progress Reports
           </div>
           <Link
             href={`/c/${companyId}/p/${projectId}/reports/calculators`}
-            className="flex items-center gap-2 px-3 py-2 text-xs text-zinc-400 hover:text-white hover:bg-white/[0.03] rounded-lg transition-all"
+            className="flex items-center gap-2 px-3 py-2 text-xs text-muted hover:text-foreground hover:bg-white/[0.03] rounded-lg transition-all"
           >
             <span>🔩</span> Construction Calculators
           </Link>
@@ -181,16 +181,16 @@ export default function ClientReportsPage() {
       {/* Main Workspace */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="border-b border-white/5 bg-[#0D0B14] px-6 py-4 flex items-center justify-between">
+        <div className="border-b border-border-custom bg-background px-6 py-4 flex items-center justify-between">
           <div>
             <h1 className="text-sm font-bold text-white">Client Progress Reports</h1>
-            <p className="text-[10px] text-zinc-500">
+            <p className="text-[10px] text-muted">
               Compile WBS milestones, subcontractor billing audits, and quality control indicators.
             </p>
           </div>
           <button
             onClick={() => setIsOpen(true)}
-            className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary to-[#FF3B6C] px-4 py-2 text-xs font-bold text-white hover:opacity-90 transition-all shadow-lg shadow-primary/20"
+            className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-xs font-bold text-white hover:opacity-90 transition-all shadow-lg shadow-primary/20"
           >
             + Generate Progress Report
           </button>
@@ -205,24 +205,24 @@ export default function ClientReportsPage() {
         {/* Workspace Layout */}
         <div className="flex-1 flex overflow-hidden">
           {/* Left Panel: Report Gallery */}
-          <div className="w-80 border-r border-white/5 bg-[#0B0910]/50 p-4 overflow-y-auto space-y-3">
-            <h2 className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider px-1">
+          <div className="w-80 border-r border-border-custom bg-card/50 p-4 overflow-y-auto space-y-3">
+            <h2 className="text-[10px] uppercase font-bold text-muted tracking-wider px-1">
               Report Logs
             </h2>
 
             {loading ? (
-              <div className="text-xs text-zinc-500 text-center py-10">Loading reports...</div>
+              <div className="text-xs text-muted text-center py-10">Loading reports...</div>
             ) : reports.length === 0 ? (
-              <div className="text-xs text-zinc-500 text-center py-10">No reports generated yet</div>
+              <div className="text-xs text-muted text-center py-10">No reports generated yet</div>
             ) : (
               reports.map((report) => (
                 <div
                   key={report.id}
                   onClick={() => setSelectedReport(report)}
-                  className={`p-3.5 rounded-xl border transition-all cursor-pointer ${
+                  className={`p-3.5 rounded-md border transition-all cursor-pointer ${
                     selectedReport?.id === report.id
-                      ? "bg-primary/5 border-primary/30 shadow-md shadow-primary/5"
-                      : "bg-white/[0.01] border-white/5 hover:bg-white/[0.03]"
+                      ? "bg-primary/5 border-border-custom shadow-md shadow-primary/5"
+                      : "bg-white/[0.01] border-border-custom hover:bg-white/[0.03]"
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2">
@@ -239,7 +239,7 @@ export default function ClientReportsPage() {
                       {report.is_approved ? "Approved" : "Draft"}
                     </span>
                   </div>
-                  <div className="text-[10px] text-zinc-500 mt-2">
+                  <div className="text-[10px] text-muted mt-2">
                     {new Date(report.report_date).toLocaleDateString(undefined, {
                       dateStyle: "medium",
                     })}
@@ -250,14 +250,14 @@ export default function ClientReportsPage() {
           </div>
 
           {/* Right Panel: Report Details & Interactive PDF Frame */}
-          <div className="flex-1 bg-[#0E0C15] p-6 overflow-y-auto flex flex-col space-y-4">
+          <div className="flex-1 bg-background p-6 overflow-y-auto flex flex-col space-y-4">
             {selectedReport ? (
               <>
                 {/* Details Header */}
-                <div className="glass-panel p-5 rounded-2xl border border-white/5 bg-[#14121F] flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="bg-card border border-border-custom rounded-lg p-5 rounded-lg border border-border-custom bg-input flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div>
                     <h2 className="text-sm font-bold text-white">{selectedReport.report_name}</h2>
-                    <p className="text-[10px] text-zinc-500 mt-0.5">
+                    <p className="text-[10px] text-muted mt-0.5">
                       Created: {new Date(selectedReport.report_date).toLocaleString()}
                     </p>
                   </div>
@@ -265,7 +265,7 @@ export default function ClientReportsPage() {
                     {!selectedReport.is_approved && (
                       <button
                         onClick={() => handleApproveReport(selectedReport.id)}
-                        className="rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-4 py-2 text-xs font-bold transition-all"
+                        className="rounded-md bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-4 py-2 text-xs font-bold transition-all"
                       >
                         ✓ Approve for Client Portal
                       </button>
@@ -273,7 +273,7 @@ export default function ClientReportsPage() {
                     <a
                       href={`${getApiHost()}/apis/v3/reports/${selectedReport.id}/download`}
                       download
-                      className="rounded-xl bg-white/5 hover:bg-white/10 text-white border border-white/10 px-4 py-2 text-xs font-bold transition-all text-center"
+                      className="rounded-md bg-white/5 hover:bg-white/10 text-white border border-border-custom px-4 py-2 text-xs font-bold transition-all text-center"
                     >
                       Download PDF
                     </a>
@@ -282,8 +282,8 @@ export default function ClientReportsPage() {
 
                 {/* Summary remarks */}
                 {selectedReport.summary_markdown && (
-                  <div className="glass-panel p-4 rounded-xl border border-white/5 bg-white/[0.01]">
-                    <h3 className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
+                  <div className="bg-card border border-border-custom rounded-lg p-4 rounded-md border border-border-custom bg-white/[0.01]">
+                    <h3 className="text-[10px] font-bold text-muted uppercase tracking-wider">
                       Executive Summary Notes
                     </h3>
                     <p className="text-xs text-zinc-300 mt-1.5 leading-relaxed">
@@ -293,7 +293,7 @@ export default function ClientReportsPage() {
                 )}
 
                 {/* Embedded PDF Viewer */}
-                <div className="flex-1 glass-panel rounded-2xl border border-white/5 overflow-hidden bg-zinc-950 flex flex-col min-h-[400px]">
+                <div className="flex-1 bg-card border border-border-custom rounded-lg rounded-lg border border-border-custom overflow-hidden bg-zinc-950 flex flex-col min-h-[400px]">
                   <iframe
                     src={`${getApiHost()}/apis/v3/reports/${selectedReport.id}/download#toolbar=0`}
                     className="w-full h-full border-0"
@@ -302,10 +302,10 @@ export default function ClientReportsPage() {
                 </div>
               </>
             ) : (
-              <div className="flex-1 flex flex-col items-center justify-center text-center p-10 bg-white/[0.01] rounded-2xl border border-white/5">
+              <div className="flex-1 flex flex-col items-center justify-center text-center p-10 bg-white/[0.01] rounded-lg border border-border-custom">
                 <span className="text-3xl mb-3">📊</span>
                 <h2 className="text-sm font-bold text-white">No Report Selected</h2>
-                <p className="text-xs text-zinc-500 max-w-xs mt-1">
+                <p className="text-xs text-muted max-w-xs mt-1">
                   Choose an existing progress report from the side log panel or click the generate button to compile a new one.
                 </p>
               </div>
@@ -317,14 +317,14 @@ export default function ClientReportsPage() {
       {/* Generate Report Dialog Modal */}
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md bg-[#12101A] border border-white/10 rounded-2xl overflow-hidden shadow-2xl">
-            <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between">
+          <div className="w-full max-w-md bg-input border border-border-custom rounded-lg overflow-hidden shadow-2xl">
+            <div className="px-5 py-4 border-b border-border-custom flex items-center justify-between">
               <h3 className="text-xs font-bold text-white uppercase tracking-wider">
                 Compile Progress Report
               </h3>
               <button
                 onClick={() => setIsOpen(false)}
-                className="text-zinc-500 hover:text-white text-sm"
+                className="text-muted hover:text-foreground text-sm"
               >
                 ✕
               </button>
@@ -337,7 +337,7 @@ export default function ClientReportsPage() {
               )}
 
               <div>
-                <label className="text-[10px] uppercase font-bold text-zinc-500 block mb-1">
+                <label className="text-[10px] uppercase font-bold text-muted block mb-1">
                   Report Title
                 </label>
                 <input
@@ -346,12 +346,12 @@ export default function ClientReportsPage() {
                   placeholder="e.g. Monthly Progress Report - June 2026"
                   value={reportName}
                   onChange={(e) => setReportName(e.target.value)}
-                  className="w-full bg-[#181622] border border-white/5 rounded-xl px-3 py-2 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-primary transition-all"
+                  className="w-full bg-elevated border border-border-custom rounded-md px-3 py-2 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-primary transition-all"
                 />
               </div>
 
               <div>
-                <label className="text-[10px] uppercase font-bold text-zinc-500 block mb-1">
+                <label className="text-[10px] uppercase font-bold text-muted block mb-1">
                   Executive Remarks
                 </label>
                 <textarea
@@ -359,7 +359,7 @@ export default function ClientReportsPage() {
                   value={summaryMarkdown}
                   onChange={(e) => setSummaryMarkdown(e.target.value)}
                   rows={4}
-                  className="w-full bg-[#181622] border border-white/5 rounded-xl px-3 py-2 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-primary transition-all resize-none"
+                  className="w-full bg-elevated border border-border-custom rounded-md px-3 py-2 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-primary transition-all resize-none"
                 />
               </div>
 
@@ -367,14 +367,14 @@ export default function ClientReportsPage() {
                 <button
                   type="button"
                   onClick={() => setIsOpen(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-bold text-zinc-400 hover:bg-white/5 transition-all"
+                  className="px-4 py-2 rounded-md text-xs font-bold text-muted hover:bg-white/5 transition-all"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-primary to-[#FF3B6C] text-xs font-bold text-white hover:opacity-90 transition-all"
+                  className="px-4 py-2 rounded-md bg-primary text-xs font-bold text-white hover:opacity-90 transition-all"
                 >
                   {submitting ? "Compiling PDF..." : "Generate & Save"}
                 </button>

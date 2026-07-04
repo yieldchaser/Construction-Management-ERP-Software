@@ -121,7 +121,7 @@ const PIN_META: Record<PinCategory, { bg: string; text: string; ring: string; la
 
 const REV_META: Record<RevStatus, { label: string; badge: string; dot: string; icon: string }> = {
   current:    { label: "Current",    badge: "bg-emerald-500/10 border-emerald-500/30 text-emerald-400", dot: "bg-emerald-500", icon: "●" },
-  superseded: { label: "Superseded", badge: "bg-zinc-700/30 border-zinc-600/20 text-zinc-500",         dot: "bg-zinc-600",   icon: "◌" },
+  superseded: { label: "Superseded", badge: "bg-zinc-700/30 border-zinc-600/20 text-muted",         dot: "bg-zinc-600",   icon: "◌" },
   locked:     { label: "Locked",     badge: "bg-amber-500/10 border-amber-500/30 text-amber-400",       dot: "bg-amber-500",  icon: "🔒" },
 };
 
@@ -371,44 +371,44 @@ export default function DrawingsPage() {
   };
 
   return (
-    <div className="flex h-screen bg-[#0E0C15] text-[#ededed] overflow-hidden">
+    <div className="flex h-screen bg-background text-foreground overflow-hidden">
       {isOffline && (
-        <div className="fixed top-4 right-4 z-50 p-4 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-2xl text-xs max-w-md">
+        <div className="fixed top-4 right-4 z-50 p-4 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-lg text-xs max-w-md">
           Using demo drawings — backend connection unavailable
         </div>
       )}
       {/* ── Sidebar ── */}
-      <aside className="w-60 shrink-0 border-r border-white/5 bg-[#0B0910] flex flex-col overflow-hidden">
-        <div className="px-5 py-4 border-b border-white/5 flex items-center gap-2.5">
-          <div className="h-7 w-7 rounded-lg bg-gradient-to-tr from-[#E8184C] to-[#7C5CFF] flex items-center justify-center text-xs font-black text-white">S</div>
+      <aside className="w-60 shrink-0 border-r border-border-custom bg-card flex flex-col overflow-hidden">
+        <div className="px-5 py-4 border-b border-border-custom flex items-center gap-2.5">
+          <div className="h-7 w-7 rounded-lg bg-gradient-to-tr bg-primary flex items-center justify-center text-xs font-black text-white">S</div>
           <span className="font-bold text-sm text-white">SiteFlow</span>
         </div>
         <nav className="flex-1 p-3 overflow-y-auto space-y-1">
-          <Link href={`/c/${companyId}/dashboard`} className="flex items-center gap-2 px-3 py-2 text-xs text-zinc-500 hover:text-white rounded-lg hover:bg-white/[0.02]">← Dashboard</Link>
+          <Link href={`/c/${companyId}/dashboard`} className="flex items-center gap-2 px-3 py-2 text-xs text-muted hover:text-foreground rounded-lg hover:bg-elevated">← Dashboard</Link>
           <div className="pt-3">
-            <div className="px-3 mb-1.5 text-[9px] uppercase tracking-widest text-zinc-600 font-bold">Modules</div>
+            <div className="px-3 mb-1.5 text-[9px] uppercase tracking-widest text-muted font-bold">Modules</div>
             {[
               { key: "drawings", label: "Blueprints & RFI", icon: "📐" },
               { key: "files", label: "Project Files", icon: "📁" },
             ].map(m => (
               <button key={m.key} onClick={() => setTab(m.key as any)}
-                className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium rounded-lg text-left transition-all ${tab === m.key ? "bg-primary/10 text-primary" : "text-zinc-400 hover:text-white hover:bg-white/[0.02]"}`}>
+                className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium rounded-lg text-left transition-all ${tab === m.key ? "bg-primary/10 text-primary" : "text-muted hover:text-foreground hover:bg-elevated"}`}>
                 <span>{m.icon}</span>{m.label}
               </button>
             ))}
           </div>
           {tab === "drawings" && (
             <div className="pt-4">
-              <div className="px-3 mb-1.5 text-[9px] uppercase tracking-widest text-zinc-600 font-bold">Drawings</div>
+              <div className="px-3 mb-1.5 text-[9px] uppercase tracking-widest text-muted font-bold">Drawings</div>
               {drawings.map(d => {
                 const allOpenPins = d.revisions.flatMap(r => r.pins).filter(p => !p.resolved).length;
                 const cur = d.revisions.find(r => r.status === "current");
                 return (
                   <button key={d.id} onClick={() => handleSelectDrawing(d.id)}
-                    className={`w-full flex items-start justify-between gap-1 px-3 py-2 text-xs rounded-lg text-left transition-all ${d.id === activeDrawingId ? "bg-primary/10 text-primary" : "text-zinc-400 hover:text-white hover:bg-white/[0.02]"}`}>
+                    className={`w-full flex items-start justify-between gap-1 px-3 py-2 text-xs rounded-lg text-left transition-all ${d.id === activeDrawingId ? "bg-primary/10 text-primary" : "text-muted hover:text-foreground hover:bg-elevated"}`}>
                     <div className="flex-1 min-w-0">
                       <div className="font-semibold line-clamp-1">{d.name}</div>
-                      <div className="text-[9px] mt-0.5 text-zinc-600">{d.category} · {cur?.version}</div>
+                      <div className="text-[9px] mt-0.5 text-muted">{d.category} · {cur?.version}</div>
                     </div>
                     {allOpenPins > 0 && <span className="shrink-0 text-[9px] px-1.5 py-0.5 bg-amber-500 text-black rounded-full font-bold mt-0.5">{allOpenPins}</span>}
                   </button>
@@ -422,18 +422,18 @@ export default function DrawingsPage() {
       {/* ── Main ── */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <header className="h-14 border-b border-white/5 bg-[#0B0910] px-6 flex items-center justify-between shrink-0">
+        <header className="h-14 border-b border-border-custom bg-card px-6 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
             <h1 className="text-sm font-bold text-white">
               {tab === "drawings" ? "Blueprint & RFI System" : "Project Files Directory"}
             </h1>
-            <span className="text-[10px] text-zinc-500">
+            <span className="text-[10px] text-muted">
               {tab === "drawings" ? "Versioned drawings · Revision locking · RFI pin overlay" : "Document storage"}
             </span>
           </div>
           {tab === "drawings" && (
             <button onClick={() => { setNewRevCode(getNextRevCode()); setNewRevComment(""); setShowRevModal(true); }}
-              className="px-4 py-1.5 bg-gradient-to-r from-primary to-[#FF3B6C] text-white text-xs font-bold rounded-lg hover:opacity-90 transition-all shadow-lg">
+              className="px-4 py-1.5 bg-primary text-white text-xs font-bold rounded-lg hover:opacity-90 transition-all shadow-lg">
               ↑ Upload New Revision
             </button>
           )}
@@ -447,10 +447,10 @@ export default function DrawingsPage() {
               {/* Canvas column */}
               <div className="flex-1 flex flex-col p-4 gap-3 min-w-0 overflow-hidden">
                 {/* Drawing header bar */}
-                <div className="flex items-center justify-between bg-[#14121F] border border-white/5 rounded-xl px-4 py-2.5 text-xs shrink-0">
+                <div className="flex items-center justify-between bg-input border border-border-custom rounded-md px-4 py-2.5 text-xs shrink-0">
                   <div>
                     <div className="font-bold text-white text-sm">{activeDrawing.name}</div>
-                    <div className="text-[10px] text-zinc-500 mt-0.5">{activeDrawing.category} · Active: {currentRev?.version} · {currentRev?.date}</div>
+                    <div className="text-[10px] text-muted mt-0.5">{activeDrawing.category} · Active: {currentRev?.version} · {currentRev?.date}</div>
                   </div>
                   <div className="flex items-center gap-2">
                     {openCount > 0 && (
@@ -462,7 +462,7 @@ export default function DrawingsPage() {
                     <div className="flex gap-1">
                       {["All", "RFI", "Clash", "Observation", "Approval"].map(cat => (
                         <button key={cat} onClick={() => setFilterCat(cat)}
-                          className={`px-2 py-0.5 text-[9px] font-bold rounded transition-all ${filterCat === cat ? "bg-primary text-white" : "bg-white/5 text-zinc-400 hover:text-white"}`}>
+                          className={`px-2 py-0.5 text-[9px] font-bold rounded transition-all ${filterCat === cat ? "bg-primary text-white" : "bg-white/5 text-muted hover:text-foreground"}`}>
                           {cat}
                         </button>
                       ))}
@@ -472,7 +472,7 @@ export default function DrawingsPage() {
 
                 {/* Canvas */}
                 <div ref={canvasRef} onClick={handleCanvasClick}
-                  className={`flex-1 relative rounded-xl border border-white/10 bg-black overflow-hidden min-h-0 ${isEditable ? "cursor-crosshair" : "cursor-default"}`}>
+                  className={`flex-1 relative rounded-md border border-border-custom bg-black overflow-hidden min-h-0 ${isEditable ? "cursor-crosshair" : "cursor-default"}`}>
                   {/* Drawing image */}
                   {activeRev?.fileUrl && (
                     <img key={activeRev.id} src={activeRev.fileUrl} alt={activeDrawing.name}
@@ -488,7 +488,7 @@ export default function DrawingsPage() {
                   {/* SUPERSEDED / LOCKED watermark */}
                   {activeRev && activeRev.status !== "current" && (
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none">
-                      <div className={`text-5xl font-black uppercase tracking-[0.5em] rotate-[-28deg] ${activeRev.status === "locked" ? "text-amber-400/20" : "text-zinc-400/15"}`}>
+                      <div className={`text-5xl font-black uppercase tracking-[0.5em] rotate-[-28deg] ${activeRev.status === "locked" ? "text-amber-400/20" : "text-muted/15"}`}>
                         {activeRev.status === "locked" ? "LOCKED" : "SUPERSEDED"}
                       </div>
                     </div>
@@ -496,12 +496,12 @@ export default function DrawingsPage() {
 
                   {/* Hint */}
                   {isEditable && visiblePins.length === 0 && (
-                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-[10px] text-zinc-500 bg-black/70 backdrop-blur-sm px-3 py-1.5 rounded-full pointer-events-none whitespace-nowrap">
+                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-[10px] text-muted bg-black/70 backdrop-blur-sm px-3 py-1.5 rounded-full pointer-events-none whitespace-nowrap">
                       Click on drawing to drop an RFI / Clash / Observation pin
                     </div>
                   )}
                   {!isEditable && (
-                    <div className="absolute top-3 left-3 text-[10px] text-zinc-500 bg-black/60 px-2.5 py-1 rounded-full pointer-events-none">
+                    <div className="absolute top-3 left-3 text-[10px] text-muted bg-black/60 px-2.5 py-1 rounded-full pointer-events-none">
                       Viewing {activeRev?.version} ({activeRev?.status}) — switch to Current revision to add pins
                     </div>
                   )}
@@ -528,7 +528,7 @@ export default function DrawingsPage() {
                   if (!pin) return null;
                   const m = PIN_META[pin.category];
                   return (
-                    <div className="shrink-0 bg-[#14121F] border border-white/5 rounded-xl p-4 space-y-2 text-xs">
+                    <div className="shrink-0 bg-input border border-border-custom rounded-md p-4 space-y-2 text-xs">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${m.bg} ${m.text}`}>{pin.category} #{pin.seq}</span>
@@ -537,24 +537,24 @@ export default function DrawingsPage() {
                         </div>
                         <div className="flex items-center gap-2">
                           <button onClick={() => handleToggleResolved(pin.id)}
-                            className={`text-[10px] px-2.5 py-1 font-bold rounded-lg border transition-all ${pin.resolved ? "bg-zinc-700/30 border-zinc-600/20 text-zinc-400 hover:border-zinc-500" : "bg-emerald-500/10 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20"}`}>
+                            className={`text-[10px] px-2.5 py-1 font-bold rounded-lg border transition-all ${pin.resolved ? "bg-zinc-700/30 border-zinc-600/20 text-muted hover:border-zinc-500" : "bg-emerald-500/10 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20"}`}>
                             {pin.resolved ? "Re-open" : "✓ Mark Resolved"}
                           </button>
-                          <button onClick={() => setSelectedPinId(null)} className="text-zinc-500 hover:text-white text-lg leading-none">×</button>
+                          <button onClick={() => setSelectedPinId(null)} className="text-muted hover:text-foreground text-lg leading-none">×</button>
                         </div>
                       </div>
                       <p className="text-zinc-200 leading-relaxed">{pin.comment}</p>
-                      <div className="text-[10px] text-zinc-600">Logged by {pin.user} · {pin.date}</div>
+                      <div className="text-[10px] text-muted">Logged by {pin.user} · {pin.date}</div>
                     </div>
                   );
                 })()}
               </div>
 
               {/* ── Revision History Panel ── */}
-              <div className="w-72 shrink-0 border-l border-white/5 bg-[#0B0910] flex flex-col overflow-hidden">
-                <div className="px-4 py-3 border-b border-white/5">
-                  <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Revision History</div>
-                  <div className="text-[9px] text-zinc-600 mt-0.5">{activeDrawing.revisions.length} revisions · Click to compare</div>
+              <div className="w-72 shrink-0 border-l border-border-custom bg-card flex flex-col overflow-hidden">
+                <div className="px-4 py-3 border-b border-border-custom">
+                  <div className="text-[10px] font-bold text-muted uppercase tracking-wider">Revision History</div>
+                  <div className="text-[9px] text-muted mt-0.5">{activeDrawing.revisions.length} revisions · Click to compare</div>
                 </div>
 
                 <div className="flex-1 overflow-y-auto p-3 space-y-0">
@@ -567,18 +567,18 @@ export default function DrawingsPage() {
                         {idx < activeDrawing.revisions.length - 1 && (
                           <div className="absolute left-[9px] top-5 bottom-0 w-px bg-white/5" />
                         )}
-                        <div className={`absolute left-1.5 top-3.5 h-3 w-3 rounded-full border-2 transition-all ${isActive ? "bg-primary border-primary" : `${m.dot} border-white/10`}`} />
-                        <div className={`mb-2 rounded-xl p-3 border transition-all ${isActive ? "bg-primary/10 border-primary/20" : "border-transparent hover:bg-white/[0.02]"}`}>
+                        <div className={`absolute left-1.5 top-3.5 h-3 w-3 rounded-full border-2 transition-all ${isActive ? "bg-primary border-primary" : `${m.dot} border-border-custom`}`} />
+                        <div className={`mb-2 rounded-md p-3 border transition-all ${isActive ? "bg-primary/10 border-primary/20" : "border-transparent hover:bg-elevated"}`}>
                           <button onClick={() => { setActiveRevId(rev.id); setSelectedPinId(null); setImgLoaded(false); }} className="w-full text-left">
                             <div className="flex items-center justify-between mb-1">
                               <span className="text-xs font-extrabold text-white">{rev.version}</span>
                               <span className={`text-[8px] px-1.5 py-0.5 rounded border font-bold ${m.badge}`}>{m.icon} {m.label}</span>
                             </div>
-                            <div className="text-[10px] text-zinc-400 line-clamp-2">{rev.comments}</div>
-                            <div className="text-[9px] text-zinc-600 mt-1">{rev.date} · {rev.uploadedBy}</div>
+                            <div className="text-[10px] text-muted line-clamp-2">{rev.comments}</div>
+                            <div className="text-[9px] text-muted mt-1">{rev.date} · {rev.uploadedBy}</div>
                             {rev.pins.length > 0 && (
                               <div className="flex items-center gap-2 mt-1 text-[9px]">
-                                <span className="text-zinc-500">{rev.pins.length} pins</span>
+                                <span className="text-muted">{rev.pins.length} pins</span>
                                 {revOpenPins > 0 && <span className="text-amber-400 font-bold">{revOpenPins} open</span>}
                               </div>
                             )}
@@ -587,7 +587,7 @@ export default function DrawingsPage() {
                           {/* Lock / Unlock for non-current revisions */}
                           {rev.status !== "current" && (
                             <button onClick={() => handleToggleLock(rev.id)}
-                              className={`mt-2 w-full text-[9px] font-bold px-2 py-1 rounded border text-left transition-all ${rev.status === "locked" ? "bg-amber-500/10 border-amber-500/20 text-amber-400 hover:bg-amber-500/20" : "bg-zinc-700/20 border-zinc-600/20 text-zinc-500 hover:text-amber-400 hover:border-amber-500/30"}`}>
+                              className={`mt-2 w-full text-[9px] font-bold px-2 py-1 rounded border text-left transition-all ${rev.status === "locked" ? "bg-amber-500/10 border-amber-500/20 text-amber-400 hover:bg-amber-500/20" : "bg-zinc-700/20 border-zinc-600/20 text-muted hover:text-amber-400 hover:border-amber-500/30"}`}>
                               {rev.status === "locked" ? "🔓 Unlock Revision" : "🔒 Lock Revision"}
                             </button>
                           )}
@@ -599,18 +599,18 @@ export default function DrawingsPage() {
 
                 {/* Open items quick list */}
                 {activeRev && activeRev.pins.filter(p => !p.resolved).length > 0 && (
-                  <div className="border-t border-white/5 p-3">
-                    <div className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider mb-2">Open Items</div>
+                  <div className="border-t border-border-custom p-3">
+                    <div className="text-[9px] font-bold text-muted uppercase tracking-wider mb-2">Open Items</div>
                     <div className="space-y-1.5 max-h-40 overflow-y-auto">
                       {activeRev.pins.filter(p => !p.resolved).map(pin => {
                         const m = PIN_META[pin.category];
                         return (
                           <button key={pin.id} onClick={() => setSelectedPinId(pin.id)}
-                            className="w-full text-left p-2 rounded-lg bg-[#14121F] hover:bg-white/5 border border-white/5 transition-all">
+                            className="w-full text-left p-2 rounded-lg bg-input hover:bg-white/5 border border-border-custom transition-all">
                             <div className="flex items-center gap-1.5 mb-0.5">
                               <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full ${m.bg} ${m.text}`}>{pin.category} #{pin.seq}</span>
                             </div>
-                            <p className="text-[10px] text-zinc-400 line-clamp-1">{pin.comment}</p>
+                            <p className="text-[10px] text-muted line-clamp-1">{pin.comment}</p>
                           </button>
                         );
                       })}
@@ -626,13 +626,13 @@ export default function DrawingsPage() {
             <div className="h-full overflow-y-auto p-5 space-y-6">
               {/* Site photos */}
               <div>
-                <div className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-3">Site Photos Reel</div>
+                <div className="text-xs font-bold text-muted uppercase tracking-wider mb-3">Site Photos Reel</div>
                 <div className="flex gap-3 overflow-x-auto pb-1">
-                  <div className="shrink-0 h-32 w-40 border border-dashed border-white/10 rounded-xl flex items-center justify-center cursor-pointer hover:bg-white/[0.02] transition-all">
-                    <span className="text-xs text-zinc-500 font-bold">📷 Snap Photo</span>
+                  <div className="shrink-0 h-32 w-40 border border-dashed border-border-custom rounded-md flex items-center justify-center cursor-pointer hover:bg-elevated transition-all">
+                    <span className="text-xs text-muted font-bold">📷 Snap Photo</span>
                   </div>
                   {SITE_PHOTOS.map(p => (
-                    <div key={p.id} className="shrink-0 relative h-32 w-44 rounded-xl overflow-hidden border border-white/5 bg-black group">
+                    <div key={p.id} className="shrink-0 relative h-32 w-44 rounded-md overflow-hidden border border-border-custom bg-black group">
                       <img src={p.url} alt={p.label} className="h-full w-full object-cover opacity-75 group-hover:scale-105 transition-all" />
                       <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-2 text-[10px] text-zinc-300 font-bold">{p.label}</div>
                     </div>
@@ -641,21 +641,21 @@ export default function DrawingsPage() {
               </div>
               {/* Folders */}
               <div>
-                <div className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-3">Project Storage Directory</div>
+                <div className="text-xs font-bold text-muted uppercase tracking-wider mb-3">Project Storage Directory</div>
                 <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
                   {FOLDERS.map(f => (
-                    <div key={f.id} className="flex items-center justify-between p-4 bg-[#14121F] border border-white/5 rounded-xl hover:border-primary/20 cursor-pointer transition-all">
+                    <div key={f.id} className="flex items-center justify-between p-4 bg-input border border-border-custom rounded-md hover:border-primary/20 cursor-pointer transition-all">
                       <div className="flex items-center gap-3">
                         <span className="text-2xl">📁</span>
                         <div>
                           <div className="text-xs font-semibold text-white">{f.name}</div>
-                          <div className="text-[10px] text-zinc-500">{f.count} files</div>
+                          <div className="text-[10px] text-muted">{f.count} files</div>
                         </div>
                       </div>
-                      <span className="text-zinc-500 text-sm">›</span>
+                      <span className="text-muted text-sm">›</span>
                     </div>
                   ))}
-                  <div className="flex items-center justify-center p-4 border border-dashed border-white/10 rounded-xl cursor-pointer hover:bg-white/[0.02] transition-all text-xs text-zinc-500 font-bold">
+                  <div className="flex items-center justify-center p-4 border border-dashed border-border-custom rounded-md cursor-pointer hover:bg-elevated transition-all text-xs text-muted font-bold">
                     + Create Folder
                   </div>
                 </div>
@@ -668,22 +668,22 @@ export default function DrawingsPage() {
       {/* ── Add RFI Pin Modal ── */}
       {showPinModal && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-[#0C0A12] border border-white/10 rounded-2xl w-full max-w-sm shadow-2xl p-5 space-y-4 text-xs">
-            <div className="flex justify-between items-start border-b border-white/5 pb-3">
+          <div className="bg-background border border-border-custom rounded-lg w-full max-w-sm shadow-2xl p-5 space-y-4 text-xs">
+            <div className="flex justify-between items-start border-b border-border-custom pb-3">
               <div>
                 <div className="text-sm font-extrabold text-white">Drop Pin on Drawing</div>
-                <div className="text-[10px] text-zinc-500 mt-0.5">Position: {tempXY.x.toFixed(1)}% × {tempXY.y.toFixed(1)}%</div>
+                <div className="text-[10px] text-muted mt-0.5">Position: {tempXY.x.toFixed(1)}% × {tempXY.y.toFixed(1)}%</div>
               </div>
-              <button onClick={() => setShowPinModal(false)} className="text-zinc-500 hover:text-white text-lg leading-none">×</button>
+              <button onClick={() => setShowPinModal(false)} className="text-muted hover:text-foreground text-lg leading-none">×</button>
             </div>
             <div>
-              <div className="text-zinc-400 mb-1.5">Pin Category</div>
+              <div className="text-muted mb-1.5">Pin Category</div>
               <div className="grid grid-cols-2 gap-1.5">
                 {(["RFI", "Clash", "Observation", "Approval"] as PinCategory[]).map(cat => {
                   const m = PIN_META[cat];
                   return (
                     <button key={cat} onClick={() => setNewPinCat(cat)}
-                      className={`py-2 px-3 rounded-lg font-bold text-[10px] border transition-all ${newPinCat === cat ? `${m.bg} ${m.text} border-white/20` : "bg-white/5 text-zinc-400 border-white/5 hover:text-white"}`}>
+                      className={`py-2 px-3 rounded-lg font-bold text-[10px] border transition-all ${newPinCat === cat ? `${m.bg} ${m.text} border-white/20` : "bg-white/5 text-muted border-border-custom hover:text-foreground"}`}>
                       {cat}
                     </button>
                   );
@@ -691,19 +691,19 @@ export default function DrawingsPage() {
               </div>
             </div>
             <div>
-              <div className="text-zinc-400 mb-1">Description / Query</div>
+              <div className="text-muted mb-1">Description / Query</div>
               <textarea rows={3} autoFocus value={newPinComment} onChange={e => setNewPinComment(e.target.value)}
-                className="w-full bg-[#16121F] border border-white/10 rounded-lg p-2.5 text-white resize-none text-xs"
+                className="w-full bg-input border border-border-custom rounded-lg p-2.5 text-white resize-none text-xs"
                 placeholder="Describe the issue, clash, or observation clearly..." />
             </div>
             <label className="flex items-center gap-2 cursor-pointer select-none">
               <input type="checkbox" checked={newPinPhoto} onChange={e => setNewPinPhoto(e.target.checked)} className="accent-primary" />
-              <span className="text-zinc-400">Attach site photo proof</span>
+              <span className="text-muted">Attach site photo proof</span>
             </label>
-            <div className="flex gap-2 justify-end border-t border-white/5 pt-3">
-              <button onClick={() => setShowPinModal(false)} className="px-4 py-2 bg-zinc-800 text-zinc-400 hover:text-white rounded-xl text-xs">Cancel</button>
+            <div className="flex gap-2 justify-end border-t border-border-custom pt-3">
+              <button onClick={() => setShowPinModal(false)} className="px-4 py-2 bg-zinc-800 text-muted hover:text-foreground rounded-md text-xs">Cancel</button>
               <button onClick={handleAddPin} disabled={!newPinComment.trim()}
-                className="px-5 py-2 bg-primary text-white font-bold rounded-xl text-xs hover:opacity-90 disabled:opacity-40 transition-all">
+                className="px-5 py-2 bg-primary text-white font-bold rounded-md text-xs hover:opacity-90 disabled:opacity-40 transition-all">
                 Place Pin
               </button>
             </div>
@@ -714,47 +714,47 @@ export default function DrawingsPage() {
       {/* ── Upload Revision Modal ── */}
       {showRevModal && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-[#0C0A12] border border-white/10 rounded-2xl w-full max-w-md shadow-2xl p-5 space-y-4 text-xs">
-            <div className="flex justify-between items-start border-b border-white/5 pb-3">
+          <div className="bg-background border border-border-custom rounded-lg w-full max-w-md shadow-2xl p-5 space-y-4 text-xs">
+            <div className="flex justify-between items-start border-b border-border-custom pb-3">
               <div>
                 <div className="text-sm font-extrabold text-white">Upload New Revision</div>
-                <div className="text-[10px] text-zinc-500 mt-0.5">Current revision will be automatically archived as Superseded</div>
+                <div className="text-[10px] text-muted mt-0.5">Current revision will be automatically archived as Superseded</div>
               </div>
-              <button onClick={() => setShowRevModal(false)} className="text-zinc-500 hover:text-white text-lg leading-none">×</button>
+              <button onClick={() => setShowRevModal(false)} className="text-muted hover:text-foreground text-lg leading-none">×</button>
             </div>
             {/* State transition preview */}
-            <div className="bg-[#14121F] border border-white/5 rounded-xl p-3 space-y-1.5">
-              <div className="text-[9px] uppercase tracking-wider text-zinc-500 mb-2">What will happen</div>
+            <div className="bg-input border border-border-custom rounded-md p-3 space-y-1.5">
+              <div className="text-[9px] uppercase tracking-wider text-muted mb-2">What will happen</div>
               {activeDrawing?.revisions.slice(0, 3).map(r => (
                 <div key={r.id} className="flex items-center gap-2 text-[10px]">
                   <span className="text-zinc-300 font-bold w-6 shrink-0">{r.version}</span>
-                  <span className="text-zinc-600">→</span>
+                  <span className="text-muted">→</span>
                   <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold border ${r.status === "current" ? "bg-amber-500/10 border-amber-500/20 text-amber-400" : REV_META[r.status].badge}`}>
                     {r.status === "current" ? "Becomes Superseded" : REV_META[r.status].label}
                   </span>
                 </div>
               ))}
-              <div className="flex items-center gap-2 text-[10px] border-t border-white/5 pt-1.5">
+              <div className="flex items-center gap-2 text-[10px] border-t border-border-custom pt-1.5">
                 <span className="text-white font-bold w-6 shrink-0">{newRevCode}</span>
-                <span className="text-zinc-600">→</span>
+                <span className="text-muted">→</span>
                 <span className="px-1.5 py-0.5 rounded text-[8px] font-bold border bg-emerald-500/10 border-emerald-500/20 text-emerald-400">New Current</span>
               </div>
             </div>
             <div>
-              <div className="text-zinc-400 mb-1">Version Code</div>
+              <div className="text-muted mb-1">Version Code</div>
               <input type="text" value={newRevCode} onChange={e => setNewRevCode(e.target.value)}
-                className="w-full bg-[#16121F] border border-white/10 rounded-lg p-2.5 text-white font-mono font-bold" />
+                className="w-full bg-input border border-border-custom rounded-lg p-2.5 text-white font-mono font-bold" />
             </div>
             <div>
-              <div className="text-zinc-400 mb-1">Release Notes</div>
+              <div className="text-muted mb-1">Release Notes</div>
               <textarea rows={3} value={newRevComment} onChange={e => setNewRevComment(e.target.value)}
-                className="w-full bg-[#16121F] border border-white/10 rounded-lg p-2.5 text-white resize-none"
+                className="w-full bg-input border border-border-custom rounded-lg p-2.5 text-white resize-none"
                 placeholder="Incorporated RFI comments, updated column grid..." />
             </div>
-            <div className="flex gap-2 justify-end border-t border-white/5 pt-3">
-              <button onClick={() => setShowRevModal(false)} className="px-4 py-2 bg-zinc-800 text-zinc-400 hover:text-white rounded-xl">Cancel</button>
+            <div className="flex gap-2 justify-end border-t border-border-custom pt-3">
+              <button onClick={() => setShowRevModal(false)} className="px-4 py-2 bg-zinc-800 text-muted hover:text-foreground rounded-md">Cancel</button>
               <button onClick={handlePublishRevision} disabled={!newRevCode.trim()}
-                className="px-5 py-2 bg-primary text-white font-bold rounded-xl hover:opacity-90 disabled:opacity-40 transition-all">
+                className="px-5 py-2 bg-primary text-white font-bold rounded-md hover:opacity-90 disabled:opacity-40 transition-all">
                 Publish {newRevCode}
               </button>
             </div>

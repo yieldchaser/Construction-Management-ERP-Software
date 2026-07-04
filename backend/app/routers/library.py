@@ -1,0 +1,300 @@
+from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel, Field
+from sqlalchemy.orm import Session
+from sqlalchemy import Numeric
+from typing import List, Optional
+from app.database import get_db
+from app import models
+import uuid
+
+router = APIRouter(prefix="/library", tags=["Company Libraries"])
+
+# ─── schemas ───
+
+class PartyCreate(BaseModel):
+    company_id: uuid.UUID
+    party_id_custom: Optional[str] = None
+    name: str
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    party_type: Optional[str] = None
+    address: Optional[str] = None
+    date_of_joining: Optional[str] = None # ISO format or custom date string
+    aadhaar_number: Optional[str] = None
+    pan_number: Optional[str] = None
+    aadhaar_file: Optional[str] = None
+    pan_file: Optional[str] = None
+
+class AssetTypeCreate(BaseModel):
+    company_id: uuid.UUID
+    name: str
+
+class CostCodeCreate(BaseModel):
+    company_id: uuid.UUID
+    code: str
+    name: str
+
+class DeductionCreate(BaseModel):
+    company_id: uuid.UUID
+    name: str
+
+class ProgressCreate(BaseModel):
+    company_id: uuid.UUID
+    name: str
+
+class WorkforceCreate(BaseModel):
+    company_id: uuid.UUID
+    name: str
+
+class MaterialCreate(BaseModel):
+    company_id: uuid.UUID
+    name: str
+    unit: str
+    gst_rate: float = 0.0
+    category: Optional[str] = None
+    unit_cost: float = 0.0
+    lead_time_days: int = 0
+    hsn_sac: Optional[str] = None
+    item_code: Optional[str] = None
+    specifications: Optional[str] = None
+
+class RateCreate(BaseModel):
+    company_id: uuid.UUID
+    name: str
+    item_code: Optional[str] = None
+    unit: str
+    gst_rate: float = 0.0
+    category: Optional[str] = None
+    unit_cost: float = 0.0
+    markup_value: float = 0.0
+    markup_type: str = "percent"
+    unit_sale_price: float = 0.0
+    note: Optional[str] = None
+    cost_code: Optional[str] = None
+    hsn_sac: Optional[str] = None
+
+
+# ─── PARTIES ───
+@router.get("/parties/{company_id}")
+def get_library_parties(company_id: uuid.UUID, db: Session = Depends(get_db)):
+    return db.query(models.LibraryParty).filter(models.LibraryParty.company_id == company_id).all()
+
+@router.post("/parties")
+def create_library_party(payload: PartyCreate, db: Session = Depends(get_db)):
+    # Automatically generate custom PID if not supplied
+    if not payload.party_id_custom:
+        count = db.query(models.LibraryParty).filter(models.LibraryParty.company_id == payload.company_id).count()
+        payload.party_id_custom = f"PID-{count + 1}"
+    
+    party = models.LibraryParty(
+        company_id=payload.company_id,
+        party_id_custom=payload.party_id_custom,
+        name=payload.name,
+        phone=payload.phone,
+        email=payload.email,
+        party_type=payload.party_type,
+        address=payload.address,
+        aadhaar_number=payload.aadhaar_number,
+        pan_number=payload.pan_number,
+        aadhaar_file=payload.aadhaar_file,
+        pan_file=payload.pan_file
+    )
+    db.add(party)
+    db.commit()
+    db.refresh(party)
+    return party
+
+@router.delete("/parties/{party_id}")
+def delete_library_party(party_id: uuid.UUID, db: Session = Depends(get_db)):
+    party = db.query(models.LibraryParty).filter(models.LibraryParty.id == party_id).first()
+    if not party:
+        raise HTTPException(status_code=404, detail="Party not found")
+    db.delete(party)
+    db.commit()
+    return {"success": True}
+
+
+# ─── ASSET TYPES ───
+@router.get("/asset-types/{company_id}")
+def get_library_asset_types(company_id: uuid.UUID, db: Session = Depends(get_db)):
+    return db.query(models.LibraryAssetType).filter(models.LibraryAssetType.company_id == company_id).all()
+
+@router.post("/asset-types")
+def create_library_asset_type(payload: AssetTypeCreate, db: Session = Depends(get_db)):
+    item = models.LibraryAssetType(company_id=payload.company_id, name=payload.name)
+    db.add(item)
+    db.commit()
+    db.refresh(item)
+    return item
+
+@router.delete("/asset-types/{item_id}")
+def delete_library_asset_type(item_id: uuid.UUID, db: Session = Depends(get_db)):
+    item = db.query(models.LibraryAssetType).filter(models.LibraryAssetType.id == item_id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Asset type not found")
+    db.delete(item)
+    db.commit()
+    return {"success": True}
+
+
+# ─── COST CODES ───
+@router.get("/cost-codes/{company_id}")
+def get_library_cost_codes(company_id: uuid.UUID, db: Session = Depends(get_db)):
+    return db.query(models.LibraryCostCode).filter(models.LibraryCostCode.company_id == company_id).all()
+
+@router.post("/cost-codes")
+def create_library_cost_code(payload: CostCodeCreate, db: Session = Depends(get_db)):
+    item = models.LibraryCostCode(company_id=payload.company_id, code=payload.code, name=payload.name)
+    db.add(item)
+    db.commit()
+    db.refresh(item)
+    return item
+
+@router.delete("/cost-codes/{item_id}")
+def delete_library_cost_code(item_id: uuid.UUID, db: Session = Depends(get_db)):
+    item = db.query(models.LibraryCostCode).filter(models.LibraryCostCode.id == item_id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Cost code not found")
+    db.delete(item)
+    db.commit()
+    return {"success": True}
+
+
+# ─── DEDUCTIONS ───
+@router.get("/deductions/{company_id}")
+def get_library_deductions(company_id: uuid.UUID, db: Session = Depends(get_db)):
+    return db.query(models.LibraryDeduction).filter(models.LibraryDeduction.company_id == company_id).all()
+
+@router.post("/deductions")
+def create_library_deduction(payload: DeductionCreate, db: Session = Depends(get_db)):
+    item = models.LibraryDeduction(company_id=payload.company_id, name=payload.name)
+    db.add(item)
+    db.commit()
+    db.refresh(item)
+    return item
+
+@router.delete("/deductions/{item_id}")
+def delete_library_deduction(item_id: uuid.UUID, db: Session = Depends(get_db)):
+    item = db.query(models.LibraryDeduction).filter(models.LibraryDeduction.id == item_id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Deduction not found")
+    db.delete(item)
+    db.commit()
+    return {"success": True}
+
+
+# ─── PROGRESSES ───
+@router.get("/progresses/{company_id}")
+def get_library_progresses(company_id: uuid.UUID, db: Session = Depends(get_db)):
+    return db.query(models.LibraryProgress).filter(models.LibraryProgress.company_id == company_id).all()
+
+@router.post("/progresses")
+def create_library_progress(payload: ProgressCreate, db: Session = Depends(get_db)):
+    item = models.LibraryProgress(company_id=payload.company_id, name=payload.name)
+    db.add(item)
+    db.commit()
+    db.refresh(item)
+    return item
+
+@router.delete("/progresses/{item_id}")
+def delete_library_progress(item_id: uuid.UUID, db: Session = Depends(get_db)):
+    item = db.query(models.LibraryProgress).filter(models.LibraryProgress.id == item_id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Progress not found")
+    db.delete(item)
+    db.commit()
+    return {"success": True}
+
+
+# ─── WORKFORCES ───
+@router.get("/workforces/{company_id}")
+def get_library_workforces(company_id: uuid.UUID, db: Session = Depends(get_db)):
+    return db.query(models.LibraryWorkforce).filter(models.LibraryWorkforce.company_id == company_id).all()
+
+@router.post("/workforces")
+def create_library_workforce(payload: WorkforceCreate, db: Session = Depends(get_db)):
+    item = models.LibraryWorkforce(company_id=payload.company_id, name=payload.name)
+    db.add(item)
+    db.commit()
+    db.refresh(item)
+    return item
+
+@router.delete("/workforces/{item_id}")
+def delete_library_workforce(item_id: uuid.UUID, db: Session = Depends(get_db)):
+    item = db.query(models.LibraryWorkforce).filter(models.LibraryWorkforce.id == item_id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Workforce not found")
+    db.delete(item)
+    db.commit()
+    return {"success": True}
+
+
+# ─── MATERIALS ───
+@router.get("/materials/{company_id}")
+def get_library_materials(company_id: uuid.UUID, db: Session = Depends(get_db)):
+    return db.query(models.LibraryMaterial).filter(models.LibraryMaterial.company_id == company_id).all()
+
+@router.post("/materials")
+def create_library_material(payload: MaterialCreate, db: Session = Depends(get_db)):
+    item = models.LibraryMaterial(
+        company_id=payload.company_id,
+        name=payload.name,
+        unit=payload.unit,
+        gst_rate=payload.gst_rate,
+        category=payload.category,
+        unit_cost=payload.unit_cost,
+        lead_time_days=payload.lead_time_days,
+        hsn_sac=payload.hsn_sac,
+        item_code=payload.item_code,
+        specifications=payload.specifications
+    )
+    db.add(item)
+    db.commit()
+    db.refresh(item)
+    return item
+
+@router.delete("/materials/{item_id}")
+def delete_library_material(item_id: uuid.UUID, db: Session = Depends(get_db)):
+    item = db.query(models.LibraryMaterial).filter(models.LibraryMaterial.id == item_id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Material not found")
+    db.delete(item)
+    db.commit()
+    return {"success": True}
+
+
+# ─── RATES ───
+@router.get("/rates/{company_id}")
+def get_library_rates(company_id: uuid.UUID, db: Session = Depends(get_db)):
+    return db.query(models.LibraryRate).filter(models.LibraryRate.company_id == company_id).all()
+
+@router.post("/rates")
+def create_library_rate(payload: RateCreate, db: Session = Depends(get_db)):
+    item = models.LibraryRate(
+        company_id=payload.company_id,
+        name=payload.name,
+        item_code=payload.item_code,
+        unit=payload.unit,
+        gst_rate=payload.gst_rate,
+        category=payload.category,
+        unit_cost=payload.unit_cost,
+        markup_value=payload.markup_value,
+        markup_type=payload.markup_type,
+        unit_sale_price=payload.unit_sale_price,
+        note=payload.note,
+        cost_code=payload.cost_code,
+        hsn_sac=payload.hsn_sac
+    )
+    db.add(item)
+    db.commit()
+    db.refresh(item)
+    return item
+
+@router.delete("/rates/{item_id}")
+def delete_library_rate(item_id: uuid.UUID, db: Session = Depends(get_db)):
+    item = db.query(models.LibraryRate).filter(models.LibraryRate.id == item_id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Rate item not found")
+    db.delete(item)
+    db.commit()
+    return {"success": True}

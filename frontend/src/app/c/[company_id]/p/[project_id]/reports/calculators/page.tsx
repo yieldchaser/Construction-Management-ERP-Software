@@ -236,9 +236,9 @@ export default function CalculatorsPage() {
   const houseTotalCost = houseSubtotal + houseContingencyCost;
 
   const houseSplits = [
-    { name: "Structure & Civil (40%)", percentage: 0.40, color: "bg-[#7C5CFF]" },
-    { name: "Finishing & Masonry (25%)", percentage: 0.25, color: "bg-[#E8184C]" },
-    { name: "MEP & Fittings (15%)", percentage: 0.15, color: "bg-[#00E5A3]" },
+    { name: "Structure & Civil (40%)", percentage: 0.40, color: "bg-primary" },
+    { name: "Finishing & Masonry (25%)", percentage: 0.25, color: "bg-primary" },
+    { name: "MEP & Fittings (15%)", percentage: 0.15, color: "bg-success" },
     { name: "Interior & Carpentry (12%)", percentage: 0.12, color: "bg-amber-500" },
     { name: "Consultants & Permits (8%)", percentage: 0.08, color: "bg-zinc-500" },
   ];
@@ -251,13 +251,13 @@ export default function CalculatorsPage() {
   };
 
   return (
-    <div className="flex h-screen bg-[#0E0C15] text-[#ededed] overflow-hidden">
+    <div className="flex h-screen bg-background text-foreground overflow-hidden">
       {/* Sidebar Navigation */}
-      <aside className="w-64 border-r border-white/5 bg-[#0B0910] flex flex-col justify-between h-full shrink-0">
+      <aside className="w-64 border-r border-border-custom bg-card flex flex-col justify-between h-full shrink-0">
         <div className="flex flex-col overflow-y-auto flex-1">
           {/* Brand Header */}
-          <div className="p-6 flex items-center gap-3 border-b border-white/5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-tr from-[#E8184C] to-[#7C5CFF] font-sans font-bold text-white shadow-lg shadow-primary/10">
+          <div className="p-6 flex items-center gap-3 border-b border-border-custom">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-tr bg-primary font-sans font-bold text-white shadow-lg shadow-primary/10">
               S
             </div>
             <span className="font-bold text-white tracking-tight text-sm">SiteFlow Console</span>
@@ -267,14 +267,14 @@ export default function CalculatorsPage() {
           <nav className="p-4 space-y-4">
             <Link
               href={`/c/${companyId}/dashboard`}
-              className="flex items-center gap-2 px-3 py-2 text-xs text-zinc-500 hover:text-white hover:bg-white/[0.03] rounded-lg transition-all"
+              className="flex items-center gap-2 px-3 py-2 text-xs text-muted hover:text-foreground hover:bg-white/[0.03] rounded-lg transition-all"
             >
               ← Dashboard
             </Link>
 
             {/* Steel Category */}
             <div>
-              <span className="text-[10px] uppercase font-bold text-zinc-600 tracking-widest block px-3 mb-2">
+              <span className="text-[10px] uppercase font-bold text-muted tracking-widest block px-3 mb-2">
                 Steel & BBS
               </span>
               <div className="space-y-1">
@@ -286,8 +286,8 @@ export default function CalculatorsPage() {
                   }}
                   className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg text-left transition-all ${
                     activeCalc === "steel_column"
-                      ? "bg-white/[0.06] text-white font-semibold shadow-sm"
-                      : "text-zinc-400 hover:text-white hover:bg-white/[0.02]"
+                      ? "bg-primary/10 text-white font-semibold shadow-sm"
+                      : "text-muted hover:text-foreground hover:bg-elevated"
                   }`}
                 >
                   <span>🔩</span> Column Steel BBS
@@ -300,8 +300,8 @@ export default function CalculatorsPage() {
                   }}
                   className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg text-left transition-all ${
                     activeCalc === "steel_slab"
-                      ? "bg-white/[0.06] text-white font-semibold shadow-sm"
-                      : "text-zinc-400 hover:text-white hover:bg-white/[0.02]"
+                      ? "bg-primary/10 text-white font-semibold shadow-sm"
+                      : "text-muted hover:text-foreground hover:bg-elevated"
                   }`}
                 >
                   <span>🕸️</span> Slab Steel BBS
@@ -311,7 +311,7 @@ export default function CalculatorsPage() {
 
             {/* Concrete Category */}
             <div>
-              <span className="text-[10px] uppercase font-bold text-zinc-600 tracking-widest block px-3 mb-2">
+              <span className="text-[10px] uppercase font-bold text-muted tracking-widest block px-3 mb-2">
                 Concrete Mix
               </span>
               <div className="space-y-1">
@@ -323,8 +323,8 @@ export default function CalculatorsPage() {
                   }}
                   className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg text-left transition-all ${
                     activeCalc === "concrete"
-                      ? "bg-white/[0.06] text-white font-semibold shadow-sm"
-                      : "text-zinc-400 hover:text-white hover:bg-white/[0.02]"
+                      ? "bg-primary/10 text-white font-semibold shadow-sm"
+                      : "text-muted hover:text-foreground hover:bg-elevated"
                   }`}
                 >
                   <span>🧪</span> Concrete Mix Vol
@@ -337,8 +337,8 @@ export default function CalculatorsPage() {
                   }}
                   className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg text-left transition-all ${
                     activeCalc === "rmc"
-                      ? "bg-white/[0.06] text-white font-semibold shadow-sm"
-                      : "text-zinc-400 hover:text-white hover:bg-white/[0.02]"
+                      ? "bg-primary/10 text-white font-semibold shadow-sm"
+                      : "text-muted hover:text-foreground hover:bg-elevated"
                   }`}
                 >
                   <span>🚛</span> Transit Mixer Load
@@ -348,7 +348,7 @@ export default function CalculatorsPage() {
 
             {/* Masonry Category */}
             <div>
-              <span className="text-[10px] uppercase font-bold text-zinc-600 tracking-widest block px-3 mb-2">
+              <span className="text-[10px] uppercase font-bold text-muted tracking-widest block px-3 mb-2">
                 Masonry & Walls
               </span>
               <div className="space-y-1">
@@ -360,8 +360,8 @@ export default function CalculatorsPage() {
                   }}
                   className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg text-left transition-all ${
                     activeCalc === "bricks"
-                      ? "bg-white/[0.06] text-white font-semibold shadow-sm"
-                      : "text-zinc-400 hover:text-white hover:bg-white/[0.02]"
+                      ? "bg-primary/10 text-white font-semibold shadow-sm"
+                      : "text-muted hover:text-foreground hover:bg-elevated"
                   }`}
                 >
                   <span>🧱</span> Brick Wall Est
@@ -374,8 +374,8 @@ export default function CalculatorsPage() {
                   }}
                   className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg text-left transition-all ${
                     activeCalc === "plaster"
-                      ? "bg-white/[0.06] text-white font-semibold shadow-sm"
-                      : "text-zinc-400 hover:text-white hover:bg-white/[0.02]"
+                      ? "bg-primary/10 text-white font-semibold shadow-sm"
+                      : "text-muted hover:text-foreground hover:bg-elevated"
                   }`}
                 >
                   <span>📐</span> Wall Plastering
@@ -385,7 +385,7 @@ export default function CalculatorsPage() {
 
             {/* Finishes Category */}
             <div>
-              <span className="text-[10px] uppercase font-bold text-zinc-600 tracking-widest block px-3 mb-2">
+              <span className="text-[10px] uppercase font-bold text-muted tracking-widest block px-3 mb-2">
                 Finishes
               </span>
               <div className="space-y-1">
@@ -397,8 +397,8 @@ export default function CalculatorsPage() {
                   }}
                   className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg text-left transition-all ${
                     activeCalc === "paint"
-                      ? "bg-white/[0.06] text-white font-semibold shadow-sm"
-                      : "text-zinc-400 hover:text-white hover:bg-white/[0.02]"
+                      ? "bg-primary/10 text-white font-semibold shadow-sm"
+                      : "text-muted hover:text-foreground hover:bg-elevated"
                   }`}
                 >
                   <span>🎨</span> Paint & Putty
@@ -411,8 +411,8 @@ export default function CalculatorsPage() {
                   }}
                   className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg text-left transition-all ${
                     activeCalc === "tile"
-                      ? "bg-white/[0.06] text-white font-semibold shadow-sm"
-                      : "text-zinc-400 hover:text-white hover:bg-white/[0.02]"
+                      ? "bg-primary/10 text-white font-semibold shadow-sm"
+                      : "text-muted hover:text-foreground hover:bg-elevated"
                   }`}
                 >
                   <span>🔲</span> Tile Flooring
@@ -425,8 +425,8 @@ export default function CalculatorsPage() {
                   }}
                   className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg text-left transition-all ${
                     activeCalc === "waterproofing"
-                      ? "bg-white/[0.06] text-white font-semibold shadow-sm"
-                      : "text-zinc-400 hover:text-white hover:bg-white/[0.02]"
+                      ? "bg-primary/10 text-white font-semibold shadow-sm"
+                      : "text-muted hover:text-foreground hover:bg-elevated"
                   }`}
                 >
                   <span>💧</span> Waterproofing
@@ -436,7 +436,7 @@ export default function CalculatorsPage() {
 
             {/* Cost Planner Category */}
             <div>
-              <span className="text-[10px] uppercase font-bold text-zinc-600 tracking-widest block px-3 mb-2">
+              <span className="text-[10px] uppercase font-bold text-muted tracking-widest block px-3 mb-2">
                 Cost Estimator
               </span>
               <button
@@ -447,8 +447,8 @@ export default function CalculatorsPage() {
                 }}
                 className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg text-left transition-all ${
                   activeCalc === "house_cost"
-                    ? "bg-white/[0.06] text-white font-semibold shadow-sm"
-                    : "text-zinc-400 hover:text-white hover:bg-white/[0.02]"
+                    ? "bg-primary/10 text-white font-semibold shadow-sm"
+                    : "text-muted hover:text-foreground hover:bg-elevated"
                 }`}
               >
                 <span>🏠</span> House Cost Planner
@@ -461,15 +461,15 @@ export default function CalculatorsPage() {
       {/* Main Container */}
       <main className="flex-1 flex flex-col overflow-hidden h-full">
         {/* Header */}
-        <header className="h-16 border-b border-white/5 px-8 flex items-center justify-between bg-[#0B0910] shrink-0">
+        <header className="h-16 border-b border-border-custom px-8 flex items-center justify-between bg-card shrink-0">
           <div>
             <h1 className="text-sm font-bold text-white uppercase tracking-wider">
               {activeCalc.replace("_", " ")} Quantity Estimator
             </h1>
-            <p className="text-[10px] text-zinc-500">IS 456 & CPWD standard quantity takeoff engine</p>
+            <p className="text-[10px] text-muted">IS 456 & CPWD standard quantity takeoff engine</p>
           </div>
           {calculating && (
-            <span className="text-[10px] font-mono text-[#E8184C] animate-pulse">Calculating...</span>
+            <span className="text-[10px] font-mono text-primary animate-pulse">Calculating...</span>
           )}
         </header>
 
@@ -478,8 +478,8 @@ export default function CalculatorsPage() {
           {/* CALCULATOR PANELS */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* INPUT PANEL */}
-            <div className="lg:col-span-2 rounded-2xl border border-white/5 bg-[#0B0910] p-6 space-y-6">
-              <div className="flex justify-between items-center border-b border-white/5 pb-3">
+            <div className="lg:col-span-2 rounded-lg border border-border-custom bg-card p-6 space-y-6">
+              <div className="flex justify-between items-center border-b border-border-custom pb-3">
                 <h3 className="font-bold text-sm uppercase tracking-wider text-white">
                   Takeoff Parameters
                 </h3>
@@ -493,7 +493,7 @@ export default function CalculatorsPage() {
                 {activeCalc === "steel_column" && (
                   <>
                     <div className="space-y-1">
-                      <label className="text-zinc-400">Column Height (mm)</label>
+                      <label className="text-muted">Column Height (mm)</label>
                       <input
                         type="number"
                         value={colHeight}
@@ -501,11 +501,11 @@ export default function CalculatorsPage() {
                           setColHeight(Number(e.target.value));
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-zinc-400">Slab Thickness (mm)</label>
+                      <label className="text-muted">Slab Thickness (mm)</label>
                       <input
                         type="number"
                         value={slabThick}
@@ -513,11 +513,11 @@ export default function CalculatorsPage() {
                           setSlabThick(Number(e.target.value));
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-zinc-400">Column Size A (mm)</label>
+                      <label className="text-muted">Column Size A (mm)</label>
                       <input
                         type="number"
                         value={sizeA}
@@ -525,11 +525,11 @@ export default function CalculatorsPage() {
                           setSizeA(Number(e.target.value));
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-zinc-400">Column Size B (mm)</label>
+                      <label className="text-muted">Column Size B (mm)</label>
                       <input
                         type="number"
                         value={sizeB}
@@ -537,18 +537,18 @@ export default function CalculatorsPage() {
                           setSizeB(Number(e.target.value));
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-zinc-400">Main Bar Diameter (mm)</label>
+                      <label className="text-muted">Main Bar Diameter (mm)</label>
                       <select
                         value={mainBarDia}
                         onChange={(e) => {
                           setMainBarDia(Number(e.target.value));
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary"
                       >
                         {[8, 10, 12, 16, 20, 25, 32].map((d) => (
                           <option key={d} value={d}>
@@ -558,7 +558,7 @@ export default function CalculatorsPage() {
                       </select>
                     </div>
                     <div className="space-y-1">
-                      <label className="text-zinc-400">Main Bars Count (nos)</label>
+                      <label className="text-muted">Main Bars Count (nos)</label>
                       <input
                         type="number"
                         value={mainBarCount}
@@ -566,11 +566,11 @@ export default function CalculatorsPage() {
                           setMainBarCount(Number(e.target.value));
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-zinc-400">Stirrup Spacing (mm)</label>
+                      <label className="text-muted">Stirrup Spacing (mm)</label>
                       <input
                         type="number"
                         value={stirrupSpacing}
@@ -578,11 +578,11 @@ export default function CalculatorsPage() {
                           setStirrupSpacing(Number(e.target.value));
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-zinc-400">Wastage Buffer (%)</label>
+                      <label className="text-muted">Wastage Buffer (%)</label>
                       <input
                         type="number"
                         value={steelWastage}
@@ -590,7 +590,7 @@ export default function CalculatorsPage() {
                           setSteelWastage(Number(e.target.value));
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary"
                       />
                     </div>
                   </>
@@ -600,7 +600,7 @@ export default function CalculatorsPage() {
                 {activeCalc === "steel_slab" && (
                   <>
                     <div className="space-y-1">
-                      <label className="text-zinc-400">Slab Length Ly (mm)</label>
+                      <label className="text-muted">Slab Length Ly (mm)</label>
                       <input
                         type="number"
                         value={slabLength}
@@ -608,11 +608,11 @@ export default function CalculatorsPage() {
                           setSlabLength(Number(e.target.value));
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-zinc-400">Slab Width Lx (mm)</label>
+                      <label className="text-muted">Slab Width Lx (mm)</label>
                       <input
                         type="number"
                         value={slabWidth}
@@ -620,18 +620,18 @@ export default function CalculatorsPage() {
                           setSlabWidth(Number(e.target.value));
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-zinc-400">Main Bar Dia (mm)</label>
+                      <label className="text-muted">Main Bar Dia (mm)</label>
                       <select
                         value={slabMainDia}
                         onChange={(e) => {
                           setSlabMainDia(Number(e.target.value));
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
                       >
                         {[8, 10, 12, 16].map((d) => (
                           <option key={d} value={d}>
@@ -641,7 +641,7 @@ export default function CalculatorsPage() {
                       </select>
                     </div>
                     <div className="space-y-1">
-                      <label className="text-zinc-400">Main Bar Spacing (mm)</label>
+                      <label className="text-muted">Main Bar Spacing (mm)</label>
                       <input
                         type="number"
                         value={slabMainSpacing}
@@ -649,18 +649,18 @@ export default function CalculatorsPage() {
                           setSlabMainSpacing(Number(e.target.value));
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-zinc-400">Distribution Bar Dia (mm)</label>
+                      <label className="text-muted">Distribution Bar Dia (mm)</label>
                       <select
                         value={slabDistDia}
                         onChange={(e) => {
                           setSlabDistDia(Number(e.target.value));
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
                       >
                         {[8, 10, 12].map((d) => (
                           <option key={d} value={d}>
@@ -670,7 +670,7 @@ export default function CalculatorsPage() {
                       </select>
                     </div>
                     <div className="space-y-1">
-                      <label className="text-zinc-400">Distribution Bar Spacing (mm)</label>
+                      <label className="text-muted">Distribution Bar Spacing (mm)</label>
                       <input
                         type="number"
                         value={slabDistSpacing}
@@ -678,7 +678,7 @@ export default function CalculatorsPage() {
                           setSlabDistSpacing(Number(e.target.value));
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
                       />
                     </div>
                   </>
@@ -688,14 +688,14 @@ export default function CalculatorsPage() {
                 {activeCalc === "concrete" && (
                   <>
                     <div className="space-y-1">
-                      <label className="text-zinc-400">Element Category</label>
+                      <label className="text-muted">Element Category</label>
                       <select
                         value={concreteForm}
                         onChange={(e) => {
                           setConcreteForm(e.target.value as any);
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
                       >
                         <option value="slab">Flat Slab / Beam</option>
                         <option value="column">Column / Pedestal</option>
@@ -703,14 +703,14 @@ export default function CalculatorsPage() {
                       </select>
                     </div>
                     <div className="space-y-1">
-                      <label className="text-zinc-400">Concrete Grade</label>
+                      <label className="text-muted">Concrete Grade</label>
                       <select
                         value={concreteGrade}
                         onChange={(e) => {
                           setConcreteGrade(e.target.value);
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
                       >
                         <option value="M10">M10 (Nominal PCC 1:3:6)</option>
                         <option value="M15">M15 (Nominal PCC 1:2:4)</option>
@@ -722,7 +722,7 @@ export default function CalculatorsPage() {
                     {concreteForm === "slab" && (
                       <>
                         <div className="space-y-1">
-                          <label className="text-zinc-400">Slab Length (m)</label>
+                          <label className="text-muted">Slab Length (m)</label>
                           <input
                             type="number"
                             value={concreteL}
@@ -730,11 +730,11 @@ export default function CalculatorsPage() {
                               setConcreteL(Number(e.target.value));
                               handleTriggerCalc();
                             }}
-                            className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-white"
+                            className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
                           />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-zinc-400">Slab Width (m)</label>
+                          <label className="text-muted">Slab Width (m)</label>
                           <input
                             type="number"
                             value={concreteW}
@@ -742,11 +742,11 @@ export default function CalculatorsPage() {
                               setConcreteW(Number(e.target.value));
                               handleTriggerCalc();
                             }}
-                            className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-white"
+                            className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
                           />
                         </div>
                         <div className="space-y-1 col-span-2">
-                          <label className="text-zinc-400">Slab Thickness / Depth (m)</label>
+                          <label className="text-muted">Slab Thickness / Depth (m)</label>
                           <input
                             type="number"
                             value={concreteD}
@@ -754,7 +754,7 @@ export default function CalculatorsPage() {
                               setConcreteD(Number(e.target.value));
                               handleTriggerCalc();
                             }}
-                            className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-white"
+                            className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
                           />
                         </div>
                       </>
@@ -763,7 +763,7 @@ export default function CalculatorsPage() {
                     {concreteForm === "column" && (
                       <>
                         <div className="space-y-1">
-                          <label className="text-zinc-400">Column Size A (mm)</label>
+                          <label className="text-muted">Column Size A (mm)</label>
                           <input
                             type="number"
                             value={sizeA}
@@ -771,11 +771,11 @@ export default function CalculatorsPage() {
                               setSizeA(Number(e.target.value));
                               handleTriggerCalc();
                             }}
-                            className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-white"
+                            className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
                           />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-zinc-400">Column Size B (mm)</label>
+                          <label className="text-muted">Column Size B (mm)</label>
                           <input
                             type="number"
                             value={sizeB}
@@ -783,11 +783,11 @@ export default function CalculatorsPage() {
                               setSizeB(Number(e.target.value));
                               handleTriggerCalc();
                             }}
-                            className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-white"
+                            className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
                           />
                         </div>
                         <div className="space-y-1 col-span-2">
-                          <label className="text-zinc-400">Column Height (mm)</label>
+                          <label className="text-muted">Column Height (mm)</label>
                           <input
                             type="number"
                             value={colHeight}
@@ -795,7 +795,7 @@ export default function CalculatorsPage() {
                               setColHeight(Number(e.target.value));
                               handleTriggerCalc();
                             }}
-                            className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-white"
+                            className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
                           />
                         </div>
                       </>
@@ -804,7 +804,7 @@ export default function CalculatorsPage() {
                     {concreteForm === "stair" && (
                       <>
                         <div className="space-y-1">
-                          <label className="text-zinc-400">Steps Count</label>
+                          <label className="text-muted">Steps Count</label>
                           <input
                             type="number"
                             value={stairSteps}
@@ -812,11 +812,11 @@ export default function CalculatorsPage() {
                               setStairSteps(Number(e.target.value));
                               handleTriggerCalc();
                             }}
-                            className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-white"
+                            className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
                           />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-zinc-400">Flight Width (m)</label>
+                          <label className="text-muted">Flight Width (m)</label>
                           <input
                             type="number"
                             value={stairWidth}
@@ -824,11 +824,11 @@ export default function CalculatorsPage() {
                               setStairWidth(Number(e.target.value));
                               handleTriggerCalc();
                             }}
-                            className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-white"
+                            className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
                           />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-zinc-400">Riser Height (m)</label>
+                          <label className="text-muted">Riser Height (m)</label>
                           <input
                             type="number"
                             value={stairRiser}
@@ -836,11 +836,11 @@ export default function CalculatorsPage() {
                               setStairRiser(Number(e.target.value));
                               handleTriggerCalc();
                             }}
-                            className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-white"
+                            className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
                           />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-zinc-400">Tread Depth (m)</label>
+                          <label className="text-muted">Tread Depth (m)</label>
                           <input
                             type="number"
                             value={stairTread}
@@ -848,11 +848,11 @@ export default function CalculatorsPage() {
                               setStairTread(Number(e.target.value));
                               handleTriggerCalc();
                             }}
-                            className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-white"
+                            className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
                           />
                         </div>
                         <div className="space-y-1 col-span-2">
-                          <label className="text-zinc-400">Waist Slab Thickness (m)</label>
+                          <label className="text-muted">Waist Slab Thickness (m)</label>
                           <input
                             type="number"
                             value={stairWaist}
@@ -860,7 +860,7 @@ export default function CalculatorsPage() {
                               setStairWaist(Number(e.target.value));
                               handleTriggerCalc();
                             }}
-                            className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-white"
+                            className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
                           />
                         </div>
                       </>
@@ -872,7 +872,7 @@ export default function CalculatorsPage() {
                 {activeCalc === "rmc" && (
                   <>
                     <div className="space-y-1">
-                      <label className="text-zinc-400">Pour Volume (m³)</label>
+                      <label className="text-muted">Pour Volume (m³)</label>
                       <input
                         type="number"
                         value={rmcVolume}
@@ -880,18 +880,18 @@ export default function CalculatorsPage() {
                           setRmcVolume(Number(e.target.value));
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-zinc-400">Mixer Truck Size (m³)</label>
+                      <label className="text-muted">Mixer Truck Size (m³)</label>
                       <select
                         value={rmcMixerSize}
                         onChange={(e) => {
                           setRmcMixerSize(Number(e.target.value));
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
                       >
                         <option value={6}>6 m³ (Standard India)</option>
                         <option value={7}>7 m³ (Standard GCC)</option>
@@ -905,7 +905,7 @@ export default function CalculatorsPage() {
                 {activeCalc === "bricks" && (
                   <>
                     <div className="space-y-1">
-                      <label className="text-zinc-400">Wall Length (m)</label>
+                      <label className="text-muted">Wall Length (m)</label>
                       <input
                         type="number"
                         value={brickWallL}
@@ -913,11 +913,11 @@ export default function CalculatorsPage() {
                           setBrickWallL(Number(e.target.value));
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-zinc-400">Wall Height (m)</label>
+                      <label className="text-muted">Wall Height (m)</label>
                       <input
                         type="number"
                         value={brickWallH}
@@ -925,25 +925,25 @@ export default function CalculatorsPage() {
                           setBrickWallH(Number(e.target.value));
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-zinc-400">Brick Size Standard</label>
+                      <label className="text-muted">Brick Size Standard</label>
                       <select
                         value={brickSizePreset}
                         onChange={(e) => {
                           setBrickSizePreset(e.target.value);
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
                       >
                         <option value="modular"> modular (190 x 90 x 90 mm)</option>
                         <option value="traditional">traditional (230 x 110 x 75 mm)</option>
                       </select>
                     </div>
                     <div className="space-y-1">
-                      <label className="text-zinc-400">Wall Thickness (mm)</label>
+                      <label className="text-muted">Wall Thickness (mm)</label>
                       <select
                         value={brickThickness}
                         onChange={(e) => {
@@ -951,21 +951,21 @@ export default function CalculatorsPage() {
                           setBrickLeaves(Number(e.target.value) > 115 ? 2 : 1);
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
                       >
                         <option value={115}>4.5 inch (Half Brick - Single Leaf)</option>
                         <option value={230}>9 inch (Full Brick - Double Leaf)</option>
                       </select>
                     </div>
                     <div className="space-y-1">
-                      <label className="text-zinc-400">Mortar Mix Ratio</label>
+                      <label className="text-muted">Mortar Mix Ratio</label>
                       <select
                         value={brickMortarRatio}
                         onChange={(e) => {
                           setBrickMortarRatio(e.target.value);
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
                       >
                         <option value="1:3">1:3 (High Strength)</option>
                         <option value="1:4">1:4 (External Walls)</option>
@@ -979,7 +979,7 @@ export default function CalculatorsPage() {
                 {activeCalc === "paint" && (
                   <>
                     <div className="space-y-1">
-                      <label className="text-zinc-400">Room Length (ft)</label>
+                      <label className="text-muted">Room Length (ft)</label>
                       <input
                         type="number"
                         value={roomL}
@@ -987,11 +987,11 @@ export default function CalculatorsPage() {
                           setRoomL(Number(e.target.value));
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-zinc-400">Room Width (ft)</label>
+                      <label className="text-muted">Room Width (ft)</label>
                       <input
                         type="number"
                         value={roomW}
@@ -999,11 +999,11 @@ export default function CalculatorsPage() {
                           setRoomW(Number(e.target.value));
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-zinc-400">Ceiling Height (ft)</label>
+                      <label className="text-muted">Ceiling Height (ft)</label>
                       <input
                         type="number"
                         value={ceilingH}
@@ -1011,18 +1011,18 @@ export default function CalculatorsPage() {
                           setCeilingH(Number(e.target.value));
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-zinc-400">Paint Quality</label>
+                      <label className="text-muted">Paint Quality</label>
                       <select
                         value={paintQuality}
                         onChange={(e) => {
                           setPaintQuality(e.target.value);
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
                       >
                         <option value="economy">Economy Emulsion</option>
                         <option value="premium">Premium Emulsion</option>
@@ -1030,7 +1030,7 @@ export default function CalculatorsPage() {
                       </select>
                     </div>
                     <div className="space-y-1">
-                      <label className="text-zinc-400">Doors Count (Standard Deductions)</label>
+                      <label className="text-muted">Doors Count (Standard Deductions)</label>
                       <input
                         type="number"
                         value={doorsCount}
@@ -1038,11 +1038,11 @@ export default function CalculatorsPage() {
                           setDoorsCount(Number(e.target.value));
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-zinc-400">Windows Count (Deductions)</label>
+                      <label className="text-muted">Windows Count (Deductions)</label>
                       <input
                         type="number"
                         value={windowsCount}
@@ -1050,7 +1050,7 @@ export default function CalculatorsPage() {
                           setWindowsCount(Number(e.target.value));
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
                       />
                     </div>
                     <div className="flex items-center gap-2 pt-4 col-span-2">
@@ -1061,9 +1061,9 @@ export default function CalculatorsPage() {
                           setPaintCeiling(e.target.checked);
                           handleTriggerCalc();
                         }}
-                        className="h-4 w-4 bg-[#15121F] rounded"
+                        className="h-4 w-4 bg-input rounded"
                       />
-                      <label className="text-zinc-400">Include Ceiling Area</label>
+                      <label className="text-muted">Include Ceiling Area</label>
                     </div>
                   </>
                 )}
@@ -1072,7 +1072,7 @@ export default function CalculatorsPage() {
                 {activeCalc === "tile" && (
                   <>
                     <div className="space-y-1">
-                      <label className="text-zinc-400">Room Length (ft)</label>
+                      <label className="text-muted">Room Length (ft)</label>
                       <input
                         type="number"
                         value={tileRoomL}
@@ -1080,11 +1080,11 @@ export default function CalculatorsPage() {
                           setTileRoomL(Number(e.target.value));
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-zinc-400">Room Width (ft)</label>
+                      <label className="text-muted">Room Width (ft)</label>
                       <input
                         type="number"
                         value={tileRoomW}
@@ -1092,11 +1092,11 @@ export default function CalculatorsPage() {
                           setTileRoomW(Number(e.target.value));
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-zinc-400">Tile Size (Length - Inch)</label>
+                      <label className="text-muted">Tile Size (Length - Inch)</label>
                       <input
                         type="number"
                         value={tileLInch}
@@ -1104,11 +1104,11 @@ export default function CalculatorsPage() {
                           setTileLInch(Number(e.target.value));
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-zinc-400">Tile Size (Width - Inch)</label>
+                      <label className="text-muted">Tile Size (Width - Inch)</label>
                       <input
                         type="number"
                         value={tileWInch}
@@ -1116,7 +1116,7 @@ export default function CalculatorsPage() {
                           setTileWInch(Number(e.target.value));
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
                       />
                     </div>
                   </>
@@ -1126,7 +1126,7 @@ export default function CalculatorsPage() {
                 {activeCalc === "plaster" && (
                   <>
                     <div className="space-y-1">
-                      <label className="text-zinc-400">Wall Area (m²)</label>
+                      <label className="text-muted">Wall Area (m²)</label>
                       <input
                         type="number"
                         value={plasterArea}
@@ -1134,11 +1134,11 @@ export default function CalculatorsPage() {
                           setPlasterArea(Number(e.target.value));
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-zinc-400">Plaster Thickness (mm)</label>
+                      <label className="text-muted">Plaster Thickness (mm)</label>
                       <input
                         type="number"
                         value={plasterThick}
@@ -1146,18 +1146,18 @@ export default function CalculatorsPage() {
                           setPlasterThick(Number(e.target.value));
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-zinc-400">Plaster Mix Ratio (Cement:Sand)</label>
+                      <label className="text-muted">Plaster Mix Ratio (Cement:Sand)</label>
                       <select
                         value={plasterRatio}
                         onChange={(e) => {
                           setPlasterRatio(e.target.value);
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
                       >
                         <option value="1:3">1:3 (Ceilings / Wet areas)</option>
                         <option value="1:4">1:4 (Internal plaster standard)</option>
@@ -1171,7 +1171,7 @@ export default function CalculatorsPage() {
                 {activeCalc === "waterproofing" && (
                   <>
                     <div className="space-y-1">
-                      <label className="text-zinc-400">Waterproofing Area (sqft)</label>
+                      <label className="text-muted">Waterproofing Area (sqft)</label>
                       <input
                         type="number"
                         value={wpArea}
@@ -1179,11 +1179,11 @@ export default function CalculatorsPage() {
                           setWpArea(Number(e.target.value));
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-zinc-400">Coverage per Litre (sqft/L)</label>
+                      <label className="text-muted">Coverage per Litre (sqft/L)</label>
                       <input
                         type="number"
                         value={wpCoverage}
@@ -1191,7 +1191,7 @@ export default function CalculatorsPage() {
                           setWpCoverage(Number(e.target.value));
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
                       />
                     </div>
                   </>
@@ -1201,7 +1201,7 @@ export default function CalculatorsPage() {
                 {activeCalc === "house_cost" && (
                   <>
                     <div className="space-y-1">
-                      <label className="text-zinc-400">Built-Up Area (sqft)</label>
+                      <label className="text-muted">Built-Up Area (sqft)</label>
                       <input
                         type="number"
                         value={houseArea}
@@ -1209,18 +1209,18 @@ export default function CalculatorsPage() {
                           setHouseArea(Number(e.target.value));
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-zinc-400">Floors Count</label>
+                      <label className="text-muted">Floors Count</label>
                       <select
                         value={houseFloors}
                         onChange={(e) => {
                           setHouseFloors(Number(e.target.value));
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
                       >
                         <option value={1}>G floor (1 floor)</option>
                         <option value={2}>G+1 (2 floors)</option>
@@ -1228,7 +1228,7 @@ export default function CalculatorsPage() {
                       </select>
                     </div>
                     <div className="space-y-1">
-                      <label className="text-zinc-400">Construction Grade</label>
+                      <label className="text-muted">Construction Grade</label>
                       <div className="grid grid-cols-3 gap-2">
                         {(["budget", "standard", "premium"] as const).map((q) => (
                           <button
@@ -1239,8 +1239,8 @@ export default function CalculatorsPage() {
                             }}
                             className={`py-1.5 border rounded-lg uppercase text-[10px] font-bold transition-all ${
                               houseQuality === q
-                                ? "bg-[#E8184C]/10 border-[#E8184C] text-[#E8184C]"
-                                : "border-white/10 text-zinc-400"
+                                ? "bg-primary/10 border-border-custom text-primary"
+                                : "border-border-custom text-muted"
                             }`}
                           >
                             {q}
@@ -1249,14 +1249,14 @@ export default function CalculatorsPage() {
                       </div>
                     </div>
                     <div className="space-y-1">
-                      <label className="text-zinc-400">Currency Mode</label>
+                      <label className="text-muted">Currency Mode</label>
                       <select
                         value={houseCurrency}
                         onChange={(e) => {
                           setHouseCurrency(e.target.value as any);
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
                       >
                         <option value="INR">India (₹)</option>
                         <option value="AED">UAE (AED)</option>
@@ -1269,9 +1269,9 @@ export default function CalculatorsPage() {
             </div>
 
             {/* RESULTS OUTPUT PANEL */}
-            <div className="rounded-2xl border border-white/5 bg-[#0B0910] p-6 space-y-6 flex flex-col justify-between">
+            <div className="rounded-lg border border-border-custom bg-card p-6 space-y-6 flex flex-col justify-between">
               <div className="space-y-5">
-                <div className="border-b border-white/5 pb-3">
+                <div className="border-b border-border-custom pb-3">
                   <h4 className="text-xs font-bold text-white uppercase tracking-wider">
                     Calculated Result
                   </h4>
@@ -1280,42 +1280,42 @@ export default function CalculatorsPage() {
                 {/* 1. Steel Column Results */}
                 {activeCalc === "steel_column" && (
                   <div className="space-y-4">
-                    <div className="bg-[#14111E] p-4 rounded-xl border border-white/5">
-                      <span className="text-zinc-500 text-[10px] uppercase font-bold block">
+                    <div className="bg-input p-4 rounded-md border border-border-custom">
+                      <span className="text-muted text-[10px] uppercase font-bold block">
                         Main Vertical Steel
                       </span>
                       <strong className="text-lg font-black text-white mt-1 block">
                         {colMainWeight.toFixed(2)} kg
                       </strong>
-                      <span className="text-[10px] text-zinc-500 italic block mt-0.5">
+                      <span className="text-[10px] text-muted italic block mt-0.5">
                         Includes {mainBarCount} nos main bars with overlaps and {steelWastage}% wastage
                       </span>
                     </div>
-                    <div className="bg-[#14111E] p-4 rounded-xl border border-white/5">
-                      <span className="text-zinc-500 text-[10px] uppercase font-bold block">
+                    <div className="bg-input p-4 rounded-md border border-border-custom">
+                      <span className="text-muted text-[10px] uppercase font-bold block">
                         Stirrups / Ties Steel
                       </span>
                       <strong className="text-lg font-black text-white mt-1 block">
                         {colStirrupWeight.toFixed(2)} kg
                       </strong>
-                      <span className="text-[10px] text-zinc-500 italic block mt-0.5">
+                      <span className="text-[10px] text-muted italic block mt-0.5">
                         Includes {colStirrupCount} stirrups (8D hook deductions as per SP-34)
                       </span>
                     </div>
-                    <div className="bg-[#14111E] p-4 rounded-xl border border-white/5">
-                      <span className="text-zinc-500 text-[10px] uppercase font-bold block">
+                    <div className="bg-input p-4 rounded-md border border-border-custom">
+                      <span className="text-muted text-[10px] uppercase font-bold block">
                         Total Column Steel Weight
                       </span>
-                      <strong className="text-2xl font-black text-[#00E5A3] mt-1 block">
+                      <strong className="text-2xl font-black text-success mt-1 block">
                         {colTotalWeight.toFixed(2)} kg
                       </strong>
                     </div>
-                    <div className="pt-4 border-t border-white/5 bg-[#14111E] p-4 rounded-xl flex items-center justify-between">
+                    <div className="pt-4 border-t border-border-custom bg-input p-4 rounded-md flex items-center justify-between">
                       <div>
-                        <span className="text-zinc-500 text-[10px] uppercase font-bold block">
+                        <span className="text-muted text-[10px] uppercase font-bold block">
                           Est. Material Cost
                         </span>
-                        <strong className="text-xl font-black text-[#E8184C] mt-1 block">
+                        <strong className="text-xl font-black text-primary mt-1 block">
                           ₹{colCost.toLocaleString("en-IN", { maximumFractionDigits: 0 })}
                         </strong>
                       </div>
@@ -1326,33 +1326,33 @@ export default function CalculatorsPage() {
                 {/* 2. Slab Steel Results */}
                 {activeCalc === "steel_slab" && (
                   <div className="space-y-4">
-                    <div className="bg-[#14111E] p-4 rounded-xl border border-white/5">
-                      <span className="text-zinc-500 text-[10px] uppercase font-bold block">
+                    <div className="bg-input p-4 rounded-md border border-border-custom">
+                      <span className="text-muted text-[10px] uppercase font-bold block">
                         Main Reinforcement
                       </span>
                       <strong className="text-lg font-black text-white mt-1 block">
                         {slabMainWeight.toFixed(2)} kg
                       </strong>
-                      <span className="text-[10px] text-zinc-500 italic block mt-0.5">
+                      <span className="text-[10px] text-muted italic block mt-0.5">
                         {slabMainCount} main bars of {slabMainDia}mm diameter
                       </span>
                     </div>
-                    <div className="bg-[#14111E] p-4 rounded-xl border border-white/5">
-                      <span className="text-zinc-500 text-[10px] uppercase font-bold block">
+                    <div className="bg-input p-4 rounded-md border border-border-custom">
+                      <span className="text-muted text-[10px] uppercase font-bold block">
                         Distribution Reinforcement
                       </span>
                       <strong className="text-lg font-black text-white mt-1 block">
                         {slabDistWeight.toFixed(2)} kg
                       </strong>
-                      <span className="text-[10px] text-zinc-500 italic block mt-0.5">
+                      <span className="text-[10px] text-muted italic block mt-0.5">
                         {slabDistCount} distribution bars of {slabDistDia}mm diameter
                       </span>
                     </div>
-                    <div className="bg-[#14111E] p-4 rounded-xl border border-white/5">
-                      <span className="text-zinc-500 text-[10px] uppercase font-bold block">
+                    <div className="bg-input p-4 rounded-md border border-border-custom">
+                      <span className="text-muted text-[10px] uppercase font-bold block">
                         Total Slab Steel Weight
                       </span>
-                      <strong className="text-2xl font-black text-[#00E5A3] mt-1 block">
+                      <strong className="text-2xl font-black text-success mt-1 block">
                         {slabTotalWeight.toFixed(2)} kg
                       </strong>
                     </div>
@@ -1362,16 +1362,16 @@ export default function CalculatorsPage() {
                 {/* 3. Concrete Volume Results */}
                 {activeCalc === "concrete" && (
                   <div className="space-y-4">
-                    <div className="bg-[#14111E] p-4 rounded-xl border border-white/5">
-                      <span className="text-zinc-500 text-[10px] uppercase font-bold block">
+                    <div className="bg-input p-4 rounded-md border border-border-custom">
+                      <span className="text-muted text-[10px] uppercase font-bold block">
                         Wet Concrete Volume
                       </span>
                       <strong className="text-xl font-black text-white mt-1 block">
                         {concVolume.toFixed(3)} m³
                       </strong>
                     </div>
-                    <div className="bg-[#14111E] p-4 rounded-xl border border-white/5">
-                      <span className="text-zinc-500 text-[10px] uppercase font-bold block">
+                    <div className="bg-input p-4 rounded-md border border-border-custom">
+                      <span className="text-muted text-[10px] uppercase font-bold block">
                         Dry Mix Materials (1.54 Factor)
                       </span>
                       <div className="grid grid-cols-3 gap-2 mt-3 text-center">
@@ -1379,23 +1379,23 @@ export default function CalculatorsPage() {
                           <strong className="text-sm font-bold text-white block">
                             {Math.ceil(concCementBags)}
                           </strong>
-                          <span className="text-[9px] text-zinc-500 uppercase">Cement Bags</span>
+                          <span className="text-[9px] text-muted uppercase">Cement Bags</span>
                         </div>
                         <div className="bg-black/30 p-2 rounded">
                           <strong className="text-sm font-bold text-white block">
                             {concSandM3.toFixed(2)}
                           </strong>
-                          <span className="text-[9px] text-zinc-500 uppercase">Sand (m³)</span>
+                          <span className="text-[9px] text-muted uppercase">Sand (m³)</span>
                         </div>
                         <div className="bg-black/30 p-2 rounded">
                           <strong className="text-sm font-bold text-white block">
                             {concAggM3.toFixed(2)}
                           </strong>
-                          <span className="text-[9px] text-zinc-500 uppercase">Aggregate (m³)</span>
+                          <span className="text-[9px] text-muted uppercase">Aggregate (m³)</span>
                         </div>
                       </div>
                     </div>
-                    <span className="text-[10px] text-zinc-500 italic block">
+                    <span className="text-[10px] text-muted italic block">
                       * Cement bags rounded up to nearest whole bag. Nominal Mix proportions: {concreteGrade}.
                     </span>
                   </div>
@@ -1404,14 +1404,14 @@ export default function CalculatorsPage() {
                 {/* 4. RMC Transit Mixer Truck Results */}
                 {activeCalc === "rmc" && (
                   <div className="space-y-4">
-                    <div className="bg-[#14111E] p-4 rounded-xl border border-white/5 text-center">
-                      <span className="text-zinc-500 text-[10px] uppercase font-bold block">
+                    <div className="bg-input p-4 rounded-md border border-border-custom text-center">
+                      <span className="text-muted text-[10px] uppercase font-bold block">
                         Transit Mixer Dispatches Needed
                       </span>
-                      <strong className="text-4xl font-black text-[#00E5A3] mt-2 block">
+                      <strong className="text-4xl font-black text-success mt-2 block">
                         {rmcTrucks} Trucks
                       </strong>
-                      <span className="text-[10px] text-zinc-500 block mt-2">
+                      <span className="text-[10px] text-muted block mt-2">
                         For a total wet pour of {rmcTotalVol.toFixed(2)} m³ (including {rmcWastage}% waste)
                       </span>
                     </div>
@@ -1421,19 +1421,19 @@ export default function CalculatorsPage() {
                 {/* 5. Brick Wall Results */}
                 {activeCalc === "bricks" && (
                   <div className="space-y-4">
-                    <div className="bg-[#14111E] p-4 rounded-xl border border-white/5 text-center">
-                      <span className="text-zinc-500 text-[10px] uppercase font-bold block">
+                    <div className="bg-input p-4 rounded-md border border-border-custom text-center">
+                      <span className="text-muted text-[10px] uppercase font-bold block">
                         Bricks Required
                       </span>
-                      <strong className="text-3xl font-black text-[#00E5A3] mt-1 block">
+                      <strong className="text-3xl font-black text-success mt-1 block">
                         {bricksNeeded.toLocaleString()} nos
                       </strong>
-                      <span className="text-[10px] text-zinc-500 block mt-1">
+                      <span className="text-[10px] text-muted block mt-1">
                         Includes {brickWastage}% cutting wastage buffer
                       </span>
                     </div>
-                    <div className="bg-[#14111E] p-4 rounded-xl border border-white/5">
-                      <span className="text-zinc-500 text-[10px] uppercase font-bold block">
+                    <div className="bg-input p-4 rounded-md border border-border-custom">
+                      <span className="text-muted text-[10px] uppercase font-bold block">
                         Dry Mortar Material Split
                       </span>
                       <div className="grid grid-cols-2 gap-3 mt-2">
@@ -1441,13 +1441,13 @@ export default function CalculatorsPage() {
                           <strong className="text-sm font-bold text-white block">
                             {brickCementBags.toFixed(1)}
                           </strong>
-                          <span className="text-[9px] text-zinc-500 uppercase">Cement Bags</span>
+                          <span className="text-[9px] text-muted uppercase">Cement Bags</span>
                         </div>
                         <div className="bg-black/30 p-2 rounded text-center">
                           <strong className="text-sm font-bold text-white block">
                             {brickSandM3.toFixed(2)}
                           </strong>
-                          <span className="text-[9px] text-zinc-500 uppercase">Sand (m³)</span>
+                          <span className="text-[9px] text-muted uppercase">Sand (m³)</span>
                         </div>
                       </div>
                     </div>
@@ -1457,35 +1457,35 @@ export default function CalculatorsPage() {
                 {/* 6. Paint & Putty Results */}
                 {activeCalc === "paint" && (
                   <div className="space-y-4">
-                    <div className="bg-[#14111E] p-4 rounded-xl border border-white/5">
-                      <span className="text-zinc-500 text-[10px] uppercase font-bold block">
+                    <div className="bg-input p-4 rounded-md border border-border-custom">
+                      <span className="text-muted text-[10px] uppercase font-bold block">
                         Paintable Wall Area
                       </span>
                       <strong className="text-lg font-black text-white mt-1 block">
                         {paintableArea.toFixed(0)} sqft
                       </strong>
-                      <span className="text-[10px] text-zinc-500 italic block mt-0.5">
+                      <span className="text-[10px] text-muted italic block mt-0.5">
                         After deducting {doorsCount} doors and {windowsCount} windows
                       </span>
                     </div>
-                    <div className="bg-[#14111E] p-4 rounded-xl border border-white/5 grid grid-cols-3 gap-2 text-center">
+                    <div className="bg-input p-4 rounded-md border border-border-custom grid grid-cols-3 gap-2 text-center">
                       <div className="bg-black/30 p-2 rounded">
                         <strong className="text-sm font-bold text-white block">
                           {paintLitres.toFixed(1)} L
                         </strong>
-                        <span className="text-[9px] text-zinc-500 uppercase">Paint</span>
+                        <span className="text-[9px] text-muted uppercase">Paint</span>
                       </div>
                       <div className="bg-black/30 p-2 rounded">
                         <strong className="text-sm font-bold text-white block">
                           {paintPuttyKg.toFixed(0)} kg
                         </strong>
-                        <span className="text-[9px] text-zinc-500 uppercase">Putty</span>
+                        <span className="text-[9px] text-muted uppercase">Putty</span>
                       </div>
                       <div className="bg-black/30 p-2 rounded">
                         <strong className="text-sm font-bold text-white block">
                           {paintPrimerL.toFixed(1)} L
                         </strong>
-                        <span className="text-[9px] text-zinc-500 uppercase">Primer</span>
+                        <span className="text-[9px] text-muted uppercase">Primer</span>
                       </div>
                     </div>
                   </div>
@@ -1494,22 +1494,22 @@ export default function CalculatorsPage() {
                 {/* 7. Tile Flooring Results */}
                 {activeCalc === "tile" && (
                   <div className="space-y-4">
-                    <div className="bg-[#14111E] p-4 rounded-xl border border-white/5 text-center">
-                      <span className="text-zinc-500 text-[10px] uppercase font-bold block">
+                    <div className="bg-input p-4 rounded-md border border-border-custom text-center">
+                      <span className="text-muted text-[10px] uppercase font-bold block">
                         Total Room Area
                       </span>
                       <strong className="text-xl font-black text-white mt-1 block">
                         {tileRoomArea.toFixed(1)} sqft
                       </strong>
                     </div>
-                    <div className="bg-[#14111E] p-4 rounded-xl border border-white/5 text-center">
-                      <span className="text-zinc-500 text-[10px] uppercase font-bold block">
+                    <div className="bg-input p-4 rounded-md border border-border-custom text-center">
+                      <span className="text-muted text-[10px] uppercase font-bold block">
                         Tiles Needed
                       </span>
-                      <strong className="text-3xl font-black text-[#00E5A3] mt-2 block">
+                      <strong className="text-3xl font-black text-success mt-2 block">
                         {tileTiles} tiles
                       </strong>
-                      <span className="text-[10px] text-zinc-500 block mt-1">
+                      <span className="text-[10px] text-muted block mt-1">
                         Includes {tileWastage}% breakage wastage buffer
                       </span>
                     </div>
@@ -1519,28 +1519,28 @@ export default function CalculatorsPage() {
                 {/* 8. Plastering Results */}
                 {activeCalc === "plaster" && (
                   <div className="space-y-4">
-                    <div className="bg-[#14111E] p-4 rounded-xl border border-white/5">
-                      <span className="text-zinc-500 text-[10px] uppercase font-bold block">
+                    <div className="bg-input p-4 rounded-md border border-border-custom">
+                      <span className="text-muted text-[10px] uppercase font-bold block">
                         Plaster Wet Volume
                       </span>
                       <strong className="text-base font-black text-white mt-1 block">
                         {plasterWetVol.toFixed(3)} m³
                       </strong>
                     </div>
-                    <div className="bg-[#14111E] p-4 rounded-xl border border-white/5 grid grid-cols-2 gap-3 text-center">
+                    <div className="bg-input p-4 rounded-md border border-border-custom grid grid-cols-2 gap-3 text-center">
                       <div>
-                        <span className="text-zinc-500 text-[10px] uppercase font-bold block">
+                        <span className="text-muted text-[10px] uppercase font-bold block">
                           Cement Bags
                         </span>
-                        <strong className="text-xl font-black text-[#00E5A3] mt-1 block">
+                        <strong className="text-xl font-black text-success mt-1 block">
                           {plasterCementBags.toFixed(1)}
                         </strong>
                       </div>
                       <div>
-                        <span className="text-zinc-500 text-[10px] uppercase font-bold block">
+                        <span className="text-muted text-[10px] uppercase font-bold block">
                           Sand Volume
                         </span>
-                        <strong className="text-xl font-black text-[#00E5A3] mt-1 block">
+                        <strong className="text-xl font-black text-success mt-1 block">
                           {plasterSandM3.toFixed(2)} m³
                         </strong>
                       </div>
@@ -1550,14 +1550,14 @@ export default function CalculatorsPage() {
 
                 {/* 9. Waterproofing Results */}
                 {activeCalc === "waterproofing" && (
-                  <div className="space-y-4 border border-white/5 bg-[#14111E] p-5 rounded-xl text-center">
-                    <span className="text-zinc-500 text-[10px] uppercase font-bold block">
+                  <div className="space-y-4 border border-border-custom bg-input p-5 rounded-md text-center">
+                    <span className="text-muted text-[10px] uppercase font-bold block">
                       Chemicals Needed
                     </span>
-                    <strong className="text-3xl font-black text-[#00E5A3] mt-2 block">
+                    <strong className="text-3xl font-black text-success mt-2 block">
                       {wpLitres.toFixed(1)} Litres
                     </strong>
-                    <span className="text-[10px] text-zinc-500 block mt-1">
+                    <span className="text-[10px] text-muted block mt-1">
                       For {wpCoats} coats with {wpWastage}% application wastage
                     </span>
                   </div>
@@ -1566,29 +1566,29 @@ export default function CalculatorsPage() {
                 {/* 10. House Cost Estimator Results */}
                 {activeCalc === "house_cost" && (
                   <div className="space-y-4">
-                    <div className="bg-[#14111E] p-4 rounded-xl border border-white/5 text-center">
-                      <span className="text-zinc-500 text-[10px] uppercase font-bold block">
+                    <div className="bg-input p-4 rounded-md border border-border-custom text-center">
+                      <span className="text-muted text-[10px] uppercase font-bold block">
                         Estimated Budget
                       </span>
-                      <strong className="text-2xl font-black text-[#00E5A3] mt-1 block">
+                      <strong className="text-2xl font-black text-success mt-1 block">
                         {currencySymbol}
                         {houseTotalCost.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                       </strong>
-                      <span className="text-[9px] text-zinc-500 block mt-1">
+                      <span className="text-[9px] text-muted block mt-1">
                         Includes {houseContingency}% contingency buffer ({currencySymbol}
                         {houseContingencyCost.toLocaleString(undefined, { maximumFractionDigits: 0 })})
                       </span>
                     </div>
 
                     <div className="space-y-3 pt-2">
-                      <h5 className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider">
+                      <h5 className="text-[10px] uppercase font-bold text-muted tracking-wider">
                         Materials & Labor Split
                       </h5>
                       {houseSplits.map((item, i) => {
                         const itemVal = houseTotalCost * item.percentage;
                         return (
                           <div key={i} className="space-y-1 text-[11px]">
-                            <div className="flex justify-between text-zinc-400">
+                            <div className="flex justify-between text-muted">
                               <span>{item.name}</span>
                               <span className="font-semibold text-white">
                                 {currencySymbol}
@@ -1612,11 +1612,11 @@ export default function CalculatorsPage() {
           </div>
 
           {/* IS-CODE / CPWD COMPLIANT CIVIL NOTE */}
-          <div className="rounded-2xl border border-white/5 bg-[#0B0910] p-6 space-y-3">
-            <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-widest border-b border-white/5 pb-2">
+          <div className="rounded-lg border border-border-custom bg-card p-6 space-y-3">
+            <h4 className="text-xs font-bold text-muted uppercase tracking-widest border-b border-border-custom pb-2">
               Engineering & Takeoff Reference Notes
             </h4>
-            <div className="text-[11px] text-zinc-500 space-y-1.5 leading-relaxed font-mono">
+            <div className="text-[11px] text-muted space-y-1.5 leading-relaxed font-mono">
               {activeCategory === "steel" && (
                 <>
                   <div>• IS 456:2000 compliant unit weight formula: Weight (kg/m) = D² ÷ 162.</div>

@@ -1,44 +1,56 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0E0C15;
-  --foreground: #ededed;
+  --background: #111113;
+  --foreground: #ECECEF;
+  --sidebar: #0C0C0E;
+  --card: #19191C;
+  --elevated: #222225;
+  --border: rgba(255, 255, 255, 0.07);
+  --input: #1E1E21;
+  --muted: #71717A;
   
-  --primary: #E8184C;
-  --secondary: #7C5CFF;
-  --card: #171520;
-  --elevated: #252131;
-  --sidebar: #0B0910;
-  --border: rgba(255, 255, 255, 0.05);
-  
-  --success: #00E5A3;
-  --warning: #FF9F43;
-  --info: #00B7FE;
+  --primary: #7C3AED;
+  --primary-hover: #6D28D9;
+  --success: #10B981;
+  --warning: #F59E0B;
+  --danger: #EF4444;
+  --info: #3B82F6;
 }
 
 :root.light-theme {
-  --background: #F8F9FD;
-  --foreground: #0F172A;
-  
+  --background: #F9FAFB;
+  --foreground: #111827;
+  --sidebar: #FFFFFF;
   --card: #FFFFFF;
-  --elevated: #EEF1F8;
-  --sidebar: #F1F4FA;
-  --border: rgba(15, 23, 42, 0.08);
+  --elevated: #F3F4F6;
+  --border: rgba(0, 0, 0, 0.08);
+  --input: #F3F4F6;
+  --muted: #6B7280;
+  
+  --primary: #6D28D9;
+  --primary-hover: #5B21B6;
+  --success: #10B981;
+  --warning: #F59E0B;
+  --danger: #EF4444;
+  --info: #3B82F6;
 }
 
 @theme {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  
-  --color-primary: var(--primary);
-  --color-secondary: var(--secondary);
+  --color-sidebar: var(--sidebar);
   --color-card: var(--card);
   --color-elevated: var(--elevated);
-  --color-sidebar: var(--sidebar);
   --color-border-custom: var(--border);
+  --color-input: var(--input);
+  --color-muted: var(--muted);
   
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
   --color-success: var(--success);
   --color-warning: var(--warning);
+  --color-danger: var(--danger);
   --color-info: var(--info);
 
   --font-sans: var(--font-sans), system-ui, -apple-system, sans-serif;
@@ -48,9 +60,10 @@ body {
   background-color: var(--background);
   color: var(--foreground);
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-/* Premium WebKit Scrollbars */
+/* Scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -73,162 +86,30 @@ body {
   background: rgba(15, 23, 42, 0.24);
 }
 
-/* Premium Glassmorphic Classes */
-.glass-panel {
-  background: rgba(23, 21, 32, 0.7);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  transition: background-color 0.3s ease, border-color 0.3s ease;
-}
-
-:root.light-theme .glass-panel {
-  background: rgba(255, 255, 255, 0.75);
-  border: 1px solid rgba(15, 23, 42, 0.08);
-}
-
-.glass-panel-glow {
-  background: rgba(23, 21, 32, 0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 0 40px rgba(124, 92, 255, 0.08);
-  transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
-}
-
-:root.light-theme .glass-panel-glow {
-  background: rgba(255, 255, 255, 0.85);
-  border: 1px solid rgba(15, 23, 42, 0.09);
-  box-shadow: 0 0 40px rgba(124, 92, 255, 0.04);
-}
-
-.glass-input {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 8px;
-  color: #ffffff;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-:root.light-theme .glass-input {
-  background: rgba(15, 23, 42, 0.02);
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  color: #0F172A;
-}
-
-.glass-input:focus {
+/* Custom Outlined Input Fields */
+.input-field {
+  background-color: var(--input);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--foreground);
+  padding: 8px 12px;
+  font-size: 13px;
   outline: none;
-  background: rgba(255, 255, 255, 0.05);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.input-field:focus {
   border-color: var(--primary);
-  box-shadow: 0 0 12px rgba(232, 24, 76, 0.2);
+  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.15);
 }
 
-:root.light-theme .glass-input:focus {
-  background: rgba(15, 23, 42, 0.04);
+:root.light-theme .input-field:focus {
+  box-shadow: 0 0 0 2px rgba(109, 40, 217, 0.15);
 }
 
-.text-gradient-primary {
-  background: linear-gradient(135deg, #ffffff 30%, #a5a5a5 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+/* Card Surface Utility */
+.card-surface {
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px;
 }
-
-:root.light-theme .text-gradient-primary {
-  background: linear-gradient(135deg, #0F172A 30%, #475569 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.text-gradient-accent {
-  background: linear-gradient(135deg, #E8184C 0%, #7C5CFF 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-/* Shimmer Animation */
-@keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
-}
-
-.animate-shimmer {
-  background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite linear;
-}
-
-/* Light Theme Contrast Overrides for Tailwind Utility Classes */
-:root.light-theme .text-zinc-400 {
-  color: #475569 !important; /* Slate 600 */
-}
-:root.light-theme .text-zinc-500 {
-  color: #64748B !important; /* Slate 500 */
-}
-:root.light-theme .text-zinc-600 {
-  color: #334155 !important; /* Slate 700 */
-}
-:root.light-theme .text-zinc-700 {
-  color: #1e293b !important; /* Slate 800 */
-}
-:root.light-theme .text-white {
-  color: #0F172A !important; /* Slate 900 */
-}
-:root.light-theme .hover\:text-white:hover {
-  color: #0F172A !important;
-}
-:root.light-theme .hover\:bg-white\/\[0\.02\]:hover {
-  background-color: rgba(15, 23, 42, 0.04) !important;
-}
-:root.light-theme .hover\:bg-white\/\[0\.03\]:hover {
-  background-color: rgba(15, 23, 42, 0.05) !important;
-}
-:root.light-theme .hover\:bg-white\/\[0\.04\]:hover {
-  background-color: rgba(15, 23, 42, 0.06) !important;
-}
-:root.light-theme .bg-white\/\[0\.01\] {
-  background-color: rgba(15, 23, 42, 0.01) !important;
-}
-:root.light-theme .bg-white\/\[0\.02\] {
-  background-color: rgba(15, 23, 42, 0.02) !important;
-}
-:root.light-theme .bg-white\/\[0\.03\] {
-  background-color: rgba(15, 23, 42, 0.03) !important;
-}
-:root.light-theme .bg-white\/\[0\.04\] {
-  background-color: rgba(15, 23, 42, 0.04) !important;
-}
-:root.light-theme .bg-white\/\[0\.06\] {
-  background-color: rgba(15, 23, 42, 0.08) !important;
-}
-:root.light-theme .border-white\/5 {
-  border-color: rgba(15, 23, 42, 0.08) !important;
-}
-:root.light-theme .border-white\/10 {
-  border-color: rgba(15, 23, 42, 0.12) !important;
-}
-:root.light-theme .bg-[#15121F] {
-  background-color: var(--elevated) !important;
-}
-:root.light-theme .bg-[#0B0910] {
-  background-color: var(--sidebar) !important;
-}
-:root.light-theme .bg-[#171520] {
-  background-color: var(--card) !important;
-}
-:root.light-theme .bg-[#252131] {
-  background-color: var(--elevated) !important;
-}
-:root.light-theme .border-r {
-  border-color: var(--border) !important;
-}
-:root.light-theme .border-b {
-  border-color: var(--border) !important;
-}
-:root.light-theme .border {
-  border-color: var(--border) !important;
-}
-

@@ -172,24 +172,24 @@ export default function StatutoryPage() {
   };
 
   const statusColors: Record<string, string> = {
-    draft: "bg-zinc-500/10 text-zinc-400",
+    draft: "bg-zinc-500/10 text-muted",
     filed: "bg-emerald-500/10 text-emerald-400",
     overdue: "bg-red-500/10 text-red-400",
   };
 
   return (
-    <div className="min-h-screen bg-[#0E0C15] text-[#ededed]">
+    <div className="min-h-screen bg-background text-foreground">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold text-white">Statutory Reports</h1>
-            <p className="text-zinc-400 mt-1">PF, ESI, BOCW, TDS and other compliance filings</p>
+            <p className="text-muted mt-1">PF, ESI, BOCW, TDS and other compliance filings</p>
           </div>
           <div className="flex gap-3">
             <select
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
-              className="bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-white text-sm"
+              className="bg-white/5 border border-border-custom rounded-md px-4 py-2 text-white text-sm"
             >
               <option value="">All Types</option>
               <option value="pf">PF</option>
@@ -199,7 +199,7 @@ export default function StatutoryPage() {
             </select>
             <button
               onClick={() => setShowModal(true)}
-              className="px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-xl text-sm font-semibold transition-all"
+              className="px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-md text-sm font-semibold transition-all"
             >
               New Report
             </button>
@@ -207,14 +207,14 @@ export default function StatutoryPage() {
         </div>
 
         {message && (
-          <div className={`mb-6 p-4 rounded-xl ${message.includes("success") || message.includes("filed") ? "bg-emerald-500/10 text-emerald-400" : "bg-red-500/10 text-red-400"}`}>
+          <div className={`mb-6 p-4 rounded-md ${message.includes("success") || message.includes("filed") ? "bg-emerald-500/10 text-emerald-400" : "bg-red-500/10 text-red-400"}`}>
             {message}
           </div>
         )}
 
-        <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
+        <div className="bg-white/5 border border-border-custom rounded-lg overflow-hidden">
           <table className="w-full text-left text-sm">
-            <thead className="bg-white/5 text-zinc-400">
+            <thead className="bg-white/5 text-muted">
               <tr>
                 <th className="px-6 py-4 font-medium">Type</th>
                 <th className="px-6 py-4 font-medium">Period</th>
@@ -228,9 +228,9 @@ export default function StatutoryPage() {
                 <th className="px-6 py-4 font-medium">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5">
+            <tbody className="divide-y divide-border-custom">
               {reports.length === 0 ? (
-                <tr><td colSpan={10} className="px-6 py-8 text-center text-zinc-500">No reports found</td></tr>
+                <tr><td colSpan={10} className="px-6 py-8 text-center text-muted">No reports found</td></tr>
               ) : (
                 reports.map((r) => (
                   <tr key={r.id} className="hover:bg-white/5 transition-colors">
@@ -263,28 +263,28 @@ export default function StatutoryPage() {
         </div>
 
         {showPenalty && penaltyData && (
-          <div className="mt-6 bg-white/5 border border-white/10 rounded-2xl p-6">
+          <div className="mt-6 bg-white/5 border border-border-custom rounded-lg p-6">
             <h3 className="text-lg font-bold text-white mb-4">Penalty Estimate</h3>
             <div className="grid grid-cols-2 gap-4 text-sm">
-              <div><span className="text-zinc-400">Report Type:</span> <span className="text-white">{penaltyData.report_type}</span></div>
-              <div><span className="text-zinc-400">Period:</span> <span className="text-white">{penaltyData.return_period}</span></div>
-              <div><span className="text-zinc-400">Total Wages:</span> <span className="text-white">₹{Number(penaltyData.total_wages).toLocaleString()}</span></div>
-              <div><span className="text-zinc-400">Due Date:</span> <span className="text-white">{penaltyData.due_date ? new Date(penaltyData.due_date as string).toLocaleDateString() : "-"}</span></div>
-              <div><span className="text-zinc-400">Estimated Penalty:</span> <span className="text-red-400 font-medium">₹{Number(penaltyData.estimated_penalty).toLocaleString()}</span></div>
+              <div><span className="text-muted">Report Type:</span> <span className="text-white">{penaltyData.report_type}</span></div>
+              <div><span className="text-muted">Period:</span> <span className="text-white">{penaltyData.return_period}</span></div>
+              <div><span className="text-muted">Total Wages:</span> <span className="text-white">₹{Number(penaltyData.total_wages).toLocaleString()}</span></div>
+              <div><span className="text-muted">Due Date:</span> <span className="text-white">{penaltyData.due_date ? new Date(penaltyData.due_date as string).toLocaleDateString() : "-"}</span></div>
+              <div><span className="text-muted">Estimated Penalty:</span> <span className="text-red-400 font-medium">₹{Number(penaltyData.estimated_penalty).toLocaleString()}</span></div>
             </div>
-            <button onClick={() => setShowPenalty(false)} className="mt-4 px-4 py-2 bg-white/10 hover:bg-white/15 text-white rounded-xl text-sm font-semibold">Close</button>
+            <button onClick={() => setShowPenalty(false)} className="mt-4 px-4 py-2 bg-white/10 hover:bg-white/15 text-white rounded-md text-sm font-semibold">Close</button>
           </div>
         )}
 
         {showModal && (
           <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-            <div className="bg-[#1A1726] border border-white/10 rounded-2xl p-6 w-full max-w-2xl">
+            <div className="bg-elevated border border-border-custom rounded-lg p-6 w-full max-w-2xl">
               <h2 className="text-xl font-bold text-white mb-4">New Statutory Report</h2>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-medium text-zinc-400 mb-1">Report Type</label>
-                    <select className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-white" value={form.report_type} onChange={(e) => setForm({...form, report_type: e.target.value})}>
+                    <label className="block text-xs font-medium text-muted mb-1">Report Type</label>
+                    <select className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-white" value={form.report_type} onChange={(e) => setForm({...form, report_type: e.target.value})}>
                       <option value="pf">Provident Fund</option>
                       <option value="esi">ESI</option>
                       <option value="bocw">BOCW Cess</option>
@@ -294,57 +294,57 @@ export default function StatutoryPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-zinc-400 mb-1">Return Period (YYYY-MM)</label>
-                    <input type="text" required placeholder="2026-06" className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-white" value={form.return_period} onChange={(e) => setForm({...form, return_period: e.target.value})} />
+                    <label className="block text-xs font-medium text-muted mb-1">Return Period (YYYY-MM)</label>
+                    <input type="text" required placeholder="2026-06" className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-white" value={form.return_period} onChange={(e) => setForm({...form, return_period: e.target.value})} />
                   </div>
                 </div>
                 <div className="flex gap-3">
-                  <button type="button" onClick={handleAutoPopulate} className="px-4 py-2 bg-zinc-500/10 text-zinc-300 rounded-xl text-xs font-medium hover:bg-zinc-500/20 transition-all">Auto-fill from Employees</button>
-                  <button type="button" onClick={handleEstimatePenalty} className="px-4 py-2 bg-amber-500/10 text-amber-400 rounded-xl text-xs font-medium hover:bg-amber-500/20 transition-all">Estimate Penalty</button>
+                  <button type="button" onClick={handleAutoPopulate} className="px-4 py-2 bg-zinc-500/10 text-zinc-300 rounded-md text-xs font-medium hover:bg-zinc-500/20 transition-all">Auto-fill from Employees</button>
+                  <button type="button" onClick={handleEstimatePenalty} className="px-4 py-2 bg-amber-500/10 text-amber-400 rounded-md text-xs font-medium hover:bg-amber-500/20 transition-all">Estimate Penalty</button>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-medium text-zinc-400 mb-1">Total Employees</label>
-                    <input type="number" required className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-white" value={form.total_employees} onChange={(e) => setForm({...form, total_employees: parseInt(e.target.value)})} />
+                    <label className="block text-xs font-medium text-muted mb-1">Total Employees</label>
+                    <input type="number" required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-white" value={form.total_employees} onChange={(e) => setForm({...form, total_employees: parseInt(e.target.value)})} />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-zinc-400 mb-1">Total Wages (₹)</label>
-                    <input type="number" required className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-white" value={form.total_wages} onChange={(e) => setForm({...form, total_wages: parseFloat(e.target.value)})} />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-medium text-zinc-400 mb-1">PF Employee (₹)</label>
-                    <input type="number" required className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-white" value={form.pf_employee_contribution} onChange={(e) => setForm({...form, pf_employee_contribution: parseFloat(e.target.value)})} />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-zinc-400 mb-1">PF Employer (₹)</label>
-                    <input type="number" required className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-white" value={form.pf_employer_contribution} onChange={(e) => setForm({...form, pf_employer_contribution: parseFloat(e.target.value)})} />
+                    <label className="block text-xs font-medium text-muted mb-1">Total Wages (₹)</label>
+                    <input type="number" required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-white" value={form.total_wages} onChange={(e) => setForm({...form, total_wages: parseFloat(e.target.value)})} />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-medium text-zinc-400 mb-1">ESI Employee (₹)</label>
-                    <input type="number" required className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-white" value={form.esi_employee_contribution} onChange={(e) => setForm({...form, esi_employee_contribution: parseFloat(e.target.value)})} />
+                    <label className="block text-xs font-medium text-muted mb-1">PF Employee (₹)</label>
+                    <input type="number" required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-white" value={form.pf_employee_contribution} onChange={(e) => setForm({...form, pf_employee_contribution: parseFloat(e.target.value)})} />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-zinc-400 mb-1">ESI Employer (₹)</label>
-                    <input type="number" required className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-white" value={form.esi_employer_contribution} onChange={(e) => setForm({...form, esi_employer_contribution: parseFloat(e.target.value)})} />
+                    <label className="block text-xs font-medium text-muted mb-1">PF Employer (₹)</label>
+                    <input type="number" required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-white" value={form.pf_employer_contribution} onChange={(e) => setForm({...form, pf_employer_contribution: parseFloat(e.target.value)})} />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-medium text-zinc-400 mb-1">BOCW Cess (₹)</label>
-                    <input type="number" required className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-white" value={form.bocw_cess} onChange={(e) => setForm({...form, bocw_cess: parseFloat(e.target.value)})} />
+                    <label className="block text-xs font-medium text-muted mb-1">ESI Employee (₹)</label>
+                    <input type="number" required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-white" value={form.esi_employee_contribution} onChange={(e) => setForm({...form, esi_employee_contribution: parseFloat(e.target.value)})} />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-zinc-400 mb-1">TDS Deducted (₹)</label>
-                    <input type="number" required className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-white" value={form.tds_deducted} onChange={(e) => setForm({...form, tds_deducted: parseFloat(e.target.value)})} />
+                    <label className="block text-xs font-medium text-muted mb-1">ESI Employer (₹)</label>
+                    <input type="number" required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-white" value={form.esi_employer_contribution} onChange={(e) => setForm({...form, esi_employer_contribution: parseFloat(e.target.value)})} />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-medium text-muted mb-1">BOCW Cess (₹)</label>
+                    <input type="number" required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-white" value={form.bocw_cess} onChange={(e) => setForm({...form, bocw_cess: parseFloat(e.target.value)})} />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-muted mb-1">TDS Deducted (₹)</label>
+                    <input type="number" required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-white" value={form.tds_deducted} onChange={(e) => setForm({...form, tds_deducted: parseFloat(e.target.value)})} />
                   </div>
                 </div>
                 <div className="flex gap-3 pt-2">
-                  <button type="submit" className="flex-1 px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-xl text-sm font-semibold">Create Report</button>
-                  <button type="button" onClick={() => { setShowModal(false); setMessage(""); }} className="px-4 py-2 bg-white/10 hover:bg-white/15 text-white rounded-xl text-sm font-semibold">Cancel</button>
+                  <button type="submit" className="flex-1 px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-md text-sm font-semibold">Create Report</button>
+                  <button type="button" onClick={() => { setShowModal(false); setMessage(""); }} className="px-4 py-2 bg-white/10 hover:bg-white/15 text-white rounded-md text-sm font-semibold">Cancel</button>
                 </div>
               </form>
             </div>

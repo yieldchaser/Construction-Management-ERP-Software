@@ -169,6 +169,32 @@ def get_indents(project_id: UUID, db: Session = Depends(get_db)):
                 items=item_schemas
             )
         )
+    
+@router.get("/indents/company/{company_id}", response_model=List[IndentResponse])
+def get_company_indents(company_id: UUID, db: Session = Depends(get_db)):
+    indents = db.query(MaterialIndent).filter(MaterialIndent.company_id == company_id).all()
+    res = []
+    for ind in indents:
+        items = db.query(MaterialIndentItem).filter(MaterialIndentItem.indent_id == ind.id).all()
+        item_schemas = [
+            IndentItemSchema(
+                material_name=i.material_name,
+                quantity=float(i.quantity),
+                unit=i.unit
+            ) for i in items
+        ]
+        res.append(
+            IndentResponse(
+                id=ind.id,
+                company_id=ind.company_id,
+                project_id=ind.project_id,
+                requested_by=ind.requested_by,
+                indent_number=ind.indent_number,
+                status=ind.status,
+                created_at=ind.created_at,
+                items=item_schemas
+            )
+        )
     return res
 
 @router.post("/indents", response_model=IndentResponse, status_code=201)

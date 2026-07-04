@@ -24,7 +24,7 @@
 
 ## Overview
 
-SiteFlow is an outcome-driven, high-fidelity ERP workspace tailored to the Indian construction industry. By consolidating scattered Excel sheets, manual site registers, and geofenced field operations into a single real-time glassmorphic canvas, SiteFlow delivers absolute control over engineering BOQ spreadsheets, subcontractor RA billing math, CPWD-compliant material estimation, purchase order workflows, and executive schedule timelines. It integrates directly with Tally Prime and Zoho Books ledger cards to automate back-office reconciliation.
+SiteFlow is an outcome-driven, high-fidelity ERP workspace tailored to the Indian construction industry. By consolidating scattered Excel sheets, manual site registers, and geofenced field operations into a single real-time structured canvas, SiteFlow delivers absolute control over engineering BOQ spreadsheets, subcontractor RA billing math, CPWD-compliant material estimation, purchase order workflows, and executive schedule timelines. It integrates directly with Tally Prime and Zoho Books ledger cards to automate back-office reconciliation.
 
 ---
 
@@ -194,16 +194,15 @@ $$f_c = \frac{\text{Peak Failure Load (N)}}{\text{Cube Area } (150 \times 150 \t
 
 ## 🎨 Premium UI/UX & Design Philosophy
 
-SiteFlow features a state-of-the-art **glassmorphic canvas** with full support for light and dark modes:
+SiteFlow features a state-of-the-art **flat canvas** with full support for light and dark modes:
 * **Dark Theme Specs**:
-  - **Background Canvas**: `#0E0C15` (Deep space slate-black)
-  - **Card Containers**: `#171520` with borders of `rgba(255, 255, 255, 0.06)` and `backdrop-filter: blur(12px)`
-  - **Active Highlights**: `#E8184C` (Hot pink / crimson for active indicators and CTAs)
-  - **Secondary Highlights**: `#7C5CFF` (Interactive purple for sub-elements and navigation tabs)
+  - **Background Canvas**: `#111113` (Warm charcoal-black)
+  - **Card Containers**: `#19191C` with borders of `rgba(255, 255, 255, 0.07)`
+  - **Active Highlights**: `#7C3AED` (Interactive violet for active indicators, hover items, and primary CTAs)
 * **Light Theme Specs**:
-  - **Background Canvas**: `#F8F9FD` (Off-white porcelain slate)
-  - **Card Containers**: `#FFFFFF` with borders of `rgba(15, 23, 42, 0.08)`
-  - **Sidebar Navigation**: `#F1F4FA` (Light gray-blue)
+  - **Background Canvas**: `#F9FAFB` (Warm off-white porcelain slate)
+  - **Card Containers**: `#FFFFFF` with borders of `rgba(0, 0, 0, 0.08)`
+  - **Sidebar Navigation**: `#FFFFFF` (Clean white sidebar)
 * **Styled WebKit Scrollbars**: Replaces raw browser sliders with a custom `6px` rounded scrollbar thumb. The thumb automatically transitions between semi-transparent white (`rgba(255, 255, 255, 0.1)`) and slate (`rgba(15, 23, 42, 0.12)`) based on active themes to guarantee high visual elegance.
 * **Typography**: Clean, editorial-style **Inter** font with tight letter spacing for high data readability.
 
@@ -225,7 +224,7 @@ SiteFlow features a state-of-the-art **glassmorphic canvas** with full support f
 - **Financial Tab**: KPI cards (advances, payables, receivables), SVG revenue/expense/margin trends, expense distribution, project financial summary, and engineering calculators.
 
 ### 2. Executive Analytics (`/c/[company_id]/analytics`)
-- Interactive S-curve progress chart with glassmorphic tooltips.
+- Interactive S-curve progress chart with sleek tooltips.
 - Budget burn chart with cumulative spend visualization.
 - Project scoreboard with budget vs. actual comparison.
 
@@ -272,6 +271,16 @@ SiteFlow features a state-of-the-art **glassmorphic canvas** with full support f
 - Active configuration panel for **Tally ERP**.
 - Request forms for planned integrations: WhatsApp Business, Zoho Books, QuickBooks, Google Drive.
 
+### 7. Company-Level ERP Modules (Onsite/SiteFlow Parity)
+- **👥 Testimonial Login Carousel**: Seamless slider rotating user testimonials, featuring country flag selectors and hand illustration layout.
+- **🏢 Company Onboarding**: Stepper for registering new companies, capturing segments (Building, Developer, MEP, PWD) and developer sub-categories.
+- **📁 Projects Landing**: Dashboard displaying active projects, progress stats, and cash flows.
+- **🗳️ Material Request Drawer**: Slide drawer for viewing and approving raw material indents across all statuses (Pending, Approved, Ordered, Rejected).
+- **📝 Leave Approval Manager**: Popup manager to review, approve, or reject employee leave requests.
+- **📅 Gantt Team Schedule**: Sub-tab Gantt calendars plotting site operations across calendar days and timesheet date filters with hours logging time-pickers.
+- **🗳️ Payment Approvals**: Approvals dashboard for authorizing and rejecting subcontractor payment requests.
+- **📚 Libraries Hub**: Central repository to declare cost codes, deductions, material properties, asset types, progress codes, and markup rate cards.
+
 ---
 
 ## 🏗 System Architecture & Data Flow
@@ -308,10 +317,10 @@ graph TD
         D3 --> E4[Financial KPI Dashboard]
     end
 
-    classDef site fill:#E8184C,stroke:#333,stroke-width:2px,color:#fff;
-    classDef core fill:#7C5CFF,stroke:#333,stroke-width:2px,color:#fff;
-    classDef db fill:#171520,stroke:#555,stroke-width:2px,color:#fff;
-    classDef integrations fill:#0B0910,stroke:#E8184C,stroke-width:1px,color:#ededed;
+    classDef site fill:#7C3AED,stroke:#333,stroke-width:2px,color:#fff;
+    classDef core fill:#3B82F6,stroke:#333,stroke-width:2px,color:#fff;
+    classDef db fill:#19191C,stroke:#555,stroke-width:2px,color:#fff;
+    classDef integrations fill:#111113,stroke:#7C3AED,stroke-width:1px,color:#F3F4F6;
     
     class A1,A2,A3,B1 site;
     class C1,C2,C3,C4,C5 core;

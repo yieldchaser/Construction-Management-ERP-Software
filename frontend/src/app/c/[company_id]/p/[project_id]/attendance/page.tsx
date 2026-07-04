@@ -380,34 +380,34 @@ export default function AttendancePage() {
   };
 
   return (
-    <div className="flex h-screen bg-[#0E0C15] text-[#ededed] overflow-hidden">
+    <div className="flex h-screen bg-background text-foreground overflow-hidden">
       {/* Sidebar */}
-      <aside className="w-56 border-r border-white/5 bg-[#0B0910] flex flex-col shrink-0">
-        <div className="p-4 flex items-center justify-between border-b border-white/5">
+      <aside className="w-56 border-r border-border-custom bg-card flex flex-col shrink-0">
+        <div className="p-4 flex items-center justify-between border-b border-border-custom">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-tr from-[#E8184C] to-[#7C5CFF] font-bold text-white text-xs">S</div>
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-tr bg-primary font-bold text-white text-xs">S</div>
             <span className="font-bold text-white text-sm tracking-tight">SiteFlow</span>
           </div>
         </div>
         <nav className="p-3 flex-1 space-y-1">
-          <Link href={`/c/${companyId}/dashboard`} className="flex items-center gap-2 px-3 py-2 text-xs text-zinc-400 hover:text-white hover:bg-white/[0.03] rounded-lg transition-all">← Dashboard</Link>
-          <div className="pt-2 pb-1 px-3 text-[10px] font-bold text-zinc-600 uppercase tracking-wider">{strings.title}</div>
+          <Link href={`/c/${companyId}/dashboard`} className="flex items-center gap-2 px-3 py-2 text-xs text-muted hover:text-foreground hover:bg-white/[0.03] rounded-lg transition-all">← Dashboard</Link>
+          <div className="pt-2 pb-1 px-3 text-[10px] font-bold text-muted uppercase tracking-wider">{strings.title}</div>
           {[
             { key: "today", label: strings.todayTab, icon: "📅" },
             { key: "payroll", label: strings.payrollTab, icon: "💵" },
           ].map(item => (
             <button key={item.key} onClick={() => setTab(item.key as typeof tab)}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg transition-all text-left ${tab === item.key ? "bg-white/[0.06] text-white font-semibold shadow-sm" : "text-zinc-400 hover:text-white hover:bg-white/[0.02]"}`}>
+              className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg transition-all text-left ${tab === item.key ? "bg-primary/10 text-white font-semibold shadow-sm" : "text-muted hover:text-foreground hover:bg-elevated"}`}>
               <span>{item.icon}</span> {item.label}
             </button>
           ))}
           
-          <div className="pt-4 border-t border-white/5 mt-4">
-            <button onClick={() => setShowLanguageDrawer(true)} className="w-full flex items-center justify-between px-3 py-2 text-xs text-zinc-400 hover:text-white hover:bg-white/[0.02] rounded-lg">
+          <div className="pt-4 border-t border-border-custom mt-4">
+            <button onClick={() => setShowLanguageDrawer(true)} className="w-full flex items-center justify-between px-3 py-2 text-xs text-muted hover:text-foreground hover:bg-elevated rounded-lg">
               <span className="flex items-center gap-2">🌐 Language: <strong className="text-primary">{lang}</strong></span>
               <span>⚙️</span>
             </button>
-            <div className="px-3 py-2 text-[10px] text-zinc-500 font-mono flex items-center justify-between">
+            <div className="px-3 py-2 text-[10px] text-muted font-mono flex items-center justify-between">
               <span>{strings.syncStatus}</span>
               <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
             </div>
@@ -417,19 +417,19 @@ export default function AttendancePage() {
 
       {/* Main Container */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        <div className="border-b border-white/5 bg-[#0D0B14] px-6 py-3 flex items-center justify-between">
+        <div className="border-b border-border-custom bg-background px-6 py-3 flex items-center justify-between">
           <div>
             <h1 className="text-sm font-bold text-white">{strings.title}</h1>
-            <p className="text-[10px] text-zinc-500">{strings.subtitle}</p>
+            <p className="text-[10px] text-muted">{strings.subtitle}</p>
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-xs text-zinc-400 bg-white/5 border border-white/10 px-3 py-1.5 rounded-lg">{strings.gpsActive}</span>
+            <span className="text-xs text-muted bg-white/5 border border-border-custom px-3 py-1.5 rounded-lg">{strings.gpsActive}</span>
             <button
               onClick={() => {
                 fetchProjectSettings();
                 setIsSettingsModalOpen(true);
               }}
-              className="px-3 py-1.5 rounded-lg bg-primary/20 hover:bg-primary/30 border border-primary/30 text-primary font-bold text-xs transition-all cursor-pointer"
+              className="px-3 py-1.5 rounded-lg bg-primary/20 hover:bg-primary/30 border border-border-custom text-primary font-bold text-xs transition-all cursor-pointer"
             >
               ⚙️ Project Settings
             </button>
@@ -438,29 +438,29 @@ export default function AttendancePage() {
 
         <div className="flex-1 overflow-y-auto p-6 space-y-5">
           {!isOnline && (
-            <div className="p-3 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-xl text-xs flex items-center gap-2">
+            <div className="p-3 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-md text-xs flex items-center gap-2">
               <span>⚠️</span> You are offline. Showing cached data. Some actions may be delayed.
             </div>
           )}
           {tab === "today" && (
             <>
               {/* Sub tabs and date picker */}
-              <div className="flex justify-between items-center border-b border-white/5 pb-1">
+              <div className="flex justify-between items-center border-b border-border-custom pb-1">
                 <div className="flex">
-                  <button onClick={() => setSubTab("staff")} className={`px-4 py-2 text-xs font-bold transition-all border-b-2 ${subTab === "staff" ? "border-primary text-primary" : "border-transparent text-zinc-400 hover:text-white"}`}>
+                  <button onClick={() => setSubTab("staff")} className={`px-4 py-2 text-xs font-bold transition-all border-b-2 ${subTab === "staff" ? "border-primary text-primary" : "border-transparent text-muted hover:text-foreground"}`}>
                     {strings.staffSubTab}
                   </button>
-                  <button onClick={() => setSubTab("subcon")} className={`px-4 py-2 text-xs font-bold transition-all border-b-2 ${subTab === "subcon" ? "border-primary text-primary" : "border-transparent text-zinc-400 hover:text-white"}`}>
+                  <button onClick={() => setSubTab("subcon")} className={`px-4 py-2 text-xs font-bold transition-all border-b-2 ${subTab === "subcon" ? "border-primary text-primary" : "border-transparent text-muted hover:text-foreground"}`}>
                     {strings.contractorSubTab}
                   </button>
                 </div>
                 <div className="flex items-center gap-2 pr-2">
-                  <span className="text-[10px] uppercase font-bold text-zinc-500">Selected Date:</span>
+                  <span className="text-[10px] uppercase font-bold text-muted">Selected Date:</span>
                   <input
                     type="date"
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
-                    className="bg-[#16121F] border border-white/10 text-white rounded-lg px-2.5 py-1 text-xs font-semibold focus:outline-none focus:border-primary text-right"
+                    className="bg-input border border-border-custom text-white rounded-lg px-2.5 py-1 text-xs font-semibold focus:outline-none focus:border-primary text-right"
                   />
                 </div>
               </div>
@@ -468,14 +468,14 @@ export default function AttendancePage() {
               {subTab === "staff" && (
                 <div className="space-y-5">
                   {/* Punch Control Panel */}
-                  <div className="glass-panel rounded-2xl border border-white/5 p-5 space-y-4">
+                  <div className="bg-card border border-border-custom rounded-lg rounded-lg border border-border-custom p-5 space-y-4">
                     <div className="flex flex-col gap-4 md:flex-row md:items-end justify-between">
                       <div className="space-y-3 flex-1">
-                        <label className="block text-xs font-bold text-zinc-400">Select Staff / Labor Employee</label>
+                        <label className="block text-xs font-bold text-muted">Select Staff / Labor Employee</label>
                         <select 
                           value={selectedEmpId} 
                           onChange={(e) => setSelectedEmpId(e.target.value)}
-                          className="w-full bg-[#16121F] border border-white/10 text-white rounded-lg p-2 text-xs"
+                          className="w-full bg-input border border-border-custom text-white rounded-lg p-2 text-xs"
                         >
                           {employees.length === 0 ? (
                             <option>No active employees found</option>
@@ -489,20 +489,20 @@ export default function AttendancePage() {
                       
                       {/* Shift Multiplier presets */}
                       <div className="space-y-2">
-                        <label className="block text-xs font-bold text-zinc-400">Shift Multiplier</label>
+                        <label className="block text-xs font-bold text-muted">Shift Multiplier</label>
                         <div className="flex gap-2">
                           {[0.5, 1.0, 2.0].map((val) => (
                             <button
                               key={val}
                               onClick={() => { setPunchMultiplier(val); setCustomMultiplierVal(""); }}
-                              className={`px-3 py-1.5 rounded-lg border text-xs font-bold transition-all ${punchMultiplier === val ? "bg-primary text-white border-primary" : "bg-[#16121F] border-white/10 text-zinc-400 hover:text-white"}`}
+                              className={`px-3 py-1.5 rounded-lg border text-xs font-bold transition-all ${punchMultiplier === val ? "bg-primary text-white border-primary" : "bg-input border-border-custom text-muted hover:text-foreground"}`}
                             >
                               {val}x
                             </button>
                           ))}
                           <button
                             onClick={() => setPunchMultiplier(0)}
-                            className={`px-3 py-1.5 rounded-lg border text-xs font-bold transition-all ${punchMultiplier === 0 ? "bg-primary text-white border-primary" : "bg-[#16121F] border-white/10 text-zinc-400 hover:text-white"}`}
+                            className={`px-3 py-1.5 rounded-lg border text-xs font-bold transition-all ${punchMultiplier === 0 ? "bg-primary text-white border-primary" : "bg-input border-border-custom text-muted hover:text-foreground"}`}
                           >
                             Custom
                           </button>
@@ -511,14 +511,14 @@ export default function AttendancePage() {
 
                       {punchMultiplier === 0 && (
                         <div className="space-y-2">
-                          <label className="block text-xs font-bold text-zinc-400">Custom Multiplier</label>
+                          <label className="block text-xs font-bold text-muted">Custom Multiplier</label>
                           <input
                             type="number"
                             step="0.01"
                             value={customMultiplierVal}
                             onChange={(e) => setCustomMultiplierVal(e.target.value)}
                             placeholder="e.g. 0.36"
-                            className="bg-[#16121F] border border-white/10 text-white rounded-lg p-2 text-xs w-28"
+                            className="bg-input border border-border-custom text-white rounded-lg p-2 text-xs w-28"
                           />
                         </div>
                       )}
@@ -532,36 +532,36 @@ export default function AttendancePage() {
                           onChange={(e) => setIsGpsSimulatedVerified(e.target.checked)}
                           className="accent-primary h-4 w-4 rounded"
                         />
-                        <label htmlFor="gps_verify" className="text-xs text-zinc-400 select-none cursor-pointer">
+                        <label htmlFor="gps_verify" className="text-xs text-muted select-none cursor-pointer">
                           Simulate GPS lock (On-Site)
                         </label>
                       </div>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-3 border-t border-white/5 pt-4">
-                      <button onClick={() => queuePunch("IN")} className="rounded-xl bg-primary px-5 py-2.5 text-xs font-bold text-white transition-opacity hover:opacity-90">
+                    <div className="flex flex-wrap items-center gap-3 border-t border-border-custom pt-4">
+                      <button onClick={() => queuePunch("IN")} className="rounded-md bg-primary px-5 py-2.5 text-xs font-bold text-white transition-opacity hover:opacity-90">
                         Clock Punch In
                       </button>
-                      <button onClick={() => queuePunch("OUT")} className="rounded-xl border border-white/10 bg-white/[0.03] px-5 py-2.5 text-xs font-bold text-zinc-200 transition-colors hover:bg-white/[0.05]">
+                      <button onClick={() => queuePunch("OUT")} className="rounded-md border border-border-custom bg-white/[0.03] px-5 py-2.5 text-xs font-bold text-zinc-200 transition-colors hover:bg-white/[0.05]">
                         Clock Punch Out
                       </button>
-                      <button onClick={flushQueue} className="rounded-xl border border-secondary/20 bg-secondary/15 px-5 py-2.5 text-xs font-bold text-secondary transition-colors hover:bg-secondary/20 ml-auto">
+                      <button onClick={flushQueue} className="rounded-md border border-secondary/20 bg-secondary/15 px-5 py-2.5 text-xs font-bold text-secondary transition-colors hover:bg-secondary/20 ml-auto">
                         Sync Offline Queue ({queuedPunches.length})
                       </button>
                     </div>
-                    {syncMessage && <div className="text-[10px] text-zinc-400 font-mono">{syncMessage}</div>}
+                    {syncMessage && <div className="text-[10px] text-muted font-mono">{syncMessage}</div>}
                   </div>
 
                   {/* Log list */}
-                  <div className="glass-panel rounded-2xl border border-white/5 overflow-hidden">
-                    <div className="px-5 py-3 border-b border-white/5 flex items-center justify-between">
-                      <h2 className="text-xs font-bold text-zinc-400 uppercase tracking-wider">{strings.workerLog}</h2>
+                  <div className="bg-card border border-border-custom rounded-lg rounded-lg border border-border-custom overflow-hidden">
+                    <div className="px-5 py-3 border-b border-border-custom flex items-center justify-between">
+                      <h2 className="text-xs font-bold text-muted uppercase tracking-wider">{strings.workerLog}</h2>
                       <span className="text-[10px] text-emerald-400 font-semibold">● Real-time Logs</span>
                     </div>
                     <div className="overflow-x-auto">
                       <table className="w-full text-xs">
                         <thead>
-                          <tr className="border-b border-white/5 text-zinc-500">
+                          <tr className="border-b border-border-custom text-muted">
                             <th className="text-left px-5 py-3 font-semibold">Worker</th>
                             <th className="text-left px-5 py-3 font-semibold">Clock In</th>
                             <th className="text-left px-5 py-3 font-semibold">Clock Out</th>
@@ -574,7 +574,7 @@ export default function AttendancePage() {
                         <tbody>
                           {dbLogs.length === 0 ? (
                             <tr>
-                              <td colSpan={7} className="px-5 py-6 text-center text-zinc-500">No attendance logs logged yet for today. Use the form above to record punches!</td>
+                              <td colSpan={7} className="px-5 py-6 text-center text-muted">No attendance logs logged yet for today. Use the form above to record punches!</td>
                             </tr>
                           ) : (
                             dbLogs.map((log) => {
@@ -594,7 +594,7 @@ export default function AttendancePage() {
                                       </span>
                                     )}
                                   </td>
-                                  <td className="px-5 py-3 text-zinc-400 font-mono">{log.distance_from_site_m ? `${log.distance_from_site_m}m` : "0m (Inside)"}</td>
+                                  <td className="px-5 py-3 text-muted font-mono">{log.distance_from_site_m ? `${log.distance_from_site_m}m` : "0m (Inside)"}</td>
                                   <td className="px-5 py-3">
                                     <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${STATUS_MAP[log.status] || STATUS_MAP.Present}`}>{log.status}</span>
                                   </td>
@@ -613,18 +613,18 @@ export default function AttendancePage() {
                 <div className="space-y-5">
                   <div className="grid gap-4 md:grid-cols-3">
                     {SUBCONTRACTORS.map((sc) => (
-                      <div key={sc.id} className="glass-panel border border-white/5 rounded-2xl p-5 flex flex-col justify-between hover:border-white/10 transition-all">
+                      <div key={sc.id} className="bg-card border border-border-custom rounded-lg border border-border-custom rounded-lg p-5 flex flex-col justify-between hover:border-border-custom transition-all">
                         <div>
                           <h3 className="text-sm font-bold text-white">{sc.name}</h3>
-                          <p className="text-[10px] text-zinc-500 mt-1">Labour Provider Crew</p>
+                          <p className="text-[10px] text-muted mt-1">Labour Provider Crew</p>
                           <div className="mt-4 flex items-center justify-between text-xs">
-                            <span className="text-zinc-400">Active Workers Today:</span>
+                            <span className="text-muted">Active Workers Today:</span>
                             <strong className="text-emerald-400 font-bold">{sc.activeWorkers}</strong>
                           </div>
                         </div>
                         <button
                           onClick={() => { setSelectedSubcon(sc); setSubconPhoto(""); }}
-                          className="mt-6 w-full text-center py-2 bg-primary/10 border border-primary/20 text-primary text-xs font-bold rounded-xl hover:bg-primary/20 transition-all"
+                          className="mt-6 w-full text-center py-2 bg-primary/10 border border-primary/20 text-primary text-xs font-bold rounded-md hover:bg-primary/20 transition-all"
                         >
                           Log Daily Crew Size →
                         </button>
@@ -634,24 +634,24 @@ export default function AttendancePage() {
 
                   {/* Subcontractor Entry Drawer Modal */}
                   {selectedSubcon && (
-                    <div className="fixed inset-0 z-50 bg-[#000]/60 backdrop-blur-sm flex items-center justify-center p-4">
-                      <div className="bg-[#0C0A12] border border-white/10 rounded-2xl w-full max-w-4xl max-h-[85vh] overflow-hidden flex flex-col shadow-2xl">
-                        <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between">
+                    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+                      <div className="bg-background border border-border-custom rounded-lg w-full max-w-4xl max-h-[85vh] overflow-hidden flex flex-col shadow-2xl">
+                        <div className="px-6 py-4 border-b border-border-custom flex items-center justify-between">
                           <div>
                             <h2 className="text-sm font-extrabold text-white">Log Subcontractor Crew Attendance</h2>
-                            <p className="text-[10px] text-zinc-500 mt-0.5">{selectedSubcon.name} · Role Allocation Grid</p>
+                            <p className="text-[10px] text-muted mt-0.5">{selectedSubcon.name} · Role Allocation Grid</p>
                           </div>
-                          <button onClick={() => setSelectedSubcon(null)} className="text-zinc-400 hover:text-white">✕</button>
+                          <button onClick={() => setSelectedSubcon(null)} className="text-muted hover:text-foreground">✕</button>
                         </div>
                         
                         <div className="p-6 overflow-y-auto space-y-6 flex-1">
                           {/* Role Count Stepper Grid */}
                           <div className="space-y-4">
-                            <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Crew Size Matrix</h3>
-                            <div className="overflow-hidden rounded-xl border border-white/5 bg-[#120F1A]">
+                            <h3 className="text-xs font-bold text-muted uppercase tracking-wider">Crew Size Matrix</h3>
+                            <div className="overflow-hidden rounded-md border border-border-custom bg-input">
                               <table className="w-full text-xs">
                                 <thead>
-                                  <tr className="bg-white/[0.02] border-b border-white/5 text-zinc-400">
+                                  <tr className="bg-elevated border-b border-border-custom text-muted">
                                     <th className="px-4 py-2.5 text-left font-semibold">Labor Role</th>
                                     <th className="px-4 py-2.5 text-left font-semibold">Worker Count</th>
                                     <th className="px-4 py-2.5 text-left font-semibold">Shift Multiplier</th>
@@ -663,7 +663,7 @@ export default function AttendancePage() {
                                 </thead>
                                 <tbody>
                                   {subconRows.map((row, idx) => (
-                                    <tr key={idx} className="border-b border-white/5 hover:bg-white/[0.01]">
+                                    <tr key={idx} className="border-b border-border-custom hover:bg-white/[0.01]">
                                       <td className="px-4 py-2">
                                         <input
                                           type="text"
@@ -673,7 +673,7 @@ export default function AttendancePage() {
                                             next[idx].role = e.target.value;
                                             setSubconRows(next);
                                           }}
-                                          className="bg-[#191524] border border-white/5 rounded px-2 py-1 text-xs text-white w-28"
+                                          className="bg-elevated border border-border-custom rounded px-2 py-1 text-xs text-white w-28"
                                         />
                                       </td>
                                       <td className="px-4 py-2">
@@ -685,7 +685,7 @@ export default function AttendancePage() {
                                             next[idx].count = parseInt(e.target.value) || 0;
                                             setSubconRows(next);
                                           }}
-                                          className="bg-[#191524] border border-white/5 rounded px-2 py-1 text-xs text-white w-16"
+                                          className="bg-elevated border border-border-custom rounded px-2 py-1 text-xs text-white w-16"
                                         />
                                       </td>
                                       <td className="px-4 py-2">
@@ -698,7 +698,7 @@ export default function AttendancePage() {
                                             next[idx].shift = parseFloat(e.target.value) || 1.0;
                                             setSubconRows(next);
                                           }}
-                                          className="bg-[#191524] border border-white/5 rounded px-2 py-1 text-xs text-white w-16"
+                                          className="bg-elevated border border-border-custom rounded px-2 py-1 text-xs text-white w-16"
                                         />
                                       </td>
                                       <td className="px-4 py-2">
@@ -710,7 +710,7 @@ export default function AttendancePage() {
                                             next[idx].ot = parseFloat(e.target.value) || 0;
                                             setSubconRows(next);
                                           }}
-                                          className="bg-[#191524] border border-white/5 rounded px-2 py-1 text-xs text-white w-16"
+                                          className="bg-elevated border border-border-custom rounded px-2 py-1 text-xs text-white w-16"
                                         />
                                       </td>
                                       <td className="px-4 py-2">
@@ -722,7 +722,7 @@ export default function AttendancePage() {
                                             next[idx].allowance = parseFloat(e.target.value) || 0;
                                             setSubconRows(next);
                                           }}
-                                          className="bg-[#191524] border border-white/5 rounded px-2 py-1 text-xs text-white w-20"
+                                          className="bg-elevated border border-border-custom rounded px-2 py-1 text-xs text-white w-20"
                                         />
                                       </td>
                                       <td className="px-4 py-2">
@@ -734,7 +734,7 @@ export default function AttendancePage() {
                                             next[idx].deduction = parseFloat(e.target.value) || 0;
                                             setSubconRows(next);
                                           }}
-                                          className="bg-[#191524] border border-white/5 rounded px-2 py-1 text-xs text-white w-20"
+                                          className="bg-elevated border border-border-custom rounded px-2 py-1 text-xs text-white w-20"
                                         />
                                       </td>
                                       <td className="px-4 py-2">
@@ -747,7 +747,7 @@ export default function AttendancePage() {
                                             setSubconRows(next);
                                           }}
                                           placeholder="Remarks"
-                                          className="bg-[#191524] border border-white/5 rounded px-2 py-1 text-xs text-white w-full"
+                                          className="bg-elevated border border-border-custom rounded px-2 py-1 text-xs text-white w-full"
                                         />
                                       </td>
                                     </tr>
@@ -759,17 +759,17 @@ export default function AttendancePage() {
                           </div>
 
                           {/* Crew Photo upload */}
-                          <div className="space-y-2 border-t border-white/5 pt-4">
-                            <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Crew Presence Verification</h3>
+                          <div className="space-y-2 border-t border-border-custom pt-4">
+                            <h3 className="text-xs font-bold text-muted uppercase tracking-wider">Crew Presence Verification</h3>
                             <div className="flex items-center gap-4">
                               <button
                                 onClick={() => setSubconPhoto("https://images.unsplash.com/photo-1541888946425-d81bb19240f5?w=500")}
-                                className="flex items-center gap-2 px-4 py-2 bg-[#16121F] hover:bg-[#1E192B] border border-white/10 rounded-xl text-xs font-bold text-zinc-300 transition-all"
+                                className="flex items-center gap-2 px-4 py-2 bg-input hover:bg-elevated border border-border-custom rounded-md text-xs font-bold text-zinc-300 transition-all"
                               >
                                 📷 Camera / Capture Crew Photo
                               </button>
                               {subconPhoto && (
-                                <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-3 py-1 rounded-xl text-[10px] font-bold">
+                                <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-3 py-1 rounded-md text-[10px] font-bold">
                                   <span>✓ Photo Attached</span>
                                 </div>
                               )}
@@ -777,9 +777,9 @@ export default function AttendancePage() {
                           </div>
                         </div>
 
-                        <div className="px-6 py-4 border-t border-white/5 bg-[#09070D] flex items-center justify-end gap-3">
-                          <button onClick={() => setSelectedSubcon(null)} className="px-4 py-2 text-xs font-bold text-zinc-400 hover:text-white rounded-xl transition-all">Cancel</button>
-                          <button onClick={submitSubconAttendance} className="px-5 py-2.5 text-xs font-bold text-white bg-primary rounded-xl hover:opacity-90 transition-all">Save Crew Logs</button>
+                        <div className="px-6 py-4 border-t border-border-custom bg-background flex items-center justify-end gap-3">
+                          <button onClick={() => setSelectedSubcon(null)} className="px-4 py-2 text-xs font-bold text-muted hover:text-foreground rounded-md transition-all">Cancel</button>
+                          <button onClick={submitSubconAttendance} className="px-5 py-2.5 text-xs font-bold text-white bg-primary rounded-md hover:opacity-90 transition-all">Save Crew Logs</button>
                         </div>
                       </div>
                     </div>
@@ -792,14 +792,14 @@ export default function AttendancePage() {
           {tab === "payroll" && (
             <div className="space-y-5">
               {/* Live Wage Estimator Box */}
-              <div className="bg-[#14121F] border border-primary/20 rounded-2xl p-5 space-y-4">
+              <div className="bg-input border border-primary/20 rounded-lg p-5 space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <h2 className="text-xs font-bold text-primary uppercase tracking-wider">📊 Live Wage Estimator</h2>
-                    <p className="text-[10px] text-zinc-500 mt-0.5">Real-time payroll estimate: Workers × Rate × Shift + OT + Allowances − Deductions</p>
+                    <p className="text-[10px] text-muted mt-0.5">Real-time payroll estimate: Workers × Rate × Shift + OT + Allowances − Deductions</p>
                   </div>
                   <div className="text-right">
-                    <div className="text-[9px] text-zinc-500 uppercase tracking-wider">Est. Monthly Outflow</div>
+                    <div className="text-[9px] text-muted uppercase tracking-wider">Est. Monthly Outflow</div>
                     <div className="text-2xl font-black text-primary">
                       ₹{(
                         (employees?.reduce((s: any, st: any) => {
@@ -818,10 +818,10 @@ export default function AttendancePage() {
                 </div>
 
                 {/* Subcontractor wage grid with real calc */}
-                <div className="overflow-x-auto rounded-xl border border-white/5">
+                <div className="overflow-x-auto rounded-md border border-border-custom">
                   <table className="w-full text-xs text-left">
                     <thead>
-                      <tr className="border-b border-white/5 text-zinc-500 text-[9px] uppercase tracking-wider">
+                      <tr className="border-b border-border-custom text-muted text-[9px] uppercase tracking-wider">
                         <th className="py-2 pl-4 pr-3">Role / Category</th>
                         <th className="py-2 px-3 text-center">Count</th>
                         <th className="py-2 px-3 text-center">Rate (₹/day)</th>
@@ -842,14 +842,14 @@ export default function AttendancePage() {
                             <td className="py-2.5 px-3 text-center">
                               <select value={row.shift || 1}
                                 onChange={(e) => { const next = [...subconRows]; (next[idx] as any).shift = parseFloat(e.target.value); setSubconRows(next); }}
-                                className="bg-[#1C182A] border border-white/10 rounded px-1.5 py-0.5 text-[10px] text-white">
+                                className="bg-elevated border border-border-custom rounded px-1.5 py-0.5 text-[10px] text-white">
                                 {[0.25, 0.5, 0.75, 1.0, 1.5, 2.0].map(v => <option key={v} value={v}>{v}×</option>)}
                               </select>
                             </td>
                             <td className="py-2.5 px-3 text-center">
                               <input type="number" min={0} value={row.ot || 0}
                                 onChange={(e) => { const next = [...subconRows]; (next[idx] as any).ot = parseFloat(e.target.value) || 0; setSubconRows(next); }}
-                                className="bg-[#1C182A] border border-white/10 rounded px-1.5 py-0.5 text-[10px] text-white w-12 text-center" placeholder="0" />
+                                className="bg-elevated border border-border-custom rounded px-1.5 py-0.5 text-[10px] text-white w-12 text-center" placeholder="0" />
                             </td>
                             <td className="py-2.5 px-3 text-center font-mono text-zinc-300">₹{row.allowance || 0}</td>
                             <td className="py-2.5 pr-4 text-right font-mono font-bold text-emerald-400">₹{daily.toLocaleString("en-IN")}</td>
@@ -858,7 +858,7 @@ export default function AttendancePage() {
                       })}
                     </tbody>
                     <tfoot>
-                      <tr className="border-t border-white/10 bg-[#0F0D1A]">
+                      <tr className="border-t border-border-custom bg-background">
                         <td colSpan={6} className="py-2.5 pl-4 text-xs font-bold text-zinc-300">Subcontractor Daily Total</td>
                         <td className="py-2.5 pr-4 text-right font-bold text-primary font-mono text-sm">
                           ₹{subconRows.reduce((s: any, r: any) => s + r.count * r.rate * (r.shift || 1) + r.count * (r.ot || 0) * (r.rate / 8) + (r.allowance || 0) - (r.deduction || 0), 0).toLocaleString("en-IN")}
@@ -870,18 +870,18 @@ export default function AttendancePage() {
               </div>
 
               {/* Month-end Payroll Compilation */}
-              <div className="bg-[#14121F] border border-white/5 rounded-2xl overflow-hidden">
-                <div className="px-5 py-3 border-b border-white/5 flex items-center justify-between">
+              <div className="bg-input border border-border-custom rounded-lg overflow-hidden">
+                <div className="px-5 py-3 border-b border-border-custom flex items-center justify-between">
                   <div>
                     <h2 className="text-xs font-bold text-white uppercase tracking-wider">Monthly Payroll Compilation — June 2026</h2>
-                    <p className="text-[10px] text-zinc-500 mt-0.5">Salary + PF + ESI statutory deductions per IS code. Download payslip per employee.</p>
+                    <p className="text-[10px] text-muted mt-0.5">Salary + PF + ESI statutory deductions per IS code. Download payslip per employee.</p>
                   </div>
                   <button className="px-3 py-1.5 bg-primary text-white text-[10px] font-bold rounded-lg hover:opacity-90">📤 Export All Payslips</button>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs text-left">
                     <thead>
-                      <tr className="border-b border-white/5 text-zinc-500 text-[9px] uppercase tracking-wider">
+                      <tr className="border-b border-border-custom text-muted text-[9px] uppercase tracking-wider">
                         <th className="py-2.5 pl-5 pr-3">Employee</th>
                         <th className="py-2.5 px-3">Designation</th>
                         <th className="py-2.5 px-3 text-right">Gross (₹)</th>
@@ -904,7 +904,7 @@ export default function AttendancePage() {
                         return (
                           <tr key={i} className="hover:bg-white/[0.015]">
                             <td className="py-3 pl-5 pr-3 font-semibold text-white">{emp.name}</td>
-                            <td className="py-3 px-3 text-zinc-400">{emp.role}</td>
+                            <td className="py-3 px-3 text-muted">{emp.role}</td>
                             <td className="py-3 px-3 text-right font-mono text-zinc-200">₹{emp.gross.toLocaleString("en-IN")}</td>
                             <td className="py-3 px-3 text-right font-mono text-red-400">₹{emp.pf.toLocaleString("en-IN")}</td>
                             <td className="py-3 px-3 text-right font-mono text-red-400">₹{emp.esi.toLocaleString("en-IN")}</td>
@@ -921,7 +921,7 @@ export default function AttendancePage() {
                       })}
                     </tbody>
                     <tfoot>
-                      <tr className="border-t-2 border-white/10 bg-[#0F0D1A]">
+                      <tr className="border-t-2 border-border-custom bg-background">
                         <td colSpan={2} className="py-3 pl-5 font-bold text-white">TOTAL PAYROLL</td>
                         <td className="py-3 px-3 text-right font-bold font-mono text-white">₹1,95,000</td>
                         <td className="py-3 px-3 text-right font-bold font-mono text-red-400">₹9,000</td>
@@ -942,11 +942,11 @@ export default function AttendancePage() {
 
       {/* Language Selection Bottom Drawer Modal */}
       {showLanguageDrawer && (
-        <div className="fixed inset-0 z-50 bg-[#000]/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-[#0C0A12] border border-white/10 rounded-2xl w-full max-w-md shadow-2xl p-6 space-y-4">
-            <div className="flex items-center justify-between border-b border-white/5 pb-2">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-background border border-border-custom rounded-lg w-full max-w-md shadow-2xl p-6 space-y-4">
+            <div className="flex items-center justify-between border-b border-border-custom pb-2">
               <h3 className="text-sm font-extrabold text-white">Select Regional Language</h3>
-              <button onClick={() => setShowLanguageDrawer(false)} className="text-zinc-400 hover:text-white">✕</button>
+              <button onClick={() => setShowLanguageDrawer(false)} className="text-muted hover:text-foreground">✕</button>
             </div>
             
             <div className="grid grid-cols-2 gap-3">
@@ -954,7 +954,7 @@ export default function AttendancePage() {
                 <button
                   key={langName}
                   onClick={() => { setLang(langName); setShowLanguageDrawer(false); }}
-                  className={`py-3 px-4 border rounded-xl text-xs font-bold text-left transition-all ${lang === langName ? "bg-primary/10 border-primary text-primary" : "bg-[#16121F] border-white/5 text-zinc-400 hover:bg-white/[0.02] hover:text-white"}`}
+                  className={`py-3 px-4 border rounded-md text-xs font-bold text-left transition-all ${lang === langName ? "bg-primary/10 border-primary text-primary" : "bg-input border-border-custom text-muted hover:bg-elevated hover:text-foreground"}`}
                 >
                   🌐 {langName}
                 </button>
@@ -966,22 +966,22 @@ export default function AttendancePage() {
 
       {/* Project Settings Modal */}
       {isSettingsModalOpen && (
-        <div className="fixed inset-0 z-50 bg-[#000]/75 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-[#0B0910] border border-white/10 rounded-2xl w-full max-w-xl shadow-2xl overflow-hidden">
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-card border border-border-custom rounded-lg w-full max-w-xl shadow-2xl overflow-hidden">
             {/* Header */}
-            <div className="p-6 border-b border-white/5 flex items-center justify-between bg-white/[0.01]">
+            <div className="p-6 border-b border-border-custom flex items-center justify-between bg-white/[0.01]">
               <div>
                 <h3 className="text-sm font-bold uppercase tracking-wider text-white">Project Setting</h3>
-                <p className="text-[10px] text-zinc-500 mt-0.5">Configure project details, members and geofence parameters</p>
+                <p className="text-[10px] text-muted mt-0.5">Configure project details, members and geofence parameters</p>
               </div>
-              <button onClick={() => setIsSettingsModalOpen(false)} className="text-zinc-400 hover:text-white cursor-pointer">✕</button>
+              <button onClick={() => setIsSettingsModalOpen(false)} className="text-muted hover:text-foreground cursor-pointer">✕</button>
             </div>
 
             {/* Modal Tabs */}
-            <div className="px-6 py-3 border-b border-white/5 flex items-center gap-4 bg-white/[0.02]">
+            <div className="px-6 py-3 border-b border-border-custom flex items-center gap-4 bg-elevated">
               <span className="text-xs font-bold text-primary border-b-2 border-primary pb-1">Project Details</span>
-              <span className="text-xs font-bold text-zinc-500 cursor-not-allowed">Members</span>
-              <span className="text-xs font-bold text-zinc-500 cursor-not-allowed">Location Structure</span>
+              <span className="text-xs font-bold text-muted cursor-not-allowed">Members</span>
+              <span className="text-xs font-bold text-muted cursor-not-allowed">Location Structure</span>
             </div>
 
             {/* Grid Content */}
@@ -990,29 +990,29 @@ export default function AttendancePage() {
               <div className="md:col-span-2 space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-[11px] text-zinc-400 font-medium">Project Code</label>
+                    <label className="text-[11px] text-muted font-medium">Project Code</label>
                     <input
                       type="text"
                       value={projectSettings.code || ""}
                       onChange={(e) => setProjectSettings({ ...projectSettings, code: e.target.value })}
-                      className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-white"
+                      className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-white"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[11px] text-zinc-400 font-medium">Project Name</label>
+                    <label className="text-[11px] text-muted font-medium">Project Name</label>
                     <input
                       type="text"
                       value={projectSettings.name || ""}
                       onChange={(e) => setProjectSettings({ ...projectSettings, name: e.target.value })}
-                      className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-white"
+                      className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-white"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-[11px] text-zinc-400 font-medium">Project Stage</label>
-                    <select className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-white">
+                    <label className="text-[11px] text-muted font-medium">Project Stage</label>
+                    <select className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-white">
                       <option>Ongoing</option>
                       <option>Planning</option>
                       <option>On Hold</option>
@@ -1020,8 +1020,8 @@ export default function AttendancePage() {
                     </select>
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[11px] text-zinc-400 font-medium">Project Category</label>
-                    <select className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-white">
+                    <label className="text-[11px] text-muted font-medium">Project Category</label>
+                    <select className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-white">
                       <option>Infrastructure</option>
                       <option>Residential</option>
                       <option>Commercial</option>
@@ -1031,46 +1031,46 @@ export default function AttendancePage() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-[11px] text-zinc-400 font-medium">Start Date</label>
-                    <input type="date" defaultValue="2026-01-01" className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-white font-mono" />
+                    <label className="text-[11px] text-muted font-medium">Start Date</label>
+                    <input type="date" defaultValue="2026-01-01" className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-white font-mono" />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[11px] text-zinc-400 font-medium">End Date</label>
-                    <input type="date" defaultValue="2026-12-31" className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-white font-mono" />
+                    <label className="text-[11px] text-muted font-medium">End Date</label>
+                    <input type="date" defaultValue="2026-12-31" className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-white font-mono" />
                   </div>
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[11px] text-zinc-400 font-medium">Project Address</label>
+                  <label className="text-[11px] text-muted font-medium">Project Address</label>
                   <input
                     type="text"
                     value={projectSettings.address || ""}
                     onChange={(e) => setProjectSettings({ ...projectSettings, address: e.target.value })}
-                    className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-white"
+                    className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-white"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-[11px] text-zinc-400 font-medium">Attendance Radius (meters)</label>
+                    <label className="text-[11px] text-muted font-medium">Attendance Radius (meters)</label>
                     <input
                       type="number"
                       value={projectSettings.attendance_radius_meters || 500}
                       onChange={(e) => setProjectSettings({ ...projectSettings, attendance_radius_meters: Number(e.target.value) })}
-                      className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-white"
+                      className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-white"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[11px] text-zinc-400 font-medium">Project Value</label>
-                    <input type="number" defaultValue="0" className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-white" />
+                    <label className="text-[11px] text-muted font-medium">Project Value</label>
+                    <input type="number" defaultValue="0" className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-white" />
                   </div>
                 </div>
               </div>
 
               {/* Live Geofence Circular Visualizer Column */}
-              <div className="flex flex-col items-center justify-center bg-[#110E1C]/40 border border-white/5 rounded-xl p-4 text-center space-y-4">
-                <span className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider">Live Geofence Boundary</span>
-                <div className="relative w-40 h-40 rounded-full border border-white/10 flex items-center justify-center bg-black/20 overflow-hidden">
+              <div className="flex flex-col items-center justify-center bg-input/40 border border-border-custom rounded-md p-4 text-center space-y-4">
+                <span className="text-[10px] uppercase font-bold text-muted tracking-wider">Live Geofence Boundary</span>
+                <div className="relative w-40 h-40 rounded-full border border-border-custom flex items-center justify-center bg-black/20 overflow-hidden">
                   <div 
                     className="absolute rounded-full bg-primary/10 border border-primary/40 animate-ping"
                     style={{ 
@@ -1091,17 +1091,17 @@ export default function AttendancePage() {
                     {projectSettings.attendance_radius_meters || 500}m Limit
                   </span>
                 </div>
-                <p className="text-[10px] text-zinc-500 leading-relaxed max-w-xs">
+                <p className="text-[10px] text-muted leading-relaxed max-w-xs">
                   GPS punches are matched against this dynamic visual limit.
                 </p>
               </div>
             </div>
 
             {/* Footer */}
-            <div className="p-6 border-t border-white/5 flex items-center justify-end gap-3 bg-white/[0.01]">
+            <div className="p-6 border-t border-border-custom flex items-center justify-end gap-3 bg-white/[0.01]">
               <button
                 onClick={() => setIsSettingsModalOpen(false)}
-                className="px-4 py-2 border border-white/10 rounded-lg text-xs font-semibold text-zinc-400 hover:text-white cursor-pointer"
+                className="px-4 py-2 border border-border-custom rounded-lg text-xs font-semibold text-muted hover:text-foreground cursor-pointer"
               >
                 Cancel
               </button>

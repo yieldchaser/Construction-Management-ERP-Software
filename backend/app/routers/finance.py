@@ -467,3 +467,32 @@ def create_payment_request(company_id: uuid.UUID, data: PaymentRequestCreate, db
         due_date=new_req.due_date,
         created_at=new_req.created_at
     )
+
+
+class PaymentRequestStatusUpdate(BaseModel):
+    status: str
+
+@router.put("/payment-requests/approve/{request_id}", response_model=PaymentRequestResponse)
+def update_payment_request_status(request_id: uuid.UUID, payload: PaymentRequestStatusUpdate, db: Session = Depends(get_db)):
+    req = db.query(PaymentRequest).filter(PaymentRequest.id == request_id).first()
+    if not req:
+        raise HTTPException(status_code=404, detail="Payment request not found")
+    req.status = payload.status
+    db.commit()
+    db.refresh(req)
+    
+    user = db.query(User).filter(User.id == req.party_company_user_id).first()
+    party_name = user.name if user else "Unknown Party"
+    
+    return PaymentRequestResponse(
+        id=req.id,
+        company_id=req.company_id,
+        project_id=req.project_id,
+        party_company_user_id=req.party_company_user_id,
+        party_name=party_name,
+        amount=req.amount,
+        details=req.details,
+        status=req.status,
+        due_date=req.due_date,
+        created_at=req.created_at
+    )

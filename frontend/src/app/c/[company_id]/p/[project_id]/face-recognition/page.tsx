@@ -75,28 +75,28 @@ export default function FaceRecognitionPage() {
   }, [view, selectedDate]);
 
   return (
-    <div className="min-h-screen bg-[#0E0C15] text-[#ededed]">
+    <div className="min-h-screen bg-background text-foreground">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold text-white">Face Recognition Attendance</h1>
-            <p className="text-zinc-400 mt-1">Face verification audit trail for attendance punches</p>
+            <p className="text-muted mt-1">Face verification audit trail for attendance punches</p>
           </div>
           <div className="flex gap-3">
-            <div className="flex bg-white/5 rounded-xl p-1">
-              <button onClick={() => setView("logs")} className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${view === "logs" ? "bg-primary text-white" : "text-zinc-400 hover:text-white"}`}>Audit Logs</button>
-              <button onClick={() => setView("summary")} className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${view === "summary" ? "bg-primary text-white" : "text-zinc-400 hover:text-white"}`}>Daily Summary</button>
+            <div className="flex bg-white/5 rounded-md p-1">
+              <button onClick={() => setView("logs")} className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${view === "logs" ? "bg-primary text-white" : "text-muted hover:text-foreground"}`}>Audit Logs</button>
+              <button onClick={() => setView("summary")} className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${view === "summary" ? "bg-primary text-white" : "text-muted hover:text-foreground"}`}>Daily Summary</button>
             </div>
-            <button onClick={fetchLogs} className="px-4 py-2 bg-white/10 hover:bg-white/15 text-white rounded-xl text-sm font-semibold transition-all">
+            <button onClick={fetchLogs} className="px-4 py-2 bg-white/10 hover:bg-white/15 text-white rounded-md text-sm font-semibold transition-all">
               Refresh
             </button>
           </div>
         </div>
 
         {view === "logs" && (
-          <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
+          <div className="bg-white/5 border border-border-custom rounded-lg overflow-hidden">
             <table className="w-full text-left text-sm">
-              <thead className="bg-white/5 text-zinc-400">
+              <thead className="bg-white/5 text-muted">
                 <tr>
                   <th className="px-6 py-4 font-medium">Time</th>
                   <th className="px-6 py-4 font-medium">Employee</th>
@@ -106,9 +106,9 @@ export default function FaceRecognitionPage() {
                   <th className="px-6 py-4 font-medium">Location</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5">
+              <tbody className="divide-y divide-border-custom">
                 {logs.length === 0 ? (
-                  <tr><td colSpan={6} className="px-6 py-8 text-center text-zinc-500">No face recognition logs found</td></tr>
+                  <tr><td colSpan={6} className="px-6 py-8 text-center text-muted">No face recognition logs found</td></tr>
                 ) : (
                   logs.map((log) => (
                     <tr key={log.id} className="hover:bg-white/5 transition-colors">
@@ -137,13 +137,13 @@ export default function FaceRecognitionPage() {
         )}
 
         {view === "summary" && (
-          <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
-            <div className="p-4 border-b border-white/10 flex items-center gap-3">
-              <label className="text-xs font-medium text-zinc-400">Date</label>
-              <input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} className="bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-white text-sm" />
+          <div className="bg-white/5 border border-border-custom rounded-lg overflow-hidden">
+            <div className="p-4 border-b border-border-custom flex items-center gap-3">
+              <label className="text-xs font-medium text-muted">Date</label>
+              <input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} className="bg-white/5 border border-border-custom rounded-md px-4 py-2 text-white text-sm" />
             </div>
             <table className="w-full text-left text-sm">
-              <thead className="bg-white/5 text-zinc-400">
+              <thead className="bg-white/5 text-muted">
                 <tr>
                   <th className="px-6 py-4 font-medium">Employee</th>
                   <th className="px-6 py-4 font-medium">Punch In</th>
@@ -153,9 +153,9 @@ export default function FaceRecognitionPage() {
                   <th className="px-6 py-4 font-medium">Geofence</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5">
+              <tbody className="divide-y divide-border-custom">
                 {summary.length === 0 ? (
-                  <tr><td colSpan={6} className="px-6 py-8 text-center text-zinc-500">No attendance records for this date</td></tr>
+                  <tr><td colSpan={6} className="px-6 py-8 text-center text-muted">No attendance records for this date</td></tr>
                 ) : (
                   summary.map((s) => (
                     <tr key={s.employee_id} className="hover:bg-white/5 transition-colors">

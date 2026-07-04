@@ -153,7 +153,7 @@ export default function DashboardPage() {
       // right-0 = flush with right edge of buttons row; top-full = just below it
       <div
         style={{ position: "absolute", top: "calc(100% + 6px)", right: 0, zIndex: 9999, width: 264 }}
-        className="bg-[#1A1726] border border-white/10 rounded-xl p-3 shadow-2xl"
+        className="bg-elevated border border-border-custom rounded-md p-3 shadow-2xl"
         onClick={e => e.stopPropagation()}
         onMouseDown={e => e.stopPropagation()}
       >
@@ -164,7 +164,7 @@ export default function DashboardPage() {
               onMouseDown={e => { e.stopPropagation(); e.preventDefault(); setType(ct); setOpenPicker(null); }}
               title={ct.replace(/_/g," ")}
               className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all hover:bg-white/10 border ${
-                activeType === ct ? "bg-primary/20 border-primary/40" : "border-transparent hover:border-white/10"
+                activeType === ct ? "bg-primary/20 border-primary/40" : "border-transparent hover:border-border-custom"
               }`}
             >
               {chartTypeIcon(ct, activeType === ct)}
@@ -179,18 +179,18 @@ export default function DashboardPage() {
   // The picker is rendered INSIDE the outer buttons-row div (which has relative)
   // so the popup is anchored to that div, not the tiny individual button.
   const renderChartHeader = (title: string, pickerId: string, activeType: string, setType: (t: string) => void) => (
-    <div className="w-full flex justify-between items-center border-b border-white/5 pb-3">
-      <span className="text-xs font-bold text-white uppercase tracking-wider">{title}</span>
+    <div className="w-full flex justify-between items-center border-b border-border-custom pb-3">
+      <span className="text-xs font-semibold text-foreground uppercase tracking-wider">{title}</span>
       {/* relative here is the positioning context for the picker popup */}
       <div className="flex items-center gap-0.5 relative">
-        <button className="p-1.5 rounded text-zinc-600 hover:text-zinc-400 hover:bg-white/5 transition-all" title="Sort">
+        <button className="p-1.5 rounded text-muted hover:text-muted hover:bg-white/5 transition-all" title="Sort">
           <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M1 3h11M3 6.5h7M5 10h3"/></svg>
         </button>
         {/* Chart type toggle button — no inner relative wrapper needed any more */}
         <button
           onMouseDown={e => { e.stopPropagation(); e.preventDefault(); setOpenPicker(openPicker === pickerId ? null : pickerId); }}
           className={`p-1.5 rounded transition-all ${
-            openPicker === pickerId ? "bg-primary/20 text-primary" : "text-zinc-600 hover:text-zinc-400 hover:bg-white/5"
+            openPicker === pickerId ? "bg-primary/20 text-primary" : "text-muted hover:text-muted hover:bg-white/5"
           }`}
           title="Change chart type"
         >
@@ -198,10 +198,10 @@ export default function DashboardPage() {
             <rect x="1" y="8" width="3" height="4" rx="0.5"/><rect x="5" y="5" width="3" height="7" rx="0.5"/><rect x="9" y="2" width="3" height="10" rx="0.5"/>
           </svg>
         </button>
-        <button className="p-1.5 rounded text-zinc-600 hover:text-zinc-400 hover:bg-white/5 transition-all" title="Fullscreen">
+        <button className="p-1.5 rounded text-muted hover:text-muted hover:bg-white/5 transition-all" title="Fullscreen">
           <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 4.5V2h2.5M8.5 2H11v2.5M11 8.5V11H8.5M4.5 11H2V8.5"/></svg>
         </button>
-        <button className="p-1.5 rounded text-zinc-600 hover:text-zinc-400 hover:bg-white/5 transition-all font-bold leading-none" title="More options">⋮</button>
+        <button className="p-1.5 rounded text-muted hover:text-muted hover:bg-white/5 transition-all font-bold leading-none" title="More options">⋮</button>
         {/* Picker popup — anchored here, wide enough for 5 columns */}
         {renderChartPicker(pickerId, activeType, setType)}
       </div>
@@ -244,7 +244,7 @@ export default function DashboardPage() {
         <div className="flex flex-col overflow-y-auto flex-1">
           {/* Header */}
           <div className="p-6 flex items-center gap-3 border-b border-border-custom">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-tr from-[#E8184C] to-[#7C5CFF] font-sans font-bold text-white">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary font-bold text-white text-sm">
               S
             </div>
             <span className="font-bold text-foreground tracking-tight">SiteFlow Console</span>
@@ -252,7 +252,7 @@ export default function DashboardPage() {
 
           {/* Project Switcher */}
           <div className="p-4 border-b border-border-custom bg-foreground/[0.01]">
-            <label className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider block mb-1.5">
+            <label className="text-xs font-medium text-muted uppercase tracking-wider block mb-1.5">
               Active Project Context
             </label>
             <select
@@ -273,7 +273,7 @@ export default function DashboardPage() {
                 setWizardStep(1);
                 setIsWizardOpen(true);
               }}
-              className="w-full mt-2 flex items-center justify-center gap-1.5 bg-primary/20 hover:bg-primary/30 border border-primary/30 rounded-lg py-1.5 text-[11px] font-semibold text-primary transition-all cursor-pointer"
+              className="w-full mt-2 flex items-center justify-center gap-1.5 bg-primary/20 hover:bg-primary/30 border border-border-custom rounded-lg py-1.5 text-[11px] font-semibold text-primary transition-all cursor-pointer"
             >
               ➕ New Project
             </button>
@@ -282,7 +282,7 @@ export default function DashboardPage() {
           {/* Module Links */}
           <nav className="p-4 space-y-6">
             <div>
-              <span className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider block px-3 mb-2">
+              <span className="text-xs font-medium text-muted uppercase tracking-wider block px-3 mb-2">
                 Pre-Construction
               </span>
               <ul className="space-y-1">
@@ -291,9 +291,7 @@ export default function DashboardPage() {
                     href="#"
                     onClick={() => setActiveTab("overview")}
                     className={`flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg transition-all ${
-                      activeTab === "overview"
-                        ? "bg-white/[0.06] text-white font-semibold shadow-sm"
-                        : "text-zinc-400 hover:text-white hover:bg-white/[0.02]"
+                      activeTab === "overview" ? "bg-primary/10 text-primary border-l-2 border-primary font-medium" : "text-muted hover:text-foreground hover:bg-elevated"
                     }`}
                   >
                     <span>📊</span> Operational Overview
@@ -304,9 +302,7 @@ export default function DashboardPage() {
                     href="#"
                     onClick={() => setActiveTab("scheduler")}
                     className={`flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg transition-all ${
-                      activeTab === "scheduler"
-                        ? "bg-white/[0.06] text-white font-semibold shadow-sm"
-                        : "text-zinc-400 hover:text-white hover:bg-white/[0.02]"
+                      activeTab === "scheduler" ? "bg-primary/10 text-primary border-l-2 border-primary font-medium" : "text-muted hover:text-foreground hover:bg-elevated"
                     }`}
                   >
                     <span>📅</span> Gantt Scheduler
@@ -315,7 +311,7 @@ export default function DashboardPage() {
                 <li>
                   <Link
                     href={`/c/${companyId}/p/${activeProject}/budgeting/boq`}
-                    className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.02] transition-all"
+                    className="flex items-center gap-2.5 px-3 py-2 text-xs rounded-lg text-muted hover:text-foreground hover:bg-elevated transition-all"
                   >
                     <span>📑</span> BOQ Spreadsheet
                   </Link>
@@ -323,7 +319,7 @@ export default function DashboardPage() {
                 <li>
                   <Link
                     href={`/c/${companyId}/p/${activeProject}/crm`}
-                    className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.02] transition-all"
+                    className="flex items-center gap-2.5 px-3 py-2 text-xs rounded-lg text-muted hover:text-foreground hover:bg-elevated transition-all"
                   >
                     <span>🤝</span> CRM & Leads
                   </Link>
@@ -331,7 +327,7 @@ export default function DashboardPage() {
                 <li>
                   <Link
                     href={`/c/${companyId}/p/${activeProject}/planning/gantt`}
-                    className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.02] transition-all"
+                    className="flex items-center gap-2.5 px-3 py-2 text-xs rounded-lg text-muted hover:text-foreground hover:bg-elevated transition-all"
                   >
                     <span>📅</span> WBS Gantt Timeline
                   </Link>
@@ -340,14 +336,14 @@ export default function DashboardPage() {
             </div>
 
             <div>
-              <span className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider block px-3 mb-2">
+              <span className="text-xs font-medium text-muted uppercase tracking-wider block px-3 mb-2">
                 Project Execution
               </span>
               <ul className="space-y-1">
                 <li>
                   <Link
                     href={`/c/${companyId}/p/${activeProject}/dpr`}
-                    className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.02] transition-all"
+                    className="flex items-center gap-2.5 px-3 py-2 text-xs rounded-lg text-muted hover:text-foreground hover:bg-elevated transition-all"
                   >
                     <span>👷</span> Daily Progress (DPR)
                   </Link>
@@ -355,7 +351,7 @@ export default function DashboardPage() {
                 <li>
                   <Link
                     href={`/c/${companyId}/p/${activeProject}/procurement`}
-                    className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.02] transition-all"
+                    className="flex items-center gap-2.5 px-3 py-2 text-xs rounded-lg text-muted hover:text-foreground hover:bg-elevated transition-all"
                   >
                     <span>🛒</span> Procurement & RFQ
                   </Link>
@@ -363,7 +359,7 @@ export default function DashboardPage() {
                 <li>
                   <Link
                     href={`/c/${companyId}/p/${activeProject}/production`}
-                    className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.02] transition-all"
+                    className="flex items-center gap-2.5 px-3 py-2 text-xs rounded-lg text-muted hover:text-foreground hover:bg-elevated transition-all"
                   >
                     <span>🏭</span> Production Management
                   </Link>
@@ -371,7 +367,7 @@ export default function DashboardPage() {
                 <li>
                   <Link
                     href={`/c/${companyId}/p/${activeProject}/attendance`}
-                    className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.02] transition-all"
+                    className="flex items-center gap-2.5 px-3 py-2 text-xs rounded-lg text-muted hover:text-foreground hover:bg-elevated transition-all"
                   >
                     <span>📍</span> Attendance & Payroll
                   </Link>
@@ -379,7 +375,7 @@ export default function DashboardPage() {
                 <li>
                   <Link
                     href={`/c/${companyId}/p/${activeProject}/drawings`}
-                    className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.02] transition-all"
+                    className="flex items-center gap-2.5 px-3 py-2 text-xs rounded-lg text-muted hover:text-foreground hover:bg-elevated transition-all"
                   >
                     <span>📐</span> Drawings & Revisions
                   </Link>
@@ -387,7 +383,7 @@ export default function DashboardPage() {
                 <li>
                   <Link
                     href={`/c/${companyId}/p/${activeProject}/hr`}
-                    className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.02] transition-all"
+                    className="flex items-center gap-2.5 px-3 py-2 text-xs rounded-lg text-muted hover:text-foreground hover:bg-elevated transition-all"
                   >
                     <span>👷</span> HR & Payroll
                   </Link>
@@ -395,7 +391,7 @@ export default function DashboardPage() {
                 <li>
                   <Link
                     href={`/c/${companyId}/p/${activeProject}/quality`}
-                    className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.02] transition-all"
+                    className="flex items-center gap-2.5 px-3 py-2 text-xs rounded-lg text-muted hover:text-foreground hover:bg-elevated transition-all"
                   >
                     <span>🛡️</span> Quality &amp; NCR
                   </Link>
@@ -404,14 +400,14 @@ export default function DashboardPage() {
             </div>
 
             <div>
-              <span className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider block px-3 mb-2">
+              <span className="text-xs font-medium text-muted uppercase tracking-wider block px-3 mb-2">
                 Client Portal
               </span>
               <ul className="space-y-1">
                 <li>
                   <Link
                     href={`/c/${companyId}/p/${activeProject}/reports`}
-                    className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.02] transition-all"
+                    className="flex items-center gap-2.5 px-3 py-2 text-xs rounded-lg text-muted hover:text-foreground hover:bg-elevated transition-all"
                   >
                     <span>📊</span> Progress Reports
                   </Link>
@@ -419,7 +415,7 @@ export default function DashboardPage() {
                 <li>
                   <Link
                     href={`/c/${companyId}/p/${activeProject}/reports/calculators`}
-                    className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.02] transition-all"
+                    className="flex items-center gap-2.5 px-3 py-2 text-xs rounded-lg text-muted hover:text-foreground hover:bg-elevated transition-all"
                   >
                     <span>🔩</span> Construction Calculators
                   </Link>
@@ -428,14 +424,14 @@ export default function DashboardPage() {
             </div>
 
             <div>
-              <span className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider block px-3 mb-2">
+              <span className="text-xs font-medium text-muted uppercase tracking-wider block px-3 mb-2">
                 Asset Management
               </span>
               <ul className="space-y-1">
                 <li>
                   <Link
                     href={`/c/${companyId}/p/${activeProject}/equipment`}
-                    className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.02] transition-all"
+                    className="flex items-center gap-2.5 px-3 py-2 text-xs rounded-lg text-muted hover:text-foreground hover:bg-elevated transition-all"
                   >
                     <span>🚜</span> Equipment Tracking
                   </Link>
@@ -444,14 +440,14 @@ export default function DashboardPage() {
             </div>
 
             <div>
-              <span className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider block px-3 mb-2">
+              <span className="text-xs font-medium text-muted uppercase tracking-wider block px-3 mb-2">
                 Safety
               </span>
               <ul className="space-y-1">
                 <li>
                   <Link
                     href={`/c/${companyId}/p/${activeProject}/safety`}
-                    className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.02] transition-all"
+                    className="flex items-center gap-2.5 px-3 py-2 text-xs rounded-lg text-muted hover:text-foreground hover:bg-elevated transition-all"
                   >
                     <span>🦺</span> HSE / Incidents
                   </Link>
@@ -460,14 +456,14 @@ export default function DashboardPage() {
             </div>
 
             <div>
-              <span className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider block px-3 mb-2">
+              <span className="text-xs font-medium text-muted uppercase tracking-wider block px-3 mb-2">
                 Executive Intelligence
               </span>
               <ul className="space-y-1">
                 <li>
                   <Link
                     href={`/c/${companyId}/analytics`}
-                    className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.02] transition-all"
+                    className="flex items-center gap-2.5 px-3 py-2 text-xs rounded-lg text-muted hover:text-foreground hover:bg-elevated transition-all"
                   >
                     <span>📊</span> Analytics Dashboard
                   </Link>
@@ -476,14 +472,14 @@ export default function DashboardPage() {
             </div>
 
             <div>
-              <span className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider block px-3 mb-2">
+              <span className="text-xs font-medium text-muted uppercase tracking-wider block px-3 mb-2">
                 Finance & Ledgers
               </span>
               <ul className="space-y-1">
                 <li>
                   <Link
                     href={`/c/${companyId}/p/${activeProject}/finance`}
-                    className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.02] transition-all"
+                    className="flex items-center gap-2.5 px-3 py-2 text-xs rounded-lg text-muted hover:text-foreground hover:bg-elevated transition-all"
                   >
                     <span>💵</span> Finance & Ledger
                   </Link>
@@ -491,7 +487,7 @@ export default function DashboardPage() {
                 <li>
                   <Link
                     href={`/c/${companyId}/p/${activeProject}/billing`}
-                    className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.02] transition-all"
+                    className="flex items-center gap-2.5 px-3 py-2 text-xs rounded-lg text-muted hover:text-foreground hover:bg-elevated transition-all"
                   >
                     <span>🧾</span> Work Orders & RA Bills
                   </Link>
@@ -501,9 +497,7 @@ export default function DashboardPage() {
                     href="#"
                     onClick={() => setActiveTab("tally")}
                     className={`flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg transition-all ${
-                      activeTab === "tally"
-                        ? "bg-white/[0.06] text-white font-semibold shadow-sm"
-                        : "text-zinc-400 hover:text-white hover:bg-white/[0.02]"
+                      activeTab === "tally" ? "bg-primary/10 text-primary border-l-2 border-primary font-medium" : "text-muted hover:text-foreground hover:bg-elevated"
                     }`}
                   >
                     <span>🔌</span> Tally ERP Integrator
@@ -513,14 +507,14 @@ export default function DashboardPage() {
             </div>
 
             <div>
-              <span className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider block px-3 mb-2">
+              <span className="text-xs font-medium text-muted uppercase tracking-wider block px-3 mb-2">
                 Company
               </span>
               <ul className="space-y-1">
                 <li>
                   <Link
                     href={`/c/${companyId}/settings`}
-                    className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.02] transition-all"
+                    className="flex items-center gap-2.5 px-3 py-2 text-xs rounded-lg text-muted hover:text-foreground hover:bg-elevated transition-all"
                   >
                     <span>⚙️</span> Company Settings
                   </Link>
@@ -528,7 +522,7 @@ export default function DashboardPage() {
                 <li>
                   <Link
                     href="/integrations"
-                    className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.02] transition-all"
+                    className="flex items-center gap-2.5 px-3 py-2 text-xs rounded-lg text-muted hover:text-foreground hover:bg-elevated transition-all"
                   >
                     <span>🔗</span> Integrations Hub
                   </Link>
@@ -539,19 +533,19 @@ export default function DashboardPage() {
         </div>
 
         {/* User profile footer */}
-        <div className="p-4 border-t border-white/5 flex items-center justify-between bg-white/[0.01]">
+        <div className="p-4 border-t border-border-custom flex items-center justify-between bg-white/[0.01]">
           <div className="flex items-center gap-2.5">
             <div className="h-8 w-8 rounded-full bg-secondary flex items-center justify-center font-bold text-xs text-white">
               DM
             </div>
             <div>
               <div className="text-xs font-semibold text-white">Demo Manager</div>
-              <div className="text-[10px] text-zinc-500">Active Tenant</div>
+              <div className="text-[10px] text-muted">Active Tenant</div>
             </div>
           </div>
           <Link
             href="/login"
-            className="text-xs text-zinc-500 hover:text-primary transition-colors"
+            className="text-xs text-muted hover:text-primary transition-colors"
           >
             Exit
           </Link>
@@ -561,13 +555,13 @@ export default function DashboardPage() {
       {/* Main Workspace Frame */}
       <main className="flex-1 flex flex-col overflow-hidden h-full">
         {/* Top Header */}
-        <header className="h-16 border-b border-border-custom px-8 flex items-center justify-between bg-sidebar shrink-0">
+        <header className="h-16 border-b border-border-custom px-6 flex items-center justify-between bg-card shrink-0">
           <div className="flex items-center gap-4">
-            <h1 className="text-lg font-bold text-white uppercase tracking-wider">
+            <h1 className="text-base font-semibold text-foreground uppercase tracking-wider">
               {activeProjDetails.name}
             </h1>
             <span className="h-4 w-px bg-white/10" />
-            <span className="text-xs font-medium text-zinc-400">
+            <span className="text-xs font-medium text-muted">
               📍 {activeProjDetails.city} Area
             </span>
           </div>
@@ -576,14 +570,14 @@ export default function DashboardPage() {
             {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
-              className="flex items-center justify-center h-8 w-8 rounded-lg bg-white/[0.04] border border-border-custom text-zinc-400 hover:text-white transition-all cursor-pointer"
+              className="flex items-center justify-center h-8 w-8 rounded-lg bg-white/[0.04] border border-border-custom text-muted hover:text-foreground transition-all cursor-pointer"
               title="Toggle Theme"
             >
               {isLightTheme ? "🌙" : "☀️"}
             </button>
 
             {/* Tally Connection status dot */}
-            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.02] border border-border-custom text-xs text-zinc-400">
+            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-elevated border border-border-custom text-xs text-muted">
               <span className="h-2 w-2 rounded-full bg-success" />
               <span>Tally Agent: {tallySyncStatus}</span>
             </div>
@@ -613,13 +607,13 @@ export default function DashboardPage() {
           {activeTab === "overview" && (
             <>
               {/* Tab Selector */}
-              <div className="flex border-b border-white/5 pb-2 gap-4 shrink-0">
+              <div className="flex border-b border-border-custom pb-2 gap-4 shrink-0">
                 <button
                   onClick={() => setOverviewTab("operational")}
                   className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${
                     overviewTab === "operational"
-                      ? "bg-primary/15 text-primary border border-primary/30"
-                      : "text-zinc-400 hover:text-white"
+                      ? "bg-primary/15 text-primary border border-border-custom"
+                      : "text-muted hover:text-foreground"
                   }`}
                 >
                   📊 Operational Dashboard
@@ -629,7 +623,7 @@ export default function DashboardPage() {
                   className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${
                     overviewTab === "financial"
                       ? "bg-secondary/15 text-secondary border border-secondary/30"
-                      : "text-zinc-400 hover:text-white"
+                      : "text-muted hover:text-foreground"
                   }`}
                 >
                   💵 Financial Summary
@@ -640,27 +634,27 @@ export default function DashboardPage() {
                 <>
                   {/* Operational Summary Counters */}
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div className="rounded-xl border border-white/5 bg-[#0B0910] p-5 flex flex-col justify-center items-center text-center">
+                    <div className="rounded-md border border-border-custom bg-card p-5 flex flex-col justify-center items-center text-center">
                       <span className="text-[11px] font-bold text-red-500 uppercase tracking-wider block mb-1">Not Started Projects</span>
-                      <span className="text-3xl font-black text-white">
+                      <span className="text-2xl font-semibold text-foreground">
                         {operationalData?.status_counts?.["Not Started"] ?? 0}
                       </span>
                     </div>
-                    <div className="rounded-xl border border-white/5 bg-[#0B0910] p-5 flex flex-col justify-center items-center text-center border-b-2 border-b-success">
+                    <div className="rounded-md border border-border-custom bg-card p-5 flex flex-col justify-center items-center text-center border-b-2 border-b-success">
                       <span className="text-[11px] font-bold text-success uppercase tracking-wider block mb-1">Ongoing Projects</span>
-                      <span className="text-3xl font-black text-white">
+                      <span className="text-2xl font-semibold text-foreground">
                         {operationalData?.status_counts?.["Ongoing"] ?? projects.length}
                       </span>
                     </div>
-                    <div className="rounded-xl border border-white/5 bg-[#0B0910] p-5 flex flex-col justify-center items-center text-center">
+                    <div className="rounded-md border border-border-custom bg-card p-5 flex flex-col justify-center items-center text-center">
                       <span className="text-[11px] font-bold text-yellow-500 uppercase tracking-wider block mb-1">Onhold Projects</span>
-                      <span className="text-3xl font-black text-white">
+                      <span className="text-2xl font-semibold text-foreground">
                         {operationalData?.status_counts?.["Onhold"] ?? 0}
                       </span>
                     </div>
-                    <div className="rounded-xl border border-white/5 bg-[#0B0910] p-5 flex flex-col justify-center items-center text-center">
-                      <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">Completed Projects</span>
-                      <span className="text-3xl font-black text-white">
+                    <div className="rounded-md border border-border-custom bg-card p-5 flex flex-col justify-center items-center text-center">
+                      <span className="text-[11px] font-bold text-muted uppercase tracking-wider block mb-1">Completed Projects</span>
+                      <span className="text-2xl font-semibold text-foreground">
                         {operationalData?.status_counts?.["Completed"] ?? 0}
                       </span>
                     </div>
@@ -669,7 +663,7 @@ export default function DashboardPage() {
                   {/* Project Health & Operational Summary */}
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Project Health Chart — chart type switchable */}
-                    <div className="rounded-2xl border border-white/5 bg-[#0B0910] p-6 space-y-4 relative">
+                    <div className="rounded-lg border border-border-custom bg-card p-6 space-y-4 relative">
                       {renderChartHeader("Project Health", "health", ctHealth, setCtHealth)}
                       {(() => {
                         const hc = operationalData?.health_counts ?? { Healthy: 0, Warning: 0, Critical: 0 };
@@ -684,12 +678,12 @@ export default function DashboardPage() {
                         if (ctHealth === "table") return (
                           <div className="space-y-2 pt-2">
                             {segments.map(s => (
-                              <div key={s.label} className="flex items-center justify-between px-3 py-2 rounded-lg bg-white/[0.02] border border-white/5">
+                              <div key={s.label} className="flex items-center justify-between px-3 py-2 rounded-lg bg-elevated border border-border-custom">
                                 <div className="flex items-center gap-2"><div className="h-2 w-2 rounded-full" style={{background:s.color}}/><span className="text-xs text-zinc-300">{s.label}</span></div>
                                 <span className="font-bold text-white font-mono text-sm">{s.value}</span>
                               </div>
                             ))}
-                            <div className="flex justify-between px-3 py-1 text-[10px] text-zinc-500"><span>Total Projects</span><span className="font-bold text-white">{total}</span></div>
+                            <div className="flex justify-between px-3 py-1 text-[10px] text-muted"><span>Total Projects</span><span className="font-bold text-white">{total}</span></div>
                           </div>
                         );
 
@@ -713,9 +707,9 @@ export default function DashboardPage() {
                             <div className="flex items-center gap-4 pt-2">
                               <div className="relative flex-shrink-0">
                                 <svg viewBox="0 0 100 100" className="w-28 h-28">{paths.map((p,i) => <path key={i} d={p.d} fill={p.color} opacity="0.85"/>)}</svg>
-                                {ctHealth === "donut" && <div className="absolute inset-0 flex flex-col items-center justify-center"><span className="text-[9px] text-zinc-500">Total</span><span className="text-xl font-black text-white">{total}</span></div>}
+                                {ctHealth === "donut" && <div className="absolute inset-0 flex flex-col items-center justify-center"><span className="text-[9px] text-muted">Total</span><span className="text-xl font-black text-white">{total}</span></div>}
                               </div>
-                              <div className="space-y-2">{segments.map(s => (<div key={s.label} className="flex items-center gap-2 text-xs"><div className="h-2 w-2 rounded-full flex-shrink-0" style={{background:s.color}}/><span className="text-zinc-400">{s.label}</span><span className="font-bold text-white ml-auto pl-3">{s.value}</span></div>))}</div>
+                              <div className="space-y-2">{segments.map(s => (<div key={s.label} className="flex items-center gap-2 text-xs"><div className="h-2 w-2 rounded-full flex-shrink-0" style={{background:s.color}}/><span className="text-muted">{s.label}</span><span className="font-bold text-white ml-auto pl-3">{s.value}</span></div>))}</div>
                             </div>
                           );
                         }
@@ -725,7 +719,7 @@ export default function DashboardPage() {
                           const pts = segments.map((s,i) => ({ x: 30+i*70, y: H-5-((s.value/maxV)*(H-15)) }));
                           return (
                             <svg viewBox={`0 0 ${W} ${H+12}`} className="w-full" style={{height:"9rem"}}>
-                              <line x1="10" y1={H} x2={W-10} y2={H} stroke="#ffffff10" strokeWidth="1"/>
+                              <line x1="10" y1={H} x2={W-10} y2={H} stroke="var(--border)" strokeWidth="1"/>
                               {pts.map((p,i) => <circle key={i} cx={p.x} cy={p.y} r="6" fill={segments[i].color} opacity="0.8"/>)}
                               {segments.map((s,i) => <text key={i} x={pts[i].x} y={H+11} fill="#6b7280" fontSize="7" textAnchor="middle">{s.label}</text>)}
                             </svg>
@@ -738,9 +732,9 @@ export default function DashboardPage() {
                           const polyPts = pts.map(p=>`${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
                           return (
                             <svg viewBox={`0 0 ${W} ${H+12}`} className="w-full" style={{height:"9rem"}}>
-                              <line x1="10" y1={H} x2={W-10} y2={H} stroke="#ffffff10" strokeWidth="1"/>
-                              <polyline points={polyPts} fill="none" stroke="#7C5CFF" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round"/>
-                              {pts.map((p,i)=><circle key={i} cx={p.x} cy={p.y} r="4" fill={segments[i].color} stroke="#0B0910" strokeWidth="1.5"/>)}
+                              <line x1="10" y1={H} x2={W-10} y2={H} stroke="var(--border)" strokeWidth="1"/>
+                              <polyline points={polyPts} fill="none" stroke="var(--primary)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round"/>
+                              {pts.map((p,i)=><circle key={i} cx={p.x} cy={p.y} r="4" fill={segments[i].color} stroke="var(--card)" strokeWidth="1.5"/>)}
                               {segments.map((s,i)=><text key={i} x={pts[i].x} y={H+11} fill="#6b7280" fontSize="7" textAnchor="middle">{s.label}</text>)}
                             </svg>
                           );
@@ -753,10 +747,10 @@ export default function DashboardPage() {
                           const areaPts = [`10,${H}`,...pts.map(p=>`${p.x.toFixed(1)},${p.y.toFixed(1)}`),`${W-10},${H}`].join(" ");
                           return (
                             <svg viewBox={`0 0 ${W} ${H+12}`} className="w-full" style={{height:"9rem"}}>
-                              <defs><linearGradient id="hAreaG" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor="#7C5CFF" stopOpacity="0.4"/><stop offset="100%" stopColor="#7C5CFF" stopOpacity="0.02"/></linearGradient></defs>
-                              <line x1="10" y1={H} x2={W-10} y2={H} stroke="#ffffff10" strokeWidth="1"/>
+                              <defs><linearGradient id="hAreaG" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor="var(--primary)" stopOpacity="0.4"/><stop offset="100%" stopColor="var(--primary)" stopOpacity="0.02"/></linearGradient></defs>
+                              <line x1="10" y1={H} x2={W-10} y2={H} stroke="var(--border)" strokeWidth="1"/>
                               <polygon points={areaPts} fill="url(#hAreaG)"/>
-                              <polyline points={polyPts} fill="none" stroke="#7C5CFF" strokeWidth="2" strokeLinejoin="round"/>
+                              <polyline points={polyPts} fill="none" stroke="var(--primary)" strokeWidth="2" strokeLinejoin="round"/>
                               {pts.map((p,i)=><circle key={i} cx={p.x} cy={p.y} r="3.5" fill={segments[i].color}/>)}
                               {segments.map((s,i)=><text key={i} x={pts[i].x} y={H+11} fill="#6b7280" fontSize="7" textAnchor="middle">{s.label}</text>)}
                             </svg>
@@ -766,22 +760,22 @@ export default function DashboardPage() {
                         // Default: horizontal bar chart per health category
                         return (
                           <div className="space-y-3 pt-2">
-                            <div className="text-[9px] text-zinc-500 uppercase tracking-wider font-bold">Project Health Count</div>
+                            <div className="text-[9px] text-muted uppercase tracking-wider font-bold">Project Health Count</div>
                             {segments.map(s => (
                               <div key={s.label} className="space-y-1">
-                                <div className="flex justify-between text-xs"><span className="text-zinc-400">{s.label}</span><span className="font-bold font-mono" style={{color:s.color}}>{s.value}</span></div>
-                                <div className="h-5 bg-white/[0.02] rounded overflow-hidden"><div className="h-full rounded transition-all" style={{width:`${(s.value/maxV)*100}%`,background:s.color,opacity:0.75}}/></div>
+                                <div className="flex justify-between text-xs"><span className="text-muted">{s.label}</span><span className="font-bold font-mono" style={{color:s.color}}>{s.value}</span></div>
+                                <div className="h-5 bg-elevated rounded overflow-hidden"><div className="h-full rounded transition-all" style={{width:`${(s.value/maxV)*100}%`,background:s.color,opacity:0.75}}/></div>
                               </div>
                             ))}
-                            <div className="text-[9px] text-zinc-500 text-center pt-1">Project Health</div>
+                            <div className="text-[9px] text-muted text-center pt-1">Project Health</div>
                           </div>
                         );
                       })()}
                     </div>
 
                     {/* Project Operational Summary */}
-                    <div className="lg:col-span-2 rounded-2xl border border-white/5 bg-[#0B0910] p-6 space-y-4">
-                      <div className="flex flex-wrap justify-between items-center gap-2 border-b border-white/5 pb-3">
+                    <div className="lg:col-span-2 rounded-lg border border-border-custom bg-card p-6 space-y-4">
+                      <div className="flex flex-wrap justify-between items-center gap-2 border-b border-border-custom pb-3">
                         <div className="flex items-center gap-3">
                           <h4 className="text-xs font-extrabold uppercase tracking-wider text-white">📊 Project Operational Summary</h4>
                           <span className="text-[10px] px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 font-bold font-mono">Real-time Stats</span>
@@ -791,7 +785,7 @@ export default function DashboardPage() {
                       <div className="overflow-x-auto w-full">
                         <table className="w-full text-left text-xs border-collapse">
                           <thead>
-                            <tr className="border-b border-white/5 text-zinc-500 font-bold uppercase tracking-wider text-[10px]">
+                            <tr className="border-b border-border-custom text-muted font-bold uppercase tracking-wider text-[10px]">
                               <th className="py-2 px-3">Project Health</th>
                               <th className="py-2 px-3">Project Name</th>
                               <th className="py-2 px-3">Start Date</th>
@@ -800,7 +794,7 @@ export default function DashboardPage() {
                               <th className="py-2 px-3">Customer</th>
                             </tr>
                           </thead>
-                          <tbody className="divide-y divide-white/5">
+                          <tbody className="divide-y divide-border-custom">
                             {(operationalData?.projects ?? projects).map((p: any) => {
                               const prog = p.progress ?? 0;
                               return (
@@ -815,14 +809,14 @@ export default function DashboardPage() {
                                     </span>
                                   </td>
                                   <td className="py-2.5 px-3 font-semibold text-white">{p.project_name ?? p.name}</td>
-                                  <td className="py-2.5 px-3 text-zinc-400 font-mono">{p.start_date || "—"}</td>
-                                  <td className="py-2.5 px-3 text-zinc-400 font-mono">{p.end_date || "—"}</td>
+                                  <td className="py-2.5 px-3 text-muted font-mono">{p.start_date || "—"}</td>
+                                  <td className="py-2.5 px-3 text-muted font-mono">{p.end_date || "—"}</td>
                                   <td className="py-2.5 px-3">
                                     <div className="flex items-center gap-2">
                                       <div className="w-16 bg-white/5 rounded-full h-1.5 overflow-hidden">
                                         <div className="bg-primary h-full rounded-full" style={{ width: `${prog}%` }} />
                                       </div>
-                                      <span className="font-mono text-[10px] text-zinc-400">{prog}%</span>
+                                      <span className="font-mono text-[10px] text-muted">{prog}%</span>
                                     </div>
                                   </td>
                                   <td className="py-2.5 px-3 font-semibold text-white">{p.customer_name ?? "—"}</td>
@@ -838,7 +832,7 @@ export default function DashboardPage() {
                   {/* Sparklines Grid */}
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     {/* Last 7 Days Attendance — chart type switchable */}
-                    <div className="rounded-2xl border border-white/5 bg-[#0B0910] p-6 space-y-3">
+                    <div className="rounded-lg border border-border-custom bg-card p-6 space-y-3">
                       {renderChartHeader("\uD83D\uDC77 Last 7 Days Attendance", "attendance", ctAttendance, setCtAttendance)}
                       {(() => {
                         const attData = operationalData?.attendance_series ?? [
@@ -855,39 +849,39 @@ export default function DashboardPage() {
 
                         if (ctAttendance === "table") return (
                           <div className="overflow-x-auto">
-                            <table className="w-full text-xs"><thead><tr className="border-b border-white/5 text-zinc-500 font-bold uppercase text-[9px]">
+                            <table className="w-full text-xs"><thead><tr className="border-b border-border-custom text-muted font-bold uppercase text-[9px]">
                               <th className="py-1.5 px-2 text-left">Date</th><th className="py-1.5 px-2 text-right text-success">Present</th><th className="py-1.5 px-2 text-right text-red-400">Absent</th>
                             </tr></thead><tbody className="divide-y divide-white/[0.03]">
-                              {attData.map((d: any, i: number) => (<tr key={i} className="hover:bg-white/[0.01]"><td className="py-1.5 px-2 font-mono text-zinc-400">{d.date}</td><td className="py-1.5 px-2 text-right font-bold text-success">{d.present??0}</td><td className="py-1.5 px-2 text-right font-bold text-red-400">{d.absent??0}</td></tr>))}
+                              {attData.map((d: any, i: number) => (<tr key={i} className="hover:bg-white/[0.01]"><td className="py-1.5 px-2 font-mono text-muted">{d.date}</td><td className="py-1.5 px-2 text-right font-bold text-success">{d.present??0}</td><td className="py-1.5 px-2 text-right font-bold text-red-400">{d.absent??0}</td></tr>))}
                             </tbody></table>
                           </div>
                         );
 
                         if (ctAttendance === "line" || ctAttendance === "smooth" || ctAttendance === "line_pt" || ctAttendance === "smooth_pt") return (
                           <svg viewBox={`0 0 ${W} ${H+12}`} className="w-full" style={{height:"9rem"}}>
-                            <defs><linearGradient id="attLG" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stopColor="#00E5A3"/><stop offset="100%" stopColor="#7C5CFF"/></linearGradient></defs>
-                            <line x1="10" y1={H} x2={W-10} y2={H} stroke="#ffffff10" strokeWidth="1"/>
+                            <defs><linearGradient id="attLG" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stopColor="var(--success)"/><stop offset="100%" stopColor="var(--primary)"/></linearGradient></defs>
+                            <line x1="10" y1={H} x2={W-10} y2={H} stroke="var(--border)" strokeWidth="1"/>
                             <polyline points={polyPts} fill="none" stroke="url(#attLG)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round"/>
-                            {pts.map((p: any, i: number) => <circle key={i} cx={p.x} cy={p.y} r="3" fill="#00E5A3" stroke="#0B0910" strokeWidth="1.5"/>)}
+                            {pts.map((p: any, i: number) => <circle key={i} cx={p.x} cy={p.y} r="3" fill="var(--success)" stroke="var(--card)" strokeWidth="1.5"/>)}
                             {attData.map((d: any, i: number) => <text key={i} x={pts[i].x} y={H+11} fill="#6b7280" fontSize="6" textAnchor="middle">{d.date.slice(-5)}</text>)}
                           </svg>
                         );
 
                         if (ctAttendance === "area" || ctAttendance === "smooth_area" || ctAttendance === "area_pt" || ctAttendance === "smooth_area_pt") return (
                           <svg viewBox={`0 0 ${W} ${H+12}`} className="w-full" style={{height:"9rem"}}>
-                            <defs><linearGradient id="attAG" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor="#00E5A3" stopOpacity="0.4"/><stop offset="100%" stopColor="#00E5A3" stopOpacity="0.02"/></linearGradient></defs>
-                            <line x1="10" y1={H} x2={W-10} y2={H} stroke="#ffffff10" strokeWidth="1"/>
+                            <defs><linearGradient id="attAG" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor="var(--success)" stopOpacity="0.4"/><stop offset="100%" stopColor="var(--success)" stopOpacity="0.02"/></linearGradient></defs>
+                            <line x1="10" y1={H} x2={W-10} y2={H} stroke="var(--border)" strokeWidth="1"/>
                             <polygon points={areaPts} fill="url(#attAG)"/>
-                            <polyline points={polyPts} fill="none" stroke="#00E5A3" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round"/>
-                            {pts.map((p: any, i: number) => <circle key={i} cx={p.x} cy={p.y} r="2.5" fill="#00E5A3"/>)}
+                            <polyline points={polyPts} fill="none" stroke="var(--success)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round"/>
+                            {pts.map((p: any, i: number) => <circle key={i} cx={p.x} cy={p.y} r="2.5" fill="var(--success)"/>)}
                             {attData.map((d: any, i: number) => <text key={i} x={pts[i].x} y={H+11} fill="#6b7280" fontSize="6" textAnchor="middle">{d.date.slice(-5)}</text>)}
                           </svg>
                         );
 
                         if (ctAttendance === "scatter" || ctAttendance === "scatter2" || ctAttendance === "scatter3") return (
                           <svg viewBox={`0 0 ${W} ${H+12}`} className="w-full" style={{height:"9rem"}}>
-                            <line x1="10" y1={H} x2={W-10} y2={H} stroke="#ffffff10" strokeWidth="1"/>
-                            {pts.map((p: any, i: number) => <circle key={i} cx={p.x} cy={p.y} r="5" fill="#00E5A3" opacity="0.8"/>)}
+                            <line x1="10" y1={H} x2={W-10} y2={H} stroke="var(--border)" strokeWidth="1"/>
+                            {pts.map((p: any, i: number) => <circle key={i} cx={p.x} cy={p.y} r="5" fill="var(--success)" opacity="0.8"/>)}
                             {attData.map((d: any, i: number) => <text key={i} x={pts[i].x} y={H+11} fill="#6b7280" fontSize="6" textAnchor="middle">{d.date.slice(-5)}</text>)}
                           </svg>
                         );
@@ -914,12 +908,12 @@ export default function DashboardPage() {
                           return (
                             <div className="flex items-center gap-4 pt-1">
                               <div className="relative flex-shrink-0">
-                                <svg viewBox="0 0 100 100" className="w-24 h-24"><path d={pathP} fill="#00E5A3" opacity="0.85"/><path d={pathA} fill="#E8184C" opacity="0.6"/></svg>
-                                {ctAttendance==="donut"&&<div className="absolute inset-0 flex flex-col items-center justify-center"><span className="text-[9px] text-zinc-500">Present</span><span className="font-black text-white text-base">{totP}</span></div>}
+                                <svg viewBox="0 0 100 100" className="w-24 h-24"><path d={pathP} fill="var(--success)" opacity="0.85"/><path d={pathA} fill="var(--danger)" opacity="0.6"/></svg>
+                                {ctAttendance==="donut"&&<div className="absolute inset-0 flex flex-col items-center justify-center"><span className="text-[9px] text-muted">Present</span><span className="font-black text-white text-base">{totP}</span></div>}
                               </div>
                               <div className="space-y-2 text-xs">
-                                <div className="flex items-center gap-2"><div className="h-2 w-2 rounded-full bg-success"/><span className="text-zinc-400">Present</span><span className="font-bold text-success ml-auto pl-3">{totP}</span></div>
-                                <div className="flex items-center gap-2"><div className="h-2 w-2 rounded-full bg-red-400"/><span className="text-zinc-400">Absent</span><span className="font-bold text-red-400 ml-auto pl-3">{totA}</span></div>
+                                <div className="flex items-center gap-2"><div className="h-2 w-2 rounded-full bg-success"/><span className="text-muted">Present</span><span className="font-bold text-success ml-auto pl-3">{totP}</span></div>
+                                <div className="flex items-center gap-2"><div className="h-2 w-2 rounded-full bg-red-400"/><span className="text-muted">Absent</span><span className="font-bold text-red-400 ml-auto pl-3">{totA}</span></div>
                               </div>
                             </div>
                           );
@@ -934,7 +928,7 @@ export default function DashboardPage() {
                                   <div style={{height:`${(p/maxVal)*100}%`,background:"#00E5A3",opacity:0.75}}/>
                                   <div style={{height:`${(a/maxVal)*100}%`,background:"#E8184C",opacity:0.55}}/>
                                 </div>
-                                <span className="text-[8px] text-zinc-500 font-mono">{d.date.slice(-5)}</span>
+                                <span className="text-[8px] text-muted font-mono">{d.date.slice(-5)}</span>
                               </div>);
                             })}
                           </div>
@@ -946,10 +940,10 @@ export default function DashboardPage() {
                             {attData.map((d: any, idx: number) => {
                               const presHeight=((d.present??0)/maxVal)*100;
                               return (<div key={idx} className="flex-1 flex flex-col items-center gap-1">
-                                <div className="w-full bg-white/[0.02] rounded flex items-end" style={{height:"7rem"}}>
+                                <div className="w-full bg-elevated rounded flex items-end" style={{height:"7rem"}}>
                                   <div className="bg-success/60 w-full rounded-b" style={{height:`${presHeight}%`}}/>
                                 </div>
-                                <span className="text-[8px] text-zinc-500 font-mono">{d.date.slice(-5)}</span>
+                                <span className="text-[8px] text-muted font-mono">{d.date.slice(-5)}</span>
                               </div>);
                             })}
                           </div>
@@ -958,7 +952,7 @@ export default function DashboardPage() {
                     </div>
 
                     {/* Last 7 Days Material Received — chart type switchable */}
-                    <div className="rounded-2xl border border-white/5 bg-[#0B0910] p-6 space-y-3">
+                    <div className="rounded-lg border border-border-custom bg-card p-6 space-y-3">
                       {renderChartHeader("\uD83D\uDCE6 Last 7 Days Material Received (GRNs)", "material", ctMaterial, setCtMaterial)}
                       {(() => {
                         const matData = operationalData?.material_series ?? [
@@ -975,39 +969,39 @@ export default function DashboardPage() {
 
                         if (ctMaterial === "table") return (
                           <div className="overflow-x-auto">
-                            <table className="w-full text-xs"><thead><tr className="border-b border-white/5 text-zinc-500 font-bold uppercase text-[9px]">
+                            <table className="w-full text-xs"><thead><tr className="border-b border-border-custom text-muted font-bold uppercase text-[9px]">
                               <th className="py-1.5 px-2 text-left">Date</th><th className="py-1.5 px-2 text-right text-primary">GRNs Received</th>
                             </tr></thead><tbody className="divide-y divide-white/[0.03]">
-                              {matData.map((d: any, i: number) => (<tr key={i} className="hover:bg-white/[0.01]"><td className="py-1.5 px-2 font-mono text-zinc-400">{d.date}</td><td className="py-1.5 px-2 text-right font-bold text-primary">{d.count??0}</td></tr>))}
+                              {matData.map((d: any, i: number) => (<tr key={i} className="hover:bg-white/[0.01]"><td className="py-1.5 px-2 font-mono text-muted">{d.date}</td><td className="py-1.5 px-2 text-right font-bold text-primary">{d.count??0}</td></tr>))}
                             </tbody></table>
                           </div>
                         );
 
                         if (ctMaterial === "line" || ctMaterial === "smooth" || ctMaterial === "line_pt" || ctMaterial === "smooth_pt") return (
                           <svg viewBox={`0 0 ${W} ${H+12}`} className="w-full" style={{height:"9rem"}}>
-                            <defs><linearGradient id="matLG" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stopColor="#7C5CFF"/><stop offset="100%" stopColor="#E8184C"/></linearGradient></defs>
-                            <line x1="10" y1={H} x2={W-10} y2={H} stroke="#ffffff10" strokeWidth="1"/>
+                            <defs><linearGradient id="matLG" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stopColor="var(--primary)"/><stop offset="100%" stopColor="#E8184C"/></linearGradient></defs>
+                            <line x1="10" y1={H} x2={W-10} y2={H} stroke="var(--border)" strokeWidth="1"/>
                             <polyline points={polyPts} fill="none" stroke="url(#matLG)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round"/>
-                            {pts.map((p: any, i: number) => <circle key={i} cx={p.x} cy={p.y} r="3" fill="#7C5CFF" stroke="#0B0910" strokeWidth="1.5"/>)}
+                            {pts.map((p: any, i: number) => <circle key={i} cx={p.x} cy={p.y} r="3" fill="var(--primary)" stroke="var(--card)" strokeWidth="1.5"/>)}
                             {matData.map((d: any, i: number) => <text key={i} x={pts[i].x} y={H+11} fill="#6b7280" fontSize="6" textAnchor="middle">{d.date.slice(-5)}</text>)}
                           </svg>
                         );
 
                         if (ctMaterial === "area" || ctMaterial === "smooth_area" || ctMaterial === "area_pt" || ctMaterial === "smooth_area_pt") return (
                           <svg viewBox={`0 0 ${W} ${H+12}`} className="w-full" style={{height:"9rem"}}>
-                            <defs><linearGradient id="matAG" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor="#7C5CFF" stopOpacity="0.4"/><stop offset="100%" stopColor="#7C5CFF" stopOpacity="0.02"/></linearGradient></defs>
-                            <line x1="10" y1={H} x2={W-10} y2={H} stroke="#ffffff10" strokeWidth="1"/>
+                            <defs><linearGradient id="matAG" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor="var(--primary)" stopOpacity="0.4"/><stop offset="100%" stopColor="var(--primary)" stopOpacity="0.02"/></linearGradient></defs>
+                            <line x1="10" y1={H} x2={W-10} y2={H} stroke="var(--border)" strokeWidth="1"/>
                             <polygon points={areaPts} fill="url(#matAG)"/>
-                            <polyline points={polyPts} fill="none" stroke="#7C5CFF" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round"/>
-                            {pts.map((p: any, i: number) => <circle key={i} cx={p.x} cy={p.y} r="2.5" fill="#7C5CFF"/>)}
+                            <polyline points={polyPts} fill="none" stroke="var(--primary)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round"/>
+                            {pts.map((p: any, i: number) => <circle key={i} cx={p.x} cy={p.y} r="2.5" fill="var(--primary)"/>)}
                             {matData.map((d: any, i: number) => <text key={i} x={pts[i].x} y={H+11} fill="#6b7280" fontSize="6" textAnchor="middle">{d.date.slice(-5)}</text>)}
                           </svg>
                         );
 
                         if (ctMaterial === "scatter" || ctMaterial === "scatter2" || ctMaterial === "scatter3") return (
                           <svg viewBox={`0 0 ${W} ${H+12}`} className="w-full" style={{height:"9rem"}}>
-                            <line x1="10" y1={H} x2={W-10} y2={H} stroke="#ffffff10" strokeWidth="1"/>
-                            {pts.map((p: any, i: number) => <circle key={i} cx={p.x} cy={p.y} r="5" fill="#7C5CFF" opacity="0.8"/>)}
+                            <line x1="10" y1={H} x2={W-10} y2={H} stroke="var(--border)" strokeWidth="1"/>
+                            {pts.map((p: any, i: number) => <circle key={i} cx={p.x} cy={p.y} r="5" fill="var(--primary)" opacity="0.8"/>)}
                             {matData.map((d: any, i: number) => <text key={i} x={pts[i].x} y={H+11} fill="#6b7280" fontSize="6" textAnchor="middle">{d.date.slice(-5)}</text>)}
                           </svg>
                         );
@@ -1034,9 +1028,9 @@ export default function DashboardPage() {
                             <div className="flex items-center gap-3 pt-1">
                               <div className="relative flex-shrink-0">
                                 <svg viewBox="0 0 100 100" className="w-24 h-24">{arcs.map((a: any, i: number)=><path key={i} d={a.path} fill={a.color} opacity="0.85"/>)}</svg>
-                                {ctMaterial==="donut"&&<div className="absolute inset-0 flex flex-col items-center justify-center"><span className="text-[9px] text-zinc-500">GRNs</span><span className="font-black text-white text-base">{total}</span></div>}
+                                {ctMaterial==="donut"&&<div className="absolute inset-0 flex flex-col items-center justify-center"><span className="text-[9px] text-muted">GRNs</span><span className="font-black text-white text-base">{total}</span></div>}
                               </div>
-                              <div className="space-y-1 text-[10px]">{arcs.map((a: any)=><div key={a.label} className="flex items-center gap-1.5"><div className="h-1.5 w-1.5 rounded-full flex-shrink-0" style={{background:a.color}}/><span className="text-zinc-400 font-mono">{a.label}</span><span className="font-bold text-white ml-auto pl-2">{a.value}</span></div>)}</div>
+                              <div className="space-y-1 text-[10px]">{arcs.map((a: any)=><div key={a.label} className="flex items-center gap-1.5"><div className="h-1.5 w-1.5 rounded-full flex-shrink-0" style={{background:a.color}}/><span className="text-muted font-mono">{a.label}</span><span className="font-bold text-white ml-auto pl-2">{a.value}</span></div>)}</div>
                             </div>
                           );
                         }
@@ -1047,10 +1041,10 @@ export default function DashboardPage() {
                             {matData.map((d: any, idx: number) => {
                               const countHeight=((d.count??0)/maxVal)*100;
                               return (<div key={idx} className="flex-1 flex flex-col items-center gap-1">
-                                <div className="w-full bg-white/[0.02] rounded flex items-end" style={{height:"7rem"}}>
+                                <div className="w-full bg-elevated rounded flex items-end" style={{height:"7rem"}}>
                                   <div className="bg-primary/60 w-full rounded-b" style={{height:`${countHeight}%`}}/>
                                 </div>
-                                <span className="text-[8px] text-zinc-500 font-mono">{d.date.slice(-5)}</span>
+                                <span className="text-[8px] text-muted font-mono">{d.date.slice(-5)}</span>
                               </div>);
                             })}
                           </div>
@@ -1064,11 +1058,11 @@ export default function DashboardPage() {
               {overviewTab === "financial" && (
                 <div className="space-y-6 font-sans">
                   {/* Filters Bar */}
-                  <div className="glass-panel rounded-2xl p-4 border border-white/5 flex flex-wrap gap-4 items-center justify-between">
+                  <div className="bg-card border border-border-custom rounded-lg rounded-lg p-4 border border-border-custom flex flex-wrap gap-4 items-center justify-between">
                     <div className="flex gap-4 items-center">
                       <div className="space-y-1">
-                        <label className="text-[9px] text-zinc-500 uppercase tracking-wider font-bold block">Project Name</label>
-                        <select className="bg-[#12101A] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none min-w-[150px]">
+                        <label className="text-[9px] text-muted uppercase tracking-wider font-bold block">Project Name</label>
+                        <select className="bg-input border border-border-custom rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none min-w-[150px]">
                           <option>All</option>
                           {financialData?.project_summaries?.map((p: any, idx: number) => (
                             <option key={idx}>{p.project_name}</option>
@@ -1076,9 +1070,9 @@ export default function DashboardPage() {
                         </select>
                       </div>
                       <div className="space-y-1">
-                        <label className="text-[9px] text-zinc-500 uppercase tracking-wider font-bold block">Txn Date</label>
-                        <div className="flex items-center gap-2 bg-[#12101A] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-zinc-400">
-                          <span className="text-zinc-500">📅</span>
+                        <label className="text-[9px] text-muted uppercase tracking-wider font-bold block">Txn Date</label>
+                        <div className="flex items-center gap-2 bg-input border border-border-custom rounded-lg px-3 py-1.5 text-xs text-muted">
+                          <span className="text-muted">📅</span>
                           <span>01 Jan 2026 to 31 Jul 2026</span>
                         </div>
                       </div>
@@ -1088,7 +1082,7 @@ export default function DashboardPage() {
                   {/* Metrics Row */}
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                     {/* Advance Paid */}
-                    <div className="bg-[#102022] border border-emerald-500/10 rounded-2xl p-4 flex flex-col justify-between">
+                    <div className="bg-emerald-950/20 border border-emerald-500/10 rounded-lg p-4 flex flex-col justify-between">
                       <span className="text-[10px] font-bold text-emerald-400/80 uppercase tracking-wider block text-center">Advance Paid</span>
                       <strong className="text-lg font-extrabold text-emerald-400 mt-2 block text-center">
                         {financialData?.advance_paid > 0 ? `₹${financialData.advance_paid.toLocaleString()}` : "-"}
@@ -1096,7 +1090,7 @@ export default function DashboardPage() {
                     </div>
 
                     {/* To Pay */}
-                    <div className="bg-[#221015] border border-red-500/10 rounded-2xl p-4 flex flex-col justify-between">
+                    <div className="bg-red-950/20 border border-red-500/10 rounded-lg p-4 flex flex-col justify-between">
                       <span className="text-[10px] font-bold text-red-400/80 uppercase tracking-wider block text-center">To Pay</span>
                       <strong className="text-lg font-extrabold text-red-400 mt-2 block text-center">
                         {financialData?.to_pay > 0 ? `₹${financialData.to_pay.toLocaleString()}` : "-"}
@@ -1104,7 +1098,7 @@ export default function DashboardPage() {
                     </div>
 
                     {/* To Receive */}
-                    <div className="bg-[#221015] border border-red-500/10 rounded-2xl p-4 flex flex-col justify-between">
+                    <div className="bg-red-950/20 border border-red-500/10 rounded-lg p-4 flex flex-col justify-between">
                       <span className="text-[10px] font-bold text-red-400/80 uppercase tracking-wider block text-center">To Receive</span>
                       <strong className="text-lg font-extrabold text-red-400 mt-2 block text-center">
                         {financialData?.to_receive > 0 ? `₹${financialData.to_receive.toLocaleString()}` : "-"}
@@ -1112,7 +1106,7 @@ export default function DashboardPage() {
                     </div>
 
                     {/* Advance Received */}
-                    <div className="bg-[#102022] border border-emerald-500/10 rounded-2xl p-4 flex flex-col justify-between">
+                    <div className="bg-emerald-950/20 border border-emerald-500/10 rounded-lg p-4 flex flex-col justify-between">
                       <span className="text-[10px] font-bold text-emerald-400/80 uppercase tracking-wider block text-center">Advance Received</span>
                       <strong className="text-lg font-extrabold text-emerald-400 mt-2 block text-center">
                         {financialData?.advance_received > 0 ? `₹${financialData.advance_received.toLocaleString()}` : "-"}
@@ -1123,29 +1117,29 @@ export default function DashboardPage() {
                   {/* Charts Grid - First Row */}
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Sales */}
-                    <div className="glass-panel border border-white/5 rounded-2xl p-5 space-y-4">
-                      <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Sales</h4>
-                      <div className="h-40 flex flex-col items-center justify-center border border-dashed border-white/5 rounded-xl bg-black/10">
+                    <div className="bg-card border border-border-custom rounded-lg border border-border-custom rounded-lg p-5 space-y-4">
+                      <h4 className="text-xs font-bold text-muted uppercase tracking-wider">Sales</h4>
+                      <div className="h-40 flex flex-col items-center justify-center border border-dashed border-border-custom rounded-md bg-black/10">
                         <span className="text-red-500 text-xs font-semibold">No Data Available</span>
                       </div>
-                      <div className="border-t border-white/5 pt-3 flex justify-between items-center text-xs">
-                        <span className="text-zinc-500">Total Sales</span>
-                        <span className="font-bold text-zinc-400">-</span>
+                      <div className="border-t border-border-custom pt-3 flex justify-between items-center text-xs">
+                        <span className="text-muted">Total Sales</span>
+                        <span className="font-bold text-muted">-</span>
                       </div>
                     </div>
 
                     {/* Expense */}
-                    <div className="glass-panel border border-white/5 rounded-2xl p-5 space-y-4">
-                      <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Expense</h4>
-                      <div className="h-40 flex items-center justify-center border border-dashed border-white/5 rounded-xl bg-black/10 relative">
+                    <div className="bg-card border border-border-custom rounded-lg border border-border-custom rounded-lg p-5 space-y-4">
+                      <h4 className="text-xs font-bold text-muted uppercase tracking-wider">Expense</h4>
+                      <div className="h-40 flex items-center justify-center border border-dashed border-border-custom rounded-md bg-black/10 relative">
                         {/* Custom SVG Bar Chart */}
                         <svg className="w-full h-full p-4" viewBox="0 0 200 100">
                           {/* Y-Axis Line */}
-                          <line x1="40" y1="10" x2="40" y2="80" stroke="#ffffff10" strokeWidth="1" />
-                          <line x1="40" y1="50" x2="180" y2="50" stroke="#ffffff20" strokeWidth="1" />
+                          <line x1="40" y1="10" x2="40" y2="80" stroke="var(--border)" strokeWidth="1" />
+                          <line x1="40" y1="50" x2="180" y2="50" stroke="var(--border)" strokeWidth="1" />
                           {/* Grid Lines */}
-                          <line x1="40" y1="20" x2="180" y2="20" stroke="#ffffff05" strokeWidth="1" strokeDasharray="2" />
-                          <line x1="40" y1="80" x2="180" y2="80" stroke="#ffffff05" strokeWidth="1" strokeDasharray="2" />
+                          <line x1="40" y1="20" x2="180" y2="20" stroke="var(--border)" strokeWidth="1" strokeDasharray="2" />
+                          <line x1="40" y1="80" x2="180" y2="80" stroke="var(--border)" strokeWidth="1" strokeDasharray="2" />
                           {/* Axis labels */}
                           <text x="35" y="24" fill="#6b7280" fontSize="8" textAnchor="end">0</text>
                           <text x="35" y="84" fill="#6b7280" fontSize="8" textAnchor="end">-1.0K</text>
@@ -1156,21 +1150,21 @@ export default function DashboardPage() {
                           <text x="85" y="45" fill="#FF3B6C" fontSize="8" textAnchor="middle" fontWeight="bold">-1.00K</text>
                         </svg>
                       </div>
-                      <div className="border-t border-white/5 pt-3 flex justify-between items-center text-xs">
-                        <span className="text-zinc-500">Total Expense</span>
+                      <div className="border-t border-border-custom pt-3 flex justify-between items-center text-xs">
+                        <span className="text-muted">Total Expense</span>
                         <span className="font-bold text-red-400">-1.00K</span>
                       </div>
                     </div>
 
                     {/* Margin */}
-                    <div className="glass-panel border border-white/5 rounded-2xl p-5 space-y-4">
-                      <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Margin</h4>
-                      <div className="h-40 flex items-center justify-center border border-dashed border-white/5 rounded-xl bg-black/10 relative">
+                    <div className="bg-card border border-border-custom rounded-lg border border-border-custom rounded-lg p-5 space-y-4">
+                      <h4 className="text-xs font-bold text-muted uppercase tracking-wider">Margin</h4>
+                      <div className="h-40 flex items-center justify-center border border-dashed border-border-custom rounded-md bg-black/10 relative">
                         {/* Custom SVG Bar Chart */}
                         <svg className="w-full h-full p-4" viewBox="0 0 200 100">
-                          <line x1="40" y1="10" x2="40" y2="80" stroke="#ffffff10" strokeWidth="1" />
-                          <line x1="40" y1="80" x2="180" y2="80" stroke="#ffffff20" strokeWidth="1" />
-                          <line x1="40" y1="35" x2="180" y2="35" stroke="#ffffff05" strokeWidth="1" strokeDasharray="2" />
+                          <line x1="40" y1="10" x2="40" y2="80" stroke="var(--border)" strokeWidth="1" />
+                          <line x1="40" y1="80" x2="180" y2="80" stroke="var(--border)" strokeWidth="1" />
+                          <line x1="40" y1="35" x2="180" y2="35" stroke="var(--border)" strokeWidth="1" strokeDasharray="2" />
                           {/* Axis labels */}
                           <text x="35" y="84" fill="#6b7280" fontSize="8" textAnchor="end">0</text>
                           <text x="35" y="39" fill="#6b7280" fontSize="8" textAnchor="end">1.0K</text>
@@ -1180,8 +1174,8 @@ export default function DashboardPage() {
                           <text x="85" y="30" fill="#10B981" fontSize="8" textAnchor="middle" fontWeight="bold">1.00K</text>
                         </svg>
                       </div>
-                      <div className="border-t border-white/5 pt-3 flex justify-between items-center text-xs">
-                        <span className="text-zinc-500">Total Margin</span>
+                      <div className="border-t border-border-custom pt-3 flex justify-between items-center text-xs">
+                        <span className="text-muted">Total Margin</span>
                         <span className="font-bold text-emerald-400">1.00K</span>
                       </div>
                     </div>
@@ -1190,17 +1184,17 @@ export default function DashboardPage() {
                   {/* Charts Grid - Second Row */}
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* Payments */}
-                    <div className="glass-panel border border-white/5 rounded-2xl p-5 space-y-4">
-                      <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Payments</h4>
-                      <div className="h-48 flex flex-col items-center justify-center border border-dashed border-white/5 rounded-xl bg-black/10">
+                    <div className="bg-card border border-border-custom rounded-lg border border-border-custom rounded-lg p-5 space-y-4">
+                      <h4 className="text-xs font-bold text-muted uppercase tracking-wider">Payments</h4>
+                      <div className="h-48 flex flex-col items-center justify-center border border-dashed border-border-custom rounded-md bg-black/10">
                         <span className="text-red-500 text-xs font-semibold">No Data Available</span>
                       </div>
                     </div>
 
                     {/* Expense Type */}
-                    <div className="glass-panel border border-white/5 rounded-2xl p-5 space-y-4">
-                      <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Expense Type</h4>
-                      <div className="h-48 flex items-center justify-between border border-dashed border-white/5 rounded-xl bg-black/10 p-4">
+                    <div className="bg-card border border-border-custom rounded-lg border border-border-custom rounded-lg p-5 space-y-4">
+                      <h4 className="text-xs font-bold text-muted uppercase tracking-wider">Expense Type</h4>
+                      <div className="h-48 flex items-center justify-between border border-dashed border-border-custom rounded-md bg-black/10 p-4">
                         {/* Doughnut Chart */}
                         <div className="relative w-32 h-32">
                           <svg className="w-full h-full" viewBox="0 0 36 36">
@@ -1222,9 +1216,9 @@ export default function DashboardPage() {
                             />
                           </svg>
                           <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                            <span className="text-[8px] text-zinc-500 uppercase">Total</span>
+                            <span className="text-[8px] text-muted uppercase">Total</span>
                             <span className="text-xs font-extrabold text-white">-1.00K</span>
-                            <span className="text-[8px] text-zinc-400 font-semibold mt-0.5">100%</span>
+                            <span className="text-[8px] text-muted font-semibold mt-0.5">100%</span>
                           </div>
                         </div>
 
@@ -1241,22 +1235,22 @@ export default function DashboardPage() {
                   </div>
 
                   {/* Party Balance */}
-                  <div className="glass-panel border border-white/5 rounded-2xl p-5 space-y-4">
-                    <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Company Party Balance (All Projects)</h4>
-                    <div className="h-32 flex flex-col items-center justify-center border border-dashed border-white/5 rounded-xl bg-black/10">
+                  <div className="bg-card border border-border-custom rounded-lg border border-border-custom rounded-lg p-5 space-y-4">
+                    <h4 className="text-xs font-bold text-muted uppercase tracking-wider">Company Party Balance (All Projects)</h4>
+                    <div className="h-32 flex flex-col items-center justify-center border border-dashed border-border-custom rounded-md bg-black/10">
                       <span className="text-red-500 text-xs font-semibold">No Data Available</span>
                     </div>
                   </div>
 
                   {/* Project Financial Summary Table */}
-                  <div className="glass-panel border border-white/5 rounded-2xl overflow-hidden">
-                    <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between">
-                      <h4 className="text-xs font-bold text-white uppercase tracking-wider">Project Financial Summary - Dashboard</h4>
+                  <div className="bg-card border border-border-custom rounded-lg border border-border-custom rounded-lg overflow-hidden">
+                    <div className="px-5 py-4 border-b border-border-custom flex items-center justify-between">
+                      <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider">Project Financial Summary - Dashboard</h4>
                     </div>
                     <div className="overflow-x-auto">
                       <table className="w-full text-xs text-left">
                         <thead>
-                          <tr className="border-b border-white/5 text-zinc-500 font-bold uppercase tracking-wider text-[9px] bg-white/[0.01]">
+                          <tr className="border-b border-border-custom text-muted font-bold uppercase tracking-wider text-[9px] bg-white/[0.01]">
                             <th className="px-5 py-3 text-center">#</th>
                             <th className="px-5 py-3">Project Name</th>
                             <th className="px-5 py-3">Project Status</th>
@@ -1274,19 +1268,19 @@ export default function DashboardPage() {
                         <tbody>
                           {financialData?.project_summaries?.length === 0 ? (
                             <tr>
-                              <td colSpan={12} className="text-center p-8 text-zinc-500">
+                              <td colSpan={12} className="text-center p-8 text-muted">
                                 No financial data found.
                               </td>
                             </tr>
                           ) : (
                             financialData.project_summaries.map((p: any, idx: number) => (
-                              <tr key={idx} className="border-t border-white/5 hover:bg-white/[0.01] transition-all">
-                                <td className="px-5 py-3.5 text-center text-zinc-500 font-mono">{idx + 1}</td>
+                              <tr key={idx} className="border-t border-border-custom hover:bg-white/[0.01] transition-all">
+                                <td className="px-5 py-3.5 text-center text-muted font-mono">{idx + 1}</td>
                                 <td className="px-5 py-3.5 font-bold text-white">{p.project_name}</td>
                                 <td className="px-5 py-3.5 text-zinc-300">{p.project_status}</td>
                                 <td className="px-5 py-3.5 text-center">
                                   {p.project_health === "-" ? (
-                                    <span className="text-zinc-600 font-bold font-mono">-</span>
+                                    <span className="text-muted font-bold font-mono">-</span>
                                   ) : (
                                     <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold border ${
                                       p.project_health === "Healthy"
@@ -1332,21 +1326,21 @@ export default function DashboardPage() {
                   </div>
 
                   {/* Estimation & Geofence Tools (Auxiliary Panel) */}
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 border-t border-white/5 pt-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 border-t border-border-custom pt-6">
                     {/* Steel calculator widget */}
-                    <div className="lg:col-span-2 rounded-2xl glass-panel p-6 space-y-6">
-                      <div className="flex justify-between items-center border-b border-white/5 pb-4">
+                    <div className="lg:col-span-2 rounded-lg bg-card border border-border-custom rounded-lg p-6 space-y-6">
+                      <div className="flex justify-between items-center border-b border-border-custom pb-4">
                         <h3 className="font-bold text-sm uppercase tracking-wider text-white">IS-456 Steel weight calculator</h3>
-                        <span className="text-xs text-zinc-500">Live API Verification</span>
+                        <span className="text-xs text-muted">Live API Verification</span>
                       </div>
 
                       <form className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-1">
-                          <label className="text-xs text-zinc-400">Diameter (D in mm)</label>
+                          <label className="text-xs text-muted">Diameter (D in mm)</label>
                           <select
                             value={diameter}
                             onChange={(e) => setDiameter(Number(e.target.value))}
-                            className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-white"
+                            className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-white"
                           >
                             <option value={8}>8 mm</option>
                             <option value={10}>10 mm</option>
@@ -1357,55 +1351,55 @@ export default function DashboardPage() {
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-xs text-zinc-400">Main Bar Count</label>
+                          <label className="text-xs text-muted">Main Bar Count</label>
                           <input
                             type="number"
                             value={barCount}
                             onChange={(e) => setBarCount(Number(e.target.value))}
-                            className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-white"
+                            className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-white"
                           />
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-xs text-zinc-400">Length/Height (meters)</label>
+                          <label className="text-xs text-muted">Length/Height (meters)</label>
                           <input
                             type="number"
                             value={barLength}
                             onChange={(e) => setBarLength(Number(e.target.value))}
-                            className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-white"
+                            className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-white"
                           />
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-xs text-zinc-400">Structural Wastage %</label>
+                          <label className="text-xs text-muted">Structural Wastage %</label>
                           <input
                             type="number"
                             value={wastagePercent}
                             onChange={(e) => setWastagePercent(Number(e.target.value))}
-                            className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-white"
+                            className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-white"
                           />
                         </div>
                       </form>
 
-                      <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 flex flex-wrap gap-6 items-center justify-between text-xs">
+                      <div className="p-4 rounded-md bg-elevated border border-border-custom flex flex-wrap gap-6 items-center justify-between text-xs">
                         <div>
-                          <span className="text-zinc-500 block uppercase font-medium">Standard Unit Weight</span>
+                          <span className="text-muted block uppercase font-medium">Standard Unit Weight</span>
                           <span className="font-bold text-white text-base">{standardUnitWeight.toFixed(3)} kg/m</span>
                         </div>
                         <div>
-                          <span className="text-zinc-500 block uppercase font-medium">Total Bar length</span>
+                          <span className="text-muted block uppercase font-medium">Total Bar length</span>
                           <span className="font-bold text-white text-base">{totalBarLength.toFixed(1)} meters</span>
                         </div>
                         <div>
-                          <span className="text-zinc-500 block uppercase font-medium">Reinforcement weight</span>
+                          <span className="text-muted block uppercase font-medium">Reinforcement weight</span>
                           <span className="font-bold text-primary text-base">{reinforcementWeight.toFixed(2)} kg</span>
                         </div>
                       </div>
                     </div>
 
                     {/* Geofencing monitoring panel */}
-                    <div className="rounded-2xl glass-panel p-6 space-y-6 flex flex-col">
-                      <div className="flex justify-between items-center border-b border-white/5 pb-4 shrink-0">
+                    <div className="rounded-lg bg-card border border-border-custom rounded-lg p-6 space-y-6 flex flex-col">
+                      <div className="flex justify-between items-center border-b border-border-custom pb-4 shrink-0">
                         <h3 className="font-bold text-sm uppercase tracking-wider text-white">Geofence Guard</h3>
                         <span className="h-2 w-2 rounded-full bg-success" />
                       </div>
@@ -1421,13 +1415,13 @@ export default function DashboardPage() {
 
                         <div className="text-center space-y-1">
                           <span className="text-xs font-semibold text-white">Attendance coordinates matched</span>
-                          <p className="text-[10px] text-zinc-500 max-w-[200px]">
+                          <p className="text-[10px] text-muted max-w-[200px]">
                             Project Center geofence limits set to 500m radius.
                           </p>
                         </div>
                       </div>
 
-                      <div className="text-xs border-t border-white/5 pt-4 flex justify-between text-zinc-400 shrink-0">
+                      <div className="text-xs border-t border-border-custom pt-4 flex justify-between text-muted shrink-0">
                         <span>1 Alert: Out-of-bounds punch-in</span>
                         <button className="text-primary font-bold hover:underline">Review</button>
                       </div>
@@ -1439,15 +1433,15 @@ export default function DashboardPage() {
           )}
 
           {activeTab === "scheduler" && (
-            <div className="rounded-2xl glass-panel p-6 space-y-6">
-              <div className="flex justify-between items-center border-b border-white/5 pb-4">
+            <div className="rounded-lg bg-card border border-border-custom rounded-lg p-6 space-y-6">
+              <div className="flex justify-between items-center border-b border-border-custom pb-4">
                 <h3 className="font-bold text-sm uppercase tracking-wider text-white">✨ Interactive Gantt Timeline Scheduler</h3>
-                <span className="text-xs text-zinc-500">Module 1: Planning</span>
+                <span className="text-xs text-muted">Module 1: Planning</span>
               </div>
 
               {/* Gantt Simulation */}
-              <div className="w-full bg-[#12101A] border border-white/5 rounded-xl overflow-hidden p-6 space-y-4">
-                <div className="grid grid-cols-12 gap-2 text-[10px] font-bold text-zinc-500 border-b border-white/5 pb-2 uppercase tracking-wider">
+              <div className="w-full bg-input border border-border-custom rounded-md overflow-hidden p-6 space-y-4">
+                <div className="grid grid-cols-12 gap-2 text-[10px] font-bold text-muted border-b border-border-custom pb-2 uppercase tracking-wider">
                   <div className="col-span-3">Task Name</div>
                   <div className="col-span-1 text-center">Days</div>
                   <div className="col-span-8 flex justify-between px-4">
@@ -1463,9 +1457,9 @@ export default function DashboardPage() {
                   {/* Task 1 */}
                   <div className="grid grid-cols-12 gap-2 items-center text-xs">
                     <div className="col-span-3 font-semibold text-white">Shoring Wall Piling</div>
-                    <div className="col-span-1 text-center text-zinc-400">14</div>
-                    <div className="col-span-8 relative h-6 bg-white/[0.02] rounded-lg">
-                      <div className="absolute left-[5%] w-[45%] h-full bg-gradient-to-r from-primary to-[#FF3B6C] rounded-lg flex items-center px-2 text-[10px] font-bold text-white shadow-lg">
+                    <div className="col-span-1 text-center text-muted">14</div>
+                    <div className="col-span-8 relative h-6 bg-elevated rounded-lg">
+                      <div className="absolute left-[5%] w-[45%] h-full bg-primary rounded-lg flex items-center px-2 text-[10px] font-bold text-white shadow-lg">
                         100%
                       </div>
                     </div>
@@ -1474,9 +1468,9 @@ export default function DashboardPage() {
                   {/* Task 2 */}
                   <div className="grid grid-cols-12 gap-2 items-center text-xs">
                     <div className="col-span-3 font-semibold text-white">Raft Foundation Rebar</div>
-                    <div className="col-span-1 text-center text-zinc-400">10</div>
-                    <div className="col-span-8 relative h-6 bg-white/[0.02] rounded-lg">
-                      <div className="absolute left-[48%] w-[32%] h-full bg-gradient-to-r from-secondary to-[#9C85FF] rounded-lg flex items-center px-2 text-[10px] font-bold text-white shadow-lg animate-shimmer">
+                    <div className="col-span-1 text-center text-muted">10</div>
+                    <div className="col-span-8 relative h-6 bg-elevated rounded-lg">
+                      <div className="absolute left-[48%] w-[32%] h-full bg-primary rounded-lg flex items-center px-2 text-[10px] font-bold text-white shadow-lg animate-shimmer">
                         75% (In Progress)
                       </div>
                     </div>
@@ -1485,9 +1479,9 @@ export default function DashboardPage() {
                   {/* Task 3 */}
                   <div className="grid grid-cols-12 gap-2 items-center text-xs">
                     <div className="col-span-3 font-semibold text-white">Base slab Concrete Pouring</div>
-                    <div className="col-span-1 text-center text-zinc-400">5</div>
-                    <div className="col-span-8 relative h-6 bg-white/[0.02] rounded-lg">
-                      <div className="absolute left-[78%] w-[18%] h-full bg-zinc-800 rounded-lg flex items-center px-2 text-[10px] font-medium text-zinc-400">
+                    <div className="col-span-1 text-center text-muted">5</div>
+                    <div className="col-span-8 relative h-6 bg-elevated rounded-lg">
+                      <div className="absolute left-[78%] w-[18%] h-full bg-zinc-800 rounded-lg flex items-center px-2 text-[10px] font-medium text-muted">
                         Planned
                       </div>
                     </div>
@@ -1498,16 +1492,16 @@ export default function DashboardPage() {
           )}
 
           {activeTab === "finance" && (
-            <div className="rounded-2xl glass-panel p-6 space-y-6">
-              <div className="flex justify-between items-center border-b border-white/5 pb-4">
+            <div className="rounded-lg bg-card border border-border-custom rounded-lg p-6 space-y-6">
+              <div className="flex justify-between items-center border-b border-border-custom pb-4">
                 <h3 className="font-bold text-sm uppercase tracking-wider text-white">📊 Waterfall Cashflow Chart</h3>
-                <span className="text-xs text-zinc-500">Module 13: Project P&L</span>
+                <span className="text-xs text-muted">Module 13: Project P&L</span>
               </div>
 
-              <div className="w-full bg-[#12101A] border border-white/5 rounded-xl p-8 flex flex-col md:flex-row items-center justify-between gap-8">
+              <div className="w-full bg-input border border-border-custom rounded-md p-8 flex flex-col md:flex-row items-center justify-between gap-8">
                 {/* SVG Waterfall Chart */}
-                <div className="w-full md:w-2/3 h-64 relative flex items-end justify-between px-6 border-b border-l border-white/10 pb-2">
-                  <div className="h-full absolute left-4 bottom-2 flex flex-col justify-between text-[10px] text-zinc-500 pointer-events-none">
+                <div className="w-full md:w-2/3 h-64 relative flex items-end justify-between px-6 border-b border-l border-border-custom pb-2">
+                  <div className="h-full absolute left-4 bottom-2 flex flex-col justify-between text-[10px] text-muted pointer-events-none">
                     <span>Rs 20 L</span>
                     <span>Rs 15 L</span>
                     <span>Rs 10 L</span>
@@ -1519,21 +1513,21 @@ export default function DashboardPage() {
                   <div className="flex flex-col items-center gap-2 w-16">
                     <span className="text-[10px] font-semibold text-success">Rs 18.5 L</span>
                     <div className="w-full bg-success/80 rounded-t-md h-48 shadow-[0_0_15px_rgba(0,229,163,0.1)]" />
-                    <span className="text-[10px] text-zinc-500">Claim Invoiced</span>
+                    <span className="text-[10px] text-muted">Claim Invoiced</span>
                   </div>
 
                   {/* Bar 2: Materials */}
                   <div className="flex flex-col items-center gap-2 w-16">
                     <span className="text-[10px] font-semibold text-primary">-Rs 6.2 L</span>
                     <div className="w-full bg-primary/80 rounded-t-md h-16 shadow-[0_0_15px_rgba(232,24,76,0.1)]" />
-                    <span className="text-[10px] text-zinc-500">Material POs</span>
+                    <span className="text-[10px] text-muted">Material POs</span>
                   </div>
 
                   {/* Bar 3: Labour */}
                   <div className="flex flex-col items-center gap-2 w-16">
                     <span className="text-[10px] font-semibold text-primary">-Rs 3.1 L</span>
                     <div className="w-full bg-primary/80 rounded-t-md h-8" />
-                    <span className="text-[10px] text-zinc-500">Labour Pay</span>
+                    <span className="text-[10px] text-muted">Labour Pay</span>
                   </div>
 
                   {/* Bar 4: Net P&L */}
@@ -1545,20 +1539,20 @@ export default function DashboardPage() {
                 </div>
 
                 <div className="w-full md:w-1/3 space-y-4">
-                  <h4 className="font-bold text-xs uppercase tracking-widest text-zinc-400">Cashflow Analytics</h4>
+                  <h4 className="font-bold text-xs uppercase tracking-widest text-muted">Cashflow Analytics</h4>
                   <div className="space-y-3 text-xs">
                     <div className="flex justify-between">
-                      <span className="text-zinc-500">Client billing cleared:</span>
+                      <span className="text-muted">Client billing cleared:</span>
                       <span className="font-semibold text-white">Rs 18,50,000</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-zinc-500">Total project spend:</span>
+                      <span className="text-muted">Total project spend:</span>
                       <span className="font-semibold text-white">Rs 9,30,000</span>
                     </div>
-                    <hr className="border-white/5" />
+                    <hr className="border-border-custom" />
                     <div className="flex justify-between">
-                      <span className="text-zinc-500 font-semibold text-primary">Pre-Tax Deduct Section 194C:</span>
-                      <span className="font-semibold text-[#E8184C]">-Rs 37,000</span>
+                      <span className="text-muted font-semibold text-primary">Pre-Tax Deduct Section 194C:</span>
+                      <span className="font-semibold text-primary">-Rs 37,000</span>
                     </div>
                   </div>
                 </div>
@@ -1567,24 +1561,24 @@ export default function DashboardPage() {
           )}
 
           {activeTab === "tally" && (
-            <div className="rounded-2xl glass-panel p-6 space-y-6">
-              <div className="flex justify-between items-center border-b border-white/5 pb-4">
+            <div className="rounded-lg bg-card border border-border-custom rounded-lg p-6 space-y-6">
+              <div className="flex justify-between items-center border-b border-border-custom pb-4">
                 <h3 className="font-bold text-sm uppercase tracking-wider text-white">🔌 Onsite Tally Integration Control</h3>
-                <span className="text-xs text-zinc-500">Module 16: Ledgers Synchronization</span>
+                <span className="text-xs text-muted">Module 16: Ledgers Synchronization</span>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="p-5 rounded-xl border border-white/5 bg-white/[0.01] space-y-3">
-                  <div className="text-xs font-bold text-zinc-500 uppercase tracking-wider">XML Agent Authentication</div>
-                  <div className="p-3 bg-[#15121F] rounded-lg border border-white/10 flex items-center justify-between text-xs">
+                <div className="p-5 rounded-md border border-border-custom bg-white/[0.01] space-y-3">
+                  <div className="text-xs font-bold text-muted uppercase tracking-wider">XML Agent Authentication</div>
+                  <div className="p-3 bg-input rounded-lg border border-border-custom flex items-center justify-between text-xs">
                     <code className="text-secondary font-mono font-bold">SF-TALLY-1082-MUM</code>
-                    <button className="text-[10px] text-zinc-500 hover:text-white uppercase font-bold">Copy Key</button>
+                    <button className="text-[10px] text-muted hover:text-foreground uppercase font-bold">Copy Key</button>
                   </div>
-                  <p className="text-[10px] text-zinc-500">Enter this key into your desktop Tally.ERP agent configuration panel.</p>
+                  <p className="text-[10px] text-muted">Enter this key into your desktop Tally.ERP agent configuration panel.</p>
                 </div>
 
-                <div className="p-5 rounded-xl border border-white/5 bg-white/[0.01] space-y-3">
-                  <div className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Sync Mode Settings</div>
+                <div className="p-5 rounded-md border border-border-custom bg-white/[0.01] space-y-3">
+                  <div className="text-xs font-bold text-muted uppercase tracking-wider">Sync Mode Settings</div>
                   <div className="space-y-2 text-xs">
                     <label className="flex items-center gap-2">
                       <input type="checkbox" defaultChecked className="accent-primary" />
@@ -1597,14 +1591,14 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
-                <div className="p-5 rounded-xl border border-white/5 bg-white/[0.01] space-y-3 flex flex-col justify-between">
+                <div className="p-5 rounded-md border border-border-custom bg-white/[0.01] space-y-3 flex flex-col justify-between">
                   <div>
-                    <div className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Voucher sync logs</div>
-                    <div className="text-xs text-zinc-400 mt-2">
+                    <div className="text-xs font-bold text-muted uppercase tracking-wider">Voucher sync logs</div>
+                    <div className="text-xs text-muted mt-2">
                       Last sync window: <span className="text-white font-medium">Today, 18:42</span>
                     </div>
-                    <div className="text-xs text-zinc-400">
-                      Vouchers sent: <span className="text-[#00E5A3] font-medium">18 Purchases, 2 Payments</span>
+                    <div className="text-xs text-muted">
+                      Vouchers sent: <span className="text-success font-medium">18 Purchases, 2 Payments</span>
                     </div>
                   </div>
                   <button
@@ -1623,35 +1617,35 @@ export default function DashboardPage() {
       {/* 2-Step Project Setup Wizard Modal */}
       {isWizardOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm">
-          <div className="bg-[#0B0910] border border-white/10 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl">
+          <div className="bg-card border border-border-custom rounded-lg w-full max-w-lg overflow-hidden shadow-2xl">
             {/* Header */}
-            <div className="p-6 border-b border-white/5 flex items-center justify-between bg-white/[0.01]">
+            <div className="p-6 border-b border-border-custom flex items-center justify-between bg-white/[0.01]">
               <div>
                 <h3 className="text-sm font-bold uppercase tracking-wider text-white">Creating Project</h3>
-                <p className="text-[10px] text-zinc-500 mt-0.5">Set up your project workspace in 2 steps</p>
+                <p className="text-[10px] text-muted mt-0.5">Set up your project workspace in 2 steps</p>
               </div>
               <button
                 onClick={() => setIsWizardOpen(false)}
-                className="text-zinc-400 hover:text-white text-sm font-bold cursor-pointer"
+                className="text-muted hover:text-foreground text-sm font-bold cursor-pointer"
               >
                 ✕
               </button>
             </div>
 
             {/* Step Indicators */}
-            <div className="px-6 py-4 bg-white/[0.02] border-b border-white/5 flex items-center justify-center gap-8">
+            <div className="px-6 py-4 bg-elevated border-b border-border-custom flex items-center justify-center gap-8">
               <div className="flex items-center gap-2">
                 <span className={`h-6 w-6 rounded-full flex items-center justify-center text-[10px] font-bold ${wizardStep === 1 ? "bg-primary text-white" : "bg-success text-white"}`}>
                   {wizardStep > 1 ? "✓" : "1"}
                 </span>
-                <span className={`text-xs font-semibold ${wizardStep === 1 ? "text-white" : "text-zinc-400"}`}>Project Details</span>
+                <span className={`text-xs font-semibold ${wizardStep === 1 ? "text-white" : "text-muted"}`}>Project Details</span>
               </div>
               <div className="h-px w-12 bg-white/10" />
               <div className="flex items-center gap-2">
-                <span className={`h-6 w-6 rounded-full flex items-center justify-center text-[10px] font-bold ${wizardStep === 2 ? "bg-primary text-white" : "bg-white/5 text-zinc-500"}`}>
+                <span className={`h-6 w-6 rounded-full flex items-center justify-center text-[10px] font-bold ${wizardStep === 2 ? "bg-primary text-white" : "bg-white/5 text-muted"}`}>
                   2
                 </span>
-                <span className={`text-xs font-semibold ${wizardStep === 2 ? "text-white" : "text-zinc-500"}`}>Add Team Member</span>
+                <span className={`text-xs font-semibold ${wizardStep === 2 ? "text-white" : "text-muted"}`}>Add Team Member</span>
               </div>
             </div>
 
@@ -1661,57 +1655,57 @@ export default function DashboardPage() {
                 <>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <label className="text-[11px] text-zinc-400 font-medium">Project Name</label>
+                      <label className="text-[11px] text-muted font-medium">Project Name</label>
                       <input
                         type="text"
                         placeholder="e.g. MP SITE"
                         value={wizardData.name}
                         onChange={(e) => setWizardData({ ...wizardData, name: e.target.value })}
-                        className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-white"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[11px] text-zinc-400 font-medium">Project Code</label>
+                      <label className="text-[11px] text-muted font-medium">Project Code</label>
                       <input
                         type="text"
                         placeholder="e.g. MP-01"
                         value={wizardData.code}
                         onChange={(e) => setWizardData({ ...wizardData, code: e.target.value })}
-                        className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-white"
                       />
                     </div>
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[11px] text-zinc-400 font-medium">Project Address</label>
+                    <label className="text-[11px] text-muted font-medium">Project Address</label>
                     <input
                       type="text"
                       placeholder="e.g. MP ,SATNA"
                       value={wizardData.address}
                       onChange={(e) => setWizardData({ ...wizardData, address: e.target.value })}
-                      className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-white"
+                      className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-white"
                     />
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <label className="text-[11px] text-zinc-400 font-medium">City</label>
+                      <label className="text-[11px] text-muted font-medium">City</label>
                       <input
                         type="text"
                         placeholder="e.g. Satna"
                         value={wizardData.city}
                         onChange={(e) => setWizardData({ ...wizardData, city: e.target.value })}
-                        className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-white"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[11px] text-zinc-400 font-medium">Attendance Radius (meters)</label>
+                      <label className="text-[11px] text-muted font-medium">Attendance Radius (meters)</label>
                       <input
                         type="number"
                         placeholder="500"
                         value={wizardData.attendance_radius_meters}
                         onChange={(e) => setWizardData({ ...wizardData, attendance_radius_meters: Number(e.target.value) })}
-                        className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-white"
                       />
                     </div>
                   </div>
@@ -1719,16 +1713,16 @@ export default function DashboardPage() {
               ) : (
                 <div className="space-y-3">
                   <div className="space-y-1">
-                    <label className="text-[11px] text-zinc-400 font-medium">Team Member Name</label>
+                    <label className="text-[11px] text-muted font-medium">Team Member Name</label>
                     <input
                       type="text"
                       placeholder="e.g. PrateekUpadhyay"
                       value={wizardData.teamMember}
                       onChange={(e) => setWizardData({ ...wizardData, teamMember: e.target.value })}
-                      className="w-full bg-[#15121F] border border-white/10 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-white"
+                      className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-white"
                     />
                   </div>
-                  <p className="text-[10px] text-zinc-500 italic">
+                  <p className="text-[10px] text-muted italic">
                     Assigned members can punch attendance and log reports from their mobile app.
                   </p>
                 </div>
@@ -1736,7 +1730,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Footer */}
-            <div className="p-6 border-t border-white/5 flex items-center justify-between bg-white/[0.01]">
+            <div className="p-6 border-t border-border-custom flex items-center justify-between bg-white/[0.01]">
               <button
                 onClick={() => {
                   if (wizardStep === 2) {
@@ -1745,7 +1739,7 @@ export default function DashboardPage() {
                     setIsWizardOpen(false);
                   }
                 }}
-                className="px-4 py-2 border border-white/10 rounded-lg text-xs font-semibold text-zinc-400 hover:text-white transition-all cursor-pointer"
+                className="px-4 py-2 border border-border-custom rounded-lg text-xs font-semibold text-muted hover:text-foreground transition-all cursor-pointer"
               >
                 {wizardStep === 2 ? "Back" : "Cancel"}
               </button>

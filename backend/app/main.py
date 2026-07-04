@@ -7,7 +7,8 @@ from app.routers import (
     billing, hr, quality, reports, equipment, safety, analytics,
     production, dpr, crm, finance, tally, subcon_attendance, settings,
     assets, three_way, wastage, chat, custom_fields, statutory, face_recognition,
-    subcon_performance, vendor_performance, rfq, labour, towers, budget
+    subcon_performance, vendor_performance, rfq, labour, towers, budget,
+    library, profile
 )
 from app.database import engine, Base
 
@@ -69,6 +70,8 @@ app.include_router(rfq.router, prefix="/apis/v3")
 app.include_router(labour.router, prefix="/apis/v3")
 app.include_router(towers.router, prefix="/apis/v3")
 app.include_router(budget.router, prefix="/apis/v3")
+app.include_router(library.router, prefix="/apis/v3")
+app.include_router(profile.router, prefix="/apis/v3")
 
 @app.get("/")
 def read_root():

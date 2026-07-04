@@ -30,13 +30,13 @@ export default async function IntegrationsIndexPage() {
   const parts = normalizedBody.split(normalizedPlaceholder);
 
   return (
-    <div className="min-h-screen bg-[#0E0C15] text-[#ededed] pb-20 relative">
-      <div className="absolute top-[-10%] right-[-10%] h-[50vw] w-[50vw] rounded-full bg-[#E8184C] opacity-5 blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] left-[-10%] h-[50vw] w-[50vw] rounded-full bg-[#7C5CFF] opacity-5 blur-[120px] pointer-events-none" />
+    <div className="min-h-screen bg-background text-foreground pb-20 relative">
+      <div className="absolute top-[-10%] right-[-10%] h-[50vw] w-[50vw] rounded-full bg-primary opacity-5 blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] left-[-10%] h-[50vw] w-[50vw] rounded-full bg-primary opacity-5 blur-[120px] pointer-events-none" />
 
-      <header className="sticky top-0 z-50 glass-panel border-b border-white/5 px-6 py-4 flex items-center justify-between">
+      <header className="sticky top-0 z-50 bg-card border border-border-custom rounded-lg border-b border-border-custom px-6 py-4 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-[#E8184C] to-[#7C5CFF] font-sans font-bold text-white shadow-md">
+          <div className="flex h-9 w-9 items-center justify-center rounded-md bg-gradient-to-tr bg-primary font-sans font-bold text-white shadow-md">
             S
           </div>
           <span className="text-lg font-bold tracking-tight text-white">
@@ -44,18 +44,18 @@ export default async function IntegrationsIndexPage() {
           </span>
         </Link>
         <div className="flex items-center gap-5">
-          <Link href="/products" className="text-sm text-zinc-400 hover:text-white transition-all">
+          <Link href="/products" className="text-sm text-muted hover:text-foreground transition-all">
             Products
           </Link>
-          <Link href="/login" className="rounded-xl bg-gradient-to-r from-primary to-[#FF3B6C] px-5 py-2 text-sm font-bold text-white hover:opacity-90 transition-all">
+          <Link href="/login" className="rounded-md bg-primary px-5 py-2 text-sm font-bold text-white hover:opacity-90 transition-all">
             Get Started
           </Link>
         </div>
       </header>
 
       {/* Breadcrumb */}
-      <div className="max-w-5xl mx-auto px-6 pt-8 flex items-center gap-2 text-xs text-zinc-500">
-        <Link href="/" className="hover:text-white transition-all">
+      <div className="max-w-5xl mx-auto px-6 pt-8 flex items-center gap-2 text-xs text-muted">
+        <Link href="/" className="hover:text-foreground transition-all">
           Home
         </Link>
         <span>/</span>
@@ -63,22 +63,22 @@ export default async function IntegrationsIndexPage() {
       </div>
 
       <main className="max-w-5xl mx-auto px-6 py-8">
-        <div className="glass-panel rounded-3xl p-8 md:p-12 border border-white/5">
+        <div className="bg-card border border-border-custom rounded-lg rounded-md p-8 md:p-12 border border-border-custom">
           {parts.length > 1 ? (
             <>
               <div
-                className="prose prose-invert max-w-none prose-headings:text-white prose-headings:font-extrabold prose-h1:text-4xl prose-h2:text-2xl prose-p:text-zinc-300 prose-p:leading-relaxed prose-li:text-zinc-300 prose-strong:text-white prose-a:text-secondary hover:prose-a:underline prose-table:border-collapse prose-table:w-full prose-td:border prose-td:border-white/10 prose-td:p-3 prose-th:border prose-th:border-white/10 prose-th:p-3 prose-img:rounded-2xl prose-hr:border-white/10"
+                className="prose prose-invert max-w-none prose-headings:text-white prose-headings:font-extrabold prose-h1:text-4xl prose-h2:text-2xl prose-p:text-zinc-300 prose-p:leading-relaxed prose-li:text-zinc-300 prose-strong:text-white prose-a:text-secondary hover:prose-a:underline prose-table:border-collapse prose-table:w-full prose-td:border prose-td:border-border-custom prose-td:p-3 prose-th:border prose-th:border-border-custom prose-th:p-3 prose-img:rounded-lg prose-hr:border-border-custom"
                 dangerouslySetInnerHTML={{ __html: parts[0] }}
               />
               <IntegrationsGridClient />
               <div
-                className="prose prose-invert max-w-none prose-headings:text-white prose-headings:font-extrabold prose-h1:text-4xl prose-h2:text-2xl prose-p:text-zinc-300 prose-p:leading-relaxed prose-li:text-zinc-300 prose-strong:text-white prose-a:text-secondary hover:prose-a:underline prose-table:border-collapse prose-table:w-full prose-td:border prose-td:border-white/10 prose-td:p-3 prose-th:border prose-th:border-white/10 prose-th:p-3 prose-img:rounded-2xl prose-hr:border-white/10"
+                className="prose prose-invert max-w-none prose-headings:text-white prose-headings:font-extrabold prose-h1:text-4xl prose-h2:text-2xl prose-p:text-zinc-300 prose-p:leading-relaxed prose-li:text-zinc-300 prose-strong:text-white prose-a:text-secondary hover:prose-a:underline prose-table:border-collapse prose-table:w-full prose-td:border prose-td:border-border-custom prose-td:p-3 prose-th:border prose-th:border-border-custom prose-th:p-3 prose-img:rounded-lg prose-hr:border-border-custom"
                 dangerouslySetInnerHTML={{ __html: parts[1] }}
               />
             </>
           ) : (
             <div
-              className="prose prose-invert max-w-none prose-headings:text-white prose-headings:font-extrabold prose-h1:text-4xl prose-h2:text-2xl prose-p:text-zinc-300 prose-p:leading-relaxed prose-li:text-zinc-300 prose-strong:text-white prose-a:text-secondary hover:prose-a:underline prose-table:border-collapse prose-table:w-full prose-td:border prose-td:border-white/10 prose-td:p-3 prose-th:border prose-th:border-white/10 prose-th:p-3 prose-img:rounded-2xl prose-hr:border-white/10"
+              className="prose prose-invert max-w-none prose-headings:text-white prose-headings:font-extrabold prose-h1:text-4xl prose-h2:text-2xl prose-p:text-zinc-300 prose-p:leading-relaxed prose-li:text-zinc-300 prose-strong:text-white prose-a:text-secondary hover:prose-a:underline prose-table:border-collapse prose-table:w-full prose-td:border prose-td:border-border-custom prose-td:p-3 prose-th:border prose-th:border-border-custom prose-th:p-3 prose-img:rounded-lg prose-hr:border-border-custom"
               dangerouslySetInnerHTML={{ __html: page.body }}
             />
           )}

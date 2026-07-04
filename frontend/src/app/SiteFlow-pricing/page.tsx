@@ -11,7 +11,7 @@ const PLANS = [
     period: "/ month",
     billing: "Billed annually",
     highlight: false,
-    color: "border-white/10",
+    color: "border-border-custom",
     badge: null,
     features: [
       "Up to 3 active projects",
@@ -59,7 +59,7 @@ const PLANS = [
     period: "",
     billing: "Contact sales for pricing",
     highlight: false,
-    color: "border-white/10",
+    color: "border-border-custom",
     badge: null,
     features: [
       "Unlimited projects & sites",
@@ -105,21 +105,21 @@ export default function PricingPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   return (
-    <div className="min-h-screen bg-[#0E0C15] text-[#ededed] pb-20 relative">
-      <div className="absolute top-[-10%] right-[-10%] h-[50vw] w-[50vw] rounded-full bg-[#E8184C] opacity-5 blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] left-[-10%] h-[50vw] w-[50vw] rounded-full bg-[#7C5CFF] opacity-5 blur-[120px] pointer-events-none" />
+    <div className="min-h-screen bg-background text-foreground pb-20 relative">
+      <div className="absolute top-[-10%] right-[-10%] h-[50vw] w-[50vw] rounded-full bg-primary opacity-5 blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] left-[-10%] h-[50vw] w-[50vw] rounded-full bg-primary opacity-5 blur-[120px] pointer-events-none" />
 
       {/* Header */}
-      <header className="sticky top-0 z-50 glass-panel border-b border-white/5 px-6 py-4 flex items-center justify-between">
+      <header className="sticky top-0 z-50 bg-card border border-border-custom rounded-lg border-b border-border-custom px-6 py-4 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-[#E8184C] to-[#7C5CFF] font-sans font-bold text-white shadow-md">S</div>
+          <div className="flex h-9 w-9 items-center justify-center rounded-md bg-gradient-to-tr bg-primary font-sans font-bold text-white shadow-md">S</div>
           <span className="text-lg font-bold tracking-tight text-white">Site<span className="text-primary">Flow</span></span>
         </Link>
         <div className="flex items-center gap-5">
-          <Link href="/products" className="hidden md:block text-sm text-zinc-400 hover:text-white transition-all">Products</Link>
-          <Link href="/about" className="hidden md:block text-sm text-zinc-400 hover:text-white transition-all">About</Link>
-          <Link href="/contact" className="hidden md:block text-sm text-zinc-400 hover:text-white transition-all">Contact</Link>
-          <Link href="/login" className="rounded-xl bg-gradient-to-r from-primary to-[#FF3B6C] px-5 py-2 text-sm font-bold text-white hover:opacity-90 transition-all">
+          <Link href="/products" className="hidden md:block text-sm text-muted hover:text-foreground transition-all">Products</Link>
+          <Link href="/about" className="hidden md:block text-sm text-muted hover:text-foreground transition-all">About</Link>
+          <Link href="/contact" className="hidden md:block text-sm text-muted hover:text-foreground transition-all">Contact</Link>
+          <Link href="/login" className="rounded-md bg-primary px-5 py-2 text-sm font-bold text-white hover:opacity-90 transition-all">
             Start Free Trial
           </Link>
         </div>
@@ -134,10 +134,10 @@ export default function PricingPage() {
           Simple, honest pricing.<br />
           <span className="text-gradient-accent">No surprises.</span>
         </h1>
-        <p className="text-zinc-400 text-base max-w-xl mx-auto">
+        <p className="text-muted text-base max-w-xl mx-auto">
           Every plan includes onboarding, training, WhatsApp support, and the full platform. No hidden charges, no locked modules.
         </p>
-        <div className="flex items-center justify-center gap-4 text-xs text-zinc-500 pt-2">
+        <div className="flex items-center justify-center gap-4 text-xs text-muted pt-2">
           <span className="flex items-center gap-1.5">✓ 14-day free trial</span>
           <span className="flex items-center gap-1.5">✓ No credit card needed</span>
           <span className="flex items-center gap-1.5">✓ Cancel anytime</span>
@@ -149,10 +149,10 @@ export default function PricingPage() {
         {PLANS.map((plan, i) => (
           <div
             key={i}
-            className={`relative rounded-3xl border p-8 flex flex-col justify-between space-y-6 transition-all ${
+            className={`relative rounded-md border p-8 flex flex-col justify-between space-y-6 transition-all ${
               plan.highlight
                 ? "bg-gradient-to-b from-primary/10 to-transparent border-primary/40 shadow-xl shadow-primary/10"
-                : "glass-panel border-white/10"
+                : "bg-card border border-border-custom rounded-lg border-border-custom"
             }`}
           >
             {plan.badge && (
@@ -166,16 +166,16 @@ export default function PricingPage() {
             <div className="space-y-4">
               <div>
                 <h2 className="text-xl font-extrabold text-white">{plan.name}</h2>
-                <p className="text-xs text-zinc-500 mt-1">{plan.tagline}</p>
+                <p className="text-xs text-muted mt-1">{plan.tagline}</p>
               </div>
 
               <div className="flex items-end gap-1 pt-2">
                 <span className="text-4xl font-extrabold text-white">{plan.price}</span>
-                <span className="text-sm text-zinc-400 mb-1">{plan.period}</span>
+                <span className="text-sm text-muted mb-1">{plan.period}</span>
               </div>
-              <p className="text-[10px] text-zinc-600 uppercase tracking-wider">{plan.billing}</p>
+              <p className="text-[10px] text-muted uppercase tracking-wider">{plan.billing}</p>
 
-              <div className="border-t border-white/5 pt-4 space-y-2.5">
+              <div className="border-t border-border-custom pt-4 space-y-2.5">
                 {plan.features.map((f, j) => (
                   <div key={j} className="flex items-start gap-2.5 text-xs text-zinc-300">
                     <span className="mt-0.5 text-primary font-bold flex-shrink-0">✓</span>
@@ -187,10 +187,10 @@ export default function PricingPage() {
 
             <Link
               href={plan.ctaLink}
-              className={`w-full text-center block rounded-xl py-3 text-sm font-bold transition-all ${
+              className={`w-full text-center block rounded-md py-3 text-sm font-bold transition-all ${
                 plan.highlight
-                  ? "bg-gradient-to-r from-primary to-[#FF3B6C] text-white hover:opacity-90 shadow-lg shadow-primary/20"
-                  : "bg-white/[0.05] border border-white/10 text-white hover:bg-white/10"
+                  ? "bg-primary text-white hover:opacity-90 shadow-lg shadow-primary/20"
+                  : "bg-white/[0.05] border border-border-custom text-white hover:bg-white/10"
               }`}
             >
               {plan.cta}
@@ -201,7 +201,7 @@ export default function PricingPage() {
 
       {/* Trust Strip */}
       <section className="max-w-4xl mx-auto px-6 py-14 text-center">
-        <div className="glass-panel rounded-2xl p-8 border border-white/5 grid grid-cols-2 md:grid-cols-4 gap-6">
+        <div className="bg-card border border-border-custom rounded-lg rounded-lg p-8 border border-border-custom grid grid-cols-2 md:grid-cols-4 gap-6">
           {[
             { num: "500+", label: "Active Clients" },
             { num: "98%", label: "Renewal Rate" },
@@ -210,7 +210,7 @@ export default function PricingPage() {
           ].map((s, i) => (
             <div key={i} className="text-center space-y-1">
               <div className="text-2xl font-extrabold text-white">{s.num}</div>
-              <div className="text-xs text-zinc-500">{s.label}</div>
+              <div className="text-xs text-muted">{s.label}</div>
             </div>
           ))}
         </div>
@@ -222,7 +222,7 @@ export default function PricingPage() {
         {FAQ.map((item, i) => (
           <div
             key={i}
-            className="glass-panel rounded-2xl border border-white/5 overflow-hidden"
+            className="bg-card border border-border-custom rounded-lg rounded-lg border border-border-custom overflow-hidden"
           >
             <button
               className="w-full flex items-center justify-between p-5 text-left"
@@ -232,7 +232,7 @@ export default function PricingPage() {
               <span className={`text-primary transition-transform text-lg ${openFaq === i ? "rotate-45" : ""}`}>+</span>
             </button>
             {openFaq === i && (
-              <div className="px-5 pb-5 text-sm text-zinc-400 leading-relaxed border-t border-white/5 pt-4">
+              <div className="px-5 pb-5 text-sm text-muted leading-relaxed border-t border-border-custom pt-4">
                 {item.a}
               </div>
             )}
@@ -242,16 +242,16 @@ export default function PricingPage() {
 
       {/* CTA Banner */}
       <section className="max-w-4xl mx-auto px-6">
-        <div className="rounded-3xl bg-gradient-to-r from-primary/20 to-secondary/20 border border-white/10 p-12 text-center space-y-5">
+        <div className="rounded-md bg-gradient-to-r from-primary/20 to-secondary/20 border border-border-custom p-12 text-center space-y-5">
           <h2 className="text-3xl font-extrabold text-white">Start your 14-day free trial today</h2>
-          <p className="text-zinc-400 text-sm max-w-md mx-auto">
+          <p className="text-muted text-sm max-w-md mx-auto">
             Your dedicated onboarding manager loads your data. Most clients are live in under 1 day.
           </p>
           <div className="flex items-center justify-center gap-4 pt-2">
-            <Link href="/login" className="rounded-xl bg-gradient-to-r from-primary to-[#FF3B6C] px-8 py-3 text-sm font-bold text-white hover:opacity-90 transition-all shadow-lg shadow-primary/20">
+            <Link href="/login" className="rounded-md bg-primary px-8 py-3 text-sm font-bold text-white hover:opacity-90 transition-all shadow-lg shadow-primary/20">
               Start Free Trial →
             </Link>
-            <Link href="/contact" className="rounded-xl border border-white/20 px-8 py-3 text-sm font-bold text-white hover:bg-white/5 transition-all">
+            <Link href="/contact" className="rounded-md border border-white/20 px-8 py-3 text-sm font-bold text-white hover:bg-white/5 transition-all">
               Talk to Sales
             </Link>
           </div>

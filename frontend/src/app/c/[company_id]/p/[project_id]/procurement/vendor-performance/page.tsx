@@ -39,23 +39,23 @@ export default function VendorPerformancePage() {
   const onTimePct = (v: VendorPerf) => v.total_grns > 0 ? ((v.on_time_deliveries / v.total_grns) * 100).toFixed(1) : "0.0";
 
   return (
-    <div className="flex h-screen bg-[#0E0C15] text-[#ededed] overflow-hidden font-sans">
-      <aside className="w-56 border-r border-white/5 bg-[#0B0910] flex flex-col shrink-0">
-        <div className="p-4 flex items-center gap-2.5 border-b border-white/5">
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-tr from-[#E8184C] to-[#7C5CFF] font-bold text-white text-xs">S</div>
+    <div className="flex h-screen bg-background text-foreground overflow-hidden font-sans">
+      <aside className="w-56 border-r border-border-custom bg-card flex flex-col shrink-0">
+        <div className="p-4 flex items-center gap-2.5 border-b border-border-custom">
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-tr bg-primary font-bold text-white text-xs">S</div>
           <span className="font-bold text-white text-sm tracking-tight">SiteFlow</span>
         </div>
         <nav className="p-3 flex-1 overflow-y-auto space-y-1">
-          <Link href={`/c/${companyId}/p/${projectId}`} className="flex items-center gap-2 px-3 py-2 text-xs text-zinc-400 hover:text-white hover:bg-white/[0.03] rounded-lg transition-all">
+          <Link href={`/c/${companyId}/p/${projectId}`} className="flex items-center gap-2 px-3 py-2 text-xs text-muted hover:text-foreground hover:bg-white/[0.03] rounded-lg transition-all">
             ← Dashboard
           </Link>
-          <div className="pt-2 pb-1 px-3 text-[10px] font-bold text-zinc-600 uppercase tracking-wider">Procurement</div>
+          <div className="pt-2 pb-1 px-3 text-[10px] font-bold text-muted uppercase tracking-wider">Procurement</div>
           {[
             { href: `/c/${companyId}/p/${projectId}/procurement`, label: "Purchase Orders" },
             { href: `/c/${companyId}/p/${projectId}/procurement/rfq`, label: "RFQ Comparison" },
             { href: `/c/${companyId}/p/${projectId}/procurement/vendor-performance`, label: "Vendor Performance" },
           ].map((item) => (
-            <Link key={item.href} href={item.href} className="block px-3 py-2 text-xs text-zinc-400 hover:text-white hover:bg-white/[0.03] rounded-lg transition-all">
+            <Link key={item.href} href={item.href} className="block px-3 py-2 text-xs text-muted hover:text-foreground hover:bg-white/[0.03] rounded-lg transition-all">
               {item.label}
             </Link>
           ))}
@@ -63,30 +63,30 @@ export default function VendorPerformancePage() {
       </aside>
 
       <div className="flex-1 flex flex-col overflow-hidden relative font-sans">
-        <div className="absolute top-[-10%] right-[-10%] h-[50vw] w-[50vw] rounded-full bg-[#E8184C] opacity-[0.02] blur-[120px] pointer-events-none" />
-        <div className="absolute bottom-[-10%] left-[-10%] h-[50vw] w-[50vw] rounded-full bg-[#7C5CFF] opacity-[0.02] blur-[120px] pointer-events-none" />
+        <div className="absolute top-[-10%] right-[-10%] h-[50vw] w-[50vw] rounded-full bg-primary opacity-[0.02] blur-[120px] pointer-events-none" />
+        <div className="absolute bottom-[-10%] left-[-10%] h-[50vw] w-[50vw] rounded-full bg-primary opacity-[0.02] blur-[120px] pointer-events-none" />
 
-        <div className="border-b border-white/5 bg-[#0D0B14] px-6 py-3.5 flex items-center justify-between z-10">
+        <div className="border-b border-border-custom bg-background px-6 py-3.5 flex items-center justify-between z-10">
           <div>
             <h1 className="text-sm font-bold text-white uppercase tracking-wider">Vendor Performance</h1>
-            <p className="text-[10px] text-zinc-500">On-time delivery · GRN history · Quality issues</p>
+            <p className="text-[10px] text-muted">On-time delivery · GRN history · Quality issues</p>
           </div>
-          <button onClick={fetchData} className="px-4 py-2 rounded-xl border border-white/10 text-xs font-bold hover:bg-white/[0.05] cursor-pointer">Refresh</button>
+          <button onClick={fetchData} className="px-4 py-2 rounded-md border border-border-custom text-xs font-bold hover:bg-white/[0.05] cursor-pointer">Refresh</button>
         </div>
 
         <div className="flex-1 overflow-y-auto p-6 z-10">
-          {loading && <div className="flex items-center justify-center h-48 text-zinc-400 text-xs">Loading...</div>}
+          {loading && <div className="flex items-center justify-center h-48 text-muted text-xs">Loading...</div>}
 
           {!loading && vendors.length === 0 && (
-            <div className="flex items-center justify-center h-48 text-zinc-600 text-xs">No vendor performance data yet. Data is auto-calculated from PO and GRN history.</div>
+            <div className="flex items-center justify-center h-48 text-muted text-xs">No vendor performance data yet. Data is auto-calculated from PO and GRN history.</div>
           )}
 
           {!loading && vendors.length > 0 && (
-            <div className="glass-panel border border-white/5 rounded-2xl overflow-hidden">
+            <div className="bg-card border border-border-custom rounded-lg border border-border-custom rounded-lg overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-xs text-left">
                   <thead>
-                    <tr className="border-b border-white/5 text-zinc-500">
+                    <tr className="border-b border-border-custom text-muted">
                       <th className="px-5 py-3 font-bold">Vendor</th>
                       <th className="px-5 py-3 font-bold text-right">POs</th>
                       <th className="px-5 py-3 font-bold text-right">GRNs</th>
@@ -106,7 +106,7 @@ export default function VendorPerformancePage() {
                           <td className="px-5 py-3.5 text-right font-mono text-zinc-300">{v.total_pos}</td>
                           <td className="px-5 py-3.5 text-right font-mono text-zinc-300">{v.total_grns}</td>
                           <td className="px-5 py-3.5 text-right font-mono text-primary">{otp}%</td>
-                          <td className="px-5 py-3.5 text-right font-mono text-zinc-400">{v.avg_delay_days.toFixed(1)}</td>
+                          <td className="px-5 py-3.5 text-right font-mono text-muted">{v.avg_delay_days.toFixed(1)}</td>
                           <td className="px-5 py-3.5 text-right font-mono text-red-400">{v.quality_issues}</td>
                           <td className="px-5 py-3.5 text-center">
                             <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${rating} border-current/20`}>

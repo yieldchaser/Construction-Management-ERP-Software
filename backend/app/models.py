@@ -27,6 +27,10 @@ class Company(Base):
     negative_balance_warning = Column(Boolean, default=False, server_default="0", nullable=False)
     custom_pdf_template_enabled = Column(Boolean, default=False, server_default="0", nullable=False)
     google_sheets_auth_phone = Column(String(50), nullable=True)
+    onboarding_segment = Column(String(255), nullable=True)
+    onboarding_categories = Column(String(500), nullable=True)
+    onboarding_city = Column(String(100), nullable=True)
+    onboarding_completed = Column(Boolean, default=False, nullable=False)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), default=func.now(), onupdate=func.now(), nullable=False)
 
@@ -1377,3 +1381,95 @@ class MusterRoll(Base):
     overtime_hours = Column(Numeric(5, 2), default=0.0, nullable=False)
     notes = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Competitor Parity — Company Libraries
+# ─────────────────────────────────────────────────────────────────────────────
+
+class LibraryParty(Base):
+    __tablename__ = "library_parties"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    party_id_custom = Column(String(100), nullable=True) # Prefilled Party ID (e.g. PID-1)
+    name = Column(String(255), nullable=False)
+    phone = Column(String(50), nullable=True)
+    email = Column(String(255), nullable=True)
+    party_type = Column(String(100), nullable=True) # e.g. Supplier, Subcontractor, Client
+    address = Column(String, nullable=True)
+    date_of_joining = Column(DateTime(timezone=True), nullable=True)
+    aadhaar_number = Column(String(50), nullable=True)
+    pan_number = Column(String(50), nullable=True)
+    aadhaar_file = Column(String, nullable=True) # file path or name
+    pan_file = Column(String, nullable=True) # file path or name
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+class LibraryAssetType(Base):
+    __tablename__ = "library_asset_types"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    name = Column(String(255), nullable=False)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+class LibraryCostCode(Base):
+    __tablename__ = "library_cost_codes"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    code = Column(String(100), nullable=False)
+    name = Column(String(255), nullable=False)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+class LibraryDeduction(Base):
+    __tablename__ = "library_deductions"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    name = Column(String(255), nullable=False)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+class LibraryProgress(Base):
+    __tablename__ = "library_progresses"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    name = Column(String(255), nullable=False)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+class LibraryWorkforce(Base):
+    __tablename__ = "library_workforces"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    name = Column(String(255), nullable=False)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+class LibraryMaterial(Base):
+    __tablename__ = "library_materials"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    name = Column(String(255), nullable=False)
+    unit = Column(String(50), nullable=False)
+    gst_rate = Column(Numeric(5, 2), default=0.0, nullable=False)
+    category = Column(String(100), nullable=True)
+    unit_cost = Column(Numeric(18, 2), default=0.0, nullable=False)
+    lead_time_days = Column(Integer, default=0, nullable=False)
+    hsn_sac = Column(String(50), nullable=True)
+    item_code = Column(String(100), nullable=True)
+    specifications = Column(String, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+class LibraryRate(Base):
+    __tablename__ = "library_rates"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    name = Column(String(255), nullable=False)
+    item_code = Column(String(100), nullable=True)
+    unit = Column(String(50), nullable=False)
+    gst_rate = Column(Numeric(5, 2), default=0.0, nullable=False)
+    category = Column(String(100), nullable=True)
+    unit_cost = Column(Numeric(18, 2), default=0.0, nullable=False)
+    markup_value = Column(Numeric(18, 2), default=0.0, nullable=False)
+    markup_type = Column(String(10), default="percent", nullable=False) # percent or flat
+    unit_sale_price = Column(Numeric(18, 2), default=0.0, nullable=False)
+    note = Column(String, nullable=True)
+    cost_code = Column(String(100), nullable=True)
+    hsn_sac = Column(String(50), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+

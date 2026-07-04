@@ -45,7 +45,7 @@ const SECTION_COLORS: Record<string, string> = {
   "3 — Masonry": "bg-amber-500/10 text-amber-400 border-amber-500/20",
   "4 — Finishes": "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
   "5 — MEP": "bg-cyan-500/10 text-cyan-400 border-cyan-500/20",
-  "6 — Provisional / Contingency": "bg-zinc-500/10 text-zinc-400 border-zinc-500/20",
+  "6 — Provisional / Contingency": "bg-zinc-500/10 text-muted border-zinc-500/20",
 };
 
 function fmt(n: number) { return "₹" + n.toLocaleString("en-IN"); }
@@ -140,34 +140,34 @@ export default function BOQPage() {
   };
 
   return (
-    <div className="flex h-screen bg-[#0E0C15] text-[#ededed] overflow-hidden">
+    <div className="flex h-screen bg-background text-foreground overflow-hidden">
       {/* Sidebar */}
-      <aside className="w-60 shrink-0 border-r border-white/5 bg-[#0B0910] flex flex-col overflow-hidden">
-        <div className="px-5 py-4 border-b border-white/5 flex items-center gap-2.5">
-          <div className="h-7 w-7 rounded-lg bg-gradient-to-tr from-[#E8184C] to-[#7C5CFF] flex items-center justify-center text-xs font-black text-white">S</div>
+      <aside className="w-60 shrink-0 border-r border-border-custom bg-card flex flex-col overflow-hidden">
+        <div className="px-5 py-4 border-b border-border-custom flex items-center gap-2.5">
+          <div className="h-7 w-7 rounded-lg bg-gradient-to-tr bg-primary flex items-center justify-center text-xs font-black text-white">S</div>
           <span className="font-bold text-sm text-white">SiteFlow</span>
         </div>
         <nav className="flex-1 p-3 overflow-y-auto space-y-1">
-          <Link href={`/c/${companyId}/dashboard`} className="flex items-center gap-2 px-3 py-2 text-xs text-zinc-500 hover:text-white rounded-lg hover:bg-white/[0.02]">← Dashboard</Link>
+          <Link href={`/c/${companyId}/dashboard`} className="flex items-center gap-2 px-3 py-2 text-xs text-muted hover:text-foreground rounded-lg hover:bg-elevated">← Dashboard</Link>
           <div className="pt-3">
-            <div className="px-3 mb-1.5 text-[9px] uppercase tracking-widest text-zinc-600 font-bold">Budgeting</div>
+            <div className="px-3 mb-1.5 text-[9px] uppercase tracking-widest text-muted font-bold">Budgeting</div>
             {[
               { key: "boq", label: "BOQ Line Items", icon: "📑" },
               { key: "variance", label: "Budget vs Actual", icon: "📊" },
               { key: "revisions", label: "Budget Revisions", icon: "📋" },
             ].map(m => (
               <button key={m.key} onClick={() => setTab(m.key as any)}
-                className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium rounded-lg text-left transition-all ${tab === m.key ? "bg-primary/10 text-primary" : "text-zinc-400 hover:text-white hover:bg-white/[0.02]"}`}>
+                className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium rounded-lg text-left transition-all ${tab === m.key ? "bg-primary/10 text-primary" : "text-muted hover:text-foreground hover:bg-elevated"}`}>
                 <span>{m.icon}</span>{m.label}
               </button>
             ))}
           </div>
           <div className="pt-3">
-            <div className="px-3 mb-1.5 text-[9px] uppercase tracking-widest text-zinc-600 font-bold">Related</div>
-            <Link href={`/c/${companyId}/p/${projectId}/planning/gantt`} className="flex items-center gap-2.5 px-3 py-2 text-xs text-zinc-400 hover:text-white rounded-lg hover:bg-white/[0.02]">
+            <div className="px-3 mb-1.5 text-[9px] uppercase tracking-widest text-muted font-bold">Related</div>
+            <Link href={`/c/${companyId}/p/${projectId}/planning/gantt`} className="flex items-center gap-2.5 px-3 py-2 text-xs text-muted hover:text-foreground rounded-lg hover:bg-elevated">
               <span>📅</span> Gantt / WBS
             </Link>
-            <Link href={`/c/${companyId}/p/${projectId}/finance`} className="flex items-center gap-2.5 px-3 py-2 text-xs text-zinc-400 hover:text-white rounded-lg hover:bg-white/[0.02]">
+            <Link href={`/c/${companyId}/p/${projectId}/finance`} className="flex items-center gap-2.5 px-3 py-2 text-xs text-muted hover:text-foreground rounded-lg hover:bg-elevated">
               <span>💰</span> Finance Ledger
             </Link>
           </div>
@@ -176,12 +176,12 @@ export default function BOQPage() {
 
       {/* Main */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="h-14 border-b border-white/5 bg-[#0B0910] px-6 flex items-center justify-between shrink-0">
+        <header className="h-14 border-b border-border-custom bg-card px-6 flex items-center justify-between shrink-0">
           <div>
             <h1 className="text-sm font-bold text-white">
               {tab === "boq" ? "Bill of Quantities (BOQ)" : tab === "variance" ? "Budget vs Actual Variance" : "Budget Revisions"}
             </h1>
-            <div className="text-[10px] text-zinc-500">Total Budget: {fmt(totalBudget)} · Spent: {fmt(totalActual)}</div>
+            <div className="text-[10px] text-muted">Total Budget: {fmt(totalBudget)} · Spent: {fmt(totalActual)}</div>
           </div>
           <div className="flex items-center gap-3">
             {/* KPI pill */}
@@ -189,7 +189,7 @@ export default function BOQPage() {
               {overallPct > 0 ? "+" : ""}{overallPct.toFixed(1)}% overall variance
             </div>
             {/* Import trigger */}
-            <label className="px-3 py-1.5 bg-gradient-to-r from-primary to-[#FF3B6C] text-white text-xs font-bold rounded-lg hover:opacity-90 cursor-pointer transition-all">
+            <label className="px-3 py-1.5 bg-primary text-white text-xs font-bold rounded-lg hover:opacity-90 cursor-pointer transition-all">
               ↑ Import Excel
               <input type="file" accept=".xlsx,.xlsm" className="hidden" onChange={e => { if (e.target.files?.[0]) { setFile(e.target.files[0]); handleImport(new Event("submit") as any); } }} />
             </label>
@@ -202,12 +202,12 @@ export default function BOQPage() {
           {tab === "boq" && (
             <div className="flex flex-col h-full overflow-hidden">
               {/* Filters */}
-              <div className="flex items-center gap-3 px-5 py-3 border-b border-white/5 shrink-0">
-                <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search item, code, section..." className="flex-1 bg-[#14121F] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white placeholder-zinc-600" />
+              <div className="flex items-center gap-3 px-5 py-3 border-b border-border-custom shrink-0">
+                <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search item, code, section..." className="flex-1 bg-input border border-border-custom rounded-lg px-3 py-1.5 text-xs text-white placeholder-zinc-600" />
                 <div className="flex gap-1">
                   {["All", ...sections].map(s => (
                     <button key={s} onClick={() => setFilterSection(s)}
-                      className={`px-2.5 py-1 text-[9px] font-bold rounded-lg transition-all ${filterSection === s ? "bg-primary text-white" : "bg-white/5 text-zinc-400 hover:text-white"}`}>
+                      className={`px-2.5 py-1 text-[9px] font-bold rounded-lg transition-all ${filterSection === s ? "bg-primary text-white" : "bg-white/5 text-muted hover:text-foreground"}`}>
                       {s === "All" ? "All" : s.split("—")[0].trim()}
                     </button>
                   ))}
@@ -217,8 +217,8 @@ export default function BOQPage() {
               {/* Table */}
               <div className="flex-1 overflow-auto">
                 <table className="w-full text-xs text-left border-collapse">
-                  <thead className="sticky top-0 z-10 bg-[#0E0C15]">
-                    <tr className="border-b border-white/5 text-zinc-500 font-bold uppercase tracking-wider text-[9px]">
+                  <thead className="sticky top-0 z-10 bg-background">
+                    <tr className="border-b border-border-custom text-muted font-bold uppercase tracking-wider text-[9px]">
                       <th className="py-3 pl-5 pr-3">Cost Code</th>
                       <th className="py-3 pr-4">Description</th>
                       <th className="py-3 px-3 text-center">Unit</th>
@@ -234,15 +234,15 @@ export default function BOQPage() {
                     {Object.entries(groupedFiltered).map(([section, items]) => {
                       const secBudget = items.reduce((s, i) => s + i.amount, 0);
                       const secActual = items.reduce((s, i) => s + i.actual_spent, 0);
-                      const sColor = SECTION_COLORS[section] ?? "bg-zinc-500/10 text-zinc-400 border-zinc-500/20";
+                      const sColor = SECTION_COLORS[section] ?? "bg-zinc-500/10 text-muted border-zinc-500/20";
                       return (
                         <React.Fragment key={section}>
                           {/* Section header */}
-                          <tr className="border-b border-white/5">
+                          <tr className="border-b border-border-custom">
                             <td colSpan={9} className="py-2 pl-5 bg-white/[0.01]">
                               <div className="flex items-center gap-3">
                                 <span className={`text-[9px] font-bold px-2 py-0.5 rounded border ${sColor}`}>{section}</span>
-                                <span className="text-[10px] text-zinc-500">Budget: {fmt(secBudget)} · Actual: {fmt(secActual)}</span>
+                                <span className="text-[10px] text-muted">Budget: {fmt(secBudget)} · Actual: {fmt(secActual)}</span>
                               </div>
                             </td>
                           </tr>
@@ -253,9 +253,9 @@ export default function BOQPage() {
                             const sb = statusBadge(vPct);
                             return (
                               <tr key={item.id} className="border-b border-white/[0.03] hover:bg-white/[0.015] transition-colors">
-                                <td className="py-3 pl-5 pr-3 font-mono text-zinc-400">{item.costCode}</td>
+                                <td className="py-3 pl-5 pr-3 font-mono text-muted">{item.costCode}</td>
                                 <td className="py-3 pr-4 text-white font-medium">{item.item_name}</td>
-                                <td className="py-3 px-3 text-center text-zinc-500">{item.unit}</td>
+                                <td className="py-3 px-3 text-center text-muted">{item.unit}</td>
                                 <td className="py-3 px-3 text-right font-mono text-zinc-300">{fmtN(item.quantity)}</td>
                                 <td className="py-3 px-3 text-right font-mono text-zinc-300">{fmtN(item.rate)}</td>
                                 <td className="py-3 px-3 text-right font-mono font-semibold text-zinc-200">{fmt(item.amount)}</td>
@@ -274,8 +274,8 @@ export default function BOQPage() {
                       );
                     })}
                   </tbody>
-                  <tfoot className="border-t-2 border-white/10">
-                    <tr className="bg-[#14121F]">
+                  <tfoot className="border-t-2 border-border-custom">
+                    <tr className="bg-input">
                       <td colSpan={5} className="py-3 pl-5 font-bold text-white text-xs">PROJECT TOTAL</td>
                       <td className="py-3 px-3 text-right font-bold text-white font-mono">{fmt(totalBudget)}</td>
                       <td className="py-3 px-3 text-right font-bold text-white font-mono">{fmt(totalActual)}</td>
@@ -304,16 +304,16 @@ export default function BOQPage() {
                   { label: "Variance (₹)", value: (totalVariance >= 0 ? "+" : "") + fmt(totalVariance), sub: totalVariance > 0 ? "Over budget" : "Under budget", color: varColor(overallPct) },
                   { label: "Variance (%)", value: (overallPct > 0 ? "+" : "") + overallPct.toFixed(1) + "%", sub: statusBadge(overallPct).label, color: varColor(overallPct) },
                 ].map(k => (
-                  <div key={k.label} className="bg-[#14121F] border border-white/5 rounded-xl p-4">
-                    <div className="text-[9px] uppercase tracking-widest text-zinc-500">{k.label}</div>
+                  <div key={k.label} className="bg-input border border-border-custom rounded-md p-4">
+                    <div className="text-[9px] uppercase tracking-widest text-muted">{k.label}</div>
                     <div className={`text-xl font-black mt-1 ${k.color}`}>{k.value}</div>
-                    <div className="text-[10px] text-zinc-600 mt-0.5">{k.sub}</div>
+                    <div className="text-[10px] text-muted mt-0.5">{k.sub}</div>
                   </div>
                 ))}
               </div>
 
               {/* Section summary bars */}
-              <div className="bg-[#14121F] border border-white/5 rounded-xl p-5 space-y-4">
+              <div className="bg-input border border-border-custom rounded-md p-5 space-y-4">
                 <h3 className="text-xs font-bold text-zinc-300 uppercase tracking-wider">Section-wise Budget vs Actual</h3>
                 {sections.map(section => {
                   const secItems = boqItems.filter(i => i.section === section);
@@ -321,15 +321,15 @@ export default function BOQPage() {
                   const sActual = secItems.reduce((s, i) => s + i.actual_spent, 0);
                   const pct = (sActual / sBudget) * 100;
                   const vp = varPct(sBudget, sActual);
-                  const sColor = SECTION_COLORS[section] ?? "bg-zinc-500/10 text-zinc-400 border-zinc-500/20";
+                  const sColor = SECTION_COLORS[section] ?? "bg-zinc-500/10 text-muted border-zinc-500/20";
                   return (
                     <div key={section} className="space-y-1.5">
                       <div className="flex items-center justify-between text-xs">
                         <span className={`text-[9px] font-bold px-2 py-0.5 rounded border ${sColor}`}>{section}</span>
                         <div className="text-right">
                           <span className="text-zinc-300 font-mono">{fmt(sActual)}</span>
-                          <span className="text-zinc-600 mx-1">/</span>
-                          <span className="text-zinc-500 font-mono">{fmt(sBudget)}</span>
+                          <span className="text-muted mx-1">/</span>
+                          <span className="text-muted font-mono">{fmt(sBudget)}</span>
                           <span className={`ml-2 text-[10px] font-bold ${varColor(vp)}`}>({vp > 0 ? "+" : ""}{vp.toFixed(1)}%)</span>
                         </div>
                       </div>
@@ -343,11 +343,11 @@ export default function BOQPage() {
               </div>
 
               {/* Variance table by cost code */}
-              <div className="bg-[#14121F] border border-white/5 rounded-xl overflow-hidden">
-                <div className="px-5 py-3 border-b border-white/5 text-xs font-bold text-zinc-300">Cost Code Variance Detail</div>
+              <div className="bg-input border border-border-custom rounded-md overflow-hidden">
+                <div className="px-5 py-3 border-b border-border-custom text-xs font-bold text-zinc-300">Cost Code Variance Detail</div>
                 <table className="w-full text-xs text-left">
                   <thead>
-                    <tr className="border-b border-white/5 text-zinc-500 text-[9px] uppercase tracking-wider">
+                    <tr className="border-b border-border-custom text-muted text-[9px] uppercase tracking-wider">
                       <th className="py-2.5 pl-5 pr-3">Code</th>
                       <th className="py-2.5 pr-4">Description</th>
                       <th className="py-2.5 px-3 text-right">Budget</th>
@@ -365,14 +365,14 @@ export default function BOQPage() {
                       const eac = pctComplete > 0 ? item.actual_spent / pctComplete : item.amount;
                       return (
                         <tr key={item.id} className="hover:bg-white/[0.01]">
-                          <td className="py-2.5 pl-5 pr-3 font-mono text-zinc-500">{item.costCode}</td>
+                          <td className="py-2.5 pl-5 pr-3 font-mono text-muted">{item.costCode}</td>
                           <td className="py-2.5 pr-4 text-zinc-300 line-clamp-1">{item.item_name}</td>
-                          <td className="py-2.5 px-3 text-right font-mono text-zinc-400">{fmt(item.amount)}</td>
+                          <td className="py-2.5 px-3 text-right font-mono text-muted">{fmt(item.amount)}</td>
                           <td className="py-2.5 px-3 text-right font-mono text-zinc-300">{fmt(item.actual_spent)}</td>
                           <td className={`py-2.5 px-3 text-right font-mono font-bold ${varColor(vPct)}`}>
                             {vAmt >= 0 ? "+" : ""}{fmt(vAmt)}
                           </td>
-                          <td className={`py-2.5 pr-5 text-right font-mono text-[10px] ${eac > item.amount ? "text-red-400" : "text-zinc-400"}`}>
+                          <td className={`py-2.5 pr-5 text-right font-mono text-[10px] ${eac > item.amount ? "text-red-400" : "text-muted"}`}>
                             {fmt(Math.round(eac))}
                           </td>
                         </tr>
@@ -380,7 +380,7 @@ export default function BOQPage() {
                     })}
                   </tbody>
                 </table>
-                <div className="px-5 py-2 border-t border-white/5 text-[9px] text-zinc-600">* EAC = Estimate at Completion (extrapolated from actual spend). Assumes proportional burn rate.</div>
+                <div className="px-5 py-2 border-t border-border-custom text-[9px] text-muted">* EAC = Estimate at Completion (extrapolated from actual spend). Assumes proportional burn rate.</div>
               </div>
             </div>
           )}
@@ -390,28 +390,28 @@ export default function BOQPage() {
             <div className="h-full overflow-y-auto p-5 space-y-4">
               <div className="grid gap-3">
                 {revisions.map((rev, idx) => (
-                  <div key={rev.id} className={`bg-[#14121F] border rounded-xl p-5 ${idx === revisions.length - 1 ? "border-primary/30 ring-1 ring-primary/10" : "border-white/5"}`}>
+                  <div key={rev.id} className={`bg-input border rounded-md p-5 ${idx === revisions.length - 1 ? "border-border-custom ring-1 ring-primary/10" : "border-border-custom"}`}>
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-3">
-                        <span className={`text-[9px] font-bold px-2 py-0.5 rounded border ${idx === revisions.length - 1 ? "bg-primary/10 border-primary/20 text-primary" : "bg-zinc-700/30 border-zinc-600/20 text-zinc-400"}`}>
+                        <span className={`text-[9px] font-bold px-2 py-0.5 rounded border ${idx === revisions.length - 1 ? "bg-primary/10 border-primary/20 text-primary" : "bg-zinc-700/30 border-zinc-600/20 text-muted"}`}>
                           {idx === revisions.length - 1 ? "CURRENT" : `REV ${idx}`}
                         </span>
                         <span className="text-sm font-bold text-white">{rev.version}</span>
                       </div>
-                      <span className="text-[10px] text-zinc-500">{rev.date}</span>
+                      <span className="text-[10px] text-muted">{rev.date}</span>
                     </div>
-                    <div className="text-xs text-zinc-400">{rev.note}</div>
+                    <div className="text-xs text-muted">{rev.note}</div>
                     <div className="mt-2 text-lg font-black text-primary">{fmt(rev.totalBudget)}</div>
                   </div>
                 ))}
               </div>
               {/* Import trigger for BOQ */}
-              <div className="bg-[#14121F] border border-dashed border-white/10 rounded-xl p-5 text-center space-y-2">
-                <div className="text-xs font-bold text-zinc-400">Import New BOQ / Revised Budget</div>
-                <div className="text-[10px] text-zinc-600">Upload an Excel (.xlsx) with columns: item_name, unit, qty, rate, cost_code</div>
+              <div className="bg-input border border-dashed border-border-custom rounded-md p-5 text-center space-y-2">
+                <div className="text-xs font-bold text-muted">Import New BOQ / Revised Budget</div>
+                <div className="text-[10px] text-muted">Upload an Excel (.xlsx) with columns: item_name, unit, qty, rate, cost_code</div>
                 {importMsg && <div className="text-xs text-emerald-400">{importMsg}</div>}
                 <form onSubmit={handleImport} className="flex justify-center gap-2">
-                  <label className="px-4 py-2 bg-white/5 border border-white/10 text-zinc-300 text-xs rounded-lg cursor-pointer hover:bg-white/10">
+                  <label className="px-4 py-2 bg-white/5 border border-border-custom text-zinc-300 text-xs rounded-lg cursor-pointer hover:bg-white/10">
                     {file ? file.name : "Select Excel File"}
                     <input type="file" accept=".xlsx,.xlsm" className="hidden" onChange={e => { if (e.target.files?.[0]) setFile(e.target.files[0]); }} />
                   </label>

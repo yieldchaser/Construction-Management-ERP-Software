@@ -110,15 +110,15 @@ export default async function HelpCenterPage() {
   );
 
   return (
-    <div className="min-h-screen bg-[#0E0C15] text-[#ededed] relative pb-20">
+    <div className="min-h-screen bg-background text-foreground relative pb-20">
       {/* Background glow elements */}
-      <div className="absolute top-[-10%] right-[-10%] h-[50vw] w-[50vw] rounded-full bg-[#E8184C] opacity-5 blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] left-[-10%] h-[50vw] w-[50vw] rounded-full bg-[#7C5CFF] opacity-5 blur-[120px] pointer-events-none" />
+      <div className="absolute top-[-10%] right-[-10%] h-[50vw] w-[50vw] rounded-full bg-primary opacity-5 blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] left-[-10%] h-[50vw] w-[50vw] rounded-full bg-primary opacity-5 blur-[120px] pointer-events-none" />
 
       {/* Header */}
-      <header className="sticky top-0 z-50 glass-panel border-b border-white/5 px-6 py-4 flex items-center justify-between">
+      <header className="sticky top-0 z-50 bg-card border border-border-custom rounded-lg border-b border-border-custom px-6 py-4 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-[#E8184C] to-[#7C5CFF] font-sans font-bold text-white shadow-md">
+          <div className="flex h-9 w-9 items-center justify-center rounded-md bg-gradient-to-tr bg-primary font-sans font-bold text-white shadow-md">
             S
           </div>
           <span className="text-lg font-bold tracking-tight text-white">
@@ -127,7 +127,7 @@ export default async function HelpCenterPage() {
         </Link>
         <Link
           href="/"
-          className="text-sm font-semibold text-zinc-400 hover:text-white transition-all"
+          className="text-sm font-semibold text-muted hover:text-foreground transition-all"
         >
           Back to Main Site
         </Link>
@@ -141,7 +141,7 @@ export default async function HelpCenterPage() {
         <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-white leading-tight">
           How can we help you today?
         </h1>
-        <p className="text-zinc-400 text-sm max-w-xl mx-auto">
+        <p className="text-muted text-sm max-w-xl mx-auto">
           Search detailed guides, tutorials, and operational workflows for SiteFlow modules.
         </p>
       </section>

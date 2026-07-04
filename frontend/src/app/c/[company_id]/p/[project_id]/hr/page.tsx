@@ -549,8 +549,8 @@ export default function HRPayrollPage() {
   const tabClass = (t: string) =>
     `px-4 py-2 text-xs font-bold rounded-lg transition-all ${
       tab === t
-        ? "bg-primary/15 text-primary border border-primary/30"
-        : "text-zinc-400 hover:text-white hover:bg-white/[0.04]"
+        ? "bg-primary/15 text-primary border border-border-custom"
+        : "text-muted hover:text-foreground hover:bg-white/[0.04]"
     }`;
 
   const statusBadge = (s: string) => {
@@ -560,14 +560,14 @@ export default function HRPayrollPage() {
       Absent: "bg-red-500/15 text-red-400 border-red-500/20",
       "Half-Day": "bg-orange-500/15 text-orange-400 border-orange-500/20",
       Leave: "bg-blue-500/15 text-blue-400 border-blue-500/20",
-      draft: "bg-zinc-500/15 text-zinc-400 border-zinc-500/20",
+      draft: "bg-zinc-500/15 text-muted border-zinc-500/20",
       submitted: "bg-blue-500/15 text-blue-400 border-blue-500/20",
       approved: "bg-green-500/15 text-green-400 border-green-500/20",
       rejected: "bg-red-500/15 text-red-400 border-red-500/20",
       finalized: "bg-purple-500/15 text-purple-400 border-purple-500/20",
       paid: "bg-green-500/15 text-green-400 border-green-500/20",
     };
-    return `inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${map[s] ?? "bg-zinc-700/30 text-zinc-400 border-zinc-700"}`;
+    return `inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${map[s] ?? "bg-zinc-700/30 text-muted border-zinc-700"}`;
   };
 
   return (
@@ -575,7 +575,7 @@ export default function HRPayrollPage() {
       {/* Sidebar */}
       <aside className="w-56 border-r border-border-custom bg-sidebar flex flex-col shrink-0">
         <div className="p-5 border-b border-border-custom flex items-center gap-2.5">
-          <div className="h-7 w-7 rounded-lg bg-gradient-to-tr from-[#E8184C] to-[#7C5CFF] flex items-center justify-center font-bold text-white text-xs">S</div>
+          <div className="h-7 w-7 rounded-lg bg-gradient-to-tr bg-primary flex items-center justify-center font-bold text-white text-xs">S</div>
           <span className="font-bold text-white text-sm">SiteFlow HR</span>
         </div>
         <nav className="p-3 flex-1 space-y-1">
@@ -587,13 +587,13 @@ export default function HRPayrollPage() {
             ["leaves", "📅", "Leaves"],
           ] as const).map(([key, icon, label]) => (
             <button key={key} onClick={() => setTab(key)}
-              className={`w-full text-left flex items-center gap-2 px-3 py-2 text-xs font-semibold rounded-lg transition-all ${tab === key ? "bg-white/[0.06] text-white font-semibold shadow-sm" : "text-zinc-400 hover:text-white hover:bg-white/[0.03]"}`}>
+              className={`w-full text-left flex items-center gap-2 px-3 py-2 text-xs font-semibold rounded-lg transition-all ${tab === key ? "bg-primary/10 text-white font-semibold shadow-sm" : "text-muted hover:text-foreground hover:bg-white/[0.03]"}`}>
               <span>{icon}</span> {label}
             </button>
           ))}
-          <div className="pt-4 border-t border-white/5 mt-4">
+          <div className="pt-4 border-t border-border-custom mt-4">
             <Link href={`/c/${companyId}/dashboard`}
-              className="flex items-center gap-2 px-3 py-2 text-xs text-zinc-500 hover:text-white transition-colors rounded-lg hover:bg-white/[0.03]">
+              className="flex items-center gap-2 px-3 py-2 text-xs text-muted hover:text-foreground transition-colors rounded-lg hover:bg-white/[0.03]">
               ← Dashboard
             </Link>
           </div>
@@ -617,7 +617,7 @@ export default function HRPayrollPage() {
             {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
-              className="flex items-center justify-center h-8 w-8 rounded-lg bg-white/[0.04] border border-border-custom text-zinc-400 hover:text-white transition-all cursor-pointer"
+              className="flex items-center justify-center h-8 w-8 rounded-lg bg-white/[0.04] border border-border-custom text-muted hover:text-foreground transition-all cursor-pointer"
               title="Toggle Theme"
             >
               {isLightTheme ? "🌙" : "☀️"}
@@ -651,41 +651,41 @@ export default function HRPayrollPage() {
                   { label: "Departments", val: new Set(employees.map(e => e.department)).size, color: "text-secondary" },
                   { label: "PF Enrolled", val: employees.length, color: "text-blue-400" },
                 ].map(({ label, val, color }) => (
-                  <div key={label} className="bg-[#171520] border border-white/5 rounded-xl p-4">
-                    <p className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider mb-1">{label}</p>
+                  <div key={label} className="bg-card border border-border-custom rounded-md p-4">
+                    <p className="text-[10px] text-muted uppercase font-bold tracking-wider mb-1">{label}</p>
                     <p className={`text-xl font-bold ${color}`}>{val}</p>
                   </div>
                 ))}
               </div>
 
               {/* Table */}
-              <div className="bg-[#171520] border border-white/5 rounded-xl overflow-hidden">
+              <div className="bg-card border border-border-custom rounded-md overflow-hidden">
                 <table className="w-full text-xs">
-                  <thead className="bg-white/[0.02] border-b border-white/5">
+                  <thead className="bg-elevated border-b border-border-custom">
                     <tr>
                       {["Code", "Name", "Designation", "Department", "Basic", "HRA", "Allowances", "Gross/mo", "PF%", "ESI", "TDS/mo", "Status"].map(h => (
-                        <th key={h} className="text-left px-3 py-2.5 text-[10px] font-bold text-zinc-500 uppercase tracking-wider">{h}</th>
+                        <th key={h} className="text-left px-3 py-2.5 text-[10px] font-bold text-muted uppercase tracking-wider">{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/[0.03]">
                     {employees.map(emp => (
-                      <tr key={emp.id} className="hover:bg-white/[0.02] transition-colors">
-                        <td className="px-3 py-2.5 font-mono text-zinc-400">{emp.code}</td>
+                      <tr key={emp.id} className="hover:bg-elevated transition-colors">
+                        <td className="px-3 py-2.5 font-mono text-muted">{emp.code}</td>
                         <td className="px-3 py-2.5 font-semibold text-white">{emp.name}</td>
                         <td className="px-3 py-2.5 text-zinc-300">{emp.designation}</td>
-                        <td className="px-3 py-2.5 text-zinc-400">{emp.department}</td>
+                        <td className="px-3 py-2.5 text-muted">{emp.department}</td>
                         <td className="px-3 py-2.5 text-zinc-300">{fmt(emp.basic)}</td>
                         <td className="px-3 py-2.5 text-zinc-300">{fmt(emp.hra)}</td>
                         <td className="px-3 py-2.5 text-zinc-300">{fmt(emp.allowances)}</td>
                         <td className="px-3 py-2.5 font-bold text-green-400">{fmt(emp.grossMonthly)}</td>
-                        <td className="px-3 py-2.5 text-zinc-400">{emp.pfPct}%</td>
+                        <td className="px-3 py-2.5 text-muted">{emp.pfPct}%</td>
                         <td className="px-3 py-2.5">
-                          <span className={emp.esiApplicable ? "text-green-400" : "text-zinc-600"}>
+                          <span className={emp.esiApplicable ? "text-green-400" : "text-muted"}>
                             {emp.esiApplicable ? "Yes" : "N/A"}
                           </span>
                         </td>
-                        <td className="px-3 py-2.5 text-zinc-400">{emp.tdsMonthly > 0 ? fmt(emp.tdsMonthly) : "—"}</td>
+                        <td className="px-3 py-2.5 text-muted">{emp.tdsMonthly > 0 ? fmt(emp.tdsMonthly) : "—"}</td>
                         <td className="px-3 py-2.5">
                           <span className={statusBadge(emp.status)}>{emp.status}</span>
                         </td>
@@ -708,20 +708,20 @@ export default function HRPayrollPage() {
                   { label: "Off-Site", val: attendance.filter(a => !a.withinGeofence).length, color: "text-yellow-400" },
                   { label: "Overtime Hours", val: attendance.reduce((a, r) => a + r.overtime, 0).toFixed(1) + " hrs", color: "text-primary" },
                 ].map(({ label, val, color }) => (
-                  <div key={label} className="bg-[#171520] border border-white/5 rounded-xl p-4">
-                    <p className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider mb-1">{label}</p>
+                  <div key={label} className="bg-card border border-border-custom rounded-md p-4">
+                    <p className="text-[10px] text-muted uppercase font-bold tracking-wider mb-1">{label}</p>
                     <p className={`text-xl font-bold ${color}`}>{val}</p>
                   </div>
                 ))}
               </div>
 
               {/* Attendance table */}
-              <div className="bg-[#171520] border border-white/5 rounded-xl overflow-hidden">
+              <div className="bg-card border border-border-custom rounded-md overflow-hidden">
                 <table className="w-full text-xs">
-                  <thead className="bg-white/[0.02] border-b border-white/5">
+                  <thead className="bg-elevated border-b border-border-custom">
                     <tr>
                       {["Employee", "Punch In", "Punch Out", "Hours", "OT", "Distance", "Geofence", "Status"].map(h => (
-                        <th key={h} className="text-left px-3 py-2.5 text-[10px] font-bold text-zinc-500 uppercase tracking-wider">{h}</th>
+                        <th key={h} className="text-left px-3 py-2.5 text-[10px] font-bold text-muted uppercase tracking-wider">{h}</th>
                       ))}
                     </tr>
                   </thead>
@@ -730,13 +730,13 @@ export default function HRPayrollPage() {
                       const emp = employees.find(e => e.id === rec.employeeId);
                       const empName = emp ? emp.name : "Staff Member";
                       return (
-                        <tr key={rec.id} className="hover:bg-white/[0.02] transition-colors">
+                        <tr key={rec.id} className="hover:bg-elevated transition-colors">
                           <td className="px-3 py-3 font-semibold text-white">{empName}</td>
                           <td className="px-3 py-3 font-mono text-green-400">{rec.punchIn || "—"}</td>
-                          <td className="px-3 py-3 font-mono text-zinc-400">{rec.punchOut || <span className="text-yellow-500 animate-pulse">Active</span>}</td>
+                          <td className="px-3 py-3 font-mono text-muted">{rec.punchOut || <span className="text-yellow-500 animate-pulse">Active</span>}</td>
                           <td className="px-3 py-3 text-white font-bold">{rec.hoursWorked > 0 ? `${rec.hoursWorked}h` : "—"}</td>
                           <td className="px-3 py-3 text-orange-400">{rec.overtime > 0 ? `+${rec.overtime.toFixed(2)}h` : "—"}</td>
-                          <td className="px-3 py-3 text-zinc-400">
+                          <td className="px-3 py-3 text-muted">
                             {rec.distanceFromSite != null ? `${rec.distanceFromSite}m` : "—"}
                           </td>
                           <td className="px-3 py-3">
@@ -753,10 +753,10 @@ export default function HRPayrollPage() {
               </div>
 
               {/* Geofence map placeholder */}
-              <div className="bg-[#171520] border border-white/5 rounded-xl p-6 text-center">
-                <div className="relative mx-auto w-64 h-64 rounded-full bg-[#0E0C15] border-2 border-white/5 flex items-center justify-center">
+              <div className="bg-card border border-border-custom rounded-md p-6 text-center">
+                <div className="relative mx-auto w-64 h-64 rounded-full bg-background border-2 border-border-custom flex items-center justify-center">
                   {/* Geofence circle */}
-                  <div className="absolute w-40 h-40 rounded-full border-2 border-dashed border-primary/30 flex items-center justify-center">
+                  <div className="absolute w-40 h-40 rounded-full border-2 border-dashed border-border-custom flex items-center justify-center">
                     <div className="w-3 h-3 rounded-full bg-primary animate-ping absolute" />
                     <div className="w-3 h-3 rounded-full bg-primary absolute" />
                   </div>
@@ -766,8 +766,8 @@ export default function HRPayrollPage() {
                   <div className="absolute top-5 left-8 w-2 h-2 rounded-full bg-yellow-400" title="Sanjay — outside" />
                   <div className="absolute top-20 left-28 w-2 h-2 rounded-full bg-green-400" title="Meera — inside" />
                 </div>
-                <p className="text-xs text-zinc-500 mt-4">Live Geofence Map (PostGIS-powered in production)</p>
-                <p className="text-[10px] text-zinc-600 mt-1">Radius: 500m  •  Site: Metro Terminal Phase 2, Mumbai</p>
+                <p className="text-xs text-muted mt-4">Live Geofence Map (PostGIS-powered in production)</p>
+                <p className="text-[10px] text-muted mt-1">Radius: 500m  •  Site: Metro Terminal Phase 2, Mumbai</p>
               </div>
             </div>
           )}
@@ -776,8 +776,8 @@ export default function HRPayrollPage() {
           {tab === "timesheets" && (
             <div className="space-y-8">
               {/* Weekly Summary */}
-              <div className="bg-[#171520] border border-white/5 rounded-xl overflow-hidden">
-                <div className="px-4 py-3 border-b border-white/5 flex items-center justify-between">
+              <div className="bg-card border border-border-custom rounded-md overflow-hidden">
+                <div className="px-4 py-3 border-b border-border-custom flex items-center justify-between">
                   <span className="text-xs font-bold text-white uppercase tracking-wider">Weekly Timesheet Approvals</span>
                   <button
                     onClick={() => {
@@ -792,18 +792,18 @@ export default function HRPayrollPage() {
                   </button>
                 </div>
                 <table className="w-full text-xs">
-                  <thead className="bg-white/[0.02] border-b border-white/5">
+                  <thead className="bg-elevated border-b border-border-custom">
                     <tr>
                       {["Employee", "Week Range", "Total Hours", "Status", "Actions"].map(h => (
-                        <th key={h} className="text-left px-4 py-2.5 text-[10px] font-bold text-zinc-500 uppercase tracking-wider">{h}</th>
+                        <th key={h} className="text-left px-4 py-2.5 text-[10px] font-bold text-muted uppercase tracking-wider">{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/[0.03]">
                     {timesheets.map(ts => (
-                      <tr key={ts.id} className="hover:bg-white/[0.02] transition-colors">
+                      <tr key={ts.id} className="hover:bg-elevated transition-colors">
                         <td className="px-4 py-3 font-semibold text-white">{ts.employeeName}</td>
-                        <td className="px-4 py-3 text-zinc-400">{ts.weekStart} → {ts.weekEnd}</td>
+                        <td className="px-4 py-3 text-muted">{ts.weekStart} → {ts.weekEnd}</td>
                         <td className="px-4 py-3 font-bold text-blue-400">{ts.totalHours}h</td>
                         <td className="px-4 py-3"><span className={statusBadge(ts.status)}>{ts.status}</span></td>
                         <td className="px-4 py-3">
@@ -824,7 +824,7 @@ export default function HRPayrollPage() {
                                 Approve
                               </button>
                             )}
-                            <button className="text-[10px] px-2 py-1 rounded bg-white/5 text-zinc-400 border border-white/10 hover:bg-white/10">View</button>
+                            <button className="text-[10px] px-2 py-1 rounded bg-white/5 text-muted border border-border-custom hover:bg-white/10">View</button>
                           </div>
                         </td>
                       </tr>
@@ -834,20 +834,20 @@ export default function HRPayrollPage() {
               </div>
 
               {/* Daily Log Entries */}
-              <div className="bg-[#171520] border border-white/5 rounded-xl overflow-hidden">
-                <div className="px-4 py-3 border-b border-white/5">
+              <div className="bg-card border border-border-custom rounded-md overflow-hidden">
+                <div className="px-4 py-3 border-b border-border-custom">
                   <span className="text-xs font-bold text-white uppercase tracking-wider">👷 Daily Activity & Timesheet Logs</span>
                 </div>
                 {timesheetLogs.length === 0 ? (
-                  <div className="p-8 text-center text-zinc-500 text-xs">
+                  <div className="p-8 text-center text-muted text-xs">
                     No daily timesheet entries logged yet. Click "Log Daily Activity" to start.
                   </div>
                 ) : (
                   <table className="w-full text-xs">
-                    <thead className="bg-white/[0.02] border-b border-white/5">
+                    <thead className="bg-elevated border-b border-border-custom">
                       <tr>
                         {["Date", "Employee", "Start Time", "End Time", "Duration", "Hours", "Activity / Task", "Remarks"].map(h => (
-                          <th key={h} className="text-left px-4 py-2.5 text-[10px] font-bold text-zinc-500 uppercase tracking-wider">{h}</th>
+                          <th key={h} className="text-left px-4 py-2.5 text-[10px] font-bold text-muted uppercase tracking-wider">{h}</th>
                         ))}
                       </tr>
                     </thead>
@@ -869,19 +869,19 @@ export default function HRPayrollPage() {
                         };
 
                         return (
-                          <tr key={log.id} className="hover:bg-white/[0.02] transition-colors">
-                            <td className="px-4 py-3 font-mono text-zinc-400">{formattedDate}</td>
+                          <tr key={log.id} className="hover:bg-elevated transition-colors">
+                            <td className="px-4 py-3 font-mono text-muted">{formattedDate}</td>
                             <td className="px-4 py-3 font-semibold text-white">{log.employee_name || "Staff"}</td>
                             <td className="px-4 py-3 font-mono text-green-400">{fmtTime(log.start_time)}</td>
-                            <td className="px-4 py-3 font-mono text-zinc-400">{fmtTime(log.end_time)}</td>
+                            <td className="px-4 py-3 font-mono text-muted">{fmtTime(log.end_time)}</td>
                             <td className="px-4 py-3 text-white font-semibold font-mono">{durationStr}</td>
                             <td className="px-4 py-3 font-bold text-blue-400 font-mono">{log.hours}h</td>
                             <td className="px-4 py-3">
-                              <span className="px-2 py-0.5 rounded bg-white/5 border border-white/5 text-[10px] text-zinc-300">
+                              <span className="px-2 py-0.5 rounded bg-white/5 border border-border-custom text-[10px] text-zinc-300">
                                 {taskName}
                               </span>
                             </td>
-                            <td className="px-4 py-3 text-zinc-400 max-w-[200px] truncate" title={log.activity_description}>
+                            <td className="px-4 py-3 text-muted max-w-[200px] truncate" title={log.activity_description}>
                               {log.activity_description || "—"}
                             </td>
                           </tr>
@@ -895,16 +895,16 @@ export default function HRPayrollPage() {
               {/* sliding New Timesheet Drawer */}
               {showNewTimesheetDrawer && (
                 <div className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-sm">
-                  <div className="w-full max-w-md h-full bg-[#0E0C15] border-l border-white/10 p-6 flex flex-col justify-between overflow-y-auto">
+                  <div className="w-full max-w-md h-full bg-background border-l border-border-custom p-6 flex flex-col justify-between overflow-y-auto">
                     <div className="space-y-6">
-                      <div className="flex justify-between items-center border-b border-white/5 pb-4">
+                      <div className="flex justify-between items-center border-b border-border-custom pb-4">
                         <div>
                           <h3 className="text-sm font-bold text-white">Log Timesheet Entry</h3>
-                          <p className="text-[10px] text-zinc-500">Record daily hour logs & activity details</p>
+                          <p className="text-[10px] text-muted">Record daily hour logs & activity details</p>
                         </div>
                         <button
                           onClick={() => setShowNewTimesheetDrawer(false)}
-                          className="text-zinc-500 hover:text-white text-lg font-bold"
+                          className="text-muted hover:text-foreground text-lg font-bold"
                         >
                           ✕
                         </button>
@@ -912,11 +912,11 @@ export default function HRPayrollPage() {
 
                       <div className="space-y-4">
                         <div className="space-y-1.5">
-                          <label className="text-[10px] text-zinc-500 font-bold uppercase block">Employee / Party Name</label>
+                          <label className="text-[10px] text-muted font-bold uppercase block">Employee / Party Name</label>
                           <select
                             value={timesheetForm.employeeId}
                             onChange={(e) => setTimesheetForm(prev => ({ ...prev, employeeId: e.target.value }))}
-                            className="w-full bg-[#171520] border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-primary"
+                            className="w-full bg-card border border-border-custom rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-primary"
                           >
                             <option value="">Select Employee</option>
                             {employees.map(e => (
@@ -926,46 +926,46 @@ export default function HRPayrollPage() {
                         </div>
 
                         <div className="space-y-1.5">
-                          <label className="text-[10px] text-zinc-500 font-bold uppercase block">Date</label>
+                          <label className="text-[10px] text-muted font-bold uppercase block">Date</label>
                           <input
                             type="date"
                             value={timesheetForm.date}
                             onChange={(e) => setTimesheetForm(prev => ({ ...prev, date: e.target.value }))}
-                            className="w-full bg-[#171520] border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-primary"
+                            className="w-full bg-card border border-border-custom rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-primary"
                           />
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-1.5">
-                            <label className="text-[10px] text-zinc-500 font-bold uppercase block">Start Time</label>
+                            <label className="text-[10px] text-muted font-bold uppercase block">Start Time</label>
                             <input
                               type="time"
                               value={timesheetForm.startTime}
                               onChange={(e) => setTimesheetForm(prev => ({ ...prev, startTime: e.target.value }))}
-                              className="w-full bg-[#171520] border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-primary"
+                              className="w-full bg-card border border-border-custom rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-primary"
                             />
                           </div>
                           <div className="space-y-1.5">
-                            <label className="text-[10px] text-zinc-500 font-bold uppercase block">Stop Time</label>
+                            <label className="text-[10px] text-muted font-bold uppercase block">Stop Time</label>
                             <input
                               type="time"
                               value={timesheetForm.endTime}
                               onChange={(e) => setTimesheetForm(prev => ({ ...prev, endTime: e.target.value }))}
-                              className="w-full bg-[#171520] border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-primary"
+                              className="w-full bg-card border border-border-custom rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-primary"
                             />
                           </div>
                         </div>
 
                         {/* Calculated Duration display */}
-                        <div className="p-3.5 rounded-lg bg-white/[0.02] border border-white/5 flex justify-between items-center text-xs">
+                        <div className="p-3.5 rounded-lg bg-elevated border border-border-custom flex justify-between items-center text-xs">
                           <div>
-                            <span className="text-[10px] text-zinc-500 uppercase block font-bold">Calculated Duration</span>
+                            <span className="text-[10px] text-muted uppercase block font-bold">Calculated Duration</span>
                             <span className="text-white font-extrabold font-mono text-sm">
                               {calculateHoursAndDuration(timesheetForm.startTime, timesheetForm.endTime).durationStr}
                             </span>
                           </div>
                           <div>
-                            <span className="text-[10px] text-zinc-500 uppercase block font-bold text-right">Hours Logged</span>
+                            <span className="text-[10px] text-muted uppercase block font-bold text-right">Hours Logged</span>
                             <span className="text-primary font-black font-mono text-sm block text-right">
                               {calculateHoursAndDuration(timesheetForm.startTime, timesheetForm.endTime).hours}h
                             </span>
@@ -973,11 +973,11 @@ export default function HRPayrollPage() {
                         </div>
 
                         <div className="space-y-1.5">
-                          <label className="text-[10px] text-zinc-500 font-bold uppercase block">Project Task / Activity</label>
+                          <label className="text-[10px] text-muted font-bold uppercase block">Project Task / Activity</label>
                           <select
                             value={timesheetForm.taskId}
                             onChange={(e) => setTimesheetForm(prev => ({ ...prev, taskId: e.target.value }))}
-                            className="w-full bg-[#171520] border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-primary"
+                            className="w-full bg-card border border-border-custom rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-primary"
                           >
                             <option value="">Select Project Task (Optional)</option>
                             {projectTasks.map(t => (
@@ -987,37 +987,37 @@ export default function HRPayrollPage() {
                         </div>
 
                         <div className="space-y-1.5">
-                          <label className="text-[10px] text-zinc-500 font-bold uppercase block">Remarks / Notes</label>
+                          <label className="text-[10px] text-muted font-bold uppercase block">Remarks / Notes</label>
                           <textarea
                             value={timesheetForm.remarks}
                             onChange={(e) => setTimesheetForm(prev => ({ ...prev, remarks: e.target.value }))}
                             rows={3}
                             placeholder="Enter remarks or details of work done..."
-                            className="w-full bg-[#171520] border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-primary resize-none"
+                            className="w-full bg-card border border-border-custom rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-primary resize-none"
                           />
                         </div>
 
                         {/* File Upload Attachment Placeholder */}
                         <div className="space-y-1.5">
-                          <label className="text-[10px] text-zinc-500 font-bold uppercase block">Attachments</label>
-                          <div className="border border-dashed border-white/10 rounded-lg p-4 text-center cursor-pointer hover:bg-white/[0.01] transition-all">
+                          <label className="text-[10px] text-muted font-bold uppercase block">Attachments</label>
+                          <div className="border border-dashed border-border-custom rounded-lg p-4 text-center cursor-pointer hover:bg-white/[0.01] transition-all">
                             <span className="text-xl">📎</span>
-                            <span className="text-[10px] text-zinc-500 block mt-1">Upload files, logs or PDF proof</span>
+                            <span className="text-[10px] text-muted block mt-1">Upload files, logs or PDF proof</span>
                           </div>
                         </div>
                       </div>
                     </div>
 
-                    <div className="flex gap-4 border-t border-white/5 pt-4 mt-6">
+                    <div className="flex gap-4 border-t border-border-custom pt-4 mt-6">
                       <button
                         onClick={() => setShowNewTimesheetDrawer(false)}
-                        className="flex-1 px-4 py-2 border border-white/10 rounded-lg text-xs font-bold text-zinc-400 hover:text-white transition-all"
+                        className="flex-1 px-4 py-2 border border-border-custom rounded-lg text-xs font-bold text-muted hover:text-foreground transition-all"
                       >
                         Cancel
                       </button>
                       <button
                         onClick={handleSaveTimesheetEntry}
-                        className="flex-1 px-4 py-2 bg-gradient-to-r from-primary to-[#FF3B6C] rounded-lg text-xs font-bold text-white shadow-lg shadow-primary/20 transition-all hover:brightness-110"
+                        className="flex-1 px-4 py-2 bg-primary rounded-lg text-xs font-bold text-white shadow-lg shadow-primary/20 transition-all hover:brightness-110"
                       >
                         Save Entry
                       </button>
@@ -1032,18 +1032,18 @@ export default function HRPayrollPage() {
           {tab === "payroll" && (
             <div className="space-y-6">
               {/* Controls */}
-              <div className="bg-[#171520] border border-white/5 rounded-xl p-5">
+              <div className="bg-card border border-border-custom rounded-md p-5">
                 <h2 className="text-sm font-bold text-white mb-4">🚀 Run Monthly Payroll</h2>
                 <div className="flex items-end gap-4">
                   <div>
-                    <label className="text-[10px] text-zinc-500 font-bold uppercase block mb-1.5">Payroll Month</label>
+                    <label className="text-[10px] text-muted font-bold uppercase block mb-1.5">Payroll Month</label>
                     <input type="month" value={payrollMonth} onChange={e => setPayrollMonth(e.target.value)}
-                      className="bg-[#0E0C15] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary" />
+                      className="bg-background border border-border-custom rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary" />
                   </div>
                   <div>
-                    <label className="text-[10px] text-zinc-500 font-bold uppercase block mb-1.5">Working Days</label>
+                    <label className="text-[10px] text-muted font-bold uppercase block mb-1.5">Working Days</label>
                     <input type="number" min={1} max={31} value={daysInMonth} onChange={e => setDaysInMonth(Number(e.target.value))}
-                      className="w-24 bg-[#0E0C15] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary" />
+                      className="w-24 bg-background border border-border-custom rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary" />
                   </div>
                   <button onClick={handleRunPayroll}
                     className="px-5 py-2 bg-primary rounded-lg text-white text-sm font-bold hover:bg-primary/90 transition-all">
@@ -1061,45 +1061,45 @@ export default function HRPayrollPage() {
                       { label: "Total Deductions", val: fmt(payrollRun.totalDeductions), color: "text-red-400" },
                       { label: "Net Payable", val: fmt(payrollRun.totalNet), color: "text-primary" },
                     ].map(({ label, val, color }) => (
-                      <div key={label} className="bg-[#171520] border border-white/5 rounded-xl p-5">
-                        <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider mb-1">{label}</p>
+                      <div key={label} className="bg-card border border-border-custom rounded-md p-5">
+                        <p className="text-[10px] text-muted font-bold uppercase tracking-wider mb-1">{label}</p>
                         <p className={`text-2xl font-bold ${color}`}>{val}</p>
-                        <p className="text-[10px] text-zinc-600 mt-1">{payrollRun.month} payroll</p>
+                        <p className="text-[10px] text-muted mt-1">{payrollRun.month} payroll</p>
                       </div>
                     ))}
                   </div>
 
                   {/* Payslips table */}
-                  <div className="bg-[#171520] border border-white/5 rounded-xl overflow-hidden">
-                    <div className="px-4 py-3 border-b border-white/5 flex items-center justify-between">
+                  <div className="bg-card border border-border-custom rounded-md overflow-hidden">
+                    <div className="px-4 py-3 border-b border-border-custom flex items-center justify-between">
                       <span className="text-xs font-bold text-white">Employee Payslips — {payrollRun.month}</span>
                       <span className={statusBadge("finalized")}>{payrollRun.status}</span>
                     </div>
                     <table className="w-full text-xs">
-                      <thead className="bg-white/[0.02] border-b border-white/5">
+                      <thead className="bg-elevated border-b border-border-custom">
                         <tr>
                           {["Employee", "Days", "Gross", "PF (Emp)", "PF (Er)", "ESI", "TDS", "Deductions", "Net Pay", ""].map(h => (
-                            <th key={h} className="text-left px-3 py-2.5 text-[10px] font-bold text-zinc-500 uppercase tracking-wider">{h}</th>
+                            <th key={h} className="text-left px-3 py-2.5 text-[10px] font-bold text-muted uppercase tracking-wider">{h}</th>
                           ))}
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-white/[0.03]">
                         {payrollRun.payslips.map(p => (
-                          <tr key={p.employeeId} className="hover:bg-white/[0.02] transition-colors cursor-pointer" onClick={() => setSelectedPayslip(p)}>
+                          <tr key={p.employeeId} className="hover:bg-elevated transition-colors cursor-pointer" onClick={() => setSelectedPayslip(p)}>
                             <td className="px-3 py-3">
                               <div className="font-semibold text-white">{p.employeeName}</div>
-                              <div className="text-[10px] text-zinc-500">{p.designation}</div>
+                              <div className="text-[10px] text-muted">{p.designation}</div>
                             </td>
                             <td className="px-3 py-3 text-zinc-300">{p.daysPresent}/{p.daysInMonth}</td>
                             <td className="px-3 py-3 font-bold text-green-400">{fmt(p.gross)}</td>
-                            <td className="px-3 py-3 text-zinc-400">{fmt(p.pfEmployee)}</td>
-                            <td className="px-3 py-3 text-zinc-500">{fmt(p.pfEmployer)}</td>
-                            <td className="px-3 py-3 text-zinc-400">{p.esiEmployee > 0 ? fmt(p.esiEmployee) : <span className="text-zinc-600">N/A</span>}</td>
-                            <td className="px-3 py-3 text-zinc-400">{p.tds > 0 ? fmt(p.tds) : "—"}</td>
+                            <td className="px-3 py-3 text-muted">{fmt(p.pfEmployee)}</td>
+                            <td className="px-3 py-3 text-muted">{fmt(p.pfEmployer)}</td>
+                            <td className="px-3 py-3 text-muted">{p.esiEmployee > 0 ? fmt(p.esiEmployee) : <span className="text-muted">N/A</span>}</td>
+                            <td className="px-3 py-3 text-muted">{p.tds > 0 ? fmt(p.tds) : "—"}</td>
                             <td className="px-3 py-3 text-red-400 font-bold">{fmt(p.totalDeductions)}</td>
                             <td className="px-3 py-3 font-bold text-primary text-sm">{fmt(p.netPayable)}</td>
                             <td className="px-3 py-3">
-                              <button className="text-[10px] px-2 py-1 rounded bg-white/5 text-zinc-400 border border-white/10 hover:bg-white/10">Payslip</button>
+                              <button className="text-[10px] px-2 py-1 rounded bg-white/5 text-muted border border-border-custom hover:bg-white/10">Payslip</button>
                             </td>
                           </tr>
                         ))}
@@ -1110,10 +1110,10 @@ export default function HRPayrollPage() {
               )}
 
               {!payrollRun && (
-                <div className="bg-[#171520] border border-white/5 rounded-xl p-16 text-center">
+                <div className="bg-card border border-border-custom rounded-md p-16 text-center">
                   <p className="text-4xl mb-3">💰</p>
-                  <p className="text-sm text-zinc-400 font-semibold">No payroll run yet</p>
-                  <p className="text-xs text-zinc-600 mt-1">Select a month and click "Compute Payroll" to generate payslips</p>
+                  <p className="text-sm text-muted font-semibold">No payroll run yet</p>
+                  <p className="text-xs text-muted mt-1">Select a month and click "Compute Payroll" to generate payslips</p>
                 </div>
               )}
             </div>
@@ -1124,8 +1124,8 @@ export default function HRPayrollPage() {
             <div className="space-y-4 font-sans">
               <div className="flex justify-between items-center mb-4">
                 <div>
-                  <h2 className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Employee Leave Requests & Balances</h2>
-                  <p className="text-[10px] text-zinc-600 mt-0.5">Submit, review and approve casual/sick/earned leave requests for the site personnel.</p>
+                  <h2 className="text-xs font-bold text-muted uppercase tracking-wider">Employee Leave Requests & Balances</h2>
+                  <p className="text-[10px] text-muted mt-0.5">Submit, review and approve casual/sick/earned leave requests for the site personnel.</p>
                 </div>
               </div>
 
@@ -1137,19 +1137,19 @@ export default function HRPayrollPage() {
                   { title: "Sanjay Yadav", casual: 6, sick: 3, earned: 8 },
                   { title: "Meera Nair", casual: 8, sick: 4, earned: 12 },
                 ].map((bal, idx) => (
-                  <div key={idx} className="bg-[#171520] border border-white/5 rounded-xl p-4 space-y-2">
+                  <div key={idx} className="bg-card border border-border-custom rounded-md p-4 space-y-2">
                     <span className="text-xs font-bold text-white block">{bal.title}</span>
                     <div className="grid grid-cols-3 gap-2 text-center text-[10px] font-mono">
                       <div className="bg-black/30 p-1.5 rounded">
-                        <span className="text-zinc-500 block">Casual</span>
+                        <span className="text-muted block">Casual</span>
                         <strong className="text-primary font-bold">{bal.casual}</strong>
                       </div>
                       <div className="bg-black/30 p-1.5 rounded">
-                        <span className="text-zinc-500 block">Sick</span>
+                        <span className="text-muted block">Sick</span>
                         <strong className="text-amber-400 font-bold">{bal.sick}</strong>
                       </div>
                       <div className="bg-black/30 p-1.5 rounded">
-                        <span className="text-zinc-500 block">Earned</span>
+                        <span className="text-muted block">Earned</span>
                         <strong className="text-emerald-400 font-bold">{bal.earned}</strong>
                       </div>
                     </div>
@@ -1158,12 +1158,12 @@ export default function HRPayrollPage() {
               </div>
 
               {/* Leave Requests Listing */}
-              <div className="bg-[#171520] border border-white/5 rounded-xl overflow-hidden mt-6">
-                <div className="px-4 py-3 border-b border-white/5 flex items-center justify-between">
+              <div className="bg-card border border-border-custom rounded-md overflow-hidden mt-6">
+                <div className="px-4 py-3 border-b border-border-custom flex items-center justify-between">
                   <span className="text-xs font-bold text-white">Leave Application Logs</span>
                 </div>
                 <table className="w-full text-xs text-left">
-                  <thead className="bg-white/[0.02] border-b border-white/5 text-zinc-500 font-bold uppercase tracking-wider text-[10px]">
+                  <thead className="bg-elevated border-b border-border-custom text-muted font-bold uppercase tracking-wider text-[10px]">
                     <tr>
                       <th className="px-4 py-3 font-semibold">Employee</th>
                       <th className="px-4 py-3 font-semibold">Type</th>
@@ -1184,9 +1184,9 @@ export default function HRPayrollPage() {
                         </td>
                         <td className="px-4 py-3">
                           <span className="font-bold">{leave.startDate} to {leave.endDate}</span>
-                          <span className="block text-[10px] text-zinc-500 mt-0.5">({leave.days} day{leave.days > 1 ? "s" : ""})</span>
+                          <span className="block text-[10px] text-muted mt-0.5">({leave.days} day{leave.days > 1 ? "s" : ""})</span>
                         </td>
-                        <td className="px-4 py-3 text-zinc-400 max-w-xs truncate">{leave.reason}</td>
+                        <td className="px-4 py-3 text-muted max-w-xs truncate">{leave.reason}</td>
                         <td className="px-4 py-3">
                           <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${
                             leave.status === "Approved" ? "bg-green-500/10 border-green-500/20 text-green-400" :
@@ -1222,34 +1222,34 @@ export default function HRPayrollPage() {
       {selectedPayslip && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
           onClick={() => setSelectedPayslip(null)}>
-          <div className="bg-[#171520] border border-white/10 rounded-2xl w-full max-w-lg p-6" onClick={e => e.stopPropagation()}>
+          <div className="bg-card border border-border-custom rounded-lg w-full max-w-lg p-6" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-5">
               <div>
                 <h2 className="text-base font-bold text-white">Payslip — {selectedPayslip.employeeName}</h2>
-                <p className="text-xs text-zinc-500">{selectedPayslip.designation} · {payrollMonth}</p>
+                <p className="text-xs text-muted">{selectedPayslip.designation} · {payrollMonth}</p>
               </div>
               <div className="flex items-center gap-3">
-                <button onClick={() => window.print()} className="px-3 py-1 bg-primary/20 hover:bg-primary/35 text-primary border border-primary/30 rounded text-[10px] font-bold transition-all">
+                <button onClick={() => window.print()} className="px-3 py-1 bg-primary/20 hover:bg-primary/35 text-primary border border-border-custom rounded text-[10px] font-bold transition-all">
                   🖨️ Download PDF
                 </button>
-                <button onClick={() => setSelectedPayslip(null)} className="text-zinc-500 hover:text-white text-xl">✕</button>
+                <button onClick={() => setSelectedPayslip(null)} className="text-muted hover:text-foreground text-xl">✕</button>
               </div>
             </div>
 
             {/* Earnings */}
             <div className="space-y-1 mb-4">
-              <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider mb-2">Earnings</p>
+              <p className="text-[10px] text-muted font-bold uppercase tracking-wider mb-2">Earnings</p>
               {[
                 ["Basic Salary", selectedPayslip.basic],
                 ["HRA", selectedPayslip.hra],
                 ["Other Allowances", selectedPayslip.allowances],
               ].map(([label, val]) => (
                 <div key={label as string} className="flex justify-between text-xs">
-                  <span className="text-zinc-400">{label}</span>
+                  <span className="text-muted">{label}</span>
                   <span className="text-white font-semibold">{fmt(val as number)}</span>
                 </div>
               ))}
-              <div className="flex justify-between text-xs pt-2 border-t border-white/5">
+              <div className="flex justify-between text-xs pt-2 border-t border-border-custom">
                 <span className="text-zinc-300 font-bold">Gross ({selectedPayslip.daysPresent}/{selectedPayslip.daysInMonth} days)</span>
                 <span className="text-green-400 font-bold">{fmt(selectedPayslip.gross)}</span>
               </div>
@@ -1257,7 +1257,7 @@ export default function HRPayrollPage() {
 
             {/* Deductions */}
             <div className="space-y-1 mb-4">
-              <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider mb-2">Deductions</p>
+              <p className="text-[10px] text-muted font-bold uppercase tracking-wider mb-2">Deductions</p>
               {[
                 ["PF (Employee 12%)", selectedPayslip.pfEmployee],
                 ["PF (Employer 12%)", selectedPayslip.pfEmployer],
@@ -1266,20 +1266,20 @@ export default function HRPayrollPage() {
                 ["TDS", selectedPayslip.tds],
               ].map(([label, val]) => (
                 <div key={label as string} className="flex justify-between text-xs">
-                  <span className="text-zinc-400">{label}</span>
-                  <span className={(val as number) > 0 ? "text-red-400" : "text-zinc-600"}>
+                  <span className="text-muted">{label}</span>
+                  <span className={(val as number) > 0 ? "text-red-400" : "text-muted"}>
                     {(val as number) > 0 ? fmt(val as number) : "N/A"}
                   </span>
                 </div>
               ))}
-              <div className="flex justify-between text-xs pt-2 border-t border-white/5">
+              <div className="flex justify-between text-xs pt-2 border-t border-border-custom">
                 <span className="text-zinc-300 font-bold">Total Deductions</span>
                 <span className="text-red-400 font-bold">{fmt(selectedPayslip.totalDeductions)}</span>
               </div>
             </div>
 
             {/* Net */}
-            <div className="bg-primary/10 border border-primary/20 rounded-xl p-4 flex justify-between items-center">
+            <div className="bg-primary/10 border border-primary/20 rounded-md p-4 flex justify-between items-center">
               <span className="text-sm font-bold text-white">Net Payable</span>
               <span className="text-2xl font-bold text-primary">{fmt(selectedPayslip.netPayable)}</span>
             </div>
@@ -1291,10 +1291,10 @@ export default function HRPayrollPage() {
       {showAddEmp && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
           onClick={() => setShowAddEmp(false)}>
-          <div className="bg-[#171520] border border-white/10 rounded-2xl w-full max-w-xl p-6" onClick={e => e.stopPropagation()}>
+          <div className="bg-card border border-border-custom rounded-lg w-full max-w-xl p-6" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-base font-bold text-white">Add New Employee</h2>
-              <button onClick={() => setShowAddEmp(false)} className="text-zinc-500 hover:text-white text-xl">✕</button>
+              <button onClick={() => setShowAddEmp(false)} className="text-muted hover:text-foreground text-xl">✕</button>
             </div>
             <div className="grid grid-cols-2 gap-3 text-xs">
               {[
@@ -1310,13 +1310,13 @@ export default function HRPayrollPage() {
                 { label: "Date of Joining", type: "date", key: "joined", placeholder: "" },
               ].map(({ label, type, key, placeholder }) => (
                 <div key={label}>
-                  <label className="text-[10px] text-zinc-500 uppercase font-bold block mb-1">{label}</label>
+                  <label className="text-[10px] text-muted uppercase font-bold block mb-1">{label}</label>
                   <input
                     type={type}
                     placeholder={placeholder}
                     value={(empForm as any)[key]}
                     onChange={(e) => setEmpForm({ ...empForm, [key]: e.target.value })}
-                    className="w-full bg-[#0E0C15] border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
                   />
                 </div>
               ))}
@@ -1328,7 +1328,7 @@ export default function HRPayrollPage() {
               >
                 Save Employee
               </button>
-              <button onClick={() => setShowAddEmp(false)} className="px-4 py-2 rounded-lg border border-white/10 text-zinc-400 text-sm hover:text-white hover:border-white/20">Cancel</button>
+              <button onClick={() => setShowAddEmp(false)} className="px-4 py-2 rounded-lg border border-border-custom text-muted text-sm hover:text-foreground hover:border-white/20">Cancel</button>
             </div>
           </div>
         </div>
@@ -1337,19 +1337,19 @@ export default function HRPayrollPage() {
       {showApplyLeaveModal && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
           onClick={() => setShowApplyLeaveModal(false)}>
-          <div className="bg-[#171520] border border-white/10 rounded-2xl w-full max-w-md p-6" onClick={e => e.stopPropagation()}>
+          <div className="bg-card border border-border-custom rounded-lg w-full max-w-md p-6" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-base font-bold text-white">Apply for Leave</h2>
-              <button onClick={() => setShowApplyLeaveModal(false)} className="text-zinc-500 hover:text-white text-xl">✕</button>
+              <button onClick={() => setShowApplyLeaveModal(false)} className="text-muted hover:text-foreground text-xl">✕</button>
             </div>
             
             <div className="space-y-4 text-xs">
               <div className="space-y-1">
-                <label className="text-[10px] text-zinc-500 uppercase font-bold block">Select Employee</label>
+                <label className="text-[10px] text-muted uppercase font-bold block">Select Employee</label>
                 <select
                   value={leaveForm.employeeId}
                   onChange={(e) => setLeaveForm({ ...leaveForm, employeeId: e.target.value })}
-                  className="w-full bg-[#0E0C15] border border-white/10 rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-primary"
+                  className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-primary"
                 >
                   <option value="E-01">Ramesh Kumar (EMP-001)</option>
                   <option value="E-02">Priya Shah (EMP-002)</option>
@@ -1359,11 +1359,11 @@ export default function HRPayrollPage() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] text-zinc-500 uppercase font-bold block">Leave Type</label>
+                <label className="text-[10px] text-muted uppercase font-bold block">Leave Type</label>
                 <select
                   value={leaveForm.leaveType}
                   onChange={(e) => setLeaveForm({ ...leaveForm, leaveType: e.target.value })}
-                  className="w-full bg-[#0E0C15] border border-white/10 rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-primary"
+                  className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-primary"
                 >
                   <option value="Casual">Casual Leave</option>
                   <option value="Sick">Sick Leave</option>
@@ -1373,33 +1373,33 @@ export default function HRPayrollPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-[10px] text-zinc-500 uppercase font-bold block">Start Date</label>
+                  <label className="text-[10px] text-muted uppercase font-bold block">Start Date</label>
                   <input
                     type="date"
                     value={leaveForm.startDate}
                     onChange={(e) => setLeaveForm({ ...leaveForm, startDate: e.target.value })}
-                    className="w-full bg-[#0E0C15] border border-white/10 rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-primary"
+                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-primary"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] text-zinc-500 uppercase font-bold block">End Date</label>
+                  <label className="text-[10px] text-muted uppercase font-bold block">End Date</label>
                   <input
                     type="date"
                     value={leaveForm.endDate}
                     onChange={(e) => setLeaveForm({ ...leaveForm, endDate: e.target.value })}
-                    className="w-full bg-[#0E0C15] border border-white/10 rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-primary"
+                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-primary"
                   />
                 </div>
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] text-zinc-500 uppercase font-bold block">Reason / Description</label>
+                <label className="text-[10px] text-muted uppercase font-bold block">Reason / Description</label>
                 <textarea
                   placeholder="Reason for requesting leave..."
                   value={leaveForm.reason}
                   onChange={(e) => setLeaveForm({ ...leaveForm, reason: e.target.value })}
                   rows={3}
-                  className="w-full bg-[#0E0C15] border border-white/10 rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-primary resize-none"
+                  className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-primary resize-none"
                 />
               </div>
             </div>
@@ -1437,7 +1437,7 @@ export default function HRPayrollPage() {
               >
                 Submit Application
               </button>
-              <button onClick={() => setShowApplyLeaveModal(false)} className="px-4 py-2 rounded-lg border border-white/10 text-zinc-400 text-sm hover:text-white hover:border-white/20">Cancel</button>
+              <button onClick={() => setShowApplyLeaveModal(false)} className="px-4 py-2 rounded-lg border border-border-custom text-muted text-sm hover:text-foreground hover:border-white/20">Cancel</button>
             </div>
           </div>
         </div>
