@@ -232,6 +232,10 @@ def get_company_analytics(company_id: uuid.UUID, db: Session = Depends(get_db)):
                 "completion_pct": completion_pct,
                 "task_count": total_tasks,
                 "completed_tasks": completed_tasks,
+                "health": project.health or "Good",
+                "category": project.category,
+                "stage": project.stage,
+                "key_personnel_id": str(project.key_personnel_id) if project.key_personnel_id else None
             }
         )
 

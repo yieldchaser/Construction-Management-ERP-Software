@@ -59,6 +59,10 @@ class Project(Base):
     attendance_radius_meters = Column(Integer, default=500, nullable=False)
     is_location_required = Column(Boolean, default=True, nullable=False)
     custom_pdf_template_enabled = Column(Boolean, default=False, nullable=False)
+    health = Column(String(50), default="Good", nullable=True)
+    category = Column(String(100), nullable=True)
+    stage = Column(String(100), nullable=True)
+    key_personnel_id = Column(UUID(as_uuid=True), ForeignKey("company_team.id", ondelete="SET NULL"), nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), default=func.now(), onupdate=func.now(), nullable=False)
 
@@ -828,6 +832,12 @@ class CRMQuotationItem(Base):
     supply_tax_pct = Column(Numeric(5, 2), default=18.00, nullable=False)
     installation_tax_pct = Column(Numeric(5, 2), default=12.00, nullable=False)
     total_amount = Column(Numeric(18, 2), default=0.0, nullable=False)
+    markup = Column(Numeric(18, 2), default=0.0, nullable=True)
+    item_code = Column(String(50), nullable=True)
+    hsn_sac = Column(String(20), nullable=True)
+    cost_code = Column(String(100), nullable=True)
+    billed_qty = Column(Numeric(18, 4), default=0.0, nullable=True)
+    unbilled_qty = Column(Numeric(18, 4), default=0.0, nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 
 
@@ -847,6 +857,10 @@ class Payment(Base):
     payment_date = Column(DateTime(timezone=True), nullable=False)
     tally_synced = Column(Boolean, default=False, nullable=False)
     approval_pipeline_template_id = Column(String(100), nullable=True)
+    account_name = Column(String(255), nullable=True)
+    cost_code = Column(String(100), nullable=True)
+    sub_cost_code = Column(String(100), nullable=True)
+    category = Column(String(100), nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 
 

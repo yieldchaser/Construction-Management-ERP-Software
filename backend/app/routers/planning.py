@@ -337,6 +337,10 @@ class ProjectCreateSchema(BaseModel):
     city: Optional[str] = None
     location: Optional[str] = None
     attendance_radius_meters: Optional[int] = 500
+    health: Optional[str] = "Good"
+    category: Optional[str] = None
+    stage: Optional[str] = None
+    key_personnel_id: Optional[UUID] = None
 
 class ProjectUpdateSchema(BaseModel):
     name: Optional[str] = None
@@ -346,6 +350,10 @@ class ProjectUpdateSchema(BaseModel):
     location: Optional[str] = None
     attendance_radius_meters: Optional[int] = None
     status: Optional[str] = None
+    health: Optional[str] = None
+    category: Optional[str] = None
+    stage: Optional[str] = None
+    key_personnel_id: Optional[UUID] = None
 
 class ProjectResponseSchema(BaseModel):
     id: UUID
@@ -357,6 +365,10 @@ class ProjectResponseSchema(BaseModel):
     location: Optional[str] = None
     attendance_radius_meters: int
     status: str
+    health: str
+    category: Optional[str] = None
+    stage: Optional[str] = None
+    key_personnel_id: Optional[UUID] = None
 
     class Config:
         from_attributes = True
@@ -384,7 +396,11 @@ def create_project_v3(payload: ProjectCreateSchema, db: Session = Depends(get_db
         city=payload.city,
         location=payload.location or "19.0760,72.8777", # Default location
         attendance_radius_meters=payload.attendance_radius_meters or 500,
-        status="Ongoing"
+        status="Ongoing",
+        health=payload.health or "Good",
+        category=payload.category,
+        stage=payload.stage,
+        key_personnel_id=payload.key_personnel_id
     )
     db.add(proj)
     db.commit()
@@ -411,6 +427,14 @@ def update_project_v3(project_id: UUID, payload: ProjectUpdateSchema, db: Sessio
         proj.attendance_radius_meters = payload.attendance_radius_meters
     if payload.status is not None:
         proj.status = payload.status
+    if payload.health is not None:
+        proj.health = payload.health
+    if payload.category is not None:
+        proj.category = payload.category
+    if payload.stage is not None:
+        proj.stage = payload.stage
+    if payload.key_personnel_id is not None:
+        proj.key_personnel_id = payload.key_personnel_id
         
     db.commit()
     db.refresh(proj)

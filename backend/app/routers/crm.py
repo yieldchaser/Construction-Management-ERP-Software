@@ -73,8 +73,14 @@ class QuotationItemCreateRequest(BaseModel):
     selling_price: float = 0.0
     supply_rate: float = 0.0
     installation_rate: float = 0.0
-    supply_tax_pct: float = 18.00;
-    installation_tax_pct: float = 12.00;
+    supply_tax_pct: float = 18.00
+    installation_tax_pct: float = 12.00
+    markup: float = 0.0
+    item_code: Optional[str] = None
+    hsn_sac: Optional[str] = None
+    cost_code: Optional[str] = None
+    billed_qty: float = 0.0
+    unbilled_qty: float = 0.0
 
 class QuotationCreateRequest(BaseModel):
     subject: str
@@ -97,6 +103,12 @@ class QuotationItemResponse(BaseModel):
     supply_tax_pct: float
     installation_tax_pct: float
     total_amount: float
+    markup: float
+    item_code: Optional[str] = None
+    hsn_sac: Optional[str] = None
+    cost_code: Optional[str] = None
+    billed_qty: float
+    unbilled_qty: float
 
     class Config:
         from_attributes = True
@@ -260,7 +272,13 @@ def create_quotation(lead_id: uuid.UUID, req: QuotationCreateRequest, db: Sessio
             installation_rate=item.installation_rate,
             supply_tax_pct=item.supply_tax_pct,
             installation_tax_pct=item.installation_tax_pct,
-            total_amount=item_total
+            total_amount=item_total,
+            markup=item.markup,
+            item_code=item.item_code,
+            hsn_sac=item.hsn_sac,
+            cost_code=item.cost_code,
+            billed_qty=item.billed_qty,
+            unbilled_qty=item.unbilled_qty
         )
         items_to_add.append(q_item)
         db.add(q_item)

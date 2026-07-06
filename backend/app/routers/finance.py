@@ -24,6 +24,10 @@ class PaymentCreateRequest(BaseModel):
     reference_number: Optional[str] = None
     description: Optional[str] = None
     payment_date: datetime
+    account_name: Optional[str] = None
+    cost_code: Optional[str] = None
+    sub_cost_code: Optional[str] = None
+    category: Optional[str] = None
 
 class PaymentResponse(BaseModel):
     id: uuid.UUID
@@ -38,6 +42,10 @@ class PaymentResponse(BaseModel):
     description: Optional[str]
     payment_date: datetime
     created_at: datetime
+    account_name: Optional[str]
+    cost_code: Optional[str]
+    sub_cost_code: Optional[str]
+    category: Optional[str]
 
     class Config:
         from_attributes = True
@@ -52,6 +60,9 @@ class LedgerTransactionResponse(BaseModel):
     party: str
     ref: str
     ledger: str
+    debit: float = 0.0
+    credit: float = 0.0
+    balance: float = 0.0
 
 class PLItemResponse(BaseModel):
     head: str
@@ -85,7 +96,11 @@ def create_payment(req: PaymentCreateRequest, db: Session = Depends(get_db)):
         payment_method=req.payment_method,
         reference_number=req.reference_number,
         description=req.description,
-        payment_date=req.payment_date
+        payment_date=req.payment_date,
+        account_name=req.account_name,
+        cost_code=req.cost_code,
+        sub_cost_code=req.sub_cost_code,
+        category=req.category
     )
     db.add(payment)
     db.flush()
@@ -155,87 +170,125 @@ def get_ledger(project_id: uuid.UUID, db: Session = Depends(get_db)):
     # 3. Fetch salary line items
     salaries = db.query(PayrollLineItem).join(PayrollRun).filter(PayrollRun.project_id == proj_uuid).all()
 
-    ledger_entries = []
-
-    # Map Payments
+    raw_entries = []
     for p in payments:
-        party_name = "Walk-in Party"
-        if p.party_company_user_id:
-            team_member = db.query(CompanyTeam).filter(CompanyTeam.id == p.party_company_user_id).first()
-            if team_member:
-                user = db.query(User).filter(User.id == team_member.user_id).first()
-                if user:
-                    party_name = user.name
-
-        ledger_entries.append(
-            LedgerTransactionResponse(
-                id=str(p.id),
-                date=p.payment_date.strftime("%b %d") if p.payment_date else "",
-                type="Receipt" if p.payment_type == "in" else "Expense",
-                category="Client Payment" if p.payment_type == "in" else "Direct Payment",
-                description=p.description or ("Receipt Payment" if p.payment_type == "in" else "Expense Payment"),
-                amount=float(p.amount) if p.payment_type == "in" else -float(p.amount),
-                party=party_name,
-                ref=p.reference_number or "",
-                ledger="Revenue" if p.payment_type == "in" else "General Ledger"
-            )
-        )
-
-    # Map Bills
+        raw_entries.append((p.payment_date, "payment", p))
     for b in bills:
-        party_name = "Vendor/Client"
-        if b.party_company_user_id:
-            team_member = db.query(CompanyTeam).filter(CompanyTeam.id == b.party_company_user_id).first()
-            if team_member:
-                user = db.query(User).filter(User.id == team_member.user_id).first()
-                if user:
-                    party_name = user.name
-
-        is_receipt = b.invoice_type == "sale"
-        category = "Client Invoice" if b.invoice_type == "sale" else ("Subcon Invoice" if b.invoice_type == "subcon" else "Material Bill")
-        ledger_head = "Revenue" if b.invoice_type == "sale" else ("Subcon Cost" if b.invoice_type == "subcon" else "Material Cost")
-
-        ledger_entries.append(
-            LedgerTransactionResponse(
-                id=str(b.id),
-                date=b.invoice_date.strftime("%b %d") if b.invoice_date else "",
-                type="Receipt" if is_receipt else "Expense",
-                category=category,
-                description=f"Invoice {b.invoice_number}",
-                amount=float(b.total_payable) if is_receipt else -float(b.total_payable),
-                party=party_name,
-                ref=b.invoice_number,
-                ledger=ledger_head
-            )
-        )
-
-    # Map Salaries
+        raw_entries.append((b.invoice_date, "bill", b))
     for s in salaries:
-        party_name = "Staff Member"
-        if s.employee_id:
-            emp = db.query(StaffEmployee).filter(StaffEmployee.id == s.employee_id).first()
-            if emp and emp.company_user_id:
-                team_member = db.query(CompanyTeam).filter(CompanyTeam.id == emp.company_user_id).first()
+        raw_entries.append((s.created_at, "salary", s))
+        
+    # Sort ascending chronologically to compute running balance
+    raw_entries.sort(key=lambda x: x[0] if x[0] else datetime.min)
+
+    ledger_entries = []
+    running_balance = 0.0
+
+    for dt, entry_type, obj in raw_entries:
+        if entry_type == "payment":
+            party_name = "Walk-in Party"
+            if obj.party_company_user_id:
+                team_member = db.query(CompanyTeam).filter(CompanyTeam.id == obj.party_company_user_id).first()
                 if team_member:
                     user = db.query(User).filter(User.id == team_member.user_id).first()
                     if user:
                         party_name = user.name
-
-        ledger_entries.append(
-            LedgerTransactionResponse(
-                id=str(s.id),
-                date=s.created_at.strftime("%b %d") if s.created_at else "",
-                type="Expense",
-                category="Labour Wages",
-                description="Salary Payout",
-                amount=-float(s.net_payable),
-                party=party_name,
-                ref="PAYROLL",
-                ledger="Labour Cost"
+            
+            is_in = obj.payment_type == "in"
+            amount = float(obj.amount)
+            debit = amount if is_in else 0.0
+            credit = 0.0 if is_in else amount
+            if is_in:
+                running_balance += amount
+            else:
+                running_balance -= amount
+                
+            ledger_entries.append(
+                LedgerTransactionResponse(
+                    id=str(obj.id),
+                    date=obj.payment_date.strftime("%b %d") if obj.payment_date else "",
+                    type="Receipt" if is_in else "Expense",
+                    category="Client Payment" if is_in else "Direct Payment",
+                    description=obj.description or ("Receipt Payment" if is_in else "Expense Payment"),
+                    amount=amount if is_in else -amount,
+                    party=party_name,
+                    ref=obj.reference_number or "",
+                    ledger="Revenue" if is_in else "General Ledger",
+                    debit=debit,
+                    credit=credit,
+                    balance=running_balance
+                )
             )
-        )
+        elif entry_type == "bill":
+            party_name = "Vendor/Client"
+            if obj.party_company_user_id:
+                team_member = db.query(CompanyTeam).filter(CompanyTeam.id == obj.party_company_user_id).first()
+                if team_member:
+                    user = db.query(User).filter(User.id == team_member.user_id).first()
+                    if user:
+                        party_name = user.name
+            is_receipt = obj.invoice_type == "sale"
+            amount = float(obj.total_payable)
+            debit = amount if is_receipt else 0.0
+            credit = 0.0 if is_receipt else amount
+            if is_receipt:
+                running_balance += amount
+            else:
+                running_balance -= amount
+                
+            category = "Client Invoice" if obj.invoice_type == "sale" else ("Subcon Invoice" if obj.invoice_type == "subcon" else "Material Bill")
+            ledger_head = "Revenue" if obj.invoice_type == "sale" else ("Subcon Cost" if obj.invoice_type == "subcon" else "Material Cost")
+            
+            ledger_entries.append(
+                LedgerTransactionResponse(
+                    id=str(obj.id),
+                    date=obj.invoice_date.strftime("%b %d") if obj.invoice_date else "",
+                    type="Receipt" if is_receipt else "Expense",
+                    category=category,
+                    description=f"Invoice {obj.invoice_number}",
+                    amount=amount if is_receipt else -amount,
+                    party=party_name,
+                    ref=obj.invoice_number,
+                    ledger=ledger_head,
+                    debit=debit,
+                    credit=credit,
+                    balance=running_balance
+                )
+            )
+        elif entry_type == "salary":
+            party_name = "Staff Member"
+            if obj.employee_id:
+                emp = db.query(StaffEmployee).filter(StaffEmployee.id == obj.employee_id).first()
+                if emp and emp.company_user_id:
+                    team_member = db.query(CompanyTeam).filter(CompanyTeam.id == emp.company_user_id).first()
+                    if team_member:
+                        user = db.query(User).filter(User.id == team_member.user_id).first()
+                        if user:
+                            party_name = user.name
+            amount = float(obj.net_payable)
+            debit = 0.0
+            credit = amount
+            running_balance -= amount
+            
+            ledger_entries.append(
+                LedgerTransactionResponse(
+                    id=str(obj.id),
+                    date=obj.created_at.strftime("%b %d") if obj.created_at else "",
+                    type="Expense",
+                    category="Labour Wages",
+                    description="Salary Payout",
+                    amount=-amount,
+                    party=party_name,
+                    ref="PAYROLL",
+                    ledger="Labour Cost",
+                    debit=debit,
+                    credit=credit,
+                    balance=running_balance
+                )
+            )
 
-    # Sort ledger entries by date descending (mock a simple order)
+    # Sort descending (most recent first) for response presentation
+    ledger_entries.reverse()
     return ledger_entries
 
 
