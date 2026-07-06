@@ -236,10 +236,17 @@ export default function ReportsDashboard() {
   // Specific Columns mapped from the actual Onsite Teams reconstructed spreadsheets
   const exportSchemas: Record<string, string[]> = {
     "Company Expense Report": ['S.NO.', 'Expense Date', 'Expense Type', 'Project Name', 'Party Name', 'Notes', 'Cost Code', 'Expense Status', 'Total Amount', 'Net Amount', 'Paid Amount', 'Unpaid Amount', 'Due Date', 'Approval Status'],
-    "Staff Muster Roll": ['Labor / Subcontractor', 'Workforce Type', 'Project Name', '01-Jul-26', '02-Jul-26', '03-Jul-26', '04-Jul-26'],
+    "Staff Muster Roll": ['S.NO.', 'Party Code', 'Employee Name', 'Designation', 'Phone No.', 'Bank Account No.', 'Bank Name', 'Salary Type', 'Gross Salary', 'Work Days', 'PL', 'WO', 'Payable Days', 'OT(Hours)', 'Earnings Basic', 'Earnings HRA', 'Earnings Allowance', 'Deductions', 'Net Salary', 'CTC'],
+    "Staff Punch Report": ['S.NO.', 'PARTY NAME', 'DESIGNATION', 'PUNCH DATE', 'PUNCH IN TIME', 'PUNCH IN LOCATION', 'PUNCH OUT TIME', 'PUNCH OUT LOCATION', 'DURATION', 'PUNCH IN PHOTO VERIFIED', 'PUNCH OUT PHOTO VERIFIED', 'PUNCH IN LOCATION VERIFIED', 'PUNCH OUT LOCATION VERIFIED'],
+    "Company Attendance": ['Labor / Subcontractor', 'Workforce Type', 'Project Name', '01-Jul-26', '02-Jul-26', '03-Jul-26', '04-Jul-26', '05-Jul-26'],
     "Company Payments": ['Date', 'Project', 'Sender', 'Receiver', 'Amount', 'Creator', 'Category', 'Trade', 'Payment Mode', 'Description'],
     "Project Wise Payment Summary": ['Project Name', 'Salary', 'Net Purchase', 'Other Expense', 'Site Expense', 'SubCon Expense', 'Total Sales Invoice', 'Total expense', 'Total Out', 'Total IN', 'Balance', 'Margin', 'Net Transfer'],
-    "Sales (GSTR-1)": ['Party GSTIN', 'Party Name', 'Place of Supply', 'Invoice Number', 'Invoice Value', 'Invoice Date', 'Taxable Amt', 'Tax Rate', 'CGST Amt', 'SGST Amt', 'IGST Amt', 'Total Tax Amt']
+    "Sales (GSTR-1)": ['Party GSTIN', 'Party Name', 'Place of Supply', 'Invoice Number', 'Invoice Value', 'Invoice Date', 'Taxable Amt', 'Tax Rate', 'CGST Amt', 'SGST Amt', 'IGST Amt', 'Total Tax Amt'],
+    "BOQ Workorder Summary Report": ['Project Name', 'Client Name', 'Workorder Date'],
+    "BOQ Item Report": ['Project Name', 'Workorder Name', 'Workorder No', 'Client Name', 'BOQ Date'],
+    "Equipment Usage Detail Report": ['EquipmentName', 'Equipment No', 'Created Date'],
+    "Payment Upload Template": ['Payment Date', 'Payment Type', 'Party Name', 'Project Name', 'Amount', 'Remark', 'Mode of Payment', 'Company Bank Account Number', 'Category', 'Payment Request ID'],
+    "Payroll Upload Template": ['Name', 'Staff Type', 'Shift Hours', 'Day Off', 'Overtime Rate (Per Hour)', 'Designation', 'Cost Code', 'Salary Basis', 'Salary Type', 'CTC', 'Basic', 'Allowance Name (A1)', 'A1 Relation Type', '% of A1 Relation', 'A1 Amount']
   };
 
   const handleReportClick = (report: ReportItem) => {
@@ -281,8 +288,44 @@ export default function ReportsDashboard() {
         ];
       } else if (reportName === "Staff Muster Roll") {
         mockRows = [
-          ["Yash Desai", "Staff", "Metro Terminal", "P", "P", "P", "P"],
-          ["Ramesh Kumar", "Mason", "Metro Terminal", "P", "P", "A", "P"]
+          ["1", "EMP-001", "Yash Desai", "Engineer", "9876543210", "1234567890", "SBI", "Monthly", "60000", "26", "2", "4", "30", "5", "40000", "15000", "5000", "3000", "57000", "60000"],
+          ["2", "EMP-002", "Ramesh Kumar", "Mason", "9876543211", "1234567891", "HDFC", "Daily", "22000", "22", "1", "4", "27", "12", "15000", "5000", "2000", "1500", "20500", "22000"]
+        ];
+      } else if (reportName === "Staff Punch Report") {
+        mockRows = [
+          ["1", "Yash Desai", "Engineer", "2026-07-01", "09:00:00", "Metro Terminal Entrance", "18:00:00", "Metro Terminal Exit", "9h 0m", "Yes", "Yes", "Yes", "Yes"],
+          ["2", "Ramesh Kumar", "Mason", "2026-07-01", "08:45:00", "Metro Terminal Gate 2", "17:45:00", "Metro Terminal Gate 2", "9h 0m", "Yes", "Yes", "Yes", "Yes"]
+        ];
+      } else if (reportName === "Company Attendance") {
+        mockRows = [
+          ["Yash Desai", "Staff", "Metro Terminal", "P", "P", "P", "P", "P"],
+          ["Ramesh Kumar", "Mason", "Metro Terminal", "P", "P", "A", "P", "P"]
+        ];
+      } else if (reportName === "BOQ Workorder Summary Report") {
+        mockRows = [
+          ["Metro Terminal Phase 2", "L&T Civil Division", "2026-06-15"],
+          ["Flyover Bypass", "National Highway Authority", "2026-06-28"]
+        ];
+      } else if (reportName === "BOQ Item Report") {
+        mockRows = [
+          ["Metro Terminal", "Excavation and Raft", "WO-ARCH-001", "L&T Civil", "2026-05-15"],
+          ["Metro Terminal", "Pillar Reinforcement", "WO-ARCH-002", "L&T Civil", "2026-05-20"]
+        ];
+      } else if (reportName === "Equipment Usage Detail Report") {
+        mockRows = [
+          ["Excavator JCB-3DX", "MH-14-EX-4512", "2026-07-01"],
+          ["Transit Mixer TM-10", "MH-14-MX-8891", "2026-07-02"]
+        ];
+      } else if (reportName === "Payment Upload Template") {
+        mockRows = [
+          ["19-Jan-2026", "Out", "Abhijit", "Project-Vikroli", "5000", "For dec month salary", "Cash", "", "Salary", "1c050f4e-5f4a-4d47-ac53-0efefd921dc2"],
+          ["19-Jan-2026", "Out", "Akash Panwar", "July_2025 Project Test", "4000", "For dec month salary", "Cheque", "54909090", "Salary", "8df95ec3-59a9-4c80-a2e7-1890eb743fa3"],
+          ["19-Jan-2026", "In", "Aishwarya", "July_2025 Project Test", "8000", "Bill", "Bank Transfer", "54909090", "Material", ""]
+        ];
+      } else if (reportName === "Payroll Upload Template") {
+        mockRows = [
+          ["Payrole-05", "Office", "8", "Sat,Sun, tuesday", "100", "plumbing", "bth-03", "Punch", "Monthly", "10000", "5000", "allowance 6", "basic", "50", "2500"],
+          ["Payrole-06", "Site", "7", "Sun", "600", "plumbing", "bth-03", "shift", "Monthly", "0", "", "", "", "", ""]
         ];
       } else {
         mockRows = [
