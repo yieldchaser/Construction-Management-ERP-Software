@@ -1,5 +1,19 @@
 import { redirect } from "next/navigation";
 
-export default function BudgetingPage() {
-  redirect("/c/e0000000-0000-0000-0000-000000000000/p/d0000000-0000-0000-0000-000000000001/budgeting/boq");
+interface PageProps {
+  params: Promise<{
+    company_id: string;
+    project_id: string;
+  }> | {
+    company_id: string;
+    project_id: string;
+  };
+}
+
+export default async function BudgetingPage({ params }: PageProps) {
+  const resolvedParams = await (params instanceof Promise ? params : Promise.resolve(params));
+  const companyId = resolvedParams.company_id;
+  const projectId = resolvedParams.project_id;
+
+  redirect(`/c/${companyId}/p/${projectId}/budgeting/boq`);
 }

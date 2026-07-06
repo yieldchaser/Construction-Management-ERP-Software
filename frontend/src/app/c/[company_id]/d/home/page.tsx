@@ -372,7 +372,7 @@ export default function ProjectsHomePage() {
                 filteredProjects.map((p) => (
                   <tr key={p.id} className="hover:bg-elevated/20 transition-colors">
                     <td className="px-6 py-4">
-                      <Link href={`/c/${companyId}/p/${p.id}/wbs`} className="text-foreground hover:text-primary font-medium transition-colors text-sm">
+                      <Link href={`/c/${companyId}/p/${p.id}/planning/gantt`} className="text-foreground hover:text-primary font-medium transition-colors text-sm">
                         {p.name}
                       </Link>
                       <span className="block text-xs text-muted mt-1 uppercase tracking-wider font-normal">

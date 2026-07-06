@@ -11,6 +11,23 @@ export default function Sidebar({ onShowToast }: { onShowToast?: (msg: string) =
   const companyId = (params.company_id as string) || "e0000000-0000-0000-0000-000000000000";
 
   const [companyName, setCompanyName] = useState("Loading Company...");
+  const [projectId, setProjectId] = useState("d0000000-0000-0000-0000-000000000001");
+
+  useEffect(() => {
+    if (params.project_id) {
+      setProjectId(params.project_id as string);
+      if (typeof window !== "undefined") {
+        localStorage.setItem("last_project_id", params.project_id as string);
+      }
+    } else {
+      if (typeof window !== "undefined") {
+        const lastProj = localStorage.getItem("last_project_id");
+        if (lastProj) {
+          setProjectId(lastProj);
+        }
+      }
+    }
+  }, [params.project_id]);
 
   useEffect(() => {
     const cachedName = typeof window !== "undefined" ? localStorage.getItem("company_name") : null;
@@ -94,7 +111,7 @@ export default function Sidebar({ onShowToast }: { onShowToast?: (msg: string) =
     },
     {
       label: "Finance",
-      href: `/c/${companyId}/p/e0000000-0000-0000-0000-000000000000/finance`,
+      href: `/c/${companyId}/p/${projectId}/finance`,
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -104,7 +121,7 @@ export default function Sidebar({ onShowToast }: { onShowToast?: (msg: string) =
     },
     {
       label: "Payroll",
-      href: `/c/${companyId}/p/e0000000-0000-0000-0000-000000000000/hr`,
+      href: `/c/${companyId}/p/${projectId}/hr`,
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -114,7 +131,7 @@ export default function Sidebar({ onShowToast }: { onShowToast?: (msg: string) =
     },
     {
       label: "CRM",
-      href: `/c/${companyId}/p/e0000000-0000-0000-0000-000000000000/crm`,
+      href: `/c/${companyId}/p/${projectId}/crm`,
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
