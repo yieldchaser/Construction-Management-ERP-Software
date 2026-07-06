@@ -271,7 +271,8 @@ export default function ReportsDashboard() {
     "Payroll Library": ['Employee Name', 'Designation', 'Designation Type', 'Payroll Type', 'CTC', 'Gross Salary', 'Net Salary', 'Shift Hours', 'Salary Breakup', 'Created Date'],
     "Task Resource Budget Vs Actual Report": ['Main Task Name', 'Group Task Name', 'Task Name', 'Task Unit', 'Task Qty', 'Task Progress Qty', 'Resource Name', 'Resource Type', 'Budgeted Rate', 'Avg Unit Cost', 'Budgeted Qty', 'Qty Actual Used', 'Budgeted Amount', 'Actual Amount', 'Exceeded Qty', 'Exceeded Amount'],
     "Site Inspection Report": ['Project Name', 'Inspection Date', 'Inspection Name', 'Inspection Status', 'Inspection Items', 'Inspection Notes', 'Created Date'],
-    "Task BOQ Billed & Unbilled Qty Report": ['Project Name', 'Main Task Name', 'Group Task Name', 'Task Name', 'Unit', 'Estimated Qty', 'Progress Qty', '% Complete', 'Task Status', 'Linked BOQ Detail', 'Billed Qty', 'Unbilled Qty']
+    "Task BOQ Billed & Unbilled Qty Report": ['Project Name', 'Main Task Name', 'Group Task Name', 'Task Name', 'Unit', 'Estimated Qty', 'Progress Qty', '% Complete', 'Task Status', 'Linked BOQ Detail', 'Billed Qty', 'Unbilled Qty'],
+    "CRM Lead Detail Report": ['Lead Date', 'Lead Name', 'Contact Name', 'Contact No.', 'Lead Status', 'Lead Priority', 'Lead Source', 'Lead Category']
   };
 
   const handleReportClick = (report: ReportItem) => {
@@ -340,6 +341,11 @@ export default function ReportsDashboard() {
         mockRows = [
           ["Metro Terminal", "Excavator JCB-3DX", "MH-14-EX-4512", "Anil Steels", "150"],
           ["Metro Terminal", "Transit Mixer TM-10", "MH-14-MX-8891", "Yash Desai", "80"]
+        ];
+      } else if (reportName === "CRM Lead Detail Report") {
+        mockRows = [
+          ["05-Jul-2026", "Own", "Anujuman", "0882816316", "", "medium", "Facebook", ""],
+          ["05-Jul-2026", "Own", "Yash", "7628371919", "New Lead", "medium", "", ""]
         ];
       } else if (reportName === "Material Request Item Report") {
         mockRows = [
