@@ -1,0 +1,2300 @@
+# Deep Gap Analysis: Onsite Teams vs SiteFlow
+Generated: 2026-07-06T19:03:38.293261
+
+---
+
+## 1. SITEFLOW BACKEND EXISTS
+- Routers: 35
+- Models: 100
+- Tables: 100
+
+### Routers
+
+- `analytics`
+- `assets`
+- `auth`
+- `billing`
+- `budget`
+- `budgeting`
+- `calculators`
+- `chat`
+- `crm`
+- `custom_fields`
+- `dpr`
+- `drawings`
+- `equipment`
+- `face_recognition`
+- `finance`
+- `hr`
+- `labour`
+- `library`
+- `planning`
+- `procurement`
+- `production`
+- `profile`
+- `quality`
+- `reports`
+- `rfq`
+- `safety`
+- `settings`
+- `statutory`
+- `subcon_attendance`
+- `subcon_performance`
+- `tally`
+- `three_way`
+- `towers`
+- `vendor_performance`
+- `wastage`
+
+### Models
+
+- `ApprovalRule`
+- `AssetDepreciationEntry`
+- `AssetDepreciationSchedule`
+- `AttendanceLog`
+- `BOCWRecord`
+- `BOQItem`
+- `BankAccount`
+- `Bill`
+- `CRMLead`
+- `CRMQuotation`
+- `CRMQuotationItem`
+- `ChatGroup`
+- `ChatGroupMember`
+- `ChatMessage`
+- `ChecklistItem`
+- `ClientReport`
+- `Company`
+- `CompanyBranch`
+- `CompanyRole`
+- `CompanyTeam`
+- `CreditNote`
+- `CustomField`
+- `CustomFieldValue`
+- `DailyProgressReport`
+- `DebitNote`
+- `Drawing`
+- `DrawingPin`
+- `DrawingRevision`
+- `Equipment`
+- `EquipmentDeployment`
+- `FaceRecognitionLog`
+- `FuelLog`
+- `GRNItem`
+- `GoodsReceiptNote`
+- `Holiday`
+- `InspectionResponse`
+- `LeaveRequest`
+- `LibraryAssetType`
+- `LibraryCostCode`
+- `LibraryDeduction`
+- `LibraryMaterial`
+- `LibraryParty`
+- `LibraryProgress`
+- `LibraryRate`
+- `LibraryWorkforce`
+- `MaintenanceSchedule`
+- `MaterialIndent`
+- `MaterialIndentItem`
+- `MaterialTestResult`
+- `MaterialTransaction`
+- `MaterialWastage`
+- `MusterRoll`
+- `NCR`
+- `PPECheck`
+- `Payment`
+- `PaymentRequest`
+- `PaymentSettlement`
+- `PayrollLineItem`
+- `PayrollRun`
+- `ProductionBatch`
+- `ProductionBatchMaterial`
+- `ProductionRecipe`
+- `ProductionRecipeMaterial`
+- `Project`
+- `ProjectBudget`
+- `ProjectTower`
+- `PurchaseOrder`
+- `PurchaseOrderItem`
+- `QualityChecklist`
+- `Quotation`
+- `RFQ`
+- `RFQItem`
+- `RFQQuote`
+- `SafetyIncident`
+- `SiteInspection`
+- `StaffEmployee`
+- `StatutoryReport`
+- `SubcontractorAttendance`
+- `SubcontractorPerformance`
+- `TallyAgent`
+- `TallyBankMapping`
+- `TallyConnection`
+- `TallyCostCentreMapping`
+- `TallyLedgerMapping`
+- `TallyPartyMapping`
+- `Task`
+- `TaskComment`
+- `TaskPredecessor`
+- `TaskTodo`
+- `ThreeWayMatch`
+- `Timesheet`
+- `TimesheetEntry`
+- `ToolboxTalk`
+- `TransactionDeduction`
+- `User`
+- `VendorPerformance`
+- `WarehouseInventory`
+- `WorkOrder`
+- `WorkOrderAmendment`
+- `WorkOrderItem`
+
+---
+
+## 2. SITEFLOW FRONTEND ROUTES
+Total: 60
+
+- `/.`
+- `/SiteFlow-pricing`
+- `/[slug]`
+- `/blog`
+- `/blog\[slug]`
+- `/c\[company_id]\analytics`
+- `/c\[company_id]\d\home`
+- `/c\[company_id]\d\library`
+- `/c\[company_id]\d\payment-approval`
+- `/c\[company_id]\d\team-action`
+- `/c\[company_id]\d\todo`
+- `/c\[company_id]\dashboard`
+- `/c\[company_id]\p\[project_id]\attendance`
+- `/c\[company_id]\p\[project_id]\billing`
+- `/c\[company_id]\p\[project_id]\budget`
+- `/c\[company_id]\p\[project_id]\budgeting`
+- `/c\[company_id]\p\[project_id]\budgeting\boq`
+- `/c\[company_id]\p\[project_id]\chat`
+- `/c\[company_id]\p\[project_id]\crm`
+- `/c\[company_id]\p\[project_id]\custom-fields`
+- `/c\[company_id]\p\[project_id]\depreciation`
+- `/c\[company_id]\p\[project_id]\dpr`
+- `/c\[company_id]\p\[project_id]\drawings`
+- `/c\[company_id]\p\[project_id]\equipment`
+- `/c\[company_id]\p\[project_id]\face-recognition`
+- `/c\[company_id]\p\[project_id]\finance`
+- `/c\[company_id]\p\[project_id]\hr`
+- `/c\[company_id]\p\[project_id]\labour`
+- `/c\[company_id]\p\[project_id]\planning`
+- `/c\[company_id]\p\[project_id]\planning\gantt`
+- `/c\[company_id]\p\[project_id]\procurement`
+- `/c\[company_id]\p\[project_id]\procurement\rfq`
+- `/c\[company_id]\p\[project_id]\procurement\vendor-performance`
+- `/c\[company_id]\p\[project_id]\production`
+- `/c\[company_id]\p\[project_id]\quality`
+- `/c\[company_id]\p\[project_id]\reports`
+- `/c\[company_id]\p\[project_id]\reports\calculators`
+- `/c\[company_id]\p\[project_id]\safety`
+- `/c\[company_id]\p\[project_id]\statutory`
+- `/c\[company_id]\p\[project_id]\subcon`
+- `/c\[company_id]\p\[project_id]\subcon\scorecards`
+- `/c\[company_id]\p\[project_id]\subcon\work-orders\amendments`
+- `/c\[company_id]\p\[project_id]\three-way`
+- `/c\[company_id]\p\[project_id]\towers`
+- `/c\[company_id]\p\[project_id]\wastage`
+- `/c\[company_id]\reports`
+- `/c\[company_id]\reports\dpr`
+- `/c\[company_id]\reports\item-wise-sales`
+- `/c\[company_id]\settings`
+- `/contact`
+- `/help`
+- `/help\[...slug]`
+- `/integrations`
+- `/integrations\tally`
+- `/login`
+- `/products`
+- `/products\[slug]`
+- `/profile\onboarding`
+- `/resources`
+- `/resources\[...slug]`
+
+---
+
+## 3. ONSITE TEAMS EXTRACTED UI (from 586 screenshots)
+
+### Navigation / Menu Items (unique: 923)
+
+- `Pinned Projects` (324x)
+- `@ Delete Logs` (293x)
+- `MOM To Do Chat` (222x)
+- `© Onsite Teams | v8.24.0 Powered by onsite` (183x)
+- `| Payroll` (111x)
+- `© Onsite Teams | v8.24.0` (105x)
+- `MOM ToDo Chat` (83x)
+- `CQ Project` (56x)
+- `Multi Level Approval` (30x)
+- `Total Amount` (26x)
+- `Payroll` (24x)
+- `QO Project` (23x)
+- `CRM Integrations` (20x)
+- `© Onsite Teams | v8.23.` (20x)
+- `O Report` (18x)
+- `Y Filter CO Invert More filters ¥` (17x)
+- `a OSOot* OnNonga eas aN FOO osora0as` (16x)
+- `OD Report` (15x)
+- `a OSOot* OnNonga eas ee` (14x)
+- `Party Transaction PaymentRequests Accounts` (14x)
+- `Net Amount` (14x)
+- `Schedule Timesheet` (13x)
+- `Paid Amount` (13x)
+- `Deduction Library` (13x)
+- `Material Library` (13x)
+- `x Cancel` (12x)
+- `Party Library` (12x)
+- `Y Filter O Invert More filters ¥` (12x)
+- `Project Name` (11x)
+- `Unit of Measurement` (11x)
+- `a OSOot* OnNonga eas aN FD osora0as` (10x)
+- `I Payroll` (10x)
+- `Upload Files (Ay` (10x)
+- `People Attendance TeamLeaves MyLeaves Holidays` (10x)
+- `Remaining on Site` (10x)
+- `All v| All v| All v` (9x)
+- `a OSOot* OnNonga eas aN FD osor anes` (9x)
+- `a OSOot* OnNonga eas ae ne` (9x)
+- `All v| All | & -Select-` (9x)
+- `|` (9x)
+- `Progress Library` (9x)
+- `© Onsite Teams | v8.22.0` (9x)
+- `Status` (9x)
+- `D Report` (8x)
+- `Item Name` (8x)
+- `Email` (8x)
+- `Upload Files ()` (8x)
+- `Payment Request` (8x)
+- `Material Used` (8x)
+- `Name Status Type Cookies Size a` (8x)
+- `All v| All v| All vy) All v` (7x)
+- `Pinned Projects v` (7x)
+- `a OSOot* OnNonga eas aN FD sor anes` (7x)
+- `All v| All v| All vy) All v |) -Select -` (7x)
+- `PARTY ID` (7x)
+- `Equipment Expense` (7x)
+- `Item Code` (7x)
+- `Material Purchase` (7x)
+- `D Reports` (7x)
+- `Party Transaction Payment Requests Accounts` (7x)
+- `v SiteFlow | Premium Construct) X Company Settings x + © Ask Gemini - ag xX` (7x)
+- `CO Project` (6x)
+- `a OSOot* OnNonga eas aN FOO sor a0as` (6x)
+- `3€ Dashboard Equipment Library CG Filter Sort More [(% | Search Data Q |` (6x)
+- `Select Cost Code` (6x)
+- `CRM Rate Library` (6x)
+- `X NEW MATERIAL Cancel | save |` (6x)
+- `Leave Application` (6x)
+- `Material Transfer` (6x)
+- `Payment Entries` (6x)
+- `2 Team Schedule No Approval Level has been created for this Range Yet.` (6x)
+- `Report` (5x)
+- `All v| All | & -Select- All ~All v` (5x)
+- `O Report a` (5x)
+- `All v| This Week vy) -Select -` (5x)
+- `a OSOot* OnNonga eas aN FD osor sons` (5x)
+- `All v| -Select- v All v| & -Select- All ~All v| All v| All vy) All v` (5x)
+- `& - Select - & - Select - All vy) All ~All v| All v` (5x)
+- `© Onsite Teams | v8.24.0 Poweredby  ONsite` (5x)
+- `Finance Filter Sort More | Search Q |` (5x)
+- `2 Team Schedule | hift OTHrs Payable Allowance amount  LateFine Ded` (5x)
+- `Upload Files (A)` (5x)
+- `X ADD PARTY Cancel` (5x)
+- `Party Name` (5x)
+- `Select Party Type v` (5x)
+- `Additional Charges` (5x)
+- `QO Project Design Version` (5x)
+- `Material Issue` (5x)
+- `Clear Filter 0 Apply` (5x)
+- `v SiteFlow | Premium Construct) x Transaction x + © Ask Gemini - ag xX` (5x)
+- `All | 01 Jan 2026 to 31 Jul 2026` (4x)
+- `& - Select - All v| All vy) All v` (4x)
+- `OQ Project` (4x)
+- `All v| All v| All vy) All ~All v` (4x)
+- `a OSOot* OnNonga eas aN FD osor anne` (4x)
+- `a OSOot* OnNonga eas aN FD osoraoas` (4x)
+- `Material Name` (4x)
+- `All v| All v` (4x)
+- `3€ Dashboard Party Library CG Filter Sort More = [(N | Search Data Q |` (4x)
+- `Project Setting x` (4x)
+
+### Form Fields / Labels (unique: 1654)
+
+- `MD5: c3d112f2e6aad9804db2353876d30170` (9x)
+- `Project Name: Date: Date Range:` (9x)
+- `Date: Party Name: Project Name: Designation: Payroll Type:` (8x)
+- `MD5: 09a9d1c423ff69aa7efb5fca9b66275e` (8x)
+- `MD5: 44d3e0bf1b59d889ab7b59ff770d401a` (8x)
+- `Compan:` (7x)
+- `| hoe e@ ~ Oo ENG aa in 18:36` (7x)
+- `MD5: 4e484be3e058763c64e914187dd80d51` (6x)
+- `| hoe e@ ~ Oo ENG aa in 18:16` (6x)
+- `MD5: 428a3027656b14ebce6091f3b11b591a` (6x)
+- `© Report EquipmentName: Equipment No: Created Date:` (6x)
+- `| io e@ wn Oo a ENG a bi 18:39` (6x)
+- `MD5: 849d0a3a6cc29846dcd6bf5e30ed9f0b` (6x)
+- `| e@ wn Oo a ENG a bi 16:16` (6x)
+- `| i e@ ~ Oo ENG aa 4 18:02` (5x)
+- `MD5: 5e44ac6bc7c3e99da801b062e5cca8ed` (5x)
+- `Material: Project Name: Entry Type: Date: Task Name: Challan Number: Party Name: Created By: Material Category:` (5x)
+- `MD5: b959f29c2921e0319a07fb6dec040190` (5x)
+- `© Report Purchase Date: Receiving Date: Party Name: Party GST: Project Name: Material:` (5x)
+- `| hoe e@ ~ Oo ENG aa in 18:19` (5x)
+- `MD5: b9f5880b034bd29ede902840cf20e93e` (5x)
+- `| hoe e@ ~ Oo ENG aa in 18:25` (5x)
+- `© Report Party Name: Party Type:` (5x)
+- `| hoe e@ ~ Oo ENG aa in 18:35` (5x)
+- `Opening Balance:` (5x)
+- `P| e (3) a oS a ENG an 44 18:53` (5x)
+- `| @ nw Oo a ENG a bi 18:56` (5x)
+- `| @ nw Oo a ENG a bi 18:58` (5x)
+- `| @ wn Oo ENG a bi 19:00` (5x)
+- `(@®) Demo Compan:` (5x)
+- `— - @ ~~ Mw ¢€ _ ENG ay n 20:08` (5x)
+- `MD5: fc11a5862d7c097e83a461737870af02` (5x)
+- `Zetwerk . :` (5x)
+- `= - e (3) a oS a ENG an 44 16:17` (5x)
+- `MD5: 4b7c3bc6747eaedc375100acdf2f9eeb` (4x)
+- `MD5: 3a2fd67d15e5498106ae9be63fc092da` (4x)
+- `MD5: 0e28e77b41bc764b284f3d53ace5cf90` (4x)
+- `| hoe e@ ~ Oo ENG aa in 18:18` (4x)
+- `| ih @ ~ Oo ENG aa in 18:21` (4x)
+- `© Report Project Name:` (4x)
+- `MD5: 483d427a1defac4f32d47fdc340b692f` (4x)
+- `| hoe @ ~ Oo ENG a n 18:33` (4x)
+- `_- - 2) -~ Mw ¢ 3 ENG ay ‘i 18:39` (4x)
+- `a= = (od () a SS ¢ 7 ENG an 44 18:42` (4x)
+- `_- - 2) ww 8 x ENG a n 18:48` (4x)
+- `= - e 2) ~ os 5 ENG a n 18:54` (4x)
+- `MD5: 248598a97e39c7154a5ddc00c6d7163c` (4x)
+- `| @ wn Oo az ENG a bi 18:57` (4x)
+- `« ENG 19:57` (4x)
+- `MD5: de78553253e377bf301874da062b8869` (4x)
+- `DIESEL :` (4x)
+- `& Team Schedule party in: 0 | Out: 20` (4x)
+- `| @ (Sy ® a F<] [| az ENG aa 4 14:14` (4x)
+- `MD5: c3453f1b8f1c463b98436b606a2d3e37` (4x)
+- `MD5: 356b8ce79a646623777fbf94b735e7a2` (3x)
+- `© Report Client Name: Project Name: Invoice Date: Sale Type: Creator Name:` (3x)
+- `MD5: f5b173d6cfc24a696736828e719e7076` (3x)
+- `© Report Lead Date: Lead Name: Contact Name: Lead Status: Lead Priority: Lead Category:` (3x)
+- `| i e@ ~ Oo ENG aa 4 18:03` (3x)
+- `MD5: 4d6ced6cead1dd5839ef6615dcaba0ee` (3x)
+- `Payment Date: Creator Name: Party Name: Project Name: Payment Type: Payment Mode: Cost Code:` (3x)
+- `| i e@ ~ Oo ENG aa 4 18:07` (3x)
+- `© Report Project Name: MainTaskName: Group TaskName: Resource Name: Resource Type:` (3x)
+- `MD5: cad42b5da90c57e622389b0e2a80b884` (3x)
+- `© Report Project Name: MainTaskName: Group TaskName: Task Name:` (3x)
+- `| i e@ ~ Oo ENG aa in 18:10` (3x)
+- `© Report Party Name: Project Name: Party Type: Balance Type:` (3x)
+- `| hoe e@ ~ Oo ENG aa in 18:15` (3x)
+- `MD5: 9d65543b2b30da809953a9ee9fc2fe3f` (3x)
+- `MD5: 360aaf954fdf2ddb87e81bb27367b0e6` (3x)
+- `© Report Project Name: Equipment Name: Vehicle No: Party Name: Date:` (3x)
+- `| hoe e@ ~ Oo ENG aa in 18:23` (3x)
+- `—_— e@ aw” o ENG ax i 18:24` (3x)
+- `| hoe e@ ~ Oo ENG aa in 18:28` (3x)
+- `MD5: 49da18a1ff3cd475b72f0149083684f5` (3x)
+- `© Report Progress Date: Project Name: Subcontractor Na... _Workorder Name:` (3x)
+- `| hoe @ ~ Oo ENG a n 18:31` (3x)
+- `MD5: 29bd42fa69707f547f3952da4584427a` (3x)
+- `‘Txn Date: Project Name: Party Name: Txn Type: Transaction Categ... Cost Code: Sub Cost Code:` (3x)
+- `| hoe e@ ~ Oo ENG aa in 18:31` (3x)
+- `MD5: eafc7bdbe2759a9027c95c35abc6a117` (3x)
+- `MD5: 08eb4a6fdce3e2cedd43633ba81bb196` (3x)
+- `MD5: f3e3903481c84874dc152b4f555f1226` (3x)
+- `© Report Client Name: QuotationName: Quotation Created:` (3x)
+- `MD5: 536c801c248aa21639ba47310db66f7a` (3x)
+- `© Report Project Name: Workorder Name:  Workorder No: Client Name: Progress Date:` (3x)
+- `Payment Method:` (3x)
+- `_- - 2) ww 8 x ENG a n 18:41` (3x)
+- `MD5: 7df703c10b80eb45261bef800aecd76c` (3x)
+- `MD5: a22071dc7c517e019722d149f3e97b16` (3x)
+- `MD5: da75ac5522223242844edefd945ac1aa` (3x)
+- `MD5: 91d138e405296f6c08aaea8ec106a7c8` (3x)
+- `MD5: 597923c2723b70ce3868d2468e0afd8d` (3x)
+- `_- - 2) ww 8 x ENG a n 18:53` (3x)
+- `| @ nw Oo az ENG a bi 18:56` (3x)
+- `| @ nw Oo a ENG a bi 18:57` (3x)
+- `Compan :` (3x)
+- `MD5: 1b6a66b7becf4d48a911c28e4b950b45` (3x)
+- `Manage your Business overview 3 Lt [ -. = = =z: z/ =` (3x)
+- `< ENG 19:57` (3x)
+- `MD5: 536315d9f5a7bd82259ceb3813fa04f3` (3x)
+- `MD5: cedbaa00f7711b314f3e3fad8c61f5b7` (3x)
+- `1 G ata 20:07` (3x)
+- `MD5: b8e94ad814efcdfecf9c40e9cd823f80` (3x)
+- `x CEMENT 43 GRADE :` (3x)
+- `Cost Code: Civil .` (3x)
+- `MD5: d9dd1553f003d2506d70ab438167ea9c` (3x)
+- `x STEEL BAR 8MM :` (3x)
+- `Cost Code: Stee! .` (3x)
+- `-_ - S) ~ Mw € 5 ENG ay a 20:09` (3x)
+- `MD5: a2f34a00d861124c4e5a7b5d2e6e4421` (3x)
+- `MD5: 2aa5797383c8ecd307b9c6ff30ff67b8` (3x)
+- `MD5: ef3a386b457486e2228c02f081f94c9f` (3x)
+- `MD5: fd2517aa85efa2b94d1d93cc5408f5d5` (3x)
+- `Payroll Type: Workforce Name: Material name: Material Category:` (2x)
+- `QQ. Project Project Name: Project Status: Project Health:` (2x)
+- `| @ ~ Oo ENG a 4 17:57` (2x)
+- `Q. Project Project Name: ‘Txn Date:` (2x)
+- `| i @ ~ Oo ENG a 4 17:58` (2x)
+- `| @ wn Oo ENG a i 17:59` (2x)
+- `MD5: dabcc05a31d99dfc8179f267479acaba` (2x)
+- `© Report Project Name: Client Name: Invoice Date: Itern Name: Sales Type:` (2x)
+- `© Report Entry Creation Da... Type: Project Name: Party Name:` (2x)
+- `Size: 174.75 KB | 1920x1200` (2x)
+- `MD5: fa031a12677bc6471868de8e64e6eb28` (2x)
+- `OB Report Project Name:` (2x)
+- `—_— e@ aw” o ENG aw 5 18:04` (2x)
+- `Size: 175.7 KB | 1920x1200` (2x)
+- `—_— e@ aw” o ENG ax " 18:04` (2x)
+- `MD5: 9e978096479ac7474d022b7ef6cca15c` (2x)
+- `© Report Account Name: Account Number: Bank Name: Project Name: Party Name: Payment Date:` (2x)
+- `| i @ ~ Oo ENG a 4 18:05` (2x)
+- `MD5: 2c7e1d7cad99bc3e870fbb240b18b270` (2x)
+- `© Report Payment Date: Project Name: Payment Type: Party Name: Account Name:` (2x)
+- `| i e@ ~ Oo ENG aa 4 18:05` (2x)
+- `MD5: 752801a6834d10bfddba624f5ee18dbb` (2x)
+- `© Report Party Name: Project Name: ‘Approval Status: Payment Status: Payment Date:` (2x)
+- `| @ ~ Oo ENG a 4 18:06` (2x)
+- `| i @ ~ Oo ENG aa 4 18:06` (2x)
+- `Size: 177.95 KB | 1920x1200` (2x)
+- `| i @ ~ Oo ENG aa 4 18:07` (2x)
+- `MD5: d6c4e68ae43f61c58883f5b2297f1182` (2x)
+- `MD5: 414d2f7ec92f47d68c3d7c37c8074908` (2x)
+- `© Report Project Name: MainTaskName: Group TaskName: Task Name: Progress Date: Task Status:` (2x)
+- `MD5: b08afec49cd2a17479fe30f836d9a7fb` (2x)
+- `© Report Project Name: Activity Name: Assigned To: Due Date: Status: Related Task: Creator Name:` (2x)
+- `| @ ~ Oo ENG a 4 18:08` (2x)
+- `Size: 176.54 KB | 1920x1200` (2x)
+- `| i e@ ~ Oo ENG aa 4 18:08` (2x)
+- `Size: 174.35 KB | 1920x1200` (2x)
+
+### Buttons / Actions (unique: 563)
+
+- `@ Delete Logs` (293x)
+- `Y Filter CO Invert More filters ¥` (17x)
+- `a OSOot* OnNonga eas aN FOO osora0as` (16x)
+- `a OSOot* OnNonga eas ee` (14x)
+- `x Cancel` (12x)
+- `Y Filter O Invert More filters ¥` (12x)
+- `a OSOot* OnNonga eas aN FD osora0as` (10x)
+- `OD Report Team Gantt View Month v From 8 - To 8 Filter by assignee > Allstatuses + Filter by project + Export ¥` (10x)
+- `Upload Files (Ay` (10x)
+- `a OSOot* OnNonga eas aN FD osor anes` (9x)
+- `a OSOot* OnNonga eas ae ne` (9x)
+- `Upload Files ()` (8x)
+- `a OSOot* OnNonga eas aN FD sor anes` (7x)
+- `a OSOot* OnNonga eas aN FOO sor a0as` (6x)
+- `© Report EquipmentName: Equipment No: Created Date:` (6x)
+- `3€ Dashboard Equipment Library CG Filter Sort More [(% | Search Data Q |` (6x)
+- `X NEW MATERIAL Cancel | save |` (6x)
+- `2 Team Schedule No Approval Level has been created for this Range Yet.` (6x)
+- `a OSOot* OnNonga eas aN FD osor sons` (5x)
+- `Material: Project Name: Entry Type: Date: Task Name: Challan Number: Party Name: Created By: Material Category:` (5x)
+- `36 Dashboard Material Receiving & Used Report CG Filter Sort More 4) | Search Data Q |` (5x)
+- `36 Dashboard Material Purchase Item Report CG Filter Sort More 4) | Search Data Q |` (5x)
+- `Finance Filter Sort More | Search Q |` (5x)
+- `Upload Files (A)` (5x)
+- `X ADD PARTY Cancel` (5x)
+- `Clear Filter 0 Apply` (5x)
+- `a OSOot* OnNonga eas aN FD osor anne` (4x)
+- `36 Dashboard Project level Party Balance Report CG Filter Sort More 4) | Search Data Q |` (4x)
+- `a OSOot* OnNonga eas aN FD osoraoas` (4x)
+- `36 Dashboard Company Transactions Report CG Filter Sort More 4) | Search Data Q |` (4x)
+- `3€ Dashboard Party Library CG Filter Sort More = [(N | Search Data Q |` (4x)
+- `Purchase Invoice No.` (4x)
+- `— Note(Optional). AANA.` (4x)
+- `X ADD PARTY Cancel | save |` (4x)
+- `X ADD NEW ACCOUNT Cancel | save |` (4x)
+- `Create your own Holiday Calendar for your company.` (4x)
+- `$§ Dashboard Company Sales Report CG Filter Sort More [(%y | Search Data Q |` (3x)
+- `$§ Dashboard Company Payment Report CG Filter Sort More [(%y | Search Data Q |` (3x)
+- `3€ Dashboard Task Resource Budget vs Actual Report @ Filter Sort More (4) Search Data Q |` (3x)
+- `36 Dashboard Task BOQ Billed & Unbilled Qty Report CG Filter Sort More 4) | Search Data Q |` (3x)
+- `a OSOot* OnNonga eas a NF D osor anes` (3x)
+- `PO Number: PO Date: Project Name: Vendor Name: Material Name: Approval Status: Material Category: __ Item Status: GRN No.` (3x)
+- `36 Dashboard Purchase Order Item Report CG Filter Sort More 4) | Search Data Q |` (3x)
+- `Filter Sort More Search Q` (3x)
+- `2 Team Schedule Party Name Designation Phone No. Bank Name IFSC Code Account No. ‘Shift OTHrs Payabk Allowance LateFine Ded` (3x)
+- `© Report Project Name: Equipment Name: Vehicle No: Party Name: Date:` (3x)
+- `36 Dashboard Daily based Equipment Used Report CG Filter Sort More 4) | Search Data Q |` (3x)
+- `a OSOot* OnNonga eas aN FOO os or anes` (3x)
+- `a OSOot* OnNonga eas ae` (3x)
+- `36 Dashboard Subcon Measurement Book CG Filter Sort More 4) | Search Data Q |` (3x)
+- `© Report Client Name: QuotationName: Quotation Created:` (3x)
+- `© Report Project Name: Workorder Name:  Workorder No: Client Name: Progress Date:` (3x)
+- `3€ Dashboard BOQ Measurement Book CG Filter Sort More [(% | Search Data Q |` (3x)
+- `Rejected` (3x)
+- `+ Reference No` (3x)
+- `+ Notes` (3x)
+- `Upload Files (4` (3x)
+- `Bill To/Ship To View` (3x)
+- `— Note(ptional), $A ARN` (3x)
+- `9, Finance GRN Material + Add New Approver` (3x)
+- `= = €¢ Hor * OK ORBOaALB ~ in FP ©® 507-2026` (3x)
+- `> NEW MATERIAL Cancel` (3x)
+- `36 Dashboard Item Wise Sales Report CG Filter Sort More 4) | Search Data Q |` (2x)
+- `36 Dashboard CRM Lead Detail Report Filter Sort More) | Search Data Q|` (2x)
+- `Project 1 Noof Retention Post Tax Payment` (2x)
+- `@ crm Filter Sort More | Search Q |` (2x)
+- `36 Dashboard Bank Statement Report Filter Sort More) | Search Data Q|` (2x)
+- `$§ Dashboard Project Payment Report CG Filter Sort More [(%y | Search Data Q |` (2x)
+- `@ Delete Logs Max%` (2x)
+- `LI] Project Name Equipment Name Vehicle No Unit` (2x)
+- `3€ Dashboard Task Measurement Book CG Filter Sort More [% | Search Data Q |` (2x)
+- `3€ Dashboard To Do Report CG Filter Sort More = [(N | Search Data Q |` (2x)
+- `36 Dashboard Task Attendance Report CG Filter Sort More 4) | Search Data Q |` (2x)
+- `36 Dashboard Company Expense Report CG Filter Sort More 4) | Search Data Q |` (2x)
+- `a OSOot* OnNonga eas aN FD sor a0as` (2x)
+- `3€ Dashboard All expense Deduction / Retention Report @ Filter Sort More [y | Search Data Q |` (2x)
+- `a OSOt* OnNonga eas ee on ee` (2x)
+- `3€ Dashboard Party Ledger @ Filter Sort More = [(N | Search Data Q |` (2x)
+- `Material Name: Project Name: Request No: Status: Request Date: Approved or Rejec... Requested by:` (2x)
+- `36 Dashboard Material Request Item Report CG Filter Sort More 4) | Search Data Q |` (2x)
+- `© Report Project Name: Vendor Name: Approval Status: Approved or Rejec... Creator Name:` (2x)
+- `a OSOot* OnNonga eas a EN FD D osor-o006` (2x)
+- `a OSOot* OnNonga eas a NF D osor anne` (2x)
+- `36 Dashboard Production Material Report CG Filter Sort More 4) | Search Data Q |` (2x)
+- `Project Name: Equipment Name: __ Vehicle No: Party Name: Ownership Type: Entry Type: Creator Name: Used Date:` (2x)
+- `36 Dashboard Equipment Usage Detail Report CG Filter Sort More 4) | Search Data Q |` (2x)
+- `Filter Sort More | Search Q |` (2x)
+- `$§ Dashboard Equipment Trip Report CG Filter Sort More [(%y | Search Data Q |` (2x)
+- `36 Dashboard Asset Allocation Report CG Filter Sort More 4) | Search Data Q |` (2x)
+- `3€ Dashboard Asset Status Report CG Filter Sort More [(% | Search Data Q |` (2x)
+- `3€ Dashboard Sales (GSTR-1) CG Filter Sort More [(% | Search Data Q |` (2x)
+- `© Report Party Name: Project Name: Expense Type: Expense Date: Party Tax No.: Company Tax No.:` (2x)
+- `3€ Dashboard Warehouse Stock Movement Report @ Filter Sort More (4) | Search Data Q |` (2x)
+- `36 Dashboard Warehouse Transaction Report CG Filter Sort More 4) | Search Data Q |` (2x)
+- `36 Dashboard Warehouse Current Stock Report CG Filter Sort More 4) | Search Data Q |` (2x)
+- `36 Dashboard Subcon Workorder Summary Report CG Filter Sort More 4) | Search Data Q |` (2x)
+- `a OSOot* OnNonga eas a NFO OD osora0as` (2x)
+- `a OSOot* OnNonga eas a` (2x)
+- `3€ Dashboard Subcon Deduction / Retention Report @ Filter Sort More [y | Search Data Q |` (2x)
+- `3€ Dashboard Rate Card Library CG Filter Sort More [(% | Search Data Q |` (2x)
+
+### Table Headers / Rows (unique: 1277)
+
+- `© Onsite Teams | v8.24.0 Powered by onsite` (183x)
+- `| Payroll` (111x)
+- `© Onsite Teams | v8.24.0` (105x)
+- `© Onsite Teams | v8.23.` (20x)
+- `| | . All| Fetevxte | Doc || C55 ||| Font || Img || Media| Manifest || Socket || Wasm |/ Other` (10x)
+- `Company Company Details Branches Business Profile |!) 100.000ms — 200,.000ms  300,.000ms 400,000ms —500,000ms 600,000ms 700,000ms 800,000 ms 900,000 ms 1,000,000. ms 1,100,000 ms 1,200,000 ms 1,300,001` (10x)
+- `All v| All v| All v` (9x)
+- `All v| All | & -Select-` (9x)
+- `© Onsite Teams | v8.22.0` (9x)
+- `All v| All v| All vy) All v` (7x)
+- `All v| All v| All vy) All v |) -Select -` (7x)
+- `| hoe e@ ~ Oo ENG aa in 18:36` (7x)
+- `BS Bl MyAccount © Soros (2019) QM eeMo BM pop Bx owas B¥PiZ Al val |Z) GRIN wm JHMM wm JHSC viuE [Q MFEM 3 JoeT [Al avsc` (7x)
+- `v SiteFlow | Premium Construct) X Company Settings x + © Ask Gemini - ag xX` (7x)
+- `v Onsite Teams compe’ x © Construction Manage X © Library x 4 construction-manage & SiteFlow|Premiumc x 4 SiteFlow|PremiumC X + ~ Ask Gemini al a x` (7x)
+- `| hoe e@ ~ Oo ENG aa in 18:16` (6x)
+- `3€ Dashboard Equipment Library CG Filter Sort More [(% | Search Data Q |` (6x)
+- `| io e@ wn Oo a ENG a bi 18:39` (6x)
+- `X NEW MATERIAL Cancel | save |` (6x)
+- `| e@ wn Oo a ENG a bi 16:16` (6x)
+- `All v| All | & -Select- All ~All v` (5x)
+- `| i e@ ~ Oo ENG aa 4 18:02` (5x)
+- `All v| This Week vy) -Select -` (5x)
+- `36 Dashboard Material Receiving & Used Report CG Filter Sort More 4) | Search Data Q |` (5x)
+- `All v| -Select- v All v| & -Select- All ~All v| All v| All vy) All v` (5x)
+- `36 Dashboard Material Purchase Item Report CG Filter Sort More 4) | Search Data Q |` (5x)
+- `& - Select - & - Select - All vy) All ~All v| All v` (5x)
+- `| hoe e@ ~ Oo ENG aa in 18:19` (5x)
+- `© Onsite Teams | v8.24.0 Poweredby  ONsite` (5x)
+- `Finance Filter Sort More | Search Q |` (5x)
+- `2 Team Schedule | hift OTHrs Payable Allowance amount  LateFine Ded` (5x)
+- `| hoe e@ ~ Oo ENG aa in 18:25` (5x)
+- `| hoe e@ ~ Oo ENG aa in 18:35` (5x)
+- `P| e (3) a oS a ENG an 44 18:53` (5x)
+- `| @ nw Oo a ENG a bi 18:56` (5x)
+- `| @ nw Oo a ENG a bi 18:58` (5x)
+- `| @ wn Oo ENG a bi 19:00` (5x)
+- `v SiteFlow | Premium Construct) x Transaction x + © Ask Gemini - ag xX` (5x)
+- `v  -%€ Onsite Teams compet X © Construction Manage Xx © Library x 4 construction-manage 4 SiteFlow|PremiumC: x & SiteFlow|PremiumC xX + > Ask Gemini al a x` (5x)
+- `All | 01 Jan 2026 to 31 Jul 2026` (4x)
+- `& - Select - All v| All vy) All v` (4x)
+- `All v| All v| All vy) All ~All v` (4x)
+- `36 Dashboard Project level Party Balance Report CG Filter Sort More 4) | Search Data Q |` (4x)
+- `| hoe e@ ~ Oo ENG aa in 18:18` (4x)
+- `| ih @ ~ Oo ENG aa in 18:21` (4x)
+- `All v| All v` (4x)
+- `36 Dashboard Company Transactions Report CG Filter Sort More 4) | Search Data Q |` (4x)
+- `3€ Dashboard Party Library CG Filter Sort More = [(N | Search Data Q |` (4x)
+- `| hoe @ ~ Oo ENG a n 18:33` (4x)
+- `X ADD PARTY Cancel | save |` (4x)
+- `X ADD NEW ACCOUNT Cancel | save |` (4x)
+- `| @ wn Oo az ENG a bi 18:57` (4x)
+- `© Onsite Teams | v8.24.0 Setting` (4x)
+- `& Team Schedule party in: 0 | Out: 20` (4x)
+- `| @ (Sy ® a F<] [| az ENG aa 4 14:14` (4x)
+- `v Onsite Teams compe’ x © Construction Manage X @ Schedule x 4 construction-manage & SiteFlow|Premiumc x 4 SiteFlow|PremiumC X + ~ Ask Gemini al a x` (4x)
+- `$§ Dashboard Company Sales Report CG Filter Sort More [(%y | Search Data Q |` (3x)
+- `& - Select - All v| All ~All v` (3x)
+- `& - Select - All v| All vy) All ~All v| All v` (3x)
+- `| i e@ ~ Oo ENG aa 4 18:03` (3x)
+- `$§ Dashboard Company Payment Report CG Filter Sort More [(%y | Search Data Q |` (3x)
+- `& - Select - All | All | All vy) All vy) All v| All v` (3x)
+- `All v| All v| All ~All vy |) -Select-` (3x)
+- `| i e@ ~ Oo ENG aa 4 18:07` (3x)
+- `3€ Dashboard Task Resource Budget vs Actual Report @ Filter Sort More (4) Search Data Q |` (3x)
+- `36 Dashboard Task BOQ Billed & Unbilled Qty Report CG Filter Sort More 4) | Search Data Q |` (3x)
+- `| i e@ ~ Oo ENG aa in 18:10` (3x)
+- `All v| All | & -Select- All ~All v| All v| All vy) All v | -Select-` (3x)
+- `All v| All v| & -Select-` (3x)
+- `| hoe e@ ~ Oo ENG aa in 18:15` (3x)
+- `36 Dashboard Purchase Order Item Report CG Filter Sort More 4) | Search Data Q |` (3x)
+- `All | © -Select- All vy) All ~All v| All v| All vy) All vy) All v` (3x)
+- `36 Dashboard Daily based Equipment Used Report CG Filter Sort More 4) | Search Data Q |` (3x)
+- `| hoe e@ ~ Oo ENG aa in 18:23` (3x)
+- `All v| All v| All vy © -Select-` (3x)
+- `| hoe e@ ~ Oo ENG aa in 18:28` (3x)
+- `36 Dashboard Subcon Measurement Book CG Filter Sort More 4) | Search Data Q |` (3x)
+- `| hoe @ ~ Oo ENG a n 18:31` (3x)
+- `& - Select - All v| All vy) All ~All v| All v| All v` (3x)
+- `| hoe e@ ~ Oo ENG aa in 18:31` (3x)
+- `All v| -Select- vy) -Select -` (3x)
+- `3€ Dashboard BOQ Measurement Book CG Filter Sort More [(% | Search Data Q |` (3x)
+- `X  NEWLEAD F save. |` (3x)
+- `BS Bl MyAccount © Soros (2019) QM eeMO QM pop BY owas B¥PiZ Al val |Z) GRIN wm JHMM wm JHSC viuE [J MFEM 3 JoeT [Al avsc` (3x)
+- `X NEW ITEM | save |` (3x)
+- `| @ nw Oo az ENG a bi 18:56` (3x)
+- `| @ nw Oo a ENG a bi 18:57` (3x)
+- `A) FetelvxHR. | Doc || CS5]|J5]| Font || Img || Media || Manifest || Socket || Wasm |/ Other` (3x)
+- `© Onsite Teams | v8.23` (3x)
+- `v SiteFlow | Premium Construct) x Payroll x + © Ask Gemini - ag xX` (3x)
+- `v SiteFlow | Premium Construct) x Company Settings x + © Ask Gemini - ag xX` (3x)
+- `© Onsite Teams | v8.23. ® Setting` (3x)
+- `v Onsite Teams compe’ = © Construction Manage % © Company Home X & construction-manage XX — & SiteFlow|PremiumC X — & SiteFlow|Premiumc x = + © Ask Gemini - ag xX` (3x)
+- `All | All vy) All v` (2x)
+- `| @ ~ Oo ENG a 4 17:57` (2x)
+- `| i @ ~ Oo ENG a 4 17:58` (2x)
+- `| @ wn Oo ENG a i 17:59` (2x)
+- `36 Dashboard Item Wise Sales Report CG Filter Sort More 4) | Search Data Q |` (2x)
+- `36 Dashboard CRM Lead Detail Report Filter Sort More) | Search Data Q|` (2x)
+- `Size: 174.75 KB | 1920x1200` (2x)
+
+---
+
+## 4. ONSITE PDF FEATURE CLAIMS (top keywords)
+
+- `Management Software` (182x)
+- `Check Pricing` (57x)
+- `Software` (50x)
+- `Read story` (42x)
+- `Construction Project` (39x)
+- `Onsite is a construction management software built to` (36x)
+- `Construction Financial` (36x)
+- `Construction Labour` (36x)
+- `Construction Material` (36x)
+- `Terms & Conditions` (36x)
+- `Our Products` (35x)
+- `About Us` (35x)
+- `Customer Stories` (35x)
+- `Career` (35x)
+- `Contact us` (35x)
+- `Help Center` (35x)
+- `Privacy Policy` (35x)
+- `Channel Partner Program` (35x)
+- `Advertise with Us` (35x)
+- `Contractor Management` (35x)
+- `Quick Links` (34x)
+- `Important Links` (34x)
+- `Construction Equipment` (34x)
+- `Management` (23x)
+- `Get Free Demo Check Pricing` (22x)
+- `FAQs` (21x)
+- `CUSTOMER SUCCESS STORY` (20x)
+- `Live` (19x)
+- `Industry Challenges` (17x)
+- `What Construction Companies Say About Onsite` (14x)
+- `Tracking` (14x)
+- `Control` (13x)
+- `Onsite` (12x)
+- `India` (12x)
+- `Pending` (11x)
+- `Firms` (11x)
+- `Companies` (10x)
+- `Interior and Fit-Out` (9x)
+- `Infra and EPC` (9x)
+- `Absent` (8x)
+- `Projects` (8x)
+- `Auto` (8x)
+- `Middle East` (8x)
+- `Procurement` (7x)
+- `Contractors and` (7x)
+- `Developers` (7x)
+- `Dashboard` (7x)
+- `Construction` (7x)
+- `What Construction Companies Say About` (7x)
+- `Name` (6x)
+- `Reporting` (6x)
+- `Infra & EPC Firms` (6x)
+- `Progress Tracking India` (6x)
+- `Equipment Management` (5x)
+- `Verified` (5x)
+- `Active` (5x)
+- `Unverified` (5x)
+- `Interior and fit-out firms` (5x)
+- `Why Excel and WhatsApp Cannot Handle Construction` (5x)
+- `Visibility` (5x)
+- `Reidius Infra` (5x)
+- `KEY BENEFIT` (5x)
+- `THE PROBLEM` (4x)
+- `WHY ONSITE` (4x)
+- `Consultants` (4x)
+- `No Visibility` (4x)
+- `Verification` (4x)
+- `Infrastructure and EPC firms` (4x)
+- `Auto-posts` (4x)
+- `Construction Equipment Management Software` (4x)
+- `Avg utilisation` (4x)
+- `Additional Features That Strengthen Construction` (4x)
+- `Repository` (4x)
+- `Developers & Contractors` (4x)
+- `Interior & Industrial Projects` (4x)
+- `Analytics` (4x)
+- `Budget` (4x)
+- `Generate client bills with proper documentation` (4x)
+- `Track receivables and pending payments` (4x)
+- `Maintain clear billing status across projects` (4x)
+- `Attendance` (4x)
+- `Records` (4x)
+- `Without` (4x)
+- `Paid` (4x)
+- `Teams` (4x)
+- `Construction Material Management Software` (4x)
+- `Avg approval time` (4x)
+- `Trusted by leading construction companies` (4x)
+- `Configure multi-level approval hierarchies for subcontractor` (4x)
+- `Building` (4x)
+- `See Pricing` (4x)
+- `Book a Free Demo` (4x)
+- `Construction verticals` (4x)
+- `SFC Infratech` (4x)
+- `Theeran Avant` (4x)
+- `Hydro Master Pools` (4x)
+- `Cyath Contracting` (4x)
+- `Industrial Construction` (4x)
+- `Material ManagementIndia` (4x)
+- `Vecttor Buildtech` (4x)
+
+---
+
+## 5. ONSITE HAR API ENDPOINTS (unique: 0)
+
+
+---
+
+## 6. GAP ANALYSIS: ONSITE UI vs SITEFLOW BACKEND
+
+### Navigation/Modules UI exists in Onsite but MISSING in SiteFlow backend:
+
+- `a OSOot* OnNonga eas aN FD osor anne`
+- `© Onsite Teams | v8.23.`
+- `| Payroll`
+- `Select Cost Code`
+- `Dashboard`
+- `? Services Noida , Noida = ba .`
+- `All v| |) -Select- All vA v`
+- `Report Date Filter x`
+- `Entry by Site Expense`
+- `All vy) |All v| |) -Select- All vy) |All v`
+- `Material Category`
+- `< > =] Q Search Payroll 0 Present`
+- `All ~All ~All ~All v | | F-Select-`
+- `Select Bank Account`
+- `5 on + Add New Approver`
+- `q | xt || Mobile |`
+- `Nothing`
+- `a OSOot* OnNonga eas a NF D osor anes`
+- `your construction ERP. ——— | “* 3 ttt +`
+- `q | z+ + || Mobile |`
+- `° x NEWITEM F seve. | © OD XA GPresevelog Cl Dheblecathe[Notiottng ~|S LL 8`
+- `Download Excel [7]`
+- `& - Select - All v| All vy) All v`
+- `ti} Delete Logs`
+- `Filter Sort More | Search Q |`
+- `Qty per Unit H`
+- `3€ Dashboard Asset Status Report CG Filter Sort More [(% | Search Data Q |`
+- `yey Y Filter Cline Morefiters ¥`
+- `Supervisor`
+- `Seer *entwonagoua ® a in FD ® 9406-2026`
+- `& 01 Mar 2026 to 31 Mar 2026 All v| All v`
+- `All v| All v All | All v`
+- `Nothing 2-2 con commond-17440644 modems 200 script 0 idiske`
+- `No leave applications for this year.`
+- `$€ Dashboard |`
+- `Restrict BOM Material`
+- `]_ WMO Woodwark Conractrs 3437 a @ Create subcontractor work orders`
+- `& Team Schedule Export to MSP`
+- `Request Date`
+- `Rejected`
+- `STEEL Unit Estimated Received Current Stock`
+- `All | |} -Select - All v`
+- `All | © -Select- All vy) All ~All v`
+- `X ADD NEW ACCOUNT Cancel`
+- `(2) Not allowed`
+- `D Report Lvov`
+- `x Work Order Create Work Order`
+- `All vy) All v| All vy) All v |) -Select -`
+- `a OSOot* OnNonga eas a`
+- `Search parties. Filte Acti + ,`
+- `Leave Policy Template`
+- `No Location found`
+- `Payroll Material Purchase Order Restriction`
+- `© Onsite Teams | v8.24.0 MANAGEMEN.`
+- `| NERUL, Mumbai i a .`
+- `All v| -Select- vy) -Select -`
+- `a OSOot* OnNonga eas aN FOO os or anes`
+- `Filter Sort More Search Q`
+- `All | © -Select- All ~ |_| Pass,Fail vy) All v`
+- `New Cost Code`
+- `& G Ba No activity yet.`
+- `Lead Status t Contact Name Contact No. Mobile Email 208 fetch 0 oon`
+- `36 Dashboard Site Inspection Report Filter Sort More) | Search Data a]`
+- `& - Select - & - Select - All vy) All ~All v| All v`
+- `Party Name`
+- `| Payroll 0 2 0`
+- `v SiteFlow | Premium Construct) X Transaction x + © Ask Gemini - ag xX`
+- `a OSOot* OnNonga eas a TN FD DW osor-2006`
+- `Bangalore Name Status Type Cookies | Size nN`
+- `© Onsite Teams | v8.24.0 .`
+- `All v| -Select- v All v| & -Select- All ~All v| All v| All vy) All v`
+- `tf Delete Logs Taxes Rs 5000 Annual Maintenance +`
+- `© Onsite Teams | v8.24.0 Setting`
+- `Viewer`
+- `Item Level Tax`
+- `© Onsite Teams | v8.24.0 2028`
+- `All v| All | & -Select-`
+- `Not provided z0 —`
+- `Q search parties Y Fiter Active > & Export`
+- `X NEW MATERIAL Cancel | save |`
+- `Material Used`
+- `Payroll ' (| " x`
+- `a OSOt* OnNonga eas ae`
+- `| 18`
+- `& - Select - All v| All vy) All ~All v| All v`
+- `5 . 1 Open 05-Jul-2026 05-Jul-2026 05-Jul-2026 Yash Desai`
+- `Janl2 | present vser`
+- `© Onsite Teams | v8.23. ® Setting`
+- `Reference No.`
+- `Report v`
+- `Email`
+- `& - Select - All v| All ~All v`
+- `Construction Material Management`
+- `All | 01 Jan 2026 to 31 Jul 2026`
+- `No Retention Found`
+- `Creation Date`
+- `Nothing 4280,7632c3ebdd527457;s 200 script 0 Idiske`
+- `NEW BRANCH Cancel | save |`
+- `Bank Code NA`
+- `Opening Balance`
+
+### Form Fields / Columns UI exists in Onsite but potentially MISSING in SiteFlow models:
+
+- `#2 Equipment ‘ype: Tas! rial Number:`
+- `$8 Dashboard . , : i i`
+- `$§ Dashboard BOQ Workorder Summary Report Cc Filter Sort More [(% | Search Data Q |`
+- `$§ Dashboard CRM Lead Detail Report CG Filter Sort More [(%y | Search Data Q |`
+- `$§ Dashboard Company Expense Report CG Filter Sort More [(%y | Search Data Q |`
+- `$§ Dashboard Company Expense Report CG Filter Sort More [4 | Search Data Q |`
+- `$§ Dashboard Company Payment Report CG Filter Sort More [(%y | Search Data Q |`
+- `$§ Dashboard Company Sales Report CG Filter Sort More [(%y | Search Data Q |`
+- `$§ Dashboard Equipment Trip Report CG Filter Sort More [(%y | Search Data Q |`
+- `$§ Dashboard PO Summary Report CG Filter Sort More [(%y | Search Data Q |`
+- `$§ Dashboard Payment Request Report CG Filter Sort More [4 | Search Data Q |`
+- `$§ Dashboard Project Financial Summary CG Filter Sort More (4) | Search Data Q |`
+- `$§ Dashboard Project Financial Summary CG Filter Sort More [4 | Search Data Q |`
+- `$§ Dashboard Project Operational Summary CG Filter Sort More [4 | Search Data Q |`
+- `$§ Dashboard Project Payment Report CG Filter Sort More [(%y | Search Data Q |`
+- `$€ Dashboar Material Library @ Filter Sort More [(N | Search Data Q |`
+- `$€ Dashboard |`
+- `%} Setting a Leave Policy Setup |= Holiday Calendar`
+- `& - Select - & - Select - All vy) All ~All v| All v`
+- `& - Select - All v| All vy) All v`
+- `& - Select - All v| All vy) All ~All v| All v`
+- `& - Select - All v| All vy) All ~All v| All v| All v`
+- `& - Select - All v| All ~All v`
+- `& - Select - All v| All ~All ~All v| All v| All v`
+- `& - Select - All | All | All vy) All v`
+- `& - Select - All | All | All vy) All vy) All v| All v`
+- `& 01 Mar 2026 to 31 Mar 2026 All v| All v`
+- `& 01 May 2026 to 31 May 2026 All v| All | All vy) All v`
+- `& @) @ a“ "4 Oo (x) a re] A NG ag wt 18:46`
+- `& G 7) Payroll Type: Workforce Name: Material name: Material Category:`
+- `& Setting [> | Prestige Developers 0% zo/z0 0 ot`
+- `& Team Schedule 2:`
+- `& Team Schedule Restrict Entry Creation: Blocks request creation if it exceeds the estimate.`
+- `& Team Schedule Unpaid invoice: Z 0 Unpaid Expense: #0 In: 0] Out: z 0`
+- `& Team Schedule Unpaid invoice: Z 0 Unpaid Expense: Z 0 in: 01 Out 0`
+- `& Team Schedule party in: 0 | Out: 20`
+- `& Team Schedule y 3} da / mm / yyy Holiday nam | Add |`
+- `& Team Schedule | Name`
+- `& Team sche Unpaid Invoice: Z 0 In: @ 0] Out: 0`
+- `& ea) @ - "4 BD [x] : ce] aA INS ag wa 18:38`
+- `&% Mom Unpaid invoice: Z 0 Unpaid Expense: #0 in: 01 Out 0`
+- `() Cash |) Bank Transfer (| Cheque:`
+- `(0) vo-entry-checkout-payment-S2aisd 61: modemys 200 texthavascrpt 0 (dske`
+- `(@®) Demo Compan:`
+- `(am]| Fetenrxnr (Doc |[¢55 |(45] Font |(img | Media |( Manifest |( Socket | { Wasm | {Other }`
+- `(v] WhatsApp progress updates have no connection to the planned schedule and cannot trigger automatic delay alerts |`
+- `(vy) Spot delays early and act quickly | | O = a Z`
+- `(} workforce-type-wise?company_id=4d6fc487-5cf8-4826-8fd3-1c1f5f1d7660 200 xhe 0 O58 |`
+- `+ 1 tt > copy(localstorage.getItem(*token') || sessionStorage.getItem( token'))`
+- `+ Subcon Issue + Material Transfer erent : i`
+- `, ENG ata 19:54`
+- `, ENG ata 19:55`
+- `- > PAYMENT REQUESTS ® OY. QA G@Presevelog Disable cache | Nothrottiing +| DL 8`
+- `- F o - ENG aw 00:12`
+- `- MP SITE 0% :`
+- `- Select - vA v| All v| All vy © -Select-`
+- `- Select - vy -Select - vy -Select - v | F- Select -`
+- `- Site Visit Inspection PCC (Plain Cement Concrete) 1:4:8 7`
+- `- e@ 2) aw” = a ENG + 03:07`
+- `-_ - 2) ~ Mw ¢€ ENG ay n 19:01`
+- `-_ - S) ~ Mw € 5 ENG ay a 20:09`
+- `-_— - 2) ~ Mw € A ENG ay ‘i 18:42`
+- `-_— - e 2) a os A ENG a bs 21:02`
+- `-_— @ aw” o ENG ax n 14:14`
+- `-_— e@ aw” o A ENG ax " 14:14`
+- `-— - e 2) a os A ENG a bs 16:18`
+- `-— - e 2) a os x ENG a bs 16:16`
+- `. . a : The standard scheduling process Planning engineers update the`
+- `. : 200 hr 1 ie`
+- `. Boe : “ * EE Bee =`
+- `. ER [| elements Console Sources _Network Performance Memory >> on Ars mss @ Bi x`
+- `. Prestige Developers 0% :`
+- `. x NEWITEM | save | @ @ Y. Q G@Preservelog (Disable cache | No throtting ~| t% L 8`
+- `. | collect?v=284tid=G-DBPPGRWDG7&igtm =A5je66u1V89919076..t=108seg=1&dt... 204 fetch 0 00K8`
+- `. ¢ ENG 19:50`
+- `. ¢ ENG 20:01`
+- `028 0 eallect=2atdaG-ORPFGRWOGTga4e66uV912076.t=I08segeT&at. oss) fetch 0 |`
+- `05 Jul, 2026 Party 7:40 PM - 9:43 PM 2Hr3 Min Nerul Fs`
+- `1 Delete Logs Tutorial Video = Nn es L :`
+- `1 G ata 19:55`
+- `1 G ata 20:07`
+- `1,00,000+ Happy customers Callus:9560209605 © cs =`
+- `2 3 o — ENG za in 00:12`
+- `2 @ om ENG aq ‘i 00:13`
+- `2 Team Schedule + Workorder No + Group + Section + Item Name + Progress Date Unit Estimated Quantity Ope:`
+- `2 Team Schedule =| Material Category Unit Opening Stock Total In Quantity Total Out Quantity Current Stock AvgPurchase Price Current Stock Value`
+- `2 Team Schedule All v | | 3 01 Jan 2026 to 31 Jul 2026`
+- `2 Team Schedule All v| |All v| |All v`
+- `2 Team Schedule Fg) coco Email N: Budget Followup Date D Closure D Remark`
+- `2 Team Schedule Workorder Name Workorder Date Workorder No Name Estimated Amount % Order Complete | WorkDone Amount Bill`
+- `2 Team Schedule a Email N: Budget Followup Date D Closure D Remark Assignees`
+- `2 Team Schedule a Estimated Amount % Order Complete | WorkDone Amount Billed Amount rer bre Bale Workorder Date t Creator Name Created Date`
+- `2 Team Schedule a Estimated Quantity Opening Quantity Number Length Width Height Progress Quantity Closing Quantity|`
+- `2 Team Schedule a Party Tax No. Project Name Bill Number + Expense Type Expense Date t Expense Amount Tax Amount:`
+- `2 Team Schedule a Unit Unit Price Quantity Basic Amount TAX Discount Total Amount Material Category PO|`
+- `2 Team Schedule y Zetwerk :`
+- `2 Team Schedule | Name Category Name Unit`
+- `2 Team Schedule | Name Name Designatio`
+- `2 Team Schedule | hift OTHrs Payable Allowance amount  LateFine Ded`
+- `2 Team schedule | a Equipment VehicleNo Hid ae EqpUnit Y ActiveDays  FAaMPIns FuelAdded  DRFuel A | FuelVariance "46`
+- `2 e@ ENG a 18:23`
+- `2 e@ ENG am a 18:23`
+- `2 e@ na Oo ENG aa in 18:20`
+- `2 n Company Level Report sate not selecte:`
+- `2 til e z0/z0 O :`
+- `2 | Prestige Developers | Ongoin, 0`
+- `2% Team Schedule Equipment Name VehicleNo > | Ownership Type Party Name UsedDate 7 — Entry Type Unit d`
+- `2% Team Schedule Tt RequestNo + | ProjectName Materfal Name Specifications Unit RequestQuantity Ordered Quantity Pend`
+- `2, Finance Ally 3 Stage » Category » Search Projects Q . Bice:`
+- `21 Brick Masonry (230mm / 115mm) 40.wd 12 Dec 25 - 20 Jan 26 o-- rey :`
+- `24 Finance Restrict Entry Creation: Blocks request creation if it exceeds the estimate.`
+- `2] "4 ENG 18:58`
+- `3 D | Managemer, >=. aS`
+- `319 /2808 requests | 400 kB /790 kB transferred | 2,206 KB / 52,110 KB resources | Finish:92 min | DOMContentLoaded: 6.72 | Load: 7.84 s`
+- `319/2789 requests | 400 kB /790 kB transferred | 2,206 KB / 52,023 KB resources | Finish: 9.1 min | DOMContentLoaded: 6.725 | Load: 7.84 s`
+- `331/304 requests | 416 KB /806 KB transferred | 2.28548 /55234KB resources Finish: 103 min | DOMContentLoaded: 672s Load: 7.845`
+- `36 Dashboard All Party Balance Report CG Filter Sort More 4) | Search Data Q |`
+- `36 Dashboard Asset Allocation Report CG Filter Sort More 4) | Search Data Q |`
+- `36 Dashboard BOQ Workorder Summary Report CG Filter Sort More 4) | Search Data Q |`
+- `36 Dashboard Bank Statement Report Filter Sort More) | Search Data Q|`
+- `36 Dashboard CRM Lead Detail Report Filter Sort More) | Search Data Q|`
+- `36 Dashboard Company Expense Report CG Filter Sort More 4) | Search Data Q |`
+- `36 Dashboard Company Transactions Report CG Filter Sort More 4) | Search Data Q |`
+- `36 Dashboard Daily based Equipment Used Report CG Filter Sort More 4) | Search Data Q |`
+- `36 Dashboard Equipment Usage Detail Report CG Filter Sort More 4) | Search Data Q |`
+- `36 Dashboard Item Wise Sales Report CG Filter Sort More 4) | Search Data Q |`
+- `36 Dashboard Material Purchase Item Report CG Filter Sort More 4) | Search Data Q |`
+- `36 Dashboard Material Received w/o PO CG Filter Sort More 4) | Search Data Q |`
+- `36 Dashboard Material Receiving & Used Report CG Filter Sort More 4) | Search Data Q |`
+- `36 Dashboard Material Request Item Report CG Filter Sort More 4) | Search Data Q |`
+- `36 Dashboard Payment Request Report CG Filter Sort More 4) | Search Data Q |`
+- `36 Dashboard Production Material Report CG Filter Sort More 4) | Search Data Q |`
+- `36 Dashboard Project Operational Summary CG Filter Sort More 4) | Search Data Q |`
+- `36 Dashboard Project level Party Balance Report CG Filter Sort More 4) | Search Data Q |`
+- `36 Dashboard Purchase Order Item Report CG Filter Sort More 4) | Search Data Q |`
+- `36 Dashboard Site Inspection Report CG Filter Sort More 4) | Search Data Q |`
+- `36 Dashboard Site Inspection Report Filter Sort More) | Search Data a]`
+- `36 Dashboard Subcon Measurement Book CG Filter Sort More 4) | Search Data Q |`
+- `36 Dashboard Subcon Workorder Summary Report CG Filter Sort More 4) | Search Data Q |`
+- `36 Dashboard Task Attendance Report CG Filter Sort More 4) | Search Data Q |`
+- `36 Dashboard Task BOQ Billed & Unbilled Qty Report CG Filter Sort More 4) | Search Data Q |`
+- `36 Dashboard Task Resource Budget vs Actual Report CG Filter Sort More | Search Data Q |`
+- `36 Dashboard Unbilled Item Report Filter Sort More) | Search Data Q|`
+- `36 Dashboard Warehouse Current Stock Report CG Filter Sort More 4) | Search Data Q |`
+- `36 Dashboard Warehouse Transaction Report CG Filter Sort More 4) | Search Data Q |`
+- `38 Dashboar Payroll Library CG Filter Sort More 4) | Search Data Q |`
+- `3} da / mm / yyy Holiday name | Add |`
+- `3€ Dashboard All expense Deduction / Retention Report @ Filter Sort More [y | Search Data Q |`
+- `3€ Dashboard Asset Status Report CG Filter Sort More [(% | Search Data Q |`
+- `3€ Dashboard BOQ Item Report CG Filter Sort More = [(N | Search Data Q |`
+
+---
+
+## 7. BUSINESS LOGIC INDICATORS & FORMULAS FROM OCR
+
+- `CQ Project Project Name: Project Status: Project Health:`
+- `2 Team Schedule All v| |All v| |All v`
+- `MOM ToDo Chat All vA v All v| All ¥`
+- `Q. Project Project Name: Project Status: Project Health:`
+- `All | All ~All v`
+- `All v| All v All | All v`
+- `QQ. Project Project Name: Project Status: Project Health:`
+- `All | All vy) All v`
+- `fat ProjectName| T ProjectCategory T (KeyPersonnel 7 ProjectStatus TT ProjectHealth fj StartDate 6 End Date T Progress`
+- `Delete Logs Total Sales Total Expense Total Margin`
+- `2 Team Schedule All v | | 3 01 Jan 2026 to 31 Jul 2026`
+- `ty Delete Logs Company Party Balance (All Projects)`
+- `All | 01 Jan 2026 to 31 Jul 2026`
+- `, Balance Type`
+- `f} Delete Logs Advance Paid To Pay To Receive Advance Received`
+- `MOM ToDo Chat ‘T  ProjectNamey ‘J ProjectStatus 7 Project Heal Project Budget , Total Expense Remaining . OK Project Margit`
+- `G Delete Logs QQ Tax TH Warehouse TH Sub Con.`
+- `$§ Dashboard Company Sales Report CG Filter Sort More [(%y | Search Data Q |`
+- `All v| All | & -Select- All ~All v`
+- `2 Team Schedule Fess Net Amount Due Date Payment Received Balance Due Payment Status Notes Creator Name —`
+- `Settlement Payment Total`
+- `2 Team Schedule a Balance Due Payment Status Notes. Creator Name A Payment Dates Reference Numbers 4 =`
+- `36 Dashboard Item Wise Sales Report CG Filter Sort More 4) | Search Data Q |`
+- `2 Team Schedule a Unit Quantity Item Rate Tax% Tax Amount Gross Amount Total Amount Invoice Created`
+- `3€ Dashboard Sales Deduction / Retention Report @ Filter Sort More [4 | Search Data Q |`
+- `& - Select - All v| All vy) All v`
+- `3€ Dashboard Sales Deduction / Retention Report @ Filter Sort More [y | Search Data Q |`
+- `& - Select - All v| All ~All v`
+- `© Report Lead Date: Lead Name: Contact Name: Lead Status: Lead Priority: Lead Category:`
+- `2 Team Schedule a t Lead Name. Contact Name. Contact No. Lead Status Lead Priority Lead Source Lead Category`
+- `36 Dashboard CRM Lead Detail Report Filter Sort More) | Search Data Q|`
+- `& - Select - All v| All vy) All ~All v| All v`
+- `$§ Dashboard CRM Lead Detail Report CG Filter Sort More [(%y | Search Data Q |`
+- `© Report Lead Date: Lead Status: Lead Source: Assignees:`
+- `5} - Select - fA v| |All v| |All v`
+- `Project 1 No of Retention Post Tax Payment`
+- `® Team Schedule | Name Invoices EES Amount Deduction NetAmount Received ‘Balance Due`
+- `Project 1 Noof Retention Post Tax Payment`
+- `® Team Schedule | Name Invoices EES ‘Amount Deduction  NetAmount Received ‘Balance Due`
+- `@ crm Filter Sort More | Search Q |`
+- `$§ Dashboard Company Payment Report CG Filter Sort More [(%y | Search Data Q |`
+- `& - Select - All | All | All vy) All vy) All v| All v`
+- `36 Dashboard Bank Statement Report Filter Sort More) | Search Data Q|`
+- `All v| All v| All vy) -Select- vy -Select - v © -Select-`
+- `Fj From 09 Jul 2026 All v| | Reset |`
+- `®& Team Schedule t Project Name Creator Name Party Name Amount Remark Reference No. Payment Type P`
+- `$§ Dashboard Project Payment Report CG Filter Sort More [(%y | Search Data Q |`
+- `& - Select - All | All | All vy) All v`
+- `© Report Party Name: Project Name: ‘Approval Status: Payment Status: Payment Date:`
+- `$§ Dashboard Payment Request Report CG Filter Sort More [4 | Search Data Q |`
+- `All v| All v| All ~All vy |) -Select-`
+- `2 Team Schedule a Due Date Creator Name Request Type Order/Bill No Approval Status Payment Status Remark Account Name`
+- `4 Finance il 31-Jul-2026 Yash Desai Subcon Expense Auto Approved Unpaid`
+- `36 Dashboard Payment Request Report CG Filter Sort More 4) | Search Data Q |`
+- `@ Delete Logs Max%`
+- `Project MainTask Group Task Task: Start Date End Date Unit EstimatedQty OpeningQty ProgressQty Complete Closing Qty`
+- `OQ) Project All | This Week vy -Select -`
+- `ful T ProjectName | T Activity Name 'T Status | T fu T ProjectName | T MaterialName | #, Request'| #. Unsettled Quanti| T Stats`
+- `: Project Main Task Group Task ak %`
+- `84 Finance N: R Name ‘Task Name Start Date End Date Unit EstimatedQty OpeningQty ProgressQty Complete Closing Qty`
+- `Project name Party name Workforce name No of Workers Total Shift`
+- `LI] Project Name Equipment Name Vehicle No Unit`
+- `All v| This Week vy) -Select -`
+- `LI] Project Name Subcontractor Name Workorder Name Workorder No. Estimated Amount Work Done Amount Invoice Amount % Complete`
+- `9M, Finance 1 Developers As. - - - NotStarted Delayed 04-Feb-2026 04-Feb-2026 % -`
+- `All v| All v| All vy) All v |) -Select - All v| All vy) All v | -Select-`
+- `9M, Finance 1 Not Started Delayed 04-Feb-2026 04-Feb-2026 % - 100.00 0.00 0.00`
+- `® Team Schedule Task Del 1 J in t Estimated % Com| Last`
+- `© Report Project Name: MainTaskName: Group TaskName: Task Name: Progress Date: Task Status:`
+- `2% Team Schedule a ProjectName + MainTaskName + GroupTaskName +  TaskName +  ProgressDate + Unit Estimated Quantity Opening Quantity`
+- `3€ Dashboard Task Measurement Book CG Filter Sort More [% | Search Data Q |`
+- `All v| All v| All ~All vy |) -Select- All v`
+- `2 Team Schedule Gl. Opening Quantity Number Length Width Height Progress Quantity Closing Quantity Progress Notes`
+- `All v| All v| All vy) All v |) -Select - All v`
+- `All v| All v| All vy) All vy) All v| & -Select -`
+- `ProkctNane | Matealname | MaivickNane | Group exkNane AgUnitate | Areca]`
+- `© Report Project Name: Activity Name: Assigned To: Due Date: Status: Related Task: Creator Name:`
+- `2 Team Schedule a Activity Name Project Name Status Creation Date t Due Date Last Updated Date Assigned To Type Re}`
+- `3€ Dashboard To Do Report CG Filter Sort More = [(N | Search Data Q |`
+- `All v| All v| All vy © -Select- All v| All v| All v`
+- `2 Team Schedule a Creation Date t Due Date Last Updated Date Assigned To Type Related Task Creator Name Closed Date`
+- `3€ Dashboard Task Resource Budget vs Actual Report @ Filter Sort More (4) Search Data Q |`
+- `All v| All v| All vy) All ~All v`
+- `Qty per Unit H`
+- `36 Dashboard Task Resource Budget vs Actual Report CG Filter Sort More | Search Data Q |`
+- `Project Name Status`
+- `© Report Project Name: Inspection Date: Inspection Name: Inspection Status: Approval Status:`
+- `36 Dashboard Site Inspection Report CG Filter Sort More 4) | Search Data Q |`
+- `All | © -Select- All ~ |_| Pass,Fail vy) All v`
+- `Report Project Name: Inspection Date: Inspection Name: Inspection Status: Approval Status:`
+- `2 Team Schedule _ Inspection Name ae Inspection Items. Inspection Notes Created Date t Approval Status`
+- `36 Dashboard Site Inspection Report Filter Sort More) | Search Data a]`
+- `All | © -Select - All ~ |_| Pass,Fail ~All v`
+- `All vy) All v| All vy) All v |) -Select -`
+- `36 Dashboard Task BOQ Billed & Unbilled Qty Report CG Filter Sort More 4) | Search Data Q |`
+- `All v| All v| All vy) All v`
+- `36 Dashboard Task Attendance Report CG Filter Sort More 4) | Search Data Q |`
+- `All | © -Select- All vy) All ~All v`
+- `All | © -Select - All ~All ~All v`
+- `$§ Dashboard Company Expense Report CG Filter Sort More [4 | Search Data Q |`
+- `All v| All v| & -Select- All ~All v| All v| All ~All vy |) -Select-`
+- `36 Dashboard Company Expense Report CG Filter Sort More 4) | Search Data Q |`
+- `All v| All | & -Select- All ~All v| All v| All vy) All v | -Select-`
+- `a Due Date Settlement By Payment Mode Cost Code Sub Cost Code. Notes/Remarks. Reference No. Creator Name`
+- `a Payment Mode Cost Code Sub Cost Code. Notes/Remarks. Reference No. Creator Name Approval Status Created Date`
+- `$§ Dashboard Company Expense Report CG Filter Sort More [(%y | Search Data Q |`
+- `All v| | -Select - v`
+- `All v| -Select - v`
+- `© Report Project Name: Then Date: Party Name: Due Date:`
+- `All v| |) -Select- All v| | Fy -Select-`
+- `3€ Dashboard All expense Deduction / Retention Report @ Filter Sort More [y | Search Data Q |`
+- `All v| All v| & -Select-`
+- `Select - vA v| All v| All vy © -Select-`
+- `3€ Dashboard Party Ledger @ Filter Sort More = [(N | Search Data Q |`
+- `- Select - vA v| All v| All vy © -Select-`
+- `© Report Party Name: Balance Type: Party Type:`
+- `36 Dashboard All Party Balance Report CG Filter Sort More 4) | Search Data Q |`
+- `All v| All v| All v`
+- `Report Party Name: Project Name: Party Type: Balance Type:`
+- `36 Dashboard Project level Party Balance Report CG Filter Sort More 4) | Search Data Q |`
+- `© Report Party Name: Project Name: Party Type: Balance Type:`
+- `2 Team Schedule i. Subcon Amount Site Expense. Equipment Expense Debit Note. Sales Invoice Net Retention Credit Note Material Sale`
+- `& Team Schedule a Debit Note Sales Invoice Net Retention + Credit Note Material Sale Material Return Party Received Party Paid`
+- `& Team Schedule a Net Retention Credit Note Material Sale Material Return Party Received Party Paid Net Balance Balance Type`
+- `Material Name: Project Name: Request No: Status: Request Date: Approved or Rejec... Requested by:`
+- `36 Dashboard Material Request Item Report CG Filter Sort More 4) | Search Data Q |`
+- `All v| All v| All ~All vy |) -Select- All v| All v`
+- `2% Team Schedule Tt RequestNo + | ProjectName Materfal Name Specifications Unit RequestQuantity Ordered Quantity Pend`
+- `2 Team Schedule Request Quantity Ordered Quantity Pending Quantity PONo Requested by Status Rej By Request Notes`
+- `All v| All v| All vy) All v |) -Select - All v| All v`
+- `36 Dashboard Material Receiving & Used Report CG Filter Sort More 4) | Search Data Q |`
+- `All v| -Select- v All v| & -Select- All ~All v| All v| All vy) All v`
+- `“= Vehicle Number PO Number PO Quantity POdate Main Task Name. Group Task Name Task Name Equipme:`
+- `a PO Number PO Quantity POdate Main Task Name. Group Task Name Task Name Equipment Name. Equipment No`
+- `2 Team Schedule | Name Category Name Unit`
+- `Select - vy -Select - vy -Select - v | F- Select -`
+- `36 Dashboard Unbilled Item Report Filter Sort More) | Search Data Q|`
+- `- Select - vy -Select - vy -Select - v | F- Select -`
+- `© Report Project Name: Vendor Name: Approval Status: Approved or Rejec... Creator Name:`
+- `3€ Dashboard PO Summary Report CG Filter Sort More = [(N | Search Data Q |`
+- `All v| All v| All ~All ~All v`
+- `2 Team Schedule a PO Number Material Amount Discount Other Charges Tax Amount Total Amount Approval Status Approved or Rejecte:`
+- `$§ Dashboard PO Summary Report CG Filter Sort More [(%y | Search Data Q |`
+- `= f Project Name Party Name Created By Receiving Date t Unit Quantity`
+- `36 Dashboard Material Received w/o PO CG Filter Sort More 4) | Search Data Q |`
+- `PO Number: PO Date: Project Name: Vendor Name: Material Name: Approval Status: Material Category: __ Item Status: GRN No.`
+- `36 Dashboard Purchase Order Item Report CG Filter Sort More 4) | Search Data Q |`
+- `All | © -Select- All vy) All ~All v| All v| All vy) All vy) All v`
+- `2 Team Schedule Gl Unit Price POQty PO Received Qty PO Pending Qty Item Status Approval Status MRNo. Challan Numb`
+- `2 Team Schedule a POQty PO Received Qty PO Pending Qty Item Status Approval Status MRNo. Challan Number GRNNo.`
+- `36 Dashboard Production Material Report CG Filter Sort More 4) | Search Data Q |`
+- `All v| Select - All ~All v`
+- `2% Team Schedule a. prosucdion hateriad Unit Quantity Production Date * Raw Material Consumed Notes`
+- `© Report Purchase Date: Receiving Date: Party Name: Party GST: Project Name: Material:`
+- `36 Dashboard Material Purchase Item Report CG Filter Sort More 4) | Search Data Q |`
+- `& - Select - & - Select - All vy) All ~All v| All v`
+- `2 Team Schedule a Unit Unit Price Quantity Basic Amount TAX Discount Total Amount Material Category PO|`
+- `2 Team Schedule a Material Category PO Number PO Quantity PO Item Rate POdate PO Total Amount GRNNo. Challan Number`
+- `2 Team Schedule a PO Total Amount GRNNo. Challan Number Reference No. Remark Created By Vehicle Number Expense Status`
+- `Amount Amount`
+- `2 Team Schedule Remark Created By Vehicle Number Expense Status Due_date Expense Amount Eyesres Unpaid Expense`
+- `ME ProfectName Material Name uoM Date OpeningQty __StockIn___StockOut Closing Qty`
+- `All | |} -Select - All v`
+- `This Week vy |) -Select - All v| All v)| All | |All v`
+- `Filter Sort More Search Q`
+- `This Week v |) -Select - All vy) All v)| All vy) All v`
+- `irkforceName | AttendanceDate t No of Workers Total Shift Overtime Hours`
+- `Finance Filter Sort More | Search Q |`
+- `2 Team Schedule Party Name Designation Phone No. Bank Name IFSC Code Account No. ‘Shift OTHrs Payabk Allowance LateFine Ded`
+- `£5] 01 May 2026 to 31 May 2026 All vl) jal al) |All al) |All al`
+- `2 Team Schedule | hift OTHrs Payable Allowance amount  LateFine Ded`
+- `Account No. + Project Name Date Month Total Shift`
+- `& 01 May 2026 to 31 May 2026 All v| All | All vy) All v`
+- `36 Dashboard Equipment Usage Detail Report CG Filter Sort More 4) | Search Data Q |`
+- `All v| All v| All ~All ~All v| All v| All vy © -Select-`
+- `2% Team Schedule Equipment Name VehicleNo > | Ownership Type Party Name UsedDate 7 — Entry Type Unit d`
+- `®& Team Schedule i Used Date t Entry Type Unit Qty Start at Stop at Notes Creator Name`
+- `& 01 Mar 2026 to 31 Mar 2026 All v| All v`
+- `2 Team schedule | a Equipment VehicleNo Hid ae EqpUnit Y ActiveDays  FAaMPIns FuelAdded  DRFuel A | FuelVariance "46`
+- `2 Team Schedule a es Equipment VehicleNo roy ae EqpUnit Y ActiveDays  PAaNPInE FuelAdded  PFuel, — ActualFue! Fuel Variance PU`
+- `Filter Sort More | Search Q |`
+- `ProjectName |  EquipmentName | Vehicle No + PartyName J ExpMileage J Eqp Unit 4+ | Equipment Used Exp Fuel Consumed Fuel Added Fuel Adjusted`
+- `Party Name + Exp Mileage + Eqp Unit 4+ | Equipment Used Exp Fuel Consumed Fuel Added Fuel Adjusted Total Equipment Use Used Date Unit Price`
+- `2 Team Schedule Equipment Name. Vehicle No Ownership Type Party Name Measurement Type Usage Unit Date t Equi`
+- `36 Dashboard Daily based Equipment Used Report CG Filter Sort More 4) | Search Data Q |`
+- `All v| All v| All vy) All v |) -Select -`
+- `All vy) |All v| |) -Select- All vy) |All v`
+- `$§ Dashboard Equipment Trip Report CG Filter Sort More [(%y | Search Data Q |`
+- `= t Trip Name Trip Distance Trip Count Load Per Trip Load Unit Total Load Total Distance Created Date`
+- `2% Team Schedule a + AssetName + — AssetType 4 — AssignedTo Allocation Type Created by Project Name Assigned Time`
+- `36 Dashboard Asset Allocation Report CG Filter Sort More 4) | Search Data Q |`
+- `All ~All ~All ~All v | | F-Select- © - Select -`
+- `& Team Schedule a Asset Type + Assigned To Allocation Type Created by Project Name Assigned Time Assigned Qty Remaining Qty`
+- `All v| All v| All ~All vy |) -Select- & - Select -`
+- `3€ Dashboard Asset Status Report CG Filter Sort More [(% | Search Data Q |`
+- `2 Team Schedule a Assigned Qty InRepair Qty Damaged Qty Asset Value Created by Creation Date t Last Assigned To Last Assigned Time`
+- `© Report Party Name: Invoice Date: Project Name: Invoice Type: Party GST: Company GST:`
+- `3€ Dashboard Sales (GSTR-1) CG Filter Sort More [(% | Search Data Q |`
+- `All | © -Select- All vy) All ~All v| All v`
+- `®& Team Schedule a t Invoice Number Invoice Amount: Tax Amount CGST SGST IGsT UTGST Company GST`
+
+---
+
+## 8. ONSITE JSON SCHEMA KEYS (from HAR response bodies)
+
+- `page` (406x)
+- `data` (242x)
+- `id` (103x)
+- `created` (90x)
+- `updated` (89x)
+- `delete` (86x)
+- `creator_company_user_id` (81x)
+- `company_id` (77x)
+- `creator` (76x)
+- `subcategories` (58x)
+- `name` (51x)
+- `projects` (47x)
+- `available_slot_count` (45x)
+- `city` (38x)
+- `type` (38x)
+- `prefix` (34x)
+- `sequence` (34x)
+- `unbilled_material_count` (26x)
+- `state` (25x)
+- `photos` (25x)
+- `material_request_pending_count` (22x)
+- `multilevel_approval_pending_count` (22x)
+- `open_material_request_count` (22x)
+- `open_material_request_item_ordered_count` (22x)
+- `pending_approval_count` (22x)
+- `todo_count` (22x)
+- `gstin` (20x)
+- `mobile` (20x)
+- `notes` (20x)
+- `code` (19x)
+- `message` (19x)
+- `ip` (18x)
+- `nm` (17x)
+- `ddd` (17x)
+- `h` (17x)
+- `w` (17x)
+- `layers` (17x)
+- `v` (17x)
+- `fr` (17x)
+- `op` (17x)
+- `assets` (17x)
+- `location` (17x)
+- `search` (17x)
+- `opening_balance` (17x)
+- `address_list` (16x)
+- `country_code` (15x)
+- `owner_id` (14x)
+- `address_type` (14x)
+- `address_title` (14x)
+- `address_gst` (14x)
+- `address_line_1` (14x)
+- `address_line_2` (14x)
+- `postal_code` (14x)
+- `google_address` (14x)
+- `primary` (14x)
+- `monkey_patch_country_config` (14x)
+- `material_use` (14x)
+- `sub_con_material_issue` (14x)
+- `material_transfer` (14x)
+- `material_request_restriction` (14x)
+- `po_material_restriction` (14x)
+- `production_material_restriction` (14x)
+- `lib_bom_restriction` (14x)
+- `grn_sequence_level` (14x)
+- `material_request_sequence_level` (14x)
+- `debit_credit` (14x)
+- `creator_company_id` (14x)
+- `client_company_id` (14x)
+- `vendor_company_id` (14x)
+- `client_company_client_cu_id` (14x)
+- `client_company_vendor_cu_id` (14x)
+- `vendor_company_client_cu_id` (14x)
+- `vendor_company_vendor_cu_id` (14x)
+- `client_project_id` (14x)
+- `vendor_project_id` (14x)
+- `item_count` (14x)
+- `quotation_number` (14x)
+- `quotation_count` (14x)
+- `quotation_date` (14x)
+- `work_states` (14x)
+- `estimated_work_amount` (14x)
+- `estimated_gst_amount` (14x)
+- `discount` (14x)
+- `other_amount` (14x)
+- `categories` (14x)
+- `role` (13x)
+- `user_id` (13x)
+- `hidden` (13x)
+- `address` (12x)
+- `company_role_id` (12x)
+- `mobile_verified` (12x)
+- `assigned_project_ids` (12x)
+- `pinned_project_ids` (12x)
+- `profile_pic` (12x)
+- `aadhar_card_number` (12x)
+- `pan_card_number` (12x)
+- `aadhar_photos` (12x)
+- `pan_photos` (12x)
+- `legal_business_name` (12x)
+- `trade_name` (12x)
+
+---
+
+## 9. SUMMARY GAPS
+
+- Onsite Navigation items missing in SiteFlow backend: 599
+- Onsite form fields/columns potentially missing in SiteFlow models: 2926
+- Onsite JSON keys found in HAR: 371
+- SiteFlow routers: 35
+- SiteFlow models: 100
+
+---
+
+## 10. DETAILED COMPARISON TABLES
+
+### Onsite Module vs SiteFlow Router/Model
+
+- `#WO--1 -- Civil & Interior Work ofo 4% = 27,73,000 @ 38,515.2 G Approved i` | MISSING | None
+- `$§ Dashboard CRM Lead Detail Report CG Filter Sort More [(%y | Search Data Q |` | MATCHED | crm
+- `$§ Dashboard Company Expense Report CG Filter Sort More [(%y | Search Data Q |` | MATCHED | Company
+- `$§ Dashboard Company Expense Report CG Filter Sort More [4 | Search Data Q |` | MATCHED | Company
+- `$§ Dashboard Company Payment Report CG Filter Sort More [(%y | Search Data Q |` | MATCHED | Company, Payment
+- `$§ Dashboard Company Sales Report CG Filter Sort More [(%y | Search Data Q |` | MATCHED | Company
+- `$§ Dashboard Equipment Trip Report CG Filter Sort More [(%y | Search Data Q |` | MATCHED | equipment, Equipment, equipment
+- `$§ Dashboard PO Summary Report CG Filter Sort More [(%y | Search Data Q |` | MISSING | None
+- `$§ Dashboard Payment Request Report CG Filter Sort More [4 | Search Data Q |` | MATCHED | Payment
+- `$§ Dashboard Project Financial Summary CG Filter Sort More [4 | Search Data Q |` | MATCHED | Project
+- `$§ Dashboard Project Payment Report CG Filter Sort More [(%y | Search Data Q |` | MATCHED | Payment, Project
+- `$€ Dashboar Material Library @ Filter Sort More [(N | Search Data Q |` | MATCHED | library
+- `$€ Dashboard |` | MISSING | None
+- `% Services Please Create New Deduction Item!` | MISSING | None
+- `%} Setting a Leave Policy Setup |= Holiday Calendar` | MATCHED | Holiday
+- `& - Select - & - Select - All vy) All ~All v| All v` | MISSING | None
+- `& - Select - All v| All vy) All v` | MISSING | None
+- `& - Select - All v| All vy) All ~All v| All v` | MISSING | None
+- `& - Select - All v| All vy) All ~All v| All v| All v` | MISSING | None
+- `& - Select - All v| All ~All v` | MISSING | None
+- `& - Select - All v| All ~All ~All v| All v| All v` | MISSING | None
+- `& - Select - All | All | All vy) All v` | MISSING | None
+- `& - Select - All | All | All vy) All vy) All v| All v` | MISSING | None
+- `& 01 Mar 2026 to 31 Mar 2026 All v| All v` | MISSING | None
+- `& 01 May 2026 to 31 May 2026 All v| All | All vy) All v` | MISSING | None
+- `& Delete Logs Account Holder` | MISSING | None
+- `& G Ba No activity yet.` | MISSING | None
+- `& G im} Account Number Show A/C No` | MISSING | None
+- `& Services Please Create New Asset Types!` | MISSING | None
+- `& Setting Upload signature @` | MISSING | None
+- `& Setting [> | Prestige Developers 0% zo/z0 0 ot` | MISSING | None
+- `& Team Schedule Export to MSP` | MISSING | None
+- `& Team Schedule Workforce Library Search Cost Code Q + Add Cost Code` | MATCHED | library
+- `& Team Schedule Workforce Library Search Workforce Q` | MATCHED | library
+- `& Team Schedule y 3} da / mm / yyy Holiday nam | Add |` | MATCHED | Holiday
+- `& Team Schedule | Name` | MISSING | None
+- `& Team Schedule ~ Unassigned Export to MSP` | MISSING | None
+- `&% Not shared` | MISSING | None
+- `&} Setting No All Projects!` | MATCHED | Project, projects
+- `&} Setting No Data Available No Data Available` | MISSING | None
+- `' + Create Party ' Sonrraetan Vv` | MISSING | None
+- `( © Project Approve Leave Requests of your site team` | MATCHED | Project
+- `(0) Ad6fc487-5cf8-4826-8fd3-1c1f5#1d7660 200 ahr id 0.5 kB` | MATCHED | hr
+- `(0) lead?company id=4d6fe487-5cf8-4826-8fd3-1c1f5f1d7660 200 xh 0 23 kB` | MATCHED | Company
+- `(2) Not allowed` | MISSING | None
+- `(vy) Spot delays early and act quickly | | O = a Z` | MISSING | None
+- `* Open the project.` | MATCHED | Project
+- `+ 1 tt > copy(localstorage.getItem(*token') || sessionStorage.getItem( token'))` | MISSING | None
+- `+ Notes` | MISSING | None
+- `+ Reference No` | MISSING | None
+- `, Balance Type` | MISSING | None
+- `- > PAYMENT REQUESTS ® OY. QA G@Presevelog Disable cache | Nothrottiing +| DL 8` | MATCHED | hr, Payment
+- `- Select - vA v| All v| All vy © -Select-` | MISSING | None
+- `- Select - vy -Select - vy -Select - v | F- Select -` | MISSING | None
+- `- ©) assetitem?company id=4d6fc487-5cf8-4826-8fd3-1c1#5f1d7660 200 xbr 0 O7 kB` | MATCHED | Company
+- `-_ = OSOot* OnNonga eas aN FO os or a0as` | MISSING | None
+- `. Apply deduction/retention on the amount before tax` | MISSING | None
+- `. Apply deduction/retention on the amount before tax.` | MISSING | None
+- `. Not provided 2 5,00,000 --` | MISSING | None
+- `. Ortiow Controls No leave policy templates found` | MISSING | None
+- `. Z Opening Balance >` | MISSING | None
+- `028 0 eallect=2atdaG-ORPFGRWOGTga4e66uV912076.t=I08segeT&at. oss) fetch 0 |` | MISSING | None
+- `1 -NoValue- 1 1` | MISSING | None
+- `1! No leave template assigned for your account this year.` | MISSING | None
+- `2 Team Schedule + BogName + BOQNo + ClientName + BOQDate + Group Section Item` | MISSING | None
+- `2 Team Schedule All v | | 3 01 Jan 2026 to 31 Jul 2026` | MISSING | None
+- `2 Team Schedule All v| |All v| |All v` | MISSING | None
+- `2 Team Schedule No Approval Level has been created for this Range Yet.` | MISSING | None
+- `2 Team Schedule Q Search partie V Fiter eve o = 23,240 = 42,657.68` | MISSING | None
+- `2 Team Schedule | Name Category Name Unit` | MISSING | None
+- `2 Team Schedule | Name Name Designatio` | MISSING | None
+- `2 Team Schedule | hift OTHrs Payable Allowance amount  LateFine Ded` | MATCHED | hr
+- `2 library No Data Available No Data Available` | MATCHED | library
+- `2 | Prestige Developers | Ongoin, 0` | MISSING | None
+- `2, Fi + Add New Approver` | MISSING | None
+- `2, Finance Previous Month` | MATCHED | finance
+- `2026 All statuses` | MISSING | None
+- `2026 Export to PDF` | MISSING | None
+- `24 Finance Not Started Projects Ongoing Projects Completed Projects` | MATCHED | finance, Project, projects
+- `2p Services No Custom Fields Found` | MISSING | None
+- `2» Services Apply & Approve Leave Balance` | MISSING | None
+- `3 D | Managemer, >=. aS` | MISSING | None
+- `3, Upload that file here.` | MISSING | None
+- `36 Dashboard All Party Balance Report CG Filter Sort More 4) | Search Data Q |` | MISSING | None
+- `36 Dashboard Asset Allocation Report CG Filter Sort More 4) | Search Data Q |` | MISSING | None
+- `36 Dashboard Bank Statement Report Filter Sort More) | Search Data Q|` | MISSING | None
+- `36 Dashboard CRM Lead Detail Report Filter Sort More) | Search Data Q|` | MATCHED | crm
+- `36 Dashboard Company Expense Report CG Filter Sort More 4) | Search Data Q |` | MATCHED | Company
+- `36 Dashboard Item Wise Sales Report CG Filter Sort More 4) | Search Data Q |` | MISSING | None
+- `36 Dashboard Material Received w/o PO CG Filter Sort More 4) | Search Data Q |` | MISSING | None
+- `36 Dashboard Payment Request Report CG Filter Sort More 4) | Search Data Q |` | MATCHED | Payment
+- `36 Dashboard Recent Deleted Items` | MISSING | None
+- `36 Dashboard Site Inspection Report CG Filter Sort More 4) | Search Data Q |` | MISSING | None
+- `36 Dashboard Site Inspection Report Filter Sort More) | Search Data a]` | MISSING | None
+- `36 Dashboard Subcon Measurement Book CG Filter Sort More 4) | Search Data Q |` | MISSING | None
+- `36 Dashboard Task Attendance Report CG Filter Sort More 4) | Search Data Q |` | MATCHED | Task
+- `36 Dashboard Unbilled Item Report Filter Sort More) | Search Data Q|` | MATCHED | Bill
+- `38 Dashboar Payroll Library CG Filter Sort More 4) | Search Data Q |` | MATCHED | library
+- `38 Dashboard PENDING Y TYPE ¥ Search Q 4b Filter` | MISSING | None
+- `38 Dashboard PENDING Y TYPE ¥ Search Q 4th Filter` | MISSING | None
+- `38 Dashboard PENDING Y TYPE ¥ Search Q tt Filter` | MISSING | None
+- `3} da / mm / yyy Holiday name | Add |` | MATCHED | Holiday
+- `3€ Dashboard Asset Status Report CG Filter Sort More [(% | Search Data Q |` | MISSING | None
+- `3€ Dashboard BOQ Item Report CG Filter Sort More = [(N | Search Data Q |` | MISSING | None
+- `3€ Dashboard BOQ Item Report CG Filter Sort More [(% | Search Data Q |` | MISSING | None
+- `3€ Dashboard BOQ Measurement Book CG Filter Sort More [(% | Search Data Q |` | MISSING | None
+- `3€ Dashboard BOQBOM Report Filter Sort More | Search Data Q |` | MISSING | None
+- `3€ Dashboard Cost Code Library CG Filter Sort More [(N | Search Data Q |` | MATCHED | library
+- `3€ Dashboard Equipment Library CG Filter Sort More [(% | Search Data Q |` | MATCHED | library, equipment, Equipment, equipment
+- `3€ Dashboard PO Summary Report CG Filter Sort More = [(N | Search Data Q |` | MISSING | None
+- `3€ Dashboard Party Ledger @ Filter Sort More = [(N | Search Data Q |` | MISSING | None
+- `3€ Dashboard Party Library @ Filter Sort More = [(N | Search Data Q |` | MATCHED | library
+- `3€ Dashboard Party Library CG Filter Sort More = [(N | Search Data Q |` | MATCHED | library
+- `3€ Dashboard Payroll Library CG Filter Sort More [(% | Search Data Q |` | MATCHED | library
+- `3€ Dashboard Purchase (GSTR-2) CG Filter Sort More = [(N | Search Data Q |` | MISSING | None
+- `3€ Dashboard Purchase (GSTR-2) CG Filter Sort More [(% | Search Data Q |` | MISSING | None
+- `3€ Dashboard Q Date Filter Attendee v Project» New MOM+` | MATCHED | Project
+- `3€ Dashboard Quotation Item Report CG Filter Sort More = [(N | Search Data Q |` | MATCHED | Quotation
+- `3€ Dashboard Quotation Item Report CG Filter Sort More [(% | Search Data Q |` | MATCHED | Quotation
+- `3€ Dashboard Quotation Report CG Filter Sort More [(% | Search Data Q |` | MATCHED | Quotation
+- `3€ Dashboard Rate Card Library CG Filter Sort More = [(N | Search Data Q |` | MATCHED | library
+- `3€ Dashboard Rate Card Library CG Filter Sort More [(% | Search Data Q |` | MATCHED | library
+- `3€ Dashboard Sales (GSTR-1) CG Filter Sort More [(% | Search Data Q |` | MISSING | None
+- `3€ Dashboard Task Measurement Book CG Filter Sort More [% | Search Data Q |` | MATCHED | Task
+- `3€ Dashboard To Do Report CG Filter Sort More = [(N | Search Data Q |` | MISSING | None
+- `4 Finance il 31-Jul-2026 Yash Desai Subcon Expense Auto Approved Unpaid` | MATCHED | finance
+- `48 Equipment Ally 1 Stage » Category Search Projects Q AA` | MATCHED | equipment, Equipment, Project, equipment, projects
+- `5 . 1 Open 05-Jul-2026 05-Jul-2026 05-Jul-2026 Yash Desai` | MISSING | None
+- `5 on + Add New Approver` | MISSING | None
+- `5} - Select - fA v| |All v| |All v` | MISSING | None
+- `8 ry | Mode` | MISSING | None
+- `9, Finance GRN Material + Add New Approver` | MATCHED | finance
+- `94 Finance Sales Invoice + Add New Approver` | MATCHED | finance
+- `94, Finance 0 Upload Logo @` | MATCHED | finance
+- `9M, Finance 1 Not Started Delayed 04-Feb-2026 04-Feb-2026 % - 100.00 0.00 0.00` | MATCHED | finance
+- `; , |` | MISSING | None
+- `; [rpes25)` | MISSING | None
+- `< > =] Q Search Payroll 0 Present` | MISSING | None
+- `< > Q Search Equipment + Add Equipment` | MATCHED | equipment, Equipment, equipment
+- `= = Hor * OK ORB OALB ~ in ®& &® 95-07-2006` | MISSING | None
+- `= = Hor * SOK ORB OaALB ~ wn ®& &® 95-07-2026` | MISSING | None
+- `= = e¢ Hor * OK ORBOaALB ~ i FP ©® 507-2026` | MISSING | None
+- `= = €¢ Hor * OK ORBOaALB ~ in FP ©® 507-2026` | MISSING | None
+- `= @ QQ @ Preserve lo jsablecache| Nothrotting ~ |S 2 fc` | MATCHED | hr
+- `= A ®@Q@  « G2 Preserve lox ( Disable cache | No throttling *|\~e ft` | MATCHED | hr
+- `= MS @© @ Y Q GQ@Preservelog | Disable cache| Nothrotting ~| Ht L B` | MATCHED | hr
+- `= f Project Name Party Name Created By Receiving Date t Unit Quantity` | MATCHED | Project
+- `= it earch =X © @ QD Preservelog [Disable cache| No throttling ~ |S 2` | MATCHED | hr
+- `= ¢ A @ @ Y.& G@Presevelog Disable cache| Nothvotting ~|% 2 L` | MISSING | None
+- `> NEW ADDRESS Cancel` | MISSING | None
+- `> NEW MATERIAL Cancel` | MISSING | None
+- `> PAYMENT REQUESTS ® OY. QA G@Presevelog Disable cache | Nothrottiing +| DL 8` | MATCHED | hr, Payment
+- `> WORKFORCE LIBRARY | save |` | MATCHED | library
+- `> copy(LocalStorage.getItem( token’) || sessionstorage.getItem( token")` | MISSING | None
+- `? Services Noida , Noida = ba .` | MISSING | None
+- `@ Delete Logs` | MISSING | None
+- `@ Delete Logs 2026` | MISSING | None
+- `@ Delete Logs BB` | MISSING | None
+- `@ Delete Logs Max%` | MISSING | None
+- `@ Delete Logs °` | MISSING | None
+- `@ No sign-up 65.55 18.42` | MISSING | None
+- `@ Track budgets Vs expenses i . oa |` | MATCHED | budget
+- `@ _Youdon'thave access © cole 26t 6-150 = te ADORE E5858 TEL, OK tach 0 aos` | MISSING | None
+- `@ crm Filter Sort More | Search Q |` | MATCHED | crm
+- `@ eSeortx* SKHVOEBRBO DEF a in FD 9406-2026` | MISSING | None
+- `@ eSeotx* SCSHYOEBRBO DEF A‘ FM 95-06-2026` | MISSING | None
+- `@ eSeotx* SCSHYOEBRBO DEF a in FD ® 9306-2026` | MISSING | None
+- `A 2026 Export to PDF` | MISSING | None
+- `A A Pending` | MISSING | None
+- `A Finance` | MATCHED | finance
+- `AMOUNT Name Status Type Cookies Size a` | MISSING | None
+- `Aa Finance Sales Expense Margin` | MATCHED | finance
+- `Account No. + Project Name Date Month Total Shift` | MATCHED | Project
+- `Add Cost Code` | MISSING | None
+- `Add Location` | MISSING | None
+- `Add Material Category` | MISSING | None
+- `Add New Timesheet.` | MATCHED | Timesheet
+- `Add New Workforce` | MISSING | None
+- `Add Progress` | MISSING | None
+- `Add Project v` | MATCHED | Project
+- `Add Repeat Todo` | MISSING | None
+- `Add Salary Breakup` | MISSING | None
+- `Add Task` | MATCHED | Task
+- `Add Task v` | MATCHED | Task
+- `Add Todo Type v` | MISSING | None
+- `Add Your Own Customised Terms & Conditions` | MISSING | None
+- `Add and Define Roles for your team-mates` | MISSING | None
+- `Additional Charges` | MISSING | None
+- `Address` | MISSING | None
+- `Address Details` | MISSING | None
+- `Advance Paid To Pay` | MISSING | None
+- `All Projects 0 AllStages ¥ Search project name... Export` | MATCHED | Project, projects
+- `All vy) All v| All vy) All v |) -Select -` | MISSING | None
+- `All vy) |All v| |) -Select- All vy) |All v` | MISSING | None
+- `All v| & -Select - All v` | MISSING | None
+- `All v| &-Select - All v` | MISSING | None
+- `All v| -Select - v` | MISSING | None
+- `All v| -Select- v All v| & -Select- All ~All v| All v| All vy) All v` | MISSING | None
+- `All v| -Select- vy) -Select -` | MISSING | None
+- `All v| All v` | MISSING | None
+- `All v| All v All | All v` | MISSING | None
+- `All v| All v| & -Select-` | MISSING | None
+- `All v| All v| & -Select- All ~All v| All v| All ~All vy |) -Select-` | MISSING | None
+- `All v| All v| All v` | MISSING | None
+- `All v| All v| All vy © -Select-` | MISSING | None
+- `All v| All v| All vy © -Select- All v| All v` | MISSING | None
+- `All v| All v| All vy © -Select- All v| All v| All v` | MISSING | None
+- `All v| All v| All vy) -Select- vy -Select - v © -Select-` | MISSING | None
+- `All v| All v| All vy) All v` | MISSING | None
+- `All v| All v| All vy) All v |) -Select -` | MISSING | None
+- `All v| All v| All vy) All v |) -Select - All v` | MISSING | None
+- `All v| All v| All vy) All v |) -Select - All v| All v` | MISSING | None
+- `All v| All v| All vy) All v |) -Select - All v| All vy) All v | -Select-` | MISSING | None
+- `All v| All v| All vy) All vy) All v| & -Select -` | MISSING | None
+- `All v| All v| All vy) All ~All v` | MISSING | None
+- `All v| All v| All ~All vy |) -Select-` | MISSING | None
+- `All v| All v| All ~All vy |) -Select- & - Select -` | MISSING | None
+- `All v| All v| All ~All vy |) -Select- All v` | MISSING | None
+- `All v| All v| All ~All vy |) -Select- All v| All v` | MISSING | None
+- `All v| All v| All ~All ~All v` | MISSING | None
+- `All v| All v| All ~All ~All v| All v| All vy © -Select-` | MISSING | None
+- `All v| All | & -Select-` | MISSING | None
+- `All v| All | & -Select- All ~All v` | MISSING | None
+- `All v| All | & -Select- All ~All v| All v| All vy) All v | -Select-` | MISSING | None
+- `All v| Select - All ~All v` | MISSING | None
+- `All v| This Week vy) -Select -` | MISSING | None
+- `All v| | -Select - v` | MISSING | None
+- `All v| | Fy -Select-` | MISSING | None
+- `All v| |) -Select-` | MISSING | None
+- `All v| |) -Select- All vA v` | MISSING | None
+- `All v| |) -Select- All v| | Fy -Select-` | MISSING | None
+- `All | 01 Jan 2026 to 31 Jul 2026` | MISSING | None
+- `All | All vy) All v` | MISSING | None
+- `All | All ~All v` | MISSING | None
+- `All | |} -Select - All v` | MISSING | None
+- `All | © -Select - All ~ |_| Pass,Fail ~All v` | MISSING | None
+- `All | © -Select - All ~All ~All v` | MISSING | None
+- `All | © -Select- All vy) All ~All v` | MISSING | None
+- `All | © -Select- All vy) All ~All v| All v` | MISSING | None
+- `All | © -Select- All vy) All ~All v| All v| All vy) All vy) All v` | MISSING | None
+- `All | © -Select- All ~ |_| Pass,Fail vy) All v` | MISSING | None
+- `All ~All ~All ~All v | | F-Select-` | MISSING | None
+- `All ~All ~All ~All v | | F-Select- © - Select -` | MISSING | None
+- `Ally 0 Stage » Category Search Projects Q RAE + New Project` | MATCHED | Project, projects
+- `Ally 3 stage » Category v Search Projects Q AEE + New Project` | MATCHED | Project, projects
+- `Amount` | MISSING | None
+- `Amount Amount` | MISSING | None
+- `App Project Health Report` | MATCHED | Project
+- `Aq Finance Contact Name` | MATCHED | finance
+- `Asset Transfer Add Approvers & Levels for Asset Transfer 3` | MISSING | None
+- `Asset Transfer Add Approvers & Levels for GRN Material i` | MISSING | None
+- `Asset Transfer ‘Add Approvers & Levels for Design Version 3` | MISSING | None
+- `Attendance Report for DPR` | MATCHED | dpr
+- `Attendance Setting Team Leave View` | MISSING | None
+- `Ay Finance Cost Code` | MATCHED | finance
+- `Ay Finance Cost Code Cheque` | MATCHED | finance
+- `B library Lead Category` | MATCHED | library
+- `BOM Material Restrictions` | MISSING | None
+- `BOQ-Linked Activity Scheduling |` | MISSING | None
+- `BOT cpr © ¥ Fitter Defaultlevels ¥ Nolssues Shidden` | MISSING | None
+- `Back Dated Entry Control` | MISSING | None
+- `Bangalore Name Status Type Cookies | Size nN` | MISSING | None
+- `Bank Account` | MISSING | None
+- `Bank Code NA` | MISSING | None
+- `Bank Name` | MISSING | None
+- `Bank To Bank Cash Deposit | © Cash withdraw |` | MISSING | None
+- `Bank To Bank | © Cash Deposit | Cash Withdraw` | MISSING | None
+- `Bank Transfer` | MISSING | None
+- `Be Team Sehedile Pevelopers No Approvals Found` | MISSING | None
+- `Bill To/Ship To View` | MATCHED | Bill
+- `Browse Calculators | Try Onsite ERP Free 93-97 = 5,040` | MATCHED | calculators
+- `Budget` | MATCHED | budget, budgeting, ProjectBudget, project_budgets
+- `Budget versus Actual at Activity Level` | MATCHED | budget
+- `Build the Schedule from the BOQ Site Engineers Update Progress from Mobile` | MISSING | None
+- `C } category?type=billing_unit 200 xe 0 3.0 KB |` | MATCHED | billing, Bill
+- `CIVIL Unit Estimated Received Current Stock` | MISSING | None
+- `CLIENT PORTAL` | MISSING | None
+- `CO Project` | MATCHED | Project
+- `CO Project Total Invoice Company Balance` | MATCHED | Company, Project
+- `CO Projects` | MATCHED | Project, projects
+- `CO) Project Create your own Holiday Calendar for your company.` | MATCHED | Company, Holiday, Project
+- `CQ Project` | MATCHED | Project
+- `CQ Project SNo Task name` | MATCHED | Task, Project
+- `CQ Project SNo Task name .` | MATCHED | Task, Project
+- `CQ Project SNo Task name 4 r` | MATCHED | Task, Project
+- `CQ Project SNo Task name sun sal 5` | MATCHED | Task, Project
+- `CQ Project it` | MATCHED | Project
+- `CQ Projects` | MATCHED | Project, projects
+- `CQ) Project SNo Task name , -` | MATCHED | Task, Project
+- `CQ) Project SNo Task name Jan cob Mar` | MATCHED | Task, Project
+- `CQ) Project SNo Task name Jan feb Mar exnort to Excel` | MATCHED | Task, Project
+- `CRM > iain e > a > | > |` | MATCHED | crm
+- `CRM Integrations` | MATCHED | crm
+- `CRM Integrations Restrict Material Transfer` | MATCHED | crm
+- `CRM Integrations o` | MATCHED | crm
+- `CRM MM` | MATCHED | crm
+- `CRM Rate Library` | MATCHED | library, crm
+- `Cancel` | MISSING | None
+- `Cash Bank Transter Cheque` | MISSING | None
+- `Category` | MISSING | None
+- `Category Equipment Expense` | MATCHED | equipment, Equipment, equipment
+- `Ce @O«x* e@eWonagoua ® a in FD 2306-2026` | MISSING | None
+- `Ce @O«x* e@eWonagoua ® a in FD ® 2406-2026` | MISSING | None
+- `Ce @«* eWmonagoua ® a in FD ® 9406-2026` | MISSING | None
+- `Ce @«* eWvonagoua ® a in FD ® 9406-2026` | MISSING | None
+- `Clear Filter 0 Apply` | MISSING | None
+- `Client Name` | MISSING | None
+- `Code` | MATCHED | LibraryCostCode, library_cost_codes
+- `Combined Party Balances for All Projects` | MATCHED | Project, projects
+- `Company Payments Report All Time` | MATCHED | Company, Payment, payments
+- `Complete ERP Platform for Every Type of Construction Business |` | MISSING | None
+- `Construction Equipment Management` | MATCHED | equipment, Equipment, equipment
+- `Construction Material Management` | MISSING | None
+- `Construction Project @ | wren r` | MATCHED | Project
+- `Construction Project Planning Software` | MATCHED | planning, Project
+- `Construction schedules in Excel or When activity dependencies are not ‘ ; . |` | MISSING | None
+- `Contact Number` | MISSING | None
+- `Copyright © 2026 ABEYAANTRIX TECHNOLOGY PRIVATE LIMITED fo) oe o fo) |` | MISSING | None
+- `Cost Code` | MISSING | None
+- `Create Chat Group` | MATCHED | chat
+- `Create Workorder --NA-- >` | MATCHED | WorkOrder
+- `Create your own Holiday Calendar for your company.` | MATCHED | Company, Holiday
+- `Creating Project` | MATCHED | Project
+- `Creating Project | |` | MATCHED | Project
+- `Creation Date` | MISSING | None
+- `D Report` | MISSING | None
+- `D Report Cost Code Library Search Q Active a Party type a Add Party` | MATCHED | library
+- `D Report Cost Code Library Search Q Active v Party type v Add Party` | MATCHED | library
+- `D Report Cost Code Library Search Workforce Q + Add Workforce` | MATCHED | library
+- `D Report Cost Code Library search Asset type Q` | MATCHED | library
+- `D Report Introducing new services for` | MISSING | None
+- `D Report Lvov` | MISSING | None
+- `D Report Office Staff Site Staff Q Search Payroll Active ~ + New Payrall. v` | MISSING | None
+- `D Report Team Leaves` | MISSING | None
+- `D Reports` | MATCHED | reports
+- `D Roles & Access , | i .` | MISSING | None
+- `DO Report Cost Code Library Search Cost Code Q + Add Cost Code` | MATCHED | library
+- `DO Report Cost Code Library Search Item Q + Add Item` | MATCHED | library
+- `DO Report Cost Code Library Search Progress Q + Add Progress` | MATCHED | library
+- `DO Report Cost Code Library Search Workforce Q + Add Workforce` | MATCHED | library
+- `DO Report Office Staff cD Q Search P Active €  PrateekUpadhyay Site Staff ~` | MISSING | None
+- `D_ Report Search Quotation Q Date Filter All v + New Quotation` | MATCHED | Quotation
+- `Dashboard` | MISSING | None
+- `Dashboard i nN` | MISSING | None
+- `Date Range` | MISSING | None
+- `Deduction Library` | MATCHED | library
+- `Deductions` | MATCHED | transaction_deductions, library_deductions
+- `Delete L` | MISSING | None
+- `Delete Logs` | MISSING | None
+- `Delete Logs How to add team members to a project ? >` | MATCHED | Project
+- `Delete Logs Total Sales Total Expense Total Margin` | MISSING | None
+- `Delete Logs ont` | MISSING | None
+- `Delete Logs ys 4 4 Y` | MISSING | None
+- `Delete Logs ¥ q` | MISSING | None
+- `Demo Manager` | MISSING | None
+- `Description Item Code Cost Code Uni` | MISSING | None
+- `Design Version Add Approvers & Levels for Task Progress i` | MATCHED | Task
+- `Document Numbering` | MISSING | None
+- `Download Excel Reports = o on ea` | MATCHED | reports
+- `Download Excel [7]` | MISSING | None
+- `Download Format I | { Le =e = — ied |` | MISSING | None
+- `Download reports in pdf or excel ia` | MATCHED | reports
+- `Downstream Impact No impact — resolved has been missed.` | MISSING | None
+- `Due Date` | MISSING | None
+- `E Payroll Restrict Subcontractor Material Issue` | MISSING | None
+- `E Way Bill No.` | MATCHED | Bill
+- `Email` | MISSING | None
+- `Email Campaign` | MISSING | None
+- `Enable GST Percent` | MISSING | None
+- `Entry by Site Expense` | MISSING | None
+- `Equipment` | MATCHED | equipment, Equipment, EquipmentDeployment, equipment, equipment_fuel_logs
+- `Equipment Expense` | MATCHED | equipment, Equipment, equipment
+- `Equipment Name` | MATCHED | equipment, Equipment, equipment
+- `Equipment Report for DPR` | MATCHED | dpr, equipment, Equipment, equipment
+- `FAQs |` | MISSING | None
+- `Filter 3 x Sottca materiats GM rencingéntrios OP` | MISSING | None
+- `Filter = x Unbilled Materials Pending Entries Create Transaction ++` | MATCHED | Bill
+- `Filter Sort More Search Q` | MISSING | None
+- `Filter Sort More | Search Q |` | MISSING | None
+- `Filter Sort More | Search Q | 200 Pa 1 ore` | MISSING | None
+- `FilterZ= ate iter Sottca materiats GM rencingéntrios OP` | MISSING | None
+- `Filters Date Filter Unbilled Materials Pending Entries Create Transaction +` | MATCHED | Bill
+- `Filters Date Filter Unbilled Materials Pending Entries Create Transaction ++` | MATCHED | Bill
+- `Filters Date Filter Unbilled Materials Pending Entries Create Transaction -+-` | MATCHED | Bill
+- `Finance Filter Sort More | Search Q |` | MATCHED | finance
+- `Finance Settings` | MATCHED | settings, finance
+- `Fj From 09 Jul 2026 All v| | Reset |` | MISSING | None
+- `Fuel Status` | MISSING | None
+- `G Delete Logs QQ Tax TH Warehouse TH Sub Con.` | MISSING | None
+- `GRN Material` | MISSING | None
+- `GRN Numbering` | MISSING | None
+- `Get Claude Code` | MISSING | None
+- `H + Create Party H` | MISSING | None
+- `Historical index data CSV export` | MISSING | None
+- `Holiday & Weekoft nl joliday name (acta |` | MATCHED | Holiday
+- `I Payroll` | MISSING | None
+- `I Payroll Quotation Terms` | MATCHED | Quotation
+- `I Payroll sosT zo` | MISSING | None
+- `INSP- 0 i ( ) 19 Jun 26 [ Pass | Auto Approved` | MISSING | None
+- `INSP- 2 i ¥( i ) Onsite Office 2 12 Dec 25 { Fait | -` | MISSING | None
+- `India (Rs) | GCC / Middle East ($) A` | MISSING | None
+- `Invoice No.` | MISSING | None
+- `Irrelevant Lead` | MISSING | None
+- `Item Code` | MISSING | None
+- `Item Level Tax` | MISSING | None
+- `Item Name` | MISSING | None
+- `Item Name Due Date Assigned Project Type Action` | MATCHED | Project
+- `Item Name | - [fs ae rites meee tone ce mm ene ee pee ee ele ee!` | MISSING | None
+- `Item Name |- {fs Ss Serminces memos cums wee mame mens IO et Ts eject` | MISSING | None
+- `Ja ep Not Started Mar` | MISSING | None
+- `Janl2 | present vser` | MISSING | None
+- `LI] Project Name Equipment Name Vehicle No Unit` | MATCHED | equipment, Equipment, Project, equipment
+- `Las |` | MISSING | None
+- `Last Contacted` | MISSING | None
+- `Lead Assignee` | MISSING | None
+- `Lead Company Last Contacted Expected` | MATCHED | Company
+- `Lead Name` | MISSING | None
+- `Lead Source` | MISSING | None
+- `Lead Status t Contact Name Contact No. Mobile Email 208 fetch 0 oon` | MISSING | None
+- `Leads Quotation` | MATCHED | Quotation
+- `Leave Application` | MISSING | None
+- `Leave Management` | MISSING | None
+- `Leave Policy Template` | MISSING | None
+- `Leave Type Quotas + Add New Type` | MISSING | None
+- `Location Name` | MISSING | None
+- `L| SUM =-NA- SUM = 48,000` | MISSING | None
+- `M ana g ement venry | Request Receed Use` | MISSING | None
+- `MOM To Do Chat` | MATCHED | chat
+- `MOM To Do Chat v` | MATCHED | chat
+- `MOM ToDo Chat` | MATCHED | chat
+- `MOM ToDo Chat All vA v All v| All ¥` | MATCHED | chat
+- `MOM ToDo Chat GRN Numbering` | MATCHED | chat
+- `MOM ToDo Chat Material Purchase Order Restriction` | MATCHED | chat
+- `MOM ToDo Chat Powered by onsite` | MATCHED | chat
+- `MOM ToDo Chat eg Onsite Referral Program` | MATCHED | chat
+- `Manage your Business overview 3 Lt [ -- = = =a =| 2` | MISSING | None
+- `Manage your Business overview E KEE- - = = | z 2` | MISSING | None
+- `Manage your Team Roles and Accesibility` | MISSING | None
+- `Masking company names in word docurr | Write a message... |` | MATCHED | Company
+- `Material Category` | MISSING | None
+- `Material Category Libra` | MISSING | None
+- `Material Category Library` | MATCHED | library
+- `Material Category Library Asset Type` | MATCHED | library
+- `Material Category Library No workforce found` | MATCHED | library
+- `Material Issue` | MISSING | None
+- `Material Library` | MATCHED | library
+- `Material Name` | MISSING | None
+- `Material Name Name Created GRNNo. Challan Number` | MISSING | None
+- `Material Purchase` | MISSING | None
+- `Material Purchase + Add New Approver` | MISSING | None
+- `Material Request Restriction` | MISSING | None
+- `Material Request for DPR a` | MATCHED | dpr
+- `Material Supplier` | MISSING | None
+- `Material Transfer` | MISSING | None
+- `Material Transfer Add Approvers & Levels for Task Progress 5` | MATCHED | Task
+- `Material Used` | MISSING | None
+- `MoM Chat` | MATCHED | chat
+- `MoM ToDo Chat Material Purchase Order Restriction` | MATCHED | chat
+- `Mom ToDo Chat` | MATCHED | chat
+- `Mon fast Nawe croup Task Nese tekntme! | Aig 1) ek 4] Sey Stats Start Date` | MATCHED | Task
+- `Multi Level Approval` | MISSING | None
+- `Multi Level Approval Bangalore` | MISSING | None
+- `Multi Level Approval COMPANY PRIMARY ADDRESS` | MATCHED | Company
+- `Multi Level Approval JUN` | MISSING | None
+- `Multi Level Approval QUOTATION TERMS` | MATCHED | Quotation
+- `Multi Level Approvals` | MISSING | None
+- `N Project Code Nerul` | MATCHED | Project
+- `NEW BRANCH Cancel | save |` | MISSING | None
+- `Name` | MISSING | None
+- `Name Attendance status` | MISSING | None
+- `Name Attendee Project Notes` | MATCHED | Project
+- `Name Attendee Project Notes Name status Type Cookies Size a` | MATCHED | Project
+- `Name Status Type Cookies Size a` | MISSING | None
+- `Name Status Type Cookies | Size EN` | MISSING | None
+- `Name status Type Cookies Size` | MISSING | None
+- `Negative Material Stock Restrictions` | MISSING | None
+- `Net Amount` | MISSING | None
+- `New Cost Code` | MISSING | None
+- `New Salary Template | save |` | MISSING | None
+- `No Approvals Found` | MISSING | None
+- `No Data Available` | MISSING | None
+- `No Data Available No Data Available` | MISSING | None
+- `No Data Bank Account` | MISSING | None
+- `No Data Transaction` | MISSING | None
+- `No Data Transaction 1100.2d94¢726720c147¢js 200 script 0 (disk.` | MISSING | None
+- `No Location found` | MISSING | None
+- `No Response` | MISSING | None
+- `No Retention Found` | MISSING | None
+- `No To Do Available` | MISSING | None
+- `No active projects. Click "+ New Project" to create one.` | MATCHED | Project, projects
+- `No address available No address available` | MISSING | None
+- `No authorized phones yet. Add a phone above.` | MATCHED | auth
+- `No leave applications for this year.` | MISSING | None
+- `No leave applications for this year. © Log Out From All Devices` | MISSING | None
+- `No matches` | MISSING | None
+- `No matches (©) 1430ea6acf94a0a5e015 js, 200 script 0 Idiske` | MISSING | None
+- `No matches © ¥2-ently-v2-con-common-33e4ee5b moderns, 200 script 0 idiske` | MISSING | None
+- `Not Started Projects ‘Ongoing Projects ‘Completed Projects` | MATCHED | Project, projects
+- `Not provided z0 —` | MISSING | None
+- `Nothing` | MISSING | None
+- `Nothing 2-2 con commond-17440644 modems 200 script 0 idiske` | MISSING | None
+- `Nothing 4280,7632c3ebdd527457;s 200 script 0 Idiske` | MISSING | None
+- `Now bec Jan seb id_onsite_announcement. group 200 hr 0 16K8` | MATCHED | hr
+- `O Project` | MATCHED | Project
+- `O Project Os` | MATCHED | Project
+- `O Project S.No. Date Subject Client Est. Amount Status` | MATCHED | Project
+- `O Report` | MISSING | None
+- `O Report a` | MISSING | None
+- `OD Report` | MISSING | None
+- `OD Report Company Name x` | MATCHED | Company
+- `OD Report Cost Code Library Search Q + Add Item` | MATCHED | library
+- `OD Report Introducing new services for` | MISSING | None
+- `OD Report PC` | MISSING | None
+- `OD Report Party Date Filter search Q` | MISSING | None
+- `OD Report Staff Ihave Advance` | MISSING | None
+- `OQ Project` | MATCHED | Project
+- `OQ Project Create Folder ++` | MATCHED | Project
+- `OQ Project Design Vi` | MATCHED | Project
+- `OQ Project Material Issue` | MATCHED | Project
+- `OQ Project Search Material Q Filter 4` | MATCHED | Project
+- `OQ Project Transaction MP SITE Company Balance` | MATCHED | Company, Project
+- `OQ Report Search.` | MISSING | None
+- `OQ) Project All | This Week v © -Select -` | MATCHED | Project
+- `OQ) Project All | This Week vy -Select -` | MATCHED | Project
+- `OQ. Project —_—_—-eauaQm8 | ——` | MATCHED | Project
+- `Onsite Add On Request` | MISSING | None
+- `Onsite in the News` | MISSING | None
+- `Opening Balance` | MISSING | None
+- `Opening stock` | MISSING | None
+- `Our Products Quick Links Important Links` | MISSING | None
+- `P  PrateekUpadhyay Not Marked` | MISSING | None
+- `PARTY ID` | MISSING | None
+- `PDF report with performance charts anc` | MISSING | None
+- `PDF report with performance charts anc as` | MISSING | None
+- `Paid Amount` | MISSING | None
+- `Party` | MATCHED | TallyPartyMapping, LibraryParty, tally_party_mappings
+- `Party Details Status` | MISSING | None
+- `Party Library` | MATCHED | library
+- `Party Name` | MISSING | None
+- `Party Name Project Name Amount` | MATCHED | Project
+- `Party O This Week Sais` | MISSING | None
+- `Party Transaction Payment Requests Accounts` | MATCHED | Payment
+- `Party Transaction PaymentRequests Accounts` | MATCHED | Payment, PaymentRequest
+- `PartyName J| Designation | Phone No. tL Bank Name tL Account No.` | MISSING | None
+- `Payment Date` | MATCHED | Payment
+- `Payment Entries` | MATCHED | Payment
+- `Payment Out` | MATCHED | Payment
+- `Payment Request` | MATCHED | Payment
+- `Payments Expense Type` | MATCHED | Payment, payments
+- `Payroll` | MATCHED | PayrollLineItem, PayrollRun, payroll_runs, payroll_line_items
+- `Payroll ' (| " x` | MISSING | None
+- `Payroll Material Purchase Order Restriction` | MISSING | None
+- `Payroll SOMPANY NAME` | MISSING | None
+- `Payroll You have used | out of 3 team member slots. + Add Member` | MISSING | None
+- `People Attendance TeamLeaves MyLeaves Holidays` | MATCHED | Holiday, holidays
+- `People Attendance TeamLleaves MyLeaves Holidays` | MATCHED | Holiday, holidays
+- `People Attendance Teamleaves MyLeaves Holidays` | MATCHED | Holiday, holidays
+- `People Attendance Teamleaves MylLleaves Holidays` | MATCHED | Holiday, holidays
+- `Pinned Projects` | MATCHED | Project, projects
+- `Pinned Projects Document Numbering` | MATCHED | Project, projects
+- `Pinned Projects Next Follow Up` | MATCHED | Project, projects
+- `Pinned Projects Task` | MATCHED | Task, Project, projects
+- `Pinned Projects oct` | MATCHED | Project, projects
+- `Pinned Projects preeasrome` | MATCHED | Project, projects
+- `Pinned Projects v` | MATCHED | Project, projects
+- `Progress Library` | MATCHED | library
+- `Project` | MATCHED | ProjectTower, ProjectBudget, Project, project_budgets, projects
+- `Project 1 No of Retention Post Tax Payment` | MATCHED | Payment, Project
+- `Project 1 Noof Retention Post Tax Payment` | MATCHED | Payment, Project
+- `Project Details` | MATCHED | Project
+- `Project Details Members Location Structure` | MATCHED | Project
+- `Project Geo Location` | MATCHED | Project
+- `Project Health` | MATCHED | Project
+- `Project Material Unit` | MATCHED | Project
+- `Project Name` | MATCHED | Project
+- `Project Name Category` | MATCHED | Project
+- `Project Name Name` | MATCHED | Project
+- `Project Name Status` | MATCHED | Project
+- `Project Operational Summary Dashboard` | MATCHED | Project
+- `Project Orientation Project Dimension` | MATCHED | Project
+- `Project Setting x` | MATCHED | Project
+- `Project Transport` | MATCHED | Project
+- `Project name Party name Workforce name No of Workers Total Shift` | MATCHED | Project
+- `Project |  Subcon | Material |  AvgUnit |` | MATCHED | Project
+- `Project | Party J +` | MATCHED | Project
+- `ProjectHealth | Start Date End Date Project Status Days Left f` | MATCHED | Project
+- `ProjectName | EquipmentName | Vehicle No tL PartyName J Exp Mileage` | MATCHED | equipment, Equipment, Project, equipment
+- `ProjectName | PartyName | WorkforceName | AttendanceDate Tt No of Workers` | MATCHED | Project
+- `Projects` | MATCHED | Project, projects
+- `Projects vs skills differences` | MATCHED | Project, projects
+- `Projects with Onsite Al` | MATCHED | Project, projects
+- `ProkctNane | Matealname | MaivickNane | Group exkNane AgUnitate | Areca]` | MISSING | None
+- `Purchase Invoice No.` | MISSING | None
+- `Purchase invoice Date` | MISSING | None
+- `Q 4b Filter Active ~ oh + New Party` | MISSING | None
+- `Q Email` | MISSING | None
+- `Q Project S.No ItemName Cost Code Unit @sT Cost Price _ Selling Price` | MATCHED | Project
+- `Q Project Upload Payroll CSV` | MATCHED | Project
+- `Q Search parties. Y Filter Active + Export` | MISSING | None
+- `Q Search parties. YT Filter Active + YD = 8,000 v` | MISSING | None
+- `Q betetiter Attendee © Project» i | ie sine ome eae atoms satis` | MATCHED | Project
+- `Q search parties Y Fiter Active > & Export` | MISSING | None
+- `QA Owe 7 Clinvert | More filters ¥` | MISSING | None
+- `QCv— 500 ms 1,000 ms 1,500 ms 2,000 ms 2500|` | MISSING | None
+- `QO Project` | MATCHED | Project
+- `QO Project , . |` | MATCHED | Project
+- `QO Project COMPANY NAME Your Logo` | MATCHED | Company, Project
+- `QO Project Design Version` | MATCHED | Project
+- `QO Project HOLIDAY NAME` | MATCHED | Holiday, Project
+- `QO Project a` | MATCHED | Project
+- `QO Project su Mo Tu We Th Fr sa` | MATCHED | Project
+- `QQ. Project | vores all Company Balance` | MATCHED | Company, Project
+- `Qty per Unit H` | MISSING | None
+- `Quotation Date` | MATCHED | Quotation
+- `R Equipment ve` | MATCHED | equipment, Equipment, equipment
+- `Ree eteattae Rateetatene vom` | MISSING | None
+- `Reference No.` | MISSING | None
+- `Rejected` | MISSING | None
+- `Remaining on Site` | MISSING | None
+- `Report` | MATCHED | reports, StatutoryReport, ClientReport, DailyProgressReport, client_reports
+- `Report A` | MISSING | None
+- `Report Date Filter x` | MISSING | None
+- `Report v` | MISSING | None
+- `Report z` | MISSING | None
+- `Request Date` | MISSING | None
+- `Restrict BOM Material` | MISSING | None
+- `Restrict Production Material` | MATCHED | production
+- `S.No Equipment Name Type Vendor Name Unit of Measurement ®` | MATCHED | equipment, Equipment, equipment
+- `S.No Item NxLxWxH Cost Price Selling Price ary Tax(%) Amount` | MISSING | None
+- `S.No. Client Name Bog Title Milestone Physical Progress BOQ Value Billed Value` | MATCHED | Bill
+- `SNo Task name t ounce x x 6` | MATCHED | Task
+- `STEEL Unit Estimated Received Current Stock` | MISSING | None
+- `Sales Invoice Retention` | MISSING | None
+- `Save` | MISSING | None
+- `Schedule` | MATCHED | MaintenanceSchedule, AssetDepreciationSchedule, equipment_maintenance_schedules, asset_depreciation_schedules
+- `Schedule Activities` | MISSING | None
+- `Schedule Timesheet` | MATCHED | Timesheet
+- `Se@oex *entwonagoura ® a in FD 9406-2026` | MISSING | None
+- `Se@oexz*entonagoua ® a NS & ot) B® a5 ome` | MISSING | None
+- `Search Equipment Q` | MATCHED | equipment, Equipment, equipment
+- `Search Material Filters E 29 vy, v` | MISSING | None
+- `Search Party Q` | MISSING | None
+- `Search Quotation Q Date Filter All ~ —` | MATCHED | Quotation
+- `Search Workforce Q` | MISSING | None
+- `Search parties. Filte Acti + ,` | MISSING | None
+- `Seeoerz *entwonagoua ® A in FD © 5406-2026` | MISSING | None
+- `Seer *entwonagoua ® a in FD ® 9406-2026` | MISSING | None
+- `Select - vA v| All v| All vy © -Select-` | MISSING | None
+- `Select - vy -Select - v` | MISSING | None
+- `Select - vy -Select - vy -Select - v | F- Select -` | MISSING | None
+- `Select Bank Account` | MISSING | None
+- `Select Bank Account v` | MISSING | None
+- `Select Company Address v` | MATCHED | Company
+- `Select Cost Code` | MISSING | None
+- `Select Group Image` | MISSING | None
+- `Select Party Type` | MISSING | None
+- `Select Party Type v` | MISSING | None
+- `Select Project` | MATCHED | Project
+- `Select Unit` | MISSING | None
+- `Select v Name Status Type Cookies Size a` | MISSING | None
+- `Seo x* SCKVOBODE®F A in FP) © 23.062026` | MISSING | None
+- `Seon *entwonagoua ® A in FD &® 53-06-2026` | MISSING | None
+- `Services Attendance Report for DPR` | MATCHED | dpr
+- `Settlement Payment Total` | MATCHED | Payment
+- `Site Expense` | MISSING | None
+- `Site Visit Inspection AAC Block Masonry` | MISSING | None
+- `Skip for Now` | MISSING | None
+- `Ss Finance GRN Mati` | MATCHED | finance
+- `Status` | MISSING | None
+- `Sub Total` | MISSING | None
+- `Subcon Workorder Summary Report` | MATCHED | WorkOrder
+- `Supervisor` | MISSING | None
+- `T t Subcontractor` | MISSING | None
+- `TF Equipment No Party Available!` | MATCHED | equipment, Equipment, equipment
+- `TH CRM Integrations Payment Entries` | MATCHED | crm, Payment
+- `TH CRM Status` | MATCHED | crm
+- `TH Delete Logs` | MISSING | None
+- `TW Delete Logs Rs 20000 + Taxes Rs 10000 + Taxes Rs 5000 + Taxes` | MISSING | None
+- `Take Complete Control of your Projects with Onsite` | MATCHED | Project, projects
+- `Task` | MATCHED | TaskPredecessor, TaskTodo, Task, TaskComment, task_todos
+- `Task Progress` | MATCHED | Task
+- `Taxes` | MISSING | None
+- `This Week v |) -Select - All vy) All v)| All vy) All v` | MISSING | None
+- `This Week vy |) -Select - All v| All v)| All | |All v` | MISSING | None
+- `To Do For DPR Material Request for DPR` | MATCHED | dpr
+- `ToDo For DPR ae` | MATCHED | dpr
+- `Total` | MISSING | None
+- `Total Amount` | MISSING | None
+- `Total Branches Primary Branch Other Branches` | MISSING | None
+- `Transfer Type` | MISSING | None
+- `Unit` | MISSING | None
+- `Unit of Measurement` | MISSING | None
+- `Upload Csv i)` | MISSING | None
+- `Upload Files ()` | MISSING | None
+- `Upload Files (4` | MISSING | None
+- `Upload Files (5` | MISSING | None
+- `Upload Files (A)` | MISSING | None
+- `Upload Files (Ay` | MISSING | None
+- `Upload Files Cy` | MISSING | None
+- `Upload Files GS (0) Ad6te487-Scf8-4826-Bfd3-Te1f5F17660 200 ahr 0 05 ke` | MATCHED | hr
+- `Upload Watermark @` | MISSING | None
+- `User Details Company Details` | MATCHED | Company, User
+- `Vehicle No Project Name Date t Name Distance Count Load Per Trij` | MATCHED | Project
+- `Vehicle No.` | MISSING | None
+- `Viewer` | MISSING | None
+- `Week, Not Today Unmapped Dependencies` | MISSING | None
+- `Week, Not Today Unmapped Dependencies |` | MISSING | None
+- `Workflow Controls Bangalore Urban Primary Address` | MISSING | None
+- `Workflow Controls Holiday Date Day` | MATCHED | Holiday
+- `Workflow Controls Material Request Restriction` | MISSING | None
+- `Workflow Controls Template Name Description Status` | MISSING | None
+- `Worktlow Controls Restrict Material Usage` | MISSING | None
+- `X  NEWLEAD F save. |` | MISSING | None
+- `X ADD NEW ACCOUNT Cancel` | MISSING | None
+- `X ADD NEW ACCOUNT Cancel | save |` | MISSING | None
+- `X ADD PARTY Cancel` | MISSING | None
+- `X ADD PARTY Cancel | save |` | MISSING | None
+- `X NEW ITEM | save |` | MISSING | None
+- `X NEW MATERIAL Cancel | save |` | MISSING | None
+- `X New Leave Policy Template f save |` | MISSING | None
+- `X OPENING BALANCE Cancel` | MISSING | None
+- `Y Filter CO Invert More filters ¥` | MISSING | None
+- `Y Filter Clinvert More filters ¥` | MISSING | None
+- `Y Filter Invert More filters ¥` | MISSING | None
+- `Y Filter Invert More fiters. +` | MISSING | None
+- `Y Filter O Invert More filters ¥` | MISSING | None
+- `Y Services Bank Account Information ic` | MISSING | None
+- `Yv — @ Deleted Logs x + > Ask Gemini al a x` | MISSING | None
+- `[=] Payroll No Data Transaction` | MISSING | None
+- `[oreongtons @ Create DPRs in a click` | MATCHED | dpr
+- `[| Nerul . 0% z0/z0 () et` | MISSING | None
+- `]_ WMO Woodwark Conractrs 3437 a @ Create subcontractor work orders` | MISSING | None
+- `_ i remium Plan Vali til OQ YQ Grmeneiog Cdmbecde| Notre a 8` | MISSING | None
+- `a . Upload Stamp @` | MISSING | None
+- `a . Upload Stc ies)` | MISSING | None
+- `a OSOot* OnNonga eas a` | MISSING | None
+- `a OSOot* OnNonga eas a EN FD D osor-o006` | MISSING | None
+- `a OSOot* OnNonga eas a EN PPD osor-2006` | MISSING | None
+- `a OSOot* OnNonga eas a NF D osor anes` | MISSING | None
+- `a OSOot* OnNonga eas a NF D osor anne` | MISSING | None
+- `a OSOot* OnNonga eas a NF D osora0as` | MISSING | None
+- `a OSOot* OnNonga eas a NFO OD osora0as` | MISSING | None
+- `a OSOot* OnNonga eas a TN FD D osor-v006` | MISSING | None
+- `a OSOot* OnNonga eas a TN FD D osorv006` | MISSING | None
+- `a OSOot* OnNonga eas a TN FD DW osor-2006` | MISSING | None
+- `a OSOot* OnNonga eas aN FD os or anes` | MISSING | None
+- `a OSOot* OnNonga eas aN FD osor anes` | MISSING | None
+- `a OSOot* OnNonga eas aN FD osor anne` | MISSING | None
+- `a OSOot* OnNonga eas aN FD osor sons` | MISSING | None
+- `a OSOot* OnNonga eas aN FD osora0as` | MISSING | None
+- `a OSOot* OnNonga eas aN FD osoraoas` | MISSING | None
+- `a OSOot* OnNonga eas aN FD sor a0as` | MISSING | None
+- `a OSOot* OnNonga eas aN FD sor anes` | MISSING | None
+- `a OSOot* OnNonga eas aN FO osora0as` | MISSING | None
+- `a OSOot* OnNonga eas aN FOO os or anes` | MISSING | None
+- `a OSOot* OnNonga eas aN FOO osora0as` | MISSING | None
+- `a OSOot* OnNonga eas aN FOO sor a0as` | MISSING | None
+- `a OSOot* OnNonga eas ae` | MISSING | None
+- `a OSOot* OnNonga eas ae ne` | MISSING | None
+- `a OSOot* OnNonga eas ee` | MISSING | None
+- `a OSOot* OnNonga eas ee ae` | MISSING | None
+- `a OSOot* OnNongaeas ee a` | MISSING | None
+- `a OSOt* OnNonga eas ae` | MISSING | None
+- `a OSOt* OnNonga eas ee on ee` | MISSING | None
+- `always know what is happening and what needs attention next. |` | MISSING | None
+- `cRM = — Opening Balance` | MATCHED | crm
+- `e@ Se@oez *envwonagoua ® a in FD 9406-2026` | MISSING | None
+- `eT Approved or` | MISSING | None
+- `er] DO | ———§ | SITEMANAG| > ea (>) = = = > iia` | MISSING | None
+- `f Delete Logs Select +` | MISSING | None
+- `f G 7) Nov` | MISSING | None
+- `f Note(Optional) —` | MISSING | None
+- `fa Finance Onsite Updates about new features` | MATCHED | finance
+- `fe Ally 0 Stage » Category Search Projects Q AA` | MATCHED | Project, projects
+- `fe Ally 1 Stage » Category v Search Projects Q AZ` | MATCHED | Project, projects
+- `ff Delete Logs ;` | MISSING | None
+- `ff Delete Logs No Data Quotation` | MATCHED | Quotation
+- `ff Delete Logs | poy |` | MISSING | None
+- `fi Delete Logs` | MISSING | None
+- `fi} Delete Logs = —` | MISSING | None
+- `full project schedule without paper-based sign-` | MATCHED | Project
+- `f} Delete Logs Advance Paid To Pay To Receive Advance Received` | MISSING | None
+- `i (0) Ad6fc487-5cf8-4826-8fd3-1c1f5F1d7660 200 ahr id 0.9 kB` | MATCHED | hr
+- `i < 48.00K |` | MISSING | None
+- `i < 48.00K | .` | MISSING | None
+- `i Delete Logs BOQ BOM Report @` | MISSING | None
+- `i Yash Desai QT.No, QT. Date Status .` | MISSING | None
+- `i] some = .000me—=—=«ts00m=~——=«2.000ms == «2500ms «3 000m SNe 4000ms | ASMe` | MISSING | None
+- `irkforceName | AttendanceDate t No of Workers Total Shift Overtime Hours` | MISSING | None
+- `is | Showing 0 of 0 leads` | MISSING | None
+- `is | on task 2026` | MATCHED | Task
+- `j 100000 ms 200000 3on000ms 40,000 ms 500,000 me 0000 ms on, 000 ms se0000ms |` | MISSING | None
+- `j 2.000 ms moms 4.000 4000 me 10,000 12,000 me 14000 ms 16000 me 2000s |` | MISSING | None
+- `lipment Name Vehicle No |` | MISSING | None
+- `on Finnie ‘ponents — ~= =` | MISSING | None
+- `payroll + Create New` | MISSING | None
+- `pn | Project Code Nerul` | MATCHED | Project
+- `q | xt || Mobile |` | MISSING | None
+- `q | z+ + || Mobile |` | MISSING | None
+- `rs | Demo Construction Ltd Projects eg Cu]` | MATCHED | Project, projects
+- `rs | SiteFlow Console METRO TERMINAL (PHASE 2) Y ly Ag igger Sy` | MISSING | None
+- `search X @© Q@ Y Q = G@Preservelog (1) Disable cache| Nothrotting ~|7 tL 8` | MATCHED | hr
+- `sotti Upload Signature @>` | MISSING | None
+- `t Delete Logs Taxes Rs 5000 Annual Maintenance +` | MISSING | None
+- `tH CRM Previous Year` | MATCHED | crm
+- `tJ Delete Logs .` | MISSING | None
+- `tJ Delete Logs supervisor _` | MISSING | None
+- `tf Delete Logs Taxes Rs 5000 Annual Maintenance +` | MISSING | None
+- `time the planning team sees that an without production. Across a project | . .` | MATCHED | planning, production, Project
+- `ti} Delete Logs` | MISSING | None
+- `ty Delete Logs Company Party Balance (All Projects)` | MATCHED | Company, Project, projects
+- `ty Delete Logs NAME PROGRESS IN / OUT TODO` | MISSING | None
+- `ty Delete Logs Production Material Report @` | MATCHED | production
+- `ty Delete Logs Purchase Order Terms` | MISSING | None
+- `v SiteFlow | Premium Construct) To Do x + ~~ Ask Gemini _ a x` | MISSING | None
+- `v SiteFlow | Premium Construct) X Company Settings x + © Ask Gemini - ag xX` | MATCHED | settings, Company
+- `v SiteFlow | Premium Construct) X Finance x + © Ask Gemini - a x` | MATCHED | finance
+- `v SiteFlow | Premium Construct) X Payroll x + © Ask Gemini - ag xX` | MISSING | None
+- `v SiteFlow | Premium Construct) X Transaction x + © Ask Gemini - ag xX` | MISSING | None
+- `v SiteFlow | Premium Construct) x Approvals x + © Ask Gemini - ag xX` | MISSING | None
+- `v SiteFlow | Premium Construct) x Company Settings x + © Ask Gemini - ag xX` | MATCHED | settings, Company
+- `v SiteFlow | Premium Construct) x Payroll x + © Ask Gemini - ag xX` | MISSING | None
+- `v SiteFlow | Premium Construct) x Services x + © Ask Gemini - a x` | MISSING | None
+- `v SiteFlow | Premium Construct) x Services x + © Ask Gemini - ag xX` | MISSING | None
+- `v SiteFlow | Premium Construct) x Transaction x + © Ask Gemini - a x` | MISSING | None
+- `v SiteFlow | Premium Construct) x Transaction x + © Ask Gemini - ag xX` | MISSING | None
+- `v SiteFlow | Premium Construct, Company Settings x + ~~} Ask Gemini - a x` | MATCHED | settings, Company
+- `v SiteFlow | Premium Constructic Company Home x + > Ask Gemini - ag xX` | MATCHED | Company
+- `v SiteFlow | Premium Constructic Finance x + > Ask Gemini - ag xX` | MATCHED | finance
+- `v SiteFlow | Premium Constructic Transaction x + > Ask Gemini - ag xX` | MISSING | None
+- `v SiteFlow | Premium Construct’ Company Settings x + ~~} Ask Gemini - a x` | MATCHED | settings, Company
+- `ws | Project Code MP SITE` | MATCHED | Project
+- `x Cancel` | MISSING | None
+- `x MATERIAL RETURN Cancel` | MISSING | None
+- `x Salary Breakup @ O@ Y. Q @Preservelog (I Disable cache| Nothrotting ~|% LL B` | MATCHED | hr
+- `x Work Order Create Work Order` | MISSING | None
+- `y__ Steel framing — Level 3 Unblocked |` | MISSING | None
+- `yey Y Filter Cline Morefiters ¥` | MISSING | None
+- `your construction ERP. ——— | “* 3 ttt +` | MISSING | None
+- `yun ju Not Started aug` | MISSING | None
+- `yun jul AUG Export to Excel` | MISSING | None
+- `| + New Status` | MISSING | None
+- `| 18` | MISSING | None
+- `| 3356 41817dd8156ec256,e 200 script 0 Idiske` | MISSING | None
+- `| = + || Mobile |` | MISSING | None
+- `| Approved | Ordered | Rejected` | MISSING | None
+- `| Category Labour` | MATCHED | labour
+- `| India jurisdiction only` | MISSING | None
+- `| Material Purchase` | MISSING | None
+- `| NERUL, Mumbai i a .` | MISSING | None
+- `| NERUL, Mumbai i et` | MISSING | None
+- `| Payroll` | MISSING | None
+- `| Payroll 0 2 0` | MISSING | None
+- `| Payroll 1 v_ Concreting Work i` | MATCHED | NCR
+- `| Pending Approved | Ordered | Rejected` | MISSING | None
+- `| Pending | Approved | Ordered Rejected` | MISSING | None
+- `| Pending | Approved | Rejected` | MISSING | None
+- `| Powered by onsite` | MISSING | None
+- `| Project` | MATCHED | Project
+- `| SUM = -NA- SUM =-NA-` | MISSING | None
+- `| x` | MISSING | None
+- `| x Email` | MISSING | None
+- `| © Bank To Bank | Cash Deposit Cash Withdraw` | MISSING | None
+- `| © Payroll SNo Task name Nov bee son cep` | MATCHED | Task
+- `} category?type=billing_unit 200 xe 0 3.0 KB |` | MATCHED | billing, Bill
+- `~ , v' Create and customize templates to streamline payroll.` | MISSING | None
+- `~ | Office staff t siesta) Q Search Payroll Active +` | MISSING | None
+- `~ | Showing | of 0 leads` | MISSING | None
+- `£5] 01 May 2026 to 31 May 2026 All vl) jal al) |All al) |All al` | MISSING | None
+- `¥ © SiteFlow | Premium Constructic © Transaction x + > Ask Gemini al a x` | MISSING | None
+- `© Help + Add Note` | MISSING | None
+- `© Help No All Projects!` | MATCHED | Project, projects
+- `© Help No Timesheet Available.` | MATCHED | Timesheet
+- `© Help Project name Party name Workforce name Noof Workers Total Shift` | MATCHED | Project
+- `© Library [> | Pune , Pune 70/z0 2 ” ;` | MATCHED | library
+- `© Library [> | Pune , Pune ° ,` | MATCHED | library
+- `© Onsite Teams | v8.22.0` | MISSING | None
+- `© Onsite Teams | v8.23` | MISSING | None
+- `© Onsite Teams | v8.23 MR Numbering` | MISSING | None
+- `© Onsite Teams | v8.23.` | MISSING | None
+- `© Onsite Teams | v8.23. (15 pages) [15 post + 4 Reels] msgs per year)` | MISSING | None
+- `© Onsite Teams | v8.23. Project Level © Company Level` | MATCHED | Company, Project
+- `© Onsite Teams | v8.23. ® Setting` | MISSING | None
+- `© Onsite Teams | v8.24.0` | MISSING | None
+- `© Onsite Teams | v8.24.0 & Attendance & Salary @ Equipments @ Asset` | MATCHED | equipment, Equipment, equipment
+- `© Onsite Teams | v8.24.0 &@ Setting` | MISSING | None
+- `© Onsite Teams | v8.24.0 + Payment in [i - Payment Out` | MATCHED | Payment
+- `© Onsite Teams | v8.24.0 .` | MISSING | None
+- `© Onsite Teams | v8.24.0 15 pages 15 post + 4 Reels msgs per year,` | MISSING | None
+- `© Onsite Teams | v8.24.0 2028` | MISSING | None
+- `© Onsite Teams | v8.24.0 5 .` | MISSING | None
+- `© Onsite Teams | v8.24.0 DEC` | MISSING | None
+- `© Onsite Teams | v8.24.0 MANAGEMEN.` | MISSING | None
+- `© Onsite Teams | v8.24.0 Powered by ensite` | MISSING | None
+- `© Onsite Teams | v8.24.0 Powered by onsite` | MISSING | None
+- `© Onsite Teams | v8.24.0 Poweredby  ONsite` | MISSING | None
+- `© Onsite Teams | v8.24.0 Setting` | MISSING | None
+- `© Onsite Teams | v8.24.0 Where to add project value? >` | MATCHED | Project
+- `© Onsite Teams | v8.24.0 a9 Recently added 16h ago Powered by onsite` | MISSING | None
+- `© Onsite Teams | v8.24.0 powered by onsite` | MISSING | None
+- `© Procurement & RFQ No Data Available a | |` | MATCHED | rfq, procurement, RFQ
+- `© Q 4 Filter Active + RA + New Party` | MISSING | None
+- `© library Apply Approve - Track Balance — all rom the app` | MATCHED | library
+- `© library No Data Available No Data Available No Data Available` | MATCHED | library
+- `© mom 200 xhr 0 sha |` | MATCHED | hr
+- `«> A Q Search Payroll 0 Present` | MISSING | None
+- `® 9 No Data Available` | MISSING | None
+- `® Team Schedule Task Del 1 J in t Estimated % Com| Last` | MATCHED | Task
+- `® Ubrary f° | Mumbai, Mumbai ! et` | MISSING | None
+- `° x NEWITEM F seve. | © OD XA GPresevelog Cl Dheblecathe[Notiottng ~|S LL 8` | MISSING | None
+- `— Note (Optional) $A NN NN` | MISSING | None
+- `— Note ————____` | MISSING | None
+- `— Note(Optional), $@7mWNAN —.` | MISSING | None
+- `— Note(Optional). AANA.` | MISSING | None
+- `— Note(ptional), $A ARN` | MISSING | None
+- `— | Abhishek Ch Sub-con 22%` | MISSING | None
+- `‘() all?workorder_id=8292cafc-a60e-44ce-bf32-752ace8a7366 200 xhr oO 04 “|` | MATCHED | hr, WorkOrder
+- `‘Sub Cost Code Created Date` | MISSING | None
+- `“ Services Please Create New Asset Types!` | MISSING | None
+- `€ Additional Details ASU " =| = |` | MISSING | None
+- `€ Additional Details ASU { { E = & I |` | MISSING | None

@@ -155,7 +155,7 @@ def auto_populate(company_id: uuid.UUID, report_type: str = Query(...), return_p
         "pf_employer_contribution": Decimal(str(round(pf_employer, 2))),
         "esi_employee_contribution": Decimal(str(round(esi_employee, 2))),
         "esi_employer_contribution": Decimal(str(round(esi_employer, 2))),
-        "bocw_cess": Decimal("0"),
+        "bocw_cess": Decimal(str(round(total_wages * 0.01, 2))) if report_type == "bocw" else Decimal("0"),
         "tds_deducted": Decimal(str(round(tds, 2))),
         "status": "draft",
     }

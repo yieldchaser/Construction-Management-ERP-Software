@@ -1,0 +1,1420 @@
+# Clean Gap Analysis: Onsite Teams vs SiteFlow
+Generated: 2026-07-06T19:05:18.543652
+
+---
+
+## 1. SITEFLOW BACKEND CAPABILITY
+
+- Routers: 35
+- Models: 100
+
+### Routers
+
+- `analytics`
+- `assets`
+- `auth`
+- `billing`
+- `budget`
+- `budgeting`
+- `calculators`
+- `chat`
+- `crm`
+- `custom_fields`
+- `dpr`
+- `drawings`
+- `equipment`
+- `face_recognition`
+- `finance`
+- `hr`
+- `labour`
+- `library`
+- `planning`
+- `procurement`
+- `production`
+- `profile`
+- `quality`
+- `reports`
+- `rfq`
+- `safety`
+- `settings`
+- `statutory`
+- `subcon_attendance`
+- `subcon_performance`
+- `tally`
+- `three_way`
+- `towers`
+- `vendor_performance`
+- `wastage`
+
+### Models & Columns
+
+- `approval_rules`: id, company_id, feature_type, min_amount, max_amount, levels, approvers, created_at
+- `asset_depreciation_entries`: id, company_id, schedule_id, asset_id, project_id, entry_date, depreciation_amount, accumulated_depreciation, book_value, notes, created_at
+- `asset_depreciation_schedules`: id, company_id, asset_id, method, useful_life_years, salvage_value, depreciation_pct, start_date, is_active, created_at, updated_at
+- `attendance_logs`: id, employee_id, project_id, attendance_date, punch_in, punch_out, lat_in, lng_in, lat_out, lng_out, distance_from_site_m, is_within_geofence, status, hours_worked, overtime_hours, shift_multiplier, location_verified, photo_verified, notes, created_at
+- `bank_accounts`: id, company_id, account_holder_name, bank_name, account_number, ifsc_code, upi_id, balance, created_at
+- `bills`: id, company_id, project_id, party_company_user_id, invoice_number, invoice_date, due_date, invoice_type, status, subtotal, gst_amount, total_payable, paid_amount, approval_flag, is_milestone_fixed_amount, tally_synced, created_at, updated_at
+- `bocw_records`: id, company_id, project_id, contractor_id, contractor_name, month_year, workers_count, wages_paid, contribution_amount, acknowledgement_number, created_at
+- `boq_items`: id, project_id, section_name, item_name, unit, quantity, rate, supply_rate, installation_rate, supply_tax_pct, installation_tax_pct, quantity_float_limit, amount, created_at
+- `chat_group_members`: id, group_id, user_id, role, joined_at
+- `chat_groups`: id, company_id, project_id, name, group_type, created_by, is_archived, created_at
+- `chat_messages`: id, group_id, user_id, user_name, message_text, media_url, voice_note_url, image_urls, is_mom, mom_date, created_at
+- `checklist_items`: id, checklist_id, sequence, description, acceptable_criteria, is_mandatory, created_at
+- `client_reports`: id, project_id, report_name, report_date, summary_markdown, pdf_url, generated_by, is_approved, created_at, updated_at
+- `companies`: id, name, legal_business_name, gstin, billing_address, currency_decimal_places, quantity_decimal_places, back_dated_limit_days, negative_stock_lock, bom_restriction, po_restriction, material_request_restriction, negative_balance_warning, custom_pdf_template_enabled, google_sheets_auth_phone, onboarding_segment, onboarding_categories, onboarding_city, onboarding_completed, created_at, updated_at
+- `company_branches`: id, company_id, branch_name, gstin, billing_address, created_at
+- `company_roles`: id, company_id, role_name, permissions, created_at
+- `company_team`: id, company_id, user_id, role_id, priority_type, created_at
+- `credit_notes`: id, project_id, company_id, party_company_user_id, notes, total_amount, bill_id, reference_number, approval_flag, created_at
+- `crm_leads`: id, company_id, assignee_id, lead_date, lead_type, contact_name, phone_no, email, client_company_name, address, source, category, status, priority, budget, description, next_follow_up, expected_closure, created_at, updated_at
+- `crm_quotation_items`: id, quotation_id, section_name, item_name, qty, unit, cost_price, selling_price, supply_rate, installation_rate, supply_tax_pct, installation_tax_pct, total_amount, created_at
+- `crm_quotations`: id, lead_id, subject, tax_type, status, gst_pct, discount, total_amount, terms, created_at
+- `custom_field_values`: id, company_id, field_id, entity_type, entity_id, value_text, value_number, value_date, value_json, created_at, updated_at
+- `custom_fields`: id, company_id, entity_type, field_name, field_label, field_type, is_required, options, display_order, is_active, created_at
+- `daily_progress_reports`: id, project_id, task_id, reported_by, dpr_date, weather, executed_qty, workers_deployed, materials_consumed, photos, notes, issues, status, created_at
+- `debit_notes`: id, project_id, company_id, party_company_user_id, notes, total_amount, work_amount, gst_amount, bill_id, reference_number, approval_flag, created_at
+- `drawing_pins`: id, revision_id, x_coordinate, y_coordinate, comment, tagged_user_id, created_by, created_at
+- `drawing_revisions`: id, drawing_id, version_code, file_url, approval_status, approved_by, comments, created_at
+- `drawings`: id, project_id, name, category, created_by, created_at
+- `equipment`: id, company_id, name, code, category, ownership_type, status, hourly_rate, created_at, updated_at
+- `equipment_deployments`: id, equipment_id, project_id, start_date, end_date, remarks, created_at
+- `equipment_fuel_logs`: id, equipment_id, project_id, logged_date, liters, cost_per_liter, total_cost, odometer_hours, remarks, created_at
+- `equipment_maintenance_schedules`: id, equipment_id, service_type, scheduled_date, completed_date, cost, status, remarks, created_at
+- `face_recognition_logs`: id, company_id, project_id, employee_id, punch_type, face_verified, confidence_score, image_url, lat, lng, is_within_geofence
+- `goods_receipt_notes`: id, company_id, project_id, po_id, grn_number, received_date, received_by, created_at
+- `grn_items`: id, grn_id, po_item_id, received_qty, created_at
+- `holidays`: id, company_id, name, date, created_at
+- `inspection_responses`: id, inspection_id, checklist_item_id, result, remarks, photo_url, created_at
+- `leave_requests`: id, company_id, project_id, employee_name, leave_type, start_date, end_date, days_count, status, applied_on
+- `library_asset_types`: id, company_id, name, created_at
+- `library_cost_codes`: id, company_id, code, name, created_at
+- `library_deductions`: id, company_id, name, created_at
+- `library_materials`: id, company_id, name, unit, gst_rate, category, unit_cost, lead_time_days, hsn_sac, item_code, specifications, created_at
+- `library_parties`: id, company_id, party_id_custom, name, phone, email, party_type, address, date_of_joining, aadhaar_number, pan_number, aadhaar_file, pan_file, created_at
+- `library_progresses`: id, company_id, name, created_at
+- `library_rates`: id, company_id, name, item_code, unit, gst_rate, category, unit_cost, markup_value, markup_type, unit_sale_price, note, cost_code, hsn_sac, created_at
+- `library_workforces`: id, company_id, name, created_at
+- `material_indent_items`: id, indent_id, material_name, quantity, unit, created_at
+- `material_indents`: id, company_id, project_id, requested_by, indent_number, status, created_at
+- `material_test_results`: id, project_id, test_type, material, sample_ref, test_date, result_value, unit, min_acceptable, max_acceptable, is_pass, zone, remarks, created_at
+- `material_transactions`: id, project_id, material_name, qty, type, source_ref_id, created_at
+- `material_wastage`: id, company_id, project_id, material_name, wastage_type, quantity, unit, estimated_value, reason, reported_by, photo_urls, task_id, status, created_at
+- `muster_rolls`: id, company_id, project_id, contractor_id, date, labor_role, workers_present, workers_absent, hours_worked, overtime_hours, notes, created_at
+- `ncrs`: id, project_id, inspection_id, ncr_number, title, description, severity, raised_by, assigned_to, due_date, status, resolution_notes, closed_at, created_at, updated_at
+- `payment_requests`: id, company_id, project_id, party_company_user_id, party_name, amount, details, status, due_date, created_at
+- `payment_settlements`: id, payment_id, bill_id, settled_amount, created_at
+- `payments`: id, company_id, project_id, party_company_user_id, payment_type, amount, unsettled_amount, payment_method, reference_number, description, payment_date, tally_synced, approval_pipeline_template_id, created_at
+- `payroll_line_items`: id, payroll_run_id, employee_id, days_present, days_in_month, gross_salary, basic, hra, other_allowances, overtime_amount, pf_employee, pf_employer, esi_employee, esi_employer, tds, advance_recovery, other_deductions, total_deductions, net_payable, created_at
+- `payroll_runs`: id, company_id, project_id, payroll_month, run_date, status, total_gross, total_deductions, total_net, created_at
+- `ppe_checks`: id, project_id, checked_by, check_date, total_workers, compliant_workers, non_compliant_items, created_at
+- `production_batch_materials`: id, batch_id, material_name, planned_qty, actual_qty, unit, variance_qty, created_at
+- `production_batches`: id, company_id, project_id, recipe_id, task_id, batch_number, planned_output_qty, actual_output_qty, planned_material_qty, actual_material_qty, consumption_variance_qty, status, started_at, completed_at, notes, created_at, updated_at
+- `production_recipe_materials`: id, recipe_id, material_name, planned_qty, unit, is_optional, created_at
+- `production_recipes`: id, company_id, project_id, recipe_code, product_name, mix_type, unit, target_output_qty, wastage_pct, status, notes, created_at, updated_at
+- `project_budgets`: id, project_id, material_budget, labour_budget, subcon_budget, equipment_budget, created_at
+- `project_towers`: id, project_id, tower_name, tower_code, status, start_date, end_date, budget, created_at
+- `projects`: id, company_id, branch_id, name, code, status, address, city, state, location, attendance_radius_meters, is_location_required, custom_pdf_template_enabled, created_at, updated_at
+- `purchase_order_items`: id, po_id, material_name, quantity, unit, rate, tax_pct, total_amount, created_at
+- `purchase_orders`: id, company_id, project_id, vendor_id, po_number, po_date, status, gross_amount, tax_amount, total_amount, approval_flag, created_at
+- `quality_checklists`: id, company_id, title, category, is_code_reference, description, is_active, created_at
+- `quotations`: id, company_id, subject, client_name, estimated_amount, status, expiry_date, created_at
+- `rfq_items`: id, rfq_id, material_name, quantity, unit, specifications, created_at
+- `rfq_quotes`: id, rfq_id, vendor_id, vendor_name, item_id, quoted_rate, delivery_days, terms, validity_days, submitted_at
+- `rfqs`: id, company_id, project_id, rfq_number, status, valid_until, notes, created_at, updated_at
+- `safety_incidents`: id, project_id, incident_type, severity, description, location, injured_person, lost_time_days, status, root_cause, corrective_action, reported_by, reported_at, closed_at, created_at
+- `site_inspections`: id, project_id, checklist_id, task_id, inspected_by, zone, inspection_date, status, pass_count, fail_count, na_count, overall_remarks, created_at, updated_at
+- `staff_employees`: id, company_id, project_id, name, employee_code, designation, department, mobile, basic_salary, hra, other_allowances, pf_employee_pct, pf_employer_pct, esi_employee_pct, esi_employer_pct, tds_monthly, is_esi_applicable, status, date_of_joining, created_at, updated_at
+- `statutory_reports`: id, company_id, project_id, report_type, return_period, total_employees, total_wages, pf_employee_contribution, pf_employer_contribution, esi_employee_contribution, esi_employer_contribution, bocw_cess, tds_deducted, filed_at, filed_by, acknowledgment_number, status, created_at, updated_at
+- `subcontractor_attendance_logs`: id, project_id, subcontractor_id, attendance_date, labor_role, worker_count, shift_multiplier, overtime_hours, allowance, deduction, notes, photo_url, created_at
+- `subcontractor_performance`: id, company_id, project_id, subcontractor_id, period_start, period_end, on_time_pct, billing_accuracy_pct, quality_score, tasks_completed, tasks_delayed, total_billed, disputes_count, notes, created_at, updated_at
+- `tally_agents`: id, company_id, machine_label, auth_key, status, created_at, updated_at
+- `tally_bank_mappings`: id, company_id, onsite_bank_account_details, tally_ledger_name, created_at
+- `tally_connections`: id, company_id, tally_company_name, registered_mobile, sync_window_start_date, voucher_number_template, auto_create_missing_ledgers, round_off_ledger, default_cash_ledger, created_at, updated_at
+- `tally_cost_centre_mappings`: id, company_id, project_id, tally_cost_centre_name, created_at
+- `tally_ledger_mappings`: id, company_id, onsite_transaction_type, posting_mode, tally_voucher_type, tally_ledger_name, freight_ledger, surcharge_ledger, created_at
+- `tally_party_mappings`: id, company_id, onsite_party_id, tally_ledger_name, created_at
+- `task_comments`: id, task_id, user_id, user_name, message_text, media_url, voice_note_url, progress_qty_added, created_at
+- `task_predecessors`: task_id, predecessor_id, type
+- `task_todos`: id, task_id, title, is_completed, created_at
+- `tasks`: id, project_id, parent_id, name, duration_days, start_date, end_date, status, priority, assigned_to, boq_item_id, created_at
+- `three_way_matches`: id, company_id, project_id, po_id, grn_id, invoice_id, match_status, po_amount, grn_qty, invoiced_amount, variance_amount, variance_reason, matched_by, matched_at, created_at, updated_at
+- `timesheet_entries`: id, timesheet_id, task_id, entry_date, hours, activity_description, start_time, end_time, duration, created_at
+- `timesheets`: id, employee_id, project_id, week_start, week_end, total_hours, status, approved_by, photo_verified, location_verified, notes, created_at, updated_at
+- `toolbox_talks`: id, project_id, topic, conducted_by, conducted_at, attendee_count, notes, created_at
+- `transaction_deductions`: id, bill_id, deduction_type, amount, percentage, notes, created_at
+- `users`: id, name, mobile, email, created_at
+- `vendor_performance`: id, company_id, project_id, vendor_id, vendor_name, total_pos, total_grns, on_time_deliveries, quality_issues, avg_delay_days, last_updated, created_at
+- `warehouse_inventory`: id, project_id, material_name, on_hand_qty, reserved_qty, unit, created_at
+- `work_order_amendments`: id, wo_id, amendment_number, amended_fields, amended_by, amended_at, reason, created_at
+- `work_order_items`: id, wo_id, boq_item_id, task_id, quantity, rate, amount, created_at
+- `work_orders`: id, company_id, project_id, subcontractor_id, wo_number, wo_date, status, estimated_work_amount, terms, created_at
+
+---
+
+## 2. SITEFLOW FRONTEND ROUTES
+
+- `/.`
+- `/SiteFlow-pricing`
+- `/[slug]`
+- `/blog`
+- `/blog\[slug]`
+- `/c\[company_id]\analytics`
+- `/c\[company_id]\d\home`
+- `/c\[company_id]\d\library`
+- `/c\[company_id]\d\payment-approval`
+- `/c\[company_id]\d\team-action`
+- `/c\[company_id]\d\todo`
+- `/c\[company_id]\dashboard`
+- `/c\[company_id]\p\[project_id]\attendance`
+- `/c\[company_id]\p\[project_id]\billing`
+- `/c\[company_id]\p\[project_id]\budget`
+- `/c\[company_id]\p\[project_id]\budgeting`
+- `/c\[company_id]\p\[project_id]\budgeting\boq`
+- `/c\[company_id]\p\[project_id]\chat`
+- `/c\[company_id]\p\[project_id]\crm`
+- `/c\[company_id]\p\[project_id]\custom-fields`
+- `/c\[company_id]\p\[project_id]\depreciation`
+- `/c\[company_id]\p\[project_id]\dpr`
+- `/c\[company_id]\p\[project_id]\drawings`
+- `/c\[company_id]\p\[project_id]\equipment`
+- `/c\[company_id]\p\[project_id]\face-recognition`
+- `/c\[company_id]\p\[project_id]\finance`
+- `/c\[company_id]\p\[project_id]\hr`
+- `/c\[company_id]\p\[project_id]\labour`
+- `/c\[company_id]\p\[project_id]\planning`
+- `/c\[company_id]\p\[project_id]\planning\gantt`
+- `/c\[company_id]\p\[project_id]\procurement`
+- `/c\[company_id]\p\[project_id]\procurement\rfq`
+- `/c\[company_id]\p\[project_id]\procurement\vendor-performance`
+- `/c\[company_id]\p\[project_id]\production`
+- `/c\[company_id]\p\[project_id]\quality`
+- `/c\[company_id]\p\[project_id]\reports`
+- `/c\[company_id]\p\[project_id]\reports\calculators`
+- `/c\[company_id]\p\[project_id]\safety`
+- `/c\[company_id]\p\[project_id]\statutory`
+- `/c\[company_id]\p\[project_id]\subcon`
+- `/c\[company_id]\p\[project_id]\subcon\scorecards`
+- `/c\[company_id]\p\[project_id]\subcon\work-orders\amendments`
+- `/c\[company_id]\p\[project_id]\three-way`
+- `/c\[company_id]\p\[project_id]\towers`
+- `/c\[company_id]\p\[project_id]\wastage`
+- `/c\[company_id]\reports`
+- `/c\[company_id]\reports\dpr`
+- `/c\[company_id]\reports\item-wise-sales`
+- `/c\[company_id]\settings`
+- `/contact`
+- `/help`
+- `/help\[...slug]`
+- `/integrations`
+- `/integrations\tally`
+- `/login`
+- `/products`
+- `/products\[slug]`
+- `/profile\onboarding`
+- `/resources`
+- `/resources\[...slug]`
+
+---
+
+## 3. ONSITE PDF FEATURE TEXT (cleaned)
+
+- Generated: 2026-07-06T17:52:47.786662
+- - Size: 1940.21 KB
+- - Pages: 16
+- --- Page 1 ---
+- FEATURES SOLUTIONS RESOURCES PRICING CONTACT US Get Product Demo
+- 7/5/26, 5:46 PM #1 Cloud Infrastructure ERP Software in India | Onsite
+- https://onsiteteams.com/software-for-infrastructure-projects/ 1/16
+- --- Page 2 ---
+- ERP FOR INFRASTRUCTURE PROJECTS
+- InfrastructureERP Software
+- Onsite connects field teams and back offices in one
+- infrastructure ERP platform. Monitor chainage-wise progress,
+- track equipment, control costs, and keep projects on schedule
+- — from any device on site.
+- Get Free Demo →
+- Check Pricing
+- ★★★★★ 4.8/5 rated by infrastructure companies across India & Middle East
+- DPR Submitted Today4 reports
+- Budget Consumed₹18.4 Cr of ₹26 Cr
+- Equipment on Site — Today 12 active
+- ✓  JCB 3DX — 3 active ✓  Compactor — running
+- ✓  Roller — standby △  Paver — idle
+- NH-48 Road Package On Track
+- Km 0+000 — 4+200 92%
+- Km 4+200 — 8+800 74%
+- Km 8+800 — 11+500 45%
+- Km 11+500 — 14+200 18%
+- Project Value
+- Overall Progress
+- Workers on Site
+- https://onsiteteams.com/software-for-infrastructure-projects/ 2/16
+- --- Page 3 ---
+- Why Infrastructure Projects Go Over Budget
+- Every infra contractor faces the same problems. Most accept them as
+- normal. They are not.
+- THE PROBLEM
+- Fake Attendance
+- Supervisors mark registers manually across chainages and
+- camps. Workers who were never on site get counted. Payroll
+- calculations are wrong every month and disputes follow.
+- 📋SITE REGISTER — DAY 14
+- Raju Kumar — Mason ✕  Off-site
+- Suresh Helper ✕  Not verified
+- Ahmed Painter △  Marked absent
+- Material Wastage
+- Materials are ordered over calls. No one checks delivery
+- against the purchase order. Over-ordering and losses are
+- discovered only after handover — when nothing can be
+- 📦MATERIAL VS PO — SITE A
+- TMT Bars 12 bundles short
+- Cement Bags 40 unmatched
+- https://onsiteteams.com/software-for-infrastructure-projects/ 3/16
+- --- Page 4 ---
+- Delayed Daily Reports
+- Site engineers send DPR updates over WhatsApp days after the
+- work happens. By the time the office knows about a delay or
+- cost issue, the damage is already done.
+- 📄DPR STATUS
+- Earthwork DPR — 3 days overdue
+- RCC Work DPR — not submitted
+- Formwork DPR — submitted today
+- Subcontractor Overbilling
+- Subcontractors bill for more work than was actually executed.
+- Without measured quantities linked to bills, there is no way to
+- catch it before payment goes out.
+- 💲SUBCONTRACTOR BILL — RAMESH CIVIL
+- Claimed: 4,200 sqft Unverified
+- Measured: 3,140 sqft Actual
+- No Live Project P&L
+- Project cost is visible only after every bill is in — usually after handover. By then there is nothing to fix. A ₹38L overrun that built up over
+- six months shows up as one number at the end, with no point in the timeline where action was possible.
+- 📈PROJECT COST — NH-48 ROAD PACKAGE Overrun: ₹38L undetected
+- Apr May Jun Jul Aug Sep Oct Nov
+- https://onsiteteams.com/software-for-infrastructure-projects/ 4/16
+- --- Page 5 ---
+- One Platform Instead of Six.
+- Infrastructure sites run on WhatsApp forwards, Excel sheets, and manual
+- registers. Onsite replaces all of them — and adds AI on top.
+- ONE PLATFORM
+- BEFORE ONSITE — YOUR DAILY SWITCHING ROUTINE
+- BOQ tracking
+- Site updates
+- Billing only
+- Attendance only
+- DPR, labour
+- Switch to Onsite
+- Everything runs on Onsite
+- One login. One dashboard. All modules connected.
+- ✨  AI Co-Pilot Live in 3 days
+- https://onsiteteams.com/software-for-infrastructure-projects/ 5/16
+- --- Page 6 ---
+- Chainage Progress Tracking
+- GPS Attendance
+- Equipment Management
+- DPR Generation
+- Budget vs Actual
+- AI-Assisted Reports
+- Infrastructur e ERP
+- T racking Budget
+- P ayr oll Equipment
+- Procurement
+- Mat erial Finance
+- P&L R epor ts
+- ✦  AI  CO- PI LOT L AYER ✦
+- See It in Action → View Pricing
+- https://onsiteteams.com/software-for-infrastructure-projects/ 6/16
+- --- Page 7 ---
+- Everything Infra Teams Need. One Platform.
+- Project scheduling, resource control, financial oversight, and field
+- connectivity — built for how infrastructure sites actually work.
+- PLATFORM FEATURES
+- PROJECT EXECUTION
+- End-to-End Project Planning
+- and Scheduling
+- Manage every stage from DPR creation and BOQ management
+- through to construction scheduling and task dependencies. Site
+- engineers get their tasks on the app. The office sees what’s
+- moving and what’s not — without calling anyone.
+- Chainage-wise activity scheduling
+- DPR creation and submission from mobile
+- Real-time delay alerts before they compound
+- Onsite · NH-48 Project Schedule
+- CHAINAGE PROGRESS 14.2 km
+- Km 0+000 — 4+200
+- WMM laid · earthwork complete
+- Km 4+200 — 8+800
+- GSB in progress
+- Km 8+800 — 11+500
+- https://onsiteteams.com/software-for-infrastructure-projects/ 7/16
+- --- Page 8 ---
+- See this in a demo →
+- Bridge pending · delayed
+- Onsite · Budget and Finance
+- TOTAL BUDGET
+- VENDOR BILLS — THIS MONTH 3 verified
+- TALLY SYNC STATUS Auto
+- No manual entry
+- R Ramesh Civil — Earthwork
+- Claimed 4,200 sqft · Measured 3,140
+- S Suresh Infra — GSB Layer
+- WO #12 · ₹4.8L
+- Last synced: 2 minutes ago
+- FINANCE AND CONTRACTS
+- Integrated Financial and
+- Contract Management
+- Multi-crore infra budgets are hard to track when your data lives
+- across Excel sheets and Tally. Onsite pulls all of it together.
+- Budget vs actual, vendor bill verification, milestone-based
+- payments — visible in one place, updated as work happens on
+- Budget vs actual at chainage and package level
+- Vendor bill verified against measured work before payment
+- Tally and Zoho Books sync — no double entry
+- https://onsiteteams.com/software-for-infrastructure-projects/ 8/16
+- --- Page 9 ---
+- RESOURCE MANAGEMENT
+- Centralized Resource and
+- Material Control
+- Track material procurement, deliveries, and stock levels across
+- every site in one place. When cement arrives short or a batch
+- gets diverted, Onsite flags it the same day. Not at handover.
+- Getting this right saves more than most infra companies realize.
+- Delivery matched to purchase order before acceptance
+- Live inventory across multiple sites and camps
+- Equipment utilization tracked per chainage
+- Onsite · Material and Equipment
+- MATERIAL VS PO — SITE A
+- EQUIPMENT — TODAY
+- TMT Bars 12mm
+- 4.2 MT in stock
+- Cement Bags
+- 40 bags short vs PO
+- 18 loads received
+- JCB 3DX — 3 units active · Km 4+200
+- Paver Finisher — maintenance due
+- https://onsiteteams.com/software-for-infrastructure-projects/ 9/16
+- --- Page 10 ---
+- Onsite · Workforce — All Sites
+- WEEK PAYROLL
+- ATTENDANCE — TODAY GPS verified
+- R Raju Kumar — Mason
+- Km 4+200 · 8:04 AM
+- S Suresh Helper
+- Km 8+800 · 8:17 AM
+- A Ahmed Painter
+- Not punched in
+- GPS Attendance, Payroll and
+- Field Connectivity
+- Infrastructure sites spread across multiple chainages make
+- manual attendance genuinely impossible to get right. GPS
+- punch-in and face recognition fix this. Wages calculate
+- automatically on verified data. Site engineers submit daily
+- reports from their phones, not from memory two days later.
+- GPS and face recognition attendance across all sites
+- Payroll auto-calculated on verified punch-in data
+- Web and mobile access for office and field teams
+- https://onsiteteams.com/software-for-infrastructure-projects/ 10/16
+- --- Page 11 ---
+- Rated by road and infrastructure
+- Progress Tracking 4.9
+- Budget Control 4.8
+- Labour Management 4.9
+- Field Reporting 4.8
+- Rated by infrastructure contractors across India
+- and the Middle East
+- S SKC Infra
+- Road and Highway Construction · India
+- Finally know what is happening at every chainage without calling
+- We were managing multiple road packages and spending most of the day following up
+- with site engineers on WhatsApp for progress updates. With Onsite, each chainage
+- section has its own activity tracking and the DPRs come in from site on time. Office
+- knows where things stand every morning without anyone having to ask.
+- Chainage Tracking DPR ManagementSite Visibility
+- A Alamdar Infrastructure
+- Infrastructure Contractor · Middle East
+- Payroll disputes dropped to almost zero after GPS attendance
+- Our sites are spread across remote locations and manual attendance was a constant
+- problem. Workers disputed wages every month and supervisors had no way to prove
+- the records were accurate. GPS punch-in through Onsite changed this completely. The
+- data is there, wages calculate automatically, and disputes have nearly stopped. That
+- alone made it worth switching.
+- GPS Attendance Payroll Automation Labour Control
+- https://onsiteteams.com/software-for-infrastructure-projects/ 11/16
+- --- Page 12 ---
+- V Vijay Infra
+- Road Construction · India
+- Caught two subcontractor overbills in the first month itself
+- We had subcontractors claiming work quantities that our engineers had not verified.
+- Earlier there was no easy way to check before payment went out. Onsite made site
+- measurement a mandatory step before bill approval. In the first month we caught two
+- bills where the claimed quantity did not match what was actually done. That saved
+- more than what we paid for the software for the whole year.
+- Bill Verification Cost Control Subcon Management
+- M MVB Constructions
+- Infrastructure and Civil · India
+- Material shortages stopped surprising us midway through work
+- The biggest problem on our sites was finding out material was short only after work
+- had already started and progress was blocked. Now every delivery is checked against
+- the purchase order in Onsite before it is accepted. Stock levels update in real time. We
+- see potential shortages three or four days in advance and can act on it. That has
+- reduced idle time from equipment and labour waiting for material significantly.
+- Material Tracking Procurement Control Equipment Utilization
+- https://onsiteteams.com/software-for-infrastructure-projects/ 12/16
+- --- Page 13 ---
+- Questions infrastructure companies ask before
+- https://onsiteteams.com/software-for-infrastructure-projects/ 13/16
+- --- Page 14 ---
+- Does Onsite work for road and highway projects with
+- multiple chainages? +
+- Can site engineers submit DPRs from mobile on site? +
+- How does Onsite handle vendor bill verification for
+- infrastructure contracts? +
+- Does it integrate with Tally and Zoho Books? +
+- Can Onsite track labour attendance across remote sites
+- and camps? +
+- How long does it take to get an infrastructure project
+- running on Onsite? +
+- Can I see a live P&L across multiple project packages? +
+- What does Onsite cost for infrastructure companies? +
+- Your site runs on WhatsApp
+- It does not have to.
+- GET STARTED
+- https://onsiteteams.com/software-for-infrastructure-projects/ 14/16
+- --- Page 15 ---
+- Onsite is a construction management software built to
+- help construction companies run projects with clarity and
+- control. As a complete construction ERP software, it
+- connects site teams, project managers, procurement, and
+- finance on one platform. By replacing scattered tools and
+- manual tracking, Onsite construction software helps
+- businesses save time, reduce cost leakages, and improve
+- Our Products
+- Construction Financial
+- Management Software
+- Construction Labour
+- Construction Material
+- Construction Project
+- Quick Links
+- Customer Stories
+- Help Center
+- Important Links
+- Privacy Policy
+- Terms & Conditions
+- Channel Partner Program
+- Advertise with Us
+- Infrastructure teams across India and the Middle East use Onsite to track
+- progress, control costs, and manage field teams without the daily chaos. Go live
+- Request Free Demo
+- No credit card required  ·  Live in under 3 days  ·  Dedicated onboarding manager
+- https://onsiteteams.com/software-for-infrastructure-projects/ 15/16
+- --- Page 16 ---
+- execution across every project. The result is a practical
+- ERP software that supports real site operations, not just
+- Contractor Management
+- Construction Equipment
+- Copyright © 2026 ABEYAANTRIX TECHNOLOGY PRIVATE LIMITED
+- https://onsiteteams.com/software-for-infrastructure-projects/ 16/16
+- Generated: 2026-07-06T17:52:49.853274
+- - Size: 1525.2 KB
+- - Pages: 14
+- Founded 2021 · · Abeyaantrix Technology Pvt Ltd
+
+---
+
+## 4. ONSITE API ENDPOINTS (from HAR)
+
+
+---
+
+## 5. ONSITE OCR UI ELEMENTS (filtered for quality)
+
+
+### Navigation / Modules
+
+- `% Finance < —————— EE >`
+- `% Finance ————— EEE >`
+- `& (CA Payment Entries`
+- `& Daily Progress (DPR)`
+- `& G Asset Transfer`
+- `& Services Bank Account Information G`
+- `&} Setting Company User Activity Leaderboard Equipment Library`
+- `( © Project Approve Leave Requests of your site team Open Leave Manager`
+- `(fh Integrate Tally/Zoho`
+- `(fh Integrate Tally/Zoho £8 Refer & Earn`
+- `(v] Track project-wise P&L updated in real time = Je - ~`
+- `(© cash () Bank Transfer () Cheque`
+- `+ Add Equipment`
+- `+ Add Materials`
+- `+ Bank Details Item Sub Total z0`
+- `+ Create Party`
+- `+ Subcon Issue + Material Transfer`
+- `+ Tag Equipment`
+- `+ Tag Task`
+- `+ Upload Payments`
+- `+ Vendor Bill Number`
+- `++ New Project`
+- `- 1 | Yash Desai Employee Opening Balance Opening Balance 03-Jan-0001`
+- `- PID-1 Party Material Supplier HDFC BANK Party IcIco002891091`
+- `. Party Details Type Balance (2) Status`
+- `. Party Material Supplier 40,000 | Advance Paid`
+- `. Party Name Project Name Amount`
+- `. Payroll Current Plan Start Date End Date Renewal Date`
+- `. Team Leaves`
+- `1 New Project - FARE (2 approval-pipeline-template 8 - xhr`
+- `2 Party Profile`
+- `2 | Party Material Supplier Opening Balance Opening Balance 02-Jul-2026`
+- `2, Finance`
+- `2, Finance 1 AS Year`
+- `2, Finance How to add team members to a project ? v`
+- `2, Finance Quotation Status`
+- `2, Finance n2 i i ®`
+- `2. Ensure the column structure aligns with the Onsite Payment`
+- `2. Finance Ally 3 Stage » Category v Search Projects Q AZ`
+- `22 Payroll APPROVAL (PENDING) o MATERIAL (PENDING) 6 TO DO (PENDING)`
+- `23 Finance`
+- `23 Finance Bill Number`
+- `23 Finance Model N`
+- `23 Finance Previous Month`
+- `25 Finance`
+- `25 Finance r >`
+- `25 Finance r7 >`
+- `2a, Finance`
+- `2a, Finance Prateekupadhyay (ENG) a`
+- `2p Services Attendance Report for DPR`
+- `4 Finance 1 Developers As - - - Not Started Delayed 04-Feb-2026 04-Feb-2026 % -`
+- `4 Tips to Manage Construction Project Planning More Efficiently`
+- `4, Finance 1 NotStarted Delayed 04-Feb-2026 04-Feb-2026 % - 100.00 0.00 0.00`
+- `4} Setting Todo Library`
+- `7 Finance 31-Jul-2026 Yash Desai Subcon Expense Auto Approved Unpaid`
+- `7) Payment Request #PR-1 Against Subcon Expense Unpaid`
+- `7, Finance Company Transactions Report © Material Library © Quotation Report ©`
+- `8 Add New Timesheet.`
+- `9 Company Cash & Bank Accounts`
+- `9 Finance`
+- `91 9876543210 e.g. Finance team`
+- `; Payroll Purchase Order >`
+- `< > — Q Search Equipment`
+- `= Payro >Oo Res Jan 0001 Tally/Zoho Earn & Sah @ 2 sable cache { No thratiling`
+- `=_ Dashboarc > =" sun 2026 Tally/Zoho @ Ean 3`
+- `> Premium Plan Valid till 07 Jul 2026 Integrate Tally/Zoho ‘Refer & Earn ya 4`
+- `@ Attendance Query for Enterprise - Google Chrome = Oo`
+- `@ Automate RFQ - PO - GRN workflow Blocks 6 Inches = a`
+- `@ Bank To Bank Cash Deposit Cash Withdraw`
+- `@ CRM&Leads`
+- `@ Create DPRs ina click`
+- `@ Equipment Query for Enterprise - Google Chrome = Oo`
+- `@ Help No Timesheet Available.`
+- `@ Party will pay Party will receive`
+- `A HR& Payroll`
+- `Account No. + Project Name Date Month Total Shift`
+- `Activities - Budget - Dependencies`
+- `Add Approvers & Levels for Asset Transfer g`
+- `Add Material Category`
+- `Add Materials F a 6bd-40bS-4303 Y 05 KB`
+- `Add Project`
+- `Add Task`
+- `Additional Features That Strengthen Construction Project Planning`
+- `Advance against Material Purchase`
+- `Advance against Other Expense`
+- `Advance against PO`
+- `Advance against Subcon Expense`
+- `Advance against Subcon Work Order`
+- `Against Subcon Expense`
+- `All Expense Deduction / Retention © Unbilled Item Report ©`
+- `All Party Balances`
+- `All Projects 0 AllStages ¥ Search project name... SRM New Project |`
+- `Ally 0 Stage » Category Search Projects Q AZ`
+- `Ally 1 Stage » Category Search Projects Q AZ`
+- `Ally 2 Stage v Category v Search Projects Q wy`
+- `Ally 3 Stage » Category v Search Projects Q AE + New Project`
+- `Approval (Pending) © Material (Pending) @ (6)`
+- `Approval (Pending) © Material (Pending) @ To Do (Pending) @ Our Services`
+- `Approval (Pending) © Material (Pending) © To Do (Pending) @`
+- `Approvals and Reports Without Manual Compilation`
+
+### Form Fields / Labels
+
+- `(8 CO Elements Console Sources Network Performance Memory Application >> sazn9 @& : x`
+- `(R [0 | Elements Console Sources Network Performance Memory >> 4 482079 m3 @ GB: x`
+- `* OH ORB OL ae n NS ey ao 23:52`
+- `05 Jul, 2026 Party 7:40 PM - 9:43 PM 2Hr 3 Min Nerul 8`
+- `22 AAC Block Masonry /600 183d 15 wd 20 Dec 25 - 0:`
+- `3 Onsite Teams competitive re:`
+- `363 /3231 requests | 436 kB / 827 KB transferred | 2,395 kB / 58,397 kB resource:`
+- `4 SiteFlow| Premium Construc: x = + Ask Gemini`
+- `433 requests | 139 KB transferred | 313MB resources | Finish: 1183s Load: 1.96 s`
+- `5 ENG A n 17:59`
+- `54/347 requests | 824 kB /868B transferred | 998 kB / 16342 kB resources | Finish: 19.64`
+- `7501 requests | 130 KB / 136 KB transferred | 1,727 kB / 19,308 kB resources | Finish: 1.1 min`
+- `81/507 requests | 139%B / 144 KB wansfered | 1886 kb / 19492 kB Finish: 1.2 min`
+- `: Alassistance Issues`
+- `:2b7189d-Daab-4eSb-a29e-b17b4849db Ic`
+- `= MoM > Jul 2026 Tally/Z0ho cain a @ : No trotting _~ | 7%`
+- `> Batic =G-DBPPGRWDGT&igtm : 00K`
+- `> Bitid=G-DBPPGRWDG7Eigtm : 00 ke`
+- `> Btid-G-DBPPGRWDG7&igtm : 0.08`
+- `> Butid = G-DBPPGRWDG7Eigtm: 0 fetch 0.08`
+- `> Butid = G-DBPPGRWDG7Eigtm: : 0.08`
+- `> ENG " 18:21`
+- `@ 83. web.onsiteteams.com/c/4d6fc487-5cf8-4826-8fd3-1c1f5f1d7660/d/library/party x OF Sb ew:`
+- `@ dick invoices, faster collections :`
+- `@eor:x*xonKvonouae® ~ Oe 2a a`
+- `A ENG A 21:13`
+- `A ENG A 4 14:13`
+- `A ENG A 4 14:14`
+- `A Type: Task Serial Number: 21`
+- `A: quipment *`
+- `Account Name: Account Number: Bank Name: Project Name: Party Name: Payment Date:`
+- `Address:`
+- `Alc:icic`
+- `Asset Tra :`
+- `Asset Transfer Min Amount:1 Max Amount: 1 3`
+- `Attendance Period: | Custom Date: Party Name: Project Name: Workforce Name: Payroll Type:`
+- `BANK NAME:`
+- `BCCO@O:`
+- `BOTtr py | ©) ¥ Filter Default levels ¥ | 26 Issues: 5126 8`
+- `BUC,‘ eECOr ¥OKH ODE “—- 21:02`
+- `Be topy | @ _ ¥ Filter Default levels ¥ | 64 Issues: 16 58 S`
+- `Bill From:`
+- `Bill To: ee — =`
+- `Bitid= G-DBPPGRWDG7&.gtm:`
+- `Buti =G-DBPPGRWDG78gtm: smpany%20Settin.. 00 ke`
+- `COO: xeonvoneva® eT`
+- `Ce2@O: * OH ORB OL ae a EN FP) WW 25 06-2026`
+- `Cee: * OH ORB OL ae a EN FD 95 06-2006`
+- `Cee: ®Y08 @ &`
+- `Challan Number:`
+- `Cost Code: Fuel`
+- `Cost Code: Stee!`
+- `Created By:`
+- `Creator Name:`
+- `DO f | py | ©. ¥ Filter Default levels ¥ | 6 Issues: 516`
+- `DOMContentLoaded: 1.`
+- `DOMContentLoaded: 6.72 s`
+- `DOMContentLoaded: 6.72 s d:7.`
+- `Date Range:`
+- `Date: Party Name: Project Name: Designation: Payroll Type:`
+- `Delete Lo:`
+- `Diwali 04 Jul, 2026 Saturday :`
+- `Due Date:`
+- `EB vy Accou s (2019 v IV aw JHMM awn JH:`
+- `ENG " 18:22`
+- `ENG & 16:15`
+- `ENG & 18:57`
+- `ENG & 20:53`
+- `ENG 00:12`
+- `ENG 02:51`
+- `ENG 17:58`
+- `ENG 18:04`
+- `ENG 18:06`
+- `ENG 18:56`
+- `ENG 19:01`
+- `ENG 20:04`
+- `ENG 21:02`
+- `ENG 23:52`
+- `ENG A 17:58`
+- `ENG A 18:06`
+- `ENG A 4 18:15`
+- `ENG A 7 18:14`
+- `ENG x oy ol 13:24`
+- `ENG x wy) @ 17:57`
+- `ENG x wy) ota 16:20`
+- `ENTATION T DIMEN:`
+- `Entry Type: Date:`
+- `Entry by: Yash Desai`
+- `Equipment ul PCC (Plain Cement Concrete) 1:4:8 11,200 201d 5wd 12 Dec 25 - 1€`
+- `Equipment ul PCC (Plain Cement Concrete) 1:4:8 12 Dec 25 - 16 Dec 25 ---`
+- `Equipment ul PCC (Plain Cement Concrete) 1:4:8 Swd 12 Dec 25 - 16 Dec 25 ---`
+- `Equipment: JCB (MHI23)`
+- `Finance Restrict Entry Creation: Blocks request creation if it exceeds the estimate.`
+- `Finish: 10.3 min`
+- `Finish: 13.6 min`
+- `From BOQ to Site to Dashboard: One Planning Workflow With No`
+- `GinsaED Diwali 05 Jul, 2026 sunday :`
+- `Grand Summary:`
+- `Grand Summary: SUM = 48,000 SUM = 8,000 SUM=0`
+- `Holiday & Weekoff $8 Level 1: Approver x > oO`
+- `HzH@oO«*¥ et onuevae AN FD ® ou 06:2026`
+- `In: 20] Out: 0`
+- `In: € 0] Out: €0`
+- `In: € 25,000 @ | Out:217,000 @ Sales: Z 48,240 © | Expense: ¢ 59,657.68 ©`
+- `Include in report:`
+- `Integrations Residential interiors oO iG DBPFGRUDGTEgtn = : 0.08`
+- `Lead Date: Lead Status: Lead Source: Assignees`
+- `Level 1: Approver x v`
+- `Load: 7.84`
+- `M... > \r Premium Plan Valid till 27 Jun 2026 ~~ @ Ongoing ~ fy — = = = :`
+- `MHI23 Type: Rented`
+- `MOM Unpaid invoice: z 0 Unpaid Expense: 2 0 In: 0] Out: 0`
+- `Material Category:`
+- `Material: Project Name:`
+- `May 499 qu 74 kB /971 KB transferred | 3,035 kB / 62,473 kB resources | Finish: 16.4 min`
+- `Min Amount: 2 Max Amount: 20`
+- `Min Amount:1 Max Amount: 1 :`
+- `Multi Level Approval Restrict Entry Creation: Blocks PO creation if it exceeds the estimate`
+- `NK NAME:`
+- `NUMBER:`
+- `Onsite . 16 Jun 2026 07:48 PM`
+- `Onsite . 23 Feb 2026 07:10 PM`
+- `Onsite . 23 Feb 2026 07:11 PM`
+- `Overdraft Limit:`
+- `Party Name:`
+- `Party Name: Project Name: Expense Type: Expense Date: Party Tax No.: Company Tax No.:`
+- `Payment Method:`
+- `Payment Method: Bank Transfer`
+- `Payment Method: Cheque`
+- `Payroll Turn ON these settings to prevent using materials not available in stock. (Default: OFF)`
+- `Payroll Type: Workforce Name: Material name: Material Category:`
+- `Perform:`
+- `Pinned Projects Onsite .16 Jun 2026 07:48 PM`
+- `Project Name:`
+- `Project Name: BOQ Name: Material Name:`
+- `Project Name: Date: Date Range:`
+- `Project Name: Main TaskName: Group TaskName: Task Name:`
+- `Project Name: Party Name: Expense Date: Expense Type: Expense Status: Cost Code:`
+- `Project Name: Project Status: Project Health:`
+- `Project Name: Txn Date:`
+- `Project Party Detalls Opening: 8,000 Petty Cash Balance: Z 8,000 Salary Balance: Z 0`
+- `Project Project Name: Project Status: Project Health:`
+- `Project Project Name: Txn Date:`
+- `QT Date:`
+- `Repet Txn Date: Project Name: Party Name: Txn Type: Transaction Categ... Cost Code: Sub Cost Code:`
+- `Report Asset Code: Asset Name: Asset Type:`
+- `Report Party Name: Invoice Date: Project Name: Invoice Type: Party GST: ‘Company GST:`
+- `Report Party Name: Project Name: Party Type: Balance Type:`
+- `Report Payment Date: Creator Name: Party Name: Project Name: Payment Type: Payment Mode: Cost Code:`
+- `Report Payment Date: Project Name:`
+
+### Buttons / Actions
+
+- `#WO--1 -- Civil & Interior Work o/o 4% @ 27,73,000 @ 38,515.2 G Approved i`
+- `( © Project Approve Leave Requests of your site team Open Leave Manager`
+- `) Add Supply and installation Rate workorder?company id=4d6fc487-5cf8-4826-8fd3-1c115F147660 200 hr 0 2a ke`
+- `+ Add Additional Charges`
+- `+ Add Discount + Add Additional`
+- `+ Add Equipment`
+- `+ Add Item`
+- `+ Add Materials`
+- `+ Additional Charges`
+- `+ Create Party`
+- `+ Upload Payments`
+- `+Add Assignee`
+- `1 Delete Logs`
+- `1 Delete Logs . a`
+- `100% Filter Sort More Search Q`
+- `2. Finance Ally 3 Stage » Category v Search Projects Q AZ`
+- `2026 Export to PDF`
+- `3. Upload that file here.`
+- `7 Finance 31-Jul-2026 Yash Desai Subcon Expense Auto Approved Unpaid`
+- `7] ICICI BANK 25,00,000 View Statement @`
+- `8 Add New Timesheet.`
+- `< > 8 Q Search Payroll 0 Present labour-attendance?company, id=3adb36bd-40b5-4303-ac..3718:20:00.001Z...`
+- `< > — Q Search Equipment`
+- `=p ff View Premium Plan Valid till, _Integrate e aA OE`
+- `> View Plans`
+- `@ Create DPRs ina click`
+- `@ Delete Logs Supervisor --`
+- `@ Help + Add Note`
+- `Ad ie y Deleted Logs > wf Premium Plan Valid till 07 Jul 2026 Integrate Tally/Zoho €@ Refer & Earn a B a`
+- `Add Approvers & Levels for Asset Transfer g`
+- `Add Cost Code`
+- `Add Cost Code nyuser ity xy 0 00 Ke`
+- `Add Cost Code subcategory?company_id=4d6fc487-Scf8-4826-8fd3-Ic1f5f1d76608type=materi... 200`
+- `Add Discount`
+- `Add Holidays`
+- `Add Location`
+- `Add Material Category`
+- `Add Materials F a 6bd-40bS-4303 Y 05 KB`
+- `Add New Workforce`
+- `Add Progress`
+- `Add Project`
+- `Add Received + y 0518`
+- `Add Repeat Todo`
+- `Add Salary Breakup`
+- `Add Task`
+- `Add Todo Type`
+- `Add Your Own Customised Terms & Conditions`
+- `Add a not`
+- `Add a note...`
+- `Additional Charges ie}`
+- `Additional Features That Strengthen Construction Project Planning`
+- `Address Details`
+- `Address category?company id=Ad6"C487-5cf8-4826-Bfd3-IclfSF1d76608type=cashbook 200 he ° 118`
+- `Address customfield?company id=Ad6fc487-Scf8-4826-8fd3-IclfSF1d76608custom field... 200 he ° 0568`
+- `Address:`
+- `All Projects 0 AllStages ¥ Search project name... SRM New Project |`
+- `Ally 0 Stage » Category Search Projects Q AZ`
+- `Ally 1 Stage » Category Search Projects Q AZ`
+- `Ally 2 Stage v Category v Search Projects Q wy`
+- `Ally 3 Stage » Category v Search Projects Q AE + New Project`
+- `Any changes must be requested in writing and agreed upon by both parties. Additional work or Additional Discount 0`
+- `Approved`
+- `Asset Transfer Add Approvers & Levels for Design Version 8`
+- `Asset Transfer Add Approvers & Levels for GRN Material 8`
+- `Attendance Setting Team Leave View`
+- `B Delete Logs Account Holder`
+- `BC, ECOtr K¥eOKH OBOS`
+- `BOTtr py | ©) ¥ Filter Default levels ¥ | 26 Issues: 5126 8`
+- `BUC,‘ eECOr ¥OKH ODE “—- 21:02`
+- `Bank Statement Report Filter Sort`
+- `Be topy | @ _ ¥ Filter Default levels ¥ | 64 Issues: 16 58 S`
+- `Besieead All expense Deduction / Retention Report CG) Filter Sort | More (| SearchData`
+- `Bestest) TYPE ¥ Search Q`
+- `Bl TYPE ¥ Search Q`
+- `Cancel`
+- `Cancel Save`
+- `Casual Games Send files`
+- `Cc Filter`
+- `Clear Filter 0`
+- `Company Expense Report C ) Filter More (| Search Data Q`
+- `Company Expense Report CG) Filter`
+- `Create Group`
+- `Create Workorder`
+- `Create your own Holiday Calendar for your company.`
+- `Created By:`
+- `DBDataSheetView IEWACTIO`
+- `DO f | py | ©. ¥ Filter Default levels ¥ | 6 Issues: 516`
+- `Dashboard All Party Balance Report C@ Filter Sort More ("| Search Data`
+- `Dashboard Asset Allocation Report C@ Filter Sort More ("| Search Data`
+- `Dashboard Asset Status Report C Filter Sort = More = (“| Search Data`
+- `Dashboard BOQ BOM Report C Filter Sort = More = (“| Search Data`
+- `Dashboard BOQ BOM Report C@ Filter Sort More ("| Search Data Q`
+- `Dashboard BOQ Item Report C@ Filter Sort More ("| Search Data`
+- `Dashboard BOQ Item Report C@ Filter Sort More ("| Search Data Q`
+- `Dashboard BOQ Measurement Book C Filter Sort = More = [1% | Search Data`
+- `Dashboard BOQ Workorder Summary Report C@ Filter Sort More ("| Search Data`
+- `Dashboard Bank Statement Report C Filter Sort = More = (“| Search Data`
+- `Dashboard Budget vs Actual (Material Cost) (  ZohoSheet View [27 Sort (1)`
+- `Dashboard Budget vs Actual (Material Qty) (C  ZohoSheet View (27 Sort (N)`
+- `Dashboard CRM Lead Detail Report C@ Filter Sort More ("| Search Data`
+
+### Table Headers / Rows
+
+- `(R [0 | Elements Console Sources Network Performance Memory >> 12 0148309 61 @ Bi x`
+- `(R [0 | Elements Console Sources Network Performance Memory >> 4 482079 m3 @ GB: x`
+- `(R [0 | Elements Console Sources Network Performance Memory >> 4 As09s1 mss @ Gz x`
+- `* 4 construction-manager X |  SiteFlow|PremiumCco x`
+- `* © 40 iar | e “ nT & ®) & mage`
+- `- 1 | Yash Desai Employee Opening Balance Opening Balance 03-Jan-0001`
+- `- 1289 | ICICIBANK 04-Jul-2026 500,000 | Opening Balance`
+- `- Select - val v) all v) all v | 3 -Select -`
+- `. Party Material Supplier 40,000 | Advance Paid`
+- `1 | Developers Ongoing - 0 0 0 0 0`
+- `1 | Developers Ongoing - 0.00%`
+- `1S) (Font | Img | Media )( Manifest )( Socket] { Wasm | {Other`
+- `2 Owes 7 Invert | More filters ¥`
+- `2 | PID-2 Yash Desai Customer Yash Desai`
+- `2 | Party Material Supplier Opening Balance Opening Balance 02-Jul-2026`
+- `2 | Prestige Developers Ongoing - 0.00%`
+- `2 | Prestige Developers Ongoing - 0.009`
+- `2 | Yash Desai Staff 8,000 | Advance Paid 8,000 0`
+- `20mm 7 Giimert | Morefiters ¥`
+- `319 / 2789 requests | 400 kB /790 kB transferred | 2,206 kB / 52,023 kB resources | Finish: 9.1 min | DOMContentLoaded: 672s | Load: 7.845`
+- `319 / 2808 requests | 400 kB /790 kB transferred | 2,206 kB / 52,110 kB resources | Finish:9.2 min | DOMContentLoaded: 672s | Load: 7.845`
+- `331 /3004 requests | 416 kB / 806 KB transferred | 2,285 kB / 55,234 kB resour`
+- `363 /3231 requests | 436 kB / 827 KB transferred | 2,395 kB / 58,397 kB resource:`
+- `363 requests | 436 KB / 827 kB transferred 5 KB / 58,666 kB resources`
+- `4 SiteFlow| Premium Co X | 4 SiteFlow | Premium (`
+- `4 SiteFlow| Premium Construc: x = + Ask Gemini`
+- `4 SiteFlow|PremiumCo X 9 +`
+- `4. SiteFlow | Premium (`
+- `4. SiteFlow | Premium Construct X`
+- `422 / 3539 requests | 498 KB / 892 KB transferred | 2,609 kB / 61,445 kB resources | Finish: 13.6 min`
+- `433 requests | 139 KB transferred | 313MB resources | Finish: 1183s Load: 1.96 s`
+- `484 /3657 requests | 557 KB / 953 kB transferred | 2,865 kB /61,833 kB resources | Finish: 15:8 min | DOMContentLoaded: 6:72 5`
+- `491 / 3668 requests | 562 kB / 958 kB transferred | 2,921 kB/ 61,891 kB resources | Finish: 16.1 min | DOMContentLoaded: 6.72 s`
+- `4am —p Srequests | 6.4kB transferred | 153 kB resources`
+- `5 From 09 Jul 2026 All v | Reset |`
+- `54/347 requests | 824 kB /868B transferred | 998 kB / 16342 kB resources | Finish: 19.64`
+- `7 Finance 4fb7-8564- PR-1 Prestige Developers | Yash Desai 234,534 | 05-Jul-2026 31-Jul-2026 Yash Desai Sube`
+- `7501 requests | 130 KB / 136 KB transferred | 1,727 kB / 19,308 kB resources | Finish: 1.1 min`
+- `79/497 requests | 130KB /135 kB transferred | 1,727 kB / 19.283 kB resources | Finish 1.1 min`
+- `81/507 requests | 139%B / 144 KB wansfered | 1886 kb / 19492 kB Finish: 1.2 min`
+- `= 01 May 2026 to 31 May 2026 All i] (al | (al i) an \`
+- `= 01 May 2026 to 31 May 2026 All v) all v) all v| all v`
+- `= @ No throtting ~|S| t`
+- `= Company < P ti€.Ss Paes Jul 2026 Tally/Zoho @ carn jae & Q|\¥. a Preserve log 2 | No throttling 2`
+- `= MoM > Jul 2026 Tally/Z0ho cain a @ : No trotting _~ | 7%`
+- `= Quotation Jan 0001 Tally/zoho Yreserve log | [1 Disable cache | No throttling S tt`
+- `@ > Y. Q | G Preserve log Disable cache | No throttling`
+- `@ @) (A) a © q Go a | a e “ ao eo) & anaee`
+- `@ @) (A) a © q Go a | a e “ ao eo) & anaes`
+- `@ Track budgets Vs expenses j ‘ yy a |`
+- `@ | Y. Q | WPreserveiog | Gi Disable cache | Nothrotting ~ |S) 2`
+- `@ | ¥. & | G Preserveiog | 5 Disable cache | Nothrotting ~|%| 2 £`
+- `@ | ¥. Q | @Preserveiog | O Disable cache | Nothrotting ~|S | 2 L`
+- `@_ Y. Q |G Preserveiog (5) Disable cache | No throtting ~ |S) 2`
+- `A eae y |`
+- `All All val v| all v | Ey-Select -`
+- `All All val v| all v | Ey-Select - All val v`
+- `All Projects 0 AllStages ¥ Search project name... SRM New Project |`
+- `All v All Vv) | )-Select- All vAll v All v All`
+- `All v | -Select - v | E}-Select -`
+- `All v | -Select - yall v) | }-Select - All val val val Vall v`
+- `All v | -Select-`
+- `All v) all v) all v | -Select - v -Select - v3 -Select -`
+- `All v) all v) all v | 3 -Select - All v) all v`
+- `All v) all v) all yall v | }-Select -`
+- `All v) | 3 -Select- All v`
+- `All v) | }-Select - All val v`
+- `All v) | }-Select - All val val v`
+- `All v) | }-Select - All val val val v`
+- `All v) | }-Select - All val val val val Vall yall v`
+- `All vA vA v) [All v) fall v) | E}-Select-`
+- `All val v) | E}-Select -`
+- `All val v) | E}-Select - All val v`
+- `All val v) | E}-Select - All val val val Vall v) | -Select-`
+- `All val vy) all v) |} Select -`
+- `All val vy) all v) |} Select - All val v`
+- `All val vy) all v) |} Select - All val val v`
+- `All val vy) all val v) | -Select-`
+- `All val vy) all val v) | -Select- 5 - Select -`
+- `All val vy) all val v) | -Select- All v`
+- `All val vy) all val v) | -Select- All val Vall v) | -Select-`
+- `All val vy) all val val val val v) |} Select -`
+- `All v| All v`
+- `All v| All v| All v`
+- `All v| All v| All v3 -Select-`
+- `All v| All v| |) -Select- All yall v| All v| All vA v | |} -Select-`
+- `All v| ThisWeek  v_—}-Select -`
+- `All v| ThisWeek = v3 -Select -`
+- `All v| | -Select- v`
+- `All v| |} -Select- All v`
+- `All v| |} -Select- All v3 -Select-`
+- `All v| |} -Select- All vA v`
+- `All) Feteh/XHR {Doc | [ ¢55 (45) (Font ] {Img ]{ Media] ( Manifest | { Socket | { Wasm`
+- `All) | Feteh/XHR (Doc | [ €55 (45) (Font ] {Img ]{ Media] ( Manifest | { Socket] { Wasm | { Other`
+- `All| (Fetehy/xHR {Doc} [ €55] (45) (Font ] {Img ]{ Media] ( Manifest | { Socket | { Wasm`
+- `All| (Fetehy/xtR | { Doc} [ €55} (45) (Font ] {mg ]{ Media] ( Manifest | { Socket | { Wasm | { Other`
+- `All| (FetehyxtR J ( Doc`
+- `All| (FetehyxtR | ( Doc} [ €55 (45) (Font ] {Img ]{ Media] ( Manifest | { Socket | Wasm | { Other`
+- `Attendance Period: | Custom Date: Party Name: Project Name: Workforce Name: Payroll Type:`
+- `B . | | . & E M t Financial Health Expense Analysis`
+
+---
+
+## 6. CLEAN GAP ANALYSIS
+
+### A. Modules present in Onsite UI but not mapped to SiteFlow routers/models:
+
+- `& G Asset Transfer`
+- `(© cash () Bank Transfer () Cheque`
+- `+ Add Materials`
+- `+ Bank Details Item Sub Total z0`
+- `+ Create Party`
+- `+ Subcon Issue + Material Transfer`
+- `- 1 | Yash Desai Employee Opening Balance Opening Balance 03-Jan-0001`
+- `- PID-1 Party Material Supplier HDFC BANK Party IcIco002891091`
+- `. Party Details Type Balance (2) Status`
+- `. Party Material Supplier 40,000 | Advance Paid`
+- `. Payroll Current Plan Start Date End Date Renewal Date`
+- `. Team Leaves`
+- `2 | Party Material Supplier Opening Balance Opening Balance 02-Jul-2026`
+- `22 Payroll APPROVAL (PENDING) o MATERIAL (PENDING) 6 TO DO (PENDING)`
+- `@ Bank To Bank Cash Deposit Cash Withdraw`
+- `@ Party will pay Party will receive`
+- `Add Approvers & Levels for Asset Transfer g`
+- `Add Material Category`
+- `Add Materials F a 6bd-40bS-4303 Y 05 KB`
+- `Advance against Material Purchase`
+- `Advance against Other Expense`
+- `Advance against PO`
+- `Advance against Subcon Expense`
+- `Against Subcon Expense`
+- `All Party Balances`
+- `Approval (Pending) © Material (Pending) @ (6)`
+- `Approval (Pending) © Material (Pending) @ To Do (Pending) @ Our Services`
+- `Approval (Pending) © Material (Pending) © To Do (Pending) @`
+- `Asset Transfer Add Approvers & Levels for Design Version 8`
+- `Asset Transfer Add Approvers & Levels for GRN Material 8`
+- `Attendance Setting Team Leave View`
+- `Attendance Status`
+- `B . | | . & E M t Financial Health Expense Analysis`
+- `BOM Material Restrictions`
+- `Bank Code NA`
+- `Bank Details`
+- `Bank Statement @`
+- `Bank Statement Report Filter Sort`
+- `Bank Transfer`
+- `BeCr1.,, 60% * ne 42 AN PO) Ow cor sae`
+- `Build the Schedule from the BOQ`
+- `CLIENT PORTAL`
+- `Configure how GRN numbers are generated and managed across your organization.`
+- `Construction Material Management`
+- `Construction Material Management v`
+- `Construction Teams`
+- `Cost Code Expense Analysis ©`
+- `Dashboard`
+- `Dashboard 7667359544`
+- `Dashboard All Party Balance Report C@ Filter Sort More ("| Search Data`
+- `Dashboard Approval for Asset Transfer`
+- `Dashboard Approval for Design Version`
+- `Dashboard Asset Allocation Report C@ Filter Sort More ("| Search Data`
+- `Dashboard BOQ BOM Report C Filter Sort = More = (“| Search Data`
+- `Dashboard BOQ BOM Report C@ Filter Sort More ("| Search Data Q`
+- `Dashboard BOQ Measurement Book C Filter Sort = More = [1% | Search Data`
+- `Dashboard Bank Statement Report C Filter Sort = More = (“| Search Data`
+- `Dashboard Cost Code Expense Analysis (  ZohoSheet View [27 Sort (1)`
+- `Dashboard Cost Code Expense Analysis © || Zohosheetview || sort ]/ ch`
+- `Dashboard FAQ Articles`
+- `Dashboard Fuel Efficiency Report ZohoSheet View 2 Sort (*)`
+- `Dashboard Item Wise Sales Report C@ Filter Sort More ("| Search Data`
+- `Dashboard Lead Status Funnel Report ‘`
+- `Dashboard Material Purchase Item Report Filter Sort More (4) | Search Data`
+- `Dashboard Material Received w/o PO Filter Sort More (4) | Search Data`
+- `Dashboard Material Receiving & Used Report CG Filter Sort More (| Search Data Q`
+- `Dashboard Material Request Item Report Filter Sort More (4) | Search Data`
+- `Dashboard Material Stock Movement Report ZohoSheet View [2 Sort (2h Insights`
+- `Dashboard Material Stock Summary ZohoSheet View [2 Sort (2h Insights`
+- `Dashboard Monthly P&L Report (  ZohoSheet View [7 Sort (1)`
+- `Dashboard OT & Shift Report C  ZohoSheet View [2 Sort (1`
+- `Dashboard PO Summary Report C Filter Sort = More = (“| Search Data`
+- `Dashboard Pany Approval for GRN Material`
+- `Dashboard Party Ledger Filter Sort More (4) | Search Data Q`
+- `Dashboard Pending v PROJEC .`
+- `Dashboard Pending ¥`
+- `Dashboard Purchase (GSTR-2) C Filter Sort = More = (“| Search Data Q`
+- `Dashboard Purchase (GSTR-2) C Filter Sort More (| Search Data`
+- `Dashboard Recent Deleted Items`
+- `Dashboard Salary Report (  ZohoSheet View [7 Sort (1)`
+- `Dashboard Salary Report C  ZohoSheet View [2 Sort (1`
+- `Dashboard Sales (GSTR-1) C Filter Sort More (| Search Data`
+- `Dashboard Sales Deduction / Retention Report Filter Sort More (4) | Search Data`
+- `Dashboard Subcon Material Issue Summary (C  ZohoSheet View (27 Sort (N)`
+- `Dashboard Subcon Measurement Book Filter Sort More (4) | Search Data`
+- `Dashboard To Do Report C@ Filter Sort More ("| Search Data`
+- `Dashboard Warehouse Current Stock Report CG Filter Sort More (| Search Data Q`
+- `Dashboard Warehouse Stock Movement Report CG Filter Sort More (| Search Data Q`
+- `Dashboard Warehouse Transaction Report C Filter Sort More [| Search Data`
+- `Dashboard Warshonsey`
+- `Dashboard Yash Desai`
+- `Dashboard a`
+- `Dashboard pS 9770985945`
+- `Dashboard pany Approval for Asset Transfer`
+- `Dashboard review your needs and schedule Taxes Taxes`
+- `Dashboard y`
+- `Dashboards and Smart`
+- `Entry by Site Expense`
+- `Expense`
+- `Expense Type`
+
+### B. Table columns / form fields missing in SiteFlow models:
+
+- `* 4 construction-manager X |  SiteFlow|PremiumCco x`
+- `* OH ORB OL ae n NS ey ao 23:52`
+- `* © 40 iar | e “ nT & ®) & mage`
+- `- Select - val v) all v) all v | 3 -Select -`
+- `05 Jul, 2026 Party 7:40 PM - 9:43 PM 2Hr 3 Min Nerul 8`
+- `1 | Developers Ongoing - 0 0 0 0 0`
+- `1 | Developers Ongoing - 0.00%`
+- `1S) (Font | Img | Media )( Manifest )( Socket] { Wasm | {Other`
+- `2 Owes 7 Invert | More filters ¥`
+- `2 | Prestige Developers Ongoing - 0.00%`
+- `2 | Prestige Developers Ongoing - 0.009`
+- `20mm 7 Giimert | Morefiters ¥`
+- `22 AAC Block Masonry /600 183d 15 wd 20 Dec 25 - 0:`
+- `3 Onsite Teams competitive re:`
+- `331 /3004 requests | 416 kB / 806 KB transferred | 2,285 kB / 55,234 kB resour`
+- `4 SiteFlow| Premium Co X | 4 SiteFlow | Premium (`
+- `4 SiteFlow| Premium Construc: x = + Ask Gemini`
+- `4 SiteFlow|PremiumCo X 9 +`
+- `4. SiteFlow | Premium (`
+- `4. SiteFlow | Premium Construct X`
+- `5 ENG A n 17:59`
+- `5 From 09 Jul 2026 All v | Reset |`
+- `7 Finance 4fb7-8564- PR-1 Prestige Developers | Yash Desai 234,534 | 05-Jul-2026 31-Jul-2026 Yash Desai Sube`
+- `81/507 requests | 139%B / 144 KB wansfered | 1886 kb / 19492 kB Finish: 1.2 min`
+- `:2b7189d-Daab-4eSb-a29e-b17b4849db Ic`
+- `= 01 May 2026 to 31 May 2026 All i] (al | (al i) an \`
+- `= 01 May 2026 to 31 May 2026 All v) all v) all v| all v`
+- `= @ No throtting ~|S| t`
+- `= Company < P ti€.Ss Paes Jul 2026 Tally/Zoho @ carn jae & Q|\¥. a Preserve log 2 | No throttling 2`
+- `= MoM > Jul 2026 Tally/Z0ho cain a @ : No trotting _~ | 7%`
+- `= Quotation Jan 0001 Tally/zoho Yreserve log | [1 Disable cache | No throttling S tt`
+- `> Batic =G-DBPPGRWDGT&igtm : 00K`
+- `> ENG " 18:21`
+- `@ 83. web.onsiteteams.com/c/4d6fc487-5cf8-4826-8fd3-1c1f5f1d7660/d/library/party x OF Sb ew:`
+- `@ > Y. Q | G Preserve log Disable cache | No throttling`
+- `@ @) (A) a © q Go a | a e “ ao eo) & anaee`
+- `@ @) (A) a © q Go a | a e “ ao eo) & anaes`
+- `@ dick invoices, faster collections :`
+- `@ | Y. Q | WPreserveiog | Gi Disable cache | Nothrotting ~ |S) 2`
+- `@ | ¥. & | G Preserveiog | 5 Disable cache | Nothrotting ~|%| 2 £`
+- `@ | ¥. Q | @Preserveiog | O Disable cache | Nothrotting ~|S | 2 L`
+- `@_ Y. Q |G Preserveiog (5) Disable cache | No throtting ~ |S) 2`
+- `@eor:x*xonKvonouae® ~ Oe 2a a`
+- `A ENG A 21:13`
+- `A ENG A 4 14:13`
+- `A ENG A 4 14:14`
+- `A eae y |`
+- `A: quipment *`
+- `Alc:icic`
+- `All All val v| all v | Ey-Select -`
+- `All All val v| all v | Ey-Select - All val v`
+- `All v All Vv) | )-Select- All vAll v All v All`
+- `All v | -Select - v | E}-Select -`
+- `All v | -Select - yall v) | }-Select - All val val val Vall v`
+- `All v | -Select-`
+- `All v) all v) all v | -Select - v -Select - v3 -Select -`
+- `All v) all v) all v | 3 -Select - All v) all v`
+- `All v) all v) all yall v | }-Select -`
+- `All v) | 3 -Select- All v`
+- `All v) | }-Select - All val v`
+- `All v) | }-Select - All val val v`
+- `All v) | }-Select - All val val val v`
+- `All v) | }-Select - All val val val val Vall yall v`
+- `All vA vA v) [All v) fall v) | E}-Select-`
+- `All val v) | E}-Select -`
+- `All val v) | E}-Select - All val v`
+- `All val v) | E}-Select - All val val val Vall v) | -Select-`
+- `All val vy) all v) |} Select -`
+- `All val vy) all v) |} Select - All val v`
+- `All val vy) all v) |} Select - All val val v`
+- `All val vy) all val v) | -Select-`
+- `All val vy) all val v) | -Select- 5 - Select -`
+- `All val vy) all val v) | -Select- All v`
+- `All val vy) all val v) | -Select- All val Vall v) | -Select-`
+- `All val vy) all val val val val v) |} Select -`
+- `All v| All v`
+- `All v| All v| All v`
+- `All v| All v| All v3 -Select-`
+- `All v| All v| |) -Select- All yall v| All v| All vA v | |} -Select-`
+- `All v| ThisWeek  v_—}-Select -`
+- `All v| ThisWeek = v3 -Select -`
+- `All v| | -Select- v`
+- `All v| |} -Select- All v`
+- `All v| |} -Select- All v3 -Select-`
+- `All v| |} -Select- All vA v`
+- `All) Feteh/XHR {Doc | [ ¢55 (45) (Font ] {Img ]{ Media] ( Manifest | { Socket | { Wasm`
+- `All) | Feteh/XHR (Doc | [ €55 (45) (Font ] {Img ]{ Media] ( Manifest | { Socket] { Wasm | { Other`
+- `All| (Fetehy/xHR {Doc} [ €55] (45) (Font ] {Img ]{ Media] ( Manifest | { Socket | { Wasm`
+- `All| (Fetehy/xtR | { Doc} [ €55} (45) (Font ] {mg ]{ Media] ( Manifest | { Socket | { Wasm | { Other`
+- `All| (FetehyxtR J ( Doc`
+- `All| (FetehyxtR | ( Doc} [ €55 (45) (Font ] {Img ]{ Media] ( Manifest | { Socket | Wasm | { Other`
+- `Asset Tra :`
+- `B . | | . & E M t Financial Health Expense Analysis`
+- `B requests | 522kB/917 KB transferred | 2,697 kB / 61,524 kB resourc`
+- `BCCO@O:`
+- `BUC,‘ eECOr ¥OKH ODE “—- 21:02`
+- `Bill From:`
+- `Bill To: ee — =`
+- `Buti =G-DBPPGRWDG78gtm: smpany%20Settin.. 00 ke`
+- `COMContentloaded 6725 | Load`
+- `COO: xeonvoneva® eT`
+- `Ce2@O: * OH ORB OL ae a EN FP) WW 25 06-2026`
+- `Cee: * OH ORB OL ae a EN FD 95 06-2006`
+- `Cee: ®Y08 @ &`
+- `Challan Number:`
+- `Company Expense Report C ) Filter More (| Search Data Q`
+- `Created By:`
+- `DIESEL @ | ¥. Q | @Preserveiog | O Disable cache | Nothrotting ~|S | 2 L`
+- `DOMContentLoaded: 1.`
+- `DOMContentLoaded: 6.72 s`
+- `DOMContentLoaded: 6.72 s d:7.`
+- `Dashboard BOQ BOM Report C Filter Sort = More = (“| Search Data`
+- `Dashboard BOQ BOM Report C@ Filter Sort More ("| Search Data Q`
+- `Dashboard BOQ Item Report C@ Filter Sort More ("| Search Data`
+- `Dashboard BOQ Item Report C@ Filter Sort More ("| Search Data Q`
+- `Dashboard BOQ Measurement Book C Filter Sort = More = [1% | Search Data`
+- `Dashboard BOQ Workorder Summary Report C@ Filter Sort More ("| Search Data`
+- `Dashboard CRM Lead Detail Report C@ Filter Sort More ("| Search Data`
+- `Dashboard Company Expense Report CC Filter Sort More = [% | Search Data`
+- `Dashboard Company Payment Report CC Filter Sort More = [% | Search Data`
+- `Dashboard Company Sales Report C@ Filter Sort More ("| Search Data`
+- `Dashboard Company Transactions Report C Filter Sort = More = [1% | Search Data Q`
+- `Dashboard Daily based Equipment Used Report Filter Sort More (4) | Search Data`
+- `Dashboard Equipment Library C Filter Sort More (| Search Data`
+- `Dashboard Equipment Trip Report C@ Filter Sort More ("| Search Data`
+- `Dashboard Equipment Usage Detail Report C Filter Sort = More = [1% | Search Data`
+- `Dashboard Item Wise Sales Report C@ Filter Sort More ("| Search Data`
+- `Dashboard PO Summary Report C Filter Sort = More = (“| Search Data`
+- `Dashboard Party Ledger Filter Sort More (4) | Search Data Q`
+- `Dashboard Party Library C Filter Sort = More = (“| Search Data Q`
+- `Dashboard Party Library C Filter Sort More (| Search Data`
+- `Dashboard Payment Request Report CC Filter Sort More = [% | Search Data`
+- `Dashboard Payroll Library C Filter Sort = More = (“| Search Data Q`
+- `Dashboard Payroll Library C Filter Sort More (| Search Data`
+- `Dashboard Project Financial Summary C Filter Sort More (| Search Data`
+- `Dashboard Project Operational Summary CG Filter Sort =More [“)_| Search Data`
+- `Dashboard Project Payment Report C Filter Sort = More = (“| Search Data`
+- `Dashboard Purchase (GSTR-2) C Filter Sort = More = (“| Search Data Q`
+- `Dashboard Purchase (GSTR-2) C Filter Sort More (| Search Data`
+- `Dashboard Purchase Order Item Report C@ Filter Sort More ("| Search Data`
+- `Dashboard Quotation Item Report C@ Filter Sort More ("| Search Data Q`
+- `Dashboard Quotation Report C@ Filter Sort More ("| Search Data`
+- `Dashboard Sales (GSTR-1) C Filter Sort More (| Search Data`
+- `Dashboard Site Inspection Report C@ Filter Sort More ("| Search Data`
+- `Dashboard Subcon Measurement Book Filter Sort More (4) | Search Data`
+- `Dashboard Subcon Workorder Summary Report C Filter Sort More [| Search Data`
+- `Dashboard Task Attendance Report C@ Filter Sort More ("| Search Data`
+- `Dashboard Task Measurement Book Filter Sort More (4) | Search Data`
+- `Dashboard To Do Report C@ Filter Sort More ("| Search Data`
+- `Dashboard Unbilled Item Report C@ Filter Sort More ("| Search Data`
+
+### C. Business logic / formula indicators from UI text:
+
+- `® Delete Logs Total Sales Total Margin`
+- `Company Party Balance (All Projects)`
+- `7] Balance Type`
+- `Advance Paid = 48.00K`
+- `¥|Balance Type`
+- `Advance Paid 48.00K`
+- `Delete Logs Advance Paid To Pay To Receive Advance Received`
+- `a Sales Deduction / Retention Report © Project Wise Payment Summary © Task Measurement Book ©`
+- `Task BOQ Billed & Unbilled Qty Report ©`
+- `Cost Code Expense Analysis © All Party Balances © Material Received & Used Report ©`
+- `Project Wise Expense Summary © Project level Party Balance Report © Material Stock Report ©`
+- `All Expense Deduction / Retention © Unbilled Item Report ©`
+- `Sales (GSTR-1) & © Warehouse Stock Movement Report © Subcon Workorder Summary Report ©`
+- `MOM ToDo Chat Purchase (GSTR-2) @ Warehouse Transaction Report @ Subcon Measurement Book @`
+- `© Onsite Teams | v8.24.0 Warehouse Current Stock Report Subcon Deduction / Retention Report`
+- `Monthly P&L Report © Rate Card Library © Quotation Item Report ©`
+- `im) G A Budget vs Actual (Material Qty) @`
+- `Dashboard Company Sales Report C@ Filter Sort More ("| Search Data`
+- `Dashboard Item Wise Sales Report C@ Filter Sort More ("| Search Data`
+- `Dashboard Sales Deduction / Retention Report Filter Sort More (4) | Search Data`
+- `Dashboard CRM Lead Detail Report C@ Filter Sort More ("| Search Data`
+- `Filter Sort More Search`
+- `Library ProjectName J InvoiceDate Total Amount Post Tax Deduction Retention Amou`
+- `Library ax Deduction Retention Amount Net Amount Balance Due Payment Received`
+- `Dashboard Company Payment Report CC Filter Sort More = [% | Search Data`
+- `Bank Statement Report Filter Sort`
+- `Search Data`
+- `Dashboard Bank Statement Report C Filter Sort = More = (“| Search Data`
+- `- 1289 | ICICIBANK 04-Jul-2026 500,000 | Opening Balance`
+- `Dashboard Project Payment Report C Filter Sort = More = (“| Search Data`
+- `Dashboard Payment Request Report CC Filter Sort More = [% | Search Data`
+- `Dashboard Task Measurement Book Filter Sort More (4) | Search Data`
+- `Dashboard To Do Report C@ Filter Sort More ("| Search Data`
+- `Ropale Project Name: Activity Name: Assigned To: Due Date: Status: Related Task: Creator Name:`
+- `Dashboard Task Resource Budget vs Actual Report Filter Sort More (4) | Search Data`
+- `Dashboard Site Inspection Report C@ Filter Sort More ("| Search Data`
+- `aan Task BOQ Billed & Unbilled Qty Report > Filter Sort More) | Search Data`
+- `Dashboard Task Attendance Report C@ Filter Sort More ("| Search Data`
+- `Dashboard Company Expense Report CC Filter Sort More = [% | Search Data`
+- `Company Expense Report CG) Filter`
+- `Due Date:`
+- `Company Expense Report C ) Filter More (| Search Data Q`
+- `Project Name: Party Name: Expense Date: Expense Type: Expense Status: Cost Code: Settlement By: Creator Name: Due Date:`
+- `Report Project Name: Txn Date: Party Name: Due Date:`
+- `Besieead All expense Deduction / Retention Report CG) Filter Sort | More (| SearchData`
+- `Dashboard Party Ledger Filter Sort More (4) | Search Data Q`
+- `- 1 | Yash Desai Employee Opening Balance Opening Balance 03-Jan-0001`
+- `2 | Party Material Supplier Opening Balance Opening Balance 02-Jul-2026`
+- `. 1 Opening Balance Opening Balance 03-Jan-0001 8,000 8,000`
+- `2 Opening Balance Opening Balance 02-Jul-2026 40,000 40,000`
+- `Dashboard All Party Balance Report C@ Filter Sort More ("| Search Data`
+- `pepo Party Name: Balance Type: Party Type:`
+- `. Party Material Supplier 40,000 | Advance Paid`
+- `2 | Yash Desai Staff 8,000 | Advance Paid 8,000 0`
+- `Dashboard Project level Party Balance Report Filter Sort More (4) | Search Data`
+- `Report Party Name: Project Name: Party Type: Balance Type:`
+- `Dashboard Material Request Item Report Filter Sort More (4) | Search Data`
+- `Dashboard Material Receiving & Used Report CG Filter Sort More (| Search Data Q`
+- `Cc Filter`
+- `Dashboard Unbilled Item Report C@ Filter Sort More ("| Search Data`
+- `Dashboard PO Summary Report C Filter Sort = More = (“| Search Data`
+- `Dashboard Material Received w/o PO Filter Sort More (4) | Search Data`
+- `Dashboard Purchase Order Item Report C@ Filter Sort More ("| Search Data`
+- `Dashboard Production Material Report Filter Sort More (4) | Search Data`
+- `Dashboard Material Purchase Item Report Filter Sort More (4) | Search Data`
+- `Report Purchase Date: Receiving Date: Party Name: Party GST: Project Name: Material:`
+- `Filter Sort More Search Q`
+- `irkforceName | Attendance Date ft No of Workers Total Shift Overtime Hours`
+- `Finance Filter Sort More | Search Q`
+- `Account No. + Project Name Date Month Total Shift`
+- `nth Total Shift OTHrs Basic Payable Allowance`
+- `Allowance OT Amount Late Fine Deductions Total Salary Payable`
+- `ate Fine Deductions Total Salary Payable Payment Payroll Type`
+- `Dashboard Equipment Usage Detail Report C Filter Sort = More = [1% | Search Data`
+- `Equipment Usage Detail Report CG Filter More (‘J | Search Data Q`
+- `Filter Sort = More Search Q`
+- `Filter Sort = More Search`
+- `Dashboard Daily based Equipment Used Report Filter Sort More (4) | Search Data`
+- `Dashboard Equipment Trip Report C@ Filter Sort More ("| Search Data`
+- `Dashboard Asset Allocation Report C@ Filter Sort More ("| Search Data`
+- `Dashboard Asset Status Report C Filter Sort = More = (“| Search Data`
+- `Dashboard Sales (GSTR-1) C Filter Sort More (| Search Data`
+- `Report Party Name: Invoice Date: Project Name: Invoice Type: Party GST: ‘Company GST:`
+- `Dashboard Purchase (GSTR-2) C Filter Sort = More = (“| Search Data Q`
+- `Party Name: Project Name: Expense Type: Expense Date: Party Tax No.: Company Tax No.:`
+- `Dashboard Purchase (GSTR-2) C Filter Sort More (| Search Data`
+- `pepo Party Name: Project Name: Expense Type: Expense Date: Party Tax No: Company Tax No:`
+- `Dashboard Warehouse Stock Movement Report CG Filter Sort More (| Search Data Q`
+- `Dashboard Warehouse Transaction Report C Filter Sort More [| Search Data`
+- `Dashboard Warehouse Current Stock Report CG Filter Sort More (| Search Data Q`
+- `Dashboard Subcon Workorder Summary Report C Filter Sort More [| Search Data`
+- `Dashboard Subcon Measurement Book Filter Sort More (4) | Search Data`
+- `Dashboard Subcon Deduction / Retention Report C@ Filter Sort = More (S| Search Data Q`
+- `Dashboard Subcon Deduction / Retention Report Filter Sort More (4) | Search Data`
+- `Dashboard Project Financial Summary C Filter Sort More (| Search Data`
+- `Dashboard Project Operational Summary CG Filter Sort =More [“)_| Search Data`
+- `Dashboard Company Transactions Report C Filter Sort = More = [1% | Search Data Q`
+- `Dashboard Company Transactions Report C Filter Sort = More = [1% | Search Data`
+- `Dashboard Party Library C Filter Sort More (| Search Data`
+- `Dashboard Party Library C Filter Sort = More = (“| Search Data Q`
+- `Dashboard Cost Code Library C Filter Sort More (| Search Data`
+- `Dashboard Material Library C Filter Sort More (| Search Data`
+- `Dashboard Rate Card Library C Filter Sort More (| Search Data`
+- `Dashboard Payroll Library C Filter Sort = More = (“| Search Data Q`
+- `Dashboard Payroll Library C Filter Sort More (| Search Data`
+- `Dashboard Equipment Library C Filter Sort More (| Search Data`
+- `Dashboard BOQ Workorder Summary Report C@ Filter Sort More ("| Search Data`
+- `Dashboard BOQ Item Report C@ Filter Sort More ("| Search Data Q`
+- `Dashboard BOQ Item Report C@ Filter Sort More ("| Search Data`
+- `Dashboard Quotation Report C@ Filter Sort More ("| Search Data`
+- `Dashboard Quotation Item Report C@ Filter Sort More ("| Search Data Q`
+- `Dashboard Quotation Item Report C@ Filter Sort More ("| Search Data`
+- `Dashboard BOQ Measurement Book C Filter Sort = More = [1% | Search Data`
+- `Dashboard BOQ BOM Report C@ Filter Sort More ("| Search Data Q`
+- `Dashboard BOQ BOM Report C Filter Sort = More = (“| Search Data`
+- `Dashboard Budget vs Actual (Material Qty) (C  ZohoSheet View (27 Sort (N)`
+- `Ally 2 Stage v Category v Search Projects Q wy`
+- `Report Search.`
+- `Bestest) TYPE ¥ Search Q`
+- `Item Name Due Date Assigned Project Type Action`
+- `Report Team Gantt View Month ¥ From 8 - To 8 Filter by assignee + Allstatuses + Filter by project + Export ¥`
+- `Report Party Date Filter search Q`
+- `Report @ Advance Paid @ To Pay @To Receive TY Advance Received`
+- `Q Y Filter Active > & Export`
+- `. Party Details Type Balance (2) Status`
+- `Payroll P Party Material Supplier = 40,000 Advance Paid`
+- `4} Setting Yash Desai = 8,000 Ihave Advance`
+- `Filtera- Date Filter`
+- `Project Total Invoice Total Expense Company Balance`
+- `Total Amount`
+- `Item Level Tax`
+- `+ Deduction`
+- `+ Retention`
+- `Net Amount`
+- `Items + Add Deductions`
+- `Items + Add Retentions`
+- `No Retention Found`
+- `Total Retention:`
+- `Sub Total`
+- `Paid Amount`
+- `© Add GST Amount`
+- `SERVICE RATE CATEGORIES + Tag Service Rate Category`
+- `= Opening Balance`
+- `O Add Quantity and Unit Rate`
+- `Enable GST Percent`
+- `Balance Due`
+- `. Party Name Project Name Amount`
+- `Opening Balance:`
+- `Q Y Filter Active + & Export`
+- `Report Q Search Payroll`
+
+---
+
+## 7. SUMMARY
+
+- SiteFlow routers: 35
+- SiteFlow models: 100
+- Onsite HAR endpoints: 0
+- Onsite UI nav items: 903
+- Onsite form fields: 281
+- Onsite table headers: 308
+- Potential missing Onsite modules in SiteFlow: 321
+- Potential missing columns/fields in SiteFlow: 355
+
+Next step: Manually review the MISSING lists above and map them to SiteFlow enhancement tickets.

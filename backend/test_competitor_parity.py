@@ -142,9 +142,12 @@ def test_competitor_parity():
         # Verify database update for employee
         sys.path.append(os.path.dirname(os.path.abspath(__file__)))
         os.environ["DATABASE_URL"] = f"sqlite:///./{DB_FILE}"
-        from app.database import SessionLocal
+        from sqlalchemy import create_engine
+        from sqlalchemy.orm import sessionmaker
         from app import models
-        db = SessionLocal()
+        test_engine = create_engine(f"sqlite:///./{DB_FILE}", connect_args={"check_same_thread": False})
+        TestSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_engine)
+        db = TestSessionLocal()
         emp = db.query(models.StaffEmployee).filter(models.StaffEmployee.name == "Arun Sharma").first()
         assert emp is not None
         assert float(emp.basic_salary) == 20000.0

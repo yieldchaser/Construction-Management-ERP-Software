@@ -197,30 +197,159 @@ export default function ProductionPage() {
   const [data, setData] = useState<ProductionSummary | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Modals state
+  const [showNewRecipeModal, setShowNewRecipeModal] = useState(false);
+  const [showLogBatchModal, setShowLogBatchModal] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+
+  // Recipe form state
+  const [recipeCode, setRecipeCode] = useState("");
+  const [productName, setProductName] = useState("");
+  const [mixType, setMixType] = useState("Ready Mix");
+  const [recipeUnit, setRecipeUnit] = useState("m³");
+  const [targetOutputQty, setTargetOutputQty] = useState("1.0");
+  const [wastagePct, setWastagePct] = useState("5.0");
+  const [recipeNotes, setRecipeNotes] = useState("");
+  const [recipeMaterials, setRecipeMaterials] = useState<{ material_name: string; planned_qty: string; unit: string; is_optional: boolean }[]>([
+    { material_name: "Cement", planned_qty: "50", unit: "bags", is_optional: false },
+    { material_name: "Sand", planned_qty: "3.0", unit: "m³", is_optional: false },
+  ]);
+
+  // Batch form state
+  const [selectedRecipeId, setSelectedRecipeId] = useState("");
+  const [batchNumber, setBatchNumber] = useState("");
+  const [plannedOutputQty, setPlannedOutputQty] = useState("10.0");
+  const [actualOutputQty, setActualOutputQty] = useState("10.0");
+  const [batchStatus, setBatchStatus] = useState("completed");
+  const [batchNotes, setBatchNotes] = useState("");
+
+  const fetchSummary = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`${getApiHost()}/apis/v3/production/summary?project_id=${projectId}`);
+      if (!response.ok) {
+        throw new Error(`Production summary request failed: ${response.status}`);
+      }
+      const payload = (await response.json()) as ProductionSummary;
+      setData(payload);
+    } catch (error) {
+      console.error("Failed to load production summary, using mock data", error);
+      setData(MOCK_PRODUCTION_SUMMARY);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    if (!projectId) {
+    if (projectId) {
+      void fetchSummary();
+    }
+  }, [projectId]);
+
+  const handleCompleteBatch = async (batchId: string) => {
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/production/batches/${batchId}/complete`, {
+        method: "PATCH",
+      });
+      if (res.ok) {
+        void fetchSummary();
+      } else {
+        const err = await res.json();
+        alert(err.detail || "Failed to complete batch");
+      }
+    } catch (e) {
+      console.error("Failed to complete batch", e);
+      alert("Network error completing batch");
+    }
+  };
+
+  const handleCreateRecipe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setSubmitError("");
+    try {
+      const payload = {
+        company_id: companyId,
+        project_id: projectId,
+        recipe_code: recipeCode,
+        product_name: productName,
+        mix_type: mixType,
+        unit: recipeUnit,
+        target_output_qty: Number(targetOutputQty),
+        wastage_pct: Number(wastagePct),
+        notes: recipeNotes || null,
+        materials: recipeMaterials.map(m => ({
+          material_name: m.material_name,
+          planned_qty: Number(m.planned_qty),
+          unit: m.unit,
+          is_optional: m.is_optional,
+        })),
+      };
+      const res = await fetch(`${getApiHost()}/apis/v3/production/recipes`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (res.ok) {
+        setShowNewRecipeModal(false);
+        setRecipeCode("");
+        setProductName("");
+        setRecipeNotes("");
+        void fetchSummary();
+      } else {
+        const err = await res.json();
+        setSubmitError(err.detail || "Failed to create recipe");
+      }
+    } catch (err) {
+      console.error(err);
+      setSubmitError("Network error creating recipe");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleCreateBatch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedRecipeId) {
+      setSubmitError("Please select a recipe");
       return;
     }
-
-    const fetchSummary = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch(`${getApiHost()}/apis/v3/production/summary?project_id=${projectId}`);
-        if (!response.ok) {
-          throw new Error(`Production summary request failed: ${response.status}`);
-        }
-        const payload = (await response.json()) as ProductionSummary;
-        setData(payload);
-      } catch (error) {
-        console.error("Failed to load production summary, using mock data", error);
-        setData(MOCK_PRODUCTION_SUMMARY);
-      } finally {
-        setLoading(false);
+    setSubmitting(true);
+    setSubmitError("");
+    try {
+      const payload = {
+        company_id: companyId,
+        project_id: projectId,
+        recipe_id: selectedRecipeId,
+        batch_number: batchNumber,
+        planned_output_qty: Number(plannedOutputQty),
+        actual_output_qty: Number(actualOutputQty),
+        status: batchStatus,
+        notes: batchNotes || null,
+        materials: [],
+      };
+      const res = await fetch(`${getApiHost()}/apis/v3/production/batches`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (res.ok) {
+        setShowLogBatchModal(false);
+        setBatchNumber("");
+        setBatchNotes("");
+        void fetchSummary();
+      } else {
+        const err = await res.json();
+        setSubmitError(err.detail || "Failed to log batch");
       }
-    };
-
-    void fetchSummary();
-  }, [projectId]);
+    } catch (err) {
+      console.error(err);
+      setSubmitError("Network error logging batch");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const totals = useMemo(() => {
     return {
@@ -303,10 +432,10 @@ export default function ProductionPage() {
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <button onClick={() => setTab("recipes")} className="rounded-md border border-border-custom bg-white/[0.03] px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-primary/10">
+              <button onClick={() => setShowNewRecipeModal(true)} className="rounded-md border border-border-custom bg-white/[0.03] px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-primary/10">
                 + New Recipe
               </button>
-              <button onClick={() => setTab("batches")} className="rounded-md bg-primary px-4 py-2 text-xs font-bold text-white transition-opacity hover:opacity-90">
+              <button onClick={() => setShowLogBatchModal(true)} className="rounded-md bg-primary px-4 py-2 text-xs font-bold text-white transition-opacity hover:opacity-90">
                 + Log Batch
               </button>
             </div>
@@ -534,9 +663,19 @@ export default function ProductionPage() {
                           <div className="mt-1 text-[10px] text-muted">{batch.recipe_code} · {batch.mix_type}</div>
                         </td>
                         <td className="px-4 py-3">
-                          <span className="rounded-full bg-white/5 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-300">
-                            {batch.status}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] ${batch.status === 'completed' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-white/5 text-zinc-300'}`}>
+                              {batch.status}
+                            </span>
+                            {batch.status === "running" && (
+                              <button
+                                onClick={() => handleCompleteBatch(batch.id)}
+                                className="rounded bg-primary px-2 py-1 text-[10px] font-bold text-white hover:opacity-90"
+                              >
+                                Complete
+                              </button>
+                            )}
+                          </div>
                         </td>
                         <td className="px-4 py-3 text-zinc-300">{formatQty(batch.planned_output_qty)}</td>
                         <td className="px-4 py-3 text-emerald-400">{formatQty(batch.actual_output_qty)}</td>
@@ -630,6 +769,145 @@ export default function ProductionPage() {
           )}
         </div>
       </main>
+
+      {showNewRecipeModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="w-full max-w-lg rounded-xl border border-border-custom bg-[#121214] p-6 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-border-custom pb-4">
+              <h3 className="text-lg font-bold text-white">Create Production Recipe</h3>
+              <button onClick={() => setShowNewRecipeModal(false)} className="text-muted hover:text-white text-lg">&times;</button>
+            </div>
+            <form onSubmit={handleCreateRecipe} className="mt-4 space-y-4">
+              {submitError && <div className="rounded bg-red-500/10 border border-red-500/20 p-3 text-xs text-red-400">{submitError}</div>}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-[10px] uppercase tracking-[0.2em] text-muted block mb-1">Recipe Code</label>
+                  <input type="text" value={recipeCode} onChange={(e) => setRecipeCode(e.target.value)} required placeholder="e.g. MIX-M25" className="w-full bg-white/5 border border-border-custom rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-primary" />
+                </div>
+                <div>
+                  <label className="text-[10px] uppercase tracking-[0.2em] text-muted block mb-1">Product Name</label>
+                  <input type="text" value={productName} onChange={(e) => setProductName(e.target.value)} required placeholder="e.g. Concrete M25" className="w-full bg-white/5 border border-border-custom rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-primary" />
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <label className="text-[10px] uppercase tracking-[0.2em] text-muted block mb-1">Mix Type</label>
+                  <select value={mixType} onChange={(e) => setMixType(e.target.value)} className="w-full bg-white/5 border border-border-custom rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-primary">
+                    <option value="Ready Mix">Ready Mix</option>
+                    <option value="Site Mix">Site Mix</option>
+                    <option value="Concrete Batch">Concrete Batch</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-[10px] uppercase tracking-[0.2em] text-muted block mb-1">Unit</label>
+                  <input type="text" value={recipeUnit} onChange={(e) => setRecipeUnit(e.target.value)} required className="w-full bg-white/5 border border-border-custom rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-primary" />
+                </div>
+                <div>
+                  <label className="text-[10px] uppercase tracking-[0.2em] text-muted block mb-1">Wastage %</label>
+                  <input type="number" step="0.1" value={wastagePct} onChange={(e) => setWastagePct(e.target.value)} required className="w-full bg-white/5 border border-border-custom rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-primary" />
+                </div>
+              </div>
+              <div>
+                <label className="text-[10px] uppercase tracking-[0.2em] text-muted block mb-1 block mb-1">Materials (Planned Ingredients)</label>
+                <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
+                  {recipeMaterials.map((mat, idx) => (
+                    <div key={idx} className="flex gap-2 items-center">
+                      <input type="text" value={mat.material_name} onChange={(e) => {
+                        const newMats = [...recipeMaterials];
+                        newMats[idx].material_name = e.target.value;
+                        setRecipeMaterials(newMats);
+                      }} placeholder="Material name" required className="flex-1 bg-white/5 border border-border-custom rounded px-2.5 py-1.5 text-xs text-white" />
+                      <input type="number" value={mat.planned_qty} onChange={(e) => {
+                        const newMats = [...recipeMaterials];
+                        newMats[idx].planned_qty = e.target.value;
+                        setRecipeMaterials(newMats);
+                      }} placeholder="Qty" required className="w-20 bg-white/5 border border-border-custom rounded px-2.5 py-1.5 text-xs text-white" />
+                      <input type="text" value={mat.unit} onChange={(e) => {
+                        const newMats = [...recipeMaterials];
+                        newMats[idx].unit = e.target.value;
+                        setRecipeMaterials(newMats);
+                      }} placeholder="Unit" required className="w-16 bg-white/5 border border-border-custom rounded px-2.5 py-1.5 text-xs text-white" />
+                      <button type="button" onClick={() => {
+                        setRecipeMaterials(recipeMaterials.filter((_, i) => i !== idx));
+                      }} className="text-red-400 hover:text-red-300 text-xs px-1">&times;</button>
+                    </div>
+                  ))}
+                </div>
+                <button type="button" onClick={() => setRecipeMaterials([...recipeMaterials, { material_name: "", planned_qty: "", unit: "kg", is_optional: false }])} className="mt-2 text-xs text-primary font-semibold hover:underline">+ Add Material</button>
+              </div>
+              <div>
+                <label className="text-[10px] uppercase tracking-[0.2em] text-muted block mb-1">Notes</label>
+                <textarea value={recipeNotes} onChange={(e) => setRecipeNotes(e.target.value)} placeholder="Mix ratio design details..." className="w-full h-16 bg-white/5 border border-border-custom rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-primary resize-none" />
+              </div>
+              <div className="flex justify-end gap-2 border-t border-border-custom pt-4">
+                <button type="button" onClick={() => setShowNewRecipeModal(false)} className="rounded px-4 py-2 text-xs font-semibold text-muted hover:text-white">Cancel</button>
+                <button type="submit" disabled={submitting} className="rounded bg-primary px-4 py-2 text-xs font-bold text-white hover:opacity-90 disabled:opacity-50">{submitting ? "Creating..." : "Save Recipe"}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showLogBatchModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="w-full max-w-lg rounded-xl border border-border-custom bg-[#121214] p-6 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-border-custom pb-4">
+              <h3 className="text-lg font-bold text-white">Log Production Batch</h3>
+              <button onClick={() => setShowLogBatchModal(false)} className="text-muted hover:text-white text-lg">&times;</button>
+            </div>
+            <form onSubmit={handleCreateBatch} className="mt-4 space-y-4">
+              {submitError && <div className="rounded bg-red-500/10 border border-red-500/20 p-3 text-xs text-red-400">{submitError}</div>}
+              <div>
+                <label className="text-[10px] uppercase tracking-[0.2em] text-muted block mb-1">Select Recipe Standard</label>
+                <select value={selectedRecipeId} onChange={(e) => {
+                  setSelectedRecipeId(e.target.value);
+                  const selected = data?.recipes.find(r => r.id === e.target.value);
+                  if (selected) {
+                    setPlannedOutputQty(String(selected.target_output_qty));
+                    setActualOutputQty(String(selected.target_output_qty));
+                  }
+                }} required className="w-full bg-white/5 border border-border-custom rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-primary">
+                  <option value="">-- Choose Recipe --</option>
+                  {(data?.recipes ?? []).map((r) => (
+                    <option key={r.id} value={r.id}>{r.recipe_code} - {r.product_name} ({r.mix_type})</option>
+                  ))}
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-[10px] uppercase tracking-[0.2em] text-muted block mb-1">Batch Number</label>
+                  <input type="text" value={batchNumber} onChange={(e) => setBatchNumber(e.target.value)} required placeholder="e.g. BATCH-2026-001" className="w-full bg-white/5 border border-border-custom rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-primary" />
+                </div>
+                <div>
+                  <label className="text-[10px] uppercase tracking-[0.2em] text-muted block mb-1">Status</label>
+                  <select value={batchStatus} onChange={(e) => setBatchStatus(e.target.value)} className="w-full bg-white/5 border border-border-custom rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-primary">
+                    <option value="completed">Completed (Deducts Stock)</option>
+                    <option value="running">Running (Pending Deduction)</option>
+                  </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-[10px] uppercase tracking-[0.2em] text-muted block mb-1">Planned Output Qty</label>
+                  <input type="number" step="0.01" value={plannedOutputQty} onChange={(e) => setPlannedOutputQty(e.target.value)} required className="w-full bg-white/5 border border-border-custom rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-primary" />
+                </div>
+                <div>
+                  <label className="text-[10px] uppercase tracking-[0.2em] text-muted block mb-1">Actual Output Qty</label>
+                  <input type="number" step="0.01" value={actualOutputQty} onChange={(e) => setActualOutputQty(e.target.value)} required className="w-full bg-white/5 border border-border-custom rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-primary" />
+                </div>
+              </div>
+              <div>
+                <label className="text-[10px] uppercase tracking-[0.2em] text-muted block mb-1">Notes</label>
+                <textarea value={batchNotes} onChange={(e) => setBatchNotes(e.target.value)} placeholder="Pour location details, slump verification, grid lines..." className="w-full h-16 bg-white/5 border border-border-custom rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-primary resize-none" />
+              </div>
+              <div className="flex justify-end gap-2 border-t border-border-custom pt-4">
+                <button type="button" onClick={() => setShowLogBatchModal(false)} className="rounded px-4 py-2 text-xs font-semibold text-muted hover:text-white">Cancel</button>
+                <button type="submit" disabled={submitting} className="rounded bg-primary px-4 py-2 text-xs font-bold text-white hover:opacity-90 disabled:opacity-50">{submitting ? "Logging..." : "Log Batch"}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
