@@ -80,9 +80,10 @@ SiteFlow is an outcome-driven, high-fidelity ERP workspace tailored to the India
 - **📈 Executive Analytics**: Interactive S-curve progress charts and budget burn charts with hover tooltips.
 - **📑 Client Progress Reports**: Auto-generated progress reports with approval workflow and PDF download.
 - **📊 Production Tracking**: Interactive recipe builder and log batch modal overlays. Supports concrete mix ratio setups (with dry volume 1.54 mix design factor), active batch status tracking (Draft, Running, Completed), completed batch auto-deductions from warehouse inventories, and low-stock alerts.
-- **🗃️ 15-Category Reports Dashboard**: Dynamic, company-wide reports directory spanning Sales, Payments, Progress & Task, Purchase, Party Balances, Tax, and Assets.
-- **📅 Period Slider Export Modal**: Smooth sliding selector modal (`< Month >`) supporting custom CSV/Excel downloads matching exact client layouts.
+- **🗃️ 15-Category Reports Dashboard**: Dynamic, company-wide reports directory spanning Sales, Payments, Progress & Task, Purchase, Party Balances, Tax, and Assets. Includes **35+ mapped reports and master libraries** (e.g., Party Ledger, GSTR-1/GSTR-2, Staff Muster Roll, Daily Equipment logs, Subcontractor Measurement Book, and Rate Card/Cost Code libraries) aligned exactly to the competitor's schemas and layout.
+- **📅 Period Slider Export Modal**: Smooth sliding selector modal (`< Month >`) supporting custom CSV/Excel downloads matching exact competitor layouts with high-fidelity mock data.
 - **📋 Daily Progress Report (DPR)**: Comprehensive dashboard aggregating To-Dos, material indents, tasks, shifts, aggregate receipts, and active machinery usage schedules.
+- **🔄 Dynamic Project Context Routing**: Fully dynamic routing redirects for project budgeting/planning modules and global Sidebar tracking that preserves selected project context across clicks using localStorage.
 
 ### Integrations
 - **🔗 Tally Prime**: Direct XML sync gateway for voucher push and pull.
