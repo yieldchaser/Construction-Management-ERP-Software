@@ -524,6 +524,40 @@ export default function HRPayrollPage() {
     }
   };
 
+  const handleUploadPayrollCSV = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    setLoading(true);
+    const formData = new FormData();
+    formData.append("company_id", companyId);
+    formData.append("project_id", projectId);
+    formData.append("file", file);
+    
+    try {
+      const apiHost = getApiHost();
+      const res = await fetch(`${apiHost}/apis/v3/hr/payroll/upload`, {
+        method: "POST",
+        body: formData
+      });
+      if (res.ok) {
+        const data = await res.json();
+        alert(`Payroll data uploaded successfully! Created/updated ${data.created} staff employees.`);
+        if (typeof window !== "undefined") {
+          window.location.reload();
+        }
+      } else {
+        const err = await res.json();
+        alert(`Failed to upload payroll CSV: ${err.detail || "Unknown error"}`);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error uploading payroll CSV file");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleRunPayroll = async () => {
     setLoading(true);
     try {
@@ -1094,6 +1128,19 @@ export default function HRPayrollPage() {
                   <button onClick={handleRunPayroll}
                     className="px-5 py-2 bg-primary rounded-lg text-white text-sm font-bold hover:bg-primary/90 transition-all">
                     Compute Payroll
+                  </button>
+                  <button 
+                    onClick={() => document.getElementById("payroll-csv-file-input")?.click()}
+                    className="px-5 py-2 bg-elevated border border-border-custom hover:bg-elevated/80 rounded-lg text-foreground text-sm font-bold transition-all"
+                  >
+                    <input 
+                      type="file" 
+                      id="payroll-csv-file-input" 
+                      accept=".csv" 
+                      className="hidden" 
+                      onChange={handleUploadPayrollCSV}
+                    />
+                    📥 Import Payroll CSV
                   </button>
                 </div>
               </div>

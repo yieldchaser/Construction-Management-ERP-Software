@@ -18,7 +18,7 @@ import uuid
 from datetime import datetime, date, timedelta
 from decimal import Decimal
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, File, Form, UploadFile
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
@@ -726,3 +726,117 @@ def update_leave_status(leave_id: uuid.UUID, data: LeaveStatusUpdate, db: Sessio
     db.commit()
     db.refresh(leave)
     return leave
+
+
+@router.post("/payroll/upload")
+def upload_payroll(
+    company_id: uuid.UUID = Form(...),
+    project_id: Optional[uuid.UUID] = Form(None),
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db)
+):
+    import csv
+    import io
+    
+    try:
+        content = file.file.read().decode("utf-8")
+        csv_reader = csv.reader(io.StringIO(content))
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed to read file: {str(e)}")
+    
+    headers = next(csv_reader, None)
+    if not headers:
+        raise HTTPException(status_code=400, detail="Empty CSV file")
+        
+    headers = [h.replace('\ufeff', '').strip() for h in headers]
+    
+    if 'Name' not in headers:
+        raise HTTPException(status_code=400, detail="Invalid CSV schema: 'Name' column is required")
+        
+    created_count = 0
+    updated_count = 0
+    
+    for row_cells in csv_reader:
+        if not row_cells or not any(row_cells):
+            continue
+            
+        row = {}
+        for idx, header in enumerate(headers):
+            if idx < len(row_cells):
+                row[header] = row_cells[idx].strip()
+                
+        name = row.get("Name")
+        if not name:
+            continue
+            
+        def to_float(val, default=0.0):
+            try:
+                return float(val) if val else default
+            except ValueError:
+                return default
+                
+        basic_salary = to_float(row.get("Basic"))
+        hra = 0.0
+        other_allowances = to_float(row.get("Fixed Allowance"))
+        
+        for prefix in ["A1", "A2", "A3"]:
+            allow_name = row.get(f"Allowance Name ({prefix})", "")
+            allow_amt = to_float(row.get(f"{prefix} Amount"))
+            if "hra" in allow_name.lower():
+                hra += allow_amt
+            elif allow_name:
+                other_allowances += allow_amt
+                
+        tds_monthly = 0.0
+        for prefix in ["D1", "D2"]:
+            ded_name = row.get(f"Deduction Name ({prefix})", "")
+            ded_amt = to_float(row.get(f"{prefix} Amount"))
+            if "tds" in ded_name.lower() or "tax" in ded_name.lower():
+                tds_monthly += ded_amt
+                
+        designation = row.get("Designation")
+        department = row.get("Cost Code")
+        mobile = None
+        
+        emp = db.query(StaffEmployee).filter(
+            StaffEmployee.company_id == company_id,
+            StaffEmployee.name == name
+        ).first()
+        
+        if emp:
+            emp.designation = designation or emp.designation
+            emp.department = department or emp.department
+            emp.basic_salary = basic_salary
+            emp.hra = hra
+            emp.other_allowances = other_allowances
+            emp.tds_monthly = tds_monthly
+            if project_id:
+                emp.project_id = project_id
+            updated_count += 1
+        else:
+            emp = StaffEmployee(
+                id=uuid.uuid4(),
+                company_id=company_id,
+                project_id=project_id,
+                name=name,
+                employee_code=f"EMP-{uuid.uuid4().hex[:6].upper()}",
+                designation=designation,
+                department=department,
+                mobile=mobile,
+                basic_salary=basic_salary,
+                hra=hra,
+                other_allowances=other_allowances,
+                tds_monthly=tds_monthly,
+                status="active"
+            )
+            db.add(emp)
+            created_count += 1
+            
+    db.commit()
+    
+    return {
+        "status": "success",
+        "created": created_count,
+        "updated": updated_count
+    }
+

@@ -11,6 +11,7 @@ from app.routers import (
     library, profile
 )
 from app.database import engine, Base
+from app import models
 
 # Initialize SQLAlchemy tables if they do not exist
 # Note: In production this is handled via Supabase SQL migrations, but for local/SQLite dev it serves as an auto-fallback
@@ -163,6 +164,7 @@ app.include_router(production.router, prefix="/apis/v3")
 app.include_router(dpr.router, prefix="/apis/v3")
 app.include_router(crm.router, prefix="/apis/v3")
 app.include_router(finance.router, prefix="/apis/v3")
+app.include_router(finance.cashbook_router, prefix="/apis/v3")
 app.include_router(tally.router, prefix="/apis/v3")
 app.include_router(subcon_attendance.router, prefix="/apis/v3")
 app.include_router(settings.router, prefix="/apis/v3")

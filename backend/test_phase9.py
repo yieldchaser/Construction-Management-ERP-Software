@@ -74,8 +74,8 @@ def test_phase9():
         conn.execute(
             "INSERT INTO companies (id, name, currency_decimal_places, quantity_decimal_places, back_dated_limit_days, "
             "negative_stock_lock, bom_restriction, po_restriction, material_request_restriction, negative_balance_warning, "
-            "custom_pdf_template_enabled, created_at, updated_at) "
-            "VALUES (?, 'Test Co', 2, 3, 7, 0, 0, 0, 0, 0, 0, datetime('now'), datetime('now'))",
+            "custom_pdf_template_enabled, onboarding_completed, created_at, updated_at) "
+            "VALUES (?, 'Test Co', 2, 3, 7, 0, 0, 0, 0, 0, 0, 0, datetime('now'), datetime('now'))",
             (company_id_raw,)
         )
         conn.execute(

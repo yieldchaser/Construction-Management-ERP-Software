@@ -448,6 +448,7 @@ class AttendanceLog(Base):
     overtime_hours = Column(Numeric(5, 2), default=0.0, nullable=False)
     shift_multiplier = Column(Numeric(5, 2), default=1.0, nullable=False)
     location_verified = Column(Boolean, default=True, nullable=False)
+    photo_verified = Column(Boolean, default=False, nullable=False)
     notes = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 
@@ -463,6 +464,8 @@ class Timesheet(Base):
     total_hours = Column(Numeric(6, 2), default=0.0, nullable=False)
     status = Column(String(50), default="draft", nullable=False)
     approved_by = Column(UUID(as_uuid=True), nullable=True)
+    photo_verified = Column(Boolean, default=False, nullable=False)
+    location_verified = Column(Boolean, default=False, nullable=False)
     notes = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), default=func.now(), onupdate=func.now(), nullable=False)
@@ -843,6 +846,7 @@ class Payment(Base):
     description = Column(String, nullable=True)
     payment_date = Column(DateTime(timezone=True), nullable=False)
     tally_synced = Column(Boolean, default=False, nullable=False)
+    approval_pipeline_template_id = Column(String(100), nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 
 

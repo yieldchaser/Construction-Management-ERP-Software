@@ -1,0 +1,18 @@
+{
+  "id": "3f23a429-0df9-4e00-a13d-e71e885bd5ba",
+  "creator": "aecbdfea-bbf5-4678-b556-de154d23bf67",
+  "creator_company_user_id": "c6e4849d-c10f-49fe-8095-e193b5a4aaf8",
+  "company_id": "4d6fc487-5cf8-4826-8fd3-1c1f5f1d7660",
+  "is_punch_setting_enabled": 0,
+  "self_punch_enabled": 0,
+  "is_selfie_required": 0,
+  "is_ai_facerecognition_enabled": 0,
+  "is_location_required": 1,
+  "adjust_shift_on_punch": 0,
+  "grace_period": 0,
+  "delete": 0,
+  "created": "2026-07-04T10:45:03.17Z",
+  "updated": "2026-07-04T10:45:03.17Z",
+  "is_geo_fencing_enabled": 0,
+  "is_bulk_geo_fencing_enabled": 0
+}

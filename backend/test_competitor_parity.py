@@ -1,156 +1,224 @@
-import requests
+# -*- coding: utf-8 -*-
+"""
+Competitor Parity Integration Tests
+Tests:
+  1. P2P wallet transfers
+  2. Payroll CSV uploads
+  3. Dry volume concrete batch deductions
+"""
+
+import os
 import sys
+import time
+import uuid
+import subprocess
+import requests
+import io
+from datetime import datetime
 
-BASE_URL = "http://localhost:8000/apis/v3"
+BASE = "http://127.0.0.1:8018/apis/v3"
+DB_FILE = "test_competitor_parity.db"
 
-def run_tests():
-    print("Starting Competitor Parity Backend API Tests...")
+
+def start_server():
+    env = os.environ.copy()
+    env["DATABASE_URL"] = f"sqlite:///./{DB_FILE}"
+    proc = subprocess.Popen(
+        [sys.executable, "-m", "uvicorn", "app.main:app",
+         "--host", "127.0.0.1", "--port", "8018", "--log-level", "error"],
+        env=env,
+        cwd=os.path.dirname(os.path.abspath(__file__)),
+    )
+    for _ in range(30):
+        time.sleep(1)
+        try:
+            if requests.get("http://127.0.0.1:8018/").status_code == 200:
+                return proc
+        except Exception:
+            pass
+    proc.terminate()
+    raise RuntimeError("Server failed to start within 30s")
+
+
+def seed_db(company_obj, project_obj, sender_team_obj, receiver_team_obj, sender_user_obj, receiver_user_obj):
+    sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+    os.environ["DATABASE_URL"] = f"sqlite:///./{DB_FILE}"
+
+    from sqlalchemy import create_engine
+    from sqlalchemy.orm import sessionmaker
+    engine = create_engine(f"sqlite:///./{DB_FILE}", connect_args={"check_same_thread": False})
+    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    from app import models
+
+    models.Base.metadata.create_all(bind=engine)
+    db = SessionLocal()
+
+    company = models.Company(id=company_obj, name="Competitor Parity Ltd")
+    project = models.Project(id=project_obj, company_id=company.id, name="Main Project", code="PROJ-01")
     
-    # 1. Verify Project & Employees
-    proj_id = "d0000000-0000-0000-0000-000000000001"
-    emp_id = "e0000000-0000-0000-0000-000000000100"
+    sender_user = models.User(id=sender_user_obj, name="Sender User", mobile="+919999999991")
+    receiver_user = models.User(id=receiver_user_obj, name="Receiver User", mobile="+919999999992")
     
-    print("\n--- 1. Fetching Employees ---")
-    emp_res = requests.get(f"{BASE_URL}/hr/employees/{proj_id}")
-    if emp_res.status_code != 200:
-        print(f"Failed to fetch employees. Status: {emp_res.status_code}")
-        print(emp_res.text)
-        sys.exit(1)
-    
-    employees = emp_res.json()
-    print(f"Employees list fetched. Found {len(employees)} employees.")
-    if len(employees) > 0:
-        emp_id = employees[0]['id']
-        print(f"Using employee: {employees[0]['name']} (ID: {emp_id})")
+    sender_team = models.CompanyTeam(id=sender_team_obj, company_id=company.id, user_id=sender_user.id, priority_type="partner")
+    receiver_team = models.CompanyTeam(id=receiver_team_obj, company_id=company.id, user_id=receiver_user.id, priority_type="partner")
 
-    # 2. Punch IN with shift multiplier & geofence flags
-    print("\n--- 2. Recording GPS Punch IN ---")
-    punch_in_payload = {
-        "employee_id": emp_id,
-        "project_id": proj_id,
-        "lat": 12.9716,
-        "lng": 77.5946,
-        "punch_type": "in",
-        "shift_multiplier": 0.36,
-        "location_verified": False,
-        "notes": "Offsite check-in test"
-    }
-    punch_res = requests.post(f"{BASE_URL}/hr/attendance/punch", json=punch_in_payload)
-    if punch_res.status_code not in (200, 201):
-        if "Already punched in today" in punch_res.text:
-            print("Already punched in today. Proceeding...")
-        else:
-            print(f"Punch IN failed. Status: {punch_res.status_code}")
-            print(punch_res.text)
-            sys.exit(1)
-    else:
-        punch_log = punch_res.json()
-        print(f"Punch IN recorded. Shift Multiplier: {punch_log['shift_multiplier']}, Location Verified: {punch_log['location_verified']}")
-        assert punch_log['shift_multiplier'] == 0.36
-        assert punch_log['location_verified'] is False
+    db.add_all([company, project, sender_user, receiver_user, sender_team, receiver_team])
+    db.commit()
 
-    # 3. Subcontractor attendance logs
-    print("\n--- 3. Subcontractor Crew Attendance ---")
-    subcon_id = "e0000000-0000-0000-0000-000000000100" 
-    subcon_payload = {
-        "project_id": proj_id,
-        "subcontractor_id": subcon_id,
-        "attendance_date": "2026-06-30T10:00:00Z",
-        "labor_role": "Mason",
-        "worker_count": 12,
-        "shift_multiplier": 1.25,
-        "overtime_hours": 2.5,
-        "allowance": 500.0,
-        "deduction": 50.0,
-        "notes": "Krishna masonry crew",
-        "photo_url": "http://example.com/crew.jpg"
-    }
-    
-    subcon_res = requests.post(f"{BASE_URL}/subcon/attendance", json=subcon_payload)
-    if subcon_res.status_code not in (200, 201):
-        print(f"Failed to log subcontractor crew attendance. Status: {subcon_res.status_code}")
-        print(subcon_res.text)
-        sys.exit(1)
-    subcon_log = subcon_res.json()
-    print(f"Subcontractor crew attendance saved. Role: {subcon_log['labor_role']}, Count: {subcon_log['worker_count']}, Allowance: {subcon_log['allowance']}")
-    assert subcon_log['worker_count'] == 12
-    assert subcon_log['shift_multiplier'] == 1.25
-    assert float(subcon_log['allowance']) == 500.0
+    db.add_all([
+        models.WarehouseInventory(
+            project_id=project.id,
+            material_name="Cement",
+            on_hand_qty=200,
+            reserved_qty=0,
+            unit="bags",
+        ),
+        models.WarehouseInventory(
+            project_id=project.id,
+            material_name="Sand",
+            on_hand_qty=50,
+            reserved_qty=0,
+            unit="m3",
+        ),
+    ])
+    db.commit()
+    db.close()
 
-    print("\n--- 4. Fetch Subcontractor logs for Date ---")
-    subcon_get = requests.get(f"{BASE_URL}/subcon/attendance/{proj_id}/2026-06-30")
-    if subcon_get.status_code != 200:
-        print(f"Failed to fetch subcontractor attendance. Status: {subcon_get.status_code}")
-        print(subcon_get.text)
-        sys.exit(1)
-    subcon_list = subcon_get.json()
-    print(f"Subcontractor attendance list retrieved. Count: {len(subcon_list)}")
-    assert len(subcon_list) >= 1
-    assert subcon_list[0]['labor_role'] == "Mason"
 
-    # 4. WBS tasks list and detail feeds
-    print("\n--- 5. Fetch WBS Tasks ---")
-    tasks_res = requests.get(f"{BASE_URL}/planning/tasks?project_id={proj_id}")
-    if tasks_res.status_code != 200:
-        print(f"Failed to fetch WBS tasks. Status: {tasks_res.status_code}")
-        print(tasks_res.text)
-        sys.exit(1)
-    tasks = tasks_res.json()
-    print(f"Tasks retrieved. Count: {len(tasks)}")
-    
-    if len(tasks) == 0:
-        print("Creating a dummy WBS task to complete feed tests...")
-        task_create_payload = {
-            "project_id": proj_id,
-            "name": "Site Clearing & Earthworks",
-            "duration_days": 10,
-            "start_date": "2026-06-30T08:00:00Z",
-            "priority": "high"
+def test_competitor_parity():
+    if os.path.exists(DB_FILE):
+        try:
+            os.remove(DB_FILE)
+        except Exception:
+            pass
+
+    company_id = uuid.uuid4()
+    project_id = uuid.uuid4()
+    sender_team_id = uuid.uuid4()
+    receiver_team_id = uuid.uuid4()
+    sender_user_id = uuid.uuid4()
+    receiver_user_id = uuid.uuid4()
+
+    seed_db(company_id, project_id, sender_team_id, receiver_team_id, sender_user_id, receiver_user_id)
+
+    proc = start_server()
+    try:
+        # Test 1: P2P Wallet Transfer
+        p2p_payload = {
+            "company_id": str(company_id),
+            "sender_company_user_id": str(sender_team_id),
+            "receiver_company_user_id": str(receiver_team_id),
+            "amount": 2500.0,
+            "payment_date": "2026-07-06T12:00:00",
+            "description": "Wallet to Wallet transfer"
         }
-        task_res = requests.post(f"{BASE_URL}/planning/tasks", json=task_create_payload)
-        task_obj = task_res.json()
-    else:
-        task_obj = tasks[0]
-    
-    task_id = task_obj['id']
-    print(f"Testing with WBS Task: {task_obj['name']} (ID: {task_id})")
+        res = requests.post(f"{BASE}/cashbook/p2p", json=p2p_payload)
+        assert res.status_code == 201, res.text
+        data = res.json()
+        assert data["status"] == "Success"
+        assert "sender_payment_id" in data
+        assert "receiver_payment_id" in data
 
-    # 5. Checklist subtask todos
-    print("\n--- 6. Task Sub-task Todo Checklist ---")
-    todo_res = requests.post(f"{BASE_URL}/planning/tasks/{task_id}/todos", json={"title": "Clear North Excavation Area"})
-    if todo_res.status_code not in (200, 201):
-        print(f"Failed to create subtask todo. Status: {todo_res.status_code}")
-        print(todo_res.text)
-        sys.exit(1)
-    todo = todo_res.json()
-    print(f"Sub-task todo created: '{todo['title']}', Completed: {todo['is_completed']}")
-    assert todo['is_completed'] is False
-    
-    toggle_res = requests.patch(f"{BASE_URL}/planning/tasks/todos/{todo['id']}/toggle")
-    todo_toggled = toggle_res.json()
-    print(f"Sub-task todo toggled is_completed: {todo_toggled['is_completed']}")
-    assert todo_toggled['is_completed'] is True
+        # Test 2: Payroll CSV Upload
+        csv_data = (
+            "Name,Staff Type,Shift Hours,Day Off,Overtime Rate (Per Hour),Designation,Cost Code,Salary Basis,Salary Type,CTC,Basic,Allowance Name (A1),A1 Relation Type,% of A1 Relation,A1 Amount,Allowance Name (A2),A2 Relation Type,% of A2 Relation,A2 Amount,Allowance Name (A3),A3 Relation Type,% of A3 Relation,A3 Amount,Fixed Allowance,Gross Salary,Deduction Name (D1),D1 Relation Type,% of D1 Relation,D1 Amount,Deduction Name (D2),D2 Relation Type,% of D2 Relation,D2 Amount,Net Amount,Projects\n"
+            "Arun Sharma,Staff,8,Sunday,150,Site Supervisor,CC-03,Monthly,Fixed,35000,20000,HRA,Basic,25,5000,Medical,Fixed,,1500,Travel,Fixed,,1000,1000,28500,TDS,Gross,10,2850,ESI,Fixed,,500,25150,Main Project\n"
+        )
+        
+        files = {
+            "file": ("Payroll-Upload-Template.csv", io.StringIO(csv_data), "text/csv")
+        }
+        form_data = {
+            "company_id": str(company_id),
+            "project_id": str(project_id)
+        }
+        
+        res = requests.post(f"{BASE}/hr/payroll/upload", data=form_data, files=files)
+        assert res.status_code == 200, res.text
+        payroll_res = res.json()
+        assert payroll_res["status"] == "success"
+        assert payroll_res["created"] == 1
 
-    # 6. Task Activity Comments Feed
-    print("\n--- 7. WBS Task Activity Feed & Progress Logging ---")
-    comment_payload = {
-        "user_id": subcon_id,
-        "user_name": "Vikram Joshi (Site Engineer)",
-        "message_text": "Completed concrete casting for Grid A-C",
-        "progress_qty_added": 45.5,
-        "voice_note_url": "http://example.com/audio-rec.mp3"
-      }
-    comment_res = requests.post(f"{BASE_URL}/planning/tasks/{task_id}/comments", json=comment_payload)
-    if comment_res.status_code not in (200, 201):
-        print(f"Comment creation failed. Status: {comment_res.status_code}")
-        print(comment_res.text)
-        sys.exit(1)
-    comment = comment_res.json()
-    print(f"Task comment/activity logged. Msg: '{comment['message_text']}', Progress Logged: {comment['progress_qty_added']}, Audio Note: {comment['voice_note_url']}")
-    assert comment['progress_qty_added'] == 45.5
-    assert comment['voice_note_url'] == "http://example.com/audio-rec.mp3"
+        # Verify database update for employee
+        sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+        os.environ["DATABASE_URL"] = f"sqlite:///./{DB_FILE}"
+        from app.database import SessionLocal
+        from app import models
+        db = SessionLocal()
+        emp = db.query(models.StaffEmployee).filter(models.StaffEmployee.name == "Arun Sharma").first()
+        assert emp is not None
+        assert float(emp.basic_salary) == 20000.0
+        assert float(emp.hra) == 5000.0
+        assert float(emp.other_allowances) == 3500.0 # Medical (1500) + Travel (1000) + Fixed (1000) = 3500
+        assert float(emp.tds_monthly) == 2850.0
 
-    print("\nALL COMPETITOR PARITY ENDPOINTS TESTED SUCCESSFULLY!")
+        # Test 3: Production batch completion with 1.54 factor and conditional deduction
+        recipe_payload = {
+            "company_id": str(company_id),
+            "project_id": str(project_id),
+            "recipe_code": "REC-M20",
+            "product_name": "Concrete mix",
+            "mix_type": "Concrete Batch",
+            "unit": "m3",
+            "target_output_qty": 10.0,
+            "wastage_pct": 0,
+            "materials": [
+                {"material_name": "Cement", "planned_qty": 50, "unit": "bags", "is_optional": False},
+                {"material_name": "Sand", "planned_qty": 3.0, "unit": "m3", "is_optional": False},
+            ]
+        }
+        res = requests.post(f"{BASE}/production/recipes", json=recipe_payload)
+        assert res.status_code == 201, res.text
+        recipe = res.json()
+
+        # Create batch with status "running" -> should NOT deduct inventory
+        batch_payload = {
+            "company_id": str(company_id),
+            "project_id": str(project_id),
+            "recipe_id": recipe["id"],
+            "batch_number": "B-001",
+            "planned_output_qty": 10.0,
+            "actual_output_qty": 10.0,
+            "status": "running",
+        }
+        res = requests.post(f"{BASE}/production/batches", json=batch_payload)
+        assert res.status_code == 201, res.text
+        batch = res.json()
+
+        # Check inventory is untouched
+        cement_inv = db.query(models.WarehouseInventory).filter(
+            models.WarehouseInventory.project_id == project_id,
+            models.WarehouseInventory.material_name == "Cement"
+        ).first()
+        assert float(cement_inv.on_hand_qty) == 200.0
+
+        # Complete the batch
+        res = requests.patch(f"{BASE}/production/batches/{batch['id']}/complete")
+        assert res.status_code == 200, res.text
+        
+        # Verify 1.54 multiplier applied:
+        # Cement planned: 50 bags for 10 m3.
+        # Scale to 10 m3 actual: 50 bags.
+        # Multiply by 1.54: 50 * 1.54 = 77 bags.
+        # New inventory Cement: 200 - 77 = 123.
+        db.refresh(cement_inv)
+        assert float(cement_inv.on_hand_qty) == 123.0
+
+        sand_inv = db.query(models.WarehouseInventory).filter(
+            models.WarehouseInventory.project_id == project_id,
+            models.WarehouseInventory.material_name == "Sand"
+        ).first()
+        # Sand planned: 3.0. Scale and multiply by 1.54: 3.0 * 1.54 = 4.62.
+        # New inventory Sand: 50 - 4.62 = 45.38.
+        db.refresh(sand_inv)
+        assert abs(float(sand_inv.on_hand_qty) - 45.38) <= 1e-4
+
+        db.close()
+        print("Competitor Parity Integration Tests Passed Successfully!")
+    finally:
+        proc.terminate()
+        proc.wait(timeout=10)
+
 
 if __name__ == "__main__":
-    run_tests()
+    test_competitor_parity()

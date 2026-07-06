@@ -349,9 +349,20 @@ def create_batch(payload: BatchCreate, db: Session = Depends(get_db)):
     planned_material_qty = 0.0
     actual_material_qty = 0.0
 
+    is_concrete = any(x in (recipe.mix_type or "").lower() for x in ["concrete", "rmc", "batch"])
+
     for recipe_material in recipe_materials:
         override = override_map.pop(recipe_material.material_name, None)
-        actual_qty = override.actual_qty if override and override.actual_qty is not None else float(recipe_material.planned_qty)
+        
+        if override and override.actual_qty is not None:
+            actual_qty = override.actual_qty
+        else:
+            is_dry_material = any(x in recipe_material.material_name.lower() for x in ["cement", "sand", "aggregate"])
+            if is_concrete and is_dry_material:
+                actual_qty = (float(recipe_material.planned_qty) / float(recipe.target_output_qty)) * actual_output_qty * 1.54
+            else:
+                actual_qty = (float(recipe_material.planned_qty) / float(recipe.target_output_qty)) * actual_output_qty
+                
         unit = override.unit if override else recipe_material.unit
         variance_qty = actual_qty - float(recipe_material.planned_qty)
 
@@ -368,16 +379,18 @@ def create_batch(payload: BatchCreate, db: Session = Depends(get_db)):
                 variance_qty=variance_qty,
             )
         )
-        db.add(
-            MaterialTransaction(
-                project_id=payload.project_id,
-                material_name=recipe_material.material_name,
-                qty=actual_qty,
-                type="used",
-                source_ref_id=batch.id,
+        
+        if batch.status == "completed":
+            db.add(
+                MaterialTransaction(
+                    project_id=payload.project_id,
+                    material_name=recipe_material.material_name,
+                    qty=actual_qty,
+                    type="used",
+                    source_ref_id=batch.id,
+                )
             )
-        )
-        _upsert_inventory(db, payload.project_id, recipe_material.material_name, unit, actual_qty)
+            _upsert_inventory(db, payload.project_id, recipe_material.material_name, unit, actual_qty)
 
     for extra_material in override_map.values():
         actual_qty = extra_material.actual_qty if extra_material.actual_qty is not None else 0.0
@@ -395,16 +408,18 @@ def create_batch(payload: BatchCreate, db: Session = Depends(get_db)):
                 variance_qty=actual_qty - planned_qty,
             )
         )
-        db.add(
-            MaterialTransaction(
-                project_id=payload.project_id,
-                material_name=extra_material.material_name,
-                qty=actual_qty,
-                type="used",
-                source_ref_id=batch.id,
+        
+        if batch.status == "completed":
+            db.add(
+                MaterialTransaction(
+                    project_id=payload.project_id,
+                    material_name=extra_material.material_name,
+                    qty=actual_qty,
+                    type="used",
+                    source_ref_id=batch.id,
+                )
             )
-        )
-        _upsert_inventory(db, payload.project_id, extra_material.material_name, extra_material.unit, actual_qty)
+            _upsert_inventory(db, payload.project_id, extra_material.material_name, extra_material.unit, actual_qty)
 
     batch.planned_material_qty = planned_material_qty
     batch.actual_material_qty = actual_material_qty
@@ -413,6 +428,42 @@ def create_batch(payload: BatchCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(batch)
     return _batch_response(db, batch)
+
+
+@router.patch("/batches/{batch_id}/complete", response_model=BatchResponse)
+def complete_batch(batch_id: UUID, db: Session = Depends(get_db)):
+    batch = db.query(ProductionBatch).filter(ProductionBatch.id == batch_id).first()
+    if not batch:
+        raise HTTPException(status_code=404, detail="Batch not found")
+    if batch.status == "completed":
+        return _batch_response(db, batch)
+
+    batch.status = "completed"
+    batch.completed_at = datetime.utcnow()
+
+    # Deduct inventory if not already deducted
+    tx_exists = db.query(MaterialTransaction).filter(
+        MaterialTransaction.source_ref_id == batch.id
+    ).first()
+    
+    if not tx_exists:
+        batch_materials = db.query(ProductionBatchMaterial).filter(ProductionBatchMaterial.batch_id == batch.id).all()
+        for bm in batch_materials:
+            db.add(
+                MaterialTransaction(
+                    project_id=batch.project_id,
+                    material_name=bm.material_name,
+                    qty=bm.actual_qty,
+                    type="used",
+                    source_ref_id=batch.id,
+                )
+            )
+            _upsert_inventory(db, batch.project_id, bm.material_name, bm.unit, bm.actual_qty)
+
+    db.commit()
+    db.refresh(batch)
+    return _batch_response(db, batch)
+
 
 
 @router.get("/batches", response_model=List[BatchResponse])

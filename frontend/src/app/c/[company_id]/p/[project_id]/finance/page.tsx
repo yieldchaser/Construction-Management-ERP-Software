@@ -270,9 +270,123 @@ export default function FinancePage() {
     }
   }, [projectId, companyId]);
 
+  const handleUploadCSV = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    setSubmitting(true);
+    const formData = new FormData();
+    formData.append("company_id", companyId);
+    formData.append("file", file);
+    
+    try {
+      const apiHost = getApiHost();
+      const res = await fetch(`${apiHost}/apis/v3/cashbook/upload`, {
+        method: "POST",
+        body: formData
+      });
+      if (res.ok) {
+        const data = await res.json();
+        alert(`Payments imported successfully! Created ${data.created} transactions.`);
+        setShowAddModal(false);
+        if (typeof window !== "undefined") {
+          window.location.reload();
+        }
+      } else {
+        const err = await res.json();
+        alert(`Failed to import: ${err.detail || "Unknown error"}`);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error importing CSV file");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const handleRecordPayment = async (e: React.FormEvent) => {
     e.preventDefault();
     const amtVal = parseFloat(amount);
+    
+    if (selectedTxnType === "Party to Party") {
+      if (!amount || amtVal <= 0 || !paymentFromParty || !paymentToParty) {
+        alert("Please select both parties and enter a valid amount");
+        return;
+      }
+      setSubmitting(true);
+      try {
+        const apiHost = getApiHost();
+        const res = await fetch(`${apiHost}/apis/v3/cashbook/p2p`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            company_id: companyId,
+            sender_company_user_id: paymentFromParty,
+            receiver_company_user_id: paymentToParty,
+            amount: amtVal,
+            payment_date: new Date().toISOString(),
+            description: desc || "Party to Party Wallet Transfer"
+          }),
+        });
+        
+        if (res.ok) {
+          const data = await res.json();
+          const fromName = usersList.find((u: any) => u.id === paymentFromParty)?.name || "Sender";
+          const toName = usersList.find((u: any) => u.id === paymentToParty)?.name || "Receiver";
+          
+          const newTxn1: Transaction = {
+            id: data.sender_payment_id || `TXN-${Date.now()}-1`,
+            date: new Date().toISOString().split("T")[0],
+            type: "Party to Party",
+            category: "P2P Debit",
+            description: desc || `Transfer to ${toName}`,
+            amount: amtVal,
+            party: fromName,
+            ref: refNum || "P2P-OUT",
+            ledger: "Cashbook",
+            status: "Approved",
+            cost_code: costCode,
+            settled_amount: amtVal,
+            balance_due: 0
+          };
+          
+          const newTxn2: Transaction = {
+            id: data.receiver_payment_id || `TXN-${Date.now()}-2`,
+            date: new Date().toISOString().split("T")[0],
+            type: "Party to Party",
+            category: "P2P Credit",
+            description: desc || `Transfer from ${fromName}`,
+            amount: amtVal,
+            party: toName,
+            ref: refNum || "P2P-IN",
+            ledger: "Cashbook",
+            status: "Approved",
+            cost_code: costCode,
+            settled_amount: amtVal,
+            balance_due: 0
+          };
+          
+          setTransactions([newTxn1, newTxn2, ...transactions]);
+          alert("Party to Party transfer recorded successfully!");
+        } else {
+          const err = await res.json();
+          alert(`Failed: ${err.detail || "Server error"}`);
+        }
+        setShowAddModal(false);
+        setAmount("");
+        setPaymentFromParty("");
+        setPaymentToParty("");
+        setRefNum("");
+        setDesc("");
+      } catch (err) {
+        console.error("Failed to record P2P transfer", err);
+        alert("Error sending request to server");
+      } finally {
+        setSubmitting(false);
+      }
+      return;
+    }
+
     if (!amount || amtVal <= 0 || !partyName.trim()) return;
 
     setSubmitting(true);
@@ -1524,10 +1638,20 @@ export default function FinancePage() {
                     </div>
                   </div>
 
-                  <div className="border-2 border-dashed border-border-custom hover:border-primary/50 transition-all rounded-xl p-8 flex flex-col items-center justify-center bg-background cursor-pointer text-center space-y-2">
+                  <div 
+                    onClick={() => document.getElementById("payments-csv-file-input")?.click()}
+                    className="border-2 border-dashed border-border-custom hover:border-primary/50 transition-all rounded-xl p-8 flex flex-col items-center justify-center bg-background cursor-pointer text-center space-y-2"
+                  >
+                    <input 
+                      type="file" 
+                      id="payments-csv-file-input" 
+                      accept=".csv" 
+                      className="hidden" 
+                      onChange={handleUploadCSV}
+                    />
                     <span className="text-2xl text-primary">📤</span>
                     <strong className="text-white font-bold text-xs">Upload Csv</strong>
-                    <span className="text-[9px] text-muted">Supports .csv, .xls, .xlsx formats up to 10MB</span>
+                    <span className="text-[9px] text-muted">Supports .csv formats up to 10MB</span>
                   </div>
                 </div>
               ) : selectedTxnType === "Other Expense" ? (
@@ -2282,31 +2406,33 @@ export default function FinancePage() {
                   </div>
 
                   <div>
-                    <label className="text-[10px] text-muted uppercase font-bold block mb-1">Payment From</label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        value={paymentFromParty}
-                        onChange={e => setPaymentFromParty(e.target.value)}
-                        placeholder="Search or select party to debit..."
-                        className="w-full bg-background border border-border-custom rounded-lg pl-9 pr-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
-                      />
-                      <span className="absolute left-3 top-2.5 text-muted text-xs">🔍</span>
-                    </div>
+                    <label className="text-[10px] text-muted uppercase font-bold block mb-1">Payment From (Debit)*</label>
+                    <select
+                      value={paymentFromParty}
+                      onChange={e => setPaymentFromParty(e.target.value)}
+                      required
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                    >
+                      <option value="">Select party to debit...</option>
+                      {usersList.map((u: any) => (
+                        <option key={u.id} value={u.id}>{u.name} ({u.role || "Staff"})</option>
+                      ))}
+                    </select>
                   </div>
 
                   <div>
-                    <label className="text-[10px] text-muted uppercase font-bold block mb-1">Payment To</label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        value={paymentToParty}
-                        onChange={e => setPaymentToParty(e.target.value)}
-                        placeholder="Search or select party to credit..."
-                        className="w-full bg-background border border-border-custom rounded-lg pl-9 pr-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
-                      />
-                      <span className="absolute left-3 top-2.5 text-muted text-xs">🔍</span>
-                    </div>
+                    <label className="text-[10px] text-muted uppercase font-bold block mb-1">Payment To (Credit)*</label>
+                    <select
+                      value={paymentToParty}
+                      onChange={e => setPaymentToParty(e.target.value)}
+                      required
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                    >
+                      <option value="">Select party to credit...</option>
+                      {usersList.map((u: any) => (
+                        <option key={u.id} value={u.id}>{u.name} ({u.role || "Staff"})</option>
+                      ))}
+                    </select>
                   </div>
 
                   <div>

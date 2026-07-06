@@ -1,0 +1,18 @@
+{
+  "id": "18f1633c-0754-4873-84c9-571ad716948d",
+  "company_id": "4d6fc487-5cf8-4826-8fd3-1c1f5f1d7660",
+  "creator_company_user_id": "c6e4849d-c10f-49fe-8095-e193b5a4aaf8",
+  "creator": "aecbdfea-bbf5-4678-b556-de154d23bf67",
+  "created": "2026-07-04T10:45:03.17Z",
+  "updated": "2026-07-04T10:45:03.17Z",
+  "delete": 0,
+  "material_use": 0,
+  "sub_con_material_issue": 0,
+  "material_transfer": 0,
+  "material_request_restriction": 0,
+  "po_material_restriction": 0,
+  "production_material_restriction": 0,
+  "lib_bom_restriction": 0,
+  "grn_sequence_level": 0,
+  "material_request_sequence_level": 0
+}

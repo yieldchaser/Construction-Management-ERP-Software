@@ -1,0 +1,54 @@
+{
+  "page": {
+    "prev_url": "",
+    "next_url": "",
+    "count": 1
+  },
+  "address_list": [
+    {
+      "id": "665d76fe-171f-4711-b51b-30d0cedac9d7",
+      "company_id": "4d6fc487-5cf8-4826-8fd3-1c1f5f1d7660",
+      "creator_company_user_id": "c6e4849d-c10f-49fe-8095-e193b5a4aaf8",
+      "owner_id": "f84d70e3-9db8-450b-a89a-24e72ba5a1b6",
+      "address_type": "project",
+      "address_title": "Prestige Developers ",
+      "address_gst": "",
+      "address_line_1": "Pune",
+      "address_line_2": "",
+      "city": "Pune",
+      "state": "",
+      "postal_code": "",
+      "country_code": "",
+      "location": {
+        "type": "Point",
+        "coordinates": [
+          1.1,
+          1.1
+        ]
+      },
+      "google_address": null,
+      "primary": 1,
+      "delete": 0,
+      "created": "2026-07-04T19:28:35.971Z",
+      "updated": "2026-07-04T19:28:35.971Z",
+      "search": "Pune ",
+      "monkey_patch_country_config": {
+        "country_code": "",
+        "country_iso": "",
+        "country_name": "",
+        "created": "0001-01-01T00:00:00Z",
+        "minimum_digits": 0,
+        "maximum_digits": 0,
+        "login_channels": null,
+        "currency": "",
+        "flag": "",
+        "tax_slabs": null,
+        "tax_display_name": "",
+        "tax_value_display_name": "",
+        "published": 0,
+        "decimal_digit": 0,
+        "timezone": ""
+      }
+    }
+  ]
+}

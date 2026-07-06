@@ -1,0 +1,130 @@
+{
+  "page": {
+    "prev_url": "",
+    "next_url": "",
+    "count": 11
+  },
+  "categories": [
+    {
+      "id": "f760581d-8c78-41ac-8341-dfa8d7a87a3c",
+      "type": "cashbook",
+      "text_en": "Customer",
+      "text_hi": "Customer",
+      "index": 6,
+      "dimensions": null,
+      "created": "2021-11-02T10:21:05.863Z",
+      "updated": "2023-07-15T19:19:30.555Z",
+      "parent_id": ""
+    },
+    {
+      "id": "8b39fd8a-b631-4fa6-8e64-031fc4f184fa",
+      "type": "cashbook",
+      "text_en": "Designer",
+      "text_hi": "Designer",
+      "index": 7,
+      "dimensions": null,
+      "created": "2021-11-02T10:21:05.863Z",
+      "updated": "2023-07-15T19:19:30.555Z",
+      "parent_id": ""
+    },
+    {
+      "id": "0685d96a-006c-4a63-884d-3c13b41bec95",
+      "type": "cashbook",
+      "text_en": "Equipment",
+      "text_hi": "Equipment",
+      "index": 4,
+      "dimensions": null,
+      "created": "2022-01-04T05:55:42.757Z",
+      "updated": "2023-07-15T19:19:30.555Z",
+      "parent_id": ""
+    },
+    {
+      "id": "55907b9d-3f3e-453c-adc9-7d1994c0bc03",
+      "type": "cashbook",
+      "text_en": "Food and Travel",
+      "text_hi": "Food and Travel",
+      "index": 8,
+      "dimensions": null,
+      "created": "2021-11-02T10:21:05.863Z",
+      "updated": "2023-07-15T19:19:30.555Z",
+      "parent_id": ""
+    },
+    {
+      "id": "b7c3a4d5-582d-4dad-97d7-652dc345ca2d",
+      "type": "cashbook",
+      "text_en": "Fuel",
+      "text_hi": "Fuel",
+      "index": 50,
+      "dimensions": null,
+      "created": "2022-07-22T13:31:37.204Z",
+      "updated": "2023-07-15T19:19:30.555Z",
+      "parent_id": ""
+    },
+    {
+      "id": "a530b35c-a85a-4893-a6fe-c88868f344f4",
+      "type": "cashbook",
+      "text_en": "Labour",
+      "text_hi": "Labour",
+      "index": 1,
+      "dimensions": null,
+      "created": "2021-11-02T10:21:05.862Z",
+      "updated": "2023-07-15T19:19:30.555Z",
+      "parent_id": ""
+    },
+    {
+      "id": "c4881f7f-6345-405e-a4ee-f5c4088d47b2",
+      "type": "cashbook",
+      "text_en": "Material",
+      "text_hi": "Material",
+      "index": 2,
+      "dimensions": null,
+      "created": "2021-11-02T10:21:05.863Z",
+      "updated": "2023-07-15T19:19:30.555Z",
+      "parent_id": ""
+    },
+    {
+      "id": "da023b74-dbee-47c7-87a4-fcae45b03391",
+      "type": "cashbook",
+      "text_en": "Others",
+      "text_hi": "Others",
+      "index": 9,
+      "dimensions": null,
+      "created": "2021-11-02T10:21:05.863Z",
+      "updated": "2023-07-15T19:19:30.555Z",
+      "parent_id": ""
+    },
+    {
+      "id": "a0789c1d-5ca4-442d-96fe-f9ae090d4c9c",
+      "type": "cashbook",
+      "text_en": "Salary",
+      "text_hi": "Salary",
+      "index": 50,
+      "dimensions": null,
+      "created": "2022-04-12T09:38:01.649Z",
+      "updated": "2023-07-15T19:19:30.555Z",
+      "parent_id": ""
+    },
+    {
+      "id": "3723e5bd-b78f-4a61-9367-cc65fc7eb7dd",
+      "type": "cashbook",
+      "text_en": "Sub Contractor",
+      "text_hi": "Sub Contractor",
+      "index": 5,
+      "dimensions": null,
+      "created": "2021-11-02T10:21:05.863Z",
+      "updated": "2023-07-15T19:19:30.555Z",
+      "parent_id": ""
+    },
+    {
+      "id": "e1e06a1e-9d82-42c2-bfd0-bec06d01b6b9",
+      "type": "cashbook",
+      "text_en": "Transport",
+      "text_hi": "Transport",
+      "index": 3,
+      "dimensions": null,
+      "created": "2022-01-04T05:55:42.74Z",
+      "updated": "2023-07-15T19:19:30.555Z",
+      "parent_id": ""
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+Payment Date,Payment Type,Party Name,Project Name,Amount,Remark,Mode of Payment,Company Bank Account Number,Category,Payment Request ID
+19-Jan-2026,Out,Abhijit,Project-Vikroli,5000,For dec month salary,Cash,,Salary,1c050f4e-5f4a-4d47-ac53-0efefd921dc2
+19-Jan-2026,Out,Akash Panwar,July_2025 Project Test,4000,For dec month salary,Cheque,54909090,Salary,8df95ec3-59a9-4c80-a2e7-1890eb743fa3
+19-Jan-2026,In,Aishwarya,July_2025 Project Test,8000,Bill,Bank Transfer,54909090,Material,

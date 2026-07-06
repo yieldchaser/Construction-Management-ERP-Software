@@ -230,6 +230,18 @@ export default function ProductionPage() {
     };
   }, [data]);
 
+  const getLowStockMaterialsForBatch = (batch: Batch) => {
+    if (!data?.inventory_alerts) return [];
+    const recipe = data.recipes.find(r => r.recipe_code === batch.recipe_code);
+    const materialNames = new Set([
+      ...batch.materials.map(m => m.material_name.toLowerCase()),
+      ...(recipe?.materials.map(m => m.material_name.toLowerCase()) || [])
+    ]);
+    return data.inventory_alerts
+      .filter(ia => ia.needs_reorder && materialNames.has(ia.material_name.toLowerCase()))
+      .map(ia => ia.material_name);
+  };
+
   return (
     <div className="flex min-h-screen bg-background text-foreground">
       <aside className="w-72 shrink-0 border-r border-border-custom bg-card">
@@ -395,7 +407,14 @@ export default function ProductionPage() {
                     <div key={batch.id} className="rounded-lg border border-border-custom bg-card p-4">
                       <div className="flex items-start justify-between gap-3">
                         <div>
-                          <div className="text-sm font-bold text-white">{batch.batch_number}</div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-bold text-white">{batch.batch_number}</span>
+                            {getLowStockMaterialsForBatch(batch).length > 0 && (
+                              <span className="inline-flex items-center gap-1 rounded bg-amber-500/10 px-2 py-0.5 text-[9px] font-medium text-amber-400 border border-amber-500/25 shadow-sm animate-pulse">
+                                ⚠️ Low Stock
+                              </span>
+                            )}
+                          </div>
                           <div className="mt-1 text-xs text-muted">{batch.product_name}</div>
                         </div>
                         <span className="rounded-full bg-white/5 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-300">
@@ -500,7 +519,14 @@ export default function ProductionPage() {
                     {(data?.batches ?? []).map((batch) => (
                       <tr key={batch.id} className="border-b border-white/[0.03] hover:bg-elevated">
                         <td className="px-4 py-3 text-white">
-                          <div className="font-semibold">{batch.batch_number}</div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold">{batch.batch_number}</span>
+                            {getLowStockMaterialsForBatch(batch).length > 0 && (
+                              <span className="inline-flex items-center gap-1 rounded bg-amber-500/10 px-2 py-0.5 text-[9px] font-medium text-amber-400 border border-amber-500/25 shadow-sm animate-pulse">
+                                ⚠️ Low Stock
+                              </span>
+                            )}
+                          </div>
                           <div className="mt-1 text-[10px] text-muted">{batch.started_at ? new Date(batch.started_at).toLocaleString() : "No start time"}</div>
                         </td>
                         <td className="px-4 py-3 text-zinc-300">

@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, File, Form, UploadFile
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 from app.database import get_db
@@ -496,3 +496,192 @@ def update_payment_request_status(request_id: uuid.UUID, payload: PaymentRequest
         due_date=req.due_date,
         created_at=req.created_at
     )
+
+
+# --- P2P Transfer Endpoints ---
+class P2PTransferRequest(BaseModel):
+    company_id: uuid.UUID
+    sender_company_user_id: uuid.UUID
+    receiver_company_user_id: uuid.UUID
+    amount: float
+    payment_date: datetime
+    description: Optional[str] = None
+
+class P2PTransferResponse(BaseModel):
+    sender_payment_id: uuid.UUID
+    receiver_payment_id: uuid.UUID
+    status: str
+
+cashbook_router = APIRouter(
+    prefix="/cashbook",
+    tags=["Cashbook & P2P"]
+)
+
+def perform_p2p_transfer(req: P2PTransferRequest, db: Session):
+    comp_uuid = uuid.UUID(str(req.company_id))
+    sender_uuid = uuid.UUID(str(req.sender_company_user_id))
+    receiver_uuid = uuid.UUID(str(req.receiver_company_user_id))
+    
+    sender = db.query(CompanyTeam).filter(CompanyTeam.id == sender_uuid, CompanyTeam.company_id == comp_uuid).first()
+    if not sender:
+        raise HTTPException(status_code=404, detail="Sender not found in company team")
+        
+    receiver = db.query(CompanyTeam).filter(CompanyTeam.id == receiver_uuid, CompanyTeam.company_id == comp_uuid).first()
+    if not receiver:
+        raise HTTPException(status_code=404, detail="Receiver not found in company team")
+
+    if req.amount <= 0:
+        raise HTTPException(status_code=400, detail="Transfer amount must be greater than zero")
+
+    sender_payment = Payment(
+        id=uuid.uuid4(),
+        company_id=comp_uuid,
+        project_id=None,
+        party_company_user_id=sender_uuid,
+        payment_type="out",
+        amount=req.amount,
+        unsettled_amount=req.amount,
+        payment_method="Cash",
+        reference_number=f"P2P-OUT-{uuid.uuid4().hex[:6].upper()}",
+        description=req.description or f"P2P transfer to team member {receiver_uuid}",
+        payment_date=req.payment_date
+    )
+    db.add(sender_payment)
+
+    receiver_payment = Payment(
+        id=uuid.uuid4(),
+        company_id=comp_uuid,
+        project_id=None,
+        party_company_user_id=receiver_uuid,
+        payment_type="in",
+        amount=req.amount,
+        unsettled_amount=req.amount,
+        payment_method="Cash",
+        reference_number=f"P2P-IN-{uuid.uuid4().hex[:6].upper()}",
+        description=req.description or f"P2P transfer from team member {sender_uuid}",
+        payment_date=req.payment_date
+    )
+    db.add(receiver_payment)
+    db.commit()
+
+    return P2PTransferResponse(
+        sender_payment_id=sender_payment.id,
+        receiver_payment_id=receiver_payment.id,
+        status="Success"
+    )
+
+@cashbook_router.post("/p2p", response_model=P2PTransferResponse, status_code=status.HTTP_201_CREATED)
+def p2p_transfer_cashbook(req: P2PTransferRequest, db: Session = Depends(get_db)):
+    return perform_p2p_transfer(req, db)
+
+@router.post("/cashbook/p2p", response_model=P2PTransferResponse, status_code=status.HTTP_201_CREATED)
+def p2p_transfer_finance(req: P2PTransferRequest, db: Session = Depends(get_db)):
+    return perform_p2p_transfer(req, db)
+
+
+@cashbook_router.post("/upload")
+def upload_payments(
+    company_id: uuid.UUID = Form(...),
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db)
+):
+    import csv
+    import io
+    
+    try:
+        content = file.file.read().decode("utf-8")
+        csv_reader = csv.reader(io.StringIO(content))
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed to read file: {str(e)}")
+        
+    headers = next(csv_reader, None)
+    if not headers:
+        raise HTTPException(status_code=400, detail="Empty CSV file")
+        
+    headers = [h.replace('\ufeff', '').strip() for h in headers]
+    
+    required = ["Payment Type", "Party Name", "Amount"]
+    for col in required:
+        if col not in headers:
+            raise HTTPException(status_code=400, detail=f"Invalid CSV schema: '{col}' column is required")
+            
+    created_count = 0
+    
+    for row_cells in csv_reader:
+        if not row_cells or not any(row_cells):
+            continue
+            
+        row = {}
+        for idx, header in enumerate(headers):
+            if idx < len(row_cells):
+                row[header] = row_cells[idx].strip()
+                
+        party_name = row.get("Party Name")
+        amt_str = row.get("Amount")
+        pay_type = (row.get("Payment Type") or "out").lower()
+        if pay_type in ["receipt", "in"]:
+            payment_type = "in"
+        else:
+            payment_type = "out"
+            
+        try:
+            amount = float(amt_str) if amt_str else 0.0
+        except ValueError:
+            continue
+            
+        if amount <= 0:
+            continue
+            
+        party_user = db.query(User).filter(User.name == party_name).first()
+        party_team_id = None
+        if party_user:
+            team_member = db.query(CompanyTeam).filter(
+                CompanyTeam.user_id == party_user.id,
+                CompanyTeam.company_id == company_id
+            ).first()
+            if team_member:
+                party_team_id = team_member.id
+                
+        project_name = row.get("Project Name")
+        project_id = None
+        if project_name:
+            proj = db.query(Project).filter(
+                Project.name == project_name,
+                Project.company_id == company_id
+            ).first()
+            if proj:
+                project_id = proj.id
+                
+        pay_date_str = row.get("Payment Date")
+        payment_date = datetime.utcnow()
+        if pay_date_str:
+            for fmt in ("%Y-%m-%d", "%d/%m/%Y", "%m/%d/%Y", "%Y-%m-%dT%H:%M:%S"):
+                try:
+                    payment_date = datetime.strptime(pay_date_str, fmt)
+                    break
+                except ValueError:
+                    pass
+
+        payment = Payment(
+            id=uuid.uuid4(),
+            company_id=company_id,
+            project_id=project_id,
+            party_company_user_id=party_team_id,
+            payment_type=payment_type,
+            amount=amount,
+            unsettled_amount=amount,
+            payment_method=row.get("Mode of Payment") or "Cash",
+            reference_number=row.get("Payment Request ID") or f"CSV-V-{uuid.uuid4().hex[:6].upper()}",
+            description=row.get("Remark") or f"CSV Uploaded Payment - Category: {row.get('Category')}",
+            payment_date=payment_date
+        )
+        db.add(payment)
+        created_count += 1
+        
+    db.commit()
+    return {
+        "status": "success",
+        "created": created_count
+    }
+
+
