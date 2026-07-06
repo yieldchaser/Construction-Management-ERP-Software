@@ -56,7 +56,7 @@ SiteFlow is an outcome-driven, high-fidelity ERP workspace tailored to the India
   - **Equipment Expense**: High-fidelity scrolled forms covering Sub Total, Discount, GST selector, Net Amount (with Round Off check), Deductions, Paid Amount, and Balance Due calculations.
   - **Material Transfer**: Material transfer tracking with project targets, E-Way Bill numbers, vehicle logs, and Transfer Out IDs.
   - **Sub-Con Workorders**: Standalone subcontractor workorder modal with party selectors, Terms & Conditions links, and media attachments.
-- **📋 Statutory Reports**: PF, ESI, BOCW, TDS, Professional Tax, and Income Tax monthly return filing with contribution tracking and acknowledgment numbers.
+- **📋 Statutory Reports**: PF, ESI, BOCW (with dynamic 1% cess calculation on total wages), TDS, Professional Tax, and Income Tax monthly return filing with contribution tracking and acknowledgment numbers.
 - **🧾 Purchase-to-Pay**: Material indents, multi-item purchase orders, goods receipt notes (GRN), inventory tracking, and approval gates.
 - **📉 Asset Depreciation**: Straight-line, reducing balance, and written-down-value depreciation schedules with monthly ledger entries.
 - **🔗 3-Way Matching**: Automated PO-GRN-Invoice reconciliation with variance detection and approve/reject workflow.
@@ -79,7 +79,7 @@ SiteFlow is an outcome-driven, high-fidelity ERP workspace tailored to the India
 ### Analytics & Reporting
 - **📈 Executive Analytics**: Interactive S-curve progress charts and budget burn charts with hover tooltips.
 - **📑 Client Progress Reports**: Auto-generated progress reports with approval workflow and PDF download.
-- **📊 Production Tracking**: Task-level work quantities, recipe management, batch logging, and inventory alerts.
+- **📊 Production Tracking**: Interactive recipe builder and log batch modal overlays. Supports concrete mix ratio setups (with dry volume 1.54 mix design factor), active batch status tracking (Draft, Running, Completed), completed batch auto-deductions from warehouse inventories, and low-stock alerts.
 - **🗃️ 15-Category Reports Dashboard**: Dynamic, company-wide reports directory spanning Sales, Payments, Progress & Task, Purchase, Party Balances, Tax, and Assets.
 - **📅 Period Slider Export Modal**: Smooth sliding selector modal (`< Month >`) supporting custom CSV/Excel downloads matching exact client layouts.
 - **📋 Daily Progress Report (DPR)**: Comprehensive dashboard aggregating To-Dos, material indents, tasks, shifts, aggregate receipts, and active machinery usage schedules.
