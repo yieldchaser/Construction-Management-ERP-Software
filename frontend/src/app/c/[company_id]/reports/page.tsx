@@ -244,9 +244,13 @@ export default function ReportsDashboard() {
     "Sales (GSTR-1)": ['Party GSTIN', 'Party Name', 'Place of Supply', 'Invoice Number', 'Invoice Value', 'Invoice Date', 'Taxable Amt', 'Tax Rate', 'CGST Amt', 'SGST Amt', 'IGST Amt', 'Total Tax Amt'],
     "BOQ Workorder Summary Report": ['Project Name', 'Client Name', 'Workorder Date'],
     "BOQ Item Report": ['Project Name', 'Workorder Name', 'Workorder No', 'Client Name', 'BOQ Date'],
-    "Equipment Usage Detail Report": ['EquipmentName', 'Equipment No', 'Created Date'],
+    "Equipment Usage Detail Report": ['ProjectName', 'EquipmentName', 'Vehicle No', 'PartyName', 'Exp Mileage'],
     "Payment Upload Template": ['Payment Date', 'Payment Type', 'Party Name', 'Project Name', 'Amount', 'Remark', 'Mode of Payment', 'Company Bank Account Number', 'Category', 'Payment Request ID'],
-    "Payroll Upload Template": ['Name', 'Staff Type', 'Shift Hours', 'Day Off', 'Overtime Rate (Per Hour)', 'Designation', 'Cost Code', 'Salary Basis', 'Salary Type', 'CTC', 'Basic', 'Allowance Name (A1)', 'A1 Relation Type', '% of A1 Relation', 'A1 Amount']
+    "Payroll Upload Template": ['Name', 'Staff Type', 'Shift Hours', 'Day Off', 'Overtime Rate (Per Hour)', 'Designation', 'Cost Code', 'Salary Basis', 'Salary Type', 'CTC', 'Basic', 'Allowance Name (A1)', 'A1 Relation Type', '% of A1 Relation', 'A1 Amount'],
+    "Material Request Item Report": ['RequestNo', 'ProjectName', 'Material Name', 'Specifications', 'Unit', 'RequestQuantity', 'Ordered Quantity', 'Pending Quantity'],
+    "Project Operational Summary": ['ProjectName', 'ProjectCategory', 'KeyPersonnel', 'ProjectStatus', 'ProjectHealth', 'StartDate', 'EndDate', 'Progress'],
+    "Daily based Equipment Used Report": ['ProjectName', 'EquipmentName', 'Vehicle No', 'PartyName', 'ExpMileage', 'Eqp Unit', 'Equipment Used', 'Exp Fuel Consumed', 'Fuel Added', 'Fuel Adjusted'],
+    "OT & Shift Report": ['ProjectName', 'PartyName', 'WorkforceName', 'AttendanceDate', 'No of Workers']
   };
 
   const handleReportClick = (report: ReportItem) => {
@@ -313,8 +317,28 @@ export default function ReportsDashboard() {
         ];
       } else if (reportName === "Equipment Usage Detail Report") {
         mockRows = [
-          ["Excavator JCB-3DX", "MH-14-EX-4512", "2026-07-01"],
-          ["Transit Mixer TM-10", "MH-14-MX-8891", "2026-07-02"]
+          ["Metro Terminal", "Excavator JCB-3DX", "MH-14-EX-4512", "Anil Steels", "150"],
+          ["Metro Terminal", "Transit Mixer TM-10", "MH-14-MX-8891", "Yash Desai", "80"]
+        ];
+      } else if (reportName === "Material Request Item Report") {
+        mockRows = [
+          ["REQ-001", "Metro Terminal", "Cement OPC 53", "Grade A", "bags", "500", "500", "0"],
+          ["REQ-002", "Metro Terminal", "Fine Sand", "High density", "m³", "100", "80", "20"]
+        ];
+      } else if (reportName === "Project Operational Summary") {
+        mockRows = [
+          ["Metro Terminal", "Commercial Complex", "Suresh R (PM)", "Ongoing", "Healthy", "2026-01-10", "2026-12-31", "65%"],
+          ["Bypass Highway Flyover", "Infrastructure", "Anand T (PE)", "Ongoing", "Healthy", "2026-03-01", "2027-06-30", "42%"]
+        ];
+      } else if (reportName === "Daily based Equipment Used Report") {
+        mockRows = [
+          ["Metro Terminal", "Excavator JCB-3DX", "MH-14-EX-4512", "Anil Steels", "12", "Hours", "12", "45", "50", "5"],
+          ["Metro Terminal", "Transit Mixer TM-10", "MH-14-MX-8891", "Yash Desai", "8", "Hours", "8", "30", "30", "0"]
+        ];
+      } else if (reportName === "OT & Shift Report") {
+        mockRows = [
+          ["Metro Terminal", "L&T Civil Division", "Yash Desai", "2026-07-01", "25"],
+          ["Metro Terminal", "Sanjay Yadav Subcontractor", "Ramesh Kumar", "2026-07-02", "18"]
         ];
       } else if (reportName === "Payment Upload Template") {
         mockRows = [
