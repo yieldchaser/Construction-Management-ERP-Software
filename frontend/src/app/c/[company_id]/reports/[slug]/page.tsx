@@ -40,7 +40,7 @@ const REPORT_METADATA: Record<string, ReportMeta> = {
       { label: "Project Name", type: "select", options: ["All", "Metro Terminal", "Bypass Flyover"] },
       { label: "Party Name", type: "select", options: ["All", "L&T Civil", "National Highway Authority"] }
     ],
-    columns: ['Item Name', 'Amount', 'Project Name', 'Party Name', 'Invoice Number', 'Creator Name', 'Type', 'Entry Creation Date', 'Due Date']
+    columns: ['Name', 'Amount', 'Project Name', 'Party Name', 'Invoice Number', 'Creator Name', 'Type', 'Entry Creation Date', 'Due Date']
   },
   "crm-lead-detail": {
     title: "CRM Lead Detail Report",
@@ -115,7 +115,7 @@ const REPORT_METADATA: Record<string, ReportMeta> = {
       { label: "Payment Status", type: "select", options: ["All", "Paid", "Unpaid", "Partially Paid"] },
       { label: "Payment Date", type: "date" }
     ],
-    columns: ['Payment Request ID', 'Payment Request No', 'Project Name', 'Party Name', 'Amount', 'Payment Date', 'Due Date', 'Creator Name', 'Request Type', 'Order/Bill No', 'Approval Status', 'Payment Status', 'Remark', 'Account Name']
+    columns: ['Payment Request No', 'Project Name', 'Party Name', 'Amount', 'Payment Date', 'Due Date', 'Creator Name', 'Request Type', 'Order/Bill No', 'Approval Status', 'Payment Status', 'Remark', 'Account Name']
   },
   "task-report": {
     title: "Task Report",
@@ -162,7 +162,7 @@ const REPORT_METADATA: Record<string, ReportMeta> = {
       { label: "Project Name", type: "select", options: ["All", "Metro Terminal", "Bypass Flyover"] },
       { label: "Main Task Name", type: "select", options: ["All", "Superstructure", "Substructure"] }
     ],
-    columns: ['Project Name', 'Main Task Name', 'Group Task Name', 'Task Name', 'Task Unit', 'Task Qty', 'Task Progress Qty', 'Resource Name', 'Resource Type', 'Budgeted Rate', 'Avg Unit Cost', 'Unit', 'Qty per Unit Progress', 'Budgeted Qty', 'Pro Rata Budget Qty', 'Actual Used Qty', 'Budgeted Amount', 'Pro Rata Budget Amount', 'Actual Amount', 'Exceeded Qty', 'Exceeded Amount']
+    columns: ['Project Name', 'Main Task Name', 'Group Task Name', 'Task Name', 'Resource Type', 'Resource Name', 'Budget Qty', 'Actual Qty', 'Qty Variance', 'Budget Amount', 'Actual Amount', 'Amount Variance', 'Budget Rate', 'Actual Rate']
   },
   "site-inspection": {
     title: "Site Inspection Report",
@@ -247,7 +247,7 @@ const REPORT_METADATA: Record<string, ReportMeta> = {
       { label: "Party Name", type: "select", options: ["All", "Anil Steels", "Sanjay Yadav"] },
       { label: "Project Name", type: "select", options: ["All", "Metro Terminal", "Bypass Flyover"] }
     ],
-    columns: ['Party Name', 'Party Type', 'Project Name', 'Creator Name', 'Description', 'Cost Code', 'Transaction Type', 'Transaction Date', 'Party Debit', 'Party Credit', 'Balance']
+    columns: ['Party Name', 'Party Type', 'Project Name', 'Creator Name', 'Description', 'Cost Code', 'Transaction Type', 'Date', 'Debit', 'Credit', 'Balance']
   },
   "all-party-balances": {
     title: "All Party Balances",
@@ -255,7 +255,7 @@ const REPORT_METADATA: Record<string, ReportMeta> = {
     filters: [
       { label: "Party Type", type: "select", options: ["All", "Supplier", "Labour Contractor", "Subcontractor"] }
     ],
-    columns: ['Party Name', 'Party Type', 'Balance Amount', 'Balance Type', 'Petty Cash Balance', 'Salary Balance']
+    columns: ['Party Name', 'Party Type', 'Debit', 'Direction', 'Advance In', 'Advance Out']
   },
   "project-level-party-balance": {
     title: "Project level Party Balance Report",
@@ -354,9 +354,10 @@ const REPORT_METADATA: Record<string, ReportMeta> = {
     filters: [
       { label: "Project Name", type: "select", options: ["All", "Metro Terminal", "Bypass Flyover"] },
       { label: "Month", type: "select", options: ["All", "Jul 2026", "Jun 2026"] },
-      { label: "Payroll Type", type: "select", options: ["All", "Monthly", "Daily"] }
+      { label: "Payroll Type", type: "select", options: ["All", "Monthly", "Daily"] },
+      { label: "Workforce Name", type: "select", options: ["All", "Yash Desai", "Ramesh Kumar"] }
     ],
-    columns: ['Party Name', 'Designation', 'Phone No.', 'Bank Name', 'IFSC Code', 'Account No.', 'Shift', 'OT Hrs', 'Basic Payable', 'Allowance', 'OT Amount', 'Late Fine', 'Deductions', 'Total Salary Payable']
+    columns: ['Employee Name', 'Designation', 'Project Name', 'Payroll Type', 'Days Present', 'Days Absent', 'OT Hours', 'Total Shift', 'Basic', 'HRA', 'Allowances', 'Gross Salary', 'Deductions', 'Net Salary']
   },
   "ot-shift": {
     title: "OT & Shift Report",
@@ -366,7 +367,7 @@ const REPORT_METADATA: Record<string, ReportMeta> = {
       { label: "Party Name", type: "select", options: ["All", "Yash Desai", "Ramesh Kumar"] },
       { label: "Attendance Date", type: "date" }
     ],
-    columns: ['Project Name', 'Party Name', 'Workforce Name', 'Attendance Date', 'No of Workers', 'Total Shift', 'Overtime Hours']
+    columns: ['Project Name', 'Party Name', 'Employee Name', 'Date', 'Normal Shifts', 'Actual Shifts', 'OT Hours']
   },
   "staff-salary": {
     title: "Staff Salary Report",
@@ -472,7 +473,7 @@ const REPORT_METADATA: Record<string, ReportMeta> = {
     filters: [
       { label: "Project Name", type: "select", options: ["All", "Metro Terminal", "Bypass Flyover"] }
     ],
-    columns: ['Workorder No', 'Group', 'Section', 'Item Name', 'Progress Date', 'Unit', 'Estimated Quantity', 'Opening Quantity', 'Number', 'Length', 'Width', 'Height', 'Progress Quantity', 'Closing Quantity']
+    columns: ['WO No', 'WO Name', 'Section', 'Description', 'Date', 'Unit', 'Length', 'Width', 'Height', 'No.', 'Depth', 'Factor', 'Measurement Qty', 'Total Qty']
   },
   "subcon-deduction-retention": {
     title: "Subcon Deduction / Retention Report",
@@ -488,7 +489,7 @@ const REPORT_METADATA: Record<string, ReportMeta> = {
     filters: [
       { label: "Project Name", type: "select", options: ["All", "Metro Terminal", "Bypass Flyover"] }
     ],
-    columns: ['Project Name', 'Subcon Name', 'Material Name', 'Avg Unit Price', 'Total Quantity Issued', 'Total Amount']
+    columns: ['Project Name', 'Subcontractor Name', 'Material Name', 'Qty', 'Rate', 'Amount']
   },
   "project-financial-summary": {
     title: "Project Financial Summary",
