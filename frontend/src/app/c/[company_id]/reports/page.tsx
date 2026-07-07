@@ -234,13 +234,13 @@ export default function ReportsDashboard() {
 
   // Specific Columns mapped from the actual Onsite Teams reconstructed spreadsheets and UI screens
   const exportSchemas: Record<string, string[]> = {
-    "Company Sales Report": ['Invoice Date', 'Sale Type', 'Client Name', 'Project Name', 'Invoice Number', 'Total Amount', 'Retention Amount', 'Post Tax Deduction', 'Net Amount', 'Due Date', 'Payment Received', 'Balance Due', 'Payment Status', 'Notes', 'Creator Name', 'Settlement Amounts', 'Payment Dates', 'Reference Numbers', 'Payment Total Amounts'],
+    "Company Sales Report": ['Invoice Date', 'Party Name', 'Invoice Number', 'Invoice Value', 'Total Deduction', 'Net Amount', 'Balance Due', 'Due Date', 'Creator', 'Project'],
     "Item Wise Sales Report": ['Sales Type', 'Project Name', 'Client Name', 'Invoice Number', 'Invoice Date', 'Item Name', 'Unit', 'Quantity', 'Item Rate', 'Tax %', 'Tax Amount', 'Gross Amount', 'Total Amount', 'Invoice Created'],
     "Sales Deduction / Retention Report": ['Item Name', 'Amount', 'Project Name', 'Party Name', 'Invoice Number', 'Creator Name', 'Type', 'Entry Creation Date', 'Due Date'],
     "CRM Lead Detail Report": ['Lead Date', 'Lead Name', 'Contact Name', 'Contact No.', 'Lead Status', 'Lead Priority', 'Lead Source', 'Lead Category', 'Lead Company', 'Email', 'Budget', 'Last Contacted Date', 'Followup Date', 'Expected Closure Date', 'Remark', 'Assignees'],
     "Lead Status Funnel Report": ['(No tabular columns - rendered as a funnel/visual chart, not a data table)'],
     "Project Wise Sales Summary": ['Project Name', 'No. of Invoices', 'Total Sales', 'Retention Amount', 'Post Tax Deduction', 'Net Amount', 'Payment Received', 'Balance Due'],
-    "Company Payments": ['Project Name', 'Creator Name', 'Party Name', 'Amount', 'Unsettled Amount', 'Net Amount', 'Settlement Type', 'Remark', 'Payment Type', 'Payment Mode', 'Account Name', 'Cost Code', 'Sub Cost Code', 'Category', 'Created Date', 'Reference No.'],
+    "Company Payments": ['Date', 'Project', 'Sender', 'Receiver', 'Amount', 'Creator', 'Category', 'Trade', 'Payment Mode', 'Description'],
     "Bank Statement": ['Account Name', 'Account Number', 'Bank Name', 'Project Name', 'Party Name', 'Payment Date', 'Credit', 'Debit', 'Balance', 'Remarks'],
     "Project Wise Payment Summary": ['Project Name (single grouping column visible', 'no data rows loaded in screenshot)'],
     "Project Payment Report": ['Payment Date', 'Project Name', 'Creator Name', 'Party Name', 'Amount', 'Remark', 'Reference No.', 'Payment Type', 'Payment Mode', 'Account Name', 'Category', 'Cost Code', 'Sub Cost Code', 'Created Date'],
@@ -255,7 +255,7 @@ export default function ReportsDashboard() {
     "Task Revenue & Expense Report": ['Project Name', 'Main Task Name', 'Group Task Name', 'Task Name', 'Progress', 'Unit (truncated - only 1 screenshot captured)'],
     "Task BOQ Billed & Unbilled Qty Report": ['Project Name', 'Main Task Name', 'Group Task Name', 'Task Name', 'Unit', 'Estimated Qty', 'Progress Qty', '% Complete', 'Task Status', 'Linked BOQ Detail', 'Billed Qty', 'Unbilled Qty'],
     "Task Attendance Report": ['Party Name', 'Workforce Name', 'Project Name', 'Attendance Date', 'Attendance Status', 'Main Task Name', 'Group Task Name', 'Task Name', 'Workers on Task', 'Work Hours', 'Total Hours', 'Task Labour Cost'],
-    "Company Expense Report": ['Txn Type', 'Project Name', 'Description', 'Party Name', 'Txn Status', 'Base Amount', 'Tax Amount', 'Bill Discount', 'Additional Charges', 'Total Amount', 'Net Amount', 'Paid Amount', 'Unpaid Amount', 'Due Date', 'Settlement By', 'Payment Mode', 'Cost Code', 'Sub Cost Code', 'Notes/Remarks', 'Reference No.', 'Creator Name', 'Approval Status', 'Created Date'],
+    "Company Expense Report": ['S.NO.', 'Expense Date', 'Expense Type', 'Project Name', 'Party Name', 'Notes', 'Cost Code', 'Expense Status', 'Total Amount', 'Net Amount', 'Paid Amount', 'Unpaid Amount', 'Due Date', 'Approval Status'],
     "Cost Code Expense Analysis": ['(No flat table captured - appears to be a chart/analysis view with a date-range dropdown, e.g. \'This Month\')'],
     "Project Wise Expense Summary": ['Project Name (truncated - only 1 screenshot captured, table appears empty/collapsed)'],
     "All Expense Deduction / Retention Report": ['Entry Creation Date', 'Type', 'Item Name', 'Amount', 'Bill Number', 'Expense Type', 'Project Name', 'Party Name', 'Creator Name', 'Due Date'],
@@ -274,11 +274,11 @@ export default function ReportsDashboard() {
     "Material Stock Movement Report": ['Project Name', 'Material Name', 'UOM', 'Date', 'Opening Qty', 'Stock In', 'Stock Out', 'Closing Qty'],
     "Attendance & Salary Report": ['Party Name', 'Project Name', 'Designation (truncated - only 1 screenshot captured)'],
     "OT & Shift Report": ['Project Name', 'Party Name', 'Designation (remaining columns not captured - screenshots 6212/6213 show an embedded Zoho Analytics popup window rather than the table)'],
-    "Company Attendance": ['(No detail screenshot', 'report is a direct download from the report list, not opened as a page)'],
-    "Staff Monthly Salary Slip": ['(No detail screenshot', 'report is a direct download from the report list)'],
+    "Company Attendance": ['Labor / Subcontractor', 'Workforce Type', 'Project Name', '01-Jul-26', '02-Jul-26', '03-Jul-26', '04-Jul-26', '05-Jul-26'],
+    "Staff Monthly Salary Slip": ['Employee Code', 'Employee Name', 'Designation', 'Salary Month', 'Basic Salary', 'Allowances', 'Deductions', 'Net Payable', 'Payment Status'],
     "Staff Salary Report": ['Party Name', 'Designation', 'Phone No.', 'Bank Name', 'IFSC Code', 'Account No.', 'Shift', 'OT Hrs', 'Basic/Payable', 'Allowance Amount', 'Late Fine Deduction (additional columns not captured - several screenshots show an embedded Zoho \'salary_payment_report\' popup)'],
-    "Staff Punch Report": ['(No detail screenshot', 'report is a direct download from the report list)'],
-    "Staff Muster Roll": ['(No detail screenshot', 'report is a direct download from the report list)'],
+    "Staff Punch Report": ['S.NO.', 'PARTY NAME', 'DESIGNATION', 'PUNCH DATE', 'PUNCH IN TIME', 'PUNCH IN LOCATION', 'PUNCH OUT TIME', 'PUNCH OUT LOCATION', 'DURATION', 'PUNCH IN PHOTO VERIFIED', 'PUNCH OUT PHOTO VERIFIED', 'PUNCH IN LOCATION VERIFIED', 'PUNCH OUT LOCATION VERIFIED'],
+    "Staff Muster Roll": ['S.NO.', 'Party Code', 'Employee Name', 'Designation', 'Phone No.', 'Bank Account No.', 'Bank Name', 'Salary Type', 'Gross Salary', 'Work Days', 'PL', 'WO', 'Payable Days', 'OT(Hours)', 'Earnings', 'Deductions', 'Net Salary', 'CTC'],
     "Equipment Usage Detail Report": ['Project Name', 'Equipment Name', 'Vehicle No.', 'Ownership Type', 'Party Name', 'Used Date', 'Entry Type', 'Unit', 'Qty', 'Start at', 'Stop at', 'Notes', 'Creator Name'],
     "Fuel Efficiency Report": ['Project Name', 'Equipment Name', 'Vehicle No.', 'Party Name', 'Mileage', 'Eqp Unit', 'Active Days Used', 'Fuel Added', 'Fuel Consumed (Actual)', 'Fuel Consumed (Expected)', 'Fuel Variance'],
     "Daily based Equipment Used Report": ['Project Name', 'Equipment Name', 'Vehicle No.', 'Ownership Type', 'Party Name', 'Measurement Type', 'Usage Unit', 'Date', 'Equipment Used', 'Fuel Added', 'Fuel Adjusted', 'Equipment Reading', 'Remarks', 'Total Trips', 'Total Distance', 'Total Load Carried'],
@@ -317,7 +317,7 @@ export default function ReportsDashboard() {
     "Budget vs Actual (Material Qty)": ['Project', 'Material', 'Unit (truncated - only 1 screenshot captured)'],
     "Budget vs Actual (Cost Code)": ['(Low OCR confidence - page title reads \'Cost Code Budget vs Actual\'', 'likely Budget Amount, Actual Amount, Variance columns but text was too garbled to confirm reliably)'],
     "Payment Upload Template": ['Payment Date', 'Payment Type', 'Party Name', 'Project Name', 'Amount', 'Remark', 'Mode of Payment', 'Company Bank Account Number', 'Category', 'Payment Request ID'],
-    "Payroll Upload Template": ['Name', 'Staff Type', 'Shift Hours', 'Day Off', 'Overtime Rate (Per Hour)', 'Designation', 'Cost Code', 'Salary Basis', 'Salary Type', 'CTC', 'Basic', 'Allowance Name (A1)', 'A1 Relation Type', '% of A1 Relation', 'A1 Amount'],
+    "Payroll Upload Template": ['Name', 'Staff Type', 'Shift Hours', 'Day Off', 'Overtime Rate (Per Hour)', 'Designation', 'Cost Code', 'Salary Basis', 'Salary Type', 'CTC', 'Basic', 'Allowance Name (A1)', 'A1 Relation Type', '% of A1 Relation', 'A1 Amount', 'Allowance Name (A2)', 'A2 Relation Type', '% of A2 Relation', 'A2 Amount', 'Allowance Name (A3)', 'A3 Relation Type', '% of A3 Relation', 'A3 Amount', 'Fixed Allowance', 'Gross Salary', 'Deduction Name (D1)', 'D1 Relation Type', '% of D1 Relation', 'D1 Amount', 'Deduction Name (D2)', 'D2 Relation Type', '% of D2 Relation', 'D2 Amount', 'Net Amount', 'Projects'],
     "Daily Progress Report": ['Project Name', 'DPR Date', 'Main Task Name', 'Group Task Name', 'Task Name', 'Unit', 'Progress Qty', 'Estimated Qty', 'Workers Count', 'Material Used', 'Equipment Used']
   };;;
 
@@ -338,8 +338,13 @@ export default function ReportsDashboard() {
       let mockRows: string[][] = [];
       if (reportName === "Company Expense Report") {
         mockRows = [
-          ["01-Jul-2026", "Material Purchase", "Metro Terminal", "Purchase of Grade-A rebars", "Anil Steels", "Paid", "45000", "8100", "0", "0", "53100", "53100", "53100", "0", "10-Jul-2026", "Yash Desai", "Bank Transfer", "C-102", "M-SUB-01", "Grade A rebars batch 1", "TXN-00192", "Yash Desai", "Approved", "01-Jul-2026"],
-          ["03-Jul-2026", "Labour Payroll", "Metro Terminal", "Shift allowance supervisor", "Sanjay Yadav", "Paid", "8000", "0", "0", "0", "8000", "8000", "0", "8000", "15-Jul-2026", "Yash Desai", "Cash", "C-405", "", "Supervisor shift allowance", "", "Yash Desai", "Pending Review", "03-Jul-2026"]
+          ["1", "01-Jul-2026", "Material Purchase", "Metro Terminal", "Anil Steels", "Purchase of Grade-A rebars", "C-102", "Paid", "53100", "53100", "53100", "0", "10-Jul-2026", "Approved"],
+          ["2", "03-Jul-2026", "Labour Payroll", "Metro Terminal", "Sanjay Yadav", "Supervisor allowance", "C-405", "Unpaid", "8000", "8000", "0", "8000", "15-Jul-2026", "Pending Review"]
+        ];
+      } else if (reportName === "Company Sales Report") {
+        mockRows = [
+          ["02-Jul-2026", "L&T Construction", "INV-2026-081", "118000", "18000", "100000", "0", "15-Aug-2026", "Yash Desai", "Metro Terminal"],
+          ["05-Jul-2026", "National Highways", "INV-2026-082", "500000", "50000", "450000", "450000", "31-Aug-2026", "Anand T", "Bypass Highway"]
         ];
       } else if (reportName === "Sales (GSTR-1)") {
         mockRows = [
@@ -352,8 +357,8 @@ export default function ReportsDashboard() {
         ];
       } else if (reportName === "Company Payments") {
         mockRows = [
-          ["01-Jul-2026", "Metro Terminal", "Yash Desai", "Sanjay Yadav", "8000", "0", "8000", "Full Payment", "Salary advance July", "Out", "Cash", "Site Cash Account", "C-405", "", "Salary", "01-Jul-2026", "PMT-001"],
-          ["05-Jul-2026", "Metro Terminal", "Yash Desai", "Anil Steels", "53100", "0", "53100", "Full Payment", "Material bill settlement", "Out", "Bank Transfer", "HDFC-Main", "C-102", "M-SUB-01", "Material", "05-Jul-2026", "PMT-002"]
+          ["01-Jul-2026", "Metro Terminal", "Yash Desai", "Sanjay Yadav", "8000", "Yash Desai", "Salary", "Supervisor Shift", "Cash", "Advance for supervisor"],
+          ["05-Jul-2026", "Metro Terminal", "Yash Desai", "Anil Steels", "53100", "Yash Desai", "Material", "Steel Supplier", "Bank Transfer", "Steel settlement"]
         ];
       } else if (reportName === "Project Wise Payment Summary") {
         mockRows = [
@@ -362,8 +367,8 @@ export default function ReportsDashboard() {
         ];
       } else if (reportName === "Staff Muster Roll") {
         mockRows = [
-          ["1", "EMP-001", "Yash Desai", "Engineer", "9876543210", "1234567890", "SBI", "Monthly", "60000", "26", "2", "4", "30", "5", "40000", "15000", "5000", "60000", "3000", "57000", "60000"],
-          ["2", "EMP-002", "Ramesh Kumar", "Mason", "9876543211", "1234567891", "HDFC", "Daily", "22000", "22", "1", "4", "27", "12", "15000", "5000", "2000", "22000", "1500", "20500", "22000"]
+          ["1", "PRT-101", "Yash Desai", "Engineer", "9876543210", "12345678901", "SBI", "Monthly", "60000", "26", "2", "4", "30", "5", "60000", "3000", "57000", "60000"],
+          ["2", "PRT-102", "Ramesh Kumar", "Mason", "9876543211", "98765432101", "HDFC", "Daily", "22000", "22", "1", "4", "27", "12", "22000", "1500", "20500", "22000"]
         ];
       } else if (reportName === "Staff Punch Report") {
         mockRows = [
@@ -374,6 +379,11 @@ export default function ReportsDashboard() {
         mockRows = [
           ["Yash Desai", "Staff", "Metro Terminal", "P", "P", "P", "P", "P"],
           ["Ramesh Kumar", "Mason", "Metro Terminal", "P", "P", "A", "P", "P"]
+        ];
+      } else if (reportName === "Staff Monthly Salary Slip") {
+        mockRows = [
+          ["EMP-001", "Yash Desai", "Engineer", "Jul-2026", "40000", "20000", "3000", "57000", "Paid"],
+          ["EMP-002", "Ramesh Kumar", "Mason", "Jul-2026", "15000", "7000", "1500", "20500", "Paid"]
         ];
       } else if (reportName === "BOQ Workorder Summary Report") {
         mockRows = [
@@ -423,8 +433,8 @@ export default function ReportsDashboard() {
         ];
       } else if (reportName === "Payroll Upload Template") {
         mockRows = [
-          ["Payrole-05", "Office", "8", "Sat,Sun, tuesday", "100", "plumbing", "bth-03", "Punch", "Monthly", "10000", "5000", "allowance 6", "basic", "50", "2500"],
-          ["Payrole-06", "Site", "7", "Sun", "600", "plumbing", "bth-03", "shift", "Monthly", "0", "", "", "", "", ""]
+          ["Payrole-05", "Office", "8", "Sat,Sun", "100", "Engineer", "C-102", "Punch", "Monthly", "60000", "40000", "Allowance 1", "fixed", "100", "5000", "Allowance 2", "fixed", "100", "5000", "Allowance 3", "fixed", "100", "5000", "5000", "60000", "Deduction 1", "fixed", "100", "1500", "Deduction 2", "fixed", "100", "1500", "57000", "Metro Terminal"],
+          ["Payrole-06", "Site", "7", "Sun", "600", "Mason", "C-405", "shift", "Daily", "22000", "15000", "", "", "", "", "", "", "", "", "", "", "", "", "", "22000", "", "", "", "", "", "", "", "", "22000", "Metro Terminal"]
         ];
       } else if (reportName === "Purchase (GSTR-2)") {
         mockRows = [
@@ -505,7 +515,7 @@ export default function ReportsDashboard() {
       } else if (reportName === "Payroll Library") {
         mockRows = [
           ["Ramesh Kumar", "Mason", "Wages", "Monthly", "18000", "16800", "16800", "8", "Basic: 12000, Allowances: 4800", "2026-06-15"],
-          ["Suresh Ram", "Labourer", "Wages", "Daily", "15000", "13375", "13375", "8", "Basic: 10000, Allowances: 3375", "2026-06-18"]
+          ["Suresh Ram", "Labourer", "Wages", "Daily", "15000", "13375", "13375", "8", "Basic: 10000, Allowances: 3375", "2026-06-15"]
         ];
       } else if (reportName === "Task Resource Budget Vs Actual Report") {
         mockRows = [
@@ -675,7 +685,8 @@ export default function ReportsDashboard() {
       const csvContent = [
         headers.join(","),
         ...mockRows.map(row => row.map(cell => `"${cell.replace(/"/g, '""')}"`).join(","))
-      ].join("\n");
+      ].join("
+");
 
       // Generate Blob and trigger virtual download element
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
