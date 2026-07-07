@@ -697,7 +697,7 @@ export default function ProcurementPage() {
           <div className="flex items-center gap-4">
             <h1 className="text-sm font-bold text-white uppercase tracking-wider">Site Material Procurement</h1>
             <span className="h-4 w-px bg-white/10" />
-            <span className="text-xs font-medium text-muted">Onsite.so-inspired drawer workflows</span>
+            <span className="text-xs font-medium text-muted">SiteFlow workflows</span>
           </div>
           <div className="flex gap-2">
             <button onClick={() => { setSelectedRFQItem("UltraTech Cement"); setShowRFQDrawer(true); }} className="px-4 py-2 border border-primary/20 hover:bg-primary/10 rounded-md text-xs font-bold text-primary transition-all">

@@ -1563,7 +1563,7 @@ export default function DashboardPage() {
           {activeTab === "tally" && (
             <div className="rounded-lg bg-card border border-border-custom rounded-lg p-6 space-y-6">
               <div className="flex justify-between items-center border-b border-border-custom pb-4">
-                <h3 className="font-bold text-sm uppercase tracking-wider text-white">🔌 Onsite Tally Integration Control</h3>
+                <h3 className="font-bold text-sm uppercase tracking-wider text-white">🔌 SiteFlow Tally Integration Control</h3>
                 <span className="text-xs text-muted">Module 16: Ledgers Synchronization</span>
               </div>
 

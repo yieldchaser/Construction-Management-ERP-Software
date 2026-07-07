@@ -227,7 +227,7 @@ export default function DPRPage() {
           <div className="flex items-center gap-4">
             <h1 className="text-sm font-bold text-white uppercase tracking-wider">Project Daily Progress Report (DPR)</h1>
             <span className="h-4 w-px bg-white/10" />
-            <span className="text-xs font-medium text-muted">Onsite.so-inspired daily feed</span>
+            <span className="text-xs font-medium text-muted">SiteFlow daily feed</span>
           </div>
           <button
             onClick={() => setIsCreateDPROpen(true)}

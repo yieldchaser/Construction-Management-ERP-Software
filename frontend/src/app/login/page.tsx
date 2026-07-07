@@ -9,7 +9,7 @@ const TESTIMONIALS = [
     title: "#1 Construction Application For Project tracking.",
     name: "Mr. Mohammad Taqi",
     company: "Hydro Master, Doha, Qatar",
-    quote: "I can share PDF reports instantly with clients & vendors, streamlining communication. Onsite's intuitive platform provides easy-to-use interface."
+    quote: "I can share PDF reports instantly with clients & vendors, streamlining communication. SiteFlow's intuitive platform provides easy-to-use interface."
   },
   {
     title: "#1 Construction Application For Client invoicing.",
@@ -21,13 +21,13 @@ const TESTIMONIALS = [
     title: "#1 Construction Application For Attendance/Payroll",
     name: "Mr. Manish Kumar",
     company: "Reidius Infra, Jaipur",
-    quote: "With Onsite, all the progress and cost details are visible in one place. Client discussions became much smoother because we are now talking with actual site data instead of guesses."
+    quote: "With SiteFlow, all the progress and cost details are visible in one place. Client discussions became much smoother because we are now talking with actual site data instead of guesses."
   },
   {
     title: "#1 Construction Application For Material management",
     name: "Mr. Kathirvel",
     company: "Theeran Avant, Erode, Tamil Nadu",
-    quote: "Managing site teams and tracking work across projects was becoming difficult. With Onsite, site engineers and project managers track progress in one place."
+    quote: "Managing site teams and tracking work across projects was becoming difficult. With SiteFlow, site engineers and project managers track progress in one place."
   },
   {
     title: "#1 Construction Application For Cost control",

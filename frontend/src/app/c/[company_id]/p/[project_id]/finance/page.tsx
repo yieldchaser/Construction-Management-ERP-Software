@@ -1622,13 +1622,13 @@ export default function FinancePage() {
                     <div className="flex items-start gap-2.5">
                       <span className="text-sm">ℹ️</span>
                       <div className="space-y-1">
-                        <strong className="text-white block">How to import Excel/CSV in Onsite:</strong>
+                        <strong className="text-white block">How to import Excel/CSV in SiteFlow:</strong>
                         <ol className="list-decimal pl-4 space-y-1 text-muted leading-relaxed">
                           <li>Remove any unnecessary header rows from the Excel file.</li>
                           <li>
                             Ensure the column structure aligns with the{" "}
                             <span className="text-primary hover:underline font-bold cursor-pointer inline-flex items-center gap-0.5">
-                              Onsite Payment Request template 📥
+                              SiteFlow Payment Request template 📥
                             </span>{" "}
                             (column names and order of columns need to match exactly with the sample file).
                           </li>

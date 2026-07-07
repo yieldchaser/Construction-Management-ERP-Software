@@ -263,7 +263,7 @@ export default function CompanySettingsPage() {
           </nav>
         </div>
         <div className="p-4 border-t border-border-custom text-[10px] text-muted font-mono">
-          © Onsite Teams | v8.22.0
+          © SiteFlow | v8.22.0
         </div>
       </aside>
 
