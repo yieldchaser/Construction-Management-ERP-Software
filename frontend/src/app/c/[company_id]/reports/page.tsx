@@ -238,12 +238,12 @@ export default function ReportsDashboard() {
     // Company Expense Report - exact UI columns from screenshot 6171-6174
     "Company Expense Report": ['Txn Date', 'Txn Type', 'Project Name', 'Description', 'Party Name', 'Txn Status', 'Base Amount', 'Tax Amount', 'Bill Discount', 'Additional Charges', 'Total Amount', 'Net Amount', 'Paid Amount', 'Unpaid Amount', 'Due Date', 'Settlement By', 'Payment Mode', 'Cost Code', 'Sub Cost Code', 'Notes/Remarks', 'Reference No.', 'Creator Name', 'Approval Status', 'Created Date'],
     // Staff reports
-    "Staff Muster Roll": ['S.NO.', 'Party Code', 'Employee Name', 'Designation', 'Phone No.', 'Bank Account No.', 'Bank Name', 'Salary Type', 'Gross Salary', 'Work Days', 'PL', 'WO', 'Payable Days', 'OT(Hours)', 'Earnings Basic', 'Earnings HRA', 'Earnings Allowance', 'Deductions', 'Net Salary', 'CTC'],
-    "Staff Punch Report": ['S.NO.', 'Party Name', 'Designation', 'Punch Date', 'Punch In Time', 'Punch In Location', 'Punch Out Time', 'Punch Out Location', 'Duration', 'Punch In Photo Verified', 'Punch Out Photo Verified', 'Punch In Location Verified', 'Punch Out Location Verified'],
+    "Staff Muster Roll": ['S.NO.', 'Party Code', 'Employee Name', 'Designation', 'Phone No.', 'Bank Account No.', 'Bank Name', 'Salary Type', 'Gross Salary', 'Work Days', 'PL', 'WO', 'Payable Days', 'OT(Hours)', 'Basic', 'Fixed Allowance', 'OT', 'Gross Earning', 'Gross Deductions', 'Net Salary', 'CTC'],
+    "Staff Punch Report": ['S.NO.', 'PARTY NAME', 'DESIGNATION', 'PUNCH DATE', 'PUNCH IN TIME', 'PUNCH IN LOCATION', 'PUNCH OUT TIME', 'PUNCH OUT LOCATION', 'DURATION', 'PUNCH IN PHOTO VERIFIED', 'PUNCH OUT PHOTO VERIFIED', 'PUNCH IN LOCATION VERIFIED', 'PUNCH OUT LOCATION VERIFIED'],
     "Company Attendance": ['Labor / Subcontractor', 'Workforce Type', 'Project Name', '01-Jul-26', '02-Jul-26', '03-Jul-26', '04-Jul-26', '05-Jul-26'],
     // Payment reports - exact UI columns
     "Company Payments": ['Payment Date', 'Project Name', 'Creator Name', 'Party Name', 'Amount', 'Unsettled Amount', 'Net Amount', 'Settlement Type', 'Remark', 'Payment Type', 'Payment Mode', 'Account Name', 'Cost Code', 'Sub Cost Code', 'Category', 'Created Date', 'Reference No.'],
-    "Project Wise Payment Summary": ['Project Name', 'Salary', 'Net Purchase', 'Other Expense', 'Site Expense', 'SubCon Expense', 'Total Sales Invoice', 'Total Expense', 'Total Out', 'Total IN', 'Balance', 'Margin', 'Net Transfer'],
+    "Project Wise Payment Summary": ['Project Name', 'Salary', 'Net Purchase', 'Other Expense', 'Site Expense', 'SubCon Expense', 'Total Sales Invoice', 'Total expense', 'Total Out', 'Total IN', 'Balance', 'Margin', 'Net Transfer'],
     // Tax reports
     "Sales (GSTR-1)": ['Party GSTIN', 'Party Name', 'Place of Supply', 'Invoice Number', 'Invoice Value', 'Invoice Date', 'Taxable Amt', 'Tax Rate', 'CGST Amt', 'SGST Amt', 'IGST Amt', 'Total Tax Amt'],
     "Purchase (GSTR-2)": ['Party GSTIN', 'Party Name', 'Place of Supply', 'Invoice Number', 'Invoice Value', 'Invoice Date', 'Taxable Amt', 'Tax Rate', 'CGST Amt', 'SGST Amt', 'IGST Amt', 'Total Tax Amt'],
@@ -256,15 +256,15 @@ export default function ReportsDashboard() {
     "Payment Upload Template": ['Payment Date', 'Payment Type', 'Party Name', 'Project Name', 'Amount', 'Remark', 'Mode of Payment', 'Company Bank Account Number', 'Category', 'Payment Request ID'],
     "Payroll Upload Template": ['Name', 'Staff Type', 'Shift Hours', 'Day Off', 'Overtime Rate (Per Hour)', 'Designation', 'Cost Code', 'Salary Basis', 'Salary Type', 'CTC', 'Basic', 'Allowance Name (A1)', 'A1 Relation Type', '% of A1 Relation', 'A1 Amount'],
     // Material Request - exact UI columns from screenshot 6188
-    "Material Request Item Report": ['Request No', 'Project Name', 'Material Name', 'Specifications', 'Unit', 'Request Quantity', 'Ordered Quantity', 'Pending Quantity', 'PO No', 'Requested by', 'Status', 'Approved or Rejected By', 'Request Notes'],
+    "Material Request Item Report": ['Request Date', 'Request No', 'Project Name', 'Material Name', 'Specifications', 'Unit', 'Request Quantity', 'Ordered Quantity', 'Pending Quantity', 'PO No', 'Requested by', 'Status', 'Approved or Rejected By', 'Request Notes'],
     // Project summary reports
     "Project Operational Summary": ['Project Name', 'Project Category', 'Project Stage', 'Key Personnel', 'Project Status', 'Project Health', 'Start Date', 'End Date', 'Progress'],
     // Equipment daily report - exact UI columns
     "Daily based Equipment Used Report": ['Project Name', 'Equipment Name', 'Vehicle No', 'Party Name', 'Exp Mileage', 'Equipment Unit', 'Equipment Used', 'Exp Fuel Consumed', 'Fuel Added', 'Fuel Adjusted'],
     // OT & Shift Report
-    "OT & Shift Report": ['Project Name', 'Party Name', 'Workforce Name', 'Attendance Date', 'No of Workers'],
+    "OT & Shift Report": ['Project Name', 'Party Name', 'Workforce Name', 'Attendance Date', 'No of Workers', 'Total Shift', 'Overtime Hours'],
     // Expense deduction - exact UI columns
-    "All Expense Deduction / Retention Report": ['Item Name', 'Amount', 'Bill Number', 'Expense Type', 'Project Name', 'Party Name', 'Creator Name', 'Due Date'],
+    "All Expense Deduction / Retention Report": ['Entry Creation Date', 'Type', 'Item Name', 'Amount', 'Bill Number', 'Expense Type', 'Project Name', 'Party Name', 'Creator Name', 'Due Date'],
     // Party Ledger - exact UI columns from screenshot 6180-6181
     "Party Ledger": ['Party Name', 'Party Type', 'Project Name', 'Creator Name', 'Description', 'Cost Code', 'Transaction Type', 'Transaction Date', 'Party Debit', 'Party Credit', 'Balance'],
     "All Party Balances": ['Party Name', 'Party Type', 'Balance Amount', 'Balance Type', 'Petty Cash Balance', 'Salary Balance'],
@@ -286,9 +286,9 @@ export default function ReportsDashboard() {
     "Cost Code Library": ['Cost Code', 'Sub Cost Code', 'Created Date'],
     "Material Library": ['Item Code', 'Material Name', 'Material Category', 'Specifications', 'Unit', 'Created Date', 'Creator Name'],
     "Rate Card Library": ['Item Code', 'Item Name', 'Description', 'Cost Code', 'Unit', 'Components', 'Unit Cost Price', 'Markup Amount', 'Markup %', 'Selling Price', 'Created Date', 'Component Count', 'HSN/SAC'],
-    "Payroll Library": ['Employee Name', 'Designation', 'Designation Type', 'Payroll Type', 'CTC', 'Gross Salary', 'Net Salary', 'Shift Hours', 'Salary Breakup', 'Created Date'],
+    "Payroll Library": ['Name', 'Designation', 'Type', 'Payroll Type', 'CTC', 'Gross Salary', 'Net Salary', 'Shift Hours', 'Salary Breakup', 'Created Date'],
     // Task reports - exact UI columns from screenshots
-    "Task Resource Budget Vs Actual Report": ['Main Task Name', 'Group Task Name', 'Task Name', 'Task Unit', 'Task Qty', 'Task Progress Qty', 'Resource Name', 'Resource Type', 'Budgeted Rate', 'Avg Unit Cost', 'Budgeted Qty', 'Qty Actual Used', 'Budgeted Amount', 'Actual Amount', 'Exceeded Qty', 'Exceeded Amount'],
+    "Task Resource Budget Vs Actual Report": ['Project Name', 'Main Task Name', 'Group Task Name', 'Task Name', 'Task Unit', 'Task Qty', 'Task Progress Qty', 'Resource Name', 'Resource Type', 'Budgeted Rate', 'Avg Unit Cost', 'Unit', 'Qty per Unit Progress', 'Budgeted Qty', 'Pro Rata Budget Qty', 'Actual Used Qty', 'Budgeted Amount', 'Pro Rata Budget Amount', 'Actual Amount', 'Exceeded Qty', 'Exceeded Amount'],
     // Site Inspection - exact UI columns from screenshot 6155
     "Site Inspection Report": ['Project Name', 'Inspection Date', 'Inspection Name', 'Inspection Status', 'Inspection Items', 'Inspection Notes', 'Created Date'],
     // Task BOQ - exact UI columns from screenshot 6159
@@ -296,13 +296,13 @@ export default function ReportsDashboard() {
     // CRM reports
     "CRM Lead Detail Report": ['Lead Date', 'Lead Name', 'Contact Name', 'Contact No.', 'Email', 'Lead Company Name', 'Budget', 'Lead Status', 'Lead Priority', 'Lead Source', 'Lead Category', 'Follow Up Date', 'Last Contacted Date', 'Expected Closure Date', 'Remark', 'Assignees'],
     "Item Wise Sales Report": ['Sales Type', 'Project Name', 'Client Name', 'Invoice Number', 'Invoice Date', 'Item Name', 'Unit', 'Quantity', 'Item Rate', 'Tax %', 'Tax Amount', 'Gross Amount', 'Total Amount', 'Invoice Created'],
-    "Sales Deduction / Retention Report": ['Name', 'Amount', 'Project Name', 'Party Name', 'Invoice Number', 'Creator Name', 'Type', 'Entry Creation Date', 'Due Date'],
+    "Sales Deduction / Retention Report": ['Item Name', 'Amount', 'Project Name', 'Party Name', 'Invoice Number', 'Creator Name', 'Type', 'Entry Creation Date', 'Due Date'],
     "Lead Status Funnel Report": ['Lead Status', 'Lead Count', 'Conversion Rate %'],
     // Bank Statement - exact UI columns
     "Bank Statement": ['Account Name', 'Account Number', 'Bank Name', 'Project Name', 'Party Name', 'Payment Date', 'Credit', 'Debit', 'Balance', 'Remarks'],
     // Project Payment Report - exact UI columns
     "Project Payment Report": ['Payment Date', 'Project Name', 'Creator Name', 'Party Name', 'Amount', 'Unsettled Amount', 'Net Amount', 'Remark', 'Reference No.', 'Payment Type', 'Payment Mode', 'Account Name', 'Category', 'Cost Code', 'Sub Cost Code', 'Created Date', 'Approval Status'],
-    "Payment Request Report": ['Payment Request No', 'Project Name', 'Party Name', 'Amount', 'Payment Date', 'Due Date', 'Creator Name', 'Request Type', 'Order/Bill No', 'Approval Status', 'Payment Status', 'Remark', 'Account Name'],
+    "Payment Request Report": ['Payment Request ID', 'Payment Request No', 'Project Name', 'Party Name', 'Amount', 'Payment Date', 'Due Date', 'Creator Name', 'Request Type', 'Order/Bill No', 'Approval Status', 'Payment Status', 'Remark', 'Account Name'],
     // DPR - exact UI columns from screenshot 6141
     "Daily Progress Report": ['Project Name', 'DPR Date', 'Main Task Name', 'Group Task Name', 'Task Name', 'Unit', 'Progress Qty', 'Estimated Qty', 'Workers Count', 'Material Used', 'Equipment Used'],
     // Task Report - exact UI columns from screenshot 6144
@@ -312,27 +312,57 @@ export default function ReportsDashboard() {
     "Task Material Report": ['Project Name', 'Material name', 'Main Task Name', 'Group Task Name', 'Task Name', 'Qty Used', 'Avg Unit Rate', 'Avg Cost'],
     // To Do - exact UI columns from screenshot 6150
     "To Do Report": ['Creation Date', 'Due Date', 'Last Updated Date', 'Assigned To', 'Type', 'Related Task', 'Creator Name', 'Closed Date'],
-    "Task Revenue & Expense Report": ['Project Name', 'Main Task Name', 'Group Task Name', 'Task Name', 'Task Progress', 'Unit', 'Revenue per task', 'Expense per task'],
+    "Task Revenue & Expense Report": ['Project Name', 'Main Task Name', 'Group Task Name', 'Task Name', 'Task Progress Unit', 'Revenue per task', 'Expense per task'],
     // Task Attendance - exact UI columns from screenshot 6162
     "Task Attendance Report": ['Project Name', 'Party Name', 'Workforce Name', 'Attendance Date', 'Attendance Status', 'Main Task Name', 'Group Task Name', 'Task Name', 'Workers on Task', 'Work Hours', 'Total Hours', 'Task Labour Cost'],
     // Expense analysis - exact UI columns from screenshot 6175
-    "Cost Code Expense Analysis": ['Cost Code', 'Amount', 'Budget Amount', 'Actual Expense', 'Budget Variance'],
+    "Cost Code Expense Analysis": ['Cost Code', 'Total Expense Amount', 'Total BOQ Amount', 'Total Budget Amount'],
     // Project Wise Expense Summary - UI shows Project Name as only visible
-    "Project Wise Expense Summary": ['Project Name', 'Total Expense', 'Cost Code Expense', 'Other Expense'],
+    "Project Wise Expense Summary": [
+      'Project Name',
+      'Material Purchase Total Amount', 'Material Purchase Net Amount',
+      'Subcon Expense Total Amount', 'Subcon Expense Net Amount',
+      'Salary Expense Total Amount', 'Salary Expense Net Amount',
+      'Other Expense Total Amount', 'Other Expense Net Amount',
+      'Site Expense Total Amount', 'Site Expense Net Amount',
+      'Debit Note Total Amount', 'Debit Note Net Amount',
+      'Material Return Total Amount', 'Material Return Net Amount',
+      'Material Transfer In Total Amount', 'Material Transfer In Net Amount',
+      'Material Transfer Out Total Amount', 'Material Transfer Out Net Amount',
+      'Equipment Expense Total Amount', 'Equipment Expense Net Amount',
+      'Total Amount', 'Net Amount', 'Paid Amount', 'Unpaid Amount'
+    ],
     // Material reports
-    "Material Received & Used Report": ['Project Name', 'Material Name', 'Opening Quantity', 'Received Quantity', 'Used Quantity', 'Closing Quantity'],
-    "Material Stock Report": ['Material Name', 'Category', 'Current Stock', 'Unit', 'Average Unit Cost', 'Total Stock Value'],
-    "Unbilled Item Report": ['Project Name', 'Vendor Name', 'Item Name', 'Unbilled Quantity', 'Unit', 'Avg Cost', 'Unbilled Amount'],
-    "PO Summary Report": ['PO Number', 'Material', 'Amount', 'Discount', 'Other Charges', 'Tax Amount', 'Total Amount', 'Approval Status', 'Approved or Rejected By', 'PO Quantity', 'PO Date', 'Main Task Name', 'Group Task Name', 'Task Name', 'Equipment Name', 'Equipment No'],
-    "Material Received without PO": ['Project Name', 'Material Name', 'Quantity', 'Unit', 'Vendor Name', 'Challan Number', 'Received Date'],
-    "Purchase Order Item Report": ['PO Number', 'Item Name', 'Specifications', 'Quantity', 'Unit', 'Rate', 'Tax Pct', 'Total Amount'],
-    "Production Material Report": ['Project Name', 'Material Name', 'Production Qty', 'Used Qty', 'Production Date'],
-    "Material Purchase Item Report": ['Invoice Date', 'Vendor Name', 'Item Name', 'Quantity', 'Unit', 'Rate', 'Tax Pct', 'Total Amount'],
+    "Material Received & Used Report": [
+      'Material Category', 'Material', 'Project Name', 'Party Name', 'Created By', 'GRN No.', 'Challan Number',
+      'Entry Type', 'Transfer Project', 'Purchase Done', 'Receiving Date', 'Unit', 'Quantity', 'Unit Price with Tax',
+      'Total Amount', 'Remark', 'Vehicle Number', 'PO Number', 'PO Quantity', 'PO date', 'Main Task Name',
+      'Group Task Name', 'Task Name', 'Equipment Name', 'Equipment No'
+    ],
+    "Material Stock Report": [
+      'Project Name', 'Material Category', 'Material Name', 'Unit',
+      'Material Request Pending Qty', 'Material Request Pending Cost',
+      'Estimated Qty', 'Estimated Cost',
+      'Received Qty', 'Received Cost',
+      'Used Qty', 'Used Cost',
+      'Current Stock Qty', 'Current Stock Cost'
+    ],
+    "Unbilled Item Report": ['Project Name', 'Party Name', 'Material', 'Unit', 'Quantity', 'Receiving Date'],
+    "PO Summary Report": ['Project Name', 'Creator Name', 'PO Creation Date', 'PO Date', 'Vendor Name', 'PO Number', 'Material Amount', 'Discount', 'Other Charges', 'Tax Amount', 'Total Amount', 'Approval Status', 'Approved or Rejected By'],
+    "Material Received without PO": ['Material', 'Project Name', 'Party Name', 'Created By', 'Receiving Date', 'Unit', 'Quantity'],
+    "Purchase Order Item Report": [
+      'PO Date', 'PO Number', 'Project Name', 'Vendor Name', 'Material Category', 'Material Name', 'Unit', 'Unit Price',
+      'PO Qty', 'PO Received Qty', 'PO Pending Qty', 'Item Status', 'Approval Status', 'MR No.', 'Challan Number', 'GRN No.'
+    ],
+    "Production Material Report": ['Project Name', 'Production Material Name', 'Unit', 'Quantity', 'Production Date', 'Raw Material Consumed', 'Notes'],
+    "Material Purchase Item Report": [
+      'Party Name', 'Party GST', 'Purchase Date', 'Receiving Date', 'Project Name', 'Material', 'Specification', 'Unit', 'Unit Price', 'Quantity', 'Basic Amount', 'TAX', 'Discount', 'Total Amount', 'Material Category', 'PO Number', 'PO Quantity', 'PO Item Rate', 'PO date', 'PO Total Amount', 'GRN No.', 'Challan Number', 'Reference No.', 'Remark', 'Created By', 'Vehicle Number', 'Expense Status', 'Due_date', 'Expense Amount', 'Expense Paid Amount', 'Unpaid Expense Amount'
+    ],
     "Material Stock Movement Report": ['Project Name', 'Material Name', 'UOM', 'Date', 'Opening Qty', 'Stock In', 'Stock Out', 'Closing Qty'],
     // Attendance & Salary
-    "Attendance & Salary Report": ['Employee Name', 'Project Name', 'Attendance Date', 'Attendance Status', 'Shift Hours', 'Payable Amount'],
+    "Attendance & Salary Report": ['Party Name', 'Designation', 'Phone No.', 'Bank Name', 'IFSC Code', 'Account No.', 'Shift', 'OT Hrs', 'Basic Payable', 'Allowance', 'OT Amount', 'Late Fine', 'Deductions', 'Total Salary Payable'],
     "Staff Monthly Salary Slip": ['Employee Name', 'Designation', 'Salary Month', 'Gross Salary', 'Deductions', 'Net Salary Paid'],
-    "Staff Salary Report": ['Employee Name', 'Designation', 'Bank Account No.', 'Bank Name', 'Net Salary'],
+    "Staff Salary Report": ['Party Name', 'Designation', 'Phone No.', 'Bank Name', 'IFSC Code', 'Account No.', 'Shift', 'OT Hrs', 'Basic Payable', 'Allowance', 'OT Amount', 'Late Fine', 'Deductions', 'Total Salary Payable'],
     // Equipment reports
     "Fuel Efficiency Report": ['Equipment Name', 'Vehicle No', 'Total Fuel Consumed', 'Total Hours Used', 'Fuel Efficiency (L/hr)'],
     "Equipment Expense Summary": ['Equipment Name', 'Vehicle No', 'Rental Expense', 'Fuel Expense', 'Other Expense', 'Total Expense'],
@@ -344,19 +374,19 @@ export default function ReportsDashboard() {
     // P&L
     "Monthly P&L Report": ['Month', 'Total Sales', 'Material Expense', 'Labor Expense', 'Equipment Expense', 'Other Expense', 'Net Profit'],
     // Equipment Library
-    "Equipment Library": ['Equipment Name', 'Vehicle No', 'Equipment Type', 'Vendor Name', 'Rental Rate', 'UOM'],
+    "Equipment Library": ['Equipment Name', 'Make/Brand', 'Equipment No', 'Model No.', 'Measurement Type', 'Unit', 'Created Date', 'Ownership Type', 'Exp Mileage', 'Purchase Amount', 'Insurance Policy Num', 'Insurance Provider Name', 'Insurance Start Date', 'Insurance Expiry Date', 'Service Reference No.', 'Last Service Date', 'Next Service Date', 'Fitness Certificate Reference No', 'Fitness Certificate Start Date', 'Fitness Certificate Insurance No', 'Fitness Certificate Expiry Date', 'PUCC Reference No.', 'PUCC Start Date', 'PUCC Expiry Date', 'Permit Reference No', 'Permit Start Date', 'Permit Expiry Date', 'Tax No.', 'Tax Start Date', 'Tax Expiry Date', 'Registration No.', 'Registration Start Date', 'Registration Expiry Date'],
     // Quotation & BOQ
-    "Quotation Report": ['Quotation Number', 'Project Name', 'Client Name', 'Quotation Date', 'Estimated Amount', 'Status'],
-    "Quotation Item Report": ['Quotation Number', 'Item Name', 'Description', 'Cost Code', 'Unit', 'Cost Price', 'Markup', 'Selling Price'],
-    "BOQ Measurement Book": ['Project Name', 'BOQ Code', 'Item Name', 'Length', 'Width', 'Height', 'Quantity', 'Unit'],
-    "BOQ BOM Report": ['BOQ Item Name', 'Material Name', 'Specifications', 'Budget Qty', 'Unit', 'Budget Rate', 'Budget Amount'],
+    "Quotation Report": ['Quotation Date', 'Quotation Name', 'Quotation Number', 'Client Name', 'Item Count', 'Item Sub Total', 'Discount', 'Additional Charges', 'Tax', 'Total Amount', 'Quotation Status', 'Created Date'],
+    "Quotation Item Report": ['Client Name', 'Quotation Name', 'Quotation Status', 'Quotation Date', 'Group', 'Section', 'Item Name', 'Unit', 'Estimated Qty', 'Unit Cost Price', 'Markup', 'Sales Unit Price', 'Total Sales Amount', 'Tax %', 'Total with Tax'],
+    "BOQ Measurement Book": ['Project Name', 'Workorder No', 'Group', 'Section', 'Item Name', 'Progress Date', 'Unit', 'Estimated Quantity', 'Opening Quantity', 'Number', 'Length', 'Width', 'Height', 'Progress Quantity', 'Closing Quantity', 'Progress Notes'],
+    "BOQ BOM Report": ['Project Name', 'BOQ Name', 'Item Name', 'Material Name', 'Unit', 'Unit Price', 'Quantity', 'Total Cost Price', 'Creation Date'],
     // Budget reports
-    "Budget vs Actual (Material Cost)": ['Project Name', 'Material Name', 'Budget Cost', 'Actual Cost', 'Variance'],
-    "Budget vs Actual (Material Qty)": ['Project Name', 'Material Name', 'Budget Qty', 'Actual Qty', 'Variance'],
-    "Budget vs Actual (Cost Code)": ['Project Name', 'Cost Code', 'Budget Amount', 'Actual Amount', 'Variance'],
+    "Budget vs Actual (Material Cost)": ['Project', 'Material', 'Unit', 'Budget Cost', 'Actual Cost', 'Variance'],
+    "Budget vs Actual (Material Qty)": ['Project', 'Material', 'Unit', 'Budget Qty', 'Actual Qty', 'Variance'],
+    "Budget vs Actual (Cost Code)": ['Cost Code.', 'BOQ Estimated Amount', 'Budget Amount', 'Actual Expense', 'Budget Variance'],
     // Asset reports
-    "Asset Allocation Report": ['Asset Name', 'Allocated To', 'Project Name', 'Allocation Date', 'Return Date', 'Status'],
-    "Asset Status Report": ['Asset Name', 'Serial Number', 'Category', 'Purchase Date', 'Cost', 'Status']
+    "Asset Allocation Report": ['Asset Name', 'Asset Type', 'Assigned To', 'Allocation Type', 'Created by', 'Project Name', 'Assigned Time', 'Assigned Qty', 'Remaining Qty'],
+    "Asset Status Report": ['Asset Name', 'Asset Type', 'Total Qty', 'Available Qty', 'Assigned Qty', 'In Repair Qty', 'Damaged Qty', 'Asset Value', 'Created by', 'Creation Date', 'Last Assigned To', 'Last Assigned Time']
   };
 
   const handleReportClick = (report: ReportItem) => {
@@ -387,6 +417,11 @@ export default function ReportsDashboard() {
         mockRows = [
           ["27AAAAA1111A1Z1", "L&T Construction", "Maharashtra", "INV-2026-081", "118000", "2026-07-02", "100000", "18%", "9000", "9000", "0", "18000"]
         ];
+      } else if (reportName === "Sales Deduction / Retention Report") {
+        mockRows = [
+          ["Retention Fee", "50000", "Metro Terminal", "L&T Civil", "INV-2026-081", "Yash Desai", "Retention", "02-Jul-2026", "15-Aug-2026"],
+          ["TDS Deduction", "10000", "Bypass Highway Flyover", "National Highway Authority", "INV-2026-082", "Anand T", "Deduction", "05-Jul-2026", "31-Aug-2026"]
+        ];
       } else if (reportName === "Company Payments") {
         mockRows = [
           ["01-Jul-2026", "Metro Terminal", "Yash Desai", "Sanjay Yadav", "8000", "0", "8000", "Full Payment", "Salary advance July", "Out", "Cash", "Site Cash Account", "C-405", "", "Salary", "01-Jul-2026", "PMT-001"],
@@ -399,8 +434,8 @@ export default function ReportsDashboard() {
         ];
       } else if (reportName === "Staff Muster Roll") {
         mockRows = [
-          ["1", "EMP-001", "Yash Desai", "Engineer", "9876543210", "1234567890", "SBI", "Monthly", "60000", "26", "2", "4", "30", "5", "40000", "15000", "5000", "3000", "57000", "60000"],
-          ["2", "EMP-002", "Ramesh Kumar", "Mason", "9876543211", "1234567891", "HDFC", "Daily", "22000", "22", "1", "4", "27", "12", "15000", "5000", "2000", "1500", "20500", "22000"]
+          ["1", "EMP-001", "Yash Desai", "Engineer", "9876543210", "1234567890", "SBI", "Monthly", "60000", "26", "2", "4", "30", "5", "40000", "15000", "5000", "60000", "3000", "57000", "60000"],
+          ["2", "EMP-002", "Ramesh Kumar", "Mason", "9876543211", "1234567891", "HDFC", "Daily", "22000", "22", "1", "4", "27", "12", "15000", "5000", "2000", "22000", "1500", "20500", "22000"]
         ];
       } else if (reportName === "Staff Punch Report") {
         mockRows = [
@@ -434,8 +469,8 @@ export default function ReportsDashboard() {
         ];
       } else if (reportName === "Material Request Item Report") {
         mockRows = [
-          ["REQ-001", "Metro Terminal", "Cement OPC 53", "Grade A", "bags", "500", "500", "0", "PO-0091", "Yash Desai", "Approved", "Yash Desai", "Urgent - required before 10th"],
-          ["REQ-002", "Metro Terminal", "Fine Sand", "High density", "m³", "100", "80", "20", "", "Ramesh Kumar", "Pending", "", "For plastering work"]
+          ["2026-07-04", "REQ-001", "Metro Terminal", "Cement OPC 53", "Grade A", "bags", "500", "500", "0", "PO-0091", "Yash Desai", "Approved", "Yash Desai", "Urgent - required before 10th"],
+          ["2026-07-05", "REQ-002", "Metro Terminal", "Fine Sand", "High density", "m³", "100", "80", "20", "", "Ramesh Kumar", "Pending", "", "For plastering work"]
         ];
       } else if (reportName === "Project Operational Summary") {
         mockRows = [
@@ -449,8 +484,8 @@ export default function ReportsDashboard() {
         ];
       } else if (reportName === "OT & Shift Report") {
         mockRows = [
-          ["Metro Terminal", "L&T Civil Division", "Yash Desai", "2026-07-01", "25"],
-          ["Metro Terminal", "Sanjay Yadav Subcontractor", "Ramesh Kumar", "2026-07-02", "18"]
+          ["Metro Terminal", "L&T Civil Division", "Yash Desai", "2026-07-01", "25", "25", "10"],
+          ["Metro Terminal", "Sanjay Yadav Subcontractor", "Ramesh Kumar", "2026-07-02", "18", "18", "5"]
         ];
       } else if (reportName === "Payment Upload Template") {
         mockRows = [
@@ -469,8 +504,8 @@ export default function ReportsDashboard() {
         ];
       } else if (reportName === "All Expense Deduction / Retention Report") {
         mockRows = [
-          ["Safety Helmet", "12000", "EXP-091", "Consumables", "Metro Terminal", "Anil Steels", "Yash Desai", "2026-07-15"],
-          ["Site Stationery", "1500", "EXP-092", "Office Expense", "Metro Terminal", "Anil Steels", "Yash Desai", "2026-07-20"]
+          ["2026-07-01", "Deduction", "Safety Helmet", "12000", "EXP-091", "Consumables", "Metro Terminal", "Anil Steels", "Yash Desai", "2026-07-15"],
+          ["2026-07-02", "Retention", "Site Stationery", "1500", "EXP-092", "Office Expense", "Metro Terminal", "Anil Steels", "Yash Desai", "2026-07-20"]
         ];
       } else if (reportName === "Party Ledger") {
         mockRows = [
@@ -541,11 +576,12 @@ export default function ReportsDashboard() {
         ];
       } else if (reportName === "Payroll Library") {
         mockRows = [
-          ["Yash Desai", "Engineer", "Office Staff", "Monthly", "60000", "55000", "52000", "8", "Basic: 40k, HRA: 15k", "2026-01-01"]
+          ["Ramesh Kumar", "Mason", "Wages", "Monthly", "18000", "16800", "16800", "8", "Basic: 12000, Allowances: 4800", "2026-06-15"],
+          ["Suresh Ram", "Labourer", "Wages", "Daily", "15000", "13375", "13375", "8", "Basic: 10000, Allowances: 3375", "2026-06-18"]
         ];
       } else if (reportName === "Task Resource Budget Vs Actual Report") {
         mockRows = [
-          ["Excavation & Raft", "Substructure", "Raft Slab Concrete", "m³", "500", "320", "OPC Cement", "Material", "400", "420", "1500", "1000", "600000", "420000", "0", "0"]
+          ["Metro Terminal", "Excavation & Raft", "Substructure", "Raft Slab Concrete", "m³", "500", "320", "OPC Cement 53", "Material", "400", "420", "bags", "3", "1500", "960", "1000", "600000", "384000", "420000", "40", "16000"]
         ];
       } else if (reportName === "Site Inspection Report") {
         mockRows = [
@@ -574,6 +610,132 @@ export default function ReportsDashboard() {
         mockRows = [
           ["01-Jul-2026", "Metro Terminal", "Yash Desai", "Anil Steels", "53100", "0", "53100", "Material bill settlement", "PMT-002", "Out", "Bank Transfer", "HDFC-Main", "Material", "C-102", "M-SUB-01", "01-Jul-2026", "Approved"],
           ["05-Jul-2026", "Metro Terminal", "Yash Desai", "Sanjay Yadav", "8000", "0", "8000", "Salary advance July", "PMT-001", "Out", "Cash", "Site Cash", "Salary", "C-405", "", "05-Jul-2026", "Approved"]
+        ];
+      } else if (reportName === "Payment Request Report") {
+        mockRows = [
+          ["c79160e2-2457-4fb7-8564-1ad1d5b27f47", "PR-1", "Prestige Developers", "Yash Desai", "234534", "05-Jul-2026", "31-Jul-2026", "Yash Desai", "Subcon Expense", "", "Auto Approved", "Unpaid", "", "HDFC-Main"],
+          ["c79160e2-2457-4fb7-8564-1ad1d5b27f48", "PR-2", "Metro Terminal", "Sanjay Yadav", "50000", "06-Jul-2026", "15-Jul-2026", "Yash Desai", "Labour Payroll", "WO-SUB-001", "Pending", "Unpaid", "Salary Advance", ""]
+        ];
+      } else if (reportName === "Cost Code Expense Analysis") {
+        mockRows = [
+          ["Civil - Concrete Work", "450000", "500000", "480000"],
+          ["Finishing - Plastering", "120000", "150000", "150000"],
+          ["Electrical - Wiring", "85000", "100000", "90000"]
+        ];
+      } else if (reportName === "Project Wise Expense Summary") {
+        mockRows = [
+          ["Metro Terminal", "500000", "480000", "250000", "240000", "120000", "120000", "30000", "30000", "18000", "18000", "0", "0", "-5000", "-5000", "10000", "10000", "0", "0", "50000", "50000", "973000", "943000", "900000", "43000"],
+          ["Bypass Highway Flyover", "350000", "340000", "180000", "175000", "85000", "85000", "15000", "15000", "9000", "9000", "0", "0", "0", "0", "0", "0", "0", "0", "30000", "30000", "669000", "654000", "600000", "54000"]
+        ];
+      } else if (reportName === "Material Received & Used Report") {
+        mockRows = [
+          ["Cement", "Cement OPC 53", "Metro Terminal", "Anil Steels", "Yash Desai", "GRN-098", "CH-4521", "Direct Purchase", "", "Yes", "2026-07-01", "bags", "500", "380", "190000", "Delivered in full", "MH-14-EX-4512", "PO-0091", "500", "2026-06-30", "Excavation & Raft", "Substructure", "Raft Slab Concrete", "", ""],
+          ["Steel", "TMT Rebars 12mm", "Metro Terminal", "Anil Steels", "Yash Desai", "GRN-099", "CH-4522", "Direct Purchase", "", "Yes", "2026-07-02", "tons", "15", "65000", "975000", "", "MH-14-EX-4512", "PO-0092", "15", "2026-06-30", "Superstructure", "Column Work", "Ground Floor Columns", "", ""]
+        ];
+      } else if (reportName === "Material Stock Report") {
+        mockRows = [
+          ["Metro Terminal", "Cement", "Cement OPC 53", "bags", "100", "38000", "1000", "380000", "500", "190000", "300", "114000", "200", "76000"],
+          ["Metro Terminal", "Steel", "TMT Rebars 12mm", "tons", "0", "0", "50", "3250000", "15", "975000", "10", "650000", "5", "325000"]
+        ];
+      } else if (reportName === "Unbilled Item Report") {
+        mockRows = [
+          ["Metro Terminal", "Anil Steels", "Cement OPC 53", "bags", "500", "2026-07-01"],
+          ["Metro Terminal", "Sanjay Yadav", "Fine Sand", "m³", "100", "2026-07-02"]
+        ];
+      } else if (reportName === "PO Summary Report") {
+        mockRows = [
+          ["Metro Terminal", "Yash Desai", "2026-06-30", "2026-07-01", "Anil Steels", "PO-0091", "190000", "5000", "1200", "34200", "220400", "Approved", "Yash Desai"],
+          ["Metro Terminal", "Yash Desai", "2026-06-30", "2026-07-02", "Anil Steels", "PO-0092", "975000", "25000", "5000", "171000", "1126000", "Approved", "Yash Desai"]
+        ];
+      } else if (reportName === "Material Received without PO") {
+        mockRows = [
+          ["Cement OPC 53", "Metro Terminal", "Anil Steels", "Yash Desai", "2026-07-01", "bags", "500"],
+          ["Fine Sand", "Metro Terminal", "Sanjay Yadav", "Yash Desai", "2026-07-02", "m³", "100"]
+        ];
+      } else if (reportName === "Purchase Order Item Report") {
+        mockRows = [
+          ["2026-07-01", "PO-0091", "Metro Terminal", "Anil Steels", "Cement", "Cement OPC 53", "bags", "380", "500", "500", "0", "Closed", "Approved", "REQ-001", "CH-4521", "GRN-098"],
+          ["2026-07-02", "PO-0092", "Metro Terminal", "Anil Steels", "Steel", "TMT Rebars 12mm", "tons", "65000", "15", "15", "0", "Closed", "Approved", "REQ-002", "CH-4522", "GRN-099"]
+        ];
+      } else if (reportName === "Production Material Report") {
+        mockRows = [
+          ["Metro Terminal", "Concrete M25", "m³", "50", "2026-07-04", "Cement: 150 bags, Fine Sand: 30 m³, Coarse Aggregate: 60 m³", "Batching completed for raft"],
+          ["Metro Terminal", "Concrete M20", "m³", "20", "2026-07-05", "Cement: 55 bags, Fine Sand: 12 m³, Coarse Aggregate: 24 m³", "Batching for columns"]
+        ];
+      } else if (reportName === "Material Purchase Item Report") {
+        mockRows = [
+          ["Anil Steels", "27AAAAA1111A1Z1", "2026-07-04", "2026-07-01", "Metro Terminal", "Cement OPC 53", "Grade A", "bags", "380", "500", "190000", "34200", "5000", "219200", "Cement", "PO-0091", "500", "380", "2026-06-30", "220400", "GRN-098", "CH-4521", "REF-4521", "Delivered in full", "Yash Desai", "MH-14-EX-4512", "Paid", "2026-08-04", "219200", "219200", "0"],
+          ["Anil Steels", "27AAAAA1111A1Z1", "2026-07-05", "2026-07-02", "Metro Terminal", "TMT Rebars 12mm", "", "tons", "65000", "15", "975000", "171000", "25000", "1121000", "Steel", "PO-0092", "15", "65000", "2026-06-30", "1126000", "GRN-099", "CH-4522", "REF-4522", "", "Yash Desai", "MH-14-EX-4512", "Partially Paid", "2026-08-05", "1121000", "500000", "621000"]
+        ];
+      } else if (reportName === "Material Stock Movement Report") {
+        mockRows = [
+          ["Metro Terminal", "Cement OPC 53", "bags", "2026-07-04", "0", "500", "300", "200"],
+          ["Metro Terminal", "TMT Rebars 12mm", "tons", "2026-07-05", "0", "15", "10", "5"]
+        ];
+      } else if (reportName === "Attendance & Salary Report" || reportName === "Staff Salary Report") {
+        mockRows = [
+          ["Ramesh Kumar", "Mason", "9876543210", "State Bank of India", "SBIN0001234", "12345678901", "26", "10", "15600", "500", "900", "0", "200", "16800"],
+          ["Suresh Ram", "Labourer", "9876543211", "HDFC Bank", "HDFC0000123", "98765432101", "24", "15", "12000", "300", "1125", "50", "0", "13375"]
+        ];
+      } else if (reportName === "Equipment Library") {
+        mockRows = [
+          [
+            "JCB Excavator 3DX", "JCB", "EQ-001", "3DX", "Hours", "hr", "2026-06-15", "Owned", 
+            "12", "3500000", "INS-9921", "ICICI Lombard", "2026-06-15", "2027-06-14", "SRV-8821", "2026-06-15", 
+            "2026-12-15", "FC-4521", "2026-06-15", "FINS-4521", "2027-06-14", "PUCC-7712", "2026-06-15", 
+            "2026-12-14", "PRM-6612", "2026-06-15", "2027-06-14", "TAX-5512", "2026-06-15", "2027-06-14", 
+            "MH-14-EX-4512", "2026-06-15", "2031-06-14"
+          ]
+        ];
+      } else if (reportName === "Quotation Report") {
+        mockRows = [
+          ["2026-07-01", "Villa Construction", "QTN-001", "Prestige Developers", "12", "1200000", "50000", "12000", "207000", "1369000", "Approved", "2026-07-01"],
+          ["2026-07-03", "Office Fitout", "QTN-002", "Metro Terminal", "8", "450000", "15000", "5000", "79200", "519200", "Pending", "2026-07-03"]
+        ];
+      } else if (reportName === "Quotation Item Report") {
+        mockRows = [
+          ["Prestige Developers", "Villa Construction", "Approved", "2026-07-01", "Substructure", "Excavation", "Soil Excavation", "m³", "500", "200", "50", "250", "125000", "18", "147500"],
+          ["Prestige Developers", "Villa Construction", "Approved", "2026-07-01", "Substructure", "Concrete", "Raft Slab Concrete", "m³", "120", "4500", "500", "5000", "600000", "18", "708000"]
+        ];
+      } else if (reportName === "BOQ Measurement Book") {
+        mockRows = [
+          ["Metro Terminal", "WO-001", "Substructure", "Excavation", "Soil Excavation", "2026-07-01", "m³", "500", "0", "1", "50", "10", "1", "500", "500", "Initial excavation done"],
+          ["Metro Terminal", "WO-001", "Substructure", "Concrete", "Raft Slab Concrete", "2026-07-04", "m³", "120", "0", "1", "30", "4", "1", "120", "120", "Raft concrete poured"]
+        ];
+      } else if (reportName === "BOQ BOM Report") {
+        mockRows = [
+          ["Metro Terminal", "Villa BOQ", "Raft Slab Concrete", "OPC Cement 53", "bags", "380", "500", "190000", "2026-06-15"],
+          ["Metro Terminal", "Villa BOQ", "Raft Slab Concrete", "TMT Rebars 12mm", "tons", "65000", "15", "975000", "2026-06-15"]
+        ];
+      } else if (reportName === "Budget vs Actual (Material Cost)") {
+        mockRows = [
+          ["Metro Terminal", "Cement OPC 53", "bags", "600000", "420000", "180000"],
+          ["Metro Terminal", "TMT Rebars 12mm", "tons", "975000", "1121000", "-146000"]
+        ];
+      } else if (reportName === "Budget vs Actual (Material Qty)") {
+        mockRows = [
+          ["Metro Terminal", "Cement OPC 53", "bags", "1500", "1000", "500"],
+          ["Metro Terminal", "TMT Rebars 12mm", "tons", "15", "17", "-2"]
+        ];
+      } else if (reportName === "Budget vs Actual (Cost Code)") {
+        mockRows = [
+          ["Civil - Concrete Work", "500000", "450000", "480000", "-30000"],
+          ["Finishing - Plastering", "150000", "120000", "120000", "0"]
+        ];
+      } else if (reportName === "Task Revenue & Expense Report") {
+        mockRows = [
+          ["Metro Terminal", "Excavation & Raft", "Substructure", "Raft Slab Concrete", "64% m³", "250000", "180000"],
+          ["Metro Terminal", "Superstructure", "Column Work", "Ground Floor Columns", "0% %", "0", "0"]
+        ];
+      } else if (reportName === "Asset Allocation Report") {
+        mockRows = [
+          ["JCB Excavator 3DX", "Heavy Machinery", "Sanjay Yadav", "Project Allocation", "Yash Desai", "Metro Terminal", "2026-07-01 09:00", "1", "0"],
+          ["Concrete Mixer 200L", "Equipment", "Ramesh Kumar", "Temporary Use", "Yash Desai", "Metro Terminal", "2026-07-02 10:30", "1", "1"]
+        ];
+      } else if (reportName === "Asset Status Report") {
+        mockRows = [
+          ["JCB Excavator 3DX", "Heavy Machinery", "2", "1", "1", "0", "0", "3500000", "Yash Desai", "2026-06-15", "Sanjay Yadav", "2026-07-01 09:00"],
+          ["Concrete Mixer 200L", "Equipment", "5", "3", "1", "1", "0", "85000", "Yash Desai", "2026-06-18", "Ramesh Kumar", "2026-07-02 10:30"]
         ];
       } else {
         mockRows = [
