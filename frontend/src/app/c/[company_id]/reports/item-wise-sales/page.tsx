@@ -23,9 +23,9 @@ export default function ItemWiseSalesReportPage() {
   };
 
   const mockSales = [
-    { type: "Tax Invoice", project: "Metro Terminal (Phase 2)", client: "L&T Construction", invNum: "INV-2026-004", invDate: "2026-07-02", itemName: "Reinforcement Steel (12mm)", unit: "Tons", qty: "12.5" },
-    { type: "Retail Invoice", project: "Bypass Highway Flyover", client: "Public Works Dept", invNum: "INV-2026-012", invDate: "2026-07-03", itemName: "Ready Mix Concrete M35", unit: "Cum", qty: "45.0" },
-    { type: "Proforma Invoice", project: "Alpha Premium Residences", client: "Alpha Builders Ltd", invNum: "INV-2026-009", invDate: "2026-06-28", itemName: "OPC Cement 43 Grade", unit: "Bags", qty: "300" }
+    { type: "Tax Invoice", project: "Metro Terminal (Phase 2)", client: "L&T Construction", invNum: "INV-2026-004", invDate: "2026-07-02", itemName: "Reinforcement Steel (12mm)", unit: "Tons", qty: "12.5", rate: "4500", tax: "18%", taxAmt: "10125", grossAmt: "56250", totalAmt: "66375", created: "02-Jul-2026" },
+    { type: "Retail Invoice", project: "Bypass Highway Flyover", client: "Public Works Dept", invNum: "INV-2026-012", invDate: "2026-07-03", itemName: "Ready Mix Concrete M35", unit: "Cum", qty: "45.0", rate: "5000", tax: "18%", taxAmt: "40500", grossAmt: "225000", totalAmt: "265500", created: "03-Jul-2026" },
+    { type: "Proforma Invoice", project: "Alpha Premium Residences", client: "Alpha Builders Ltd", invNum: "INV-2026-009", invDate: "2026-06-28", itemName: "OPC Cement 43 Grade", unit: "Bags", qty: "300", rate: "400", tax: "18%", taxAmt: "21600", grossAmt: "120000", totalAmt: "141600", created: "28-Jun-2026" }
   ];
 
   const filteredSales = mockSales.filter(row => {
@@ -148,7 +148,8 @@ export default function ItemWiseSalesReportPage() {
               <table className="w-full text-xs text-left">
                 <thead>
                   <tr className="border-b border-border-custom text-muted font-semibold text-[10px] uppercase">
-                    <th className="pb-2">Sales Type</th>
+                    <th className="pb-2">#</th>
+                    <th className="pb-2">Sale Type</th>
                     <th className="pb-2">Project Name</th>
                     <th className="pb-2">Client Name</th>
                     <th className="pb-2">Invoice Number</th>
@@ -156,16 +157,23 @@ export default function ItemWiseSalesReportPage() {
                     <th className="pb-2">Item Name</th>
                     <th className="pb-2">Unit</th>
                     <th className="pb-2">Quantity</th>
+                    <th className="pb-2">Item Rate</th>
+                    <th className="pb-2">Tax %</th>
+                    <th className="pb-2">Tax Amount</th>
+                    <th className="pb-2">Gross Amount</th>
+                    <th className="pb-2">Total Amount</th>
+                    <th className="pb-2">Invoice Created</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredSales.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="py-8 text-center text-muted">No sales invoice items match the active filters.</td>
+                      <td colSpan={15} className="py-8 text-center text-muted">No sales invoice items match the active filters.</td>
                     </tr>
                   ) : (
                     filteredSales.map((row, i) => (
                       <tr key={i} className="border-b border-border-custom/40 last:border-0 hover:bg-elevated/40">
+                        <td className="py-3 text-muted">{i + 1}</td>
                         <td className="py-3 font-semibold text-white">{row.type}</td>
                         <td className="py-3 text-muted">{row.project}</td>
                         <td className="py-3 text-white font-medium">{row.client}</td>
@@ -174,6 +182,12 @@ export default function ItemWiseSalesReportPage() {
                         <td className="py-3 text-white">{row.itemName}</td>
                         <td className="py-3 text-muted">{row.unit}</td>
                         <td className="py-3 text-white font-bold">{row.qty}</td>
+                        <td className="py-3 text-muted">{row.rate}</td>
+                        <td className="py-3 text-muted">{row.tax}</td>
+                        <td className="py-3 text-muted">{row.taxAmt}</td>
+                        <td className="py-3 text-muted">{row.grossAmt}</td>
+                        <td className="py-3 text-muted">{row.totalAmt}</td>
+                        <td className="py-3 text-muted">{row.created}</td>
                       </tr>
                     ))
                   )}

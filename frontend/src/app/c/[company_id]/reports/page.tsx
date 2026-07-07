@@ -241,39 +241,39 @@ export default function ReportsDashboard() {
     "Staff Punch Report": ['S.NO.', 'PARTY NAME', 'DESIGNATION', 'PUNCH DATE', 'PUNCH IN TIME', 'PUNCH IN LOCATION', 'PUNCH OUT TIME', 'PUNCH OUT LOCATION', 'DURATION', 'PUNCH IN PHOTO VERIFIED', 'PUNCH OUT PHOTO VERIFIED', 'PUNCH IN LOCATION VERIFIED', 'PUNCH OUT LOCATION VERIFIED'],
     "Company Attendance": ['Labor / Subcontractor', 'Workforce Type', 'Project Name', '01-Jul-26', '02-Jul-26', '03-Jul-26', '04-Jul-26', '05-Jul-26'],
     // Payment reports - exact UI columns
-    "Company Payments": ['Payment Date', 'Project Name', 'Creator Name', 'Party Name', 'Amount', 'Unsettled Amount', 'Net Amount', 'Settlement Type', 'Remark', 'Payment Type', 'Payment Mode', 'Account Name', 'Cost Code', 'Sub Cost Code', 'Category', 'Created Date', 'Reference No.'],
+    "Company Payments": ['Txn Date', 'Project Name', 'Paid By', 'Party Name', 'Amount', 'TDS Amount', 'Net Amount', 'Payment Type', 'Notes', 'Direction', 'Payment Mode', 'Account Name', 'Cost Code', 'Sub Cost Code', 'Expense Type', 'Created Date', 'Reference No'],
     "Project Wise Payment Summary": ['Project Name', 'Salary', 'Net Purchase', 'Other Expense', 'Site Expense', 'SubCon Expense', 'Total Sales Invoice', 'Total expense', 'Total Out', 'Total IN', 'Balance', 'Margin', 'Net Transfer'],
     // Tax reports
-    "Sales (GSTR-1)": ['Party GSTIN', 'Party Name', 'Place of Supply', 'Invoice Number', 'Invoice Value', 'Invoice Date', 'Taxable Amt', 'Tax Rate', 'CGST Amt', 'SGST Amt', 'IGST Amt', 'Total Tax Amt'],
+    "Sales (GSTR-1)": ['GSTIN', 'Client Name', 'Place of Supply', 'Invoice Number', 'Invoice Value', 'Invoice Date', 'Taxable Value', 'Tax Rate', 'CGST', 'SGST', 'IGST', 'Total Tax'],
     "Purchase (GSTR-2)": ['Party GSTIN', 'Party Name', 'Place of Supply', 'Invoice Number', 'Invoice Value', 'Invoice Date', 'Taxable Amt', 'Tax Rate', 'CGST Amt', 'SGST Amt', 'IGST Amt', 'Total Tax Amt'],
     // BOQ reports
-    "BOQ Workorder Summary Report": ['Project Name', 'Client Name', 'Workorder Name', 'Workorder No.', 'Workorder Date', 'Estimated Amount', 'Work Done Amount', 'Invoice Amount', '% Complete'],
-    "BOQ Item Report": ['Project Name', 'Workorder Name', 'Workorder No', 'Client Name', 'BOQ Date', 'Item Name', 'Unit', 'Estimated Qty', 'Billed Qty', 'Unbilled Qty'],
+    "BOQ Workorder Summary Report": ['Project Name', 'Client Name', 'Workorder Name', 'Workorder No.', 'WO Start Date', 'WO Amount', 'Work Done Amount', 'Invoice Amount', '% Complete'],
+    "BOQ Item Report": ['Project Name', 'BOQ Name', 'Workorder No', 'Client Name', 'WO Start Date', 'Item Name', 'Unit', 'Est. Qty', 'Billed Qty', 'Remaining Qty'],
     // Equipment reports - exact UI columns
     "Equipment Usage Detail Report": ['Project Name', 'Equipment Name', 'Vehicle No', 'Party Name', 'Exp Mileage', 'Equipment Unit', 'Equipment Used', 'Exp Fuel Consumed', 'Fuel Added'],
     // Upload templates
     "Payment Upload Template": ['Payment Date', 'Payment Type', 'Party Name', 'Project Name', 'Amount', 'Remark', 'Mode of Payment', 'Company Bank Account Number', 'Category', 'Payment Request ID'],
     "Payroll Upload Template": ['Name', 'Staff Type', 'Shift Hours', 'Day Off', 'Overtime Rate (Per Hour)', 'Designation', 'Cost Code', 'Salary Basis', 'Salary Type', 'CTC', 'Basic', 'Allowance Name (A1)', 'A1 Relation Type', '% of A1 Relation', 'A1 Amount'],
     // Material Request - exact UI columns from screenshot 6188
-    "Material Request Item Report": ['Request Date', 'Request No', 'Project Name', 'Material Name', 'Specifications', 'Unit', 'Request Quantity', 'Ordered Quantity', 'Pending Quantity', 'PO No', 'Requested by', 'Status', 'Approved or Rejected By', 'Request Notes'],
+    "Material Request Item Report": ['Date', 'Request No', 'Project Name', 'Material Name', 'Grade/Spec', 'Unit', 'Requested Qty', 'Approved Qty', 'Remaining Qty', 'PO Reference', 'Requested By', 'Status', 'Approved By', 'Remarks'],
     // Project summary reports
-    "Project Operational Summary": ['Project Name', 'Project Category', 'Project Stage', 'Key Personnel', 'Project Status', 'Project Health', 'Start Date', 'End Date', 'Progress'],
+    "Project Operational Summary": ['Project Name', 'Project Category', 'Key Personnel', 'Project Status', 'Project Health', 'Start Date', 'End Date', 'Progress'],
     // Equipment daily report - exact UI columns
     "Daily based Equipment Used Report": ['Project Name', 'Equipment Name', 'Vehicle No', 'Party Name', 'Exp Mileage', 'Equipment Unit', 'Equipment Used', 'Exp Fuel Consumed', 'Fuel Added', 'Fuel Adjusted'],
     // OT & Shift Report
-    "OT & Shift Report": ['Project Name', 'Party Name', 'Workforce Name', 'Attendance Date', 'No of Workers', 'Total Shift', 'Overtime Hours'],
+    "OT & Shift Report": ['Project Name', 'Party Name', 'Employee Name', 'Date', 'Normal Shifts', 'Actual Shifts', 'OT Hours'],
     // Expense deduction - exact UI columns
-    "All Expense Deduction / Retention Report": ['Entry Creation Date', 'Type', 'Item Name', 'Amount', 'Bill Number', 'Expense Type', 'Project Name', 'Party Name', 'Creator Name', 'Due Date'],
+    "All Expense Deduction / Retention Report": ['Date', 'Type', 'Item Name', 'Amount', 'Bill No', 'Expense Type', 'Project Name', 'Party Name', 'Creator Name', 'Due Date'],
     // Party Ledger - exact UI columns from screenshot 6180-6181
-    "Party Ledger": ['Party Name', 'Party Type', 'Project Name', 'Creator Name', 'Description', 'Cost Code', 'Transaction Type', 'Transaction Date', 'Party Debit', 'Party Credit', 'Balance'],
-    "All Party Balances": ['Party Name', 'Party Type', 'Balance Amount', 'Balance Type', 'Petty Cash Balance', 'Salary Balance'],
+    "Party Ledger": ['Party Name', 'Party Type', 'Project Name', 'Creator Name', 'Description', 'Cost Code', 'Transaction Type', 'Date', 'Debit', 'Credit', 'Balance'],
+    "All Party Balances": ['Party Name', 'Party Type', 'Debit', 'Direction', 'Advance In', 'Advance Out'],
     // Project level Party Balance - exact UI columns from screenshot 6183-6186
     "Project level Party Balance Report": ['Party Name', 'Party Type', 'Project Name', 'Salary', 'Material Purchase', 'Other Expense', 'Subcon Amount', 'Site Expense', 'Equipment Expense', 'Debit Note', 'Sales Invoice', 'Net Retention', 'Credit Note', 'Material Sale', 'Material Return', 'Party Received', 'Party Paid', 'Net Balance', 'Balance Type'],
     // Subcon reports
     "Subcon Workorder Summary Report": ['Project Name', 'Subcontractor Name', 'Workorder Name', 'Workorder No.', 'Estimated Amount', 'Work Done Amount', 'Invoice Amount', '% Complete'],
-    "Subcon Measurement Book": ['Workorder No', 'Group', 'Section', 'Item Name', 'Progress Date', 'Unit', 'Estimated Quantity', 'Opening Quantity', 'Number', 'Length', 'Width', 'Height', 'Progress Quantity', 'Closing Quantity'],
-    "Subcon Deduction / Retention Report": ['Amount', 'Project Name', 'Party Name', 'Invoice Number', 'Creator Name', 'Type', 'Entry Creation Date'],
-    "Subcon Material Issue Summary": ['Project Name', 'Subcon Name', 'Material Name', 'Avg Unit Price', 'Total Quantity Issued', 'Total Amount'],
+    "Subcon Measurement Book": ['WO No', 'WO Name', 'Section', 'Description', 'Date', 'Unit', 'Length', 'Width', 'Height', 'No.', 'Depth', 'Factor', 'Measurement Qty', 'Total Qty'],
+    "Subcon Deduction / Retention Report": ['Amount', 'Project Name', 'Party Name', 'Invoice No', 'Creator Name', 'Type', 'Date'],
+    "Subcon Material Issue Summary": ['Project Name', 'Subcontractor Name', 'Material Name', 'Qty', 'Rate', 'Amount'],
     // Project financial summary
     "Project Financial Summary": ['Project Name', 'Project Status', 'Project Health', 'Project Budget', 'Total Expense', 'Budget Remaining', 'Total Sales', 'Project Margin', 'Payment In', 'Payment Out', 'Cash Balance'],
     "Company Transactions Report": ['Project Name', 'Transaction Type', 'Transaction Category', 'Created Date', 'Creator Name', 'Party Name', 'Cost Code', 'Sub Cost Code', 'Total Amount', 'Net Amount', 'Paid Amount', 'Unpaid Amount', 'Reference No.', 'Notes/Remarks', 'Description', 'Due Date', 'Payment Mode', 'Approval Status'],

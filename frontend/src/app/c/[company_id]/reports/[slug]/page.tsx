@@ -78,7 +78,7 @@ const REPORT_METADATA: Record<string, ReportMeta> = {
       { label: "Transaction Date", type: "date" },
       { label: "Payment Mode", type: "select", options: ["All", "Bank Transfer", "Cash", "Cheque"] }
     ],
-    columns: ['Payment Date', 'Project Name', 'Creator Name', 'Party Name', 'Amount', 'Unsettled Amount', 'Net Amount', 'Settlement Type', 'Remark', 'Payment Type', 'Payment Mode', 'Account Name', 'Cost Code', 'Sub Cost Code', 'Category', 'Created Date', 'Reference No.']
+    columns: ['Txn Date', 'Project Name', 'Paid By', 'Party Name', 'Amount', 'TDS Amount', 'Net Amount', 'Payment Type', 'Notes', 'Direction', 'Payment Mode', 'Account Name', 'Cost Code', 'Sub Cost Code', 'Expense Type', 'Created Date', 'Reference No']
   },
   "bank-statement": {
     title: "Bank Statement",
@@ -238,7 +238,7 @@ const REPORT_METADATA: Record<string, ReportMeta> = {
       { label: "Project Name", type: "select", options: ["All", "Metro Terminal", "Bypass Flyover"] },
       { label: "Party Name", type: "select", options: ["All", "Anil Steels", "Sanjay Yadav"] }
     ],
-    columns: ['Entry Creation Date', 'Type', 'Item Name', 'Amount', 'Bill Number', 'Expense Type', 'Project Name', 'Party Name', 'Creator Name', 'Due Date']
+    columns: ['Date', 'Type', 'Item Name', 'Amount', 'Bill No', 'Expense Type', 'Project Name', 'Party Name', 'Creator Name', 'Due Date']
   },
   "party-ledger": {
     title: "Party Ledger",
@@ -272,7 +272,7 @@ const REPORT_METADATA: Record<string, ReportMeta> = {
       { label: "Project Name", type: "select", options: ["All", "Metro Terminal", "Bypass Flyover"] },
       { label: "Status", type: "select", options: ["All", "Approved", "Pending", "Rejected"] }
     ],
-    columns: ['Request Date', 'Request No', 'Project Name', 'Material Name', 'Specifications', 'Unit', 'Request Quantity', 'Ordered Quantity', 'Pending Quantity', 'PO No', 'Requested by', 'Status', 'Approved or Rejected By', 'Request Notes']
+    columns: ['Date', 'Request No', 'Project Name', 'Material Name', 'Grade/Spec', 'Unit', 'Requested Qty', 'Approved Qty', 'Remaining Qty', 'PO Reference', 'Requested By', 'Status', 'Approved By', 'Remarks']
   },
   "material-received-used": {
     title: "Material Received & Used Report",
@@ -425,7 +425,7 @@ const REPORT_METADATA: Record<string, ReportMeta> = {
     filters: [
       { label: "Date Range", type: "date" }
     ],
-    columns: ['Party GSTIN', 'Party Name', 'Place of Supply', 'Invoice Number', 'Invoice Value', 'Invoice Date', 'Taxable Amt', 'Tax Rate', 'CGST Amt', 'SGST Amt', 'IGST Amt', 'Total Tax Amt']
+    columns: ['GSTIN', 'Client Name', 'Place of Supply', 'Invoice Number', 'Invoice Value', 'Invoice Date', 'Taxable Value', 'Tax Rate', 'CGST', 'SGST', 'IGST', 'Total Tax']
   },
   "gstr2-purchase": {
     title: "Purchase (GSTR-2)",
@@ -481,7 +481,7 @@ const REPORT_METADATA: Record<string, ReportMeta> = {
     filters: [
       { label: "Project Name", type: "select", options: ["All", "Metro Terminal", "Bypass Flyover"] }
     ],
-    columns: ['Amount', 'Project Name', 'Party Name', 'Invoice Number', 'Creator Name', 'Type', 'Entry Creation Date']
+    columns: ['Amount', 'Project Name', 'Party Name', 'Invoice No', 'Creator Name', 'Type', 'Date']
   },
   "subcon-material-issue": {
     title: "Subcon Material Issue Summary",
@@ -505,7 +505,7 @@ const REPORT_METADATA: Record<string, ReportMeta> = {
     filters: [
       { label: "Project Name", type: "select", options: ["All", "Metro Terminal", "Bypass Flyover"] }
     ],
-    columns: ['Project Name', 'Project Category', 'Project Stage', 'Key Personnel', 'Project Status', 'Project Health', 'Start Date', 'End Date', 'Progress']
+    columns: ['Project Name', 'Project Category', 'Key Personnel', 'Project Status', 'Project Health', 'Start Date', 'End Date', 'Progress']
   },
   "company-transactions": {
     title: "Company Transactions Report",
@@ -581,13 +581,13 @@ const REPORT_METADATA: Record<string, ReportMeta> = {
     title: "BOQ Workorder Summary Report",
     hasDownload: false,
     filters: [],
-    columns: ['Project Name', 'Client Name', 'Workorder Name', 'Workorder No.', 'Workorder Date', 'Estimated Amount', 'Work Done Amount', 'Invoice Amount', '% Complete']
+    columns: ['Project Name', 'Client Name', 'Workorder Name', 'Workorder No.', 'WO Start Date', 'WO Amount', 'Work Done Amount', 'Invoice Amount', '% Complete']
   },
   "boq-item": {
     title: "BOQ Item Report",
     hasDownload: false,
     filters: [],
-    columns: ['Project Name', 'Workorder Name', 'Workorder No', 'Client Name', 'BOQ Date', 'Item Name', 'Unit', 'Estimated Qty', 'Billed Qty', 'Unbilled Qty']
+    columns: ['Project Name', 'BOQ Name', 'Workorder No', 'Client Name', 'WO Start Date', 'Item Name', 'Unit', 'Est. Qty', 'Billed Qty', 'Remaining Qty']
   },
   "quotation": {
     title: "Quotation Report",
@@ -605,7 +605,7 @@ const REPORT_METADATA: Record<string, ReportMeta> = {
     title: "BOQ Measurement Book",
     hasDownload: false,
     filters: [],
-    columns: ['Project Name', 'Workorder No', 'Group', 'Section', 'Item Name', 'Progress Date', 'Unit', 'Estimated Quantity', 'Opening Quantity', 'Number', 'Length', 'Width', 'Height', 'Progress Quantity', 'Closing Quantity', 'Progress Notes']
+    columns: ['BOQ Name', 'Item Name', 'Material Name', 'Unit', 'Unit Price', 'Quantity', 'Total Cost Price', 'Creation Date']
   },
   "boq-bom": {
     title: "BOQ BOM Report",
