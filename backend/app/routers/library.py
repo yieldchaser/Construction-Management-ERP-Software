@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 from sqlalchemy import Numeric
+from datetime import datetime
 from typing import List, Optional
 from app.database import get_db
 from app import models
@@ -19,9 +20,20 @@ class PartyCreate(BaseModel):
     email: Optional[str] = None
     party_type: Optional[str] = None
     address: Optional[str] = None
+    bank_name: Optional[str] = None
+    account_name: Optional[str] = None
+    account_number: Optional[str] = None
+    ifsc_code: Optional[str] = None
+    tax_no: Optional[str] = None
     date_of_joining: Optional[str] = None # ISO format or custom date string
     aadhaar_number: Optional[str] = None
     pan_number: Optional[str] = None
+    esi_number: Optional[str] = None
+    pf_number: Optional[str] = None
+    father_name: Optional[str] = None
+    passport_no: Optional[str] = None
+    passport_expiry_date: Optional[str] = None
+    creator_name: Optional[str] = None
     aadhaar_file: Optional[str] = None
     pan_file: Optional[str] = None
 
@@ -32,6 +44,7 @@ class AssetTypeCreate(BaseModel):
 class CostCodeCreate(BaseModel):
     company_id: uuid.UUID
     code: str
+    sub_cost_code: Optional[str] = None
     name: str
 
 class DeductionCreate(BaseModel):
@@ -74,6 +87,32 @@ class RateCreate(BaseModel):
     hsn_sac: Optional[str] = None
 
 
+def _parse_optional_datetime(value: Optional[str]) -> Optional[datetime]:
+    if value is None:
+        return None
+
+    if isinstance(value, datetime):
+        return value
+
+    candidate = value.strip()
+    if not candidate:
+        return None
+
+    normalized = candidate.replace("Z", "+00:00")
+    try:
+        return datetime.fromisoformat(normalized)
+    except ValueError:
+        pass
+
+    for fmt in ("%Y-%m-%d", "%d-%m-%Y", "%d/%m/%Y", "%d-%b-%Y", "%d-%B-%Y"):
+        try:
+            return datetime.strptime(candidate, fmt)
+        except ValueError:
+            continue
+
+    return None
+
+
 # ─── PARTIES ───
 @router.get("/parties/{company_id}")
 def get_library_parties(company_id: uuid.UUID, db: Session = Depends(get_db)):
@@ -94,8 +133,20 @@ def create_library_party(payload: PartyCreate, db: Session = Depends(get_db)):
         email=payload.email,
         party_type=payload.party_type,
         address=payload.address,
+        bank_name=payload.bank_name,
+        account_name=payload.account_name,
+        account_number=payload.account_number,
+        ifsc_code=payload.ifsc_code,
+        tax_no=payload.tax_no,
+        date_of_joining=_parse_optional_datetime(payload.date_of_joining),
         aadhaar_number=payload.aadhaar_number,
         pan_number=payload.pan_number,
+        esi_number=payload.esi_number,
+        pf_number=payload.pf_number,
+        father_name=payload.father_name,
+        passport_no=payload.passport_no,
+        passport_expiry_date=_parse_optional_datetime(payload.passport_expiry_date),
+        creator_name=payload.creator_name,
         aadhaar_file=payload.aadhaar_file,
         pan_file=payload.pan_file
     )
@@ -109,6 +160,11 @@ def delete_library_party(party_id: uuid.UUID, db: Session = Depends(get_db)):
     party = db.query(models.LibraryParty).filter(models.LibraryParty.id == party_id).first()
     if not party:
         raise HTTPException(status_code=404, detail="Party not found")
+    try:
+        from app.routers.delete_logs import log_deletion
+        log_deletion(db, party.company_id, "party", party.id, f"Party: {party.name}", party_name=party.name)
+    except Exception:
+        pass
     db.delete(party)
     db.commit()
     return {"success": True}
@@ -144,7 +200,12 @@ def get_library_cost_codes(company_id: uuid.UUID, db: Session = Depends(get_db))
 
 @router.post("/cost-codes")
 def create_library_cost_code(payload: CostCodeCreate, db: Session = Depends(get_db)):
-    item = models.LibraryCostCode(company_id=payload.company_id, code=payload.code, name=payload.name)
+    item = models.LibraryCostCode(
+        company_id=payload.company_id,
+        code=payload.code,
+        sub_cost_code=payload.sub_cost_code,
+        name=payload.name
+    )
     db.add(item)
     db.commit()
     db.refresh(item)
@@ -258,6 +319,11 @@ def delete_library_material(item_id: uuid.UUID, db: Session = Depends(get_db)):
     item = db.query(models.LibraryMaterial).filter(models.LibraryMaterial.id == item_id).first()
     if not item:
         raise HTTPException(status_code=404, detail="Material not found")
+    try:
+        from app.routers.delete_logs import log_deletion
+        log_deletion(db, item.company_id, "material", item.id, f"Material: {item.name}")
+    except Exception:
+        pass
     db.delete(item)
     db.commit()
     return {"success": True}

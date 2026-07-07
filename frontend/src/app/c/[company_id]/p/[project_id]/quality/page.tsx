@@ -157,6 +157,9 @@ export default function QualityPage() {
   const [selectedInspection, setSelectedInspection] = useState<Inspection | null>(null);
   const [activeInspectionItems, setActiveInspectionItems] = useState<ChecklistItem[]>([]);
   const [inspectionResponses, setInspectionResponses] = useState<Record<string, "Pass" | "Fail" | "NA">>({});
+  const [inspectionSearch, setInspectionSearch] = useState("");
+  const [inspectionInspectorFilter, setInspectionInspectorFilter] = useState("all");
+  const [inspectionStatusFilter, setInspectionStatusFilter] = useState("all");
 
   const [showNCRForm, setShowNCRForm] = useState(false);
   const [ncrForm, setNcrForm] = useState({
@@ -456,6 +459,17 @@ export default function QualityPage() {
   const openNCRs = ncrs.filter(n => n.status === "open");
   const reviewNCRs = ncrs.filter(n => n.status === "under_review");
   const closedNCRs = ncrs.filter(n => n.status === "closed");
+  const inspectionInspectorOptions = Array.from(new Set(inspections.map((inspection) => inspection.inspector))).sort((a, b) => a.localeCompare(b));
+  const inspectionStatusOptions = ["pending", "pass", "partial", "fail"];
+  const inspectionSearchValue = inspectionSearch.trim().toLowerCase();
+  const filteredInspections = inspections.filter((insp) => {
+    const matchesSearch =
+      inspectionSearchValue.length === 0 ||
+      [insp.zone, insp.checklist, insp.inspector].some((value) => value.toLowerCase().includes(inspectionSearchValue));
+    const matchesInspector = inspectionInspectorFilter === "all" || insp.inspector === inspectionInspectorFilter;
+    const matchesStatus = inspectionStatusFilter === "all" || insp.status === inspectionStatusFilter;
+    return matchesSearch && matchesInspector && matchesStatus;
+  });
 
   const tabBtn = (key: typeof tab, label: string) => (
     <button onClick={() => setTab(key)}
@@ -559,37 +573,113 @@ export default function QualityPage() {
                 ))}
               </div>
 
-              {/* Inspection cards */}
-              <div className="grid grid-cols-1 gap-3">
-                {inspections.map(insp => {
-                  const rate = passRate(insp.passCount, insp.failCount);
-                  return (
-                    <div key={insp.id} onClick={() => setSelectedInspection(insp)}
-                      className="bg-card border border-border-custom rounded-md p-5 cursor-pointer hover:border-primary/20 hover:bg-white/[0.01] transition-all">
-                      <div className="flex items-start justify-between mb-3">
-                        <div>
-                          <p className="font-bold text-white text-sm">{insp.zone}</p>
-                          <p className="text-xs text-muted mt-0.5">{insp.checklist}</p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {badge(insp.status.replace("_", " "), statusColors[insp.status])}
-                          <span className="text-[10px] text-muted">{insp.date}</span>
-                        </div>
-                      </div>
-                      {/* Pass rate bar */}
-                      <div className="flex items-center gap-3">
-                        <div className="flex-1 h-1.5 bg-white/5 rounded-full overflow-hidden">
-                          <div className="h-full bg-gradient-to-r from-green-500 to-green-400 rounded-full transition-all"
-                            style={{ width: `${rate}%` }} />
-                        </div>
-                        <span className="text-xs font-bold text-zinc-300">{rate}% pass</span>
-                        <span className="text-xs text-green-400">✓ {insp.passCount}</span>
-                        <span className="text-xs text-red-400">✗ {insp.failCount}</span>
-                        <span className="text-[10px] text-muted">by {insp.inspector}</span>
-                      </div>
-                    </div>
-                  );
-                })}
+              {/* Inspection Filters */}
+              <div className="rounded-md border border-border-custom bg-card p-4 space-y-4">
+                <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+                  <div>
+                    <h3 className="text-xs font-bold text-muted uppercase tracking-wider">Inspection Register</h3>
+                    <p className="text-[10px] text-muted mt-1">Search by zone, checklist, or inspector. Filter the register by inspector and status.</p>
+                  </div>
+                  <div className="text-[10px] text-muted font-medium">
+                    {filteredInspections.length} inspection{filteredInspections.length === 1 ? "" : "s"} shown
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+                  <div className="space-y-1">
+                    <label className="text-[10px] uppercase font-bold text-muted tracking-wider">Search</label>
+                    <input
+                      value={inspectionSearch}
+                      onChange={(e) => setInspectionSearch(e.target.value)}
+                      placeholder="Search zone, checklist, or inspector..."
+                      className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-xs text-white placeholder:text-muted"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] uppercase font-bold text-muted tracking-wider">Inspected By</label>
+                    <select
+                      value={inspectionInspectorFilter}
+                      onChange={(e) => setInspectionInspectorFilter(e.target.value)}
+                      className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-xs text-white"
+                    >
+                      <option value="all">All Inspectors</option>
+                      {inspectionInspectorOptions.map((name) => (
+                        <option key={name} value={name}>{name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] uppercase font-bold text-muted tracking-wider">Status</label>
+                    <select
+                      value={inspectionStatusFilter}
+                      onChange={(e) => setInspectionStatusFilter(e.target.value)}
+                      className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-xs text-white"
+                    >
+                      <option value="all">All Statuses</option>
+                      {inspectionStatusOptions.map((status) => (
+                        <option key={status} value={status}>{status.replace("_", " ")}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-card border border-border-custom rounded-md overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs text-left">
+                    <thead className="bg-elevated border-b border-border-custom">
+                      <tr>
+                        <th className="px-5 py-3 font-semibold">Zone</th>
+                        <th className="px-5 py-3 font-semibold">Checklist</th>
+                        <th className="px-5 py-3 font-semibold">Date</th>
+                        <th className="px-5 py-3 font-semibold">Inspected By</th>
+                        <th className="px-5 py-3 font-semibold">Pass / Fail</th>
+                        <th className="px-5 py-3 font-semibold">Status</th>
+                        <th className="px-5 py-3 font-semibold text-right">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredInspections.length === 0 ? (
+                        <tr>
+                          <td colSpan={7} className="px-5 py-10 text-center text-muted">No inspections match the current filters.</td>
+                        </tr>
+                      ) : (
+                        filteredInspections.map((insp) => {
+                          const rate = passRate(insp.passCount, insp.failCount);
+                          return (
+                            <tr key={insp.id} className="border-b border-white/[0.03] hover:bg-white/[0.015] transition-all">
+                              <td className="px-5 py-3 font-bold text-white">{insp.zone}</td>
+                              <td className="px-5 py-3 text-zinc-200">{insp.checklist}</td>
+                              <td className="px-5 py-3 text-muted">{insp.date}</td>
+                              <td className="px-5 py-3 text-muted">{insp.inspector}</td>
+                              <td className="px-5 py-3">
+                                <div className="flex items-center gap-3">
+                                  <div className="flex-1 h-1.5 bg-white/5 rounded-full overflow-hidden max-w-28">
+                                    <div className="h-full bg-gradient-to-r from-green-500 to-green-400 rounded-full" style={{ width: `${rate}%` }} />
+                                  </div>
+                                  <div className="text-[10px] text-muted whitespace-nowrap">
+                                    <span className="text-green-400 font-bold">✓ {insp.passCount}</span>
+                                    <span className="mx-1">/</span>
+                                    <span className="text-red-400 font-bold">✕ {insp.failCount}</span>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="px-5 py-3">{badge(insp.status.replace("_", " "), statusColors[insp.status])}</td>
+                              <td className="px-5 py-3 text-right">
+                                <button
+                                  onClick={() => setSelectedInspection(insp)}
+                                  className="px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-[10px] font-bold border border-primary/20 hover:bg-primary/20 cursor-pointer"
+                                >
+                                  View
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           )}

@@ -139,18 +139,21 @@ def test_onboarding_and_libraries():
     cc_payload = {
         "company_id": str(company_id),
         "code": "CC-MAS-01",
+        "sub_cost_code": "CC-MAS-01-01",
         "name": "Masonry Brick Work"
     }
     res_cc_post = client.post("/apis/v3/library/cost-codes", json=cc_payload)
     assert res_cc_post.status_code == 200, res_cc_post.text
     cc = res_cc_post.json()
     print("Created Cost Code:", cc)
+    assert cc["sub_cost_code"] == "CC-MAS-01-01"
     
     res_cc_get = client.get(f"/apis/v3/library/cost-codes/{company_id}")
     assert res_cc_get.status_code == 200
     codes = res_cc_get.json()
     assert len(codes) == 1
     print("Fetched Cost Codes:", codes)
+    assert codes[0]["sub_cost_code"] == "CC-MAS-01-01"
     
     # Delete test
     del_res = client.delete(f"/apis/v3/library/cost-codes/{cc['id']}")

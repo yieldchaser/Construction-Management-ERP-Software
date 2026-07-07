@@ -359,7 +359,8 @@ def create_batch(payload: BatchCreate, db: Session = Depends(get_db)):
         else:
             is_dry_material = any(x in recipe_material.material_name.lower() for x in ["cement", "sand", "aggregate"])
             if is_concrete and is_dry_material:
-                actual_qty = (float(recipe_material.planned_qty) / float(recipe.target_output_qty)) * actual_output_qty * 1.54
+                # Scale planned material qty to actual output; recipe qty is already the dry-material amount, so no 1.54 wet->dry factor
+                actual_qty = (float(recipe_material.planned_qty) / float(recipe.target_output_qty)) * actual_output_qty
             else:
                 actual_qty = (float(recipe_material.planned_qty) / float(recipe.target_output_qty)) * actual_output_qty
                 

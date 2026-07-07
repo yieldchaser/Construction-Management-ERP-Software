@@ -103,8 +103,8 @@ export default function OnboardingPage() {
 
       const data = await response.json();
       if (response.ok && data.success) {
-        // Redirect to Projects landing page
-        window.location.href = `/c/${companyId}/d/home`;
+        // Redirect to the shared company hub after onboarding
+        window.location.href = `/c/${companyId}/reports`;
       } else {
         setError(data.detail || "Onboarding failed. Please try again.");
       }

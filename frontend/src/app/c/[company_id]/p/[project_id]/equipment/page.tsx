@@ -260,7 +260,7 @@ export default function EquipmentTrackingPage() {
       const odoVal = fuelOdo ? parseFloat(fuelOdo) : null;
       const total = litersVal * rateVal;
 
-      const res = await fetch(`${getApiHost()}/apis/v3/equipment/fuel-log`, {
+      const res = await fetch(`${getApiHost()}/apis/v3/equipment/${activeFuelingEq.id}/fuel`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -324,7 +324,7 @@ export default function EquipmentTrackingPage() {
         <div className="flex flex-col overflow-y-auto flex-1">
           <div className="p-6 flex items-center gap-3 border-b border-border-custom">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-tr bg-primary font-sans font-bold text-white">S</div>
-            <span className="font-bold text-white tracking-tight">SiteFlow Console</span>
+            <span className="font-bold text-white tracking-tight">SiteFlow</span>
           </div>
 
           <nav className="p-4 space-y-2">
@@ -411,7 +411,7 @@ export default function EquipmentTrackingPage() {
                       const activeDep = deployments.find(d => d.equipment_id === eq.id && d.end_date === null);
                       const isOverdue = maintenanceLogs.some(m => m.equipment_id === eq.id && m.completed_date === null && new Date(m.scheduled_date) < new Date());
                       return (
-                        <div key={eq.id} className="bg-card border border-border-custom rounded-lg p-5 rounded-lg border border-border-custom bg-input flex flex-col justify-between space-y-4">
+                        <div key={eq.id} className="bg-card border border-border-custom rounded-lg p-5 flex flex-col justify-between space-y-4">
                           <div>
                             <div className="flex justify-between items-start gap-2">
                               <span className="text-xs font-bold text-white line-clamp-1">{eq.name}</span>
@@ -468,7 +468,7 @@ export default function EquipmentTrackingPage() {
               )}
 
               {activeTab === "timeline" && (
-                <div className="bg-card border border-border-custom rounded-lg border border-border-custom rounded-lg p-6 space-y-4">
+                <div className="bg-card border border-border-custom rounded-lg p-6 space-y-4">
                   <div className="flex justify-between items-center pb-2 border-b border-border-custom">
                     <h3 className="text-xs font-bold text-muted uppercase tracking-wider">Refuel & Usage Feed</h3>
                     <div className="text-[10px] text-muted">Chronological machine-ledger timeline</div>

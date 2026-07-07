@@ -61,11 +61,22 @@ def test_phase7():
         env=env
     )
     
-    # Wait for the server to spin up
-    time.sleep(5)
-    
     try:
         base_url = "http://127.0.0.1:8005"
+        # Wait for the server to spin up
+        server_ready = False
+        for _ in range(30):
+            if proc.poll() is not None:
+                break
+            try:
+                res = requests.get(f"{base_url}/openapi.json", timeout=1)
+                if res.status_code == 200:
+                    server_ready = True
+                    break
+            except requests.RequestException:
+                pass
+            time.sleep(1)
+        assert server_ready, "FastAPI backend server did not start in time"
         
         # 1. Create a Material Indent
         print("\nTesting Create Material Indent...")
@@ -88,6 +99,34 @@ def test_phase7():
         assert indent["status"] == "pending"
         assert len(indent["items"]) == 2
         print("[x] Material Indent created successfully!")
+
+        # 1a. List the created indent through the shared listing route
+        print("\nTesting List Material Indents by project_id...")
+        res = requests.get(f"{base_url}/apis/v3/procurement/indents?project_id={project_id}")
+        assert res.status_code == 200
+        project_indents = res.json()
+        assert any(item["id"] == indent_id for item in project_indents)
+        project_indent = next(item for item in project_indents if item["id"] == indent_id)
+        assert project_indent["indent_number"] == "IND-2026-001"
+
+        print("\nTesting List Material Indents by company_id...")
+        res = requests.get(f"{base_url}/apis/v3/procurement/indents?company_id={company_id}")
+        assert res.status_code == 200
+        company_indents = res.json()
+        assert any(item["id"] == indent_id for item in company_indents)
+        company_indent = next(item for item in company_indents if item["id"] == indent_id)
+        assert company_indent["indent_number"] == "IND-2026-001"
+
+        print("\nTesting existing company-specific indent listing route...")
+        res = requests.get(f"{base_url}/apis/v3/procurement/indents/company/{company_id}")
+        assert res.status_code == 200
+        company_path_indents = res.json()
+        assert any(item["id"] == indent_id for item in company_path_indents)
+
+        print("\nTesting List Material Indents without query params...")
+        res = requests.get(f"{base_url}/apis/v3/procurement/indents")
+        assert res.status_code == 400
+        assert res.json()["detail"] == "Either project_id or company_id must be provided"
 
         # 2. Approve Material Indent
         print("\nTesting Approve Material Indent...")

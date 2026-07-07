@@ -139,6 +139,8 @@ export default function LoginPage() {
         localStorage.setItem("access_token", data.access_token);
         localStorage.setItem("company_id", data.company.id);
         localStorage.setItem("user_id", data.user.id);
+        localStorage.setItem("user_name", data.user?.name || "");
+        localStorage.setItem("creator_name", data.user?.name || "");
         
         // Fetch company onboarding status
         const companyRes = await fetch(`${apiHost}/apis/v3/settings/company/${data.company.id}`, {
@@ -157,7 +159,7 @@ export default function LoginPage() {
           if (shouldOnboard) {
             window.location.href = `/profile/onboarding`;
           } else {
-            window.location.href = `/c/${data.company.id}/d/home`;
+            window.location.href = `/c/${data.company.id}/reports`;
           }
         }, 1500);
       } else {

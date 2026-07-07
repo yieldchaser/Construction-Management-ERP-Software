@@ -36,8 +36,19 @@ export default function LibraryHubPage() {
   const [partyEmail, setPartyEmail] = useState("");
   const [partyType, setPartyType] = useState("Supplier");
   const [partyAddress, setPartyAddress] = useState("");
+  const [partyBankName, setPartyBankName] = useState("");
+  const [partyAccountName, setPartyAccountName] = useState("");
+  const [partyAccountNumber, setPartyAccountNumber] = useState("");
+  const [partyIfscCode, setPartyIfscCode] = useState("");
+  const [partyTaxNo, setPartyTaxNo] = useState("");
+  const [partyJoiningDate, setPartyJoiningDate] = useState("");
   const [partyAadhaar, setPartyAadhaar] = useState("");
   const [partyPan, setPartyPan] = useState("");
+  const [partyEsiNumber, setPartyEsiNumber] = useState("");
+  const [partyPfNumber, setPartyPfNumber] = useState("");
+  const [partyFatherName, setPartyFatherName] = useState("");
+  const [partyPassportNo, setPartyPassportNo] = useState("");
+  const [partyPassportExpiryDate, setPartyPassportExpiryDate] = useState("");
 
   // Form Fields: Material
   const [matName, setMatName] = useState("");
@@ -67,8 +78,34 @@ export default function LibraryHubPage() {
   // Simple Item (Asset Type, Cost Code, Deduction, Progress, Workforce)
   const [simpleName, setSimpleName] = useState("");
   const [simpleCode, setSimpleCode] = useState(""); // used for Cost Code
+  const [simpleSubCode, setSimpleSubCode] = useState("");
 
   const apiHost = getApiHost();
+  const getStoredCreatorName = () => {
+    if (typeof window === "undefined") return "";
+    return localStorage.getItem("creator_name") || localStorage.getItem("user_name") || "";
+  };
+
+  const resetPartyForm = () => {
+    setPartyName("");
+    setPartyPhone("");
+    setPartyEmail("");
+    setPartyType("Supplier");
+    setPartyAddress("");
+    setPartyBankName("");
+    setPartyAccountName("");
+    setPartyAccountNumber("");
+    setPartyIfscCode("");
+    setPartyTaxNo("");
+    setPartyJoiningDate("");
+    setPartyAadhaar("");
+    setPartyPan("");
+    setPartyEsiNumber("");
+    setPartyPfNumber("");
+    setPartyFatherName("");
+    setPartyPassportNo("");
+    setPartyPassportExpiryDate("");
+  };
 
   // Compute sale price automatically
   useEffect(() => {
@@ -134,6 +171,7 @@ export default function LibraryHubPage() {
   const handleCreateParty = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!partyName.trim()) return;
+    const creatorName = getStoredCreatorName();
 
     try {
       const res = await fetch(`${apiHost}/apis/v3/library/parties`, {
@@ -149,19 +187,26 @@ export default function LibraryHubPage() {
           email: partyEmail,
           party_type: partyType,
           address: partyAddress,
+          bank_name: partyBankName,
+          account_name: partyAccountName,
+          account_number: partyAccountNumber,
+          ifsc_code: partyIfscCode,
+          tax_no: partyTaxNo,
+          date_of_joining: partyJoiningDate || null,
           aadhaar_number: partyAadhaar,
-          pan_number: partyPan
+          pan_number: partyPan,
+          esi_number: partyEsiNumber,
+          pf_number: partyPfNumber,
+          father_name: partyFatherName,
+          passport_no: partyPassportNo,
+          passport_expiry_date: partyPassportExpiryDate || null,
+          creator_name: creatorName || null
         })
       });
 
       if (res.ok) {
         setIsPartyDrawerOpen(false);
-        setPartyName("");
-        setPartyPhone("");
-        setPartyEmail("");
-        setPartyAddress("");
-        setPartyAadhaar("");
-        setPartyPan("");
+        resetPartyForm();
         setToastMessage("Party added to library!");
         setTimeout(() => setToastMessage(""), 3000);
         fetchLibraryData();
@@ -267,6 +312,7 @@ export default function LibraryHubPage() {
       };
       if (activeTab === "cost-code") {
         payload.code = simpleCode;
+        payload.sub_cost_code = simpleSubCode || null;
       }
 
       const res = await fetch(`${apiHost}/apis/v3/library/${endpoint}`, {
@@ -282,6 +328,7 @@ export default function LibraryHubPage() {
         setIsSimpleDrawerOpen(false);
         setSimpleName("");
         setSimpleCode("");
+        setSimpleSubCode("");
         setToastMessage("Library item created!");
         setTimeout(() => setToastMessage(""), 3000);
         fetchLibraryData();
@@ -292,12 +339,59 @@ export default function LibraryHubPage() {
   };
 
   const filteredData = libraryData.filter((item) => {
-    const query = searchQuery.toLowerCase();
-    const nameMatches = item.name && item.name.toLowerCase().includes(query);
-    const codeMatches = item.code && item.code.toLowerCase().includes(query);
-    const customPidMatches = item.party_id_custom && item.party_id_custom.toLowerCase().includes(query);
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return true;
+
+    const matchesQuery = (value: unknown) =>
+      value !== null && value !== undefined && String(value).toLowerCase().includes(query);
+
+    if (activeTab === "party") {
+      return [
+        item.party_id_custom,
+        item.name,
+        item.party_type,
+        item.phone,
+        item.email,
+        item.address,
+        item.bank_name,
+        item.account_name,
+        item.account_number,
+        item.ifsc_code,
+        item.tax_no,
+        item.date_of_joining,
+        item.aadhaar_number,
+        item.pan_number,
+        item.esi_number,
+        item.pf_number,
+        item.father_name,
+        item.passport_no,
+        item.passport_expiry_date,
+        item.creator_name,
+        item.created_at
+      ].some(matchesQuery);
+    }
+
+    if (activeTab === "cost-code") {
+      return [item.code, item.sub_cost_code, item.name].some(matchesQuery);
+    }
+
+    const nameMatches = matchesQuery(item.name);
+    const codeMatches = matchesQuery(item.code) || matchesQuery(item.item_code) || matchesQuery(item.cost_code);
+    const customPidMatches = matchesQuery(item.party_id_custom);
     return nameMatches || codeMatches || customPidMatches;
   });
+
+  const formatLibraryCell = (value: unknown) => {
+    if (value === null || value === undefined || value === "") return "-";
+    return String(value);
+  };
+
+  const formatDateCell = (value: unknown) => {
+    if (value === null || value === undefined || value === "") return "-";
+    const parsedDate = new Date(String(value));
+    if (Number.isNaN(parsedDate.getTime()) || parsedDate.getFullYear() <= 1) return "-";
+    return parsedDate.toLocaleDateString();
+  };
 
   return (
     <div className="flex-1 flex overflow-hidden">
@@ -371,34 +465,62 @@ export default function LibraryHubPage() {
         <div className="flex-1 overflow-auto rounded-md border border-border-custom bg-sidebar">
           {/* Party Library Table */}
           {activeTab === "party" && (
-            <table className="w-full text-left text-xs border-collapse">
+            <table className="min-w-[2200px] w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="border-b border-border-custom text-muted font-semibold uppercase tracking-wider bg-background/50">
                   <th className="px-5 py-3">Party ID</th>
-                  <th className="px-5 py-3">Name</th>
-                  <th className="px-5 py-3">Phone / Email</th>
+                  <th className="px-5 py-3">Party Name</th>
                   <th className="px-5 py-3">Party Type</th>
+                  <th className="px-5 py-3">Bank Name</th>
+                  <th className="px-5 py-3">Account Name</th>
+                  <th className="px-5 py-3">Account Number</th>
+                  <th className="px-5 py-3">IFSC Code</th>
+                  <th className="px-5 py-3">Tax No.</th>
+                  <th className="px-5 py-3">Billing Address</th>
+                  <th className="px-5 py-3">Aadhaar Number</th>
+                  <th className="px-5 py-3">PAN Card Number</th>
+                  <th className="px-5 py-3">ESI Number</th>
+                  <th className="px-5 py-3">PF Number</th>
+                  <th className="px-5 py-3">Father Name</th>
+                  <th className="px-5 py-3">Passport No.</th>
+                  <th className="px-5 py-3">Passport Expiry Date</th>
+                  <th className="px-5 py-3">Joining Date</th>
+                  <th className="px-5 py-3">Created Date</th>
+                  <th className="px-5 py-3">Creator Name</th>
                   <th className="px-6 py-4 text-center">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border-custom">
                 {filteredData.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-6 py-12 text-center text-muted font-semibold">No parties registered in library.</td>
+                    <td colSpan={20} className="px-6 py-12 text-center text-muted font-semibold">No parties registered in library.</td>
                   </tr>
                 ) : (
                   filteredData.map((item) => (
                     <tr key={item.id} className="hover:bg-elevated/20 transition-colors border-b border-border-custom last:border-b-0">
-                      <td className="px-6 py-4 text-muted font-bold">{item.party_id_custom}</td>
-                      <td className="px-6 py-4 font-semibold text-foreground">{item.name}</td>
-                      <td className="px-6 py-4 text-muted">
-                        {item.phone || "-"} <span className="block text-[10px] text-muted mt-0.5">{item.email}</span>
-                      </td>
-                      <td className="px-5 py-3">
+                      <td className="px-6 py-4 text-muted font-bold whitespace-nowrap">{formatLibraryCell(item.party_id_custom)}</td>
+                      <td className="px-6 py-4 font-semibold text-foreground whitespace-nowrap">{formatLibraryCell(item.name)}</td>
+                      <td className="px-5 py-3 whitespace-nowrap">
                         <span className="bg-white/5 text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider text-zinc-300">
-                          {item.party_type}
+                          {formatLibraryCell(item.party_type)}
                         </span>
                       </td>
+                      <td className="px-6 py-4 text-muted whitespace-nowrap">{formatLibraryCell(item.bank_name)}</td>
+                      <td className="px-6 py-4 text-muted whitespace-nowrap">{formatLibraryCell(item.account_name)}</td>
+                      <td className="px-6 py-4 text-muted font-mono whitespace-nowrap">{formatLibraryCell(item.account_number)}</td>
+                      <td className="px-6 py-4 text-muted font-mono whitespace-nowrap">{formatLibraryCell(item.ifsc_code)}</td>
+                      <td className="px-6 py-4 text-muted whitespace-nowrap">{formatLibraryCell(item.tax_no)}</td>
+                      <td className="px-6 py-4 text-muted whitespace-nowrap">{formatLibraryCell(item.address)}</td>
+                      <td className="px-6 py-4 text-muted font-mono whitespace-nowrap">{formatLibraryCell(item.aadhaar_number)}</td>
+                      <td className="px-6 py-4 text-muted font-mono whitespace-nowrap">{formatLibraryCell(item.pan_number)}</td>
+                      <td className="px-6 py-4 text-muted font-mono whitespace-nowrap">{formatLibraryCell(item.esi_number)}</td>
+                      <td className="px-6 py-4 text-muted font-mono whitespace-nowrap">{formatLibraryCell(item.pf_number)}</td>
+                      <td className="px-6 py-4 text-muted whitespace-nowrap">{formatLibraryCell(item.father_name)}</td>
+                      <td className="px-6 py-4 text-muted font-mono whitespace-nowrap">{formatLibraryCell(item.passport_no)}</td>
+                      <td className="px-6 py-4 text-muted whitespace-nowrap">{formatDateCell(item.passport_expiry_date)}</td>
+                      <td className="px-6 py-4 text-muted whitespace-nowrap">{formatDateCell(item.date_of_joining)}</td>
+                      <td className="px-6 py-4 text-muted whitespace-nowrap">{formatDateCell(item.created_at)}</td>
+                      <td className="px-6 py-4 text-muted whitespace-nowrap">{formatLibraryCell(item.creator_name)}</td>
                       <td className="px-6 py-4 text-center">
                         <button
                           onClick={() => handleDeleteItem(item.id)}
@@ -414,8 +536,8 @@ export default function LibraryHubPage() {
             </table>
           )}
 
-          {/* Simple Tables (Asset Types, Cost Codes, Deductions, Progresses, Workforces) */}
-          {(activeTab === "asset-type" || activeTab === "deduction" || activeTab === "progress" || activeTab === "workforce") && (
+          {/* Simple Tables (Asset Types, Deductions, Progresses) */}
+          {(activeTab === "asset-type" || activeTab === "deduction" || activeTab === "progress") && (
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="border-b border-border-custom text-muted font-semibold uppercase tracking-wider bg-background/50">
@@ -451,25 +573,59 @@ export default function LibraryHubPage() {
             </table>
           )}
 
-          {activeTab === "cost-code" && (
+          {/* Workforce Library Table */}
+          {activeTab === "workforce" && (
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="border-b border-border-custom text-muted font-semibold uppercase tracking-wider bg-background/50">
-                  <th className="px-5 py-3">Code</th>
+                  <th className="px-5 py-3">Workforce Name</th>
+                  <th className="px-5 py-3">Cost Code</th>
+                  <th className="px-5 py-3">Salary Per Shift</th>
+                  <th className="px-5 py-3">Shift Hours</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border-custom">
+                {filteredData.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="px-6 py-12 text-center text-muted font-semibold">No workforces registered in library.</td>
+                  </tr>
+                ) : (
+                  filteredData.map((item) => (
+                    <tr key={item.id} className="hover:bg-elevated/20 transition-colors border-b border-border-custom last:border-b-0">
+                      <td className="px-6 py-4 font-semibold text-foreground">{formatLibraryCell(item.name)}</td>
+                      <td className="px-6 py-4 text-muted">{formatLibraryCell(item.cost_code ?? item.costCode)}</td>
+                      <td className="px-6 py-4 text-muted">{formatLibraryCell(item.salary_per_shift ?? item.salaryPerShift)}</td>
+                      <td className="px-6 py-4 text-muted">{formatLibraryCell(item.shift_hours ?? item.shiftHours)}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          )}
+
+          {activeTab === "cost-code" && (
+            <table className="w-full min-w-[760px] text-left text-xs border-collapse">
+              <thead>
+                <tr className="border-b border-border-custom text-muted font-semibold uppercase tracking-wider bg-background/50">
+                  <th className="px-5 py-3">Cost Code</th>
+                  <th className="px-5 py-3">Sub Cost Code</th>
                   <th className="px-5 py-3">Description</th>
+                  <th className="px-5 py-3">Created Date</th>
                   <th className="px-6 py-4 text-center">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border-custom">
                 {filteredData.length === 0 ? (
                   <tr>
-                    <td colSpan={3} className="px-6 py-12 text-center text-muted font-semibold">No cost codes registered in library.</td>
+                    <td colSpan={5} className="px-6 py-12 text-center text-muted font-semibold">No cost codes registered in library.</td>
                   </tr>
                 ) : (
                   filteredData.map((item) => (
                     <tr key={item.id} className="hover:bg-elevated/20 transition-colors border-b border-border-custom last:border-b-0">
-                      <td className="px-6 py-4 text-primary font-semibold font-mono">{item.code}</td>
-                      <td className="px-6 py-4 font-semibold text-foreground">{item.name}</td>
+                      <td className="px-6 py-4 text-primary font-semibold font-mono">{formatLibraryCell(item.code)}</td>
+                      <td className="px-6 py-4 text-muted font-mono">{formatLibraryCell(item.sub_cost_code)}</td>
+                      <td className="px-6 py-4 font-semibold text-foreground">{formatLibraryCell(item.name)}</td>
+                      <td className="px-6 py-4 text-muted">{formatDateCell(item.created_at)}</td>
                       <td className="px-6 py-4 text-center">
                         <button
                           onClick={() => handleDeleteItem(item.id)}
@@ -490,39 +646,41 @@ export default function LibraryHubPage() {
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="border-b border-border-custom text-muted font-semibold uppercase tracking-wider bg-background/50">
-                  <th className="px-5 py-3">Material Code</th>
-                  <th className="px-5 py-3">Item Name</th>
-                  <th className="px-5 py-3">GST% / Category</th>
-                  <th className="px-6 py-4 text-right">Standard Cost Price</th>
-                  <th className="px-6 py-4 text-center">Action</th>
+                  <th className="px-5 py-3">Item Code</th>
+                  <th className="px-5 py-3">Material Name</th>
+                  <th className="px-5 py-3">Specifications</th>
+                  <th className="px-5 py-3">Unit</th>
+                  <th className="px-5 py-3">Material Category</th>
+                  <th className="px-5 py-3">Created Date</th>
+                  <th className="px-5 py-3">Creator Name</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border-custom">
                 {filteredData.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-6 py-12 text-center text-muted font-semibold">No materials registered.</td>
+                    <td colSpan={7} className="px-6 py-12 text-center text-muted font-semibold">No materials registered.</td>
                   </tr>
                 ) : (
                   filteredData.map((item) => (
                     <tr key={item.id} className="hover:bg-elevated/20 transition-colors border-b border-border-custom last:border-b-0">
-                      <td className="px-6 py-4 text-muted font-mono">{item.item_code || "-"}</td>
-                      <td className="px-6 py-4 font-semibold text-foreground">
-                        {item.name}
-                        <span className="block text-[10px] text-muted mt-0.5">UOM: {item.unit}</span>
+                      <td className="px-6 py-4 text-muted font-mono">{formatLibraryCell(item.item_code)}</td>
+                      <td className="px-6 py-4 font-semibold text-foreground">{formatLibraryCell(item.name)}</td>
+                      <td className="px-6 py-4 text-muted">{formatLibraryCell(item.specifications)}</td>
+                      <td className="px-6 py-4 text-muted">{formatLibraryCell(item.unit)}</td>
+                      <td className="px-6 py-4 text-muted">{formatLibraryCell(item.category)}</td>
+                      <td className="px-6 py-4 text-muted">
+                        {item.created_at ? new Date(item.created_at).toLocaleDateString() : "-"}
                       </td>
                       <td className="px-6 py-4 text-muted">
-                        {item.gst_rate}% <span className="block text-[10px] text-muted mt-0.5">{item.category}</span>
-                      </td>
-                      <td className="px-6 py-4 text-right text-sm font-bold text-success">
-                        ₹{floatVal(item.unit_cost).toLocaleString()}
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <button
-                          onClick={() => handleDeleteItem(item.id)}
-                          className="px-2.5 py-1 bg-elevated hover:bg-elevated/80 border border-border-custom text-foreground text-xs font-medium rounded transition-all cursor-pointer"
-                        >
-                          Remove
-                        </button>
+                        {formatLibraryCell(
+                          item.creator_name ||
+                            item.creatorName ||
+                            item.created_by_name ||
+                            item.createdByName ||
+                            item.creator ||
+                            item.created_by_user_name ||
+                            item.createdByUserName
+                        )}
                       </td>
                     </tr>
                   ))
@@ -536,45 +694,57 @@ export default function LibraryHubPage() {
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="border-b border-border-custom text-muted font-semibold uppercase tracking-wider bg-background/50">
-                  <th className="px-5 py-3">Item Name</th>
-                  <th className="px-5 py-3">GST% / Category</th>
-                  <th className="px-6 py-4 text-right">Standard Cost Price</th>
-                  <th className="px-6 py-4 text-right">Standard Sale Price</th>
-                  <th className="px-6 py-4 text-center">Action</th>
+                  <th className="px-5 py-3">Description</th>
+                  <th className="px-5 py-3">Item Code</th>
+                  <th className="px-5 py-3">Cost Code</th>
+                  <th className="px-5 py-3">Unit</th>
+                  <th className="px-5 py-3">Components</th>
+                  <th className="px-5 py-3 text-right">Unit Cost Price</th>
+                  <th className="px-5 py-3 text-right">Markup Amount</th>
+                  <th className="px-5 py-3 text-right">Markup %</th>
+                  <th className="px-5 py-3 text-right">Selling Price</th>
+                  <th className="px-5 py-3">Created Date</th>
+                  <th className="px-5 py-3">Component Count</th>
+                  <th className="px-5 py-3">HSN/SAC</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border-custom">
                 {filteredData.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-6 py-12 text-center text-muted font-semibold">No rate card items registered.</td>
+                    <td colSpan={12} className="px-6 py-12 text-center text-muted font-semibold">No rate card items registered.</td>
                   </tr>
                 ) : (
-                  filteredData.map((item) => (
-                    <tr key={item.id} className="hover:bg-elevated/20 transition-colors border-b border-border-custom last:border-b-0">
-                      <td className="px-6 py-4 font-semibold text-foreground">
-                        {item.name}
-                        <span className="block text-[10px] text-muted mt-0.5">UOM: {item.unit} • {item.item_code}</span>
-                      </td>
-                      <td className="px-6 py-4 text-muted">
-                        {item.gst_rate}% <span className="block text-[10px] text-muted mt-0.5">{item.category}</span>
-                      </td>
-                      <td className="px-6 py-4 text-right text-muted font-semibold">
-                        ₹{floatVal(item.unit_cost).toLocaleString()}
-                      </td>
-                      <td className="px-6 py-4 text-right text-sm font-bold text-success">
-                        ₹{floatVal(item.unit_sale_price).toLocaleString()}
-                        <span className="block text-[9px] text-muted mt-0.5">Markup: {item.markup_value} ({item.markup_type})</span>
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <button
-                          onClick={() => handleDeleteItem(item.id)}
-                          className="px-2.5 py-1 bg-elevated hover:bg-elevated/80 border border-border-custom text-foreground text-xs font-medium rounded transition-all cursor-pointer"
-                        >
-                          Remove
-                        </button>
-                      </td>
-                    </tr>
-                  ))
+                  filteredData.map((item) => {
+                    const hasMarkupValue = item.markup_value !== null && item.markup_value !== undefined && item.markup_value !== "";
+                    return (
+                      <tr key={item.id} className="hover:bg-elevated/20 transition-colors border-b border-border-custom last:border-b-0">
+                        <td className="px-6 py-4 font-semibold text-foreground">{formatLibraryCell(item.name)}</td>
+                        <td className="px-6 py-4 text-muted font-mono">{formatLibraryCell(item.item_code)}</td>
+                        <td className="px-6 py-4 text-muted">{formatLibraryCell(item.cost_code)}</td>
+                        <td className="px-6 py-4 text-muted">{formatLibraryCell(item.unit)}</td>
+                        <td className="px-6 py-4 text-muted">{formatLibraryCell(item.components)}</td>
+                        <td className="px-6 py-4 text-right text-muted font-semibold">
+                          {item.unit_cost === null || item.unit_cost === undefined || item.unit_cost === ""
+                            ? "-"
+                            : floatVal(item.unit_cost).toLocaleString()}
+                        </td>
+                        <td className="px-6 py-4 text-right text-muted">
+                          {hasMarkupValue ? floatVal(item.markup_value).toLocaleString() : "-"}
+                        </td>
+                        <td className="px-6 py-4 text-right text-muted">{formatLibraryCell(item.markup_type)}</td>
+                        <td className="px-6 py-4 text-right text-sm font-bold text-success">
+                          {item.unit_sale_price === null || item.unit_sale_price === undefined || item.unit_sale_price === ""
+                            ? "-"
+                            : floatVal(item.unit_sale_price).toLocaleString()}
+                        </td>
+                        <td className="px-6 py-4 text-muted">
+                          {item.created_at ? new Date(item.created_at).toLocaleDateString() : "-"}
+                        </td>
+                        <td className="px-6 py-4 text-center text-muted">{formatLibraryCell(item.component_count)}</td>
+                        <td className="px-6 py-4 text-muted">{formatLibraryCell(item.hsn_sac)}</td>
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>
@@ -601,6 +771,19 @@ export default function LibraryHubPage() {
                     value={simpleCode}
                     onChange={(e) => setSimpleCode(e.target.value)}
                     placeholder="e.g. CC-101"
+                    className="input-field w-full px-3 py-2 text-xs focus:outline-none font-mono"
+                  />
+                </div>
+              )}
+
+              {activeTab === "cost-code" && (
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-muted uppercase tracking-wider block mb-1.5">Sub Cost Code</label>
+                  <input
+                    type="text"
+                    value={simpleSubCode}
+                    onChange={(e) => setSimpleSubCode(e.target.value)}
+                    placeholder="e.g. SCC-101"
                     className="input-field w-full px-3 py-2 text-xs focus:outline-none font-mono"
                   />
                 </div>
@@ -638,30 +821,20 @@ export default function LibraryHubPage() {
               <button onClick={() => setIsPartyDrawerOpen(false)} className="text-muted hover:text-foreground font-bold">×</button>
             </div>
 
-            <form onSubmit={handleCreateParty} className="p-6 space-y-3.5 max-h-[500px] overflow-y-auto">
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-muted uppercase tracking-wider block mb-1.5">Party Name *</label>
-                <input
-                  type="text"
-                  required
-                  value={partyName}
-                  onChange={(e) => setPartyName(e.target.value)}
-                  placeholder="e.g. Sai Steel Traders"
-                  className="input-field w-full px-3 py-2 text-xs focus:outline-none"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-xs font-medium text-muted uppercase tracking-wider block mb-1.5">Phone</label>
+            <form onSubmit={handleCreateParty} className="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                <div className="space-y-1 md:col-span-2">
+                  <label className="text-xs font-medium text-muted uppercase tracking-wider block mb-1.5">Party Name *</label>
                   <input
-                    type="tel"
-                    value={partyPhone}
-                    onChange={(e) => setPartyPhone(e.target.value)}
-                    placeholder="9876543210"
+                    type="text"
+                    required
+                    value={partyName}
+                    onChange={(e) => setPartyName(e.target.value)}
+                    placeholder="e.g. Sai Steel Traders"
                     className="input-field w-full px-3 py-2 text-xs focus:outline-none"
                   />
                 </div>
+
                 <div className="space-y-1">
                   <label className="text-xs font-medium text-muted uppercase tracking-wider block mb-1.5">Party Type</label>
                   <select
@@ -674,31 +847,116 @@ export default function LibraryHubPage() {
                     <option value="Client">Client</option>
                   </select>
                 </div>
-              </div>
 
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-muted uppercase tracking-wider block mb-1.5">Email Address</label>
-                <input
-                  type="email"
-                  value={partyEmail}
-                  onChange={(e) => setPartyEmail(e.target.value)}
-                  placeholder="vendor@siteflow.co"
-                  className="input-field w-full px-3 py-2 text-xs focus:outline-none"
-                />
-              </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-muted uppercase tracking-wider block mb-1.5">Phone</label>
+                  <input
+                    type="tel"
+                    value={partyPhone}
+                    onChange={(e) => setPartyPhone(e.target.value)}
+                    placeholder="9876543210"
+                    className="input-field w-full px-3 py-2 text-xs focus:outline-none"
+                  />
+                </div>
 
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-muted uppercase tracking-wider block mb-1.5">Address</label>
-                <input
-                  type="text"
-                  value={partyAddress}
-                  onChange={(e) => setPartyAddress(e.target.value)}
-                  placeholder="Commercial Market Sector 12"
-                  className="input-field w-full px-3 py-2 text-xs focus:outline-none"
-                />
-              </div>
+                <div className="space-y-1 md:col-span-2">
+                  <label className="text-xs font-medium text-muted uppercase tracking-wider block mb-1.5">Email Address</label>
+                  <input
+                    type="email"
+                    value={partyEmail}
+                    onChange={(e) => setPartyEmail(e.target.value)}
+                    placeholder="vendor@siteflow.co"
+                    className="input-field w-full px-3 py-2 text-xs focus:outline-none"
+                  />
+                </div>
 
-              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1 md:col-span-2">
+                  <label className="text-xs font-medium text-muted uppercase tracking-wider block mb-1.5">Billing Address</label>
+                  <textarea
+                    value={partyAddress}
+                    onChange={(e) => setPartyAddress(e.target.value)}
+                    placeholder="Commercial Market Sector 12"
+                    rows={2}
+                    className="input-field w-full px-3 py-2 text-xs focus:outline-none resize-none"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-muted uppercase tracking-wider block mb-1.5">Joining Date</label>
+                  <input
+                    type="date"
+                    value={partyJoiningDate}
+                    onChange={(e) => setPartyJoiningDate(e.target.value)}
+                    className="input-field w-full px-3 py-2 text-xs focus:outline-none"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-muted uppercase tracking-wider block mb-1.5">Creator Name</label>
+                  <input
+                    type="text"
+                    value={getStoredCreatorName()}
+                    readOnly
+                    placeholder="Auto-filled from login"
+                    className="input-field w-full px-3 py-2 text-xs focus:outline-none bg-elevated/50"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-muted uppercase tracking-wider block mb-1.5">Bank Name</label>
+                  <input
+                    type="text"
+                    value={partyBankName}
+                    onChange={(e) => setPartyBankName(e.target.value)}
+                    placeholder="Bank of India"
+                    className="input-field w-full px-3 py-2 text-xs focus:outline-none"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-muted uppercase tracking-wider block mb-1.5">Account Name</label>
+                  <input
+                    type="text"
+                    value={partyAccountName}
+                    onChange={(e) => setPartyAccountName(e.target.value)}
+                    placeholder="Sai Steel Traders"
+                    className="input-field w-full px-3 py-2 text-xs focus:outline-none"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-muted uppercase tracking-wider block mb-1.5">Account Number</label>
+                  <input
+                    type="text"
+                    value={partyAccountNumber}
+                    onChange={(e) => setPartyAccountNumber(e.target.value)}
+                    placeholder="012345678901"
+                    className="input-field w-full px-3 py-2 text-xs focus:outline-none"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-muted uppercase tracking-wider block mb-1.5">IFSC Code</label>
+                  <input
+                    type="text"
+                    value={partyIfscCode}
+                    onChange={(e) => setPartyIfscCode(e.target.value)}
+                    placeholder="SBIN0001234"
+                    className="input-field w-full px-3 py-2 text-xs focus:outline-none"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-muted uppercase tracking-wider block mb-1.5">Tax No.</label>
+                  <input
+                    type="text"
+                    value={partyTaxNo}
+                    onChange={(e) => setPartyTaxNo(e.target.value)}
+                    placeholder="GST / tax number"
+                    className="input-field w-full px-3 py-2 text-xs focus:outline-none"
+                  />
+                </div>
+
                 <div className="space-y-1">
                   <label className="text-xs font-medium text-muted uppercase tracking-wider block mb-1.5">Aadhaar Number</label>
                   <input
@@ -709,6 +967,7 @@ export default function LibraryHubPage() {
                     className="input-field w-full px-3 py-2 text-xs focus:outline-none"
                   />
                 </div>
+
                 <div className="space-y-1">
                   <label className="text-xs font-medium text-muted uppercase tracking-wider block mb-1.5">PAN Card Number</label>
                   <input
@@ -716,6 +975,60 @@ export default function LibraryHubPage() {
                     value={partyPan}
                     onChange={(e) => setPartyPan(e.target.value)}
                     placeholder="PAN card"
+                    className="input-field w-full px-3 py-2 text-xs focus:outline-none"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-muted uppercase tracking-wider block mb-1.5">ESI Number</label>
+                  <input
+                    type="text"
+                    value={partyEsiNumber}
+                    onChange={(e) => setPartyEsiNumber(e.target.value)}
+                    placeholder="ESI number"
+                    className="input-field w-full px-3 py-2 text-xs focus:outline-none"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-muted uppercase tracking-wider block mb-1.5">PF Number</label>
+                  <input
+                    type="text"
+                    value={partyPfNumber}
+                    onChange={(e) => setPartyPfNumber(e.target.value)}
+                    placeholder="PF number"
+                    className="input-field w-full px-3 py-2 text-xs focus:outline-none"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-muted uppercase tracking-wider block mb-1.5">Father Name</label>
+                  <input
+                    type="text"
+                    value={partyFatherName}
+                    onChange={(e) => setPartyFatherName(e.target.value)}
+                    placeholder="Father's full name"
+                    className="input-field w-full px-3 py-2 text-xs focus:outline-none"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-muted uppercase tracking-wider block mb-1.5">Passport No.</label>
+                  <input
+                    type="text"
+                    value={partyPassportNo}
+                    onChange={(e) => setPartyPassportNo(e.target.value)}
+                    placeholder="Passport number"
+                    className="input-field w-full px-3 py-2 text-xs focus:outline-none"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-muted uppercase tracking-wider block mb-1.5">Passport Expiry Date</label>
+                  <input
+                    type="date"
+                    value={partyPassportExpiryDate}
+                    onChange={(e) => setPartyPassportExpiryDate(e.target.value)}
                     className="input-field w-full px-3 py-2 text-xs focus:outline-none"
                   />
                 </div>

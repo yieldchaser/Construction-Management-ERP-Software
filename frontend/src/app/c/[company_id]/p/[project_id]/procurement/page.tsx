@@ -652,7 +652,7 @@ export default function ProcurementPage() {
         <div className="flex flex-col overflow-y-auto flex-1">
           <div className="p-6 flex items-center gap-3 border-b border-border-custom">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-tr bg-primary font-sans font-bold text-white">S</div>
-            <span className="font-bold text-white tracking-tight">SiteFlow Console</span>
+            <span className="font-bold text-white tracking-tight">SiteFlow</span>
           </div>
 
           <nav className="p-4 space-y-2">
@@ -724,7 +724,7 @@ export default function ProcurementPage() {
               <h2 className="text-xs font-bold text-muted uppercase tracking-wider">Indent & Requisitions (Stock Contextual)</h2>
               <div className="grid gap-4 md:grid-cols-2">
                 {indents.map((ind) => (
-                  <div key={ind.id} className="bg-card border border-border-custom rounded-lg p-5 rounded-lg border border-border-custom bg-input space-y-4">
+                  <div key={ind.id} className="bg-card border border-border-custom rounded-lg p-5 space-y-4">
                     <div className="flex justify-between items-center text-xs">
                       <strong className="text-white font-extrabold">{ind.indentNumber}</strong>
                       <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${
@@ -775,49 +775,71 @@ export default function ProcurementPage() {
           {tab === "po" && (
             <div className="space-y-4">
               <h2 className="text-xs font-bold text-muted uppercase tracking-wider">Purchase Orders</h2>
-              <div className="grid gap-4 md:grid-cols-2">
-                {pos.map((po) => (
-                  <div key={po.id} className="bg-card border border-border-custom rounded-lg p-5 rounded-lg border border-border-custom bg-input space-y-4">
-                    <div className="flex justify-between items-center text-xs">
-                      <div>
-                        <strong className="text-white font-extrabold">{po.poNumber}</strong>
-                        <span className="text-[10px] text-muted block mt-0.5">Vendor: {po.vendor}</span>
-                      </div>
-                      <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${
-                        po.status === "received" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "bg-primary/10 text-primary border border-primary/20"
-                      }`}>{po.status}</span>
-                    </div>
-
-                    <div className="border-t border-border-custom pt-3 text-xs space-y-1">
-                      {po.items.map((item, i) => (
-                        <div key={i} className="flex justify-between text-zinc-300">
-                          <span>{item.name}</span>
-                          <span>{item.qty} {item.unit} @ ₹{item.rate}</span>
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="flex justify-between items-end border-t border-border-custom pt-3">
-                      <div>
-                        <span className="text-[9px] uppercase text-muted block">Total Amount</span>
-                        <strong className="text-sm text-white font-extrabold">₹{po.totalAmount.toLocaleString()}</strong>
-                      </div>
-                      
-                      <div className="flex gap-2">
-                        {po.approvalFlag === "pending" && (
-                          <button onClick={() => handleApprovePO(po.id)} className="px-3 py-1.5 bg-primary/10 hover:bg-primary/20 border border-primary/20 text-primary rounded-lg text-[10px] font-bold">
-                            Approve PO
-                          </button>
-                        )}
-                        {po.status === "sent" && po.approvalFlag === "approved" && (
-                          <button onClick={() => handleOpenGRNModal(po)} className="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 rounded-lg text-[10px] font-bold">
-                            🚚 Record GRN (Checklist)
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
+              <div className="bg-card border border-border-custom rounded-lg overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs text-left">
+                    <thead className="bg-elevated text-muted border-b border-border-custom">
+                      <tr>
+                        <th className="px-5 py-3 font-semibold">PO No.</th>
+                        <th className="px-5 py-3 font-semibold">Vendor</th>
+                        <th className="px-5 py-3 font-semibold">Item Line(s)</th>
+                        <th className="px-5 py-3 font-semibold">Approval</th>
+                        <th className="px-5 py-3 font-semibold">Status</th>
+                        <th className="px-5 py-3 font-semibold text-right">Total Amount</th>
+                        <th className="px-5 py-3 font-semibold text-right">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {pos.length === 0 ? (
+                        <tr>
+                          <td colSpan={7} className="px-5 py-10 text-center text-muted">No purchase orders available.</td>
+                        </tr>
+                      ) : (
+                        pos.map((po) => (
+                          <tr key={po.id} className="border-b border-white/[0.03] hover:bg-white/[0.015] transition-all align-top">
+                            <td className="px-5 py-3 font-mono font-bold text-white whitespace-nowrap">{po.poNumber}</td>
+                            <td className="px-5 py-3 text-zinc-200 whitespace-nowrap">{po.vendor}</td>
+                            <td className="px-5 py-3 space-y-1">
+                              {po.items.map((item, i) => (
+                                <div key={i} className="text-zinc-300">
+                                  <span className="font-semibold text-zinc-100">{item.name}</span>{" "}
+                                  <span className="text-muted">{item.qty} {item.unit} @ ₹{item.rate.toLocaleString("en-IN")}</span>
+                                </div>
+                              ))}
+                            </td>
+                            <td className="px-5 py-3">
+                              <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase border ${
+                                po.approvalFlag === "approved" ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" :
+                                po.approvalFlag === "rejected" ? "bg-red-500/10 text-red-400 border border-red-500/20" :
+                                "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                              }`}>{po.approvalFlag}</span>
+                            </td>
+                            <td className="px-5 py-3">
+                              <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase border ${
+                                po.status === "received" || po.status === "closed" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "bg-primary/10 text-primary border border-primary/20"
+                              }`}>{po.status}</span>
+                            </td>
+                            <td className="px-5 py-3 text-right font-mono font-bold text-white whitespace-nowrap">₹{po.totalAmount.toLocaleString("en-IN")}</td>
+                            <td className="px-5 py-3 text-right whitespace-nowrap">
+                              <div className="flex gap-2 justify-end">
+                                {po.approvalFlag === "pending" && (
+                                  <button onClick={() => handleApprovePO(po.id)} className="px-3 py-1.5 bg-primary/10 hover:bg-primary/20 border border-primary/20 text-primary rounded-lg text-[10px] font-bold">
+                                    Approve PO
+                                  </button>
+                                )}
+                                {po.status === "sent" && po.approvalFlag === "approved" && (
+                                  <button onClick={() => handleOpenGRNModal(po)} className="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 rounded-lg text-[10px] font-bold">
+                                    🚚 Record GRN
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           )}
@@ -826,13 +848,15 @@ export default function ProcurementPage() {
           {tab === "inventory" && (
             <div className="space-y-4">
               <h2 className="text-xs font-bold text-muted uppercase tracking-wider">Real-time Warehouse Stock Balance</h2>
-              <div className="bg-card border border-border-custom rounded-lg border border-border-custom rounded-lg overflow-hidden">
+              <div className="bg-card border border-border-custom rounded-lg overflow-hidden">
                 <table className="w-full text-xs text-left">
                   <thead className="bg-elevated text-muted border-b border-border-custom">
                     <tr>
                       <th className="px-5 py-3 font-semibold">Material Item</th>
-                      <th className="px-5 py-3 font-semibold">Physical Stock</th>
+                      <th className="px-5 py-3 font-semibold">Unit</th>
+                      <th className="px-5 py-3 font-semibold">Current Stock</th>
                       <th className="px-5 py-3 font-semibold">Reserved Stock</th>
+                      <th className="px-5 py-3 font-semibold">Reorder Level</th>
                       <th className="px-5 py-3 font-semibold">Status</th>
                     </tr>
                   </thead>
@@ -840,10 +864,12 @@ export default function ProcurementPage() {
                     {inventory.map((inv, idx) => (
                       <tr key={idx} className="border-b border-white/[0.03] hover:bg-white/[0.015] transition-all">
                         <td className="px-5 py-3 font-bold text-white">{inv.name}</td>
+                        <td className="px-5 py-3 text-muted font-mono uppercase">{inv.unit}</td>
                         <td className={`px-5 py-3 font-mono font-bold ${inv.onHand < 0 ? "text-red-400 font-extrabold" : "text-zinc-200"}`}>
                           {inv.onHand} {inv.unit}
                         </td>
                         <td className="px-5 py-3 text-muted font-mono">{inv.reserved} {inv.unit}</td>
+                        <td className="px-5 py-3 text-muted font-mono">{inv.minAlertThreshold} {inv.unit}</td>
                         <td className="px-5 py-3">
                           {inv.onHand < 0 ? (
                             <span className="px-2 py-0.5 rounded bg-red-500/10 border border-red-500/20 text-red-400 font-bold uppercase text-[9px]">Negative stock context</span>
@@ -865,7 +891,7 @@ export default function ProcurementPage() {
           {tab === "ledger" && (
             <div className="space-y-4">
               <h2 className="text-xs font-bold text-muted uppercase tracking-wider">Inventory Transactions</h2>
-              <div className="bg-card border border-border-custom rounded-lg border border-border-custom rounded-lg overflow-hidden">
+              <div className="bg-card border border-border-custom rounded-lg overflow-hidden">
                 <table className="w-full text-xs text-left">
                   <thead className="bg-elevated text-muted border-b border-border-custom">
                     <tr>

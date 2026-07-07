@@ -44,6 +44,20 @@ export default function DashboardPage() {
       }
     ]
   });
+  const [workforceEmployees, setWorkforceEmployees] = useState<any[]>([]);
+  const [workforceLibraries, setWorkforceLibraries] = useState<any[]>([]);
+  const [materialLibraries, setMaterialLibraries] = useState<any[]>([]);
+  const [snapshotFilters, setSnapshotFilters] = useState<{
+    payrollType: string;
+    workforceName: string;
+    materialCategory: string;
+    materialName: string;
+  }>({
+    payrollType: "All",
+    workforceName: "All",
+    materialCategory: "All",
+    materialName: "All"
+  });
   const [isLightTheme, setIsLightTheme] = useState(false);
 
   useEffect(() => {
@@ -63,6 +77,17 @@ export default function DashboardPage() {
   useEffect(() => {
     if (companyId) {
       const apiHost = getApiHost();
+      const toList = (value: any) => Array.isArray(value)
+        ? value
+        : Array.isArray(value?.data)
+          ? value.data
+          : Array.isArray(value?.items)
+            ? value.items
+            : Array.isArray(value?.results)
+              ? value.results
+              : Array.isArray(value?.rows)
+                ? value.rows
+                : [];
       fetch(`${apiHost}/apis/v3/analytics/company/${companyId}/operational`)
         .then((res) => res.json())
         .then((data) => setOperationalData(data))
@@ -72,8 +97,23 @@ export default function DashboardPage() {
         .then((res) => res.json())
         .then((data) => setFinancialData(data))
         .catch((err) => console.error("Failed to fetch financial stats", err));
+
+      fetch(`${apiHost}/apis/v3/hr/employees/${activeProject}`)
+        .then((res) => res.json())
+        .then((data) => setWorkforceEmployees(toList(data)))
+        .catch((err) => console.error("Failed to fetch workforce employees", err));
+
+      fetch(`${apiHost}/apis/v3/library/workforces/${companyId}`)
+        .then((res) => res.json())
+        .then((data) => setWorkforceLibraries(toList(data)))
+        .catch((err) => console.error("Failed to fetch workforce library", err));
+
+      fetch(`${apiHost}/apis/v3/library/materials/${companyId}`)
+        .then((res) => res.json())
+        .then((data) => setMaterialLibraries(toList(data)))
+        .catch((err) => console.error("Failed to fetch material library", err));
     }
-  }, [companyId]);
+  }, [companyId, activeProject]);
 
   // Project setup wizard state
   const [isWizardOpen, setIsWizardOpen] = useState(false);
@@ -214,6 +254,103 @@ export default function DashboardPage() {
   const reinforcementWeight = totalWeightNoWastage * (1 + wastagePercent / 100); // kg
 
   const activeProjDetails = projects.find(p => p.id === activeProject) || projects[0];
+  const normalizeText = (value: any) => (typeof value === "string" ? value.trim() : value == null ? "" : String(value).trim());
+  const uniqueValues = (values: string[]) => Array.from(new Set(values.filter(Boolean))).sort((a, b) => a.localeCompare(b));
+  const activeProjectName = normalizeText(activeProjDetails.name) || "Active Project";
+  const activeProjectStatus = normalizeText(activeProjDetails.status) || "Ongoing";
+  const formatMoney = (value: number) => `₹${value.toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
+  const fallbackWorkforceEmployees = [
+    {
+      id: "demo-employee-1",
+      name: "Sample Crew Lead",
+      designation: "Monthly",
+      department: "Labour",
+      employee_code: "EMP-001",
+      basic_salary: 18000,
+      hra: 2000,
+      other_allowances: 500
+    }
+  ];
+  const fallbackMaterials = [
+    { id: "demo-material-1", name: "Cement", category: "Structural", unit: "bag", lead_time_days: 3 },
+    { id: "demo-material-2", name: "Sand", category: "Aggregate", unit: "m3", lead_time_days: 2 }
+  ];
+  const workforceSource = workforceEmployees.length ? workforceEmployees : fallbackWorkforceEmployees;
+  const materialSource = materialLibraries.length ? materialLibraries : fallbackMaterials;
+
+  const workforceRows = workforceSource.map((emp: any, idx: number) => {
+    const designation = normalizeText(emp?.designation);
+    const department = normalizeText(emp?.department);
+    const payrollType = normalizeText(emp?.payroll_type) || normalizeText(emp?.payrollType) || designation || department || "General";
+    const libraryMatch = workforceLibraries.find((item: any) => {
+      const libraryName = normalizeText(item?.name).toLowerCase();
+      const normalizedDesignation = designation.toLowerCase();
+      const normalizedDepartment = department.toLowerCase();
+      return (
+        (normalizedDesignation && (libraryName === normalizedDesignation || libraryName.includes(normalizedDesignation))) ||
+        (normalizedDepartment && (libraryName === normalizedDepartment || libraryName.includes(normalizedDepartment)))
+      );
+    });
+    const grossSalary = Number(emp?.basic_salary ?? emp?.basic ?? 0) + Number(emp?.hra ?? 0) + Number(emp?.other_allowances ?? 0);
+
+    return {
+      id: String(emp?.id ?? emp?.employee_id ?? `emp-${idx}`),
+      workforceName: normalizeText(emp?.workforce_name)
+        || normalizeText(emp?.workforceName)
+        || normalizeText(emp?.workforce)
+        || normalizeText(emp?.workforce_type)
+        || normalizeText(emp?.workforceType)
+        || normalizeText(emp?.team_name)
+        || normalizeText(emp?.team)
+        || normalizeText(libraryMatch?.name)
+        || normalizeText(emp?.name)
+        || payrollType,
+      payrollType,
+      costCode: normalizeText(emp?.employee_code) || `CC-${String(idx + 1).padStart(2, "0")}`,
+      salaryPerShift: grossSalary > 0 ? grossSalary / 26 : Number(emp?.salary_per_shift ?? 0),
+      shiftHours: Number(emp?.shift_hours ?? emp?.shiftHours ?? 8) || 8,
+      projectName: normalizeText(emp?.project_name) || activeProjectName,
+      projectStatus: normalizeText(emp?.project_status) || activeProjectStatus,
+      basicSalary: Number(emp?.basic_salary ?? emp?.basic ?? 0) || 0
+    };
+  });
+
+  const materialRows = materialSource.map((item: any, idx: number) => ({
+    id: String(item?.id ?? `mat-${idx}`),
+    materialName: normalizeText(item?.name) || normalizeText(item?.material_name) || "Material",
+    materialCategory: normalizeText(item?.category) || normalizeText(item?.material_category) || "General",
+    unit: normalizeText(item?.unit) || normalizeText(item?.uom) || "-",
+    leadTime: normalizeText(item?.lead_time) || (item?.lead_time_days !== undefined && item?.lead_time_days !== null && item?.lead_time_days !== ""
+      ? `${item.lead_time_days} days`
+      : "-"),
+    projectName: normalizeText(item?.project_name) || activeProjectName
+  }));
+
+  const workforcePayrollOptions = uniqueValues([
+    ...workforceRows.map((row) => row.payrollType),
+    ...workforceLibraries.map((item: any) => normalizeText(item?.name))
+  ]);
+  const workforceNameOptions = uniqueValues([
+    ...workforceRows.map((row) => row.workforceName),
+    ...workforceLibraries.map((item: any) => normalizeText(item?.name))
+  ]);
+  const materialCategoryOptions = uniqueValues([
+    ...materialRows.map((row) => row.materialCategory),
+    ...materialLibraries.map((item: any) => normalizeText(item?.category))
+  ]);
+  const materialNameOptions = uniqueValues([
+    ...materialRows.map((row) => row.materialName),
+    ...materialLibraries.map((item: any) => normalizeText(item?.name))
+  ]);
+
+  const filteredWorkforceRows = workforceRows.filter((row) => (
+    (snapshotFilters.payrollType === "All" || row.payrollType === snapshotFilters.payrollType) &&
+    (snapshotFilters.workforceName === "All" || row.workforceName === snapshotFilters.workforceName)
+  ));
+  const filteredMaterialRows = materialRows.filter((row) => (
+    (snapshotFilters.materialCategory === "All" || row.materialCategory === snapshotFilters.materialCategory) &&
+    (snapshotFilters.materialName === "All" || row.materialName === snapshotFilters.materialName)
+  ));
 
 
   const handleSyncTally = async () => {
@@ -247,13 +384,18 @@ export default function DashboardPage() {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary font-bold text-white text-sm">
               S
             </div>
-            <span className="font-bold text-foreground tracking-tight">SiteFlow Console</span>
+            <div className="min-w-0">
+              <span className="font-bold text-foreground tracking-tight block">SiteFlow Workspace</span>
+              <span className="text-[11px] text-muted uppercase tracking-wider font-medium">
+                Active Project: {activeProjDetails.name} ({activeProjDetails.code})
+              </span>
+            </div>
           </div>
 
           {/* Project Switcher */}
           <div className="p-4 border-b border-border-custom bg-foreground/[0.01]">
             <label className="text-xs font-medium text-muted uppercase tracking-wider block mb-1.5">
-              Active Project Context
+              Active Project
             </label>
             <select
               value={activeProject}
@@ -450,6 +592,22 @@ export default function DashboardPage() {
                     className="flex items-center gap-2.5 px-3 py-2 text-xs rounded-lg text-muted hover:text-foreground hover:bg-elevated transition-all"
                   >
                     <span>🦺</span> HSE / Incidents
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <span className="text-xs font-medium text-muted uppercase tracking-wider block px-3 mb-2">
+                Meetings
+              </span>
+              <ul className="space-y-1">
+                <li>
+                  <Link
+                    href={`/c/${companyId}/p/${activeProject}/mom`}
+                    className="flex items-center gap-2.5 px-3 py-2 text-xs rounded-lg text-muted hover:text-foreground hover:bg-elevated transition-all"
+                  >
+                    <span>📝</span> Minutes of Meeting
                   </Link>
                 </li>
               </ul>
@@ -788,6 +946,7 @@ export default function DashboardPage() {
                             <tr className="border-b border-border-custom text-muted font-bold uppercase tracking-wider text-[10px]">
                               <th className="py-2 px-3">Project Health</th>
                               <th className="py-2 px-3">Project Name</th>
+                              <th className="py-2 px-3">Project Status</th>
                               <th className="py-2 px-3">Start Date</th>
                               <th className="py-2 px-3">End Date</th>
                               <th className="py-2 px-3">Progress</th>
@@ -809,6 +968,15 @@ export default function DashboardPage() {
                                     </span>
                                   </td>
                                   <td className="py-2.5 px-3 font-semibold text-white">{p.project_name ?? p.name}</td>
+                                  <td className="py-2.5 px-3">
+                                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
+                                      (p.status ?? p.project_status ?? "Ongoing") === "Completed" ? "bg-success/10 text-success border-success/20" :
+                                      (p.status ?? p.project_status ?? "Ongoing") === "Onhold" ? "bg-yellow-500/10 text-yellow-400 border-yellow-500/20" :
+                                      "bg-primary/10 text-primary border-primary/20"
+                                    }`}>
+                                      {p.status ?? p.project_status ?? "Ongoing"}
+                                    </span>
+                                  </td>
                                   <td className="py-2.5 px-3 text-muted font-mono">{p.start_date || "—"}</td>
                                   <td className="py-2.5 px-3 text-muted font-mono">{p.end_date || "—"}</td>
                                   <td className="py-2.5 px-3">
@@ -1052,6 +1220,147 @@ export default function DashboardPage() {
                       })()}
                     </div>
                   </div>
+
+                  {/* Workforce & Material Snapshot */}
+                  <div className="rounded-lg border border-border-custom bg-card p-6 space-y-4">
+                    <div className="flex flex-wrap justify-between items-center gap-2 border-b border-border-custom pb-3">
+                      <div className="flex items-center gap-3">
+                        <h4 className="text-xs font-extrabold uppercase tracking-wider text-white">Workforce & Material Snapshot</h4>
+                        <span className="text-[10px] px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 font-bold font-sans">Project Sync</span>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
+                      <div className="space-y-1">
+                        <label className="text-[9px] text-muted uppercase tracking-wider font-bold block">Payroll Type</label>
+                        <select
+                          className="bg-input border border-border-custom rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none min-w-[150px] w-full"
+                          value={snapshotFilters.payrollType}
+                          onChange={(e) => setSnapshotFilters((prev) => ({ ...prev, payrollType: e.target.value }))}
+                        >
+                          <option value="All">All</option>
+                          {workforcePayrollOptions.map((option) => (
+                            <option key={option} value={option}>{option}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[9px] text-muted uppercase tracking-wider font-bold block">Workforce Name</label>
+                        <select
+                          className="bg-input border border-border-custom rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none min-w-[150px] w-full"
+                          value={snapshotFilters.workforceName}
+                          onChange={(e) => setSnapshotFilters((prev) => ({ ...prev, workforceName: e.target.value }))}
+                        >
+                          <option value="All">All</option>
+                          {workforceNameOptions.map((option) => (
+                            <option key={option} value={option}>{option}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[9px] text-muted uppercase tracking-wider font-bold block">Material Name</label>
+                        <select
+                          className="bg-input border border-border-custom rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none min-w-[150px] w-full"
+                          value={snapshotFilters.materialName}
+                          onChange={(e) => setSnapshotFilters((prev) => ({ ...prev, materialName: e.target.value }))}
+                        >
+                          <option value="All">All</option>
+                          {materialNameOptions.map((option) => (
+                            <option key={option} value={option}>{option}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[9px] text-muted uppercase tracking-wider font-bold block">Material Category</label>
+                        <select
+                          className="bg-input border border-border-custom rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none min-w-[150px] w-full"
+                          value={snapshotFilters.materialCategory}
+                          onChange={(e) => setSnapshotFilters((prev) => ({ ...prev, materialCategory: e.target.value }))}
+                        >
+                          <option value="All">All</option>
+                          {materialCategoryOptions.map((option) => (
+                            <option key={option} value={option}>{option}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                      <div className="rounded-lg border border-border-custom bg-background/40 p-4">
+                        <div className="flex items-center justify-between border-b border-border-custom pb-2 mb-3">
+                          <h5 className="text-[10px] font-bold uppercase tracking-wider text-muted">Workforce Table</h5>
+                          <span className="text-[10px] text-muted">{filteredWorkforceRows.length} Rows</span>
+                        </div>
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-left text-xs border-collapse">
+                            <thead>
+                              <tr className="border-b border-border-custom text-muted font-bold uppercase tracking-wider text-[10px] bg-white/[0.01]">
+                                <th className="py-2 px-3">Workforce Name</th>
+                                <th className="py-2 px-3">Cost Code</th>
+                                <th className="py-2 px-3">Salary Per Shift</th>
+                                <th className="py-2 px-3">Shift Hours</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-border-custom">
+                              {filteredWorkforceRows.length === 0 ? (
+                                <tr>
+                                  <td colSpan={4} className="py-6 px-3 text-center text-muted font-semibold">No workforce rows found.</td>
+                                </tr>
+                              ) : (
+                                filteredWorkforceRows.map((row) => (
+                                  <tr key={row.id} className="hover:bg-white/[0.01] transition-colors">
+                                    <td className="py-2.5 px-3 font-semibold text-white">{row.workforceName}</td>
+                                    <td className="py-2.5 px-3 text-muted">{row.costCode}</td>
+                                    <td className="py-2.5 px-3 text-right font-semibold text-success">₹{row.salaryPerShift.toLocaleString("en-IN", { maximumFractionDigits: 2 })}</td>
+                                    <td className="py-2.5 px-3 text-muted">{row.shiftHours}</td>
+                                  </tr>
+                                ))
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+
+                      <div className="rounded-lg border border-border-custom bg-background/40 p-4">
+                        <div className="flex items-center justify-between border-b border-border-custom pb-2 mb-3">
+                          <h5 className="text-[10px] font-bold uppercase tracking-wider text-muted">Material Table</h5>
+                          <span className="text-[10px] text-muted">{filteredMaterialRows.length} Rows</span>
+                        </div>
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-left text-xs border-collapse">
+                            <thead>
+                              <tr className="border-b border-border-custom text-muted font-bold uppercase tracking-wider text-[10px] bg-white/[0.01]">
+                                <th className="py-2 px-3">Material Name</th>
+                                <th className="py-2 px-3">Material Category</th>
+                                <th className="py-2 px-3">Unit</th>
+                                <th className="py-2 px-3">Lead Time</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-border-custom">
+                              {filteredMaterialRows.length === 0 ? (
+                                <tr>
+                                  <td colSpan={4} className="py-6 px-3 text-center text-muted font-semibold">No material rows found.</td>
+                                </tr>
+                              ) : (
+                                filteredMaterialRows.map((row) => (
+                                  <tr key={row.id} className="hover:bg-white/[0.01] transition-colors">
+                                    <td className="py-2.5 px-3 font-semibold text-white">{row.materialName}</td>
+                                    <td className="py-2.5 px-3 text-muted">{row.materialCategory}</td>
+                                    <td className="py-2.5 px-3 text-muted">{row.unit}</td>
+                                    <td className="py-2.5 px-3 text-muted">{row.leadTime}</td>
+                                  </tr>
+                                ))
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                 </>
               )}
 

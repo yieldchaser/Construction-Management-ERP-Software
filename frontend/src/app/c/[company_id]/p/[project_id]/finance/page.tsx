@@ -640,14 +640,14 @@ export default function FinancePage() {
           <Link href={`/c/${companyId}/dashboard`} className="flex items-center gap-2 px-3 py-2 text-xs text-muted hover:text-foreground hover:bg-white/[0.03] rounded-lg transition-all">← Dashboard</Link>
           <div className="pt-2 pb-1 px-3 text-[10px] font-bold text-muted uppercase tracking-wider">Finance</div>
           {[
-            { key: "ledger", label: "Transaction Ledger", icon: "📒" },
-            { key: "party", label: "Party Ledgers", icon: "👥" },
-            { key: "payment_requests", label: "Payment Requests", icon: "✉️" },
-            { key: "accounts", label: "Cash & Bank Accounts", icon: "🏦" },
-            { key: "cashbook", label: "Cash Book Statement", icon: "📖" },
-            { key: "pl", label: "Project P&L", icon: "📊" },
-            { key: "tally", label: "Tally Sync Gateway", icon: "🔗" },
-            { key: "costvar", label: "Cost Variance Report", icon: "⚠️" },
+            { key: "ledger", label: "Dashboard", icon: "📒" },
+            { key: "party", label: "Party", icon: "👥" },
+            { key: "payment_requests", label: "PaymentRequests", icon: "✉️" },
+            { key: "accounts", label: "Accounts", icon: "🏦" },
+            { key: "cashbook", label: "Cash Book", icon: "📖" },
+            { key: "pl", label: "P&L", icon: "📊" },
+            { key: "tally", label: "Tally Sync", icon: "🔗" },
+            { key: "costvar", label: "Cost Variance", icon: "⚠️" },
           ].map(item => (
             <button key={item.key} onClick={() => setTab(item.key as any)}
               className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg transition-all text-left ${tab === item.key ? "bg-primary/10 text-white font-semibold shadow-sm" : "text-muted hover:text-foreground hover:bg-elevated"}`}>
@@ -662,7 +662,7 @@ export default function FinancePage() {
         <header className="h-14 border-b border-border-custom bg-background px-6 flex items-center justify-between shrink-0">
           <div>
             <h1 className="text-sm font-bold text-white">
-              {tab === "ledger" ? "Accrual Ledger" : tab === "party" ? "Party-wise Ledgers" : tab === "payment_requests" ? "Payment Requests Ledger" : tab === "accounts" ? "Company Cash & Bank Accounts" : tab === "cashbook" ? "Cash Book (Bank Ledger)" : tab === "pl" ? "Project P&L" : tab === "tally" ? "Tally Sync Gateway" : "Cost Variance Report"}
+              {tab === "ledger" ? "Dashboard" : tab === "party" ? "Party-wise Ledgers" : tab === "payment_requests" ? "Payment Requests Ledger" : tab === "accounts" ? "Company Cash & Bank Accounts" : tab === "cashbook" ? "Cash Book (Bank Ledger)" : tab === "pl" ? "Project P&L" : tab === "tally" ? "Tally Sync Gateway" : "Cost Variance Report"}
             </h1>
             <p className="text-[10px] text-muted">Real-time sequential approval tracking & running balance ledger</p>
           </div>

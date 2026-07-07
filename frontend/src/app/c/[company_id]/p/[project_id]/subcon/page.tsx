@@ -161,6 +161,7 @@ export default function SubconPage() {
               <thead className="bg-elevated border-b border-border-custom text-muted text-[10px] uppercase font-bold tracking-wider">
                 <tr>
                   <th className="px-4 py-3">S.No.</th>
+                  <th className="px-4 py-3">Work Order</th>
                   <th className="px-4 py-3">Sub Contractor</th>
                   <th className="px-4 py-3">Physical Progress</th>
                   <th className="px-4 py-3">Work Order Value</th>
@@ -171,12 +172,13 @@ export default function SubconPage() {
               <tbody className="divide-y divide-border-custom/40">
                 {filteredWO.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-4 py-8 text-center text-muted">No subcontractor workorders found.</td>
+                    <td colSpan={7} className="px-4 py-8 text-center text-muted">No subcontractor workorders found.</td>
                   </tr>
                 ) : (
                   filteredWO.map(wo => (
                     <tr key={wo.id} className="hover:bg-elevated/40 transition-colors">
                       <td className="px-4 py-3 text-muted">{wo.sNo}</td>
+                      <td className="px-4 py-3 font-mono text-zinc-300">{wo.id}</td>
                       <td className="px-4 py-3 font-semibold text-white">{wo.subContractor}</td>
                       <td className="px-4 py-3 text-muted">
                         <div className="flex items-center gap-2">

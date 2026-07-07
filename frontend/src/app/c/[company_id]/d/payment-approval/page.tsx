@@ -4,6 +4,14 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { getApiHost } from "@/lib/api";
 
+interface Project {
+  id: string;
+  name?: string;
+  code?: string;
+  project_name?: string;
+  project_code?: string;
+}
+
 interface PaymentRequest {
   id: string;
   party_name: string;
@@ -12,7 +20,35 @@ interface PaymentRequest {
   status: string;
   due_date?: string;
   created_at: string;
+  project_id?: string | null;
 }
+
+const COMPANY_WIDE_FILTER = "__company_wide__";
+
+const extractProjects = (data: unknown): Project[] => {
+  if (Array.isArray(data)) return data as Project[];
+
+  if (data && typeof data === "object") {
+    const payload = data as { data?: unknown; projects?: unknown; items?: unknown };
+
+    if (Array.isArray(payload.data)) return payload.data as Project[];
+    if (Array.isArray(payload.projects)) return payload.projects as Project[];
+    if (Array.isArray(payload.items)) return payload.items as Project[];
+  }
+
+  return [];
+};
+
+const getProjectName = (project?: Project | null) => project?.project_name || project?.name || "Untitled Project";
+
+const getProjectCode = (project?: Project | null) => project?.project_code || project?.code || "";
+
+const getProjectLabel = (project?: Project | null) => {
+  if (!project) return "Company-wide";
+
+  const projectCode = getProjectCode(project);
+  return projectCode ? `${getProjectName(project)} (${projectCode})` : getProjectName(project);
+};
 
 export default function PaymentApprovalPage() {
   const params = useParams();
@@ -20,7 +56,9 @@ export default function PaymentApprovalPage() {
   const accessToken = typeof window !== "undefined" ? localStorage.getItem("access_token") : "";
 
   const [requests, setRequests] = useState<PaymentRequest[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [filterStatus, setFilterStatus] = useState("Pending");
+  const [projectFilter, setProjectFilter] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [toastMessage, setToastMessage] = useState("");
 
@@ -28,13 +66,27 @@ export default function PaymentApprovalPage() {
 
   const fetchData = async () => {
     if (!companyId || !accessToken) return;
+    const authHeaders = { "Authorization": `Bearer ${accessToken}` };
+
     try {
       const res = await fetch(`${apiHost}/apis/v3/payment-requests/${companyId}`, {
-        headers: { "Authorization": `Bearer ${accessToken}` }
+        headers: authHeaders
       });
       if (res.ok) {
         const data = await res.json();
         setRequests(data);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+
+    try {
+      const res = await fetch(`${apiHost}/apis/v3/planning/projects?company_id=${companyId}`, {
+        headers: authHeaders
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setProjects(extractProjects(data));
       }
     } catch (err) {
       console.error(err);
@@ -104,10 +156,21 @@ export default function PaymentApprovalPage() {
     }
   };
 
+  const projectMap = new Map(projects.map((project) => [project.id, project]));
+  const normalizedSearch = searchQuery.toLowerCase();
+
   const filteredRequests = requests.filter((r) => {
     const matchesStatus = r.status.toLowerCase() === filterStatus.toLowerCase();
-    const matchesSearch = r.party_name.toLowerCase().includes(searchQuery.toLowerCase()) || (r.details && r.details.toLowerCase().includes(searchQuery.toLowerCase()));
-    return matchesStatus && matchesSearch;
+    const project = r.project_id ? projectMap.get(r.project_id) : undefined;
+    const projectLabel = getProjectLabel(project);
+    const matchesProject =
+      !projectFilter ||
+      (projectFilter === COMPANY_WIDE_FILTER ? !r.project_id : r.project_id === projectFilter);
+    const matchesSearch =
+      r.party_name.toLowerCase().includes(normalizedSearch) ||
+      (r.details && r.details.toLowerCase().includes(normalizedSearch)) ||
+      projectLabel.toLowerCase().includes(normalizedSearch);
+    return matchesStatus && matchesProject && matchesSearch;
   });
 
   return (
@@ -144,13 +207,29 @@ export default function PaymentApprovalPage() {
           ))}
         </div>
 
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search by party name or details..."
-          className="input-field px-4 py-2 text-xs font-semibold focus:outline-none placeholder-muted w-full md:max-w-xs"
-        />
+        <div className="flex flex-col sm:flex-row gap-3 w-full md:max-w-2xl">
+          <select
+            value={projectFilter}
+            onChange={(e) => setProjectFilter(e.target.value)}
+            className="input-field px-4 py-2 text-xs font-semibold focus:outline-none placeholder-muted w-full sm:max-w-xs"
+          >
+            <option value="">All Projects</option>
+            <option value={COMPANY_WIDE_FILTER}>Company-wide</option>
+            {projects.map((project) => (
+              <option key={project.id} value={project.id}>
+                {getProjectLabel(project)}
+              </option>
+            ))}
+          </select>
+
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search by party name, details, or project..."
+            className="input-field px-4 py-2 text-xs font-semibold focus:outline-none placeholder-muted w-full md:max-w-xs"
+          />
+        </div>
       </div>
 
       {/* Requests List */}
@@ -159,8 +238,8 @@ export default function PaymentApprovalPage() {
           <div className="rounded-lg border border-border-custom bg-card p-12 flex flex-col items-center justify-center text-center space-y-4">
             <span className="text-4xl">🏷️</span>
             <div>
-              <h3 className="text-foreground font-semibold text-sm">No Payment Requests found</h3>
-              <p className="text-muted text-xs mt-1">No requests match status "{filterStatus}". Click "+ Create Demo Request" to try the flow.</p>
+              <h3 className="text-foreground font-semibold text-sm">No Approvals Found</h3>
+              <p className="text-muted text-xs mt-1">No requests match the selected status or project filter. Click "+ Create Demo Request" to try the flow.</p>
             </div>
           </div>
         ) : (
@@ -170,7 +249,7 @@ export default function PaymentApprovalPage() {
               className="p-6 bg-card border border-border-custom rounded-md flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:border-border-custom transition-all"
             >
               <div className="space-y-2">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 flex-wrap">
                   <span className="font-semibold text-foreground text-base">{r.party_name}</span>
                   <span className={`text-[9px] px-2 py-0.5 rounded font-bold uppercase tracking-wider ${
                     r.status === "Approved"
@@ -179,6 +258,9 @@ export default function PaymentApprovalPage() {
                       ? "bg-danger/10 text-danger"
                       : "bg-warning/10 text-warning"
                   }`}>{r.status}</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded border border-border-custom bg-elevated text-muted font-medium">
+                    Project: {getProjectLabel(r.project_id ? projectMap.get(r.project_id) : undefined)}
+                  </span>
                 </div>
                 
                 <p className="text-muted text-xs max-w-xl">{r.details || "No details provided"}</p>

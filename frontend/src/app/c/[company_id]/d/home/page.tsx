@@ -10,10 +10,18 @@ interface Project {
   name: string;
   code: string;
   status: string;
+  stage?: string;
   city: string;
+  address?: string;
+  health?: string;
   progress?: number;
   cashflow_in?: number;
   cashflow_out?: number;
+  project_name?: string;
+  project_code?: string;
+  project_status?: string;
+  project_address?: string;
+  project_health?: string;
 }
 
 interface PaymentRequest {
@@ -40,6 +48,63 @@ interface Leave {
   start_date: string;
   end_date: string;
 }
+
+const normalizeText = (value: string) => value.toLowerCase().replace(/\s+/g, "");
+
+const getProjectName = (project: Project) => project.project_name || project.name || "Untitled Project";
+
+const getProjectCode = (project: Project) => project.project_code || project.code || "No Code";
+
+const getProjectStatus = (project: Project) => project.project_status || project.status || "Ongoing";
+
+const getProjectAddress = (project: Project) => {
+  const address = project.project_address || project.address || "";
+  const city = project.city || "";
+
+  if (!address && !city) return "Address not set";
+  if (!address) return city;
+  if (!city) return address;
+  if (normalizeText(address).includes(normalizeText(city))) return address;
+  return `${address} • ${city}`;
+};
+
+const getProjectHealth = (project: Project) => project.project_health || project.health || "Healthy";
+
+const getProjectStatusBadgeClass = (status: string) => {
+  const normalized = normalizeText(status);
+  if (normalized.includes("complete")) return "bg-success/10 text-success border-success/20";
+  if (normalized.includes("hold")) return "bg-warning/10 text-warning border-warning/20";
+  if (normalized.includes("ongoing") || normalized.includes("active") || normalized.includes("progress")) {
+    return "bg-primary/10 text-primary border-primary/20";
+  }
+  return "bg-elevated text-muted border-border-custom";
+};
+
+const getProjectHealthBadgeClass = (health: string) => {
+  const normalized = normalizeText(health);
+  if (normalized.includes("healthy") || normalized.includes("good") || normalized.includes("stable")) {
+    return "bg-success/10 text-success border-success/20";
+  }
+  if (normalized.includes("warn")) return "bg-yellow-500/10 text-yellow-400 border-yellow-500/20";
+  if (normalized.includes("critical")) return "bg-danger/10 text-danger border-danger/20";
+  if (normalized.includes("complete")) return "bg-success/10 text-success border-success/20";
+  if (normalized.includes("hold")) return "bg-warning/10 text-warning border-warning/20";
+  return "bg-elevated text-muted border-border-custom";
+};
+
+const extractProjects = (data: unknown): Project[] => {
+  if (Array.isArray(data)) return data as Project[];
+
+  if (data && typeof data === "object") {
+    const payload = data as { data?: unknown; projects?: unknown; items?: unknown };
+
+    if (Array.isArray(payload.data)) return payload.data as Project[];
+    if (Array.isArray(payload.projects)) return payload.projects as Project[];
+    if (Array.isArray(payload.items)) return payload.items as Project[];
+  }
+
+  return [];
+};
 
 export default function ProjectsHomePage() {
   const params = useParams();
@@ -82,18 +147,19 @@ export default function ProjectsHomePage() {
   const fetchData = async () => {
     if (!companyId) return;
     try {
+      const authHeaders = { "Authorization": `Bearer ${accessToken}` };
+
       // 1. Projects
-      const projectsRes = await fetch(`${apiHost}/apis/v3/company/${companyId}/projects`, {
-        headers: { "Authorization": `Bearer ${accessToken}` }
+      const planningProjectsRes = await fetch(`${apiHost}/apis/v3/planning/projects?company_id=${companyId}`, {
+        headers: authHeaders
       });
-      if (projectsRes.ok) {
-        const data = await projectsRes.json();
-        setProjects(data);
+      if (planningProjectsRes.ok) {
+        setProjects(extractProjects(await planningProjectsRes.json()));
       }
 
       // 2. Payments / Approvals
-      const paymentsRes = await fetch(`${apiHost}/apis/v3/company/${companyId}/payment-requests`, {
-        headers: { "Authorization": `Bearer ${accessToken}` }
+      const paymentsRes = await fetch(`${apiHost}/apis/v3/payment-requests/${companyId}`, {
+        headers: authHeaders
       });
       if (paymentsRes.ok) {
         const data = await paymentsRes.json();
@@ -102,7 +168,7 @@ export default function ProjectsHomePage() {
 
       // 3. Indents
       const indentsRes = await fetch(`${apiHost}/apis/v3/procurement/indents?company_id=${companyId}`, {
-        headers: { "Authorization": `Bearer ${accessToken}` }
+        headers: authHeaders
       });
       if (indentsRes.ok) {
         const data = await indentsRes.json();
@@ -110,8 +176,8 @@ export default function ProjectsHomePage() {
       }
 
       // 4. Leaves
-      const leavesRes = await fetch(`${apiHost}/apis/v3/company/${companyId}/leaves`, {
-        headers: { "Authorization": `Bearer ${accessToken}` }
+      const leavesRes = await fetch(`${apiHost}/apis/v3/leaves/${companyId}`, {
+        headers: authHeaders
       });
       if (leavesRes.ok) {
         const data = await leavesRes.json();
@@ -129,13 +195,14 @@ export default function ProjectsHomePage() {
   const handleCreateProject = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const res = await fetch(`${apiHost}/apis/v3/company/${companyId}/projects`, {
+      const res = await fetch(`${apiHost}/apis/v3/planning/projects`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${accessToken}`
         },
         body: JSON.stringify({
+          company_id: companyId,
           name: newProjectName,
           code: newProjectCode || `PROJ-${Math.floor(100 + Math.random() * 900)}`,
           city: newProjectCity,
@@ -160,7 +227,7 @@ export default function ProjectsHomePage() {
 
   const handleCreateDemoLeave = async () => {
     try {
-      const res = await fetch(`${apiHost}/apis/v3/company/${companyId}/leaves`, {
+      const res = await fetch(`${apiHost}/apis/v3/leaves/${companyId}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -186,8 +253,8 @@ export default function ProjectsHomePage() {
 
   const handleApproveLeave = async (leaveId: string, targetStatus: "Approved" | "Rejected") => {
     try {
-      const res = await fetch(`${apiHost}/apis/v3/company/${companyId}/leaves/${leaveId}/approve`, {
-        method: "POST",
+      const res = await fetch(`${apiHost}/apis/v3/leaves/approve/${leaveId}`, {
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${accessToken}`
@@ -207,13 +274,22 @@ export default function ProjectsHomePage() {
   const pendingApprovalsCount = paymentRequests.filter((p) => p.status.toLowerCase() === "pending").length;
   const pendingMaterialsCount = indents.filter((i) => i.status.toLowerCase() === "pending").length;
   const pendingLeavesCount = leaves.filter((l) => l.status.toLowerCase() === "pending").length;
+  const normalizedStageFilter = normalizeText(stageFilter);
+  const normalizedSearchQuery = normalizeText(searchQuery.trim());
 
   const filteredProjects = projects.filter((p) => {
     // Stage Filter
-    if (stageFilter !== "All" && p.status !== stageFilter) return false;
+    if (normalizedStageFilter !== "all" && normalizeText(getProjectStatus(p)) !== normalizedStageFilter) return false;
     // Search Query
-    if (searchQuery) {
-      return p.name.toLowerCase().includes(searchQuery.toLowerCase()) || p.code.toLowerCase().includes(searchQuery.toLowerCase());
+    if (normalizedSearchQuery) {
+      const searchable = [
+        getProjectName(p),
+        getProjectCode(p),
+        getProjectStatus(p),
+        getProjectAddress(p),
+        getProjectHealth(p)
+      ].join(" ");
+      return normalizeText(searchable).includes(normalizedSearchQuery);
     }
     return true;
   });
@@ -228,6 +304,35 @@ export default function ProjectsHomePage() {
     }
     return true;
   });
+
+  const featuredProject = projects[0];
+  const projectDetailTiles = [
+    {
+      label: "Project Name",
+      value: featuredProject ? getProjectName(featuredProject) : "No projects yet",
+      tone: "default" as const
+    },
+    {
+      label: "Project Code",
+      value: featuredProject ? getProjectCode(featuredProject) : "No code",
+      tone: "default" as const
+    },
+    {
+      label: "Project Status",
+      value: featuredProject ? getProjectStatus(featuredProject) : "Pending",
+      tone: "status" as const
+    },
+    {
+      label: "Project Address",
+      value: featuredProject ? getProjectAddress(featuredProject) : "Address not set",
+      tone: "default" as const
+    },
+    {
+      label: "Project Health",
+      value: featuredProject ? getProjectHealth(featuredProject) : "Healthy",
+      tone: "health" as const
+    }
+  ];
 
   return (
     <div className="flex-1 overflow-y-auto p-6 space-y-6 relative">
@@ -306,11 +411,14 @@ export default function ProjectsHomePage() {
         {/* Filter bar */}
         <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4">
           {/* Left Side Active Info */}
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-foreground">All Projects</span>
-            <span className="px-2 py-0.5 bg-elevated border border-border-custom rounded text-xs text-muted font-medium">
-              {filteredProjects.length}
-            </span>
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-semibold text-foreground">Project Portfolio</span>
+              <span className="px-2 py-0.5 bg-elevated border border-border-custom rounded text-xs text-muted font-medium">
+                {filteredProjects.length}
+              </span>
+            </div>
+            <p className="text-xs text-muted">Planning projects with name, status, address, and health details.</p>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
@@ -320,8 +428,9 @@ export default function ProjectsHomePage() {
               onChange={(e) => setStageFilter(e.target.value)}
               className="input-field"
             >
-              <option value="All">All Stages</option>
+              <option value="All">All Statuses</option>
               <option value="Ongoing">Ongoing</option>
+              <option value="Onhold">On Hold</option>
               <option value="Completed">Completed</option>
             </select>
 
@@ -330,7 +439,7 @@ export default function ProjectsHomePage() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search project name..."
+              placeholder="Search name, code, address, or health..."
               className="input-field placeholder-muted"
             />
 
@@ -338,7 +447,7 @@ export default function ProjectsHomePage() {
               onClick={() => showToast("Exporting project ledger report to CSV...")}
               className="px-3 py-2 bg-card border border-border-custom rounded-md text-xs font-medium hover:bg-elevated transition-all cursor-pointer"
             >
-              Export
+              Export Portfolio
             </button>
 
             <button
@@ -350,21 +459,62 @@ export default function ProjectsHomePage() {
           </div>
         </div>
 
+        {/* Project Details strip */}
+        <div className="rounded-lg border border-border-custom bg-card p-5 space-y-4">
+          <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+            <div className="space-y-1">
+              <div className="text-[11px] font-semibold uppercase tracking-wider text-primary">Project Details</div>
+              <h3 className="text-sm font-semibold text-foreground">Project Name, Project Code, Project Status, Project Health, Project Address</h3>
+              <p className="text-xs text-muted max-w-3xl">
+                Pulled from the planning projects endpoint so the home page exposes the richer project labels the workbook called out.
+              </p>
+            </div>
+            <div className="px-3 py-1.5 rounded-md bg-elevated border border-border-custom text-xs font-medium text-muted">
+              {filteredProjects.length} visible project{filteredProjects.length === 1 ? "" : "s"}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">
+            {projectDetailTiles.map((tile) => (
+              <div key={tile.label} className="rounded-lg border border-border-custom bg-background/60 px-4 py-3">
+                <div className="text-[10px] font-semibold uppercase tracking-wider text-muted">{tile.label}</div>
+                <div className="mt-1">
+                  {tile.tone === "status" ? (
+                    <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider ${getProjectStatusBadgeClass(tile.value)}`}>
+                      {tile.value}
+                    </span>
+                  ) : tile.tone === "health" ? (
+                    <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider ${getProjectHealthBadgeClass(tile.value)}`}>
+                      {tile.value}
+                    </span>
+                  ) : (
+                    <span className="block truncate text-sm font-semibold text-foreground">{tile.value}</span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* Projects Table */}
         <div className="rounded-lg border border-border-custom bg-card overflow-hidden">
-          <table className="w-full text-left text-xs border-collapse">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[1100px] text-left text-xs border-collapse">
             <thead>
               <tr className="border-b border-border-custom text-muted font-semibold uppercase tracking-wider bg-background/50">
-                <th className="px-6 py-3.5">Name</th>
+                <th className="px-6 py-3.5">Project Name</th>
+                <th className="px-6 py-3.5">Project Status</th>
+                <th className="px-6 py-3.5">Project Address</th>
+                <th className="px-6 py-3.5">Project Health</th>
                 <th className="px-6 py-3.5">Progress</th>
-                <th className="px-6 py-3.5 text-right">In / Out</th>
-                <th className="px-6 py-3.5 text-center">To Do</th>
+                <th className="px-6 py-3.5 text-right">Cash Flow In / Out</th>
+                <th className="px-6 py-3.5 text-center">Project Tasks</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border-custom">
               {filteredProjects.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="px-6 py-12 text-center text-muted font-medium">
+                  <td colSpan={7} className="px-6 py-12 text-center text-muted font-medium">
                     No active projects. Click "+ New Project" to create one.
                   </td>
                 </tr>
@@ -373,13 +523,26 @@ export default function ProjectsHomePage() {
                   <tr key={p.id} className="hover:bg-elevated/20 transition-colors">
                     <td className="px-6 py-4">
                       <Link href={`/c/${companyId}/p/${p.id}/planning/gantt`} className="text-foreground hover:text-primary font-medium transition-colors text-sm">
-                        {p.name}
+                        {getProjectName(p)}
                       </Link>
                       <span className="block text-xs text-muted mt-1 uppercase tracking-wider font-normal">
-                        {p.code} • {p.city}
+                        {getProjectCode(p)} • {p.city}
                       </span>
                     </td>
-                    <td className="px-6 py-4 w-1/4">
+                    <td className="px-6 py-4">
+                      <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider ${getProjectStatusBadgeClass(getProjectStatus(p))}`}>
+                        {getProjectStatus(p)}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm font-medium text-foreground">{getProjectAddress(p)}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider ${getProjectHealthBadgeClass(getProjectHealth(p))}`}>
+                        {getProjectHealth(p)}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 w-52">
                       <div className="flex items-center gap-3">
                         <div className="h-1.5 bg-elevated rounded-full flex-1 overflow-hidden">
                           <div
@@ -419,6 +582,7 @@ export default function ProjectsHomePage() {
             </tbody>
           </table>
         </div>
+      </div>
       </div>
 
       {/* Leave Management Modal */}
@@ -609,63 +773,92 @@ export default function ProjectsHomePage() {
             </div>
 
             {/* Indent List */}
-            <div className="p-5 overflow-y-auto flex-1 space-y-4">
-              {filteredIndents.length === 0 ? (
-                <div className="text-center py-12 text-xs text-muted font-medium">
-                  No material indents found matching tab "{mrTab}".
+            <div className="p-5 overflow-y-auto flex-1">
+              <div className="rounded-lg border border-border-custom bg-card overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[1100px] text-left text-xs border-collapse">
+                    <thead>
+                      <tr className="border-b border-border-custom text-muted font-semibold uppercase tracking-wider bg-background/50">
+                        <th className="px-6 py-3.5">Indent No.</th>
+                        <th className="px-6 py-3.5">Project</th>
+                        <th className="px-6 py-3.5">Created</th>
+                        <th className="px-6 py-3.5">Materials</th>
+                        <th className="px-6 py-3.5">Status</th>
+                        <th className="px-6 py-3.5 text-right">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border-custom">
+                      {filteredIndents.length === 0 ? (
+                        <tr>
+                          <td colSpan={6} className="px-6 py-12 text-center text-muted font-medium">
+                            No material indents found matching tab "{mrTab}".
+                          </td>
+                        </tr>
+                      ) : (
+                        filteredIndents.map((ind) => {
+                          return (
+                            <tr key={ind.id} className="hover:bg-elevated/20 transition-colors">
+                              <td className="px-6 py-4">
+                                <div className="text-sm font-semibold text-foreground">{ind.indent_number}</div>
+                              </td>
+                              <td className="px-6 py-4">
+                                <div className="text-sm font-medium text-foreground">{projects.find((p) => p.id === ind.project_id)?.name || 'Unknown Project'}</div>
+                              </td>
+                              <td className="px-6 py-4 text-muted">
+                                {new Date(ind.created_at).toLocaleDateString()}
+                              </td>
+                              <td className="px-6 py-4">
+                                {ind.items.length > 0 ? (
+                                  <div className="space-y-1 text-sm text-foreground">
+                                    {ind.items.map((item, idx) => (
+                                      <div key={idx} className="leading-snug">
+                                        <span className="font-medium">{item.material_name}</span>
+                                        <span className="text-muted"> • {item.quantity} {item.unit}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <span className="text-muted">No items</span>
+                                )}
+                              </td>
+                              <td className="px-6 py-4">
+                                <span className="inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider bg-elevated text-muted border-border-custom">
+                                  {ind.status}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4 text-right">
+                                {ind.status === "pending" ? (
+                                  <button
+                                    onClick={async () => {
+                                      try {
+                                        const res = await fetch(`${apiHost}/apis/v3/procurement/indents/${ind.id}/approve`, {
+                                          method: "POST",
+                                          headers: { "Authorization": `Bearer ${accessToken}` }
+                                        });
+                                        if (res.ok) {
+                                          fetchData();
+                                          showToast("Material indent approved!");
+                                        }
+                                      } catch (err) {
+                                        console.error(err);
+                                      }
+                                    }}
+                                    className="px-3 py-1.5 bg-primary hover:bg-primary-hover text-white text-xs font-semibold rounded-md transition-all cursor-pointer"
+                                  >
+                                    Approve Indent
+                                  </button>
+                                ) : (
+                                  <span className="text-muted">-</span>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
+                    </tbody>
+                  </table>
                 </div>
-              ) : (
-                filteredIndents.map((ind) => (
-                  <div key={ind.id} className="p-4 rounded-lg bg-card border border-border-custom space-y-3">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <span className="text-xs font-semibold text-foreground">{ind.indent_number}</span>
-                        <span className="text-xs text-muted ml-2 uppercase">
-                          {projects.find((p) => p.id === ind.project_id)?.name || "Unknown Project"}
-                        </span>
-                      </div>
-                      <span className="text-xs text-muted">
-                        {new Date(ind.created_at).toLocaleDateString()}
-                      </span>
-                    </div>
-
-                    <div className="space-y-1 border-t border-border-custom pt-2">
-                      {ind.items.map((item, idx) => (
-                        <div key={idx} className="flex justify-between text-xs">
-                          <span className="text-foreground font-medium">{item.material_name}</span>
-                          <span className="text-muted font-medium">
-                            {item.quantity} {item.unit}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-
-                    {ind.status === "pending" && (
-                      <div className="flex justify-end gap-2 pt-2">
-                        <button
-                          onClick={async () => {
-                            try {
-                              const res = await fetch(`${apiHost}/apis/v3/procurement/indents/${ind.id}/approve`, {
-                                method: "POST",
-                                headers: { "Authorization": `Bearer ${accessToken}` }
-                              });
-                              if (res.ok) {
-                                fetchData();
-                                showToast("Material indent approved!");
-                              }
-                            } catch (err) {
-                              console.error(err);
-                            }
-                          }}
-                          className="px-3 py-1.5 bg-primary hover:bg-primary-hover text-white text-xs font-semibold rounded-md transition-all cursor-pointer"
-                        >
-                          Approve Indent
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                ))
-              )}
+              </div>
             </div>
           </div>
         </div>

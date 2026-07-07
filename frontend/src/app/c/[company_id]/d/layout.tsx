@@ -15,12 +15,12 @@ export default function WorkspaceLayout({ children }: { children: React.ReactNod
   };
 
   const getPageTitle = () => {
-    if (pathname.includes("/d/home")) return "Projects";
+    if (pathname.includes("/d/home")) return "Project Hub";
     if (pathname.includes("/d/library")) return "Library Hub";
     if (pathname.includes("/d/team-action")) return "Team Schedule";
     if (pathname.includes("/d/todo")) return "To-Do List";
     if (pathname.includes("/d/payment-approval")) return "Payment Approvals";
-    if (pathname.includes("/dashboard")) return "Analytics Dashboard";
+    if (pathname.includes("/dashboard")) return "Company Dashboard";
     if (pathname.includes("/settings")) return "Settings";
     return "Workspace";
   };

@@ -438,7 +438,7 @@ export default function GanttSchedulerPage() {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-tr bg-primary font-sans font-bold text-white">
               S
             </div>
-            <span className="font-bold text-white tracking-tight">SiteFlow Console</span>
+            <span className="font-bold text-white tracking-tight">SiteFlow</span>
           </div>
 
           {/* Navigation Links */}

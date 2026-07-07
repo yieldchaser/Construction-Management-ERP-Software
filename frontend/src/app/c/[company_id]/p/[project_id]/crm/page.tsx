@@ -324,6 +324,7 @@ export default function CRMPage() {
                         <th className="text-right px-5 py-3 font-semibold">Budget</th>
                         <th className="text-left px-5 py-3 font-semibold">Stage</th>
                         <th className="text-left px-5 py-3 font-semibold">Source / Type</th>
+                        <th className="text-left px-5 py-3 font-semibold">Category</th>
                         <th className="text-left px-5 py-3 font-semibold">Lead Date</th>
                         <th className="text-left px-5 py-3 font-semibold">Action</th>
                       </tr>
@@ -355,6 +356,7 @@ export default function CRMPage() {
                             <div>{lead.source}</div>
                             <div className="text-[10px] text-muted">{lead.lead_type}</div>
                           </td>
+                          <td className="px-5 py-3 text-muted">{lead.category || "—"}</td>
                           <td className="px-5 py-3 text-muted">
                             {new Date(lead.lead_date).toLocaleDateString()}
                           </td>
@@ -365,7 +367,7 @@ export default function CRMPage() {
                       ))}
                       {filteredLeads.length === 0 && (
                         <tr>
-                          <td colSpan={7} className="text-center py-10 text-muted">No leads found in this pipeline stage.</td>
+                          <td colSpan={8} className="text-center py-10 text-muted">No leads found in this pipeline stage.</td>
                         </tr>
                       )}
                     </tbody>

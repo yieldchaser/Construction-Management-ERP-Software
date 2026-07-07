@@ -288,6 +288,15 @@ def delete_task_todo(todo_id: UUID, db: Session = Depends(get_db)):
     todo = db.query(TaskTodo).filter(TaskTodo.id == todo_id).first()
     if not todo:
         raise HTTPException(status_code=404, detail="Todo not found")
+    try:
+        from app.routers.delete_logs import log_deletion
+        company_id = None
+        if todo.task_id:
+            proj = db.query(Project).filter(Project.id == todo.task_id).first()
+            company_id = str(proj.company_id) if proj else None
+        log_deletion(db, company_id, "task", todo.id, f"Task Todo: {todo.title}")
+    except Exception:
+        pass
     db.delete(todo)
     db.commit()
     return {"success": True, "message": "Todo deleted successfully"}

@@ -1415,9 +1415,20 @@ class LibraryParty(Base):
     email = Column(String(255), nullable=True)
     party_type = Column(String(100), nullable=True) # e.g. Supplier, Subcontractor, Client
     address = Column(String, nullable=True)
+    bank_name = Column(String(255), nullable=True)
+    account_name = Column(String(255), nullable=True)
+    account_number = Column(String(100), nullable=True)
+    ifsc_code = Column(String(20), nullable=True)
+    tax_no = Column(String(100), nullable=True)
     date_of_joining = Column(DateTime(timezone=True), nullable=True)
     aadhaar_number = Column(String(50), nullable=True)
     pan_number = Column(String(50), nullable=True)
+    esi_number = Column(String(100), nullable=True)
+    pf_number = Column(String(100), nullable=True)
+    father_name = Column(String(255), nullable=True)
+    passport_no = Column(String(100), nullable=True)
+    passport_expiry_date = Column(DateTime(timezone=True), nullable=True)
+    creator_name = Column(String(255), nullable=True)
     aadhaar_file = Column(String, nullable=True) # file path or name
     pan_file = Column(String, nullable=True) # file path or name
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
@@ -1434,6 +1445,7 @@ class LibraryCostCode(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
     code = Column(String(100), nullable=False)
+    sub_cost_code = Column(String(100), nullable=True)
     name = Column(String(255), nullable=False)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 
@@ -1490,4 +1502,35 @@ class LibraryRate(Base):
     cost_code = Column(String(100), nullable=True)
     hsn_sac = Column(String(50), nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
+class MoM(Base):
+    """Minutes of Meeting (MOM) records captured per company/project site."""
+    __tablename__ = "moms"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), index=True, nullable=False)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), index=True, nullable=True)
+    type = Column(String(100), nullable=False, default="Regular")  # Regular, Review, Client Meeting, Internal
+    status = Column(String(50), nullable=False, default="Open")    # Open, Closed, Action Pending
+    attendees = Column(JSONB, default=list, nullable=False)        # List of attendee names
+    notes = Column(String, nullable=True)
+    created_by = Column(String(255), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Competitor Parity — Delete Logs (Audit Trail of Deleted Records)
+# ─────────────────────────────────────────────────────────────────────────────
+
+class DeleteLog(Base):
+    """Company-level audit trail recording deletions of business records."""
+    __tablename__ = "delete_logs"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), index=True, nullable=True)
+    entity_type = Column(String(50), nullable=False)  # project, task, lead, workorder, material, payment, timesheet
+    entity_id = Column(String(255), nullable=False)
+    entity_summary = Column(String, nullable=False)   # human-readable, e.g. "Project: Demo Tower"
+    party_name = Column(String(255), nullable=True)
+    deleted_by = Column(String(255), nullable=True)
+    deleted_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 

@@ -28,6 +28,44 @@ SiteFlow is an outcome-driven, high-fidelity ERP workspace tailored to the India
 
 ---
 
+## 🔄 Status & Parity
+
+SiteFlow recently completed a competitor-parity and bug-fixing pass benchmarked against the competitor **Onsite Teams**. Reconciliation evidence lives in [`onsiteteams-recon/Onsite_Teams_Non_Report_Column_Extraction.xlsx`](onsiteteams-recon/Onsite_Teams_Non_Report_Column_Extraction.xlsx) and the `.code-review-graph` knowledge graph.
+
+### Column-Level UI Parity (Complete)
+Column-level UI parity with Onsite Teams is **complete across all existing modules**, verified against the extracted workbook fields:
+procurement (PO / inventory / ledger / unbilled), subcon, crm, billing, finance, equipment, attendance, safety, drawings, wastage, three-way, reports, quality, production, hr, labour, towers, depreciation, budgeting, library, settings, dashboard, payment-approval, and todo.
+
+Notable columns added to match competitor schemas:
+- **Inventory**: Unit, Reorder Level, Current Stock.
+- **Subcontractor**: Work Order.
+- **CRM**: Category.
+
+### Connectivity Fixes
+- Corrected **5 broken API call URLs** in `frontend/app/d/home/page.tsx` — payment-requests, leaves, projects, and leave-approve endpoints.
+- Corrected **1 broken API URL** in `frontend/app/equipment/page.tsx` — fuel-log now targets `/equipment/{id}/fuel`.
+
+### Formula / Calculation Bug Fixes
+- `backend/.../production.py`: material consumption no longer over-applies the **1.54 dry-volume factor** (was over-counting batch consumption by ~54%).
+- Frontend calculators: stirrup steel length now uses **14d** (was 24d), matching the backend.
+- GST / TDS / retention / PF-ESI / concrete / steel math reviewed and confirmed correct.
+
+### Cosmetic Cleanup
+Removed duplicate Tailwind class leftovers (`rounded-lg` / `border` / `bg-input`) from procurement and equipment pages following their card→table conversions.
+
+### Known Remaining Module Gaps (Future Work — NOT Yet Built)
+These are whole new modules (require backend + models) and were intentionally deferred:
+- **Schedule / Gantt planning board** — dedicated planning module.
+
+### Verification Note
+> Automated `tsc` / Python / backend-import tests could **not** be executed inside the sandbox. Verification was performed via **static code review**. Before deploying, please run:
+> ```bash
+> cd frontend && npx tsc --noEmit --skipLibCheck
+> ```
+> and start the backend to confirm runtime behavior.
+
+---
+
 ## Key Features
 
 ### Core Platform
@@ -61,7 +99,7 @@ SiteFlow is an outcome-driven, high-fidelity ERP workspace tailored to the India
 - **📉 Asset Depreciation**: Straight-line, reducing balance, and written-down-value depreciation schedules with monthly ledger entries.
 - **🔗 3-Way Matching**: Automated PO-GRN-Invoice reconciliation with variance detection and approve/reject workflow.
 - **♻️ Material Wastage**: Scrap, offcut, damage, expiry, and theft tracking with value estimation, reason logging, and photo attachments.
-- **💬 Site Chat & MOM**: Project-level group chat with text, media, voice notes, and Minutes of Meeting (MOM) entries.
+- **💬 Site Chat**: Project-level group chat with text, media, and voice notes. (Standalone **Minutes of Meeting (MOM)** module is now available under project navigation.)
 - **🧩 Custom Fields Engine**: Dynamic field definitions for projects, tasks, bills, invoices, leads, and vendors.
 
 ### HR & Payroll
@@ -75,6 +113,7 @@ SiteFlow is an outcome-driven, high-fidelity ERP workspace tailored to the India
 ### Quality & Safety
 - **✅ Quality Inspections**: IS-code checklist library, site inspections, non-conformance reports (NCR), and material lab test logs.
 - **🦺 Safety Management**: Site hazard reporting, PPE audit checklists, and toolbox talk logs.
+- **📝 Minutes of Meeting (MOM)**: New MOM module with list/create/edit/delete, filters (date, attendee, project, status, type), and attendee/notes/status/type tracking per company/project.
 
 ### Analytics & Reporting
 - **📈 Executive Analytics**: Interactive S-curve progress charts and budget burn charts with hover tooltips.
@@ -262,7 +301,7 @@ SiteFlow features a state-of-the-art **flat canvas** with full support for light
 - **Asset Depreciation (`/depreciation`)**: Multiple depreciation methods, monthly ledger entries.
 - **3-Way Matching (`/three-way`)**: PO-GRN-Invoice reconciliation, variance detection, approval workflow.
 - **Material Wastage (`/wastage`)**: Scrap tracking, value estimation, status progression.
-- **Chat & MOM (`/chat`)**: Project chat groups, text/media/voice notes, Minutes of Meeting.
+- **Chat (`/chat`)**: Project chat groups, text/media/voice notes. (Standalone MOM module pending — see Status & Parity.)
 - **Custom Fields (`/custom-fields`)**: Dynamic field definitions across entities.
 - **Statutory Reports (`/statutory`)**: PF, ESI, BOCW, TDS compliance filing.
 - **Face Recognition (`/face-recognition`)**: Face verification audit trail with confidence scores.

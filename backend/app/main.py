@@ -2,13 +2,14 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import os
+from sqlalchemy import DateTime, String
 from app.routers import (
     auth, calculators, budgeting, planning, drawings, procurement,
     billing, hr, quality, reports, equipment, safety, analytics,
     production, dpr, crm, finance, tally, subcon_attendance, settings,
     assets, three_way, wastage, chat, custom_fields, statutory, face_recognition,
     subcon_performance, vendor_performance, rfq, labour, towers, budget,
-    library, profile
+    library, profile, mom, delete_logs
 )
 from app.database import engine, Base
 from app import models
@@ -16,6 +17,60 @@ from app import models
 # Initialize SQLAlchemy tables if they do not exist
 # Note: In production this is handled via Supabase SQL migrations, but for local/SQLite dev it serves as an auto-fallback
 Base.metadata.create_all(bind=engine)
+
+def ensure_sqlite_library_party_columns():
+    if not engine.url.drivername.startswith("sqlite"):
+        return
+
+    required_columns = {
+        "bank_name": String(255),
+        "account_name": String(255),
+        "account_number": String(100),
+        "ifsc_code": String(20),
+        "tax_no": String(100),
+        "esi_number": String(100),
+        "pf_number": String(100),
+        "father_name": String(255),
+        "passport_no": String(100),
+        "passport_expiry_date": DateTime(timezone=True),
+        "creator_name": String(255),
+    }
+
+    with engine.begin() as conn:
+        existing_columns = {
+            row[1]
+            for row in conn.exec_driver_sql("PRAGMA table_info(library_parties)").fetchall()
+        }
+        for column_name, column_type in required_columns.items():
+            if column_name in existing_columns:
+                continue
+            conn.exec_driver_sql(
+                f'ALTER TABLE library_parties ADD COLUMN "{column_name}" {column_type.compile(dialect=engine.dialect)}'
+            )
+
+ensure_sqlite_library_party_columns()
+
+def ensure_sqlite_library_cost_code_columns():
+    if not engine.url.drivername.startswith("sqlite"):
+        return
+
+    required_columns = {
+        "sub_cost_code": String(100),
+    }
+
+    with engine.begin() as conn:
+        existing_columns = {
+            row[1]
+            for row in conn.exec_driver_sql("PRAGMA table_info(library_cost_codes)").fetchall()
+        }
+        for column_name, column_type in required_columns.items():
+            if column_name in existing_columns:
+                continue
+            conn.exec_driver_sql(
+                f'ALTER TABLE library_cost_codes ADD COLUMN "{column_name}" {column_type.compile(dialect=engine.dialect)}'
+            )
+
+ensure_sqlite_library_cost_code_columns()
 
 import uuid
 from app.database import SessionLocal
@@ -183,6 +238,8 @@ app.include_router(towers.router, prefix="/apis/v3")
 app.include_router(budget.router, prefix="/apis/v3")
 app.include_router(library.router, prefix="/apis/v3")
 app.include_router(profile.router, prefix="/apis/v3")
+app.include_router(mom.router, prefix="/apis/v3")
+app.include_router(delete_logs.router, prefix="/apis/v3")
 
 @app.get("/")
 def read_root():

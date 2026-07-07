@@ -124,7 +124,7 @@ export default function CalculatorsPage() {
   const colMainWeight = colTotalMainLen * columnMainUnitW * (1 + steelWastage / 100);
 
   const colStirrupUnitW = (stirrupDia * stirrupDia) / 162.0;
-  const colStirrupLen = (2 * ((sizeA - 80) + (sizeB - 80)) + 24 * stirrupDia) / 1000; // 40mm cover
+  const colStirrupLen = (2 * ((sizeA - 80) + (sizeB - 80)) + 14 * stirrupDia) / 1000; // 40mm cover; 2*hook(9d) - 2*bend(2d) = 14d
   const colStirrupCount = Math.ceil(colHeight / stirrupSpacing) + 1;
   const colStirrupWeight = colStirrupLen * colStirrupCount * colStirrupUnitW * (1 + steelWastage / 100);
   const colTotalWeight = colMainWeight + colStirrupWeight;
@@ -260,7 +260,7 @@ export default function CalculatorsPage() {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-tr bg-primary font-sans font-bold text-white shadow-lg shadow-primary/10">
               S
             </div>
-            <span className="font-bold text-white tracking-tight text-sm">SiteFlow Console</span>
+            <span className="font-bold text-white tracking-tight text-sm">SiteFlow</span>
           </div>
 
           {/* Sidebar Nav group */}

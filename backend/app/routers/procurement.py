@@ -1,7 +1,7 @@
 from uuid import UUID
 from datetime import datetime
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import (
@@ -145,8 +145,21 @@ class TransactionResponse(BaseModel):
 
 # 1. Indents
 @router.get("/indents", response_model=List[IndentResponse])
-def get_indents(project_id: UUID, db: Session = Depends(get_db)):
-    indents = db.query(MaterialIndent).filter(MaterialIndent.project_id == project_id).all()
+def get_indents(
+    project_id: Optional[UUID] = Query(None),
+    company_id: Optional[UUID] = Query(None),
+    db: Session = Depends(get_db)
+):
+    if project_id is None and company_id is None:
+        raise HTTPException(status_code=400, detail="Either project_id or company_id must be provided")
+
+    query = db.query(MaterialIndent)
+    if project_id is not None:
+        query = query.filter(MaterialIndent.project_id == project_id)
+    else:
+        query = query.filter(MaterialIndent.company_id == company_id)
+
+    indents = query.all()
     res = []
     for ind in indents:
         items = db.query(MaterialIndentItem).filter(MaterialIndentItem.indent_id == ind.id).all()
@@ -169,7 +182,8 @@ def get_indents(project_id: UUID, db: Session = Depends(get_db)):
                 items=item_schemas
             )
         )
-    
+    return res
+
 @router.get("/indents/company/{company_id}", response_model=List[IndentResponse])
 def get_company_indents(company_id: UUID, db: Session = Depends(get_db)):
     indents = db.query(MaterialIndent).filter(MaterialIndent.company_id == company_id).all()
