@@ -8,10 +8,9 @@ import PageHeader from "@/components/PageHeader";
 
 interface ReportItem {
   name: string;
-  type: "excel" | "pdf" | "view";
-  downloadable: boolean;
-  endpoint?: string;
-  fields?: string[];
+  hasView: boolean;
+  hasDownload: boolean;
+  viewSlug?: string;
 }
 
 interface ReportCategory {
@@ -57,178 +56,178 @@ export default function ReportsDashboard() {
       title: "Sales",
       icon: "📈",
       reports: [
-        { name: "Company Sales Report", type: "excel", downloadable: true },
-        { name: "Item Wise Sales Report", type: "view", downloadable: false, endpoint: "/item-wise-sales" },
-        { name: "Sales Deduction / Retention Report", type: "excel", downloadable: true },
-        { name: "CRM Lead Detail Report", type: "excel", downloadable: true },
-        { name: "Lead Status Funnel Report", type: "excel", downloadable: true },
-        { name: "Project Wise Sales Summary", type: "excel", downloadable: true }
+        { name: "Company Sales Report", hasView: true, hasDownload: true, viewSlug: "company-sales" },
+        { name: "Item Wise Sales Report", hasView: true, hasDownload: false, viewSlug: "item-wise-sales" },
+        { name: "Sales Deduction / Retention Report", hasView: true, hasDownload: false, viewSlug: "sales-deduction-retention" },
+        { name: "CRM Lead Detail Report", hasView: true, hasDownload: false, viewSlug: "crm-lead-detail" },
+        { name: "Lead Status Funnel Report", hasView: true, hasDownload: false, viewSlug: "lead-status-funnel" },
+        { name: "Project Wise Sales Summary", hasView: true, hasDownload: false, viewSlug: "project-wise-sales-summary" }
       ]
     },
     {
       title: "Payments",
       icon: "💳",
       reports: [
-        { name: "Company Payments", type: "excel", downloadable: true },
-        { name: "Bank Statement", type: "excel", downloadable: true },
-        { name: "Project Wise Payment Summary", type: "excel", downloadable: true },
-        { name: "Project Payment Report", type: "excel", downloadable: true },
-        { name: "Payment Request Report", type: "excel", downloadable: true }
+        { name: "Company Payments", hasView: true, hasDownload: true, viewSlug: "company-payments" },
+        { name: "Bank Statement", hasView: true, hasDownload: false, viewSlug: "bank-statement" },
+        { name: "Project Wise Payment Summary", hasView: true, hasDownload: false, viewSlug: "project-wise-payment-summary" },
+        { name: "Project Payment Report", hasView: true, hasDownload: false, viewSlug: "project-payment" },
+        { name: "Payment Request Report", hasView: true, hasDownload: false, viewSlug: "payment-request" }
       ]
     },
     {
       title: "Progress & task",
       icon: "📋",
       reports: [
-        { name: "Daily Progress Report", type: "view", downloadable: false, endpoint: "/dpr" },
-        { name: "Task Report", type: "excel", downloadable: true },
-        { name: "Task Measurement Book", type: "excel", downloadable: true },
-        { name: "Task Material Report", type: "excel", downloadable: true },
-        { name: "To Do Report", type: "excel", downloadable: true },
-        { name: "Task Resource Budget Vs Actual Report", type: "excel", downloadable: true },
-        { name: "Site Inspection Report", type: "excel", downloadable: true },
-        { name: "Task Revenue & Expense Report", type: "excel", downloadable: true },
-        { name: "Task BOQ Billed & Unbilled Qty Report", type: "excel", downloadable: true },
-        { name: "Task Attendance Report", type: "excel", downloadable: true }
+        { name: "Daily Progress Report", hasView: true, hasDownload: false, viewSlug: "dpr" },
+        { name: "Task Report", hasView: true, hasDownload: false, viewSlug: "task-report" },
+        { name: "Task Measurement Book", hasView: true, hasDownload: false, viewSlug: "task-measurement-book" },
+        { name: "Task Material Report", hasView: true, hasDownload: false, viewSlug: "task-material" },
+        { name: "To Do Report", hasView: true, hasDownload: false, viewSlug: "todo-report" },
+        { name: "Task Resource Budget Vs Actual Report", hasView: true, hasDownload: false, viewSlug: "task-resource-budget-vs-actual" },
+        { name: "Site Inspection Report", hasView: true, hasDownload: false, viewSlug: "site-inspection" },
+        { name: "Task Revenue & Expense Report", hasView: true, hasDownload: false, viewSlug: "task-revenue-expense" },
+        { name: "Task BOQ Billed & Unbilled Qty Report", hasView: true, hasDownload: false, viewSlug: "task-boq-billed-unbilled" },
+        { name: "Task Attendance Report", hasView: true, hasDownload: false, viewSlug: "task-attendance" }
       ]
     },
     {
       title: "Purchase & Expense",
       icon: "💸",
       reports: [
-        { name: "Company Expense Report", type: "excel", downloadable: true },
-        { name: "Cost Code Expense Analysis", type: "excel", downloadable: true },
-        { name: "Project Wise Expense Summary", type: "excel", downloadable: true },
-        { name: "All Expense Deduction / Retention Report", type: "excel", downloadable: true }
+        { name: "Company Expense Report", hasView: true, hasDownload: true, viewSlug: "company-expense" },
+        { name: "Cost Code Expense Analysis", hasView: true, hasDownload: false, viewSlug: "cost-code-expense-analysis" },
+        { name: "Project Wise Expense Summary", hasView: true, hasDownload: false, viewSlug: "project-wise-expense-summary" },
+        { name: "All Expense Deduction / Retention Report", hasView: true, hasDownload: false, viewSlug: "all-expense-deduction-retention" }
       ]
     },
     {
       title: "Party Balances",
       icon: "👥",
       reports: [
-        { name: "Party Ledger", type: "excel", downloadable: true },
-        { name: "All Party Balances", type: "excel", downloadable: true },
-        { name: "Project level Party Balance Report", type: "excel", downloadable: true }
+        { name: "Party Ledger", hasView: true, hasDownload: false, viewSlug: "party-ledger" },
+        { name: "All Party Balances", hasView: true, hasDownload: false, viewSlug: "all-party-balances" },
+        { name: "Project level Party Balance Report", hasView: true, hasDownload: false, viewSlug: "project-level-party-balance" }
       ]
     },
     {
       title: "Materials & Inventory",
       icon: "📦",
       reports: [
-        { name: "Material Request Item Report", type: "excel", downloadable: true },
-        { name: "Material Received & Used Report", type: "excel", downloadable: true },
-        { name: "Material Stock Report", type: "excel", downloadable: true },
-        { name: "Unbilled Item Report", type: "excel", downloadable: true },
-        { name: "PO Summary Report", type: "excel", downloadable: true },
-        { name: "Material Received without PO", type: "excel", downloadable: true },
-        { name: "Purchase Order Item Report", type: "excel", downloadable: true },
-        { name: "Production Material Report", type: "excel", downloadable: true },
-        { name: "Material Purchase Item Report", type: "excel", downloadable: true },
-        { name: "Material Stock Movement Report", type: "excel", downloadable: true }
+        { name: "Material Request Item Report", hasView: true, hasDownload: false, viewSlug: "material-request-item" },
+        { name: "Material Received & Used Report", hasView: true, hasDownload: false, viewSlug: "material-received-used" },
+        { name: "Material Stock Report", hasView: true, hasDownload: false, viewSlug: "material-stock" },
+        { name: "Unbilled Item Report", hasView: true, hasDownload: false, viewSlug: "unbilled-item" },
+        { name: "PO Summary Report", hasView: true, hasDownload: false, viewSlug: "po-summary" },
+        { name: "Material Received without PO", hasView: true, hasDownload: false, viewSlug: "material-received-without-po" },
+        { name: "Purchase Order Item Report", hasView: true, hasDownload: false, viewSlug: "purchase-order-item" },
+        { name: "Production Material Report", hasView: true, hasDownload: false, viewSlug: "production-material" },
+        { name: "Material Purchase Item Report", hasView: true, hasDownload: false, viewSlug: "material-purchase-item" },
+        { name: "Material Stock Movement Report", hasView: true, hasDownload: false, viewSlug: "material-stock-movement" }
       ]
     },
     {
       title: "Attendance & Salary",
       icon: "🧑‍💻",
       reports: [
-        { name: "Attendance & Salary Report", type: "excel", downloadable: true },
-        { name: "OT & Shift Report", type: "excel", downloadable: true },
-        { name: "Company Attendance", type: "excel", downloadable: true },
-        { name: "Staff Monthly Salary Slip", type: "excel", downloadable: true },
-        { name: "Staff Salary Report", type: "excel", downloadable: true },
-        { name: "Staff Punch Report", type: "excel", downloadable: true },
-        { name: "Staff Muster Roll", type: "excel", downloadable: true }
+        { name: "Attendance & Salary Report", hasView: true, hasDownload: false, viewSlug: "attendance-salary" },
+        { name: "OT & Shift Report", hasView: true, hasDownload: false, viewSlug: "ot-shift" },
+        { name: "Company Attendance", hasView: false, hasDownload: true, viewSlug: "company-attendance" },
+        { name: "Staff Monthly Salary Slip", hasView: false, hasDownload: true, viewSlug: "staff-monthly-salary-slip" },
+        { name: "Staff Salary Report", hasView: true, hasDownload: false, viewSlug: "staff-salary" },
+        { name: "Staff Punch Report", hasView: false, hasDownload: true, viewSlug: "staff-punch-report" },
+        { name: "Staff Muster Roll", hasView: false, hasDownload: true, viewSlug: "staff-muster-roll" }
       ]
     },
     {
       title: "Equipments",
       icon: "🚜",
       reports: [
-        { name: "Equipment Usage Detail Report", type: "excel", downloadable: true },
-        { name: "Fuel Efficiency Report", type: "excel", downloadable: true },
-        { name: "Daily based Equipment Used Report", type: "excel", downloadable: true },
-        { name: "Equipment Expense Summary", type: "excel", downloadable: true },
-        { name: "Equipment Trip Report", type: "excel", downloadable: true }
+        { name: "Equipment Usage Detail Report", hasView: true, hasDownload: false, viewSlug: "equipment-usage-detail" },
+        { name: "Fuel Efficiency Report", hasView: true, hasDownload: false, viewSlug: "fuel-efficiency" },
+        { name: "Daily based Equipment Used Report", hasView: true, hasDownload: false, viewSlug: "daily-based-equipment-used" },
+        { name: "Equipment Expense Summary", hasView: true, hasDownload: false, viewSlug: "equipment-expense-summary" },
+        { name: "Equipment Trip Report", hasView: true, hasDownload: false, viewSlug: "equipment-trip" }
       ]
     },
     {
       title: "Tax",
       icon: "🧾",
       reports: [
-        { name: "Sales (GSTR-1)", type: "excel", downloadable: true },
-        { name: "Purchase (GSTR-2)", type: "excel", downloadable: true }
+        { name: "Sales (GSTR-1)", hasView: true, hasDownload: true, viewSlug: "gstr1-sales" },
+        { name: "Purchase (GSTR-2)", hasView: true, hasDownload: false, viewSlug: "gstr2-purchase" }
       ]
     },
     {
       title: "Warehouse",
       icon: "🏪",
       reports: [
-        { name: "Warehouse Stock Movement Report", type: "excel", downloadable: true },
-        { name: "Warehouse Transaction Report", type: "excel", downloadable: true },
-        { name: "Warehouse Current Stock Report", type: "excel", downloadable: true }
+        { name: "Warehouse Stock Movement Report", hasView: true, hasDownload: false, viewSlug: "warehouse-stock-movement" },
+        { name: "Warehouse Transaction Report", hasView: true, hasDownload: false, viewSlug: "warehouse-transaction" },
+        { name: "Warehouse Current Stock Report", hasView: true, hasDownload: false, viewSlug: "warehouse-current-stock" }
       ]
     },
     {
       title: "Sub Con.",
       icon: "🏗️",
       reports: [
-        { name: "Subcon Workorder Summary Report", type: "excel", downloadable: true },
-        { name: "Subcon Measurement Book", type: "excel", downloadable: true },
-        { name: "Subcon Deduction / Retention Report", type: "excel", downloadable: true },
-        { name: "Subcon Material Issue Summary", type: "excel", downloadable: true }
+        { name: "Subcon Workorder Summary Report", hasView: true, hasDownload: false, viewSlug: "subcon-workorder-summary" },
+        { name: "Subcon Measurement Book", hasView: true, hasDownload: false, viewSlug: "subcon-measurement-book" },
+        { name: "Subcon Deduction / Retention Report", hasView: true, hasDownload: false, viewSlug: "subcon-deduction-retention" },
+        { name: "Subcon Material Issue Summary", hasView: true, hasDownload: false, viewSlug: "subcon-material-issue" }
       ]
     },
     {
       title: "Misc.",
       icon: "🔮",
       reports: [
-        { name: "Project Financial Summary", type: "excel", downloadable: true },
-        { name: "Project Operational Summary", type: "excel", downloadable: true },
-        { name: "Company Transactions Report", type: "excel", downloadable: true },
-        { name: "Monthly P&L Report", type: "excel", downloadable: true },
-        { name: "Project Activity Leaderboard", type: "excel", downloadable: true },
-        { name: "Company User Activity Leaderboard", type: "excel", downloadable: true }
+        { name: "Project Financial Summary", hasView: true, hasDownload: true, viewSlug: "project-financial-summary" },
+        { name: "Project Operational Summary", hasView: true, hasDownload: false, viewSlug: "project-operational-summary" },
+        { name: "Company Transactions Report", hasView: true, hasDownload: false, viewSlug: "company-transactions" },
+        { name: "Monthly P&L Report", hasView: true, hasDownload: false, viewSlug: "monthly-pl" },
+        { name: "Project Activity Leaderboard", hasView: true, hasDownload: false, viewSlug: "project-activity-leaderboard" },
+        { name: "Company User Activity Leaderboard", hasView: true, hasDownload: false, viewSlug: "company-user-activity-leaderboard" }
       ]
     },
     {
       title: "Library",
       icon: "📚",
       reports: [
-        { name: "Party Library", type: "excel", downloadable: true },
-        { name: "Cost Code Library", type: "excel", downloadable: true },
-        { name: "Material Library", type: "excel", downloadable: true },
-        { name: "Rate Card Library", type: "excel", downloadable: true },
-        { name: "Payroll Library", type: "excel", downloadable: true },
-        { name: "Equipment Library", type: "excel", downloadable: true }
+        { name: "Party Library", hasView: true, hasDownload: false, viewSlug: "party-library" },
+        { name: "Cost Code Library", hasView: true, hasDownload: false, viewSlug: "cost-code-library" },
+        { name: "Material Library", hasView: true, hasDownload: false, viewSlug: "material-library" },
+        { name: "Rate Card Library", hasView: true, hasDownload: false, viewSlug: "rate-card-library" },
+        { name: "Payroll Library", hasView: true, hasDownload: false, viewSlug: "payroll-library" },
+        { name: "Equipment Library", hasView: true, hasDownload: false, viewSlug: "equipment-library" }
       ]
     },
     {
       title: "BOQ",
       icon: "📐",
       reports: [
-        { name: "BOQ Workorder Summary Report", type: "excel", downloadable: true },
-        { name: "BOQ Item Report", type: "excel", downloadable: true },
-        { name: "Quotation Report", type: "excel", downloadable: true },
-        { name: "Quotation Item Report", type: "excel", downloadable: true },
-        { name: "BOQ Measurement Book", type: "excel", downloadable: true }
+        { name: "BOQ Workorder Summary Report", hasView: true, hasDownload: false, viewSlug: "boq-workorder-summary" },
+        { name: "BOQ Item Report", hasView: true, hasDownload: false, viewSlug: "boq-item" },
+        { name: "Quotation Report", hasView: true, hasDownload: false, viewSlug: "quotation" },
+        { name: "Quotation Item Report", hasView: true, hasDownload: false, viewSlug: "quotation-item" },
+        { name: "BOQ Measurement Book", hasView: true, hasDownload: false, viewSlug: "boq-measurement-book" }
       ]
     },
     {
       title: "Budget",
       icon: "📊",
       reports: [
-        { name: "BOQ BOM Report", type: "excel", downloadable: true },
-        { name: "Budget vs Actual (Material Cost)", type: "excel", downloadable: true },
-        { name: "Budget vs Actual (Material Qty)", type: "excel", downloadable: true },
-        { name: "Budget vs Actual (Cost Code)", type: "excel", downloadable: true }
+        { name: "BOQ BOM Report", hasView: true, hasDownload: false, viewSlug: "boq-bom" },
+        { name: "Budget vs Actual (Material Cost)", hasView: true, hasDownload: false, viewSlug: "budget-vs-actual-material-cost" },
+        { name: "Budget vs Actual (Material Qty)", hasView: true, hasDownload: false, viewSlug: "budget-vs-actual-material-qty" },
+        { name: "Budget vs Actual (Cost Code)", hasView: true, hasDownload: false, viewSlug: "budget-vs-actual-cost-code" }
       ]
     },
     {
       title: "Asset",
       icon: "🏠",
       reports: [
-        { name: "Asset Allocation Report", type: "excel", downloadable: true },
-        { name: "Asset Status Report", type: "excel", downloadable: true }
+        { name: "Asset Allocation Report", hasView: true, hasDownload: false, viewSlug: "asset-allocation" },
+        { name: "Asset Status Report", hasView: true, hasDownload: false, viewSlug: "asset-status" }
       ]
     }
   ];
@@ -390,12 +389,8 @@ export default function ReportsDashboard() {
   };
 
   const handleReportClick = (report: ReportItem) => {
-    if (report.type === "view" && report.endpoint) {
-      router.push(`/c/${companyId}/reports${report.endpoint}`);
-    } else {
-      setSelectedReport(report);
-      setShowModal(true);
-    }
+    setSelectedReport(report);
+    setShowModal(true);
   };
 
   const triggerDownload = () => {
@@ -810,26 +805,50 @@ export default function ReportsDashboard() {
                     </div>
 
                     <div className="space-y-1.5">
-                      {filteredReports.map((report) => (
-                        <div
-                          key={report.name}
-                          onClick={() => handleReportClick(report)}
-                          className="group flex items-center justify-between p-2 rounded-lg hover:bg-elevated cursor-pointer transition-all"
-                        >
-                          <span className="text-xs text-muted group-hover:text-foreground transition-colors truncate max-w-[80%]">
-                            {report.name}
-                          </span>
-                          <div className="flex items-center gap-2">
-                            {report.type === "view" ? (
-                              <span className="text-[10px] bg-primary/10 text-primary border border-primary/20 px-2 py-0.5 rounded-full font-semibold">VIEW</span>
-                            ) : (
-                              <span className="text-muted group-hover:text-primary transition-colors text-sm">
-                                {report.type === "excel" ? "📥" : "📄"}
-                              </span>
-                            )}
+                      {filteredReports.map((report) => {
+                        const handleClick = () => {
+                          if (report.hasView && report.viewSlug) {
+                            router.push(`/c/${companyId}/reports/${report.viewSlug}`);
+                          } else if (report.hasDownload) {
+                            setSelectedReport(report);
+                            setShowModal(true);
+                          }
+                        };
+
+                        return (
+                          <div
+                            key={report.name}
+                            onClick={handleClick}
+                            className="group flex items-center justify-between p-2 rounded-lg hover:bg-elevated cursor-pointer transition-all"
+                          >
+                            <span className="text-xs text-muted group-hover:text-foreground transition-colors truncate max-w-[70%]">
+                              {report.name}
+                            </span>
+                            <div className="flex items-center gap-2 shrink-0" onClick={e => e.stopPropagation()}>
+                              {/* Download icon — only if hasDownload */}
+                              {report.hasDownload && (
+                                <button
+                                  onClick={() => { setSelectedReport(report); setShowModal(true); }}
+                                  className="text-muted hover:text-[#FF8A00] transition-colors text-sm"
+                                  title="Download Report"
+                                >
+                                  ⬇️
+                                </button>
+                              )}
+                              {/* Eye/View icon — only if hasView */}
+                              {report.hasView && report.viewSlug && (
+                                <Link
+                                  href={`/c/${companyId}/reports/${report.viewSlug}`}
+                                  className="text-muted hover:text-primary transition-colors text-sm"
+                                  title="View Report"
+                                >
+                                  👁️
+                                </Link>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
