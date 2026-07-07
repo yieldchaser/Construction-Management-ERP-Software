@@ -176,7 +176,15 @@ export default function Sidebar({ onShowToast }: { onShowToast?: (msg: string) =
     }
   };
 
-  const navItems = [
+  interface NavItem {
+    label: string;
+    href: string;
+    icon: React.ReactNode;
+    activePattern?: string;
+    action?: () => void;
+  }
+
+  const navItems: NavItem[] = [
     {
       label: "Dashboard",
       href: `/c/${companyId}/dashboard`,
