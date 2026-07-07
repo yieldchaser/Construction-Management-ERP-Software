@@ -685,8 +685,7 @@ export default function ReportsDashboard() {
       const csvContent = [
         headers.join(","),
         ...mockRows.map(row => row.map(cell => `"${cell.replace(/"/g, '""')}"`).join(","))
-      ].join("
-");
+      ].join("\n");
 
       // Generate Blob and trigger virtual download element
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
