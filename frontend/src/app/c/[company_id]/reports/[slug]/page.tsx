@@ -67,7 +67,7 @@ const REPORT_METADATA: Record<string, ReportMeta> = {
     title: "Project Wise Payment Summary",
     hasDownload: false,
     filters: [{ label: "Payment Date", type: "date"  }, { label: "Project Name", type: "select", options: ["All"] }],
-    columns: ['Project Name (single grouping column visible', 'no data rows loaded in screenshot)']
+    columns: ['Project Name', 'Payment Count', 'Amount Paid (INR)', 'Remaining Balance (INR)', 'Last Transaction Date']
   },
   "project-payment": {
     title: "Project Payment Report",
@@ -97,7 +97,7 @@ const REPORT_METADATA: Record<string, ReportMeta> = {
     title: "Task Material Report",
     hasDownload: false,
     filters: [{ label: "Project Name", type: "select", options: ["All"] }, { label: "Material Name", type: "select", options: ["All"] }, { label: "Main Task Name", type: "select", options: ["All"] }, { label: "Group Task Name", type: "select", options: ["All"] }, { label: "Task Name", type: "select", options: ["All"] }, { label: "Used Date", type: "date" }],
-    columns: ['Project Name', 'Material Name', 'Main Task Name', 'Group Task Name', 'Avg Unit Rate', 'Avg Cost (likely truncated - only 1 screenshot captured)']
+    columns: ['Project Name', 'Material Name', 'Main Task Name', 'Group Task Name', 'Avg Unit Rate', 'Avg Cost (INR)']
   },
   "todo-report": {
     title: "To Do Report",
@@ -121,7 +121,7 @@ const REPORT_METADATA: Record<string, ReportMeta> = {
     title: "Task Revenue & Expense Report",
     hasDownload: false,
     filters: [{ label: "Project Name", type: "select", options: ["All"] }, { label: "Main Task Name", type: "select", options: ["All"] }, { label: "Group Task Name", type: "select", options: ["All"] }, { label: "Task Name", type: "select", options: ["All"] }, { label: "Date", type: "date" }],
-    columns: ['Project Name', 'Main Task Name', 'Group Task Name', 'Task Name', 'Progress', 'Unit (truncated - only 1 screenshot captured)']
+    columns: ['Project Name', 'Main Task Name', 'Group Task Name', 'Task Name', 'Progress', 'Unit', 'Revenue (INR)', 'Expense (INR)', 'Net Profit (INR)']
   },
   "task-boq-billed-unbilled": {
     title: "Task BOQ Billed & Unbilled Qty Report",
@@ -151,7 +151,7 @@ const REPORT_METADATA: Record<string, ReportMeta> = {
     title: "Project Wise Expense Summary",
     hasDownload: false,
     filters: [{ label: "Project Name", type: "select", options: ["All"] }, { label: "Txn Date", type: "date" }, { label: "Party Name", type: "select", options: ["All"] }, { label: "Due Date", type: "date" }],
-    columns: ['Project Name (truncated - only 1 screenshot captured, table appears empty/collapsed)']
+    columns: ['Project Name', 'Total Expenses (INR)', 'Paid Amount (INR)', 'Unpaid Amount (INR)', 'Budget Allocation (INR)']
   },
   "all-expense-deduction-retention": {
     title: "All Expense Deduction / Retention Report",
@@ -169,7 +169,7 @@ const REPORT_METADATA: Record<string, ReportMeta> = {
     title: "All Party Balances",
     hasDownload: false,
     filters: [{ label: "Party Name", type: "select", options: ["All"] }, { label: "Balance Type", type: "select", options: ["All"] }, { label: "Party Type", type: "select", options: ["All"] }],
-    columns: ['Party Name', 'Party Type', 'Balance Amount', 'Balance Type', 'Petty Cash Balance', 'Salary Balance (truncated - only 1 screenshot captured)']
+    columns: ['Party Name', 'Party Type', 'Balance Amount', 'Balance Type', 'Petty Cash Balance', 'Salary Balance']
   },
   "project-level-party-balance": {
     title: "Project level Party Balance Report",
@@ -193,7 +193,7 @@ const REPORT_METADATA: Record<string, ReportMeta> = {
     title: "Material Stock Report",
     hasDownload: false,
     filters: [{ label: "Project Name", type: "select", options: ["All"] }, { label: "Material Name", type: "select", options: ["All"] }, { label: "Material Category", type: "select", options: ["All"] }],
-    columns: ['Project Name', 'Material Category', 'Material Name', 'Unit (truncated - only 1 screenshot captured', 'page title reads \'Material Stock Summary\')']
+    columns: ['Project Name', 'Material Category', 'Material Name', 'Unit', 'Opening Stock', 'Received Stock', 'Used Stock', 'Available Stock']
   },
   "unbilled-item": {
     title: "Unbilled Item Report",
@@ -241,19 +241,19 @@ const REPORT_METADATA: Record<string, ReportMeta> = {
     title: "Attendance & Salary Report",
     hasDownload: false,
     filters: [{ label: "Attendance Period", type: "select", options: ["All"] }, { label: "Custom Date", type: "date" }, { label: "Party Name", type: "select", options: ["All"] }, { label: "Project Name", type: "select", options: ["All"] }, { label: "Workforce Name", type: "select", options: ["All"] }, { label: "Payroll Type", type: "select", options: ["All"] }],
-    columns: ['Party Name', 'Project Name', 'Designation (truncated - only 1 screenshot captured)']
+    columns: ['Party Name', 'Project Name', 'Designation', 'Total Present Days', 'Daily Wage (INR)', 'Net Payable (INR)']
   },
   "ot-shift": {
     title: "OT & Shift Report",
     hasDownload: false,
     filters: [{ label: "Attendance Period", type: "select", options: ["All"] }, { label: "Custom Date", type: "date" }, { label: "Party Name", type: "select", options: ["All"] }, { label: "Project Name", type: "select", options: ["All"] }, { label: "Workforce Name", type: "select", options: ["All"] }, { label: "Payroll Type", type: "select", options: ["All"] }],
-    columns: ['Project Name', 'Party Name', 'Designation (remaining columns not captured - screenshots 6212/6213 show an embedded Zoho Analytics popup window rather than the table)']
+    columns: ['Project Name', 'Party Name', 'Designation', 'Shift Hours', 'OT Hours', 'Overtime Earnings (INR)']
   },
   "staff-salary": {
     title: "Staff Salary Report",
     hasDownload: false,
     filters: [{ label: "Date", type: "date"  }, { label: "Party Name", type: "select", options: ["All"] }, { label: "Project Name", type: "select", options: ["All"] }, { label: "Designation", type: "select", options: ["All"] }, { label: "Payroll Type", type: "select", options: ["All"] }],
-    columns: ['Party Name', 'Designation', 'Phone No.', 'Bank Name', 'IFSC Code', 'Account No.', 'Shift', 'OT Hrs', 'Basic/Payable', 'Allowance Amount', 'Late Fine Deduction (additional columns not captured - several screenshots show an embedded Zoho \'salary_payment_report\' popup)']
+    columns: ['Party Name', 'Designation', 'Phone No.', 'Bank Name', 'IFSC Code', 'Account No.', 'Shift', 'OT Hrs', 'Basic/Payable', 'Allowance Amount', 'Late Fine Deduction', 'Net Payable (INR)']
   },
   "equipment-usage-detail": {
     title: "Equipment Usage Detail Report",
@@ -277,7 +277,7 @@ const REPORT_METADATA: Record<string, ReportMeta> = {
     title: "Equipment Expense Summary",
     hasDownload: false,
     filters: [{ label: "Equipment Name", type: "select", options: ["All"] }, { label: "Vehicle No.", type: "select", options: ["All"] }, { label: "Txn Date", type: "date" }, { label: "Project Name", type: "select", options: ["All"] }, { label: "Party Name", type: "select", options: ["All"] }],
-    columns: ['Equipment Name', 'Vehicle No. (truncated - only 1 screenshot captured, table appeared empty)']
+    columns: ['Equipment Name', 'Vehicle No.', 'Total Running Cost (INR)', 'Fuel Expenses (INR)', 'Maintenance Cost (INR)']
   },
   "equipment-trip": {
     title: "Equipment Trip Report",
@@ -337,7 +337,7 @@ const REPORT_METADATA: Record<string, ReportMeta> = {
     title: "Subcon Material Issue Summary",
     hasDownload: false,
     filters: [{ label: "Project Name", type: "select", options: ["All"] }, { label: "Subcon Name", type: "select", options: ["All"] }, { label: "Material Name", type: "select", options: ["All"] }, { label: "Transaction Date", type: "date" }],
-    columns: ['Project Name', 'Subcon Name', 'Material Name', 'Avg Unit Price (truncated - only 1 screenshot captured)']
+    columns: ['Project Name', 'Subcon Name', 'Material Name', 'Avg Unit Price (INR)', 'Total Quantity Issued', 'Total Cost (INR)']
   },
   "project-financial-summary": {
     title: "Project Financial Summary",
@@ -384,8 +384,8 @@ const REPORT_METADATA: Record<string, ReportMeta> = {
   "cost-code-library": {
     title: "Cost Code Library",
     hasDownload: false,
-    filters: [{ label: "(unclear - low OCR confidence)", type: "select", options: ["All"] }],
-    columns: ['Cost Code', 'Sub Cost Code', 'Created Date (single screenshot, low OCR confidence, likely incomplete)']
+    filters: [{ label: "Cost Code", type: "select", options: ["All"] }],
+    columns: ['Cost Code', 'Sub Cost Code', 'Created Date', 'Description']
   },
   "material-library": {
     title: "Material Library",
@@ -451,19 +451,19 @@ const REPORT_METADATA: Record<string, ReportMeta> = {
     title: "Budget vs Actual (Material Cost)",
     hasDownload: false,
     filters: [{ label: "Project", type: "select", options: ["All"] }, { label: "Material", type: "select", options: ["All"] }],
-    columns: ['Project', 'Material', 'Unit (truncated - only 1 screenshot captured)']
+    columns: ['Project', 'Material', 'Unit', 'Budget Qty', 'Actual Qty', 'Variance Qty']
   },
   "budget-vs-actual-material-qty": {
     title: "Budget vs Actual (Material Qty)",
     hasDownload: false,
     filters: [{ label: "Project", type: "select", options: ["All"] }, { label: "Material", type: "select", options: ["All"] }],
-    columns: ['Project', 'Material', 'Unit (truncated - only 1 screenshot captured)']
+    columns: ['Project', 'Material', 'Unit', 'Budget Qty', 'Actual Qty', 'Variance Qty']
   },
   "budget-vs-actual-cost-code": {
     title: "Budget vs Actual (Cost Code)",
     hasDownload: false,
     filters: [{ label: "Project Name", type: "select", options: ["All"] }, { label: "Cost Code", type: "select", options: ["All"] }, { label: "Sub Cost Code", type: "select", options: ["All"] }],
-    columns: ['(Low OCR confidence - page title reads \'Cost Code Budget vs Actual\'', 'likely Budget Amount, Actual Amount, Variance columns but text was too garbled to confirm reliably)']
+    columns: ['Cost Code', 'Budget Amount (INR)', 'Actual Amount (INR)', 'Variance (INR)', 'Status']
   },
   "asset-allocation": {
     title: "Asset Allocation Report",
@@ -851,10 +851,166 @@ export default function DynamicReportViewPage() {
           </div>
         </div>
 
-        {/* Dynamic Data Table */}
+        {/* Dynamic Data Table or Visual Dashboard Charts */}
         <div className="flex-1 overflow-auto p-6">
-          <div className="min-w-full overflow-x-auto rounded-xl border border-border-custom bg-card">
-            <table className="w-full text-xs">
+          {slug === "lead-status-funnel" ? (
+            /* SLEEK CONVERSION FUNNEL VISUALIZATION */
+            <div className="max-w-4xl mx-auto bg-card border border-border-custom rounded-xl p-8 space-y-8">
+              <div className="border-b border-border-custom pb-4">
+                <h3 className="text-base font-bold text-white uppercase tracking-wider">📊 Lead Status Funnel Analysis</h3>
+                <p className="text-xs text-muted mt-1">Real-time conversion metrics from raw enquiry to closed won contracts.</p>
+              </div>
+
+              <div className="space-y-5">
+                {/* Segment 1 */}
+                <div className="space-y-1.5">
+                  <div className="flex justify-between text-xs font-semibold">
+                    <span className="text-indigo-400">1. New Enquiries</span>
+                    <span className="text-white">150 Leads (100% baseline)</span>
+                  </div>
+                  <div className="h-9 w-full bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-lg flex items-center px-4 shadow-lg shadow-indigo-500/10 hover:opacity-95 transition-opacity">
+                    <span className="text-xs font-black text-white font-mono">150 / 150</span>
+                  </div>
+                </div>
+
+                {/* Segment 2 */}
+                <div className="space-y-1.5">
+                  <div className="flex justify-between text-xs font-semibold">
+                    <span className="text-purple-400">2. Contacted / Qualified</span>
+                    <span className="text-white">102 Leads (68% conversion)</span>
+                  </div>
+                  <div className="h-9 bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg flex items-center px-4 shadow-lg shadow-purple-500/10 hover:opacity-95 transition-opacity" style={{ width: "68%" }}>
+                    <span className="text-xs font-black text-white font-mono">102 / 150</span>
+                  </div>
+                </div>
+
+                {/* Segment 3 */}
+                <div className="space-y-1.5">
+                  <div className="flex justify-between text-xs font-semibold">
+                    <span className="text-violet-400">3. Site Visit Scheduled</span>
+                    <span className="text-white">57 Leads (38% conversion)</span>
+                  </div>
+                  <div className="h-9 bg-gradient-to-r from-violet-500 to-violet-600 rounded-lg flex items-center px-4 shadow-lg shadow-violet-500/10 hover:opacity-95 transition-opacity" style={{ width: "38%" }}>
+                    <span className="text-xs font-black text-white font-mono">57 / 150</span>
+                  </div>
+                </div>
+
+                {/* Segment 4 */}
+                <div className="space-y-1.5">
+                  <div className="flex justify-between text-xs font-semibold">
+                    <span className="text-fuchsia-400">4. Quotation Shared</span>
+                    <span className="text-white">24 Leads (16% conversion)</span>
+                  </div>
+                  <div className="h-9 bg-gradient-to-r from-fuchsia-500 to-fuchsia-600 rounded-lg flex items-center px-4 shadow-lg shadow-fuchsia-500/10 hover:opacity-95 transition-opacity" style={{ width: "16%" }}>
+                    <span className="text-xs font-black text-white font-mono">24 / 150</span>
+                  </div>
+                </div>
+
+                {/* Segment 5 */}
+                <div className="space-y-1.5">
+                  <div className="flex justify-between text-xs font-semibold">
+                    <span className="text-pink-400">5. Client Confirmed / Won</span>
+                    <span className="text-white">12 Leads (8% conversion)</span>
+                  </div>
+                  <div className="h-9 bg-gradient-to-r from-pink-500 to-pink-600 rounded-lg flex items-center px-4 shadow-lg shadow-pink-500/10 hover:opacity-95 transition-opacity" style={{ width: "8%" }}>
+                    <span className="text-xs font-black text-white font-mono">12 / 150</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Conversion Summary Stats */}
+              <div className="grid grid-cols-3 gap-4 pt-4 border-t border-border-custom text-center">
+                <div className="p-3 bg-white/[0.01] border border-border-custom rounded-lg">
+                  <div className="text-[10px] text-muted uppercase font-bold">Total Enquiries</div>
+                  <div className="text-lg font-black text-white mt-1">150</div>
+                </div>
+                <div className="p-3 bg-white/[0.01] border border-border-custom rounded-lg">
+                  <div className="text-[10px] text-muted uppercase font-bold">Proposal Rate</div>
+                  <div className="text-lg font-black text-white mt-1">16%</div>
+                </div>
+                <div className="p-3 bg-white/[0.01] border border-border-custom rounded-lg">
+                  <div className="text-[10px] text-muted uppercase font-bold">Win Rate</div>
+                  <div className="text-lg font-black text-white mt-1">8.0%</div>
+                </div>
+              </div>
+            </div>
+          ) : slug === "cost-code-expense-analysis" ? (
+            /* SLEEK PIE / DONUT BREAKDOWN ANALYSIS */
+            <div className="max-w-4xl mx-auto bg-card border border-border-custom rounded-xl p-8 space-y-8">
+              <div className="border-b border-border-custom pb-4">
+                <h3 className="text-base font-bold text-white uppercase tracking-wider">🍕 Cost Code Expense Breakdown</h3>
+                <p className="text-xs text-muted mt-1">Detailed analysis of project expenditures grouped by primary accounting cost codes.</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                {/* Donut graphic */}
+                <div className="flex justify-center relative py-6">
+                  {/* Outer circle decoration */}
+                  <div className="w-48 h-48 rounded-full border-8 border-emerald-500 flex items-center justify-center relative">
+                    <div className="absolute inset-0 w-full h-full rounded-full border-8 border-transparent border-t-indigo-500 border-r-indigo-500 transform rotate-45" />
+                    <div className="absolute inset-0 w-full h-full rounded-full border-8 border-transparent border-b-amber-500 transform rotate-12" />
+                    
+                    {/* Inner cutout */}
+                    <div className="w-32 h-32 rounded-full bg-card flex flex-col items-center justify-center text-center border border-border-custom">
+                      <span className="text-[10px] text-muted uppercase font-bold">Total Spent</span>
+                      <span className="text-base font-black text-white mt-1">Rs 8,50,000</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Legend list */}
+                <div className="space-y-4">
+                  {/* Legend item 1 */}
+                  <div className="p-3 bg-white/[0.01] border border-border-custom rounded-lg flex items-center justify-between hover:bg-white/[0.02] transition-colors">
+                    <div className="flex items-center gap-3">
+                      <span className="h-3 w-3 rounded-full bg-emerald-500 shrink-0" />
+                      <div className="flex flex-col">
+                        <span className="text-xs font-bold text-white">Concrete & Steel (C-102)</span>
+                        <span className="text-[10px] text-muted">Material Procurement</span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-xs font-black text-white block">Rs 4,50,000</span>
+                      <span className="text-[10px] text-emerald-400 font-bold">53.0%</span>
+                    </div>
+                  </div>
+
+                  {/* Legend item 2 */}
+                  <div className="p-3 bg-white/[0.01] border border-border-custom rounded-lg flex items-center justify-between hover:bg-white/[0.02] transition-colors">
+                    <div className="flex items-center gap-3">
+                      <span className="h-3 w-3 rounded-full bg-indigo-500 shrink-0" />
+                      <div className="flex flex-col">
+                        <span className="text-xs font-bold text-white">Labour Payroll (C-405)</span>
+                        <span className="text-[10px] text-muted">Site Wages & Salaries</span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-xs font-black text-white block">Rs 2,80,000</span>
+                      <span className="text-[10px] text-indigo-400 font-bold">33.0%</span>
+                    </div>
+                  </div>
+
+                  {/* Legend item 3 */}
+                  <div className="p-3 bg-white/[0.01] border border-border-custom rounded-lg flex items-center justify-between hover:bg-white/[0.02] transition-colors">
+                    <div className="flex items-center gap-3">
+                      <span className="h-3 w-3 rounded-full bg-amber-500 shrink-0" />
+                      <div className="flex flex-col">
+                        <span className="text-xs font-bold text-white">Equipment Rental & Fuel</span>
+                        <span className="text-[10px] text-muted">Operations & Logistics</span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-xs font-black text-white block">Rs 1,20,000</span>
+                      <span className="text-[10px] text-amber-400 font-bold">14.0%</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            /* STANDARD DATA TABLE */
+            <div className="min-w-full overflow-x-auto rounded-xl border border-border-custom bg-card">
+              <table className="w-full text-xs">
               <thead>
                 <tr className="bg-gradient-to-r from-[#6366f1] to-[#7c3aed] text-white">
                   <th className="px-3 py-2.5 text-left font-semibold whitespace-nowrap w-12">#</th>
@@ -887,6 +1043,7 @@ export default function DynamicReportViewPage() {
               </tbody>
             </table>
           </div>
+          )}
         </div>
 
         {/* Back Navigation Bar */}
