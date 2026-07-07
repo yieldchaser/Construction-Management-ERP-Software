@@ -704,6 +704,8 @@ export default function DynamicReportViewPage() {
   const [toastMessage, setToastMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [showExportDropdown, setShowExportDropdown] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc" | null>(null);
 
   // Load report meta configuration
   const meta = REPORT_METADATA[slug];
@@ -712,6 +714,17 @@ export default function DynamicReportViewPage() {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(""), 3000);
   };
+
+  // Set up filters state dynamically based on meta filter configuration
+  const [filterValues, setFilterValues] = useState<Record<string, string>>(() => {
+    const initial: Record<string, string> = {};
+    if (meta) {
+      meta.filters.forEach(f => {
+        initial[f.label] = f.type === "select" ? "All" : "";
+      });
+    }
+    return initial;
+  });
 
   if (!meta) {
     return (
@@ -724,24 +737,36 @@ export default function DynamicReportViewPage() {
     );
   }
 
-  // Set up filters state dynamically based on meta filter configuration
-  const [filterValues, setFilterValues] = useState<Record<string, string>>(() => {
-    const initial: Record<string, string> = {};
-    meta.filters.forEach(f => {
-      initial[f.label] = f.type === "select" ? "All" : "";
-    });
-    return initial;
-  });
-
   const handleFilterChange = (label: string, val: string) => {
     setFilterValues(prev => ({ ...prev, [label]: val }));
   };
 
-  // Generate 3 realistic mock rows dynamically based on the report columns
+  const handleRefresh = () => {
+    setRefreshTrigger(prev => prev + 1);
+    showToast("Refreshed data.");
+  };
+
+  const handleResetFilters = () => {
+    const reset: Record<string, string> = {};
+    meta.filters.forEach(f => {
+      reset[f.label] = f.type === "select" ? "All" : "";
+    });
+    setFilterValues(reset);
+    setSearchQuery("");
+    showToast("Filters reset to default.");
+  };
+
+  const handleSort = () => {
+    const nextDir = sortDirection === "asc" ? "desc" : "asc";
+    setSortDirection(nextDir);
+    showToast(`Sorted table rows in ${nextDir.toUpperCase()} order.`);
+  };
+
+  // Generate 3 realistic mock rows dynamically based on the report columns and refresh state
   const mockData = [0, 1, 2].map(idx => {
     const row: Record<string, string> = {};
     meta.columns.forEach(col => {
-      row[col] = getMockValueForColumn(col, idx);
+      row[col] = getMockValueForColumn(col, idx + refreshTrigger);
     });
     return row;
   });
@@ -769,19 +794,131 @@ export default function DynamicReportViewPage() {
     return true;
   });
 
+  // Apply sorting
+  const processedData = React.useMemo(() => {
+    if (!sortDirection || meta.columns.length === 0) return filteredData;
+    const sorted = [...filteredData];
+    const sortCol = meta.columns[0];
+    sorted.sort((a, b) => {
+      const valA = (a[sortCol] || "").toLowerCase();
+      const valB = (b[sortCol] || "").toLowerCase();
+      if (valA < valB) return sortDirection === "asc" ? -1 : 1;
+      if (valA > valB) return sortDirection === "asc" ? 1 : -1;
+      return 0;
+    });
+    return sorted;
+  }, [filteredData, sortDirection, meta.columns]);
+
   // Handle format export selection
   const handleExportSelect = (format: string) => {
     setShowExportDropdown(false);
     
     const headers = ["#", ...meta.columns];
-    const csvRows = filteredData.map((row, i) => [
+    const dataRows = processedData.map((row, i) => [
       String(i + 1),
       ...meta.columns.map(col => row[col] || "")
     ]);
 
+    if (format === "html") {
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>${meta.title}</title>
+          <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 24px; background: #0b0f19; color: #f3f4f6; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; background: #111827; border: 1px solid #374151; border-radius: 8px; overflow: hidden; }
+            th, td { border-bottom: 1px solid #374151; padding: 12px 16px; text-align: left; font-size: 13px; }
+            th { background-color: #312e81; color: #ffffff; font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; }
+            tr:hover { background-color: #1f2937; }
+            h2 { color: #ffffff; margin-bottom: 4px; }
+            p { color: #9ca3af; font-size: 12px; margin-top: 0; }
+          </style>
+        </head>
+        <body>
+          <h2>${meta.title}</h2>
+          <p>Generated on: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}</p>
+          <table>
+            <thead>
+              <tr>
+                ${headers.map(h => `<th>${h}</th>`).join("")}
+              </tr>
+            </thead>
+            <tbody>
+              ${dataRows.map(row => `
+                <tr>
+                  ${row.map(cell => `<td>${cell}</td>`).join("")}
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </body>
+        </html>
+      `;
+      const blob = new Blob([htmlContent], { type: "text/html;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `${meta.title.toLowerCase().replace(/[^a-z0-9]/g, "_")}_export.html`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showToast("Report exported successfully as HTML!");
+      return;
+    }
+
+    if (format === "pdf") {
+      const printWindow = window.open("", "_blank");
+      if (printWindow) {
+        printWindow.document.write(`
+          <html>
+          <head>
+            <title>${meta.title}</title>
+            <style>
+              body { font-family: sans-serif; padding: 20px; color: #333; }
+              table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+              th, td { border: 1px solid #ccc; padding: 10px; text-align: left; font-size: 12px; }
+              th { background-color: #f3f4f6; font-weight: bold; }
+              h2 { margin-bottom: 5px; }
+              p { margin-top: 0; color: #666; font-size: 11px; }
+            </style>
+          </head>
+          <body>
+            <h2>${meta.title}</h2>
+            <p>Generated on: ${new Date().toLocaleString()}</p>
+            <table>
+              <thead>
+                <tr>
+                  ${headers.map(h => `<th>${h}</th>`).join("")}
+                </tr>
+              </thead>
+              <tbody>
+                ${dataRows.map(row => `
+                  <tr>
+                    ${row.map(cell => `<td>${cell}</td>`).join("")}
+                  </tr>
+                `).join("")}
+              </tbody>
+            </table>
+            <script>
+              window.onload = function() {
+                window.print();
+                window.close();
+              }
+            </script>
+          </body>
+          </html>
+        `);
+        printWindow.document.close();
+      }
+      showToast("Exported PDF print preview generated!");
+      return;
+    }
+
+    // Default to CSV / Excel (CSV formatted stream)
     const csvContent = [
       headers.join(","),
-      ...csvRows.map(r => r.map(c => `"${c.replace(/"/g, '""')}"`).join(","))
+      ...dataRows.map(r => r.map(c => `"${c.replace(/"/g, '""')}"`).join(","))
     ].join("\n");
 
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
@@ -789,7 +926,8 @@ export default function DynamicReportViewPage() {
     const link = document.createElement("a");
     link.href = url;
     
-    const cleanFileName = meta.title.toLowerCase().replace(/[^a-z0-9]/g, "_") + `_export.${format.toLowerCase()}`;
+    const extension = format === "xlsx" ? "xlsx" : "csv";
+    const cleanFileName = meta.title.toLowerCase().replace(/[^a-z0-9]/g, "_") + `_export.${extension}`;
     link.setAttribute("download", cleanFileName);
     document.body.appendChild(link);
     link.click();
@@ -841,9 +979,9 @@ export default function DynamicReportViewPage() {
 
             {/* RIGHT: Export toolbar + Search bar */}
             <div className="flex items-center gap-2 shrink-0">
-              <button onClick={() => showToast("Refreshed data.")} className="text-muted hover:text-foreground text-xs border border-border-custom rounded-lg px-3 py-1.5 transition-all">🔄 Refresh</button>
-              <button onClick={() => showToast("Filters applied.")} className="text-muted hover:text-foreground text-xs border border-border-custom rounded-lg px-3 py-1.5 transition-all">Filter</button>
-              <button onClick={() => showToast("Sorted columns.")} className="text-muted hover:text-foreground text-xs border border-border-custom rounded-lg px-3 py-1.5 transition-all">Sort</button>
+              <button onClick={handleRefresh} className="text-muted hover:text-foreground text-xs border border-border-custom rounded-lg px-3 py-1.5 transition-all">🔄 Refresh</button>
+              <button onClick={handleResetFilters} className="text-muted hover:text-foreground text-xs border border-border-custom rounded-lg px-3 py-1.5 transition-all">Filter</button>
+              <button onClick={handleSort} className="text-muted hover:text-foreground text-xs border border-border-custom rounded-lg px-3 py-1.5 transition-all">Sort</button>
               
               {/* Dynamic 4-option export dropdown button */}
               <div className="relative">
@@ -894,14 +1032,14 @@ export default function DynamicReportViewPage() {
                 </tr>
               </thead>
               <tbody>
-                {filteredData.length === 0 ? (
+                {processedData.length === 0 ? (
                   <tr>
                     <td colSpan={meta.columns.length + 1} className="text-center py-16 text-[#ef4444] font-semibold text-sm">
                       No Data
                     </td>
                   </tr>
                 ) : (
-                  filteredData.map((row, i) => (
+                  processedData.map((row, i) => (
                     <tr key={i} className="border-t border-border-custom hover:bg-elevated/40 transition-colors">
                       <td className="px-3 py-2.5 text-muted">{i + 1}</td>
                       {meta.columns.map(col => (
