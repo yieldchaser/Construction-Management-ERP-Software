@@ -126,10 +126,16 @@ export default function DashboardPage() {
     teamMember: ""
   });
 
-  const [projects, setProjects] = useState([
-    { id: "d0000000-0000-0000-0000-000000000001", name: "Metro Terminal (Phase 2)", code: "MET-02", city: "Mumbai", address: "Andheri East Metro Line", attendance_radius_meters: 500, status: "Ongoing", health: "Healthy", startDate: "2026-01-01", endDate: "2026-12-31" },
-    { id: "d0000000-0000-0000-0000-000000000002", name: "Bypass Highway Flyover", code: "HWY-FLY", city: "Pune", address: "NH-4 Bypass Crossing", attendance_radius_meters: 300, status: "Ongoing", health: "Warning", startDate: "2026-02-15", endDate: "2027-01-10" },
-    { id: "d0000000-0000-0000-0000-000000000003", name: "Alpha Premium Residences", code: "ALF-RES", city: "Delhi", address: "Sector 62, Dwarka", attendance_radius_meters: 500, status: "Ongoing", health: "Critical", startDate: "2025-10-01", endDate: "2026-09-30" },
+  // Operational dashboard filters
+  const [selProject, setSelProject] = useState("All");
+  const [selStatus, setSelStatus] = useState("All");
+  const [selHealth, setSelHealth] = useState("All");
+
+  const [projects, setProjects] = useState<any[]>([
+    { id: "d0000000-0000-0000-0000-000000000001", name: "Metro Terminal (Phase 2)", code: "MET-02", city: "Mumbai", address: "Andheri East Metro Line", attendance_radius_meters: 500, status: "Ongoing", health: "Healthy", startDate: "2026-01-01", endDate: "2026-12-31", category: "Prestige Developers", keyPersonnel: "Yash Desai", progress: 12.5, customerName: "Prestige Group", projectStage: "Structure" },
+    { id: "d0000000-0000-0000-0000-000000000002", name: "Bypass Highway Flyover", code: "HWY-FLY", city: "Pune", address: "NH-4 Bypass Crossing", attendance_radius_meters: 300, status: "Ongoing", health: "Warning", startDate: "2026-02-15", endDate: "2027-01-10", category: "Developers", keyPersonnel: "Amit Sharma", progress: 0.0, customerName: "Developers Inc", projectStage: "Excavation" },
+    { id: "d0000000-0000-0000-0000-000000000003", name: "Alpha Premium Residences", code: "ALF-RES", city: "Delhi", address: "Sector 62, Dwarka", attendance_radius_meters: 500, status: "Ongoing", health: "Critical", startDate: "2025-10-01", endDate: "2026-09-30", category: "Nerul", keyPersonnel: "Rohan Gupta", progress: 45.0, customerName: "Alpha Group", projectStage: "Finishing" },
+    { id: "d0000000-0000-0000-0000-000000000004", name: "Prestige Commercial Hub", code: "PRG-COM", city: "Bangalore", address: "MG Road, Central District", attendance_radius_meters: 500, status: "Not Started", health: "Healthy", startDate: "2026-08-01", endDate: "2027-12-31", category: "New Project", keyPersonnel: "Siddharth Malhotra", progress: 0.0, customerName: "Acme Corp", projectStage: "Piling" }
   ]);
 
   // Steel calculator states
@@ -439,29 +445,25 @@ export default function DashboardPage() {
       {/* Main Workspace Frame */}
       <main className="flex-1 flex flex-col overflow-hidden h-full">
         {/* Top Header */}
-        <header className="h-16 border-b border-border-custom px-6 flex items-center justify-between bg-card shrink-0">
+        <header className="h-16 border-b border-border-custom [.light-theme_&]:border-zinc-200 px-6 flex items-center justify-between bg-card [.light-theme_&]:bg-white shrink-0">
           <div className="flex items-center gap-4">
-            <h1 className="text-base font-semibold text-foreground uppercase tracking-wider">
-              {activeProjDetails.name}
+            <h1 className="text-base font-bold text-foreground [.light-theme_&]:text-zinc-800 uppercase tracking-wider">
+              Company Dashboard
             </h1>
-            <span className="h-4 w-px bg-white/10" />
-            <span className="text-xs font-medium text-muted">
-              📍 {activeProjDetails.city} Area
-            </span>
           </div>
 
           <div className="flex items-center gap-4">
             {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
-              className="flex items-center justify-center h-8 w-8 rounded-lg bg-white/[0.04] border border-border-custom text-muted hover:text-foreground transition-all cursor-pointer"
+              className="flex items-center justify-center h-8 w-8 rounded-lg bg-white/[0.04] [.light-theme_&]:bg-zinc-100 border border-border-custom [.light-theme_&]:border-zinc-300 text-muted hover:text-foreground transition-all cursor-pointer"
               title="Toggle Theme"
             >
               {isLightTheme ? "🌙" : "☀️"}
             </button>
 
             {/* Tally Connection status dot */}
-            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-elevated border border-border-custom text-xs text-muted">
+            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-elevated [.light-theme_&]:bg-zinc-50 border border-border-custom [.light-theme_&]:border-zinc-300 text-xs text-muted">
               <span className="h-2 w-2 rounded-full bg-success" />
               <span>Tally Agent: {tallySyncStatus}</span>
             </div>
@@ -483,612 +485,523 @@ export default function DashboardPage() {
                 "Trigger Sync"
               )}
             </button>
+
+            {/* Refresh Button */}
+            <button
+              onClick={() => window.location.reload()}
+              className="flex items-center justify-center h-8 w-8 rounded-lg bg-white/[0.04] [.light-theme_&]:bg-zinc-100 border border-border-custom [.light-theme_&]:border-zinc-300 text-muted hover:text-foreground transition-all cursor-pointer"
+              title="Refresh Dashboard"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-4 h-4">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+              </svg>
+            </button>
           </div>
         </header>
+
+        {/* Tab Selector Row (Under Header) */}
+        <div className="flex border-b border-border-custom [.light-theme_&]:border-zinc-200 px-6 bg-card [.light-theme_&]:bg-white shrink-0">
+          <button
+            onClick={() => setOverviewTab("operational")}
+            className={`px-4 py-3 text-xs font-bold transition-all border-b-2 -mb-px ${
+              overviewTab === "operational"
+                ? "border-primary text-primary font-bold"
+                : "border-transparent text-muted hover:text-foreground"
+            }`}
+          >
+            Operational
+          </button>
+          <button
+            onClick={() => setOverviewTab("financial")}
+            className={`px-4 py-3 text-xs font-bold transition-all border-b-2 -mb-px ${
+              overviewTab === "financial"
+                ? "border-primary text-primary font-bold"
+                : "border-transparent text-muted hover:text-foreground"
+            }`}
+          >
+            Financial
+          </button>
+        </div>
 
         {/* Content Area */}
         <div className="flex-1 overflow-y-auto p-8 space-y-8">
           {activeTab === "overview" && (
             <>
-              {/* Tab Selector */}
-              <div className="flex border-b border-border-custom pb-2 gap-4 shrink-0">
-                <button
-                  onClick={() => setOverviewTab("operational")}
-                  className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${
-                    overviewTab === "operational"
-                      ? "bg-primary/15 text-primary border border-border-custom"
-                      : "text-muted hover:text-foreground"
-                  }`}
-                >
-                  📊 Operational Dashboard
-                </button>
-                <button
-                  onClick={() => setOverviewTab("financial")}
-                  className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${
-                    overviewTab === "financial"
-                      ? "bg-secondary/15 text-secondary border border-secondary/30"
-                      : "text-muted hover:text-foreground"
-                  }`}
-                >
-                  💵 Financial Summary
-                </button>
-              </div>
+              {overviewTab === "operational" && (() => {
+                const filteredProjList = projects.filter(p => {
+                  const matchProj = selProject === "All" || p.id === selProject;
+                  const matchStatus = selStatus === "All" || p.status === selStatus;
+                  const matchHealth = selHealth === "All" || p.health === selHealth;
+                  return matchProj && matchStatus && matchHealth;
+                });
 
-              {overviewTab === "operational" && (
-                <>
-                  {/* Operational Summary Counters */}
-                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div className="rounded-md border border-border-custom bg-card p-5 flex flex-col justify-center items-center text-center">
-                      <span className="text-[11px] font-bold text-red-500 uppercase tracking-wider block mb-1">Not Started Projects</span>
-                      <span className="text-2xl font-semibold text-foreground">
-                        {operationalData?.status_counts?.["Not Started"] ?? 0}
-                      </span>
-                    </div>
-                    <div className="rounded-md border border-border-custom bg-card p-5 flex flex-col justify-center items-center text-center border-b-2 border-b-success">
-                      <span className="text-[11px] font-bold text-success uppercase tracking-wider block mb-1">Ongoing Projects</span>
-                      <span className="text-2xl font-semibold text-foreground">
-                        {operationalData?.status_counts?.["Ongoing"] ?? projects.length}
-                      </span>
-                    </div>
-                    <div className="rounded-md border border-border-custom bg-card p-5 flex flex-col justify-center items-center text-center">
-                      <span className="text-[11px] font-bold text-yellow-500 uppercase tracking-wider block mb-1">Onhold Projects</span>
-                      <span className="text-2xl font-semibold text-foreground">
-                        {operationalData?.status_counts?.["Onhold"] ?? 0}
-                      </span>
-                    </div>
-                    <div className="rounded-md border border-border-custom bg-card p-5 flex flex-col justify-center items-center text-center">
-                      <span className="text-[11px] font-bold text-muted uppercase tracking-wider block mb-1">Completed Projects</span>
-                      <span className="text-2xl font-semibold text-foreground">
-                        {operationalData?.status_counts?.["Completed"] ?? 0}
-                      </span>
-                    </div>
-                  </div>
+                const notStartedCount = filteredProjList.filter(p => p.status === "Not Started").length;
+                const ongoingCount = filteredProjList.filter(p => p.status === "Ongoing").length;
+                const onHoldCount = filteredProjList.filter(p => p.status === "Onhold").length;
+                const completedCount = filteredProjList.filter(p => p.status === "Completed").length;
 
-                  {/* Project Health & Operational Summary */}
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Project Health Chart — chart type switchable */}
-                    <div className="rounded-lg border border-border-custom bg-card p-6 space-y-4 relative">
-                      {renderChartHeader("Project Health", "health", ctHealth, setCtHealth)}
-                      {(() => {
-                        const hc = operationalData?.health_counts ?? { Healthy: 0, Warning: 0, Critical: 0 };
-                        const segments = [
-                          { label: "Healthy", value: hc.Healthy ?? 0, color: "#00E5A3" },
-                          { label: "Warning", value: hc.Warning ?? 0, color: "#EAB308" },
-                          { label: "Critical", value: hc.Critical ?? 0, color: "#E8184C" },
-                        ];
-                        const total = segments.reduce((s, d) => s + d.value, 0) || 1;
-                        const maxV = Math.max(...segments.map(s => s.value), 1);
+                const healthyCount = filteredProjList.filter(p => p.health === "Healthy").length;
+                const warningCount = filteredProjList.filter(p => p.health === "Warning").length;
+                const criticalCount = filteredProjList.filter(p => p.health === "Critical").length;
+                const totalHealthCount = healthyCount + warningCount + criticalCount || 1;
 
-                        if (ctHealth === "table") return (
-                          <div className="space-y-2 pt-2">
-                            {segments.map(s => (
-                              <div key={s.label} className="flex items-center justify-between px-3 py-2 rounded-lg bg-elevated border border-border-custom">
-                                <div className="flex items-center gap-2"><div className="h-2 w-2 rounded-full" style={{background:s.color}}/><span className="text-xs text-zinc-300">{s.label}</span></div>
-                                <span className="font-bold text-white font-sans text-sm">{s.value}</span>
-                              </div>
+                const healthyPct = healthyCount / totalHealthCount;
+                const warningPct = warningCount / totalHealthCount;
+                const criticalPct = criticalCount / totalHealthCount;
+
+                const healthyAngle = healthyPct * 180;
+                const warningAngle = warningPct * 180;
+                const criticalAngle = criticalPct * 180;
+
+                const pathHealthy = getArcPath(160, 150, 110, 110, 0, healthyAngle, 70);
+                const pathWarning = getArcPath(160, 150, 110, 110, healthyAngle, healthyAngle + warningAngle, 70);
+                const pathCritical = getArcPath(160, 150, 110, 110, healthyAngle + warningAngle, 180, 70);
+
+                const midAngleH = healthyAngle / 2;
+                const midAngleW = healthyAngle + (warningAngle / 2);
+                const midAngleC = healthyAngle + warningAngle + (criticalAngle / 2);
+
+                const calloutH1 = polarToCartesian(160, 150, 90, midAngleH);
+                const calloutH2 = polarToCartesian(160, 150, 130, midAngleH - 10);
+
+                const calloutW1 = polarToCartesian(160, 150, 90, midAngleW);
+                const calloutW2 = polarToCartesian(160, 150, 130, midAngleW);
+
+                const calloutC1 = polarToCartesian(160, 150, 90, midAngleC);
+                const calloutC2 = polarToCartesian(160, 150, 130, midAngleC + 10);
+
+                return (
+                  <div className="space-y-6 font-sans">
+                    {/* Filters Bar */}
+                    <div className="bg-card [.light-theme_&]:bg-white border border-border-custom [.light-theme_&]:border-zinc-200 rounded-lg p-4 flex flex-wrap gap-4 items-center justify-between transition-all">
+                      <div className="flex flex-wrap gap-4 items-center">
+                        <div className="space-y-1">
+                          <label className="text-[9px] text-muted [.light-theme_&]:text-zinc-500 uppercase tracking-wider font-bold block">Project Name</label>
+                          <select 
+                            value={selProject}
+                            onChange={(e) => setSelProject(e.target.value)}
+                            className="bg-input [.light-theme_&]:bg-zinc-100 border border-border-custom [.light-theme_&]:border-zinc-300 rounded-lg px-3 py-1.5 text-xs text-white [.light-theme_&]:text-zinc-800 focus:outline-none min-w-[150px] transition-all"
+                          >
+                            <option value="All">All</option>
+                            {projects.map((p) => (
+                              <option key={p.id} value={p.id}>{p.name}</option>
                             ))}
-                            <div className="flex justify-between px-3 py-1 text-[10px] text-muted"><span>Total Projects</span><span className="font-bold text-white">{total}</span></div>
-                          </div>
-                        );
+                          </select>
+                        </div>
 
-                        if (ctHealth === "pie" || ctHealth === "donut") {
-                          let cumAngle = -90;
-                          const ro = ctHealth === "donut" ? 36 : 42, ri = 22;
-                          const paths = segments.map(s => {
-                            const angle = (s.value / total) * 360 || 0;
-                            const r1 = cumAngle * Math.PI / 180, r2 = (cumAngle + angle) * Math.PI / 180;
-                            const cx = 50, cy = 50;
-                            const x1 = cx + ro * Math.cos(r1), y1 = cy + ro * Math.sin(r1);
-                            const x2 = cx + ro * Math.cos(r2), y2 = cy + ro * Math.sin(r2);
-                            const laf = angle > 180 ? 1 : 0;
-                            const d = ctHealth === "donut"
-                              ? `M${x1.toFixed(1)},${y1.toFixed(1)} A${ro},${ro} 0 ${laf},1 ${x2.toFixed(1)},${y2.toFixed(1)} L${(cx+ri*Math.cos(r2)).toFixed(1)},${(cy+ri*Math.sin(r2)).toFixed(1)} A${ri},${ri} 0 ${laf},0 ${(cx+ri*Math.cos(r1)).toFixed(1)},${(cy+ri*Math.sin(r1)).toFixed(1)} Z`
-                              : `M${cx},${cy} L${x1.toFixed(1)},${y1.toFixed(1)} A${ro},${ro} 0 ${laf},1 ${x2.toFixed(1)},${y2.toFixed(1)} Z`;
-                            cumAngle += angle;
-                            return { d, color: s.color, label: s.label, value: s.value };
-                          });
-                          return (
-                            <div className="flex items-center gap-4 pt-2">
-                              <div className="relative flex-shrink-0">
-                                <svg viewBox="0 0 100 100" className="w-28 h-28">{paths.map((p,i) => <path key={i} d={p.d} fill={p.color} opacity="0.85"/>)}</svg>
-                                {ctHealth === "donut" && <div className="absolute inset-0 flex flex-col items-center justify-center"><span className="text-[9px] text-muted">Total</span><span className="text-xl font-black text-white">{total}</span></div>}
-                              </div>
-                              <div className="space-y-2">{segments.map(s => (<div key={s.label} className="flex items-center gap-2 text-xs"><div className="h-2 w-2 rounded-full flex-shrink-0" style={{background:s.color}}/><span className="text-muted">{s.label}</span><span className="font-bold text-white ml-auto pl-3">{s.value}</span></div>))}</div>
+                        <div className="space-y-1">
+                          <label className="text-[9px] text-muted [.light-theme_&]:text-zinc-500 uppercase tracking-wider font-bold block">Project Status</label>
+                          <select 
+                            value={selStatus}
+                            onChange={(e) => setSelStatus(e.target.value)}
+                            className="bg-input [.light-theme_&]:bg-zinc-100 border border-border-custom [.light-theme_&]:border-zinc-300 rounded-lg px-3 py-1.5 text-xs text-white [.light-theme_&]:text-zinc-800 focus:outline-none min-w-[150px] transition-all"
+                          >
+                            <option value="All">All</option>
+                            <option value="Ongoing">Ongoing</option>
+                            <option value="Onhold">Onhold</option>
+                            <option value="Completed">Completed</option>
+                            <option value="Not Started">Not Started</option>
+                          </select>
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[9px] text-muted [.light-theme_&]:text-zinc-500 uppercase tracking-wider font-bold block">Project Health</label>
+                          <select 
+                            value={selHealth}
+                            onChange={(e) => setSelHealth(e.target.value)}
+                            className="bg-input [.light-theme_&]:bg-zinc-100 border border-border-custom [.light-theme_&]:border-zinc-300 rounded-lg px-3 py-1.5 text-xs text-white [.light-theme_&]:text-zinc-800 focus:outline-none min-w-[150px] transition-all"
+                          >
+                            <option value="All">All</option>
+                            <option value="Healthy">Healthy</option>
+                            <option value="Warning">Warning</option>
+                            <option value="Critical">Critical</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Summary Counters Grid */}
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                      <div className="rounded-md border border-border-custom [.light-theme_&]:border-zinc-200 bg-card [.light-theme_&]:bg-white p-5 flex flex-col justify-center items-center text-center transition-all">
+                        <span className="text-[11px] font-bold text-red-500 [.light-theme_&]:text-red-600 uppercase tracking-wider block mb-1">Not Started Projects</span>
+                        <span className="text-2xl font-bold text-foreground [.light-theme_&]:text-zinc-800">{notStartedCount}</span>
+                      </div>
+                      <div className="rounded-md border border-border-custom [.light-theme_&]:border-zinc-200 bg-card [.light-theme_&]:bg-white p-5 flex flex-col justify-center items-center text-center border-b-2 border-b-success transition-all">
+                        <span className="text-[11px] font-bold text-success [.light-theme_&]:text-green-600 uppercase tracking-wider block mb-1">Ongoing Projects</span>
+                        <span className="text-2xl font-bold text-foreground [.light-theme_&]:text-zinc-800">{ongoingCount}</span>
+                      </div>
+                      <div className="rounded-md border border-border-custom [.light-theme_&]:border-zinc-200 bg-card [.light-theme_&]:bg-white p-5 flex flex-col justify-center items-center text-center transition-all">
+                        <span className="text-[11px] font-bold text-yellow-500 [.light-theme_&]:text-yellow-600 uppercase tracking-wider block mb-1">Onhold Projects</span>
+                        <span className="text-2xl font-bold text-foreground [.light-theme_&]:text-zinc-800">{onHoldCount}</span>
+                      </div>
+                      <div className="rounded-md border border-border-custom [.light-theme_&]:border-zinc-200 bg-card [.light-theme_&]:bg-white p-5 flex flex-col justify-center items-center text-center transition-all">
+                        <span className="text-[11px] font-bold text-muted [.light-theme_&]:text-zinc-400 uppercase tracking-wider block mb-1">Completed Projects</span>
+                        <span className="text-2xl font-bold text-foreground [.light-theme_&]:text-zinc-800">{completedCount}</span>
+                      </div>
+                    </div>
+
+                    {/* Project Health Card */}
+                    <div className="bg-card [.light-theme_&]:bg-white border border-border-custom [.light-theme_&]:border-zinc-200 rounded-lg p-6 transition-all">
+                      <h4 className="text-xs font-bold text-muted [.light-theme_&]:text-zinc-500 uppercase tracking-wider mb-6">Project Health</h4>
+                      <div className="flex flex-col md:flex-row items-center justify-around gap-8">
+                        {/* Half donut chart */}
+                        <div className="relative w-80 h-40 flex items-center justify-center overflow-visible">
+                          <svg className="w-full h-full overflow-visible" viewBox="0 0 320 180">
+                            {/* Inner background arc */}
+                            <path
+                              d="M 50 150 A 110 110 0 0 1 270 150 L 230 150 A 70 70 0 0 0 90 150 Z"
+                              fill="var(--border)"
+                              className="[.light-theme_&]:fill-zinc-100"
+                            />
+                            {/* Slice 1: Healthy */}
+                            {healthyCount > 0 && (
+                              <path d={pathHealthy} fill="#26A69A" className="transition-all hover:opacity-90 cursor-pointer" />
+                            )}
+                            {/* Slice 2: Warning */}
+                            {warningCount > 0 && (
+                              <path d={pathWarning} fill="#FFA726" className="transition-all hover:opacity-90 cursor-pointer" />
+                            )}
+                            {/* Slice 3: Critical */}
+                            {criticalCount > 0 && (
+                              <path d={pathCritical} fill="#EF5350" className="transition-all hover:opacity-90 cursor-pointer" />
+                            )}
+
+                            {/* Callout lines & percentage labels */}
+                            {healthyCount > 0 && (
+                              <>
+                                <path
+                                  d={`M ${calloutH1.x} ${calloutH1.y} L ${calloutH2.x} ${calloutH2.y} h -20`}
+                                  fill="none"
+                                  stroke="#26A69A"
+                                  strokeWidth="1"
+                                />
+                                <rect
+                                  x={calloutH2.x - 55}
+                                  y={calloutH2.y - 10}
+                                  width="32"
+                                  height="16"
+                                  rx="2"
+                                  fill="#26A69A"
+                                  className="shadow-sm"
+                                />
+                                <text
+                                  x={calloutH2.x - 39}
+                                  y={calloutH2.y + 1}
+                                  fill="#fff"
+                                  fontSize="9"
+                                  fontWeight="bold"
+                                  textAnchor="middle"
+                                >
+                                  {Math.round(healthyPct * 100)}%
+                                </text>
+                              </>
+                            )}
+
+                            {warningCount > 0 && (
+                              <>
+                                <path
+                                  d={`M ${calloutW1.x} ${calloutW1.y} L ${calloutW2.x} ${calloutW2.y} h 20`}
+                                  fill="none"
+                                  stroke="#FFA726"
+                                  strokeWidth="1"
+                                />
+                                <rect
+                                  x={calloutW2.x + 23}
+                                  y={calloutW2.y - 10}
+                                  width="32"
+                                  height="16"
+                                  rx="2"
+                                  fill="#FFA726"
+                                  className="shadow-sm"
+                                />
+                                <text
+                                  x={calloutW2.x + 39}
+                                  y={calloutW2.y + 1}
+                                  fill="#fff"
+                                  fontSize="9"
+                                  fontWeight="bold"
+                                  textAnchor="middle"
+                                >
+                                  {Math.round(warningPct * 100)}%
+                                </text>
+                              </>
+                            )}
+
+                            {criticalCount > 0 && (
+                              <>
+                                <path
+                                  d={`M ${calloutC1.x} ${calloutC1.y} L ${calloutC2.x} ${calloutC2.y} h 20`}
+                                  fill="none"
+                                  stroke="#EF5350"
+                                  strokeWidth="1"
+                                />
+                                <rect
+                                  x={calloutC2.x + 23}
+                                  y={calloutC2.y - 10}
+                                  width="32"
+                                  height="16"
+                                  rx="2"
+                                  fill="#EF5350"
+                                  className="shadow-sm"
+                                />
+                                <text
+                                  x={calloutC2.x + 39}
+                                  y={calloutC2.y + 1}
+                                  fill="#fff"
+                                  fontSize="9"
+                                  fontWeight="bold"
+                                  textAnchor="middle"
+                                >
+                                  {Math.round(criticalPct * 100)}%
+                                </text>
+                              </>
+                            )}
+
+                            {/* Center Value */}
+                            <text
+                              x="160"
+                              y="140"
+                              fill="currentColor"
+                              className="text-foreground [.light-theme_&]:text-zinc-800 font-extrabold"
+                              fontSize="22"
+                              textAnchor="middle"
+                            >
+                              {filteredProjList.length}
+                            </text>
+                            <text
+                              x="160"
+                              y="155"
+                              fill="#6b7280"
+                              fontSize="8"
+                              fontWeight="bold"
+                              textAnchor="middle"
+                              className="uppercase tracking-wider"
+                            >
+                              Projects
+                            </text>
+                          </svg>
+                        </div>
+
+                        {/* Legend Checklist Table */}
+                        <div className="w-full max-w-sm rounded-lg border border-border-custom [.light-theme_&]:border-zinc-200 bg-white/[0.01] [.light-theme_&]:bg-zinc-50 p-4 space-y-3">
+                          <div className="flex items-center gap-2.5 pb-2 border-b border-border-custom [.light-theme_&]:border-zinc-200 text-xs font-bold text-foreground [.light-theme_&]:text-zinc-800">
+                            <input
+                              type="checkbox"
+                              checked={true}
+                              readOnly
+                              className="rounded border-border-custom [.light-theme_&]:border-zinc-300 text-primary focus:ring-primary h-3.5 w-3.5 cursor-pointer"
+                            />
+                            <span>Project Health</span>
+                          </div>
+
+                          <div className="space-y-2 text-xs">
+                            <div className="flex items-center gap-2.5">
+                              <input
+                                type="checkbox"
+                                checked={healthyCount > 0}
+                                readOnly
+                                className="rounded border-border-custom [.light-theme_&]:border-zinc-300 text-[#26A69A] focus:ring-[#26A69A] h-3.5 w-3.5 cursor-pointer"
+                              />
+                              <div className="h-2.5 w-2.5 rounded-full bg-[#26A69A]" />
+                              <span className="text-muted [.light-theme_&]:text-zinc-600 font-medium">Healthy</span>
+                              <strong className="text-foreground [.light-theme_&]:text-zinc-800 font-bold ml-auto">{healthyCount}</strong>
                             </div>
-                          );
-                        }
 
-                        if (ctHealth === "scatter" || ctHealth === "scatter2" || ctHealth === "scatter3") {
-                          const W=200, H=80;
-                          const pts = segments.map((s,i) => ({ x: 30+i*70, y: H-5-((s.value/maxV)*(H-15)) }));
-                          return (
-                            <svg viewBox={`0 0 ${W} ${H+12}`} className="w-full" style={{height:"9rem"}}>
-                              <line x1="10" y1={H} x2={W-10} y2={H} stroke="var(--border)" strokeWidth="1"/>
-                              {pts.map((p,i) => <circle key={i} cx={p.x} cy={p.y} r="6" fill={segments[i].color} opacity="0.8"/>)}
-                              {segments.map((s,i) => <text key={i} x={pts[i].x} y={H+11} fill="#6b7280" fontSize="7" textAnchor="middle">{s.label}</text>)}
-                            </svg>
-                          );
-                        }
+                            <div className="flex items-center gap-2.5">
+                              <input
+                                type="checkbox"
+                                checked={warningCount > 0}
+                                readOnly
+                                className="rounded border-border-custom [.light-theme_&]:border-zinc-300 text-[#FFA726] focus:ring-[#FFA726] h-3.5 w-3.5 cursor-pointer"
+                              />
+                              <div className="h-2.5 w-2.5 rounded-full bg-[#FFA726]" />
+                              <span className="text-muted [.light-theme_&]:text-zinc-600 font-medium">Warning</span>
+                              <strong className="text-foreground [.light-theme_&]:text-zinc-800 font-bold ml-auto">{warningCount}</strong>
+                            </div>
 
-                        if (ctHealth === "line" || ctHealth === "smooth" || ctHealth === "line_pt" || ctHealth === "smooth_pt") {
-                          const W=200, H=80;
-                          const pts = segments.map((s,i) => ({ x: 30+i*70, y: H-5-((s.value/maxV)*(H-15)) }));
-                          const polyPts = pts.map(p=>`${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
-                          return (
-                            <svg viewBox={`0 0 ${W} ${H+12}`} className="w-full" style={{height:"9rem"}}>
-                              <line x1="10" y1={H} x2={W-10} y2={H} stroke="var(--border)" strokeWidth="1"/>
-                              <polyline points={polyPts} fill="none" stroke="var(--primary)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round"/>
-                              {pts.map((p,i)=><circle key={i} cx={p.x} cy={p.y} r="4" fill={segments[i].color} stroke="var(--card)" strokeWidth="1.5"/>)}
-                              {segments.map((s,i)=><text key={i} x={pts[i].x} y={H+11} fill="#6b7280" fontSize="7" textAnchor="middle">{s.label}</text>)}
-                            </svg>
-                          );
-                        }
-
-                        if (ctHealth === "area" || ctHealth === "smooth_area" || ctHealth === "area_pt" || ctHealth === "smooth_area_pt") {
-                          const W=200, H=80;
-                          const pts = segments.map((s,i) => ({ x: 30+i*70, y: H-5-((s.value/maxV)*(H-15)) }));
-                          const polyPts = pts.map(p=>`${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
-                          const areaPts = [`10,${H}`,...pts.map(p=>`${p.x.toFixed(1)},${p.y.toFixed(1)}`),`${W-10},${H}`].join(" ");
-                          return (
-                            <svg viewBox={`0 0 ${W} ${H+12}`} className="w-full" style={{height:"9rem"}}>
-                              <defs><linearGradient id="hAreaG" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor="var(--primary)" stopOpacity="0.4"/><stop offset="100%" stopColor="var(--primary)" stopOpacity="0.02"/></linearGradient></defs>
-                              <line x1="10" y1={H} x2={W-10} y2={H} stroke="var(--border)" strokeWidth="1"/>
-                              <polygon points={areaPts} fill="url(#hAreaG)"/>
-                              <polyline points={polyPts} fill="none" stroke="var(--primary)" strokeWidth="2" strokeLinejoin="round"/>
-                              {pts.map((p,i)=><circle key={i} cx={p.x} cy={p.y} r="3.5" fill={segments[i].color}/>)}
-                              {segments.map((s,i)=><text key={i} x={pts[i].x} y={H+11} fill="#6b7280" fontSize="7" textAnchor="middle">{s.label}</text>)}
-                            </svg>
-                          );
-                        }
-
-                        // Default: horizontal bar chart per health category
-                        return (
-                          <div className="space-y-3 pt-2">
-                            <div className="text-[9px] text-muted uppercase tracking-wider font-bold">Project Health Count</div>
-                            {segments.map(s => (
-                              <div key={s.label} className="space-y-1">
-                                <div className="flex justify-between text-xs"><span className="text-muted">{s.label}</span><span className="font-bold font-sans" style={{color:s.color}}>{s.value}</span></div>
-                                <div className="h-5 bg-elevated rounded overflow-hidden"><div className="h-full rounded transition-all" style={{width:`${(s.value/maxV)*100}%`,background:s.color,opacity:0.75}}/></div>
-                              </div>
-                            ))}
-                            <div className="text-[9px] text-muted text-center pt-1">Project Health</div>
+                            <div className="flex items-center gap-2.5">
+                              <input
+                                type="checkbox"
+                                checked={criticalCount > 0}
+                                readOnly
+                                className="rounded border-border-custom [.light-theme_&]:border-zinc-300 text-[#EF5350] focus:ring-[#EF5350] h-3.5 w-3.5 cursor-pointer"
+                              />
+                              <div className="h-2.5 w-2.5 rounded-full bg-[#EF5350]" />
+                              <span className="text-muted [.light-theme_&]:text-zinc-600 font-medium">Critical</span>
+                              <strong className="text-foreground [.light-theme_&]:text-zinc-800 font-bold ml-auto">{criticalCount}</strong>
+                            </div>
                           </div>
-                        );
-                      })()}
+                        </div>
+                      </div>
                     </div>
 
-                    {/* Project Operational Summary */}
-                    <div className="lg:col-span-2 rounded-lg border border-border-custom bg-card p-6 space-y-4">
-                      <div className="flex flex-wrap justify-between items-center gap-2 border-b border-border-custom pb-3">
-                        <div className="flex items-center gap-3">
-                          <h4 className="text-xs font-extrabold uppercase tracking-wider text-white">📊 Project Operational Summary</h4>
-                          <span className="text-[10px] px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 font-bold font-sans">Real-time Stats</span>
+                    {/* Attendance & Material Cards */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      <div className="bg-card [.light-theme_&]:bg-white border border-border-custom [.light-theme_&]:border-zinc-200 rounded-lg p-5 flex flex-col justify-between transition-all">
+                        <div className="space-y-4">
+                          <h4 className="text-xs font-bold text-muted [.light-theme_&]:text-zinc-500 uppercase tracking-wider">Last 7 Days Attendance</h4>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-1">
+                              <label className="text-[9px] text-muted [.light-theme_&]:text-zinc-500 uppercase tracking-wider font-bold block">Payroll Type</label>
+                              <select className="bg-input [.light-theme_&]:bg-zinc-100 border border-border-custom [.light-theme_&]:border-zinc-300 rounded px-2 py-1 text-[11px] text-white [.light-theme_&]:text-zinc-800 focus:outline-none w-full">
+                                <option>All</option>
+                              </select>
+                            </div>
+                            <div className="space-y-1">
+                              <label className="text-[9px] text-muted [.light-theme_&]:text-zinc-500 uppercase tracking-wider font-bold block">Workforce Name</label>
+                              <select className="bg-input [.light-theme_&]:bg-zinc-100 border border-border-custom [.light-theme_&]:border-zinc-300 rounded px-2 py-1 text-[11px] text-white [.light-theme_&]:text-zinc-800 focus:outline-none w-full">
+                                <option>All</option>
+                              </select>
+                            </div>
+                          </div>
+                          <div className="h-40 flex items-center justify-center rounded-md bg-transparent">
+                            <span className="text-red-500 [.light-theme_&]:text-red-600 text-xs font-bold uppercase tracking-wider">No Data Available</span>
+                          </div>
                         </div>
                       </div>
 
-                      <div className="overflow-x-auto w-full">
-                        <table className="w-full text-left text-xs border-collapse">
+                      <div className="bg-card [.light-theme_&]:bg-white border border-border-custom [.light-theme_&]:border-zinc-200 rounded-lg p-5 flex flex-col justify-between transition-all">
+                        <div className="space-y-4">
+                          <h4 className="text-xs font-bold text-muted [.light-theme_&]:text-zinc-500 uppercase tracking-wider">Last 7 Days Material Received</h4>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-1">
+                              <label className="text-[9px] text-muted [.light-theme_&]:text-zinc-500 uppercase tracking-wider font-bold block">Material Name</label>
+                              <select className="bg-input [.light-theme_&]:bg-zinc-100 border border-border-custom [.light-theme_&]:border-zinc-300 rounded px-2 py-1 text-[11px] text-white [.light-theme_&]:text-zinc-800 focus:outline-none w-full">
+                                <option>All</option>
+                              </select>
+                            </div>
+                            <div className="space-y-1">
+                              <label className="text-[9px] text-muted [.light-theme_&]:text-zinc-500 uppercase tracking-wider font-bold block">Material Category</label>
+                              <select className="bg-input [.light-theme_&]:bg-zinc-100 border border-border-custom [.light-theme_&]:border-zinc-300 rounded px-2 py-1 text-[11px] text-white [.light-theme_&]:text-zinc-800 focus:outline-none w-full">
+                                <option>All</option>
+                              </select>
+                            </div>
+                          </div>
+                          <div className="h-40 flex items-center justify-center rounded-md bg-transparent">
+                            <span className="text-red-500 [.light-theme_&]:text-red-600 text-xs font-bold uppercase tracking-wider">No Data Available</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Table */}
+                    <div className="bg-card [.light-theme_&]:bg-white border border-border-custom [.light-theme_&]:border-zinc-200 rounded-lg p-5 space-y-4 transition-all">
+                      <div className="flex justify-between items-center">
+                        <h4 className="text-xs font-bold text-muted [.light-theme_&]:text-zinc-500 uppercase tracking-wider">Project Operational Summary Dashboard</h4>
+                      </div>
+                      <div className="overflow-x-auto rounded-lg border border-border-custom [.light-theme_&]:border-zinc-200">
+                        <table className="w-full text-left text-xs border-collapse min-w-[1200px]">
                           <thead>
-                            <tr className="border-b border-border-custom text-muted font-bold uppercase tracking-wider text-[10px]">
-                              <th className="py-2 px-3">Project Health</th>
-                              <th className="py-2 px-3">Project Name</th>
-                              <th className="py-2 px-3">Project Status</th>
-                              <th className="py-2 px-3">Start Date</th>
-                              <th className="py-2 px-3">End Date</th>
-                              <th className="py-2 px-3">Progress</th>
-                              <th className="py-2 px-3">Customer</th>
+                            <tr className="bg-[#673AB7] text-white font-semibold text-[11px] tracking-wider uppercase border-b border-[#673AB7]">
+                              <th className="px-4 py-3 border-r border-[#7E57C2] font-semibold text-center w-12">#</th>
+                              <th className="px-4 py-3 border-r border-[#7E57C2] font-semibold">
+                                <span className="inline-flex items-center gap-1.5">
+                                  <span className="text-[9px] bg-white/20 px-1 py-0.5 rounded text-white font-mono">T</span>
+                                  Project Name
+                                </span>
+                              </th>
+                              <th className="px-4 py-3 border-r border-[#7E57C2] font-semibold">
+                                <span className="inline-flex items-center gap-1.5">
+                                  <span className="text-[9px] bg-white/20 px-1 py-0.5 rounded text-white font-mono">T</span>
+                                  Project Category
+                                </span>
+                              </th>
+                              <th className="px-4 py-3 border-r border-[#7E57C2] font-semibold">
+                                <span className="inline-flex items-center gap-1.5">
+                                  <span className="text-[9px] bg-white/20 px-1 py-0.5 rounded text-white font-mono">T</span>
+                                  Key Personnel
+                                </span>
+                              </th>
+                              <th className="px-4 py-3 border-r border-[#7E57C2] font-semibold text-center w-28">
+                                <span className="inline-flex items-center gap-1.5 justify-center">
+                                  <span className="text-[9px] bg-white/20 px-1 py-0.5 rounded text-white font-mono">T</span>
+                                  Project Status
+                                </span>
+                              </th>
+                              <th className="px-4 py-3 border-r border-[#7E57C2] font-semibold text-center w-28">
+                                <span className="inline-flex items-center gap-1.5 justify-center">
+                                  <span className="text-[9px] bg-white/20 px-1 py-0.5 rounded text-white font-mono">T</span>
+                                  Project Health
+                                </span>
+                              </th>
+                              <th className="px-4 py-3 border-r border-[#7E57C2] font-semibold text-center w-28">
+                                <span className="inline-flex items-center gap-1.5 justify-center">
+                                  <span className="text-[9px] bg-white/20 px-1 py-0.5 rounded text-white font-mono">📅</span>
+                                  Start Date
+                                </span>
+                              </th>
+                              <th className="px-4 py-3 border-r border-[#7E57C2] font-semibold text-center w-28">
+                                <span className="inline-flex items-center gap-1.5 justify-center">
+                                  <span className="text-[9px] bg-white/20 px-1 py-0.5 rounded text-white font-mono">📅</span>
+                                  End Date
+                                </span>
+                              </th>
+                              <th className="px-4 py-3 border-r border-border-custom [.light-theme_&]:border-zinc-200 font-semibold text-right w-24">
+                                <span className="inline-flex items-center gap-1.5 justify-end">
+                                  <span className="text-[9px] bg-white/20 px-1 py-0.5 rounded text-white font-mono">#</span>
+                                  Progress
+                                </span>
+                              </th>
+                              <th className="px-4 py-3 border-r border-[#7E57C2] font-semibold">
+                                <span className="inline-flex items-center gap-1.5">
+                                  <span className="text-[9px] bg-white/20 px-1 py-0.5 rounded text-white font-mono">T</span>
+                                  Customer Name
+                                </span>
+                              </th>
+                              <th className="px-4 py-3 font-semibold">
+                                <span className="inline-flex items-center gap-1.5">
+                                  <span className="text-[9px] bg-white/20 px-1 py-0.5 rounded text-white font-mono">T</span>
+                                  Project Stage
+                                </span>
+                              </th>
                             </tr>
                           </thead>
-                          <tbody className="divide-y divide-border-custom">
-                            {(operationalData?.projects ?? projects).map((p: any) => {
-                              const prog = p.progress ?? 0;
-                              return (
-                                <tr key={p.project_id ?? p.id} className="hover:bg-white/[0.01] transition-colors">
-                                  <td className="py-2.5 px-3">
+                          <tbody className="divide-y divide-border-custom [.light-theme_&]:divide-zinc-200">
+                            {filteredProjList.length === 0 ? (
+                              <tr>
+                                <td colSpan={11} className="px-4 py-8 text-center text-muted font-medium">No projects found.</td>
+                              </tr>
+                            ) : (
+                              filteredProjList.map((p, idx) => (
+                                <tr key={p.id} className="hover:bg-white/[0.02] [.light-theme_&]:hover:bg-zinc-50 transition-colors">
+                                  <td className="px-4 py-3 text-center border-r border-border-custom [.light-theme_&]:border-zinc-200 text-muted font-mono">{idx + 1}</td>
+                                  <td className="px-4 py-3 border-r border-border-custom [.light-theme_&]:border-zinc-200 font-bold text-foreground [.light-theme_&]:text-zinc-800">{p.name}</td>
+                                  <td className="px-4 py-3 border-r border-border-custom [.light-theme_&]:border-zinc-200 text-muted [.light-theme_&]:text-zinc-500 font-semibold">{p.category || "-"}</td>
+                                  <td className="px-4 py-3 border-r border-border-custom [.light-theme_&]:border-zinc-200 text-muted [.light-theme_&]:text-zinc-500 font-semibold">{p.keyPersonnel || "-"}</td>
+                                  <td className="px-4 py-3 text-center border-r border-border-custom [.light-theme_&]:border-zinc-200">
                                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
-                                      (p.health ?? "Healthy") === "Healthy" ? "bg-success/10 text-success border-success/20" :
-                                      (p.health ?? "Healthy") === "Warning" ? "bg-yellow-500/10 text-yellow-400 border-yellow-500/20" :
-                                      "bg-primary/10 text-primary border-primary/20"
+                                      p.status === "Ongoing" ? "bg-success/15 text-success border-success/30" :
+                                      p.status === "Onhold" ? "bg-yellow-500/15 text-yellow-500 border-yellow-500/30" :
+                                      p.status === "Completed" ? "bg-zinc-500/15 text-zinc-400 border-zinc-500/30" :
+                                      "bg-red-500/15 text-red-500 border-red-500/30"
                                     }`}>
-                                      {p.health ?? "Healthy"}
+                                      {p.status}
                                     </span>
                                   </td>
-                                  <td className="py-2.5 px-3 font-semibold text-white">{p.project_name ?? p.name}</td>
-                                  <td className="py-2.5 px-3">
+                                  <td className="px-4 py-3 text-center border-r border-border-custom [.light-theme_&]:border-zinc-200">
                                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
-                                      (p.status ?? p.project_status ?? "Ongoing") === "Completed" ? "bg-success/10 text-success border-success/20" :
-                                      (p.status ?? p.project_status ?? "Ongoing") === "Onhold" ? "bg-yellow-500/10 text-yellow-400 border-yellow-500/20" :
-                                      "bg-primary/10 text-primary border-primary/20"
+                                      p.health === "Healthy" ? "bg-success/15 text-success border-success/30" :
+                                      p.health === "Warning" ? "bg-yellow-500/15 text-yellow-500 border-yellow-500/30" :
+                                      "bg-red-500/15 text-red-500 border-red-500/30"
                                     }`}>
-                                      {p.status ?? p.project_status ?? "Ongoing"}
+                                      {p.health}
                                     </span>
                                   </td>
-                                  <td className="py-2.5 px-3 text-muted font-mono">{p.start_date || "—"}</td>
-                                  <td className="py-2.5 px-3 text-muted font-mono">{p.end_date || "—"}</td>
-                                  <td className="py-2.5 px-3">
-                                    <div className="flex items-center gap-2">
-                                      <div className="w-16 bg-white/5 rounded-full h-1.5 overflow-hidden">
-                                        <div className="bg-primary h-full rounded-full" style={{ width: `${prog}%` }} />
-                                      </div>
-                                      <span className="font-sans text-[10px] text-muted">{prog}%</span>
-                                    </div>
-                                  </td>
-                                  <td className="py-2.5 px-3 font-semibold text-white">{p.customer_name ?? "—"}</td>
+                                  <td className="px-4 py-3 text-center border-r border-border-custom [.light-theme_&]:border-zinc-200 text-muted [.light-theme_&]:text-zinc-500 font-semibold font-mono">{p.startDate || "-"}</td>
+                                  <td className="px-4 py-3 text-center border-r border-border-custom [.light-theme_&]:border-zinc-200 text-muted [.light-theme_&]:text-zinc-500 font-semibold font-mono">{p.endDate || "-"}</td>
+                                  <td className="px-4 py-3 text-right border-r border-border-custom [.light-theme_&]:border-zinc-200 font-bold text-foreground [.light-theme_&]:text-zinc-800 font-sans">{p.progress.toFixed(2)}%</td>
+                                  <td className="px-4 py-3 border-r border-border-custom [.light-theme_&]:border-zinc-200 text-zinc-400 [.light-theme_&]:text-zinc-600 font-medium">{p.customerName || "-"}</td>
+                                  <td className="px-4 py-3 text-zinc-400 [.light-theme_&]:text-zinc-600 font-medium">{p.projectStage || "-"}</td>
                                 </tr>
-                              );
-                            })}
+                              ))
+                            )}
                           </tbody>
                         </table>
                       </div>
                     </div>
                   </div>
-
-                  {/* Sparklines Grid */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    {/* Last 7 Days Attendance — chart type switchable */}
-                    <div className="rounded-lg border border-border-custom bg-card p-6 space-y-3">
-                      {renderChartHeader("\uD83D\uDC77 Last 7 Days Attendance", "attendance", ctAttendance, setCtAttendance)}
-                      {(() => {
-                        const attData = operationalData?.attendance_series ?? [
-                          { date: "06-26", present: 8, absent: 1 }, { date: "06-27", present: 9, absent: 0 },
-                          { date: "06-28", present: 6, absent: 3 }, { date: "06-29", present: 8, absent: 1 },
-                          { date: "06-30", present: 7, absent: 2 }, { date: "07-01", present: 9, absent: 0 },
-                          { date: "07-02", present: 8, absent: 1 },
-                        ];
-                        const maxVal = Math.max(...attData.map((d: any) => (d.present??0)+(d.absent??0)), 1);
-                        const H=90, W=200;
-                        const pts = attData.map((d: any, i: number) => ({ x: 10+(i/Math.max(attData.length-1,1))*(W-20), y: H-5-((d.present??0)/maxVal*(H-15)) }));
-                        const polyPts = pts.map((p: any) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
-                        const areaPts = [`10,${H}`,...pts.map((p: any) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`),`${W-10},${H}`].join(" ");
-
-                        if (ctAttendance === "table") return (
-                          <div className="overflow-x-auto">
-                            <table className="w-full text-xs"><thead><tr className="border-b border-border-custom text-muted font-bold uppercase text-[9px]">
-                              <th className="py-1.5 px-2 text-left">Date</th><th className="py-1.5 px-2 text-right text-success">Present</th><th className="py-1.5 px-2 text-right text-red-400">Absent</th>
-                            </tr></thead><tbody className="divide-y divide-white/[0.03]">
-                              {attData.map((d: any, i: number) => (<tr key={i} className="hover:bg-white/[0.01]"><td className="py-1.5 px-2 font-mono text-muted">{d.date}</td><td className="py-1.5 px-2 text-right font-bold text-success">{d.present??0}</td><td className="py-1.5 px-2 text-right font-bold text-red-400">{d.absent??0}</td></tr>))}
-                            </tbody></table>
-                          </div>
-                        );
-
-                        if (ctAttendance === "line" || ctAttendance === "smooth" || ctAttendance === "line_pt" || ctAttendance === "smooth_pt") return (
-                          <svg viewBox={`0 0 ${W} ${H+12}`} className="w-full" style={{height:"9rem"}}>
-                            <defs><linearGradient id="attLG" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stopColor="var(--success)"/><stop offset="100%" stopColor="var(--primary)"/></linearGradient></defs>
-                            <line x1="10" y1={H} x2={W-10} y2={H} stroke="var(--border)" strokeWidth="1"/>
-                            <polyline points={polyPts} fill="none" stroke="url(#attLG)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round"/>
-                            {pts.map((p: any, i: number) => <circle key={i} cx={p.x} cy={p.y} r="3" fill="var(--success)" stroke="var(--card)" strokeWidth="1.5"/>)}
-                            {attData.map((d: any, i: number) => <text key={i} x={pts[i].x} y={H+11} fill="#6b7280" fontSize="6" textAnchor="middle">{d.date.slice(-5)}</text>)}
-                          </svg>
-                        );
-
-                        if (ctAttendance === "area" || ctAttendance === "smooth_area" || ctAttendance === "area_pt" || ctAttendance === "smooth_area_pt") return (
-                          <svg viewBox={`0 0 ${W} ${H+12}`} className="w-full" style={{height:"9rem"}}>
-                            <defs><linearGradient id="attAG" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor="var(--success)" stopOpacity="0.4"/><stop offset="100%" stopColor="var(--success)" stopOpacity="0.02"/></linearGradient></defs>
-                            <line x1="10" y1={H} x2={W-10} y2={H} stroke="var(--border)" strokeWidth="1"/>
-                            <polygon points={areaPts} fill="url(#attAG)"/>
-                            <polyline points={polyPts} fill="none" stroke="var(--success)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round"/>
-                            {pts.map((p: any, i: number) => <circle key={i} cx={p.x} cy={p.y} r="2.5" fill="var(--success)"/>)}
-                            {attData.map((d: any, i: number) => <text key={i} x={pts[i].x} y={H+11} fill="#6b7280" fontSize="6" textAnchor="middle">{d.date.slice(-5)}</text>)}
-                          </svg>
-                        );
-
-                        if (ctAttendance === "scatter" || ctAttendance === "scatter2" || ctAttendance === "scatter3") return (
-                          <svg viewBox={`0 0 ${W} ${H+12}`} className="w-full" style={{height:"9rem"}}>
-                            <line x1="10" y1={H} x2={W-10} y2={H} stroke="var(--border)" strokeWidth="1"/>
-                            {pts.map((p: any, i: number) => <circle key={i} cx={p.x} cy={p.y} r="5" fill="var(--success)" opacity="0.8"/>)}
-                            {attData.map((d: any, i: number) => <text key={i} x={pts[i].x} y={H+11} fill="#6b7280" fontSize="6" textAnchor="middle">{d.date.slice(-5)}</text>)}
-                          </svg>
-                        );
-
-                        if (ctAttendance === "pie" || ctAttendance === "donut") {
-                          const totP = attData.reduce((s: number, d: any)=>s+(d.present??0),0);
-                          const totA = attData.reduce((s: number, d: any)=>s+(d.absent??0),0);
-                          const grand = totP+totA||1;
-                          const ro = ctAttendance==="donut"?35:42, ri=22;
-                          const angP=(totP/grand)*360;
-                          const r1=-90*Math.PI/180, r2=(-90+angP)*Math.PI/180;
-                          const cx=50,cy=50;
-                          const x1o=cx+ro*Math.cos(r1),y1o=cy+ro*Math.sin(r1);
-                          const x2o=cx+ro*Math.cos(r2),y2o=cy+ro*Math.sin(r2);
-                          const laf=angP>180?1:0;
-                          const r3=(-90+360)*Math.PI/180;
-                          const x3o=cx+ro*Math.cos(r3),y3o=cy+ro*Math.sin(r3);
-                          const pathP=ctAttendance==="donut"
-                            ?`M${x1o.toFixed(1)},${y1o.toFixed(1)} A${ro},${ro} 0 ${laf},1 ${x2o.toFixed(1)},${y2o.toFixed(1)} L${(cx+ri*Math.cos(r2)).toFixed(1)},${(cy+ri*Math.sin(r2)).toFixed(1)} A${ri},${ri} 0 ${laf},0 ${(cx+ri*Math.cos(r1)).toFixed(1)},${(cy+ri*Math.sin(r1)).toFixed(1)} Z`
-                            :`M${cx},${cy} L${x1o.toFixed(1)},${y1o.toFixed(1)} A${ro},${ro} 0 ${laf},1 ${x2o.toFixed(1)},${y2o.toFixed(1)} Z`;
-                          const pathA=ctAttendance==="donut"
-                            ?`M${x2o.toFixed(1)},${y2o.toFixed(1)} A${ro},${ro} 0 ${1-laf},1 ${x3o.toFixed(1)},${y3o.toFixed(1)} L${(cx+ri*Math.cos(r3)).toFixed(1)},${(cy+ri*Math.sin(r3)).toFixed(1)} A${ri},${ri} 0 ${1-laf},0 ${(cx+ri*Math.cos(r2)).toFixed(1)},${(cy+ri*Math.sin(r2)).toFixed(1)} Z`
-                            :`M${cx},${cy} L${x2o.toFixed(1)},${y2o.toFixed(1)} A${ro},${ro} 0 ${1-laf},1 ${x3o.toFixed(1)},${y3o.toFixed(1)} Z`;
-                          return (
-                            <div className="flex items-center gap-4 pt-1">
-                              <div className="relative flex-shrink-0">
-                                <svg viewBox="0 0 100 100" className="w-24 h-24"><path d={pathP} fill="var(--success)" opacity="0.85"/><path d={pathA} fill="var(--danger)" opacity="0.6"/></svg>
-                                {ctAttendance==="donut"&&<div className="absolute inset-0 flex flex-col items-center justify-center"><span className="text-[9px] text-muted">Present</span><span className="font-black text-white text-base">{totP}</span></div>}
-                              </div>
-                              <div className="space-y-2 text-xs">
-                                <div className="flex items-center gap-2"><div className="h-2 w-2 rounded-full bg-success"/><span className="text-muted">Present</span><span className="font-bold text-success ml-auto pl-3">{totP}</span></div>
-                                <div className="flex items-center gap-2"><div className="h-2 w-2 rounded-full bg-red-400"/><span className="text-muted">Absent</span><span className="font-bold text-red-400 ml-auto pl-3">{totA}</span></div>
-                              </div>
-                            </div>
-                          );
-                        }
-
-                        if (ctAttendance === "stacked" || ctAttendance === "stacked_bar") return (
-                          <div className="flex items-end justify-between gap-1.5" style={{height:"9rem"}}>
-                            {attData.map((d: any, idx: number) => {
-                              const p=d.present??0, a=d.absent??0;
-                              return (<div key={idx} className="flex-1 flex flex-col items-center gap-1">
-                                <div className="w-full flex flex-col-reverse overflow-hidden rounded" style={{height:"7rem",background:"rgba(255,255,255,0.02)"}}>
-                                  <div style={{height:`${(p/maxVal)*100}%`,background:"#00E5A3",opacity:0.75}}/>
-                                  <div style={{height:`${(a/maxVal)*100}%`,background:"#E8184C",opacity:0.55}}/>
-                                </div>
-                                <span className="text-[8px] text-muted font-mono">{d.date.slice(-5)}</span>
-                              </div>);
-                            })}
-                          </div>
-                        );
-
-                        // Default: bar
-                        return (
-                          <div className="flex items-end justify-between gap-1.5" style={{height:"9rem"}}>
-                            {attData.map((d: any, idx: number) => {
-                              const presHeight=((d.present??0)/maxVal)*100;
-                              return (<div key={idx} className="flex-1 flex flex-col items-center gap-1">
-                                <div className="w-full bg-elevated rounded flex items-end" style={{height:"7rem"}}>
-                                  <div className="bg-success/60 w-full rounded-b" style={{height:`${presHeight}%`}}/>
-                                </div>
-                                <span className="text-[8px] text-muted font-mono">{d.date.slice(-5)}</span>
-                              </div>);
-                            })}
-                          </div>
-                        );
-                      })()}
-                    </div>
-
-                    {/* Last 7 Days Material Received — chart type switchable */}
-                    <div className="rounded-lg border border-border-custom bg-card p-6 space-y-3">
-                      {renderChartHeader("\uD83D\uDCE6 Last 7 Days Material Received (GRNs)", "material", ctMaterial, setCtMaterial)}
-                      {(() => {
-                        const matData = operationalData?.material_series ?? [
-                          { date: "06-26", count: 2 }, { date: "06-27", count: 4 },
-                          { date: "06-28", count: 1 }, { date: "06-29", count: 3 },
-                          { date: "06-30", count: 0 }, { date: "07-01", count: 5 },
-                          { date: "07-02", count: 2 },
-                        ];
-                        const maxVal = Math.max(...matData.map((d: any) => d.count??0), 1);
-                        const H=90, W=200;
-                        const pts = matData.map((d: any, i: number) => ({ x: 10+(i/Math.max(matData.length-1,1))*(W-20), y: H-5-((d.count??0)/maxVal*(H-15)) }));
-                        const polyPts = pts.map((p: any) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
-                        const areaPts = [`10,${H}`,...pts.map((p: any) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`),`${W-10},${H}`].join(" ");
-
-                        if (ctMaterial === "table") return (
-                          <div className="overflow-x-auto">
-                            <table className="w-full text-xs"><thead><tr className="border-b border-border-custom text-muted font-bold uppercase text-[9px]">
-                              <th className="py-1.5 px-2 text-left">Date</th><th className="py-1.5 px-2 text-right text-primary">GRNs Received</th>
-                            </tr></thead><tbody className="divide-y divide-white/[0.03]">
-                              {matData.map((d: any, i: number) => (<tr key={i} className="hover:bg-white/[0.01]"><td className="py-1.5 px-2 font-mono text-muted">{d.date}</td><td className="py-1.5 px-2 text-right font-bold text-primary">{d.count??0}</td></tr>))}
-                            </tbody></table>
-                          </div>
-                        );
-
-                        if (ctMaterial === "line" || ctMaterial === "smooth" || ctMaterial === "line_pt" || ctMaterial === "smooth_pt") return (
-                          <svg viewBox={`0 0 ${W} ${H+12}`} className="w-full" style={{height:"9rem"}}>
-                            <defs><linearGradient id="matLG" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stopColor="var(--primary)"/><stop offset="100%" stopColor="#E8184C"/></linearGradient></defs>
-                            <line x1="10" y1={H} x2={W-10} y2={H} stroke="var(--border)" strokeWidth="1"/>
-                            <polyline points={polyPts} fill="none" stroke="url(#matLG)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round"/>
-                            {pts.map((p: any, i: number) => <circle key={i} cx={p.x} cy={p.y} r="3" fill="var(--primary)" stroke="var(--card)" strokeWidth="1.5"/>)}
-                            {matData.map((d: any, i: number) => <text key={i} x={pts[i].x} y={H+11} fill="#6b7280" fontSize="6" textAnchor="middle">{d.date.slice(-5)}</text>)}
-                          </svg>
-                        );
-
-                        if (ctMaterial === "area" || ctMaterial === "smooth_area" || ctMaterial === "area_pt" || ctMaterial === "smooth_area_pt") return (
-                          <svg viewBox={`0 0 ${W} ${H+12}`} className="w-full" style={{height:"9rem"}}>
-                            <defs><linearGradient id="matAG" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor="var(--primary)" stopOpacity="0.4"/><stop offset="100%" stopColor="var(--primary)" stopOpacity="0.02"/></linearGradient></defs>
-                            <line x1="10" y1={H} x2={W-10} y2={H} stroke="var(--border)" strokeWidth="1"/>
-                            <polygon points={areaPts} fill="url(#matAG)"/>
-                            <polyline points={polyPts} fill="none" stroke="var(--primary)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round"/>
-                            {pts.map((p: any, i: number) => <circle key={i} cx={p.x} cy={p.y} r="2.5" fill="var(--primary)"/>)}
-                            {matData.map((d: any, i: number) => <text key={i} x={pts[i].x} y={H+11} fill="#6b7280" fontSize="6" textAnchor="middle">{d.date.slice(-5)}</text>)}
-                          </svg>
-                        );
-
-                        if (ctMaterial === "scatter" || ctMaterial === "scatter2" || ctMaterial === "scatter3") return (
-                          <svg viewBox={`0 0 ${W} ${H+12}`} className="w-full" style={{height:"9rem"}}>
-                            <line x1="10" y1={H} x2={W-10} y2={H} stroke="var(--border)" strokeWidth="1"/>
-                            {pts.map((p: any, i: number) => <circle key={i} cx={p.x} cy={p.y} r="5" fill="var(--primary)" opacity="0.8"/>)}
-                            {matData.map((d: any, i: number) => <text key={i} x={pts[i].x} y={H+11} fill="#6b7280" fontSize="6" textAnchor="middle">{d.date.slice(-5)}</text>)}
-                          </svg>
-                        );
-
-                        if (ctMaterial === "pie" || ctMaterial === "donut") {
-                          const total = matData.reduce((s: number, d: any) => s + (d.count??0), 0) || 1;
-                          const COLORS = ["#7C5CFF","#E8184C","#00E5A3","#EAB308","#3B82F6","#F97316","#EC4899"];
-                          let cumAngle = -90;
-                          const ro = ctMaterial==="donut"?35:42, ri=22;
-                          const arcs = matData.map((d: any, i: number) => {
-                            const angle = ((d.count??0)/total)*360||0;
-                            const r1=cumAngle*Math.PI/180, r2=(cumAngle+angle)*Math.PI/180;
-                            const cx=50,cy=50;
-                            const x1=cx+ro*Math.cos(r1),y1=cy+ro*Math.sin(r1);
-                            const x2=cx+ro*Math.cos(r2),y2=cy+ro*Math.sin(r2);
-                            const laf=angle>180?1:0;
-                            const path=ctMaterial==="donut"
-                              ?`M${x1.toFixed(1)},${y1.toFixed(1)} A${ro},${ro} 0 ${laf},1 ${x2.toFixed(1)},${y2.toFixed(1)} L${(cx+ri*Math.cos(r2)).toFixed(1)},${(cy+ri*Math.sin(r2)).toFixed(1)} A${ri},${ri} 0 ${laf},0 ${(cx+ri*Math.cos(r1)).toFixed(1)},${(cy+ri*Math.sin(r1)).toFixed(1)} Z`
-                              :`M${cx},${cy} L${x1.toFixed(1)},${y1.toFixed(1)} A${ro},${ro} 0 ${laf},1 ${x2.toFixed(1)},${y2.toFixed(1)} Z`;
-                            cumAngle+=angle;
-                            return { path, color: COLORS[i%COLORS.length], label: d.date, value: d.count??0 };
-                          });
-                          return (
-                            <div className="flex items-center gap-3 pt-1">
-                              <div className="relative flex-shrink-0">
-                                <svg viewBox="0 0 100 100" className="w-24 h-24">{arcs.map((a: any, i: number)=><path key={i} d={a.path} fill={a.color} opacity="0.85"/>)}</svg>
-                                {ctMaterial==="donut"&&<div className="absolute inset-0 flex flex-col items-center justify-center"><span className="text-[9px] text-muted">GRNs</span><span className="font-black text-white text-base">{total}</span></div>}
-                              </div>
-                              <div className="space-y-1 text-[10px]">{arcs.map((a: any)=><div key={a.label} className="flex items-center gap-1.5"><div className="h-1.5 w-1.5 rounded-full flex-shrink-0" style={{background:a.color}}/><span className="text-muted font-mono">{a.label}</span><span className="font-bold text-white ml-auto pl-2">{a.value}</span></div>)}</div>
-                            </div>
-                          );
-                        }
-
-                        // Default: bar
-                        return (
-                          <div className="flex items-end justify-between gap-1.5" style={{height:"9rem"}}>
-                            {matData.map((d: any, idx: number) => {
-                              const countHeight=((d.count??0)/maxVal)*100;
-                              return (<div key={idx} className="flex-1 flex flex-col items-center gap-1">
-                                <div className="w-full bg-elevated rounded flex items-end" style={{height:"7rem"}}>
-                                  <div className="bg-primary/60 w-full rounded-b" style={{height:`${countHeight}%`}}/>
-                                </div>
-                                <span className="text-[8px] text-muted font-mono">{d.date.slice(-5)}</span>
-                              </div>);
-                            })}
-                          </div>
-                        );
-                      })()}
-                    </div>
-                  </div>
-
-                  {/* Workforce & Material Snapshot */}
-                  <div className="rounded-lg border border-border-custom bg-card p-6 space-y-4">
-                    <div className="flex flex-wrap justify-between items-center gap-2 border-b border-border-custom pb-3">
-                      <div className="flex items-center gap-3">
-                        <h4 className="text-xs font-extrabold uppercase tracking-wider text-white">Workforce & Material Snapshot</h4>
-                        <span className="text-[10px] px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 font-bold font-sans">Project Sync</span>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
-                      <div className="space-y-1">
-                        <label className="text-[9px] text-muted uppercase tracking-wider font-bold block">Payroll Type</label>
-                        <select
-                          className="bg-input border border-border-custom rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none min-w-[150px] w-full"
-                          value={snapshotFilters.payrollType}
-                          onChange={(e) => setSnapshotFilters((prev) => ({ ...prev, payrollType: e.target.value }))}
-                        >
-                          <option value="All">All</option>
-                          {workforcePayrollOptions.map((option) => (
-                            <option key={option} value={option}>{option}</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div className="space-y-1">
-                        <label className="text-[9px] text-muted uppercase tracking-wider font-bold block">Workforce Name</label>
-                        <select
-                          className="bg-input border border-border-custom rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none min-w-[150px] w-full"
-                          value={snapshotFilters.workforceName}
-                          onChange={(e) => setSnapshotFilters((prev) => ({ ...prev, workforceName: e.target.value }))}
-                        >
-                          <option value="All">All</option>
-                          {workforceNameOptions.map((option) => (
-                            <option key={option} value={option}>{option}</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div className="space-y-1">
-                        <label className="text-[9px] text-muted uppercase tracking-wider font-bold block">Material Name</label>
-                        <select
-                          className="bg-input border border-border-custom rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none min-w-[150px] w-full"
-                          value={snapshotFilters.materialName}
-                          onChange={(e) => setSnapshotFilters((prev) => ({ ...prev, materialName: e.target.value }))}
-                        >
-                          <option value="All">All</option>
-                          {materialNameOptions.map((option) => (
-                            <option key={option} value={option}>{option}</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div className="space-y-1">
-                        <label className="text-[9px] text-muted uppercase tracking-wider font-bold block">Material Category</label>
-                        <select
-                          className="bg-input border border-border-custom rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none min-w-[150px] w-full"
-                          value={snapshotFilters.materialCategory}
-                          onChange={(e) => setSnapshotFilters((prev) => ({ ...prev, materialCategory: e.target.value }))}
-                        >
-                          <option value="All">All</option>
-                          {materialCategoryOptions.map((option) => (
-                            <option key={option} value={option}>{option}</option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                      <div className="rounded-lg border border-border-custom bg-background/40 p-4">
-                        <div className="flex items-center justify-between border-b border-border-custom pb-2 mb-3">
-                          <h5 className="text-[10px] font-bold uppercase tracking-wider text-muted">Workforce Table</h5>
-                          <span className="text-[10px] text-muted">{filteredWorkforceRows.length} Rows</span>
-                        </div>
-                        <div className="overflow-x-auto">
-                          <table className="w-full text-left text-xs border-collapse">
-                            <thead>
-                              <tr className="border-b border-border-custom text-muted font-bold uppercase tracking-wider text-[10px] bg-white/[0.01]">
-                                <th className="py-2 px-3">Workforce Name</th>
-                                <th className="py-2 px-3">Cost Code</th>
-                                <th className="py-2 px-3">Salary Per Shift</th>
-                                <th className="py-2 px-3">Shift Hours</th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-border-custom">
-                              {filteredWorkforceRows.length === 0 ? (
-                                <tr>
-                                  <td colSpan={4} className="py-6 px-3 text-center text-muted font-semibold">No workforce rows found.</td>
-                                </tr>
-                              ) : (
-                                filteredWorkforceRows.map((row) => (
-                                  <tr key={row.id} className="hover:bg-white/[0.01] transition-colors">
-                                    <td className="py-2.5 px-3 font-semibold text-white">{row.workforceName}</td>
-                                    <td className="py-2.5 px-3 text-muted">{row.costCode}</td>
-                                    <td className="py-2.5 px-3 text-right font-semibold text-success">₹{row.salaryPerShift.toLocaleString("en-IN", { maximumFractionDigits: 2 })}</td>
-                                    <td className="py-2.5 px-3 text-muted">{row.shiftHours}</td>
-                                  </tr>
-                                ))
-                              )}
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-
-                      <div className="rounded-lg border border-border-custom bg-background/40 p-4">
-                        <div className="flex items-center justify-between border-b border-border-custom pb-2 mb-3">
-                          <h5 className="text-[10px] font-bold uppercase tracking-wider text-muted">Material Table</h5>
-                          <span className="text-[10px] text-muted">{filteredMaterialRows.length} Rows</span>
-                        </div>
-                        <div className="overflow-x-auto">
-                          <table className="w-full text-left text-xs border-collapse">
-                            <thead>
-                              <tr className="border-b border-border-custom text-muted font-bold uppercase tracking-wider text-[10px] bg-white/[0.01]">
-                                <th className="py-2 px-3">Material Name</th>
-                                <th className="py-2 px-3">Material Category</th>
-                                <th className="py-2 px-3">Unit</th>
-                                <th className="py-2 px-3">Lead Time</th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-border-custom">
-                              {filteredMaterialRows.length === 0 ? (
-                                <tr>
-                                  <td colSpan={4} className="py-6 px-3 text-center text-muted font-semibold">No material rows found.</td>
-                                </tr>
-                              ) : (
-                                filteredMaterialRows.map((row) => (
-                                  <tr key={row.id} className="hover:bg-white/[0.01] transition-colors">
-                                    <td className="py-2.5 px-3 font-semibold text-white">{row.materialName}</td>
-                                    <td className="py-2.5 px-3 text-muted">{row.materialCategory}</td>
-                                    <td className="py-2.5 px-3 text-muted">{row.unit}</td>
-                                    <td className="py-2.5 px-3 text-muted">{row.leadTime}</td>
-                                  </tr>
-                                ))
-                              )}
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                </>
-              )}
+                );
+              })()}
 
               {overviewTab === "financial" && (
                 <div className="space-y-6 font-sans">
@@ -1464,108 +1377,7 @@ export default function DashboardPage() {
                     </div>
                   </div>
 
-                  {/* Estimation & Geofence Tools (Auxiliary Panel) */}
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 border-t border-border-custom pt-6">
-                    {/* Steel calculator widget */}
-                    <div className="lg:col-span-2 rounded-lg bg-card border border-border-custom rounded-lg p-6 space-y-6">
-                      <div className="flex justify-between items-center border-b border-border-custom pb-4">
-                        <h3 className="font-bold text-sm uppercase tracking-wider text-white">IS-456 Steel weight calculator</h3>
-                        <span className="text-xs text-muted">Live API Verification</span>
-                      </div>
 
-                      <form className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="space-y-1">
-                          <label className="text-xs text-muted">Diameter (D in mm)</label>
-                          <select
-                            value={diameter}
-                            onChange={(e) => setDiameter(Number(e.target.value))}
-                            className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-white"
-                          >
-                            <option value={8}>8 mm</option>
-                            <option value={10}>10 mm</option>
-                            <option value={12}>12 mm</option>
-                            <option value={16}>16 mm</option>
-                            <option value={20}>20 mm</option>
-                          </select>
-                        </div>
-
-                        <div className="space-y-1">
-                          <label className="text-xs text-muted">Main Bar Count</label>
-                          <input
-                            type="number"
-                            value={barCount}
-                            onChange={(e) => setBarCount(Number(e.target.value))}
-                            className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-white"
-                          />
-                        </div>
-
-                        <div className="space-y-1">
-                          <label className="text-xs text-muted">Length/Height (meters)</label>
-                          <input
-                            type="number"
-                            value={barLength}
-                            onChange={(e) => setBarLength(Number(e.target.value))}
-                            className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-white"
-                          />
-                        </div>
-
-                        <div className="space-y-1">
-                          <label className="text-xs text-muted">Structural Wastage %</label>
-                          <input
-                            type="number"
-                            value={wastagePercent}
-                            onChange={(e) => setWastagePercent(Number(e.target.value))}
-                            className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-white"
-                          />
-                        </div>
-                      </form>
-
-                      <div className="p-4 rounded-md bg-elevated border border-border-custom flex flex-wrap gap-6 items-center justify-between text-xs">
-                        <div>
-                          <span className="text-muted block uppercase font-medium">Standard Unit Weight</span>
-                          <span className="font-bold text-white text-base">{standardUnitWeight.toFixed(3)} kg/m</span>
-                        </div>
-                        <div>
-                          <span className="text-muted block uppercase font-medium">Total Bar length</span>
-                          <span className="font-bold text-white text-base">{totalBarLength.toFixed(1)} meters</span>
-                        </div>
-                        <div>
-                          <span className="text-muted block uppercase font-medium">Reinforcement weight</span>
-                          <span className="font-bold text-primary text-base">{reinforcementWeight.toFixed(2)} kg</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Geofencing monitoring panel */}
-                    <div className="rounded-lg bg-card border border-border-custom rounded-lg p-6 space-y-6 flex flex-col">
-                      <div className="flex justify-between items-center border-b border-border-custom pb-4 shrink-0">
-                        <h3 className="font-bold text-sm uppercase tracking-wider text-white">Geofence Guard</h3>
-                        <span className="h-2 w-2 rounded-full bg-success" />
-                      </div>
-
-                      <div className="flex-1 flex flex-col justify-center items-center py-6 space-y-4">
-                        <div className="relative h-32 w-32 rounded-full border border-success/30 flex items-center justify-center bg-success/5">
-                          <div className="absolute inset-2 rounded-full border border-dashed border-success/40 animate-pulse" />
-                          <div className="absolute h-1.5 w-1.5 bg-success rounded-full" />
-                          <span className="absolute top-8 left-10 h-2 w-2 bg-success rounded-full shadow-[0_0_10px_#00E5A3] animate-ping" />
-                          <span className="absolute bottom-6 right-8 h-2 w-2 bg-success rounded-full" />
-                          <span className="absolute top-12 right-6 h-2 w-2 bg-red-500 rounded-full" />
-                        </div>
-
-                        <div className="text-center space-y-1">
-                          <span className="text-xs font-semibold text-white">Attendance coordinates matched</span>
-                          <p className="text-[10px] text-muted max-w-[200px]">
-                            Project Center geofence limits set to 500m radius.
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="text-xs border-t border-border-custom pt-4 flex justify-between text-muted shrink-0">
-                        <span>1 Alert: Out-of-bounds punch-in</span>
-                        <button className="text-primary font-bold hover:underline">Review</button>
-                      </div>
-                    </div>
-                  </div>
                 </div>
               )}
             </>
