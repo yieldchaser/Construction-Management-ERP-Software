@@ -11,6 +11,10 @@ Tests (isolated SQLite DB, port 8016):
 """
 
 import os
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+BACKEND_ROOT = os.path.dirname(HERE)
+
 import sys
 import time
 import uuid
@@ -19,17 +23,17 @@ import requests
 from datetime import datetime
 
 BASE = "http://127.0.0.1:8014/apis/v3"
-DB_FILE = "test_phase14.db"
+DB_FILE = os.path.join(HERE, "test_phase14.db")
 
 
 def start_server():
     env = os.environ.copy()
-    env["DATABASE_URL"] = f"sqlite:///./{DB_FILE}"
+    env["DATABASE_URL"] = f"sqlite:///{DB_FILE}"
     proc = subprocess.Popen(
         [sys.executable, "-m", "uvicorn", "app.main:app",
          "--host", "127.0.0.1", "--port", "8014", "--log-level", "error"],
         env=env,
-        cwd=os.path.dirname(os.path.abspath(__file__)),
+        cwd=BACKEND_ROOT,
     )
     for _ in range(30):
         time.sleep(1)
@@ -43,12 +47,12 @@ def start_server():
 
 
 def seed_db(company_obj, project_a_obj, project_b_obj):
-    sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-    os.environ["DATABASE_URL"] = f"sqlite:///./{DB_FILE}"
+    sys.path.append(BACKEND_ROOT)
+    os.environ["DATABASE_URL"] = f"sqlite:///{DB_FILE}"
 
     from sqlalchemy import create_engine
     from sqlalchemy.orm import sessionmaker
-    engine = create_engine(f"sqlite:///./{DB_FILE}", connect_args={"check_same_thread": False})
+    engine = create_engine(f"sqlite:///{DB_FILE}", connect_args={"check_same_thread": False})
     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     from app import models
 

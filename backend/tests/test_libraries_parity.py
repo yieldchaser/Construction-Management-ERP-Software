@@ -1,10 +1,14 @@
 import sys
 import os
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+BACKEND_ROOT = os.path.dirname(HERE)
+
 import uuid
 from fastapi.testclient import TestClient
 
 # Add current directory to path
-sys.path.append(os.path.dirname(__file__))
+sys.path.append(BACKEND_ROOT)
 
 from app.main import app
 from app.database import Base, engine, SessionLocal

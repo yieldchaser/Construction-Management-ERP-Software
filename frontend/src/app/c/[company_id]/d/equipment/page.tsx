@@ -199,7 +199,7 @@ export default function EquipmentTrackingPage() {
   const handleStartMachinery = async () => {
     if (!activeDeployingEq || !startMeterVal) return;
     try {
-      const res = await fetch(`${getApiHost()}/apis/v3/equipment/deploy`, {
+      const res = await fetch(`${getApiHost()}/apis/v3/equipment/${activeDeployingEq.id}/deploy`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

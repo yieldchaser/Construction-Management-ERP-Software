@@ -160,7 +160,7 @@ export default function ProjectsHomePage() {
       }
 
       // 2. Payments / Approvals
-      const paymentsRes = await fetch(`${apiHost}/apis/v3/payment-requests/${companyId}`, {
+      const paymentsRes = await fetch(`${apiHost}/apis/v3/finance/payment-requests/${companyId}`, {
         headers: authHeaders
       });
       if (paymentsRes.ok) {
@@ -178,7 +178,7 @@ export default function ProjectsHomePage() {
       }
 
       // 4. Leaves
-      const leavesRes = await fetch(`${apiHost}/apis/v3/leaves/${companyId}`, {
+      const leavesRes = await fetch(`${apiHost}/apis/v3/hr/leaves/${companyId}`, {
         headers: authHeaders
       });
       if (leavesRes.ok) {
@@ -229,7 +229,7 @@ export default function ProjectsHomePage() {
 
   const handleCreateDemoLeave = async () => {
     try {
-      const res = await fetch(`${apiHost}/apis/v3/leaves/${companyId}`, {
+      const res = await fetch(`${apiHost}/apis/v3/hr/leaves/${companyId}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -255,7 +255,7 @@ export default function ProjectsHomePage() {
 
   const handleApproveLeave = async (leaveId: string, targetStatus: "Approved" | "Rejected") => {
     try {
-      const res = await fetch(`${apiHost}/apis/v3/leaves/approve/${leaveId}`, {
+      const res = await fetch(`${apiHost}/apis/v3/hr/leaves/approve/${leaveId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

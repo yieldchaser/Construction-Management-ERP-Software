@@ -1,4 +1,8 @@
 import os
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+BACKEND_ROOT = os.path.dirname(HERE)
+
 import sys
 import subprocess
 import time
@@ -8,7 +12,7 @@ from datetime import datetime
 
 def test_phase8():
     print("Setting up local SQLite database for Phase 8 test...")
-    db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "test_phase8.db")
+    db_path = os.path.join(HERE, "test_phase8.db")
     if os.path.exists(db_path):
         try:
             os.remove(db_path)
@@ -16,7 +20,7 @@ def test_phase8():
             pass
 
     os.environ["DATABASE_URL"] = f"sqlite:///{db_path}"
-    sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+    sys.path.append(BACKEND_ROOT)
     
     from sqlalchemy import create_engine
     from sqlalchemy.orm import sessionmaker
@@ -61,7 +65,7 @@ def test_phase8():
     # Start FastAPI server
     print("Starting FastAPI backend server on port 8006...")
     env = os.environ.copy()
-    env["PYTHONPATH"] = os.path.dirname(os.path.abspath(__file__))
+    env["PYTHONPATH"] = BACKEND_ROOT
     env["DATABASE_URL"] = f"sqlite:///{db_path}"
     proc = subprocess.Popen(
         ["python", "-m", "uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", "8006"],

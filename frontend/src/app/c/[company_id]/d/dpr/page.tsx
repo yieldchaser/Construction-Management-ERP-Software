@@ -132,7 +132,7 @@ export default function DPRPage() {
 
   const fetchDPRLogs = async () => {
     try {
-      const res = await fetch(`${getApiHost()}/apis/v3/dpr?project_id=${projectId}`);
+      const res = await fetch(`${getApiHost()}/apis/v3/dpr/summary?project_id=${projectId}`);
       if (res.ok) {
         const data = await res.json();
         setLogs(data.length > 0 ? data : MOCK_DPR_LOGS);

@@ -69,7 +69,7 @@ export default function PaymentApprovalPage() {
     const authHeaders = { "Authorization": `Bearer ${accessToken}` };
 
     try {
-      const res = await fetch(`${apiHost}/apis/v3/payment-requests/${companyId}`, {
+      const res = await fetch(`${apiHost}/apis/v3/finance/payment-requests/${companyId}`, {
         headers: authHeaders
       });
       if (res.ok) {
@@ -99,7 +99,7 @@ export default function PaymentApprovalPage() {
 
   const handleUpdateStatus = async (requestId: string, action: "Approved" | "Rejected" | "Paid") => {
     try {
-      const res = await fetch(`${apiHost}/apis/v3/payment-requests/approve/${requestId}`, {
+      const res = await fetch(`${apiHost}/apis/v3/finance/payment-requests/approve/${requestId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -132,7 +132,7 @@ export default function PaymentApprovalPage() {
       }
 
       // 2. Create Payment Request
-      const res = await fetch(`${apiHost}/apis/v3/payment-requests/${companyId}`, {
+      const res = await fetch(`${apiHost}/apis/v3/finance/payment-requests/${companyId}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

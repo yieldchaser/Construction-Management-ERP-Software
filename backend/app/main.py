@@ -190,10 +190,28 @@ app = FastAPI(
     version="3.0.0"
 )
 
-# Configure CORS for Next.js frontend communication
+# Configure CORS for Next.js frontend communication.
+# Origins are restricted to an explicit allowlist. The production frontend origin is
+# supplied via FRONTEND_URL (comma-separated list permitted), falling back to the local
+# dev origins. A wildcard origin is intentionally NOT used because it is incompatible with
+# allow_credentials=True and is rejected by browsers.
+def get_allowed_origins() -> list[str]:
+    env_origins = os.getenv("FRONTEND_URL", "")
+    origins = [o.strip() for o in env_origins.split(",") if o.strip()]
+    if origins:
+        return origins
+    return [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:3001",
+        "http://127.0.0.1:3001",
+    ]
+
+ALLOWED_ORIGINS = get_allowed_origins()
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, restrict this to the frontend domain
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

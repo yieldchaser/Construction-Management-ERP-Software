@@ -6,16 +6,8 @@
   <a href="https://github.com/yieldchaser/Construction-Management-ERP-Software/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="MIT License" /></a>
   <a href="https://construction-management-erp-softwar-ten.vercel.app"><img src="https://img.shields.io/badge/Live_Site-Vercel-success?style=flat-square&logo=vercel" alt="Live Site" /></a>
   <a href="https://construction-erp-backend-73vm.onrender.com"><img src="https://img.shields.io/badge/Live_API-Render-009688?style=flat-square&logo=fastapi&logoColor=white" alt="Live API" /></a>
-  <img src="https://img.shields.io/badge/Next.js-15_App_Router-black?style=flat-square&logo=next.js" alt="Next.js" />
+  <img src="https://img.shields.io/badge/Next.js-16_App_Router-black?style=flat-square&logo=next.js" alt="Next.js" />
   <img src="https://img.shields.io/badge/PostgreSQL-Supabase-3ECF8E?style=flat-square&logo=supabase&logoColor=white" alt="Supabase" />
-</p>
-
-<p align="center">
-  <img src="https://img.shields.io/badge/Works_Contracts-Indian_Tax_Presets-E8184C?style=flat-square" alt="Indian Tax Presets" />
-  <img src="https://img.shields.io/badge/IS_456:2000-Concrete_Math-7C5CFF?style=flat-square" alt="IS 456 Concrete Math" />
-  <img src="https://img.shields.io/badge/IS_1786-Steel_Weight-blue?style=flat-square" alt="IS 1786 Steel Weight" />
-  <img src="https://img.shields.io/badge/Haversine-Geofenced_Attendance-orange?style=flat-square" alt="Geofenced Attendance" />
-  <img src="https://img.shields.io/badge/CPWD_Standards-Plaster_&_Brick-059669?style=flat-square" alt="CPWD Standards" />
 </p>
 
 <p align="center"><em>SiteFlow is the premium, enterprise-grade Construction Management ERP designed specifically for developers, builders, contractors, and project management consultancies.</em></p>
@@ -24,45 +16,9 @@
 
 ## Overview
 
-SiteFlow is an outcome-driven, high-fidelity ERP workspace tailored to the Indian construction industry. By consolidating scattered Excel sheets, manual site registers, and geofenced field operations into a single real-time structured canvas, SiteFlow delivers absolute control over engineering BOQ spreadsheets, subcontractor RA billing math, CPWD-compliant material estimation, purchase order workflows, and executive schedule timelines. It integrates directly with Tally Prime and Zoho Books ledger cards to automate back-office reconciliation.
+SiteFlow is an outcome-driven, high-fidelity ERP workspace tailored to the Indian construction industry. It consolidates scattered Excel sheets, manual site registers, and geofenced field operations into a single real-time structured canvas — delivering absolute control over engineering BOQ spreadsheets, subcontractor RA billing math, CPWD-compliant material estimation, purchase-order workflows, and executive schedule timelines. It integrates directly with Tally Prime and Zoho Books ledger cards to automate back-office reconciliation.
 
----
-
-## 🔄 Status & Parity
-
-SiteFlow recently completed a competitor-parity and bug-fixing pass benchmarked against the competitor **Onsite Teams**. Reconciliation evidence lives in [`onsiteteams-recon/Onsite_Teams_Non_Report_Column_Extraction.xlsx`](onsiteteams-recon/Onsite_Teams_Non_Report_Column_Extraction.xlsx) and the `.code-review-graph` knowledge graph.
-
-### Column-Level UI Parity (Complete)
-Column-level UI parity with Onsite Teams is **complete across all existing modules**, verified against the extracted workbook fields:
-procurement (PO / inventory / ledger / unbilled), subcon, crm, billing, finance, equipment, attendance, safety, drawings, wastage, three-way, reports, quality, production, hr, labour, towers, depreciation, budgeting, library, settings, dashboard, payment-approval, and todo.
-
-Notable columns added to match competitor schemas:
-- **Inventory**: Unit, Reorder Level, Current Stock.
-- **Subcontractor**: Work Order.
-- **CRM**: Category.
-
-### Connectivity Fixes
-- Corrected **5 broken API call URLs** in `frontend/app/d/home/page.tsx` — payment-requests, leaves, projects, and leave-approve endpoints.
-- Corrected **1 broken API URL** in `frontend/app/equipment/page.tsx` — fuel-log now targets `/equipment/{id}/fuel`.
-
-### Formula / Calculation Bug Fixes
-- `backend/.../production.py`: material consumption no longer over-applies the **1.54 dry-volume factor** (was over-counting batch consumption by ~54%).
-- Frontend calculators: stirrup steel length now uses **14d** (was 24d), matching the backend.
-- GST / TDS / retention / PF-ESI / concrete / steel math reviewed and confirmed correct.
-
-### Cosmetic Cleanup
-Removed duplicate Tailwind class leftovers (`rounded-lg` / `border` / `bg-input`) from procurement and equipment pages following their card→table conversions.
-
-### Known Remaining Module Gaps (Future Work — NOT Yet Built)
-These are whole new modules (require backend + models) and were intentionally deferred:
-- **Schedule / Gantt planning board** — dedicated planning module.
-
-### Verification Note
-> Automated `tsc` / Python / backend-import tests could **not** be executed inside the sandbox. Verification was performed via **static code review**. Before deploying, please run:
-> ```bash
-> cd frontend && npx tsc --noEmit --skipLibCheck
-> ```
-> and start the backend to confirm runtime behavior.
+Built mobile-first with a GPS-geofenced attendance PWA and an installable offline queue, SiteFlow keeps the field and the office on the same source of truth — from the first site punch to the final client invoice.
 
 ---
 
@@ -87,19 +43,12 @@ These are whole new modules (require backend + models) and were intentionally de
 - **🧮 Subcontractor RA Billing**: Real-time invoice calculators with pre-tax/post-tax deduction priorities, automatic Indian GST and TDS presets (Section 194C, 194Q), and debit/credit note ledgers.
 - **💰 Finance & Cashbook**: Payment recording, ledger entries, P&L statements, bank account management, and payment request workflows.
 - **🛡️ Live Payment & Voucher Approval Gate**: Automatically routes recorded entries to a pending approval workspace. Executives can audit transaction receipts, verify ledger alignments, and approve vouchers with a single click.
-- **📑 14 Competitor Transaction Forms**:
-  - **Internal Transfer**: Supports Bank-to-Bank, Cash Deposit, and Cash Withdraw transfers with live cash wallet balance badges.
-  - **Credit / Debit Notes**: Reference invoice tracking, total amount cards, and automated item line inclusion.
-  - **Party to Party Payment**: Payment From/To double searchable input matching.
-  - **Equipment Expense**: High-fidelity scrolled forms covering Sub Total, Discount, GST selector, Net Amount (with Round Off check), Deductions, Paid Amount, and Balance Due calculations.
-  - **Material Transfer**: Material transfer tracking with project targets, E-Way Bill numbers, vehicle logs, and Transfer Out IDs.
-  - **Sub-Con Workorders**: Standalone subcontractor workorder modal with party selectors, Terms & Conditions links, and media attachments.
+- **📑 14 Competitor Transaction Forms**: Internal Transfer, Credit/Debit Notes, Party-to-Party Payment, Equipment Expense, Material Transfer, Sub-Con Workorders, and more.
 - **📋 Statutory Reports**: PF, ESI, BOCW (with dynamic 1% cess calculation on total wages), TDS, Professional Tax, and Income Tax monthly return filing with contribution tracking and acknowledgment numbers.
-- **🧾 Purchase-to-Pay**: Material indents, multi-item purchase orders, goods receipt notes (GRN), inventory tracking, and approval gates.
 - **📉 Asset Depreciation**: Straight-line, reducing balance, and written-down-value depreciation schedules with monthly ledger entries.
 - **🔗 3-Way Matching**: Automated PO-GRN-Invoice reconciliation with variance detection and approve/reject workflow.
 - **♻️ Material Wastage**: Scrap, offcut, damage, expiry, and theft tracking with value estimation, reason logging, and photo attachments.
-- **💬 Site Chat**: Project-level group chat with text, media, and voice notes. (Standalone **Minutes of Meeting (MOM)** module is now available under project navigation.)
+- **💬 Site Chat & MOM**: Project-level group chat with text, media, and voice notes, plus a standalone Minutes of Meeting (MOM) module with list/create/edit/delete and filters.
 - **🧩 Custom Fields Engine**: Dynamic field definitions for projects, tasks, bills, invoices, leads, and vendors.
 
 ### HR & Payroll
@@ -108,21 +57,17 @@ These are whole new modules (require backend + models) and were intentionally de
 - **🧾 Payroll Runs**: Monthly payroll processing with Basic, HRA, Allowances, PF (employee + employer), ESI, and TDS calculations.
 - **😊 Face Recognition Attendance**: Face verification audit trail with confidence scores, geofence validation, and image logging.
 - **🏖️ Company Holiday Calendar**: Official company holiday list that automatically credits attendance and resolves salary run offsets.
-- **🎛️ Sliding Workforce Configuration Drawers**: Right-hand sliding side panels for adding new workforce types (mason, helper, wage types), shared Workforce Library catalog, and detailed payroll settings (shift rates, hours, leave templates).
 
 ### Quality & Safety
 - **✅ Quality Inspections**: IS-code checklist library, site inspections, non-conformance reports (NCR), and material lab test logs.
 - **🦺 Safety Management**: Site hazard reporting, PPE audit checklists, and toolbox talk logs.
-- **📝 Minutes of Meeting (MOM)**: New MOM module with list/create/edit/delete, filters (date, attendee, project, status, type), and attendee/notes/status/type tracking per company/project.
 
 ### Analytics & Reporting
 - **📈 Executive Analytics**: Interactive S-curve progress charts and budget burn charts with hover tooltips.
 - **📑 Client Progress Reports**: Auto-generated progress reports with approval workflow and PDF download.
-- **📊 Production Tracking**: Interactive recipe builder and log batch modal overlays. Supports concrete mix ratio setups (with dry volume 1.54 mix design factor), active batch status tracking (Draft, Running, Completed), completed batch auto-deductions from warehouse inventories, and low-stock alerts.
-- **🗃️ 15-Category Reports Dashboard**: Dynamic, company-wide reports directory spanning Sales, Payments, Progress & Task, Purchase, Party Balances, Tax, and Assets. Includes **35+ mapped reports and master libraries** (e.g., Party Ledger, GSTR-1/GSTR-2, Staff Muster Roll, Daily Equipment logs, Subcontractor Measurement Book, and Rate Card/Cost Code libraries) aligned exactly to the competitor's schemas and layout.
-- **📅 Period Slider Export Modal**: Smooth sliding selector modal (`< Month >`) supporting custom CSV/Excel downloads matching exact competitor layouts with high-fidelity mock data.
-- **📋 Daily Progress Report (DPR)**: Comprehensive dashboard aggregating To-Dos, material indents, tasks, shifts, aggregate receipts, and active machinery usage schedules.
-- **🔄 Dynamic Project Context Routing**: Fully dynamic routing redirects for project budgeting/planning modules and global Sidebar tracking that preserves selected project context across clicks using localStorage.
+- **📊 Production Tracking**: Interactive recipe builder and batch modal overlays. Supports concrete mix ratio setups (with dry volume 1.54 mix design factor), active batch status tracking, completed batch auto-deductions from warehouse inventories, and low-stock alerts.
+- **🗃️ 15-Category Reports Dashboard**: Dynamic, company-wide reports directory spanning Sales, Payments, Progress & Task, Purchase, Party Balances, Tax, and Assets.
+- **📅 Daily Progress Report (DPR)**: Comprehensive dashboard aggregating To-Dos, material indents, tasks, shifts, aggregate receipts, and active machinery usage schedules.
 
 ### Integrations
 - **🔗 Tally Prime**: Direct XML sync gateway for voucher push and pull.
@@ -166,14 +111,14 @@ flowchart TD
     Start[Subcontractor Submits Bill] --> Input[Input Base Subtotal]
     Choice{Pre-Tax Deductions?}
     Input --> Choice
-    
+
     Choice -- Yes (Pre-Tax) --> PreTDS[Deduct TDS 1% / 2%]
     PreTDS --> PreRet[Deduct Retention %]
     PreRet --> PreAdv[Recover Advances / Material Notes]
     PreAdv --> PreTaxable[Calculate Taxable Base]
     PreTaxable --> PreGST[Apply GST 18% / 12% / 5%]
     PreGST --> NetPayablePre[Calculate Net Payable]
-    
+
     Choice -- No (Post-Tax / Default) --> PostGST[Apply GST on Subtotal]
     PostGST --> PostGross[Gross Post-GST Value]
     PostGross --> PostTDS[Deduct TDS on Base Subtotal]
@@ -184,7 +129,7 @@ flowchart TD
     classDef action fill:#7C5CFF,stroke:#333,color:#fff;
     classDef choice fill:#E8184C,stroke:#333,color:#fff;
     classDef output fill:#059669,stroke:#333,color:#fff;
-    
+
     class Start,Input,PreTDS,PreRet,PreAdv,PreTaxable,PreGST,PostGST,PostGross,PostTDS,PostRet,PostAdv action;
     class Choice choice;
     class NetPayablePre,NetPayablePost output;
@@ -256,84 +201,23 @@ SiteFlow features a state-of-the-art **flat canvas** with full support for light
   - **Background Canvas**: `#F9FAFB` (Warm off-white porcelain slate)
   - **Card Containers**: `#FFFFFF` with borders of `rgba(0, 0, 0, 0.08)`
   - **Sidebar Navigation**: `#FFFFFF` (Clean white sidebar)
-* **Styled WebKit Scrollbars**: Replaces raw browser sliders with a custom `6px` rounded scrollbar thumb. The thumb automatically transitions between semi-transparent white (`rgba(255, 255, 255, 0.1)`) and slate (`rgba(15, 23, 42, 0.12)`) based on active themes to guarantee high visual elegance.
+* **Styled WebKit Scrollbars**: Replaces raw browser sliders with a custom `6px` rounded scrollbar thumb.
 * **Typography**: Clean, editorial-style **Inter** font with tight letter spacing for high data readability.
 
 ---
 
-## 📂 Project Directory Structure
+## 📂 Project Structure
 
-* [context/](file:///C:/Users/Dell/Github/Construction-Management-ERP-Software/context/) — Session context, roadmap history, audits, calculators, and reverse-engineering notes.
-* [onsiteteams-recon/](file:///C:/Users/Dell/Github/Construction-Management-ERP-Software/onsiteteams-recon/) — Raw competitor bundle resources, HTML assets, sitemaps, and API schemas.
-* [frontend/](file:///C:/Users/Dell/Github/Construction-Management-ERP-Software/frontend/) — Next.js app-router frontend, including dashboard, project modules, analytics, and PWA shell assets.
-* [backend/](file:///C:/Users/Dell/Github/Construction-Management-ERP-Software/backend/) — FastAPI backend with routers for auth, calculators, planning, procurement, billing, HR, quality, reports, equipment, safety, analytics, production, assets, three-way matching, wastage, chat, custom fields, statutory, and face recognition.
-
----
-
-## 📋 Module Reference
-
-### 1. Company Dashboard (`/c/[company_id]/dashboard`)
-- **Operational Tab**: Project health breakdown, 7-day attendance sparkline, 7-day GRN sparkline, project operational summary table. All charts support 25-type switching.
-- **Financial Tab**: KPI cards (advances, payables, receivables), SVG revenue/expense/margin trends, expense distribution, project financial summary, and engineering calculators.
-
-### 2. Executive Analytics (`/c/[company_id]/analytics`)
-- Interactive S-curve progress chart with sleek tooltips.
-- Budget burn chart with cumulative spend visualization.
-- Project scoreboard with budget vs. actual comparison.
-
-### 3. Project Modules (`/c/[company_id]/p/[project_id]/`)
-- **Attendance & Payroll (`/attendance`)**: GPS geofenced punch-in/out, Haversine validation, offline backup, multi-language support, shift multipliers, overtime calculations.
-- **Subcontractor Billing (`/billing`)**: Real-time RA bill calculator, pre-tax/post-tax deduction modes, Indian GST/TDS presets, debit/credit notes ledger, work order amendment version control, tower-wise P&L breakdown.
-- **Towers & Phases (`/towers`)**: Multi-tower/project-phase management with individual budgets, status tracking, and consolidated P&L per tower/phase for developer clients.
-- **Subcontractor Performance (`/subcon/scorecards`)**: Performance scorecards with on-time delivery %, billing accuracy %, quality score, and cross-subcontractor comparative analysis.
-- **CRM (`/crm`)**: Lead pipeline, client registry, quotation creation and lifecycle management.
-- **Planning & Gantt (`/planning/gantt`)**: Interactive WBS timeline, CPM scheduling, task float calculations.
-- **DPR (`/dpr`)**: Daily progress reports, delay tracking, photo attachments.
-- **Drawings (`/drawings`)**: Version-controlled blueprints, revision history, RFI/Clash/Observation pin overlay, approval workflows.
-- **Equipment (`/equipment`)**: Fuel logs, run hours, deployment tracking.
-- **Finance (`/finance`)**: Payment recording, ledger, P&L, bank accounts, payment requests, Tally sync.
-- **HR (`/hr`)**: Employee directory, leave management, monthly payroll, timesheets, face recognition attendance.
-- **Procurement (`/procurement`)**: Material indents, purchase orders, GRNs, inventory, unbilled material tracking, duplicate PO detection, vendor performance database, RFQ multi-vendor comparison with side-by-side rate/timeline view.
-- **Production (`/production`)**: Work quantity tracking, recipe management, batch logging, inventory alerts.
-- **Quality (`/quality`)**: IS-code checklists, inspections, NCRs, lab test logs.
-- **Reports (`/reports`)**: Progress report generation, approval workflow, PDF download.
-- **Safety (`/safety`)**: Hazard reporting, PPE audits, toolbox talks.
-- **Asset Depreciation (`/depreciation`)**: Multiple depreciation methods, monthly ledger entries.
-- **3-Way Matching (`/three-way`)**: PO-GRN-Invoice reconciliation, variance detection, approval workflow.
-- **Material Wastage (`/wastage`)**: Scrap tracking, value estimation, status progression.
-- **Chat (`/chat`)**: Project chat groups, text/media/voice notes. (Standalone MOM module pending — see Status & Parity.)
-- **Custom Fields (`/custom-fields`)**: Dynamic field definitions across entities.
-- **Statutory Reports (`/statutory`)**: PF, ESI, BOCW, TDS compliance filing.
-- **Face Recognition (`/face-recognition`)**: Face verification audit trail with confidence scores.
-- **Labour (`/labour`)**: Contractor reliability scoring, BOCW compliance export, digital muster roll.
-- **Budget (`/budget`)**: Committed cost tracking showing POs raised, work orders issued, and actual invoices side-by-side with budgeted amounts. Multi-tower/phase budget breakdown with consolidated P&L.
-
-### 4. Company Settings (`/c/[company_id]/settings`)
-- **General Settings**: Company profile, contact info, GSTIN validation, currency and quantity decimal precision.
-- **Branch Management**: Multi-branch configuration with individual addresses and contacts.
-- **Restrictions & Controls**: Employee self-edit, geofence enforcement, back-dated entry limits, negative stock lock, BOM/PO restrictions.
-- **Approval Workflows**: Configurable approval rules for POs, material requests, expenses, RA bills, client invoices, debit/credit notes, and timesheets.
-
-### 5. Onboarding Wizard
-- 2-step guided stepper for first-time project creation.
-- **Step 1**: Project details (name, code, city, address, geofence radius).
-- **Step 2**: Team member assignment before project goes live.
-- **⚡ Self-Healing Demo Seeder**: Dynamically populates mock projects, cost codes, and materials if the database is reset or if the demo company session is missing on first-time login.
-
-### 6. Integrations Hub (`/integrations`)
-- Interactive search and category filtering (Accounting, Communication, Storage, Analytics, Field & Site).
-- Active configuration panel for **Tally ERP**.
-- Request forms for planned integrations: WhatsApp Business, Zoho Books, QuickBooks, Google Drive.
-
-### 7. Company-Level ERP Modules (Onsite/SiteFlow Parity)
-- **👥 Testimonial Login Carousel**: Seamless slider rotating user testimonials, featuring country flag selectors and hand illustration layout.
-- **🏢 Company Onboarding**: Stepper for registering new companies, capturing segments (Building, Developer, MEP, PWD) and developer sub-categories.
-- **📁 Projects Landing**: Dashboard displaying active projects, progress stats, and cash flows.
-- **🗳️ Material Request Drawer**: Slide drawer for viewing and approving raw material indents across all statuses (Pending, Approved, Ordered, Rejected).
-- **📝 Leave Approval Manager**: Popup manager to review, approve, or reject employee leave requests.
-- **📅 Gantt Team Schedule**: Sub-tab Gantt calendars plotting site operations across calendar days and timesheet date filters with hours logging time-pickers.
-- **🗳️ Payment Approvals**: Approvals dashboard for authorizing and rejecting subcontractor payment requests.
-- **📚 Libraries Hub**: Central repository to declare cost codes, deductions, material properties, asset types, progress codes, and markup rate cards.
+```
+Construction-Management-ERP-Software/
+├── frontend/                 # Next.js (App Router) frontend + PWA shell
+├── backend/                  # FastAPI backend (routers, models, calculators)
+│   └── tests/                # Integration & phase test suites
+├── supabase/                 # SQL migrations for production PostgreSQL
+├── onsiteteams-recon/        # Competitor research artifacts & recon scripts
+├── context/                  # Roadmap history, audits, and engineering notes
+└── static/                   # Generated report artifacts
+```
 
 ---
 
@@ -375,7 +259,7 @@ graph TD
     classDef core fill:#3B82F6,stroke:#333,stroke-width:2px,color:#fff;
     classDef db fill:#19191C,stroke:#555,stroke-width:2px,color:#fff;
     classDef integrations fill:#111113,stroke:#7C3AED,stroke-width:1px,color:#F3F4F6;
-    
+
     class A1,A2,A3,B1 site;
     class C1,C2,C3,C4,C5 core;
     class D1,D2,D3 db;
@@ -391,8 +275,8 @@ SiteFlow is built from the ground up for strict multi-tenant isolation:
 * **Company-Scoped Unique Keys**: Numbers like PO, GRN, and Indents are unique *only within the company context* (`UNIQUE(company_id, po_number)`), permitting standard sequence numbering (e.g. `PO-001`) to coexist across separate tenants.
 * **Client Invoice Integrity**: Unique partial indices are enforced on outgoing client tax invoices to prevent duplicate numbers:
   ```sql
-  CREATE UNIQUE INDEX unique_sale_invoice_number_per_company 
-  ON bills (company_id, invoice_number) 
+  CREATE UNIQUE INDEX unique_sale_invoice_number_per_company
+  ON bills (company_id, invoice_number)
   WHERE invoice_type = 'sale';
   ```
 
@@ -402,13 +286,91 @@ SiteFlow is built from the ground up for strict multi-tenant isolation:
 
 | Layer | Technology |
 |-------|-----------|
-| **Frontend** | Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS |
+| **Frontend** | Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS |
 | **Backend** | FastAPI (Python 3.12), SQLAlchemy 2.0, Pydantic v2 |
 | **Database** | Supabase PostgreSQL (production), SQLite (local dev) |
 | **Deployment** | Vercel (frontend), Render (backend) |
 | **PWA** | Service Worker, offline queue, geolocation API |
 | **Charts** | Pure SVG (no external charting library) |
 | **Authentication** | JWT-based with company-scoped tokens |
+
+---
+
+## 🛠 Getting Started
+
+### Prerequisites
+- **Node.js** 18+ and **npm**
+- **Python** 3.12+
+- A **Supabase** project (production) **or** a local **SQLite** file (development)
+
+### 1. Backend (FastAPI)
+
+```bash
+cd backend
+python -m venv .venv
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+Create a `.env` file in the `backend/` directory (copy from `.env.example`):
+
+```ini
+# Database — use SQLite for local dev, Supabase PostgreSQL for production
+DATABASE_URL=sqlite:///./test.db
+
+# JWT authentication
+SECRET_KEY=replace-with-openssl-rand-hex-32
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=1440
+
+# CORS — comma-separated list of allowed frontend origins
+FRONTEND_URL=http://localhost:3000
+```
+
+Run the API:
+
+```bash
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+The interactive OpenAPI docs are available at `http://localhost:8000/docs`.
+
+### 2. Frontend (Next.js)
+
+```bash
+cd frontend
+npm install
+```
+
+Create a `.env.local` file in the `frontend/` directory:
+
+```ini
+# Backend API origin the browser will call
+NEXT_PUBLIC_API_URL=http://localhost:8000
+```
+
+> **Note on host resolution:** In development the app calls `http://localhost:8000`; when deployed to a non-local hostname it calls the hosted Render API. Ensure the backend's `FRONTEND_URL` includes the frontend's production origin so CORS requests are permitted.
+
+Run the dev server:
+
+```bash
+npm run dev
+```
+
+The app is served at `http://localhost:3000`.
+
+### 3. Production Build
+
+```bash
+# Frontend
+cd frontend && npm run build && npm run start
+
+# Backend (example process manager)
+cd backend && pip install -r requirements.txt
+FRONTEND_URL=https://your-frontend.vercel.app uvicorn app.main:app --host 0.0.0.0 --port 8000
+```
+
+Apply the Supabase SQL migrations from `supabase/` for production data modeling.
 
 ---
 
@@ -422,7 +384,7 @@ The backend exposes a versioned REST API under `/apis/v3/`. Key endpoint groups:
 | **Procurement** | `/apis/v3/procurement/indents`, `/pos`, `/grns`, `/inventory` |
 | **Billing** | `/apis/v3/billing/work-orders`, `/bills`, `/bills/summary` |
 | **HR** | `/apis/v3/hr/employees`, `/attendance`, `/leaves`, `/timesheets`, `/payroll` |
-| **Finance** | `/apis/v3/finance/payments`, `/approve/{id}`, `/ledger`, `/pl` |
+| **Finance** | `/apis/v3/finance/payments`, `/payment-requests`, `/ledger`, `/pl` |
 | **Quality** | `/apis/v3/quality/checklists`, `/inspections`, `/ncr`, `/material-tests` |
 | **Reports** | `/apis/v3/reports/{project_id}`, `/generate/{project_id}`, `/approve` |
 | **Drawings** | `/apis/v3/drawings`, `/revisions`, `/pins` |
@@ -454,4 +416,10 @@ Out-of-the-box integrations exist for **Tally Prime** (via local XML sync gatewa
 The `/apis/v3/analytics/company/{id}/financial` endpoint aggregates from the Bills ledger using `invoice_type` — `sale` for revenue, `purchase` for costs, `subcon` for subcontractor expenses — giving real-time KPIs, monthly trends, and per-project breakdowns without any manual entry.
 
 **Q: How does the chart type switcher work?**
-Each chart card in the dashboard has a floating **5×5 chart type picker** (25 options). Clicking the bar-chart icon opens the grid; selecting any type (Pie, Donut, Line, Area, Scatter, Stacked Bar, Table, etc.) instantly re-renders the chart using pure SVG — no external charting library required. The picker closes automatically on outside click.
+Each dashboard chart subscribes to the same aggregated dataset and re-renders using a pure-SVG renderer selected by the switcher, supporting 25 chart types without any external charting dependency.
+
+---
+
+## 📄 License
+
+SiteFlow is released under the [MIT License](LICENSE).

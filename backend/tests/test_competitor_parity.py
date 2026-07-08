@@ -8,6 +8,10 @@ Tests:
 """
 
 import os
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+BACKEND_ROOT = os.path.dirname(HERE)
+
 import sys
 import time
 import uuid
@@ -17,17 +21,17 @@ import io
 from datetime import datetime
 
 BASE = "http://127.0.0.1:8018/apis/v3"
-DB_FILE = "test_competitor_parity.db"
+DB_FILE = os.path.join(HERE, "test_competitor_parity.db")
 
 
 def start_server():
     env = os.environ.copy()
-    env["DATABASE_URL"] = f"sqlite:///./{DB_FILE}"
+    env["DATABASE_URL"] = f"sqlite:///{DB_FILE}"
     proc = subprocess.Popen(
         [sys.executable, "-m", "uvicorn", "app.main:app",
          "--host", "127.0.0.1", "--port", "8018", "--log-level", "error"],
         env=env,
-        cwd=os.path.dirname(os.path.abspath(__file__)),
+        cwd=BACKEND_ROOT,
     )
     for _ in range(30):
         time.sleep(1)
@@ -41,12 +45,12 @@ def start_server():
 
 
 def seed_db(company_obj, project_obj, sender_team_obj, receiver_team_obj, sender_user_obj, receiver_user_obj):
-    sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-    os.environ["DATABASE_URL"] = f"sqlite:///./{DB_FILE}"
+    sys.path.append(BACKEND_ROOT)
+    os.environ["DATABASE_URL"] = f"sqlite:///{DB_FILE}"
 
     from sqlalchemy import create_engine
     from sqlalchemy.orm import sessionmaker
-    engine = create_engine(f"sqlite:///./{DB_FILE}", connect_args={"check_same_thread": False})
+    engine = create_engine(f"sqlite:///{DB_FILE}", connect_args={"check_same_thread": False})
     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     from app import models
 
@@ -140,12 +144,12 @@ def test_competitor_parity():
         assert payroll_res["created"] == 1
 
         # Verify database update for employee
-        sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-        os.environ["DATABASE_URL"] = f"sqlite:///./{DB_FILE}"
+        sys.path.append(BACKEND_ROOT)
+        os.environ["DATABASE_URL"] = f"sqlite:///{DB_FILE}"
         from sqlalchemy import create_engine
         from sqlalchemy.orm import sessionmaker
         from app import models
-        test_engine = create_engine(f"sqlite:///./{DB_FILE}", connect_args={"check_same_thread": False})
+        test_engine = create_engine(f"sqlite:///{DB_FILE}", connect_args={"check_same_thread": False})
         TestSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_engine)
         db = TestSessionLocal()
         emp = db.query(models.StaffEmployee).filter(models.StaffEmployee.name == "Arun Sharma").first()

@@ -2,18 +2,21 @@ import subprocess
 import time
 import requests
 import sys
+import os
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+BACKEND_ROOT = os.path.dirname(HERE)
 
 def test_backend():
     print("Starting FastAPI backend server...")
-    import os
-    db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "test.db")
+    db_path = os.path.join(HERE, "test.db")
     if os.path.exists(db_path):
         try:
             os.remove(db_path)
         except Exception:
             pass
     env = os.environ.copy()
-    env["PYTHONPATH"] = os.path.dirname(os.path.abspath(__file__))
+    env["PYTHONPATH"] = BACKEND_ROOT
     env["DATABASE_URL"] = f"sqlite:///{db_path}"
     proc = subprocess.Popen(
         ["python", "-m", "uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", "8020"],

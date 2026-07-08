@@ -71,7 +71,7 @@ export default function MoMPage() {
 
   const loadProjects = async () => {
     try {
-      const res = await fetch(`${getApiHost()}/apis/v3/projects?company_id=${companyId}`);
+      const res = await fetch(`${getApiHost()}/apis/v3/planning/projects?company_id=${companyId}`);
       if (res.ok) {
         const data = await res.json();
         setProjects(data.map((p: any) => ({ id: p.id, name: p.name })));

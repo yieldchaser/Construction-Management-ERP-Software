@@ -13,6 +13,10 @@ Tests (isolated SQLite DB, port 8008):
 """
 
 import os
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+BACKEND_ROOT = os.path.dirname(HERE)
+
 import sys
 import time
 import uuid
@@ -21,17 +25,17 @@ import subprocess
 import requests
 
 BASE = "http://127.0.0.1:8008/apis/v3"
-DB_FILE = "test_phase10.db"
+DB_FILE = os.path.join(HERE, "test_phase10.db")
 
 
 def start_server():
     env = os.environ.copy()
-    env["DATABASE_URL"] = f"sqlite:///./{DB_FILE}"
+    env["DATABASE_URL"] = f"sqlite:///{DB_FILE}"
     proc = subprocess.Popen(
         [sys.executable, "-m", "uvicorn", "app.main:app",
          "--host", "127.0.0.1", "--port", "8008", "--log-level", "error"],
         env=env,
-        cwd=os.path.dirname(os.path.abspath(__file__)),
+        cwd=BACKEND_ROOT,
     )
     for _ in range(30):
         time.sleep(1)

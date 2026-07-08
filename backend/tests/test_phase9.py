@@ -12,6 +12,10 @@ Tests (run on isolated SQLite DB, port 8007):
 """
 
 import os
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+BACKEND_ROOT = os.path.dirname(HERE)
+
 import sys
 import time
 import subprocess
@@ -19,7 +23,7 @@ import requests
 import math
 
 BASE = "http://127.0.0.1:8007/apis/v3"
-DB_FILE = "test_phase9.db"
+DB_FILE = os.path.join(HERE, "test_phase9.db")
 
 
 def haversine(lat1, lon1, lat2, lon2):
@@ -33,12 +37,12 @@ def haversine(lat1, lon1, lat2, lon2):
 
 def start_server():
     env = os.environ.copy()
-    env["DATABASE_URL"] = f"sqlite:///./{DB_FILE}"
+    env["DATABASE_URL"] = f"sqlite:///{DB_FILE}"
     proc = subprocess.Popen(
         [sys.executable, "-m", "uvicorn", "app.main:app",
          "--host", "127.0.0.1", "--port", "8007", "--log-level", "error"],
         env=env,
-        cwd=os.path.dirname(os.path.abspath(__file__)),
+        cwd=BACKEND_ROOT,
     )
     for _ in range(30):
         time.sleep(1)
