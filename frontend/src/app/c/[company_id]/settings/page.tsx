@@ -1,7 +1,7 @@
 "use client";
 import { getApiHost } from "@/lib/api";
 
-import Link from "next/link";
+
 import { useParams } from "next/navigation";
 import { useEffect, useState, useRef, useCallback } from "react";
 import PwaControls from "@/components/pwa/PwaControls";
@@ -240,35 +240,9 @@ export default function CompanySettingsPage() {
   }
 
   return (
-    <div className="flex min-h-screen bg-card text-zinc-100 font-sans antialiased selection:bg-primary/30 selection:text-white">
-      {/* Sidebar Navigation */}
-      <aside className="w-64 flex-shrink-0 border-r border-border-custom bg-background flex flex-col justify-between">
-        <div className="p-6">
-          <div className="flex items-center gap-3">
-            <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center font-bold text-white shadow-lg shadow-primary/10">
-              SF
-            </div>
-            <span className="text-sm font-extrabold tracking-wider text-white">SITEFLOW ERP</span>
-          </div>
-          <nav className="mt-8 space-y-1.5">
-            <Link href={`/c/${company_id}/dashboard`} className="flex items-center gap-3 px-4 py-2.5 rounded-md text-xs font-semibold text-muted hover:bg-white/[0.03] hover:text-foreground transition-all duration-150">
-              <span>🏠</span> Dashboard
-            </Link>
-            <Link href={`/c/${company_id}/analytics`} className="flex items-center gap-3 px-4 py-2.5 rounded-md text-xs font-semibold text-muted hover:bg-white/[0.03] hover:text-foreground transition-all duration-150">
-              <span>📊</span> Analytics
-            </Link>
-            <span className="flex items-center gap-3 px-4 py-2.5 rounded-md text-xs font-semibold bg-primary/10 text-primary">
-              <span>⚙️</span> Setting
-            </span>
-          </nav>
-        </div>
-        <div className="p-4 border-t border-border-custom text-[10px] text-muted font-mono">
-          © SiteFlow | v8.22.0
-        </div>
-      </aside>
-
+    <div className="flex-1 flex flex-col overflow-hidden">
       {/* Main Workspace */}
-      <main className="flex-1 p-8 overflow-y-auto max-h-screen">
+      <main className="flex-1 p-8 overflow-y-auto">
         <header className="flex items-center justify-between border-b border-border-custom pb-6">
           <div>
             <h1 className="text-2xl font-black text-white tracking-tight">Company Settings</h1>

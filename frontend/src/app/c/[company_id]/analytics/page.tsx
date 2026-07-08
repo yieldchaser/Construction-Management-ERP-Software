@@ -1,7 +1,7 @@
 "use client";
 import { getApiHost } from "@/lib/api";
 
-import Link from "next/link";
+
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import PwaControls from "@/components/pwa/PwaControls";
@@ -349,41 +349,7 @@ export default function CompanyAnalyticsPage() {
   const burnLabels = data?.budget_burn_series.map((point) => point.label) ?? [];
 
   return (
-    <div className="flex min-h-screen bg-background text-foreground">
-      <aside className="w-64 shrink-0 border-r border-border-custom bg-card">
-        <div className="flex items-center gap-3 border-b border-border-custom p-6">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-tr bg-primary font-bold text-white">
-            S
-          </div>
-          <div>
-            <div className="text-sm font-bold text-white">SiteFlow</div>
-            <div className="text-[10px] uppercase tracking-[0.24em] text-muted">Executive Analytics</div>
-          </div>
-        </div>
-
-        <nav className="space-y-1 p-4">
-          <Link
-            href={`/c/${companyId}/dashboard`}
-            className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-muted transition-colors hover:bg-white/[0.03] hover:text-foreground"
-          >
-            &larr; Dashboard
-          </Link>
-          <div className="rounded-lg border border-primary/20 bg-primary/10 px-3 py-2 text-xs font-semibold text-primary">
-            Executive Analytics
-          </div>
-        </nav>
-
-        <div className="px-4 pb-4">
-          <div className="rounded-lg border border-border-custom bg-elevated p-4">
-            <div className="text-[10px] uppercase tracking-[0.24em] text-muted">Company Scope</div>
-            <div className="mt-1 text-sm font-semibold text-white">{data?.company_name ?? "Loading company..."}</div>
-            <div className="mt-2 text-xs text-muted">
-              {data ? `${data.project_count} projects aggregated into one command view` : "Waiting for KPI aggregation"}
-            </div>
-          </div>
-        </div>
-      </aside>
-
+    <div className="flex-1 flex flex-col overflow-hidden">
       <main className="flex-1 overflow-y-auto">
         <header className="flex flex-col gap-4 border-b border-border-custom bg-card px-6 py-5 lg:flex-row lg:items-end lg:justify-between">
           <div>

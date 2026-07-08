@@ -396,11 +396,11 @@ export default function LibraryHubPage() {
   };
 
   return (
-    <div className="flex-1 flex overflow-hidden">
-      {/* Sub-navigation Sidebar */}
-      <aside className="w-56 border-r border-border-custom bg-sidebar flex flex-col p-4 shrink-0">
-        <h2 className="text-xs font-bold text-muted uppercase tracking-widest px-3 mb-4">Libraries Hub</h2>
-        <nav className="space-y-1.5">
+    <div className="flex-1 flex flex-col overflow-hidden">
+      {/* Main Hub Area */}
+      <div className="flex-1 flex flex-col overflow-y-auto p-8 relative bg-background">
+        {/* Library sub-tab bar */}
+        <div className="-mx-8 px-8 pt-4 pb-2 mb-6 flex items-center gap-1 border-b border-border-custom bg-card overflow-x-auto shrink-0">
           {[
             { id: "party", label: "Party Library", icon: "👥" },
             { id: "asset-type", label: "Asset Type Library", icon: "🚜" },
@@ -417,21 +417,12 @@ export default function LibraryHubPage() {
                 setActiveTab(tab.id as LibraryType);
                 setSearchQuery("");
               }}
-              className={`w-full flex items-center gap-3 px-3 py-2 text-xs font-bold rounded-lg transition-all text-left cursor-pointer ${
-                activeTab === tab.id
-                  ? "bg-primary/10 text-primary border-l-2 border-primary font-medium"
-                  : "text-muted hover:text-foreground hover:bg-elevated"
-              }`}
+              className={`whitespace-nowrap px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${activeTab === tab.id ? "bg-primary/10 text-primary" : "text-muted hover:text-foreground hover:bg-elevated"}`}
             >
-              <span>{tab.icon}</span>
-              <span>{tab.label}</span>
+              <span className="mr-1.5">{tab.icon}</span>{tab.label}
             </button>
           ))}
-        </nav>
-      </aside>
-
-      {/* Main Hub Area */}
-      <div className="flex-1 flex flex-col overflow-y-auto p-8 relative bg-background">
+        </div>
         {/* Action Header */}
         <div className="flex justify-between items-center mb-6 shrink-0">
           <div>
