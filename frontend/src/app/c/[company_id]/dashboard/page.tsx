@@ -405,6 +405,7 @@ export default function DashboardPage() {
   const advPaid = financialData?.advance_paid ?? 12169221.0;
   const toPay = financialData?.to_pay ?? 12121221.0;
   const toReceive = financialData?.to_receive ?? 128788.0;
+  const advReceived = financialData?.advance_received ?? 0.0;
   const totalBalance = advPaid + toPay + toReceive;
 
   const advPaidPct = totalBalance > 0 ? advPaid / totalBalance : 0.5;
