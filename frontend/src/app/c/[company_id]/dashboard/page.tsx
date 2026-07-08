@@ -1245,31 +1245,66 @@ export default function DashboardPage() {
                     <div className="bg-card [.light-theme_&]:bg-white border border-border-custom [.light-theme_&]:border-zinc-200 rounded-lg p-5 flex flex-col justify-between transition-all">
                       <div className="space-y-4">
                         <h4 className="text-xs font-bold text-muted [.light-theme_&]:text-zinc-500 uppercase tracking-wider">Sales</h4>
-                        <div className="h-40 flex items-center justify-center rounded-md bg-transparent relative overflow-visible">
-                          {/* Bar Chart representing -121.21K */}
-                          <svg className="w-full h-full overflow-visible" viewBox="0 0 200 120">
-                            {/* Baseline (y=0) */}
-                            <line x1="20" y1="30" x2="180" y2="30" stroke="var(--border)" strokeWidth="1" className="[.light-theme_&]:stroke-zinc-200" />
-                            {/* Dashed gridlines */}
-                            <line x1="20" y1="80" x2="180" y2="80" stroke="var(--border)" strokeWidth="1" strokeDasharray="3" className="[.light-theme_&]:stroke-zinc-200" />
-                            
-                            {/* Axis numbers */}
-                            <text x="15" y="33" fill="#6b7280" fontSize="8" textAnchor="end">0</text>
-                            <text x="15" y="83" fill="#6b7280" fontSize="8" textAnchor="end">-150K</text>
-                            
-                            {/* Negative Bar extending downwards */}
-                            <rect x="85" y="30" width="30" height="50" fill="#26A69A" rx="2" className="transition-all hover:opacity-90" />
-                            
-                            {/* Value label */}
-                            <text x="100" y="93" fill="#26A69A" fontSize="9" fontWeight="bold" textAnchor="middle">-121.21K</text>
-                            {/* Month label */}
-                            <text x="100" y="112" fill="#6b7280" fontSize="8" textAnchor="middle" transform="rotate(-25 100 112)">Jul 2026</text>
-                          </svg>
-                        </div>
+                        {(() => {
+                          const series = financialData?.sales_series || [];
+                          const months = financialData?.chart_months || [];
+                          const hasData = series.length > 0 && series.some((v: number) => v !== 0);
+
+                          if (!hasData) {
+                            return (
+                              <div className="h-40 flex items-center justify-center bg-transparent">
+                                <span className="text-red-500 [.light-theme_&]:text-red-600 text-xs font-bold uppercase tracking-wider">No Data Available</span>
+                              </div>
+                            );
+                          }
+
+                          const absValues = series.map((v: number) => Math.abs(v));
+                          const maxVal = Math.max(...absValues, 1000);
+
+                          return (
+                            <div className="h-40 flex items-center justify-center bg-transparent relative overflow-visible">
+                              <svg className="w-full h-full overflow-visible" viewBox="0 0 200 120">
+                                <line x1="20" y1="40" x2="180" y2="40" stroke="var(--border)" strokeWidth="1" className="[.light-theme_&]:stroke-zinc-200" />
+                                <line x1="20" y1="90" x2="180" y2="90" stroke="var(--border)" strokeWidth="1" strokeDasharray="3" className="[.light-theme_&]:stroke-zinc-200" />
+                                <text x="15" y="43" fill="#6b7280" fontSize="8" textAnchor="end">0</text>
+                                <text x="15" y="93" fill="#6b7280" fontSize="8" textAnchor="end">-{maxVal >= 1000000 ? `${(maxVal/1000000).toFixed(1)}M` : `${Math.round(maxVal/1000)}K`}</text>
+
+                                {series.map((val: number, idx: number) => {
+                                  const x = series.length === 1 ? 85 : 45 + idx * 70;
+                                  const width = 30;
+                                  const ratio = Math.abs(val) / maxVal;
+                                  const height = ratio * 50;
+                                  const y = val < 0 ? 40 : 40 - height;
+
+                                  return (
+                                    <g key={idx}>
+                                      <rect x={x} y={y} width={width} height={height || 2} fill="#26A69A" rx="2" className="transition-all hover:opacity-90" />
+                                      <text x={x + 15} y={val < 0 ? y + height + 10 : y - 4} fill="#26A69A" fontSize="8" fontWeight="bold" textAnchor="middle">
+                                        {val === 0 ? "0" : val >= 1000000 || val <= -1000000 ? `${(val / 1000000).toFixed(2)}M` : `${(val / 1000).toFixed(1)}K`}
+                                      </text>
+                                      <text x={x + 15} y="112" fill="#6b7280" fontSize="7" textAnchor="middle" transform={`rotate(-15 ${x + 15} 112)`}>
+                                        {months[idx] || ""}
+                                      </text>
+                                    </g>
+                                  );
+                                })}
+                              </svg>
+                            </div>
+                          );
+                        })()}
                       </div>
                       <div className="border-t border-border-custom [.light-theme_&]:border-zinc-100 pt-3 flex justify-between items-center text-xs mt-4">
                         <span className="text-muted [.light-theme_&]:text-zinc-500 font-medium">Total Sales</span>
-                        <span className="font-bold text-red-500 [.light-theme_&]:text-red-700 bg-red-500/10 [.light-theme_&]:bg-[#FFEBEE] px-2 py-0.5 rounded">-121.21K</span>
+                        {(() => {
+                          const totalSales = financialData?.sales_series?.reduce((a: number, b: number) => a + b, 0) || 0;
+                          return (
+                            <span className={`font-bold px-2 py-0.5 rounded ${
+                              totalSales >= 0 ? "text-emerald-500 bg-emerald-500/10 [.light-theme_&]:bg-[#E8F5E9] text-emerald-600" : "text-red-500 bg-red-500/10 [.light-theme_&]:bg-[#FFEBEE] text-red-700"
+                            }`}>
+                              {totalSales === 0 ? "-" : totalSales.toLocaleString("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 })}
+                            </span>
+                          );
+                        })()}
                       </div>
                     </div>
 
@@ -1277,13 +1312,64 @@ export default function DashboardPage() {
                     <div className="bg-card [.light-theme_&]:bg-white border border-border-custom [.light-theme_&]:border-zinc-200 rounded-lg p-5 flex flex-col justify-between transition-all">
                       <div className="space-y-4">
                         <h4 className="text-xs font-bold text-muted [.light-theme_&]:text-zinc-500 uppercase tracking-wider">Expense</h4>
-                        <div className="h-40 flex items-center justify-center rounded-md bg-transparent">
-                          <span className="text-red-500 [.light-theme_&]:text-red-600 text-xs font-bold uppercase tracking-wider">No Data Available</span>
-                        </div>
+                        {(() => {
+                          const series = financialData?.expense_series || [];
+                          const months = financialData?.chart_months || [];
+                          const hasData = series.length > 0 && series.some((v: number) => v !== 0);
+
+                          if (!hasData) {
+                            return (
+                              <div className="h-40 flex items-center justify-center bg-transparent">
+                                <span className="text-red-500 [.light-theme_&]:text-red-600 text-xs font-bold uppercase tracking-wider">No Data Available</span>
+                              </div>
+                            );
+                          }
+
+                          const absValues = series.map((v: number) => Math.abs(v));
+                          const maxVal = Math.max(...absValues, 1000);
+
+                          return (
+                            <div className="h-40 flex items-center justify-center bg-transparent relative overflow-visible">
+                              <svg className="w-full h-full overflow-visible" viewBox="0 0 200 120">
+                                <line x1="20" y1="40" x2="180" y2="40" stroke="var(--border)" strokeWidth="1" className="[.light-theme_&]:stroke-zinc-200" />
+                                <line x1="20" y1="90" x2="180" y2="90" stroke="var(--border)" strokeWidth="1" strokeDasharray="3" className="[.light-theme_&]:stroke-zinc-200" />
+                                <text x="15" y="43" fill="#6b7280" fontSize="8" textAnchor="end">0</text>
+                                <text x="15" y="93" fill="#6b7280" fontSize="8" textAnchor="end">-{maxVal >= 1000000 ? `${(maxVal/1000000).toFixed(1)}M` : `${Math.round(maxVal/1000)}K`}</text>
+
+                                {series.map((val: number, idx: number) => {
+                                  const x = series.length === 1 ? 85 : 45 + idx * 70;
+                                  const width = 30;
+                                  const ratio = Math.abs(val) / maxVal;
+                                  const height = ratio * 50;
+                                  const y = 40;
+
+                                  return (
+                                    <g key={idx}>
+                                      <rect x={x} y={y} width={width} height={height || 2} fill="#EF5350" rx="2" className="transition-all hover:opacity-90" />
+                                      <text x={x + 15} y={y + height + 10} fill="#EF5350" fontSize="8" fontWeight="bold" textAnchor="middle">
+                                        {val === 0 ? "0" : `-${val >= 1000000 ? `${(val / 1000000).toFixed(2)}M` : `${(val / 1000).toFixed(1)}K`}`}
+                                      </text>
+                                      <text x={x + 15} y="112" fill="#6b7280" fontSize="7" textAnchor="middle" transform={`rotate(-15 ${x + 15} 112)`}>
+                                        {months[idx] || ""}
+                                      </text>
+                                    </g>
+                                  );
+                                })}
+                              </svg>
+                            </div>
+                          );
+                        })()}
                       </div>
                       <div className="border-t border-border-custom [.light-theme_&]:border-zinc-100 pt-3 flex justify-between items-center text-xs mt-4">
                         <span className="text-muted [.light-theme_&]:text-zinc-500 font-medium">Total Expense</span>
-                        <span className="font-bold text-muted [.light-theme_&]:text-zinc-500 bg-white/[0.02] [.light-theme_&]:bg-zinc-100 px-2 py-0.5 rounded">-</span>
+                        {(() => {
+                          const totalExpense = financialData?.expense_series?.reduce((a: number, b: number) => a + b, 0) || 0;
+                          return (
+                            <span className="font-bold text-red-500 [.light-theme_&]:text-red-700 bg-red-500/10 [.light-theme_&]:bg-[#FFEBEE] px-2 py-0.5 rounded">
+                              {totalExpense === 0 ? "-" : `-${totalExpense.toLocaleString("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 })}`}
+                            </span>
+                          );
+                        })()}
                       </div>
                     </div>
 
@@ -1291,31 +1377,67 @@ export default function DashboardPage() {
                     <div className="bg-card [.light-theme_&]:bg-white border border-border-custom [.light-theme_&]:border-zinc-200 rounded-lg p-5 flex flex-col justify-between transition-all">
                       <div className="space-y-4">
                         <h4 className="text-xs font-bold text-muted [.light-theme_&]:text-zinc-500 uppercase tracking-wider">Margin</h4>
-                        <div className="h-40 flex items-center justify-center rounded-md bg-transparent relative overflow-visible">
-                          {/* Bar Chart representing -121.21K */}
-                          <svg className="w-full h-full overflow-visible" viewBox="0 0 200 120">
-                            {/* Baseline (y=0) */}
-                            <line x1="20" y1="30" x2="180" y2="30" stroke="var(--border)" strokeWidth="1" className="[.light-theme_&]:stroke-zinc-200" />
-                            {/* Dashed gridlines */}
-                            <line x1="20" y1="80" x2="180" y2="80" stroke="var(--border)" strokeWidth="1" strokeDasharray="3" className="[.light-theme_&]:stroke-zinc-200" />
-                            
-                            {/* Axis numbers */}
-                            <text x="15" y="33" fill="#6b7280" fontSize="8" textAnchor="end">0</text>
-                            <text x="15" y="83" fill="#6b7280" fontSize="8" textAnchor="end">-150K</text>
-                            
-                            {/* Negative Bar extending downwards (since margin is negative) */}
-                            <rect x="85" y="30" width="30" height="50" fill="#EF5350" rx="2" className="transition-all hover:opacity-90" />
-                            
-                            {/* Value label */}
-                            <text x="100" y="93" fill="#EF5350" fontSize="9" fontWeight="bold" textAnchor="middle">-121.21K</text>
-                            {/* Month label */}
-                            <text x="100" y="112" fill="#6b7280" fontSize="8" textAnchor="middle" transform="rotate(-25 100 112)">Jul 2026</text>
-                          </svg>
-                        </div>
+                        {(() => {
+                          const series = financialData?.margin_series || [];
+                          const months = financialData?.chart_months || [];
+                          const hasData = series.length > 0 && series.some((v: number) => v !== 0);
+
+                          if (!hasData) {
+                            return (
+                              <div className="h-40 flex items-center justify-center bg-transparent">
+                                <span className="text-red-500 [.light-theme_&]:text-red-600 text-xs font-bold uppercase tracking-wider">No Data Available</span>
+                              </div>
+                            );
+                          }
+
+                          const absValues = series.map((v: number) => Math.abs(v));
+                          const maxVal = Math.max(...absValues, 1000);
+
+                          return (
+                            <div className="h-40 flex items-center justify-center bg-transparent relative overflow-visible">
+                              <svg className="w-full h-full overflow-visible" viewBox="0 0 200 120">
+                                <line x1="20" y1="40" x2="180" y2="40" stroke="var(--border)" strokeWidth="1" className="[.light-theme_&]:stroke-zinc-200" />
+                                <line x1="20" y1="90" x2="180" y2="90" stroke="var(--border)" strokeWidth="1" strokeDasharray="3" className="[.light-theme_&]:stroke-zinc-200" />
+                                <text x="15" y="43" fill="#6b7280" fontSize="8" textAnchor="end">0</text>
+                                <text x="15" y="93" fill="#6b7280" fontSize="8" textAnchor="end">-{maxVal >= 1000000 ? `${(maxVal/1000000).toFixed(1)}M` : `${Math.round(maxVal/1000)}K`}</text>
+
+                                {series.map((val: number, idx: number) => {
+                                  const x = series.length === 1 ? 85 : 45 + idx * 70;
+                                  const width = 30;
+                                  const ratio = Math.abs(val) / maxVal;
+                                  const height = ratio * 50;
+                                  const y = val < 0 ? 40 : 40 - height;
+                                  const color = val < 0 ? "#EF5350" : "#26A69A";
+
+                                  return (
+                                    <g key={idx}>
+                                      <rect x={x} y={y} width={width} height={height || 2} fill={color} rx="2" className="transition-all hover:opacity-90" />
+                                      <text x={x + 15} y={val < 0 ? y + height + 10 : y - 4} fill={color} fontSize="8" fontWeight="bold" textAnchor="middle">
+                                        {val === 0 ? "0" : val >= 1000000 || val <= -1000000 ? `${(val / 1000000).toFixed(2)}M` : `${(val / 1000).toFixed(1)}K`}
+                                      </text>
+                                      <text x={x + 15} y="112" fill="#6b7280" fontSize="7" textAnchor="middle" transform={`rotate(-15 ${x + 15} 112)`}>
+                                        {months[idx] || ""}
+                                      </text>
+                                    </g>
+                                  );
+                                })}
+                              </svg>
+                            </div>
+                          );
+                        })()}
                       </div>
                       <div className="border-t border-border-custom [.light-theme_&]:border-zinc-100 pt-3 flex justify-between items-center text-xs mt-4">
                         <span className="text-muted [.light-theme_&]:text-zinc-500 font-medium">Total Margin</span>
-                        <span className="font-bold text-red-500 [.light-theme_&]:text-red-700 bg-red-500/10 [.light-theme_&]:bg-[#FFEBEE] px-2 py-0.5 rounded">-121.21K</span>
+                        {(() => {
+                          const totalMargin = financialData?.margin_series?.reduce((a: number, b: number) => a + b, 0) || 0;
+                          return (
+                            <span className={`font-bold px-2 py-0.5 rounded ${
+                              totalMargin >= 0 ? "text-emerald-500 bg-emerald-500/10 [.light-theme_&]:bg-[#E8F5E9] text-emerald-600" : "text-red-500 bg-red-500/10 [.light-theme_&]:bg-[#FFEBEE] text-red-700"
+                            }`}>
+                              {totalMargin === 0 ? "-" : totalMargin.toLocaleString("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 })}
+                            </span>
+                          );
+                        })()}
                       </div>
                     </div>
                   </div>
