@@ -741,50 +741,24 @@ export default function DynamicReportViewPage() {
 
         {/* Filters + Action Header bar */}
         <div className="bg-sidebar border-b border-border-custom px-6 py-4 flex flex-col gap-4 shrink-0">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-            
-            {/* LEFT: Dynamic filters list */}
-            {meta.filters.length > 0 ? (
-              <div className="flex flex-wrap items-end gap-3 text-xs">
-                {meta.filters.map(filter => (
-                  <div key={filter.label} className="flex flex-col gap-1">
-                    <span className="text-[10px] text-muted uppercase font-bold">{filter.label}:</span>
-                    {filter.type === "select" ? (
-                      <select
-                        value={filterValues[filter.label] || "All"}
-                        onChange={e => handleFilterChange(filter.label, e.target.value)}
-                        className="bg-card border border-border-custom rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-primary min-w-[120px]"
-                      >
-                        {filter.options?.map(opt => (
-                          <option key={opt} value={opt}>{opt}</option>
-                        ))}
-                      </select>
-                    ) : (
-                      <input
-                        type="date"
-                        value={filterValues[filter.label] || ""}
-                        onChange={e => handleFilterChange(filter.label, e.target.value)}
-                        className="bg-card border border-border-custom rounded-lg px-2.5 py-1 text-xs text-white focus:outline-none focus:border-primary"
-                      />
-                    )}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-xs text-muted">Library schema viewer (no filter parameters)</div>
-            )}
+          
+          {/* Top Row: Info/Heading + Right Toolbar Actions */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="text-[10px] text-muted font-bold uppercase tracking-wider">
+              Spreadsheet View & Controls
+            </div>
 
-            {/* RIGHT: Export toolbar + Search bar */}
-            <div className="flex items-center gap-2 shrink-0">
-              <button onClick={handleRefresh} className="text-muted hover:text-foreground text-xs border border-border-custom rounded-lg px-3 py-1.5 transition-all">🔄 Refresh</button>
-              <button onClick={handleResetFilters} className="text-muted hover:text-foreground text-xs border border-border-custom rounded-lg px-3 py-1.5 transition-all">Filter</button>
-              <button onClick={handleSort} className="text-muted hover:text-foreground text-xs border border-border-custom rounded-lg px-3 py-1.5 transition-all">Sort</button>
+            {/* Actions Toolbar & Search Bar */}
+            <div className="flex flex-wrap items-center gap-2">
+              <button onClick={handleRefresh} className="text-muted hover:text-foreground text-xs border border-border-custom bg-card/20 rounded-lg px-3 py-1.5 transition-all">🔄 Refresh</button>
+              <button onClick={handleResetFilters} className="text-muted hover:text-foreground text-xs border border-border-custom bg-card/20 rounded-lg px-3 py-1.5 transition-all">Filter</button>
+              <button onClick={handleSort} className="text-muted hover:text-foreground text-xs border border-border-custom bg-card/20 rounded-lg px-3 py-1.5 transition-all">Sort</button>
               
               {/* Dynamic 4-option export dropdown button */}
               <div className="relative">
                 <button 
                   onClick={() => setShowExportDropdown(!showExportDropdown)}
-                  className="text-muted hover:text-primary text-xs border border-border-custom rounded-lg px-3 py-1.5 transition-all flex items-center gap-1"
+                  className="text-muted hover:text-primary text-xs border border-border-custom bg-card/20 rounded-lg px-3 py-1.5 transition-all flex items-center gap-1"
                   title="Export Options"
                 >
                   ⬆️ Export
@@ -810,8 +784,52 @@ export default function DynamicReportViewPage() {
                 <span className="absolute left-2.5 top-2 text-muted text-xs">🔍</span>
               </div>
             </div>
-
           </div>
+
+          {/* Bottom Row: Dynamic Filters Area */}
+          {meta.filters.length > 0 && (
+            <div className="border-t border-border-custom/50 pt-3">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] text-muted font-black uppercase tracking-wider">Report Filters</span>
+                {(Object.entries(filterValues).some(([label, val]) => {
+                  const def = meta.filters.find(f => f.label === label)?.type === "select" ? "All" : "";
+                  return val !== def;
+                }) || searchQuery !== "") && (
+                  <button 
+                    onClick={handleResetFilters}
+                    className="text-[9px] text-primary hover:underline font-bold"
+                  >
+                    Clear All Filters
+                  </button>
+                )}
+              </div>
+              <div className="flex flex-wrap items-end gap-3 text-xs">
+                {meta.filters.map(filter => (
+                  <div key={filter.label} className="flex flex-col gap-1">
+                    <span className="text-[10px] text-muted uppercase font-bold">{filter.label}:</span>
+                    {filter.type === "select" ? (
+                      <select
+                        value={filterValues[filter.label] || "All"}
+                        onChange={e => handleFilterChange(filter.label, e.target.value)}
+                        className="bg-card border border-border-custom rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-primary min-w-[130px]"
+                      >
+                        {filter.options?.map(opt => (
+                          <option key={opt} value={opt}>{opt}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <input
+                        type="date"
+                        value={filterValues[filter.label] || ""}
+                        onChange={e => handleFilterChange(filter.label, e.target.value)}
+                        className="bg-card border border-border-custom rounded-lg px-2.5 py-1 text-xs text-white focus:outline-none focus:border-primary"
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Dynamic Data Table or Visual Dashboard Charts */}
@@ -992,8 +1010,29 @@ export default function DynamicReportViewPage() {
                 <tbody>
                   {processedData.length === 0 ? (
                     <tr>
-                      <td colSpan={meta.columns.length + 1} className="text-center py-12 text-muted text-xs font-semibold">
-                        No data available for this report yet.
+                      <td colSpan={meta.columns.length + 1} className="py-16 text-center">
+                        <div className="sticky left-0 w-full flex flex-col items-center justify-center gap-3">
+                          <svg className="w-12 h-12 text-muted/30" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 13.5h3.86a2.25 2.25 0 012.008 1.24l.885 1.77a2.25 2.25 0 002.007 1.24h1.98a2.25 2.25 0 002.007-1.24l.885-1.77a2.25 2.25 0 012.007-1.24h3.86m-18 0h18m-18 0v-7.5A2.25 2.25 0 015.25 3h13.5A2.25 2.25 0 0121 5.25v7.5m-18 0v6a2.25 2.25 0 002.25 2.25h13.5A2.25 2.25 0 0021 18.75v-6" />
+                          </svg>
+                          <div className="flex flex-col gap-1">
+                            <span className="text-sm font-bold text-white tracking-wide">No data available for this report yet</span>
+                            <span className="text-[10px] text-muted max-w-[320px] mx-auto leading-relaxed">
+                              Try clearing active filters or check database records to populate this spreadsheet.
+                            </span>
+                          </div>
+                          {(Object.entries(filterValues).some(([label, val]) => {
+                            const def = meta.filters.find(f => f.label === label)?.type === "select" ? "All" : "";
+                            return val !== def;
+                          }) || searchQuery !== "") && (
+                            <button
+                              onClick={handleResetFilters}
+                              className="mt-2 px-3.5 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 rounded-lg text-[10px] font-bold transition-all"
+                            >
+                              Reset Active Filters
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ) : (
