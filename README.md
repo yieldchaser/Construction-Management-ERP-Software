@@ -279,6 +279,7 @@ SiteFlow is built from the ground up for strict multi-tenant isolation:
   ON bills (company_id, invoice_number)
   WHERE invoice_type = 'sale';
   ```
+* **Human-Readable Namespace Slugs**: Supports clean URLs (e.g., `/c/demo-construction`) rather than raw database UUIDs. A transparent client-side fetch interceptor resolves and maps these slugs on-the-fly to strict `uuid.UUID` primary keys, keeping URLs beautiful while maintaining structural integrity.
 
 ---
 
