@@ -1372,7 +1372,7 @@ export default function DashboardPage() {
                         <h4 className="text-xs font-bold text-muted [.light-theme_&]:text-zinc-500 uppercase tracking-wider">Sales</h4>
                         <div className="h-40 flex items-center justify-center rounded-md bg-transparent relative overflow-visible">
                           {/* Bar Chart representing -121.21K */}
-                          <svg className="w-full h-full" viewBox="0 0 200 120" className="overflow-visible">
+                          <svg className="w-full h-full overflow-visible" viewBox="0 0 200 120">
                             {/* Baseline (y=0) */}
                             <line x1="20" y1="30" x2="180" y2="30" stroke="var(--border)" strokeWidth="1" className="[.light-theme_&]:stroke-zinc-200" />
                             {/* Dashed gridlines */}
@@ -1418,7 +1418,7 @@ export default function DashboardPage() {
                         <h4 className="text-xs font-bold text-muted [.light-theme_&]:text-zinc-500 uppercase tracking-wider">Margin</h4>
                         <div className="h-40 flex items-center justify-center rounded-md bg-transparent relative overflow-visible">
                           {/* Bar Chart representing -121.21K */}
-                          <svg className="w-full h-full" viewBox="0 0 200 120" className="overflow-visible">
+                          <svg className="w-full h-full overflow-visible" viewBox="0 0 200 120">
                             {/* Baseline (y=0) */}
                             <line x1="20" y1="30" x2="180" y2="30" stroke="var(--border)" strokeWidth="1" className="[.light-theme_&]:stroke-zinc-200" />
                             {/* Dashed gridlines */}
