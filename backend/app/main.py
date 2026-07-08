@@ -198,14 +198,19 @@ app = FastAPI(
 def get_allowed_origins() -> list[str]:
     env_origins = os.getenv("FRONTEND_URL", "")
     origins = [o.strip() for o in env_origins.split(",") if o.strip()]
-    if origins:
-        return origins
-    return [
+    
+    default_origins = [
         "http://localhost:3000",
         "http://127.0.0.1:3000",
         "http://localhost:3001",
         "http://127.0.0.1:3001",
+        "https://construction-management-erp-softwar-ten.vercel.app",
+        "https://construction-management-erp-software.vercel.app"
     ]
+    
+    if origins:
+        return origins + default_origins
+    return default_origins
 
 ALLOWED_ORIGINS = get_allowed_origins()
 
