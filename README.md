@@ -3,8 +3,8 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/yieldchaser/Construction-Management-ERP-Software/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="MIT License" /></a>
-  <a href="https://construction-management-erp-softwar-ten.vercel.app"><img src="https://img.shields.io/badge/Live_Site-Vercel-success?style=flat-square&logo=vercel" alt="Live Site" /></a>
+  <a href="https://github.com/yieldchaser/siteflow-erp/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="MIT License" /></a>
+  <a href="https://siteflow-erp.vercel.app"><img src="https://img.shields.io/badge/Live_Site-Vercel-success?style=flat-square&logo=vercel" alt="Live Site" /></a>
   <a href="https://construction-erp-backend-73vm.onrender.com"><img src="https://img.shields.io/badge/Live_API-Render-009688?style=flat-square&logo=fastapi&logoColor=white" alt="Live API" /></a>
   <img src="https://img.shields.io/badge/Next.js-16_App_Router-black?style=flat-square&logo=next.js" alt="Next.js" />
   <img src="https://img.shields.io/badge/PostgreSQL-Supabase-3ECF8E?style=flat-square&logo=supabase&logoColor=white" alt="Supabase" />
@@ -209,7 +209,7 @@ SiteFlow features a state-of-the-art **flat canvas** with full support for light
 ## 📂 Project Structure
 
 ```
-Construction-Management-ERP-Software/
+siteflow-erp/
 ├── frontend/                 # Next.js (App Router) frontend + PWA shell
 ├── backend/                  # FastAPI backend (routers, models, calculators)
 │   └── tests/                # Integration & phase test suites
