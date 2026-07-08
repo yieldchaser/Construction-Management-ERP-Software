@@ -9,7 +9,8 @@ import { useProject } from "@/context/ProjectContext";
 export default function Sidebar() {
   const params = useParams();
   const pathname = usePathname();
-  const companyId = (params.company_id as string) || "demo-construction";
+  const rawCompanyId = params.company_id as string;
+  const companyId = rawCompanyId === "e0000000-0000-0000-0000-000000000000" ? "demo-construction" : (rawCompanyId || "demo-construction");
 
   const { activeProjectId, setActiveProjectId, projects, projectContext } = useProject();
 
