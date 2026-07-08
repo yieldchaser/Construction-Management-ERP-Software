@@ -4,169 +4,56 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
 import { getApiHost } from "@/lib/api";
-
-type ProjectContext = {
-  name: string;
-  code: string;
-};
-
-type ProjectRecord = {
-  id?: string;
-  name?: string;
-  project_name?: string;
-  code?: string;
-  project_code?: string;
-};
+import { useProject } from "@/context/ProjectContext";
 
 export default function Sidebar() {
   const params = useParams();
   const pathname = usePathname();
   const companyId = (params.company_id as string) || "e0000000-0000-0000-0000-000000000000";
 
-  const [companyName, setCompanyName] = useState("Loading Company...");
-  const [projectId, setProjectId] = useState("d0000000-0000-0000-0000-000000000001");
-  const [projectContext, setProjectContext] = useState<ProjectContext>({
-    name: "Project Context",
-    code: "Loading...",
-  });
+  const { activeProjectId, setActiveProjectId, projects, projectContext } = useProject();
 
+  const [companyName, setCompanyName] = useState("Loading Company...");
+
+  // Company name fetch (project context resolution now lives in ProjectContext).
   useEffect(() => {
     let isActive = true;
+    const cachedName = typeof window !== "undefined" ? localStorage.getItem("company_name") : null;
+    if (cachedName) {
+      setCompanyName(cachedName);
+      return;
+    }
 
-    const resolveProjectContext = async () => {
-      const cachedName = typeof window !== "undefined" ? localStorage.getItem("company_name") : null;
-      if (cachedName) {
-        setCompanyName(cachedName);
-      }
+    if (!companyId || companyId === "e0000000-0000-0000-0000-000000000000") {
+      setCompanyName("Demo Construction Ltd");
+      return;
+    }
 
-      const routeProjectId = (params.project_id as string) || "";
-      const storedProjectId = typeof window !== "undefined" ? localStorage.getItem("last_project_id") : null;
-      const nextProjectId = routeProjectId || storedProjectId || "";
-      const apiHost = getApiHost();
-      const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
-      const authHeaders = token ? { Authorization: `Bearer ${token}` } : undefined;
-
-      const applyProject = (project: ProjectRecord) => {
-        if (!isActive || !project) return;
-        const resolvedName = project.name || project.project_name || "Active Project";
-        const resolvedCode = project.code || project.project_code || "";
-        setProjectContext({
-          name: resolvedName,
-          code: resolvedCode,
-        });
-        setProjectId(project.id || nextProjectId || "d0000000-0000-0000-0000-000000000001");
-      };
-
-      if (routeProjectId && routeProjectId !== "d0000000-0000-0000-0000-000000000001") {
-        if (typeof window !== "undefined") {
-          localStorage.setItem("last_project_id", routeProjectId);
-        }
-        try {
-          const res = await fetch(`${apiHost}/apis/v3/planning/projects/${routeProjectId}`, {
-            headers: authHeaders,
-          });
-          if (res.ok) {
-            applyProject(await res.json());
-            return;
-          }
-        } catch {
-          // Fall through to the company project list.
-        }
-      } else if (storedProjectId) {
-        try {
-          const res = await fetch(`${apiHost}/apis/v3/planning/projects/${storedProjectId}`, {
-            headers: authHeaders,
-          });
-          if (res.ok) {
-            applyProject(await res.json());
-            return;
-          }
-        } catch {
-          // Fall through to the company project list.
-        }
-      }
-
-      try {
-        const res = await fetch(`${apiHost}/apis/v3/planning/projects?company_id=${companyId}`, {
-          headers: authHeaders,
-        });
-        if (!res.ok) {
-          if (!isActive) return;
-          setProjectContext({
-            name: "Project Context",
-            code: "Unavailable",
-          });
-          return;
-        }
-
-        const data: unknown = await res.json();
-        const payload = data as { data?: unknown; projects?: unknown };
-        const projects = Array.isArray(data)
-          ? (data as ProjectRecord[])
-          : Array.isArray(payload.data)
-            ? (payload.data as ProjectRecord[])
-            : Array.isArray(payload.projects)
-              ? (payload.projects as ProjectRecord[])
-              : [];
-        const firstProject = projects.find((project: ProjectRecord) => project?.id);
-        if (firstProject) {
-          if (typeof window !== "undefined") {
-            localStorage.setItem("last_project_id", firstProject.id ?? "");
-          }
-          applyProject(firstProject);
-        } else if (isActive) {
-          setProjectContext({
-            name: "Project Context",
-            code: "Unavailable",
-          });
-        }
-      } catch {
-        if (!isActive) return;
-        setProjectContext({
-          name: "Project Context",
-          code: "Unavailable",
-        });
-      }
-    };
-
-    const fetchCompany = async () => {
-      const cachedName = typeof window !== "undefined" ? localStorage.getItem("company_name") : null;
-      if (cachedName) {
-        setCompanyName(cachedName);
-        return;
-      }
-
-      if (!companyId || companyId === "e0000000-0000-0000-0000-000000000000") {
-        setCompanyName("Demo Construction Ltd");
-        return;
-      }
-
+    const load = async () => {
       try {
         const apiHost = getApiHost();
-        const token = localStorage.getItem("access_token");
+        const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
         const res = await fetch(`${apiHost}/apis/v3/settings/company/${companyId}`, {
           headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         });
         if (res.ok) {
           const data = await res.json();
           const resolvedCompanyName = data.name || "Demo Company Ltd";
-          setCompanyName(resolvedCompanyName);
-          localStorage.setItem("company_name", resolvedCompanyName);
-        } else {
+          if (isActive) setCompanyName(resolvedCompanyName);
+          if (typeof window !== "undefined") localStorage.setItem("company_name", resolvedCompanyName);
+        } else if (isActive) {
           setCompanyName("Demo Construction Ltd");
         }
       } catch {
-        setCompanyName("Demo Construction Ltd");
+        if (isActive) setCompanyName("Demo Construction Ltd");
       }
     };
-
-    fetchCompany();
-    resolveProjectContext();
+    load();
 
     return () => {
       isActive = false;
     };
-  }, [companyId, params.project_id]);
+  }, [companyId]);
 
   interface NavItem {
     label: string;
@@ -218,7 +105,7 @@ export default function Sidebar() {
     },
     {
       label: "Finance",
-      href: `/c/${companyId}/p/${projectId}/finance`,
+      href: `/c/${companyId}/d/finance`,
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -228,7 +115,7 @@ export default function Sidebar() {
     },
     {
       label: "Payroll",
-      href: `/c/${companyId}/p/${projectId}/hr`,
+      href: `/c/${companyId}/d/hr`,
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -238,7 +125,7 @@ export default function Sidebar() {
     },
     {
       label: "CRM",
-      href: `/c/${companyId}/p/${projectId}/crm`,
+      href: `/c/${companyId}/d/crm`,
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -293,17 +180,17 @@ export default function Sidebar() {
     <aside className="w-64 border-r border-border-custom bg-sidebar flex flex-col justify-between h-full shrink-0">
       <div className="flex flex-col overflow-y-auto flex-1">
         {/* Header */}
-          <div className="p-5 flex items-center gap-3 border-b border-border-custom">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary font-bold text-white text-sm">
-              S
-            </div>
-            <div className="min-w-0">
-              <span suppressHydrationWarning className="font-semibold text-sm text-foreground block truncate w-40">
-                {companyName}
-              </span>
-              <span className="text-[11px] text-muted uppercase tracking-wider font-medium">SiteFlow Workspace</span>
-            </div>
+        <div className="p-5 flex items-center gap-3 border-b border-border-custom">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary font-bold text-white text-sm">
+            S
           </div>
+          <div className="min-w-0">
+            <span suppressHydrationWarning className="font-semibold text-sm text-foreground block truncate w-40">
+              {companyName}
+            </span>
+            <span className="text-[11px] text-muted uppercase tracking-wider font-medium">SiteFlow Workspace</span>
+          </div>
+        </div>
 
         {/* Module Links */}
         <nav className="p-3 space-y-1 flex-1">
@@ -339,27 +226,40 @@ export default function Sidebar() {
         </nav>
       </div>
 
-      {/* Sidebar Footer Action buttons: MOM, To Do, Chat */}
+      {/* Sidebar Footer: Pinned Projects dropdown + MOM, To Do, Chat */}
       <div className="p-4 border-t border-border-custom bg-background/25">
-        {/* Company details */}
-        <div className="flex items-center gap-2.5 mb-4">
-          <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center font-bold text-xs text-white uppercase">
-            {projectContext.name.substring(0, 2)}
-          </div>
-          <div className="min-w-0">
-            <div className="text-xs font-semibold text-foreground truncate w-40">{projectContext.name}</div>
-            <div className="text-[10px] text-muted">
-              {projectContext.code ? `Code: ${projectContext.code}` : "Active Project Context"}
-            </div>
-          </div>
+        {/* Pinned Projects */}
+        <div className="mb-4">
+          <label className="block text-[10px] font-bold uppercase tracking-wider text-muted mb-1.5">
+            Pinned Projects
+          </label>
+          <select
+            value={activeProjectId}
+            onChange={(e) => setActiveProjectId(e.target.value)}
+            className="w-full rounded-md border border-border-custom bg-card px-2.5 py-2 text-xs text-foreground focus:outline-none focus:border-primary cursor-pointer"
+          >
+            {projects.length === 0 && (
+              <option value={activeProjectId}>
+                {projectContext.name && projectContext.name !== "Project Context"
+                  ? `${projectContext.name}${projectContext.code ? ` (${projectContext.code})` : ""}`
+                  : "Loading projects..."}
+              </option>
+            )}
+            {projects.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.project_name || p.name}
+                {p.project_code || p.code ? ` (${p.project_code || p.code})` : ""}
+              </option>
+            ))}
+          </select>
         </div>
 
         {/* MOM, To Do, Chat Grid */}
         <div className="grid grid-cols-3 gap-1">
           <Link
-            href={`/c/${companyId}/p/${projectId}/mom`}
+            href={`/c/${companyId}/d/mom`}
             className={`flex flex-col items-center justify-center py-2 border rounded-md text-[11px] font-medium transition-all ${
-              pathname.includes("/mom")
+              pathname.includes("/d/mom")
                 ? "bg-primary/15 border-primary text-primary"
                 : "bg-card hover:bg-elevated border-border-custom text-muted hover:text-foreground"
             }`}
@@ -379,9 +279,9 @@ export default function Sidebar() {
             <span className="mt-0.5">To Do</span>
           </Link>
           <Link
-            href={`/c/${companyId}/p/${projectId}/chat`}
+            href={`/c/${companyId}/d/chat`}
             className={`flex flex-col items-center justify-center py-2 border rounded-md text-[11px] font-medium transition-all ${
-              pathname.includes("/chat")
+              pathname.includes("/d/chat")
                 ? "bg-primary/15 border-primary text-primary"
                 : "bg-card hover:bg-elevated border-border-custom text-muted hover:text-foreground"
             }`}

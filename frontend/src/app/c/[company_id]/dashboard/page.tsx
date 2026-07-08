@@ -452,7 +452,7 @@ export default function DashboardPage() {
                 </li>
                 <li>
                   <Link
-                    href={`/c/${companyId}/p/${activeProject}/budgeting/boq`}
+                    href={`/c/${companyId}/d/budgeting/boq`}
                     className="flex items-center gap-2.5 px-3 py-2 text-xs rounded-lg text-muted hover:text-foreground hover:bg-elevated transition-all"
                   >
                     <span>📑</span> BOQ Spreadsheet
@@ -460,7 +460,7 @@ export default function DashboardPage() {
                 </li>
                 <li>
                   <Link
-                    href={`/c/${companyId}/p/${activeProject}/crm`}
+                    href={`/c/${companyId}/d/crm`}
                     className="flex items-center gap-2.5 px-3 py-2 text-xs rounded-lg text-muted hover:text-foreground hover:bg-elevated transition-all"
                   >
                     <span>🤝</span> CRM & Leads
@@ -468,7 +468,7 @@ export default function DashboardPage() {
                 </li>
                 <li>
                   <Link
-                    href={`/c/${companyId}/p/${activeProject}/planning/gantt`}
+                    href={`/c/${companyId}/d/planning/gantt`}
                     className="flex items-center gap-2.5 px-3 py-2 text-xs rounded-lg text-muted hover:text-foreground hover:bg-elevated transition-all"
                   >
                     <span>📅</span> WBS Gantt Timeline
@@ -484,7 +484,7 @@ export default function DashboardPage() {
               <ul className="space-y-1">
                 <li>
                   <Link
-                    href={`/c/${companyId}/p/${activeProject}/dpr`}
+                    href={`/c/${companyId}/d/dpr`}
                     className="flex items-center gap-2.5 px-3 py-2 text-xs rounded-lg text-muted hover:text-foreground hover:bg-elevated transition-all"
                   >
                     <span>👷</span> Daily Progress (DPR)
@@ -492,7 +492,7 @@ export default function DashboardPage() {
                 </li>
                 <li>
                   <Link
-                    href={`/c/${companyId}/p/${activeProject}/procurement`}
+                    href={`/c/${companyId}/d/procurement`}
                     className="flex items-center gap-2.5 px-3 py-2 text-xs rounded-lg text-muted hover:text-foreground hover:bg-elevated transition-all"
                   >
                     <span>🛒</span> Procurement & RFQ
@@ -500,7 +500,7 @@ export default function DashboardPage() {
                 </li>
                 <li>
                   <Link
-                    href={`/c/${companyId}/p/${activeProject}/production`}
+                    href={`/c/${companyId}/d/production`}
                     className="flex items-center gap-2.5 px-3 py-2 text-xs rounded-lg text-muted hover:text-foreground hover:bg-elevated transition-all"
                   >
                     <span>🏭</span> Production Management
@@ -508,7 +508,7 @@ export default function DashboardPage() {
                 </li>
                 <li>
                   <Link
-                    href={`/c/${companyId}/p/${activeProject}/attendance`}
+                    href={`/c/${companyId}/d/attendance`}
                     className="flex items-center gap-2.5 px-3 py-2 text-xs rounded-lg text-muted hover:text-foreground hover:bg-elevated transition-all"
                   >
                     <span>📍</span> Attendance & Payroll
@@ -516,7 +516,7 @@ export default function DashboardPage() {
                 </li>
                 <li>
                   <Link
-                    href={`/c/${companyId}/p/${activeProject}/drawings`}
+                    href={`/c/${companyId}/d/drawings`}
                     className="flex items-center gap-2.5 px-3 py-2 text-xs rounded-lg text-muted hover:text-foreground hover:bg-elevated transition-all"
                   >
                     <span>📐</span> Drawings & Revisions
@@ -524,7 +524,7 @@ export default function DashboardPage() {
                 </li>
                 <li>
                   <Link
-                    href={`/c/${companyId}/p/${activeProject}/hr`}
+                    href={`/c/${companyId}/d/hr`}
                     className="flex items-center gap-2.5 px-3 py-2 text-xs rounded-lg text-muted hover:text-foreground hover:bg-elevated transition-all"
                   >
                     <span>👷</span> HR & Payroll
@@ -532,7 +532,7 @@ export default function DashboardPage() {
                 </li>
                 <li>
                   <Link
-                    href={`/c/${companyId}/p/${activeProject}/quality`}
+                    href={`/c/${companyId}/d/quality`}
                     className="flex items-center gap-2.5 px-3 py-2 text-xs rounded-lg text-muted hover:text-foreground hover:bg-elevated transition-all"
                   >
                     <span>🛡️</span> Quality &amp; NCR
@@ -548,7 +548,7 @@ export default function DashboardPage() {
               <ul className="space-y-1">
                 <li>
                   <Link
-                    href={`/c/${companyId}/p/${activeProject}/reports`}
+                    href={`/c/${companyId}/d/reports`}
                     className="flex items-center gap-2.5 px-3 py-2 text-xs rounded-lg text-muted hover:text-foreground hover:bg-elevated transition-all"
                   >
                     <span>📊</span> Progress Reports
@@ -556,7 +556,7 @@ export default function DashboardPage() {
                 </li>
                 <li>
                   <Link
-                    href={`/c/${companyId}/p/${activeProject}/reports/calculators`}
+                    href={`/c/${companyId}/d/reports/calculators`}
                     className="flex items-center gap-2.5 px-3 py-2 text-xs rounded-lg text-muted hover:text-foreground hover:bg-elevated transition-all"
                   >
                     <span>🔩</span> Construction Calculators
@@ -572,7 +572,7 @@ export default function DashboardPage() {
               <ul className="space-y-1">
                 <li>
                   <Link
-                    href={`/c/${companyId}/p/${activeProject}/equipment`}
+                    href={`/c/${companyId}/d/equipment`}
                     className="flex items-center gap-2.5 px-3 py-2 text-xs rounded-lg text-muted hover:text-foreground hover:bg-elevated transition-all"
                   >
                     <span>🚜</span> Equipment Tracking
@@ -588,7 +588,7 @@ export default function DashboardPage() {
               <ul className="space-y-1">
                 <li>
                   <Link
-                    href={`/c/${companyId}/p/${activeProject}/safety`}
+                    href={`/c/${companyId}/d/safety`}
                     className="flex items-center gap-2.5 px-3 py-2 text-xs rounded-lg text-muted hover:text-foreground hover:bg-elevated transition-all"
                   >
                     <span>🦺</span> HSE / Incidents
@@ -604,7 +604,7 @@ export default function DashboardPage() {
               <ul className="space-y-1">
                 <li>
                   <Link
-                    href={`/c/${companyId}/p/${activeProject}/mom`}
+                    href={`/c/${companyId}/d/mom`}
                     className="flex items-center gap-2.5 px-3 py-2 text-xs rounded-lg text-muted hover:text-foreground hover:bg-elevated transition-all"
                   >
                     <span>📝</span> Minutes of Meeting
@@ -636,7 +636,7 @@ export default function DashboardPage() {
               <ul className="space-y-1">
                 <li>
                   <Link
-                    href={`/c/${companyId}/p/${activeProject}/finance`}
+                    href={`/c/${companyId}/d/finance`}
                     className="flex items-center gap-2.5 px-3 py-2 text-xs rounded-lg text-muted hover:text-foreground hover:bg-elevated transition-all"
                   >
                     <span>💵</span> Finance & Ledger
@@ -644,7 +644,7 @@ export default function DashboardPage() {
                 </li>
                 <li>
                   <Link
-                    href={`/c/${companyId}/p/${activeProject}/billing`}
+                    href={`/c/${companyId}/d/billing`}
                     className="flex items-center gap-2.5 px-3 py-2 text-xs rounded-lg text-muted hover:text-foreground hover:bg-elevated transition-all"
                   >
                     <span>🧾</span> Work Orders & RA Bills

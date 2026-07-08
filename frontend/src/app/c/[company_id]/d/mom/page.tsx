@@ -1,0 +1,375 @@
+"use client";
+import { getApiHost } from "@/lib/api";
+import React, { useState, useEffect } from "react";
+import Link from "next/link";
+import { useProject } from "@/context/ProjectContext";
+import { useParams } from "next/navigation";
+
+// ─── Types ───────────────────────────────────────────────────────────────────
+
+interface MoM {
+  id: string;
+  company_id: string;
+  project_id: string | null;
+  type: "Regular" | "Review" | "Client Meeting" | "Internal";
+  status: "Open" | "Closed" | "Action Pending";
+  attendees: string[];
+  notes: string | null;
+  created_by: string | null;
+  created_at: string | null;
+}
+
+interface ProjectOption {
+  id: string;
+  name: string;
+}
+
+const MOM_TYPES = ["Regular", "Review", "Client Meeting", "Internal"] as const;
+const MOM_STATUSES = ["Open", "Closed", "Action Pending"] as const;
+
+const statusColors: Record<string, string> = {
+  Open: "bg-red-500/10 text-red-400 border-red-500/20",
+  "Action Pending": "bg-yellow-500/10 text-yellow-400 border-yellow-500/20",
+  Closed: "bg-green-500/10 text-green-400 border-green-500/20",
+};
+
+const badge = (label: string, cls: string) => (
+  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${cls}`}>
+    {label}
+  </span>
+);
+
+// ─── Component ────────────────────────────────────────────────────────────────
+
+export default function MoMPage() {
+  const params = useParams();
+  const companyId = (params?.company_id as string) || "e0000000-0000-0000-0000-000000000000";
+  const { activeProjectId } = useProject();
+  const projectId = activeProjectId || "d0000000-0000-0000-0000-000000000001";
+
+  const [moms, setMoms] = useState<MoM[]>([]);
+  const [projects, setProjects] = useState<ProjectOption[]>([]);
+  const [isOffline, setIsOffline] = useState(false);
+
+  const [filterDate, setFilterDate] = useState("");
+  const [filterAttendee, setFilterAttendee] = useState("");
+  const [filterProject, setFilterProject] = useState("all");
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [filterType, setFilterType] = useState("all");
+
+  const [showForm, setShowForm] = useState(false);
+  const [selectedMom, setSelectedMom] = useState<MoM | null>(null);
+
+  const [form, setForm] = useState({
+    project_id: projectId,
+    type: "Regular" as typeof MOM_TYPES[number],
+    status: "Open" as typeof MOM_STATUSES[number],
+    attendees: "",
+    notes: "",
+    created_by: "",
+  });
+
+  const loadProjects = async () => {
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/projects?company_id=${companyId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setProjects(data.map((p: any) => ({ id: p.id, name: p.name })));
+      }
+    } catch (e) {
+      console.error("Failed to fetch projects", e);
+    }
+  };
+
+  const loadMoms = async () => {
+    const params2 = new URLSearchParams();
+    if (filterProject !== "all") params2.set("project_id", filterProject);
+    if (filterStatus !== "all") params2.set("status", filterStatus);
+    if (filterType !== "all") params2.set("type", filterType);
+    if (filterAttendee.trim()) params2.set("attendee", filterAttendee.trim());
+    if (filterDate) params2.set("date", filterDate);
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/mom/${companyId}?${params2.toString()}`);
+      if (res.ok) {
+        setMoms(await res.json());
+        setIsOffline(false);
+      } else {
+        throw new Error(`HTTP ${res.status}`);
+      }
+    } catch (e) {
+      console.error("Failed to fetch MOMs", e);
+      setIsOffline(true);
+    }
+  };
+
+
+  useEffect(() => {
+    loadProjects();
+  }, [companyId]);
+
+  useEffect(() => {
+    loadMoms();
+  }, [companyId, filterProject, filterStatus, filterType, filterAttendee, filterDate]);
+
+  const projectName = (id: string | null) => {
+    if (!id) return "—";
+    const p = projects.find((x) => x.id === id);
+    return p ? p.name : id.slice(0, 8);
+  };
+
+  const resetForm = () => {
+    setForm({
+      project_id: projectId,
+      type: "Regular",
+      status: "Open",
+      attendees: "",
+      notes: "",
+      created_by: "",
+    });
+  };
+
+  const openCreate = () => {
+    resetForm();
+    setSelectedMom(null);
+    setShowForm(true);
+  };
+
+  const openEdit = (m: MoM) => {
+    setSelectedMom(m);
+    setForm({
+      project_id: m.project_id || projectId,
+      type: m.type,
+      status: m.status,
+      attendees: (m.attendees || []).join(", "),
+      notes: m.notes || "",
+      created_by: m.created_by || "",
+    });
+    setShowForm(true);
+  };
+
+  const handleSave = async () => {
+    const attendeesList = form.attendees
+      .split(",")
+      .map((a) => a.trim())
+      .filter(Boolean);
+    const body = {
+      project_id: form.project_id,
+      type: form.type,
+      status: form.status,
+      attendees: attendeesList,
+      notes: form.notes || null,
+      created_by: form.created_by || null,
+    };
+    try {
+      const url = selectedMom
+        ? `${getApiHost()}/apis/v3/mom/${companyId}/${selectedMom.id}`
+        : `${getApiHost()}/apis/v3/mom/${companyId}`;
+      const res = await fetch(url, {
+        method: selectedMom ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (res.ok) {
+        setShowForm(false);
+        setSelectedMom(null);
+        loadMoms();
+      }
+    } catch (e) {
+      console.error("Failed to save MOM", e);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Delete this MOM record?")) return;
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/mom/${companyId}/${id}`, {
+        method: "DELETE",
+      });
+      if (res.ok) loadMoms();
+    } catch (e) {
+      console.error("Failed to delete MOM", e);
+    }
+  };
+
+  const inputCls = "w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none focus:border-secondary font-semibold";
+
+  return (
+    <div className="flex-1 flex flex-col overflow-hidden">
+      {/* Sidebar */}
+      
+
+      {/* Main */}
+      <main className="flex-1 flex flex-col overflow-hidden">
+        <header className="h-14 border-b border-border-custom px-6 flex items-center justify-between bg-card shrink-0">
+          <h1 className="text-sm font-bold text-white uppercase tracking-widest">Minutes of Meeting</h1>
+          <button onClick={openCreate}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-white text-xs font-bold hover:bg-primary/90 transition-all cursor-pointer">
+            + New MOM
+          </button>
+        </header>
+
+        {isOffline && (
+          <div className="px-6 py-2.5 bg-amber-500/10 border-b border-amber-500/20 text-amber-400 text-xs">
+            Backend connection unavailable — MOM list could not be loaded.
+          </div>
+        )}
+
+        <div className="flex-1 overflow-y-auto p-6 space-y-4">
+          {/* Filters */}
+          <div className="rounded-md border border-border-custom bg-card p-4">
+            <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between mb-3">
+              <div>
+                <h3 className="text-xs font-bold text-muted uppercase tracking-wider">MOM Register</h3>
+                <p className="text-[10px] text-muted mt-1">Filter minutes of meeting records by date, attendee, or project.</p>
+              </div>
+              <div className="text-[10px] text-muted font-medium">{moms.length} record{moms.length === 1 ? "" : "s"} shown</div>
+            </div>
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
+              <div className="space-y-1">
+                <label className="text-[10px] uppercase font-bold text-muted tracking-wider">Date</label>
+                <input type="date" value={filterDate} onChange={(e) => setFilterDate(e.target.value)}
+                  className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-xs text-white" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] uppercase font-bold text-muted tracking-wider">Attendee</label>
+                <input value={filterAttendee} onChange={(e) => setFilterAttendee(e.target.value)}
+                  placeholder="Attendee name..."
+                  className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-xs text-white placeholder:text-muted" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] uppercase font-bold text-muted tracking-wider">Project</label>
+                <select value={filterProject} onChange={(e) => setFilterProject(e.target.value)}
+                  className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-xs text-white">
+                  <option value="all">All Projects</option>
+                  {projects.map((p) => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] uppercase font-bold text-muted tracking-wider">Status</label>
+                <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}
+                  className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-xs text-white">
+                  <option value="all">All Statuses</option>
+                  {MOM_STATUSES.map((s) => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Table */}
+          <div className="bg-card border border-border-custom rounded-md overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs text-left">
+                <thead className="bg-elevated border-b border-border-custom">
+                  <tr>
+                    <th className="px-5 py-3 font-semibold">Attendee(s)</th>
+                    <th className="px-5 py-3 font-semibold">Project</th>
+                    <th className="px-5 py-3 font-semibold">Type</th>
+                    <th className="px-5 py-3 font-semibold">Status</th>
+                    <th className="px-5 py-3 font-semibold">Notes</th>
+                    <th className="px-5 py-3 font-semibold text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {moms.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="px-5 py-10 text-center text-muted">No MOM records match the current filters.</td>
+                    </tr>
+                  ) : (
+                    moms.map((m) => (
+                      <tr key={m.id} className="border-b border-white/[0.03] hover:bg-white/[0.015] transition-all">
+                        <td className="px-5 py-3 font-bold text-white">{(m.attendees || []).join(", ") || "—"}</td>
+                        <td className="px-5 py-3 text-zinc-200">{projectName(m.project_id)}</td>
+                        <td className="px-5 py-3 text-muted">{m.type}</td>
+                        <td className="px-5 py-3">{badge(m.status, statusColors[m.status])}</td>
+                        <td className="px-5 py-3 text-muted max-w-xs truncate">{m.notes || "—"}</td>
+                        <td className="px-5 py-3 text-right space-x-2">
+                          <button onClick={() => openEdit(m)}
+                            className="px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-[10px] font-bold border border-primary/20 hover:bg-primary/20 cursor-pointer">
+                            Edit
+                          </button>
+                          <button onClick={() => handleDelete(m.id)}
+                            className="px-3 py-1.5 rounded-lg bg-red-500/10 text-red-400 text-[10px] font-bold border border-red-500/20 hover:bg-red-500/20 cursor-pointer">
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      {/* Modal */}
+      {showForm && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-card border border-border-custom rounded-lg w-full max-w-md rounded-md p-6 space-y-4 text-left">
+            <div>
+              <h3 className="text-sm font-extrabold text-white">{selectedMom ? "Edit MOM" : "New Minutes of Meeting"}</h3>
+              <p className="text-xs text-muted mt-1">Capture attendees, notes, and meeting status.</p>
+            </div>
+            <div className="space-y-3">
+              <div>
+                <label className="text-[10px] uppercase font-bold text-muted block mb-1">Attendees</label>
+                <input type="text" placeholder="Comma-separated names"
+                  value={form.attendees} onChange={(e) => setForm(prev => ({ ...prev, attendees: e.target.value }))}
+                  className={inputCls} />
+              </div>
+              <div>
+                <label className="text-[10px] uppercase font-bold text-muted block mb-1">Project</label>
+                <select value={form.project_id} onChange={(e) => setForm(prev => ({ ...prev, project_id: e.target.value }))}
+                  className={inputCls}>
+                  {projects.map((p) => (
+                    <option key={p.id} value={p.id} className="bg-card text-white">{p.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[10px] uppercase font-bold text-muted block mb-1">Type</label>
+                  <select value={form.type} onChange={(e) => setForm(prev => ({ ...prev, type: e.target.value as any }))}
+                    className={inputCls}>
+                    {MOM_TYPES.map((t) => (
+                      <option key={t} value={t}>{t}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-[10px] uppercase font-bold text-muted block mb-1">Status</label>
+                  <select value={form.status} onChange={(e) => setForm(prev => ({ ...prev, status: e.target.value as any }))}
+                    className={inputCls}>
+                    {MOM_STATUSES.map((s) => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="text-[10px] uppercase font-bold text-muted block mb-1">Created By</label>
+                <input type="text" placeholder="Recorder name"
+                  value={form.created_by} onChange={(e) => setForm(prev => ({ ...prev, created_by: e.target.value }))}
+                  className={inputCls} />
+              </div>
+              <div>
+                <label className="text-[10px] uppercase font-bold text-muted block mb-1">Notes</label>
+                <textarea placeholder="Meeting notes and action items..."
+                  value={form.notes} onChange={(e) => setForm(prev => ({ ...prev, notes: e.target.value }))}
+                  rows={4} className={inputCls} />
+              </div>
+            </div>
+            <div className="flex gap-3 justify-end pt-2">
+              <button onClick={() => { setShowForm(false); setSelectedMom(null); }} className="px-4 py-2 rounded-md border border-border-custom text-xs font-bold hover:bg-white/[0.05] cursor-pointer">Cancel</button>
+              <button onClick={handleSave} className="bg-primary hover:opacity-90 text-white px-5 py-2 rounded-md text-xs font-bold cursor-pointer">Save MOM</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

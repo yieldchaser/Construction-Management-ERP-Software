@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { getApiHost } from "@/lib/api";
+import { useProject } from "@/context/ProjectContext";
 
 interface Project {
   id: string;
@@ -109,6 +110,7 @@ const extractProjects = (data: unknown): Project[] => {
 export default function ProjectsHomePage() {
   const params = useParams();
   const companyId = params.company_id as string;
+  const { setActiveProjectId } = useProject();
   const accessToken = typeof window !== "undefined" ? localStorage.getItem("access_token") : "";
 
   const [projects, setProjects] = useState<Project[]>([]);
@@ -522,7 +524,7 @@ export default function ProjectsHomePage() {
                 filteredProjects.map((p) => (
                   <tr key={p.id} className="hover:bg-elevated/20 transition-colors">
                     <td className="px-6 py-4">
-                      <Link href={`/c/${companyId}/p/${p.id}/planning/gantt`} className="text-foreground hover:text-primary font-medium transition-colors text-sm">
+                      <Link href={`/c/${companyId}/d/planning/gantt`} onClick={() => setActiveProjectId(p.id)} className="text-foreground hover:text-primary font-medium transition-colors text-sm">
                         {getProjectName(p)}
                       </Link>
                       <span className="block text-xs text-muted mt-1 uppercase tracking-wider font-normal">
