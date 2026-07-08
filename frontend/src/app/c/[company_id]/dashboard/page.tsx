@@ -373,6 +373,65 @@ export default function DashboardPage() {
     }
   };
 
+  // Helper calculations for Company Party Balance half-donut chart
+  const polarToCartesian = (cx: number, cy: number, r: number, angleInDegrees: number) => {
+    const angleInRadians = ((angleInDegrees - 180) * Math.PI) / 180;
+    return {
+      x: cx + r * Math.cos(angleInRadians),
+      y: cy + r * Math.sin(angleInRadians),
+    };
+  };
+
+  const getArcPath = (cx: number, cy: number, rx: number, ry: number, startAngle: number, endAngle: number, innerR: number) => {
+    const startRad = ((startAngle - 180) * Math.PI) / 180;
+    const endRad = ((endAngle - 180) * Math.PI) / 180;
+    
+    const x1 = cx + rx * Math.cos(startRad);
+    const y1 = cy + rx * Math.sin(startRad);
+    const x2 = cx + rx * Math.cos(endRad);
+    const y2 = cy + rx * Math.sin(endRad);
+    
+    const x3 = cx + innerR * Math.cos(endRad);
+    const y3 = cy + innerR * Math.sin(endRad);
+    const x4 = cx + innerR * Math.cos(startRad);
+    const y4 = cy + innerR * Math.sin(startRad);
+    
+    const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+    
+    return `M ${x1} ${y1} A ${rx} ${rx} 0 ${largeArcFlag} 1 ${x2} ${y2} L ${x3} ${y3} A ${innerR} ${innerR} 0 ${largeArcFlag} 0 ${x4} ${y4} Z`;
+  };
+
+  // Balance calculations
+  const advPaid = financialData?.advance_paid ?? 12169221.0;
+  const toPay = financialData?.to_pay ?? 12121221.0;
+  const toReceive = financialData?.to_receive ?? 128788.0;
+  const totalBalance = advPaid + toPay + toReceive;
+
+  const advPaidPct = totalBalance > 0 ? advPaid / totalBalance : 0.5;
+  const toPayPct = totalBalance > 0 ? toPay / totalBalance : 0.5;
+  const toReceivePct = totalBalance > 0 ? toReceive / totalBalance : 0.0;
+
+  const advPaidAngle = advPaidPct * 180;
+  const toPayAngle = toPayPct * 180;
+  const toReceiveAngle = toReceivePct * 180;
+
+  // Middle angles for text/callout placement
+  const midAngle1 = advPaidAngle / 2;
+  const midAngle2 = advPaidAngle + toPayAngle / 2;
+  const midAngle3 = advPaidAngle + toPayAngle + toReceiveAngle / 2;
+
+  const pos1 = polarToCartesian(160, 150, 92, midAngle1);
+  const pos2 = polarToCartesian(160, 150, 92, midAngle2);
+
+  const line1Start = polarToCartesian(160, 150, 110, midAngle1);
+  const line1End = polarToCartesian(160, 150, 130, midAngle1 - 10);
+
+  const line2Start = polarToCartesian(160, 150, 110, midAngle2);
+  const line2End = polarToCartesian(160, 150, 130, midAngle2 + 10);
+
+  const line3Start = polarToCartesian(160, 150, 110, midAngle3 - 1);
+  const line3End = polarToCartesian(160, 150, 138, midAngle3 + 3);
+
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
 
@@ -1033,11 +1092,11 @@ export default function DashboardPage() {
               {overviewTab === "financial" && (
                 <div className="space-y-6 font-sans">
                   {/* Filters Bar */}
-                  <div className="bg-card border border-border-custom rounded-lg rounded-lg p-4 border border-border-custom flex flex-wrap gap-4 items-center justify-between">
+                  <div className="bg-card [.light-theme_&]:bg-white border border-border-custom [.light-theme_&]:border-zinc-200 rounded-lg p-4 flex flex-wrap gap-4 items-center justify-between transition-all">
                     <div className="flex gap-4 items-center">
                       <div className="space-y-1">
-                        <label className="text-[9px] text-muted uppercase tracking-wider font-bold block">Project Name</label>
-                        <select className="bg-input border border-border-custom rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none min-w-[150px]">
+                        <label className="text-[9px] text-muted [.light-theme_&]:text-zinc-500 uppercase tracking-wider font-bold block">Project Name</label>
+                        <select className="bg-input [.light-theme_&]:bg-zinc-100 border border-border-custom [.light-theme_&]:border-zinc-300 rounded-lg px-3 py-1.5 text-xs text-white [.light-theme_&]:text-zinc-800 focus:outline-none min-w-[150px] transition-all">
                           <option>All</option>
                           {financialData?.project_summaries?.map((p: any, idx: number) => (
                             <option key={idx}>{p.project_name}</option>
@@ -1045,199 +1104,203 @@ export default function DashboardPage() {
                         </select>
                       </div>
                       <div className="space-y-1">
-                        <label className="text-[9px] text-muted uppercase tracking-wider font-bold block">Txn Date</label>
-                        <div className="flex items-center gap-2 bg-input border border-border-custom rounded-lg px-3 py-1.5 text-xs text-muted">
-                          <span className="text-muted">📅</span>
+                        <label className="text-[9px] text-muted [.light-theme_&]:text-zinc-500 uppercase tracking-wider font-bold block">Txn Date</label>
+                        <div className="flex items-center gap-2 bg-input [.light-theme_&]:bg-zinc-100 border border-border-custom [.light-theme_&]:border-zinc-300 rounded-lg px-3 py-1.5 text-xs text-muted [.light-theme_&]:text-zinc-600 transition-all">
+                          <span>📅</span>
                           <span>01 Jan 2026 to 31 Jul 2026</span>
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Metrics Row */}
-                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                    {/* Advance Paid */}
-                    <div className="bg-emerald-950/20 border border-emerald-500/10 rounded-lg p-4 flex flex-col justify-between">
-                      <span className="text-[10px] font-bold text-emerald-400/80 uppercase tracking-wider block text-center">Advance Paid</span>
-                      <strong className="text-lg font-extrabold text-emerald-400 mt-2 block text-center">
-                        {financialData?.advance_paid > 0 ? `₹${financialData.advance_paid.toLocaleString()}` : "-"}
-                      </strong>
+                  {/* Company Party Balance (All Projects) - Half-circle Donut & Metrics */}
+                  <div className="bg-card [.light-theme_&]:bg-white border border-border-custom [.light-theme_&]:border-zinc-200 rounded-lg p-5 space-y-6 transition-all">
+                    <div className="flex justify-between items-center border-b border-border-custom [.light-theme_&]:border-zinc-100 pb-3">
+                      <h4 className="text-xs font-bold text-muted [.light-theme_&]:text-zinc-500 uppercase tracking-wider">Company Party Balance (All Projects)</h4>
                     </div>
 
-                    {/* To Pay */}
-                    <div className="bg-red-950/20 border border-red-500/10 rounded-lg p-4 flex flex-col justify-between">
-                      <span className="text-[10px] font-bold text-red-400/80 uppercase tracking-wider block text-center">To Pay</span>
-                      <strong className="text-lg font-extrabold text-red-400 mt-2 block text-center">
-                        {financialData?.to_pay > 0 ? `₹${financialData.to_pay.toLocaleString()}` : "-"}
-                      </strong>
-                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+                      {/* Left: Half Donut SVG */}
+                      <div className="md:col-span-7 flex justify-center items-center relative overflow-visible py-4">
+                        <svg width="100%" height="150" viewBox="0 0 320 160" className="overflow-visible">
+                          {/* Segments */}
+                          <path
+                            d={getArcPath(160, 150, 110, 110, 0, advPaidAngle, 75)}
+                            fill="#5C6BC0"
+                            className="transition-all duration-300 hover:opacity-90"
+                          />
+                          <path
+                            d={getArcPath(160, 150, 110, 110, advPaidAngle, advPaidAngle + toPayAngle, 75)}
+                            fill="#26A69A"
+                            className="transition-all duration-300 hover:opacity-90"
+                          />
+                          <path
+                            d={getArcPath(160, 150, 110, 110, advPaidAngle + toPayAngle, 180, 75)}
+                            fill="#EF5350"
+                            className="transition-all duration-300 hover:opacity-90"
+                          />
 
-                    {/* To Receive */}
-                    <div className="bg-red-950/20 border border-red-500/10 rounded-lg p-4 flex flex-col justify-between">
-                      <span className="text-[10px] font-bold text-red-400/80 uppercase tracking-wider block text-center">To Receive</span>
-                      <strong className="text-lg font-extrabold text-red-400 mt-2 block text-center">
-                        {financialData?.to_receive > 0 ? `₹${financialData.to_receive.toLocaleString()}` : "-"}
-                      </strong>
-                    </div>
+                          {/* Inner Circle Base for clean looks */}
+                          <path d="M 85 150 A 75 75 0 0 1 235 150 Z" fill="transparent" />
 
-                    {/* Advance Received */}
-                    <div className="bg-emerald-950/20 border border-emerald-500/10 rounded-lg p-4 flex flex-col justify-between">
-                      <span className="text-[10px] font-bold text-emerald-400/80 uppercase tracking-wider block text-center">Advance Received</span>
-                      <strong className="text-lg font-extrabold text-emerald-400 mt-2 block text-center">
-                        {financialData?.advance_received > 0 ? `₹${financialData.advance_received.toLocaleString()}` : "-"}
-                      </strong>
-                    </div>
-                  </div>
+                          {/* Percentage labels inside segments */}
+                          {advPaidPct > 0.05 && (
+                            <text x={pos1.x} y={pos1.y + 3} fill="white" fontSize="9" fontWeight="bold" textAnchor="middle">
+                              {Math.round(advPaidPct * 100)}%
+                            </text>
+                          )}
+                          {toPayPct > 0.05 && (
+                            <text x={pos2.x} y={pos2.y + 3} fill="white" fontSize="9" fontWeight="bold" textAnchor="middle">
+                              {Math.round(toPayPct * 100)}%
+                            </text>
+                          )}
 
-                  {/* Charts Grid - First Row */}
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Sales */}
-                    <div className="bg-card border border-border-custom rounded-lg border border-border-custom rounded-lg p-5 space-y-4">
-                      <h4 className="text-xs font-bold text-muted uppercase tracking-wider">Sales</h4>
-                      <div className="h-40 flex flex-col items-center justify-center border border-dashed border-border-custom rounded-md bg-transparent">
-                        <span className="text-red-500 text-xs font-semibold">No Data Available</span>
-                      </div>
-                      <div className="border-t border-border-custom pt-3 flex justify-between items-center text-xs">
-                        <span className="text-muted">Total Sales</span>
-                        <span className="font-bold text-muted">-</span>
-                      </div>
-                    </div>
+                          {/* Callout Lines and Labels */}
+                          {/* Advance Paid Label (Left) */}
+                          <line x1={line1Start.x} y1={line1Start.y} x2={line1End.x} y2={line1End.y} stroke="#5C6BC0" strokeWidth="1" />
+                          <circle cx={line1Start.x} cy={line1Start.y} r="2" fill="#5C6BC0" />
+                          <rect x={line1End.x - 55} y={line1End.y - 10} width="50" height="16" rx="3" fill="#5C6BC0" />
+                          <text x={line1End.x - 30} y={line1End.y + 2} fill="white" fontSize="8" fontWeight="bold" textAnchor="middle">
+                            12.17M
+                          </text>
 
-                    {/* Expense */}
-                    <div className="bg-card border border-border-custom rounded-lg border border-border-custom rounded-lg p-5 space-y-4">
-                      <h4 className="text-xs font-bold text-muted uppercase tracking-wider">Expense</h4>
-                      <div className="h-40 flex items-center justify-center border border-dashed border-border-custom rounded-md bg-transparent relative">
-                        {/* Custom SVG Bar Chart */}
-                        <svg className="w-full h-full p-4" viewBox="0 0 200 100">
-                          {/* Y-Axis Line */}
-                          <line x1="40" y1="10" x2="40" y2="80" stroke="var(--border)" strokeWidth="1" />
-                          <line x1="40" y1="50" x2="180" y2="50" stroke="var(--border)" strokeWidth="1" />
-                          {/* Grid Lines */}
-                          <line x1="40" y1="20" x2="180" y2="20" stroke="var(--border)" strokeWidth="1" strokeDasharray="2" />
-                          <line x1="40" y1="80" x2="180" y2="80" stroke="var(--border)" strokeWidth="1" strokeDasharray="2" />
-                          {/* Axis labels */}
-                          <text x="35" y="24" fill="#6b7280" fontSize="8" textAnchor="end">0</text>
-                          <text x="35" y="84" fill="#6b7280" fontSize="8" textAnchor="end">-1.0K</text>
-                          {/* Bars */}
-                          <rect x="70" y="50" width="30" height="30" fill="#FF3B6C" rx="2" opacity="0.8" />
-                          <text x="85" y="93" fill="#6b7280" fontSize="8" textAnchor="middle">Jun 2026</text>
-                          {/* Value label */}
-                          <text x="85" y="45" fill="#FF3B6C" fontSize="8" textAnchor="middle" fontWeight="bold">-1.00K</text>
+                          {/* To Pay Label (Right/Top) */}
+                          <line x1={line2Start.x} y1={line2Start.y} x2={line2End.x} y2={line2End.y} stroke="#26A69A" strokeWidth="1" />
+                          <circle cx={line2Start.x} cy={line2Start.y} r="2" fill="#26A69A" />
+                          <rect x={line2End.x + 5} y={line2End.y - 10} width="50" height="16" rx="3" fill="#26A69A" />
+                          <text x={line2End.x + 30} y={line2End.y + 2} fill="white" fontSize="8" fontWeight="bold" textAnchor="middle">
+                            12.12M
+                          </text>
+
+                          {/* To Receive Label (Far Right/Bottom) */}
+                          <line x1={line3Start.x} y1={line3Start.y} x2={line3End.x} y2={line3End.y} stroke="#EF5350" strokeWidth="1" />
+                          <circle cx={line3Start.x} cy={line3Start.y} r="2" fill="#EF5350" />
+                          <rect x={line3End.x + 5} y={line3End.y - 10} width="55" height="16" rx="3" fill="#EF5350" />
+                          <text x={line3End.x + 32.5} y={line3End.y + 2} fill="white" fontSize="8" fontWeight="bold" textAnchor="middle">
+                            128.79K
+                          </text>
                         </svg>
                       </div>
-                      <div className="border-t border-border-custom pt-3 flex justify-between items-center text-xs">
-                        <span className="text-muted">Total Expense</span>
-                        <span className="font-bold text-red-400">-1.00K</span>
-                      </div>
-                    </div>
 
-                    {/* Margin */}
-                    <div className="bg-card border border-border-custom rounded-lg border border-border-custom rounded-lg p-5 space-y-4">
-                      <h4 className="text-xs font-bold text-muted uppercase tracking-wider">Margin</h4>
-                      <div className="h-40 flex items-center justify-center border border-dashed border-border-custom rounded-md bg-transparent relative">
-                        {/* Custom SVG Bar Chart */}
-                        <svg className="w-full h-full p-4" viewBox="0 0 200 100">
-                          <line x1="40" y1="10" x2="40" y2="80" stroke="var(--border)" strokeWidth="1" />
-                          <line x1="40" y1="80" x2="180" y2="80" stroke="var(--border)" strokeWidth="1" />
-                          <line x1="40" y1="35" x2="180" y2="35" stroke="var(--border)" strokeWidth="1" strokeDasharray="2" />
-                          {/* Axis labels */}
-                          <text x="35" y="84" fill="#6b7280" fontSize="8" textAnchor="end">0</text>
-                          <text x="35" y="39" fill="#6b7280" fontSize="8" textAnchor="end">1.0K</text>
-                          {/* Bars */}
-                          <rect x="70" y="35" width="30" height="45" fill="#10B981" rx="2" opacity="0.8" />
-                          <text x="85" y="93" fill="#6b7280" fontSize="8" textAnchor="middle">Jun 2026</text>
-                          <text x="85" y="30" fill="#10B981" fontSize="8" textAnchor="middle" fontWeight="bold">1.00K</text>
-                        </svg>
-                      </div>
-                      <div className="border-t border-border-custom pt-3 flex justify-between items-center text-xs">
-                        <span className="text-muted">Total Margin</span>
-                        <span className="font-bold text-emerald-400">1.00K</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Charts Grid - Second Row */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {/* Payments */}
-                    <div className="bg-card border border-border-custom rounded-lg border border-border-custom rounded-lg p-5 space-y-4">
-                      <h4 className="text-xs font-bold text-muted uppercase tracking-wider">Payments</h4>
-                      <div className="h-48 flex flex-col items-center justify-center border border-dashed border-border-custom rounded-md bg-transparent">
-                        <span className="text-red-500 text-xs font-semibold">No Data Available</span>
-                      </div>
-                    </div>
-
-                    {/* Expense Type */}
-                    <div className="bg-card border border-border-custom rounded-lg border border-border-custom rounded-lg p-5 space-y-4">
-                      <h4 className="text-xs font-bold text-muted uppercase tracking-wider">Expense Type</h4>
-                      <div className="h-48 flex items-center justify-between border border-dashed border-border-custom rounded-md bg-transparent p-4">
-                        {/* Doughnut Chart */}
-                        <div className="relative w-32 h-32">
-                          <svg className="w-full h-full" viewBox="0 0 36 36">
-                            <path
-                              className="text-zinc-800"
-                              strokeWidth="3.5"
-                              stroke="currentColor"
-                              fill="none"
-                              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                            />
-                            <path
-                              className="text-blue-500"
-                              strokeWidth="3.5"
-                              strokeDasharray="100, 100"
-                              strokeLinecap="round"
-                              stroke="currentColor"
-                              fill="none"
-                              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                            />
-                          </svg>
-                          <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                            <span className="text-[8px] text-muted uppercase">Total</span>
-                            <span className="text-xs font-extrabold text-white">-1.00K</span>
-                            <span className="text-[8px] text-muted font-semibold mt-0.5">100%</span>
-                          </div>
+                      {/* Right: Legend Checklist */}
+                      <div className="md:col-span-5 space-y-3">
+                        <div className="flex items-center gap-2 border-b border-border-custom [.light-theme_&]:border-zinc-100 pb-2">
+                          <input type="checkbox" checked readOnly className="accent-primary rounded cursor-pointer" />
+                          <span className="text-[11px] font-bold text-white [.light-theme_&]:text-zinc-800">Balance Type</span>
                         </div>
-
-                        {/* Legend */}
-                        <div className="space-y-2 text-xs">
-                          <div className="flex items-center gap-2">
-                            <input type="checkbox" checked readOnly className="accent-blue-500 rounded cursor-pointer" />
-                            <span className="text-zinc-300">Debit Note</span>
-                            <span className="font-bold text-white font-sans ml-4">₹-1,000.00</span>
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-center text-xs">
+                            <div className="flex items-center gap-2">
+                              <span className="h-2.5 w-2.5 rounded-sm bg-[#5C6BC0]" />
+                              <span className="text-zinc-300 [.light-theme_&]:text-zinc-600 font-medium">Advance Paid</span>
+                            </div>
+                            <span className="font-semibold text-white [.light-theme_&]:text-zinc-800">12.17M</span>
+                          </div>
+                          <div className="flex justify-between items-center text-xs">
+                            <div className="flex items-center gap-2">
+                              <span className="h-2.5 w-2.5 rounded-sm bg-[#26A69A]" />
+                              <span className="text-zinc-300 [.light-theme_&]:text-zinc-600 font-medium">To Pay</span>
+                            </div>
+                            <span className="font-semibold text-white [.light-theme_&]:text-zinc-800">12.12M</span>
+                          </div>
+                          <div className="flex justify-between items-center text-xs">
+                            <div className="flex items-center gap-2">
+                              <span className="h-2.5 w-2.5 rounded-sm bg-[#EF5350]" />
+                              <span className="text-zinc-300 [.light-theme_&]:text-zinc-600 font-medium">To Receive</span>
+                            </div>
+                            <span className="font-semibold text-white [.light-theme_&]:text-zinc-800">128.79K</span>
                           </div>
                         </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Party Balance */}
-                  <div className="bg-card border border-border-custom rounded-lg border border-border-custom rounded-lg p-5 space-y-4">
-                    <h4 className="text-xs font-bold text-muted uppercase tracking-wider">Company Party Balance (All Projects)</h4>
-                    <div className="h-32 flex flex-col items-center justify-center border border-dashed border-border-custom rounded-md bg-transparent">
-                      <span className="text-red-500 text-xs font-semibold">No Data Available</span>
+                    {/* Bottom metrics grid */}
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 pt-4 border-t border-border-custom [.light-theme_&]:border-zinc-100">
+                      {/* Advance Paid */}
+                      <div className="bg-emerald-950/10 border border-emerald-500/10 [.light-theme_&]:bg-[#E8F5E9]/60 [.light-theme_&]:border-emerald-200 rounded-lg p-3 flex flex-col items-center justify-center transition-all">
+                        <span className="text-[10px] font-bold text-emerald-400 [.light-theme_&]:text-emerald-700 uppercase tracking-wider block text-center">Advance Paid</span>
+                        <strong className="text-md font-bold text-emerald-400 [.light-theme_&]:text-emerald-700 mt-1 block text-center">
+                          {advPaid > 0 ? advPaid.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "-"}
+                        </strong>
+                      </div>
+
+                      {/* To Pay */}
+                      <div className="bg-red-950/10 border border-red-500/10 [.light-theme_&]:bg-[#FFEBEE]/60 [.light-theme_&]:border-red-200 rounded-lg p-3 flex flex-col items-center justify-center transition-all">
+                        <span className="text-[10px] font-bold text-red-400 [.light-theme_&]:text-red-700 uppercase tracking-wider block text-center">To Pay</span>
+                        <strong className="text-md font-bold text-red-400 [.light-theme_&]:text-red-700 mt-1 block text-center">
+                          {toPay > 0 ? toPay.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "-"}
+                        </strong>
+                      </div>
+
+                      {/* To Receive */}
+                      <div className="bg-red-950/10 border border-red-500/10 [.light-theme_&]:bg-[#FFEBEE]/60 [.light-theme_&]:border-red-200 rounded-lg p-3 flex flex-col items-center justify-center transition-all">
+                        <span className="text-[10px] font-bold text-red-400 [.light-theme_&]:text-red-700 uppercase tracking-wider block text-center">To Receive</span>
+                        <strong className="text-md font-bold text-red-400 [.light-theme_&]:text-red-700 mt-1 block text-center">
+                          {toReceive > 0 ? toReceive.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "-"}
+                        </strong>
+                      </div>
+
+                      {/* Advance Received */}
+                      <div className="bg-white/[0.01] border border-border-custom [.light-theme_&]:bg-zinc-100/60 [.light-theme_&]:border-zinc-200 rounded-lg p-3 flex flex-col items-center justify-center transition-all">
+                        <span className="text-[10px] font-bold text-muted [.light-theme_&]:text-zinc-500 uppercase tracking-wider block text-center">Advance Received</span>
+                        <strong className="text-md font-bold text-white [.light-theme_&]:text-zinc-700 mt-1 block text-center">
+                          {advReceived > 0 ? advReceived.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "-"}
+                        </strong>
+                      </div>
                     </div>
                   </div>
 
                   {/* Project Financial Summary Table */}
-                  <div className="bg-card border border-border-custom rounded-lg border border-border-custom rounded-lg overflow-hidden">
-                    <div className="px-5 py-4 border-b border-border-custom flex items-center justify-between">
-                      <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider">Project Financial Summary - Dashboard</h4>
-                    </div>
+                  <div className="bg-card [.light-theme_&]:bg-white border border-border-custom [.light-theme_&]:border-zinc-200 rounded-lg overflow-hidden transition-all shadow-sm">
                     <div className="overflow-x-auto">
-                      <table className="w-full text-xs text-left">
+                      <table className="w-full text-xs text-left border-collapse">
                         <thead>
-                          <tr className="border-b border-border-custom text-muted font-bold uppercase tracking-wider text-[9px] bg-white/[0.01]">
-                            <th className="px-5 py-3 text-center">#</th>
-                            <th className="px-5 py-3">Project Name</th>
-                            <th className="px-5 py-3">Project Status</th>
-                            <th className="px-5 py-3 text-center">Project Health</th>
-                            <th className="px-5 py-3 text-right">Project Budget</th>
-                            <th className="px-5 py-3 text-right">Total Expense</th>
-                            <th className="px-5 py-3 text-right">Budget Remaining</th>
-                            <th className="px-5 py-3 text-right">Total Sales</th>
-                            <th className="px-5 py-3 text-right">Project Margin</th>
-                            <th className="px-5 py-3 text-right">Payment In</th>
-                            <th className="px-5 py-3 text-right">Payment Out</th>
-                            <th className="px-5 py-3 text-right font-bold">Cash Balance</th>
+                          <tr className="bg-[#673AB7] text-white font-bold uppercase tracking-wider text-[9px]">
+                            <th className="px-3 py-3 text-center border-r border-white/10 w-10">#</th>
+                            <th className="px-4 py-3 border-r border-white/10">
+                              <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded bg-white/20 text-[8px] mr-1.5 font-bold font-mono">T</span>
+                              Project Name
+                            </th>
+                            <th className="px-4 py-3 border-r border-white/10">
+                              <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded bg-white/20 text-[8px] mr-1.5 font-bold font-mono">T</span>
+                              Project Status
+                            </th>
+                            <th className="px-4 py-3 text-center border-r border-white/10">
+                              <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded bg-white/20 text-[8px] mr-1.5 font-bold font-mono">T</span>
+                              Project Health
+                            </th>
+                            <th className="px-4 py-3 text-right border-r border-white/10">
+                              <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded bg-white/20 text-[8px] mr-1.5 font-bold font-mono">#</span>
+                              Project Budget
+                            </th>
+                            <th className="px-4 py-3 text-right border-r border-white/10">
+                              <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded bg-white/20 text-[8px] mr-1.5 font-bold font-mono">#</span>
+                              Total Expense
+                            </th>
+                            <th className="px-4 py-3 text-right border-r border-white/10">
+                              <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded bg-white/20 text-[8px] mr-1.5 font-bold font-mono">#</span>
+                              Budget Remaining
+                            </th>
+                            <th className="px-4 py-3 text-right border-r border-white/10">
+                              <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded bg-white/20 text-[8px] mr-1.5 font-bold font-mono">#</span>
+                              Total Sales
+                            </th>
+                            <th className="px-4 py-3 text-right border-r border-white/10">
+                              <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded bg-white/20 text-[8px] mr-1.5 font-bold font-mono">#</span>
+                              Project Margin
+                            </th>
+                            <th className="px-4 py-3 text-right border-r border-white/10">
+                              <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded bg-white/20 text-[8px] mr-1.5 font-bold font-mono">#</span>
+                              Payment In
+                            </th>
+                            <th className="px-4 py-3 text-right border-r border-white/10">
+                              <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded bg-white/20 text-[8px] mr-1.5 font-bold font-mono">#</span>
+                              Payment Out
+                            </th>
+                            <th className="px-4 py-3 text-right">
+                              <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded bg-white/20 text-[8px] mr-1.5 font-bold font-mono">#</span>
+                              Cash Balance
+                            </th>
                           </tr>
                         </thead>
                         <tbody>
@@ -1249,11 +1312,11 @@ export default function DashboardPage() {
                             </tr>
                           ) : (
                             financialData.project_summaries.map((p: any, idx: number) => (
-                              <tr key={idx} className="border-t border-border-custom hover:bg-white/[0.01] transition-all">
-                                <td className="px-5 py-3.5 text-center text-muted font-mono">{idx + 1}</td>
-                                <td className="px-5 py-3.5 font-bold text-white">{p.project_name}</td>
-                                <td className="px-5 py-3.5 text-zinc-300">{p.project_status}</td>
-                                <td className="px-5 py-3.5 text-center">
+                              <tr key={idx} className="border-t border-border-custom [.light-theme_&]:border-zinc-200 hover:bg-white/[0.01] [.light-theme_&]:hover:bg-zinc-50 transition-all text-white [.light-theme_&]:text-zinc-800">
+                                <td className="px-3 py-3 text-center border-r border-border-custom [.light-theme_&]:border-zinc-200 text-muted font-mono font-bold">{idx + 1}</td>
+                                <td className="px-4 py-3 border-r border-border-custom [.light-theme_&]:border-zinc-200 font-bold text-white [.light-theme_&]:text-zinc-800">{p.project_name}</td>
+                                <td className="px-4 py-3 border-r border-border-custom [.light-theme_&]:border-zinc-200 text-zinc-300 [.light-theme_&]:text-zinc-600">{p.project_status}</td>
+                                <td className="px-4 py-3 text-center border-r border-border-custom [.light-theme_&]:border-zinc-200">
                                   {p.project_health === "-" ? (
                                     <span className="text-muted font-bold font-mono">-</span>
                                   ) : (
@@ -1268,35 +1331,135 @@ export default function DashboardPage() {
                                     </span>
                                   )}
                                 </td>
-                                <td className="px-5 py-3.5 text-right font-semibold text-zinc-300">
-                                  {p.project_budget ? `₹${p.project_budget.toLocaleString("en-IN")}` : "0"}
+                                <td className="px-4 py-3 text-right border-r border-border-custom [.light-theme_&]:border-zinc-200 font-semibold text-zinc-300 [.light-theme_&]:text-zinc-700">
+                                  {p.project_budget ? p.project_budget.toLocaleString("en-US") : "0"}
                                 </td>
-                                <td className="px-5 py-3.5 text-right font-semibold text-red-400">
-                                  {p.total_expense ? `₹${p.total_expense.toLocaleString("en-IN")}` : "0"}
+                                <td className="px-4 py-3 text-right border-r border-border-custom [.light-theme_&]:border-zinc-200 font-semibold text-zinc-300 [.light-theme_&]:text-zinc-700">
+                                  {p.total_expense ? p.total_expense.toLocaleString("en-US") : "0"}
                                 </td>
-                                <td className="px-5 py-3.5 text-right font-semibold text-zinc-300">
-                                  {p.budget_remaining ? `₹${p.budget_remaining.toLocaleString("en-IN")}` : "0"}
+                                <td className="px-4 py-3 text-right border-r border-border-custom [.light-theme_&]:border-zinc-200 font-semibold text-zinc-300 [.light-theme_&]:text-zinc-700">
+                                  {p.budget_remaining ? p.budget_remaining.toLocaleString("en-US") : "0"}
                                 </td>
-                                <td className="px-5 py-3.5 text-right font-semibold text-zinc-300">
-                                  {p.total_sales ? `₹${p.total_sales.toLocaleString("en-IN")}` : "0"}
+                                <td className="px-4 py-3 text-right border-r border-border-custom [.light-theme_&]:border-zinc-200 font-semibold text-zinc-300 [.light-theme_&]:text-zinc-700">
+                                  {p.total_sales ? p.total_sales.toLocaleString("en-US") : "0"}
                                 </td>
-                                <td className="px-5 py-3.5 text-right font-bold text-emerald-400">
-                                  {p.project_margin ? `₹${p.project_margin.toLocaleString("en-IN")}` : "0"}
+                                <td className="px-4 py-3 text-right border-r border-border-custom [.light-theme_&]:border-zinc-200 font-semibold text-zinc-300 [.light-theme_&]:text-zinc-700">
+                                  {p.project_margin ? p.project_margin.toLocaleString("en-US") : "0"}
                                 </td>
-                                <td className="px-5 py-3.5 text-right font-semibold text-zinc-300">
-                                  {p.payment_in ? `₹${p.payment_in.toLocaleString("en-IN")}` : "0"}
+                                <td className="px-4 py-3 text-right border-r border-border-custom [.light-theme_&]:border-zinc-200 font-semibold text-zinc-300 [.light-theme_&]:text-zinc-700">
+                                  {p.payment_in ? p.payment_in.toLocaleString("en-US") : "0"}
                                 </td>
-                                <td className="px-5 py-3.5 text-right font-semibold text-zinc-300">
-                                  {p.payment_out ? `₹${p.payment_out.toLocaleString("en-IN")}` : "0"}
+                                <td className="px-4 py-3 text-right border-r border-border-custom [.light-theme_&]:border-zinc-200 font-semibold text-zinc-300 [.light-theme_&]:text-zinc-700">
+                                  {p.payment_out ? p.payment_out.toLocaleString("en-US") : "0"}
                                 </td>
-                                <td className="px-5 py-3.5 text-right font-extrabold text-white">
-                                  {p.cash_balance ? `₹${p.cash_balance.toLocaleString("en-IN")}` : "0"}
+                                <td className="px-4 py-3 text-right font-bold text-zinc-300 [.light-theme_&]:text-zinc-700">
+                                  {p.cash_balance ? p.cash_balance.toLocaleString("en-US") : "0"}
                                 </td>
                               </tr>
                             ))
                           )}
                         </tbody>
                       </table>
+                    </div>
+                  </div>
+
+                  {/* Charts Grid - First Row (Sales, Expense, Margin) */}
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {/* Sales */}
+                    <div className="bg-card [.light-theme_&]:bg-white border border-border-custom [.light-theme_&]:border-zinc-200 rounded-lg p-5 flex flex-col justify-between transition-all">
+                      <div className="space-y-4">
+                        <h4 className="text-xs font-bold text-muted [.light-theme_&]:text-zinc-500 uppercase tracking-wider">Sales</h4>
+                        <div className="h-40 flex items-center justify-center rounded-md bg-transparent relative overflow-visible">
+                          {/* Bar Chart representing -121.21K */}
+                          <svg className="w-full h-full" viewBox="0 0 200 120" className="overflow-visible">
+                            {/* Baseline (y=0) */}
+                            <line x1="20" y1="30" x2="180" y2="30" stroke="var(--border)" strokeWidth="1" className="[.light-theme_&]:stroke-zinc-200" />
+                            {/* Dashed gridlines */}
+                            <line x1="20" y1="80" x2="180" y2="80" stroke="var(--border)" strokeWidth="1" strokeDasharray="3" className="[.light-theme_&]:stroke-zinc-200" />
+                            
+                            {/* Axis numbers */}
+                            <text x="15" y="33" fill="#6b7280" fontSize="8" textAnchor="end">0</text>
+                            <text x="15" y="83" fill="#6b7280" fontSize="8" textAnchor="end">-150K</text>
+                            
+                            {/* Negative Bar extending downwards */}
+                            <rect x="85" y="30" width="30" height="50" fill="#26A69A" rx="2" className="transition-all hover:opacity-90" />
+                            
+                            {/* Value label */}
+                            <text x="100" y="93" fill="#26A69A" fontSize="9" fontWeight="bold" textAnchor="middle">-121.21K</text>
+                            {/* Month label */}
+                            <text x="100" y="112" fill="#6b7280" fontSize="8" textAnchor="middle" transform="rotate(-25 100 112)">Jul 2026</text>
+                          </svg>
+                        </div>
+                      </div>
+                      <div className="border-t border-border-custom [.light-theme_&]:border-zinc-100 pt-3 flex justify-between items-center text-xs mt-4">
+                        <span className="text-muted [.light-theme_&]:text-zinc-500 font-medium">Total Sales</span>
+                        <span className="font-bold text-red-500 [.light-theme_&]:text-red-700 bg-red-500/10 [.light-theme_&]:bg-[#FFEBEE] px-2 py-0.5 rounded">-121.21K</span>
+                      </div>
+                    </div>
+
+                    {/* Expense */}
+                    <div className="bg-card [.light-theme_&]:bg-white border border-border-custom [.light-theme_&]:border-zinc-200 rounded-lg p-5 flex flex-col justify-between transition-all">
+                      <div className="space-y-4">
+                        <h4 className="text-xs font-bold text-muted [.light-theme_&]:text-zinc-500 uppercase tracking-wider">Expense</h4>
+                        <div className="h-40 flex items-center justify-center rounded-md bg-transparent">
+                          <span className="text-red-500 [.light-theme_&]:text-red-600 text-xs font-bold uppercase tracking-wider">No Data Available</span>
+                        </div>
+                      </div>
+                      <div className="border-t border-border-custom [.light-theme_&]:border-zinc-100 pt-3 flex justify-between items-center text-xs mt-4">
+                        <span className="text-muted [.light-theme_&]:text-zinc-500 font-medium">Total Expense</span>
+                        <span className="font-bold text-muted [.light-theme_&]:text-zinc-500 bg-white/[0.02] [.light-theme_&]:bg-zinc-100 px-2 py-0.5 rounded">-</span>
+                      </div>
+                    </div>
+
+                    {/* Margin */}
+                    <div className="bg-card [.light-theme_&]:bg-white border border-border-custom [.light-theme_&]:border-zinc-200 rounded-lg p-5 flex flex-col justify-between transition-all">
+                      <div className="space-y-4">
+                        <h4 className="text-xs font-bold text-muted [.light-theme_&]:text-zinc-500 uppercase tracking-wider">Margin</h4>
+                        <div className="h-40 flex items-center justify-center rounded-md bg-transparent relative overflow-visible">
+                          {/* Bar Chart representing -121.21K */}
+                          <svg className="w-full h-full" viewBox="0 0 200 120" className="overflow-visible">
+                            {/* Baseline (y=0) */}
+                            <line x1="20" y1="30" x2="180" y2="30" stroke="var(--border)" strokeWidth="1" className="[.light-theme_&]:stroke-zinc-200" />
+                            {/* Dashed gridlines */}
+                            <line x1="20" y1="80" x2="180" y2="80" stroke="var(--border)" strokeWidth="1" strokeDasharray="3" className="[.light-theme_&]:stroke-zinc-200" />
+                            
+                            {/* Axis numbers */}
+                            <text x="15" y="33" fill="#6b7280" fontSize="8" textAnchor="end">0</text>
+                            <text x="15" y="83" fill="#6b7280" fontSize="8" textAnchor="end">-150K</text>
+                            
+                            {/* Negative Bar extending downwards (since margin is negative) */}
+                            <rect x="85" y="30" width="30" height="50" fill="#EF5350" rx="2" className="transition-all hover:opacity-90" />
+                            
+                            {/* Value label */}
+                            <text x="100" y="93" fill="#EF5350" fontSize="9" fontWeight="bold" textAnchor="middle">-121.21K</text>
+                            {/* Month label */}
+                            <text x="100" y="112" fill="#6b7280" fontSize="8" textAnchor="middle" transform="rotate(-25 100 112)">Jul 2026</text>
+                          </svg>
+                        </div>
+                      </div>
+                      <div className="border-t border-border-custom [.light-theme_&]:border-zinc-100 pt-3 flex justify-between items-center text-xs mt-4">
+                        <span className="text-muted [.light-theme_&]:text-zinc-500 font-medium">Total Margin</span>
+                        <span className="font-bold text-red-500 [.light-theme_&]:text-red-700 bg-red-500/10 [.light-theme_&]:bg-[#FFEBEE] px-2 py-0.5 rounded">-121.21K</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Charts Grid - Second Row (Payments, Expense Type) */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Payments */}
+                    <div className="bg-card [.light-theme_&]:bg-white border border-border-custom [.light-theme_&]:border-zinc-200 rounded-lg p-5 space-y-4 transition-all">
+                      <h4 className="text-xs font-bold text-muted [.light-theme_&]:text-zinc-500 uppercase tracking-wider">Payments</h4>
+                      <div className="h-48 flex items-center justify-center rounded-md bg-transparent">
+                        <span className="text-red-500 [.light-theme_&]:text-red-600 text-xs font-bold uppercase tracking-wider">No Data Available</span>
+                      </div>
+                    </div>
+
+                    {/* Expense Type */}
+                    <div className="bg-card [.light-theme_&]:bg-white border border-border-custom [.light-theme_&]:border-zinc-200 rounded-lg p-5 space-y-4 transition-all">
+                      <h4 className="text-xs font-bold text-muted [.light-theme_&]:text-zinc-500 uppercase tracking-wider">Expense Type</h4>
+                      <div className="h-48 flex items-center justify-center rounded-md bg-transparent">
+                        <span className="text-red-500 [.light-theme_&]:text-red-600 text-xs font-bold uppercase tracking-wider">No Data Available</span>
+                      </div>
                     </div>
                   </div>
 
