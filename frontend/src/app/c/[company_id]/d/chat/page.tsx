@@ -100,6 +100,15 @@ export default function ChatPage() {
           user_name: m.user_id === "e0000000-0000-0000-0000-000000000000" ? "Yash Desai" : `User ${m.user_id.slice(0, 5)}`
         }));
         setMembers(resolved);
+
+        // Resolve current user's role!
+        const currentLoggedUserId = typeof window !== "undefined" ? localStorage.getItem("user_id") || "e0000000-0000-0000-0000-000000000000" : "e0000000-0000-0000-0000-000000000000";
+        const currentMember = rawMembers.find((m: ChatMember) => m.user_id === currentLoggedUserId);
+        if (currentMember) {
+          setCurrentUserRole(currentMember.role);
+        } else {
+          setCurrentUserRole("member");
+        }
       }
     } catch (e) {
       console.error("Failed to load members", e);
@@ -136,6 +145,8 @@ export default function ChatPage() {
     e.preventDefault();
     if (!newGroupName.trim()) return;
 
+    const currentLoggedUserId = typeof window !== "undefined" ? localStorage.getItem("user_id") || "e0000000-0000-0000-0000-000000000000" : "e0000000-0000-0000-0000-000000000000";
+
     try {
       const res = await fetch(`${getApiHost()}/apis/v3/chat/groups`, {
         method: "POST",
@@ -145,6 +156,7 @@ export default function ChatPage() {
           project_id: projectId,
           name: newGroupName,
           group_type: newGroupType,
+          created_by: currentLoggedUserId,
         }),
       });
       if (res.ok) {
@@ -509,64 +521,72 @@ export default function ChatPage() {
 
               {/* Chat Input controls */}
               <div className="p-4 border-t border-border-custom bg-card shrink-0">
-                <form onSubmit={handleSendMessage} className="space-y-3">
-                  <div className="flex flex-col gap-2">
-                    
-                    {/* Top inputs row */}
-                    <div className="flex flex-wrap items-center gap-2">
-                      <input
-                        type="text"
-                        value={messageText}
-                        onChange={(e) => setMessageText(e.target.value)}
-                        placeholder="Enter Message..."
-                        className="flex-1 min-w-[200px] bg-elevated/35 border border-border-custom rounded-lg px-4 py-2 text-xs text-foreground placeholder:text-muted focus:outline-none focus:border-primary transition-all"
-                      />
-                      <input
-                        type="text"
-                        value={imageUrl}
-                        onChange={(e) => setImageUrl(e.target.value)}
-                        placeholder="Image URL (optional)"
-                        className="w-44 bg-elevated/35 border border-border-custom rounded-lg px-4 py-2 text-xs text-foreground placeholder:text-muted focus:outline-none focus:border-primary transition-all"
-                      />
-                    </div>
-
-                    {/* Bottom controls row (MOM toggle & Send) */}
-                    <div className="flex items-center justify-between pt-1">
-                      <div className="flex items-center gap-4">
-                        <label className="flex items-center gap-2 cursor-pointer select-none">
-                          <input
-                            type="checkbox"
-                            checked={isMom}
-                            onChange={(e) => setIsMom(e.target.checked)}
-                            className="rounded border-border-custom text-primary focus:ring-primary h-3.5 w-3.5"
-                          />
-                          <span className="text-[11px] font-bold text-muted hover:text-foreground transition-colors">Mark as MOM</span>
-                        </label>
-
-                        {isMom && (
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-[10px] text-muted">MOM Date:</span>
-                            <input
-                              type="date"
-                              value={momDate}
-                              onChange={(e) => setMomDate(e.target.value)}
-                              className="bg-elevated border border-border-custom rounded-lg px-3 py-1 text-[11px] text-foreground focus:outline-none focus:border-primary"
-                            />
-                          </div>
-                        )}
+                {currentUserRole === "viewer" ? (
+                  <div className="flex items-center justify-center p-3.5 bg-elevated/20 border border-dashed border-border-custom rounded-xl">
+                    <span className="text-[11px] text-muted font-bold flex items-center gap-1.5 select-none">
+                      🔒 Read-Only Access (You are a group viewer and cannot send messages)
+                    </span>
+                  </div>
+                ) : (
+                  <form onSubmit={handleSendMessage} className="space-y-3">
+                    <div className="flex flex-col gap-2">
+                      
+                      {/* Top inputs row */}
+                      <div className="flex flex-wrap items-center gap-2">
+                        <input
+                          type="text"
+                          value={messageText}
+                          onChange={(e) => setMessageText(e.target.value)}
+                          placeholder="Enter Message..."
+                          className="flex-1 min-w-[200px] bg-elevated/35 border border-border-custom rounded-lg px-4 py-2 text-xs text-foreground placeholder:text-muted focus:outline-none focus:border-primary transition-all"
+                        />
+                        <input
+                          type="text"
+                          value={imageUrl}
+                          onChange={(e) => setImageUrl(e.target.value)}
+                          placeholder="Image URL (optional)"
+                          className="w-44 bg-elevated/35 border border-border-custom rounded-lg px-4 py-2 text-xs text-foreground placeholder:text-muted focus:outline-none focus:border-primary transition-all"
+                        />
                       </div>
 
-                      <button
-                        type="submit"
-                        className="px-5 py-2 bg-primary hover:bg-primary-hover text-white rounded-lg text-xs font-bold transition-all shadow-md shadow-primary/20 flex items-center gap-1.5 cursor-pointer"
-                      >
-                        <span>Send</span>
-                        <span>✉️</span>
-                      </button>
-                    </div>
+                      {/* Bottom controls row (MOM toggle & Send) */}
+                      <div className="flex items-center justify-between pt-1">
+                        <div className="flex items-center gap-4">
+                          <label className="flex items-center gap-2 cursor-pointer select-none">
+                            <input
+                              type="checkbox"
+                              checked={isMom}
+                              onChange={(e) => setIsMom(e.target.checked)}
+                              className="rounded border-border-custom text-primary focus:ring-primary h-3.5 w-3.5"
+                            />
+                            <span className="text-[11px] font-bold text-muted hover:text-foreground transition-colors">Mark as MOM</span>
+                          </label>
 
-                  </div>
-                </form>
+                          {isMom && (
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[10px] text-muted">MOM Date:</span>
+                              <input
+                                type="date"
+                                value={momDate}
+                                onChange={(e) => setMomDate(e.target.value)}
+                                className="bg-elevated border border-border-custom rounded-lg px-3 py-1 text-[11px] text-foreground focus:outline-none focus:border-primary"
+                              />
+                            </div>
+                          )}
+                        </div>
+
+                        <button
+                          type="submit"
+                          className="px-5 py-2 bg-primary hover:bg-primary-hover text-white rounded-lg text-xs font-bold transition-all shadow-md shadow-primary/20 flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <span>Send</span>
+                          <span>✉️</span>
+                        </button>
+                      </div>
+
+                    </div>
+                  </form>
+                )}
               </div>
             </>
           ) : (
