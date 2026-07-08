@@ -4,6 +4,43 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { getApiHost } from "@/lib/api";
 
+if (typeof window !== "undefined") {
+  if (!(window as any).__originalFetch) {
+    (window as any).__originalFetch = window.fetch;
+    window.fetch = function (input, init) {
+      let url =
+        typeof input === "string"
+          ? input
+          : input instanceof URL
+          ? input.toString()
+          : (input as Request).url;
+
+      if (!url.includes("/resolve-company/")) {
+        const stored = localStorage.getItem("company_slug_mappings");
+        const slugMap = stored
+          ? JSON.parse(stored)
+          : { "demo-construction": "e0000000-0000-0000-0000-000000000000" };
+
+        if (!slugMap["demo-construction"]) {
+          slugMap["demo-construction"] = "e0000000-0000-0000-0000-000000000000";
+        }
+
+        for (const [slug, uuid] of Object.entries(slugMap)) {
+          if (url.includes(slug)) {
+            url = url.replaceAll(slug, uuid as string);
+          }
+        }
+      }
+
+      if (typeof input === "object" && !(input instanceof URL)) {
+        const newRequest = new Request(url, input as Request);
+        return (window as any).__originalFetch(newRequest, init);
+      }
+      return (window as any).__originalFetch(url, init);
+    };
+  }
+}
+
 export type ProjectRecord = {
   id?: string;
   name?: string;
@@ -63,6 +100,28 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     };
 
     const resolve = async () => {
+      let activeCompanyUuid = companyId;
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(companyId);
+      if (!isUuid) {
+        const stored = localStorage.getItem("company_slug_mappings");
+        const slugMap = stored ? JSON.parse(stored) : {};
+        if (slugMap[companyId]) {
+          activeCompanyUuid = slugMap[companyId];
+        } else {
+          try {
+            const res = await (window as any).__originalFetch(`${apiHost}/apis/v3/auth/resolve-company/${companyId}`);
+            if (res.ok) {
+              const data = await res.json();
+              activeCompanyUuid = data.id;
+              slugMap[companyId] = activeCompanyUuid;
+              localStorage.setItem("company_slug_mappings", JSON.stringify(slugMap));
+            }
+          } catch (e) {
+            console.error("Failed to resolve slug", e);
+          }
+        }
+      }
+
       // Resolve the active project's details when we already know its id.
       if (nextProjectId && nextProjectId !== FALLBACK_PROJECT_ID) {
         if (typeof window !== "undefined") {

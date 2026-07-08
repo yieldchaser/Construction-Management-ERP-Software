@@ -9,7 +9,7 @@ import { useProject } from "@/context/ProjectContext";
 export default function Sidebar() {
   const params = useParams();
   const pathname = usePathname();
-  const companyId = (params.company_id as string) || "e0000000-0000-0000-0000-000000000000";
+  const companyId = (params.company_id as string) || "demo-construction";
 
   const { activeProjectId, setActiveProjectId, projects, projectContext } = useProject();
 
@@ -24,7 +24,7 @@ export default function Sidebar() {
       return;
     }
 
-    if (!companyId || companyId === "e0000000-0000-0000-0000-000000000000") {
+    if (!companyId || companyId === "e0000000-0000-0000-0000-000000000000" || companyId === "demo-construction") {
       setCompanyName("Demo Construction Ltd");
       return;
     }

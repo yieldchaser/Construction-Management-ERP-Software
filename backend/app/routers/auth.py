@@ -142,3 +142,22 @@ def verify_otp(request: OTPVerifyRequest, db: Session = Depends(get_db)):
             "priority_type": team_member.priority_type,
         },
     }
+
+@router.get("/resolve-company/{slug}")
+def resolve_company(slug: str, db: Session = Depends(get_db)):
+    company = db.query(models.Company).filter(models.Company.slug == slug).first()
+    if not company:
+        try:
+            company_uuid = uuid.UUID(slug)
+            company = db.query(models.Company).filter(models.Company.id == company_uuid).first()
+        except ValueError:
+            pass
+            
+    if not company:
+        raise HTTPException(status_code=404, detail="Company not found")
+        
+    return {
+        "id": str(company.id),
+        "name": company.name,
+        "slug": company.slug
+    }

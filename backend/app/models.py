@@ -14,6 +14,7 @@ class Company(Base):
     __tablename__ = "companies"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = Column(String(255), nullable=False)
+    slug = Column(String(255), unique=True, index=True, nullable=True)
     legal_business_name = Column(String(255))
     gstin = Column(String(15))
     billing_address = Column(String)

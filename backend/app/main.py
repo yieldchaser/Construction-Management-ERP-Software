@@ -70,7 +70,21 @@ def ensure_sqlite_library_cost_code_columns():
                 f'ALTER TABLE library_cost_codes ADD COLUMN "{column_name}" {column_type.compile(dialect=engine.dialect)}'
             )
 
+def ensure_sqlite_company_slug_column():
+    if "sqlite" not in str(engine.url):
+        return
+    with engine.begin() as conn:
+        existing_columns = {
+            row[1]
+            for row in conn.exec_driver_sql("PRAGMA table_info(companies)").fetchall()
+        }
+        if "slug" not in existing_columns:
+            conn.exec_driver_sql(
+                'ALTER TABLE companies ADD COLUMN "slug" VARCHAR(255)'
+            )
+
 ensure_sqlite_library_cost_code_columns()
+ensure_sqlite_company_slug_column()
 
 import uuid
 from app.database import SessionLocal
@@ -81,6 +95,10 @@ def auto_seed_database():
         # Check if company exists
         company_exists = db.query(models.Company).filter(models.Company.id == uuid.UUID("e0000000-0000-0000-0000-000000000000")).first()
         if company_exists:
+            # Update slug if not set for existing seeded db
+            if not company_exists.slug:
+                company_exists.slug = "demo-construction"
+                db.commit()
             print("Database already seeded.")
             return
             
@@ -90,6 +108,7 @@ def auto_seed_database():
         company = models.Company(
             id=uuid.UUID("e0000000-0000-0000-0000-000000000000"),
             name="Demo Construction Ltd",
+            slug="demo-construction",
             legal_business_name="Demo Construction India Private Limited",
             gstin="27AADCD2424B1ZP",
             billing_address="101, Skyline Tower, Andheri East, Mumbai, MH - 400069",
