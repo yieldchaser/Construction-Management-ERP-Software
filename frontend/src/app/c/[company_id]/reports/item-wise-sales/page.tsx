@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import PageHeader from "@/components/PageHeader";
+import { getApiHost } from "@/lib/api";
 
 export default function ItemWiseSalesReportPage() {
   const params = useParams();
@@ -16,33 +17,50 @@ export default function ItemWiseSalesReportPage() {
   const [typeFilter, setTypeFilter] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [toastMessage, setToastMessage] = useState("");
+  const [rows, setRows] = useState<Record<string, any>[]>([]);
+  const [loading, setLoading] = useState(false);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(""), 3000);
   };
 
-  const mockSales = [
-    { type: "Tax Invoice", project: "Metro Terminal (Phase 2)", client: "L&T Construction", invNum: "INV-2026-004", invDate: "2026-07-02", itemName: "Reinforcement Steel (12mm)", unit: "Tons", qty: "12.5", rate: "4500", tax: "18%", taxAmt: "10125", grossAmt: "56250", totalAmt: "66375", created: "02-Jul-2026" },
-    { type: "Retail Invoice", project: "Bypass Highway Flyover", client: "Public Works Dept", invNum: "INV-2026-012", invDate: "2026-07-03", itemName: "Ready Mix Concrete M35", unit: "Cum", qty: "45.0", rate: "5000", tax: "18%", taxAmt: "40500", grossAmt: "225000", totalAmt: "265500", created: "03-Jul-2026" },
-    { type: "Proforma Invoice", project: "Alpha Premium Residences", client: "Alpha Builders Ltd", invNum: "INV-2026-009", invDate: "2026-06-28", itemName: "OPC Cement 43 Grade", unit: "Bags", qty: "300", rate: "400", tax: "18%", taxAmt: "21600", grossAmt: "120000", totalAmt: "141600", created: "28-Jun-2026" }
-  ];
+  useEffect(() => {
+    const fetchReport = async () => {
+      setLoading(true);
+      try {
+        const token = localStorage.getItem("access_token");
+        const res = await fetch(`${getApiHost()}/apis/v3/reports/data/item-wise-sales?company_id=${companyId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+        setRows(data.rows || []);
+      } catch {
+        setRows([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchReport();
+  }, [companyId]);
 
-  const filteredSales = mockSales.filter(row => {
-    const matchesProj = projectFilter === "All" || row.project.includes(projectFilter);
-    const matchesClient = clientFilter === "All" || row.client.includes(clientFilter);
-    const matchesItem = itemFilter === "All" || row.itemName.includes(itemFilter);
-    const matchesType = typeFilter === "All" || row.type.includes(typeFilter);
-    const matchesSearch = searchQuery === "" || 
-      row.itemName.toLowerCase().includes(searchQuery.toLowerCase()) || 
-      row.client.toLowerCase().includes(searchQuery.toLowerCase()) || 
-      row.invNum.toLowerCase().includes(searchQuery.toLowerCase());
+  const cell = (row: Record<string, any>, key: string) => (row[key] ?? "").toString();
+
+  const filteredSales = rows.filter(row => {
+    const matchesProj = projectFilter === "All" || cell(row, "Project Name").includes(projectFilter);
+    const matchesClient = clientFilter === "All" || cell(row, "Client Name").includes(clientFilter);
+    const matchesItem = itemFilter === "All" || cell(row, "Item Name").includes(itemFilter);
+    const matchesType = typeFilter === "All" || cell(row, "Sale Type").includes(typeFilter);
+    const matchesSearch = searchQuery === "" ||
+      cell(row, "Item Name").toLowerCase().includes(searchQuery.toLowerCase()) ||
+      cell(row, "Client Name").toLowerCase().includes(searchQuery.toLowerCase()) ||
+      cell(row, "Invoice Number").toLowerCase().includes(searchQuery.toLowerCase());
     return matchesProj && matchesClient && matchesItem && matchesType && matchesSearch;
   });
 
   return (
     <div className="flex h-screen bg-background text-foreground overflow-hidden font-sans">
-      <Sidebar onShowToast={showToast} />
+      <Sidebar />
 
       <main className="flex-1 flex flex-col h-full overflow-hidden relative">
         <PageHeader title="Item Wise Sales Report" />
@@ -143,58 +161,62 @@ export default function ItemWiseSalesReportPage() {
 
         {/* Content Table */}
         <div className="flex-1 overflow-y-auto p-6 bg-elevated/10">
-          <div className="bg-card border border-border-custom rounded-xl p-4">
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs text-left">
-                <thead>
-                  <tr className="border-b border-border-custom text-muted font-semibold text-[10px] uppercase">
-                    <th className="pb-2">#</th>
-                    <th className="pb-2">Sale Type</th>
-                    <th className="pb-2">Project Name</th>
-                    <th className="pb-2">Client Name</th>
-                    <th className="pb-2">Invoice Number</th>
-                    <th className="pb-2">Invoice Date</th>
-                    <th className="pb-2">Item Name</th>
-                    <th className="pb-2">Unit</th>
-                    <th className="pb-2">Quantity</th>
-                    <th className="pb-2">Item Rate</th>
-                    <th className="pb-2">Tax %</th>
-                    <th className="pb-2">Tax Amount</th>
-                    <th className="pb-2">Gross Amount</th>
-                    <th className="pb-2">Total Amount</th>
-                    <th className="pb-2">Invoice Created</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredSales.length === 0 ? (
-                    <tr>
-                      <td colSpan={15} className="py-8 text-center text-muted">No sales invoice items match the active filters.</td>
+          {loading ? (
+            <div className="bg-card border border-border-custom rounded-xl p-4 text-center text-muted text-sm">Loading…</div>
+          ) : (
+            <div className="bg-card border border-border-custom rounded-xl p-4">
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs text-left">
+                  <thead>
+                    <tr className="border-b border-border-custom text-muted font-semibold text-[10px] uppercase">
+                      <th className="pb-2">#</th>
+                      <th className="pb-2">Sale Type</th>
+                      <th className="pb-2">Project Name</th>
+                      <th className="pb-2">Client Name</th>
+                      <th className="pb-2">Invoice Number</th>
+                      <th className="pb-2">Invoice Date</th>
+                      <th className="pb-2">Item Name</th>
+                      <th className="pb-2">Unit</th>
+                      <th className="pb-2">Quantity</th>
+                      <th className="pb-2">Item Rate</th>
+                      <th className="pb-2">Tax %</th>
+                      <th className="pb-2">Tax Amount</th>
+                      <th className="pb-2">Gross Amount</th>
+                      <th className="pb-2">Total Amount</th>
+                      <th className="pb-2">Invoice Created</th>
                     </tr>
-                  ) : (
-                    filteredSales.map((row, i) => (
-                      <tr key={i} className="border-b border-border-custom/40 last:border-0 hover:bg-elevated/40">
-                        <td className="py-3 text-muted">{i + 1}</td>
-                        <td className="py-3 font-semibold text-white">{row.type}</td>
-                        <td className="py-3 text-muted">{row.project}</td>
-                        <td className="py-3 text-white font-medium">{row.client}</td>
-                        <td className="py-3 text-muted">{row.invNum}</td>
-                        <td className="py-3 text-muted">{row.invDate}</td>
-                        <td className="py-3 text-white">{row.itemName}</td>
-                        <td className="py-3 text-muted">{row.unit}</td>
-                        <td className="py-3 text-white font-bold">{row.qty}</td>
-                        <td className="py-3 text-muted">{row.rate}</td>
-                        <td className="py-3 text-muted">{row.tax}</td>
-                        <td className="py-3 text-muted">{row.taxAmt}</td>
-                        <td className="py-3 text-muted">{row.grossAmt}</td>
-                        <td className="py-3 text-muted">{row.totalAmt}</td>
-                        <td className="py-3 text-muted">{row.created}</td>
+                  </thead>
+                  <tbody>
+                    {filteredSales.length === 0 ? (
+                      <tr>
+                        <td colSpan={15} className="py-8 text-center text-muted">No data available for this report yet.</td>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+                    ) : (
+                      filteredSales.map((row, i) => (
+                        <tr key={i} className="border-b border-border-custom/40 last:border-0 hover:bg-elevated/40">
+                          <td className="py-3 text-muted">{i + 1}</td>
+                          <td className="py-3 font-semibold text-white">{cell(row, "Sale Type")}</td>
+                          <td className="py-3 text-muted">{cell(row, "Project Name")}</td>
+                          <td className="py-3 text-white font-medium">{cell(row, "Client Name")}</td>
+                          <td className="py-3 text-muted">{cell(row, "Invoice Number")}</td>
+                          <td className="py-3 text-muted">{cell(row, "Invoice Date")}</td>
+                          <td className="py-3 text-white">{cell(row, "Item Name")}</td>
+                          <td className="py-3 text-muted">{cell(row, "Unit")}</td>
+                          <td className="py-3 text-white font-bold">{cell(row, "Quantity")}</td>
+                          <td className="py-3 text-muted">{cell(row, "Item Rate")}</td>
+                          <td className="py-3 text-muted">{cell(row, "Tax %")}</td>
+                          <td className="py-3 text-muted">{cell(row, "Tax Amount")}</td>
+                          <td className="py-3 text-muted">{cell(row, "Gross Amount")}</td>
+                          <td className="py-3 text-muted">{cell(row, "Total Amount")}</td>
+                          <td className="py-3 text-muted">{cell(row, "Invoice Created")}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Global Toast */}

@@ -211,7 +211,7 @@ export default function DPRPage() {
               <span className="text-[10px] uppercase font-bold text-muted tracking-wider block px-3 mb-2">Daily Progress</span>
               <ul className="space-y-1">
                 <li>
-                  <Link href="#" className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg bg-primary/10 text-white font-semibold shadow-sm">
+                  <Link href={`/c/${companyId}/p/${projectId}/dpr`} className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg bg-primary/10 text-white font-semibold shadow-sm">
                     <span>📋</span> Daily Progress Log (DPR)
                   </Link>
                 </li>

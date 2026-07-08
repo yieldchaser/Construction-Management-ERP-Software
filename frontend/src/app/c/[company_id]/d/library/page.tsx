@@ -49,6 +49,8 @@ export default function LibraryHubPage() {
   const [partyFatherName, setPartyFatherName] = useState("");
   const [partyPassportNo, setPartyPassportNo] = useState("");
   const [partyPassportExpiryDate, setPartyPassportExpiryDate] = useState("");
+  const [aadhaarFile, setAadhaarFile] = useState<File | null>(null);
+  const [panFile, setPanFile] = useState<File | null>(null);
 
   // Form Fields: Material
   const [matName, setMatName] = useState("");
@@ -1035,21 +1037,48 @@ export default function LibraryHubPage() {
               </div>
 
               <div className="pt-2 border-t border-border-custom grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => alert("Mock upload for Aadhaar details ready.")}
-                  className="py-1.5 border border-border-custom hover:bg-elevated rounded-md text-foreground font-medium text-xs transition-all cursor-pointer text-center"
-                >
+                <label className="py-1.5 border border-border-custom hover:bg-elevated rounded-md text-foreground font-medium text-xs transition-all cursor-pointer text-center block">
                   Upload Aadhaar
-                </button>
-                <button
-                  type="button"
-                  onClick={() => alert("Mock upload for PAN details ready.")}
-                  className="py-1.5 border border-border-custom hover:bg-elevated rounded-md text-foreground font-medium text-xs transition-all cursor-pointer text-center"
-                >
+                  <input
+                    type="file"
+                    accept="image/*,application/pdf"
+                    className="hidden"
+                    onChange={(e) => setAadhaarFile(e.target.files?.[0] ?? null)}
+                  />
+                </label>
+                <label className="py-1.5 border border-border-custom hover:bg-elevated rounded-md text-foreground font-medium text-xs transition-all cursor-pointer text-center block">
                   Upload PAN
-                </button>
+                  <input
+                    type="file"
+                    accept="image/*,application/pdf"
+                    className="hidden"
+                    onChange={(e) => setPanFile(e.target.files?.[0] ?? null)}
+                  />
+                </label>
               </div>
+
+              {(aadhaarFile || panFile) && (
+                <div className="grid grid-cols-2 gap-3 pt-1">
+                  {aadhaarFile && (
+                    <div className="text-xs text-muted space-y-1">
+                      <span className="uppercase tracking-wider block">Aadhaar</span>
+                      {aadhaarFile.type.startsWith("image/") ? (
+                        <img src={URL.createObjectURL(aadhaarFile)} alt="Aadhaar preview" className="h-16 rounded-md border border-border-custom object-cover" />
+                      ) : null}
+                      <span className="block truncate text-foreground">{aadhaarFile.name}</span>
+                    </div>
+                  )}
+                  {panFile && (
+                    <div className="text-xs text-muted space-y-1">
+                      <span className="uppercase tracking-wider block">PAN</span>
+                      {panFile.type.startsWith("image/") ? (
+                        <img src={URL.createObjectURL(panFile)} alt="PAN preview" className="h-16 rounded-md border border-border-custom object-cover" />
+                      ) : null}
+                      <span className="block truncate text-foreground">{panFile.name}</span>
+                    </div>
+                  )}
+                </div>
+              )}
 
               <button
                 type="submit"

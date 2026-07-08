@@ -85,6 +85,7 @@ const CATEGORIES = [
 export function IntegrationsGridClient() {
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
+  const [requested, setRequested] = useState<Set<string>>(new Set());
 
   const filtered = INTEGRATIONS_LIST.filter((item) => {
     const matchesSearch =
@@ -196,10 +197,15 @@ export function IntegrationsGridClient() {
                 </Link>
               ) : (
                 <button
-                  onClick={() => alert(`Early access request submitted for ${item.name} integration.`)}
-                  className="text-xs font-bold text-muted hover:text-foreground transition-all cursor-pointer"
+                  onClick={() => setRequested((prev) => new Set(prev).add(item.name))}
+                  disabled={requested.has(item.name)}
+                  className={`text-xs font-bold transition-all cursor-pointer ${
+                    requested.has(item.name)
+                      ? "text-emerald-400"
+                      : "text-muted hover:text-foreground"
+                  }`}
                 >
-                  Request early access &rarr;
+                  {requested.has(item.name) ? "Requested ✓" : "Request early access →"}
                 </button>
               )}
             </div>

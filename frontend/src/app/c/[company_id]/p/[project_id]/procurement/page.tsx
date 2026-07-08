@@ -318,6 +318,7 @@ export default function ProcurementPage() {
   const [showUseModal, setShowUseModal] = useState(false);
   const [showRFQDrawer, setShowRFQDrawer] = useState(false);
   const [selectedRFQItem, setSelectedRFQItem] = useState<"UltraTech Cement" | "TMT Steel 16mm">("UltraTech Cement");
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   // New Indent form state
   const [newIndentNum, setNewIndentNum] = useState("IND-2026-003");
   const [newIndentMaterial, setNewIndentMaterial] = useState("UltraTech Cement");
@@ -742,9 +743,23 @@ export default function ProcurementPage() {
                               <span className="text-zinc-300 block font-bold">{item.name} (Req Qty: {item.qty} {item.unit})</span>
                               {item.specOverride && <span className="text-[10px] text-muted block">Spec: {item.specOverride}</span>}
                               {item.photoUrl && (
-                                <button onClick={() => alert("Preview item photo proof")} className="text-[9px] text-primary underline mt-1 block">
-                                  🖼️ View item photo proof
-                                </button>
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    onClick={() => setPreviewUrl(item.photoUrl!)}
+                                    className="text-[9px] text-primary underline mt-1 block"
+                                  >
+                                    🖼️ View item photo proof
+                                  </button>
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={(e) => {
+                                      const file = e.target.files?.[0];
+                                      if (file) setPreviewUrl(URL.createObjectURL(file));
+                                    }}
+                                  />
+                                </div>
                               )}
                             </div>
                             <div className="text-right">
@@ -1354,6 +1369,23 @@ export default function ProcurementPage() {
                 ))}
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {previewUrl && (
+        <div
+          className="fixed inset-0 bg-black/60 flex items-center justify-center z-[60] p-4"
+          onClick={() => setPreviewUrl(null)}
+        >
+          <div
+            className="bg-card border border-border-custom rounded-lg p-4 max-w-3xl w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-end mb-2">
+              <button onClick={() => setPreviewUrl(null)} className="text-muted hover:text-foreground font-bold text-lg leading-none">×</button>
+            </div>
+            <img src={previewUrl} className="max-h-[70vh] rounded-lg mx-auto" alt="Item photo proof" />
           </div>
         </div>
       )}

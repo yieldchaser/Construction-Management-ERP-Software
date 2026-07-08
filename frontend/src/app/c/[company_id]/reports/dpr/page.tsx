@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import PageHeader from "@/components/PageHeader";
+import { getApiHost } from "@/lib/api";
 
 export default function DPRReportPage() {
   const params = useParams();
@@ -13,56 +14,64 @@ export default function DPRReportPage() {
   const [selectedProject, setSelectedProject] = useState("All");
   const [selectedDateFilter, setSelectedDateFilter] = useState("This Week");
   const [toastMessage, setToastMessage] = useState("");
+  const [rows, setRows] = useState<Record<string, any>[]>([]);
+  const [loading, setLoading] = useState(false);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(""), 3000);
   };
 
-  // Mock data matching the columns of Onsite Teams
-  const mockTodo = [
-    { project: "Metro Terminal (Phase 2)", activity: "Slab reinforcement inspection", status: "Completed", type: "Milestone" },
-    { project: "Bypass Highway Flyover", activity: "Pillar 4 casting", status: "Ongoing", type: "Task" },
-    { project: "Alpha Premium Residences", activity: "Excavation and foundation work", status: "Pending", type: "Task" }
-  ];
+  useEffect(() => {
+    const fetchReport = async () => {
+      setLoading(true);
+      try {
+        const token = localStorage.getItem("access_token");
+        const res = await fetch(`${getApiHost()}/apis/v3/reports/data/dpr?company_id=${companyId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+        setRows(data.rows || []);
+      } catch {
+        setRows([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchReport();
+  }, [companyId]);
 
-  const mockMaterialReq = [
-    { project: "Metro Terminal (Phase 2)", material: "Cement 53 Grade", reqQty: "250 Bags", unsettledQty: "50 Bags", status: "Partially Fulfilled" },
-    { project: "Bypass Highway Flyover", material: "TMT Rebars 12mm", reqQty: "12 Tons", unsettledQty: "0 Tons", status: "Fulfilled" },
-    { project: "Alpha Premium Residences", material: "River Sand", reqQty: "40 Brass", unsettledQty: "40 Brass", status: "Requested" }
-  ];
+  const cell = (row: Record<string, any>, key: string) => row[key] ?? "";
+  const projectMatch = (row: Record<string, any>) =>
+    selectedProject === "All" || (row["Project Name"] ?? "").toString().includes(selectedProject);
 
-  const mockTaskReport = [
-    { project: "Metro Terminal (Phase 2)", mainTask: "Superstructure", groupTask: "Columns & Beams", task: "L1 Column Shuttering", start: "2026-07-01", end: "2026-07-08", unit: "Sqm", est: "450", opening: "120", progress: "180", maxPct: "66%", closing: "300" },
-    { project: "Bypass Highway Flyover", mainTask: "Substructure", groupTask: "Foundation", task: "Pile Cap Reinforcement", start: "2026-06-15", end: "2026-07-05", unit: "Tons", est: "18.5", opening: "10.2", progress: "8.3", maxPct: "100%", closing: "18.5" }
-  ];
+  const todoRows = rows.filter(r => projectMatch(r));
+  const matReqRows = rows.filter(r => projectMatch(r));
+  const taskRows = rows.filter(r => projectMatch(r));
+  const attendanceRows = rows.filter(r => projectMatch(r));
+  const materialRows = rows.filter(r => projectMatch(r));
+  const equipmentRows = rows.filter(r => projectMatch(r));
 
-  const mockAttendance = [
-    { project: "Metro Terminal (Phase 2)", party: "Sanjay Yadav", workforce: "Carpenters", workers: "8", shift: "8.0" },
-    { project: "Metro Terminal (Phase 2)", party: "Ramesh Kumar", workforce: "Bar Benders", workers: "12", shift: "12.0" },
-    { project: "Bypass Highway Flyover", party: "Subcon Alpha", workforce: "Masons", workers: "15", shift: "15.0" }
-  ];
+  const statusBadge = (status: string) => {
+    const s = status.toString();
+    if (s === "Completed" || s === "Fulfilled") {
+      return "bg-green-500/10 text-green-400 border border-green-500/20";
+    }
+    if (s === "Ongoing" || s === "Partially Fulfilled") {
+      return "bg-yellow-500/10 text-yellow-400 border border-yellow-500/20";
+    }
+    return "bg-zinc-500/10 text-muted border border-zinc-500/20";
+  };
 
-  const mockMaterial = [
-    { project: "Metro Terminal (Phase 2)", material: "Coarse Aggregate 20mm", unit: "Cum", received: "80", used: "45" },
-    { project: "Bypass Highway Flyover", material: "Ready Mix Concrete M35", unit: "Cum", received: "120", used: "120" }
-  ];
-
-  const mockEquipment = [
-    { project: "Metro Terminal (Phase 2)", name: "JCB Excavator 3DX", vehicle: "MH-12-PQ-8891", unit: "Hours (6.5)" },
-    { project: "Bypass Highway Flyover", name: "Transit Mixer 6m3", vehicle: "MH-14-GH-2305", unit: "Trips (8)" }
-  ];
-
-  const filteredTodo = selectedProject === "All" ? mockTodo : mockTodo.filter(t => t.project.includes(selectedProject));
-  const filteredMatReq = selectedProject === "All" ? mockMaterialReq : mockMaterialReq.filter(t => t.project.includes(selectedProject));
-  const filteredTaskReport = selectedProject === "All" ? mockTaskReport : mockTaskReport.filter(t => t.project.includes(selectedProject));
-  const filteredAttendance = selectedProject === "All" ? mockAttendance : mockAttendance.filter(t => t.project.includes(selectedProject));
-  const filteredMaterial = selectedProject === "All" ? mockMaterial : mockMaterial.filter(t => t.project.includes(selectedProject));
-  const filteredEquipment = selectedProject === "All" ? mockEquipment : mockEquipment.filter(t => t.project.includes(selectedProject));
+  const emptyRow = (colSpan: number) => (
+    <tr>
+      <td colSpan={colSpan} className="py-8 text-center text-muted">No data available for this report yet.</td>
+    </tr>
+  );
 
   return (
     <div className="flex h-screen bg-background text-foreground overflow-hidden font-sans">
-      <Sidebar onShowToast={showToast} />
+      <Sidebar />
 
       <main className="flex-1 flex flex-col h-full overflow-hidden relative">
         <PageHeader title="Daily Progress Report (DPR)" />
@@ -125,6 +134,10 @@ export default function DPRReportPage() {
         {/* Content Lists */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-elevated/10">
 
+          {loading && (
+            <div className="text-center text-muted text-sm py-4">Loading…</div>
+          )}
+
           {/* Row 1: To Do & Material Request split */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             
@@ -132,7 +145,7 @@ export default function DPRReportPage() {
             <div className="bg-card border border-border-custom rounded-xl p-4">
               <h3 className="text-xs font-bold text-white mb-3 flex items-center justify-between">
                 <span>To Do For DPR</span>
-                <span className="text-[10px] text-muted font-normal">{filteredTodo.length} items</span>
+                <span className="text-[10px] text-muted font-normal">{todoRows.length} items</span>
               </h3>
               <div className="overflow-x-auto">
                 <table className="w-full text-xs text-left">
@@ -145,20 +158,20 @@ export default function DPRReportPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredTodo.map((row, i) => (
-                      <tr key={i} className="border-b border-border-custom/40 last:border-0 hover:bg-elevated/40">
-                        <td className="py-2.5 font-medium text-white">{row.project}</td>
-                        <td className="py-2.5 text-muted">{row.activity}</td>
-                        <td className="py-2.5">
-                          <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
-                            row.status === "Completed" ? "bg-green-500/10 text-green-400 border border-green-500/20" :
-                            row.status === "Ongoing" ? "bg-yellow-500/10 text-yellow-400 border border-yellow-500/20" :
-                            "bg-zinc-500/10 text-muted border border-zinc-500/20"
-                          }`}>{row.status}</span>
-                        </td>
-                        <td className="py-2.5 text-muted">{row.type}</td>
-                      </tr>
-                    ))}
+                    {todoRows.length === 0 ? (
+                      emptyRow(4)
+                    ) : (
+                      todoRows.map((row, i) => (
+                        <tr key={i} className="border-b border-border-custom/40 last:border-0 hover:bg-elevated/40">
+                          <td className="py-2.5 font-medium text-white">{cell(row, "Project Name")}</td>
+                          <td className="py-2.5 text-muted">{cell(row, "Activity Name")}</td>
+                          <td className="py-2.5">
+                            <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${statusBadge(cell(row, "Status"))}`}>{cell(row, "Status")}</span>
+                          </td>
+                          <td className="py-2.5 text-muted">{cell(row, "Type")}</td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -168,7 +181,7 @@ export default function DPRReportPage() {
             <div className="bg-card border border-border-custom rounded-xl p-4">
               <h3 className="text-xs font-bold text-white mb-3 flex items-center justify-between">
                 <span>Material Request for DPR</span>
-                <span className="text-[10px] text-muted font-normal">{filteredMatReq.length} items</span>
+                <span className="text-[10px] text-muted font-normal">{matReqRows.length} items</span>
               </h3>
               <div className="overflow-x-auto">
                 <table className="w-full text-xs text-left">
@@ -182,21 +195,21 @@ export default function DPRReportPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredMatReq.map((row, i) => (
-                      <tr key={i} className="border-b border-border-custom/40 last:border-0 hover:bg-elevated/40">
-                        <td className="py-2.5 font-medium text-white">{row.project}</td>
-                        <td className="py-2.5 text-muted">{row.material}</td>
-                        <td className="py-2.5 text-white">{row.reqQty}</td>
-                        <td className="py-2.5 text-muted">{row.unsettledQty}</td>
-                        <td className="py-2.5">
-                          <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
-                            row.status === "Fulfilled" ? "bg-green-500/10 text-green-400 border border-green-500/20" :
-                            row.status === "Partially Fulfilled" ? "bg-yellow-500/10 text-yellow-400 border border-yellow-500/20" :
-                            "bg-orange-500/10 text-orange-400 border border-orange-500/20"
-                          }`}>{row.status}</span>
-                        </td>
-                      </tr>
-                    ))}
+                    {matReqRows.length === 0 ? (
+                      emptyRow(5)
+                    ) : (
+                      matReqRows.map((row, i) => (
+                        <tr key={i} className="border-b border-border-custom/40 last:border-0 hover:bg-elevated/40">
+                          <td className="py-2.5 font-medium text-white">{cell(row, "Project Name")}</td>
+                          <td className="py-2.5 text-muted">{cell(row, "Material Name")}</td>
+                          <td className="py-2.5 text-white">{cell(row, "Request Qty")}</td>
+                          <td className="py-2.5 text-muted">{cell(row, "Unsettled Qty")}</td>
+                          <td className="py-2.5">
+                            <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${statusBadge(cell(row, "Status"))}`}>{cell(row, "Status")}</span>
+                          </td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -226,22 +239,26 @@ export default function DPRReportPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredTaskReport.map((row, i) => (
-                    <tr key={i} className="border-b border-border-custom/40 last:border-0 hover:bg-elevated/40">
-                      <td className="py-2.5 font-medium text-white">{row.project}</td>
-                      <td className="py-2.5 text-muted">{row.mainTask}</td>
-                      <td className="py-2.5 text-muted">{row.groupTask}</td>
-                      <td className="py-2.5 text-white">{row.task}</td>
-                      <td className="py-2.5 text-muted">{row.start}</td>
-                      <td className="py-2.5 text-muted">{row.end}</td>
-                      <td className="py-2.5 text-muted">{row.unit}</td>
-                      <td className="py-2.5 text-white">{row.est}</td>
-                      <td className="py-2.5 text-muted">{row.opening}</td>
-                      <td className="py-2.5 text-success font-semibold">+{row.progress}</td>
-                      <td className="py-2.5 font-bold text-white">{row.maxPct}</td>
-                      <td className="py-2.5 text-white">{row.closing}</td>
-                    </tr>
-                  ))}
+                  {taskRows.length === 0 ? (
+                    emptyRow(12)
+                  ) : (
+                    taskRows.map((row, i) => (
+                      <tr key={i} className="border-b border-border-custom/40 last:border-0 hover:bg-elevated/40">
+                        <td className="py-2.5 font-medium text-white">{cell(row, "Project Name")}</td>
+                        <td className="py-2.5 text-muted">{cell(row, "Main Task Name")}</td>
+                        <td className="py-2.5 text-muted">{cell(row, "Group Task Name")}</td>
+                        <td className="py-2.5 text-white">{cell(row, "Task Name")}</td>
+                        <td className="py-2.5 text-muted">{cell(row, "Start Date")}</td>
+                        <td className="py-2.5 text-muted">{cell(row, "End Date")}</td>
+                        <td className="py-2.5 text-muted">{cell(row, "Unit")}</td>
+                        <td className="py-2.5 text-white">{cell(row, "Estimated Qty")}</td>
+                        <td className="py-2.5 text-muted">{cell(row, "Opening Qty")}</td>
+                        <td className="py-2.5 text-success font-semibold">+{cell(row, "Progress Qty")}</td>
+                        <td className="py-2.5 font-bold text-white">{cell(row, "Max % Complete")}</td>
+                        <td className="py-2.5 text-white">{cell(row, "Closing Qty")}</td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -262,15 +279,19 @@ export default function DPRReportPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredAttendance.map((row, i) => (
-                    <tr key={i} className="border-b border-border-custom/40 last:border-0 hover:bg-elevated/40">
-                      <td className="py-2.5 font-medium text-white">{row.project}</td>
-                      <td className="py-2.5 text-muted">{row.party}</td>
-                      <td className="py-2.5 text-white">{row.workforce}</td>
-                      <td className="py-2.5 font-semibold text-white">{row.workers}</td>
-                      <td className="py-2.5 text-white">{row.shift}</td>
-                    </tr>
-                  ))}
+                  {attendanceRows.length === 0 ? (
+                    emptyRow(5)
+                  ) : (
+                    attendanceRows.map((row, i) => (
+                      <tr key={i} className="border-b border-border-custom/40 last:border-0 hover:bg-elevated/40">
+                        <td className="py-2.5 font-medium text-white">{cell(row, "Project Name")}</td>
+                        <td className="py-2.5 text-muted">{cell(row, "Party Name")}</td>
+                        <td className="py-2.5 text-white">{cell(row, "Workforce Name")}</td>
+                        <td className="py-2.5 font-semibold text-white">{cell(row, "No of Workers")}</td>
+                        <td className="py-2.5 text-white">{cell(row, "Total Shift")}</td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -291,15 +312,19 @@ export default function DPRReportPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredMaterial.map((row, i) => (
-                    <tr key={i} className="border-b border-border-custom/40 last:border-0 hover:bg-elevated/40">
-                      <td className="py-2.5 font-medium text-white">{row.project}</td>
-                      <td className="py-2.5 text-white">{row.material}</td>
-                      <td className="py-2.5 text-muted">{row.unit}</td>
-                      <td className="py-2.5 text-success font-semibold">{row.received}</td>
-                      <td className="py-2.5 text-orange-400 font-semibold">{row.used}</td>
-                    </tr>
-                  ))}
+                  {materialRows.length === 0 ? (
+                    emptyRow(5)
+                  ) : (
+                    materialRows.map((row, i) => (
+                      <tr key={i} className="border-b border-border-custom/40 last:border-0 hover:bg-elevated/40">
+                        <td className="py-2.5 font-medium text-white">{cell(row, "Project Name")}</td>
+                        <td className="py-2.5 text-white">{cell(row, "Material")}</td>
+                        <td className="py-2.5 text-muted">{cell(row, "Unit")}</td>
+                        <td className="py-2.5 text-success font-semibold">{cell(row, "Received Qty")}</td>
+                        <td className="py-2.5 text-orange-400 font-semibold">{cell(row, "Used Qty")}</td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -319,14 +344,18 @@ export default function DPRReportPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredEquipment.map((row, i) => (
-                    <tr key={i} className="border-b border-border-custom/40 last:border-0 hover:bg-elevated/40">
-                      <td className="py-2.5 font-medium text-white">{row.project}</td>
-                      <td className="py-2.5 text-white">{row.name}</td>
-                      <td className="py-2.5 text-muted">{row.vehicle}</td>
-                      <td className="py-2.5 font-semibold text-white">{row.unit}</td>
-                    </tr>
-                  ))}
+                  {equipmentRows.length === 0 ? (
+                    emptyRow(4)
+                  ) : (
+                    equipmentRows.map((row, i) => (
+                      <tr key={i} className="border-b border-border-custom/40 last:border-0 hover:bg-elevated/40">
+                        <td className="py-2.5 font-medium text-white">{cell(row, "Project Name")}</td>
+                        <td className="py-2.5 text-white">{cell(row, "Equipment Name")}</td>
+                        <td className="py-2.5 text-muted">{cell(row, "Vehicle No")}</td>
+                        <td className="py-2.5 font-semibold text-white">{cell(row, "Unit")}</td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>

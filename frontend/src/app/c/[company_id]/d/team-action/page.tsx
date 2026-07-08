@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams } from "next/navigation";
 import { getApiHost } from "@/lib/api";
 
@@ -49,6 +49,8 @@ export default function TeamActionPage() {
   const [tsEndTime, setTsEndTime] = useState("17:00");
   const [tsActivity, setTsActivity] = useState("");
   const [tsHours, setTsHours] = useState(8);
+  const [tsPhotoUrl, setTsPhotoUrl] = useState<string | null>(null);
+  const tsPhotoInputRef = useRef<HTMLInputElement>(null);
 
   const apiHost = getApiHost();
 
@@ -553,13 +555,29 @@ export default function TeamActionPage() {
               </div>
 
               <div className="pt-2 border-t border-border-custom">
+                <input
+                  ref={tsPhotoInputRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) setTsPhotoUrl(URL.createObjectURL(file));
+                  }}
+                />
                 <button
                   type="button"
-                  onClick={() => alert("Photo upload integration ready! (Camera API mock)")}
+                  onClick={() => tsPhotoInputRef.current?.click()}
                   className="w-full py-2 border border-border-custom hover:bg-white/5 rounded-md text-muted font-semibold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
                 >
                   📷 Attach Photo / File
                 </button>
+                {tsPhotoUrl && (
+                  <div className="mt-2">
+                    <img src={tsPhotoUrl} alt="Attached preview" className="h-20 rounded-md border border-border-custom object-cover" />
+                  </div>
+                )}
               </div>
 
               <button

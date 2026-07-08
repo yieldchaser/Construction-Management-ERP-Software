@@ -465,7 +465,7 @@ export default function GanttSchedulerPage() {
                 </li>
                 <li>
                   <Link
-                    href="#"
+                    href={`/c/${companyId}/p/${projectId}/planning/gantt`}
                     className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg bg-primary/10 text-white font-semibold shadow-sm"
                   >
                     <span>📅</span> Gantt Scheduler

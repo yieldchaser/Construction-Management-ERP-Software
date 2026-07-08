@@ -1,18 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { usePathname } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import PageHeader from "@/components/PageHeader";
 
 export default function WorkspaceLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const [toastMessage, setToastMessage] = useState("");
-
-  const showToast = (msg: string) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(""), 3000);
-  };
 
   const getPageTitle = () => {
     if (pathname.includes("/d/home")) return "Project Hub";
@@ -28,7 +22,7 @@ export default function WorkspaceLayout({ children }: { children: React.ReactNod
   return (
     <div className="flex h-screen bg-background text-foreground overflow-hidden font-sans">
       {/* Reusable Sidebar */}
-      <Sidebar onShowToast={showToast} />
+      <Sidebar />
 
       {/* Main Workspace Area */}
       <main className="flex-1 flex flex-col h-full overflow-hidden relative">
@@ -39,14 +33,6 @@ export default function WorkspaceLayout({ children }: { children: React.ReactNod
         <div className="flex-1 overflow-hidden relative flex flex-col">
           {children}
         </div>
-
-        {/* Global Toast Message */}
-        {toastMessage && (
-          <div className="absolute bottom-6 right-6 bg-card border border-success/30 rounded-lg px-4 py-3 text-xs text-success shadow-lg flex items-center gap-2 z-50 transition-all">
-            <span>⚡</span>
-            <span className="font-semibold">{toastMessage}</span>
-          </div>
-        )}
       </main>
     </div>
   );

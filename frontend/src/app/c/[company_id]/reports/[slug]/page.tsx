@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import PageHeader from "@/components/PageHeader";
+import { getApiHost } from "@/lib/api";
 
 // Comprehensive metadata configurations for all 70+ reports
 interface FilterConfig {
@@ -477,58 +478,7 @@ const REPORT_METADATA: Record<string, ReportMeta> = {
     filters: [{ label: "Asset Code", type: "select", options: ["All"] }, { label: "Asset Name", type: "select", options: ["All"] }, { label: "Asset Type", type: "select", options: ["All"] }],
     columns: ['Asset Code', 'Asset Name', 'Asset Type', 'Total Qty', 'Available Qty', 'Assigned Qty', 'In Repair Qty', 'Damaged Qty', 'Asset Value', 'Created by', 'Creation Date', 'Last Assigned To', 'Last Assigned Time']
   }
-};;;
-
-// Seed realistic field-based mock value generators
-function getMockValueForColumn(colName: string, rowIndex: number): string {
-  const norm = colName.toLowerCase();
-  if (norm.includes("date")) {
-    return rowIndex === 0 ? "02-Jul-2026" : rowIndex === 1 ? "05-Jul-2026" : "07-Jul-2026";
-  }
-  if (norm.includes("project")) {
-    return rowIndex % 2 === 0 ? "Metro Terminal (Phase 2)" : "Bypass Highway Flyover";
-  }
-  if (norm.includes("client")) {
-    return "L&T Construction";
-  }
-  if (norm.includes("party") || norm.includes("vendor") || norm.includes("employee") || norm.includes("name") || norm.includes("assigned to")) {
-    if (norm.includes("material") || norm.includes("equipment")) {
-      return rowIndex % 2 === 0 ? "Cement 53 Grade" : "Excavator JCB-3DX";
-    }
-    return rowIndex === 0 ? "Yash Desai" : rowIndex === 1 ? "Anil Steels" : "Sanjay Yadav";
-  }
-  if (norm.includes("status")) {
-    return rowIndex % 2 === 0 ? "Approved" : "Pending";
-  }
-  if (norm.includes("mode") || norm.includes("payment mode")) {
-    return "Bank Transfer";
-  }
-  if (norm.includes("account")) {
-    return "HDFC-Main";
-  }
-  if (norm.includes("cost code")) {
-    return "C-102";
-  }
-  if (norm.includes("amount") || norm.includes("cost") || norm.includes("price") || norm.includes("budget") || norm.includes("sales") || norm.includes("deduction") || norm.includes("retention") || norm.includes("tax") || norm.includes("ctc") || norm.includes("earning") || norm.includes("deductions") || norm.includes("salary")) {
-    return rowIndex === 0 ? "45,000" : rowIndex === 1 ? "12,500" : "5,000";
-  }
-  if (norm.includes("number") || norm.includes("no") || norm.includes("code") || norm.includes("id")) {
-    return `INV-2026-${100 + rowIndex}`;
-  }
-  if (norm.includes("qty") || norm.includes("quantity") || norm.includes("hours") || norm.includes("days") || norm.includes("shift") || norm.includes("count")) {
-    return "120";
-  }
-  if (norm.includes("unit") || norm.includes("uom")) {
-    return "Bags";
-  }
-  if (norm.includes("type")) {
-    return "Material";
-  }
-  if (norm.includes("remark") || norm.includes("notes") || norm.includes("description")) {
-    return "High-fidelity automatic simulation row data";
-  }
-  return "Standard Value";
-}
+};
 
 export default function DynamicReportViewPage() {
   const params = useParams();
@@ -596,17 +546,30 @@ export default function DynamicReportViewPage() {
     showToast(`Sorted table rows in ${nextDir.toUpperCase()} order.`);
   };
 
-  // Generate 3 realistic mock rows dynamically based on the report columns and refresh state
-  const mockData = [0, 1, 2].map(idx => {
-    const row: Record<string, string> = {};
-    meta.columns.forEach(col => {
-      row[col] = getMockValueForColumn(col, idx + refreshTrigger);
-    });
-    return row;
-  });
+  const [rows, setRows] = useState<Record<string, any>[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchReport = async () => {
+      setLoading(true);
+      try {
+        const token = localStorage.getItem("access_token");
+        const res = await fetch(`${getApiHost()}/apis/v3/reports/data/${slug}?company_id=${companyId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+        setRows(data.rows || []);
+      } catch {
+        setRows([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchReport();
+  }, [slug, companyId, refreshTrigger]);
 
   // Filter rows based on search and filters
-  const filteredData = mockData.filter(row => {
+  const filteredData = rows.filter(row => {
     // 1. Match search query across all cells
     if (searchQuery !== "") {
       const rowString = JSON.stringify(row).toLowerCase();
@@ -772,7 +735,7 @@ export default function DynamicReportViewPage() {
 
   return (
     <div className="flex h-screen bg-background text-foreground overflow-hidden font-sans">
-      <Sidebar onShowToast={showToast} />
+      <Sidebar />
       <main className="flex-1 flex flex-col h-full overflow-hidden relative">
         <PageHeader title={meta.title} />
 
@@ -1009,41 +972,43 @@ export default function DynamicReportViewPage() {
             </div>
           ) : (
             /* STANDARD DATA TABLE */
-            <div className="min-w-full overflow-x-auto rounded-xl border border-border-custom bg-card">
-              <table className="w-full text-xs">
-              <thead>
-                <tr className="bg-gradient-to-r from-[#6366f1] to-[#7c3aed] text-white">
-                  <th className="px-3 py-2.5 text-left font-semibold whitespace-nowrap w-12">#</th>
-                  {meta.columns.map(col => (
-                    <th key={col} className="px-3 py-2.5 text-left font-semibold whitespace-nowrap">
-                      {col}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {processedData.length === 0 ? (
-                  <tr>
-                    <td colSpan={meta.columns.length + 1} className="text-center py-16 text-[#ef4444] font-semibold text-sm">
-                      No Data
-                    </td>
+            loading ? (
+              <div className="min-w-full overflow-x-auto rounded-xl border border-border-custom bg-card p-10 text-center text-muted text-sm">
+                Loading…
+              </div>
+            ) : processedData.length === 0 ? (
+              <div className="min-w-full overflow-x-auto rounded-xl border border-border-custom bg-card p-10 text-center">
+                <p className="text-muted text-sm">No data available for this report yet.</p>
+              </div>
+            ) : (
+              <div className="min-w-full overflow-x-auto rounded-xl border border-border-custom bg-card">
+                <table className="w-full text-xs">
+                <thead>
+                  <tr className="bg-gradient-to-r from-[#6366f1] to-[#7c3aed] text-white">
+                    <th className="px-3 py-2.5 text-left font-semibold whitespace-nowrap w-12">#</th>
+                    {meta.columns.map(col => (
+                      <th key={col} className="px-3 py-2.5 text-left font-semibold whitespace-nowrap">
+                        {col}
+                      </th>
+                    ))}
                   </tr>
-                ) : (
-                  processedData.map((row, i) => (
+                </thead>
+                <tbody>
+                  {processedData.map((row, i) => (
                     <tr key={i} className="border-t border-border-custom hover:bg-elevated/40 transition-colors">
                       <td className="px-3 py-2.5 text-muted">{i + 1}</td>
                       {meta.columns.map(col => (
                         <td key={col} className="px-3 py-2.5 text-foreground whitespace-nowrap">
-                          {row[col]}
+                          {row[col] ?? ""}
                         </td>
                       ))}
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-          )}
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            ))
+          }
         </div>
 
         {/* Back Navigation Bar */}

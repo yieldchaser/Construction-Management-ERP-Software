@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import PageHeader from "@/components/PageHeader";
+import { getApiHost } from "@/lib/api";
 
 interface ReportItem {
   name: string;
@@ -326,387 +327,49 @@ export default function ReportsDashboard() {
     setShowModal(true);
   };
 
-  const triggerDownload = () => {
+  const triggerDownload = async () => {
     if (!selectedReport) return;
+    const slug = selectedReport.viewSlug;
+    if (!slug) return;
     setIsExporting(true);
 
-    setTimeout(() => {
-      const reportName = selectedReport.name;
-      const headers = exportSchemas[reportName] || ["S.No.", "Date", "Project Name", "Details", "Amount (INR)", "Status"];
-      
-      // Seed high-fidelity sample records based on report headers
-      let mockRows: string[][] = [];
-      if (reportName === "Company Expense Report") {
-        mockRows = [
-          ["1", "01-Jul-2026", "Material Purchase", "Metro Terminal", "Anil Steels", "Purchase of Grade-A rebars", "C-102", "Paid", "53100", "53100", "53100", "0", "10-Jul-2026", "Approved"],
-          ["2", "03-Jul-2026", "Labour Payroll", "Metro Terminal", "Sanjay Yadav", "Supervisor allowance", "C-405", "Unpaid", "8000", "8000", "0", "8000", "15-Jul-2026", "Pending Review"]
-        ];
-      } else if (reportName === "Company Sales Report") {
-        mockRows = [
-          ["02-Jul-2026", "L&T Construction", "INV-2026-081", "118000", "18000", "100000", "0", "15-Aug-2026", "Yash Desai", "Metro Terminal"],
-          ["05-Jul-2026", "National Highways", "INV-2026-082", "500000", "50000", "450000", "450000", "31-Aug-2026", "Anand T", "Bypass Highway"]
-        ];
-      } else if (reportName === "Sales (GSTR-1)") {
-        mockRows = [
-          ["27AAAAA1111A1Z1", "L&T Construction", "Maharashtra", "INV-2026-081", "118000", "2026-07-02", "100000", "18%", "9000", "9000", "0", "18000"]
-        ];
-      } else if (reportName === "Sales Deduction / Retention Report") {
-        mockRows = [
-          ["Retention Fee", "50000", "Metro Terminal", "L&T Civil", "INV-2026-081", "Yash Desai", "Retention", "02-Jul-2026", "15-Aug-2026"],
-          ["TDS Deduction", "10000", "Bypass Highway Flyover", "National Highway Authority", "INV-2026-082", "Anand T", "Deduction", "05-Jul-2026", "31-Aug-2026"]
-        ];
-      } else if (reportName === "Company Payments") {
-        mockRows = [
-          ["01-Jul-2026", "Metro Terminal", "Yash Desai", "Sanjay Yadav", "8000", "Yash Desai", "Salary", "Supervisor Shift", "Cash", "Advance for supervisor"],
-          ["05-Jul-2026", "Metro Terminal", "Yash Desai", "Anil Steels", "53100", "Yash Desai", "Material", "Steel Supplier", "Bank Transfer", "Steel settlement"]
-        ];
-      } else if (reportName === "Project Wise Payment Summary") {
-        mockRows = [
-          ["Metro Terminal (Phase 2)", "120000", "450000", "32000", "18000", "250000", "1200000", "870000", "870000", "1200000", "330000", "27.5%", "330000"],
-          ["Bypass Highway Flyover", "85000", "120000", "15000", "9000", "0", "500000", "229000", "229000", "500000", "271000", "54.2%", "271000"]
-        ];
-      } else if (reportName === "Staff Muster Roll") {
-        mockRows = [
-          ["1", "PRT-101", "Yash Desai", "Engineer", "9876543210", "12345678901", "SBI", "Monthly", "60000", "26", "2", "4", "30", "5", "60000", "3000", "57000", "60000"],
-          ["2", "PRT-102", "Ramesh Kumar", "Mason", "9876543211", "98765432101", "HDFC", "Daily", "22000", "22", "1", "4", "27", "12", "22000", "1500", "20500", "22000"]
-        ];
-      } else if (reportName === "Staff Punch Report") {
-        mockRows = [
-          ["1", "Yash Desai", "Engineer", "2026-07-01", "09:00:00", "Metro Terminal Entrance", "18:00:00", "Metro Terminal Exit", "9h 0m", "Yes", "Yes", "Yes", "Yes"],
-          ["2", "Ramesh Kumar", "Mason", "2026-07-01", "08:45:00", "Metro Terminal Gate 2", "17:45:00", "Metro Terminal Gate 2", "9h 0m", "Yes", "Yes", "Yes", "Yes"]
-        ];
-      } else if (reportName === "Company Attendance") {
-        mockRows = [
-          ["Yash Desai", "Staff", "Metro Terminal", "P", "P", "P", "P", "P"],
-          ["Ramesh Kumar", "Mason", "Metro Terminal", "P", "P", "A", "P", "P"]
-        ];
-      } else if (reportName === "Staff Monthly Salary Slip") {
-        mockRows = [
-          ["EMP-001", "Yash Desai", "Engineer", "Jul-2026", "40000", "20000", "3000", "57000", "Paid"],
-          ["EMP-002", "Ramesh Kumar", "Mason", "Jul-2026", "15000", "7000", "1500", "20500", "Paid"]
-        ];
-      } else if (reportName === "BOQ Workorder Summary Report") {
-        mockRows = [
-          ["Metro Terminal Phase 2", "L&T Civil Division", "Excavation and Superstructure", "WO-001", "15-Jun-2026", "1200000", "780000", "900000", "65%"],
-          ["Flyover Bypass", "National Highway Authority", "Bridge Deck Construction", "WO-002", "28-Jun-2026", "2500000", "1000000", "1100000", "40%"]
-        ];
-      } else if (reportName === "BOQ Item Report") {
-        mockRows = [
-          ["Metro Terminal", "Excavation and Raft", "WO-ARCH-001", "L&T Civil", "15-May-2026", "Raft Slab Concrete", "m³", "500", "320", "180"],
-          ["Metro Terminal", "Pillar Reinforcement", "WO-ARCH-002", "L&T Civil", "20-May-2026", "Column Casting", "m³", "200", "120", "80"]
-        ];
-      } else if (reportName === "Equipment Usage Detail Report") {
-        mockRows = [
-          ["Metro Terminal", "Excavator JCB-3DX", "MH-14-EX-4512", "Anil Steels", "150", "Hours", "12", "45", "50"],
-          ["Metro Terminal", "Transit Mixer TM-10", "MH-14-MX-8891", "Yash Desai", "80", "Hours", "8", "30", "30"]
-        ];
-      } else if (reportName === "CRM Lead Detail Report") {
-        mockRows = [
-          ["05-Jul-2026", "Anujuman Infrastructure", "Ravi Kumar", "0882816316", "ravi@anujuman.com", "Anujuman Builders", "5000000", "Negotiation", "High", "Facebook", "Commercial", "15-Jul-2026", "05-Jul-2026", "31-Aug-2026", "Interested in Phase 2", "Yash Desai"],
-          ["05-Jul-2026", "Highway Project Lead", "Priya Sharma", "7628371919", "priya@highway.in", "National Roads Corp", "12000000", "New Lead", "Medium", "Reference", "Infrastructure", "20-Jul-2026", "05-Jul-2026", "30-Sep-2026", "Initial inquiry", "Anand T"]
-        ];
-      } else if (reportName === "Material Request Item Report") {
-        mockRows = [
-          ["2026-07-04", "REQ-001", "Metro Terminal", "Cement OPC 53", "Grade A", "bags", "500", "500", "0", "PO-0091", "Yash Desai", "Approved", "Yash Desai", "Urgent - required before 10th"],
-          ["2026-07-05", "REQ-002", "Metro Terminal", "Fine Sand", "High density", "m³", "100", "80", "20", "", "Ramesh Kumar", "Pending", "", "For plastering work"]
-        ];
-      } else if (reportName === "Project Operational Summary") {
-        mockRows = [
-          ["Metro Terminal", "Commercial Complex", "Suresh R (PM)", "Ongoing", "Healthy", "2026-01-10", "2026-12-31", "65%"],
-          ["Bypass Highway Flyover", "Infrastructure", "Anand T (PE)", "Ongoing", "Healthy", "2026-03-01", "2027-06-30", "42%"]
-        ];
-      } else if (reportName === "Daily based Equipment Used Report") {
-        mockRows = [
-          ["Metro Terminal", "Excavator JCB-3DX", "MH-14-EX-4512", "Anil Steels", "12", "Hours", "12", "45", "50", "5"],
-          ["Metro Terminal", "Transit Mixer TM-10", "MH-14-MX-8891", "Yash Desai", "8", "Hours", "8", "30", "30", "0"]
-        ];
-      } else if (reportName === "OT & Shift Report") {
-        mockRows = [
-          ["Metro Terminal", "L&T Civil Division", "Yash Desai", "2026-07-01", "25", "25", "10"],
-          ["Metro Terminal", "Sanjay Yadav Subcontractor", "Ramesh Kumar", "2026-07-02", "18", "18", "5"]
-        ];
-      } else if (reportName === "Payment Upload Template") {
-        mockRows = [
-          ["19-Jan-2026", "Out", "Abhijit", "Project-Vikroli", "5000", "For dec month salary", "Cash", "", "Salary", "1c050f4e-5f4a-4d47-ac53-0efefd921dc2"],
-          ["19-Jan-2026", "Out", "Akash Panwar", "July_2025 Project Test", "4000", "For dec month salary", "Cheque", "54909090", "Salary", "8df95ec3-59a9-4c80-a2e7-1890eb743fa3"],
-          ["19-Jan-2026", "In", "Aishwarya", "July_2025 Project Test", "8000", "Bill", "Bank Transfer", "54909090", "Material", ""]
-        ];
-      } else if (reportName === "Payroll Upload Template") {
-        mockRows = [
-          ["Payrole-05", "Office", "8", "Sat,Sun", "100", "Engineer", "C-102", "Punch", "Monthly", "60000", "40000", "Allowance 1", "fixed", "100", "5000", "Allowance 2", "fixed", "100", "5000", "Allowance 3", "fixed", "100", "5000", "5000", "60000", "Deduction 1", "fixed", "100", "1500", "Deduction 2", "fixed", "100", "1500", "57000", "Metro Terminal"],
-          ["Payrole-06", "Site", "7", "Sun", "600", "Mason", "C-405", "shift", "Daily", "22000", "15000", "", "", "", "", "", "", "", "", "", "", "", "", "", "22000", "", "", "", "", "", "", "", "", "22000", "Metro Terminal"]
-        ];
-      } else if (reportName === "Purchase (GSTR-2)") {
-        mockRows = [
-          ["27BBBBB2222B2Z2", "Anil Steels", "Maharashtra", "BILL-2026-905", "53100", "2026-07-01", "45000", "18%", "4050", "4050", "0", "8100"]
-        ];
-      } else if (reportName === "All Expense Deduction / Retention Report") {
-        mockRows = [
-          ["2026-07-01", "Deduction", "Safety Helmet", "12000", "EXP-091", "Consumables", "Metro Terminal", "Anil Steels", "Yash Desai", "2026-07-15"],
-          ["2026-07-02", "Retention", "Site Stationery", "1500", "EXP-092", "Office Expense", "Metro Terminal", "Anil Steels", "Yash Desai", "2026-07-20"]
-        ];
-      } else if (reportName === "Party Ledger") {
-        mockRows = [
-          ["Anil Steels", "Supplier", "Metro Terminal", "Yash Desai", "Material Supply Rebar", "C-102", "Purchase", "2026-07-01", "0", "45000", "45000"],
-          ["Anil Steels", "Supplier", "Metro Terminal", "Yash Desai", "UPI Payment Settlement", "C-102", "Payment", "2026-07-05", "45000", "0", "0"]
-        ];
-      } else if (reportName === "All Party Balances") {
-        mockRows = [
-          ["Anil Steels", "Supplier", "45000", "Debit", "0", "0"],
-          ["Sanjay Yadav", "Labour Contractor", "12000", "Credit", "0", "5000"]
-        ];
-      } else if (reportName === "Project level Party Balance Report") {
-        mockRows = [
-          ["Anil Steels", "Supplier", "Metro Terminal", "0", "53100", "1200", "0", "500", "0", "0", "0", "0", "0", "0", "0", "53100", "53100", "0", "Settled"],
-          ["Sanjay Yadav", "Labour Contractor", "Metro Terminal", "8000", "0", "0", "25000", "0", "0", "0", "0", "5000", "0", "0", "0", "28000", "28000", "5000", "Credit"]
-        ];
-      } else if (reportName === "Subcon Workorder Summary Report") {
-        mockRows = [
-          ["Metro Terminal", "Sanjay Yadav Contractor", "Excavation Work", "WO-SUB-001", "500000", "175000", "150000", "35%"],
-          ["Metro Terminal", "Super Plumbing Corp", "Plumbing Installation", "WO-SUB-002", "350000", "35000", "30000", "10%"]
-        ];
-      } else if (reportName === "Subcon Measurement Book") {
-        mockRows = [
-          ["WO-PLUMB-01", "Plumbing", "Section B", "Drain pipe laying", "2026-07-02", "m", "150", "0", "5", "6", "1", "1", "30", "120"]
-        ];
-      } else if (reportName === "Subcon Deduction / Retention Report") {
-        mockRows = [
-          ["5000", "Metro Terminal", "Sanjay Yadav", "INV-WO-012", "Yash Desai", "Retention", "2026-07-01"]
-        ];
-      } else if (reportName === "Subcon Material Issue Summary") {
-        mockRows = [
-          ["Metro Terminal", "Sanjay Yadav", "TMT Rebars 12mm", "65", "1200", "78000"]
-        ];
-      } else if (reportName === "Project Financial Summary") {
-        mockRows = [
-          ["Metro Terminal", "Ongoing", "Healthy", "12000000", "8700000", "3300000", "15000000", "42%", "11000000", "8700000", "2300000"]
-        ];
-      } else if (reportName === "Company Transactions Report") {
-        mockRows = [
-          ["Metro Terminal", "Expense", "Material Purchase", "2026-07-01", "Yash Desai", "Anil Steels", "C-102", "M-SUB-01", "45000", "45000", "45000", "0", "TXN-00192", "Grade A rebars", "Rebars batch 1", "2026-07-10", "Bank Transfer", "Approved"]
-        ];
-      } else if (reportName === "Project Activity Leaderboard") {
-        mockRows = [
-          ["Metro Terminal", "65", "12", "120"],
-          ["Bypass Highway Flyover", "42", "28", "95"]
-        ];
-      } else if (reportName === "Company User Activity Leaderboard") {
-        mockRows = [
-          ["Yash Desai", "Project Manager", "320", "145", "42"],
-          ["Anand T", "Project Engineer", "210", "98", "19"]
-        ];
-      } else if (reportName === "Party Library") {
-        mockRows = [
-          ["PRT-091", "Anil Steels", "Supplier", "SBI", "Anil Steel Corp", "9090909090", "SBIN0001234", "27AAAAA1111A1Z1", "Mumbai Rebar Yard 5", "aadhaar-none", "PAN-ANIL-99", "ESI-none", "PF-none", "N/A", "N/A", "N/A", "2026-01-01", "2026-01-01", "Yash Desai"]
-        ];
-      } else if (reportName === "Cost Code Library") {
-        mockRows = [
-          ["C-102", "Material Purchase - Concrete & Steel", "2026-01-01"],
-          ["C-405", "Labour Payroll - Site Supervisor", "2026-01-01"]
-        ];
-      } else if (reportName === "Material Library") {
-        mockRows = [
-          ["M-SUB-01", "OPC Cement 53 Grade", "Cement", "Standard specifications", "bags", "2026-01-01", "Yash Desai"]
-        ];
-      } else if (reportName === "Rate Card Library") {
-        mockRows = [
-          ["RC-012", "Raft Slab Concrete Work", "Standard rafting task", "C-102", "m³", "Cement, Sand, Labour", "3500", "500", "14%", "4000", "2026-01-10", "3", "9905-Civil"]
-        ];
-      } else if (reportName === "Payroll Library") {
-        mockRows = [
-          ["Ramesh Kumar", "Mason", "Wages", "Monthly", "18000", "16800", "16800", "8", "Basic: 12000, Allowances: 4800", "2026-06-15"],
-          ["Suresh Ram", "Labourer", "Wages", "Daily", "15000", "13375", "13375", "8", "Basic: 10000, Allowances: 3375", "2026-06-15"]
-        ];
-      } else if (reportName === "Task Resource Budget Vs Actual Report") {
-        mockRows = [
-          ["Metro Terminal", "Excavation & Raft", "Substructure", "Raft Slab Concrete", "m³", "500", "320", "OPC Cement 53", "Material", "400", "420", "bags", "3", "1500", "960", "1000", "600000", "384000", "420000", "40", "16000"]
-        ];
-      } else if (reportName === "Site Inspection Report") {
-        mockRows = [
-          ["Metro Terminal", "2026-07-02", "Foundation QC Check", "Passed", "5 Checked", "All structural parameters compliant", "2026-07-02"]
-        ];
-      } else if (reportName === "Task BOQ Billed & Unbilled Qty Report") {
-        mockRows = [
-          ["Metro Terminal", "Excavation & Raft", "Substructure", "Raft Concrete", "m³", "500", "320", "64%", "Active", "BOQ-SEC-1", "300", "20"]
-        ];
-      } else if (reportName === "Task Report") {
-        mockRows = [
-          ["Metro Terminal", "Excavation & Raft", "Substructure", "Raft Slab Concrete", "Yash Desai", "In Progress", "On Track", "01-Feb-2026", "28-Feb-2026", "m³", "Foundation"],
-          ["Metro Terminal", "Superstructure", "Column Work", "Ground Floor Columns", "Ramesh Kumar", "Not Started", "Delayed", "04-Feb-2026", "04-Feb-2026", "%", "-"]
-        ];
-      } else if (reportName === "Task Material Report") {
-        mockRows = [
-          ["Metro Terminal", "OPC Cement 53", "Excavation & Raft", "Substructure", "Raft Slab Concrete", "500", "380", "152000"],
-          ["Metro Terminal", "TMT Rebars 12mm", "Superstructure", "Column Work", "Ground Floor Columns", "1200", "65", "78000"]
-        ];
-      } else if (reportName === "To Do Report") {
-        mockRows = [
-          ["05-Jul-2026", "10-Jul-2026", "05-Jul-2026", "Yash Desai", "Task", "Raft Slab Concrete", "Yash Desai", ""],
-          ["04-Jul-2026", "08-Jul-2026", "05-Jul-2026", "Ramesh Kumar", "General", "", "Yash Desai", ""]
-        ];
-      } else if (reportName === "Project Payment Report") {
-        mockRows = [
-          ["01-Jul-2026", "Metro Terminal", "Yash Desai", "Anil Steels", "53100", "0", "53100", "Material bill settlement", "PMT-002", "Out", "Bank Transfer", "HDFC-Main", "Material", "C-102", "M-SUB-01", "01-Jul-2026", "Approved"],
-          ["05-Jul-2026", "Metro Terminal", "Yash Desai", "Sanjay Yadav", "8000", "0", "8000", "Salary advance July", "PMT-001", "Out", "Cash", "Site Cash", "Salary", "C-405", "", "05-Jul-2026", "Approved"]
-        ];
-      } else if (reportName === "Payment Request Report") {
-        mockRows = [
-          ["c79160e2-2457-4fb7-8564-1ad1d5b27f47", "PR-1", "Prestige Developers", "Yash Desai", "234534", "05-Jul-2026", "31-Jul-2026", "Yash Desai", "Subcon Expense", "", "Auto Approved", "Unpaid", "", "HDFC-Main"],
-          ["c79160e2-2457-4fb7-8564-1ad1d5b27f48", "PR-2", "Metro Terminal", "Sanjay Yadav", "50000", "06-Jul-2026", "15-Jul-2026", "Yash Desai", "Labour Payroll", "WO-SUB-001", "Pending", "Unpaid", "Salary Advance", ""]
-        ];
-      } else if (reportName === "Cost Code Expense Analysis") {
-        mockRows = [
-          ["Civil - Concrete Work", "450000", "500000", "480000"],
-          ["Finishing - Plastering", "120000", "150000", "150000"],
-          ["Electrical - Wiring", "85000", "100000", "90000"]
-        ];
-      } else if (reportName === "Project Wise Expense Summary") {
-        mockRows = [
-          ["Metro Terminal", "500000", "480000", "250000", "240000", "120000", "120000", "30000", "30000", "18000", "18000", "0", "0", "-5000", "-5000", "10000", "10000", "0", "0", "50000", "50000", "973000", "943000", "900000", "43000"],
-          ["Bypass Highway Flyover", "350000", "340000", "180000", "175000", "85000", "85000", "15000", "15000", "9000", "9000", "0", "0", "0", "0", "0", "0", "0", "0", "30000", "30000", "669000", "654000", "600000", "54000"]
-        ];
-      } else if (reportName === "Material Received & Used Report") {
-        mockRows = [
-          ["Cement", "Cement OPC 53", "Metro Terminal", "Anil Steels", "Yash Desai", "GRN-098", "CH-4521", "Direct Purchase", "", "Yes", "2026-07-01", "bags", "500", "380", "190000", "Delivered in full", "MH-14-EX-4512", "PO-0091", "500", "2026-06-30", "Excavation & Raft", "Substructure", "Raft Slab Concrete", "", ""],
-          ["Steel", "TMT Rebars 12mm", "Metro Terminal", "Anil Steels", "Yash Desai", "GRN-099", "CH-4522", "Direct Purchase", "", "Yes", "2026-07-02", "tons", "15", "65000", "975000", "", "MH-14-EX-4512", "PO-0092", "15", "2026-06-30", "Superstructure", "Column Work", "Ground Floor Columns", "", ""]
-        ];
-      } else if (reportName === "Material Stock Report") {
-        mockRows = [
-          ["Metro Terminal", "Cement", "Cement OPC 53", "bags", "100", "38000", "1000", "380000", "500", "190000", "300", "114000", "200", "76000"],
-          ["Metro Terminal", "Steel", "TMT Rebars 12mm", "tons", "0", "0", "50", "3250000", "15", "975000", "10", "650000", "5", "325000"]
-        ];
-      } else if (reportName === "Unbilled Item Report") {
-        mockRows = [
-          ["Metro Terminal", "Anil Steels", "Cement OPC 53", "bags", "500", "2026-07-01"],
-          ["Metro Terminal", "Sanjay Yadav", "Fine Sand", "m³", "100", "2026-07-02"]
-        ];
-      } else if (reportName === "PO Summary Report") {
-        mockRows = [
-          ["Metro Terminal", "Yash Desai", "2026-06-30", "2026-07-01", "Anil Steels", "PO-0091", "190000", "5000", "1200", "34200", "220400", "Approved", "Yash Desai"],
-          ["Metro Terminal", "Yash Desai", "2026-06-30", "2026-07-02", "Anil Steels", "PO-0092", "975000", "25000", "5000", "171000", "1126000", "Approved", "Yash Desai"]
-        ];
-      } else if (reportName === "Material Received without PO") {
-        mockRows = [
-          ["Cement OPC 53", "Metro Terminal", "Anil Steels", "Yash Desai", "2026-07-01", "bags", "500"],
-          ["Fine Sand", "Metro Terminal", "Sanjay Yadav", "Yash Desai", "2026-07-02", "m³", "100"]
-        ];
-      } else if (reportName === "Purchase Order Item Report") {
-        mockRows = [
-          ["2026-07-01", "PO-0091", "Metro Terminal", "Anil Steels", "Cement", "Cement OPC 53", "bags", "380", "500", "500", "0", "Closed", "Approved", "REQ-001", "CH-4521", "GRN-098"],
-          ["2026-07-02", "PO-0092", "Metro Terminal", "Anil Steels", "Steel", "TMT Rebars 12mm", "tons", "65000", "15", "15", "0", "Closed", "Approved", "REQ-002", "CH-4522", "GRN-099"]
-        ];
-      } else if (reportName === "Production Material Report") {
-        mockRows = [
-          ["Metro Terminal", "Concrete M25", "m³", "50", "2026-07-04", "Cement: 150 bags, Fine Sand: 30 m³, Coarse Aggregate: 60 m³", "Batching completed for raft"],
-          ["Metro Terminal", "Concrete M20", "m³", "20", "2026-07-05", "Cement: 55 bags, Fine Sand: 12 m³, Coarse Aggregate: 24 m³", "Batching for columns"]
-        ];
-      } else if (reportName === "Material Purchase Item Report") {
-        mockRows = [
-          ["Anil Steels", "27AAAAA1111A1Z1", "2026-07-04", "2026-07-01", "Metro Terminal", "Cement OPC 53", "Grade A", "bags", "380", "500", "190000", "34200", "5000", "219200", "Cement", "PO-0091", "500", "380", "2026-06-30", "220400", "GRN-098", "CH-4521", "REF-4521", "Delivered in full", "Yash Desai", "MH-14-EX-4512", "Paid", "2026-08-04", "219200", "219200", "0"],
-          ["Anil Steels", "27AAAAA1111A1Z1", "2026-07-05", "2026-07-02", "Metro Terminal", "TMT Rebars 12mm", "", "tons", "65000", "15", "975000", "171000", "25000", "1121000", "Steel", "PO-0092", "15", "65000", "2026-06-30", "1126000", "GRN-099", "CH-4522", "REF-4522", "", "Yash Desai", "MH-14-EX-4512", "Partially Paid", "2026-08-05", "1121000", "500000", "621000"]
-        ];
-      } else if (reportName === "Material Stock Movement Report") {
-        mockRows = [
-          ["Metro Terminal", "Cement OPC 53", "bags", "2026-07-04", "0", "500", "300", "200"],
-          ["Metro Terminal", "TMT Rebars 12mm", "tons", "2026-07-05", "0", "15", "10", "5"]
-        ];
-      } else if (reportName === "Attendance & Salary Report" || reportName === "Staff Salary Report") {
-        mockRows = [
-          ["Ramesh Kumar", "Mason", "9876543210", "State Bank of India", "SBIN0001234", "12345678901", "26", "10", "15600", "500", "900", "0", "200", "16800"],
-          ["Suresh Ram", "Labourer", "9876543211", "HDFC Bank", "HDFC0000123", "98765432101", "24", "15", "12000", "300", "1125", "50", "0", "13375"]
-        ];
-      } else if (reportName === "Equipment Library") {
-        mockRows = [
-          [
-            "JCB Excavator 3DX", "JCB", "EQ-001", "3DX", "Hours", "hr", "2026-06-15", "Owned", 
-            "12", "3500000", "INS-9921", "ICICI Lombard", "2026-06-15", "2027-06-14", "SRV-8821", "2026-06-15", 
-            "2026-12-15", "FC-4521", "2026-06-15", "FINS-4521", "2027-06-14", "PUCC-7712", "2026-06-15", 
-            "2026-12-14", "PRM-6612", "2026-06-15", "2027-06-14", "TAX-5512", "2026-06-15", "2027-06-14", 
-            "MH-14-EX-4512", "2026-06-15", "2031-06-14"
-          ]
-        ];
-      } else if (reportName === "Quotation Report") {
-        mockRows = [
-          ["2026-07-01", "Villa Construction", "QTN-001", "Prestige Developers", "12", "1200000", "50000", "12000", "207000", "1369000", "Approved", "2026-07-01"],
-          ["2026-07-03", "Office Fitout", "QTN-002", "Metro Terminal", "8", "450000", "15000", "5000", "79200", "519200", "Pending", "2026-07-03"]
-        ];
-      } else if (reportName === "Quotation Item Report") {
-        mockRows = [
-          ["Prestige Developers", "Villa Construction", "Approved", "2026-07-01", "Substructure", "Excavation", "Soil Excavation", "m³", "500", "200", "50", "250", "125000", "18", "147500"],
-          ["Prestige Developers", "Villa Construction", "Approved", "2026-07-01", "Substructure", "Concrete", "Raft Slab Concrete", "m³", "120", "4500", "500", "5000", "600000", "18", "708000"]
-        ];
-      } else if (reportName === "BOQ Measurement Book") {
-        mockRows = [
-          ["Metro Terminal", "WO-001", "Substructure", "Excavation", "Soil Excavation", "2026-07-01", "m³", "500", "0", "1", "50", "10", "1", "500", "500", "Initial excavation done"],
-          ["Metro Terminal", "WO-001", "Substructure", "Concrete", "Raft Slab Concrete", "2026-07-04", "m³", "120", "0", "1", "30", "4", "1", "120", "120", "Raft concrete poured"]
-        ];
-      } else if (reportName === "BOQ BOM Report") {
-        mockRows = [
-          ["Metro Terminal", "Villa BOQ", "Raft Slab Concrete", "OPC Cement 53", "bags", "380", "500", "190000", "2026-06-15"],
-          ["Metro Terminal", "Villa BOQ", "Raft Slab Concrete", "TMT Rebars 12mm", "tons", "65000", "15", "975000", "2026-06-15"]
-        ];
-      } else if (reportName === "Budget vs Actual (Material Cost)") {
-        mockRows = [
-          ["Metro Terminal", "Cement OPC 53", "bags", "600000", "420000", "180000"],
-          ["Metro Terminal", "TMT Rebars 12mm", "tons", "975000", "1121000", "-146000"]
-        ];
-      } else if (reportName === "Budget vs Actual (Material Qty)") {
-        mockRows = [
-          ["Metro Terminal", "Cement OPC 53", "bags", "1500", "1000", "500"],
-          ["Metro Terminal", "TMT Rebars 12mm", "tons", "15", "17", "-2"]
-        ];
-      } else if (reportName === "Budget vs Actual (Cost Code)") {
-        mockRows = [
-          ["Civil - Concrete Work", "500000", "450000", "480000", "-30000"],
-          ["Finishing - Plastering", "150000", "120000", "120000", "0"]
-        ];
-      } else if (reportName === "Task Revenue & Expense Report") {
-        mockRows = [
-          ["Metro Terminal", "Excavation & Raft", "Substructure", "Raft Slab Concrete", "64% m³", "250000", "180000"],
-          ["Metro Terminal", "Superstructure", "Column Work", "Ground Floor Columns", "0% %", "0", "0"]
-        ];
-      } else if (reportName === "Asset Allocation Report") {
-        mockRows = [
-          ["JCB Excavator 3DX", "Heavy Machinery", "Sanjay Yadav", "Project Allocation", "Yash Desai", "Metro Terminal", "2026-07-01 09:00", "1", "0"],
-          ["Concrete Mixer 200L", "Equipment", "Ramesh Kumar", "Temporary Use", "Yash Desai", "Metro Terminal", "2026-07-02 10:30", "1", "1"]
-        ];
-      } else if (reportName === "Asset Status Report") {
-        mockRows = [
-          ["JCB Excavator 3DX", "Heavy Machinery", "2", "1", "1", "0", "0", "3500000", "Yash Desai", "2026-06-15", "Sanjay Yadav", "2026-07-01 09:00"],
-          ["Concrete Mixer 200L", "Equipment", "5", "3", "1", "1", "0", "85000", "Yash Desai", "2026-06-18", "Ramesh Kumar", "2026-07-02 10:30"]
-        ];
-      } else {
-        mockRows = [
-          ["1", "2026-07-04", "Metro Terminal", `Sample transaction for ${reportName}`, "15000", "Active"]
-        ];
-      }
+    try {
+      const token = localStorage.getItem("access_token");
+      const res = await fetch(`${getApiHost()}/apis/v3/reports/data/${slug}?company_id=${companyId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      const rows: Record<string, any>[] = data.rows || [];
+      const headers = exportSchemas[selectedReport.name] || (rows[0] ? Object.keys(rows[0]) : ["S.No.", "Date", "Project Name", "Details", "Amount (INR)", "Status"]);
 
-      // Compose CSV tabular text
       const csvContent = [
         headers.join(","),
-        ...mockRows.map(row => row.map(cell => `"${cell.replace(/"/g, '""')}"`).join(","))
+        ...rows.map(r => headers.map(h => `"${String(r[h] ?? "").replace(/"/g, '""')}"`).join(","))
       ].join("\n");
 
-      // Generate Blob and trigger virtual download element
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.setAttribute("href", url);
-      const cleanFileName = reportName.toLowerCase().replace(/[^a-z0-9]/g, "_") + "_" + selectedMonth.toLowerCase().replace(" ", "_") + ".csv";
+      const cleanFileName = selectedReport.name.toLowerCase().replace(/[^a-z0-9]/g, "_") + ".csv";
       link.setAttribute("download", cleanFileName);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
 
+      showToast(`Exported ${selectedReport.name} successfully!`);
+    } catch {
+      showToast("Export failed. Please try again.");
+    } finally {
       setIsExporting(false);
       setShowModal(false);
-      showToast(`Exported ${reportName} for ${selectedMonth} successfully!`);
-    }, 1200);
+    }
   };
+
 
   return (
     <div className="flex h-screen bg-background text-foreground overflow-hidden font-sans">
-      <Sidebar onShowToast={showToast} />
+      <Sidebar />
 
       <main className="flex-1 flex flex-col h-full overflow-hidden relative">
         <PageHeader title="Company Reports Hub" />

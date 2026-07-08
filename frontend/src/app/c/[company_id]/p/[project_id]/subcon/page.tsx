@@ -128,7 +128,7 @@ export default function SubconPage() {
 
   return (
     <div className="flex h-screen bg-background text-foreground overflow-hidden font-sans">
-      <Sidebar onShowToast={showToast} />
+      <Sidebar />
 
       <main className="flex-1 flex flex-col h-full overflow-hidden relative">
         <PageHeader title="Subcontractors & Work Orders" />

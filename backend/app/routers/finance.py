@@ -430,6 +430,8 @@ class PaymentRequestCreate(BaseModel):
     amount: float
     details: str
     due_date: Optional[datetime] = None
+    approval_status: Optional[str] = None
+    request_type: Optional[str] = None
 
 class PaymentRequestResponse(BaseModel):
     id: uuid.UUID
@@ -441,6 +443,8 @@ class PaymentRequestResponse(BaseModel):
     details: str
     status: str
     due_date: Optional[datetime]
+    approval_status: str = "Pending"
+    request_type: Optional[str] = None
     created_at: datetime
 
     class Config:
@@ -487,6 +491,8 @@ def get_payment_requests(company_id: uuid.UUID, db: Session = Depends(get_db)):
             details=r.details,
             status=r.status,
             due_date=r.due_date,
+            approval_status=r.approval_status,
+            request_type=r.request_type,
             created_at=r.created_at
         ))
     return res
@@ -503,7 +509,9 @@ def create_payment_request(company_id: uuid.UUID, data: PaymentRequestCreate, db
         party_name=party_name,
         amount=data.amount,
         details=data.details,
-        due_date=data.due_date
+        due_date=data.due_date,
+        approval_status=data.approval_status or "Pending",
+        request_type=data.request_type
     )
     db.add(new_req)
     db.commit()
@@ -518,6 +526,8 @@ def create_payment_request(company_id: uuid.UUID, data: PaymentRequestCreate, db
         details=new_req.details,
         status=new_req.status,
         due_date=new_req.due_date,
+        approval_status=new_req.approval_status,
+        request_type=new_req.request_type,
         created_at=new_req.created_at
     )
 
@@ -531,6 +541,8 @@ def update_payment_request_status(request_id: uuid.UUID, payload: PaymentRequest
     if not req:
         raise HTTPException(status_code=404, detail="Payment request not found")
     req.status = payload.status
+    if payload.status in ("Approved", "Paid"):
+        req.approval_status = "Approved"
     db.commit()
     db.refresh(req)
     
@@ -547,6 +559,8 @@ def update_payment_request_status(request_id: uuid.UUID, payload: PaymentRequest
         details=req.details,
         status=req.status,
         due_date=req.due_date,
+        approval_status=req.approval_status,
+        request_type=req.request_type,
         created_at=req.created_at
     )
 

@@ -18,7 +18,7 @@ type ProjectRecord = {
   project_code?: string;
 };
 
-export default function Sidebar({ onShowToast }: { onShowToast?: (msg: string) => void }) {
+export default function Sidebar() {
   const params = useParams();
   const pathname = usePathname();
   const companyId = (params.company_id as string) || "e0000000-0000-0000-0000-000000000000";
@@ -167,14 +167,6 @@ export default function Sidebar({ onShowToast }: { onShowToast?: (msg: string) =
       isActive = false;
     };
   }, [companyId, params.project_id]);
-
-  const localToast = (msg: string) => {
-    if (onShowToast) {
-      onShowToast(msg);
-    } else {
-      alert(msg);
-    }
-  };
 
   interface NavItem {
     label: string;
@@ -364,13 +356,17 @@ export default function Sidebar({ onShowToast }: { onShowToast?: (msg: string) =
 
         {/* MOM, To Do, Chat Grid */}
         <div className="grid grid-cols-3 gap-1">
-          <button
-            onClick={() => localToast("Minutes of Meeting (MOM) module initiated.")}
-            className="flex flex-col items-center justify-center py-2 bg-card hover:bg-elevated border border-border-custom rounded-md text-[11px] font-medium text-muted hover:text-foreground transition-all cursor-pointer"
+          <Link
+            href={`/c/${companyId}/p/${projectId}/mom`}
+            className={`flex flex-col items-center justify-center py-2 border rounded-md text-[11px] font-medium transition-all ${
+              pathname.includes("/mom")
+                ? "bg-primary/15 border-primary text-primary"
+                : "bg-card hover:bg-elevated border-border-custom text-muted hover:text-foreground"
+            }`}
           >
             <span>📝</span>
             <span className="mt-0.5">MOM</span>
-          </button>
+          </Link>
           <Link
             href={`/c/${companyId}/d/todo`}
             className={`flex flex-col items-center justify-center py-2 border rounded-md text-[11px] font-medium transition-all ${
@@ -382,13 +378,17 @@ export default function Sidebar({ onShowToast }: { onShowToast?: (msg: string) =
             <span>✅</span>
             <span className="mt-0.5">To Do</span>
           </Link>
-          <button
-            onClick={() => localToast("Opening company chat window...")}
-            className="flex flex-col items-center justify-center py-2 bg-card hover:bg-elevated border border-border-custom rounded-md text-[11px] font-medium text-muted hover:text-foreground transition-all cursor-pointer"
+          <Link
+            href={`/c/${companyId}/p/${projectId}/chat`}
+            className={`flex flex-col items-center justify-center py-2 border rounded-md text-[11px] font-medium transition-all ${
+              pathname.includes("/chat")
+                ? "bg-primary/15 border-primary text-primary"
+                : "bg-card hover:bg-elevated border-border-custom text-muted hover:text-foreground"
+            }`}
           >
             <span>💬</span>
             <span className="mt-0.5">Chat</span>
-          </button>
+          </Link>
         </div>
       </div>
     </aside>

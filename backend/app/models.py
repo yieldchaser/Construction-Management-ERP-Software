@@ -1063,6 +1063,8 @@ class PaymentRequest(Base):
     details = Column(String, nullable=True)
     status = Column(String(50), default="Pending", nullable=False) # Pending, Paid, Rejected
     due_date = Column(DateTime(timezone=True), nullable=True)
+    approval_status = Column(String(50), default="Pending", nullable=False)  # Pending, Approved, Rejected
+    request_type = Column(String(100), nullable=True)  # Advance, Final, Material, Retention
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 
 # ─────────────────────────────────────────────────────────────────────────────
