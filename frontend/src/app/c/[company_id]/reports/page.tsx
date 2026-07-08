@@ -547,7 +547,6 @@ export default function ReportsDashboard() {
             <span className="font-semibold">{toastMessage}</span>
           </div>
         )}
-      </div>
     </div>
   );
 }
