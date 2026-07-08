@@ -213,14 +213,21 @@ export default function Sidebar() {
               </div>
             );
 
-            if (item.action) {
-              return <div key={idx}>{content}</div>;
-            }
-
-            return (
-              <Link href={item.href} key={idx}>
+            const element = item.action ? (
+              <div key={idx}>{content}</div>
+            ) : (
+              <Link href={item.href} key={idx} className="block">
                 {content}
               </Link>
+            );
+
+            return (
+              <React.Fragment key={idx}>
+                {element}
+                {(idx === 1 || idx === 3 || idx === 5 || idx === 6 || idx === 8) && (
+                  <hr className="my-1.5 border-border-custom/50" />
+                )}
+              </React.Fragment>
             );
           })}
         </nav>
