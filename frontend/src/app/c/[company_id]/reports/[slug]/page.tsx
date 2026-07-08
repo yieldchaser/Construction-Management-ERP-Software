@@ -976,10 +976,6 @@ export default function DynamicReportViewPage() {
               <div className="min-w-full overflow-x-auto rounded-xl border border-border-custom bg-card p-10 text-center text-muted text-sm">
                 Loading…
               </div>
-            ) : processedData.length === 0 ? (
-              <div className="min-w-full overflow-x-auto rounded-xl border border-border-custom bg-card p-10 text-center">
-                <p className="text-muted text-sm">No data available for this report yet.</p>
-              </div>
             ) : (
               <div className="min-w-full overflow-x-auto rounded-xl border border-border-custom bg-card">
                 <table className="w-full text-xs">
@@ -994,20 +990,28 @@ export default function DynamicReportViewPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {processedData.map((row, i) => (
-                    <tr key={i} className="border-t border-border-custom hover:bg-elevated/40 transition-colors">
-                      <td className="px-3 py-2.5 text-muted">{i + 1}</td>
-                      {meta.columns.map(col => (
-                        <td key={col} className="px-3 py-2.5 text-foreground whitespace-nowrap">
-                          {row[col] ?? ""}
-                        </td>
-                      ))}
+                  {processedData.length === 0 ? (
+                    <tr>
+                      <td colSpan={meta.columns.length + 1} className="text-center py-12 text-muted text-xs font-semibold">
+                        No data available for this report yet.
+                      </td>
                     </tr>
-                  ))}
+                  ) : (
+                    processedData.map((row, i) => (
+                      <tr key={i} className="border-t border-border-custom hover:bg-elevated/40 transition-colors">
+                        <td className="px-3 py-2.5 text-muted">{i + 1}</td>
+                        {meta.columns.map(col => (
+                          <td key={col} className="px-3 py-2.5 text-foreground whitespace-nowrap">
+                            {row[col] ?? ""}
+                          </td>
+                        ))}
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
-            ))
+            )
           }
         </div>
 
