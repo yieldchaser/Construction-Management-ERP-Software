@@ -15,7 +15,8 @@ if (typeof window !== "undefined") {
           ? input.toString()
           : (input as Request).url;
 
-      if (!url.includes("/resolve-company/")) {
+      const isApiCall = url.includes("/apis/") || url.includes("localhost:8000") || url.includes("onrender.com");
+      if (isApiCall && !url.includes("/resolve-company/")) {
         const stored = localStorage.getItem("company_slug_mappings");
         const slugMap = stored
           ? JSON.parse(stored)
