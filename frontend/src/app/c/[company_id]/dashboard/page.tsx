@@ -939,66 +939,16 @@ export default function DashboardPage() {
                           <thead>
                             <tr className="bg-[#673AB7] text-white font-semibold text-[11px] tracking-wider uppercase border-b border-[#673AB7]">
                               <th className="px-4 py-3 border-r border-[#7E57C2] font-semibold text-center w-12">#</th>
-                              <th className="px-4 py-3 border-r border-[#7E57C2] font-semibold">
-                                <span className="inline-flex items-center gap-1.5">
-                                  <span className="text-[9px] bg-white/20 px-1 py-0.5 rounded text-white font-mono">T</span>
-                                  Project Name
-                                </span>
-                              </th>
-                              <th className="px-4 py-3 border-r border-[#7E57C2] font-semibold">
-                                <span className="inline-flex items-center gap-1.5">
-                                  <span className="text-[9px] bg-white/20 px-1 py-0.5 rounded text-white font-mono">T</span>
-                                  Project Category
-                                </span>
-                              </th>
-                              <th className="px-4 py-3 border-r border-[#7E57C2] font-semibold">
-                                <span className="inline-flex items-center gap-1.5">
-                                  <span className="text-[9px] bg-white/20 px-1 py-0.5 rounded text-white font-mono">T</span>
-                                  Key Personnel
-                                </span>
-                              </th>
-                              <th className="px-4 py-3 border-r border-[#7E57C2] font-semibold text-center w-28">
-                                <span className="inline-flex items-center gap-1.5 justify-center">
-                                  <span className="text-[9px] bg-white/20 px-1 py-0.5 rounded text-white font-mono">T</span>
-                                  Project Status
-                                </span>
-                              </th>
-                              <th className="px-4 py-3 border-r border-[#7E57C2] font-semibold text-center w-28">
-                                <span className="inline-flex items-center gap-1.5 justify-center">
-                                  <span className="text-[9px] bg-white/20 px-1 py-0.5 rounded text-white font-mono">T</span>
-                                  Project Health
-                                </span>
-                              </th>
-                              <th className="px-4 py-3 border-r border-[#7E57C2] font-semibold text-center w-28">
-                                <span className="inline-flex items-center gap-1.5 justify-center">
-                                  <span className="text-[9px] bg-white/20 px-1 py-0.5 rounded text-white font-mono">📅</span>
-                                  Start Date
-                                </span>
-                              </th>
-                              <th className="px-4 py-3 border-r border-[#7E57C2] font-semibold text-center w-28">
-                                <span className="inline-flex items-center gap-1.5 justify-center">
-                                  <span className="text-[9px] bg-white/20 px-1 py-0.5 rounded text-white font-mono">📅</span>
-                                  End Date
-                                </span>
-                              </th>
-                              <th className="px-4 py-3 border-r border-border-custom [.light-theme_&]:border-zinc-200 font-semibold text-right w-24">
-                                <span className="inline-flex items-center gap-1.5 justify-end">
-                                  <span className="text-[9px] bg-white/20 px-1 py-0.5 rounded text-white font-mono">#</span>
-                                  Progress
-                                </span>
-                              </th>
-                              <th className="px-4 py-3 border-r border-[#7E57C2] font-semibold">
-                                <span className="inline-flex items-center gap-1.5">
-                                  <span className="text-[9px] bg-white/20 px-1 py-0.5 rounded text-white font-mono">T</span>
-                                  Customer Name
-                                </span>
-                              </th>
-                              <th className="px-4 py-3 font-semibold">
-                                <span className="inline-flex items-center gap-1.5">
-                                  <span className="text-[9px] bg-white/20 px-1 py-0.5 rounded text-white font-mono">T</span>
-                                  Project Stage
-                                </span>
-                              </th>
+                              <th className="px-4 py-3 border-r border-[#7E57C2] font-semibold">Project Name</th>
+                              <th className="px-4 py-3 border-r border-[#7E57C2] font-semibold">Project Category</th>
+                              <th className="px-4 py-3 border-r border-[#7E57C2] font-semibold">Key Personnel</th>
+                              <th className="px-4 py-3 border-r border-[#7E57C2] font-semibold text-center w-28">Project Status</th>
+                              <th className="px-4 py-3 border-r border-[#7E57C2] font-semibold text-center w-28">Project Health</th>
+                              <th className="px-4 py-3 border-r border-[#7E57C2] font-semibold text-center w-28">Start Date</th>
+                              <th className="px-4 py-3 border-r border-[#7E57C2] font-semibold text-center w-28">End Date</th>
+                              <th className="px-4 py-3 border-r border-border-custom [.light-theme_&]:border-zinc-200 font-semibold text-right w-24">Progress</th>
+                              <th className="px-4 py-3 border-r border-[#7E57C2] font-semibold">Customer Name</th>
+                              <th className="px-4 py-3 font-semibold">Project Stage</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-border-custom [.light-theme_&]:divide-zinc-200">
