@@ -1,13 +1,23 @@
 "use client";
 
 import React from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter, useParams } from "next/navigation";
+import { useEffect } from "react";
 import { ProjectProvider } from "@/context/ProjectContext";
 import Sidebar from "@/components/Sidebar";
 import PageHeader from "@/components/PageHeader";
 
 export default function CompanyLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const params = useParams();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (params?.company_id === "e0000000-0000-0000-0000-000000000000") {
+      const newPath = pathname.replace("e0000000-0000-0000-0000-000000000000", "demo-construction");
+      router.replace(newPath);
+    }
+  }, [params, pathname, router]);
 
   const getPageTitle = (): string => {
     if (pathname.includes("/d/home")) return "Project Hub";
