@@ -11,9 +11,11 @@ export default function CompanyLayout({ children }: { children: React.ReactNode 
   const pathname = usePathname();
   const params = useParams();
   const router = useRouter();
+  const redirected = React.useRef(false);
 
   useEffect(() => {
-    if (params?.company_id === "e0000000-0000-0000-0000-000000000000") {
+    if (params?.company_id === "e0000000-0000-0000-0000-000000000000" && !redirected.current) {
+      redirected.current = true;
       const newPath = pathname.replace("e0000000-0000-0000-0000-000000000000", "demo-construction");
       router.replace(newPath);
     }
