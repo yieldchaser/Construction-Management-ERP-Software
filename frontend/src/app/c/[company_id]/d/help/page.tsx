@@ -55,7 +55,7 @@ export default function HelpPage() {
         <div className="space-y-2 text-muted">
           <p>Defining contract value is essential for tracking budget burn rates and cash flow analytics:</p>
           <ol className="list-decimal pl-5 space-y-1">
-            <li>Navigate to <strong>Settings</strong> > <strong>Branch & Projects</strong>.</li>
+            <li>Navigate to <strong>Settings</strong> &gt; <strong>Branch &amp; Projects</strong>.</li>
             <li>Click on the <strong>Edit</strong> icon for the target project (or use the <em>Project Creator Wizard</em> on the Dashboard).</li>
             <li>Locate the <strong>Contract Value (INR)</strong> field and input the gross contract amount.</li>
             <li>Save changes. This value will now feed the financial widgets and BOQ percentage calculations.</li>
