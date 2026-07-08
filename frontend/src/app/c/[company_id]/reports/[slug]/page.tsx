@@ -1012,7 +1012,7 @@ export default function DynamicReportViewPage() {
               </table>
             </div>
             )
-          }
+          )}
         </div>
 
         {/* Back Navigation Bar */}
