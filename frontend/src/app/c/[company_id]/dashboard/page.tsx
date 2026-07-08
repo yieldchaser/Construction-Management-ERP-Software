@@ -671,7 +671,7 @@ export default function DashboardPage() {
                         <span className="text-[11px] font-bold text-red-500 [.light-theme_&]:text-red-600 uppercase tracking-wider block mb-1">Not Started Projects</span>
                         <span className="text-2xl font-bold text-foreground [.light-theme_&]:text-zinc-800">{notStartedCount}</span>
                       </div>
-                      <div className="rounded-md border border-border-custom [.light-theme_&]:border-zinc-200 bg-card [.light-theme_&]:bg-white p-5 flex flex-col justify-center items-center text-center border-b-2 border-b-success transition-all">
+                      <div className="rounded-md border border-border-custom [.light-theme_&]:border-zinc-200 bg-card [.light-theme_&]:bg-white p-5 flex flex-col justify-center items-center text-center transition-all">
                         <span className="text-[11px] font-bold text-success [.light-theme_&]:text-green-600 uppercase tracking-wider block mb-1">Ongoing Projects</span>
                         <span className="text-2xl font-bold text-foreground [.light-theme_&]:text-zinc-800">{ongoingCount}</span>
                       </div>
@@ -1166,50 +1166,17 @@ export default function DashboardPage() {
                         <thead>
                           <tr className="bg-[#673AB7] text-white font-bold uppercase tracking-wider text-[9px]">
                             <th className="px-3 py-3 text-center border-r border-white/10 w-10">#</th>
-                            <th className="px-4 py-3 border-r border-white/10">
-                              <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded bg-white/20 text-[8px] mr-1.5 font-bold font-mono">T</span>
-                              Project Name
-                            </th>
-                            <th className="px-4 py-3 border-r border-white/10">
-                              <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded bg-white/20 text-[8px] mr-1.5 font-bold font-mono">T</span>
-                              Project Status
-                            </th>
-                            <th className="px-4 py-3 text-center border-r border-white/10">
-                              <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded bg-white/20 text-[8px] mr-1.5 font-bold font-mono">T</span>
-                              Project Health
-                            </th>
-                            <th className="px-4 py-3 text-right border-r border-white/10">
-                              <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded bg-white/20 text-[8px] mr-1.5 font-bold font-mono">#</span>
-                              Project Budget
-                            </th>
-                            <th className="px-4 py-3 text-right border-r border-white/10">
-                              <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded bg-white/20 text-[8px] mr-1.5 font-bold font-mono">#</span>
-                              Total Expense
-                            </th>
-                            <th className="px-4 py-3 text-right border-r border-white/10">
-                              <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded bg-white/20 text-[8px] mr-1.5 font-bold font-mono">#</span>
-                              Budget Remaining
-                            </th>
-                            <th className="px-4 py-3 text-right border-r border-white/10">
-                              <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded bg-white/20 text-[8px] mr-1.5 font-bold font-mono">#</span>
-                              Total Sales
-                            </th>
-                            <th className="px-4 py-3 text-right border-r border-white/10">
-                              <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded bg-white/20 text-[8px] mr-1.5 font-bold font-mono">#</span>
-                              Project Margin
-                            </th>
-                            <th className="px-4 py-3 text-right border-r border-white/10">
-                              <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded bg-white/20 text-[8px] mr-1.5 font-bold font-mono">#</span>
-                              Payment In
-                            </th>
-                            <th className="px-4 py-3 text-right border-r border-white/10">
-                              <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded bg-white/20 text-[8px] mr-1.5 font-bold font-mono">#</span>
-                              Payment Out
-                            </th>
-                            <th className="px-4 py-3 text-right">
-                              <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded bg-white/20 text-[8px] mr-1.5 font-bold font-mono">#</span>
-                              Cash Balance
-                            </th>
+                            <th className="px-4 py-3 border-r border-white/10">Project Name</th>
+                            <th className="px-4 py-3 border-r border-white/10">Project Status</th>
+                            <th className="px-4 py-3 text-center border-r border-white/10">Project Health</th>
+                            <th className="px-4 py-3 text-right border-r border-white/10">Project Budget</th>
+                            <th className="px-4 py-3 text-right border-r border-white/10">Total Expense</th>
+                            <th className="px-4 py-3 text-right border-r border-white/10">Budget Remaining</th>
+                            <th className="px-4 py-3 text-right border-r border-white/10">Total Sales</th>
+                            <th className="px-4 py-3 text-right border-r border-white/10">Project Margin</th>
+                            <th className="px-4 py-3 text-right border-r border-white/10">Payment In</th>
+                            <th className="px-4 py-3 text-right border-r border-white/10">Payment Out</th>
+                            <th className="px-4 py-3 text-right">Cash Balance</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -1356,22 +1323,101 @@ export default function DashboardPage() {
                   {/* Charts Grid - Second Row (Payments, Expense Type) */}
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* Payments */}
-                    <div className="bg-card [.light-theme_&]:bg-white border border-border-custom [.light-theme_&]:border-zinc-200 rounded-lg p-5 space-y-4 transition-all">
-                      <h4 className="text-xs font-bold text-muted [.light-theme_&]:text-zinc-500 uppercase tracking-wider">Payments</h4>
-                      <div className="h-48 flex items-center justify-center rounded-md bg-transparent">
-                        <span className="text-red-500 [.light-theme_&]:text-red-600 text-xs font-bold uppercase tracking-wider">No Data Available</span>
+                    <div className="bg-card [.light-theme_&]:bg-white border border-border-custom [.light-theme_&]:border-zinc-200 rounded-lg p-5 flex flex-col justify-between transition-all">
+                      <div className="space-y-4">
+                        <h4 className="text-xs font-bold text-muted [.light-theme_&]:text-zinc-500 uppercase tracking-wider">Payments</h4>
+                        {(() => {
+                          const totalPaymentIn = financialData?.project_summaries?.reduce((acc: number, p: any) => acc + (p.payment_in || 0), 0) || 0;
+                          const totalPaymentOut = financialData?.project_summaries?.reduce((acc: number, p: any) => acc + (p.payment_out || 0), 0) || 0;
+                          const hasPaymentData = totalPaymentIn > 0 || totalPaymentOut > 0;
+
+                          if (!hasPaymentData) {
+                            return (
+                              <div className="h-40 flex items-center justify-center rounded-md bg-transparent">
+                                <span className="text-red-500 [.light-theme_&]:text-red-600 text-xs font-bold uppercase tracking-wider">No Data Available</span>
+                              </div>
+                            );
+                          }
+
+                          const maxVal = Math.max(totalPaymentIn, totalPaymentOut);
+                          const bar1Height = maxVal > 0 ? (totalPaymentIn / maxVal) * 80 : 0;
+                          const bar2Height = maxVal > 0 ? (totalPaymentOut / maxVal) * 80 : 0;
+
+                          return (
+                            <div className="h-40 flex items-center justify-center rounded-md bg-transparent relative overflow-visible">
+                              <svg className="w-full h-full overflow-visible" viewBox="0 0 240 120">
+                                <line x1="20" y1="90" x2="220" y2="90" stroke="var(--border)" strokeWidth="1" className="[.light-theme_&]:stroke-zinc-200" />
+                                
+                                {/* Payments In Bar */}
+                                <rect x="60" y={90 - bar1Height} width="40" height={bar1Height} fill="#26A69A" rx="2" className="transition-all hover:opacity-90" />
+                                <text x="80" y={90 - bar1Height - 5} fill="#26A69A" fontSize="8" fontWeight="bold" textAnchor="middle">
+                                  {totalPaymentIn >= 1000000 ? `${(totalPaymentIn / 1000000).toFixed(2)}M` : totalPaymentIn.toLocaleString()}
+                                </text>
+                                <text x="80" y="105" fill="#6b7280" fontSize="8" textAnchor="middle">Inflow</text>
+
+                                {/* Payments Out Bar */}
+                                <rect x="140" y={90 - bar2Height} width="40" height={bar2Height} fill="#EF5350" rx="2" className="transition-all hover:opacity-90" />
+                                <text x="160" y={90 - bar2Height - 5} fill="#EF5350" fontSize="8" fontWeight="bold" textAnchor="middle">
+                                  {totalPaymentOut >= 1000000 ? `${(totalPaymentOut / 1000000).toFixed(2)}M` : totalPaymentOut.toLocaleString()}
+                                </text>
+                                <text x="160" y="105" fill="#6b7280" fontSize="8" textAnchor="middle">Outflow</text>
+                              </svg>
+                            </div>
+                          );
+                        })()}
+                      </div>
+                      <div className="border-t border-border-custom [.light-theme_&]:border-zinc-100 pt-3 flex justify-between items-center text-xs mt-4">
+                        <span className="text-muted [.light-theme_&]:text-zinc-500 font-medium">Payment Inflow vs Outflow</span>
+                        <span className="font-bold text-muted [.light-theme_&]:text-zinc-500 bg-white/[0.02] [.light-theme_&]:bg-zinc-100 px-2 py-0.5 rounded">Live</span>
                       </div>
                     </div>
 
                     {/* Expense Type */}
-                    <div className="bg-card [.light-theme_&]:bg-white border border-border-custom [.light-theme_&]:border-zinc-200 rounded-lg p-5 space-y-4 transition-all">
-                      <h4 className="text-xs font-bold text-muted [.light-theme_&]:text-zinc-500 uppercase tracking-wider">Expense Type</h4>
-                      <div className="h-48 flex items-center justify-center rounded-md bg-transparent">
-                        <span className="text-red-500 [.light-theme_&]:text-red-600 text-xs font-bold uppercase tracking-wider">No Data Available</span>
+                    <div className="bg-card [.light-theme_&]:bg-white border border-border-custom [.light-theme_&]:border-zinc-200 rounded-lg p-5 flex flex-col justify-between transition-all">
+                      <div className="space-y-4 w-full">
+                        <h4 className="text-xs font-bold text-muted [.light-theme_&]:text-zinc-500 uppercase tracking-wider">Expense Type</h4>
+                        {(() => {
+                          const expenseItems = financialData?.expense_by_type || [];
+                          const hasExpenseData = expenseItems.length > 0 && expenseItems.some((e: any) => e.value > 0);
+
+                          if (!hasExpenseData) {
+                            return (
+                              <div className="h-40 flex items-center justify-center rounded-md bg-transparent">
+                                <span className="text-red-500 [.light-theme_&]:text-red-600 text-xs font-bold uppercase tracking-wider">No Data Available</span>
+                              </div>
+                            );
+                          }
+
+                          const totalExp = expenseItems.reduce((acc: number, item: any) => acc + (item.value || 0), 0) || 1;
+
+                          return (
+                            <div className="space-y-3 py-2 max-h-[160px] overflow-y-auto pr-1">
+                              {expenseItems.map((item: any, idx: number) => {
+                                const pct = Math.round((item.value / totalExp) * 100) || 0;
+                                const colors = ["#5C6BC0", "#26A69A", "#EF5350", "#AB47BC", "#FFA726"];
+                                const color = colors[idx % colors.length];
+                                return (
+                                  <div key={idx} className="space-y-1">
+                                    <div className="flex justify-between items-center text-xs font-medium text-zinc-300 [.light-theme_&]:text-zinc-700">
+                                      <span>{item.name}</span>
+                                      <span className="font-bold">{item.value.toLocaleString("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 })} ({pct}%)</span>
+                                    </div>
+                                    <div className="w-full bg-white/5 [.light-theme_&]:bg-zinc-100 rounded-full h-2">
+                                      <div className="rounded-full h-2 transition-all duration-500" style={{ width: `${pct}%`, backgroundColor: color }} />
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          );
+                        })()}
+                      </div>
+                      <div className="border-t border-border-custom [.light-theme_&]:border-zinc-100 pt-3 flex justify-between items-center text-xs mt-4">
+                        <span className="text-muted [.light-theme_&]:text-zinc-500 font-medium">Expense Breakdown</span>
+                        <span className="font-bold text-muted [.light-theme_&]:text-zinc-500 bg-white/[0.02] [.light-theme_&]:bg-zinc-100 px-2 py-0.5 rounded">Live</span>
                       </div>
                     </div>
                   </div>
-
 
                 </div>
               )}
