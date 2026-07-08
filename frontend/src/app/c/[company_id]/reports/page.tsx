@@ -3,8 +3,6 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import Sidebar from "@/components/Sidebar";
-import PageHeader from "@/components/PageHeader";
 import { getApiHost } from "@/lib/api";
 
 interface ReportItem {
@@ -368,13 +366,8 @@ export default function ReportsDashboard() {
 
 
   return (
-    <div className="flex h-screen bg-background text-foreground overflow-hidden font-sans">
-      <Sidebar />
-
-      <main className="flex-1 flex flex-col h-full overflow-hidden relative">
-        <PageHeader title="Company Reports Hub" />
-
-        <div className="flex-1 overflow-y-auto p-6 space-y-8 bg-elevated/20">
+    <div className="flex-1 flex flex-col overflow-hidden bg-elevated/20">
+      <div className="flex-1 overflow-y-auto p-6 space-y-8">
           
           {/* Filter & Search Header */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-border-custom">
@@ -554,7 +547,7 @@ export default function ReportsDashboard() {
             <span className="font-semibold">{toastMessage}</span>
           </div>
         )}
-      </main>
+      </div>
     </div>
   );
 }

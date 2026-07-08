@@ -3,8 +3,6 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import Sidebar from "@/components/Sidebar";
-import PageHeader from "@/components/PageHeader";
 import { getApiHost } from "@/lib/api";
 
 export default function ItemWiseSalesReportPage() {
@@ -59,11 +57,7 @@ export default function ItemWiseSalesReportPage() {
   });
 
   return (
-    <div className="flex h-screen bg-background text-foreground overflow-hidden font-sans">
-      <Sidebar />
-
-      <main className="flex-1 flex flex-col h-full overflow-hidden relative">
-        <PageHeader title="Item Wise Sales Report" />
+    <div className="flex-1 flex flex-col overflow-hidden">
 
         {/* Filters Top Bar */}
         <div className="bg-sidebar border-b border-border-custom px-6 py-4 flex flex-col gap-4 shrink-0">
@@ -226,7 +220,6 @@ export default function ItemWiseSalesReportPage() {
             <span className="font-semibold">{toastMessage}</span>
           </div>
         )}
-      </main>
     </div>
   );
 }

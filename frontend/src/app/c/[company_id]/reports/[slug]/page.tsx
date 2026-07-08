@@ -3,8 +3,6 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import Sidebar from "@/components/Sidebar";
-import PageHeader from "@/components/PageHeader";
 import { getApiHost } from "@/lib/api";
 
 // Comprehensive metadata configurations for all 70+ reports
@@ -734,10 +732,7 @@ export default function DynamicReportViewPage() {
   };
 
   return (
-    <div className="flex h-screen bg-background text-foreground overflow-hidden font-sans">
-      <Sidebar />
-      <main className="flex-1 flex flex-col h-full overflow-hidden relative">
-        <PageHeader title={meta.title} />
+    <div className="flex-1 flex flex-col overflow-hidden">
 
         {/* Filters + Action Header bar */}
         <div className="bg-sidebar border-b border-border-custom px-6 py-4 flex flex-col gap-4 shrink-0">
@@ -1068,7 +1063,6 @@ export default function DynamicReportViewPage() {
             <span className="font-semibold">{toastMessage}</span>
           </div>
         )}
-      </main>
     </div>
   );
 }
