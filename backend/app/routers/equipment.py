@@ -173,6 +173,21 @@ def list_deployments(project_id: uuid.UUID, db: Session = Depends(get_db)):
     ).order_by(EquipmentDeployment.start_date.desc()).all()
 
 
+@router.patch("/deployments/{deployment_id}/return", response_model=DeploymentResponse)
+def return_deployment(deployment_id: uuid.UUID, db: Session = Depends(get_db)):
+    dep = db.query(EquipmentDeployment).filter(EquipmentDeployment.id == deployment_id).first()
+    if not dep:
+        raise HTTPException(status_code=404, detail="Deployment not found")
+
+    dep.end_date = datetime.utcnow()
+    eq = db.query(Equipment).filter(Equipment.id == dep.equipment_id).first()
+    if eq:
+        eq.status = "available"
+    db.commit()
+    db.refresh(dep)
+    return dep
+
+
 # ─── Fuel Logging Endpoints ──────────────────────────────────────────────────
 
 @router.post("/{equipment_id}/fuel", response_model=FuelLogResponse, status_code=status.HTTP_201_CREATED)

@@ -83,6 +83,7 @@ export default function DPRPage() {
   const [weather, setWeather] = useState("Clear");
   const [notes, setNotes] = useState("");
   const [issues, setIssues] = useState("");
+  const [reportedBy, setReportedBy] = useState("");
   const [cementConsumed, setCementConsumed] = useState("");
   
   // Measurement Book (M.B.) takeoff items state
@@ -164,7 +165,9 @@ export default function DPRPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           project_id: projectId,
-          task_id: selectedTaskId,
+          task_id: selectedTaskId && /^[0-9a-fA-F-]{36}$/.test(selectedTaskId) ? selectedTaskId : null,
+          reported_by: reportedBy || "Site Engineer",
+          dpr_date: new Date().toISOString(),
           executed_qty: parseFloat(executedQty) || 0.0,
           workers_deployed: parseInt(workersDeployed) || 0,
           weather: weather,
@@ -294,6 +297,11 @@ export default function DPRPage() {
                     <option key={t.id} value={t.id}>{t.name} ({t.status})</option>
                   ))}
                 </select>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-muted">Reported By</label>
+                <input type="text" value={reportedBy} onChange={(e) => setReportedBy(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-white" placeholder="e.g. Er. Suresh R (PM)" />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
