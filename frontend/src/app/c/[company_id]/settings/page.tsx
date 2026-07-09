@@ -1,7 +1,6 @@
 "use client";
 import { getApiHost } from "@/lib/api";
 
-
 import { useParams } from "next/navigation";
 import { useEffect, useState, useRef, useCallback } from "react";
 import PwaControls from "@/components/pwa/PwaControls";
@@ -11,7 +10,27 @@ interface CompanySettings {
   name: string;
   legal_business_name?: string | null;
   gstin?: string | null;
+  phone?: string | null;
   billing_address?: string | null;
+  business_segment?: string | null;
+  company_size?: string | null;
+  construction_types?: string[] | null;
+  weekly_off?: string | null;
+  weekly_off_days?: string[] | null;
+  restrict_entry_creation_enabled?: boolean;
+  restrict_entry_creation_days?: number;
+  restrict_entry_editing_enabled?: boolean;
+  restrict_entry_editing_days?: number;
+  restrict_progress_over_estimate?: boolean;
+  pretax_deduction_retention?: boolean;
+  restrict_subcon_material_issue?: boolean;
+  restrict_material_transfer?: boolean;
+  restrict_production_material?: boolean;
+  grn_numbering?: string | null;
+  logo_url?: string | null;
+  signature_url?: string | null;
+  stamp_url?: string | null;
+  watermark_url?: string | null;
   currency_decimal_places: number;
   quantity_decimal_places: number;
   back_dated_limit_days: number;
@@ -21,7 +40,14 @@ interface CompanySettings {
   material_request_restriction: boolean;
   negative_balance_warning: boolean;
   custom_pdf_template_enabled: boolean;
+  document_company_name_display?: string | null;
   google_sheets_auth_phone?: string | null;
+  google_sheets_enabled?: boolean;
+  google_sheets_authorized_phones?: string[] | null;
+  subscription_plan?: string | null;
+  subscription_start?: string | null;
+  subscription_end?: string | null;
+  subscription_renewal?: string | null;
 }
 
 interface Branch {
@@ -29,204 +55,821 @@ interface Branch {
   branch_name: string;
   gstin: string;
   billing_address: string;
+  is_primary: boolean;
+  geo_location?: string | null;
+  address_line1?: string | null;
+  city?: string | null;
+  state?: string | null;
+  zip?: string | null;
+  country?: string | null;
+  created_at: string;
+}
+
+interface Role {
+  id: string;
+  company_id: string;
+  role_name: string;
+  created_at: string;
+}
+
+interface PayrollSettings {
+  id: string;
+  company_id: string;
+  pf_employee_pct: number;
+  pf_employer_pct: number;
+  esi_employee_pct: number;
+  esi_employer_pct: number;
+  tds_monthly: number;
+  is_esi_applicable: boolean;
+}
+
+interface LeaveTemplate {
+  id: string;
+  company_id: string;
+  name: string;
+  casual_leave_days: number;
+  sick_leave_days: number;
+  earned_leave_days: number;
+  leave_types: { type: string; days: number }[];
+  created_at: string;
+}
+
+interface Holiday {
+  id: string;
+  company_id: string;
+  name: string;
+  date: string;
+}
+
+interface SalaryBreakup {
+  monthly_ctc: number;
+  day_off: string;
+  basic_pct: number;
+  basic: number;
+  allowances: { name: string; amount: number }[];
+  gross: number;
+  deductions: { name: string; amount: number }[];
+  net: number;
+}
+
+interface SalaryTemplate {
+  id: string;
+  company_id: string;
+  name: string;
+  description: string | null;
+  status: string;
+  breakup: SalaryBreakup;
+  created_at: string;
+}
+
+interface CustomField {
+  id: string;
+  company_id: string;
+  entity_type: string;
+  field_name: string;
+  field_label: string;
+  field_type: string;
+  is_required: boolean;
+  options: string[];
+  display_order: number;
+  is_active: boolean;
+  default_value: string | null;
+  set_default: boolean;
   created_at: string;
 }
 
 interface ApprovalRule {
   id: string;
+  company_id: string;
   feature_type: string;
   min_amount: number;
-  max_amount?: number | null;
+  max_amount: number | null;
   levels: number;
   approvers: string;
+  created_at: string;
 }
 
-interface Holiday {
-  id: string;
-  name: string;
-  date: string;
-}
+const DEFAULT_ROLES = [
+  "Admin", "Client", "Accountant", "Sub Contractor", "Associate HR",
+  "Project partner", "Site Engineer", "Manager", "Supervisor", "Viewer",
+];
+
+type SectionId =
+  | "company" | "roles" | "payroll" | "holiday" | "workflow"
+  | "docfields" | "approval" | "integrations" | "subscription";
+
+const SECTIONS: { id: SectionId; label: string }[] = [
+  { id: "company", label: "Company" },
+  { id: "roles", label: "Roles & Access" },
+  { id: "payroll", label: "Payroll" },
+  { id: "holiday", label: "Holiday & Weekoff" },
+  { id: "workflow", label: "Workflow Controls" },
+  { id: "docfields", label: "Document & Fields" },
+  { id: "approval", label: "Multi Level Approval" },
+  { id: "integrations", label: "Integrations" },
+  { id: "subscription", label: "Subscription" },
+];
+
+const COUNTRIES = ["India", "United Arab Emirates", "United States", "United Kingdom", "Singapore", "Australia", "Canada", "Germany", "Other"];
+const BUSINESS_SEGMENTS = ["1cr-10cr", "10cr-20cr", "20cr-50cr", "50cr-100cr"];
+const COMPANY_SIZES = ["1-20", "20-50", "50-100", "100-200"];
+const CONSTRUCTION_TYPES = ["Developer", "Residential Real Estate", "Commercial Real Estate", "Infrastructure", "Industrial", "Renovation / Retrofit"];
+
+const ASSET_LABELS: { type: "logo" | "signature" | "stamp" | "watermark"; label: string }[] = [
+  { type: "logo", label: "Logo" },
+  { type: "signature", label: "Signature" },
+  { type: "stamp", label: "Stamp" },
+  { type: "watermark", label: "Watermark" },
+];
 
 export default function CompanySettingsPage() {
   const { company_id } = useParams();
   const [settings, setSettings] = useState<CompanySettings | null>(null);
-  const [draft, setDraft] = useState<Partial<CompanySettings>>({});
   const [branches, setBranches] = useState<Branch[]>([]);
-  const [rules, setRules] = useState<ApprovalRule[]>([]);
-  const [holidays, setHolidays] = useState<Holiday[]>([]);
-  const [activeTab, setActiveTab] = useState<"details" | "branches" | "workflow" | "approvals" | "holidays">("details");
-  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
-
-  // Form states for new branch
-  const [newBranch, setNewBranch] = useState({ name: "", gstin: "", address: "" });
-  const [showAddBranch, setShowAddBranch] = useState(false);
-
-  // Form states for new approval rule
-  const [newRule, setNewRule] = useState({ feature: "purchase_order", min: 0, max: "", levels: 1, approvers: "" });
-  const [showAddRule, setShowAddRule] = useState(false);
-
-  // Form states for new holiday
-  const [newHoliday, setNewHoliday] = useState({ name: "", date: "" });
-  const [showAddHoliday, setShowAddHoliday] = useState(false);
-
+  const [activeSection, setActiveSection] = useState<SectionId>("company");
+  const [companyTab, setCompanyTab] = useState<"details" | "branches" | "business">("details");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [uploading, setUploading] = useState<string | null>(null);
 
   const apiHost = `${getApiHost()}`;
 
-  useEffect(() => {
+  const loadSettings = useCallback(() => {
     if (!company_id) return;
     setLoading(true);
-
-    // Fetch Settings
     fetch(`${apiHost}/apis/v3/settings/company/${company_id}`)
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to load settings");
-        return res.json();
-      })
+      .then((res) => { if (!res.ok) throw new Error("Failed to load settings"); return res.json(); })
       .then((data) => setSettings(data))
       .catch((err) => setError(err.message));
-
-    // Fetch Branches
     fetch(`${apiHost}/apis/v3/settings/branches/${company_id}`)
       .then((res) => res.json())
       .then((data) => setBranches(data))
-      .catch(() => {});
-
-    // Fetch Approval Rules
-    fetch(`${apiHost}/apis/v3/settings/approval-rules/${company_id}`)
-      .then((res) => res.json())
-      .then((data) => setRules(data))
-      .catch(() => {});
-
-    // Fetch Holidays
-    fetch(`${apiHost}/apis/v3/settings/holidays/${company_id}`)
-      .then((res) => res.json())
-      .then((data) => setHolidays(data))
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [company_id]);
+  }, [company_id, apiHost]);
 
-  const handleUpdateSettings = async (updates: Partial<CompanySettings>) => {
+  useEffect(() => { loadSettings(); }, [loadSettings]);
+
+  // ─── Company Details draft + save ──────────────────────────────────────────
+  const [cDraft, setCDraft] = useState<{ name: string; legal_business_name: string; gstin: string; phone: string; billing_address: string }>({
+    name: "", legal_business_name: "", gstin: "", phone: "", billing_address: "",
+  });
+  useEffect(() => {
+    if (settings) {
+      setCDraft({
+        name: settings.name || "",
+        legal_business_name: settings.legal_business_name ?? "",
+        gstin: settings.gstin ?? "",
+        phone: settings.phone ?? "",
+        billing_address: settings.billing_address ?? "",
+      });
+      setWeeklyOffDays(
+        Array.isArray(settings.weekly_off_days)
+          ? settings.weekly_off_days
+          : settings.weekly_off
+            ? [settings.weekly_off]
+            : []
+      );
+      setWf({
+        restrict_entry_creation_enabled: settings.restrict_entry_creation_enabled ?? false,
+        restrict_entry_creation_days: settings.restrict_entry_creation_days ?? 0,
+        restrict_entry_editing_enabled: settings.restrict_entry_editing_enabled ?? false,
+        restrict_entry_editing_days: settings.restrict_entry_editing_days ?? 0,
+        restrict_progress_over_estimate: settings.restrict_progress_over_estimate ?? false,
+        pretax_deduction_retention: settings.pretax_deduction_retention ?? false,
+        negative_stock_lock: settings.negative_stock_lock ?? false,
+        restrict_subcon_material_issue: settings.restrict_subcon_material_issue ?? false,
+        restrict_material_transfer: settings.restrict_material_transfer ?? false,
+        restrict_production_material: settings.restrict_production_material ?? false,
+        material_request_restriction: settings.material_request_restriction ?? false,
+        po_restriction: settings.po_restriction ?? false,
+        bom_restriction: settings.bom_restriction ?? false,
+        grn_numbering: settings.grn_numbering ?? "Project Level",
+      });
+    }
+  }, [settings]);
+
+  const [weeklyOffDays, setWeeklyOffDays] = useState<string[]>([]);
+  const [weeklyOffStatus, setWeeklyOffStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const saveWeeklyOff = async () => {
+    setWeeklyOffStatus("saving");
+    try {
+      const res = await fetch(`${apiHost}/apis/v3/settings/company/${company_id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ weekly_off_days: weeklyOffDays }),
+      });
+      if (res.ok) { setSettings(await res.json()); setWeeklyOffStatus("saved"); setTimeout(() => setWeeklyOffStatus("idle"), 2000); }
+      else setWeeklyOffStatus("error");
+    } catch { setWeeklyOffStatus("error"); }
+  };
+
+  const toggleWeeklyOffDay = (d: string) =>
+    setWeeklyOffDays(weeklyOffDays.includes(d) ? weeklyOffDays.filter((x) => x !== d) : [...weeklyOffDays, d]);
+
+  // ─── Workflow Controls (company restriction flags) ──────────────────────────
+  const [wf, setWf] = useState({
+    restrict_entry_creation_enabled: false, restrict_entry_creation_days: 0,
+    restrict_entry_editing_enabled: false, restrict_entry_editing_days: 0,
+    restrict_progress_over_estimate: false,
+    pretax_deduction_retention: false,
+    negative_stock_lock: false,
+    restrict_subcon_material_issue: false,
+    restrict_material_transfer: false,
+    restrict_production_material: false,
+    material_request_restriction: false,
+    po_restriction: false,
+    bom_restriction: false,
+    grn_numbering: "Project Level",
+  });
+  const [wfTab, setWfTab] = useState<"entry" | "progress" | "finance" | "material">("entry");
+  const [wfStatus, setWfStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const saveWorkflow = async () => {
+    setWfStatus("saving");
+    try {
+      const res = await fetch(`${apiHost}/apis/v3/settings/company/${company_id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(wf),
+      });
+      if (res.ok) { setSettings(await res.json()); setWfStatus("saved"); setTimeout(() => setWfStatus("idle"), 2000); }
+      else setWfStatus("error");
+    } catch { setWfStatus("error"); }
+  };
+
+  // ─── Document & Fields (PDF Template / Terms / Number Format / Custom Fields) ─
+  const [docTab, setDocTab] = useState<"pdf" | "terms" | "number" | "custom">("pdf");
+
+  // PDF Template settings
+  const [pdfStatus, setPdfStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const savePdfSettings = async (patch: { custom_pdf_template_enabled?: boolean; document_company_name_display?: string }) => {
+    setPdfStatus("saving");
+    try {
+      const res = await fetch(`${apiHost}/apis/v3/settings/company/${company_id}`, {
+        method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(patch),
+      });
+      if (res.ok) { setSettings(await res.json()); setPdfStatus("saved"); setTimeout(() => setPdfStatus("idle"), 2000); }
+      else setPdfStatus("error");
+    } catch { setPdfStatus("error"); }
+  };
+
+  // Terms & Conditions — 5 independent documents; central source of default T&C
+  const TERMS_BOILERPLATE: Record<string, string> = {
+    invoice_terms:
+      "1. Payment due within 30 days of invoice date.\n2. Interest @ 18% p.a. shall be charged on all overdue amounts.\n3. Goods remain the property of the Company until payment is made in full.\n4. Disputes, if any, shall be subject to the jurisdiction of the Company's registered office.",
+    quotation_terms:
+      "1. This quotation is valid for 30 days from the date of issue.\n2. Prices are exclusive of applicable taxes unless stated otherwise.\n3. Rates are subject to revision on account of statutory changes.\n4. Confirmation of acceptance is required to proceed with the work.",
+    subcon_terms:
+      "1. Work Order value is lumpsum inclusive of all labour, tools and applicable taxes unless specified.\n2. Measurements will be taken as per actual completed and approved work.\n3. Statutory compliance (labour, safety) is the sole responsibility of the Subcontractor.\n4. Retention @ 10% shall be deducted and released on satisfactory completion.",
+    boq_terms:
+      "1. Quantities are indicative and subject to verification at site.\n2. Rates are firm for the contract duration.\n3. Variations require written approval before execution.\n4. All works to be executed as per approved drawings and specifications.",
+    purchase_order_terms:
+      "1. Delivery within the agreed lead time to the specified site.\n2. Materials to be accompanied by test certificates and valid tax invoices.\n3. Defective or short supplies to be replaced at no extra cost.\n4. Payment released against submission of matched documents.",
+  };
+  const TERMS_FIELDS: { key: keyof typeof TERMS_BOILERPLATE; label: string }[] = [
+    { key: "invoice_terms", label: "Invoice Terms" },
+    { key: "quotation_terms", label: "Quotation Terms" },
+    { key: "subcon_terms", label: "Subcon Terms" },
+    { key: "boq_terms", label: "BOQ Terms" },
+    { key: "purchase_order_terms", label: "Purchase Order Terms" },
+  ];
+  const [terms, setTerms] = useState<Record<string, string>>({
+    invoice_terms: "", quotation_terms: "", subcon_terms: "", boq_terms: "", purchase_order_terms: "",
+  });
+  const [termsLoaded, setTermsLoaded] = useState(false);
+  const [termsStatus, setTermsStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const loadTerms = useCallback(() => {
+    if (!company_id) return;
+    fetch(`${apiHost}/apis/v3/settings/company-terms/${company_id}`)
+      .then((r) => r.json())
+      .then((d) => {
+        setTerms({
+          invoice_terms: d.invoice_terms || TERMS_BOILERPLATE.invoice_terms,
+          quotation_terms: d.quotation_terms || TERMS_BOILERPLATE.quotation_terms,
+          subcon_terms: d.subcon_terms || TERMS_BOILERPLATE.subcon_terms,
+          boq_terms: d.boq_terms || TERMS_BOILERPLATE.boq_terms,
+          purchase_order_terms: d.purchase_order_terms || TERMS_BOILERPLATE.purchase_order_terms,
+        });
+        setTermsLoaded(true);
+      })
+      .catch(() => setTermsLoaded(true));
+  }, [company_id, apiHost]);
+  const saveTerms = async () => {
+    setTermsStatus("saving");
+    try {
+      const res = await fetch(`${apiHost}/apis/v3/settings/company-terms/${company_id}`, {
+        method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(terms),
+      });
+      if (res.ok) { setTermsStatus("saved"); setTimeout(() => setTermsStatus("idle"), 2000); }
+      else setTermsStatus("error");
+    } catch { setTermsStatus("error"); }
+  };
+
+  // Number Format (currency / quantity decimal places)
+  const [numFmt, setNumFmt] = useState({ currency_decimal_places: 2, quantity_decimal_places: 3 });
+  const [numStatus, setNumStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  useEffect(() => {
+    if (settings) {
+      setNumFmt({
+        currency_decimal_places: settings.currency_decimal_places ?? 2,
+        quantity_decimal_places: settings.quantity_decimal_places ?? 3,
+      });
+    }
+  }, [settings]);
+  const saveNumFmt = async () => {
+    setNumStatus("saving");
+    try {
+      const res = await fetch(`${apiHost}/apis/v3/settings/company/${company_id}`, {
+        method: "PUT", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          currency_decimal_places: Number(numFmt.currency_decimal_places) || 0,
+          quantity_decimal_places: Number(numFmt.quantity_decimal_places) || 0,
+        }),
+      });
+      if (res.ok) { setSettings(await res.json()); setNumStatus("saved"); setTimeout(() => setNumStatus("idle"), 2000); }
+      else setNumStatus("error");
+    } catch { setNumStatus("error"); }
+  };
+
+  // Custom Fields (entity_type-based, wired to /custom-fields)
+  const DOC_TYPES = [
+    "Project", "Task", "Lead", "Vendor", "Customer", "Invoice", "Bill",
+    "Work Order", "Purchase Order", "Quotation", "BOQ", "Payment", "Expense", "Material", "Equipment",
+  ];
+  const CF_DATA_TYPES = ["text", "number", "date", "select", "multiselect", "checkbox"];
+  const [cfEntity, setCfEntity] = useState(DOC_TYPES[0]);
+  const [cfList, setCfList] = useState<CustomField[]>([]);
+  const [showAddCf, setShowAddCf] = useState(false);
+  const [cfBusy, setCfBusy] = useState(false);
+  const [cfMsg, setCfMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
+  const [cfDraft, setCfDraft] = useState({ field_name: "", field_type: "text", default_value: "", set_default: false });
+  const loadCf = useCallback(() => {
+    if (!company_id) return;
+    fetch(`${apiHost}/apis/v3/custom-fields/fields/${company_id}?entity_type=${encodeURIComponent(cfEntity)}`)
+      .then((r) => r.json())
+      .then((d) => setCfList(Array.isArray(d) ? d : []))
+      .catch(() => setCfList([]));
+  }, [company_id, apiHost, cfEntity]);
+  useEffect(() => { if (activeSection === "docfields") loadCf(); }, [activeSection, loadCf]);
+  useEffect(() => { if (activeSection === "docfields") loadTerms(); }, [activeSection, loadTerms]);
+  const addCf = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const name = cfDraft.field_name.trim();
+    if (!name) return;
+    setCfBusy(true); setCfMsg(null);
+    try {
+      const res = await fetch(`${apiHost}/apis/v3/custom-fields/fields`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          company_id, entity_type: cfEntity, field_name: name, field_label: name,
+          field_type: cfDraft.field_type, is_required: false, options: [], display_order: cfList.length,
+          default_value: cfDraft.set_default ? cfDraft.default_value : null,
+          set_default: cfDraft.set_default,
+        }),
+      });
+      if (res.ok) {
+        const f = await res.json();
+        setCfList([...cfList, f]);
+        setCfDraft({ field_name: "", field_type: "text", default_value: "", set_default: false });
+        setShowAddCf(false);
+        setCfMsg({ type: "ok", text: "Custom field added" });
+      } else {
+        setCfMsg({ type: "err", text: "Failed to add custom field" });
+      }
+    } catch {
+      setCfMsg({ type: "err", text: "Failed to add custom field" });
+    } finally {
+      setCfBusy(false);
+    }
+  };
+
+  // ─── Multi Level Approval (15 categories; flat chain or amount-range blocks) ──
+  const APPROVAL_CATEGORIES = [
+    "Asset Transfer", "Design Version", "Equipment Expense", "GRN Material",
+    "Inspection Form Response", "Leave Application", "Material Issue", "Material Purchase",
+    "Material Transfer", "Material Used", "Other Expense", "Payment Entries",
+    "Payment Request", "Purchase Order", "RFQ",
+  ];
+  const emptyRuleDraft = () => ({ min_amount: 0, max_amount: "", levels: 1, approvers: "" });
+  const [approvalCat, setApprovalCat] = useState(APPROVAL_CATEGORIES[0]);
+  const [approvalRules, setApprovalRules] = useState<ApprovalRule[]>([]);
+  const [newRule, setNewRule] = useState(emptyRuleDraft);
+  const [ruleEdits, setRuleEdits] = useState<Record<string, { min_amount: number; max_amount: string; levels: number; approvers: string }>>({});
+  const [ruleBusy, setRuleBusy] = useState(false);
+  const [ruleMsg, setRuleMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
+
+  const loadApprovalRules = useCallback(() => {
+    if (!company_id) return;
+    fetch(`${apiHost}/apis/v3/settings/approval-rules/${company_id}`)
+      .then((r) => r.json())
+      .then((d) => setApprovalRules(Array.isArray(d) ? d : []))
+      .catch(() => setApprovalRules([]));
+  }, [company_id, apiHost]);
+  useEffect(() => { if (activeSection === "approval") loadApprovalRules(); }, [activeSection, loadApprovalRules]);
+
+  const publishNewRule = async () => {
+    if (!newRule.approvers.trim()) { setRuleMsg({ type: "err", text: "Approvers are required" }); return; }
+    setRuleBusy(true); setRuleMsg(null);
+    try {
+      const res = await fetch(`${apiHost}/apis/v3/settings/approval-rules/${company_id}`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          feature_type: approvalCat,
+          min_amount: Number(newRule.min_amount) || 0,
+          max_amount: newRule.max_amount === "" || newRule.max_amount == null ? null : Number(newRule.max_amount),
+          levels: Number(newRule.levels) || 1,
+          approvers: newRule.approvers.trim(),
+        }),
+      });
+      if (res.ok) {
+        const r = await res.json();
+        setApprovalRules([...approvalRules, r]);
+        setNewRule(emptyRuleDraft());
+        setRuleMsg({ type: "ok", text: "Approval rule published" });
+      } else {
+        setRuleMsg({ type: "err", text: "Failed to publish approval rule" });
+      }
+    } catch {
+      setRuleMsg({ type: "err", text: "Failed to publish approval rule" });
+    } finally {
+      setRuleBusy(false);
+    }
+  };
+
+  const publishEditRule = async (r: ApprovalRule) => {
+    const e = ruleEdits[r.id] ?? { min_amount: r.min_amount, max_amount: r.max_amount ?? "", levels: r.levels, approvers: r.approvers };
+    setRuleBusy(true); setRuleMsg(null);
+    try {
+      const res = await fetch(`${apiHost}/apis/v3/settings/approval-rules/${r.id}`, {
+        method: "PUT", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          feature_type: r.feature_type,
+          min_amount: Number(e.min_amount) || 0,
+          max_amount: e.max_amount === "" || e.max_amount == null ? null : Number(e.max_amount),
+          levels: Number(e.levels) || 1,
+          approvers: e.approvers.trim(),
+        }),
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setApprovalRules(approvalRules.map((x) => (x.id === r.id ? updated : x)));
+        setRuleEdits((prev) => { const n = { ...prev }; delete n[r.id]; return n; });
+        setRuleMsg({ type: "ok", text: "Approval rule published" });
+      } else {
+        setRuleMsg({ type: "err", text: "Failed to publish approval rule" });
+      }
+    } catch {
+      setRuleMsg({ type: "err", text: "Failed to publish approval rule" });
+    } finally {
+      setRuleBusy(false);
+    }
+  };
+
+  const deleteRule = async (id: string) => {
+    const res = await fetch(`${apiHost}/apis/v3/settings/approval-rules/${id}`, { method: "DELETE" });
+    if (res.ok || res.status === 404) setApprovalRules(approvalRules.filter((x) => x.id !== id));
+  };
+
+  const approveEdit = (id: string, patch: Partial<{ min_amount: number; max_amount: string; levels: number; approvers: string }>) =>
+    setRuleEdits((prev) => {
+      const base = prev[id] ?? { min_amount: 0, max_amount: "", levels: 1, approvers: "" };
+      return { ...prev, [id]: { ...base, ...patch } };
+    });
+
+  const approvalRulesForCat = (cat: string) =>
+    approvalRules.filter((r) => r.feature_type === cat).sort((a, b) => (a.min_amount || 0) - (b.min_amount || 0));
+
+  // ─── Integrations (Google Sheets — auth/storage layer only) ──────────────────
+  const [gsEnabled, setGsEnabled] = useState(false);
+  const [gsPhones, setGsPhones] = useState<string[]>([]);
+  const [gsPhoneInput, setGsPhoneInput] = useState("");
+  const [gsStatus, setGsStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  useEffect(() => {
+    if (settings) {
+      setGsEnabled(settings.google_sheets_enabled ?? false);
+      setGsPhones(Array.isArray(settings.google_sheets_authorized_phones) ? settings.google_sheets_authorized_phones : []);
+    }
+  }, [settings]);
+  const saveGs = async (patch: { google_sheets_enabled?: boolean; google_sheets_authorized_phones?: string[] }) => {
+    setGsStatus("saving");
+    try {
+      const res = await fetch(`${apiHost}/apis/v3/settings/company/${company_id}`, {
+        method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(patch),
+      });
+      if (res.ok) { setSettings(await res.json()); setGsStatus("saved"); setTimeout(() => setGsStatus("idle"), 2000); }
+      else setGsStatus("error");
+    } catch { setGsStatus("error"); }
+  };
+  const addGsPhone = () => {
+    const p = gsPhoneInput.trim();
+    if (!p) return;
+    const next = gsPhones.includes(p) ? gsPhones : [...gsPhones, p];
+    setGsPhones(next); setGsPhoneInput(""); saveGs({ google_sheets_authorized_phones: next });
+  };
+  const removeGsPhone = (p: string) => {
+    const next = gsPhones.filter((x) => x !== p);
+    setGsPhones(next); saveGs({ google_sheets_authorized_phones: next });
+  };
+
+  // ─── Subscription (display-only; no billing UI) ──────────────────────────────
+  const fmtDate = (d?: string | null) => (d ? new Date(d).toLocaleDateString("en-IN", { year: "numeric", month: "short", day: "numeric" }) : "—");
+
+  const validateGSTIN = (g: string) => /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(g.toUpperCase());
+  const [gstinError, setGstinError] = useState(false);
+
+  const saveDetails = async () => {
     if (!settings) return;
     setSaveStatus("saving");
     try {
       const res = await fetch(`${apiHost}/apis/v3/settings/company/${company_id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updates),
+        body: JSON.stringify(cDraft),
       });
-      if (res.ok) {
-        const updated = await res.json();
-        setSettings(updated);
-        setDraft({});
-        setSaveStatus("saved");
-        setTimeout(() => setSaveStatus("idle"), 2000);
-      } else {
-        setSaveStatus("error");
-      }
-    } catch (err) {
-      console.error(err);
-      setSaveStatus("error");
+      if (res.ok) { setSettings(await res.json()); setSaveStatus("saved"); setTimeout(() => setSaveStatus("idle"), 2000); }
+      else setSaveStatus("error");
+    } catch { setSaveStatus("error"); }
+  };
+
+  // ─── Business Profile draft + save ──────────────────────────────────────────
+  const [bSeg, setBSeg] = useState<string | null>(null);
+  const [bSize, setBSize] = useState<string | null>(null);
+  const [bTypes, setBTypes] = useState<string[]>([]);
+  const [ctypeInput, setCtypeInput] = useState("");
+  useEffect(() => {
+    if (settings) {
+      setBSeg(settings.business_segment ?? null);
+      setBSize(settings.company_size ?? null);
+      setBTypes(settings.construction_types ?? []);
     }
-  };
-
-  const handleDraftChange = useCallback((updates: Partial<CompanySettings>) => {
-    setDraft(prev => ({ ...prev, ...updates }));
+  }, [settings]);
+  const toggleCType = (t: string) => setBTypes((prev) => prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]);
+  const addCType = () => { const v = ctypeInput.trim(); if (v && !bTypes.includes(v)) setBTypes([...bTypes, v]); setCtypeInput(""); };
+  const saveBusiness = async () => {
     setSaveStatus("saving");
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
-      handleUpdateSettings(updates);
-    }, 800);
-  }, [settings, company_id, apiHost]);
-
-  const validateGSTIN = (gstin: string): boolean => {
-    return /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(gstin.toUpperCase());
+    try {
+      const res = await fetch(`${apiHost}/apis/v3/settings/company/${company_id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ business_segment: bSeg, company_size: bSize, construction_types: bTypes }),
+      });
+      if (res.ok) { setSettings(await res.json()); setSaveStatus("saved"); setTimeout(() => setSaveStatus("idle"), 2000); }
+      else setSaveStatus("error");
+    } catch { setSaveStatus("error"); }
   };
 
-  const [gstinError, setGstinError] = useState(false);
-
-  const FEATURE_LABELS: Record<string, string> = {
-    purchase_order: "Purchase Orders (PO)",
-    material_request: "Material Requests",
-    expense: "Expenses & Petty Cash",
-    ra_bill: "RA / Subcontractor Bills",
-    client_invoice: "Client Invoices",
-    debit_note: "Debit Notes",
-    credit_note: "Credit Notes",
-    timesheet: "Timesheets",
+  // ─── Branding uploads ───────────────────────────────────────────────────────
+  const uploadAsset = async (type: "logo" | "signature" | "stamp" | "watermark", file: File) => {
+    setUploading(type);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch(`${apiHost}/apis/v3/settings/company-file/${company_id}?asset_type=${type}`, { method: "POST", body: fd });
+      if (res.ok) {
+        setSettings((prev) => prev ? {
+          ...prev,
+          logo_url: type === "logo" ? `${apiHost}/apis/v3/settings/company-file/${company_id}/logo` : prev.logo_url,
+          signature_url: type === "signature" ? `${apiHost}/apis/v3/settings/company-file/${company_id}/signature` : prev.signature_url,
+          stamp_url: type === "stamp" ? `${apiHost}/apis/v3/settings/company-file/${company_id}/stamp` : prev.stamp_url,
+          watermark_url: type === "watermark" ? `${apiHost}/apis/v3/settings/company-file/${company_id}/watermark` : prev.watermark_url,
+        } : prev);
+      }
+    } finally { setUploading(null); }
   };
 
-  const handleAddBranch = async (e: React.FormEvent) => {
+  // ─── Branches ───────────────────────────────────────────────────────────────
+  const [showAddBranch, setShowAddBranch] = useState(false);
+  const [nb, setNb] = useState({ branch_name: "", gstin: "", geo_location: "", address_line1: "", city: "", state: "", zip: "", country: "India" });
+  const addBranch = async (e: React.FormEvent) => {
     e.preventDefault();
+    const billing = [nb.address_line1, [nb.city, nb.state].filter(Boolean).join(", "), nb.zip, nb.country].filter(Boolean).join(", ") || nb.geo_location;
     try {
       const res = await fetch(`${apiHost}/apis/v3/settings/branches/${company_id}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          branch_name: newBranch.name,
-          gstin: newBranch.gstin,
-          billing_address: newBranch.address,
-        }),
+        body: JSON.stringify({ ...nb, billing_address: billing }),
+      });
+      if (res.ok) { const added = await res.json(); setBranches([...branches, added]); setNb({ branch_name: "", gstin: "", geo_location: "", address_line1: "", city: "", state: "", zip: "", country: "India" }); setShowAddBranch(false); }
+    } catch (err) { console.error(err); }
+  };
+  const setPrimary = async (id: string) => {
+    const res = await fetch(`${apiHost}/apis/v3/settings/branches/${id}/primary`, { method: "PATCH" });
+    if (res.ok) { const updated = await res.json(); setBranches(branches.map((b) => ({ ...b, is_primary: b.id === id }))); void updated; }
+  };
+
+  // ─── Roles & Access (flat list of roles) ──────────────────────────────────
+  const [roles, setRoles] = useState<Role[]>([]);
+  const [roleName, setRoleName] = useState("");
+  const [showAddRole, setShowAddRole] = useState(false);
+  const [roleBusy, setRoleBusy] = useState(false);
+  const [roleMsg, setRoleMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
+
+  const loadRoles = useCallback(() => {
+    if (!company_id) return;
+    fetch(`${apiHost}/apis/v3/settings/roles/${company_id}`)
+      .then((res) => res.json())
+      .then((data) => setRoles(Array.isArray(data) ? data : []))
+      .catch(() => setRoles([]));
+  }, [company_id, apiHost]);
+
+  useEffect(() => { if (activeSection === "roles") loadRoles(); }, [activeSection, loadRoles]);
+
+  const addRole = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const name = roleName.trim();
+    if (!name) return;
+    setRoleBusy(true); setRoleMsg(null);
+    try {
+      const res = await fetch(`${apiHost}/apis/v3/settings/roles/${company_id}`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role_name: name }),
       });
       if (res.ok) {
-        const added = await res.json();
-        setBranches([...branches, added]);
-        setNewBranch({ name: "", gstin: "", address: "" });
-        setShowAddBranch(false);
+        const r = await res.json();
+        setRoles([...roles, r]); setRoleName(""); setShowAddRole(false);
+        setRoleMsg({ type: "ok", text: "Role added" });
+      } else if (res.status === 409) {
+        setRoleMsg({ type: "err", text: "Role already exists" });
+      } else {
+        setRoleMsg({ type: "err", text: "Failed to add role" });
       }
-    } catch (err) {
-      console.error(err);
+    } catch {
+      setRoleMsg({ type: "err", text: "Failed to add role" });
+    } finally {
+      setRoleBusy(false);
     }
   };
 
-  const handleAddRule = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const seedRoles = async () => {
+    setRoleBusy(true); setRoleMsg(null);
     try {
-      const res = await fetch(`${apiHost}/apis/v3/settings/approval-rules/${company_id}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          feature_type: newRule.feature,
-          min_amount: Number(newRule.min),
-          max_amount: newRule.max ? Number(newRule.max) : null,
-          levels: Number(newRule.levels),
-          approvers: newRule.approvers,
-        }),
-      });
+      const res = await fetch(`${apiHost}/apis/v3/settings/roles/seed/${company_id}`, { method: "POST" });
       if (res.ok) {
-        const added = await res.json();
-        setRules([...rules, added]);
-        setNewRule({ feature: "purchase_order", min: 0, max: "", levels: 1, approvers: "" });
-        setShowAddRule(false);
+        const created = await res.json();
+        setRoles(created);
+        setRoleMsg({ type: "ok", text: `Seeded ${created.length} default roles` });
+      } else if (res.status === 409) {
+        setRoleMsg({ type: "err", text: "Default roles already added for this company" });
+      } else {
+        setRoleMsg({ type: "err", text: "Failed to seed roles" });
       }
-    } catch (err) {
-      console.error(err);
+    } catch {
+      setRoleMsg({ type: "err", text: "Failed to seed roles" });
+    } finally {
+      setRoleBusy(false);
     }
   };
 
-  const handleAddHoliday = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // ─── Payroll Settings (company-level statutory defaults) ───────────────────
+  const [payroll, setPayroll] = useState<PayrollSettings | null>(null);
+  const [pDraft, setPDraft] = useState({
+    pf_employee_pct: 12, pf_employer_pct: 12, esi_employee_pct: 0.75,
+    esi_employer_pct: 3.25, tds_monthly: 0, is_esi_applicable: true,
+  });
+  const [payrollStatus, setPayrollStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+
+  const loadPayroll = useCallback(() => {
+    if (!company_id) return;
+    fetch(`${apiHost}/apis/v3/settings/payroll/${company_id}`)
+      .then((res) => res.json())
+      .then((data) => {
+        setPayroll(data);
+        setPDraft({
+          pf_employee_pct: data.pf_employee_pct, pf_employer_pct: data.pf_employer_pct,
+          esi_employee_pct: data.esi_employee_pct, esi_employer_pct: data.esi_employer_pct,
+          tds_monthly: data.tds_monthly, is_esi_applicable: data.is_esi_applicable,
+        });
+      })
+      .catch(() => {});
+  }, [company_id, apiHost]);
+
+  useEffect(() => { if (activeSection === "payroll") loadPayroll(); }, [activeSection, loadPayroll]);
+
+  const savePayroll = async () => {
+    setPayrollStatus("saving");
     try {
-      const res = await fetch(`${apiHost}/apis/v3/settings/holidays/${company_id}`, {
-        method: "POST",
+      const res = await fetch(`${apiHost}/apis/v3/settings/payroll/${company_id}`, {
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(pDraft),
+      });
+      if (res.ok) { setPayroll(await res.json()); setPayrollStatus("saved"); setTimeout(() => setPayrollStatus("idle"), 2000); }
+      else setPayrollStatus("error");
+    } catch { setPayrollStatus("error"); }
+  };
+
+  // ─── Payroll sub-tabs: Leave Policy | Holiday Calendar | Salary Template | Statutory ──
+  const [payrollTab, setPayrollTab] = useState<"leave" | "holiday" | "salary" | "statutory">("leave");
+  const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+  // Leave Policy
+  const [leaveTemplates, setLeaveTemplates] = useState<LeaveTemplate[]>([]);
+  const [showAddLeave, setShowAddLeave] = useState(false);
+  const [ltBusy, setLtBusy] = useState(false);
+  const [ltName, setLtName] = useState("");
+  const [ltTypes, setLtTypes] = useState<{ type: string; days: number }[]>([{ type: "", days: 0 }]);
+  const addLtType = () => setLtTypes([...ltTypes, { type: "", days: 0 }]);
+  const editLtType = (i: number, key: "type" | "days", val: any) =>
+    setLtTypes(ltTypes.map((t, j) => (j === i ? { ...t, [key]: val } : t)));
+  const removeLtType = (i: number) => setLtTypes(ltTypes.filter((_, j) => j !== i));
+  const createLeaveTemplate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!ltName.trim()) return;
+    const rows = ltTypes.filter((t) => t.type.trim()).map((t) => ({ type: t.type.trim(), days: Number(t.days) || 0 }));
+    setLtBusy(true);
+    try {
+      const res = await fetch(`${apiHost}/apis/v3/hr/leave-templates/${company_id}`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: ltName.trim(), leave_types: rows }),
+      });
+      if (res.ok) { const t = await res.json(); setLeaveTemplates([...leaveTemplates, t]); setLtName(""); setLtTypes([{ type: "", days: 0 }]); setShowAddLeave(false); }
+    } catch { /* ignore */ }
+    finally { setLtBusy(false); }
+  };
+  const deleteLeaveTemplate = async (id: string) => {
+    const res = await fetch(`${apiHost}/apis/v3/hr/leave-templates/${id}`, { method: "DELETE" });
+    if (res.ok) setLeaveTemplates(leaveTemplates.filter((t) => t.id !== id));
+  };
+
+  // Holiday Calendar
+  const [holidays, setHolidays] = useState<Holiday[]>([]);
+  const [showAddHoliday, setShowAddHoliday] = useState(false);
+  const [hName, setHName] = useState("");
+  const [hDate, setHDate] = useState("");
+  const createHoliday = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!hName.trim() || !hDate) return;
+    try {
+      const res = await fetch(`${apiHost}/apis/v3/hr/holidays/${company_id}`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: hName.trim(), date: new Date(hDate + "T00:00:00").toISOString() }),
+      });
+      if (res.ok) { const h = await res.json(); setHolidays([...holidays, h]); setHName(""); setHDate(""); setShowAddHoliday(false); }
+    } catch { /* ignore */ }
+  };
+  const deleteHoliday = async (id: string) => {
+    const res = await fetch(`${apiHost}/apis/v3/hr/holidays/${id}`, { method: "DELETE" });
+    if (res.ok) setHolidays(holidays.filter((h) => h.id !== id));
+  };
+
+  // Salary Template (reusable named salary breakup cascade)
+  const [salaryTemplates, setSalaryTemplates] = useState<SalaryTemplate[]>([]);
+  const [showAddSalary, setShowAddSalary] = useState(false);
+  const [stName, setStName] = useState("");
+  const [stDesc, setStDesc] = useState("");
+  const [stCtc, setStCtc] = useState(0);
+  const [stDayOff, setStDayOff] = useState("Sunday");
+  const [stBasicPct, setStBasicPct] = useState(40);
+  const [stAllowances, setStAllowances] = useState<{ name: string; amount: number }[]>([]);
+  const [stDeductions, setStDeductions] = useState<{ name: string; amount: number }[]>([]);
+  const stBasic = Math.round(stCtc * (stBasicPct / 100) * 100) / 100;
+  const stFixedAllowance = Math.round(stAllowances.reduce((s, a) => s + (a.amount || 0), 0) * 100) / 100;
+  const stGross = Math.round((stBasic + stFixedAllowance) * 100) / 100;
+  const stTotalDed = Math.round(stDeductions.reduce((s, d) => s + (d.amount || 0), 0) * 100) / 100;
+  const stNet = Math.round((stGross - stTotalDed) * 100) / 100;
+  const editLine = (list: { name: string; amount: number }[], set: (v: { name: string; amount: number }[]) => void, idx: number, key: "name" | "amount", val: any) =>
+    set(list.map((x, j) => (j === idx ? { ...x, [key]: val } : x)));
+  const resetSt = () => { setStName(""); setStDesc(""); setStCtc(0); setStDayOff("Sunday"); setStBasicPct(40); setStAllowances([]); setStDeductions([]); };
+  const createSalaryTemplate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!stName.trim()) return;
+    try {
+      const res = await fetch(`${apiHost}/apis/v3/settings/salary-templates/${company_id}`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: newHoliday.name,
-          date: newHoliday.date ? `${newHoliday.date}T00:00:00` : null,
+          name: stName.trim(), description: stDesc.trim() || null, status: "Active",
+          breakup: { monthly_ctc: stCtc, day_off: stDayOff, basic_pct: stBasicPct, basic: stBasic,
+            allowances: stAllowances, gross: stGross, deductions: stDeductions, net: stNet },
         }),
       });
-      if (res.ok) {
-        const added = await res.json();
-        setHolidays([...holidays, added]);
-        setNewHoliday({ name: "", date: "" });
-        setShowAddHoliday(false);
-      }
-    } catch (err) {
-      console.error(err);
-    }
+      if (res.ok) { const t = await res.json(); setSalaryTemplates([...salaryTemplates, t]); resetSt(); setShowAddSalary(false); }
+    } catch { /* ignore */ }
   };
+  const deleteSalaryTemplate = async (id: string) => {
+    const res = await fetch(`${apiHost}/apis/v3/settings/salary-templates/${id}`, { method: "DELETE" });
+    if (res.ok) setSalaryTemplates(salaryTemplates.filter((t) => t.id !== id));
+  };
+
+  const loadPayrollSubs = useCallback(() => {
+    if (!company_id) return;
+    fetch(`${apiHost}/apis/v3/hr/leave-templates/${company_id}`).then((r) => r.json()).then((d) => setLeaveTemplates(Array.isArray(d) ? d : [])).catch(() => {});
+    fetch(`${apiHost}/apis/v3/hr/holidays/${company_id}`).then((r) => r.json()).then((d) => setHolidays(Array.isArray(d) ? d : [])).catch(() => {});
+    fetch(`${apiHost}/apis/v3/settings/salary-templates/${company_id}`).then((r) => r.json()).then((d) => setSalaryTemplates(Array.isArray(d) ? d : [])).catch(() => {});
+  }, [company_id, apiHost]);
+  useEffect(() => { if (activeSection === "payroll") loadPayrollSubs(); }, [activeSection, loadPayrollSubs]);
+
+  useEffect(() => {
+    if (activeSection === "holiday") {
+      fetch(`${apiHost}/apis/v3/hr/holidays/${company_id}`)
+        .then((r) => r.json())
+        .then((d) => setHolidays(Array.isArray(d) ? d : []))
+        .catch(() => setHolidays([]));
+    }
+  }, [activeSection, company_id, apiHost]);
+
+  const primaryBranch = branches.find((b) => b.is_primary);
+  const otherCount = branches.length - (primaryBranch ? 1 : 0);
 
   if (loading) {
     return (
@@ -240,489 +883,1294 @@ export default function CompanySettingsPage() {
   }
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden">
-      {/* Main Workspace */}
+    <div className="flex-1 flex overflow-hidden">
+      {/* Left section nav */}
+      <aside className="w-60 shrink-0 border-r border-border-custom bg-card p-4 overflow-y-auto">
+        <div className="px-2 pb-4 text-[10px] uppercase tracking-[0.2em] text-muted font-bold">Settings</div>
+        <nav className="space-y-1">
+          {SECTIONS.map((s) => (
+            <button
+              key={s.id}
+              onClick={() => setActiveSection(s.id)}
+              className={`w-full text-left px-3 py-2.5 rounded-md text-xs font-bold transition-all duration-200 ${
+                activeSection === s.id ? "bg-primary text-white shadow-lg shadow-primary/10" : "text-muted hover:text-foreground hover:bg-elevated"
+              }`}
+            >
+              {s.label}
+            </button>
+          ))}
+        </nav>
+      </aside>
+
+      {/* Main content */}
       <main className="flex-1 p-8 overflow-y-auto">
         <header className="flex items-center justify-between border-b border-border-custom pb-6">
           <div>
-            <h1 className="text-2xl font-black text-white tracking-tight">Company Settings</h1>
-            <p className="mt-1 text-xs text-muted">Configure global business profile, branches, workflow bounds, and sequential approvals.</p>
+            <h1 className="text-2xl font-black text-white tracking-tight">{SECTIONS.find((s) => s.id === activeSection)?.label}</h1>
+            <p className="mt-1 text-xs text-muted">Configure company-wide settings for this organization.</p>
           </div>
           <PwaControls />
         </header>
 
-        {/* Tab Selection */}
-        <div className="mt-6 flex border-b border-border-custom gap-1 bg-elevated p-1 rounded-lg w-max">
-          {(["details", "branches", "workflow", "approvals", "holidays"] as const).map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`px-5 py-2.5 rounded-md text-xs font-bold capitalize transition-all duration-200 ${
-                activeTab === tab
-                  ? "bg-primary text-white shadow-lg shadow-primary/10"
-                  : "text-muted hover:text-foreground hover:bg-elevated"
-              }`}
-            >
-              {tab === "details" ? "Company Profile" : tab}
-            </button>
-          ))}
-        </div>
-
-        {/* Error message */}
         {error && (
-          <div className="mt-6 p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs rounded-lg">
-            {error}
-          </div>
+          <div className="mt-6 p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs rounded-lg">{error}</div>
         )}
         {saveStatus === "saved" && (
-          <div className="mt-6 p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-lg">
-            Settings saved successfully
-          </div>
+          <div className="mt-6 p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-lg">Settings saved successfully</div>
         )}
         {saveStatus === "error" && (
-          <div className="mt-6 p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs rounded-lg">
-            Failed to save settings. Please try again.
-          </div>
+          <div className="mt-6 p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs rounded-lg">Failed to save settings. Please try again.</div>
         )}
 
         <div className="mt-8">
-          {/* TAB 1: DETAILS */}
-          {activeTab === "details" && settings && (
-            <div className="bg-card border border-border-custom rounded-lg max-w-2xl border border-border-custom bg-background p-6 rounded-md space-y-6">
-              <h2 className="text-sm font-bold text-white uppercase tracking-wider text-muted border-b border-border-custom pb-3">Business Profile Details</h2>
-              <div className="grid grid-cols-2 gap-6">
-                <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase tracking-wider text-muted font-bold">Company Name</label>
-                  <input
-                    type="text"
-                    value={settings.name}
-                    disabled
-                    className="w-full bg-white/[0.03] border border-border-custom rounded-md px-4 py-2.5 text-xs text-muted cursor-not-allowed"
-                  />
+          {/* ════════════════════════════ COMPANY ════════════════════════════ */}
+          {activeSection === "company" && settings && (
+            <div className="space-y-6">
+              <div className="flex border-b border-border-custom gap-1 bg-elevated p-1 rounded-lg w-max">
+                {([["details", "Company Details"], ["branches", "Branches"], ["business", "Business Profile"]] as const).map(([id, label]) => (
+                  <button key={id} onClick={() => setCompanyTab(id)}
+                    className={`px-5 py-2.5 rounded-md text-xs font-bold transition-all duration-200 ${
+                      companyTab === id ? "bg-primary text-white shadow-lg shadow-primary/10" : "text-muted hover:text-foreground hover:bg-elevated"
+                    }`}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Company Details */}
+              {companyTab === "details" && (
+                <div className="bg-card border border-border-custom rounded-lg max-w-3xl bg-background p-6 rounded-md space-y-6">
+                  <h2 className="text-sm font-bold text-white uppercase tracking-wider text-muted border-b border-border-custom pb-3">Company Details</h2>
+                  <div className="grid grid-cols-2 gap-6">
+                    <Field label="Company Name">
+                      <input type="text" value={cDraft.name} onChange={(e) => setCDraft({ ...cDraft, name: e.target.value })}
+                        className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-4 py-2.5 text-xs text-white outline-none" />
+                    </Field>
+                    <Field label="Phone Number">
+                      <input type="text" value={cDraft.phone} onChange={(e) => setCDraft({ ...cDraft, phone: e.target.value })}
+                        className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-4 py-2.5 text-xs text-white outline-none" placeholder="Company phone number" />
+                    </Field>
+                    <Field label="Legal Business Name">
+                      <input type="text" value={cDraft.legal_business_name} onChange={(e) => setCDraft({ ...cDraft, legal_business_name: e.target.value })}
+                        className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-4 py-2.5 text-xs text-white outline-none" placeholder="Enter Legal Entity Name" />
+                    </Field>
+                    <Field label="GSTIN">
+                      <input type="text" value={cDraft.gstin} onChange={(e) => { const v = e.target.value.toUpperCase(); setCDraft({ ...cDraft, gstin: v }); setGstinError(v ? !validateGSTIN(v) : false); }}
+                        className={`w-full bg-elevated border rounded-md px-4 py-2.5 text-xs text-white outline-none ${gstinError ? "border-rose-500" : "border-border-custom focus:border-primary"}`} placeholder="Enter 15-digit GSTIN" />
+                      {gstinError && <p className="text-[10px] text-rose-400 mt-1">Invalid GSTIN format.</p>}
+                    </Field>
+                  </div>
+                  <Field label="Company Primary Address">
+                    <textarea value={cDraft.billing_address} onChange={(e) => setCDraft({ ...cDraft, billing_address: e.target.value })}
+                      rows={3} className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-4 py-2.5 text-xs text-white outline-none resize-none" placeholder="Registered business address" />
+                  </Field>
+
+                  {/* Branding upload slots */}
+                  <div>
+                    <h3 className="text-[10px] uppercase tracking-wider text-muted font-bold mb-3">Branding Assets</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      {ASSET_LABELS.map(({ type, label }) => {
+                        const url = settings[`${type}_url` as keyof CompanySettings] as string | null | undefined;
+                        return (
+                          <div key={type} className="border border-dashed border-border-custom rounded-lg p-3 flex flex-col items-center gap-2">
+                            <div className="h-20 w-full flex items-center justify-center rounded-md bg-elevated overflow-hidden">
+                              {url ? <img src={url} alt={label} className="max-h-20 max-w-full object-contain" /> : <span className="text-[10px] text-muted">{label}</span>}
+                            </div>
+                            <div className="text-[10px] text-muted font-bold">{label}</div>
+                            <input type="file" accept="image/*" id={`up-${type}`} className="hidden"
+                              onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadAsset(type, f); }} />
+                            <label htmlFor={`up-${type}`} className="text-[10px] bg-primary/10 text-primary border border-primary/20 px-3 py-1 rounded-md cursor-pointer hover:bg-primary/20">
+                              {uploading === type ? "Uploading…" : url ? "Replace" : "Upload"}
+                            </label>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end">
+                    <button onClick={saveDetails} disabled={gstinError} className="bg-primary text-white text-xs font-bold px-6 py-2.5 rounded-md disabled:opacity-50">
+                      Save
+                    </button>
+                  </div>
                 </div>
-                <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase tracking-wider text-muted font-bold">Legal Business Name</label>
-                  <input
-                    type="text"
-                    value={draft.legal_business_name ?? settings?.legal_business_name ?? ""}
-                    onChange={(e) => handleDraftChange({ legal_business_name: e.target.value })}
-                    className="w-full bg-elevated border border-border-custom focus:border-border-custom focus:ring-1 focus:ring-primary rounded-md px-4 py-2.5 text-xs text-white transition-all outline-none"
-                    placeholder="Enter Legal Entity Name"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase tracking-wider text-muted font-bold">GSTIN</label>
-                  <input
-                    type="text"
-                    value={draft.gstin ?? settings?.gstin ?? ""}
-                    onChange={(e) => {
-                      const v = e.target.value.toUpperCase();
-                      handleDraftChange({ gstin: v });
-                      if (v && !validateGSTIN(v)) {
-                        setGstinError(true);
-                      } else {
-                        setGstinError(false);
-                      }
-                    }}
-                    className={`w-full bg-elevated border rounded-md px-4 py-2.5 text-xs text-white transition-all outline-none ${gstinError ? "border-rose-500 focus:border-rose-500" : "border-border-custom focus:border-border-custom focus:ring-1 focus:ring-primary"}`}
-                    placeholder="Enter 15-digit GSTIN"
-                  />
-                  {gstinError && (
-                    <p className="text-[10px] text-rose-400 mt-1">Invalid GSTIN format. Expected: 2 digits + 5 letters + 4 digits + 1 letter + 1 digit/letter + Z + 1 digit/letter</p>
+              )}
+
+              {/* Branches */}
+              {companyTab === "branches" && (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-3 gap-4">
+                    <StatCard label="Total Branches" value={String(branches.length)} />
+                    <StatCard label="Primary Branch" value={primaryBranch ? `${primaryBranch.branch_name}${primaryBranch.city ? ` · ${primaryBranch.city}` : ""}` : "—"} />
+                    <StatCard label="Other Branches" value={String(otherCount)} />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-sm font-bold text-white uppercase tracking-wider text-muted">Company Branches</h2>
+                    <button onClick={() => setShowAddBranch(true)} className="bg-primary text-white text-xs font-bold px-4 py-2.5 rounded-md">+ New Branch</button>
+                  </div>
+
+                  {showAddBranch && (
+                    <form onSubmit={addBranch} className="bg-card border border-border-custom rounded-lg max-w-xl bg-background p-6 rounded-md space-y-4">
+                      <h3 className="text-xs font-bold text-white uppercase tracking-wider">New Branch Details</h3>
+                      <div className="grid grid-cols-2 gap-4">
+                        <input type="text" placeholder="Branch Name" value={nb.branch_name} onChange={(e) => setNb({ ...nb, branch_name: e.target.value })} required className="bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
+                        <input type="text" placeholder="Branch GSTIN" value={nb.gstin} onChange={(e) => setNb({ ...nb, gstin: e.target.value })} required className="bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
+                      </div>
+                      <textarea placeholder="Project Geo Location (Google Address)" value={nb.geo_location} onChange={(e) => setNb({ ...nb, geo_location: e.target.value })} rows={2} className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none resize-none" />
+                      <div className="grid grid-cols-2 gap-4">
+                        <input type="text" placeholder="Address Line 1" value={nb.address_line1} onChange={(e) => setNb({ ...nb, address_line1: e.target.value })} className="bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
+                        <input type="text" placeholder="City" value={nb.city} onChange={(e) => setNb({ ...nb, city: e.target.value })} className="bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
+                        <input type="text" placeholder="State / Province" value={nb.state} onChange={(e) => setNb({ ...nb, state: e.target.value })} className="bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
+                        <input type="text" placeholder="Zip" value={nb.zip} onChange={(e) => setNb({ ...nb, zip: e.target.value })} className="bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
+                        <select value={nb.country} onChange={(e) => setNb({ ...nb, country: e.target.value })} className="bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none">
+                          {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                        </select>
+                      </div>
+                      <div className="flex gap-2 justify-end">
+                        <button type="button" onClick={() => setShowAddBranch(false)} className="text-muted hover:text-foreground text-xs font-bold px-4 py-2">Cancel</button>
+                        <button type="submit" className="bg-primary text-white text-xs font-bold px-4 py-2 rounded-md">Save Branch</button>
+                      </div>
+                    </form>
                   )}
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase tracking-wider text-muted font-bold">Primary Address</label>
-                  <input
-                    type="text"
-                    value={draft.billing_address ?? settings?.billing_address ?? ""}
-                    onChange={(e) => handleDraftChange({ billing_address: e.target.value })}
-                    className="w-full bg-elevated border border-border-custom focus:border-border-custom focus:ring-1 focus:ring-primary rounded-md px-4 py-2.5 text-xs text-white transition-all outline-none"
-                    placeholder="Enter Business Address"
-                  />
-                </div>
-              </div>
-            </div>
-          )}
 
-          {/* TAB 2: BRANCHES */}
-          {activeTab === "branches" && (
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h2 className="text-sm font-bold text-white uppercase tracking-wider text-muted">Company Branches</h2>
-                <button
-                  onClick={() => setShowAddBranch(true)}
-                  className="bg-primary hover:bg-primary text-white text-xs font-bold px-4 py-2.5 rounded-md transition-all shadow-md shadow-primary/5"
-                >
-                  + Add Branch
-                </button>
-              </div>
-
-              {showAddBranch && (
-                <form onSubmit={handleAddBranch} className="bg-card border border-border-custom rounded-lg max-w-xl border border-border-custom bg-background p-6 rounded-md space-y-4">
-                  <h3 className="text-xs font-bold text-white uppercase tracking-wider">New Branch Details</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <input
-                      type="text"
-                      placeholder="Branch Name (e.g. Mumbai Main)"
-                      value={newBranch.name}
-                      onChange={(e) => setNewBranch({ ...newBranch, name: e.target.value })}
-                      required
-                      className="bg-elevated border border-border-custom focus:border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Branch GSTIN"
-                      value={newBranch.gstin}
-                      onChange={(e) => setNewBranch({ ...newBranch, gstin: e.target.value })}
-                      required
-                      className="bg-elevated border border-border-custom focus:border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none"
-                    />
-                  </div>
-                  <input
-                    type="text"
-                    placeholder="Billing Address"
-                    value={newBranch.address}
-                    onChange={(e) => setNewBranch({ ...newBranch, address: e.target.value })}
-                    required
-                    className="w-full bg-elevated border border-border-custom focus:border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none"
-                  />
-                  <div className="flex gap-2 justify-end">
-                    <button type="button" onClick={() => setShowAddBranch(false)} className="text-muted hover:text-foreground text-xs font-bold px-4 py-2">
-                      Cancel
-                    </button>
-                    <button type="submit" className="bg-primary text-white text-xs font-bold px-4 py-2 rounded-md">
-                      Save Branch
-                    </button>
-                  </div>
-                </form>
-              )}
-
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {branches.length === 0 ? (
-                  <div className="col-span-full text-center p-8 border border-dashed border-border-custom rounded-md text-muted text-xs">
-                    No branches configured.
-                  </div>
-                ) : (
-                  branches.map((b) => (
-                    <div key={b.id} className="bg-card border border-border-custom rounded-lg border border-border-custom bg-background p-5 rounded-lg space-y-3">
-                      <div className="flex justify-between items-center">
-                        <div className="font-bold text-white text-sm">{b.branch_name}</div>
-                        <span className="text-[10px] bg-zinc-800 text-muted px-2 py-0.5 rounded-full font-mono">Active</span>
-                      </div>
-                      <div className="text-xs space-y-1">
-                        <div className="text-muted">GSTIN: <span className="font-mono text-zinc-300">{b.gstin}</span></div>
-                        <div className="text-muted line-clamp-2">Address: <span className="text-zinc-300">{b.billing_address}</span></div>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* TAB 3: WORKFLOW */}
-          {activeTab === "workflow" && settings && (
-            <div className="bg-card border border-border-custom rounded-lg max-w-2xl border border-border-custom bg-background p-6 rounded-md space-y-6">
-              <h2 className="text-sm font-bold text-white uppercase tracking-wider text-muted border-b border-border-custom pb-3">Workflow Restriction Controls</h2>
-              
-              <div className="space-y-4">
-                {/* Currency Precision */}
-                <div className="flex items-center justify-between py-2">
-                  <div>
-                    <div className="text-xs font-semibold text-white">Currency Decimal Precision</div>
-                    <div className="text-[10px] text-muted">Decimals to display on payouts, rates, and margins.</div>
-                  </div>
-                  <select
-                    value={settings.currency_decimal_places}
-                     onChange={(e) => handleDraftChange({ currency_decimal_places: Number(e.target.value) })}
-                    className="bg-card border border-border-custom rounded-md px-3 py-1.5 text-xs text-white"
-                  >
-                    <option value={0}>0 Decimals</option>
-                    <option value={1}>1 Decimal</option>
-                    <option value={2}>2 Decimals</option>
-                    <option value={3}>3 Decimals</option>
-                  </select>
-                </div>
-
-                {/* Quantity Precision */}
-                <div className="flex items-center justify-between py-2 border-t border-border-custom">
-                  <div>
-                    <div className="text-xs font-semibold text-white">Quantity Decimal Precision</div>
-                    <div className="text-[10px] text-muted">Decimals to display on materials, stock, and indents.</div>
-                  </div>
-                  <select
-                    value={settings.quantity_decimal_places}
-                     onChange={(e) => handleDraftChange({ quantity_decimal_places: Number(e.target.value) })}
-                    className="bg-card border border-border-custom rounded-md px-3 py-1.5 text-xs text-white"
-                  >
-                    <option value={0}>0 Decimals</option>
-                    <option value={1}>1 Decimal</option>
-                    <option value={2}>2 Decimals</option>
-                    <option value={3}>3 Decimals</option>
-                    <option value={4}>4 Decimals</option>
-                  </select>
-                </div>
-
-                {/* Backdated Locks */}
-                <div className="flex items-center justify-between py-2 border-t border-border-custom">
-                  <div>
-                    <div className="text-xs font-semibold text-white">Backdated Lock Limit</div>
-                    <div className="text-[10px] text-muted">Allow logging entries up to X days in the past.</div>
-                  </div>
-                  <input
-                    type="number"
-                    value={settings.back_dated_limit_days}
-                     onChange={(e) => handleDraftChange({ back_dated_limit_days: Number(e.target.value) })}
-                    className="w-20 bg-card border border-border-custom rounded-md px-3 py-1 text-xs text-white text-center"
-                    min={0}
-                    max={180}
-                  />
-                </div>
-
-                {/* Negative Stock Lock */}
-                <div className="flex items-center justify-between py-2 border-t border-border-custom">
-                  <div>
-                    <div className="text-xs font-semibold text-white">Negative Stock Lock</div>
-                    <div className="text-[10px] text-muted">Prevent material transfers or issues exceeding available stock.</div>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={settings.negative_stock_lock}
-                     onChange={(e) => handleDraftChange({ negative_stock_lock: e.target.checked })}
-                    className="h-4 w-4 accent-primary"
-                  />
-                </div>
-
-                {/* BOM Restrict */}
-                <div className="flex items-center justify-between py-2 border-t border-border-custom">
-                  <div>
-                    <div className="text-xs font-semibold text-white">BOM Budget Restrict</div>
-                    <div className="text-[10px] text-muted">Prevent ordering items not listed or exceeding Bill of Materials.</div>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={settings.bom_restriction}
-                     onChange={(e) => handleDraftChange({ bom_restriction: e.target.checked })}
-                    className="h-4 w-4 accent-primary"
-                  />
-                </div>
-
-                {/* PO Lock */}
-                <div className="flex items-center justify-between py-2 border-t border-border-custom">
-                  <div>
-                    <div className="text-xs font-semibold text-white">Strict PO Restriction</div>
-                    <div className="text-[10px] text-muted">Block GRNs that do not reference an active Purchase Order.</div>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={settings.po_restriction}
-                     onChange={(e) => handleDraftChange({ po_restriction: e.target.checked })}
-                    className="h-4 w-4 accent-primary"
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* TAB 4: APPROVALS */}
-          {activeTab === "approvals" && (
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h2 className="text-sm font-bold text-white uppercase tracking-wider text-muted">Sequential Multi-Level Approvals</h2>
-                <button
-                  onClick={() => setShowAddRule(true)}
-                  className="bg-primary text-white text-xs font-bold px-4 py-2.5 rounded-md"
-                >
-                  + Configure Rule
-                </button>
-              </div>
-
-              {showAddRule && (
-                <form onSubmit={handleAddRule} className="bg-card border border-border-custom rounded-lg max-w-xl border border-border-custom bg-background p-6 rounded-md space-y-4">
-                  <h3 className="text-xs font-bold text-white uppercase tracking-wider">New Approval Rule</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <label className="text-[9px] uppercase tracking-wider text-muted">Feature Module</label>
-                      <select
-                        value={newRule.feature}
-                        onChange={(e) => setNewRule({ ...newRule, feature: e.target.value })}
-                        className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-white"
-                      >
-                        <option value="purchase_order">Purchase Orders (PO)</option>
-                        <option value="material_request">Material Requests</option>
-                        <option value="expense">Expenses & Petty Cash</option>
-                        <option value="ra_bill">RA / Subcontractor Bills</option>
-                        <option value="client_invoice">Client Invoices</option>
-                        <option value="debit_note">Debit Notes</option>
-                        <option value="credit_note">Credit Notes</option>
-                        <option value="timesheet">Timesheets</option>
-                      </select>
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-[9px] uppercase tracking-wider text-muted">Min Amount (Rs)</label>
-                      <input
-                        type="number"
-                        value={newRule.min}
-                        onChange={(e) => setNewRule({ ...newRule, min: Number(e.target.value) })}
-                        required
-                        className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-white"
-                      />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <label className="text-[9px] uppercase tracking-wider text-muted">Max Amount (Optional)</label>
-                      <input
-                        type="number"
-                        placeholder="Leave blank for no upper bound"
-                        value={newRule.max}
-                        onChange={(e) => setNewRule({ ...newRule, max: e.target.value })}
-                        className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-white"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-[9px] uppercase tracking-wider text-muted">Approval Levels</label>
-                      <input
-                        type="number"
-                        min={1}
-                        max={5}
-                        value={newRule.levels}
-                        onChange={(e) => setNewRule({ ...newRule, levels: Number(e.target.value) })}
-                        required
-                        className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-white"
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[9px] uppercase tracking-wider text-muted">Approvers (Comma-separated emails/names)</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. pm@siteflow.com, cfo@siteflow.com"
-                      value={newRule.approvers}
-                      onChange={(e) => setNewRule({ ...newRule, approvers: e.target.value })}
-                      required
-                      className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-white"
-                    />
-                  </div>
-                  <div className="flex gap-2 justify-end">
-                    <button type="button" onClick={() => setShowAddRule(false)} className="text-muted hover:text-foreground text-xs font-bold px-4 py-2">
-                      Cancel
-                    </button>
-                    <button type="submit" className="bg-primary text-white text-xs font-bold px-4 py-2 rounded-md">
-                      Save Rule
-                    </button>
-                  </div>
-                </form>
-              )}
-
-              <div className="space-y-4">
-                {rules.length === 0 ? (
-                  <div className="text-center p-8 border border-dashed border-border-custom rounded-md text-muted text-xs">
-                    No approval rules defined. Items will auto-approve based on role permissions.
-                  </div>
-                ) : (
-                  rules.map((r) => (
-                    <div key={r.id} className="bg-card border border-border-custom rounded-lg border border-border-custom bg-background p-5 rounded-lg flex items-center justify-between">
-                      <div className="space-y-1.5">
-                         <div className="text-xs font-bold text-white capitalize">{FEATURE_LABELS[r.feature_type] || r.feature_type.replace("_", " ")}</div>
-                        <div className="text-[11px] text-muted">
-                          Threshold: <span className="font-semibold text-zinc-300">Rs {r.min_amount}</span> {r.max_amount ? `to Rs ${r.max_amount}` : "+"}
+                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    {branches.length === 0 ? (
+                      <div className="col-span-full text-center p-8 border border-dashed border-border-custom rounded-md text-muted text-xs">No branches configured.</div>
+                    ) : branches.map((b) => (
+                      <div key={b.id} className="bg-card border border-border-custom rounded-lg bg-background p-5 rounded-lg space-y-3">
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center gap-3">
+                            <div className="h-9 w-9 rounded-full bg-primary/15 text-primary font-bold flex items-center justify-center text-sm">{b.branch_name.charAt(0).toUpperCase()}</div>
+                            <div className="font-bold text-white text-sm">{b.branch_name}</div>
+                          </div>
+                          {b.is_primary && <span className="text-[10px] bg-emerald-500/15 text-emerald-400 px-2 py-0.5 rounded-full font-bold">Primary</span>}
+                        </div>
+                        <div className="text-xs space-y-1">
+                          <div className="text-muted">GSTIN: <span className="font-mono text-zinc-300">{b.gstin}</span></div>
+                          <div className="text-muted line-clamp-2">Address: <span className="text-zinc-300">{b.billing_address}</span></div>
+                          {b.is_primary && <span className="inline-block mt-1 text-[10px] bg-zinc-800 text-muted px-2 py-0.5 rounded-full">Primary Address</span>}
+                        </div>
+                        <div className="flex justify-end">
+                          <button onClick={() => setPrimary(b.id)} disabled={b.is_primary} className="text-[10px] text-muted hover:text-primary disabled:opacity-40 disabled:cursor-default font-bold">
+                            {b.is_primary ? "Primary" : "Set as Primary"}
+                          </button>
                         </div>
                       </div>
-                      <div className="text-right space-y-1">
-                        <span className="text-[10px] bg-primary/10 text-primary border border-primary/10 px-2.5 py-1 rounded-md font-bold">
-                          {r.levels}-Step Approval
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Business Profile */}
+              {companyTab === "business" && (
+                <div className="space-y-6 max-w-3xl">
+                  <h2 className="text-sm font-bold text-white uppercase tracking-wider text-muted border-b border-border-custom pb-3">Business Profile</h2>
+
+                  <SelectorCard title="Avg. Business / Year" options={BUSINESS_SEGMENTS} selected={bSeg} onSelect={setBSeg} />
+                  <SelectorCard title="Company Size" options={COMPANY_SIZES} selected={bSize} onSelect={setBSize} />
+
+                  <div className="bg-card border border-border-custom rounded-lg bg-background p-6 rounded-md space-y-3">
+                    <h3 className="text-[10px] uppercase tracking-wider text-muted font-bold">Construction Type</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {bTypes.map((t) => (
+                        <span key={t} className="text-xs bg-primary/15 text-primary border border-primary/20 px-2.5 py-1 rounded-full flex items-center gap-1.5">
+                          {t}
+                          <button onClick={() => toggleCType(t)} className="text-primary/70 hover:text-primary">×</button>
                         </span>
-                        <div className="text-[9px] text-muted mt-1 max-w-[200px] truncate">{r.approvers}</div>
+                      ))}
+                      {bTypes.length === 0 && <span className="text-xs text-muted">None selected</span>}
+                    </div>
+                    <div className="flex gap-2">
+                      <select value={ctypeInput} onChange={(e) => setCtypeInput(e.target.value)} className="bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none flex-1">
+                        <option value="">Add or pick a type…</option>
+                        {CONSTRUCTION_TYPES.filter((t) => !bTypes.includes(t)).map((t) => <option key={t} value={t}>{t}</option>)}
+                      </select>
+                      <button onClick={addCType} className="bg-primary text-white text-xs font-bold px-4 py-2 rounded-md">Add</button>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end">
+                    <button onClick={saveBusiness} className="bg-primary text-white text-xs font-bold px-6 py-2.5 rounded-md">Save</button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ════════════════════════════ ROLES & ACCESS ════════════════════════════ */}
+          {activeSection === "roles" && (
+            <div className="space-y-6">
+              {roleMsg && (
+                <div className={`p-4 text-xs rounded-lg border ${
+                  roleMsg.type === "ok"
+                    ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+                    : "bg-rose-500/10 border-rose-500/20 text-rose-400"
+                }`}>{roleMsg.text}</div>
+              )}
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-sm font-bold text-white uppercase tracking-wider text-muted">Company Roles</h2>
+                  <p className="mt-1 text-xs text-muted">Flat list of access roles for this organization. {roles.length} role{roles.length === 1 ? "" : "s"} configured.</p>
+                </div>
+                <div className="flex gap-2">
+                  {roles.length === 0 && (
+                    <button onClick={seedRoles} disabled={roleBusy} className="bg-elevated text-white text-xs font-bold px-4 py-2.5 rounded-md border border-border-custom hover:border-primary/50 disabled:opacity-50">
+                      Seed 10 Defaults
+                    </button>
+                  )}
+                  <button onClick={() => setShowAddRole(true)} className="bg-primary text-white text-xs font-bold px-4 py-2.5 rounded-md">+ Add Role</button>
+                </div>
+              </div>
+
+              {showAddRole && (
+                <form onSubmit={addRole} className="bg-card border border-border-custom rounded-lg bg-background p-6 space-y-4 max-w-xl">
+                  <h3 className="text-xs font-bold text-white uppercase tracking-wider">New Role</h3>
+                  <input type="text" placeholder="Role name (e.g. Safety Officer)" value={roleName}
+                    onChange={(e) => setRoleName(e.target.value)} required
+                    className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
+                  <div className="flex gap-2 justify-end">
+                    <button type="button" onClick={() => setShowAddRole(false)} className="text-muted hover:text-foreground text-xs font-bold px-4 py-2">Cancel</button>
+                    <button type="submit" disabled={roleBusy} className="bg-primary text-white text-xs font-bold px-4 py-2 rounded-md disabled:opacity-50">Add Role</button>
+                  </div>
+                </form>
+              )}
+
+              {roles.length === 0 ? (
+                <div className="col-span-full text-center p-8 border border-dashed border-border-custom rounded-md text-muted text-xs">
+                  No roles configured. Click <span className="text-primary font-bold">Seed 10 Defaults</span> to add the standard set, or add a role manually.
+                </div>
+              ) : (
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {roles.map((r) => (
+                    <div key={r.id} className="bg-card border border-border-custom rounded-lg bg-background p-5 flex items-center gap-3">
+                      <div className="h-9 w-9 shrink-0 rounded-full bg-primary/15 text-primary font-bold flex items-center justify-center text-sm">
+                        {r.role_name.charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <div className="font-bold text-white text-sm">{r.role_name}</div>
+                        {DEFAULT_ROLES.includes(r.role_name) && (
+                          <span className="text-[10px] bg-zinc-800 text-muted px-2 py-0.5 rounded-full">Default</span>
+                        )}
                       </div>
                     </div>
-                  ))
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ════════════════════════════ PAYROLL ════════════════════════════ */}
+          {activeSection === "payroll" && (
+            <div className="space-y-6">
+              <div className="flex border-b border-border-custom gap-1 bg-elevated p-1 rounded-lg w-max">
+                {([["leave", "Leave Policy"], ["holiday", "Holiday Calendar"], ["salary", "Salary Template"], ["statutory", "Statutory (PF/ESI/TDS)"]] as const).map(([id, label]) => (
+                  <button key={id} onClick={() => setPayrollTab(id)}
+                    className={`px-5 py-2.5 rounded-md text-xs font-bold transition-all duration-200 ${
+                      payrollTab === id ? "bg-primary text-white shadow-lg shadow-primary/10" : "text-muted hover:text-foreground hover:bg-elevated"
+                    }`}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+
+              {/* ── Leave Policy ── */}
+              {payrollTab === "leave" && (
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-sm font-bold text-white uppercase tracking-wider text-muted">Leave Policy Templates</h2>
+                    <button onClick={() => setShowAddLeave(true)} className="bg-primary text-white text-xs font-bold px-4 py-2.5 rounded-md">+ Create New</button>
+                  </div>
+
+                  {showAddLeave && (
+                    <form onSubmit={createLeaveTemplate} className="bg-card border border-border-custom rounded-lg bg-background p-6 space-y-4 max-w-xl">
+                      <h3 className="text-xs font-bold text-white uppercase tracking-wider">New Leave Policy</h3>
+                      <Field label="Template Name">
+                        <input type="text" placeholder="e.g. Standard Leave Policy" value={ltName}
+                          onChange={(e) => setLtName(e.target.value)} required
+                          className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
+                      </Field>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] uppercase tracking-wider text-muted font-bold">Leave Type Quotas</span>
+                          <button type="button" onClick={addLtType} className="text-[10px] bg-primary/10 text-primary border border-primary/20 px-3 py-1 rounded-md hover:bg-primary/20">+ Add New Type</button>
+                        </div>
+                        {ltTypes.map((t, i) => (
+                          <div key={i} className="flex gap-2">
+                            <input type="text" placeholder="Type (e.g. Casual)" value={t.type}
+                              onChange={(e) => editLtType(i, "type", e.target.value)}
+                              className="flex-1 bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
+                            <input type="number" placeholder="Days" value={t.days}
+                              onChange={(e) => editLtType(i, "days", Number(e.target.value) || 0)}
+                              className="w-24 bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
+                            <button type="button" onClick={() => removeLtType(i)} className="text-muted hover:text-rose-500 px-2">✕</button>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="flex gap-2 justify-end">
+                        <button type="button" onClick={() => setShowAddLeave(false)} className="text-muted hover:text-foreground text-xs font-bold px-4 py-2">Cancel</button>
+                        <button type="submit" disabled={ltBusy} className="bg-primary text-white text-xs font-bold px-4 py-2 rounded-md disabled:opacity-50">Create</button>
+                      </div>
+                    </form>
+                  )}
+
+                  {leaveTemplates.length === 0 ? (
+                    <div className="col-span-full text-center p-8 border border-dashed border-border-custom rounded-md text-muted text-xs">No leave policy templates found.</div>
+                  ) : (
+                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                      {leaveTemplates.map((t) => {
+                        const quotas = (t.leave_types && t.leave_types.length)
+                          ? t.leave_types
+                          : [{ type: "Casual", days: t.casual_leave_days }, { type: "Sick", days: t.sick_leave_days }, { type: "Earned", days: t.earned_leave_days }];
+                        return (
+                          <div key={t.id} className="bg-card border border-border-custom rounded-lg bg-background p-5 space-y-3">
+                            <div className="flex items-center justify-between">
+                              <div className="font-bold text-white text-sm">{t.name}</div>
+                              <button onClick={() => deleteLeaveTemplate(t.id)} className="text-[10px] text-muted hover:text-rose-400">Delete</button>
+                            </div>
+                            <div className="text-xs text-muted space-y-1">
+                              {quotas.map((q) => (
+                                <div key={q.type}>{q.type}: <span className="text-zinc-300">{q.days} days</span></div>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* ── Holiday Calendar ── */}
+              {payrollTab === "holiday" && (
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-sm font-bold text-white uppercase tracking-wider text-muted">Holiday Calendar</h2>
+                    <button onClick={() => setShowAddHoliday(true)} className="bg-primary text-white text-xs font-bold px-4 py-2.5 rounded-md">+ Add Holiday</button>
+                  </div>
+
+                  {showAddHoliday && (
+                    <form onSubmit={createHoliday} className="bg-card border border-border-custom rounded-lg bg-background p-6 space-y-4 max-w-xl">
+                      <h3 className="text-xs font-bold text-white uppercase tracking-wider">New Holiday</h3>
+                      <Field label="Holiday Name">
+                        <input type="text" placeholder="e.g. Independence Day" value={hName}
+                          onChange={(e) => setHName(e.target.value)} required
+                          className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
+                      </Field>
+                      <Field label="Date">
+                        <input type="date" value={hDate}
+                          onChange={(e) => setHDate(e.target.value)}
+                          className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
+                      </Field>
+                      <div className="flex gap-2 justify-end">
+                        <button type="button" onClick={() => setShowAddHoliday(false)} className="text-muted hover:text-foreground text-xs font-bold px-4 py-2">Cancel</button>
+                        <button type="submit" className="bg-primary text-white text-xs font-bold px-4 py-2 rounded-md">Add</button>
+                      </div>
+                    </form>
+                  )}
+
+                  {holidays.length === 0 ? (
+                    <div className="col-span-full text-center p-8 border border-dashed border-border-custom rounded-md text-muted text-xs">No holidays configured.</div>
+                  ) : (
+                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                      {holidays.map((h) => (
+                        <div key={h.id} className="bg-card border border-border-custom rounded-lg bg-background p-5 flex items-center justify-between">
+                          <div>
+                            <div className="font-bold text-white text-sm">{h.name}</div>
+                            <div className="text-xs text-muted">{new Date(h.date).toLocaleDateString("en-IN")}</div>
+                          </div>
+                          <button onClick={() => deleteHoliday(h.id)} className="text-[10px] text-muted hover:text-rose-400">Delete</button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* ── Salary Template ── */}
+              {payrollTab === "salary" && (
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-sm font-bold text-white uppercase tracking-wider text-muted">Salary Templates</h2>
+                    <button onClick={() => setShowAddSalary(true)} className="bg-primary text-white text-xs font-bold px-4 py-2.5 rounded-md">+ Create New</button>
+                  </div>
+
+                  {showAddSalary && (
+                    <form onSubmit={createSalaryTemplate} className="bg-card border border-border-custom rounded-lg bg-background p-6 space-y-6 max-w-2xl">
+                      <div className="grid grid-cols-2 gap-6">
+                        <Field label="Template Name">
+                          <input type="text" placeholder="e.g. Grade A Engineer" value={stName}
+                            onChange={(e) => setStName(e.target.value)} required
+                            className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
+                        </Field>
+                        <Field label="Description">
+                          <input type="text" placeholder="Optional" value={stDesc}
+                            onChange={(e) => setStDesc(e.target.value)}
+                            className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
+                        </Field>
+                        <Field label="Monthly CTC">
+                          <div className="flex gap-2">
+                            <input type="number" value={stCtc}
+                              onChange={(e) => setStCtc(parseFloat(e.target.value) || 0)}
+                              className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
+                            <select disabled className="bg-elevated border border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none"><option>Monthly</option></select>
+                          </div>
+                        </Field>
+                        <Field label="Day Off">
+                          <select value={stDayOff} onChange={(e) => setStDayOff(e.target.value)}
+                            className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none">
+                            {WEEKDAYS.map((d) => <option key={d}>{d}</option>)}
+                          </select>
+                        </Field>
+                      </div>
+
+                      <div className="rounded-md border border-border-custom p-3 space-y-3">
+                        <div className="text-sm font-semibold text-foreground">Salary Components</div>
+                        <Field label="Basic">
+                          <div className="flex items-center gap-2">
+                            <input type="number" value={stBasicPct}
+                              onChange={(e) => setStBasicPct(parseFloat(e.target.value) || 0)}
+                              className="w-32 bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
+                            <select disabled className="bg-elevated border border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none"><option>% of CTC</option></select>
+                            <div className="whitespace-nowrap text-sm text-muted">= ₹{stBasic.toLocaleString("en-IN")}</div>
+                          </div>
+                        </Field>
+
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-foreground">Allowances</span>
+                          <button type="button" onClick={() => setStAllowances([...stAllowances, { name: "", amount: 0 }])}
+                            className="text-[10px] bg-primary/10 text-primary border border-primary/20 px-3 py-1 rounded-md hover:bg-primary/20">+ New Allowance</button>
+                        </div>
+                        {stAllowances.map((a, i) => (
+                          <div key={i} className="flex gap-2">
+                            <input placeholder="Allowance name" value={a.name}
+                              onChange={(e) => editLine(stAllowances, setStAllowances, i, "name", e.target.value)}
+                              className="flex-1 bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
+                            <input type="number" placeholder="Amount" value={a.amount}
+                              onChange={(e) => editLine(stAllowances, setStAllowances, i, "amount", parseFloat(e.target.value) || 0)}
+                              className="w-32 bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
+                            <button type="button" onClick={() => setStAllowances(stAllowances.filter((_, j) => j !== i))} className="text-muted hover:text-rose-500 px-2">✕</button>
+                          </div>
+                        ))}
+                        <div className="text-right text-sm text-muted">Fixed Allowance: ₹{stFixedAllowance.toLocaleString("en-IN")}</div>
+                        <div className="border-t border-border-custom pt-3 text-sm font-semibold text-foreground">Gross Salary: ₹{stGross.toLocaleString("en-IN")}</div>
+                      </div>
+
+                      <div className="rounded-md border border-border-custom p-3 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-foreground">Deductions</span>
+                          <button type="button" onClick={() => setStDeductions([...stDeductions, { name: "", amount: 0 }])}
+                            className="text-[10px] bg-primary/10 text-primary border border-primary/20 px-3 py-1 rounded-md hover:bg-primary/20">+ New Deduction</button>
+                        </div>
+                        {stDeductions.map((d, i) => (
+                          <div key={i} className="flex gap-2">
+                            <input placeholder="Deduction name" value={d.name}
+                              onChange={(e) => editLine(stDeductions, setStDeductions, i, "name", e.target.value)}
+                              className="flex-1 bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
+                            <input type="number" placeholder="Amount" value={d.amount}
+                              onChange={(e) => editLine(stDeductions, setStDeductions, i, "amount", parseFloat(e.target.value) || 0)}
+                              className="w-32 bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
+                            <button type="button" onClick={() => setStDeductions(stDeductions.filter((_, j) => j !== i))} className="text-muted hover:text-rose-500 px-2">✕</button>
+                          </div>
+                        ))}
+                        <div className="border-t border-border-custom pt-3 text-sm font-semibold text-foreground">Net Amount (Per Month): ₹{stNet.toLocaleString("en-IN")}</div>
+                      </div>
+
+                      <div className="flex gap-2 justify-end">
+                        <button type="button" onClick={() => { resetSt(); setShowAddSalary(false); }} className="text-muted hover:text-foreground text-xs font-bold px-4 py-2">Cancel</button>
+                        <button type="submit" className="bg-primary text-white text-xs font-bold px-4 py-2 rounded-md">Save Template</button>
+                      </div>
+                    </form>
+                  )}
+
+                  {salaryTemplates.length === 0 ? (
+                    <div className="col-span-full text-center p-8 border border-dashed border-border-custom rounded-md text-muted text-xs">No salary templates found.</div>
+                  ) : (
+                    <div className="space-y-2">
+                      <div className="grid grid-cols-[2fr_3fr_1fr_auto] gap-4 px-4 text-[10px] uppercase tracking-wider text-muted font-bold">
+                        <div>Template Name</div><div>Description</div><div>Status</div><div></div>
+                      </div>
+                      {salaryTemplates.map((t) => (
+                        <div key={t.id} className="bg-card border border-border-custom rounded-lg bg-background p-5 grid grid-cols-[2fr_3fr_1fr_auto] gap-4 items-center">
+                          <div className="font-bold text-white text-sm">{t.name}</div>
+                          <div className="text-xs text-muted truncate">{t.description || "—"}</div>
+                          <div><span className="text-[10px] bg-emerald-500/15 text-emerald-400 px-2 py-0.5 rounded-full font-bold">{t.status}</span></div>
+                          <button onClick={() => deleteSalaryTemplate(t.id)} className="text-[10px] text-muted hover:text-rose-400 justify-self-end">Delete</button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* ── Statutory (PF/ESI/TDS) — bonus section ── */}
+              {payrollTab === "statutory" && (
+                <div className="space-y-6 max-w-3xl">
+                  <h2 className="text-sm font-bold text-white uppercase tracking-wider text-muted border-b border-border-custom pb-3">Statutory Payroll Defaults</h2>
+                  <p className="text-xs text-muted -mt-2">Company-wide default PF / ESI / TDS rates. These are inherited by new employees; per-employee overrides are set on the employee record in HR.</p>
+
+                  <div className="bg-card border border-border-custom rounded-lg bg-background p-6 rounded-md space-y-6">
+                    <div className="grid grid-cols-2 gap-6">
+                      <Field label="PF Employee %">
+                        <input type="number" step="0.01" value={pDraft.pf_employee_pct}
+                          onChange={(e) => setPDraft({ ...pDraft, pf_employee_pct: Number(e.target.value) })}
+                          className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-4 py-2.5 text-xs text-white outline-none" />
+                      </Field>
+                      <Field label="PF Employer %">
+                        <input type="number" step="0.01" value={pDraft.pf_employer_pct}
+                          onChange={(e) => setPDraft({ ...pDraft, pf_employer_pct: Number(e.target.value) })}
+                          className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-4 py-2.5 text-xs text-white outline-none" />
+                      </Field>
+                      <Field label="ESI Employee %">
+                        <input type="number" step="0.01" value={pDraft.esi_employee_pct}
+                          onChange={(e) => setPDraft({ ...pDraft, esi_employee_pct: Number(e.target.value) })}
+                          className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-4 py-2.5 text-xs text-white outline-none" />
+                      </Field>
+                      <Field label="ESI Employer %">
+                        <input type="number" step="0.01" value={pDraft.esi_employer_pct}
+                          onChange={(e) => setPDraft({ ...pDraft, esi_employer_pct: Number(e.target.value) })}
+                          className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-4 py-2.5 text-xs text-white outline-none" />
+                      </Field>
+                      <Field label="TDS (Monthly ₹)">
+                        <input type="number" step="0.01" value={pDraft.tds_monthly}
+                          onChange={(e) => setPDraft({ ...pDraft, tds_monthly: Number(e.target.value) })}
+                          className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-4 py-2.5 text-xs text-white outline-none" />
+                      </Field>
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] uppercase tracking-wider text-muted font-bold">ESI Applicable</label>
+                        <label className="flex items-center gap-2 cursor-pointer mt-2">
+                          <input type="checkbox" checked={pDraft.is_esi_applicable}
+                            onChange={(e) => setPDraft({ ...pDraft, is_esi_applicable: e.target.checked })}
+                            className="h-4 w-4 accent-[#3b82f6]" />
+                          <span className="text-xs text-white">{pDraft.is_esi_applicable ? "Yes" : "No"}</span>
+                        </label>
+                      </div>
+                    </div>
+                    <div className="flex justify-end">
+                      <button onClick={savePayroll} disabled={payrollStatus === "saving"}
+                        className="bg-primary text-white text-xs font-bold px-6 py-2.5 rounded-md disabled:opacity-50">
+                        {payrollStatus === "saving" ? "Saving…" : "Save"}
+                      </button>
+                    </div>
+                    {payrollStatus === "saved" && (
+                      <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-lg">Payroll settings saved</div>
+                    )}
+                    {payrollStatus === "error" && (
+                      <div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs rounded-lg">Failed to save payroll settings</div>
+                    )}
+                  </div>
+
+                  <div className="bg-card border border-border-custom rounded-lg bg-background p-6 rounded-md space-y-3">
+                    <h3 className="text-[10px] uppercase tracking-wider text-muted font-bold">Salary Components (Payslip Structure)</h3>
+                    <p className="text-[11px] text-muted">Fixed payslip component layout used by the payroll engine. Earnings and deductions are computed per run; this is a reference view, not an editable definition.</p>
+                    <div className="grid grid-cols-2 gap-6 pt-2">
+                      <div>
+                        <div className="text-[10px] uppercase tracking-wider text-emerald-400 font-bold mb-2">Earnings</div>
+                        <ul className="text-xs text-zinc-300 space-y-1">
+                          <li>• Basic</li><li>• HRA</li><li>• Other Allowances</li>
+                        </ul>
+                      </div>
+                      <div>
+                        <div className="text-[10px] uppercase tracking-wider text-rose-400 font-bold mb-2">Deductions</div>
+                        <ul className="text-xs text-zinc-300 space-y-1">
+                          <li>• PF (Employee) — Basic × PF Employee %</li>
+                          <li>• PF (Employer) — Basic × PF Employer %</li>
+                          <li>• ESI (Employee) — Gross × ESI Employee %</li>
+                          <li>• ESI (Employer) — Gross × ESI Employer %</li>
+                          <li>• TDS — Monthly fixed</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ════════════════════════════ HOLIDAY & WEEKOFF ════════════════════════════ */}
+          {activeSection === "holiday" && (
+            <div className="space-y-6">
+              {/* Holidays — reuses HR's /hr/holidays (single source of truth) */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-sm font-bold text-white uppercase tracking-wider text-muted">Holiday Calendar</h2>
+                  <button onClick={() => setShowAddHoliday(true)} className="bg-primary text-white text-xs font-bold px-4 py-2.5 rounded-md">+ Add Holiday</button>
+                </div>
+
+                {showAddHoliday && (
+                  <form onSubmit={createHoliday} className="bg-card border border-border-custom rounded-lg bg-background p-6 space-y-4 max-w-xl">
+                    <h3 className="text-xs font-bold text-white uppercase tracking-wider">New Holiday</h3>
+                    <Field label="Holiday Name">
+                      <input type="text" placeholder="e.g. Independence Day" value={hName}
+                        onChange={(e) => setHName(e.target.value)} required
+                        className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
+                    </Field>
+                    <Field label="Date">
+                      <input type="date" value={hDate}
+                        onChange={(e) => setHDate(e.target.value)}
+                        className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
+                    </Field>
+                    <div className="flex gap-2 justify-end">
+                      <button type="button" onClick={() => setShowAddHoliday(false)} className="text-muted hover:text-foreground text-xs font-bold px-4 py-2">Cancel</button>
+                      <button type="submit" className="bg-primary text-white text-xs font-bold px-4 py-2 rounded-md">Add</button>
+                    </div>
+                  </form>
+                )}
+
+                {holidays.length === 0 ? (
+                  <div className="col-span-full text-center p-8 border border-dashed border-border-custom rounded-md text-muted text-xs">No holidays configured.</div>
+                ) : (
+                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    {holidays.map((h) => (
+                      <div key={h.id} className="bg-card border border-border-custom rounded-lg bg-background p-5 flex items-center justify-between">
+                        <div>
+                          <div className="font-bold text-white text-sm">{h.name}</div>
+                          <div className="text-xs text-muted">{new Date(h.date).toLocaleDateString("en-IN")}</div>
+                        </div>
+                        <button onClick={() => deleteHoliday(h.id)} className="text-[10px] text-muted hover:text-rose-400">Delete</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Weekly Off — company default (bonus; not part of /hr/holidays) */}
+              <div className="bg-card border border-border-custom rounded-lg bg-background p-6 space-y-4 max-w-xl">
+                <h2 className="text-sm font-bold text-white uppercase tracking-wider text-muted border-b border-border-custom pb-3">Weekly Off</h2>
+                <p className="text-[11px] text-muted -mt-2">Default weekly off day for this company. Stored on the company record (separate from the Holiday Calendar above).</p>
+                <Field label="Weekly Off Days">
+                  <div className="flex gap-2">
+                    {WEEKDAYS.map((d) => {
+                      const isOff = weeklyOffDays.includes(d);
+                      return (
+                        <button
+                          key={d}
+                          type="button"
+                          onClick={() => toggleWeeklyOffDay(d)}
+                          className={`h-12 w-12 rounded-full text-[10px] font-bold flex flex-col items-center justify-center transition-colors ${
+                            isOff
+                              ? "bg-rose-500/15 text-rose-400 border border-rose-500/30"
+                              : "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
+                          }`}
+                          title={d}
+                        >
+                          <span>{d.slice(0, 2)}</span>
+                          <span className="text-[8px] mt-0.5">{isOff ? "Off" : "Work"}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <p className="text-[10px] text-muted mt-2">Green = Working, Red = Week Off. Click each day to toggle it independently (e.g. both Sat & Sun off).</p>
+                </Field>
+                <div className="flex justify-end">
+                  <button onClick={saveWeeklyOff} disabled={weeklyOffStatus === "saving"}
+                    className="bg-primary text-white text-xs font-bold px-6 py-2.5 rounded-md disabled:opacity-50">
+                    {weeklyOffStatus === "saving" ? "Saving…" : "Save"}
+                  </button>
+                </div>
+                {weeklyOffStatus === "saved" && (
+                  <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-lg">Weekly off saved</div>
+                )}
+                {weeklyOffStatus === "error" && (
+                  <div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs rounded-lg">Failed to save weekly off</div>
                 )}
               </div>
             </div>
           )}
 
-          {/* TAB 5: HOLIDAYS */}
-          {activeTab === "holidays" && (
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h2 className="text-sm font-bold text-white uppercase tracking-wider text-muted">Company Calendar Holidays</h2>
-                <button
-                  onClick={() => setShowAddHoliday(true)}
-                  className="bg-primary text-white text-xs font-bold px-4 py-2.5 rounded-md"
-                >
-                  + Add Holiday
-                </button>
+          {/* ════════════════════════════ WORKFLOW CONTROLS ════════════════════════════ */}
+          {activeSection === "workflow" && (
+            <div className="space-y-6 max-w-3xl">
+              <div className="flex border-b border-border-custom gap-1 bg-elevated p-1 rounded-lg w-max">
+                {([["entry", "Entry Controls"], ["progress", "Progress Controls"], ["finance", "Finance Controls"], ["material", "Material Controls"]] as const).map(([id, label]) => (
+                  <button key={id} onClick={() => setWfTab(id)}
+                    className={`px-5 py-2.5 rounded-md text-xs font-bold transition-all duration-200 ${
+                      wfTab === id ? "bg-primary text-white shadow-lg shadow-primary/10" : "text-muted hover:text-foreground hover:bg-elevated"
+                    }`}>{label}</button>
+                ))}
               </div>
 
-              {showAddHoliday && (
-                <form onSubmit={handleAddHoliday} className="bg-card border border-border-custom rounded-lg max-w-xl border border-border-custom bg-background p-6 rounded-md space-y-4">
-                  <h3 className="text-xs font-bold text-white uppercase tracking-wider">New Holiday</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <input
-                      type="text"
-                      placeholder="Holiday Name (e.g. Independence Day)"
-                      value={newHoliday.name}
-                      onChange={(e) => setNewHoliday({ ...newHoliday, name: e.target.value })}
-                      required
-                      className="bg-elevated border border-border-custom focus:border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none"
-                    />
-                    <input
-                      type="date"
-                      value={newHoliday.date}
-                      onChange={(e) => setNewHoliday({ ...newHoliday, date: e.target.value })}
-                      required
-                      className="bg-elevated border border-border-custom focus:border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none"
-                    />
-                  </div>
-                  <div className="flex gap-2 justify-end">
-                    <button type="button" onClick={() => setShowAddHoliday(false)} className="text-muted hover:text-foreground text-xs font-bold px-4 py-2">
-                      Cancel
-                    </button>
-                    <button type="submit" className="bg-primary text-white text-xs font-bold px-4 py-2 rounded-md">
-                      Save Holiday
-                    </button>
-                  </div>
-                </form>
+              {/* Entry Controls */}
+              {wfTab === "entry" && (
+                <div className="space-y-3">
+                  <WfEntryRow
+                    label="Restrict creating entries older than (N) days"
+                    desc="Block creating entries dated more than N days in the past"
+                    enabled={wf.restrict_entry_creation_enabled}
+                    days={wf.restrict_entry_creation_days}
+                    onToggle={(v) => setWf({ ...wf, restrict_entry_creation_enabled: v })}
+                    onDays={(v) => setWf({ ...wf, restrict_entry_creation_days: v })}
+                  />
+                  <WfEntryRow
+                    label="Restrict editing entries older than (N) days"
+                    desc="Block editing entries dated more than N days in the past"
+                    enabled={wf.restrict_entry_editing_enabled}
+                    days={wf.restrict_entry_editing_days}
+                    onToggle={(v) => setWf({ ...wf, restrict_entry_editing_enabled: v })}
+                    onDays={(v) => setWf({ ...wf, restrict_entry_editing_days: v })}
+                  />
+                  <WfSaveFooter status={wfStatus} onSave={saveWorkflow} savedText="Workflow controls saved" errorText="Failed to save workflow controls" />
+                </div>
               )}
 
-              <div className="overflow-hidden rounded-lg border border-border-custom bg-background">
-                <table className="w-full text-sm">
-                  <thead className="bg-elevated text-[10px] uppercase tracking-[0.25em] text-muted font-bold">
-                    <tr>
-                      <th className="px-5 py-3 text-left">Holiday Event</th>
-                      <th className="px-5 py-3 text-right">Calendar Date</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {holidays.length === 0 ? (
-                      <tr>
-                        <td colSpan={2} className="text-center p-8 text-muted text-xs">
-                          No holidays logged.
-                        </td>
-                      </tr>
+              {/* Progress Controls */}
+              {wfTab === "progress" && (
+                <div className="space-y-3">
+                  <WfToggleRow
+                    label="Restrict progress more than estimation"
+                    desc="Block task progress entries beyond 100% / the linked estimate (ties into the Task tab)"
+                    value={wf.restrict_progress_over_estimate}
+                    onChange={(v) => setWf({ ...wf, restrict_progress_over_estimate: v })}
+                  />
+                  <WfSaveFooter status={wfStatus} onSave={saveWorkflow} savedText="Workflow controls saved" errorText="Failed to save workflow controls" />
+                </div>
+              )}
+
+              {/* Finance Controls */}
+              {wfTab === "finance" && (
+                <div className="space-y-3">
+                  <WfToggleRow
+                    label="Pre-Tax Deduction/Retention"
+                    desc="Apply Deduction/Retention before tax (instead of after) in Transaction & Quotation calcs"
+                    value={wf.pretax_deduction_retention}
+                    onChange={(v) => setWf({ ...wf, pretax_deduction_retention: v })}
+                  />
+                  <WfSaveFooter status={wfStatus} onSave={saveWorkflow} savedText="Workflow controls saved" errorText="Failed to save workflow controls" />
+                </div>
+              )}
+
+              {/* Material Controls */}
+              {wfTab === "material" && (
+                <div className="space-y-3">
+                  <WfToggleRow label="Restrict Material Usage" desc="Block material usage that would drive stock negative" value={wf.negative_stock_lock} onChange={(v) => setWf({ ...wf, negative_stock_lock: v })} />
+                  <WfToggleRow label="Restrict Subcontractor Material Issue" desc="Block issuing material to subcontractors" value={wf.restrict_subcon_material_issue} onChange={(v) => setWf({ ...wf, restrict_subcon_material_issue: v })} />
+                  <WfToggleRow label="Restrict Material Transfer" desc="Block inter-location / project material transfers" value={wf.restrict_material_transfer} onChange={(v) => setWf({ ...wf, restrict_material_transfer: v })} />
+                  <WfToggleRow label="Restrict Production Material" desc="Block material consumption in production" value={wf.restrict_production_material} onChange={(v) => setWf({ ...wf, restrict_production_material: v })} />
+                  <WfToggleRow label="Material Request Restriction" desc="Restrict the Material Request flow" value={wf.material_request_restriction} onChange={(v) => setWf({ ...wf, material_request_restriction: v })} />
+                  <WfToggleRow label="Material Purchase Order Restriction" desc="Restrict Purchase Order creation" value={wf.po_restriction} onChange={(v) => setWf({ ...wf, po_restriction: v })} />
+                  <WfToggleRow label="Restrict BOM Material" desc="Restrict edits to Bills of Material" value={wf.bom_restriction} onChange={(v) => setWf({ ...wf, bom_restriction: v })} />
+                  <div className="flex items-center justify-between bg-elevated border border-border-custom rounded-lg px-4 py-3">
+                    <div>
+                      <div className="text-xs font-bold text-white">GRN Numbering</div>
+                      <div className="text-[10px] text-muted">Scope for GRN numbering</div>
+                    </div>
+                    <div className="flex gap-2">
+                      {["Project Level", "Company Level"].map((opt) => (
+                        <button key={opt} onClick={() => setWf({ ...wf, grn_numbering: opt })}
+                          className={`px-4 py-2 rounded-md text-xs font-bold border transition-all ${
+                            wf.grn_numbering === opt ? "bg-primary text-white border-primary" : "bg-elevated text-muted border-border-custom hover:border-primary/50"
+                          }`}>{opt}</button>
+                      ))}
+                    </div>
+                  </div>
+                  <WfSaveFooter status={wfStatus} onSave={saveWorkflow} savedText="Workflow controls saved" errorText="Failed to save workflow controls" />
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ════════════════════════════ DOCUMENT & FIELDS ════════════════════════════ */}
+          {activeSection === "docfields" && settings && (
+            <div className="space-y-6">
+              <div className="flex border-b border-border-custom gap-1 bg-elevated p-1 rounded-lg w-max">
+                {([["pdf", "PDF Template"], ["terms", "Terms & Conditions"], ["number", "Number Format"], ["custom", "Custom Fields"]] as const).map(([id, label]) => (
+                  <button key={id} onClick={() => setDocTab(id)}
+                    className={`px-5 py-2.5 rounded-md text-xs font-bold transition-all duration-200 ${docTab === id ? "bg-primary text-white shadow-lg shadow-primary/10" : "text-muted hover:text-foreground hover:bg-elevated"}`}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+
+              {/* ── PDF Template ── */}
+              {docTab === "pdf" && (
+                <div className="space-y-6 max-w-3xl">
+                  <h2 className="text-sm font-bold text-white uppercase tracking-wider text-muted border-b border-border-custom pb-3">PDF Template</h2>
+
+                  <div className="bg-card border border-border-custom rounded-lg bg-background p-6 space-y-3">
+                    <h3 className="text-[10px] uppercase tracking-wider text-muted font-bold">Choose your Own PDF Template</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      {([
+                        { v: "Default", t: "Default", d: "Use the standard SiteFlow PDF template for all company documents." },
+                        { v: "Custom", t: "Custom", d: "Use your own uploaded / configured custom PDF template." },
+                      ] as const).map((o) => {
+                        const active = settings.custom_pdf_template_enabled ? o.v === "Custom" : o.v === "Default";
+                        return (
+                          <button key={o.v} type="button" onClick={() => savePdfSettings({ custom_pdf_template_enabled: o.v === "Custom" })}
+                            className={`text-left rounded-lg border p-4 space-y-1.5 transition-all ${active ? "border-primary bg-primary/10" : "border-border-custom bg-elevated hover:border-primary/50"}`}>
+                            <div className="text-xs font-bold text-white">{o.t}</div>
+                            <div className="text-[10px] text-muted">{o.d}</div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <p className="text-[10px] text-muted">Stored on the company record (custom_pdf_template_enabled). Note: the PDF rendering engine does not yet consume this flag to switch templates — storage + UI wired, enforcement pending.</p>
+                  </div>
+
+                  <div className="bg-card border border-border-custom rounded-lg bg-background p-6 space-y-3">
+                    <h3 className="text-[10px] uppercase tracking-wider text-muted font-bold">Document Company Name Display</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      {([
+                        { v: "company", t: "Company Name", d: "Print the parent company name on documents." },
+                        { v: "branch", t: "Branch Name", d: "Print the issuing branch name on documents." },
+                      ] as const).map((o) => {
+                        const active = (settings.document_company_name_display ?? "company") === o.v;
+                        return (
+                          <button key={o.v} type="button" onClick={() => savePdfSettings({ document_company_name_display: o.v })}
+                            className={`text-left rounded-lg border p-4 space-y-1.5 transition-all ${active ? "border-primary bg-primary/10" : "border-border-custom bg-elevated hover:border-primary/50"}`}>
+                            <div className="text-xs font-bold text-white">{o.t}</div>
+                            <div className="text-[10px] text-muted">{o.d}</div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <p className="text-[10px] text-muted">Stored on the company record (document_company_name_display). Note: document generation does not yet read this to choose the printed name — storage + UI wired, enforcement pending.</p>
+                  </div>
+
+                  {pdfStatus === "saved" && (<div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-lg">PDF template settings saved</div>)}
+                  {pdfStatus === "error" && (<div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs rounded-lg">Failed to save PDF template settings</div>)}
+                </div>
+              )}
+
+              {/* ── Terms & Conditions ── */}
+              {docTab === "terms" && (
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h2 className="text-sm font-bold text-white uppercase tracking-wider text-muted">Terms & Conditions</h2>
+                      <p className="mt-1 text-xs text-muted">Central default text for each document type. Prefills downstream forms (Sales Invoice, Subcon Work Order, CRM Quotation).</p>
+                    </div>
+                    <button onClick={saveTerms} disabled={termsStatus === "saving"} className="bg-primary text-white text-xs font-bold px-6 py-2.5 rounded-md disabled:opacity-50">{termsStatus === "saving" ? "Saving…" : "Save"}</button>
+                  </div>
+
+                  {!termsLoaded ? (
+                    <div className="text-xs text-muted">Loading…</div>
+                  ) : (
+                    <div className="space-y-5">
+                      {TERMS_FIELDS.map((f) => (
+                        <div key={f.key} className="bg-card border border-border-custom rounded-lg bg-background p-5 space-y-2">
+                          <label className="text-[10px] uppercase tracking-wider text-muted font-bold">{f.label}</label>
+                          <textarea value={terms[f.key]} onChange={(e) => setTerms((t) => ({ ...t, [f.key]: e.target.value }))} rows={5}
+                            className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-4 py-2.5 text-xs text-white outline-none resize-y font-mono" />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="p-4 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs rounded-lg">
+                    Disconnect: the Project Tab document forms (Sales Invoice terms, Subcon Work Order terms, CRM Quotation terms) currently start blank and do <strong>not</strong> yet pull these defaults. Wiring the downstream forms to read from here is out of scope for this round — storage + UI wired here only.
+                  </div>
+
+                  {termsStatus === "saved" && (<div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-lg">Terms & Conditions saved</div>)}
+                  {termsStatus === "error" && (<div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs rounded-lg">Failed to save Terms & Conditions</div>)}
+                </div>
+              )}
+
+              {/* ── Number Format ── */}
+              {docTab === "number" && (
+                <div className="space-y-6 max-w-2xl">
+                  <h2 className="text-sm font-bold text-white uppercase tracking-wider text-muted border-b border-border-custom pb-3">Number Format</h2>
+                  <div className="bg-card border border-border-custom rounded-lg bg-background p-6 rounded-md space-y-6">
+                    <div className="grid grid-cols-2 gap-6">
+                      <Field label="Currency Decimal Places">
+                        <input type="number" min={0} max={6} value={numFmt.currency_decimal_places}
+                          onChange={(e) => setNumFmt({ ...numFmt, currency_decimal_places: parseInt(e.target.value || "0", 10) || 0 })}
+                          className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-4 py-2.5 text-xs text-white outline-none" />
+                      </Field>
+                      <Field label="Quantity Decimal Places">
+                        <input type="number" min={0} max={6} value={numFmt.quantity_decimal_places}
+                          onChange={(e) => setNumFmt({ ...numFmt, quantity_decimal_places: parseInt(e.target.value || "0", 10) || 0 })}
+                          className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-4 py-2.5 text-xs text-white outline-none" />
+                      </Field>
+                    </div>
+                    <div className="flex justify-end">
+                      <button onClick={saveNumFmt} disabled={numStatus === "saving"} className="bg-primary text-white text-xs font-bold px-6 py-2.5 rounded-md disabled:opacity-50">{numStatus === "saving" ? "Saving…" : "Save"}</button>
+                    </div>
+                    {numStatus === "saved" && (<div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-lg">Number format saved</div>)}
+                    {numStatus === "error" && (<div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs rounded-lg">Failed to save number format</div>)}
+                  </div>
+                  <div className="p-4 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs rounded-lg">
+                    Enforcement gap: the shared currency formatter (fmtINR) hardcodes 0 decimal places and does <strong>not</strong> currently read these settings. The values are stored on the company record, but display formatting does not yet honor them — wiring the formatter to the configured decimal count is deferred (would touch every component that renders money/quantities).
+                  </div>
+                </div>
+              )}
+
+              {/* ── Custom Fields ── */}
+              {docTab === "custom" && (
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h2 className="text-sm font-bold text-white uppercase tracking-wider text-muted">Custom Fields</h2>
+                      <p className="mt-1 text-xs text-muted">Define extra fields attached to a document/entity type. Wired to the generic CustomField backend (entity_type-based).</p>
+                    </div>
+                    <button onClick={() => setShowAddCf(true)} className="bg-primary text-white text-xs font-bold px-4 py-2.5 rounded-md">+ New Custom Field</button>
+                  </div>
+
+                  <div className="flex items-center gap-3 max-w-sm">
+                    <label className="text-[10px] uppercase tracking-wider text-muted font-bold">Document / Entity Type</label>
+                    <select value={cfEntity} onChange={(e) => setCfEntity(e.target.value)}
+                      className="flex-1 bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none">
+                      {DOC_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                  </div>
+
+                  {cfMsg && (<div className={`p-4 text-xs rounded-lg border ${cfMsg.type === "ok" ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" : "bg-rose-500/10 border-rose-500/20 text-rose-400"}`}>{cfMsg.text}</div>)}
+
+                  {showAddCf && (
+                    <form onSubmit={addCf} className="bg-card border border-border-custom rounded-lg bg-background p-6 space-y-4 max-w-xl">
+                      <h3 className="text-xs font-bold text-white uppercase tracking-wider">New Custom Field — {cfEntity}</h3>
+                      <Field label="Field Name">
+                        <input type="text" placeholder="e.g. Client PO Reference" value={cfDraft.field_name}
+                          onChange={(e) => setCfDraft({ ...cfDraft, field_name: e.target.value })} required
+                          className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
+                      </Field>
+                      <Field label="Data Type">
+                        <select value={cfDraft.field_type} onChange={(e) => setCfDraft({ ...cfDraft, field_type: e.target.value })}
+                          className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none">
+                          {CF_DATA_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+                        </select>
+                      </Field>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" checked={cfDraft.set_default} onChange={(e) => setCfDraft({ ...cfDraft, set_default: e.target.checked })} className="h-4 w-4 accent-[#3b82f6]" />
+                        <span className="text-xs text-white">Set Default</span>
+                      </label>
+                      {cfDraft.set_default && (
+                        <Field label="Default Value">
+                          <input type="text" placeholder="Default value" value={cfDraft.default_value}
+                            onChange={(e) => setCfDraft({ ...cfDraft, default_value: e.target.value })}
+                            className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
+                        </Field>
+                      )}
+                      <div className="flex gap-2 justify-end">
+                        <button type="button" onClick={() => setShowAddCf(false)} className="text-muted hover:text-foreground text-xs font-bold px-4 py-2">Cancel</button>
+                        <button type="submit" disabled={cfBusy} className="bg-primary text-white text-xs font-bold px-4 py-2 rounded-md disabled:opacity-50">Add Field</button>
+                      </div>
+                    </form>
+                  )}
+
+                  <div className="bg-card border border-border-custom rounded-lg bg-background overflow-hidden">
+                    <div className="grid grid-cols-[2fr_1.5fr_1fr_2fr] gap-4 px-5 py-3 text-[10px] uppercase tracking-wider text-muted font-bold border-b border-border-custom">
+                      <div>Field Name</div><div>Data Type</div><div>Set Default</div><div>Default Value</div>
+                    </div>
+                    {cfList.length === 0 ? (
+                      <div className="p-8 text-center text-xs text-muted">No custom fields for {cfEntity}.</div>
                     ) : (
-                      holidays.map((h) => (
-                        <tr key={h.id} className="border-t border-border-custom hover:bg-white/[0.015]">
-                          <td className="px-5 py-3 font-semibold text-white">{h.name}</td>
-                          <td className="px-5 py-3 text-right text-muted font-mono">
-                            {new Date(h.date).toLocaleDateString("en-IN", {
-                              day: "2-digit",
-                              month: "short",
-                              year: "numeric",
-                            })}
-                          </td>
-                        </tr>
+                      cfList.map((f) => (
+                        <div key={f.id} className="grid grid-cols-[2fr_1.5fr_1fr_2fr] gap-4 px-5 py-3 items-center border-b border-border-custom last:border-0">
+                          <div className="font-bold text-white text-sm">{f.field_name}</div>
+                          <div className="text-xs text-muted">{f.field_type}</div>
+                          <div>{f.set_default ? <span className="text-[10px] bg-emerald-500/15 text-emerald-400 px-2 py-0.5 rounded-full font-bold">Yes</span> : <span className="text-[10px] text-muted">—</span>}</div>
+                          <div className="text-xs text-zinc-300 truncate">{f.default_value || "—"}</div>
+                        </div>
                       ))
                     )}
-                  </tbody>
-                </table>
+                  </div>
+
+                  <div className="p-4 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs rounded-lg">
+                    Enforcement gap: custom fields are stored and listed here, but the entity forms (Project, Task, Invoice, etc.) do not yet render these fields on records. Storage + this definition UI are wired; per-record rendering is pending a later round.
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ════════════════════════════ MULTI LEVEL APPROVAL ════════════════════════════ */}
+          {activeSection === "approval" && (
+            <div className="space-y-6">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h2 className="text-sm font-bold text-white uppercase tracking-wider text-muted">Multi Level Approval</h2>
+                  <p className="mt-1 text-xs text-muted">Define approver chains per document/transaction category. One block with no upper limit = a flat chain; multiple Min/Max blocks = amount-range routing (each published independently).</p>
+                </div>
+                <select value={approvalCat} onChange={(e) => setApprovalCat(e.target.value)}
+                  className="bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none">
+                  {APPROVAL_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+
+              {ruleMsg && (
+                <div className={`p-4 text-xs rounded-lg border ${ruleMsg.type === "ok" ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" : "bg-rose-500/10 border-rose-500/20 text-rose-400"}`}>{ruleMsg.text}</div>
+              )}
+
+              {/* New rule block */}
+              <div className="bg-card border border-border-custom rounded-lg bg-background p-5 space-y-4">
+                <div className="text-[10px] uppercase tracking-wider text-muted font-bold">Add Approval Rule Block — {approvalCat}</div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <Field label="Min Amount (₹)">
+                    <input type="number" min={0} value={newRule.min_amount}
+                      onChange={(e) => setNewRule({ ...newRule, min_amount: parseInt(e.target.value || "0", 10) || 0 })}
+                      className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
+                  </Field>
+                  <Field label="Max Amount (₹, blank = no limit)">
+                    <input type="number" min={0} value={newRule.max_amount}
+                      onChange={(e) => setNewRule({ ...newRule, max_amount: e.target.value })}
+                      placeholder="No upper limit"
+                      className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
+                  </Field>
+                  <Field label="Levels">
+                    <input type="number" min={1} value={newRule.levels}
+                      onChange={(e) => setNewRule({ ...newRule, levels: parseInt(e.target.value || "1", 10) || 1 })}
+                      className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
+                  </Field>
+                  <Field label="Approvers (comma-separated)">
+                    <input type="text" value={newRule.approvers}
+                      onChange={(e) => setNewRule({ ...newRule, approvers: e.target.value })}
+                      placeholder="e.g. manager@co.in, finance@co.in"
+                      className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
+                  </Field>
+                </div>
+                <div className="flex justify-end">
+                  <button onClick={publishNewRule} disabled={ruleBusy} className="bg-primary text-white text-xs font-bold px-5 py-2.5 rounded-md disabled:opacity-50">Publish Rule Block</button>
+                </div>
+              </div>
+
+              {/* Existing rule blocks for this category */}
+              <div className="space-y-3">
+                {approvalRulesForCat(approvalCat).length === 0 ? (
+                  <div className="text-center p-8 border border-dashed border-border-custom rounded-md text-muted text-xs">No approval rules configured for {approvalCat}.</div>
+                ) : (
+                  approvalRulesForCat(approvalCat).map((r) => {
+                    const e = ruleEdits[r.id] ?? { min_amount: r.min_amount, max_amount: r.max_amount ?? "", levels: r.levels, approvers: r.approvers };
+                    return (
+                      <div key={r.id} className="bg-card border border-border-custom rounded-lg bg-background p-5 space-y-4">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                          <Field label="Min Amount (₹)">
+                            <input type="number" min={0} value={e.min_amount}
+                              onChange={(ev) => approveEdit(r.id, { min_amount: parseInt(ev.target.value || "0", 10) || 0 })}
+                              className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
+                          </Field>
+                          <Field label="Max Amount (₹, blank = no limit)">
+                            <input type="number" min={0} value={e.max_amount}
+                              onChange={(ev) => approveEdit(r.id, { max_amount: ev.target.value })}
+                              placeholder="No upper limit"
+                              className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
+                          </Field>
+                          <Field label="Levels">
+                            <input type="number" min={1} value={e.levels}
+                              onChange={(ev) => approveEdit(r.id, { levels: parseInt(ev.target.value || "1", 10) || 1 })}
+                              className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
+                          </Field>
+                          <Field label="Approvers (comma-separated)">
+                            <input type="text" value={e.approvers}
+                              onChange={(ev) => approveEdit(r.id, { approvers: ev.target.value })}
+                              placeholder="e.g. manager@co.in, finance@co.in"
+                              className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
+                          </Field>
+                        </div>
+                        <div className="flex justify-end gap-2">
+                          <button onClick={() => deleteRule(r.id)} className="text-[10px] text-muted hover:text-rose-400 font-bold">Delete</button>
+                          <button onClick={() => publishEditRule(r)} disabled={ruleBusy} className="bg-primary text-white text-xs font-bold px-5 py-2 rounded-md disabled:opacity-50">Publish</button>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+
+              <div className="p-4 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs rounded-lg">
+                Enforcement gap: approval rules are stored and managed here (via the existing ApprovalRule backend), but the document/transaction flows for these 15 categories do not yet consult these chains to gate actions. Storage + UI wired; the enforcement engine that blocks/requests approvals per category is pending a later round.
               </div>
             </div>
+          )}
+
+          {/* ════════════════════════════ INTEGRATIONS ════════════════════════════ */}
+          {activeSection === "integrations" && settings && (
+            <div className="space-y-6 max-w-3xl">
+              <h2 className="text-sm font-bold text-white uppercase tracking-wider text-muted border-b border-border-custom pb-3">Integrations</h2>
+
+              <div className="bg-card border border-border-custom rounded-lg bg-background p-6 space-y-5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-sm font-bold text-white">Google Sheets</div>
+                    <div className="text-[10px] text-muted">Enable the Google Sheets integration for this company.</div>
+                  </div>
+                  <WfSwitch checked={gsEnabled} onChange={(v) => { setGsEnabled(v); saveGs({ google_sheets_enabled: v }); }} />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] uppercase tracking-wider text-muted font-bold">Authorized Phones (whitelist)</label>
+                  <div className="flex gap-2">
+                    <input type="text" placeholder="e.g. +919812345678" value={gsPhoneInput}
+                      onChange={(e) => setGsPhoneInput(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addGsPhone(); } }}
+                      className="flex-1 bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
+                    <button onClick={addGsPhone} className="bg-primary text-white text-xs font-bold px-4 py-2 rounded-md">Add</button>
+                  </div>
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    {gsPhones.length === 0 ? (
+                      <span className="text-[10px] text-muted">No authorized phones added.</span>
+                    ) : gsPhones.map((p) => (
+                      <span key={p} className="text-xs bg-primary/15 text-primary border border-primary/20 px-2.5 py-1 rounded-full flex items-center gap-1.5">
+                        {p}
+                        <button onClick={() => removeGsPhone(p)} className="text-primary/70 hover:text-primary">×</button>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="rounded-lg border border-border-custom p-4 space-y-2">
+                  <div className="text-[10px] uppercase tracking-wider text-muted font-bold">Activity Log</div>
+                  <p className="text-[11px] text-muted">Auth and sync events for the Google Sheets integration will appear here once the connection is live.</p>
+                  <div className="text-center text-xs text-muted py-4">No activity recorded yet.</div>
+                </div>
+
+                <div className="p-4 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs rounded-lg">
+                  This is the <strong>auth/storage layer only</strong> — the enable flag, authorized-phone whitelist and activity log are stored, but there is <strong>no working Google Sheets add-on</strong> behind it yet (no live sheet sync/export). Wiring the actual Google Sheets connection is a separate build.
+                </div>
+
+                {gsStatus === "saved" && (<div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-lg">Integration settings saved</div>)}
+                {gsStatus === "error" && (<div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs rounded-lg">Failed to save integration settings</div>)}
+              </div>
+            </div>
+          )}
+
+          {/* ════════════════════════════ SUBSCRIPTION ════════════════════════════ */}
+          {activeSection === "subscription" && settings && (
+            <div className="space-y-6 max-w-3xl">
+              <h2 className="text-sm font-bold text-white uppercase tracking-wider text-muted border-b border-border-custom pb-3">Subscription</h2>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <StatCard label="Current Plan" value={settings.subscription_plan || "—"} />
+                <StatCard label="Start Date" value={fmtDate(settings.subscription_start)} />
+                <StatCard label="End Date" value={fmtDate(settings.subscription_end)} />
+                <StatCard label="Renewal Date" value={fmtDate(settings.subscription_renewal)} />
+              </div>
+
+              <div className="bg-card border border-border-custom rounded-lg bg-background p-6 space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-full bg-primary/15 text-primary font-bold flex items-center justify-center text-lg">★</div>
+                  <div>
+                    <div className="text-sm font-bold text-white">Need to change your plan?</div>
+                    <div className="text-[10px] text-muted">Plan, billing cycle and renewal are managed by the billing team.</div>
+                  </div>
+                </div>
+                <p className="text-xs text-muted">
+                  This view is <strong>display-only</strong> — there is no in-app billing or payment UI. Contact support to upgrade, downgrade, or adjust your renewal.
+                </p>
+                <div className="flex justify-start">
+                  <a href="mailto:support@siteflow.app" className="bg-primary text-white text-xs font-bold px-6 py-2.5 rounded-md">Contact Support</a>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ════════════════ Placeholder for not-yet-built sections ════════════════ */}
+          {activeSection !== "company" && activeSection !== "roles" && activeSection !== "payroll" && activeSection !== "holiday" && activeSection !== "workflow" && activeSection !== "docfields" && activeSection !== "approval" && activeSection !== "integrations" && activeSection !== "subscription" && (
+            <Placeholder section={SECTIONS.find((s) => s.id === activeSection)?.label ?? ""} />
           )}
         </div>
       </main>
+    </div>
+  );
+}
+
+// ─── Small presentational helpers ─────────────────────────────────────────────
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-1.5">
+      <label className="text-[10px] uppercase tracking-wider text-muted font-bold">{label}</label>
+      {children}
+    </div>
+  );
+}
+
+function WfSwitch({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <button type="button" onClick={() => onChange(!checked)}
+      className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${checked ? "bg-primary" : "bg-zinc-600"}`}
+      aria-pressed={checked}>
+      <span className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white transition-transform ${checked ? "translate-x-5" : ""}`} />
+    </button>
+  );
+}
+
+function WfEntryRow({ label, desc, enabled, days, onToggle, onDays }: {
+  label: string; desc: string; enabled: boolean; days: number; onToggle: (v: boolean) => void; onDays: (v: number) => void;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-4 bg-elevated border border-border-custom rounded-lg px-4 py-3">
+      <div className="min-w-0">
+        <div className="text-xs font-bold text-white">{label}</div>
+        <div className="text-[10px] text-muted">{desc}</div>
+      </div>
+      <div className="flex items-center gap-3 shrink-0">
+        <input type="number" min={0} value={days}
+          onChange={(e) => onDays(parseInt(e.target.value || "0", 10) || 0)}
+          className="w-20 bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
+        <WfSwitch checked={enabled} onChange={onToggle} />
+      </div>
+    </div>
+  );
+}
+
+function WfToggleRow({ label, desc, value, onChange }: {
+  label: string; desc: string; value: boolean; onChange: (v: boolean) => void;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-4 bg-elevated border border-border-custom rounded-lg px-4 py-3">
+      <div className="min-w-0">
+        <div className="text-xs font-bold text-white">{label}</div>
+        <div className="text-[10px] text-muted">{desc}</div>
+      </div>
+      <WfSwitch checked={value} onChange={onChange} />
+    </div>
+  );
+}
+
+function WfSaveFooter({ status, onSave, savedText, errorText }: {
+  status: "idle" | "saving" | "saved" | "error"; onSave: () => void; savedText: string; errorText: string;
+}) {
+  return (
+    <>
+      <div className="flex justify-end">
+        <button onClick={onSave} disabled={status === "saving"}
+          className="bg-primary text-white text-xs font-bold px-6 py-2.5 rounded-md disabled:opacity-50">
+          {status === "saving" ? "Saving…" : "Save"}
+        </button>
+      </div>
+      {status === "saved" && (
+        <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-lg">{savedText}</div>
+      )}
+      {status === "error" && (
+        <div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs rounded-lg">{errorText}</div>
+      )}
+    </>
+  );
+}
+
+function StatCard({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="bg-card border border-border-custom rounded-lg bg-background p-5 rounded-lg">
+      <div className="text-[10px] uppercase tracking-wider text-muted font-bold">{label}</div>
+      <div className="mt-2 text-lg font-bold text-white truncate">{value}</div>
+    </div>
+  );
+}
+
+function SelectorCard({ title, options, selected, onSelect }: { title: string; options: string[]; selected: string | null; onSelect: (v: string) => void }) {
+  return (
+    <div className="bg-card border border-border-custom rounded-lg bg-background p-6 rounded-md space-y-3">
+      <h3 className="text-[10px] uppercase tracking-wider text-muted font-bold">{title}</h3>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {options.map((o) => (
+          <button key={o} onClick={() => onSelect(o)} className={`px-4 py-3 rounded-md text-xs font-bold border transition-all ${
+            selected === o ? "bg-primary text-white border-primary" : "bg-elevated text-muted border-border-custom hover:border-primary/50"
+          }`}>
+            {o}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function Placeholder({ section }: { section: string }) {
+  return (
+    <div className="bg-card border border-dashed border-border-custom rounded-lg p-10 text-center space-y-2">
+      <div className="text-sm font-bold text-white">{section}</div>
+      <p className="text-xs text-muted max-w-md mx-auto">
+        This section is implemented in a later build round (per the Setting tab build order). Round 1 covers <span className="text-primary font-bold">Company</span> (Details, Branches, Business Profile).
+      </p>
     </div>
   );
 }

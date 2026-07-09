@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import Column, String, ForeignKey, DateTime, Integer, Boolean, Table, Numeric, Float, Text, BigInteger, LargeBinary
+from sqlalchemy import Column, String, ForeignKey, DateTime, Date, Integer, Boolean, Table, Numeric, Float, Text, BigInteger, LargeBinary
 from sqlalchemy.sql import func
 from app.database import Base, engine
 
@@ -48,6 +48,7 @@ class Company(Base):
     slug = Column(String(255), unique=True, index=True, nullable=True)
     legal_business_name = Column(String(255))
     gstin = Column(String(15))
+    phone = Column(String(20), nullable=True)
     billing_address = Column(String)
     currency_decimal_places = Column(Integer, default=2, nullable=False)
     quantity_decimal_places = Column(Integer, default=3, nullable=False)
@@ -58,11 +59,34 @@ class Company(Base):
     material_request_restriction = Column(Boolean, default=False, server_default="0", nullable=False)
     negative_balance_warning = Column(Boolean, default=False, server_default="0", nullable=False)
     custom_pdf_template_enabled = Column(Boolean, default=False, server_default="0", nullable=False)
+    document_company_name_display = Column(String(20), default="company", server_default="company", nullable=False)  # company | branch
     google_sheets_auth_phone = Column(String(50), nullable=True)
+    google_sheets_enabled = Column(Boolean, default=False, server_default="0", nullable=False)
+    google_sheets_authorized_phones = Column(JSONB, default=list, nullable=False)  # whitelist of authorized phone numbers
+    subscription_plan = Column(String(50), nullable=True)  # display-only; set by billing backend
+    subscription_start = Column(DateTime(timezone=True), nullable=True)
+    subscription_end = Column(DateTime(timezone=True), nullable=True)
+    subscription_renewal = Column(DateTime(timezone=True), nullable=True)
     onboarding_segment = Column(String(255), nullable=True)
     onboarding_categories = Column(String(500), nullable=True)
     onboarding_city = Column(String(100), nullable=True)
     onboarding_completed = Column(Boolean, default=False, nullable=False)
+    business_segment = Column(String(50), nullable=True)  # avg business / year
+    company_size = Column(String(50), nullable=True)  # headcount band
+    construction_types = Column(JSONB, default=list, nullable=False)
+    weekly_off = Column(String(20), nullable=True)
+    weekly_off_days = Column(JSONB, default=list, nullable=False)
+    # ── Workflow Controls (Entry / Progress / Finance / Material) ──
+    restrict_entry_creation_enabled = Column(Boolean, default=False, nullable=False)
+    restrict_entry_creation_days = Column(Integer, default=0, nullable=False)
+    restrict_entry_editing_enabled = Column(Boolean, default=False, nullable=False)
+    restrict_entry_editing_days = Column(Integer, default=0, nullable=False)
+    restrict_progress_over_estimate = Column(Boolean, default=False, nullable=False)
+    pretax_deduction_retention = Column(Boolean, default=False, nullable=False)
+    restrict_subcon_material_issue = Column(Boolean, default=False, nullable=False)
+    restrict_material_transfer = Column(Boolean, default=False, nullable=False)
+    restrict_production_material = Column(Boolean, default=False, nullable=False)
+    grn_numbering = Column(String(20), default="Project Level", nullable=False)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), default=func.now(), onupdate=func.now(), nullable=False)
 
@@ -73,7 +97,27 @@ class CompanyBranch(Base):
     branch_name = Column(String(100), nullable=False)
     gstin = Column(String(15), nullable=False)
     billing_address = Column(String, nullable=False)
+    is_primary = Column(Boolean, default=False, server_default="0", nullable=False)
+    geo_location = Column(String, nullable=True)  # Google Address textarea
+    address_line1 = Column(String, nullable=True)
+    city = Column(String(100), nullable=True)
+    state = Column(String(100), nullable=True)
+    zip = Column(String(20), nullable=True)
+    country = Column(String(100), default="India", nullable=False)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
+class CompanyFile(Base):
+    """Company-scoped BLOB storage for branding assets (logo/signature/stamp/watermark)."""
+    __tablename__ = "company_files"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    asset_type = Column(String(30), nullable=False)  # logo, signature, stamp, watermark
+    filename = Column(String(255), nullable=False)
+    content_type = Column(String(100), nullable=True)
+    data = Column(LargeBinary, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
 
 class Project(Base):
     __tablename__ = "projects"
@@ -123,6 +167,26 @@ class CompanyRole(Base):
     role_name = Column(String(100), nullable=False)
     permissions = Column(JSONB, nullable=False)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
+class CompanyPayrollSettings(Base):
+    """Company-level default statutory payroll rates.
+
+    These are the default PF/ESI/TDS percentages and ESI applicability that new
+    employees inherit; per-employee overrides remain on StaffEmployee. Field names
+    match StaffEmployee exactly (no separate taxonomy).
+    """
+    __tablename__ = "company_payroll_settings"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), unique=True, nullable=False)
+    pf_employee_pct = Column(Numeric(5, 2), default=12.0, nullable=False)
+    pf_employer_pct = Column(Numeric(5, 2), default=12.0, nullable=False)
+    esi_employee_pct = Column(Numeric(5, 2), default=0.75, nullable=False)
+    esi_employer_pct = Column(Numeric(5, 2), default=3.25, nullable=False)
+    tds_monthly = Column(Numeric(14, 2), default=0.0, nullable=False)
+    is_esi_applicable = Column(Boolean, default=True, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
 
 class CompanyTeam(Base):
     __tablename__ = "company_team"
@@ -885,6 +949,9 @@ class CRMLead(Base):
     description = Column(String, nullable=True)
     next_follow_up = Column(DateTime(timezone=True), nullable=True)
     expected_closure = Column(DateTime(timezone=True), nullable=True)
+    country_code = Column(String(10), default="+91", nullable=False)
+    last_contacted = Column(DateTime(timezone=True), nullable=True)
+    lead_name = Column(String(255), nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), default=func.now(), onupdate=func.now(), nullable=False)
 
@@ -898,7 +965,16 @@ class CRMQuotation(Base):
     tax_type = Column(String(50), default="bill_level", nullable=False)  # item_level, bill_level
     status = Column(String(50), default="Draft", nullable=False)  # Draft, Sent, Confirmed, Rejected
     gst_pct = Column(Numeric(5, 2), default=18.00, nullable=False)
+    cgst_pct = Column(Numeric(5, 2), default=9.00, nullable=False)
+    sgst_pct = Column(Numeric(5, 2), default=9.00, nullable=False)
+    cgst_amount = Column(Numeric(18, 2), default=0.0, nullable=False)
+    sgst_amount = Column(Numeric(18, 2), default=0.0, nullable=False)
     discount = Column(Numeric(18, 2), default=0.0, nullable=False)
+    additional_charges = Column(Numeric(18, 2), default=0.0, nullable=False)
+    round_off = Column(Numeric(18, 2), default=0.0, nullable=False)
+    qt_no = Column(String(100), nullable=True)
+    qt_date = Column(Date, nullable=True)
+    bank_account_id = Column(UUID(as_uuid=True), ForeignKey("bank_accounts.id", ondelete="SET NULL"), nullable=True)
     total_amount = Column(Numeric(18, 2), default=0.0, nullable=False)
     terms = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
@@ -924,8 +1000,38 @@ class CRMQuotationItem(Base):
     item_code = Column(String(50), nullable=True)
     hsn_sac = Column(String(20), nullable=True)
     cost_code = Column(String(100), nullable=True)
+    length = Column(Numeric(18, 4), nullable=True)
+    width = Column(Numeric(18, 4), nullable=True)
+    height = Column(Numeric(18, 4), nullable=True)
     billed_qty = Column(Numeric(18, 4), default=0.0, nullable=True)
     unbilled_qty = Column(Numeric(18, 4), default=0.0, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
+class CRMLeadSource(Base):
+    """Company-scoped creatable lookup for lead Sources (Website, Referral, ...)."""
+    __tablename__ = "crm_lead_sources"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    name = Column(String(255), nullable=False)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
+class CRMLeadCategory(Base):
+    """Company-scoped creatable lookup for lead Categories."""
+    __tablename__ = "crm_lead_categories"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    name = Column(String(255), nullable=False)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
+class CRMLeadStatus(Base):
+    """Company-scoped creatable lookup for lead Statuses (New Lead, Won, Lost, ...)."""
+    __tablename__ = "crm_lead_statuses"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    name = Column(String(255), nullable=False)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 
 
@@ -1172,7 +1278,56 @@ class LeaveTemplate(Base):
     casual_leave_days = Column(Numeric(5, 1), default=0.0, nullable=False)
     sick_leave_days = Column(Numeric(5, 1), default=0.0, nullable=False)
     earned_leave_days = Column(Numeric(5, 1), default=0.0, nullable=False)
+    leave_types = Column(JSONB, nullable=False, default=list)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
+class SalaryTemplate(Base):
+    """Reusable named salary breakup cascade (company-scoped).
+
+    The full computed cascade (monthly CTC, day off, basic %, allowances, gross,
+    deductions, net) is stored as JSONB so it can be loaded into the Payroll tab's
+    Salary Breakup modal as a template.
+    """
+    __tablename__ = "salary_templates"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    name = Column(String(255), nullable=False)
+    description = Column(Text, nullable=True)
+    status = Column(String(20), default="Active", nullable=False)
+    breakup = Column(JSONB, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
+class PdfTemplate(Base):
+    """Reusable named PDF document template (company-scoped)."""
+    __tablename__ = "pdf_templates"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    name = Column(String(255), nullable=False)
+    content = Column(Text, nullable=True)
+    is_default = Column(Boolean, default=False, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
+class CompanyTerms(Base):
+    """Company-wide Terms & Conditions (one per company).
+
+    Five independently-editable documents: Invoice, Quotation, Subcon Work Order,
+    BOQ, and Purchase Order. These are the central source of default T&C text that
+    the downstream document forms (Sales Invoice, Subcon Work Order, CRM Quotation)
+    should pull from. The legacy `content` field is retained for backward compat.
+    """
+    __tablename__ = "company_terms"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), unique=True, nullable=False)
+    content = Column(Text, nullable=True)
+    invoice_terms = Column(Text, nullable=True)
+    quotation_terms = Column(Text, nullable=True)
+    subcon_terms = Column(Text, nullable=True)
+    boq_terms = Column(Text, nullable=True)
+    purchase_order_terms = Column(Text, nullable=True)
+    updated_at = Column(DateTime(timezone=True), default=func.now(), onupdate=func.now(), nullable=False)
 
 
 class PayrollProfile(Base):
@@ -1374,6 +1529,8 @@ class CustomField(Base):
     options = Column(JSONB, default=list, nullable=False) # for select/multiselect
     display_order = Column(Integer, default=0, nullable=False)
     is_active = Column(Boolean, default=True, nullable=False)
+    default_value = Column(Text, nullable=True) # default value pre-filled on new records
+    set_default = Column(Boolean, default=False, server_default="0", nullable=False) # whether a default value is configured
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 
 

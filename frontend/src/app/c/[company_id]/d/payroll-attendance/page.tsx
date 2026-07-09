@@ -273,11 +273,13 @@ function CreatablePicker<T extends { id: string; name: string }>({
 function SalaryBreakupModal({
   initial,
   salaryAmount,
+  companyId,
   onClose,
   onSave,
 }: {
   initial: Breakup | null;
   salaryAmount: number;
+  companyId: string;
   onClose: () => void;
   onSave: (b: Breakup) => void;
 }) {
@@ -290,6 +292,25 @@ function SalaryBreakupModal({
   const [deductions, setDeductions] = useState<{ name: string; amount: number }[]>(
     initial?.deductions ?? []
   );
+  const [templates, setTemplates] = useState<{ id: string; name: string; breakup: any }[]>([]);
+
+  useEffect(() => {
+    if (!companyId) return;
+    jget(`/settings/salary-templates/${companyId}`)
+      .then((d) => setTemplates(Array.isArray(d) ? d : []))
+      .catch(() => setTemplates([]));
+  }, [companyId]);
+
+  const loadTemplate = (id: string) => {
+    const t = templates.find((x) => x.id === id);
+    if (!t) return;
+    const b = t.breakup;
+    setCtc(b.monthly_ctc ?? 0);
+    setDayOff(b.day_off ?? "Sunday");
+    setBasicPct(b.basic_pct ?? 40);
+    setAllowances(b.allowances ?? []);
+    setDeductions(b.deductions ?? []);
+  };
 
   const basic = Math.round(ctc * (basicPct / 100) * 100) / 100;
   const fixedAllowance = Math.round(allowances.reduce((s, a) => s + (a.amount || 0), 0) * 100) / 100;
@@ -311,6 +332,20 @@ function SalaryBreakupModal({
 
   return (
     <Modal title="Salary Breakup" onClose={onClose} wide>
+      {templates.length > 0 && (
+        <Field label="Load Template">
+          <select
+            className={inputCls}
+            value=""
+            onChange={(e) => e.target.value && loadTemplate(e.target.value)}
+          >
+            <option value="">— Select a saved template —</option>
+            {templates.map((t) => (
+              <option key={t.id} value={t.id}>{t.name}</option>
+            ))}
+          </select>
+        </Field>
+      )}
       <Field label="Monthly CTC">
         <div className="flex gap-2">
           <input
@@ -842,6 +877,7 @@ function PayrollDetailsDrawer({
         <SalaryBreakupModal
           initial={currentBreakup}
           salaryAmount={salaryAmount}
+          companyId={companyId}
           onClose={() => setBreakupOpen(false)}
           onSave={(b) => {
             onBreakupSave(b);

@@ -1,633 +1,1157 @@
 "use client";
-import { getApiHost } from "@/lib/api";
 
-import React, { useState, useEffect } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
+import { getApi, authHeaders, resolveCompanyId, fmtINR } from "@/lib/siteflow";
 
-interface Lead {
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+type Lead = {
   id: string;
-  contact_name: string;
+  company_id: string;
+  assignee_id: string | null;
+  lead_date: string;
   lead_type: string;
+  contact_name: string;
   phone_no: string;
-  email?: string;
-  client_company_name?: string;
-  address?: string;
-  source?: string;
-  category?: string;
+  country_code: string | null;
+  email: string | null;
+  client_company_name: string | null;
+  address: string | null;
+  source: string | null;
+  category: string | null;
   status: string;
   priority: string;
   budget: number;
-  description?: string;
-  lead_date: string;
-}
-
-const STAGES = ["New Lead", "Initial Contact", "Site Visit Done", "Proposal Sent", "Negotiation", "Won", "Lost"];
-
-const STAGE_COLORS: Record<string, string> = {
-  "New Lead": "bg-zinc-500/10 text-muted border-zinc-500/20",
-  "Initial Contact": "bg-blue-500/10 text-blue-400 border-blue-500/20",
-  "Site Visit Done": "bg-purple-500/10 text-purple-400 border-purple-500/20",
-  "Proposal Sent": "bg-amber-500/10 text-amber-400 border-amber-500/20",
-  "Negotiation": "bg-orange-500/10 text-orange-400 border-orange-500/20",
-  "Won": "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
-  "Lost": "bg-red-500/10 text-red-400 border-red-500/20",
+  lead_name: string | null;
+  description: string | null;
+  last_contacted: string | null;
+  next_follow_up: string | null;
+  expected_closure: string | null;
+  created_at: string;
+  updated_at: string;
 };
 
-const MOCK_LEADS: Lead[] = [
-  { id: "lead-001", contact_name: "Arjun Skyline", lead_type: "Residential", phone_no: "+91 98110 45678", email: "arjun@gmail.com", client_company_name: "Skyline Builders", address: "Sector 62, Noida, UP", source: "Referral", category: "Civil", status: "Proposal Sent", priority: "high", budget: 4500000, description: "G+3 residential villa with basement parking", lead_date: "2026-06-01" },
-  { id: "lead-002", contact_name: "Priya Apex", lead_type: "Commercial", phone_no: "+91 97700 12345", email: "priya@prestige.in", client_company_name: "Prestige Heights", address: "Whitefield, Bengaluru", source: "Tender", category: "Civil", status: "Negotiation", priority: "high", budget: 18000000, description: "5,000 sqft commercial showroom with mezzanine", lead_date: "2026-06-05" },
-  { id: "lead-003", contact_name: "Rakesh Nair", lead_type: "Infrastructure", phone_no: "+91 88901 67890", email: "rakesh.nair@pwd.gov.in", client_company_name: "Kerala PWD", address: "Thiruvananthapuram, Kerala", source: "Tender", category: "Civil", status: "Initial Contact", priority: "medium", budget: 32000000, description: "Road widening project — 4.5 km stretch", lead_date: "2026-06-10" },
-  { id: "lead-004", contact_name: "Deepika Reddy", lead_type: "Residential", phone_no: "+91 91234 56789", email: "deepika@gmail.com", client_company_name: "", address: "Jubilee Hills, Hyderabad", source: "Website", category: "Interior", status: "Site Visit Done", priority: "medium", budget: 2800000, description: "3BHK luxury flat renovation including modular kitchen", lead_date: "2026-06-15" },
-  { id: "lead-005", contact_name: "Suresh Kapoor", lead_type: "Commercial", phone_no: "+91 99870 11223", email: "suresh@kapoorindustries.com", client_company_name: "Kapoor Industries", address: "Peenya Industrial Area, Bengaluru", source: "Referral", category: "Civil", status: "Won", priority: "low", budget: 7500000, description: "Warehouse and loading bay with RCC frame structure", lead_date: "2026-05-28" },
-];
+type TeamMember = { id: string; name: string };
+type Lookup = { id: string; company_id: string; name: string };
+type BankAccount = {
+  id: string;
+  company_id: string;
+  account_holder_name: string;
+  bank_name: string;
+  account_number: string;
+  ifsc_code: string;
+  upi_id: string | null;
+  balance: number;
+};
+type QItem = {
+  id?: string;
+  section_name: string;
+  item_name: string;
+  qty: number;
+  unit: string;
+  cost_price: number;
+  selling_price: number;
+  supply_rate: number;
+  installation_rate: number;
+  supply_tax_pct: number;
+  installation_tax_pct: number;
+  markup: number;
+  item_code: string;
+  hsn_sac: string;
+  cost_code: string;
+  length: number | null;
+  width: number | null;
+  height: number | null;
+  total_amount: number;
+};
+type Quotation = {
+  id: string;
+  lead_id: string;
+  subject: string;
+  tax_type: string;
+  status: string;
+  gst_pct: number;
+  cgst_pct: number;
+  sgst_pct: number;
+  cgst_amount: number;
+  sgst_amount: number;
+  tax_amount: number;
+  discount: number;
+  additional_charges: number;
+  round_off: number;
+  qt_no: string | null;
+  qt_date: string | null;
+  bank_account_id: string | null;
+  total_amount: number;
+  terms: string | null;
+  created_at: string;
+  items: QItem[];
+};
+
+// ─── API helpers ──────────────────────────────────────────────────────────────
+
+const jget = async (p: string) => {
+  const r = await fetch(getApi(p), { headers: authHeaders() || undefined });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+};
+const jpost = async (p: string, body: any) => {
+  const r = await fetch(getApi(p), {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
+    body: JSON.stringify(body),
+  });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+};
+const jput = async (p: string, body: any) => {
+  const r = await fetch(getApi(p), {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
+    body: JSON.stringify(body),
+  });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+};
+
+// ─── Small UI primitives ──────────────────────────────────────────────────────
+
+const inputCls =
+  "w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary";
+const btnPrimary =
+  "rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50";
+const btnGhost =
+  "rounded-md border border-border-custom px-3 py-2 text-sm text-foreground hover:bg-elevated";
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="mb-3">
+      <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-muted">
+        {label}
+      </label>
+      {children}
+    </div>
+  );
+}
+
+function Drawer({
+  title,
+  onClose,
+  children,
+  width = "max-w-md",
+}: {
+  title: string;
+  onClose: () => void;
+  children: React.ReactNode;
+  width?: string;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex justify-end bg-black/40" onClick={onClose}>
+      <div
+        className={`h-full w-full ${width} overflow-y-auto border-l border-border-custom bg-background p-5 shadow-xl`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="mb-4 flex items-center justify-between">
+          <h3 className="text-base font-semibold text-foreground">{title}</h3>
+          <button className="text-muted hover:text-foreground" onClick={onClose}>
+            ✕
+          </button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function CreatableSelect({
+  label,
+  items,
+  value,
+  onPick,
+  onCreate,
+  placeholder,
+}: {
+  label: string;
+  items: Lookup[];
+  value: string | null;
+  onPick: (id: string | null, name: string) => void;
+  onCreate: (name: string) => Promise<void>;
+  placeholder: string;
+}) {
+  const [adding, setAdding] = useState(false);
+  const [newName, setNewName] = useState("");
+  return (
+    <Field label={label}>
+      <div className="flex gap-2">
+        <select
+          className={inputCls}
+          value={value ?? ""}
+          onChange={(e) => {
+            const id = e.target.value || null;
+            const it = items.find((i) => i.id === id);
+            onPick(id, it?.name ?? "");
+          }}
+        >
+          <option value="">{placeholder}</option>
+          {items.map((i) => (
+            <option key={i.id} value={i.id}>
+              {i.name}
+            </option>
+          ))}
+        </select>
+        <button type="button" className={btnGhost} onClick={() => setAdding((a) => !a)}>
+          +
+        </button>
+      </div>
+      {adding && (
+        <div className="mt-2 flex gap-2">
+          <input
+            className={inputCls}
+            placeholder="New option"
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+          />
+          <button
+            type="button"
+            className={btnPrimary}
+            disabled={!newName.trim()}
+            onClick={async () => {
+              await onCreate(newName.trim());
+              setNewName("");
+              setAdding(false);
+            }}
+          >
+            Add
+          </button>
+        </div>
+      )}
+    </Field>
+  );
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+const toDateInput = (s: string | null): string =>
+  s ? new Date(s).toISOString().slice(0, 10) : "";
+const fromDateInput = (s: string): string | null =>
+  s ? new Date(s + "T00:00:00").toISOString() : null;
+const fmtDate = (s: string | null): string =>
+  s ? new Date(s).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—";
+const todayISO = () => new Date().toISOString().slice(0, 10);
+
+const PRIORITY_OPTS = ["High", "Medium", "Low"];
+const COUNTRY_CODES = ["+91", "+1", "+44", "+971", "+65", "+61"];
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function CRMPage() {
   const params = useParams();
-  const companyId = params?.company_id as string;
+  const slug = params.company_id as string;
+  const [companyId, setCompanyId] = useState("");
+
+  const [tab, setTab] = useState<"leads" | "quotation">("leads");
 
   const [leads, setLeads] = useState<Lead[]>([]);
-  const [tab, setTab] = useState<"pipeline" | "kanban" | "quotations">("pipeline");
-  const [selectedStage, setSelectedStage] = useState("All");
+  const [team, setTeam] = useState<TeamMember[]>([]);
+  const [sources, setSources] = useState<Lookup[]>([]);
+  const [categories, setCategories] = useState<Lookup[]>([]);
+  const [statuses, setStatuses] = useState<Lookup[]>([]);
+  const [banks, setBanks] = useState<BankAccount[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  // Lead modal states
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [contactName, setContactName] = useState("");
-  const [phoneNo, setPhoneNo] = useState("");
-  const [email, setEmail] = useState("");
-  const [clientCompany, setClientCompany] = useState("");
-  const [leadType, setLeadType] = useState("Residential");
-  const [budget, setBudget] = useState("");
-  const [source, setSource] = useState("Website");
-  const [category, setCategory] = useState("Civil");
-  const [description, setDescription] = useState("");
+  // quotation sub-tab
+  const [selLeadId, setSelLeadId] = useState("");
+  const [quots, setQuots] = useState<Quotation[]>([]);
+  const [qLoading, setQLoading] = useState(false);
+  const [qDrawer, setQDrawer] = useState(false);
+  const [qDetail, setQDetail] = useState<Quotation | null>(null);
+  const [qSaving, setQSaving] = useState(false);
+  const [qError, setQError] = useState("");
 
-  // Quotation states
-  const [quotations, setQuotations] = useState<any[]>([]);
-  const [showAddQuotModal, setShowAddQuotModal] = useState(false);
-  const [newQuot, setNewQuot] = useState({
+  const emptyQItem = {
+    section_name: "",
+    item_name: "",
+    qty: 1,
+    unit: "Nos",
+    cost_price: 0,
+    selling_price: 0,
+    supply_rate: 0,
+    installation_rate: 0,
+    supply_tax_pct: 18,
+    installation_tax_pct: 12,
+    markup: 0,
+    item_code: "",
+    hsn_sac: "",
+    cost_code: "",
+    length: null,
+    width: null,
+    height: null,
+    total_amount: 0,
+  };
+  const emptyQ = {
     subject: "",
-    leadId: "",
-    discount: "0",
+    tax_type: "bill_level",
+    gst_pct: 18,
+    cgst_pct: 9,
+    sgst_pct: 9,
+    discount: 0,
+    additional_charges: 0,
+    round_off: 0,
+    qt_no: "",
+    qt_date: todayISO(),
+    bank_account_id: "",
     terms: "",
-    items: [{ name: "", qty: "1", unit: "Nos", price: "0" }]
-  });
-
-  const [submitting, setSubmitting] = useState(false);
-  const [errorMsg, setErrorMsg] = useState("");
-
-  const [isOffline, setIsOffline] = useState(false);
-
-  const fetchQuotationsForLeads = async (leadsList: Lead[]) => {
-    try {
-      let allQuots: any[] = [];
-      for (const l of leadsList) {
-        const qRes = await fetch(`${getApiHost()}/apis/v3/crm/leads/${l.id}/quotations`);
-        if (qRes.ok) {
-          const qData = await qRes.json();
-          allQuots = [...allQuots, ...qData.map((item: any) => ({ ...item, client_name: l.client_company_name || l.contact_name }))];
-        }
-      }
-      setQuotations(allQuots);
-    } catch (e) {
-      console.error("Failed to load quotations", e);
-    }
+    items: [{ ...emptyQItem }] as QItem[],
   };
+  const [qForm, setQForm] = useState({ ...emptyQ });
 
-  const fetchLeads = async () => {
-    try {
-      const res = await fetch(`${getApiHost()}/apis/v3/crm/leads?company_id=${companyId}`);
-      if (res.ok) {
-        const data = await res.json();
-        if (Array.isArray(data)) {
-          setLeads(data);
-          if (data.length > 0) {
-            fetchQuotationsForLeads(data);
-          }
-        } else {
-          throw new Error("Invalid response format");
-        }
-      } else {
-        throw new Error(`HTTP ${res.status}`);
-      }
-    } catch (e) {
-      console.error("API unavailable, using demo data", e);
-      setIsOffline(true);
-      setLeads(MOCK_LEADS);
-      fetchQuotationsForLeads(MOCK_LEADS);
-    }
+  // filters
+  const [search, setSearch] = useState("");
+  const [fAssignee, setFAssignee] = useState("");
+  const [fPriority, setFPriority] = useState("");
+  const [fStatus, setFStatus] = useState("");
+  const [fSource, setFSource] = useState("");
+  const [fCategory, setFCategory] = useState("");
+  const [fDate, setFDate] = useState("");
+
+  // drawer / form
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const emptyForm = {
+    assignee_id: "" as string | null,
+    lead_type: "",
+    contact_name: "",
+    country_code: "+91",
+    phone_no: "",
+    email: "",
+    client_company_name: "",
+    address: "",
+    source_id: "" as string | null,
+    source_name: "",
+    category_id: "" as string | null,
+    category_name: "",
+    status_id: "" as string | null,
+    status_name: "",
+    priority: "Medium",
+    budget: "",
+    lead_name: "",
+    description: "",
+    last_contacted: "",
+    expected_closure: "",
+    date: todayISO(),
   };
+  const [form, setForm] = useState({ ...emptyForm });
+  const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState("");
+
+  // column visibility
+  const ALL_COLS: { key: string; label: string; def: boolean }[] = [
+    { key: "sno", label: "S.No", def: true },
+    { key: "lead_type", label: "Lead Type", def: true },
+    { key: "contact_name", label: "Contact Name", def: true },
+    { key: "updated_at", label: "Last Updated", def: true },
+    { key: "phone", label: "Contact Number", def: true },
+    { key: "status", label: "Status", def: true },
+    { key: "source", label: "Source", def: true },
+    { key: "lead_name", label: "Lead Name", def: false },
+    { key: "country_code", label: "Country Code", def: true },
+    { key: "category", label: "Lead Category", def: true },
+    { key: "assignee", label: "Lead Assignee", def: true },
+    { key: "priority", label: "Priority", def: true },
+    { key: "email", label: "Email", def: true },
+    { key: "company", label: "Company Name", def: true },
+    { key: "address", label: "Address", def: true },
+    { key: "budget", label: "Budget", def: true },
+    { key: "created_at", label: "Creation Date", def: true },
+    { key: "next_follow_up", label: "Next Follow Up", def: true },
+    { key: "expected_closure", label: "Expected Closure", def: true },
+    { key: "last_contacted", label: "Last Contacted", def: true },
+  ];
+  const [visible, setVisible] = useState<Record<string, boolean>>(() =>
+    Object.fromEntries(ALL_COLS.map((c) => [c.key, c.def]))
+  );
+  const [showColMenu, setShowColMenu] = useState(false);
 
   useEffect(() => {
-    if (companyId) {
-      fetchLeads();
-    }
-  }, [companyId]);
+    resolveCompanyId(slug).then(setCompanyId);
+  }, [slug]);
 
-  const handleCreateLead = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!contactName || !phoneNo) {
-      setErrorMsg("Please fill in Contact Name and Phone Number");
+  const loadAll = useCallback(async () => {
+    if (!companyId) return;
+    setLoading(true);
+    try {
+      const [ld, tm, src, cat, sts, bk] = await Promise.all([
+        jget(`/crm/leads?company_id=${companyId}`).catch(() => []),
+        jget(`/crm/team-members/${companyId}`).catch(() => []),
+        jget(`/crm/lead-sources/${companyId}`).catch(() => []),
+        jget(`/crm/lead-categories/${companyId}`).catch(() => []),
+        jget(`/crm/lead-statuses/${companyId}`).catch(() => []),
+        jget(`/accounts/${companyId}`).catch(() => []),
+      ]);
+      setLeads(ld);
+      setTeam(tm);
+      setSources(src);
+      setCategories(cat);
+      setStatuses(sts);
+      setBanks(bk);
+      if (ld.length && !selLeadId) setSelLeadId(ld[0].id);
+    } finally {
+      setLoading(false);
+    }
+  }, [companyId, selLeadId]);
+
+  const loadQuots = useCallback(async () => {
+    if (!selLeadId) {
+      setQuots([]);
       return;
     }
-
-    setSubmitting(true);
-    setErrorMsg("");
-
+    setQLoading(true);
     try {
-      const res = await fetch(`${getApiHost()}/apis/v3/crm/leads`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          company_id: companyId,
-          contact_name: contactName,
-          phone_no: phoneNo,
-          email: email || null,
-          client_company_name: clientCompany || null,
-          lead_type: leadType,
-          budget: parseFloat(budget || "0"),
-          source: source,
-          category: category,
-          description: description || null,
-          status: "New Lead",
-          priority: "medium"
-        })
-      });
-
-      if (res.ok) {
-        setShowAddModal(false);
-        setContactName("");
-        setPhoneNo("");
-        setEmail("");
-        setClientCompany("");
-        setBudget("");
-        setDescription("");
-        fetchLeads();
-      } else {
-        const err = await res.text();
-        setErrorMsg(`Error: ${err}`);
-      }
-    } catch (e) {
-      setErrorMsg("Failed to connect to the backend API.");
+      const data = await jget(`/crm/leads/${selLeadId}/quotations`).catch(() => []);
+      setQuots(data);
     } finally {
-      setSubmitting(false);
+      setQLoading(false);
     }
-  };
+  }, [selLeadId]);
 
-  const handleCreateQuotation = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newQuot.subject || !newQuot.leadId) {
-      setErrorMsg("Subject and Lead are required");
-      return;
-    }
-    setSubmitting(true);
-    setErrorMsg("");
-    try {
-      const formattedItems = newQuot.items.map(item => ({
-        section_name: "Items",
-        item_name: item.name,
-        qty: parseFloat(item.qty),
-        unit: item.unit,
-        selling_price: parseFloat(item.price),
-        cost_price: parseFloat(item.price),
-        supply_rate: parseFloat(item.price),
-        installation_rate: 0.0,
-      }));
+  useEffect(() => {
+    if (tab === "quotation") loadQuots();
+  }, [tab, loadQuots]);
 
-      const res = await fetch(`${getApiHost()}/apis/v3/crm/leads/${newQuot.leadId}/quotations`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          subject: newQuot.subject,
-          discount: parseFloat(newQuot.discount),
-          terms: newQuot.terms || null,
-          items: formattedItems
-        }),
-      });
+  useEffect(() => {
+    loadAll();
+  }, [loadAll]);
 
-      if (res.ok) {
-        setShowAddQuotModal(false);
-        setNewQuot({
-          subject: "",
-          leadId: "",
-          discount: "0",
-          terms: "",
-          items: [{ name: "", qty: "1", unit: "Nos", price: "0" }]
-        });
-        fetchLeads();
-      } else {
-        const err = await res.text();
-        setErrorMsg(`Error: ${err}`);
+  const nameById = (list: TeamMember[], id: string | null) =>
+    list.find((t) => t.id === id)?.name ?? "—";
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return leads.filter((l) => {
+      if (fAssignee && l.assignee_id !== fAssignee) return false;
+      if (fPriority && l.priority !== fPriority) return false;
+      if (fStatus && l.status !== fStatus) return false;
+      if (fSource && l.source !== fSource) return false;
+      if (fCategory && l.category !== fCategory) return false;
+      if (fDate) {
+        const d = (l.lead_date || "").slice(0, 10);
+        if (d !== fDate) return false;
       }
-    } catch (e) {
-      setErrorMsg("Failed to create quotation");
-    } finally {
-      setSubmitting(false);
-    }
+      if (q) {
+        const hay = `${l.contact_name} ${l.lead_name || ""} ${l.client_company_name || ""} ${l.phone_no} ${l.email || ""}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+  }, [leads, search, fAssignee, fPriority, fStatus, fSource, fCategory, fDate]);
+
+  const openNew = () => {
+    setForm({ ...emptyForm });
+    setFormError("");
+    setDrawerOpen(true);
   };
 
-  const handleUpdateStatus = async (leadId: string, newStatus: string) => {
-    // Optimistic local update first (works even offline)
-    setLeads(prev => prev.map(l => l.id === leadId ? { ...l, status: newStatus } : l));
+  const createLookup = async (kind: "source" | "category" | "status", name: string) => {
+    if (!companyId) return;
+    await jpost(`/crm/lead-${kind}s/${companyId}`, { name });
+    const [src, cat, sts] = await Promise.all([
+      jget(`/crm/lead-sources/${companyId}`).catch(() => []),
+      jget(`/crm/lead-categories/${companyId}`).catch(() => []),
+      jget(`/crm/lead-statuses/${companyId}`).catch(() => []),
+    ]);
+    setSources(src);
+    setCategories(cat);
+    setStatuses(sts);
+  };
+
+  const submit = async () => {
+    setFormError("");
+    if (!form.lead_type.trim()) return setFormError("Lead Type is required");
+    if (!form.contact_name.trim()) return setFormError("Contact Name is required");
+    if (!form.phone_no.trim()) return setFormError("Phone No. is required");
+    if (!companyId) return setFormError("Company not resolved");
+    setSaving(true);
     try {
-      await fetch(`${getApiHost()}/apis/v3/crm/leads/${leadId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: newStatus })
-      });
-    } catch (e) {
-      console.error("Failed to sync status to server", e);
+      const body = {
+        company_id: companyId,
+        assignee_id: form.assignee_id || null,
+        lead_type: form.lead_type.trim(),
+        contact_name: form.contact_name.trim(),
+        country_code: form.country_code,
+        phone_no: form.phone_no.trim(),
+        email: form.email.trim() || null,
+        client_company_name: form.client_company_name.trim() || null,
+        address: form.address.trim() || null,
+        source: form.source_name || null,
+        category: form.category_name || null,
+        status: form.status_name || "New Lead",
+        priority: form.priority,
+        budget: parseFloat(form.budget || "0") || 0,
+        lead_name: form.lead_name.trim() || null,
+        description: form.description.trim() || null,
+        last_contacted: fromDateInput(form.last_contacted),
+        expected_closure: fromDateInput(form.expected_closure),
+      };
+      await jpost("/crm/leads", body);
+      setDrawerOpen(false);
+      await loadAll();
+    } catch (e: any) {
+      setFormError(e.message || "Failed to save lead");
+    } finally {
+      setSaving(false);
     }
   };
 
-  const filteredLeads = selectedStage === "All" ? leads : leads.filter(l => l.status === selectedStage);
-  const totalPipelineValue = leads.filter(l => l.status !== "Lost").reduce((s, l) => s + l.budget, 0);
+  const setF = (patch: Partial<typeof form>) => setForm((f) => ({ ...f, ...patch }));
+
+  // ─── Quotation helpers ───────────────────────────────────────────────────
+  const qSet = (patch: Partial<typeof qForm>) => setQForm((q) => ({ ...q, ...patch }));
+  const qSetItem = (idx: number, patch: Partial<QItem>) =>
+    setQForm((q) => ({ ...q, items: q.items.map((it, i) => (i === idx ? { ...it, ...patch } : it)) }));
+  const qAddItem = () => setQForm((q) => ({ ...q, items: [...q.items, { ...emptyQItem }] }));
+  const qDelItem = (idx: number) =>
+    setQForm((q) => ({ ...q, items: q.items.filter((_, i) => i !== idx) }));
+
+  const dimFactor = (it: QItem) =>
+    it.length && it.width && it.height ? it.length * it.width * it.height : 1;
+  const itemBase = (it: QItem) => {
+    const unit = it.selling_price + it.supply_rate + it.installation_rate;
+    return it.qty * dimFactor(it) * unit;
+  };
+  const qSubtotal = qForm.items.reduce((s, it) => s + itemBase(it), 0);
+  const qDiscounted = Math.max(qSubtotal - (Number(qForm.discount) || 0), 0);
+  const qTax = qForm.tax_type === "bill_level" ? qDiscounted * ((Number(qForm.gst_pct) || 0) / 100) : 0;
+  const qTotalGst = (Number(qForm.cgst_pct) || 0) + (Number(qForm.sgst_pct) || 0) || 1;
+  const qCgst = qTax * ((Number(qForm.cgst_pct) || 0) / qTotalGst);
+  const qSgst = qTax * ((Number(qForm.sgst_pct) || 0) / qTotalGst);
+  const qGrand =
+    qDiscounted + qTax + (Number(qForm.additional_charges) || 0) + (Number(qForm.round_off) || 0);
+
+  const submitQuotation = async () => {
+    setQError("");
+    if (!qForm.subject.trim()) return setQError("Subject is required");
+    if (!selLeadId) return setQError("Select a lead first");
+    if (qForm.items.some((it) => !it.item_name.trim())) return setQError("Every item needs a name");
+    setQSaving(true);
+    try {
+      const body = {
+        subject: qForm.subject.trim(),
+        tax_type: qForm.tax_type,
+        gst_pct: Number(qForm.gst_pct) || 0,
+        cgst_pct: Number(qForm.cgst_pct) || 0,
+        sgst_pct: Number(qForm.sgst_pct) || 0,
+        discount: Number(qForm.discount) || 0,
+        additional_charges: Number(qForm.additional_charges) || 0,
+        round_off: Number(qForm.round_off) || 0,
+        qt_no: qForm.qt_no.trim() || null,
+        qt_date: fromDateInput(qForm.qt_date),
+        bank_account_id: qForm.bank_account_id || null,
+        terms: qForm.terms.trim() || null,
+        items: qForm.items.map((it) => ({
+          section_name: it.section_name.trim() || null,
+          item_name: it.item_name.trim(),
+          qty: Number(it.qty) || 0,
+          unit: it.unit.trim() || "Nos",
+          cost_price: Number(it.cost_price) || 0,
+          selling_price: Number(it.selling_price) || 0,
+          supply_rate: Number(it.supply_rate) || 0,
+          installation_rate: Number(it.installation_rate) || 0,
+          supply_tax_pct: Number(it.supply_tax_pct) || 0,
+          installation_tax_pct: Number(it.installation_tax_pct) || 0,
+          markup: Number(it.markup) || 0,
+          item_code: it.item_code.trim() || null,
+          hsn_sac: it.hsn_sac.trim() || null,
+          cost_code: it.cost_code.trim() || null,
+          length: it.length ?? null,
+          width: it.width ?? null,
+          height: it.height ?? null,
+          billed_qty: 0,
+          unbilled_qty: 0,
+        })),
+      };
+      await jpost(`/crm/leads/${selLeadId}/quotations`, body);
+      setQDrawer(false);
+      setQForm({ ...emptyQ });
+      await loadQuots();
+    } catch (e: any) {
+      setQError(e.message || "Failed to save quotation");
+    } finally {
+      setQSaving(false);
+    }
+  };
+
+  const bankById = (id: string | null) => banks.find((b) => b.id === id);
+
+  const renderCell = (l: Lead, key: string) => {
+    switch (key) {
+      case "sno":
+        return null; // handled separately
+      case "lead_type":
+        return l.lead_type;
+      case "contact_name":
+        return l.contact_name;
+      case "updated_at":
+        return fmtDate(l.updated_at);
+      case "phone":
+        return `${l.country_code || ""} ${l.phone_no}`.trim();
+      case "status":
+        return l.status;
+      case "source":
+        return l.source || "—";
+      case "lead_name":
+        return l.lead_name || "—";
+      case "country_code":
+        return l.country_code || "—";
+      case "category":
+        return l.category || "—";
+      case "assignee":
+        return nameById(team, l.assignee_id);
+      case "priority":
+        return l.priority;
+      case "email":
+        return l.email || "—";
+      case "company":
+        return l.client_company_name || "—";
+      case "address":
+        return l.address || "—";
+      case "budget":
+        return fmtINR(l.budget);
+      case "created_at":
+        return fmtDate(l.created_at);
+      case "next_follow_up":
+        return fmtDate(l.next_follow_up);
+      case "expected_closure":
+        return fmtDate(l.expected_closure);
+      case "last_contacted":
+        return fmtDate(l.last_contacted);
+      default:
+        return "—";
+    }
+  };
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden">
-      {/* ── CRM sub-navigation (top tabs) ── */}
-      <div className="flex items-center gap-1 px-6 py-2 border-b border-border-custom bg-card shrink-0 overflow-x-auto">
-        {[
-          { key: "pipeline", label: "Lead Pipeline", icon: "🤝" },
-          { key: "kanban", label: "Kanban Board", icon: "🗂️" },
-          { key: "quotations", label: "Quotation List", icon: "📑" },
-        ].map(item => (
-          <button key={item.key} onClick={() => setTab(item.key as typeof tab)}
-            className={`whitespace-nowrap px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${tab === item.key ? "bg-primary/10 text-primary" : "text-muted hover:text-foreground hover:bg-elevated"}`}>
-            <span className="mr-1.5">{item.icon}</span>{item.label}
+    <div className="p-4">
+      {/* Sub-tabs */}
+      <div className="mb-4 flex gap-1 border-b border-border-custom">
+        {(["leads", "quotation"] as const).map((t) => (
+          <button
+            key={t}
+            onClick={() => setTab(t)}
+            className={`px-4 py-2 text-sm font-medium capitalize ${
+              tab === t
+                ? "border-b-2 border-primary text-foreground"
+                : "text-muted hover:text-foreground"
+            }`}
+          >
+            {t === "leads" ? "Leads" : "Quotation"}
           </button>
         ))}
       </div>
 
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <div className="border-b border-border-custom bg-background px-6 py-3 flex items-center justify-between">
-          <div>
-            <h1 className="text-sm font-bold text-white">
-              {tab === "quotations" ? "Pre-sales Quotation Registry" : "CRM & Lead Management"}
-            </h1>
-            <p className="text-[10px] text-muted">Pipeline: ₹{(totalPipelineValue / 100000).toFixed(2)}L active value</p>
-          </div>
-          {tab === "quotations" ? (
-            <button onClick={() => setShowAddQuotModal(true)} className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-xs font-bold text-white hover:opacity-90 transition-all cursor-pointer">
-              + Create Quotation
-            </button>
-          ) : (
-            <button onClick={() => setShowAddModal(true)} className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-xs font-bold text-white hover:opacity-90 transition-all cursor-pointer">
-              + Add Lead
-            </button>
-          )}
-        </div>
-
-        <div className="flex-1 overflow-y-auto p-6 space-y-5">
-          {/* Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            {[
-              { label: "Total Leads", value: leads.length, color: "text-white" },
-              { label: "Active", value: leads.filter(l => !["Won", "Lost"].includes(l.status)).length, color: "text-primary" },
-              { label: "Won (Jun)", value: leads.filter(l => l.status === "Won").length, color: "text-emerald-400" },
-              { label: "Lost (Jun)", value: leads.filter(l => l.status === "Lost").length, color: "text-red-400" },
-              { label: "Pipeline Value", value: `₹${(totalPipelineValue / 100000).toFixed(2)}L`, color: "text-secondary" },
-            ].map((s, i) => (
-              <div key={i} className="bg-card border border-border-custom rounded-lg rounded-md p-4 border border-border-custom">
-                <div className="text-[10px] text-muted uppercase tracking-wider">{s.label}</div>
-                <div className={`text-xl font-extrabold mt-1 ${s.color}`}>{s.value}</div>
-              </div>
-            ))}
-          </div>
-
-          {tab === "pipeline" && (
-            <div className="space-y-4">
-              {/* Stage filter */}
-              <div className="flex items-center gap-2 flex-wrap">
-                {["All", ...STAGES].map(s => (
-                  <button key={s} onClick={() => setSelectedStage(s)}
-                    className={`px-3 py-1.5 text-xs font-semibold rounded-full border transition-all ${selectedStage === s ? "bg-primary/20 text-primary border-border-custom" : "bg-elevated text-muted border-border-custom hover:border-white/20"}`}>
-                    {s}
-                  </button>
-                ))}
-              </div>
-
-              <div className="bg-card border border-border-custom rounded-lg rounded-lg border border-border-custom overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-xs">
-                    <thead>
-                      <tr className="border-b border-border-custom text-muted">
-                        <th className="text-left px-5 py-3 font-semibold">Lead</th>
-                        <th className="text-left px-5 py-3 font-semibold">Contact</th>
-                        <th className="text-right px-5 py-3 font-semibold">Budget</th>
-                        <th className="text-left px-5 py-3 font-semibold">Stage</th>
-                        <th className="text-left px-5 py-3 font-semibold">Source / Type</th>
-                        <th className="text-left px-5 py-3 font-semibold">Category</th>
-                        <th className="text-left px-5 py-3 font-semibold">Lead Date</th>
-                        <th className="text-left px-5 py-3 font-semibold">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredLeads.map((lead, i) => (
-                        <tr key={i} className="border-b border-white/[0.03] hover:bg-white/[0.015] transition-all">
-                          <td className="px-5 py-3">
-                            <div className="font-bold text-white">{lead.client_company_name || "Direct Customer"}</div>
-                            <div className="text-[10px] text-muted font-mono">{lead.id.substring(0, 8)}</div>
-                          </td>
-                          <td className="px-5 py-3">
-                            <div className="text-zinc-300">{lead.contact_name}</div>
-                            <div className="text-[10px] text-muted">{lead.phone_no}</div>
-                          </td>
-                          <td className="px-5 py-3 text-right font-extrabold text-white">₹{lead.budget.toLocaleString("en-IN")}</td>
-                          <td className="px-5 py-3">
-                            <select
-                              value={lead.status}
-                              onChange={e => handleUpdateStatus(lead.id, e.target.value)}
-                              className={`px-2 py-1 rounded-full text-[10px] font-semibold border bg-transparent focus:outline-none ${STAGE_COLORS[lead.status]}`}
-                            >
-                              {STAGES.map(st => (
-                                <option key={st} value={st} className="bg-background text-zinc-300">{st}</option>
-                              ))}
-                            </select>
-                          </td>
-                          <td className="px-5 py-3 text-muted">
-                            <div>{lead.source}</div>
-                            <div className="text-[10px] text-muted">{lead.lead_type}</div>
-                          </td>
-                          <td className="px-5 py-3 text-muted">{lead.category || "—"}</td>
-                          <td className="px-5 py-3 text-muted">
-                            {new Date(lead.lead_date).toLocaleDateString()}
-                          </td>
-                          <td className="px-5 py-3">
-                            <span className="text-xs text-secondary cursor-pointer hover:underline">Convert</span>
-                          </td>
-                        </tr>
-                      ))}
-                      {filteredLeads.length === 0 && (
-                        <tr>
-                          <td colSpan={8} className="text-center py-10 text-muted">No leads found in this pipeline stage.</td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
+      {tab === "leads" && (
+        <>
+          {/* Toolbar */}
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            <div className="relative">
+              <input
+                className={`${inputCls} pl-8`}
+                placeholder="Search"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+              <span className="pointer-events-none absolute left-2 top-2.5 text-muted">⌕</span>
+            </div>
+            <select className={inputCls} value={fAssignee} onChange={(e) => setFAssignee(e.target.value)}>
+              <option value="">Assignee</option>
+              {team.map((t) => (
+                <option key={t.id} value={t.id}>{t.name}</option>
+              ))}
+            </select>
+            <input type="date" className={inputCls} value={fDate} onChange={(e) => setFDate(e.target.value)} />
+            <select className={inputCls} value={fPriority} onChange={(e) => setFPriority(e.target.value)}>
+              <option value="">Priority</option>
+              {PRIORITY_OPTS.map((p) => (
+                <option key={p} value={p}>{p}</option>
+              ))}
+            </select>
+            <select className={inputCls} value={fStatus} onChange={(e) => setFStatus(e.target.value)}>
+              <option value="">Status</option>
+              {statuses.map((s) => (
+                <option key={s.id} value={s.name}>{s.name}</option>
+              ))}
+            </select>
+            <select className={inputCls} value={fSource} onChange={(e) => setFSource(e.target.value)}>
+              <option value="">Source</option>
+              {sources.map((s) => (
+                <option key={s.id} value={s.name}>{s.name}</option>
+              ))}
+            </select>
+            <select className={inputCls} value={fCategory} onChange={(e) => setFCategory(e.target.value)}>
+              <option value="">Category</option>
+              {categories.map((c) => (
+                <option key={c.id} value={c.name}>{c.name}</option>
+              ))}
+            </select>
+            <div className="ml-auto relative">
+              <button className={btnGhost} onClick={() => setShowColMenu((v) => !v)} title="Columns">
+                +
+              </button>
+              {showColMenu && (
+                <div
+                  className="absolute right-0 z-50 mt-1 w-56 rounded-md border border-border-custom bg-background p-2 shadow-xl"
+                  onMouseLeave={() => setShowColMenu(false)}
+                >
+                  {ALL_COLS.filter((c) => c.key !== "sno").map((c) => (
+                    <label key={c.key} className="flex items-center gap-2 py-1 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={!!visible[c.key]}
+                        onChange={(e) => setVisible((v) => ({ ...v, [c.key]: e.target.checked }))}
+                      />
+                      {c.label}
+                    </label>
+                  ))}
                 </div>
-              </div>
+              )}
             </div>
-          )}
+            <button className={btnPrimary} onClick={openNew}>
+              New Lead +
+            </button>
+          </div>
 
-          {tab === "kanban" && (
-            <div className="flex gap-4 overflow-x-auto pb-2">
-              {STAGES.map(stage => {
-                const stageLeads = leads.filter(l => l.status === stage);
-                return (
-                  <div key={stage} className="flex-shrink-0 w-56 space-y-3 bg-card/40 p-3 rounded-lg border border-white/[0.02]">
-                    <div className="flex items-center justify-between pb-1 border-b border-border-custom">
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${STAGE_COLORS[stage]}`}>{stage}</span>
-                      <span className="text-[10px] text-muted font-bold">{stageLeads.length}</span>
-                    </div>
-                    {stageLeads.map((lead, i) => (
-                      <div key={i} className="bg-card border border-border-custom rounded-lg rounded-md p-3 border border-border-custom space-y-2 hover:border-border-custom transition-all cursor-pointer">
-                        <div className="text-xs font-bold text-white line-clamp-2">{lead.client_company_name || lead.contact_name}</div>
-                        <div className="text-[10px] text-muted">{lead.phone_no}</div>
-                        <div className="flex items-center justify-between pt-1 border-t border-border-custom">
-                          <span className="text-xs font-extrabold text-primary">₹{lead.budget.toLocaleString("en-IN")}</span>
-                          <span className="text-[10px] text-muted">{lead.lead_type}</span>
-                        </div>
-                      </div>
+          <div className="mb-2 text-xs text-muted">
+            Showing {filtered.length} of {leads.length} leads
+          </div>
+
+          {/* Table */}
+          <div className="overflow-x-auto rounded-md border border-border-custom">
+            <table className="w-full text-sm">
+              <thead className="bg-elevated text-left text-muted">
+                <tr>
+                  {ALL_COLS.filter((c) => visible[c.key]).map((c) => (
+                    <th key={c.key} className="whitespace-nowrap px-3 py-2 font-medium">
+                      {c.label}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {loading && (
+                  <tr>
+                    <td className="px-3 py-6 text-muted" colSpan={ALL_COLS.length}>
+                      Loading…
+                    </td>
+                  </tr>
+                )}
+                {!loading && filtered.length === 0 && (
+                  <tr>
+                    <td className="px-3 py-6 text-muted" colSpan={ALL_COLS.length}>
+                      No leads found.
+                    </td>
+                  </tr>
+                )}
+                {filtered.map((l, i) => (
+                  <tr key={l.id} className="border-t border-border-custom hover:bg-elevated">
+                    {ALL_COLS.filter((c) => visible[c.key]).map((c) => (
+                      <td key={c.key} className="whitespace-nowrap px-3 py-2 text-foreground">
+                        {c.key === "sno" ? i + 1 : renderCell(l, c.key)}
+                      </td>
                     ))}
-                    {stageLeads.length === 0 && (
-                      <div className="rounded-md border border-dashed border-border-custom p-4 text-center text-[10px] text-zinc-700">No leads</div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
-          {tab === "quotations" && (
-            <div className="space-y-4">
-              <div className="text-xs text-muted">View and print customer quotations, track status, and convert to projects.</div>
-              <div className="bg-card border border-border-custom rounded-lg rounded-lg border border-border-custom bg-input overflow-hidden">
-                <table className="w-full text-xs text-left">
-                  <thead>
-                    <tr className="border-b border-border-custom text-muted font-bold uppercase tracking-wider text-[9px]">
-                      <th className="px-5 py-3">Created At</th>
-                      <th className="px-5 py-3">Lead Subject</th>
-                      <th className="px-5 py-3">Client Company / Contact</th>
-                      <th className="px-5 py-3 text-right">Discount</th>
-                      <th className="px-5 py-3 text-right">Total Amount</th>
-                      <th className="px-5 py-3">Status</th>
+          {/* New Lead Drawer */}
+          {drawerOpen && (
+            <Drawer title="New Lead" onClose={() => setDrawerOpen(false)} width="max-w-lg">
+              <CreatableSelect
+                label="Lead Assignee"
+                items={team.map((t) => ({ id: t.id, company_id: companyId, name: t.name }))}
+                value={form.assignee_id}
+                onPick={(id) => setF({ assignee_id: id })}
+                onCreate={async () => {}}
+                placeholder="Select assignee"
+              />
+              <Field label="Date">
+                <input
+                  type="date"
+                  className={inputCls}
+                  value={form.date}
+                  onChange={(e) => setF({ date: e.target.value })}
+                />
+              </Field>
+              <Field label="Lead Type *">
+                <input
+                  className={inputCls}
+                  value={form.lead_type}
+                  onChange={(e) => setF({ lead_type: e.target.value })}
+                  placeholder="e.g. Residential, Commercial"
+                />
+              </Field>
+              <Field label="Contact Name *">
+                <input
+                  className={inputCls}
+                  value={form.contact_name}
+                  onChange={(e) => setF({ contact_name: e.target.value })}
+                />
+              </Field>
+              <Field label="Phone No. *">
+                <div className="flex gap-2">
+                  <select
+                    className={inputCls}
+                    value={form.country_code}
+                    onChange={(e) => setF({ country_code: e.target.value })}
+                  >
+                    {COUNTRY_CODES.map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                  <input
+                    className={inputCls}
+                    value={form.phone_no}
+                    onChange={(e) => setF({ phone_no: e.target.value })}
+                    placeholder="Phone number"
+                  />
+                </div>
+              </Field>
+              <Field label="Email">
+                <input className={inputCls} value={form.email} onChange={(e) => setF({ email: e.target.value })} />
+              </Field>
+              <Field label="Company Name">
+                <input
+                  className={inputCls}
+                  value={form.client_company_name}
+                  onChange={(e) => setF({ client_company_name: e.target.value })}
+                />
+              </Field>
+              <Field label="Address">
+                <textarea
+                  className={inputCls}
+                  rows={2}
+                  value={form.address}
+                  onChange={(e) => setF({ address: e.target.value })}
+                />
+              </Field>
+              <CreatableSelect
+                label="Source"
+                items={sources}
+                value={form.source_id}
+                onPick={(_id, name) => setF({ source_id: _id, source_name: name })}
+                onCreate={(name) => createLookup("source", name).then(() => {
+                  const found = sources.find((s) => s.name === name);
+                  if (found) setF({ source_id: found.id, source_name: name });
+                })}
+                placeholder="Select source"
+              />
+              <CreatableSelect
+                label="Category"
+                items={categories}
+                value={form.category_id}
+                onPick={(_id, name) => setF({ category_id: _id, category_name: name })}
+                onCreate={(name) => createLookup("category", name).then(() => {
+                  const found = categories.find((c) => c.name === name);
+                  if (found) setF({ category_id: found.id, category_name: name });
+                })}
+                placeholder="Select category"
+              />
+              <CreatableSelect
+                label="Lead Status"
+                items={statuses}
+                value={form.status_id}
+                onPick={(_id, name) => setF({ status_id: _id, status_name: name })}
+                onCreate={(name) => createLookup("status", name).then(() => {
+                  const found = statuses.find((s) => s.name === name);
+                  if (found) setF({ status_id: found.id, status_name: name });
+                })}
+                placeholder="Select status"
+              />
+              <Field label="Priority">
+                <select
+                  className={inputCls}
+                  value={form.priority}
+                  onChange={(e) => setF({ priority: e.target.value })}
+                >
+                  {PRIORITY_OPTS.map((p) => (
+                    <option key={p} value={p}>{p}</option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="Last Contacted Date">
+                <input
+                  type="date"
+                  className={inputCls}
+                  value={form.last_contacted}
+                  onChange={(e) => setF({ last_contacted: e.target.value })}
+                />
+              </Field>
+              <Field label="Expected Closure Date">
+                <input
+                  type="date"
+                  className={inputCls}
+                  value={form.expected_closure}
+                  onChange={(e) => setF({ expected_closure: e.target.value })}
+                />
+              </Field>
+              <Field label="Budget">
+                <input
+                  type="number"
+                  className={inputCls}
+                  value={form.budget}
+                  onChange={(e) => setF({ budget: e.target.value })}
+                />
+              </Field>
+              <Field label="Description">
+                <textarea
+                  className={inputCls}
+                  rows={3}
+                  value={form.description}
+                  onChange={(e) => setF({ description: e.target.value })}
+                />
+              </Field>
+
+              {formError && <div className="mb-3 rounded bg-red-500/10 px-3 py-2 text-sm text-red-400">{formError}</div>}
+              <div className="flex justify-end gap-2">
+                <button className={btnGhost} onClick={() => setDrawerOpen(false)}>
+                  Cancel
+                </button>
+                <button className={btnPrimary} onClick={submit} disabled={saving}>
+                  {saving ? "Saving…" : "Save Lead"}
+                </button>
+              </div>
+            </Drawer>
+          )}
+        </>
+      )}
+
+      {tab === "quotation" && (
+        <div>
+          {/* Lead selector + new */}
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            <select
+              className={inputCls}
+              value={selLeadId}
+              onChange={(e) => setSelLeadId(e.target.value)}
+            >
+              <option value="">Select Lead</option>
+              {leads.map((l) => (
+                <option key={l.id} value={l.id}>
+                  {l.contact_name} · {l.client_company_name || l.lead_type}
+                </option>
+              ))}
+            </select>
+            <button
+              className={btnPrimary}
+              disabled={!selLeadId}
+              onClick={() => {
+                setQForm({ ...emptyQ });
+                setQError("");
+                setQDrawer(true);
+              }}
+            >
+              New Quotation +
+            </button>
+          </div>
+
+          {/* Quotations list */}
+          <div className="overflow-x-auto rounded-md border border-border-custom">
+            <table className="w-full text-sm">
+              <thead className="bg-elevated text-left text-muted">
+                <tr>
+                  {["QT No", "Date", "Subject", "Items", "Tax", "CGST", "SGST", "Total", "Status"].map((h) => (
+                    <th key={h} className="whitespace-nowrap px-3 py-2 font-medium">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {qLoading && (
+                  <tr><td className="px-3 py-6 text-muted" colSpan={9}>Loading…</td></tr>
+                )}
+                {!qLoading && quots.length === 0 && (
+                  <tr><td className="px-3 py-6 text-muted" colSpan={9}>
+                    {selLeadId ? "No quotations yet for this lead." : "Select a lead to view quotations."}
+                  </td></tr>
+                )}
+                {quots.map((q) => (
+                  <tr
+                    key={q.id}
+                    className="cursor-pointer border-t border-border-custom hover:bg-elevated"
+                    onClick={() => setQDetail(q)}
+                  >
+                    <td className="px-3 py-2 text-foreground">{q.qt_no || "—"}</td>
+                    <td className="px-3 py-2 text-foreground">{fmtDate(q.qt_date)}</td>
+                    <td className="px-3 py-2 text-foreground">{q.subject}</td>
+                    <td className="px-3 py-2 text-foreground">{q.items.length}</td>
+                    <td className="px-3 py-2 text-foreground">{q.gst_pct}%</td>
+                    <td className="px-3 py-2 text-foreground">{fmtINR(q.cgst_amount)}</td>
+                    <td className="px-3 py-2 text-foreground">{fmtINR(q.sgst_amount)}</td>
+                    <td className="px-3 py-2 text-foreground">{fmtINR(q.total_amount)}</td>
+                    <td className="px-3 py-2 text-foreground">{q.status}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* New Quotation Drawer */}
+          {qDrawer && (
+            <Drawer title="New Quotation" onClose={() => setQDrawer(false)} width="max-w-4xl">
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="Subject *">
+                  <input className={inputCls} value={qForm.subject} onChange={(e) => qSet({ subject: e.target.value })} />
+                </Field>
+                <Field label="QT No">
+                  <input className={inputCls} value={qForm.qt_no} onChange={(e) => qSet({ qt_no: e.target.value })} />
+                </Field>
+                <Field label="QT Date">
+                  <input type="date" className={inputCls} value={qForm.qt_date} onChange={(e) => qSet({ qt_date: e.target.value })} />
+                </Field>
+                <Field label="Tax Type">
+                  <select className={inputCls} value={qForm.tax_type} onChange={(e) => qSet({ tax_type: e.target.value })}>
+                    <option value="bill_level">Bill Level</option>
+                    <option value="item_level">Item Level</option>
+                  </select>
+                </Field>
+                <Field label="GST %">
+                  <input type="number" className={inputCls} value={qForm.gst_pct} onChange={(e) => qSet({ gst_pct: Number(e.target.value) })} />
+                </Field>
+                <Field label="CGST %">
+                  <input type="number" className={inputCls} value={qForm.cgst_pct} onChange={(e) => qSet({ cgst_pct: Number(e.target.value) })} />
+                </Field>
+                <Field label="SGST %">
+                  <input type="number" className={inputCls} value={qForm.sgst_pct} onChange={(e) => qSet({ sgst_pct: Number(e.target.value) })} />
+                </Field>
+                <Field label="Discount">
+                  <input type="number" className={inputCls} value={qForm.discount} onChange={(e) => qSet({ discount: Number(e.target.value) })} />
+                </Field>
+                <Field label="Additional Charges">
+                  <input type="number" className={inputCls} value={qForm.additional_charges} onChange={(e) => qSet({ additional_charges: Number(e.target.value) })} />
+                </Field>
+                <Field label="Round Off">
+                  <input type="number" className={inputCls} value={qForm.round_off} onChange={(e) => qSet({ round_off: Number(e.target.value) })} />
+                </Field>
+                <Field label="Bank Account">
+                  <select className={inputCls} value={qForm.bank_account_id} onChange={(e) => qSet({ bank_account_id: e.target.value })}>
+                    <option value="">Select bank</option>
+                    {banks.map((b) => (
+                      <option key={b.id} value={b.id}>{b.bank_name} — {b.account_number}</option>
+                    ))}
+                  </select>
+                </Field>
+              </div>
+
+              <div className="mb-2 mt-2 text-xs font-medium uppercase tracking-wide text-muted">Line Items (N × L × W × H)</div>
+              <div className="overflow-x-auto rounded-md border border-border-custom">
+                <table className="w-full text-xs">
+                  <thead className="bg-elevated text-muted">
+                    <tr>
+                      {["Item", "Section", "N (Qty)", "Unit", "L", "W", "H", "Cost", "Selling", "Supply", "Install", "Markup", "Amount"].map((h) => (
+                        <th key={h} className="whitespace-nowrap px-2 py-1 font-medium">{h}</th>
+                      ))}
+                      <th></th>
                     </tr>
                   </thead>
                   <tbody>
-                    {quotations.length === 0 ? (
-                      <tr>
-                        <td colSpan={6} className="text-center p-8 text-muted">
-                          No quotations found. Click "+ Create Quotation" to add one.
-                        </td>
+                    {qForm.items.map((it, idx) => (
+                      <tr key={idx} className="border-t border-border-custom">
+                        <td className="p-1"><input className={inputCls + " px-1 py-1"} value={it.item_name} onChange={(e) => qSetItem(idx, { item_name: e.target.value })} /></td>
+                        <td className="p-1"><input className={inputCls + " px-1 py-1"} value={it.section_name} onChange={(e) => qSetItem(idx, { section_name: e.target.value })} /></td>
+                        <td className="p-1"><input type="number" className={inputCls + " px-1 py-1 w-16"} value={it.qty} onChange={(e) => qSetItem(idx, { qty: Number(e.target.value) })} /></td>
+                        <td className="p-1"><input className={inputCls + " px-1 py-1 w-16"} value={it.unit} onChange={(e) => qSetItem(idx, { unit: e.target.value })} /></td>
+                        <td className="p-1"><input type="number" className={inputCls + " px-1 py-1 w-14"} value={it.length ?? ""} onChange={(e) => qSetItem(idx, { length: e.target.value === "" ? null : Number(e.target.value) })} /></td>
+                        <td className="p-1"><input type="number" className={inputCls + " px-1 py-1 w-14"} value={it.width ?? ""} onChange={(e) => qSetItem(idx, { width: e.target.value === "" ? null : Number(e.target.value) })} /></td>
+                        <td className="p-1"><input type="number" className={inputCls + " px-1 py-1 w-14"} value={it.height ?? ""} onChange={(e) => qSetItem(idx, { height: e.target.value === "" ? null : Number(e.target.value) })} /></td>
+                        <td className="p-1"><input type="number" className={inputCls + " px-1 py-1 w-20"} value={it.cost_price} onChange={(e) => qSetItem(idx, { cost_price: Number(e.target.value) })} /></td>
+                        <td className="p-1"><input type="number" className={inputCls + " px-1 py-1 w-20"} value={it.selling_price} onChange={(e) => qSetItem(idx, { selling_price: Number(e.target.value) })} /></td>
+                        <td className="p-1"><input type="number" className={inputCls + " px-1 py-1 w-20"} value={it.supply_rate} onChange={(e) => qSetItem(idx, { supply_rate: Number(e.target.value) })} /></td>
+                        <td className="p-1"><input type="number" className={inputCls + " px-1 py-1 w-20"} value={it.installation_rate} onChange={(e) => qSetItem(idx, { installation_rate: Number(e.target.value) })} /></td>
+                        <td className="p-1"><input type="number" className={inputCls + " px-1 py-1 w-16"} value={it.markup} onChange={(e) => qSetItem(idx, { markup: Number(e.target.value) })} /></td>
+                        <td className="p-1 whitespace-nowrap text-foreground">{fmtINR(itemBase(it))}</td>
+                        <td className="p-1"><button className={btnGhost} onClick={() => qDelItem(idx)}>✕</button></td>
                       </tr>
-                    ) : (
-                      quotations.map((q) => (
-                        <tr key={q.id} className="border-t border-border-custom hover:bg-white/[0.015]">
-                          <td className="px-5 py-3 text-muted font-mono">
-                            {new Date(q.created_at).toLocaleDateString("en-IN")}
-                          </td>
-                          <td className="px-5 py-3 font-semibold text-white">{q.subject}</td>
-                          <td className="px-5 py-3 text-zinc-300">{q.client_name}</td>
-                          <td className="px-5 py-3 text-right text-muted font-mono">₹{q.discount.toLocaleString("en-IN")}</td>
-                          <td className="px-5 py-3 text-right text-emerald-400 font-bold font-mono">₹{q.total_amount.toLocaleString("en-IN")}</td>
-                          <td className="px-5 py-3">
-                            <span className={`px-2 py-0.5 rounded text-[8px] font-bold border ${
-                              q.status === "Approved"
-                                ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
-                                : q.status === "Declined"
-                                ? "bg-red-500/10 border-red-500/20 text-red-400"
-                                : "bg-amber-500/10 border-amber-500/20 text-amber-400"
-                            }`}>
-                              {q.status.toUpperCase()}
-                            </span>
-                          </td>
-                        </tr>
-                      ))
-                    )}
+                    ))}
                   </tbody>
                 </table>
               </div>
-            </div>
-          )}
-        </div>
-      </div>
+              <button className={btnGhost + " mt-2"} onClick={qAddItem}>+ Add Item</button>
 
-      {/* Add Lead Modal */}
-      {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md bg-background border border-border-custom rounded-lg p-6 space-y-4">
-            <div className="flex justify-between items-center border-b border-border-custom pb-3">
-              <h3 className="text-sm font-bold text-white">Add New CRM Lead</h3>
-              <button onClick={() => setShowAddModal(false)} className="text-muted hover:text-foreground">✕</button>
-            </div>
-            
-            {errorMsg && <p className="text-xs text-red-400 bg-red-500/10 p-2 rounded">{errorMsg}</p>}
+              <Field label="Terms">
+                <textarea className={inputCls} rows={2} value={qForm.terms} onChange={(e) => qSet({ terms: e.target.value })} />
+              </Field>
 
-            <form onSubmit={handleCreateLead} className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="text-[10px] text-muted uppercase">Contact Name *</label>
-                  <input type="text" value={contactName} onChange={e => setContactName(e.target.value)} placeholder="Mr. Arjun Skyline" className="w-full bg-white/[0.03] border border-border-custom rounded-md px-4 py-2 text-xs text-white focus:outline-none" />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] text-muted uppercase">Phone Number *</label>
-                  <input type="text" value={phoneNo} onChange={e => setPhoneNo(e.target.value)} placeholder="+91 98110..." className="w-full bg-white/[0.03] border border-border-custom rounded-md px-4 py-2 text-xs text-white focus:outline-none" />
-                </div>
+              {/* Totals */}
+              <div className="mt-2 space-y-1 rounded-md border border-border-custom p-3 text-sm">
+                <div className="flex justify-between"><span className="text-muted">Subtotal</span><span>{fmtINR(qSubtotal)}</span></div>
+                <div className="flex justify-between"><span className="text-muted">Discount</span><span>- {fmtINR(qForm.discount)}</span></div>
+                <div className="flex justify-between"><span className="text-muted">GST ({qForm.gst_pct}%)</span><span>{fmtINR(qTax)}</span></div>
+                <div className="flex justify-between"><span className="text-muted">CGST ({qForm.cgst_pct}%)</span><span>{fmtINR(qCgst)}</span></div>
+                <div className="flex justify-between"><span className="text-muted">SGST ({qForm.sgst_pct}%)</span><span>{fmtINR(qSgst)}</span></div>
+                <div className="flex justify-between"><span className="text-muted">Additional Charges</span><span>{fmtINR(qForm.additional_charges)}</span></div>
+                <div className="flex justify-between"><span className="text-muted">Round Off</span><span>{fmtINR(qForm.round_off)}</span></div>
+                <div className="flex justify-between border-t border-border-custom pt-1 font-semibold"><span>Grand Total</span><span>{fmtINR(qGrand)}</span></div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="text-[10px] text-muted uppercase">Email</label>
-                  <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="arjun@gmail.com" className="w-full bg-white/[0.03] border border-border-custom rounded-md px-4 py-2 text-xs text-white focus:outline-none" />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] text-muted uppercase">Client Company</label>
-                  <input type="text" value={clientCompany} onChange={e => setClientCompany(e.target.value)} placeholder="Prestige Heights" className="w-full bg-white/[0.03] border border-border-custom rounded-md px-4 py-2 text-xs text-white focus:outline-none" />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="text-[10px] text-muted uppercase">Lead Type</label>
-                  <select value={leadType} onChange={e => setLeadType(e.target.value)} className="w-full bg-background border border-border-custom rounded-md px-4 py-2 text-xs text-white focus:outline-none">
-                    {["Residential", "Commercial", "Infrastructure"].map(t => <option key={t}>{t}</option>)}
-                  </select>
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] text-muted uppercase">Project Budget (INR)</label>
-                  <input type="number" value={budget} onChange={e => setBudget(e.target.value)} placeholder="E.g. 4500000" className="w-full bg-white/[0.03] border border-border-custom rounded-md px-4 py-2 text-xs text-white focus:outline-none" />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="text-[10px] text-muted uppercase">Lead Source</label>
-                  <select value={source} onChange={e => setSource(e.target.value)} className="w-full bg-background border border-border-custom rounded-md px-4 py-2 text-xs text-white focus:outline-none">
-                    {["Website", "Referral", "Tender", "Exhibition", "Cold Call"].map(s => <option key={s}>{s}</option>)}
-                  </select>
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] text-muted uppercase">Project Category</label>
-                  <select value={category} onChange={e => setCategory(e.target.value)} className="w-full bg-background border border-border-custom rounded-md px-4 py-2 text-xs text-white focus:outline-none">
-                    {["Civil", "Electrical", "Plumbing", "Interior"].map(c => <option key={c}>{c}</option>)}
-                  </select>
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-[10px] text-muted uppercase">Notes / Description</label>
-                <input type="text" value={description} onChange={e => setDescription(e.target.value)} placeholder="Additional information..." className="w-full bg-white/[0.03] border border-border-custom rounded-md px-4 py-2 text-xs text-white focus:outline-none" />
-              </div>
-
-              <button type="submit" disabled={submitting} className="w-full py-2.5 rounded-md bg-primary font-bold text-xs text-white hover:opacity-90 disabled:opacity-50 transition-all">
-                {submitting ? "Adding..." : "Add Lead →"}
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
-      {/* Create Quotation Modal */}
-      {showAddQuotModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="w-full max-w-lg bg-background border border-border-custom rounded-lg p-6 space-y-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center border-b border-border-custom pb-3">
-              <h3 className="text-sm font-bold text-white">Create Pre-sales Quotation</h3>
-              <button onClick={() => setShowAddQuotModal(false)} className="text-muted hover:text-foreground cursor-pointer">✕</button>
-            </div>
-
-            {errorMsg && <p className="text-xs text-red-400 bg-red-500/10 p-2 rounded">{errorMsg}</p>}
-
-            <form onSubmit={handleCreateQuotation} className="space-y-4 text-xs">
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="text-[10px] text-muted uppercase font-semibold">Quotation Subject *</label>
-                  <input type="text" value={newQuot.subject} onChange={e => setNewQuot({ ...newQuot, subject: e.target.value })} placeholder="e.g. Structure Construction Quote" className="w-full bg-white/[0.03] border border-border-custom rounded-md px-4 py-2.5 text-xs text-white focus:outline-none" required />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] text-muted uppercase font-semibold">Link to CRM Lead *</label>
-                  <select
-                    value={newQuot.leadId}
-                    onChange={e => setNewQuot({ ...newQuot, leadId: e.target.value })}
-                    required
-                    className="w-full bg-background border border-border-custom rounded-md px-4 py-2.5 text-xs text-white focus:outline-none"
-                  >
-                    <option value="">Select CRM Lead</option>
-                    {leads.map(l => (
-                      <option key={l.id} value={l.id}>{l.client_company_name || l.contact_name} ({l.lead_type})</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="text-[10px] text-muted uppercase font-semibold">Discount (INR)</label>
-                  <input type="number" value={newQuot.discount} onChange={e => setNewQuot({ ...newQuot, discount: e.target.value })} className="w-full bg-white/[0.03] border border-border-custom rounded-md px-4 py-2.5 text-xs text-white focus:outline-none" />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] text-muted uppercase font-semibold">Terms & Conditions</label>
-                  <input type="text" value={newQuot.terms} onChange={e => setNewQuot({ ...newQuot, terms: e.target.value })} placeholder="e.g. 50% advance, balance on slab layout" className="w-full bg-white/[0.03] border border-border-custom rounded-md px-4 py-2.5 text-xs text-white focus:outline-none" />
-                </div>
-              </div>
-
-              <div className="space-y-2 border-t border-border-custom pt-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-[10px] font-bold text-muted uppercase tracking-wider">Line Items</span>
-                  <button
-                    type="button"
-                    onClick={() => setNewQuot({ ...newQuot, items: [...newQuot.items, { name: "", qty: "1", unit: "Nos", price: "0" }] })}
-                    className="text-primary font-bold hover:underline"
-                  >
-                    + Add Item
-                  </button>
-                </div>
-
-                {newQuot.items.map((item, idx) => (
-                  <div key={idx} className="grid grid-cols-4 gap-2 items-end">
-                    <div className="space-y-1">
-                      <label className="text-[9px] text-muted">Item Name</label>
-                      <input type="text" value={item.name} onChange={e => {
-                        const updated = [...newQuot.items];
-                        updated[idx].name = e.target.value;
-                        setNewQuot({ ...newQuot, items: updated });
-                      }} placeholder="e.g. RCC M25 Concrete" className="w-full bg-elevated border border-border-custom rounded-lg px-2.5 py-1.5 text-[11px] text-white focus:outline-none" required />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-[9px] text-muted">Qty</label>
-                      <input type="number" value={item.qty} onChange={e => {
-                        const updated = [...newQuot.items];
-                        updated[idx].qty = e.target.value;
-                        setNewQuot({ ...newQuot, items: updated });
-                      }} className="w-full bg-elevated border border-border-custom rounded-lg px-2.5 py-1.5 text-[11px] text-white focus:outline-none" required />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-[9px] text-muted">Unit</label>
-                      <input type="text" value={item.unit} onChange={e => {
-                        const updated = [...newQuot.items];
-                        updated[idx].unit = e.target.value;
-                        setNewQuot({ ...newQuot, items: updated });
-                      }} className="w-full bg-elevated border border-border-custom rounded-lg px-2.5 py-1.5 text-[11px] text-white focus:outline-none" required />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-[9px] text-muted">Price (₹)</label>
-                      <input type="number" value={item.price} onChange={e => {
-                        const updated = [...newQuot.items];
-                        updated[idx].price = e.target.value;
-                        setNewQuot({ ...newQuot, items: updated });
-                      }} className="w-full bg-elevated border border-border-custom rounded-lg px-2.5 py-1.5 text-[11px] text-white focus:outline-none" required />
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="flex gap-2 justify-end border-t border-border-custom pt-4">
-                <button type="button" onClick={() => setShowAddQuotModal(false)} className="px-4 py-2 bg-zinc-800 text-muted hover:text-foreground rounded-md">Cancel</button>
-                <button type="submit" className="px-5 py-2.5 bg-primary text-white font-bold rounded-md hover:opacity-90">
-                  Save Quotation
+              {qError && <div className="mb-3 mt-3 rounded bg-red-500/10 px-3 py-2 text-sm text-red-400">{qError}</div>}
+              <div className="mt-3 flex justify-end gap-2">
+                <button className={btnGhost} onClick={() => setQDrawer(false)}>Cancel</button>
+                <button className={btnPrimary} onClick={submitQuotation} disabled={qSaving}>
+                  {qSaving ? "Saving…" : "Save Quotation"}
                 </button>
               </div>
-            </form>
-          </div>
+            </Drawer>
+          )}
+
+          {/* Detail Drawer */}
+          {qDetail && (
+            <Drawer title={`Quotation · ${qDetail.qt_no || qDetail.subject}`} onClose={() => setQDetail(null)} width="max-w-4xl">
+              <div className="mb-3 grid grid-cols-2 gap-3 text-sm">
+                <div><span className="text-muted">Subject: </span>{qDetail.subject}</div>
+                <div><span className="text-muted">Date: </span>{fmtDate(qDetail.qt_date)}</div>
+                <div><span className="text-muted">Status: </span>{qDetail.status}</div>
+                <div><span className="text-muted">Tax: </span>{qDetail.gst_pct}% ({qDetail.tax_type})</div>
+                <div className="col-span-2"><span className="text-muted">Bank: </span>{bankById(qDetail.bank_account_id) ? `${bankById(qDetail.bank_account_id)!.bank_name} — ${bankById(qDetail.bank_account_id)!.account_number}` : "—"}</div>
+              </div>
+              <div className="overflow-x-auto rounded-md border border-border-custom">
+                <table className="w-full text-xs">
+                  <thead className="bg-elevated text-muted">
+                    <tr>
+                      {["Item", "Section", "N", "L", "W", "H", "Unit", "Cost", "Selling", "Supply", "Install", "Markup", "Amount"].map((h) => (
+                        <th key={h} className="whitespace-nowrap px-2 py-1 font-medium">{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {qDetail.items.map((it) => (
+                      <tr key={it.id} className="border-t border-border-custom">
+                        <td className="p-1 text-foreground">{it.item_name}</td>
+                        <td className="p-1 text-foreground">{it.section_name || "—"}</td>
+                        <td className="p-1 text-foreground">{it.qty}</td>
+                        <td className="p-1 text-foreground">{it.length ?? "—"}</td>
+                        <td className="p-1 text-foreground">{it.width ?? "—"}</td>
+                        <td className="p-1 text-foreground">{it.height ?? "—"}</td>
+                        <td className="p-1 text-foreground">{it.unit}</td>
+                        <td className="p-1 text-foreground">{fmtINR(it.cost_price)}</td>
+                        <td className="p-1 text-foreground">{fmtINR(it.selling_price)}</td>
+                        <td className="p-1 text-foreground">{fmtINR(it.supply_rate)}</td>
+                        <td className="p-1 text-foreground">{fmtINR(it.installation_rate)}</td>
+                        <td className="p-1 text-foreground">{fmtINR(it.markup)}</td>
+                        <td className="p-1 text-foreground">{fmtINR(it.total_amount)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="mt-3 space-y-1 rounded-md border border-border-custom p-3 text-sm">
+                <div className="flex justify-between"><span className="text-muted">CGST ({qDetail.cgst_pct}%)</span><span>{fmtINR(qDetail.cgst_amount)}</span></div>
+                <div className="flex justify-between"><span className="text-muted">SGST ({qDetail.sgst_pct}%)</span><span>{fmtINR(qDetail.sgst_amount)}</span></div>
+                <div className="flex justify-between"><span className="text-muted">Additional Charges</span><span>{fmtINR(qDetail.additional_charges)}</span></div>
+                <div className="flex justify-between"><span className="text-muted">Round Off</span><span>{fmtINR(qDetail.round_off)}</span></div>
+                <div className="flex justify-between border-t border-border-custom pt-1 font-semibold"><span>Grand Total</span><span>{fmtINR(qDetail.total_amount)}</span></div>
+              </div>
+              {qDetail.terms && <div className="mt-3 text-sm text-muted">Terms: {qDetail.terms}</div>}
+            </Drawer>
+          )}
         </div>
       )}
     </div>

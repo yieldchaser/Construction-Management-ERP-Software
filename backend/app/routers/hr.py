@@ -908,6 +908,11 @@ def create_designation(company_id: uuid.UUID, payload: DesignationCreate, db: Se
 
 # ─── Leave Templates (company-scoped policy) ────────────────────────────────
 
+class LeaveTypeQuota(BaseModel):
+    type: str
+    days: float
+
+
 class LeaveTemplateResponse(BaseModel):
     id: uuid.UUID
     company_id: uuid.UUID
@@ -915,6 +920,7 @@ class LeaveTemplateResponse(BaseModel):
     casual_leave_days: float
     sick_leave_days: float
     earned_leave_days: float
+    leave_types: List[LeaveTypeQuota] = []
     created_at: datetime
 
     class Config:
@@ -926,6 +932,7 @@ class LeaveTemplateCreate(BaseModel):
     casual_leave_days: float = 0.0
     sick_leave_days: float = 0.0
     earned_leave_days: float = 0.0
+    leave_types: List[LeaveTypeQuota] = []
 
 
 class LeaveTemplateUpdate(BaseModel):
@@ -933,6 +940,7 @@ class LeaveTemplateUpdate(BaseModel):
     casual_leave_days: Optional[float] = None
     sick_leave_days: Optional[float] = None
     earned_leave_days: Optional[float] = None
+    leave_types: Optional[List[LeaveTypeQuota]] = None
 
 
 @router.get("/leave-templates/{company_id}", response_model=List[LeaveTemplateResponse])

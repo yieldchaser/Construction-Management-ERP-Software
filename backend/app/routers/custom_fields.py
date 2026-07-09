@@ -19,6 +19,8 @@ class CustomFieldCreate(BaseModel):
     is_required: bool = False
     options: List[str] = []
     display_order: int = 0
+    default_value: Optional[str] = None
+    set_default: bool = False
 
 
 class CustomFieldResponse(BaseModel):
@@ -32,6 +34,8 @@ class CustomFieldResponse(BaseModel):
     options: List[str]
     display_order: int
     is_active: bool
+    default_value: Optional[str] = None
+    set_default: bool = False
     created_at: datetime
 
     class Config:
