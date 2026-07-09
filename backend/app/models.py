@@ -1836,6 +1836,15 @@ class LibraryRate(Base):
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 
 
+class LibraryTodo(Base):
+    """Canned To Do preset labels for the Library tab (distinct from project-scoped todos)."""
+    __tablename__ = "library_todos"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    name = Column(String(255), nullable=False)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
 class MoM(Base):
     """Minutes of Meeting (MOM) records captured per company/project site."""
     __tablename__ = "moms"

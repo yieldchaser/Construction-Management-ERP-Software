@@ -12,7 +12,10 @@ type LibraryType =
   | "progress"
   | "workforce"
   | "material"
-  | "rate";
+  | "rate"
+  | "retention"
+  | "material-category"
+  | "todo";
 
 export default function LibraryHubPage() {
   const params = useParams();
@@ -62,6 +65,7 @@ export default function LibraryHubPage() {
   const [matHsn, setMatHsn] = useState("");
   const [matCode, setMatCode] = useState("");
   const [matSpecs, setMatSpecs] = useState("");
+  const [matAltUnit, setMatAltUnit] = useState("");
 
   // Form Fields: Rate
   const [rateName, setRateName] = useState("");
@@ -130,6 +134,9 @@ export default function LibraryHubPage() {
       case "workforce": return "workforces";
       case "material": return "materials";
       case "rate": return "rates";
+      case "retention": return "retentions";
+      case "material-category": return "material-categories";
+      case "todo": return "todos";
     }
   };
 
@@ -229,10 +236,11 @@ export default function LibraryHubPage() {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${accessToken}`
         },
-        body: JSON.stringify({
+          body: JSON.stringify({
           company_id: companyId,
           name: matName,
           unit: matUnit,
+          alternate_unit: matAltUnit || null,
           gst_rate: Number(matGst),
           category: matCategory,
           unit_cost: Number(matCost),
@@ -249,6 +257,7 @@ export default function LibraryHubPage() {
         setMatHsn("");
         setMatCode("");
         setMatSpecs("");
+        setMatAltUnit("");
         setToastMessage("Material item saved to library!");
         setTimeout(() => setToastMessage(""), 3000);
         fetchLibraryData();
@@ -408,8 +417,11 @@ export default function LibraryHubPage() {
             { id: "deduction", label: "Deduction Library", icon: "➖" },
             { id: "progress", label: "Progress Library", icon: "📈" },
             { id: "workforce", label: "Workforce Library", icon: "👷" },
-            { id: "material", label: "Material Library", icon: "🪵" },
-            { id: "rate", label: "Rate Library", icon: "💸" }
+             { id: "material", label: "Material Library", icon: "🪵" },
+             { id: "rate", label: "Rate Library", icon: "💸" },
+             { id: "retention", label: "Retention Library", icon: "🔒" },
+             { id: "material-category", label: "Material Category Library", icon: "🗂️" },
+             { id: "todo", label: "To Do Library", icon: "✅" }
           ].map((tab) => (
             <button
               key={tab.id}
@@ -439,7 +451,7 @@ export default function LibraryHubPage() {
             }}
             className="px-4 py-2 bg-primary hover:bg-primary/95 text-white rounded-lg text-xs font-bold shadow-lg transition-all cursor-pointer"
           >
-            + Add to Library
+            {activeTab === "todo" ? "+ Add To Do" : "+ Add to Library"}
           </button>
         </div>
 
@@ -449,7 +461,7 @@ export default function LibraryHubPage() {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder={`Search ${activeTab.replace("-", " ")} items...`}
+            placeholder={activeTab === "todo" ? "Search To Do" : `Search ${activeTab.replace("-", " ")} items...`}
             className="input-field px-4 py-2 text-xs font-semibold focus:outline-none placeholder-muted w-full"
           />
         </div>
@@ -529,8 +541,8 @@ export default function LibraryHubPage() {
             </table>
           )}
 
-          {/* Simple Tables (Asset Types, Deductions, Progresses) */}
-          {(activeTab === "asset-type" || activeTab === "deduction" || activeTab === "progress") && (
+          {/* Simple Tables (Asset Types, Deductions, Progresses, Retentions, Material Categories, Todos) */}
+          {(activeTab === "asset-type" || activeTab === "deduction" || activeTab === "progress" || activeTab === "retention" || activeTab === "material-category" || activeTab === "todo") && (
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="border-b border-border-custom text-muted font-semibold uppercase tracking-wider bg-background/50">
@@ -643,6 +655,7 @@ export default function LibraryHubPage() {
                   <th className="px-5 py-3">Material Name</th>
                   <th className="px-5 py-3">Specifications</th>
                   <th className="px-5 py-3">Unit</th>
+                  <th className="px-5 py-3">Alternate UOM</th>
                   <th className="px-5 py-3">Material Category</th>
                   <th className="px-5 py-3">Created Date</th>
                   <th className="px-5 py-3">Creator Name</th>
@@ -660,6 +673,7 @@ export default function LibraryHubPage() {
                       <td className="px-6 py-4 font-semibold text-foreground">{formatLibraryCell(item.name)}</td>
                       <td className="px-6 py-4 text-muted">{formatLibraryCell(item.specifications)}</td>
                       <td className="px-6 py-4 text-muted">{formatLibraryCell(item.unit)}</td>
+                      <td className="px-6 py-4 text-muted">{formatLibraryCell(item.alternate_unit)}</td>
                       <td className="px-6 py-4 text-muted">{formatLibraryCell(item.category)}</td>
                       <td className="px-6 py-4 text-muted">
                         {item.created_at ? new Date(item.created_at).toLocaleDateString() : "-"}
@@ -750,7 +764,7 @@ export default function LibraryHubPage() {
         <div className="fixed inset-0 bg-background/80 flex items-center justify-center z-50 p-4">
           <div className="w-full max-w-md bg-card border border-border-custom rounded-lg overflow-hidden shadow-lg animate-in fade-in zoom-in-95 duration-150">
             <div className="p-6 border-b border-border-custom flex justify-between items-center">
-              <h3 className="text-xs font-semibold text-foreground uppercase tracking-wider">Add {activeTab.replace("-", " ")}</h3>
+              <h3 className="text-xs font-semibold text-foreground uppercase tracking-wider">{activeTab === "todo" ? "Add To Do" : `Add ${activeTab.replace("-", " ")}`}</h3>
               <button onClick={() => setIsSimpleDrawerOpen(false)} className="text-muted hover:text-foreground font-bold">×</button>
             </div>
 

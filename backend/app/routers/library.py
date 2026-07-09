@@ -75,6 +75,7 @@ class MaterialCreate(BaseModel):
     company_id: uuid.UUID
     name: str
     unit: str
+    alternate_unit: Optional[str] = None
     gst_rate: float = 0.0
     category: Optional[str] = None
     unit_cost: float = 0.0
@@ -344,6 +345,7 @@ def create_library_material(payload: MaterialCreate, db: Session = Depends(get_d
         company_id=payload.company_id,
         name=payload.name,
         unit=payload.unit,
+        alternate_unit=payload.alternate_unit,
         gst_rate=payload.gst_rate,
         category=payload.category,
         unit_cost=payload.unit_cost,
@@ -471,6 +473,37 @@ def delete_material_category(item_id: uuid.UUID, db: Session = Depends(get_db)):
     item = db.query(models.MaterialCategory).filter(models.MaterialCategory.id == item_id).first()
     if not item:
         raise HTTPException(status_code=404, detail="Material category not found")
+    db.delete(item)
+    db.commit()
+    return {"success": True}
+
+
+# ─── TODOS (Library preset labels) ───
+
+class TodoCreate(BaseModel):
+    company_id: uuid.UUID
+    name: str
+
+
+@router.get("/todos/{company_id}")
+def get_library_todos(company_id: uuid.UUID, db: Session = Depends(get_db)):
+    return db.query(models.LibraryTodo).filter(models.LibraryTodo.company_id == company_id).all()
+
+
+@router.post("/todos")
+def create_library_todo(payload: TodoCreate, db: Session = Depends(get_db)):
+    item = models.LibraryTodo(company_id=payload.company_id, name=payload.name)
+    db.add(item)
+    db.commit()
+    db.refresh(item)
+    return item
+
+
+@router.delete("/todos/{item_id}")
+def delete_library_todo(item_id: uuid.UUID, db: Session = Depends(get_db)):
+    item = db.query(models.LibraryTodo).filter(models.LibraryTodo.id == item_id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="To Do not found")
     db.delete(item)
     db.commit()
     return {"success": True}
