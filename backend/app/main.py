@@ -2,16 +2,16 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import os
-from sqlalchemy import DateTime, String
+from sqlalchemy import DateTime, String, Numeric, Boolean, Text, func
 from app.routers import (
     auth, calculators, budgeting, planning, drawings, procurement,
     billing, hr, quality, reports, equipment, safety, analytics,
     production, dpr, crm, finance, tally, subcon_attendance, settings,
     assets, three_way, wastage, chat, custom_fields, statutory, face_recognition,
     subcon_performance, vendor_performance, rfq, labour, towers, budget,
-    library, profile, mom, delete_logs
+    library, profile, mom, delete_logs, projects, todos, team_schedule
 )
-from app.database import engine, Base
+from app.database import engine, Base, SessionLocal
 from app import models
 
 # Initialize SQLAlchemy tables if they do not exist
@@ -50,6 +50,50 @@ def ensure_sqlite_library_party_columns():
 
 ensure_sqlite_library_party_columns()
 
+
+def ensure_sqlite_company_team_party_link():
+    if not engine.url.drivername.startswith("sqlite"):
+        return
+    with engine.begin() as conn:
+        existing = {
+            row[1]
+            for row in conn.exec_driver_sql("PRAGMA table_info(company_team)").fetchall()
+        }
+        if "library_party_id" not in existing:
+            conn.exec_driver_sql('ALTER TABLE company_team ADD COLUMN "library_party_id" VARCHAR(36)')
+
+
+def backfill_company_team_party_links(db):
+    """Associate billing-side company_team rows with their library_party by name within the same company."""
+    linked = 0
+    for lp in db.query(models.LibraryParty).all():
+        if not lp.name:
+            continue
+        target = (
+            db.query(models.CompanyTeam)
+            .join(models.User, models.User.id == models.CompanyTeam.user_id)
+            .filter(
+                models.CompanyTeam.company_id == lp.company_id,
+                models.CompanyTeam.library_party_id.is_(None),
+                func.lower(func.trim(models.User.name)) == lp.name.strip().lower(),
+            )
+            .first()
+        )
+        if target:
+            target.library_party_id = lp.id
+            linked += 1
+    db.commit()
+    return linked
+
+
+ensure_sqlite_company_team_party_link()
+_db = SessionLocal()
+try:
+    backfill_company_team_party_links(_db)
+finally:
+    _db.close()
+
+
 def ensure_sqlite_library_cost_code_columns():
     if not engine.url.drivername.startswith("sqlite"):
         return
@@ -85,6 +129,117 @@ def ensure_sqlite_company_slug_column():
 
 ensure_sqlite_library_cost_code_columns()
 ensure_sqlite_company_slug_column()
+
+def ensure_sqlite_project_tab_columns():
+    """Add columns introduced for the Project Tab parity build to existing tables."""
+    if not engine.url.drivername.startswith("sqlite"):
+        return
+
+    column_specs = {
+        "projects": {
+            "project_value": Numeric(18, 2),
+            "planned_start_date": DateTime(timezone=True),
+            "planned_end_date": DateTime(timezone=True),
+            "actual_start_date": DateTime(timezone=True),
+            "actual_end_date": DateTime(timezone=True),
+            "orientation": String(255),
+            "dimension": String(255),
+            "scope_of_work": String(),
+            "project_avatar": String(),
+            "is_pinned": Boolean(),
+        },
+        "library_cost_codes": {
+            "parent_id": String(),
+        },
+        "library_materials": {
+            "alternate_unit": String(50),
+        },
+        "project_parties": {
+            "status": String(50),
+        },
+    }
+
+    with engine.begin() as conn:
+        for table, cols in column_specs.items():
+            existing = {row[1] for row in conn.exec_driver_sql(f'PRAGMA table_info("{table}")').fetchall()}
+            for col_name, col_type in cols.items():
+                if col_name in existing:
+                    continue
+                conn.exec_driver_sql(
+                    f'ALTER TABLE "{table}" ADD COLUMN "{col_name}" {col_type.compile(dialect=engine.dialect)}'
+                )
+
+ensure_sqlite_project_tab_columns()
+
+
+def ensure_sqlite_bill_columns():
+    """Add Transaction-tab sub-entity columns to the bills table for SQLite dev."""
+    if not engine.url.drivername.startswith("sqlite"):
+        return
+    required_columns = {
+        "items_json": Text(),
+        "payment_mode": String(20),
+        "payment_bank_name": String(255),
+        "payment_ref": String(255),
+        "ship_to": Text(),
+    }
+    with engine.begin() as conn:
+        existing = {row[1] for row in conn.exec_driver_sql("PRAGMA table_info(bills)").fetchall()}
+        for col, typ in required_columns.items():
+            if col in existing:
+                continue
+            conn.exec_driver_sql(
+                f'ALTER TABLE bills ADD COLUMN "{col}" {typ.compile(dialect=engine.dialect)}'
+            )
+
+
+def ensure_sqlite_task_columns():
+    """Add the actual-progress column to the tasks table for SQLite dev."""
+    if not engine.url.drivername.startswith("sqlite"):
+        return
+    required_columns = {
+        "progress": Numeric(5, 2),
+    }
+    with engine.begin() as conn:
+        existing = {row[1] for row in conn.exec_driver_sql("PRAGMA table_info(tasks)").fetchall()}
+        for col, typ in required_columns.items():
+            if col in existing:
+                continue
+            conn.exec_driver_sql(
+                f'ALTER TABLE tasks ADD COLUMN "{col}" {typ.compile(dialect=engine.dialect)}'
+            )
+
+
+ensure_sqlite_bill_columns()
+ensure_sqlite_task_columns()
+
+def ensure_sqlite_schema_sync():
+    """Catch-all migration for SQLite dev DBs: add any model column that is
+    missing from an existing table. Only nullable columns (or columns with a
+    default) are added, so data already present is preserved. This keeps the
+    local SQLite schema aligned with models.py without manual per-column ALTERs.
+    """
+    if not engine.url.drivername.startswith("sqlite"):
+        return
+    from app import models as _models
+    with engine.begin() as conn:
+        for tname, tmeta in _models.Base.metadata.tables.items():
+            try:
+                existing = {row[1] for row in conn.exec_driver_sql(f'PRAGMA table_info("{tname}")').fetchall()}
+            except Exception:
+                continue
+            for col in tmeta.columns:
+                if col.name in existing:
+                    continue
+                if not (col.nullable or col.default is not None or col.server_default is not None):
+                    continue
+                try:
+                    col_type = col.type.compile(dialect=engine.dialect)
+                    conn.exec_driver_sql(f'ALTER TABLE "{tname}" ADD COLUMN "{col.name}" {col_type}')
+                except Exception as e:
+                    print(f"schema_sync skipped {tname}.{col.name}: {e}")
+
+ensure_sqlite_schema_sync()
 
 import uuid
 from app.database import SessionLocal
@@ -286,7 +441,12 @@ app.include_router(budget.router, prefix="/apis/v3")
 app.include_router(library.router, prefix="/apis/v3")
 app.include_router(profile.router, prefix="/apis/v3")
 app.include_router(mom.router, prefix="/apis/v3")
+app.include_router(projects.router, prefix="/apis/v3")
+app.include_router(todos.router, prefix="/apis/v3")
 app.include_router(delete_logs.router, prefix="/apis/v3")
+from app.routers import files as files_router
+app.include_router(files_router.router, prefix="/apis/v3")
+app.include_router(team_schedule.router, prefix="/apis/v3")
 
 @app.get("/")
 def read_root():

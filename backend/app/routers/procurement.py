@@ -4,6 +4,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from app.database import get_db
+from app.auth import get_current_user
 from app.models import (
     MaterialIndent, MaterialIndentItem, 
     PurchaseOrder, PurchaseOrderItem, 
@@ -14,7 +15,8 @@ from pydantic import BaseModel, Field
 
 router = APIRouter(
     prefix="/procurement",
-    tags=["Procurement & Inventory"]
+    tags=["Procurement & Inventory"],
+    dependencies=[Depends(get_current_user)]
 )
 
 # Pydantic Schemas
@@ -121,6 +123,7 @@ class InventoryResponse(BaseModel):
     id: UUID
     project_id: UUID
     material_name: str
+    category: str = "Uncategorized"
     on_hand_qty: float
     reserved_qty: float
     unit: str
@@ -133,15 +136,48 @@ class TransactionResponse(BaseModel):
     id: UUID
     project_id: UUID
     material_name: str
+    category: str = "Uncategorized"
     qty: float
     type: str
+    unit: Optional[str] = None
     source_ref_id: Optional[UUID] = None
     created_at: datetime
 
     class Config:
         from_attributes = True
 
+# Computed stock (Received - Consumed), grouped by category on the frontend
+class StockRow(BaseModel):
+    inventory_id: Optional[UUID] = None
+    category: str
+    material_name: str
+    unit: Optional[str] = None
+    received: float = 0.0
+    consumed: float = 0.0
+    current_stock: float = 0.0   # may be negative on over-consumption (no clamp)
+    reserved: float = 0.0
+
+    class Config:
+        from_attributes = True
+
+class TransactionCreateRequest(BaseModel):
+    project_id: UUID
+    material_name: str
+    qty: float = Field(..., gt=0)
+    type: str                      # received, used, transferred, returned
+    category: str = "Uncategorized"
+    unit: Optional[str] = None
+    source_ref_id: Optional[UUID] = None
+
+class InventoryPatchRequest(BaseModel):
+    category: Optional[str] = None
+    unit: Optional[str] = None
+
 # --- Endpoints ---
+
+# Movement classification for stock math
+RECEIVED_TYPES = {"received", "returned"}
+CONSUMED_TYPES = {"used", "transferred"}
 
 # 1. Indents
 @router.get("/indents", response_model=List[IndentResponse])
@@ -596,9 +632,136 @@ def get_transactions(project_id: UUID, db: Session = Depends(get_db)):
             id=t.id,
             project_id=t.project_id,
             material_name=t.material_name,
+            category=t.category,
             qty=float(t.qty),
             type=t.type,
+            unit=t.unit,
             source_ref_id=t.source_ref_id,
             created_at=t.created_at
         ) for t in txns
     ]
+
+
+# 6. Computed Stock (Received - Consumed), negative allowed
+@router.get("/stock", response_model=List[StockRow])
+def get_stock(project_id: UUID, db: Session = Depends(get_db)):
+    invs = db.query(WarehouseInventory).filter(WarehouseInventory.project_id == project_id).all()
+    txns = db.query(MaterialTransaction).filter(MaterialTransaction.project_id == project_id).all()
+
+    received: dict = {}
+    consumed: dict = {}
+    txn_cat: dict = {}
+    txn_unit: dict = {}
+    for t in txns:
+        key = t.material_name
+        txn_cat.setdefault(key, t.category)
+        if t.unit:
+            txn_unit.setdefault(key, t.unit)
+        if t.type in RECEIVED_TYPES:
+            received[key] = received.get(key, 0.0) + float(t.qty)
+        elif t.type in CONSUMED_TYPES:
+            consumed[key] = consumed.get(key, 0.0) + float(t.qty)
+
+    names = set(received) | set(consumed) | {i.material_name for i in invs}
+    rows = []
+    for name in sorted(names):
+        inv = next((i for i in invs if i.material_name == name), None)
+        r = received.get(name, 0.0)
+        c = consumed.get(name, 0.0)
+        cat = (inv.category if inv else None) or txn_cat.get(name) or "Uncategorized"
+        unit = (inv.unit if inv and inv.unit else None) or txn_unit.get(name)
+        rows.append(StockRow(
+            inventory_id=inv.id if inv else None,
+            category=cat,
+            material_name=name,
+            unit=unit,
+            received=round(r, 4),
+            consumed=round(c, 4),
+            current_stock=round(r - c, 4),   # NO CLAMP — over-consumption goes negative
+            reserved=round(float(inv.reserved_qty), 4) if inv else 0.0,
+        ))
+    rows.sort(key=lambda x: (x.category, x.material_name))
+    return rows
+
+
+# 7. Record a manual material movement (receive / issue), syncs inventory
+@router.post("/transactions", response_model=TransactionResponse, status_code=status.HTTP_201_CREATED)
+def create_transaction(req: TransactionCreateRequest, db: Session = Depends(get_db)):
+    if req.type not in RECEIVED_TYPES and req.type not in CONSUMED_TYPES:
+        raise HTTPException(status_code=400, detail=f"Unsupported type '{req.type}'. Use one of {sorted(RECEIVED_TYPES | CONSUMED_TYPES)}")
+    txn = MaterialTransaction(
+        project_id=req.project_id,
+        material_name=req.material_name,
+        category=req.category,
+        qty=req.qty,
+        type=req.type,
+        unit=req.unit,
+        source_ref_id=req.source_ref_id,
+    )
+    db.add(txn)
+    db.flush()
+
+    if req.type in RECEIVED_TYPES:
+        delta = req.qty
+    else:
+        delta = -req.qty
+
+    inv = db.query(WarehouseInventory).filter(
+        WarehouseInventory.project_id == req.project_id,
+        WarehouseInventory.material_name == req.material_name,
+    ).first()
+    if inv:
+        inv.on_hand_qty = float(inv.on_hand_qty) + delta
+        if req.category and req.category != "Uncategorized":
+            inv.category = req.category
+        if req.unit:
+            inv.unit = req.unit
+    else:
+        inv = WarehouseInventory(
+            project_id=req.project_id,
+            material_name=req.material_name,
+            category=req.category,
+            on_hand_qty=delta,
+            reserved_qty=0.0,
+            unit=req.unit or "nos",
+        )
+        db.add(inv)
+        db.flush()
+
+    db.commit()
+    db.refresh(txn)
+    return TransactionResponse(
+        id=txn.id,
+        project_id=txn.project_id,
+        material_name=txn.material_name,
+        category=txn.category,
+        qty=float(txn.qty),
+        type=txn.type,
+        unit=txn.unit,
+        source_ref_id=txn.source_ref_id,
+        created_at=txn.created_at,
+    )
+
+
+# 8. Patch inventory master (set category / unit)
+@router.patch("/inventory/{inventory_id}", response_model=InventoryResponse)
+def patch_inventory(inventory_id: UUID, req: InventoryPatchRequest, db: Session = Depends(get_db)):
+    inv = db.query(WarehouseInventory).filter(WarehouseInventory.id == inventory_id).first()
+    if not inv:
+        raise HTTPException(status_code=404, detail="Inventory not found")
+    if req.category is not None:
+        inv.category = req.category
+    if req.unit is not None:
+        inv.unit = req.unit
+    db.commit()
+    db.refresh(inv)
+    return InventoryResponse(
+        id=inv.id,
+        project_id=inv.project_id,
+        material_name=inv.material_name,
+        category=inv.category,
+        on_hand_qty=float(inv.on_hand_qty),
+        reserved_qty=float(inv.reserved_qty),
+        unit=inv.unit,
+        created_at=inv.created_at,
+    )

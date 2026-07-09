@@ -25,7 +25,8 @@ from pydantic import BaseModel, Field
 from app.database import get_db
 from app.models import (
     StaffEmployee, AttendanceLog, Timesheet,
-    TimesheetEntry, PayrollRun, PayrollLineItem, Project, LeaveRequest
+    TimesheetEntry, PayrollRun, PayrollLineItem, Project, LeaveRequest,
+    Holiday, Designation, LeaveTemplate, PayrollProfile
 )
 
 router = APIRouter(prefix="/hr", tags=["HR, Attendance & Payroll"])
@@ -839,4 +840,303 @@ def upload_payroll(
         "created": created_count,
         "updated": updated_count
     }
+
+
+# ─── Company-scoped HR (Payroll tab) ────────────────────────────────────────
+
+class EmployeeUpdate(BaseModel):
+    designation: Optional[str] = None
+    department: Optional[str] = None
+    mobile: Optional[str] = None
+    basic_salary: Optional[float] = None
+    hra: Optional[float] = None
+    other_allowances: Optional[float] = None
+    tds_monthly: Optional[float] = None
+    status: Optional[str] = None
+    date_of_joining: Optional[datetime] = None
+
+
+@router.get("/company/employees/{company_id}", response_model=List[EmployeeResponse])
+def list_company_employees(company_id: uuid.UUID, db: Session = Depends(get_db)):
+    """Company-wide active employee list (Payroll → People tab)."""
+    return db.query(StaffEmployee).filter(
+        StaffEmployee.company_id == company_id,
+        StaffEmployee.status == "active"
+    ).all()
+
+
+@router.put("/employees/{employee_id}", response_model=EmployeeResponse)
+def update_employee(employee_id: uuid.UUID, payload: EmployeeUpdate, db: Session = Depends(get_db)):
+    emp = db.query(StaffEmployee).filter(StaffEmployee.id == employee_id).first()
+    if not emp:
+        raise HTTPException(status_code=404, detail="Employee not found")
+    for k, v in payload.model_dump(exclude_unset=True).items():
+        setattr(emp, k, v)
+    db.commit()
+    db.refresh(emp)
+    return emp
+
+
+# ─── Designations (company-scoped lookup) ───────────────────────────────────
+
+class DesignationResponse(BaseModel):
+    id: uuid.UUID
+    company_id: uuid.UUID
+    name: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class DesignationCreate(BaseModel):
+    name: str
+
+
+@router.get("/designations/{company_id}", response_model=List[DesignationResponse])
+def list_designations(company_id: uuid.UUID, db: Session = Depends(get_db)):
+    return db.query(Designation).filter(Designation.company_id == company_id).order_by(Designation.name).all()
+
+
+@router.post("/designations/{company_id}", response_model=DesignationResponse, status_code=status.HTTP_201_CREATED)
+def create_designation(company_id: uuid.UUID, payload: DesignationCreate, db: Session = Depends(get_db)):
+    obj = Designation(company_id=company_id, name=payload.name)
+    db.add(obj)
+    db.commit()
+    return obj
+
+
+# ─── Leave Templates (company-scoped policy) ────────────────────────────────
+
+class LeaveTemplateResponse(BaseModel):
+    id: uuid.UUID
+    company_id: uuid.UUID
+    name: str
+    casual_leave_days: float
+    sick_leave_days: float
+    earned_leave_days: float
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class LeaveTemplateCreate(BaseModel):
+    name: str
+    casual_leave_days: float = 0.0
+    sick_leave_days: float = 0.0
+    earned_leave_days: float = 0.0
+
+
+class LeaveTemplateUpdate(BaseModel):
+    name: Optional[str] = None
+    casual_leave_days: Optional[float] = None
+    sick_leave_days: Optional[float] = None
+    earned_leave_days: Optional[float] = None
+
+
+@router.get("/leave-templates/{company_id}", response_model=List[LeaveTemplateResponse])
+def list_leave_templates(company_id: uuid.UUID, db: Session = Depends(get_db)):
+    return db.query(LeaveTemplate).filter(LeaveTemplate.company_id == company_id).order_by(LeaveTemplate.name).all()
+
+
+@router.post("/leave-templates/{company_id}", response_model=LeaveTemplateResponse, status_code=status.HTTP_201_CREATED)
+def create_leave_template(company_id: uuid.UUID, payload: LeaveTemplateCreate, db: Session = Depends(get_db)):
+    obj = LeaveTemplate(company_id=company_id, **payload.model_dump())
+    db.add(obj)
+    db.commit()
+    return obj
+
+
+@router.put("/leave-templates/{leave_template_id}", response_model=LeaveTemplateResponse)
+def update_leave_template(leave_template_id: uuid.UUID, payload: LeaveTemplateUpdate, db: Session = Depends(get_db)):
+    obj = db.query(LeaveTemplate).filter(LeaveTemplate.id == leave_template_id).first()
+    if not obj:
+        raise HTTPException(status_code=404, detail="Leave template not found")
+    for k, v in payload.model_dump(exclude_unset=True).items():
+        setattr(obj, k, v)
+    db.commit()
+    db.refresh(obj)
+    return obj
+
+
+@router.delete("/leave-templates/{leave_template_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_leave_template(leave_template_id: uuid.UUID, db: Session = Depends(get_db)):
+    obj = db.query(LeaveTemplate).filter(LeaveTemplate.id == leave_template_id).first()
+    if not obj:
+        raise HTTPException(status_code=404, detail="Leave template not found")
+    db.delete(obj)
+    db.commit()
+
+
+# ─── Payroll Profiles (per-employee detail + salary breakup) ────────────────
+
+class PayrollProfileResponse(BaseModel):
+    id: uuid.UUID
+    employee_id: uuid.UUID
+    company_id: uuid.UUID
+    salary_amount: float
+    shift_start: Optional[str] = None
+    shift_end: Optional[str] = None
+    shift_hours: float
+    overtime_rate: float
+    cost_code: Optional[str] = None
+    leave_template_id: Optional[uuid.UUID] = None
+    salary_breakup: Optional[str] = None
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class PayrollProfileUpdate(BaseModel):
+    salary_amount: Optional[float] = None
+    shift_start: Optional[str] = None
+    shift_end: Optional[str] = None
+    shift_hours: Optional[float] = None
+    overtime_rate: Optional[float] = None
+    cost_code: Optional[str] = None
+    leave_template_id: Optional[uuid.UUID] = None
+    salary_breakup: Optional[str] = None
+
+
+def _to_decimal(val):
+    return Decimal(str(val)) if val is not None else None
+
+
+@router.get("/payroll-profiles/{employee_id}", response_model=PayrollProfileResponse)
+def get_payroll_profile(employee_id: uuid.UUID, db: Session = Depends(get_db)):
+    prof = db.query(PayrollProfile).filter(PayrollProfile.employee_id == employee_id).first()
+    if not prof:
+        raise HTTPException(status_code=404, detail="Payroll profile not found")
+    return prof
+
+
+@router.put("/payroll-profiles/{employee_id}", response_model=PayrollProfileResponse)
+def upsert_payroll_profile(employee_id: uuid.UUID, payload: PayrollProfileUpdate, db: Session = Depends(get_db)):
+    emp = db.query(StaffEmployee).filter(StaffEmployee.id == employee_id).first()
+    if not emp:
+        raise HTTPException(status_code=404, detail="Employee not found")
+    prof = db.query(PayrollProfile).filter(PayrollProfile.employee_id == employee_id).first()
+    data = payload.model_dump(exclude_unset=True)
+    if not prof:
+        prof = PayrollProfile(
+            employee_id=employee_id,
+            company_id=emp.company_id,
+            salary_amount=Decimal("0.0"),
+            shift_hours=Decimal("8.0"),
+            overtime_rate=Decimal("0.0"),
+        )
+        db.add(prof)
+        db.flush()
+    for k, v in data.items():
+        if v is None:
+            continue
+        if k in ("salary_amount", "shift_hours", "overtime_rate"):
+            setattr(prof, k, _to_decimal(v))
+        else:
+            setattr(prof, k, v)
+    db.commit()
+    return prof
+
+
+# ─── Holidays (company-scoped calendar) ─────────────────────────────────────
+
+class HolidayResponse(BaseModel):
+    id: uuid.UUID
+    company_id: uuid.UUID
+    name: str
+    date: datetime
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class HolidayCreate(BaseModel):
+    name: str
+    date: datetime
+
+
+class HolidayUpdate(BaseModel):
+    name: Optional[str] = None
+    date: Optional[datetime] = None
+
+
+@router.get("/holidays/{company_id}", response_model=List[HolidayResponse])
+def list_holidays(company_id: uuid.UUID, db: Session = Depends(get_db)):
+    return db.query(Holiday).filter(Holiday.company_id == company_id).order_by(Holiday.date).all()
+
+
+@router.post("/holidays/{company_id}", response_model=HolidayResponse, status_code=status.HTTP_201_CREATED)
+def create_holiday(company_id: uuid.UUID, payload: HolidayCreate, db: Session = Depends(get_db)):
+    obj = Holiday(company_id=company_id, name=payload.name, date=payload.date)
+    db.add(obj)
+    db.commit()
+    return obj
+
+
+@router.put("/holidays/{holiday_id}", response_model=HolidayResponse)
+def update_holiday(holiday_id: uuid.UUID, payload: HolidayUpdate, db: Session = Depends(get_db)):
+    obj = db.query(Holiday).filter(Holiday.id == holiday_id).first()
+    if not obj:
+        raise HTTPException(status_code=404, detail="Holiday not found")
+    for k, v in payload.model_dump(exclude_unset=True).items():
+        setattr(obj, k, v)
+    db.commit()
+    db.refresh(obj)
+    return obj
+
+
+@router.delete("/holidays/{holiday_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_holiday(holiday_id: uuid.UUID, db: Session = Depends(get_db)):
+    obj = db.query(Holiday).filter(Holiday.id == holiday_id).first()
+    if not obj:
+        raise HTTPException(status_code=404, detail="Holiday not found")
+    db.delete(obj)
+    db.commit()
+
+
+# ─── Company-wide attendance ─────────────────────────────────────────────────
+
+class CompanyAttendanceResponse(BaseModel):
+    employee_id: uuid.UUID
+    employee_name: str
+    attendance_date: datetime
+    punch_in: Optional[datetime]
+    punch_out: Optional[datetime]
+    status: str
+    hours_worked: Optional[float]
+    overtime_hours: float
+    is_within_geofence: bool
+
+    class Config:
+        from_attributes = True
+
+
+@router.get("/attendance/company/{company_id}/{date_str}", response_model=List[CompanyAttendanceResponse])
+def company_attendance(company_id: uuid.UUID, date_str: str, db: Session = Depends(get_db)):
+    """Company-wide attendance rollup for a single day (Payroll → Attendance tab)."""
+    try:
+        target = datetime.strptime(date_str, "%Y-%m-%d")
+    except ValueError:
+        raise HTTPException(status_code=400, detail="date_str must be YYYY-MM-DD")
+    next_day = target + timedelta(days=1)
+    results = (
+        db.query(AttendanceLog, StaffEmployee.name.label("employee_name"))
+        .join(StaffEmployee, AttendanceLog.employee_id == StaffEmployee.id)
+        .filter(
+            StaffEmployee.company_id == company_id,
+            AttendanceLog.attendance_date >= target,
+            AttendanceLog.attendance_date < next_day,
+        )
+        .order_by(StaffEmployee.name)
+        .all()
+    )
+    response = []
+    for log, emp_name in results:
+        res = CompanyAttendanceResponse.model_validate(log)
+        res.employee_name = emp_name
+        response.append(res)
+    return response
 

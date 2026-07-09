@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.auth import create_access_token
+from app.auth import create_access_token, get_current_active_company_user
 from app import models
 import uuid
 
@@ -160,4 +160,25 @@ def resolve_company(slug: str, db: Session = Depends(get_db)):
         "id": str(company.id),
         "name": company.name,
         "slug": company.slug
+    }
+
+
+@router.get("/me")
+def get_me(ctx: dict = Depends(get_current_active_company_user), db: Session = Depends(get_db)):
+    """Return the current authenticated user's company role context."""
+    user = ctx["user"]
+    company_id = ctx["company_id"]
+    role_id = ctx.get("role_id")
+    priority_type = ctx.get("priority_type")
+    role_name = None
+    if role_id:
+        role = db.query(models.CompanyRole).filter(models.CompanyRole.id == role_id).first()
+        role_name = role.role_name if role else None
+    return {
+        "user_id": str(user.id),
+        "name": user.name,
+        "company_id": str(company_id),
+        "role_id": str(role_id) if role_id else None,
+        "role": role_name,
+        "priority_type": priority_type,
     }

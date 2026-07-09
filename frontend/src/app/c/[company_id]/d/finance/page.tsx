@@ -169,6 +169,12 @@ export default function FinancePage() {
   const [addCharges, setAddCharges] = useState(0);
   const [roundOff, setRoundOff] = useState(false);
   const [billToShipTo, setBillToShipTo] = useState("Pune Site Office Address");
+  const [showBillShipModal, setShowBillShipModal] = useState(false);
+  const [billShip, setBillShip] = useState({ billFrom: "", billTo: "", shipFrom: "", shipTo: "" });
+  const [sameAsBillFrom, setSameAsBillFrom] = useState(false);
+  const [sameAsBillTo, setSameAsBillTo] = useState(false);
+  const [csvPreview, setCsvPreview] = useState<any[] | null>(null);
+  const [csvFile, setCsvFile] = useState<File | null>(null);
 
   // Transfer & Sub-form state variables
   const [transferType, setTransferType] = useState<"Bank To Bank" | "Cash Deposit" | "Cash Withdraw">("Bank To Bank");
@@ -192,12 +198,53 @@ export default function FinancePage() {
 
   // Bank Accounts & Payment Requests states
   const [bankAccounts, setBankAccounts] = useState<any[]>([]);
+  const [cashAccount, setCashAccount] = useState<any>(null);
+  const [cashRunning, setCashRunning] = useState(0);
   const [paymentRequests, setPaymentRequests] = useState<any[]>([]);
   const [showAddBankModal, setShowAddBankModal] = useState(false);
   const [newBank, setNewBank] = useState({ name: "", holder: "", number: "", ifsc: "", upi: "", balance: "" });
+  const [showAddCashModal, setShowAddCashModal] = useState(false);
+  const [newCash, setNewCash] = useState({ name: "Cash Account", opening: "" });
   const [showAddRequestModal, setShowAddRequestModal] = useState(false);
-  const [newRequest, setNewRequest] = useState({ partyId: "", amount: "", details: "", dueDate: "" });
+  const [newRequest, setNewRequest] = useState({ partyId: "", amount: "", details: "", dueDate: "", requestType: "", extra: "" });
+  const [prStep, setPrStep] = useState<"type" | "form">("type");
+  const [prType, setPrType] = useState<any>(null);
+  const [selectedPR, setSelectedPR] = useState<any>(null);
+  const [showRecordPaymentModal, setShowRecordPaymentModal] = useState(false);
+  const [prPayment, setPrPayment] = useState({ date: "", mode: "Cash", paidAmount: "", deduction: "0", tds: "0", remarks: "", referenceNo: "", attachmentName: "" });
   const [usersList, setUsersList] = useState<any[]>([]);
+
+  const PR_TYPES = [
+    { key: "Advance against PO", icon: "📄", label: "Advance against PO", extraLabel: "PO Reference", extraPlaceholder: "PO-204" },
+    { key: "Advance against Subcon Work Order", icon: "📑", label: "Advance against Subcon Work Order", extraLabel: "Work Order Ref", extraPlaceholder: "WO-1001" },
+    { key: "Advance against BOQ", icon: "📐", label: "Advance against BOQ", extraLabel: "BOQ Document Ref", extraPlaceholder: "BOQ-..." },
+    { key: "Advance against Material Purchase", icon: "📦", label: "Advance against Material Purchase", extraLabel: "Material Purchase Ref", extraPlaceholder: "MP-..." },
+    { key: "Advance against Subcon Expense", icon: "🧱", label: "Advance against Subcon Expense", extraLabel: "Subcon Expense Ref", extraPlaceholder: "SE-..." },
+    { key: "Advance against Other Expense", icon: "🧾", label: "Advance against Other Expense", extraLabel: "Other Expense Ref", extraPlaceholder: "OE-..." },
+    { key: "Advance for Labour", icon: "👷", label: "Advance for Labour", extraLabel: "Labour Ref", extraPlaceholder: "Labour / Workforce" },
+    { key: "Petty Cash", icon: "💵", label: "Petty Cash", extraLabel: "", extraPlaceholder: "" },
+    { key: "Other", icon: "📝", label: "Other", extraLabel: "", extraPlaceholder: "" },
+  ];
+
+  // Company-level Party sub-tab states
+  const [companyParties, setCompanyParties] = useState<any[]>([]);
+  const [showAddPartyModal, setShowAddPartyModal] = useState(false);
+  const [partyTabStatus, setPartyTabStatus] = useState("Active");
+  const [newParty, setNewParty] = useState({
+    name: "", phone: "", email: "", party_type: "Supplier", address: "",
+    party_id_custom: "", date_of_joining: "", aadhaar_number: "", pan_number: "",
+    contractor_role: "", bank_account_id: "", opening_balance: "", opening_balance_type: "pay",
+    create_wo: false, wo_title: "", wo_terms: "",
+  });
+  const [serviceTags, setServiceTags] = useState<string[]>([]);
+  const [serviceTagInput, setServiceTagInput] = useState("");
+
+  // Company-level Transaction sub-tab states
+  const [txnSummary, setTxnSummary] = useState<any>({
+    total_invoice: 0, unpaid_invoice: 0, total_expense: 0, unpaid_expense: 0,
+    company_balance: 0, cash_balance: 0, in_total: 0, out_total: 0, transactions: [],
+  });
+  const [txnDateFilter, setTxnDateFilter] = useState("");
 
   // Tally Sync States
   const [syncing, setSyncing] = useState(false);
@@ -213,14 +260,8 @@ export default function FinancePage() {
   // Search & Filters
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Party Master-Detail & Side-drawer States
-  const [selectedParty, setSelectedParty] = useState<string>("Yash Desai");
-  const [showOpeningBalanceDrawer, setShowOpeningBalanceDrawer] = useState(false);
-  const [openingBalanceType, setOpeningBalanceType] = useState<"pay" | "receive">("pay");
-  const [openingBalances, setOpeningBalances] = useState<Record<string, number>>({ "Yash Desai": 8000 });
-  const [tempAmt, setTempAmt] = useState("8000");
+  // Party sub-tab states
   const [partySearchQuery, setPartySearchQuery] = useState("");
-  const [partyFilter, setPartyFilter] = useState("Active");
 
   const fetchData = async () => {
     try {
@@ -240,10 +281,27 @@ export default function FinancePage() {
       if (bankRes.ok) {
         setBankAccounts(await bankRes.json());
       }
+      // Fetch Cash Account (running balance)
+      const cashRes = await fetch(`${getApiHost()}/apis/v3/finance/cash-account/${companyId}`);
+      if (cashRes.ok) {
+        const ca = await cashRes.json();
+        setCashAccount(ca);
+        setCashRunning(ca ? ca.running_balance : 0);
+      }
       // Fetch Payment Requests
       const reqRes = await fetch(`${getApiHost()}/apis/v3/finance/payment-requests/${companyId}`);
       if (reqRes.ok) {
         setPaymentRequests(await reqRes.json());
+      }
+      // Fetch Company-level Parties (Finance tab: Party sub-tab)
+      const partyRes = await fetch(`${getApiHost()}/apis/v3/finance/parties/${companyId}`);
+      if (partyRes.ok) {
+        setCompanyParties(await partyRes.json());
+      }
+      // Fetch Company-level Transactions & Summary (Finance tab: Transaction sub-tab)
+      const txnRes = await fetch(`${getApiHost()}/apis/v3/finance/transactions/${companyId}`);
+      if (txnRes.ok) {
+        setTxnSummary(await txnRes.json());
       }
       // Fetch Employees for party dropdown
       const empRes = await fetch(`${getApiHost()}/apis/v3/hr/employees/${projectId}`);
@@ -271,10 +329,7 @@ export default function FinancePage() {
     }
   }, [projectId, companyId]);
 
-  const handleUploadCSV = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    
+  const handleUploadCSV = async (file: File) => {
     setSubmitting(true);
     const formData = new FormData();
     formData.append("company_id", companyId);
@@ -290,6 +345,8 @@ export default function FinancePage() {
         const data = await res.json();
         alert(`Payments imported successfully! Created ${data.created} transactions.`);
         setShowAddModal(false);
+        setCsvPreview(null);
+        setCsvFile(null);
         if (typeof window !== "undefined") {
           window.location.reload();
         }
@@ -302,6 +359,27 @@ export default function FinancePage() {
       alert("Error importing CSV file");
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleCsvSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setCsvFile(file);
+    try {
+      const text = await file.text();
+      const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length);
+      if (lines.length < 2) { setCsvPreview([]); return; }
+      const headers = lines[0].split(",").map(h => h.replace(/^"|"$/g, "").trim());
+      const rows = lines.slice(1).map(line => {
+        const cells = line.split(",").map(c => c.replace(/^"|"$/g, "").trim());
+        const obj: any = {};
+        headers.forEach((h, i) => { obj[h] = cells[i] || ""; });
+        return obj;
+      });
+      setCsvPreview(rows);
+    } catch (err) {
+      alert("Could not parse CSV file");
     }
   };
 
@@ -495,6 +573,29 @@ export default function FinancePage() {
     }
   };
 
+  const handleCreateCashAccount = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/finance/cash-account/${companyId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: newCash.name || "Cash Account",
+          opening_balance: parseFloat(newCash.opening) || 0.0,
+        }),
+      });
+      if (res.ok) {
+        const ca = await res.json();
+        setCashAccount(ca);
+        setCashRunning(ca.running_balance);
+        setNewCash({ name: "Cash Account", opening: "" });
+        setShowAddCashModal(false);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const handleCreatePaymentRequest = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -505,14 +606,17 @@ export default function FinancePage() {
           party_company_user_id: newRequest.partyId,
           project_id: projectId || null,
           amount: parseFloat(newRequest.amount),
-          details: newRequest.details,
+          details: newRequest.extra ? `${newRequest.extra} — ${newRequest.details}` : newRequest.details,
           due_date: newRequest.dueDate ? new Date(newRequest.dueDate).toISOString() : null,
+          request_type: newRequest.requestType,
         }),
       });
       if (res.ok) {
         const added = await res.json();
         setPaymentRequests([...paymentRequests, added]);
-        setNewRequest({ partyId: "", amount: "", details: "", dueDate: "" });
+        setNewRequest({ partyId: "", amount: "", details: "", dueDate: "", requestType: "", extra: "" });
+        setPrStep("type");
+        setPrType(null);
         setShowAddRequestModal(false);
       }
     } catch (err) {
@@ -629,19 +733,80 @@ export default function FinancePage() {
   const grossProfit = totalRevenue - totalCost;
   const margin = totalRevenue > 0 ? ((grossProfit / totalRevenue) * 100).toFixed(1) : "58.5";
 
+  const handleCreateParty = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newParty.name.trim()) {
+      alert("Party name is required");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const payload: any = {
+        company_id: companyId,
+        name: newParty.name,
+        phone: newParty.phone || null,
+        email: newParty.email || null,
+        party_type: newParty.party_type || null,
+        address: newParty.address || null,
+        party_id_custom: newParty.party_id_custom || null,
+        date_of_joining: newParty.date_of_joining || null,
+        aadhaar_number: newParty.aadhaar_number || null,
+        pan_number: newParty.pan_number || null,
+        contractor_role: newParty.party_type === "Contractor" || newParty.party_type === "Subcontractor" ? newParty.contractor_role : null,
+        service_rate_categories: serviceTags.length ? JSON.stringify(serviceTags) : null,
+        bank_account_id: newParty.bank_account_id || null,
+        opening_balance: parseFloat(newParty.opening_balance) || 0,
+        opening_balance_type: newParty.opening_balance ? newParty.opening_balance_type : null,
+      };
+      const res = await fetch(`${getApiHost()}/apis/v3/library/parties`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.detail || "Failed to create party");
+      }
+      const created = await res.json();
+      // Spin party directly into a Sub-Con Work Order if requested (requires an active project context)
+      if (newParty.create_wo && newParty.wo_title.trim() && activeProjectId) {
+        await fetch(`${getApiHost()}/apis/v3/billing/work-orders`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            company_id: companyId,
+            project_id: activeProjectId,
+            subcontractor_id: created.id,
+            wo_number: `WO-${Date.now().toString().slice(-6)}`,
+            wo_date: new Date().toISOString(),
+            items: [],
+            terms: newParty.wo_terms,
+          }),
+        }).catch(() => null);
+      }
+      // Refresh party list
+      const pr = await fetch(`${getApiHost()}/apis/v3/finance/parties/${companyId}`);
+      if (pr.ok) setCompanyParties(await pr.json());
+      setShowAddPartyModal(false);
+      setNewParty({ name: "", phone: "", email: "", party_type: "Supplier", address: "", party_id_custom: "", date_of_joining: "", aadhaar_number: "", pan_number: "", contractor_role: "", bank_account_id: "", opening_balance: "", opening_balance_type: "pay", create_wo: false, wo_title: "", wo_terms: "" });
+      setServiceTags([]);
+      alert("Party created successfully" + (newParty.create_wo ? " with Work Order" : ""));
+    } catch (err: any) {
+      alert(err?.message || "Error creating party");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* ── Finance sub-navigation (top tabs) ── */}
       <div className="flex items-center gap-1 px-6 py-2 border-b border-border-custom bg-card shrink-0 overflow-x-auto">
         {[
-          { key: "ledger", label: "Dashboard", icon: "📒" },
           { key: "party", label: "Party", icon: "👥" },
+          { key: "ledger", label: "Transaction", icon: "📒" },
           { key: "payment_requests", label: "Payment Requests", icon: "✉️" },
           { key: "accounts", label: "Accounts", icon: "🏦" },
-          { key: "cashbook", label: "Cash Book", icon: "📖" },
-          { key: "pl", label: "P&L", icon: "📊" },
-          { key: "tally", label: "Tally Sync", icon: "🔗" },
-          { key: "costvar", label: "Cost Variance", icon: "⚠️" },
         ].map(item => (
           <button key={item.key} onClick={() => setTab(item.key as any)}
             className={`whitespace-nowrap px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${tab === item.key ? "bg-primary/10 text-primary" : "text-muted hover:text-foreground hover:bg-elevated"}`}>
@@ -724,414 +889,476 @@ export default function FinancePage() {
 
         <div className="flex-1 overflow-y-auto p-6 space-y-5">
           {/* ── TRANSACTION LEDGER TAB ── */}
-          {tab === "ledger" && (
+          {/* ── TRANSACTION SUB-TAB (COMPANY-WIDE) ── */}
+          {tab === "ledger" && (() => {
+            const txns = txnSummary.transactions || [];
+            const filtered = txns.filter((t: any) => {
+              const q = searchQuery.toLowerCase();
+              const matchQ = !q || (t.party || "").toLowerCase().includes(q) || (t.details || "").toLowerCase().includes(q) || (t.ref || "").toLowerCase().includes(q);
+              const matchD = !txnDateFilter || (t.date || "").startsWith(txnDateFilter);
+              return matchQ && matchD;
+            });
+            const unbilledCount = txns.filter((t: any) => /material/i.test(t.type || "") && t.status && t.status !== "Paid").length;
+            const pendingCount = txns.filter((t: any) => t.status && t.status !== "Paid" && t.status !== "Approved").length;
+            const statusClass = (s: string) => {
+              if (s === "Paid" || s === "Approved") return "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
+              if (s === "Partially Paid") return "bg-amber-500/10 text-amber-400 border border-amber-500/20";
+              return "bg-rose-500/10 text-rose-400 border border-rose-500/20";
+            };
+            return (
             <div className="space-y-4">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {[
-                  { label: "Total Credits (Inflow)", value: `₹${receiptsSum.toLocaleString("en-IN")}`, color: "text-emerald-400" },
-                  { label: "Total Debits (Outflow)", value: `₹${expensesSum.toLocaleString("en-IN")}`, color: "text-red-400" },
-                  { label: "Net Ledger Balance", value: (netCashFlow >= 0 ? "+" : "") + `₹${netCashFlow.toLocaleString("en-IN")}`, color: netCashFlow >= 0 ? "text-primary" : "text-red-400" },
-                  { label: "Pending Approvals", value: transactions.filter(t => t.status === "Pending").length, color: "text-amber-400" },
-                ].map((s, i) => (
-                  <div key={i} className="bg-card border border-border-custom rounded-lg rounded-md p-4 border border-border-custom bg-input">
-                    <div className="text-[9px] text-muted uppercase tracking-wider">{s.label}</div>
-                    <div className={`text-lg font-black mt-1 ${s.color}`}>{s.value}</div>
+              {/* Three Summary Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-card border border-border-custom rounded-lg p-4">
+                  <div className="text-[10px] font-bold text-muted uppercase tracking-wider">Total Invoice</div>
+                  <div className="text-xl font-extrabold text-foreground mt-1">₹{(txnSummary.total_invoice || 0).toLocaleString("en-IN")}</div>
+                  <div className="text-[10px] text-rose-400 mt-1">Unpaid Invoice: ₹{(txnSummary.unpaid_invoice || 0).toLocaleString("en-IN")}</div>
+                </div>
+                <div className="bg-card border border-border-custom rounded-lg p-4">
+                  <div className="text-[10px] font-bold text-muted uppercase tracking-wider">Total Expense</div>
+                  <div className="text-xl font-extrabold text-foreground mt-1">₹{(txnSummary.total_expense || 0).toLocaleString("en-IN")}</div>
+                  <div className="text-[10px] text-rose-400 mt-1">Unpaid Expense: ₹{(txnSummary.unpaid_expense || 0).toLocaleString("en-IN")}</div>
+                </div>
+                <div className="bg-card border border-border-custom rounded-lg p-4">
+                  <div className="text-[10px] font-bold text-muted uppercase tracking-wider flex items-center gap-1">
+                    Company Balance <span title="Sum of Cash + all Bank Account balances" className="cursor-help">ⓘ</span>
                   </div>
-                ))}
-              </div>
-
-              {/* Filters */}
-              <div className="flex items-center gap-3 bg-input border border-border-custom rounded-md px-4 py-2.5">
-                <input type="text" placeholder="Search party, voucher#, cost code..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
-                  className="flex-1 bg-elevated border border-border-custom rounded-lg px-3 py-1.5 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-primary" />
-              </div>
-
-              {/* Main Ledger Table */}
-              <div className="bg-card border border-border-custom rounded-lg rounded-lg border border-border-custom bg-input overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-xs text-left">
-                    <thead>
-                      <tr className="border-b border-border-custom text-muted font-bold uppercase tracking-wider text-[9px]">
-                        <th className="px-5 py-3">Date</th>
-                        <th className="px-5 py-3">Voucher#</th>
-                        <th className="px-5 py-3">Type</th>
-                        <th className="px-5 py-3">Party Name</th>
-                        <th className="px-5 py-3">Description</th>
-                        <th className="px-5 py-3">Status</th>
-                        <th className="px-5 py-3 text-right">Amount</th>
-                        <th className="px-5 py-3 text-right">Ledger Balance</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-white/[0.03]">
-                      {ledgerWithRunningBalance
-                        .filter(t => !searchQuery || t.party.toLowerCase().includes(searchQuery.toLowerCase()) || t.ref.toLowerCase().includes(searchQuery.toLowerCase()) || t.description.toLowerCase().includes(searchQuery.toLowerCase()))
-                        .map((t, i) => {
-                          const isCredit = t.type === "Receipt" || t.type === "Credit Note";
-                          return (
-                            <tr key={i} onClick={() => setSelectedVoucher(t)} className="hover:bg-white/[0.015] transition-all cursor-pointer">
-                              <td className="px-5 py-3 text-muted font-mono">{t.date}</td>
-                              <td className="px-5 py-3 text-white font-bold">{t.ref}</td>
-                              <td className="px-5 py-3 text-muted">
-                                <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded border ${isCredit ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" : "bg-red-500/10 border-red-500/20 text-red-400"}`}>{t.type}</span>
-                              </td>
-                              <td className="px-5 py-3 text-zinc-300 font-medium">{t.party}</td>
-                              <td className="px-5 py-3 text-muted line-clamp-1 max-w-[150px]">{t.description}</td>
-                              <td className="px-5 py-3">
-                                <span className={`px-2 py-0.5 rounded text-[8px] font-bold border ${t.status === "Approved" ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" : "bg-amber-500/10 border-amber-500/20 text-amber-400"}`}>
-                                  {t.status === "Approved" ? "✓ APPROVED" : "🕒 PENDING"}
-                                </span>
-                              </td>
-                              <td className={`px-5 py-3 text-right font-extrabold font-sans ${isCredit ? "text-emerald-400" : "text-red-400"}`}>
-                                {isCredit ? "+" : "-"}₹{t.amount.toLocaleString("en-IN")}
-                              </td>
-                              <td className="px-5 py-3 text-right font-sans text-muted">
-                                ₹{t.running_balance.toLocaleString("en-IN")}
-                              </td>
-                            </tr>
-                          );
-                        })}
-                    </tbody>
-                  </table>
+                  <div className="text-xl font-extrabold text-foreground mt-1">₹{(txnSummary.company_balance || 0).toLocaleString("en-IN")}</div>
+                  <div className="text-[10px] text-muted mt-1">In: ₹{(txnSummary.in_total || 0).toLocaleString("en-IN")} | Out: ₹{(txnSummary.out_total || 0).toLocaleString("en-IN")}</div>
                 </div>
               </div>
-            </div>
-          )}
 
-          {/* ── PARTY LEDGERS TAB (MASTER-DETAIL SPLIT LAYOUT) ── */}
-          {tab === "party" && (
+              {/* Toolbar */}
+              <div className="flex flex-wrap items-center gap-2">
+                <button className="py-1 px-3 border border-border-custom hover:bg-elevated rounded text-[11px] font-medium text-foreground transition-all">⏳ Filter</button>
+                <input type="date" value={txnDateFilter} onChange={(e) => setTxnDateFilter(e.target.value)} className="py-1 px-2 border border-border-custom bg-card hover:bg-elevated rounded text-[11px] text-foreground focus:outline-none" />
+                <button className="py-1 px-3 border border-border-custom hover:bg-elevated rounded text-[11px] font-medium text-foreground transition-all flex items-center gap-1">
+                  🛒 Unbilled Materials <span className="bg-primary/20 text-primary text-[9px] font-bold px-1.5 py-0.5 rounded-full">New {unbilledCount}</span>
+                </button>
+                <button className="py-1 px-3 border border-border-custom hover:bg-elevated rounded text-[11px] font-medium text-foreground transition-all flex items-center gap-1">
+                  🕒 Pending Entries <span className="bg-amber-500/20 text-amber-400 text-[9px] font-bold px-1.5 py-0.5 rounded-full">{pendingCount}</span>
+                </button>
+                <div className="flex-1" />
+                <input type="text" placeholder="Search party, voucher#..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="bg-input border border-border-custom rounded-md px-3 py-1.5 text-xs text-foreground placeholder-muted focus:outline-none focus:border-primary" />
+              </div>
+
+              {/* Table: Party | Details | Status */}
+              <div className="bg-card border border-border-custom rounded-lg overflow-hidden">
+                <table className="w-full text-xs text-left">
+                  <thead className="bg-input/60 text-muted uppercase text-[10px] tracking-wider">
+                    <tr>
+                      <th className="p-3 font-semibold">Party</th>
+                      <th className="p-3 font-semibold">Details</th>
+                      <th className="p-3 font-semibold text-right">Amount (₹)</th>
+                      <th className="p-3 font-semibold">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border-custom/40">
+                    {filtered.length === 0 && (
+                      <tr><td colSpan={4} className="p-6 text-center text-muted">No Data Transaction</td></tr>
+                    )}
+                    {filtered.map((t: any, i: number) => (
+                      <tr key={i} className="hover:bg-elevated/40 transition-all cursor-pointer" onClick={() => setSelectedVoucher(t)}>
+                        <td className="p-3">
+                          <div className="font-bold text-foreground">{t.party}</div>
+                          <div className="text-[10px] text-muted">{t.type}</div>
+                        </td>
+                        <td className="p-3 text-foreground">
+                          {t.details}
+                          {t.project_id ? <span className="text-[10px] text-muted block">Project: {String(t.project_id).slice(0, 8)}</span> : null}
+                        </td>
+                        <td className="p-3 text-right font-bold text-foreground">₹{(t.amount || 0).toLocaleString("en-IN")}</td>
+                        <td className="p-3">
+                          <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider ${statusClass(t.status)}`}>{t.status}</span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            );
+          })()}
+
+          {/* ── PARTY SUB-TAB (COMPANY-WIDE) ── */}
+          {tab === "party" && (() => {
+            const partySums = companyParties.reduce(
+              (acc, p) => {
+                acc.advance_paid += p.advance_paid || 0;
+                acc.to_pay += p.to_pay || 0;
+                acc.to_receive += p.to_receive || 0;
+                acc.advance_received += p.advance_received || 0;
+                return acc;
+              },
+              { advance_paid: 0, to_pay: 0, to_receive: 0, advance_received: 0 }
+            );
+            const statusChip = (status: string) => {
+              if (status === "Advance Paid" || status === "Advance Received")
+                return "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
+              if (status === "To Pay" || status === "To Receive")
+                return "bg-rose-500/10 text-rose-400 border border-rose-500/20";
+              return "bg-zinc-500/10 text-muted border border-zinc-500/20";
+            };
+            const filteredParties = companyParties.filter(p => {
+              const q = partySearchQuery.toLowerCase();
+              const matchQ = !q || p.name.toLowerCase().includes(q) || (p.party_id_custom || "").toLowerCase().includes(q);
+              const matchS = partyTabStatus === "All" || (partyTabStatus === "Active" ? p.status !== "Settled" : p.status === "Settled");
+              return matchQ && matchS;
+            });
+            const exportCsv = () => {
+              const rows = [["Party ID", "Name", "Type", "Balance", "Status"]];
+              filteredParties.forEach(p => rows.push([p.party_id_custom || "", p.name, p.party_type || "", String(p.balance), p.status]));
+              const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
+              const blob = new Blob([csv], { type: "text/csv" });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = "parties.csv";
+              a.click();
+              URL.revokeObjectURL(url);
+            };
+            return (
             <div className="space-y-6 relative h-full flex flex-col">
               {/* Four Cards Metrics Summary Grid */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                {/* Advance Paid */}
                 <div className="bg-card border border-border-custom rounded-lg p-4 flex items-center justify-between shadow-sm relative overflow-hidden">
                   <div className="space-y-1 z-10">
                     <span className="text-[10px] font-bold text-emerald-400/80 uppercase tracking-wider block">Advance Paid</span>
-                    <strong className="text-xl font-extrabold text-foreground tracking-tight block">
-                      ₹{Object.values(openingBalances).reduce((s, v) => s + v, 0).toLocaleString("en-IN")}
-                    </strong>
+                    <strong className="text-xl font-extrabold text-foreground tracking-tight block">₹{partySums.advance_paid.toLocaleString("en-IN")}</strong>
                   </div>
-                  <div className="h-9 w-9 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-400 z-10">
-                    ↗
-                  </div>
+                  <div className="h-9 w-9 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-400 z-10">↗</div>
                 </div>
-
-                {/* To Pay */}
                 <div className="bg-card border border-border-custom rounded-lg p-4 flex items-center justify-between shadow-sm relative overflow-hidden">
                   <div className="space-y-1 z-10">
                     <span className="text-[10px] font-bold text-red-400/80 uppercase tracking-wider block">To Pay</span>
-                    <strong className="text-xl font-extrabold text-foreground tracking-tight block">
-                      ₹{(openingBalanceType === "receive" ? Object.values(openingBalances).reduce((s, v) => s + v, 0) : 0).toLocaleString("en-IN")}
-                    </strong>
+                    <strong className="text-xl font-extrabold text-foreground tracking-tight block">₹{partySums.to_pay.toLocaleString("en-IN")}</strong>
                   </div>
-                  <div className="h-9 w-9 rounded-full bg-red-500/10 flex items-center justify-center text-red-400 z-10">
-                    ↑
-                  </div>
+                  <div className="h-9 w-9 rounded-full bg-red-500/10 flex items-center justify-center text-red-400 z-10">↑</div>
                 </div>
-
-                {/* To Receive */}
                 <div className="bg-card border border-border-custom rounded-lg p-4 flex items-center justify-between shadow-sm relative overflow-hidden">
                   <div className="space-y-1 z-10">
                     <span className="text-[10px] font-bold text-red-400/80 uppercase tracking-wider block">To Receive</span>
-                    <strong className="text-xl font-extrabold text-foreground tracking-tight block">₹0</strong>
+                    <strong className="text-xl font-extrabold text-foreground tracking-tight block">₹{partySums.to_receive.toLocaleString("en-IN")}</strong>
                   </div>
-                  <div className="h-9 w-9 rounded-full bg-red-500/10 flex items-center justify-center text-red-400 z-10">
-                    ↓
-                  </div>
+                  <div className="h-9 w-9 rounded-full bg-red-500/10 flex items-center justify-center text-red-400 z-10">↓</div>
                 </div>
-
-                {/* Advance Received */}
                 <div className="bg-card border border-border-custom rounded-lg p-4 flex items-center justify-between shadow-sm relative overflow-hidden">
                   <div className="space-y-1 z-10">
                     <span className="text-[10px] font-bold text-emerald-400/80 uppercase tracking-wider block">Advance Received</span>
-                    <strong className="text-xl font-extrabold text-foreground tracking-tight block">₹0</strong>
+                    <strong className="text-xl font-extrabold text-foreground tracking-tight block">₹{partySums.advance_received.toLocaleString("en-IN")}</strong>
                   </div>
-                  <div className="h-9 w-9 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-400 z-10">
-                    ↙
-                  </div>
+                  <div className="h-9 w-9 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-400 z-10">↙</div>
                 </div>
               </div>
 
-              {/* Master-Detail Split Screen Container */}
-              <div className="flex flex-1 gap-6 min-h-[500px]">
-                {/* Master Panel: Left Party List (1/3 Width) */}
-                <div className="w-full lg:w-1/3 bg-card border border-border-custom rounded-lg flex flex-col overflow-hidden">
-                  {/* Search and Filters Header */}
-                  <div className="p-4 border-b border-border-custom space-y-3">
-                    <div className="relative">
-                      <input
-                        type="text"
-                        placeholder="Search parties..."
-                        value={partySearchQuery}
-                        onChange={(e) => setPartySearchQuery(e.target.value)}
-                        className="w-full bg-input border border-border-custom rounded-md py-1.5 pl-8 pr-3 text-xs text-foreground placeholder-muted focus:outline-none focus:border-primary transition-all"
-                      />
-                      <span className="absolute left-2.5 top-2 text-muted text-xs">🔍</span>
-                    </div>
+              {/* Toolbar */}
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="relative flex-1 min-w-[200px]">
+                  <input
+                    type="text"
+                    placeholder="Search parties..."
+                    value={partySearchQuery}
+                    onChange={(e) => setPartySearchQuery(e.target.value)}
+                    className="w-full bg-input border border-border-custom rounded-md py-1.5 pl-8 pr-3 text-xs text-foreground placeholder-muted focus:outline-none focus:border-primary transition-all"
+                  />
+                  <span className="absolute left-2.5 top-2 text-muted text-xs">🔍</span>
+                </div>
+                <button className="py-1 px-3 border border-border-custom hover:bg-elevated rounded text-[11px] font-medium text-foreground transition-all flex items-center justify-center gap-1">
+                  <span>⏳</span> Filter
+                </button>
+                <select
+                  value={partyTabStatus}
+                  onChange={(e) => setPartyTabStatus(e.target.value)}
+                  className="py-1 px-2 border border-border-custom bg-card hover:bg-elevated rounded text-[11px] font-medium text-foreground focus:outline-none cursor-pointer"
+                >
+                  <option>Active</option>
+                  <option>All</option>
+                  <option>Inactive</option>
+                </select>
+                <button onClick={exportCsv} className="py-1 px-3 border border-border-custom hover:bg-elevated rounded text-[11px] font-medium text-foreground transition-all">
+                  ⬇ Export
+                </button>
+                <button
+                  onClick={() => { setShowAddPartyModal(true); }}
+                  className="py-1.5 px-3 rounded bg-primary hover:bg-primary/90 text-white text-[11px] font-semibold transition-all"
+                >
+                  + New Party
+                </button>
+              </div>
 
-                    <div className="flex gap-2">
-                      <button className="flex-1 py-1 px-3 border border-border-custom hover:bg-elevated rounded text-[11px] font-medium text-foreground transition-all flex items-center justify-center gap-1">
-                        <span>⏳</span> Filter
-                      </button>
-                      <select
-                        value={partyFilter}
-                        onChange={(e) => setPartyFilter(e.target.value)}
-                        className="flex-1 py-1 px-2 border border-border-custom bg-card hover:bg-elevated rounded text-[11px] font-medium text-foreground focus:outline-none cursor-pointer"
-                      >
-                        <option>Active</option>
-                        <option>Inactive</option>
+              {/* Table */}
+              <div className="flex-1 bg-card border border-border-custom rounded-lg overflow-auto">
+                <table className="w-full text-xs text-left">
+                  <thead className="bg-input/60 text-muted uppercase text-[10px] tracking-wider">
+                    <tr>
+                      <th className="p-3 font-semibold">Party Details</th>
+                      <th className="p-3 font-semibold">Type</th>
+                      <th className="p-3 font-semibold text-right">Balance (₹)</th>
+                      <th className="p-3 font-semibold">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border-custom/40">
+                    {filteredParties.length === 0 && (
+                      <tr><td colSpan={4} className="p-6 text-center text-muted">No parties found</td></tr>
+                    )}
+                    {filteredParties.map(p => (
+                      <tr key={String(p.id)} className="hover:bg-elevated/40 transition-all">
+                        <td className="p-3">
+                          <div className="flex items-center gap-3">
+                            <div className="h-8 w-8 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center text-xs">
+                              {p.name.slice(0, 2).toUpperCase()}
+                            </div>
+                            <div>
+                              <h4 className="text-xs font-bold text-foreground">{p.name}</h4>
+                              <span className="text-[10px] text-muted">{p.party_id_custom || ""}</span>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="p-3 text-foreground">{p.party_type || "—"}</td>
+                        <td className="p-3 text-right font-bold text-foreground">₹{(p.balance || 0).toLocaleString("en-IN")}</td>
+                        <td className="p-3">
+                          <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider ${statusChip(p.status)}`}>
+                            {p.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            );
+          })()}
+
+          {/* ── ADD PARTY MODAL ── */}
+          {showAddPartyModal && (
+            <>
+              <div onClick={() => setShowAddPartyModal(false)} className="fixed inset-0 bg-black/60 z-40" />
+              <div className="fixed right-0 top-0 h-full w-[480px] max-w-full bg-card border-l border-border-custom shadow-2xl z-50 p-6 overflow-y-auto flex flex-col gap-5">
+                <div className="flex justify-between items-center border-b border-border-custom pb-4">
+                  <div>
+                    <button onClick={() => setShowAddPartyModal(false)} className="text-muted hover:text-foreground text-sm font-semibold pr-2">✕</button>
+                    <h3 className="text-sm font-bold uppercase tracking-wider text-foreground inline ml-1">New Party</h3>
+                  </div>
+                  <button onClick={handleCreateParty} disabled={submitting} className="px-4 py-1.5 bg-primary hover:bg-primary/90 text-white text-xs font-semibold rounded disabled:opacity-50">
+                    {submitting ? "Saving..." : "Save Party"}
+                  </button>
+                </div>
+
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-[10px] font-bold text-muted uppercase tracking-wider">Name *</label>
+                    <input value={newParty.name} onChange={(e) => setNewParty({ ...newParty, name: e.target.value })} className="w-full bg-input border border-border-custom rounded-md p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[10px] font-bold text-muted uppercase tracking-wider">Phone (w/ country code)</label>
+                      <input value={newParty.phone} onChange={(e) => setNewParty({ ...newParty, phone: e.target.value })} placeholder="+91" className="w-full bg-input border border-border-custom rounded-md p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-muted uppercase tracking-wider">Email</label>
+                      <input value={newParty.email} onChange={(e) => setNewParty({ ...newParty, email: e.target.value })} className="w-full bg-input border border-border-custom rounded-md p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[10px] font-bold text-muted uppercase tracking-wider">Party Type</label>
+                      <select value={newParty.party_type} onChange={(e) => setNewParty({ ...newParty, party_type: e.target.value })} className="w-full bg-input border border-border-custom rounded-md p-2 text-xs text-foreground focus:outline-none focus:border-primary">
+                        <option>Supplier</option>
+                        <option>Subcontractor</option>
+                        <option>Contractor</option>
+                        <option>Client</option>
+                        <option>Labour</option>
                       </select>
                     </div>
-                  </div>
-
-                  {/* Party List */}
-                  <div className="flex-1 overflow-y-auto divide-y divide-border-custom/40">
-                    {partyLedgers
-                      .filter(p => p.party.toLowerCase().includes(partySearchQuery.toLowerCase()))
-                      .map(p => {
-                        const isSelected = selectedParty === p.party;
-                        const displayBal = openingBalances[p.party] !== undefined ? openingBalances[p.party] : p.net_due;
-                        
-                        return (
-                          <div
-                            key={p.party}
-                            onClick={() => setSelectedParty(p.party)}
-                            className={`p-4 flex items-center justify-between cursor-pointer transition-all ${
-                              isSelected ? "bg-primary/5 border-l-2 border-primary" : "hover:bg-elevated/40"
-                            }`}
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className="h-8 w-8 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center text-xs">
-                                {p.party.slice(0, 2).toUpperCase()}
-                              </div>
-                              <div>
-                                <h4 className="text-xs font-bold text-foreground">{p.party}</h4>
-                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary font-medium mt-1 inline-block">
-                                  {p.party === "Yash Desai" ? "Staff" : "Vendor"}
-                                </span>
-                              </div>
-                            </div>
-                            <div className="text-right space-y-1">
-                              <div className="text-xs font-bold text-foreground">
-                                ₹{displayBal.toLocaleString("en-IN")}
-                              </div>
-                              <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider block ${
-                                displayBal > 0 
-                                  ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                                  : "bg-zinc-500/10 text-muted"
-                              }`}>
-                                {displayBal > 0 ? "I have Advance" : "No Due"}
-                              </span>
-                            </div>
-                          </div>
-                        );
-                      })}
-                  </div>
-                </div>
-
-                {/* Detail Panel: Right Details (2/3 Width) */}
-                <div className="flex-1 bg-card border border-border-custom rounded-lg flex flex-col overflow-hidden relative p-6">
-                  {(() => {
-                    const activeP = partyLedgers.find(p => p.party === selectedParty) || partyLedgers[0];
-                    if (!activeP) return <div className="text-xs text-muted">No Party Selected</div>;
-                    
-                    const netDueVal = openingBalances[activeP.party] !== undefined ? openingBalances[activeP.party] : activeP.net_due;
-                    const isYash = activeP.party === "Yash Desai";
-                    
-                    return (
-                      <div className="flex flex-col h-full justify-between">
-                        {/* Upper Section */}
-                        <div className="space-y-6">
-                          {/* Header */}
-                          <div className="flex justify-between items-start border-b border-border-custom/50 pb-4">
-                            <div className="flex items-center gap-3">
-                              <div className="h-10 w-10 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center text-sm">
-                                {activeP.party.slice(0, 2).toUpperCase()}
-                              </div>
-                              <div>
-                                <h2 className="text-sm font-bold text-foreground">{activeP.party}</h2>
-                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary font-medium mt-1 inline-block">
-                                  {isYash ? "Staff" : "Vendor"}
-                                </span>
-                              </div>
-                            </div>
-
-                            <div className="flex items-center gap-4">
-                              <div className="text-right">
-                                <span className="text-[10px] text-muted block">Balance</span>
-                                <strong className="text-sm font-bold text-foreground">
-                                  ₹{netDueVal.toLocaleString("en-IN")}
-                                </strong>
-                              </div>
-                              <button className="p-1.5 border border-border-custom rounded hover:bg-elevated text-xs">
-                                📥
-                              </button>
-                            </div>
-                          </div>
-
-                          {/* Inner Metric Header Strip */}
-                          <div className="grid grid-cols-3 gap-4 border-b border-border-custom/50 pb-5">
-                            <div>
-                              <span className="text-[10px] text-muted block">Opening</span>
-                              <strong className="text-xs font-semibold text-foreground">
-                                ₹{netDueVal.toLocaleString("en-IN")}
-                              </strong>
-                            </div>
-                            <div>
-                              <span className="text-[10px] text-muted block">Petty Cash Balance</span>
-                              <strong className="text-xs font-semibold text-foreground">
-                                ₹{isYash ? "8,000" : "0"}
-                              </strong>
-                            </div>
-                            <div>
-                              <span className="text-[10px] text-muted block">Salary Balance</span>
-                              <strong className="text-xs font-semibold text-foreground">₹0</strong>
-                            </div>
-                          </div>
-
-                          {/* Party Detail Options Lists */}
-                          <div className="space-y-3">
-                            {/* Option 1: Profile */}
-                            <div className="p-4 border border-border-custom rounded-lg bg-input/50 flex justify-between items-center hover:bg-elevated/20 transition-all cursor-pointer">
-                              <div className="flex items-center gap-3">
-                                <span className="text-sm">👤</span>
-                                <div>
-                                  <h5 className="text-xs font-semibold text-foreground">Party Profile</h5>
-                                  <span className="text-[10px] text-muted">{activeP.party}</span>
-                                </div>
-                              </div>
-                              <span className="text-xs text-muted">➔</span>
-                            </div>
-
-                            {/* Option 2: Opening Balance Trigger */}
-                            <div
-                              onClick={() => {
-                                setTempAmt(String(netDueVal));
-                                setShowOpeningBalanceDrawer(true);
-                              }}
-                              className="p-4 border border-border-custom rounded-lg bg-input/50 flex justify-between items-center hover:bg-elevated/20 transition-all cursor-pointer"
-                            >
-                              <div className="flex items-center gap-3">
-                                <span className="text-sm">💵</span>
-                                <div>
-                                  <h5 className="text-xs font-semibold text-foreground">Opening Balance</h5>
-                                  <span className="text-[10px] text-muted">₹{netDueVal.toLocaleString("en-IN")}</span>
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <span className="text-[10px] text-primary font-bold">
-                                  {openingBalanceType === "pay" ? "Party Will Pay" : "Party Will Get"}
-                                </span>
-                                <span className="text-xs text-muted">➔</span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Actions bar at bottom */}
-                        <div className="flex gap-4 border-t border-border-custom/50 pt-4 mt-8">
-                          <button className="flex-1 py-3 px-4 rounded bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold shadow-sm transition-all text-center">
-                            + Payment In
-                          </button>
-                          <button className="flex-1 py-3 px-4 rounded bg-rose-500 hover:bg-rose-600 text-white text-xs font-semibold shadow-sm transition-all text-center">
-                            - Payment Out
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })()}
-                </div>
-              </div>
-
-              {/* Sliding Right-side Drawer for Opening Balance */}
-              {showOpeningBalanceDrawer && (
-                <>
-                  {/* Backdrop */}
-                  <div
-                    onClick={() => setShowOpeningBalanceDrawer(false)}
-                    className="fixed inset-0 bg-black/60 z-40 transition-opacity"
-                  />
-                  {/* Drawer Content */}
-                  <div className="fixed right-0 top-0 h-full w-96 bg-card border-l border-border-custom shadow-2xl z-50 p-6 flex flex-col justify-between animate-in slide-in-from-right duration-300">
-                    <div className="space-y-6">
-                      {/* Header */}
-                      <div className="flex justify-between items-center border-b border-border-custom pb-4">
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => setShowOpeningBalanceDrawer(false)}
-                            className="text-muted hover:text-foreground text-sm font-semibold pr-2"
-                          >
-                            ✕
-                          </button>
-                          <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">Opening Balance</h3>
-                        </div>
-                        <div className="flex items-center gap-4">
-                          <button
-                            onClick={() => setShowOpeningBalanceDrawer(false)}
-                            className="text-xs font-medium text-muted hover:text-foreground"
-                          >
-                            Cancel
-                          </button>
-                          <button
-                            onClick={() => {
-                              setOpeningBalances(prev => ({ ...prev, [selectedParty]: parseInt(tempAmt) || 0 }));
-                              setShowOpeningBalanceDrawer(false);
-                            }}
-                            className="px-3 py-1 bg-primary hover:bg-primary/90 text-white text-xs font-semibold rounded"
-                          >
-                            Save
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Pay/Receive Selection Option Buttons */}
-                      <div className="flex gap-3">
-                        <button
-                          type="button"
-                          onClick={() => setOpeningBalanceType("pay")}
-                          className={`flex-1 py-3 px-4 rounded-lg border text-xs font-semibold flex items-center justify-center gap-2 transition-all ${
-                            openingBalanceType === "pay"
-                              ? "border-primary bg-primary/10 text-primary shadow-sm"
-                              : "border-border-custom hover:bg-elevated text-foreground"
-                          }`}
-                        >
-                          <span className="h-4 w-4 rounded-full border-2 border-primary flex items-center justify-center p-0.5">
-                            {openingBalanceType === "pay" && <span className="h-full w-full bg-primary rounded-full" />}
-                          </span>
-                          Party will pay
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setOpeningBalanceType("receive")}
-                          className={`flex-1 py-3 px-4 rounded-lg border text-xs font-semibold flex items-center justify-center gap-2 transition-all ${
-                            openingBalanceType === "receive"
-                              ? "border-primary bg-primary/10 text-primary shadow-sm"
-                              : "border-border-custom hover:bg-elevated text-foreground"
-                          }`}
-                        >
-                          <span className="h-4 w-4 rounded-full border border-muted flex items-center justify-center p-0.5">
-                            {openingBalanceType === "receive" && <span className="h-full w-full bg-primary rounded-full" />}
-                          </span>
-                          Party will receive
-                        </button>
-                      </div>
-
-                      {/* Input Value */}
-                      <div className="space-y-1">
-                        <label className="text-[10px] font-bold text-muted uppercase tracking-wider">
-                          Amount (₹) *
-                        </label>
-                        <input
-                          type="number"
-                          value={tempAmt}
-                          onChange={(e) => setTempAmt(e.target.value)}
-                          className="w-full bg-input border border-border-custom rounded-md p-3 text-sm font-semibold text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20"
-                        />
-                      </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-muted uppercase tracking-wider">Party ID (auto)</label>
+                      <input value={newParty.party_id_custom} onChange={(e) => setNewParty({ ...newParty, party_id_custom: e.target.value })} placeholder="PID-1" className="w-full bg-input border border-border-custom rounded-md p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
                     </div>
                   </div>
-                </>
-              )}
-            </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-muted uppercase tracking-wider">Address</label>
+                    <textarea value={newParty.address} onChange={(e) => setNewParty({ ...newParty, address: e.target.value })} rows={2} className="w-full bg-input border border-border-custom rounded-md p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[10px] font-bold text-muted uppercase tracking-wider">Date of Joining</label>
+                      <input type="date" value={newParty.date_of_joining} onChange={(e) => setNewParty({ ...newParty, date_of_joining: e.target.value })} className="w-full bg-input border border-border-custom rounded-md p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-muted uppercase tracking-wider">PAN</label>
+                      <input value={newParty.pan_number} onChange={(e) => setNewParty({ ...newParty, pan_number: e.target.value })} className="w-full bg-input border border-border-custom rounded-md p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-muted uppercase tracking-wider">Aadhaar Number</label>
+                    <div className="flex gap-2">
+                      <input value={newParty.aadhaar_number} onChange={(e) => setNewParty({ ...newParty, aadhaar_number: e.target.value })} className="flex-1 bg-input border border-border-custom rounded-md p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
+                      <button type="button" className="px-3 py-2 border border-border-custom rounded-md text-[10px] text-muted hover:bg-elevated">⬆ Aadhaar</button>
+                      <button type="button" className="px-3 py-2 border border-border-custom rounded-md text-[10px] text-muted hover:bg-elevated">⬆ PAN</button>
+                    </div>
+                  </div>
+
+                  {/* Contractor / Subcontractor extra fields */}
+                  {(newParty.party_type === "Contractor" || newParty.party_type === "Subcontractor") && (
+                    <div className="space-y-3 border border-border-custom rounded-lg p-3 bg-input/40">
+                      <div>
+                        <label className="text-[10px] font-bold text-muted uppercase tracking-wider">Contractor Role</label>
+                        <select value={newParty.contractor_role} onChange={(e) => setNewParty({ ...newParty, contractor_role: e.target.value })} className="w-full bg-input border border-border-custom rounded-md p-2 text-xs text-foreground focus:outline-none focus:border-primary">
+                          <option value="">— Select —</option>
+                          <option>Site Execution</option>
+                          <option>Finishing</option>
+                          <option>MEP</option>
+                          <option>Survey</option>
+                          <option>Other</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-bold text-muted uppercase tracking-wider">Service Rate Categories</label>
+                        <div className="flex flex-wrap gap-2 mb-2">
+                          {serviceTags.map((t, i) => (
+                            <span key={i} className="text-[10px] px-2 py-1 rounded bg-primary/10 text-primary flex items-center gap-1">
+                              {t}
+                              <button type="button" onClick={() => setServiceTags(serviceTags.filter((_, j) => j !== i))} className="text-primary/70">✕</button>
+                            </span>
+                          ))}
+                        </div>
+                        <div className="flex gap-2">
+                          <input
+                            value={serviceTagInput}
+                            onChange={(e) => setServiceTagInput(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" && serviceTagInput.trim()) {
+                                e.preventDefault();
+                                setServiceTags([...serviceTags, serviceTagInput.trim()]);
+                                setServiceTagInput("");
+                              }
+                            }}
+                            placeholder="Add tag + Enter"
+                            className="flex-1 bg-input border border-border-custom rounded-md p-2 text-xs text-foreground focus:outline-none focus:border-primary"
+                          />
+                          <button type="button" onClick={() => { if (serviceTagInput.trim()) { setServiceTags([...serviceTags, serviceTagInput.trim()]); setServiceTagInput(""); } }} className="px-3 py-2 border border-border-custom rounded-md text-[10px] text-muted hover:bg-elevated">+ Tag</button>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-bold text-muted uppercase tracking-wider">Opening Balance (₹)</label>
+                        <input type="number" value={newParty.opening_balance} onChange={(e) => setNewParty({ ...newParty, opening_balance: e.target.value })} className="w-full bg-input border border-border-custom rounded-md p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
+                        {newParty.opening_balance && (
+                          <div className="flex gap-3 mt-2">
+                            <button type="button" onClick={() => setNewParty({ ...newParty, opening_balance_type: "pay" })} className={`flex-1 py-2 rounded border text-[10px] font-semibold ${newParty.opening_balance_type === "pay" ? "border-primary bg-primary/10 text-primary" : "border-border-custom text-muted"}`}>Party will pay (To Pay)</button>
+                            <button type="button" onClick={() => setNewParty({ ...newParty, opening_balance_type: "receive" })} className={`flex-1 py-2 rounded border text-[10px] font-semibold ${newParty.opening_balance_type === "receive" ? "border-primary bg-primary/10 text-primary" : "border-border-custom text-muted"}`}>Party will receive (Advance Received)</button>
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-bold text-muted uppercase tracking-wider">Link Bank Account</label>
+                        <select value={newParty.bank_account_id} onChange={(e) => setNewParty({ ...newParty, bank_account_id: e.target.value })} className="w-full bg-input border border-border-custom rounded-md p-2 text-xs text-foreground focus:outline-none focus:border-primary">
+                          <option value="">--NA--</option>
+                          {bankAccounts.map((b: any) => (
+                            <option key={String(b.id)} value={String(b.id)}>{b.bank_name} — {b.account_number}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Spin into Sub-Con Work Order */}
+                  <div className="border border-border-custom rounded-lg p-3 bg-input/40 space-y-3">
+                    <label className="flex items-center gap-2 text-[11px] font-semibold text-foreground cursor-pointer">
+                      <input type="checkbox" checked={newParty.create_wo} onChange={(e) => setNewParty({ ...newParty, create_wo: e.target.checked })} />
+                      Create Sub-Con Work Order for this party
+                    </label>
+                    {newParty.create_wo && (
+                      <>
+                        <div>
+                          <label className="text-[10px] font-bold text-muted uppercase tracking-wider">WO Title</label>
+                          <input value={newParty.wo_title} onChange={(e) => setNewParty({ ...newParty, wo_title: e.target.value })} className="w-full bg-input border border-border-custom rounded-md p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-bold text-muted uppercase tracking-wider">Terms &amp; Conditions</label>
+                          <div className="flex gap-1 mb-1">
+                            <button type="button" onClick={() => document.execCommand("bold")} className="px-2 py-1 border border-border-custom rounded text-[10px] font-bold">B</button>
+                            <button type="button" onClick={() => document.execCommand("italic")} className="px-2 py-1 border border-border-custom rounded text-[10px] italic">I</button>
+                            <button type="button" onClick={() => document.execCommand("underline")} className="px-2 py-1 border border-border-custom rounded text-[10px] underline">U</button>
+                            <button type="button" onClick={() => document.execCommand("insertUnorderedList")} className="px-2 py-1 border border-border-custom rounded text-[10px]">• List</button>
+                          </div>
+                          <div
+                            contentEditable
+                            suppressContentEditableWarning
+                            onBlur={(e) => setNewParty({ ...newParty, wo_terms: e.currentTarget.innerHTML })}
+                            className="w-full min-h-[80px] bg-input border border-border-custom rounded-md p-2 text-xs text-foreground focus:outline-none focus:border-primary"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-bold text-muted uppercase tracking-wider">Attach Media</label>
+                          <button type="button" className="w-full py-3 border border-dashed border-border-custom rounded-md text-[10px] text-muted hover:bg-elevated">⬆ Drop files or click to upload</button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* ── BILL / SHIP ADDRESS MODAL (4 blocks) ── */}
+          {showBillShipModal && (
+            <>
+              <div onClick={() => setShowBillShipModal(false)} className="fixed inset-0 bg-black/60 z-40" />
+              <div className="fixed right-0 top-0 h-full w-[520px] max-w-full bg-card border-l border-border-custom shadow-2xl z-50 p-6 overflow-y-auto flex flex-col gap-4">
+                <div className="flex justify-between items-center border-b border-border-custom pb-4">
+                  <h3 className="text-sm font-bold uppercase tracking-wider text-foreground">Bill To / Ship To</h3>
+                  <button onClick={() => setShowBillShipModal(false)} className="text-muted hover:text-foreground text-sm font-semibold">✕</button>
+                </div>
+
+                {(["billFrom", "billTo", "shipFrom", "shipTo"] as const).map((key) => {
+                  const label = { billFrom: "Bill From", billTo: "Bill To", shipFrom: "Ship From", shipTo: "Ship To" }[key];
+                  return (
+                    <div key={key} className="border border-border-custom rounded-lg p-3 bg-input/40 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] font-bold text-foreground">{label}</span>
+                        <select
+                          value={billShip[key] === "" ? "" : "custom"}
+                          onChange={(e) => {
+                            if (e.target.value !== "custom") setBillShip({ ...billShip, [key]: e.target.value });
+                          }}
+                          className="text-[10px] bg-input border border-border-custom rounded px-2 py-1 text-foreground"
+                        >
+                          <option value="custom">Type / select address</option>
+                          <option value="Company">Company</option>
+                        </select>
+                      </div>
+                      <textarea
+                        value={billShip[key]}
+                        onChange={(e) => setBillShip({ ...billShip, [key]: e.target.value })}
+                        rows={2}
+                        placeholder={`${label} address`}
+                        className="w-full bg-input border border-border-custom rounded-md p-2 text-xs text-foreground focus:outline-none focus:border-primary"
+                      />
+                      {key === "shipFrom" && (
+                        <label className="flex items-center gap-2 text-[10px] text-muted cursor-pointer">
+                          <input type="checkbox" checked={sameAsBillFrom} onChange={(e) => { setSameAsBillFrom(e.target.checked); if (e.target.checked) setBillShip({ ...billShip, shipFrom: billShip.billFrom }); }} />
+                          Same as Bill From Address
+                        </label>
+                      )}
+                      {key === "shipTo" && (
+                        <label className="flex items-center gap-2 text-[10px] text-muted cursor-pointer">
+                          <input type="checkbox" checked={sameAsBillTo} onChange={(e) => { setSameAsBillTo(e.target.checked); if (e.target.checked) setBillShip({ ...billShip, shipTo: billShip.billTo }); }} />
+                          Same as Bill To Address
+                        </label>
+                      )}
+                    </div>
+                  );
+                })}
+
+                <button
+                  onClick={() => setShowBillShipModal(false)}
+                  className="mt-2 py-2 rounded bg-primary hover:bg-primary/90 text-white text-xs font-semibold"
+                >
+                  Save Addresses
+                </button>
+              </div>
+            </>
           )}
 
           {/* ── CASH BOOK TAB ── */}
@@ -1175,7 +1402,7 @@ export default function FinancePage() {
               <div className="flex justify-between items-center">
                 <div className="text-xs text-muted">Record and track internal payment requests, milestone requests, and supplier payments.</div>
                 <button
-                  onClick={() => setShowAddRequestModal(true)}
+                  onClick={() => { setPrStep("type"); setPrType(null); setNewRequest({ partyId: "", amount: "", details: "", dueDate: "", requestType: "", extra: "" }); setShowAddRequestModal(true); }}
                   className="bg-primary text-white text-xs font-bold px-4 py-2.5 rounded-md cursor-pointer"
                 >
                   + Create Payment Request
@@ -1185,29 +1412,33 @@ export default function FinancePage() {
               <div className="bg-card border border-border-custom rounded-lg rounded-lg border border-border-custom bg-input overflow-hidden">
                 <table className="w-full text-xs text-left">
                   <thead>
-                    <tr className="border-b border-border-custom text-muted font-bold uppercase tracking-wider text-[9px]">
-                      <th className="px-5 py-3">Created At</th>
-                      <th className="px-5 py-3">Party Name</th>
-                      <th className="px-5 py-3">Requested Amount</th>
-                      <th className="px-5 py-3">Particulars / Details</th>
-                      <th className="px-5 py-3">Status</th>
-                      <th className="px-5 py-3">Due Date</th>
-                    </tr>
+                      <tr className="border-b border-border-custom text-muted font-bold uppercase tracking-wider text-[9px]">
+                        <th className="px-5 py-3">Request No.</th>
+                        <th className="px-5 py-3">Created At</th>
+                        <th className="px-5 py-3">Party Name</th>
+                        <th className="px-5 py-3">Type</th>
+                        <th className="px-5 py-3">Requested Amount</th>
+                        <th className="px-5 py-3">Particulars / Details</th>
+                        <th className="px-5 py-3">Status</th>
+                        <th className="px-5 py-3">Due Date</th>
+                      </tr>
                   </thead>
                   <tbody>
                     {paymentRequests.length === 0 ? (
                       <tr>
-                        <td colSpan={6} className="text-center p-8 text-muted">
-                          No active payment requests found.
-                        </td>
+                          <td colSpan={8} className="text-center p-8 text-muted">
+                            No active payment requests found.
+                          </td>
                       </tr>
                     ) : (
                       paymentRequests.map((req) => (
-                        <tr key={req.id} className="border-t border-border-custom hover:bg-white/[0.015]">
+                        <tr key={req.id} onClick={() => setSelectedPR(req)} className="border-t border-border-custom hover:bg-white/[0.04] cursor-pointer transition-colors">
+                          <td className="px-5 py-3 text-white font-mono font-bold">{req.request_no || "—"}</td>
                           <td className="px-5 py-3 text-muted font-mono">
                             {new Date(req.created_at).toLocaleDateString("en-IN")}
                           </td>
                           <td className="px-5 py-3 font-semibold text-white">{req.party_name}</td>
+                          <td className="px-5 py-3 text-muted">{req.request_type || "—"}</td>
                           <td className="px-5 py-3 text-white font-bold font-sans">₹{req.amount.toLocaleString("en-IN")}</td>
                           <td className="px-5 py-3 text-muted">{req.details}</td>
                           <td className="px-5 py-3">
@@ -1248,25 +1479,38 @@ export default function FinancePage() {
 
               {/* Cash Account Section */}
               <div className="space-y-3">
-                <p className="text-[10px] text-muted font-bold uppercase tracking-wider">Cash Account</p>
-                <div className="bg-card border border-border-custom rounded-xl p-4 flex items-center justify-between hover:shadow-md transition-all">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-green-500/10 flex items-center justify-center text-green-400 text-lg border border-green-500/20">
-                      💵
-                    </div>
-                    <div>
-                      <h4 className="text-xs font-bold text-white">Cash Account</h4>
-                      <p className="text-[10px] text-muted mt-0.5">Physical vault cash at site</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <span className="text-base font-bold text-white">₹{netCashFlow.toLocaleString("en-IN")}</span>
-                    <button className="px-3 py-1.5 bg-sidebar hover:bg-elevated border border-border-custom rounded-lg text-[10px] font-bold text-muted hover:text-foreground transition-all flex items-center gap-1">
-                      View Statement <span className="text-[9px]">↗</span>
-                    </button>
-                    <span className="text-muted cursor-pointer hover:text-white">⋮</span>
-                  </div>
+                <div className="flex justify-between items-center">
+                  <p className="text-[10px] text-muted font-bold uppercase tracking-wider">Cash Account</p>
+                  {!cashAccount && (
+                    <button onClick={() => setShowAddCashModal(true)} className="bg-primary hover:bg-primary/95 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg transition-all">+ New Cash Account</button>
+                  )}
                 </div>
+                {cashAccount ? (
+                  <div className="bg-card border border-border-custom rounded-xl p-4 flex items-center justify-between hover:shadow-md transition-all">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-lg bg-green-500/10 flex items-center justify-center text-green-400 text-lg border border-green-500/20">
+                        💵
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-bold text-white">{cashAccount.name}</h4>
+                        <p className="text-[10px] text-muted mt-0.5">Opening: ₹{(cashAccount.opening_balance || 0).toLocaleString("en-IN")}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="text-right">
+                        <p className="text-[8px] text-muted uppercase tracking-wider">Running Balance</p>
+                        <span className="text-base font-bold text-white">₹{cashRunning.toLocaleString("en-IN")}</span>
+                      </div>
+                      <button className="px-3 py-1.5 bg-sidebar hover:bg-elevated border border-border-custom rounded-lg text-[10px] font-bold text-muted hover:text-foreground transition-all flex items-center gap-1">
+                        View Statement <span className="text-[9px]">↗</span>
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-card border border-dashed border-border-custom rounded-xl p-8 text-center text-muted text-xs">
+                    No cash account configured. Click "+ New Cash Account" to set an opening balance.
+                  </div>
+                )}
               </div>
 
               {/* Bank Accounts Section */}
@@ -1321,8 +1565,12 @@ export default function FinancePage() {
                             <span className="text-white font-semibold mt-0.5 block font-mono">Not provided</span>
                           </div>
                           <div className="col-span-2">
-                            <span className="text-muted block uppercase font-medium text-[8px] tracking-wider">Opening Balance</span>
+                            <span className="text-muted block uppercase font-medium text-[8px] tracking-wider">Running Balance</span>
                             <span className="text-white font-bold mt-0.5 block text-xs">₹{acc.balance.toLocaleString("en-IN")}</span>
+                          </div>
+                          <div className="col-span-2">
+                            <span className="text-muted block uppercase font-medium text-[8px] tracking-wider">Opening Balance</span>
+                            <span className="text-white font-semibold mt-0.5 block text-[10px]">₹{(acc.opening_balance ?? 0).toLocaleString("en-IN")}</span>
                           </div>
                         </div>
                       </div>
@@ -1603,9 +1851,6 @@ export default function FinancePage() {
                 <div className="flex items-center gap-3">
                   <button onClick={() => setShowAddModal(false)} className="text-xs text-muted hover:text-white transition-colors cursor-pointer">Cancel</button>
                   <button onClick={handleRecordPayment} className="bg-primary hover:bg-primary/90 text-white font-bold text-xs px-4 py-1.5 rounded-lg shadow transition-all cursor-pointer">Save</button>
-                  {selectedTxnType === "Upload Payments" && (
-                    <button type="button" className="bg-elevated border border-border-custom hover:bg-elevated/80 text-foreground font-bold text-xs px-3.5 py-1.5 rounded-lg transition-all">Preview</button>
-                  )}
                 </div>
               </div>
 
@@ -1622,7 +1867,14 @@ export default function FinancePage() {
                           <li>Remove any unnecessary header rows from the Excel file.</li>
                           <li>
                             Ensure the column structure aligns with the{" "}
-                            <span className="text-primary hover:underline font-bold cursor-pointer inline-flex items-center gap-0.5">
+                            <span onClick={() => {
+                              const tpl = "Payment Type,Party Name,Amount,Project Name,Payment Date,Mode of Payment,Category,Payment Request ID,Remark\nout,Sample Vendor Pvt Ltd,12500,Sample Project,2026-07-09,Cash,Material,PR-1,June material advance\nin,Sample Client Ltd,80000,Sample Project,2026-07-09,Bank,Client,INV-1,July milestone";
+                              const blob = new Blob([tpl], { type: "text/csv" });
+                              const url = URL.createObjectURL(blob);
+                              const a = document.createElement("a");
+                              a.href = url; a.download = "siteflow_payment_template.csv"; a.click();
+                              URL.revokeObjectURL(url);
+                            }} className="text-primary hover:underline font-bold cursor-pointer inline-flex items-center gap-0.5">
                               SiteFlow Payment Request template 📥
                             </span>{" "}
                             (column names and order of columns need to match exactly with the sample file).
@@ -1642,12 +1894,45 @@ export default function FinancePage() {
                       id="payments-csv-file-input" 
                       accept=".csv" 
                       className="hidden" 
-                      onChange={handleUploadCSV}
+                      onChange={handleCsvSelect}
                     />
                     <span className="text-2xl text-primary">📤</span>
                     <strong className="text-white font-bold text-xs">Upload Csv</strong>
                     <span className="text-[9px] text-muted">Supports .csv formats up to 10MB</span>
                   </div>
+
+                  {csvPreview && (
+                    <div className="border border-border-custom rounded-xl p-3 bg-input/40 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] font-bold text-foreground">Preview ({csvPreview.length} rows)</span>
+                        <button type="button" onClick={() => { setCsvPreview(null); setCsvFile(null); }} className="text-[10px] text-muted hover:text-foreground">Clear</button>
+                      </div>
+                      <div className="max-h-48 overflow-auto">
+                        <table className="w-full text-[9px] text-left">
+                          <thead className="text-muted uppercase">
+                            <tr>
+                              {csvPreview[0] && Object.keys(csvPreview[0]).map(h => <th key={h} className="p-1">{h}</th>)}
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-border-custom/40">
+                            {csvPreview.slice(0, 50).map((r, i) => (
+                              <tr key={i}>
+                                {Object.values(r).map((v: any, j) => <td key={j} className="p-1 text-foreground">{v}</td>)}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                      <button
+                        type="button"
+                        disabled={!csvFile || submitting}
+                        onClick={() => csvFile && handleUploadCSV(csvFile)}
+                        className="w-full py-2 rounded bg-primary hover:bg-primary/90 text-white text-xs font-semibold disabled:opacity-50"
+                      >
+                        {submitting ? "Importing..." : "Save Import"}
+                      </button>
+                    </div>
+                  )}
                 </div>
               ) : selectedTxnType === "Other Expense" ? (
                 /* OTHER EXPENSES SCREEN (Screenshot 1) */
@@ -1966,12 +2251,14 @@ export default function FinancePage() {
                     <span className="text-muted text-[10px]">▶</span>
                   </div>
 
-                  <div className="border border-border-custom rounded-xl p-3 bg-elevated/10 flex justify-between items-center text-xs">
+                  <div className="border border-border-custom rounded-xl p-3 bg-elevated/10 flex justify-between items-center text-xs cursor-pointer" onClick={() => setShowBillShipModal(true)}>
                     <div>
-                      <span className="text-muted block text-[9px] uppercase font-bold">Bill To/Ship To</span>
-                      <span className="text-white block font-semibold mt-0.5">{billToShipTo}</span>
+                      <span className="text-muted block text-[9px] uppercase font-bold">Bill To / Ship To</span>
+                      <span className="text-white block font-semibold mt-0.5">
+                        {billShip.billTo || billShip.billFrom ? "Configured" : "Not set"}
+                      </span>
                     </div>
-                    <span className="text-primary font-bold text-[10px] cursor-pointer" onClick={() => setBillToShipTo("Custom Site Address")}>+ Add</span>
+                    <span className="text-primary font-bold text-[10px]">+ Add</span>
                   </div>
 
                   <div>
@@ -2824,6 +3111,54 @@ export default function FinancePage() {
         </div>
       )}
 
+      {/* ── Add Cash Account Modal ── */}
+      {showAddCashModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center animate-fade-in p-4" onClick={() => setShowAddCashModal(false)}>
+          <div className="bg-card w-full max-w-md border border-border-custom shadow-2xl rounded-xl p-6" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-center border-b border-border-custom pb-4 mb-5">
+              <div>
+                <h3 className="text-sm font-bold text-white uppercase tracking-wider">New Cash Account</h3>
+                <p className="text-[10px] text-muted mt-0.5">Set the opening cash balance for the company</p>
+              </div>
+              <button onClick={() => setShowAddCashModal(false)} className="text-muted hover:text-white text-lg cursor-pointer">✕</button>
+            </div>
+
+            <form onSubmit={handleCreateCashAccount} className="space-y-4 text-xs font-sans">
+              <div>
+                <label className="text-[10px] text-muted uppercase font-bold block mb-1">Account Name</label>
+                <input
+                  type="text"
+                  value={newCash.name}
+                  onChange={e => setNewCash({ ...newCash, name: e.target.value })}
+                  placeholder="Cash Account"
+                  className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] text-muted uppercase font-bold block mb-1">Opening Balance (₹)*</label>
+                <input
+                  type="number"
+                  value={newCash.opening}
+                  onChange={e => setNewCash({ ...newCash, opening: e.target.value })}
+                  required
+                  placeholder="e.g. 50000"
+                  className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs font-mono"
+                />
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="submit"
+                  className="flex-1 py-2.5 bg-primary text-white font-bold rounded-lg hover:bg-primary/95 text-xs transition-all"
+                >
+                  Create Cash Account
+                </button>
+                <button onClick={() => setShowAddCashModal(false)} className="px-4 py-2.5 rounded-lg border border-border-custom text-muted hover:text-white hover:border-white/20 text-xs">Cancel</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* ── Create Payment Request Drawer ── */}
       {showAddRequestModal && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-end animate-fade-in" onClick={() => setShowAddRequestModal(false)}>
@@ -2831,123 +3166,349 @@ export default function FinancePage() {
             <div>
               <div className="flex justify-between items-center border-b border-border-custom pb-4 mb-5">
                 <div>
-                  <h3 className="text-sm font-bold text-white uppercase tracking-wider">Payment Requests</h3>
-                  <p className="text-[10px] text-muted font-mono mt-0.5">Voucher: PR-1</p>
+                  <h3 className="text-sm font-bold text-white uppercase tracking-wider">New Payment Request</h3>
+                  <p className="text-[10px] text-muted font-mono mt-0.5">Voucher: PR-{paymentRequests.length + 1}</p>
                 </div>
                 <button onClick={() => setShowAddRequestModal(false)} className="text-muted hover:text-white text-lg cursor-pointer">✕</button>
               </div>
 
-              <form onSubmit={handleCreatePaymentRequest} className="space-y-4 text-xs font-sans">
-                <div className="grid grid-cols-2 gap-3">
+              {prStep === "type" ? (
+                <div className="space-y-3">
+                  <p className="text-[10px] text-muted uppercase font-bold tracking-wider">Select Request Type</p>
+                  <div className="grid grid-cols-1 gap-2">
+                    {PR_TYPES.map((t) => (
+                      <button
+                        key={t.key}
+                        type="button"
+                        onClick={() => { setPrType(t); setNewRequest({ ...newRequest, requestType: t.key }); setPrStep("form"); }}
+                        className="flex items-center gap-3 w-full text-left bg-background border border-border-custom hover:border-primary/60 hover:bg-primary/5 rounded-lg px-4 py-3 transition-all"
+                      >
+                        <span className="text-lg">{t.icon}</span>
+                        <span className="text-xs font-semibold text-white">{t.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <form onSubmit={handleCreatePaymentRequest} className="space-y-4 text-xs font-sans">
+                  <button type="button" onClick={() => { setPrStep("type"); setPrType(null); }} className="text-[10px] text-primary hover:underline font-bold cursor-pointer">← Change type</button>
+                  <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-3 py-1 text-[10px] font-bold text-primary">
+                    <span>{prType?.icon}</span>{prType?.label}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[10px] text-muted uppercase font-bold block mb-1">Request No.*</label>
+                      <input
+                        type="text"
+                        value={`PR-${paymentRequests.length + 1}`}
+                        disabled
+                        className="w-full bg-background/50 border border-border-custom rounded-lg px-3 py-2 text-muted focus:outline-none text-xs font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-muted uppercase font-bold block mb-1">Date*</label>
+                      <input
+                        type="date"
+                        value={new Date().toISOString().slice(0, 10)}
+                        disabled
+                        className="w-full bg-background/50 border border-border-custom rounded-lg px-3 py-2 text-muted focus:outline-none text-xs"
+                      />
+                    </div>
+                  </div>
+
                   <div>
-                    <label className="text-[10px] text-muted uppercase font-bold block mb-1">Request No.*</label>
+                    <label className="text-[10px] text-muted uppercase font-bold block mb-1">Party Name*</label>
+                    <select
+                      value={newRequest.partyId}
+                      onChange={e => setNewRequest({ ...newRequest, partyId: e.target.value })}
+                      required
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                    >
+                      <option value="">Search or select party...</option>
+                      {usersList.map((u: any) => (
+                        <option key={u.id} value={u.id}>{u.name} ({u.role || "Employee"})</option>
+                      ))}
+                      {usersList.length === 0 && (Array.from(new Set(txnSummary.transactions.map((t: any) => t.party))) as any[]).map((p: any, idx) => (
+                        <option key={idx} value="00000000-0000-0000-0000-000000000000">{p}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {prType?.extraLabel && (
+                    <div>
+                      <label className="text-[10px] text-muted uppercase font-bold block mb-1">{prType.extraLabel}</label>
+                      <input
+                        type="text"
+                        value={newRequest.extra}
+                        onChange={e => setNewRequest({ ...newRequest, extra: e.target.value })}
+                        placeholder={prType.extraPlaceholder}
+                        className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                      />
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="text-[10px] text-muted uppercase font-bold block mb-1">Requested Amount (₹)*</label>
                     <input
-                      type="text"
-                      defaultValue="PR-1"
-                      disabled
-                      className="w-full bg-background/50 border border-border-custom rounded-lg px-3 py-2 text-muted focus:outline-none text-xs"
+                      type="number"
+                      value={newRequest.amount}
+                      onChange={e => setNewRequest({ ...newRequest, amount: e.target.value })}
+                      required
+                      placeholder="e.g. 15000"
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs font-mono"
                     />
                   </div>
+
                   <div>
-                    <label className="text-[10px] text-muted uppercase font-bold block mb-1">Date*</label>
+                    <label className="text-[10px] text-muted uppercase font-bold block mb-1">Due Date</label>
                     <input
                       type="date"
-                      defaultValue="2026-07-05"
-                      disabled
-                      className="w-full bg-background/50 border border-border-custom rounded-lg px-3 py-2 text-muted focus:outline-none text-xs"
+                      value={newRequest.dueDate}
+                      onChange={e => setNewRequest({ ...newRequest, dueDate: e.target.value })}
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
                     />
                   </div>
-                </div>
 
-                <div>
-                  <label className="text-[10px] text-muted uppercase font-bold block mb-1">Party Name*</label>
-                  <select
-                    value={newRequest.partyId}
-                    onChange={e => setNewRequest({ ...newRequest, partyId: e.target.value })}
-                    required
-                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
-                  >
-                    <option value="">Search or select party...</option>
-                    {usersList.map((u: any) => (
-                      <option key={u.id} value={u.id}>{u.name} ({u.role || "Employee"})</option>
-                    ))}
-                    {usersList.length === 0 && Array.from(new Set(transactions.map(t => t.party))).map((p, idx) => (
-                      <option key={idx} value="00000000-0000-0000-0000-000000000000">{p}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="text-[10px] text-muted uppercase font-bold block mb-1">Request Type*</label>
-                  <select
-                    defaultValue="Advance against PO"
-                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
-                  >
-                    <option value="Advance against PO">Advance against PO</option>
-                    <option value="Advance against Subcon Work Order">Advance against Subcon Work Order</option>
-                    <option value="Advance against BOQ">Advance against BOQ</option>
-                    <option value="Advance against Material Purchase">Advance against Material Purchase</option>
-                    <option value="Advance against Subcon Expense">Advance against Subcon Expense</option>
-                    <option value="Advance against Other Expense">Advance against Other Expense</option>
-                    <option value="Advance for Labour">Advance for Labour</option>
-                    <option value="Petty Cash">Petty Cash</option>
-                    <option value="Other">Other</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="text-[10px] text-muted uppercase font-bold block mb-1">Requested Amount (₹)*</label>
-                  <input
-                    type="number"
-                    value={newRequest.amount}
-                    onChange={e => setNewRequest({ ...newRequest, amount: e.target.value })}
-                    required
-                    placeholder="e.g. 15000"
-                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs font-mono"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-[10px] text-muted uppercase font-bold block mb-1">Due Date</label>
-                  <input
-                    type="date"
-                    value={newRequest.dueDate}
-                    onChange={e => setNewRequest({ ...newRequest, dueDate: e.target.value })}
-                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-[10px] text-muted uppercase font-bold block mb-1">Request Details / Particulars</label>
-                  <textarea
-                    value={newRequest.details}
-                    onChange={e => setNewRequest({ ...newRequest, details: e.target.value })}
-                    placeholder="Provide details for this payment request..."
-                    rows={3}
-                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs resize-none"
-                  />
-                </div>
-
-                {/* Upload zone */}
-                <div>
-                  <label className="text-[10px] text-muted uppercase font-bold block mb-1">Attachments</label>
-                  <div className="border border-dashed border-border-custom hover:border-primary/50 transition-all rounded-lg p-5 flex flex-col items-center justify-center bg-background cursor-pointer">
-                    <span className="text-base mb-1">📤</span>
-                    <span className="text-[11px] text-muted font-medium">Upload Files</span>
-                    <span className="text-[8px] text-muted/60 mt-0.5">PDF, images or doc receipts</span>
+                  <div>
+                    <label className="text-[10px] text-muted uppercase font-bold block mb-1">Request Details / Particulars</label>
+                    <textarea
+                      value={newRequest.details}
+                      onChange={e => setNewRequest({ ...newRequest, details: e.target.value })}
+                      placeholder="Provide details for this payment request..."
+                      rows={3}
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs resize-none"
+                    />
                   </div>
-                </div>
-              </form>
+
+                  <div>
+                    <label className="text-[10px] text-muted uppercase font-bold block mb-1">Attachments</label>
+                    <div className="border border-dashed border-border-custom hover:border-primary/50 transition-all rounded-lg p-5 flex flex-col items-center justify-center bg-background cursor-pointer">
+                      <span className="text-base mb-1">📤</span>
+                      <span className="text-[11px] text-muted font-medium">Upload Files</span>
+                      <span className="text-[8px] text-muted/60 mt-0.5">PDF, images or doc receipts</span>
+                    </div>
+                  </div>
+                </form>
+              )}
             </div>
 
             <div className="flex gap-3 mt-8 pt-4 border-t border-border-custom">
-              <button
-                onClick={handleCreatePaymentRequest}
-                className="flex-1 py-2.5 bg-primary text-white font-bold rounded-lg hover:bg-primary/95 text-xs transition-all"
-              >
-                Save
-              </button>
+              {prStep === "form" && (
+                <button
+                  onClick={handleCreatePaymentRequest}
+                  className="flex-1 py-2.5 bg-primary text-white font-bold rounded-lg hover:bg-primary/95 text-xs transition-all"
+                >
+                  Save Request
+                </button>
+              )}
               <button onClick={() => setShowAddRequestModal(false)} className="px-4 py-2.5 rounded-lg border border-border-custom text-muted hover:text-white hover:border-white/20 text-xs">Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Payment Request Detail Drawer ── */}
+      {selectedPR && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-end animate-fade-in" onClick={() => setSelectedPR(null)}>
+          <div className="bg-card w-full max-w-md h-full border-l border-border-custom shadow-2xl p-6 flex flex-col overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-start border-b border-border-custom pb-4 mb-5">
+              <div>
+                <p className="text-[10px] text-muted font-mono">Voucher: {selectedPR.request_no || "—"}</p>
+                <h3 className="text-sm font-bold text-white uppercase tracking-wider mt-0.5">{selectedPR.request_type || "Payment Request"}</h3>
+                <p className="text-xs text-white mt-1">{selectedPR.party_name}</p>
+              </div>
+              <button onClick={() => setSelectedPR(null)} className="text-muted hover:text-white text-lg cursor-pointer">✕</button>
+            </div>
+
+            <div className="space-y-4 text-xs font-sans">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-background border border-border-custom rounded-lg p-3">
+                  <p className="text-[9px] text-muted uppercase font-bold">Requested Amount</p>
+                  <p className="text-white font-bold font-sans mt-1">₹{(selectedPR.amount || 0).toLocaleString("en-IN")}</p>
+                </div>
+                <div className="bg-background border border-border-custom rounded-lg p-3">
+                  <p className="text-[9px] text-muted uppercase font-bold">Status</p>
+                  <p className="mt-1">
+                    <span className={`px-2 py-0.5 rounded text-[8px] font-bold border ${
+                      selectedPR.status === "Paid" || selectedPR.status === "Approved"
+                        ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+                        : selectedPR.status === "Rejected"
+                        ? "bg-red-500/10 border-red-500/20 text-red-400"
+                        : "bg-amber-500/10 border-amber-500/20 text-amber-400"
+                    }`}>{selectedPR.status.toUpperCase()}</span>
+                    <span className="ml-2 text-[8px] text-muted uppercase">Appr: {selectedPR.approval_status}</span>
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-background border border-border-custom rounded-lg p-3">
+                <p className="text-[9px] text-muted uppercase font-bold mb-1">Particulars</p>
+                <p className="text-muted">{selectedPR.details || "—"}</p>
+                <p className="text-[9px] text-muted mt-2">Due: {selectedPR.due_date ? new Date(selectedPR.due_date).toLocaleDateString("en-IN") : "Immediate"}</p>
+              </div>
+
+              {selectedPR.payment && (
+                <div className="bg-primary/5 border border-primary/20 rounded-lg p-3">
+                  <p className="text-[9px] text-primary uppercase font-bold mb-1">Payment Recorded</p>
+                  <p className="text-white font-sans">₹{selectedPR.payment.paid_amount.toLocaleString("en-IN")} via {selectedPR.payment.payment_mode} on {new Date(selectedPR.payment.payment_date).toLocaleDateString("en-IN")}</p>
+                  <p className="text-[9px] text-muted mt-1">Deduction ₹{selectedPR.payment.deduction} · TDS ₹{selectedPR.payment.tds} · Balance Due ₹{selectedPR.payment.balance_due}</p>
+                  {selectedPR.payment.reference_no && <p className="text-[9px] text-muted mt-1">Ref: {selectedPR.payment.reference_no}</p>}
+                  {selectedPR.payment.remarks && <p className="text-[9px] text-muted mt-1">Remarks: {selectedPR.payment.remarks}</p>}
+                </div>
+              )}
+            </div>
+
+            <div className="mt-auto pt-5 space-y-2">
+              <div className="flex gap-2">
+                <button
+                  onClick={async () => {
+                    const res = await fetch(`${getApiHost()}/apis/v3/finance/payment-requests/approve/${selectedPR.id}`, {
+                      method: "PUT", headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ status: "Approved" }),
+                    });
+                    if (res.ok) { const u = await res.json(); setSelectedPR(u); setPaymentRequests(paymentRequests.map(p => p.id === u.id ? u : p)); }
+                  }}
+                  disabled={selectedPR.status === "Paid"}
+                  className="flex-1 py-2.5 bg-primary text-white font-bold rounded-lg hover:bg-primary/95 text-xs transition-all disabled:opacity-40"
+                >Request Approval</button>
+                <button
+                  onClick={async () => {
+                    const res = await fetch(`${getApiHost()}/apis/v3/finance/payment-requests/approve/${selectedPR.id}`, {
+                      method: "PUT", headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ status: "Paid" }),
+                    });
+                    if (res.ok) { const u = await res.json(); setSelectedPR(u); setPaymentRequests(paymentRequests.map(p => p.id === u.id ? u : p)); }
+                  }}
+                  disabled={selectedPR.status === "Paid"}
+                  className="flex-1 py-2.5 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-500 text-xs transition-all disabled:opacity-40"
+                >Mark as Paid</button>
+              </div>
+              <button
+                onClick={() => { setPrPayment({ date: new Date().toISOString().slice(0, 10), mode: "Cash", paidAmount: String(selectedPR.amount || ""), deduction: "0", tds: "0", remarks: "", referenceNo: "", attachmentName: "" }); setShowRecordPaymentModal(true); }}
+                disabled={selectedPR.status === "Paid"}
+                className="w-full py-2.5 bg-white/10 text-white font-bold rounded-lg hover:bg-white/20 text-xs transition-all disabled:opacity-40"
+              >Record Payment</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Record Payment Modal ── */}
+      {showRecordPaymentModal && selectedPR && (
+        <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-center justify-center animate-fade-in p-4" onClick={() => setShowRecordPaymentModal(false)}>
+          <div className="bg-card w-full max-w-md border border-border-custom shadow-2xl rounded-xl p-6 overflow-y-auto max-h-[90vh]" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-center border-b border-border-custom pb-4 mb-5">
+              <div>
+                <h3 className="text-sm font-bold text-white uppercase tracking-wider">Record Payment</h3>
+                <p className="text-[10px] text-muted font-mono mt-0.5">{selectedPR.request_no} · {selectedPR.party_name}</p>
+              </div>
+              <button onClick={() => setShowRecordPaymentModal(false)} className="text-muted hover:text-white text-lg cursor-pointer">✕</button>
+            </div>
+
+            <div className="space-y-4 text-xs font-sans">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[10px] text-muted uppercase font-bold block mb-1">Payment Date*</label>
+                  <input type="date" value={prPayment.date}
+                    onChange={e => setPrPayment({ ...prPayment, date: e.target.value })}
+                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs" />
+                </div>
+                <div>
+                  <label className="text-[10px] text-muted uppercase font-bold block mb-1">Payment Mode*</label>
+                  <select value={prPayment.mode}
+                    onChange={e => setPrPayment({ ...prPayment, mode: e.target.value })}
+                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs">
+                    <option value="Cash">Cash</option>
+                    <option value="Bank">Bank</option>
+                    <option value="UPI">UPI</option>
+                    <option value="Cheque">Cheque</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[10px] text-muted uppercase font-bold block mb-1">Paid Amount (₹)*</label>
+                  <input type="number" value={prPayment.paidAmount}
+                    onChange={e => setPrPayment({ ...prPayment, paidAmount: e.target.value })}
+                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs font-mono" />
+                </div>
+                <div>
+                  <label className="text-[10px] text-muted uppercase font-bold block mb-1">Deduction (₹)</label>
+                  <input type="number" value={prPayment.deduction}
+                    onChange={e => setPrPayment({ ...prPayment, deduction: e.target.value })}
+                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs font-mono" />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[10px] text-muted uppercase font-bold block mb-1">TDS (₹)</label>
+                  <input type="number" value={prPayment.tds}
+                    onChange={e => setPrPayment({ ...prPayment, tds: e.target.value })}
+                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs font-mono" />
+                </div>
+                <div>
+                  <label className="text-[10px] text-muted uppercase font-bold block mb-1">Balance Due (₹)</label>
+                  <input type="text" readOnly
+                    value={Math.max(0, (selectedPR.amount || 0) - (parseFloat(prPayment.paidAmount) || 0) - (parseFloat(prPayment.deduction) || 0) - (parseFloat(prPayment.tds) || 0)).toLocaleString("en-IN")}
+                    className="w-full bg-background/50 border border-border-custom rounded-lg px-3 py-2 text-muted focus:outline-none text-xs font-mono" />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-[10px] text-muted uppercase font-bold block mb-1">Reference No.</label>
+                <input type="text" value={prPayment.referenceNo}
+                  onChange={e => setPrPayment({ ...prPayment, referenceNo: e.target.value })}
+                  placeholder="e.g. TXN-1234 / Cheque no."
+                  className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs" />
+              </div>
+
+              <div>
+                <label className="text-[10px] text-muted uppercase font-bold block mb-1">Remarks</label>
+                <textarea value={prPayment.remarks}
+                  onChange={e => setPrPayment({ ...prPayment, remarks: e.target.value })}
+                  rows={2} placeholder="Optional remarks..."
+                  className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs resize-none" />
+              </div>
+
+              <div>
+                <label className="text-[10px] text-muted uppercase font-bold block mb-1">Attach File(s)</label>
+                <input type="file" onChange={e => setPrPayment({ ...prPayment, attachmentName: e.target.files?.[0]?.name || "" })}
+                  className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs file:mr-3 file:rounded file:border-0 file:bg-primary/20 file:px-3 file:py-1 file:text-primary" />
+                {prPayment.attachmentName && <p className="text-[9px] text-muted mt-1">📎 {prPayment.attachmentName}</p>}
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={async () => {
+                    try {
+                      const res = await fetch(`${getApiHost()}/apis/v3/finance/payment-requests/pay/${selectedPR.id}`, {
+                        method: "POST", headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          payment_date: prPayment.date ? new Date(prPayment.date).toISOString() : new Date().toISOString(),
+                          payment_mode: prPayment.mode,
+                          paid_amount: parseFloat(prPayment.paidAmount) || 0,
+                          deduction: parseFloat(prPayment.deduction) || 0,
+                          tds: parseFloat(prPayment.tds) || 0,
+                          remarks: prPayment.remarks,
+                          reference_no: prPayment.referenceNo,
+                          attachment_name: prPayment.attachmentName,
+                        }),
+                      });
+                      if (res.ok) {
+                        const u = await res.json();
+                        setSelectedPR(u);
+                        setPaymentRequests(paymentRequests.map(p => p.id === u.id ? u : p));
+                        setShowRecordPaymentModal(false);
+                      }
+                    } catch (err) { console.error(err); }
+                  }}
+                  className="flex-1 py-2.5 bg-primary text-white font-bold rounded-lg hover:bg-primary/95 text-xs transition-all"
+                >Save Payment</button>
+                <button onClick={() => setShowRecordPaymentModal(false)} className="px-4 py-2.5 rounded-lg border border-border-custom text-muted hover:text-white hover:border-white/20 text-xs">Cancel</button>
+              </div>
             </div>
           </div>
         </div>

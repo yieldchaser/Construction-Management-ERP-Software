@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, File, Form, Uploa
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.models import Payment, PaymentSettlement, Bill, PayrollRun, PayrollLineItem, StaffEmployee, ProjectBudget, Project, CompanyTeam, User, Equipment, EquipmentDeployment, FuelLog, BankAccount, PaymentRequest
+from app.models import Payment, PaymentSettlement, Bill, PayrollRun, PayrollLineItem, StaffEmployee, ProjectBudget, Project, CompanyTeam, User, Equipment, EquipmentDeployment, FuelLog, BankAccount, PaymentRequest, PaymentRequestPayment, CashAccount, LibraryParty
 from pydantic import BaseModel
 
 router = APIRouter(
@@ -432,6 +432,7 @@ class PaymentRequestCreate(BaseModel):
     due_date: Optional[datetime] = None
     approval_status: Optional[str] = None
     request_type: Optional[str] = None
+    request_no: Optional[str] = None
 
 class PaymentRequestResponse(BaseModel):
     id: uuid.UUID
@@ -445,10 +446,22 @@ class PaymentRequestResponse(BaseModel):
     due_date: Optional[datetime]
     approval_status: str = "Pending"
     request_type: Optional[str] = None
+    request_no: Optional[str] = None
     created_at: datetime
+    payment: Optional[dict] = None
 
     class Config:
         from_attributes = True
+
+class PaymentRequestPaymentCreate(BaseModel):
+    payment_date: datetime
+    payment_mode: str  # Cash, Bank, UPI, Cheque
+    paid_amount: float
+    deduction: float = 0.0
+    tds: float = 0.0
+    remarks: Optional[str] = None
+    reference_no: Optional[str] = None
+    attachment_name: Optional[str] = None
 
 
 @router.get("/accounts/{company_id}", response_model=List[BankAccountResponse])
@@ -473,6 +486,312 @@ def create_bank_account(company_id: uuid.UUID, data: BankAccountCreate, db: Sess
     return new_acc
 
 
+# --- Cash Account (Finance tab: Accounts sub-tab) ---
+def _cash_running_balance(db, company_id: uuid.UUID) -> float:
+    """Running cash balance = opening balance + (cash-in payments - cash-out payments)."""
+    cash_acc = db.query(CashAccount).filter(CashAccount.company_id == company_id).first()
+    opening = float(cash_acc.opening_balance) if cash_acc else 0.0
+    cash_in = db.query(func.coalesce(func.sum(Payment.amount), 0)).filter(
+        Payment.company_id == company_id, Payment.payment_type == "in",
+        Payment.payment_method.ilike("%cash%"),
+    ).scalar() or 0
+    cash_out = db.query(func.coalesce(func.sum(Payment.amount), 0)).filter(
+        Payment.company_id == company_id, Payment.payment_type == "out",
+        Payment.payment_method.ilike("%cash%"),
+    ).scalar() or 0
+    return round(opening + float(cash_in) - float(cash_out), 2)
+
+
+class CashAccountCreate(BaseModel):
+    name: Optional[str] = "Cash Account"
+    opening_balance: float = 0.0
+
+
+class CashAccountResponse(BaseModel):
+    id: uuid.UUID
+    company_id: uuid.UUID
+    name: str
+    opening_balance: float
+    running_balance: float
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+@router.get("/cash-account/{company_id}", response_model=Optional[CashAccountResponse])
+def get_cash_account(company_id: uuid.UUID, db: Session = Depends(get_db)):
+    acc = db.query(CashAccount).filter(CashAccount.company_id == company_id).first()
+    if not acc:
+        return None
+    return CashAccountResponse(
+        id=acc.id,
+        company_id=acc.company_id,
+        name=acc.name,
+        opening_balance=acc.opening_balance,
+        running_balance=_cash_running_balance(db, company_id),
+        created_at=acc.created_at,
+    )
+
+
+@router.post("/cash-account/{company_id}", response_model=CashAccountResponse)
+def create_cash_account(company_id: uuid.UUID, data: CashAccountCreate, db: Session = Depends(get_db)):
+    existing = db.query(CashAccount).filter(CashAccount.company_id == company_id).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Cash account already exists for this company")
+    new_acc = CashAccount(
+        company_id=company_id,
+        name=data.name or "Cash Account",
+        opening_balance=data.opening_balance,
+    )
+    db.add(new_acc)
+    db.commit()
+    db.refresh(new_acc)
+    return CashAccountResponse(
+        id=new_acc.id,
+        company_id=new_acc.company_id,
+        name=new_acc.name,
+        opening_balance=new_acc.opening_balance,
+        running_balance=_cash_running_balance(db, company_id),
+        created_at=new_acc.created_at,
+    )
+
+
+# --- Company-level Party aggregation (Finance tab: Party sub-tab) ---
+def _company_party_team_ids(db, party_id: uuid.UUID):
+    """Resolve the billing-side company_team ids linked to a library party (company-wide)."""
+    team_ids = [
+        t.id
+        for t in db.query(CompanyTeam).filter(CompanyTeam.library_party_id == party_id).all()
+    ]
+    if not team_ids:
+        lp = db.query(LibraryParty).filter(LibraryParty.id == party_id).first()
+        if lp and lp.name:
+            teams = (
+                db.query(CompanyTeam)
+                .join(User, User.id == CompanyTeam.user_id)
+                .filter(
+                    CompanyTeam.company_id == lp.company_id,
+                    func.lower(func.trim(User.name)) == lp.name.strip().lower(),
+                )
+                .all()
+            )
+            team_ids = [t.id for t in teams]
+    return team_ids
+
+
+class CompanyPartyResponse(BaseModel):
+    id: uuid.UUID
+    party_id_custom: Optional[str] = None
+    name: str
+    party_type: Optional[str] = None
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    address: Optional[str] = None
+    bank_account_id: Optional[uuid.UUID] = None
+    contractor_role: Optional[str] = None
+    service_rate_categories: Optional[str] = None
+    # Computed company-wide metrics
+    advance_paid: float = 0.0       # money advanced/paid to party (vendor/subcon)
+    to_pay: float = 0.0             # outstanding payable to party
+    to_receive: float = 0.0         # outstanding receivable from party (client)
+    advance_received: float = 0.0   # advance taken from party (client)
+    balance: float = 0.0            # net balance (positive = party owes us / advance paid)
+    status: str = "To Pay"
+
+    class Config:
+        from_attributes = True
+
+
+@router.get("/parties/{company_id}", response_model=List[CompanyPartyResponse])
+def get_company_parties(company_id: uuid.UUID, db: Session = Depends(get_db)):
+    parties = db.query(LibraryParty).filter(LibraryParty.company_id == company_id).all()
+    result = []
+    for lp in parties:
+        team_ids = _company_party_team_ids(db, lp.id)
+        opening_pay = float(lp.opening_balance or 0.0) if lp.opening_balance_type == "pay" else 0.0
+        opening_receive = float(lp.opening_balance or 0.0) if lp.opening_balance_type == "receive" else 0.0
+
+        # Payable side (purchase / subcon bills)
+        pay_net = opening_pay
+        recv_net = opening_receive
+        if team_ids:
+            bills = db.query(Bill).filter(Bill.party_company_user_id.in_(team_ids)).all()
+            for b in bills:
+                delta = float(b.paid_amount or 0.0) - float(b.total_payable or 0.0)
+                if b.invoice_type == "sale":
+                    recv_net += delta
+                else:
+                    pay_net += delta
+
+        advance_paid = round(max(0.0, pay_net), 2)
+        to_pay = round(max(0.0, -pay_net), 2)
+        advance_received = round(max(0.0, recv_net), 2)
+        to_receive = round(max(0.0, -recv_net), 2)
+
+        balance = round(advance_paid + advance_received - to_pay - to_receive, 2)
+
+        if to_pay > 0:
+            status = "To Pay"
+        elif advance_paid > 0:
+            status = "Advance Paid"
+        elif to_receive > 0:
+            status = "To Receive"
+        elif advance_received > 0:
+            status = "Advance Received"
+        else:
+            status = "Settled"
+
+        result.append(CompanyPartyResponse(
+            id=lp.id,
+            party_id_custom=lp.party_id_custom,
+            name=lp.name,
+            party_type=lp.party_type,
+            phone=lp.phone,
+            email=lp.email,
+            address=lp.address,
+            bank_account_id=lp.bank_account_id,
+            contractor_role=lp.contractor_role,
+            service_rate_categories=lp.service_rate_categories,
+            advance_paid=advance_paid,
+            to_pay=to_pay,
+            to_receive=to_receive,
+            advance_received=advance_received,
+            balance=balance,
+            status=status,
+        ))
+    return result
+
+
+# --- Company-level Transactions & Summary (Finance tab: Transaction sub-tab) ---
+def _txn_party_name(db, team_id):
+    if not team_id:
+        return "Walk-in Party"
+    team = db.query(CompanyTeam).filter(CompanyTeam.id == team_id).first()
+    if not team:
+        return "Unknown Party"
+    user = db.query(User).filter(User.id == team.user_id).first()
+    return user.name if user else "Unknown Party"
+
+
+class TransactionRow(BaseModel):
+    id: str
+    date: str
+    type: str
+    party: str
+    details: str
+    status: str
+    amount: float
+    project_id: Optional[str] = None
+    ref: str = ""
+
+    class Config:
+        from_attributes = True
+
+
+class FinanceSummaryResponse(BaseModel):
+    total_invoice: float = 0.0
+    unpaid_invoice: float = 0.0
+    total_expense: float = 0.0
+    unpaid_expense: float = 0.0
+    company_balance: float = 0.0
+    cash_balance: float = 0.0
+    in_total: float = 0.0
+    out_total: float = 0.0
+    transactions: List[TransactionRow] = []
+
+    class Config:
+        from_attributes = True
+
+
+@router.get("/transactions/{company_id}", response_model=FinanceSummaryResponse)
+def get_company_transactions(company_id: uuid.UUID, db: Session = Depends(get_db)):
+    project_ids = [p.id for p in db.query(Project).filter(Project.company_id == company_id).all()]
+
+    bills = []
+    if project_ids:
+        bills = db.query(Bill).filter(Bill.project_id.in_(project_ids)).all()
+    payments = []
+    if project_ids:
+        payments = db.query(Payment).filter(Payment.project_id.in_(project_ids)).all()
+
+    total_invoice = 0.0
+    unpaid_invoice = 0.0
+    total_expense = 0.0
+    unpaid_expense = 0.0
+    in_total = 0.0
+    out_total = 0.0
+
+    rows: List[TransactionRow] = []
+
+    for b in bills:
+        party = _txn_party_name(db, b.party_company_user_id)
+        payable = float(b.total_payable or 0.0)
+        paid = float(b.paid_amount or 0.0)
+        outstanding = round(max(0.0, payable - paid), 2)
+        type_label = {
+            "sale": "Sales Invoice",
+            "purchase": "Material Purchase",
+            "subcon": "Subcon Bill",
+        }.get(b.invoice_type, b.invoice_type)
+        # Invoices are company "expense" when payable out (purchase/subcon) and "invoice" when sale
+        if b.invoice_type == "sale":
+            total_invoice += payable
+            unpaid_invoice += outstanding
+        else:
+            total_expense += payable
+            unpaid_expense += outstanding
+        rows.append(TransactionRow(
+            id=str(b.id),
+            date=(b.invoice_date.strftime("%Y-%m-%d") if b.invoice_date else ""),
+            type=type_label,
+            party=party,
+            details=f"Invoice {b.invoice_number}",
+            status=b.status,
+            amount=payable,
+            project_id=str(b.project_id) if b.project_id else None,
+            ref=b.invoice_number or "",
+        ))
+
+    for p in payments:
+        party = _txn_party_name(db, p.party_company_user_id)
+        amt = float(p.amount or 0.0)
+        if p.payment_type == "in":
+            in_total += amt
+        else:
+            out_total += amt
+        rows.append(TransactionRow(
+            id=str(p.id),
+            date=(p.payment_date.strftime("%Y-%m-%d") if p.payment_date else ""),
+            type="Payment In" if p.payment_type == "in" else "Payment Out",
+            party=party,
+            details=p.description or "",
+            status="Approved",
+            amount=amt,
+            project_id=str(p.project_id) if p.project_id else None,
+            ref=p.reference_number or "",
+        ))
+
+    # Company balance = cash wallet + all bank account balances
+    cash_balance = _cash_running_balance(db, company_id)
+    bank_balance = float(db.query(func.coalesce(func.sum(BankAccount.balance), 0.0)).filter(BankAccount.company_id == company_id).scalar() or 0.0)
+    company_balance = round(cash_balance + bank_balance, 2)
+
+    rows.sort(key=lambda r: r.date, reverse=True)
+
+    return FinanceSummaryResponse(
+        total_invoice=round(total_invoice, 2),
+        unpaid_invoice=round(unpaid_invoice, 2),
+        total_expense=round(total_expense, 2),
+        unpaid_expense=round(unpaid_expense, 2),
+        company_balance=company_balance,
+        cash_balance=cash_balance,
+        in_total=round(in_total, 2),
+        out_total=round(out_total, 2),
+        transactions=rows,
+    )
+
+
 @router.get("/payment-requests/{company_id}", response_model=List[PaymentRequestResponse])
 def get_payment_requests(company_id: uuid.UUID, db: Session = Depends(get_db)):
     requests = db.query(PaymentRequest).filter(PaymentRequest.company_id == company_id).all()
@@ -481,6 +800,26 @@ def get_payment_requests(company_id: uuid.UUID, db: Session = Depends(get_db)):
     for r in requests:
         user = db.query(User).filter(User.id == r.party_company_user_id).first()
         party_name = user.name if user else "Unknown Party"
+        payment = (
+            db.query(PaymentRequestPayment)
+            .filter(PaymentRequestPayment.payment_request_id == r.id)
+            .order_by(PaymentRequestPayment.created_at.desc())
+            .first()
+        )
+        payment_dict = None
+        if payment:
+            payment_dict = {
+                "id": str(payment.id),
+                "payment_date": payment.payment_date,
+                "payment_mode": payment.payment_mode,
+                "paid_amount": payment.paid_amount,
+                "deduction": payment.deduction,
+                "tds": payment.tds,
+                "balance_due": payment.balance_due,
+                "remarks": payment.remarks,
+                "reference_no": payment.reference_no,
+                "attachment_name": payment.attachment_name,
+            }
         res.append(PaymentRequestResponse(
             id=r.id,
             company_id=r.company_id,
@@ -493,7 +832,9 @@ def get_payment_requests(company_id: uuid.UUID, db: Session = Depends(get_db)):
             due_date=r.due_date,
             approval_status=r.approval_status,
             request_type=r.request_type,
-            created_at=r.created_at
+            request_no=r.request_no,
+            created_at=r.created_at,
+            payment=payment_dict,
         ))
     return res
 
@@ -502,6 +843,12 @@ def get_payment_requests(company_id: uuid.UUID, db: Session = Depends(get_db)):
 def create_payment_request(company_id: uuid.UUID, data: PaymentRequestCreate, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == data.party_company_user_id).first()
     party_name = user.name if user else "Unknown Party"
+    # Auto-generate sequential request no (PR-1, PR-2, ...) per company
+    if not data.request_no:
+        count = db.query(PaymentRequest).filter(PaymentRequest.company_id == company_id).count()
+        request_no = f"PR-{count + 1}"
+    else:
+        request_no = data.request_no
     new_req = PaymentRequest(
         company_id=company_id,
         project_id=data.project_id,
@@ -511,7 +858,8 @@ def create_payment_request(company_id: uuid.UUID, data: PaymentRequestCreate, db
         details=data.details,
         due_date=data.due_date,
         approval_status=data.approval_status or "Pending",
-        request_type=data.request_type
+        request_type=data.request_type,
+        request_no=request_no,
     )
     db.add(new_req)
     db.commit()
@@ -528,7 +876,64 @@ def create_payment_request(company_id: uuid.UUID, data: PaymentRequestCreate, db
         due_date=new_req.due_date,
         approval_status=new_req.approval_status,
         request_type=new_req.request_type,
-        created_at=new_req.created_at
+        request_no=new_req.request_no,
+        created_at=new_req.created_at,
+        payment=None,
+    )
+
+
+@router.post("/payment-requests/pay/{request_id}", response_model=PaymentRequestResponse)
+def record_payment_request(request_id: uuid.UUID, data: PaymentRequestPaymentCreate, db: Session = Depends(get_db)):
+    req = db.query(PaymentRequest).filter(PaymentRequest.id == request_id).first()
+    if not req:
+        raise HTTPException(status_code=404, detail="Payment request not found")
+    balance_due = max(0.0, req.amount - data.paid_amount - data.deduction - data.tds)
+    payment = PaymentRequestPayment(
+        payment_request_id=req.id,
+        company_id=req.company_id,
+        payment_date=data.payment_date,
+        payment_mode=data.payment_mode,
+        paid_amount=data.paid_amount,
+        deduction=data.deduction,
+        tds=data.tds,
+        balance_due=balance_due,
+        remarks=data.remarks,
+        reference_no=data.reference_no,
+        attachment_name=data.attachment_name,
+    )
+    db.add(payment)
+    req.status = "Paid"
+    req.approval_status = "Approved"
+    db.commit()
+    db.refresh(req)
+    user = db.query(User).filter(User.id == req.party_company_user_id).first()
+    party_name = user.name if user else "Unknown Party"
+    return PaymentRequestResponse(
+        id=req.id,
+        company_id=req.company_id,
+        project_id=req.project_id,
+        party_company_user_id=req.party_company_user_id,
+        party_name=party_name,
+        amount=req.amount,
+        details=req.details,
+        status=req.status,
+        due_date=req.due_date,
+        approval_status=req.approval_status,
+        request_type=req.request_type,
+        request_no=req.request_no,
+        created_at=req.created_at,
+        payment={
+            "id": str(payment.id),
+            "payment_date": payment.payment_date,
+            "payment_mode": payment.payment_mode,
+            "paid_amount": payment.paid_amount,
+            "deduction": payment.deduction,
+            "tds": payment.tds,
+            "balance_due": payment.balance_due,
+            "remarks": payment.remarks,
+            "reference_no": payment.reference_no,
+            "attachment_name": payment.attachment_name,
+        },
     )
 
 

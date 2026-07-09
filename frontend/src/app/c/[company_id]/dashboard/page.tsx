@@ -459,6 +459,12 @@ export default function DashboardPage() {
   const advReceived = financialData?.advance_received ?? 0.0;
   const totalBalance = advPaid + toPay + toReceive;
 
+  const formatCompact = (val: number) => {
+    if (val >= 1000000) return `${(val / 1000000).toFixed(2)}M`;
+    if (val >= 1000) return `${(val / 1000).toFixed(2)}K`;
+    return val.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
+
   const advPaidPct = totalBalance > 0 ? advPaid / totalBalance : 0.5;
   const toPayPct = totalBalance > 0 ? toPay / totalBalance : 0.5;
   const toReceivePct = totalBalance > 0 ? toReceive / totalBalance : 0.0;
@@ -899,9 +905,73 @@ export default function DashboardPage() {
                               </select>
                             </div>
                           </div>
-                          <div className="h-40 flex items-center justify-center rounded-md bg-transparent">
-                            <span className="text-red-500 [.light-theme_&]:text-red-600 text-xs font-bold uppercase tracking-wider">No Data Available</span>
-                          </div>
+                          {(() => {
+                            const series = operationalData?.attendance_series || [];
+                            const hasData = series.length > 0 && series.some((day: any) => day.present > 0 || day.absent > 0);
+
+                            if (!hasData) {
+                              return (
+                                <div className="h-40 flex items-center justify-center rounded-md bg-transparent">
+                                  <span className="text-red-500 [.light-theme_&]:text-red-600 text-xs font-bold uppercase tracking-wider">No Data Available</span>
+                                </div>
+                              );
+                            }
+
+                            // Calculate maximum value for scaling
+                            const maxVal = Math.max(...series.map((day: any) => Math.max(day.present, day.absent)), 5);
+                            const chartWidth = 240;
+                            const barWidth = 10;
+
+                            return (
+                              <div className="h-40 flex items-center justify-center bg-transparent relative overflow-visible">
+                                <svg className="w-full h-full overflow-visible" viewBox="0 0 280 120">
+                                  {/* Gridline / Baseline */}
+                                  <line x1="20" y1="90" x2="260" y2="90" stroke="var(--border)" strokeWidth="1" className="[.light-theme_&]:stroke-zinc-200" />
+                                  
+                                  {series.map((day: any, idx: number) => {
+                                    const x = 30 + idx * (chartWidth / series.length);
+                                    
+                                    const presentHeight = (day.present / maxVal) * 70;
+                                    const absentHeight = (day.absent / maxVal) * 70;
+                                    
+                                    const presentY = 90 - presentHeight;
+                                    const absentY = 90 - absentHeight;
+
+                                    // Format short date (e.g. "09 Jul" or just day name "Mon")
+                                    const dateObj = new Date(day.date);
+                                    const formattedDate = isNaN(dateObj.getTime()) 
+                                      ? day.date 
+                                      : dateObj.toLocaleDateString("en-US", { day: "numeric", month: "short" });
+
+                                    return (
+                                      <g key={idx}>
+                                        {/* Present Bar */}
+                                        <rect x={x} y={presentY} width={barWidth} height={presentHeight || 1} fill="#26A69A" rx="1" className="transition-all hover:opacity-90" />
+                                        {day.present > 0 && (
+                                          <text x={x + barWidth / 2} y={presentY - 3} fill="#26A69A" fontSize="7" fontWeight="bold" textAnchor="middle">
+                                            {day.present}
+                                          </text>
+                                        )}
+
+                                        {/* Absent Bar */}
+                                        <rect x={x + barWidth + 2} y={absentY} width={barWidth} height={absentHeight || 1} fill="#EF5350" rx="1" className="transition-all hover:opacity-90" />
+                                        {day.absent > 0 && (
+                                          <text x={x + barWidth + 2 + barWidth / 2} y={absentY - 3} fill="#EF5350" fontSize="7" fontWeight="bold" textAnchor="middle">
+                                            {day.absent}
+                                          </text>
+                                        )}
+
+                                        {/* Date Label */}
+                                        <text x={x + barWidth + 1} y="105" fill="#6b7280" fontSize="7" textAnchor="middle" transform={`rotate(-15 ${x + barWidth + 1} 105)`}>
+                                          {formattedDate}
+                                        </text>
+                                      </g>
+                                    );
+                                  })}
+                                </svg>
+                              </div>
+                            );
+                          })()}
                         </div>
                       </div>
 
@@ -922,9 +992,59 @@ export default function DashboardPage() {
                               </select>
                             </div>
                           </div>
-                          <div className="h-40 flex items-center justify-center rounded-md bg-transparent">
-                            <span className="text-red-500 [.light-theme_&]:text-red-600 text-xs font-bold uppercase tracking-wider">No Data Available</span>
-                          </div>
+                          {(() => {
+                            const series = operationalData?.material_series || [];
+                            const hasData = series.length > 0 && series.some((day: any) => day.count > 0);
+
+                            if (!hasData) {
+                              return (
+                                <div className="h-40 flex items-center justify-center rounded-md bg-transparent">
+                                  <span className="text-red-500 [.light-theme_&]:text-red-600 text-xs font-bold uppercase tracking-wider">No Data Available</span>
+                                </div>
+                              );
+                            }
+
+                            const maxVal = Math.max(...series.map((day: any) => day.count), 5);
+                            const chartWidth = 240;
+                            const barWidth = 16;
+
+                            return (
+                              <div className="h-40 flex items-center justify-center bg-transparent relative overflow-visible">
+                                <svg className="w-full h-full overflow-visible" viewBox="0 0 280 120">
+                                  {/* Gridline / Baseline */}
+                                  <line x1="20" y1="90" x2="260" y2="90" stroke="var(--border)" strokeWidth="1" className="[.light-theme_&]:stroke-zinc-200" />
+                                  
+                                  {series.map((day: any, idx: number) => {
+                                    const x = 30 + idx * (chartWidth / series.length);
+                                    const barHeight = (day.count / maxVal) * 70;
+                                    const y = 90 - barHeight;
+
+                                    const dateObj = new Date(day.date);
+                                    const formattedDate = isNaN(dateObj.getTime()) 
+                                      ? day.date 
+                                      : dateObj.toLocaleDateString("en-US", { day: "numeric", month: "short" });
+
+                                    return (
+                                      <g key={idx}>
+                                        {/* Material Received Bar */}
+                                        <rect x={x} y={y} width={barWidth} height={barHeight || 1} fill="#5C6BC0" rx="1.5" className="transition-all hover:opacity-90" />
+                                        {day.count > 0 && (
+                                          <text x={x + barWidth / 2} y={y - 3} fill="#5C6BC0" fontSize="7" fontWeight="bold" textAnchor="middle">
+                                            {day.count}
+                                          </text>
+                                        )}
+
+                                        {/* Date Label */}
+                                        <text x={x + barWidth / 2} y="105" fill="#6b7280" fontSize="7" textAnchor="middle" transform={`rotate(-15 ${x + barWidth / 2} 105)`}>
+                                          {formattedDate}
+                                        </text>
+                                      </g>
+                                    );
+                                  })}
+                                </svg>
+                              </div>
+                            );
+                          })()}
                         </div>
                       </div>
                     </div>
@@ -1070,7 +1190,7 @@ export default function DashboardPage() {
                           <circle cx={line1Start.x} cy={line1Start.y} r="2" fill="#5C6BC0" />
                           <rect x={line1End.x - 55} y={line1End.y - 10} width="50" height="16" rx="3" fill="#5C6BC0" />
                           <text x={line1End.x - 30} y={line1End.y + 2} fill="white" fontSize="8" fontWeight="bold" textAnchor="middle">
-                            12.17M
+                            {formatCompact(advPaid)}
                           </text>
 
                           {/* To Pay Label (Right/Top) */}
@@ -1078,7 +1198,7 @@ export default function DashboardPage() {
                           <circle cx={line2Start.x} cy={line2Start.y} r="2" fill="#26A69A" />
                           <rect x={line2End.x + 5} y={line2End.y - 10} width="50" height="16" rx="3" fill="#26A69A" />
                           <text x={line2End.x + 30} y={line2End.y + 2} fill="white" fontSize="8" fontWeight="bold" textAnchor="middle">
-                            12.12M
+                            {formatCompact(toPay)}
                           </text>
 
                           {/* To Receive Label (Far Right/Bottom) */}
@@ -1086,7 +1206,7 @@ export default function DashboardPage() {
                           <circle cx={line3Start.x} cy={line3Start.y} r="2" fill="#EF5350" />
                           <rect x={line3End.x + 5} y={line3End.y - 10} width="55" height="16" rx="3" fill="#EF5350" />
                           <text x={line3End.x + 32.5} y={line3End.y + 2} fill="white" fontSize="8" fontWeight="bold" textAnchor="middle">
-                            128.79K
+                            {formatCompact(toReceive)}
                           </text>
                         </svg>
                       </div>
@@ -1103,21 +1223,21 @@ export default function DashboardPage() {
                               <span className="h-2.5 w-2.5 rounded-sm bg-[#5C6BC0]" />
                               <span className="text-zinc-300 [.light-theme_&]:text-zinc-600 font-medium">Advance Paid</span>
                             </div>
-                            <span className="font-semibold text-white [.light-theme_&]:text-zinc-800">12.17M</span>
+                            <span className="font-semibold text-white [.light-theme_&]:text-zinc-800">{formatCompact(advPaid)}</span>
                           </div>
                           <div className="flex justify-between items-center text-xs">
                             <div className="flex items-center gap-2">
                               <span className="h-2.5 w-2.5 rounded-sm bg-[#26A69A]" />
                               <span className="text-zinc-300 [.light-theme_&]:text-zinc-600 font-medium">To Pay</span>
                             </div>
-                            <span className="font-semibold text-white [.light-theme_&]:text-zinc-800">12.12M</span>
+                            <span className="font-semibold text-white [.light-theme_&]:text-zinc-800">{formatCompact(toPay)}</span>
                           </div>
                           <div className="flex justify-between items-center text-xs">
                             <div className="flex items-center gap-2">
                               <span className="h-2.5 w-2.5 rounded-sm bg-[#EF5350]" />
                               <span className="text-zinc-300 [.light-theme_&]:text-zinc-600 font-medium">To Receive</span>
                             </div>
-                            <span className="font-semibold text-white [.light-theme_&]:text-zinc-800">128.79K</span>
+                            <span className="font-semibold text-white [.light-theme_&]:text-zinc-800">{formatCompact(toReceive)}</span>
                           </div>
                         </div>
                       </div>

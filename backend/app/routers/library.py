@@ -6,9 +6,10 @@ from datetime import datetime
 from typing import List, Optional
 from app.database import get_db
 from app import models
+from app.auth import get_current_user
 import uuid
 
-router = APIRouter(prefix="/library", tags=["Company Libraries"])
+router = APIRouter(prefix="/library", tags=["Company Libraries"], dependencies=[Depends(get_current_user)])
 
 # ─── schemas ───
 
@@ -16,6 +17,7 @@ class PartyCreate(BaseModel):
     company_id: uuid.UUID
     party_id_custom: Optional[str] = None
     name: str
+    project_id: Optional[uuid.UUID] = None
     phone: Optional[str] = None
     email: Optional[str] = None
     party_type: Optional[str] = None
@@ -36,6 +38,14 @@ class PartyCreate(BaseModel):
     creator_name: Optional[str] = None
     aadhaar_file: Optional[str] = None
     pan_file: Optional[str] = None
+    opening_balance_direction: Optional[str] = None  # will_pay / will_receive
+    opening_balance_amount: Optional[float] = 0.0
+    # Finance tab company-level extensions
+    contractor_role: Optional[str] = None
+    service_rate_categories: Optional[str] = None  # JSON list of tag strings
+    bank_account_id: Optional[uuid.UUID] = None
+    opening_balance: Optional[float] = 0.0
+    opening_balance_type: Optional[str] = None  # "pay" / "receive"
 
 class AssetTypeCreate(BaseModel):
     company_id: uuid.UUID
@@ -45,7 +55,9 @@ class CostCodeCreate(BaseModel):
     company_id: uuid.UUID
     code: str
     sub_cost_code: Optional[str] = None
+    parent_id: Optional[uuid.UUID] = None
     name: str
+    budget_amount: float = 0.0
 
 class DeductionCreate(BaseModel):
     company_id: uuid.UUID
@@ -148,12 +160,41 @@ def create_library_party(payload: PartyCreate, db: Session = Depends(get_db)):
         passport_expiry_date=_parse_optional_datetime(payload.passport_expiry_date),
         creator_name=payload.creator_name,
         aadhaar_file=payload.aadhaar_file,
-        pan_file=payload.pan_file
+        pan_file=payload.pan_file,
+        contractor_role=payload.contractor_role,
+        service_rate_categories=payload.service_rate_categories,
+        bank_account_id=payload.bank_account_id,
+        opening_balance=payload.opening_balance or 0.0,
+        opening_balance_type=payload.opening_balance_type,
     )
     db.add(party)
+    db.flush()
+    # Opening balance is project-scoped: persist it on the project_parties junction
+    # when a project context is supplied, otherwise keep a global opening record.
+    if payload.opening_balance_direction in ("will_pay", "will_receive") and (payload.opening_balance_amount or 0) > 0:
+        amount = float(payload.opening_balance_amount)
+        adv = amount if payload.opening_balance_direction == "will_receive" else 0.0
+        pay = amount if payload.opening_balance_direction == "will_pay" else 0.0
+        if payload.project_id:
+            db.add(models.ProjectParty(
+                project_id=payload.project_id,
+                party_id=party.id,
+                balance=round(adv - pay, 2),
+                advance_paid=adv,
+                to_pay=pay,
+            ))
     db.commit()
     db.refresh(party)
     return party
+
+
+@router.get("/parties/{company_id}/balances")
+def get_party_balances(company_id: uuid.UUID, project_id: Optional[uuid.UUID] = None, db: Session = Depends(get_db)):
+    q = db.query(models.ProjectParty).filter(models.ProjectParty.project_id == project_id)
+    balances = q.all()
+    advance_paid = sum(float(b.advance_paid) for b in balances)
+    to_pay = sum(float(b.to_pay) for b in balances)
+    return {"advance_paid": round(advance_paid, 2), "to_pay": round(to_pay, 2)}
 
 @router.delete("/parties/{party_id}")
 def delete_library_party(party_id: uuid.UUID, db: Session = Depends(get_db)):
@@ -204,7 +245,9 @@ def create_library_cost_code(payload: CostCodeCreate, db: Session = Depends(get_
         company_id=payload.company_id,
         code=payload.code,
         sub_cost_code=payload.sub_cost_code,
-        name=payload.name
+        parent_id=payload.parent_id,
+        name=payload.name,
+        budget_amount=payload.budget_amount,
     )
     db.add(item)
     db.commit()
@@ -364,3 +407,71 @@ def delete_library_rate(item_id: uuid.UUID, db: Session = Depends(get_db)):
     db.delete(item)
     db.commit()
     return {"success": True}
+
+
+# ─── RETENTIONS ───
+
+class RetentionCreate(BaseModel):
+    company_id: uuid.UUID
+    name: str
+
+
+@router.get("/retentions/{company_id}")
+def get_library_retentions(company_id: uuid.UUID, db: Session = Depends(get_db)):
+    return db.query(models.LibraryRetention).filter(models.LibraryRetention.company_id == company_id).all()
+
+
+@router.post("/retentions")
+def create_library_retention(payload: RetentionCreate, db: Session = Depends(get_db)):
+    item = models.LibraryRetention(company_id=payload.company_id, name=payload.name)
+    db.add(item)
+    db.commit()
+    db.refresh(item)
+    return item
+
+
+@router.delete("/retentions/{item_id}")
+def delete_library_retention(item_id: uuid.UUID, db: Session = Depends(get_db)):
+    item = db.query(models.LibraryRetention).filter(models.LibraryRetention.id == item_id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Retention not found")
+    db.delete(item)
+    db.commit()
+    return {"success": True}
+
+
+# ─── MATERIAL CATEGORIES ───
+
+class MaterialCategoryCreate(BaseModel):
+    company_id: uuid.UUID
+    name: str
+    parent_id: Optional[uuid.UUID] = None
+
+
+@router.get("/material-categories/{company_id}")
+def get_material_categories(company_id: uuid.UUID, db: Session = Depends(get_db)):
+    return db.query(models.MaterialCategory).filter(models.MaterialCategory.company_id == company_id).all()
+
+
+@router.post("/material-categories")
+def create_material_category(payload: MaterialCategoryCreate, db: Session = Depends(get_db)):
+    item = models.MaterialCategory(
+        company_id=payload.company_id,
+        name=payload.name,
+        parent_id=payload.parent_id,
+    )
+    db.add(item)
+    db.commit()
+    db.refresh(item)
+    return item
+
+
+@router.delete("/material-categories/{item_id}")
+def delete_material_category(item_id: uuid.UUID, db: Session = Depends(get_db)):
+    item = db.query(models.MaterialCategory).filter(models.MaterialCategory.id == item_id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Material category not found")
+    db.delete(item)
+    db.commit()
+    return {"success": True}
+

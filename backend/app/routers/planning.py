@@ -4,12 +4,14 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.models import Task, TaskPredecessor, Project, TaskTodo, TaskComment
+from app.auth import get_current_user
+from app.models import Task, TaskPredecessor, Project, TaskTodo, TaskComment, CompanyTeam, User
 from pydantic import BaseModel
 
 router = APIRouter(
     prefix="/planning",
-    tags=["Planning & Scheduler"]
+    tags=["Planning & Scheduler"],
+    dependencies=[Depends(get_current_user)]
 )
 
 # Pydantic Schemas
@@ -25,9 +27,15 @@ class TaskResponse(BaseModel):
     priority: str
     assigned_to: Optional[UUID] = None
     boq_item_id: Optional[UUID] = None
+    progress: float = 0.0  # actual physical progress %, 0-100
 
     class Config:
         from_attributes = True
+
+
+class CompanyTaskResponse(TaskResponse):
+    project_name: Optional[str] = None
+    assigned_to_name: Optional[str] = None
 
 class TaskCreateRequest(BaseModel):
     project_id: UUID
@@ -38,6 +46,7 @@ class TaskCreateRequest(BaseModel):
     priority: str = "medium"
     assigned_to: Optional[UUID] = None
     boq_item_id: Optional[UUID] = None
+    progress: float = 0.0
 
 class TaskUpdateRequest(BaseModel):
     name: Optional[str] = None
@@ -46,6 +55,7 @@ class TaskUpdateRequest(BaseModel):
     status: Optional[str] = None
     priority: Optional[str] = None
     assigned_to: Optional[UUID] = None
+    progress: Optional[float] = None
 
 class PredecessorCreateRequest(BaseModel):
     predecessor_id: UUID
@@ -111,6 +121,49 @@ def get_tasks(project_id: UUID, db: Session = Depends(get_db)):
     tasks = db.query(Task).filter(Task.project_id == project_id).all()
     return tasks
 
+@router.get("/tasks/company/{company_id}", response_model=List[CompanyTaskResponse])
+def get_company_tasks(company_id: UUID, db: Session = Depends(get_db)):
+    """Cross-project rollup of every task in the company (Team Schedule Gantt)."""
+    company = db.query(Project).filter(Project.company_id == company_id).first()
+    if not company:
+        raise HTTPException(status_code=404, detail="Company has no projects")
+
+    tasks = (
+        db.query(Task)
+        .join(Project, Task.project_id == Project.id)
+        .filter(Project.company_id == company_id)
+        .all()
+    )
+
+    projects = db.query(Project).filter(Project.company_id == company_id).all()
+    proj_by_id = {p.id: p for p in projects}
+
+    team_ids = [t.assigned_to for t in tasks if t.assigned_to]
+    teams = db.query(CompanyTeam).filter(CompanyTeam.id.in_(team_ids)).all() if team_ids else []
+    users = (
+        db.query(User).filter(User.id.in_([t.user_id for t in teams if t.user_id])).all()
+        if teams else []
+    )
+    users_by_id = {u.id: u for u in users}
+    team_by_id = {t.id: t for t in teams}
+
+    def resolve_name(tid: UUID) -> Optional[str]:
+        team = team_by_id.get(tid)
+        if not team:
+            return None
+        if team.user_id and team.user_id in users_by_id and users_by_id[team.user_id].name:
+            return users_by_id[team.user_id].name
+        return None
+
+    out = []
+    for t in tasks:
+        d = TaskResponse.from_orm(t).dict()
+        d["project_name"] = proj_by_id[t.project_id].name if t.project_id in proj_by_id else None
+        d["assigned_to_name"] = resolve_name(t.assigned_to) if t.assigned_to else None
+        out.append(CompanyTaskResponse(**d))
+    return out
+
+
 @router.post("/tasks", response_model=TaskResponse, status_code=status.HTTP_201_CREATED)
 def create_task(request: TaskCreateRequest, db: Session = Depends(get_db)):
     project = db.query(Project).filter(Project.id == request.project_id).first()
@@ -129,7 +182,8 @@ def create_task(request: TaskCreateRequest, db: Session = Depends(get_db)):
         end_date=end_date,
         priority=request.priority,
         assigned_to=request.assigned_to,
-        boq_item_id=request.boq_item_id
+        boq_item_id=request.boq_item_id,
+        progress=request.progress
     )
 
     db.add(task)
@@ -153,6 +207,8 @@ def update_task(task_id: UUID, request: TaskUpdateRequest, db: Session = Depends
         task.priority = request.priority
     if request.assigned_to is not None:
         task.assigned_to = request.assigned_to
+    if request.progress is not None:
+        task.progress = request.progress
 
     # Handle duration or start date changes
     if request.start_date is not None or request.duration_days is not None:

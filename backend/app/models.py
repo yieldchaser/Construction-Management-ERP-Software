@@ -1,11 +1,42 @@
 import uuid
-from sqlalchemy import Column, String, ForeignKey, DateTime, Integer, Boolean, Table, Numeric, Float
+from sqlalchemy import Column, String, ForeignKey, DateTime, Integer, Boolean, Table, Numeric, Float, Text, BigInteger, LargeBinary
 from sqlalchemy.sql import func
 from app.database import Base, engine
 
 # Database-agnostic fallback for SQLite testing
 if engine.url.drivername.startswith("sqlite"):
-    from sqlalchemy import JSON, UUID
+    import uuid as _uuid_mod
+    from sqlalchemy import JSON
+    from sqlalchemy.types import TypeDecorator
+
+    class SQLiteUUID(TypeDecorator):
+        """SQLite-safe UUID: stores as STRING(36), always reads back as uuid.UUID.
+
+        SQLAlchemy's generic UUID result processor mis-handles UUID PK reads on
+        SQLite (returns the value as a float), which 500s every row read. This
+        type sidesteps that by serialising to a plain hyphenated string. Only used
+        on SQLite; Postgres keeps its native UUID type.
+        """
+        impl = String(36)
+        cache_ok = True
+
+        def __init__(self, as_uuid=None, **kwargs):
+            super().__init__()
+
+        def process_bind_param(self, value, dialect):
+            return str(value) if value is not None else None
+
+        def process_result_value(self, value, dialect):
+            if value is None:
+                return None
+            if isinstance(value, _uuid_mod.UUID):
+                return value
+            try:
+                return _uuid_mod.UUID(str(value))
+            except Exception:
+                return value
+
+    UUID = SQLiteUUID
     JSONB = JSON
 else:
     from sqlalchemy.dialects.postgresql import UUID, JSONB
@@ -64,6 +95,16 @@ class Project(Base):
     category = Column(String(100), nullable=True)
     stage = Column(String(100), nullable=True)
     key_personnel_id = Column(UUID(as_uuid=True), ForeignKey("company_team.id", ondelete="SET NULL"), nullable=True)
+    project_value = Column(Numeric(18, 2), default=0.0, nullable=False)
+    planned_start_date = Column(DateTime(timezone=True), nullable=True)
+    planned_end_date = Column(DateTime(timezone=True), nullable=True)
+    actual_start_date = Column(DateTime(timezone=True), nullable=True)
+    actual_end_date = Column(DateTime(timezone=True), nullable=True)
+    orientation = Column(String(255), nullable=True)
+    dimension = Column(String(255), nullable=True)
+    scope_of_work = Column(String, nullable=True)
+    project_avatar = Column(String, nullable=True)
+    is_pinned = Column(Boolean, default=False, nullable=False)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), default=func.now(), onupdate=func.now(), nullable=False)
 
@@ -90,6 +131,7 @@ class CompanyTeam(Base):
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"))
     role_id = Column(UUID(as_uuid=True), ForeignKey("company_roles.id", ondelete="SET NULL"), nullable=True)
     priority_type = Column(String(50), default="employee", nullable=False)
+    library_party_id = Column(UUID(as_uuid=True), ForeignKey("library_parties.id", ondelete="SET NULL"), nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 
 class BOQItem(Base):
@@ -107,6 +149,17 @@ class BOQItem(Base):
     installation_tax_pct = Column(Numeric(5, 2), default=12.00, nullable=False)
     quantity_float_limit = Column(Integer, default=2, nullable=False)
     amount = Column(Numeric(18, 2), nullable=True)
+    boq_document_id = Column(UUID(as_uuid=True), ForeignKey("boq_documents.id", ondelete="SET NULL"), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+class BOQDocument(Base):
+    __tablename__ = "boq_documents"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
+    client_party_id = Column(UUID(as_uuid=True), ForeignKey("library_parties.id", ondelete="SET NULL"), nullable=True)
+    title = Column(String(255), nullable=False)
+    milestone_done = Column(Integer, default=0, nullable=False)
+    milestone_total = Column(Integer, default=0, nullable=False)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 
 class ProjectBudget(Base):
@@ -132,6 +185,7 @@ class Task(Base):
     priority = Column(String(50), default="medium", nullable=False)
     assigned_to = Column(UUID(as_uuid=True), ForeignKey("company_team.id"), nullable=True)
     boq_item_id = Column(UUID(as_uuid=True), ForeignKey("boq_items.id", ondelete="SET NULL"), nullable=True)
+    progress = Column(Numeric(5, 2), default=0.0, nullable=False)  # actual physical progress %, 0-100
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 
 class TaskPredecessor(Base):
@@ -241,6 +295,7 @@ class WarehouseInventory(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
     material_name = Column(String(255), nullable=False)
+    category = Column(String(100), default="Uncategorized", nullable=False)
     on_hand_qty = Column(Numeric(18, 4), default=0.0, nullable=False)
     reserved_qty = Column(Numeric(18, 4), default=0.0, nullable=False)
     unit = Column(String(50), nullable=False)
@@ -251,8 +306,10 @@ class MaterialTransaction(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
     material_name = Column(String(255), nullable=False)
+    category = Column(String(100), default="Uncategorized", nullable=False)
     qty = Column(Numeric(18, 4), nullable=False)
     type = Column(String(50), nullable=False) # received, used, transferred, returned
+    unit = Column(String(50), nullable=True)
     source_ref_id = Column(UUID(as_uuid=True), nullable=True) # grn_id, dpr_id, etc.
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 
@@ -362,6 +419,13 @@ class Bill(Base):
     approval_flag = Column(String(50), default="pending", nullable=False)
     is_milestone_fixed_amount = Column(Boolean, default=False, nullable=False)
     tally_synced = Column(Boolean, default=False, nullable=False)
+    boq_document_id = Column(UUID(as_uuid=True), ForeignKey("boq_documents.id", ondelete="SET NULL"), nullable=True)
+    # Transaction sub-entity persistence (Project Tab Transaction build)
+    items_json = Column(Text, nullable=True)  # JSON array of line items: {desc, cost_code_id, cost_code_name, qty, rate, amount}
+    payment_mode = Column(String(20), nullable=True)  # Cash / Bank / Cheque (Payment In / Payment Out)
+    payment_bank_name = Column(String(255), nullable=True)
+    payment_ref = Column(String(255), nullable=True)  # cheque no / bank txn ref
+    ship_to = Column(Text, nullable=True)  # Bill / Ship addressing
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), default=func.now(), onupdate=func.now(), nullable=False)
 
@@ -488,6 +552,29 @@ class TimesheetEntry(Base):
     start_time = Column(DateTime(timezone=True), nullable=True)
     end_time = Column(DateTime(timezone=True), nullable=True)
     duration = Column(Integer, nullable=True) # in minutes
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
+class TeamScheduleTimesheet(Base):
+    """Lightweight party-linked time log (Team Schedule tab).
+
+    Deliberately separate from the HR/payroll weekly `Timesheet` model: this is
+    one row per time-log entry (any party type + single date + start/end + project),
+    with no week grouping or submit/approve workflow. See scratchpad decision (a).
+    """
+    __tablename__ = "team_schedule_timesheets"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    party_id = Column(UUID(as_uuid=True), ForeignKey("library_parties.id", ondelete="SET NULL"), nullable=True)
+    party_name = Column(String(255), nullable=True)  # snapshot at log time
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="SET NULL"), nullable=True)
+    entry_date = Column(DateTime(timezone=True), nullable=False)
+    start_time = Column(DateTime(timezone=True), nullable=True)
+    end_time = Column(DateTime(timezone=True), nullable=True)
+    duration_minutes = Column(Integer, nullable=True)
+    remarks = Column(String, nullable=True)
+    file_url = Column(String, nullable=True)  # e.g. /files/file/{project_file_id}
+    file_name = Column(String(255), nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 
 
@@ -1003,6 +1090,20 @@ class BankAccount(Base):
     ifsc_code = Column(String(20), nullable=False)
     upi_id = Column(String(100), nullable=True)
     balance = Column(Float, default=0.0, nullable=False)
+    opening_balance = Column(Float, default=0.0, nullable=False)
+    iban = Column(String(100), nullable=True)
+    bank_address = Column(String, nullable=True)
+    overdraft_limit = Column(Float, default=0.0, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
+class CashAccount(Base):
+    """Company-wide cash wallet; running balance = opening + net cash payments."""
+    __tablename__ = "cash_accounts"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    name = Column(String(255), default="Cash Account", nullable=False)
+    opening_balance = Column(Float, default=0.0, nullable=False)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 
 
@@ -1053,6 +1154,48 @@ class Holiday(Base):
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 
 
+class Designation(Base):
+    """Company-scoped master-data lookup for employee designations."""
+    __tablename__ = "designations"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    name = Column(String(255), nullable=False)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
+class LeaveTemplate(Base):
+    """Company-scoped leave policy: how many leave days of each type per year."""
+    __tablename__ = "leave_templates"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    name = Column(String(255), nullable=False)
+    casual_leave_days = Column(Numeric(5, 1), default=0.0, nullable=False)
+    sick_leave_days = Column(Numeric(5, 1), default=0.0, nullable=False)
+    earned_leave_days = Column(Numeric(5, 1), default=0.0, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
+class PayrollProfile(Base):
+    """Per-employee payroll detail + salary breakup, linked 1:1 to StaffEmployee.
+
+    Kept as a separate table (not altering staff_employees) so it is created
+    automatically by Base.metadata.create_all without a migration.
+    """
+    __tablename__ = "payroll_profiles"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    employee_id = Column(UUID(as_uuid=True), ForeignKey("staff_employees.id", ondelete="CASCADE"), nullable=False, unique=True)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    salary_amount = Column(Numeric(14, 2), default=0.0, nullable=False)
+    shift_start = Column(String(10), nullable=True)
+    shift_end = Column(String(10), nullable=True)
+    shift_hours = Column(Numeric(5, 2), default=8.0, nullable=False)
+    overtime_rate = Column(Numeric(14, 2), default=0.0, nullable=False)
+    cost_code = Column(String(100), nullable=True)
+    leave_template_id = Column(UUID(as_uuid=True), ForeignKey("leave_templates.id", ondelete="SET NULL"), nullable=True)
+    salary_breakup = Column(Text, nullable=True)  # JSON string
+    updated_at = Column(DateTime(timezone=True), default=func.now(), onupdate=func.now(), nullable=False)
+
+
 class PaymentRequest(Base):
     __tablename__ = "payment_requests"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -1066,6 +1209,25 @@ class PaymentRequest(Base):
     due_date = Column(DateTime(timezone=True), nullable=True)
     approval_status = Column(String(50), default="Pending", nullable=False)  # Pending, Approved, Rejected
     request_type = Column(String(100), nullable=True)  # Advance, Final, Material, Retention
+    request_no = Column(String(50), nullable=True)  # e.g. PR-1
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
+class PaymentRequestPayment(Base):
+    """Recorded actual payment against a PaymentRequest (Cash/Bank/UPI/Cheque)."""
+    __tablename__ = "payment_request_payments"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    payment_request_id = Column(UUID(as_uuid=True), ForeignKey("payment_requests.id", ondelete="CASCADE"), nullable=False)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    payment_date = Column(DateTime(timezone=True), nullable=False)
+    payment_mode = Column(String(50), nullable=False)  # Cash, Bank, UPI, Cheque
+    paid_amount = Column(Float, nullable=False)
+    deduction = Column(Float, default=0.0, nullable=False)
+    tds = Column(Float, default=0.0, nullable=False)
+    balance_due = Column(Float, default=0.0, nullable=False)
+    remarks = Column(String, nullable=True)
+    reference_no = Column(String(100), nullable=True)
+    attachment_name = Column(String(255), nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -1434,7 +1596,14 @@ class LibraryParty(Base):
     creator_name = Column(String(255), nullable=True)
     aadhaar_file = Column(String, nullable=True) # file path or name
     pan_file = Column(String, nullable=True) # file path or name
+    # Company-level Finance extensions
+    contractor_role = Column(String(100), nullable=True)  # role flag for Contractor/Subcontractor parties
+    service_rate_categories = Column(Text, nullable=True)  # JSON list of tag strings
+    opening_balance = Column(Float, default=0.0, nullable=False)
+    opening_balance_type = Column(String(20), nullable=True)  # "pay" (To Pay) / "receive" (Advance Received)
+    bank_account_id = Column(UUID(as_uuid=True), ForeignKey("bank_accounts.id", ondelete="SET NULL"), nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
 
 class LibraryAssetType(Base):
     __tablename__ = "library_asset_types"
@@ -1449,7 +1618,9 @@ class LibraryCostCode(Base):
     company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
     code = Column(String(100), nullable=False)
     sub_cost_code = Column(String(100), nullable=True)
+    parent_id = Column(UUID(as_uuid=True), ForeignKey("library_cost_codes.id", ondelete="CASCADE"), nullable=True)
     name = Column(String(255), nullable=False)
+    budget_amount = Column(Numeric(18, 2), default=0.0, nullable=False)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 
 class LibraryDeduction(Base):
@@ -1479,6 +1650,7 @@ class LibraryMaterial(Base):
     company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
     name = Column(String(255), nullable=False)
     unit = Column(String(50), nullable=False)
+    alternate_unit = Column(String(50), nullable=True)
     gst_rate = Column(Numeric(5, 2), default=0.0, nullable=False)
     category = Column(String(100), nullable=True)
     unit_cost = Column(Numeric(18, 2), default=0.0, nullable=False)
@@ -1536,4 +1708,117 @@ class DeleteLog(Base):
     party_name = Column(String(255), nullable=True)
     deleted_by = Column(String(255), nullable=True)
     deleted_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Project Tab Parity — Foundation tables (Project List, Party, Cost Code, Materials, Todos)
+# ─────────────────────────────────────────────────────────────────────────────
+
+class ProjectMember(Base):
+    """Project-scoped membership linking a company team member to a project."""
+    __tablename__ = "project_members"
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), primary_key=True)
+    company_team_id = Column(UUID(as_uuid=True), ForeignKey("company_team.id", ondelete="CASCADE"), primary_key=True)
+
+
+class ProjectLocation(Base):
+    """Hierarchical location/zone structure inside a project (towers, floors, wings)."""
+    __tablename__ = "project_locations"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
+    parent_id = Column(UUID(as_uuid=True), ForeignKey("project_locations.id", ondelete="CASCADE"), nullable=True)
+    name = Column(String(255), nullable=False)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
+class ProjectParty(Base):
+    """Per-project party linkage with project-scoped balances (Advance Paid / To Pay)."""
+    __tablename__ = "project_parties"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
+    party_id = Column(UUID(as_uuid=True), ForeignKey("library_parties.id", ondelete="CASCADE"), nullable=False)
+    balance = Column(Numeric(18, 2), default=0.0, nullable=False)
+    advance_paid = Column(Numeric(18, 2), default=0.0, nullable=False)
+    to_pay = Column(Numeric(18, 2), default=0.0, nullable=False)
+    status = Column(String(50), default="Active", nullable=False)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
+class LibraryRetention(Base):
+    """Reusable retention presets (mirrors LibraryDeduction)."""
+    __tablename__ = "library_retentions"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    name = Column(String(255), nullable=False)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
+class TransactionRetention(Base):
+    """Retention line attached to a bill (mirrors TransactionDeduction)."""
+    __tablename__ = "transaction_retentions"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    bill_id = Column(UUID(as_uuid=True), ForeignKey("bills.id", ondelete="CASCADE"), nullable=False)
+    retention_type = Column(String(100), nullable=False)
+    amount = Column(Numeric(18, 2), nullable=False)
+    percentage = Column(Numeric(5, 2), nullable=True)
+    notes = Column(String, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
+class MaterialCategory(Base):
+    """Hierarchical material categories (creatable, nested)."""
+    __tablename__ = "material_categories"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    parent_id = Column(UUID(as_uuid=True), ForeignKey("material_categories.id", ondelete="CASCADE"), nullable=True)
+    name = Column(String(255), nullable=False)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
+class Todo(Base):
+    """To Do items (company- or project-scoped), with optional task link."""
+    __tablename__ = "todos"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=True)
+    created_by = Column(UUID(as_uuid=True), ForeignKey("company_team.id", ondelete="SET NULL"), nullable=True)
+    title = Column(String(500), nullable=False)
+    due_date = Column(DateTime(timezone=True), nullable=True)
+    repeat_type = Column(String(50), default="none", nullable=False)  # none, daily, weekly, monthly
+    type = Column(String(100), nullable=True)
+    linked_task_id = Column(UUID(as_uuid=True), ForeignKey("tasks.id", ondelete="SET NULL"), nullable=True)
+    url = Column(String(1024), nullable=True)
+    status = Column(String(50), default="pending", nullable=False)  # pending, done
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
+class TodoAssignee(Base):
+    """Many-to-many assignees for a Todo."""
+    __tablename__ = "todo_assignees"
+    todo_id = Column(UUID(as_uuid=True), ForeignKey("todos.id", ondelete="CASCADE"), primary_key=True)
+    assignee_id = Column(UUID(as_uuid=True), ForeignKey("company_team.id", ondelete="CASCADE"), primary_key=True)
+
+
+class FileFolder(Base):
+    """Folder in the project document library (self-referencing for nesting)."""
+    __tablename__ = "file_folders"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
+    parent_id = Column(UUID(as_uuid=True), ForeignKey("file_folders.id", ondelete="CASCADE"), nullable=True)
+    name = Column(String(255), nullable=False)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
+class ProjectFile(Base):
+    """Uploaded document stored as a BLOB (no external storage in this build)."""
+    __tablename__ = "project_files"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
+    folder_id = Column(UUID(as_uuid=True), ForeignKey("file_folders.id", ondelete="CASCADE"), nullable=True)
+    name = Column(String(255), nullable=False)
+    original_filename = Column(String(512), nullable=False)
+    content_type = Column(String(128), nullable=True)
+    size = Column(BigInteger, default=0, nullable=False)
+    data = Column(LargeBinary, nullable=False)
+    uploaded_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 

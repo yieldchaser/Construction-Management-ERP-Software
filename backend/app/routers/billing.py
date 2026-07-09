@@ -4,6 +4,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.database import get_db
+from app.auth import get_current_user
 from app.models import (
     WorkOrder, WorkOrderItem, Bill, TransactionDeduction, 
     DebitNote, CreditNote, CompanyTeam, User
@@ -12,7 +13,8 @@ from pydantic import BaseModel, Field
 
 router = APIRouter(
     prefix="/billing",
-    tags=["Subcontractor Work Orders & Billing"]
+    tags=["Subcontractor Work Orders & Billing"],
+    dependencies=[Depends(get_current_user)]
 )
 
 # Pydantic Schemas
@@ -74,6 +76,13 @@ class BillCreateRequest(BaseModel):
     gst_pct: float = 18.00
     deductions: List[DeductionItemSchema] = []
     pre_tax_deductions: bool = False
+    # Transaction sub-entity persistence (Project Tab Transaction build)
+    items_json: Optional[str] = None  # JSON string of line items
+    payment_mode: Optional[str] = None  # Cash / Bank / Cheque
+    payment_bank_name: Optional[str] = None
+    payment_ref: Optional[str] = None  # cheque no / bank txn ref
+    ship_to: Optional[str] = None
+    boq_document_id: Optional[UUID] = None  # link this bill to a BOQ document (for Billed Value)
 
 class DeductionResponseSchema(BaseModel):
     id: UUID
@@ -100,6 +109,11 @@ class BillResponse(BaseModel):
     is_milestone_fixed_amount: bool
     created_at: datetime
     deductions: List[DeductionResponseSchema] = []
+    items_json: Optional[str] = None
+    payment_mode: Optional[str] = None
+    payment_bank_name: Optional[str] = None
+    payment_ref: Optional[str] = None
+    ship_to: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -300,7 +314,12 @@ def get_bills(project_id: UUID, invoice_type: Optional[str] = None, db: Session 
                 approval_flag=b.approval_flag,
                 is_milestone_fixed_amount=b.is_milestone_fixed_amount,
                 created_at=b.created_at,
-                deductions=ded_schemas
+                deductions=ded_schemas,
+                items_json=b.items_json,
+                payment_mode=b.payment_mode,
+                payment_bank_name=b.payment_bank_name,
+                payment_ref=b.payment_ref,
+                ship_to=b.ship_to,
             )
         )
     return res
@@ -358,7 +377,13 @@ def create_bill(req: BillCreateRequest, db: Session = Depends(get_db)):
         total_payable=total_payable,
         paid_amount=0.0,
         approval_flag="pending",
-        is_milestone_fixed_amount=False
+        is_milestone_fixed_amount=False,
+        items_json=req.items_json,
+        payment_mode=req.payment_mode,
+        payment_bank_name=req.payment_bank_name,
+        payment_ref=req.payment_ref,
+        ship_to=req.ship_to,
+        boq_document_id=req.boq_document_id,
     )
     db.add(bill)
     db.flush()
@@ -405,7 +430,12 @@ def create_bill(req: BillCreateRequest, db: Session = Depends(get_db)):
         approval_flag=bill.approval_flag,
         is_milestone_fixed_amount=bill.is_milestone_fixed_amount,
         created_at=bill.created_at,
-        deductions=ded_responses
+        deductions=ded_responses,
+        items_json=bill.items_json,
+        payment_mode=bill.payment_mode,
+        payment_bank_name=bill.payment_bank_name,
+        payment_ref=bill.payment_ref,
+        ship_to=bill.ship_to,
     )
 
 # 3. Debit Notes

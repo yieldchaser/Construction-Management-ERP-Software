@@ -14,6 +14,10 @@ export default function Sidebar() {
 
   const { activeProjectId, setActiveProjectId, projects, projectContext } = useProject();
 
+  const projBase = activeProjectId
+    ? `/c/${companyId}/p/${activeProjectId}`
+    : `/c/${companyId}/projects`;
+
   const [companyName, setCompanyName] = useState("Loading Company...");
 
   // Company name fetch (project context resolution now lives in ProjectContext).
@@ -86,13 +90,13 @@ export default function Sidebar() {
     },
     {
       label: "Project",
-      href: `/c/${companyId}/d/home`,
+      href: `/c/${companyId}/projects`,
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
         </svg>
       ),
-      activePattern: "/d/home",
+      activePattern: "/projects",
     },
     {
       label: "Team Schedule",
@@ -116,13 +120,13 @@ export default function Sidebar() {
     },
     {
       label: "Payroll",
-      href: `/c/${companyId}/d/hr`,
+      href: `/c/${companyId}/d/payroll-attendance`,
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
         </svg>
       ),
-      activePattern: "/hr",
+      activePattern: "/payroll-attendance",
     },
     {
       label: "CRM",
@@ -143,6 +147,46 @@ export default function Sidebar() {
         </svg>
       ),
       activePattern: "/d/library",
+    },
+    {
+      label: "Cost Codes",
+      href: `/c/${companyId}/cost-codes`,
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h.01M7 3h5a1.99 1.99 0 011.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.99 1.99 0 013 12V7a4 4 0 014-4z" />
+        </svg>
+      ),
+      activePattern: "/cost-codes",
+    },
+    {
+      label: "Materials",
+      href: `/c/${companyId}/materials`,
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+        </svg>
+      ),
+      activePattern: "/materials",
+    },
+    {
+      label: "Party",
+      href: `${projBase}/party`,
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+        </svg>
+      ),
+      activePattern: "/party",
+    },
+    {
+      label: "To Do",
+      href: `${projBase}/todo`,
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+        </svg>
+      ),
+      activePattern: "/todo",
     },
     {
       label: "Setting",

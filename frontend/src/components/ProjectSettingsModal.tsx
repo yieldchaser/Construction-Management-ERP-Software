@@ -1,0 +1,230 @@
+"use client";
+
+import React, { useCallback, useEffect, useState } from "react";
+import { getApi, authHeaders, fmtINR, initials } from "@/lib/siteflow";
+
+export type ProjectSettingsData = {
+  id: string;
+  name: string;
+  address?: string | null;
+  city?: string | null;
+  stage?: string | null;
+  category?: string | null;
+  project_value?: number;
+  orientation?: string | null;
+  dimension?: string | null;
+  scope_of_work?: string | null;
+  attendance_radius_meters?: number;
+};
+
+type Member = {
+  company_team_id: string;
+  name: string;
+  role?: string | null;
+  mobile?: string | null;
+};
+
+type Location = { id: string; name: string; parent_id: string | null };
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <div className="mb-1 text-xs font-medium text-muted">{label}</div>
+      {children}
+    </div>
+  );
+}
+
+export default function ProjectSettingsModal({
+  project,
+  companyId,
+  onClose,
+  onSaved,
+}: {
+  project: ProjectSettingsData;
+  companyId: string;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const api = getApi;
+  const auth = authHeaders;
+  const [tab, setTab] = useState<"details" | "members" | "locations">("details");
+  const [form, setForm] = useState({
+    name: project.name,
+    address: project.address || "",
+    city: project.city || "",
+    stage: project.stage || "",
+    category: project.category || "",
+    project_value: String(project.project_value || 0),
+    orientation: project.orientation || "",
+    dimension: project.dimension || "",
+    scope_of_work: project.scope_of_work || "",
+    attendance_radius_meters: project.attendance_radius_meters || 500,
+  });
+  const [locations, setLocations] = useState<Location[]>([]);
+  const [newLoc, setNewLoc] = useState("");
+  const [members, setMembers] = useState<Member[]>([]);
+  const [saving, setSaving] = useState(false);
+
+  const loadLocations = useCallback(() => {
+    fetch(api(`/projects/${project.id}/locations`), { headers: auth() })
+      .then((r) => (r.ok ? r.json() : []))
+      .then(setLocations)
+      .catch(() => setLocations([]));
+  }, [project.id]);
+
+  useEffect(() => {
+    loadLocations();
+    fetch(api(`/projects/${project.id}/members`), { headers: auth() })
+      .then((r) => (r.ok ? r.json() : []))
+      .then(setMembers)
+      .catch(() => setMembers([]));
+  }, [project.id, loadLocations]);
+
+  const saveDetails = async () => {
+    setSaving(true);
+    try {
+      await fetch(api(`/projects/${project.id}`), {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", ...(auth() || {}) },
+        body: JSON.stringify({
+          name: form.name,
+          address: form.address,
+          city: form.city,
+          stage: form.stage,
+          category: form.category,
+          project_value: parseFloat(form.project_value) || 0,
+          orientation: form.orientation,
+          dimension: form.dimension,
+          scope_of_work: form.scope_of_work,
+          attendance_radius_meters: form.attendance_radius_meters,
+        }),
+      });
+      onSaved();
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const addLocation = async () => {
+    if (!newLoc.trim()) return;
+    const res = await fetch(api(`/projects/${project.id}/locations`), {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...(auth() || {}) },
+      body: JSON.stringify({ name: newLoc.trim() }),
+    });
+    if (res.ok) {
+      setNewLoc("");
+      loadLocations();
+    }
+  };
+
+  const deleteLocation = async (id: string) => {
+    await fetch(api(`/projects/${project.id}/locations/${id}`), {
+      method: "DELETE",
+      headers: auth(),
+    });
+    loadLocations();
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="w-full max-w-2xl rounded-lg border border-border-custom bg-card">
+        <div className="flex items-center justify-between border-b border-border-custom px-6 py-4">
+          <h3 className="text-lg font-semibold text-foreground">Project Settings</h3>
+          <button onClick={onClose} className="text-muted hover:text-foreground">✕</button>
+        </div>
+
+        <div className="flex gap-1 px-6 pt-3 border-b border-border-custom">
+          {(["details", "members", "locations"] as const).map((t) => (
+            <button
+              key={t}
+              onClick={() => setTab(t)}
+              className={`px-3 py-2 text-sm capitalize ${
+                tab === t
+                  ? "border-b-2 border-primary text-primary font-medium"
+                  : "text-muted"
+              }`}
+            >
+              {t === "details" ? "Project Details" : t === "members" ? "Members" : "Location Structure"}
+            </button>
+          ))}
+        </div>
+
+        <div className="p-6 max-h-[60vh] overflow-y-auto">
+          {tab === "details" && (
+            <div className="space-y-3">
+              <Field label="Project Name">
+                <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground" />
+              </Field>
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="Stage">
+                  <input value={form.stage} onChange={(e) => setForm({ ...form, stage: e.target.value })} className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground" />
+                </Field>
+                <Field label="Category">
+                  <input value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground" />
+                </Field>
+              </div>
+              <Field label="Address">
+                <input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground" />
+              </Field>
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="City">
+                  <input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground" />
+                </Field>
+                <Field label="Project Value">
+                  <input type="number" value={form.project_value} onChange={(e) => setForm({ ...form, project_value: e.target.value })} className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground" />
+                </Field>
+              </div>
+              <Field label="Orientation"><input value={form.orientation} onChange={(e) => setForm({ ...form, orientation: e.target.value })} className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground" /></Field>
+              <Field label="Dimension"><input value={form.dimension} onChange={(e) => setForm({ ...form, dimension: e.target.value })} className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground" /></Field>
+              <Field label="Scope of Work"><textarea value={form.scope_of_work} onChange={(e) => setForm({ ...form, scope_of_work: e.target.value })} rows={3} className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground" /></Field>
+              <Field label="Attendance Radius (meters)"><input type="number" value={form.attendance_radius_meters} onChange={(e) => setForm({ ...form, attendance_radius_meters: parseInt(e.target.value) || 500 })} className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground" /></Field>
+              <div className="flex justify-end pt-2">
+                <button onClick={saveDetails} disabled={saving} className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white disabled:opacity-40">
+                  {saving ? "Saving…" : "Save"}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {tab === "members" && (
+            <div className="space-y-1">
+              {members.map((m) => (
+                <div key={m.company_team_id} className="flex items-center justify-between px-3 py-2 rounded-md hover:bg-elevated">
+                  <div className="flex items-center gap-3">
+                    <div className="h-8 w-8 rounded-full bg-primary/15 text-primary flex items-center justify-center text-xs font-semibold">{initials(m.name)}</div>
+                    <div>
+                      <div className="text-sm text-foreground">{m.name}</div>
+                      <div className="text-xs text-muted">{m.role || "Member"}</div>
+                    </div>
+                  </div>
+                  <span className="text-xs rounded-full bg-elevated px-2 py-0.5 text-muted">{m.mobile || ""}</span>
+                </div>
+              ))}
+              {members.length === 0 && <div className="text-sm text-muted">No members.</div>}
+            </div>
+          )}
+
+          {tab === "locations" && (
+            <div className="space-y-3">
+              <div className="flex gap-2">
+                <input value={newLoc} onChange={(e) => setNewLoc(e.target.value)} placeholder="Location Name (e.g. Tower A)" className="flex-1 rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground" />
+                <button onClick={addLocation} className="rounded-md bg-primary px-4 py-2 text-sm text-white">+ Location</button>
+              </div>
+              <div className="divide-y divide-border-custom rounded-md border border-border-custom">
+                {locations.map((l) => (
+                  <div key={l.id} className="flex items-center justify-between px-3 py-2">
+                    <span className="text-sm text-foreground">{l.name}</span>
+                    <button onClick={() => deleteLocation(l.id)} className="text-xs text-muted hover:text-rose-500">Delete</button>
+                  </div>
+                ))}
+                {locations.length === 0 && <div className="px-3 py-4 text-sm text-muted">No locations yet.</div>}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

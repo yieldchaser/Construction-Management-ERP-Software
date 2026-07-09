@@ -6,12 +6,14 @@ from sqlalchemy.orm import Session
 from sqlalchemy import select
 from openpyxl import load_workbook
 from app.database import get_db
-from app.models import BOQItem, ProjectBudget, Project
+from app.auth import get_current_user
+from app.models import BOQItem, BOQDocument, ProjectBudget, Project, Bill, LibraryParty, Task
 from pydantic import BaseModel, Field
 
 router = APIRouter(
     prefix="/budgeting",
-    tags=["Budgeting & BOQ"]
+    tags=["Budgeting & BOQ"],
+    dependencies=[Depends(get_current_user)]
 )
 
 class BOQItemResponse(BaseModel):
@@ -49,13 +51,16 @@ class BudgetResponse(BaseModel):
         from_attributes = True
 
 @router.get("/boq", response_model=List[BOQItemResponse])
-def get_boq_items(project_id: UUID, db: Session = Depends(get_db)):
+def get_boq_items(project_id: UUID, boq_document_id: Optional[UUID] = None, db: Session = Depends(get_db)):
     # Check if project exists
     project = db.query(Project).filter(Project.id == project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     
-    items = db.query(BOQItem).filter(BOQItem.project_id == project_id).all()
+    q = db.query(BOQItem).filter(BOQItem.project_id == project_id)
+    if boq_document_id is not None:
+        q = q.filter(BOQItem.boq_document_id == boq_document_id)
+    items = q.all()
     # Cast Numeric types to floats for response model compatibility
     result = []
     for item in items:
@@ -78,6 +83,7 @@ def get_boq_items(project_id: UUID, db: Session = Depends(get_db)):
 async def import_boq(
     project_id: UUID = Form(...),
     file: UploadFile = File(...),
+    boq_document_id: Optional[UUID] = Form(None),
     db: Session = Depends(get_db)
 ):
     project = db.query(Project).filter(Project.id == project_id).first()
@@ -162,6 +168,7 @@ async def import_boq(
 
             boq_item = BOQItem(
                 project_id=project_id,
+                boq_document_id=boq_document_id,
                 section_name=section_name,
                 item_name=str(item_name).strip(),
                 unit=unit,
@@ -208,3 +215,139 @@ def allocate_project_budgets(
     db.commit()
     db.refresh(budget)
     return budget
+
+
+# ─── BOQ Documents (per-client BOQ layer) ────────────────────────────────────
+# Invoices raised to the client whose value counts toward "Billed Value".
+BILLING_TYPES = {"sales_invoice", "material_sales"}
+
+
+def _item_amount(i: BOQItem) -> float:
+    if i.amount is not None:
+        return float(i.amount)
+    return float(i.quantity) * (float(i.rate) + float(i.supply_rate) + float(i.installation_rate))
+
+
+class BOQDocumentCreate(BaseModel):
+    project_id: UUID
+    title: str
+    client_party_id: Optional[UUID] = None
+    milestone_done: int = 0
+    milestone_total: int = 0
+
+
+class BOQDocumentPatch(BaseModel):
+    title: Optional[str] = None
+    client_party_id: Optional[UUID] = None
+    milestone_done: Optional[int] = None
+    milestone_total: Optional[int] = None
+
+
+class BOQDocumentResponse(BaseModel):
+    id: UUID
+    project_id: UUID
+    client_party_id: Optional[UUID] = None
+    client_name: Optional[str] = None
+    title: str
+    milestone_done: int
+    milestone_total: int
+    boq_value: float
+    billed_value: float
+    physical_progress: float  # 0-100, value-weighted linked-task completion
+    item_count: int
+
+    class Config:
+        from_attributes = True
+
+
+def _build_doc_response(db: Session, d: BOQDocument) -> BOQDocumentResponse:
+    items = db.query(BOQItem).filter(BOQItem.boq_document_id == d.id).all()
+    boq_value = sum(_item_amount(i) for i in items)
+
+    bills = (
+        db.query(Bill)
+        .filter(Bill.project_id == d.project_id, Bill.boq_document_id == d.id, Bill.invoice_type.in_(BILLING_TYPES))
+        .all()
+    )
+    billed_value = sum(float(b.total_payable) for b in bills)
+
+    # Physical progress = value-weighted average of linked-task completion.
+    item_ids = [i.id for i in items]
+    progress_by_item: dict = {}
+    if item_ids:
+        tasks = db.query(Task).filter(Task.boq_item_id.in_(item_ids)).all()
+        for t in tasks:
+            progress_by_item.setdefault(t.boq_item_id, []).append(float(t.progress or 0))
+    num = 0.0
+    den = 0.0
+    for i in items:
+        amt = _item_amount(i)
+        ps = progress_by_item.get(i.id)
+        pct = (sum(ps) / len(ps)) if ps else 0.0
+        num += amt * pct
+        den += amt
+    physical_progress = round(num / den, 2) if den > 0 else 0.0
+
+    party = db.query(LibraryParty).filter(LibraryParty.id == d.client_party_id).first() if d.client_party_id else None
+    return BOQDocumentResponse(
+        id=d.id,
+        project_id=d.project_id,
+        client_party_id=d.client_party_id,
+        client_name=party.name if party else None,
+        title=d.title,
+        milestone_done=d.milestone_done,
+        milestone_total=d.milestone_total,
+        boq_value=round(boq_value, 2),
+        billed_value=round(billed_value, 2),
+        physical_progress=physical_progress,
+        item_count=len(items),
+    )
+
+
+@router.get("/boq-documents", response_model=List[BOQDocumentResponse])
+def list_boq_documents(project_id: UUID, db: Session = Depends(get_db)):
+    project = db.query(Project).filter(Project.id == project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    docs = db.query(BOQDocument).filter(BOQDocument.project_id == project_id).all()
+    return [_build_doc_response(db, d) for d in docs]
+
+
+@router.post("/boq-documents", response_model=BOQDocumentResponse, status_code=201)
+def create_boq_document(req: BOQDocumentCreate, db: Session = Depends(get_db)):
+    project = db.query(Project).filter(Project.id == req.project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    if req.client_party_id:
+        party = db.query(LibraryParty).filter(LibraryParty.id == req.client_party_id).first()
+        if not party:
+            raise HTTPException(status_code=404, detail="Client party not found")
+    doc = BOQDocument(
+        project_id=req.project_id,
+        client_party_id=req.client_party_id,
+        title=req.title,
+        milestone_done=req.milestone_done,
+        milestone_total=req.milestone_total,
+    )
+    db.add(doc)
+    db.commit()
+    db.refresh(doc)
+    return _build_doc_response(db, doc)
+
+
+@router.patch("/boq-documents/{doc_id}", response_model=BOQDocumentResponse)
+def patch_boq_document(doc_id: UUID, req: BOQDocumentPatch, db: Session = Depends(get_db)):
+    doc = db.query(BOQDocument).filter(BOQDocument.id == doc_id).first()
+    if not doc:
+        raise HTTPException(status_code=404, detail="BOQ document not found")
+    if req.title is not None:
+        doc.title = req.title
+    if req.client_party_id is not None:
+        doc.client_party_id = req.client_party_id
+    if req.milestone_done is not None:
+        doc.milestone_done = req.milestone_done
+    if req.milestone_total is not None:
+        doc.milestone_total = req.milestone_total
+    db.commit()
+    db.refresh(doc)
+    return _build_doc_response(db, doc)
