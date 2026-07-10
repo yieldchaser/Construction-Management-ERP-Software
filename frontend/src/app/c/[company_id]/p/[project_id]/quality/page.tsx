@@ -1,5 +1,6 @@
 "use client";
 import { getApiHost } from "@/lib/api";
+import { authHeaders } from "@/lib/siteflow";
 import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 
@@ -191,11 +192,11 @@ export default function QualityPage() {
   const loadAll = async () => {
     let currentChecklists: Checklist[] = [];
     try {
-      const clRes = await fetch(`${getApiHost()}/apis/v3/quality/checklists/${companyId}`);
+      const clRes = await fetch(`${getApiHost()}/apis/v3/quality/checklists/${companyId}`, { headers: authHeaders() });
       if (clRes.ok) {
         const clData = await clRes.json();
         currentChecklists = await Promise.all(clData.map(async (cl: any) => {
-          const itemsRes = await fetch(`${getApiHost()}/apis/v3/quality/checklists/${cl.id}/items`);
+          const itemsRes = await fetch(`${getApiHost()}/apis/v3/quality/checklists/${cl.id}/items`, { headers: authHeaders() });
           let items: ChecklistItem[] = [];
           if (itemsRes.ok) {
             const itemsData = await itemsRes.json();
@@ -226,7 +227,7 @@ export default function QualityPage() {
     }
 
     try {
-      const inspRes = await fetch(`${getApiHost()}/apis/v3/quality/inspections/${projectId}`);
+      const inspRes = await fetch(`${getApiHost()}/apis/v3/quality/inspections/${projectId}`, { headers: authHeaders() });
       if (inspRes.ok) {
         const inspData = await inspRes.json();
         const mapped = inspData.map((insp: any) => {
@@ -253,7 +254,7 @@ export default function QualityPage() {
 
   const fetchNcrs = async () => {
     try {
-      const res = await fetch(`${getApiHost()}/apis/v3/quality/ncr/${projectId}`);
+      const res = await fetch(`${getApiHost()}/apis/v3/quality/ncr/${projectId}`, { headers: authHeaders() });
       if (res.ok) {
         const data = await res.json();
         const mapped = data.map((n: any) => ({
@@ -277,7 +278,7 @@ export default function QualityPage() {
 
   const fetchLabTests = async () => {
     try {
-      const res = await fetch(`${getApiHost()}/apis/v3/quality/material-tests/${projectId}`);
+      const res = await fetch(`${getApiHost()}/apis/v3/quality/material-tests/${projectId}`, { headers: authHeaders() });
       if (res.ok) {
         const data = await res.json();
         const mapped = data.map((t: any) => ({
@@ -326,7 +327,7 @@ export default function QualityPage() {
       const body = newStatus === "closed" ? JSON.stringify({ resolution_notes: "Resolved and verified on-site." }) : undefined;
       const res = await fetch(`${getApiHost()}/apis/v3/quality/ncr/${id}/${action}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body
       });
       if (res.ok) {
@@ -341,7 +342,7 @@ export default function QualityPage() {
     try {
       const res = await fetch(`${getApiHost()}/apis/v3/quality/ncr`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify({
           project_id: projectId,
           ncr_number: `NCR-2026-${Math.floor(100 + Math.random() * 900)}`,
@@ -371,7 +372,7 @@ export default function QualityPage() {
     try {
       const res = await fetch(`${getApiHost()}/apis/v3/quality/material-tests`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify({
           project_id: projectId,
           test_type: testForm.type,
@@ -409,7 +410,7 @@ export default function QualityPage() {
     try {
       const res = await fetch(`${getApiHost()}/apis/v3/quality/inspections`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify({
           project_id: projectId,
           checklist_id: inspForm.checklistId,
@@ -443,7 +444,7 @@ export default function QualityPage() {
     try {
       const res = await fetch(`${getApiHost()}/apis/v3/quality/inspections/${selectedInspection.id}/respond`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify({ responses })
       });
       if (res.ok) {

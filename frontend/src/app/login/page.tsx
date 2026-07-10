@@ -145,6 +145,31 @@ export default function LoginPage() {
             Site<span className="text-white">Flow</span>
           </span>
         </div>
+
+        {/* Value proposition */}
+        <div className="z-10 max-w-md">
+          <h2 className="text-3xl font-extrabold leading-tight text-white">
+            Your whole construction business in one workspace.
+          </h2>
+          <p className="mt-4 text-sm leading-relaxed text-white/80">
+            Projects, billing, procurement, payroll and CRM stay connected, so
+            your office and your site work from the same numbers.
+          </p>
+          <ul className="mt-8 space-y-3">
+            {[
+              "Track projects, tasks and daily progress in one place",
+              "Run RA billing, procurement and 3-way match without spreadsheets",
+              "Give your team role-based access from office to site",
+            ].map((point) => (
+              <li key={point} className="flex items-start gap-3 text-sm text-white/90">
+                <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/15 text-xs font-bold text-white">
+                  ✓
+                </span>
+                <span>{point}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
 
       {/* Interactive Form Panel */}

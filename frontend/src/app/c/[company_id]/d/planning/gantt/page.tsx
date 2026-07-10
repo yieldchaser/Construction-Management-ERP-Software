@@ -1,5 +1,6 @@
 "use client";
 import { getApiHost } from "@/lib/api";
+import { authHeaders } from "@/lib/siteflow";
 
 import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
@@ -203,7 +204,7 @@ export default function GanttSchedulerPage() {
       setLoading(true);
       setError("");
       setIsOffline(false);
-      const res = await fetch(`${getApiHost()}/apis/v3/planning/tasks?project_id=${projectId}`);
+      const res = await fetch(`${getApiHost()}/apis/v3/planning/tasks?project_id=${projectId}`, { headers: authHeaders() });
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data)) {
@@ -239,7 +240,7 @@ export default function GanttSchedulerPage() {
 
     // 1. Fetch Todos
     try {
-      const todoRes = await fetch(`${getApiHost()}/apis/v3/planning/tasks/${task.id}/todos`);
+      const todoRes = await fetch(`${getApiHost()}/apis/v3/planning/tasks/${task.id}/todos`, { headers: authHeaders() });
       if (todoRes.ok) {
         setTodos(await todoRes.json());
       } else {
@@ -251,7 +252,7 @@ export default function GanttSchedulerPage() {
 
     // 2. Fetch Comments
     try {
-      const commRes = await fetch(`${getApiHost()}/apis/v3/planning/tasks/${task.id}/comments`);
+      const commRes = await fetch(`${getApiHost()}/apis/v3/planning/tasks/${task.id}/comments`, { headers: authHeaders() });
       if (commRes.ok) {
         setComments(await commRes.json());
       } else {
@@ -272,7 +273,7 @@ export default function GanttSchedulerPage() {
     try {
       const res = await fetch(`${getApiHost()}/apis/v3/planning/tasks`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify({
           project_id: projectId,
           name: taskName,
@@ -303,7 +304,7 @@ export default function GanttSchedulerPage() {
     try {
       const res = await fetch(`${getApiHost()}/apis/v3/planning/tasks/${selectedTaskForLink}/predecessors`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify({
           predecessor_id: selectedPredecessor
         }),
@@ -328,7 +329,7 @@ export default function GanttSchedulerPage() {
     try {
       const res = await fetch(`${getApiHost()}/apis/v3/planning/tasks/${selectedTask.id}/todos`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify({ title: newTodoTitle.trim() }),
       });
       if (res.ok) {
@@ -346,6 +347,7 @@ export default function GanttSchedulerPage() {
     try {
       const res = await fetch(`${getApiHost()}/apis/v3/planning/tasks/todos/${todoId}/toggle`, {
         method: "PATCH",
+        headers: authHeaders(),
       });
       if (res.ok) {
         const updated = await res.json();
@@ -361,6 +363,7 @@ export default function GanttSchedulerPage() {
     try {
       const res = await fetch(`${getApiHost()}/apis/v3/planning/tasks/todos/${todoId}`, {
         method: "DELETE",
+        headers: authHeaders(),
       });
       if (res.ok) {
         setTodos(todos.filter(t => t.id !== todoId));
@@ -387,7 +390,7 @@ export default function GanttSchedulerPage() {
 
       const res = await fetch(`${getApiHost()}/apis/v3/planning/tasks/${selectedTask.id}/comments`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify(body),
       });
 

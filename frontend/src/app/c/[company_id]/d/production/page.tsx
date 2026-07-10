@@ -1,5 +1,6 @@
 "use client";
 import { getApiHost } from "@/lib/api";
+import { authHeaders } from "@/lib/siteflow";
 
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
@@ -228,7 +229,7 @@ export default function ProductionPage() {
   const fetchSummary = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${getApiHost()}/apis/v3/production/summary?project_id=${projectId}`);
+      const response = await fetch(`${getApiHost()}/apis/v3/production/summary?project_id=${projectId}`, { headers: authHeaders() });
       if (!response.ok) {
         throw new Error(`Production summary request failed: ${response.status}`);
       }
@@ -252,6 +253,7 @@ export default function ProductionPage() {
     try {
       const res = await fetch(`${getApiHost()}/apis/v3/production/batches/${batchId}/complete`, {
         method: "PATCH",
+        headers: authHeaders(),
       });
       if (res.ok) {
         void fetchSummary();
@@ -289,7 +291,7 @@ export default function ProductionPage() {
       };
       const res = await fetch(`${getApiHost()}/apis/v3/production/recipes`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify(payload),
       });
       if (res.ok) {
@@ -332,7 +334,7 @@ export default function ProductionPage() {
       };
       const res = await fetch(`${getApiHost()}/apis/v3/production/batches`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify(payload),
       });
       if (res.ok) {

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { useProject } from "@/context/ProjectContext";
 import { getApiHost } from "@/lib/api";
+import { authHeaders } from "@/lib/siteflow";
 
 interface VendorPerf {
   id: string;
@@ -29,7 +30,7 @@ export default function VendorPerformancePage() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${getApiHost()}/apis/v3/procurement/vendors/performance/${projectId}`);
+      const res = await fetch(`${getApiHost()}/apis/v3/procurement/vendors/performance/${projectId}`, { headers: authHeaders() });
       if (res.ok) setVendors(await res.json());
     } catch (e) { console.error(e); }
     setLoading(false);

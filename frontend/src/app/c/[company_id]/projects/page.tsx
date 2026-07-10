@@ -15,6 +15,12 @@ type Project = {
   stage?: string | null;
   category?: string | null;
   project_value?: number;
+  planned_start_date?: string | null;
+  planned_end_date?: string | null;
+  orientation?: string | null;
+  dimension?: string | null;
+  scope_of_work?: string | null;
+  attendance_radius_meters?: number | null;
   progress?: number;
   cash_in?: number;
   cash_out?: number;
@@ -466,13 +472,25 @@ function CreateProjectModal({
 }) {
   const [step, setStep] = useState(1);
   const [name, setName] = useState("");
+  const [code, setCode] = useState("");
   const [address, setAddress] = useState("");
   const [city, setCity] = useState("");
+  const [stage, setStage] = useState("");
+  const [category, setCategory] = useState("");
+  const [projectValue, setProjectValue] = useState("");
+  const [plannedStart, setPlannedStart] = useState("");
+  const [plannedEnd, setPlannedEnd] = useState("");
+  const [orientation, setOrientation] = useState("");
+  const [dimension, setDimension] = useState("");
+  const [scopeOfWork, setScopeOfWork] = useState("");
+  const [attendanceRadius, setAttendanceRadius] = useState(500);
   const [members, setMembers] = useState<Member[]>([]);
   const [selected, setSelected] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [resolvedCompanyId, setResolvedCompanyId] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
+
+  const TOTAL_STEPS = 3;
 
   useEffect(() => {
     fetch(api(`/projects/company/${companyId}/members`), { headers: authHeaders() })
@@ -516,8 +534,18 @@ function CreateProjectModal({
         body: JSON.stringify({
           company_id: cid,
           name,
+          code: code || null,
           address,
           city,
+          stage: stage || null,
+          category: category || null,
+          project_value: parseFloat(projectValue) || 0,
+          planned_start_date: plannedStart || null,
+          planned_end_date: plannedEnd || null,
+          orientation: orientation || null,
+          dimension: dimension || null,
+          scope_of_work: scopeOfWork || null,
+          attendance_radius_meters: attendanceRadius,
           member_ids: selected,
           custom_fields: customFields.toPayload(),
         }),
@@ -532,9 +560,12 @@ function CreateProjectModal({
   const toggleMember = (id: string) =>
     setSelected((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
 
+  const inputCls =
+    "w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground";
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="flex w-full max-w-3xl rounded-lg border border-border-custom bg-card">
+      <div className="relative flex w-full max-w-3xl rounded-lg border border-border-custom bg-card">
         {/* Live preview */}
         <div className="hidden md:block w-1/3 border-r border-border-custom bg-elevated p-6">
           <div className="text-xs uppercase tracking-wider text-muted mb-3">Live Preview</div>
@@ -544,6 +575,8 @@ function CreateProjectModal({
             </div>
             <div className="mt-2 font-semibold text-foreground">{name || "Project Name"}</div>
             <div className="text-xs text-muted">{city || "City"}</div>
+            {code && <div className="mt-1 text-xs text-muted">Code: {code}</div>}
+            {stage && <div className="text-xs text-muted">Stage: {stage}</div>}
             <div className="mt-3 text-xs text-muted">
               Members: {selected.length}
             </div>
@@ -553,31 +586,31 @@ function CreateProjectModal({
         <div className="flex-1 p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-foreground">Create Project</h3>
-            <div className="text-xs text-muted">Step {step} of 2</div>
+            <div className="flex items-center gap-3">
+              <div className="text-xs text-muted">Step {step} of {TOTAL_STEPS}</div>
+              <button
+                onClick={onClose}
+                aria-label="Close"
+                className="flex h-8 w-8 items-center justify-center rounded-full border border-border-custom text-muted hover:bg-elevated hover:text-foreground"
+              >
+                ✕
+              </button>
+            </div>
           </div>
 
           {step === 1 && (
             <div className="space-y-3">
               <Field label="Project Name *">
-                <input
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground"
-                />
+                <input value={name} onChange={(e) => setName(e.target.value)} className={inputCls} />
+              </Field>
+              <Field label="Project Code">
+                <input value={code} onChange={(e) => setCode(e.target.value)} placeholder="e.g. PRJ-001" className={inputCls} />
               </Field>
               <Field label="Address">
-                <input
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground"
-                />
+                <input value={address} onChange={(e) => setAddress(e.target.value)} className={inputCls} />
               </Field>
               <Field label="City">
-                <input
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground"
-                />
+                <input value={city} onChange={(e) => setCity(e.target.value)} className={inputCls} />
               </Field>
               <div className="flex justify-end pt-2">
                 <button
@@ -592,6 +625,60 @@ function CreateProjectModal({
           )}
 
           {step === 2 && (
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="Stage">
+                  <input value={stage} onChange={(e) => setStage(e.target.value)} className={inputCls} />
+                </Field>
+                <Field label="Category">
+                  <input value={category} onChange={(e) => setCategory(e.target.value)} className={inputCls} />
+                </Field>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="Project Value">
+                  <input type="number" value={projectValue} onChange={(e) => setProjectValue(e.target.value)} className={inputCls} />
+                </Field>
+                <Field label="Attendance Radius (meters)">
+                  <input type="number" value={attendanceRadius} onChange={(e) => setAttendanceRadius(parseInt(e.target.value) || 500)} className={inputCls} />
+                </Field>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="Planned Start Date">
+                  <input type="date" value={plannedStart} onChange={(e) => setPlannedStart(e.target.value)} className={inputCls} />
+                </Field>
+                <Field label="Planned End Date">
+                  <input type="date" value={plannedEnd} onChange={(e) => setPlannedEnd(e.target.value)} className={inputCls} />
+                </Field>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="Orientation">
+                  <input value={orientation} onChange={(e) => setOrientation(e.target.value)} className={inputCls} />
+                </Field>
+                <Field label="Dimension">
+                  <input value={dimension} onChange={(e) => setDimension(e.target.value)} className={inputCls} />
+                </Field>
+              </div>
+              <Field label="Scope of Work">
+                <textarea value={scopeOfWork} onChange={(e) => setScopeOfWork(e.target.value)} rows={3} className={inputCls} />
+              </Field>
+              <div className="flex justify-between pt-2">
+                <button
+                  onClick={() => setStep(1)}
+                  className="rounded-md border border-border-custom px-4 py-2 text-sm text-muted"
+                >
+                  Back
+                </button>
+                <button
+                  onClick={() => setStep(3)}
+                  className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white"
+                >
+                  Continue
+                </button>
+              </div>
+            </div>
+          )}
+
+          {step === 3 && (
             <div className="space-y-3">
               <Field label="Add Team Member">
                 <div className="max-h-48 overflow-y-auto rounded-md border border-border-custom divide-y divide-border-custom">
@@ -630,7 +717,7 @@ function CreateProjectModal({
               )}
               <div className="flex justify-between pt-2">
                 <button
-                  onClick={() => setStep(1)}
+                  onClick={() => setStep(2)}
                   className="rounded-md border border-border-custom px-4 py-2 text-sm text-muted"
                 >
                   Back
@@ -645,13 +732,6 @@ function CreateProjectModal({
               </div>
             </div>
           )}
-
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 text-muted hover:text-foreground"
-          >
-            ✕
-          </button>
         </div>
       </div>
     </div>
@@ -687,15 +767,18 @@ function ProjectSettingsModal({
   const [tab, setTab] = useState<"details" | "members" | "locations">("details");
   const [form, setForm] = useState({
     name: project.name,
+    code: project.code || "",
     address: project.address || "",
     city: project.city || "",
     stage: project.stage || "",
     category: project.category || "",
     project_value: String(project.project_value || 0),
-    orientation: "",
-    dimension: "",
-    scope_of_work: "",
-    attendance_radius_meters: 500,
+    planned_start_date: (project.planned_start_date || "").slice(0, 10),
+    planned_end_date: (project.planned_end_date || "").slice(0, 10),
+    orientation: project.orientation || "",
+    dimension: project.dimension || "",
+    scope_of_work: project.scope_of_work || "",
+    attendance_radius_meters: project.attendance_radius_meters || 500,
   });
   const [locations, setLocations] = useState<{ id: string; name: string; parent_id: string | null }[]>([]);
   const [newLoc, setNewLoc] = useState("");
@@ -758,11 +841,14 @@ function ProjectSettingsModal({
         headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify({
           name: form.name,
+          code: form.code || null,
           address: form.address,
           city: form.city,
           stage: form.stage,
           category: form.category,
           project_value: parseFloat(form.project_value) || 0,
+          planned_start_date: form.planned_start_date || null,
+          planned_end_date: form.planned_end_date || null,
           orientation: form.orientation,
           dimension: form.dimension,
           scope_of_work: form.scope_of_work,
@@ -828,6 +914,22 @@ function ProjectSettingsModal({
                 <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground" />
               </Field>
               <div className="grid grid-cols-2 gap-3">
+                <Field label="Project Code">
+                  <input value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} placeholder="e.g. PRJ-001" className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground" />
+                </Field>
+                <Field label="Attendance Radius (meters)">
+                  <input type="number" value={form.attendance_radius_meters} onChange={(e) => setForm({ ...form, attendance_radius_meters: parseInt(e.target.value) || 500 })} className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground" />
+                </Field>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="Planned Start Date">
+                  <input type="date" value={form.planned_start_date} onChange={(e) => setForm({ ...form, planned_start_date: e.target.value })} className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground" />
+                </Field>
+                <Field label="Planned End Date">
+                  <input type="date" value={form.planned_end_date} onChange={(e) => setForm({ ...form, planned_end_date: e.target.value })} className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground" />
+                </Field>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
                 <Field label="Stage">
                   <input value={form.stage} onChange={(e) => setForm({ ...form, stage: e.target.value })} className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground" />
                 </Field>
@@ -854,9 +956,6 @@ function ProjectSettingsModal({
               </Field>
               <Field label="Scope of Work">
                 <textarea value={form.scope_of_work} onChange={(e) => setForm({ ...form, scope_of_work: e.target.value })} rows={3} className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground" />
-              </Field>
-              <Field label="Attendance Radius (meters)">
-                <input type="number" value={form.attendance_radius_meters} onChange={(e) => setForm({ ...form, attendance_radius_meters: parseInt(e.target.value) || 500 })} className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground" />
               </Field>
               <div className="grid grid-cols-2 gap-3">
                 <CustomFieldsSection

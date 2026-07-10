@@ -1,6 +1,7 @@
 "use client";
 
 import { getApiHost } from "@/lib/api";
+import { authHeaders } from "@/lib/siteflow";
 import React, { useState, useEffect, useRef } from "react";
 import { useProject } from "@/context/ProjectContext";
 import { useParams } from "next/navigation";
@@ -73,7 +74,7 @@ export default function ChatPage() {
 
   const fetchGroups = async () => {
     try {
-      const res = await fetch(`${getApiHost()}/apis/v3/chat/groups/${projectId}`);
+      const res = await fetch(`${getApiHost()}/apis/v3/chat/groups/${projectId}`, { headers: authHeaders() });
       if (res.ok) setGroups(await res.json());
     } catch (e) {
       console.error("Failed to load groups", e);
@@ -82,7 +83,7 @@ export default function ChatPage() {
 
   const fetchMessages = async (groupId: string) => {
     try {
-      const res = await fetch(`${getApiHost()}/apis/v3/chat/messages/${groupId}`);
+      const res = await fetch(`${getApiHost()}/apis/v3/chat/messages/${groupId}`, { headers: authHeaders() });
       if (res.ok) setMessages(await res.json());
     } catch (e) {
       console.error("Failed to load messages", e);
@@ -91,7 +92,7 @@ export default function ChatPage() {
 
   const fetchMembers = async (groupId: string) => {
     try {
-      const res = await fetch(`${getApiHost()}/apis/v3/chat/groups/${groupId}/members`);
+      const res = await fetch(`${getApiHost()}/apis/v3/chat/groups/${groupId}/members`, { headers: authHeaders() });
       if (res.ok) {
         const rawMembers = await res.json();
         // Resolve mock names for presentation
@@ -150,7 +151,7 @@ export default function ChatPage() {
     try {
       const res = await fetch(`${getApiHost()}/apis/v3/chat/groups`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify({
           company_id: companyId,
           project_id: projectId,
@@ -176,7 +177,7 @@ export default function ChatPage() {
     try {
       const res = await fetch(`${getApiHost()}/apis/v3/chat/groups/${activeGroup.id}/members`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify({
           group_id: activeGroup.id,
           user_id: memberForm.user_id,
@@ -200,7 +201,7 @@ export default function ChatPage() {
     try {
       const res = await fetch(
         `${getApiHost()}/apis/v3/chat/groups/${activeGroup.id}/members/${userId}`,
-        { method: "DELETE" }
+        { method: "DELETE", headers: authHeaders() }
       );
       if (res.ok) {
         fetchMembers(activeGroup.id);
@@ -224,7 +225,7 @@ export default function ChatPage() {
       };
       const res = await fetch(`${getApiHost()}/apis/v3/chat/messages`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify(body),
       });
       if (res.ok) {
@@ -246,6 +247,7 @@ export default function ChatPage() {
     try {
       const res = await fetch(`${getApiHost()}/apis/v3/chat/groups/${activeGroup.id}`, {
         method: "DELETE",
+        headers: authHeaders(),
       });
       if (res.ok) {
         setActiveGroup(null);

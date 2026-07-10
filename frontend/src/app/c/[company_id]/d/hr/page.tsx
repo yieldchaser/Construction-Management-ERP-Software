@@ -210,7 +210,7 @@ export default function HRPayrollPage() {
   const fetchTimesheetLogs = async () => {
     if (!projectId) return;
     try {
-      const res = await fetch(`${getApiHost()}/apis/v3/hr/timesheets/project/${projectId}`);
+      const res = await fetch(`${getApiHost()}/apis/v3/hr/timesheets/project/${projectId}`, { headers: authHeaders() });
       if (res.ok) {
         const data = await res.json();
         setTimesheetLogs(data);
@@ -223,7 +223,7 @@ export default function HRPayrollPage() {
   const fetchProjectTasks = async () => {
     if (!projectId) return;
     try {
-      const res = await fetch(`${getApiHost()}/apis/v3/planning/tasks?project_id=${projectId}`);
+      const res = await fetch(`${getApiHost()}/apis/v3/planning/tasks?project_id=${projectId}`, { headers: authHeaders() });
       if (res.ok) {
         const data = await res.json();
         setProjectTasks(data);
@@ -261,7 +261,7 @@ export default function HRPayrollPage() {
   const fetchEmployees = async () => {
     if (!projectId) return;
     try {
-      const res = await fetch(`${getApiHost()}/apis/v3/hr/employees/${projectId}`);
+      const res = await fetch(`${getApiHost()}/apis/v3/hr/employees/${projectId}`, { headers: authHeaders() });
       if (res.ok) {
         const data = await res.json();
         const mapped = data.map((emp: any) => ({
@@ -298,7 +298,7 @@ export default function HRPayrollPage() {
   const fetchAttendance = async () => {
     if (!projectId) return;
     try {
-      const res = await fetch(`${getApiHost()}/apis/v3/hr/attendance/${projectId}/${selectedDate}`);
+      const res = await fetch(`${getApiHost()}/apis/v3/hr/attendance/${projectId}/${selectedDate}`, { headers: authHeaders() });
       if (res.ok) {
         const data = await res.json();
         const mapped = data.map((att: any) => ({
@@ -330,7 +330,7 @@ export default function HRPayrollPage() {
   const fetchLeaves = async () => {
     if (!companyId) return;
     try {
-      const res = await fetch(`${getApiHost()}/apis/v3/hr/leaves/${companyId}`);
+      const res = await fetch(`${getApiHost()}/apis/v3/hr/leaves/${companyId}`, { headers: authHeaders() });
       if (res.ok) {
         const data = await res.json();
         const mapped = data.map((l: any) => ({
@@ -355,7 +355,7 @@ export default function HRPayrollPage() {
     try {
       const res = await fetch(`${getApiHost()}/apis/v3/hr/leaves/approve/${leaveId}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify({ status: nextStatus })
       });
       if (res.ok) {
@@ -395,7 +395,7 @@ export default function HRPayrollPage() {
     try {
       const res = await fetch(`${getApiHost()}/apis/v3/hr/employees`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify({
           company_id: companyId,
           project_id: projectId,
@@ -440,7 +440,8 @@ export default function HRPayrollPage() {
   const handleTimesheetAction = async (tsId: string, action: "submit" | "approve") => {
     try {
       const res = await fetch(`${getApiHost()}/apis/v3/hr/timesheets/${tsId}/${action}`, {
-        method: "PATCH"
+        method: "PATCH",
+        headers: authHeaders()
       });
       if (res.ok) {
         setTimesheets(prev => prev.map(ts => ts.id === tsId ? { ...ts, status: action === "submit" ? "submitted" : "approved" } : ts));
@@ -485,7 +486,7 @@ export default function HRPayrollPage() {
       // Post Timesheet Header
       const tsHeaderRes = await fetch(`${getApiHost()}/apis/v3/hr/timesheets`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify({
           employee_id: timesheetForm.employeeId,
           project_id: projectId,
@@ -510,7 +511,7 @@ export default function HRPayrollPage() {
       
       const res = await fetch(`${getApiHost()}/apis/v3/hr/timesheets/${tsId}/entries`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify({
           task_id: timesheetForm.taskId ? timesheetForm.taskId : null,
           entry_date: new Date(timesheetForm.date).toISOString(),
@@ -544,6 +545,7 @@ export default function HRPayrollPage() {
       const apiHost = getApiHost();
       const res = await fetch(`${apiHost}/apis/v3/hr/payroll/upload`, {
         method: "POST",
+        headers: authHeaders(),
         body: formData
       });
       if (res.ok) {
@@ -569,7 +571,7 @@ export default function HRPayrollPage() {
     try {
       const res = await fetch(`${getApiHost()}/apis/v3/hr/payroll/run`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify({
           company_id: companyId,
           project_id: projectId,
@@ -1632,7 +1634,7 @@ export default function HRPayrollPage() {
                   try {
                     const res = await fetch(`${getApiHost()}/apis/v3/hr/leaves/${companyId}`, {
                       method: "POST",
-                      headers: { "Content-Type": "application/json" },
+                      headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
                       body: JSON.stringify({
                         project_id: projectId || null,
                         employee_name: emp.name,

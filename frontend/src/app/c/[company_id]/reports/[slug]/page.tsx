@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { getApiHost } from "@/lib/api";
+import { authHeaders } from "@/lib/siteflow";
 
 // Comprehensive metadata configurations for all 70+ reports
 interface FilterConfig {
@@ -551,9 +552,8 @@ export default function DynamicReportViewPage() {
     const fetchReport = async () => {
       setLoading(true);
       try {
-        const token = localStorage.getItem("access_token");
         const res = await fetch(`${getApiHost()}/apis/v3/reports/data/${slug}?company_id=${companyId}`, {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { ...(authHeaders() || {}) }
         });
         const data = await res.json();
         setRows(data.rows || []);

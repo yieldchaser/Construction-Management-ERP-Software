@@ -1,5 +1,6 @@
 "use client";
 import { getApiHost } from "@/lib/api";
+import { authHeaders } from "@/lib/siteflow";
 import React, { useState, useEffect } from "react";
 import { useProject } from "@/context/ProjectContext";
 import { useParams } from "next/navigation";
@@ -55,7 +56,7 @@ export default function ThreeWayPage() {
 
   const fetchMatches = async () => {
     try {
-      const res = await fetch(`${getApiHost()}/apis/v3/three-way/${companyId}?project_id=${projectId}`);
+      const res = await fetch(`${getApiHost()}/apis/v3/three-way/${companyId}?project_id=${projectId}`, { headers: authHeaders() });
       if (res.ok) {
         const data = await res.json();
         setMatches(data);
@@ -68,8 +69,8 @@ export default function ThreeWayPage() {
   const fetchReferenceData = async () => {
     try {
       const [posRes, grnsRes] = await Promise.all([
-        fetch(`${getApiHost()}/apis/v3/three-way/pos/${companyId}?project_id=${projectId}`),
-        fetch(`${getApiHost()}/apis/v3/three-way/grns/${companyId}?project_id=${projectId}`),
+        fetch(`${getApiHost()}/apis/v3/three-way/pos/${companyId}?project_id=${projectId}`, { headers: authHeaders() }),
+        fetch(`${getApiHost()}/apis/v3/three-way/grns/${companyId}?project_id=${projectId}`, { headers: authHeaders() }),
       ]);
       if (posRes.ok) setPos(await posRes.json());
       if (grnsRes.ok) setGrns(await grnsRes.json());
@@ -102,7 +103,7 @@ export default function ThreeWayPage() {
       body.match_status = form.match_status;
       const res = await fetch(`${getApiHost()}/apis/v3/three-way`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify(body),
       });
       const data = await res.json();
@@ -122,7 +123,7 @@ export default function ThreeWayPage() {
 
   const handleApprove = async (id: string) => {
     try {
-      const res = await fetch(`${getApiHost()}/apis/v3/three-way/${id}/approve?approved_by=current_user`, { method: "PATCH" });
+      const res = await fetch(`${getApiHost()}/apis/v3/three-way/${id}/approve?approved_by=current_user`, { method: "PATCH", headers: authHeaders() });
       if (res.ok) {
         setMessage("Match approved");
         fetchMatches();
@@ -134,7 +135,7 @@ export default function ThreeWayPage() {
     const reason = prompt("Reason for rejection:");
     if (!reason) return;
     try {
-      const res = await fetch(`${getApiHost()}/apis/v3/three-way/${id}/reject?reason=${encodeURIComponent(reason)}`, { method: "PATCH" });
+      const res = await fetch(`${getApiHost()}/apis/v3/three-way/${id}/reject?reason=${encodeURIComponent(reason)}`, { method: "PATCH", headers: authHeaders() });
       if (res.ok) {
         setMessage("Match rejected");
         fetchMatches();

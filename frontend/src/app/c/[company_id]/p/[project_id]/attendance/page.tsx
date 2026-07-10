@@ -1,5 +1,6 @@
 "use client";
 import { getApiHost } from "@/lib/api";
+import { authHeaders } from "@/lib/siteflow";
 
 import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
@@ -130,7 +131,7 @@ export default function AttendancePage() {
 
   const fetchProjectSettings = async () => {
     try {
-      const res = await fetch(`${getApiHost()}/apis/v3/planning/projects/${projectId}`);
+      const res = await fetch(`${getApiHost()}/apis/v3/planning/projects/${projectId}`, { headers: authHeaders() });
       if (res.ok) {
         const data = await res.json();
         setProjectSettings(data);
@@ -145,7 +146,7 @@ export default function AttendancePage() {
     try {
       const res = await fetch(`${getApiHost()}/apis/v3/planning/projects/${projectId}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify(projectSettings)
       });
       if (res.ok) {
@@ -186,7 +187,7 @@ export default function AttendancePage() {
   // Load employees and logs
   const fetchEmpsAndLogs = async () => {
     try {
-      const res = await fetch(`${getApiHost()}/apis/v3/hr/employees/${projectId}`);
+      const res = await fetch(`${getApiHost()}/apis/v3/hr/employees/${projectId}`, { headers: authHeaders() });
       if (res.ok) {
         const data = await res.json();
         setEmployees(data);
@@ -195,7 +196,7 @@ export default function AttendancePage() {
         }
       }
       
-      const logRes = await fetch(`${getApiHost()}/apis/v3/hr/attendance/${projectId}/${date}`);
+      const logRes = await fetch(`${getApiHost()}/apis/v3/hr/attendance/${projectId}/${date}`, { headers: authHeaders() });
       if (logRes.ok) {
         const logs = await logRes.json();
         setDbLogs(logs);
@@ -312,7 +313,7 @@ export default function AttendancePage() {
     try {
       const res = await fetch(`${getApiHost()}/apis/v3/hr/attendance/punch`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify({
           employee_id: finalEmpId,
           project_id: projectId,
@@ -368,7 +369,7 @@ export default function AttendancePage() {
         };
         await fetch(`${getApiHost()}/apis/v3/subcon/attendance`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
           body: JSON.stringify(body),
         });
       }

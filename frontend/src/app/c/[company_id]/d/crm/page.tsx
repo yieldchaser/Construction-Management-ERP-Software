@@ -120,6 +120,10 @@ const jput = async (p: string, body: any) => {
 
 const inputCls =
   "w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary";
+// Filter-bar variant: no w-full so the controls sit inline in a horizontal
+// flex-wrap row instead of each stacking full-width on its own line.
+const filterCls =
+  "w-auto min-w-[140px] rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary";
 const btnPrimary =
   "rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50";
 const btnGhost =
@@ -656,39 +660,39 @@ export default function CRMPage() {
           <div className="mb-3 flex flex-wrap items-center gap-2">
             <div className="relative">
               <input
-                className={`${inputCls} pl-8`}
+                className={`${filterCls} pl-8`}
                 placeholder="Search"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
               <span className="pointer-events-none absolute left-2 top-2.5 text-muted">⌕</span>
             </div>
-            <select className={inputCls} value={fAssignee} onChange={(e) => setFAssignee(e.target.value)}>
+            <select className={filterCls} value={fAssignee} onChange={(e) => setFAssignee(e.target.value)}>
               <option value="">Assignee</option>
               {team.map((t) => (
                 <option key={t.id} value={t.id}>{t.name}</option>
               ))}
             </select>
-            <input type="date" className={inputCls} value={fDate} onChange={(e) => setFDate(e.target.value)} />
-            <select className={inputCls} value={fPriority} onChange={(e) => setFPriority(e.target.value)}>
+            <input type="date" className={filterCls} value={fDate} onChange={(e) => setFDate(e.target.value)} />
+            <select className={filterCls} value={fPriority} onChange={(e) => setFPriority(e.target.value)}>
               <option value="">Priority</option>
               {PRIORITY_OPTS.map((p) => (
                 <option key={p} value={p}>{p}</option>
               ))}
             </select>
-            <select className={inputCls} value={fStatus} onChange={(e) => setFStatus(e.target.value)}>
+            <select className={filterCls} value={fStatus} onChange={(e) => setFStatus(e.target.value)}>
               <option value="">Status</option>
               {statuses.map((s) => (
                 <option key={s.id} value={s.name}>{s.name}</option>
               ))}
             </select>
-            <select className={inputCls} value={fSource} onChange={(e) => setFSource(e.target.value)}>
+            <select className={filterCls} value={fSource} onChange={(e) => setFSource(e.target.value)}>
               <option value="">Source</option>
               {sources.map((s) => (
                 <option key={s.id} value={s.name}>{s.name}</option>
               ))}
             </select>
-            <select className={inputCls} value={fCategory} onChange={(e) => setFCategory(e.target.value)}>
+            <select className={filterCls} value={fCategory} onChange={(e) => setFCategory(e.target.value)}>
               <option value="">Category</option>
               {categories.map((c) => (
                 <option key={c.id} value={c.name}>{c.name}</option>

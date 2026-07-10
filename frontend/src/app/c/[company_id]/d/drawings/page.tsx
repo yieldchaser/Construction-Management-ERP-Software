@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useProject } from "@/context/ProjectContext";
 import { useParams } from "next/navigation";
 import { getApiHost } from "@/lib/api";
+import { authHeaders } from "@/lib/siteflow";
 
 type PinCategory = "RFI" | "Clash" | "Observation" | "Approval";
 type RevStatus = "current" | "superseded" | "locked";
@@ -158,7 +159,7 @@ export default function DrawingsPage() {
   const fetchDrawings = async () => {
     try {
       const apiHost = getApiHost();
-      const res = await fetch(`${apiHost}/apis/v3/drawings?project_id=${projectId}`);
+      const res = await fetch(`${apiHost}/apis/v3/drawings?project_id=${projectId}`, { headers: authHeaders() });
       if (res.ok) {
         const data = await res.json();
         const mapped: Drawing[] = data.map((d: any) => ({
@@ -272,7 +273,7 @@ export default function DrawingsPage() {
       const apiHost = getApiHost();
       const res = await fetch(`${apiHost}/apis/v3/drawings/revisions/${activeRev.id}/pins`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify({
           x_coordinate: tempXY.x,
           y_coordinate: tempXY.y,
@@ -320,7 +321,7 @@ export default function DrawingsPage() {
       const apiHost = getApiHost();
       const res = await fetch(`${apiHost}/apis/v3/drawings/${activeDrawingId}/revisions`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify({
           version_code: newRevCode.toUpperCase(),
           file_url: newRev.fileUrl,
@@ -352,7 +353,7 @@ export default function DrawingsPage() {
       const apiHost = getApiHost();
       await fetch(`${apiHost}/apis/v3/drawings/revisions/${revId}/approve`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify({
           approval_status: newStatus === "locked" ? "approved" : "rejected",
           approved_by: "current-user",

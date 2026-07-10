@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { useProject } from "@/context/ProjectContext";
 import { getApiHost } from "@/lib/api";
+import { authHeaders } from "@/lib/siteflow";
 
 interface Scorecard {
   id: string;
@@ -48,8 +49,8 @@ export default function SubconScorecardsPage() {
     setError(null);
     try {
       const [scRes, compRes] = await Promise.all([
-        fetch(`${getApiHost()}/apis/v3/subcon/scorecards/${projectId}`),
-        fetch(`${getApiHost()}/apis/v3/subcon/scorecards/${projectId}/comparative`),
+        fetch(`${getApiHost()}/apis/v3/subcon/scorecards/${projectId}`, { headers: authHeaders() }),
+        fetch(`${getApiHost()}/apis/v3/subcon/scorecards/${projectId}/comparative`, { headers: authHeaders() }),
       ]);
       if (scRes.ok) setScorecards(await scRes.json());
       if (compRes.ok) setComparative(await compRes.json());

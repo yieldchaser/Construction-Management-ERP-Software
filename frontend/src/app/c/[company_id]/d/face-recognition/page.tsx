@@ -1,5 +1,6 @@
 "use client";
 import { getApiHost } from "@/lib/api";
+import { authHeaders } from "@/lib/siteflow";
 import React, { useState, useEffect } from "react";
 import { useProject } from "@/context/ProjectContext";
 import { useParams } from "next/navigation";
@@ -45,7 +46,7 @@ export default function FaceRecognitionPage() {
       const url = projectId
         ? `${getApiHost()}/apis/v3/face/logs/${companyId}?project_id=${projectId}`
         : `${getApiHost()}/apis/v3/face/logs/${companyId}`;
-      const res = await fetch(url);
+      const res = await fetch(url, { headers: authHeaders() });
       if (res.ok) setLogs(await res.json());
     } catch (e) {
       console.error("Failed to load face logs", e);
@@ -55,7 +56,7 @@ export default function FaceRecognitionPage() {
   const fetchSummary = async () => {
     try {
       const url = `${getApiHost()}/apis/v3/face/summary/${companyId}?date=${selectedDate}${projectId ? `&project_id=${projectId}` : ""}`;
-      const res = await fetch(url);
+      const res = await fetch(url, { headers: authHeaders() });
       if (res.ok) setSummary(await res.json());
     } catch (e) {
       console.error("Failed to load summary", e);

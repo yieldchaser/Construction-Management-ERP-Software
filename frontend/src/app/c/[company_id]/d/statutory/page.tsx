@@ -1,5 +1,6 @@
 "use client";
 import { getApiHost } from "@/lib/api";
+import { authHeaders } from "@/lib/siteflow";
 import React, { useState, useEffect } from "react";
 import { useProject } from "@/context/ProjectContext";
 import { useParams } from "next/navigation";
@@ -64,7 +65,7 @@ export default function StatutoryPage() {
   const fetchReports = async () => {
     try {
       const url = `${getApiHost()}/apis/v3/statutory/${companyId}${filterType ? `?report_type=${filterType}` : ""}`;
-      const res = await fetch(url);
+      const res = await fetch(url, { headers: authHeaders() });
       if (res.ok) setReports(await res.json());
     } catch (e) { console.error("Failed to load reports", e); }
   };
@@ -80,7 +81,7 @@ export default function StatutoryPage() {
     if (!returnPeriod) { setMessage("Please enter return period first"); return; }
     try {
       const url = `${getApiHost()}/apis/v3/statutory/${companyId}/auto-populate?report_type=${reportType}&return_period=${returnPeriod}${projectId ? `&project_id=${projectId}` : ""}`;
-      const res = await fetch(url);
+      const res = await fetch(url, { headers: authHeaders() });
       if (res.ok) {
         const data = await res.json();
         setForm({
@@ -106,7 +107,7 @@ export default function StatutoryPage() {
     if (!returnPeriod) { setMessage("Please enter return period first"); return; }
     try {
       const url = `${getApiHost()}/apis/v3/statutory/${companyId}/penalty?report_type=${form.report_type}&return_period=${returnPeriod}&total_wages=${form.total_wages}`;
-      const res = await fetch(url);
+      const res = await fetch(url, { headers: authHeaders() });
       if (res.ok) {
         const data = await res.json();
         setPenaltyData(data);
@@ -122,7 +123,7 @@ export default function StatutoryPage() {
       const body = { ...form, company_id: companyId, project_id: projectId || null, status: "draft" };
       const res = await fetch(`${getApiHost()}/apis/v3/statutory`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify(body),
       });
       if (res.ok) {
@@ -154,7 +155,7 @@ export default function StatutoryPage() {
     const by = prompt("Enter filed by name:");
     if (!ack || !by) return;
     try {
-      const res = await fetch(`${getApiHost()}/apis/v3/statutory/${reportId}/file?acknowledgment_number=${ack}&filed_by=${by}`, { method: "PATCH" });
+      const res = await fetch(`${getApiHost()}/apis/v3/statutory/${reportId}/file?acknowledgment_number=${ack}&filed_by=${by}`, { method: "PATCH", headers: authHeaders() });
       if (res.ok) {
         setMessage("Report filed successfully");
         fetchReports();

@@ -116,7 +116,7 @@ export default function FilesTab() {
         body.append("project_id", projectId);
         if (currentFolderId) body.append("folder_id", currentFolderId);
         body.append("file", f);
-        const res = await fetch(getApi("/files/upload"), { method: "POST", body });
+        const res = await fetch(getApi("/files/upload"), { method: "POST", body, headers: authHeaders() });
         if (!res.ok) {
           const t = await res.text();
           throw new Error(t || `Upload failed ${res.status}`);

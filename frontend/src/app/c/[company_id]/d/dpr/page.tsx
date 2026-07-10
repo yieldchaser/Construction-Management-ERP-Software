@@ -1,5 +1,6 @@
 "use client";
 import { getApiHost } from "@/lib/api";
+import { authHeaders } from "@/lib/siteflow";
 
 import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
@@ -97,7 +98,7 @@ export default function DPRPage() {
 
   const fetchTasks = async () => {
     try {
-      const res = await fetch(`${getApiHost()}/apis/v3/planning/tasks?project_id=${projectId}`);
+      const res = await fetch(`${getApiHost()}/apis/v3/planning/tasks?project_id=${projectId}`, { headers: authHeaders() });
       if (res.ok) {
         const data = await res.json();
         const taskList = data.length > 0 ? data : MOCK_TASKS;
@@ -118,7 +119,7 @@ export default function DPRPage() {
 
   const fetchDPRSummary = async () => {
     try {
-      const res = await fetch(`${getApiHost()}/apis/v3/dpr/summary?project_id=${projectId}`);
+      const res = await fetch(`${getApiHost()}/apis/v3/dpr/summary?project_id=${projectId}`, { headers: authHeaders() });
       if (res.ok) {
         const data = await res.json();
         setSummary(data);
@@ -133,7 +134,7 @@ export default function DPRPage() {
 
   const fetchDPRLogs = async () => {
     try {
-      const res = await fetch(`${getApiHost()}/apis/v3/dpr/summary?project_id=${projectId}`);
+      const res = await fetch(`${getApiHost()}/apis/v3/dpr/summary?project_id=${projectId}`, { headers: authHeaders() });
       if (res.ok) {
         const data = await res.json();
         setLogs(data.length > 0 ? data : MOCK_DPR_LOGS);
@@ -162,7 +163,7 @@ export default function DPRPage() {
     try {
       const res = await fetch(`${getApiHost()}/apis/v3/dpr`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify({
           project_id: projectId,
           task_id: selectedTaskId && /^[0-9a-fA-F-]{36}$/.test(selectedTaskId) ? selectedTaskId : null,

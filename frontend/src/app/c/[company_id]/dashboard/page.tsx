@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { getApiHost } from "@/lib/api";
+import { authHeaders } from "@/lib/siteflow";
 
 export default function DashboardPage() {
   const params = useParams();
@@ -87,32 +88,32 @@ export default function DashboardPage() {
               : Array.isArray(value?.rows)
                 ? value.rows
                 : [];
-      fetch(`${apiHost}/apis/v3/analytics/company/${companyId}/operational`)
+      fetch(`${apiHost}/apis/v3/analytics/company/${companyId}/operational`, { headers: authHeaders() })
         .then((res) => res.json())
         .then((data) => setOperationalData(data))
         .catch((err) => console.error("Failed to fetch operational stats", err));
 
-      fetch(`${apiHost}/apis/v3/analytics/company/${companyId}/financial`)
+      fetch(`${apiHost}/apis/v3/analytics/company/${companyId}/financial`, { headers: authHeaders() })
         .then((res) => res.json())
         .then((data) => setFinancialData(data))
         .catch((err) => console.error("Failed to fetch financial stats", err));
 
-      fetch(`${apiHost}/apis/v3/hr/employees/${activeProject}`)
+      fetch(`${apiHost}/apis/v3/hr/employees/${activeProject}`, { headers: authHeaders() })
         .then((res) => res.json())
         .then((data) => setWorkforceEmployees(toList(data)))
         .catch((err) => console.error("Failed to fetch workforce employees", err));
 
-      fetch(`${apiHost}/apis/v3/library/workforces/${companyId}`)
+      fetch(`${apiHost}/apis/v3/library/workforces/${companyId}`, { headers: authHeaders() })
         .then((res) => res.json())
         .then((data) => setWorkforceLibraries(toList(data)))
         .catch((err) => console.error("Failed to fetch workforce library", err));
 
-      fetch(`${apiHost}/apis/v3/library/materials/${companyId}`)
+      fetch(`${apiHost}/apis/v3/library/materials/${companyId}`, { headers: authHeaders() })
         .then((res) => res.json())
         .then((data) => setMaterialLibraries(toList(data)))
         .catch((err) => console.error("Failed to fetch material library", err));
 
-      fetch(`${apiHost}/apis/v3/planning/projects?company_id=${companyId}`)
+      fetch(`${apiHost}/apis/v3/planning/projects?company_id=${companyId}`, { headers: authHeaders() })
         .then((res) => res.json())
         .then((data) => {
           const list = Array.isArray(data) ? data : [];
@@ -409,7 +410,7 @@ export default function DashboardPage() {
       const apiHost = getApiHost();
       const res = await fetch(`${apiHost}/apis/v3/tally/sync?company_id=${companyId}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" }
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) }
       });
       if (res.ok) {
         const data = await res.json();
@@ -2000,10 +2001,10 @@ export default function DashboardPage() {
                     
                     try {
                        const apiHost = getApiHost();
-                       const res = await fetch(`${apiHost}/apis/v3/planning/projects`, {
-                         method: "POST",
-                         headers: { "Content-Type": "application/json" },
-                         body: JSON.stringify({
+                        const res = await fetch(`${apiHost}/apis/v3/planning/projects`, {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
+                          body: JSON.stringify({
                            company_id: companyId,
                            name: newProj.name,
                            code: newProj.code,

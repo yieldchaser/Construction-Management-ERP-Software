@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { getApiHost } from "@/lib/api";
+import { authHeaders } from "@/lib/siteflow";
 
 const SEGMENTS = [
   "Building Construction",
@@ -40,7 +41,7 @@ export default function OnboardingPage() {
       try {
         const apiHost = getApiHost();
         const res = await fetch(`${apiHost}/apis/v3/settings/company/${companyId}`, {
-          headers: { "Authorization": `Bearer ${accessToken}` }
+          headers: { ...(authHeaders() || {}) }
         });
         if (res.ok) {
           const data = await res.json();
@@ -90,7 +91,7 @@ export default function OnboardingPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${accessToken}`
+          ...(authHeaders() || {})
         },
         body: JSON.stringify({
           company_id: companyId,

@@ -1,5 +1,6 @@
 "use client";
 import { getApiHost } from "@/lib/api";
+import { authHeaders } from "@/lib/siteflow";
 
 import { useParams } from "next/navigation";
 import { useEffect, useState, useRef, useCallback } from "react";
@@ -200,14 +201,14 @@ export default function CompanySettingsPage() {
   const loadSettings = useCallback(() => {
     if (!company_id) return;
     setLoading(true);
-    fetch(`${apiHost}/apis/v3/settings/company/${company_id}`)
+    fetch(`${apiHost}/apis/v3/settings/company/${company_id}`, { headers: authHeaders() })
       .then((res) => { if (!res.ok) throw new Error("Failed to load settings"); return res.json(); })
       .then((data) => setSettings(data))
       .catch((err) => setError(err.message));
-    fetch(`${apiHost}/apis/v3/settings/branches/${company_id}`)
-      .then((res) => res.json())
-      .then((data) => setBranches(data))
-      .catch(() => {})
+    fetch(`${apiHost}/apis/v3/settings/branches/${company_id}`, { headers: authHeaders() })
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => setBranches(Array.isArray(data) ? data : []))
+      .catch(() => setBranches([]))
       .finally(() => setLoading(false));
   }, [company_id, apiHost]);
 
@@ -259,7 +260,7 @@ export default function CompanySettingsPage() {
     try {
       const res = await fetch(`${apiHost}/apis/v3/settings/company/${company_id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify({ weekly_off_days: weeklyOffDays }),
       });
       if (res.ok) { setSettings(await res.json()); setWeeklyOffStatus("saved"); setTimeout(() => setWeeklyOffStatus("idle"), 2000); }
@@ -292,7 +293,7 @@ export default function CompanySettingsPage() {
     try {
       const res = await fetch(`${apiHost}/apis/v3/settings/company/${company_id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify(wf),
       });
       if (res.ok) { setSettings(await res.json()); setWfStatus("saved"); setTimeout(() => setWfStatus("idle"), 2000); }
@@ -309,7 +310,7 @@ export default function CompanySettingsPage() {
     setPdfStatus("saving");
     try {
       const res = await fetch(`${apiHost}/apis/v3/settings/company/${company_id}`, {
-        method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(patch),
+        method: "PUT", headers: { "Content-Type": "application/json", ...(authHeaders() || {}) }, body: JSON.stringify(patch),
       });
       if (res.ok) { setSettings(await res.json()); setPdfStatus("saved"); setTimeout(() => setPdfStatus("idle"), 2000); }
       else setPdfStatus("error");
@@ -326,7 +327,7 @@ export default function CompanySettingsPage() {
     setZatcaStatus("saving");
     try {
       const res = await fetch(`${apiHost}/apis/v3/settings/company/${company_id}`, {
-        method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(patch),
+        method: "PUT", headers: { "Content-Type": "application/json", ...(authHeaders() || {}) }, body: JSON.stringify(patch),
       });
       if (res.ok) { setSettings(await res.json()); setZatcaStatus("saved"); setTimeout(() => setZatcaStatus("idle"), 2000); }
       else setZatcaStatus("error");
@@ -360,7 +361,7 @@ export default function CompanySettingsPage() {
   const [termsStatus, setTermsStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const loadTerms = useCallback(() => {
     if (!company_id) return;
-    fetch(`${apiHost}/apis/v3/settings/company-terms/${company_id}`)
+    fetch(`${apiHost}/apis/v3/settings/company-terms/${company_id}`, { headers: authHeaders() })
       .then((r) => r.json())
       .then((d) => {
         setTerms({
@@ -378,7 +379,7 @@ export default function CompanySettingsPage() {
     setTermsStatus("saving");
     try {
       const res = await fetch(`${apiHost}/apis/v3/settings/company-terms/${company_id}`, {
-        method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(terms),
+        method: "PUT", headers: { "Content-Type": "application/json", ...(authHeaders() || {}) }, body: JSON.stringify(terms),
       });
       if (res.ok) { setTermsStatus("saved"); setTimeout(() => setTermsStatus("idle"), 2000); }
       else setTermsStatus("error");
@@ -400,7 +401,7 @@ export default function CompanySettingsPage() {
     setNumStatus("saving");
     try {
       const res = await fetch(`${apiHost}/apis/v3/settings/company/${company_id}`, {
-        method: "PUT", headers: { "Content-Type": "application/json" },
+        method: "PUT", headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify({
           currency_decimal_places: Number(numFmt.currency_decimal_places) || 0,
           quantity_decimal_places: Number(numFmt.quantity_decimal_places) || 0,
@@ -426,7 +427,7 @@ export default function CompanySettingsPage() {
   const [cfDraft, setCfDraft] = useState({ field_name: "", field_type: "text", default_value: "", set_default: false });
   const loadCf = useCallback(() => {
     if (!company_id) return;
-    fetch(`${apiHost}/apis/v3/custom-fields/fields/${company_id}?entity_type=${encodeURIComponent(cfEntity)}`)
+    fetch(`${apiHost}/apis/v3/custom-fields/fields/${company_id}?entity_type=${encodeURIComponent(cfEntity)}`, { headers: authHeaders() })
       .then((r) => r.json())
       .then((d) => setCfList(Array.isArray(d) ? d : []))
       .catch(() => setCfList([]));
@@ -440,7 +441,7 @@ export default function CompanySettingsPage() {
     setCfBusy(true); setCfMsg(null);
     try {
       const res = await fetch(`${apiHost}/apis/v3/custom-fields/fields`, {
-        method: "POST", headers: { "Content-Type": "application/json" },
+        method: "POST", headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify({
           company_id, entity_type: cfEntity, field_name: name, field_label: name,
           field_type: cfDraft.field_type, is_required: false, options: [], display_order: cfList.length,
@@ -481,7 +482,7 @@ export default function CompanySettingsPage() {
 
   const loadApprovalRules = useCallback(() => {
     if (!company_id) return;
-    fetch(`${apiHost}/apis/v3/settings/approval-rules/${company_id}`)
+    fetch(`${apiHost}/apis/v3/settings/approval-rules/${company_id}`, { headers: authHeaders() })
       .then((r) => r.json())
       .then((d) => setApprovalRules(Array.isArray(d) ? d : []))
       .catch(() => setApprovalRules([]));
@@ -493,7 +494,7 @@ export default function CompanySettingsPage() {
     setRuleBusy(true); setRuleMsg(null);
     try {
       const res = await fetch(`${apiHost}/apis/v3/settings/approval-rules/${company_id}`, {
-        method: "POST", headers: { "Content-Type": "application/json" },
+        method: "POST", headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify({
           feature_type: approvalCat,
           min_amount: Number(newRule.min_amount) || 0,
@@ -522,7 +523,7 @@ export default function CompanySettingsPage() {
     setRuleBusy(true); setRuleMsg(null);
     try {
       const res = await fetch(`${apiHost}/apis/v3/settings/approval-rules/${r.id}`, {
-        method: "PUT", headers: { "Content-Type": "application/json" },
+        method: "PUT", headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify({
           feature_type: r.feature_type,
           min_amount: Number(e.min_amount) || 0,
@@ -547,7 +548,7 @@ export default function CompanySettingsPage() {
   };
 
   const deleteRule = async (id: string) => {
-    const res = await fetch(`${apiHost}/apis/v3/settings/approval-rules/${id}`, { method: "DELETE" });
+    const res = await fetch(`${apiHost}/apis/v3/settings/approval-rules/${id}`, { method: "DELETE", headers: authHeaders() });
     if (res.ok || res.status === 404) setApprovalRules(approvalRules.filter((x) => x.id !== id));
   };
 
@@ -586,7 +587,7 @@ export default function CompanySettingsPage() {
     setGsStatus("saving");
     try {
       const res = await fetch(`${apiHost}/apis/v3/settings/company/${company_id}`, {
-        method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(patch),
+        method: "PUT", headers: { "Content-Type": "application/json", ...(authHeaders() || {}) }, body: JSON.stringify(patch),
       });
       if (res.ok) { setSettings(await res.json()); setGsStatus("saved"); setTimeout(() => setGsStatus("idle"), 2000); }
       else setGsStatus("error");
@@ -615,7 +616,7 @@ export default function CompanySettingsPage() {
     try {
       const res = await fetch(`${apiHost}/apis/v3/settings/company/${company_id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify(cDraft),
       });
       if (res.ok) { setSettings(await res.json()); setSaveStatus("saved"); setTimeout(() => setSaveStatus("idle"), 2000); }
@@ -642,7 +643,7 @@ export default function CompanySettingsPage() {
     try {
       const res = await fetch(`${apiHost}/apis/v3/settings/company/${company_id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify({ business_segment: bSeg, company_size: bSize, construction_types: bTypes }),
       });
       if (res.ok) { setSettings(await res.json()); setSaveStatus("saved"); setTimeout(() => setSaveStatus("idle"), 2000); }
@@ -656,7 +657,7 @@ export default function CompanySettingsPage() {
     try {
       const fd = new FormData();
       fd.append("file", file);
-      const res = await fetch(`${apiHost}/apis/v3/settings/company-file/${company_id}?asset_type=${type}`, { method: "POST", body: fd });
+      const res = await fetch(`${apiHost}/apis/v3/settings/company-file/${company_id}?asset_type=${type}`, { method: "POST", headers: authHeaders(), body: fd });
       if (res.ok) {
         setSettings((prev) => prev ? {
           ...prev,
@@ -678,14 +679,14 @@ export default function CompanySettingsPage() {
     try {
       const res = await fetch(`${apiHost}/apis/v3/settings/branches/${company_id}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify({ ...nb, billing_address: billing }),
       });
       if (res.ok) { const added = await res.json(); setBranches([...branches, added]); setNb({ branch_name: "", gstin: "", geo_location: "", address_line1: "", city: "", state: "", zip: "", country: "India" }); setShowAddBranch(false); }
     } catch (err) { console.error(err); }
   };
   const setPrimary = async (id: string) => {
-    const res = await fetch(`${apiHost}/apis/v3/settings/branches/${id}/primary`, { method: "PATCH" });
+    const res = await fetch(`${apiHost}/apis/v3/settings/branches/${id}/primary`, { method: "PATCH", headers: authHeaders() });
     if (res.ok) { const updated = await res.json(); setBranches(branches.map((b) => ({ ...b, is_primary: b.id === id }))); void updated; }
   };
 
@@ -698,7 +699,7 @@ export default function CompanySettingsPage() {
 
   const loadRoles = useCallback(() => {
     if (!company_id) return;
-    fetch(`${apiHost}/apis/v3/settings/roles/${company_id}`)
+    fetch(`${apiHost}/apis/v3/settings/roles/${company_id}`, { headers: authHeaders() })
       .then((res) => res.json())
       .then((data) => setRoles(Array.isArray(data) ? data : []))
       .catch(() => setRoles([]));
@@ -713,7 +714,7 @@ export default function CompanySettingsPage() {
     setRoleBusy(true); setRoleMsg(null);
     try {
       const res = await fetch(`${apiHost}/apis/v3/settings/roles/${company_id}`, {
-        method: "POST", headers: { "Content-Type": "application/json" },
+        method: "POST", headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify({ role_name: name }),
       });
       if (res.ok) {
@@ -735,7 +736,7 @@ export default function CompanySettingsPage() {
   const seedRoles = async () => {
     setRoleBusy(true); setRoleMsg(null);
     try {
-      const res = await fetch(`${apiHost}/apis/v3/settings/roles/seed/${company_id}`, { method: "POST" });
+      const res = await fetch(`${apiHost}/apis/v3/settings/roles/seed/${company_id}`, { method: "POST", headers: authHeaders() });
       if (res.ok) {
         const created = await res.json();
         setRoles(created);
@@ -762,7 +763,7 @@ export default function CompanySettingsPage() {
 
   const loadPayroll = useCallback(() => {
     if (!company_id) return;
-    fetch(`${apiHost}/apis/v3/settings/payroll/${company_id}`)
+    fetch(`${apiHost}/apis/v3/settings/payroll/${company_id}`, { headers: authHeaders() })
       .then((res) => res.json())
       .then((data) => {
         setPayroll(data);
@@ -782,7 +783,7 @@ export default function CompanySettingsPage() {
     try {
       const res = await fetch(`${apiHost}/apis/v3/settings/payroll/${company_id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify(pDraft),
       });
       if (res.ok) { setPayroll(await res.json()); setPayrollStatus("saved"); setTimeout(() => setPayrollStatus("idle"), 2000); }
@@ -811,7 +812,7 @@ export default function CompanySettingsPage() {
     setLtBusy(true);
     try {
       const res = await fetch(`${apiHost}/apis/v3/hr/leave-templates/${company_id}`, {
-        method: "POST", headers: { "Content-Type": "application/json" },
+        method: "POST", headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify({ name: ltName.trim(), leave_types: rows }),
       });
       if (res.ok) { const t = await res.json(); setLeaveTemplates([...leaveTemplates, t]); setLtName(""); setLtTypes([{ type: "", days: 0 }]); setShowAddLeave(false); }
@@ -819,7 +820,7 @@ export default function CompanySettingsPage() {
     finally { setLtBusy(false); }
   };
   const deleteLeaveTemplate = async (id: string) => {
-    const res = await fetch(`${apiHost}/apis/v3/hr/leave-templates/${id}`, { method: "DELETE" });
+    const res = await fetch(`${apiHost}/apis/v3/hr/leave-templates/${id}`, { method: "DELETE", headers: authHeaders() });
     if (res.ok) setLeaveTemplates(leaveTemplates.filter((t) => t.id !== id));
   };
 
@@ -833,14 +834,14 @@ export default function CompanySettingsPage() {
     if (!hName.trim() || !hDate) return;
     try {
       const res = await fetch(`${apiHost}/apis/v3/hr/holidays/${company_id}`, {
-        method: "POST", headers: { "Content-Type": "application/json" },
+        method: "POST", headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify({ name: hName.trim(), date: new Date(hDate + "T00:00:00").toISOString() }),
       });
       if (res.ok) { const h = await res.json(); setHolidays([...holidays, h]); setHName(""); setHDate(""); setShowAddHoliday(false); }
     } catch { /* ignore */ }
   };
   const deleteHoliday = async (id: string) => {
-    const res = await fetch(`${apiHost}/apis/v3/hr/holidays/${id}`, { method: "DELETE" });
+    const res = await fetch(`${apiHost}/apis/v3/hr/holidays/${id}`, { method: "DELETE", headers: authHeaders() });
     if (res.ok) setHolidays(holidays.filter((h) => h.id !== id));
   };
 
@@ -867,7 +868,7 @@ export default function CompanySettingsPage() {
     if (!stName.trim()) return;
     try {
       const res = await fetch(`${apiHost}/apis/v3/settings/salary-templates/${company_id}`, {
-        method: "POST", headers: { "Content-Type": "application/json" },
+        method: "POST", headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify({
           name: stName.trim(), description: stDesc.trim() || null, status: "Active",
           breakup: { monthly_ctc: stCtc, day_off: stDayOff, basic_pct: stBasicPct, basic: stBasic,
@@ -878,21 +879,21 @@ export default function CompanySettingsPage() {
     } catch { /* ignore */ }
   };
   const deleteSalaryTemplate = async (id: string) => {
-    const res = await fetch(`${apiHost}/apis/v3/settings/salary-templates/${id}`, { method: "DELETE" });
+    const res = await fetch(`${apiHost}/apis/v3/settings/salary-templates/${id}`, { method: "DELETE", headers: authHeaders() });
     if (res.ok) setSalaryTemplates(salaryTemplates.filter((t) => t.id !== id));
   };
 
   const loadPayrollSubs = useCallback(() => {
     if (!company_id) return;
-    fetch(`${apiHost}/apis/v3/hr/leave-templates/${company_id}`).then((r) => r.json()).then((d) => setLeaveTemplates(Array.isArray(d) ? d : [])).catch(() => {});
-    fetch(`${apiHost}/apis/v3/hr/holidays/${company_id}`).then((r) => r.json()).then((d) => setHolidays(Array.isArray(d) ? d : [])).catch(() => {});
-    fetch(`${apiHost}/apis/v3/settings/salary-templates/${company_id}`).then((r) => r.json()).then((d) => setSalaryTemplates(Array.isArray(d) ? d : [])).catch(() => {});
+    fetch(`${apiHost}/apis/v3/hr/leave-templates/${company_id}`, { headers: authHeaders() }).then((r) => r.json()).then((d) => setLeaveTemplates(Array.isArray(d) ? d : [])).catch(() => {});
+    fetch(`${apiHost}/apis/v3/hr/holidays/${company_id}`, { headers: authHeaders() }).then((r) => r.json()).then((d) => setHolidays(Array.isArray(d) ? d : [])).catch(() => {});
+    fetch(`${apiHost}/apis/v3/settings/salary-templates/${company_id}`, { headers: authHeaders() }).then((r) => r.json()).then((d) => setSalaryTemplates(Array.isArray(d) ? d : [])).catch(() => {});
   }, [company_id, apiHost]);
   useEffect(() => { if (activeSection === "payroll") loadPayrollSubs(); }, [activeSection, loadPayrollSubs]);
 
   useEffect(() => {
     if (activeSection === "holiday") {
-      fetch(`${apiHost}/apis/v3/hr/holidays/${company_id}`)
+      fetch(`${apiHost}/apis/v3/hr/holidays/${company_id}`, { headers: authHeaders() })
         .then((r) => r.json())
         .then((d) => setHolidays(Array.isArray(d) ? d : []))
         .catch(() => setHolidays([]));

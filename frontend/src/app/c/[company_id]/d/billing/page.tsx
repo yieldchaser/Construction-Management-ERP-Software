@@ -5,6 +5,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useProject } from "@/context/ProjectContext";
 import { useParams } from "next/navigation";
+import { authHeaders } from "@/lib/siteflow";
 
 // Types
 interface Deduction {
@@ -140,7 +141,7 @@ export default function SubcontractorBillingPage() {
 
   const fetchWorkOrders = async () => {
     try {
-      const res = await fetch(`${getApiHost()}/apis/v3/billing/work-orders?project_id=${projectId}`);
+      const res = await fetch(`${getApiHost()}/apis/v3/billing/work-orders?project_id=${projectId}`, { headers: authHeaders() });
       if (res.ok) {
         const data = await res.json();
         const mapped = data.map((wo: any) => ({
@@ -161,7 +162,7 @@ export default function SubcontractorBillingPage() {
 
   const fetchTowers = async () => {
     try {
-      const res = await fetch(`${getApiHost()}/apis/v3/towers/${projectId}`);
+      const res = await fetch(`${getApiHost()}/apis/v3/towers/${projectId}`, { headers: authHeaders() });
       if (res.ok) {
         const data = await res.json();
         setTowers(data.map((t: any) => ({ id: t.id, tower_name: t.tower_name, tower_code: t.tower_code })));
@@ -174,14 +175,14 @@ export default function SubcontractorBillingPage() {
       const url = selectedTower === "all"
         ? `${getApiHost()}/apis/v3/towers/${projectId}/consolidated-pnl`
         : `${getApiHost()}/apis/v3/towers/${projectId}/consolidated-pnl?tower_id=${selectedTower}`;
-      const res = await fetch(url);
+      const res = await fetch(url, { headers: authHeaders() });
       if (res.ok) setPnlData(await res.json());
     } catch (e) { console.error(e); }
   };
 
   const fetchBills = async () => {
     try {
-      const res = await fetch(`${getApiHost()}/apis/v3/billing/bills?project_id=${projectId}&invoice_type=subcon`);
+      const res = await fetch(`${getApiHost()}/apis/v3/billing/bills?project_id=${projectId}&invoice_type=subcon`, { headers: authHeaders() });
       if (res.ok) {
         const data = await res.json();
         const mapped = data.map((bill: any) => {
@@ -217,8 +218,8 @@ export default function SubcontractorBillingPage() {
 
   const fetchNotes = async () => {
     try {
-      const dnRes = await fetch(`${getApiHost()}/apis/v3/billing/debit-notes?project_id=${projectId}`);
-      const cnRes = await fetch(`${getApiHost()}/apis/v3/billing/credit-notes?project_id=${projectId}`);
+      const dnRes = await fetch(`${getApiHost()}/apis/v3/billing/debit-notes?project_id=${projectId}`, { headers: authHeaders() });
+      const cnRes = await fetch(`${getApiHost()}/apis/v3/billing/credit-notes?project_id=${projectId}`, { headers: authHeaders() });
       let allNotes: DebitCreditNote[] = [];
       if (dnRes.ok) {
         const dnData = await dnRes.json();
@@ -270,7 +271,7 @@ export default function SubcontractorBillingPage() {
   useEffect(() => {
     (async () => {
       try {
-        const r = await fetch(`${getApiHost()}/apis/v3/settings/company-terms/${companyId}`);
+        const r = await fetch(`${getApiHost()}/apis/v3/settings/company-terms/${companyId}`, { headers: authHeaders() });
         if (r.ok) {
           const d = await r.json();
           setInvoiceDefaultTerms(d.subcon_terms || d.invoice_terms || "");
@@ -358,7 +359,7 @@ export default function SubcontractorBillingPage() {
     try {
       const res = await fetch(`${getApiHost()}/apis/v3/billing/work-orders`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify({
           company_id: companyId,
           project_id: projectId,
@@ -401,7 +402,7 @@ export default function SubcontractorBillingPage() {
     try {
       const res = await fetch(`${getApiHost()}/apis/v3/billing/bills`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify({
           company_id: companyId,
           project_id: projectId,

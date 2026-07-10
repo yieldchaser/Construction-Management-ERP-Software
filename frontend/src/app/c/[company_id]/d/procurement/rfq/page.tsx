@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { useProject } from "@/context/ProjectContext";
 import { getApiHost } from "@/lib/api";
+import { authHeaders } from "@/lib/siteflow";
 
 interface RFQ {
   id: string;
@@ -61,7 +62,7 @@ export default function RFQPage() {
   const fetchRFQs = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${getApiHost()}/apis/v3/procurement/rfq/${projectId}`);
+      const res = await fetch(`${getApiHost()}/apis/v3/procurement/rfq/${projectId}`, { headers: authHeaders() });
       if (res.ok) setRFQs(await res.json());
     } catch (e) { console.error(e); }
     setLoading(false);
@@ -69,7 +70,7 @@ export default function RFQPage() {
 
   const fetchComparison = async (rfqId: string) => {
     try {
-      const res = await fetch(`${getApiHost()}/apis/v3/procurement/rfq/${rfqId}/comparison`);
+      const res = await fetch(`${getApiHost()}/apis/v3/procurement/rfq/${rfqId}/comparison`, { headers: authHeaders() });
       if (res.ok) setComparison(await res.json());
     } catch (e) { console.error(e); }
   };
@@ -80,7 +81,7 @@ export default function RFQPage() {
     try {
       const res = await fetch(`${getApiHost()}/apis/v3/procurement/rfq`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify({
           company_id: companyId,
           project_id: projectId,

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useProject } from "@/context/ProjectContext";
 import { getApiHost } from "@/lib/api";
+import { authHeaders } from "@/lib/siteflow";
 
 // Types
 interface IndentItem {
@@ -239,10 +240,10 @@ export default function ProcurementPage() {
     try {
       const apiHost = getApiHost();
       const [indentsRes, posRes, grnsRes, invRes] = await Promise.all([
-        fetch(`${apiHost}/apis/v3/procurement/indents?project_id=${projectId}`),
-        fetch(`${apiHost}/apis/v3/procurement/pos?project_id=${projectId}`),
-        fetch(`${apiHost}/apis/v3/procurement/grns?project_id=${projectId}`),
-        fetch(`${apiHost}/apis/v3/procurement/inventory?project_id=${projectId}`),
+        fetch(`${apiHost}/apis/v3/procurement/indents?project_id=${projectId}`, { headers: authHeaders() }),
+        fetch(`${apiHost}/apis/v3/procurement/pos?project_id=${projectId}`, { headers: authHeaders() }),
+        fetch(`${apiHost}/apis/v3/procurement/grns?project_id=${projectId}`, { headers: authHeaders() }),
+        fetch(`${apiHost}/apis/v3/procurement/inventory?project_id=${projectId}`, { headers: authHeaders() }),
       ]);
 
       if (indentsRes.ok) {
@@ -316,7 +317,7 @@ export default function ProcurementPage() {
   useEffect(() => {
     (async () => {
       try {
-        const r = await fetch(`${getApiHost()}/apis/v3/settings/company-terms/${companyId}`);
+        const r = await fetch(`${getApiHost()}/apis/v3/settings/company-terms/${companyId}`, { headers: authHeaders() });
         if (r.ok) {
           const d = await r.json();
           setPoDefaultTerms(d.purchase_order_terms || "");
@@ -389,7 +390,7 @@ export default function ProcurementPage() {
       const apiHost = getApiHost();
       const res = await fetch(`${apiHost}/apis/v3/procurement/indents`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify({
           company_id: companyId,
           project_id: projectId,
@@ -418,7 +419,7 @@ export default function ProcurementPage() {
       const apiHost = getApiHost();
       await fetch(`${apiHost}/apis/v3/procurement/indents/${id}/approve`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" }
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) }
       });
     } catch (err) {
       console.error("Indent approve error:", err);
@@ -455,7 +456,7 @@ export default function ProcurementPage() {
 
     try {
       const apiHost = getApiHost();
-      const dupRes = await fetch(`${apiHost}/apis/v3/procurement/duplicate-po-check?company_id=${companyId}&po_number=${encodeURIComponent(newPONum)}`);
+      const dupRes = await fetch(`${apiHost}/apis/v3/procurement/duplicate-po-check?company_id=${companyId}&po_number=${encodeURIComponent(newPONum)}`, { headers: authHeaders() });
       if (dupRes.ok) {
         const dupData = await dupRes.json();
         if (dupData.is_duplicate) {
@@ -466,7 +467,7 @@ export default function ProcurementPage() {
 
       const res = await fetch(`${apiHost}/apis/v3/procurement/pos`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify({
           company_id: companyId,
           project_id: projectId,
@@ -497,7 +498,7 @@ export default function ProcurementPage() {
       const apiHost = getApiHost();
       await fetch(`${apiHost}/apis/v3/procurement/pos/${id}/approve`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" }
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) }
       });
     } catch (err) {
       console.error("PO approve error:", err);
@@ -566,7 +567,7 @@ export default function ProcurementPage() {
       const apiHost = getApiHost();
       await fetch(`${apiHost}/apis/v3/procurement/grns`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify({
           company_id: companyId,
           project_id: projectId,

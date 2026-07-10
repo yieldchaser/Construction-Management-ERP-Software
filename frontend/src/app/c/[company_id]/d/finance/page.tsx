@@ -1,5 +1,6 @@
 "use client";
 import { getApiHost } from "@/lib/api";
+import { authHeaders } from "@/lib/siteflow";
 
 import React, { useState, useEffect, useMemo } from "react";
 import { useParams } from "next/navigation";
@@ -265,11 +266,11 @@ export default function FinancePage() {
 
   const fetchData = async () => {
     try {
-      const plRes = await fetch(`${getApiHost()}/apis/v3/finance/pl?project_id=${projectId}`);
+      const plRes = await fetch(`${getApiHost()}/apis/v3/finance/pl?project_id=${projectId}`, { headers: authHeaders() });
       if (plRes.ok) {
         setPlData(await plRes.json());
       }
-      const tallyRes = await fetch(`${getApiHost()}/apis/v3/tally/connections?company_id=${companyId}`);
+      const tallyRes = await fetch(`${getApiHost()}/apis/v3/tally/connections?company_id=${companyId}`, { headers: authHeaders() });
       if (tallyRes.ok) {
         const data = await tallyRes.json();
         setTallyConn(data);
@@ -277,34 +278,34 @@ export default function FinancePage() {
         setTallyMobile(data.registered_mobile);
       }
       // Fetch Bank Accounts
-      const bankRes = await fetch(`${getApiHost()}/apis/v3/finance/accounts/${companyId}`);
+      const bankRes = await fetch(`${getApiHost()}/apis/v3/finance/accounts/${companyId}`, { headers: authHeaders() });
       if (bankRes.ok) {
         setBankAccounts(await bankRes.json());
       }
       // Fetch Cash Account (running balance)
-      const cashRes = await fetch(`${getApiHost()}/apis/v3/finance/cash-account/${companyId}`);
+      const cashRes = await fetch(`${getApiHost()}/apis/v3/finance/cash-account/${companyId}`, { headers: authHeaders() });
       if (cashRes.ok) {
         const ca = await cashRes.json();
         setCashAccount(ca);
         setCashRunning(ca ? ca.running_balance : 0);
       }
       // Fetch Payment Requests
-      const reqRes = await fetch(`${getApiHost()}/apis/v3/finance/payment-requests/${companyId}`);
+      const reqRes = await fetch(`${getApiHost()}/apis/v3/finance/payment-requests/${companyId}`, { headers: authHeaders() });
       if (reqRes.ok) {
         setPaymentRequests(await reqRes.json());
       }
       // Fetch Company-level Parties (Finance tab: Party sub-tab)
-      const partyRes = await fetch(`${getApiHost()}/apis/v3/finance/parties/${companyId}`);
+      const partyRes = await fetch(`${getApiHost()}/apis/v3/finance/parties/${companyId}`, { headers: authHeaders() });
       if (partyRes.ok) {
         setCompanyParties(await partyRes.json());
       }
       // Fetch Company-level Transactions & Summary (Finance tab: Transaction sub-tab)
-      const txnRes = await fetch(`${getApiHost()}/apis/v3/finance/transactions/${companyId}`);
+      const txnRes = await fetch(`${getApiHost()}/apis/v3/finance/transactions/${companyId}`, { headers: authHeaders() });
       if (txnRes.ok) {
         setTxnSummary(await txnRes.json());
       }
       // Fetch Employees for party dropdown
-      const empRes = await fetch(`${getApiHost()}/apis/v3/hr/employees/${projectId}`);
+      const empRes = await fetch(`${getApiHost()}/apis/v3/hr/employees/${projectId}`, { headers: authHeaders() });
       if (empRes.ok) {
         setUsersList(await empRes.json());
       }
@@ -339,6 +340,7 @@ export default function FinancePage() {
       const apiHost = getApiHost();
       const res = await fetch(`${apiHost}/apis/v3/cashbook/upload`, {
         method: "POST",
+        headers: authHeaders(),
         body: formData
       });
       if (res.ok) {
@@ -397,7 +399,7 @@ export default function FinancePage() {
         const apiHost = getApiHost();
         const res = await fetch(`${apiHost}/apis/v3/cashbook/p2p`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
           body: JSON.stringify({
             company_id: companyId,
             sender_company_user_id: paymentFromParty,
@@ -475,7 +477,7 @@ export default function FinancePage() {
       const apiHost = getApiHost();
       const res = await fetch(`${apiHost}/apis/v3/finance/payments`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify({
           company_id: companyId,
           project_id: projectId,
@@ -526,7 +528,7 @@ export default function FinancePage() {
       const apiHost = getApiHost();
       const res = await fetch(`${apiHost}/apis/v3/finance/approve/${id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" }
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) }
       });
       if (res.ok) {
         const data = await res.json();
@@ -552,7 +554,7 @@ export default function FinancePage() {
     try {
       const res = await fetch(`${getApiHost()}/apis/v3/finance/accounts/${companyId}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify({
           account_holder_name: newBank.holder,
           bank_name: newBank.name,
@@ -578,7 +580,7 @@ export default function FinancePage() {
     try {
       const res = await fetch(`${getApiHost()}/apis/v3/finance/cash-account/${companyId}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify({
           name: newCash.name || "Cash Account",
           opening_balance: parseFloat(newCash.opening) || 0.0,
@@ -601,7 +603,7 @@ export default function FinancePage() {
     try {
       const res = await fetch(`${getApiHost()}/apis/v3/finance/payment-requests/${companyId}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify({
           party_company_user_id: newRequest.partyId,
           project_id: projectId || null,
@@ -631,7 +633,7 @@ export default function FinancePage() {
       const apiHost = getApiHost();
       const res = await fetch(`${apiHost}/apis/v3/tally/sync?company_id=${companyId}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" }
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) }
       });
       if (res.ok) {
         const data = await res.json();
@@ -760,7 +762,7 @@ export default function FinancePage() {
       };
       const res = await fetch(`${getApiHost()}/apis/v3/library/parties`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify(payload),
       });
       if (!res.ok) {
@@ -772,7 +774,7 @@ export default function FinancePage() {
       if (newParty.create_wo && newParty.wo_title.trim() && activeProjectId) {
         await fetch(`${getApiHost()}/apis/v3/billing/work-orders`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
           body: JSON.stringify({
             company_id: companyId,
             project_id: activeProjectId,
@@ -785,7 +787,7 @@ export default function FinancePage() {
         }).catch(() => null);
       }
       // Refresh party list
-      const pr = await fetch(`${getApiHost()}/apis/v3/finance/parties/${companyId}`);
+      const pr = await fetch(`${getApiHost()}/apis/v3/finance/parties/${companyId}`, { headers: authHeaders() });
       if (pr.ok) setCompanyParties(await pr.json());
       setShowAddPartyModal(false);
       setNewParty({ name: "", phone: "", email: "", party_type: "Supplier", address: "", party_id_custom: "", date_of_joining: "", aadhaar_number: "", pan_number: "", contractor_role: "", bank_account_id: "", opening_balance: "", opening_balance_type: "pay", create_wo: false, wo_title: "", wo_terms: "" });
@@ -3364,7 +3366,7 @@ export default function FinancePage() {
                 <button
                   onClick={async () => {
                     const res = await fetch(`${getApiHost()}/apis/v3/finance/payment-requests/approve/${selectedPR.id}`, {
-                      method: "PUT", headers: { "Content-Type": "application/json" },
+                      method: "PUT", headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
                       body: JSON.stringify({ status: "Approved" }),
                     });
                     if (res.ok) { const u = await res.json(); setSelectedPR(u); setPaymentRequests(paymentRequests.map(p => p.id === u.id ? u : p)); }
@@ -3375,7 +3377,7 @@ export default function FinancePage() {
                 <button
                   onClick={async () => {
                     const res = await fetch(`${getApiHost()}/apis/v3/finance/payment-requests/approve/${selectedPR.id}`, {
-                      method: "PUT", headers: { "Content-Type": "application/json" },
+                      method: "PUT", headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
                       body: JSON.stringify({ status: "Paid" }),
                     });
                     if (res.ok) { const u = await res.json(); setSelectedPR(u); setPaymentRequests(paymentRequests.map(p => p.id === u.id ? u : p)); }
@@ -3485,7 +3487,7 @@ export default function FinancePage() {
                   onClick={async () => {
                     try {
                       const res = await fetch(`${getApiHost()}/apis/v3/finance/payment-requests/pay/${selectedPR.id}`, {
-                        method: "POST", headers: { "Content-Type": "application/json" },
+                        method: "POST", headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
                         body: JSON.stringify({
                           payment_date: prPayment.date ? new Date(prPayment.date).toISOString() : new Date().toISOString(),
                           payment_mode: prPayment.mode,

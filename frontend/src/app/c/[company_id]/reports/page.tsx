@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { getApiHost } from "@/lib/api";
+import { authHeaders } from "@/lib/siteflow";
 
 interface ReportItem {
   name: string;
@@ -332,9 +333,8 @@ export default function ReportsDashboard() {
     setIsExporting(true);
 
     try {
-      const token = localStorage.getItem("access_token");
       const res = await fetch(`${getApiHost()}/apis/v3/reports/data/${slug}?company_id=${companyId}`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { ...(authHeaders() || {}) }
       });
       const data = await res.json();
       const rows: Record<string, any>[] = data.rows || [];

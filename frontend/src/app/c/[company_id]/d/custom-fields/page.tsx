@@ -1,5 +1,6 @@
 "use client";
 import { getApiHost } from "@/lib/api";
+import { authHeaders } from "@/lib/siteflow";
 import React, { useState, useEffect } from "react";
 import { useProject } from "@/context/ProjectContext";
 import { useParams } from "next/navigation";
@@ -49,7 +50,7 @@ export default function CustomFieldsPage() {
 
   const fetchFields = async () => {
     try {
-      const res = await fetch(`${getApiHost()}/apis/v3/custom-fields/fields/${companyId}?entity_type=project`);
+      const res = await fetch(`${getApiHost()}/apis/v3/custom-fields/fields/${companyId}?entity_type=project`, { headers: authHeaders() });
       if (res.ok) setFields(await res.json());
     } catch (e) { console.error("Failed to load fields", e); }
   };
@@ -57,7 +58,7 @@ export default function CustomFieldsPage() {
   const fetchValues = async () => {
     if (!selectedField) return;
     try {
-      await fetch(`${getApiHost()}/apis/v3/custom-fields/values/${selectedField.entity_type}/${projectId}`);
+      await fetch(`${getApiHost()}/apis/v3/custom-fields/values/${selectedField.entity_type}/${projectId}`, { headers: authHeaders() });
     } catch (e) { console.error("Failed to load values", e); }
   };
 
@@ -83,7 +84,7 @@ export default function CustomFieldsPage() {
       };
       const res = await fetch(`${getApiHost()}/apis/v3/custom-fields/fields`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify(body),
       });
       if (res.ok) {
@@ -114,7 +115,7 @@ export default function CustomFieldsPage() {
       }
       const res = await fetch(`${getApiHost()}/apis/v3/custom-fields/values`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify(body),
       });
       if (res.ok) {

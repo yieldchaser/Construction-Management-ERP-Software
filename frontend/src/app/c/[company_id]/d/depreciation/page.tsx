@@ -1,5 +1,6 @@
 "use client";
 import { getApiHost } from "@/lib/api";
+import { authHeaders } from "@/lib/siteflow";
 import React, { useState, useEffect } from "react";
 import { useProject } from "@/context/ProjectContext";
 import { useParams } from "next/navigation";
@@ -60,7 +61,7 @@ export default function DepreciationPage() {
 
   const fetchSchedules = async () => {
     try {
-      const res = await fetch(`${getApiHost()}/apis/v3/assets/schedules/${companyId}`);
+      const res = await fetch(`${getApiHost()}/apis/v3/assets/schedules/${companyId}`, { headers: authHeaders() });
       if (res.ok) {
         const data = await res.json();
         setSchedules(data);
@@ -72,7 +73,7 @@ export default function DepreciationPage() {
 
   const fetchEntries = async () => {
     try {
-      const res = await fetch(`${getApiHost()}/apis/v3/assets/entries/${companyId}`);
+      const res = await fetch(`${getApiHost()}/apis/v3/assets/entries/${companyId}`, { headers: authHeaders() });
       if (res.ok) {
         const data = await res.json();
         setEntries(data);
@@ -96,7 +97,7 @@ export default function DepreciationPage() {
     try {
       const res = await fetch(`${getApiHost()}/apis/v3/assets/schedules`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify({ ...schedForm, company_id: companyId }),
       });
       if (res.ok) {
@@ -119,7 +120,7 @@ export default function DepreciationPage() {
     try {
       const res = await fetch(`${getApiHost()}/apis/v3/assets/entries`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify({ ...entryForm, company_id: companyId }),
       });
       if (res.ok) {

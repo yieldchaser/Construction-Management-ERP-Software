@@ -1,5 +1,6 @@
 "use client";
 import { getApiHost } from "@/lib/api";
+import { authHeaders } from "@/lib/siteflow";
 import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 
@@ -67,7 +68,7 @@ export default function MoMPage() {
 
   const loadProjects = async () => {
     try {
-      const res = await fetch(`${getApiHost()}/apis/v3/planning/projects?company_id=${companyId}`);
+      const res = await fetch(`${getApiHost()}/apis/v3/planning/projects?company_id=${companyId}`, { headers: authHeaders() });
       if (res.ok) {
         const data = await res.json();
         setProjects(data.map((p: { id: string; name: string }) => ({ id: p.id, name: p.name })));
@@ -85,7 +86,7 @@ export default function MoMPage() {
     if (filterAttendee.trim()) params2.set("attendee", filterAttendee.trim());
     if (filterDate) params2.set("date", filterDate);
     try {
-      const res = await fetch(`${getApiHost()}/apis/v3/mom/${companyId}?${params2.toString()}`);
+      const res = await fetch(`${getApiHost()}/apis/v3/mom/${companyId}?${params2.toString()}`, { headers: authHeaders() });
       if (res.ok) {
         setMoms(await res.json());
         setIsOffline(false);
@@ -162,7 +163,7 @@ export default function MoMPage() {
         : `${getApiHost()}/apis/v3/mom/${companyId}`;
       const res = await fetch(url, {
         method: selectedMom ? "PUT" : "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify(body),
       });
       if (res.ok) {
@@ -180,6 +181,7 @@ export default function MoMPage() {
     try {
       const res = await fetch(`${getApiHost()}/apis/v3/mom/${companyId}/${id}`, {
         method: "DELETE",
+        headers: authHeaders(),
       });
       if (res.ok) loadMoms();
     } catch (e) {

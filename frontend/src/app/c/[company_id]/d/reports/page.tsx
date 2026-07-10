@@ -1,5 +1,6 @@
 "use client";
 import { getApiHost } from "@/lib/api";
+import { authHeaders } from "@/lib/siteflow";
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
@@ -62,7 +63,7 @@ export default function ClientReportsPage() {
     try {
       setLoading(true);
       setIsOffline(false);
-      const res = await fetch(`${getApiHost()}/apis/v3/reports/${projectId}`);
+      const res = await fetch(`${getApiHost()}/apis/v3/reports/${projectId}`, { headers: authHeaders() });
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data)) {
@@ -107,7 +108,7 @@ export default function ClientReportsPage() {
       setError("");
       const res = await fetch(`${getApiHost()}/apis/v3/reports/generate/${projectId}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify({
           report_name: reportName,
           summary_markdown: summaryMarkdown,
@@ -135,6 +136,7 @@ export default function ClientReportsPage() {
     try {
       const res = await fetch(`${getApiHost()}/apis/v3/reports/${reportId}/approve`, {
         method: "PATCH",
+        headers: authHeaders(),
       });
       if (res.ok) {
         const updated = await res.json();

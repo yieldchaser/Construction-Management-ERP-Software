@@ -1,6 +1,7 @@
 'use client';
 import { useProject } from '@/context/ProjectContext';
 import { getApiHost } from '@/lib/api';
+import { authHeaders } from '@/lib/siteflow';
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
@@ -188,10 +189,10 @@ export default function SafetyPage() {
     setLoading(true);
     try {
       const [incR, statsR, talkR, ppeR] = await Promise.all([
-        fetch(`${API}/safety/incidents/${project_id}`),
-        fetch(`${API}/safety/stats/${project_id}?total_manhours=50000`),
-        fetch(`${API}/safety/toolbox-talks/${project_id}`),
-        fetch(`${API}/safety/ppe-checks/${project_id}`),
+        fetch(`${API}/safety/incidents/${project_id}`, { headers: authHeaders() }),
+        fetch(`${API}/safety/stats/${project_id}?total_manhours=50000`, { headers: authHeaders() }),
+        fetch(`${API}/safety/toolbox-talks/${project_id}`, { headers: authHeaders() }),
+        fetch(`${API}/safety/ppe-checks/${project_id}`, { headers: authHeaders() }),
       ]);
       const incData = incR.ok ? await incR.json() : [];
       const statsData = statsR.ok ? await statsR.json() : null;
@@ -215,7 +216,7 @@ export default function SafetyPage() {
   // Submit incident
   const submitIncident = async () => {
     const r = await fetch(`${API}/safety/incidents`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: { 'Content-Type': 'application/json', ...(authHeaders() || {}) },
       body: JSON.stringify({ ...incidentForm, project_id }),
     });
     if (r.ok) { flash('Incident reported.'); setShowIncidentModal(false); fetchAll(); }
@@ -226,7 +227,7 @@ export default function SafetyPage() {
   const submitClose = async () => {
     if (!showCloseModal) return;
     const r = await fetch(`${API}/safety/incidents/${showCloseModal}/close`, {
-      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      method: 'PATCH', headers: { 'Content-Type': 'application/json', ...(authHeaders() || {}) },
       body: JSON.stringify(closeForm),
     });
     if (r.ok) { flash('Incident closed.'); setShowCloseModal(null); fetchAll(); }
@@ -236,7 +237,7 @@ export default function SafetyPage() {
   // Submit toolbox talk
   const submitTalk = async () => {
     const r = await fetch(`${API}/safety/toolbox-talks`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: { 'Content-Type': 'application/json', ...(authHeaders() || {}) },
       body: JSON.stringify({ ...talkForm, project_id }),
     });
     if (r.ok) { flash('Talk logged.'); setShowTalkModal(false); fetchAll(); }
@@ -247,7 +248,7 @@ export default function SafetyPage() {
   const submitPPE = async () => {
     const items = ppeForm.non_compliant_items.split(',').map(s => s.trim()).filter(Boolean);
     const r = await fetch(`${API}/safety/ppe-checks`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: { 'Content-Type': 'application/json', ...(authHeaders() || {}) },
       body: JSON.stringify({ ...ppeForm, project_id, non_compliant_items: items }),
     });
     if (r.ok) { flash('PPE check recorded.'); setShowPPEModal(false); fetchAll(); }

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { useProject } from "@/context/ProjectContext";
 import { getApiHost } from "@/lib/api";
+import { authHeaders } from "@/lib/siteflow";
 
 interface Tower {
   id: string;
@@ -51,8 +52,8 @@ export default function TowersPage() {
     setLoading(true);
     try {
       const [tRes, pRes] = await Promise.all([
-        fetch(`${getApiHost()}/apis/v3/towers/${projectId}`),
-        fetch(`${getApiHost()}/apis/v3/towers/${projectId}/consolidated-pnl`),
+        fetch(`${getApiHost()}/apis/v3/towers/${projectId}`, { headers: authHeaders() }),
+        fetch(`${getApiHost()}/apis/v3/towers/${projectId}/consolidated-pnl`, { headers: authHeaders() }),
       ]);
       if (tRes.ok) setTowers(await tRes.json());
       if (pRes.ok) setPnl(await pRes.json());
@@ -80,7 +81,7 @@ export default function TowersPage() {
       if (formEnd) body.end_date = new Date(formEnd).toISOString();
       const res = await fetch(`${getApiHost()}/apis/v3/towers/`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify(body),
       });
       if (res.ok) { fetchData(); resetForm(); }
@@ -99,7 +100,7 @@ export default function TowersPage() {
       body.budget = formBudget;
       const res = await fetch(`${getApiHost()}/apis/v3/towers/${editingId}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify(body),
       });
       if (res.ok) { fetchData(); resetForm(); }
@@ -109,7 +110,7 @@ export default function TowersPage() {
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this tower? This will not affect underlying POs or bills.")) return;
     try {
-      const res = await fetch(`${getApiHost()}/apis/v3/towers/${id}`, { method: "DELETE" });
+      const res = await fetch(`${getApiHost()}/apis/v3/towers/${id}`, { method: "DELETE", headers: authHeaders() });
       if (res.ok) fetchData();
     } catch (e) { console.error(e); }
   };

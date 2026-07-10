@@ -1,5 +1,6 @@
 "use client";
 import { getApiHost } from "@/lib/api";
+import { authHeaders } from "@/lib/siteflow";
 import React, { useState, useEffect } from "react";
 import { useProject } from "@/context/ProjectContext";
 import { useParams } from "next/navigation";
@@ -42,7 +43,7 @@ export default function WastagePage() {
 
   const fetchRecords = async () => {
     try {
-      const res = await fetch(`${getApiHost()}/apis/v3/wastage/${projectId}`);
+      const res = await fetch(`${getApiHost()}/apis/v3/wastage/${projectId}`, { headers: authHeaders() });
       if (res.ok) {
         const data = await res.json();
         setRecords(data);
@@ -63,7 +64,7 @@ export default function WastagePage() {
     try {
       const res = await fetch(`${getApiHost()}/apis/v3/wastage`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify({ ...form, company_id: companyId, project_id: projectId }),
       });
       if (res.ok) {
@@ -83,7 +84,7 @@ export default function WastagePage() {
 
   const updateStatus = async (id: string, status: string) => {
     try {
-      const res = await fetch(`${getApiHost()}/apis/v3/wastage/${id}/status?status=${status}`, { method: "PATCH" });
+      const res = await fetch(`${getApiHost()}/apis/v3/wastage/${id}/status?status=${status}`, { method: "PATCH", headers: authHeaders() });
       if (res.ok) {
         fetchRecords();
       }

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useProject } from "@/context/ProjectContext";
 import { useParams } from "next/navigation";
 import { getApiHost } from "@/lib/api";
+import { authHeaders } from "@/lib/siteflow";
 
 interface BudgetCommitted {
   project_id: string;
@@ -39,7 +40,7 @@ export default function BudgetPage() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const budRes = await fetch(`${getApiHost()}/apis/v3/budget/committed/${projectId}`);
+      const budRes = await fetch(`${getApiHost()}/apis/v3/budget/committed/${projectId}`, { headers: authHeaders() });
       if (budRes.ok) setBudget(await budRes.json());
     } catch (e) {
       setError("Failed to load budget data");

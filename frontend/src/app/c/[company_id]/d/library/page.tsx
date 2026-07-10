@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { getApiHost } from "@/lib/api";
 import { UNITS } from "@/lib/units";
 
@@ -18,12 +18,23 @@ type LibraryType =
   | "material-category"
   | "todo";
 
+const LIBRARY_TABS: LibraryType[] = [
+  "party", "asset-type", "cost-code", "deduction", "progress", "workforce",
+  "material", "rate", "retention", "material-category", "todo",
+];
+
 export default function LibraryHubPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const companyId = params.company_id as string;
   const accessToken = typeof window !== "undefined" ? localStorage.getItem("access_token") : "";
 
-  const [activeTab, setActiveTab] = useState<LibraryType>("party");
+  const initialTab = ((): LibraryType => {
+    const t = searchParams.get("tab");
+    return t && (LIBRARY_TABS as string[]).includes(t) ? (t as LibraryType) : "party";
+  })();
+
+  const [activeTab, setActiveTab] = useState<LibraryType>(initialTab);
   const [libraryData, setLibraryData] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [toastMessage, setToastMessage] = useState("");

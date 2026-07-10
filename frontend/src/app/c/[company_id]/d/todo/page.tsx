@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { getApiHost } from "@/lib/api";
+import { authHeaders } from "@/lib/siteflow";
 
 interface Project {
   id: string;
@@ -92,7 +93,7 @@ export default function ToDoPage() {
       if (!companyId || !accessToken) return;
       try {
         const res = await fetch(`${apiHost}/apis/v3/planning/projects?company_id=${companyId}`, {
-          headers: { "Authorization": `Bearer ${accessToken}` }
+          headers: { ...(authHeaders() || {}) }
         });
         if (res.ok) {
           const data = await res.json();

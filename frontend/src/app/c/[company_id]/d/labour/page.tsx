@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useProject } from "@/context/ProjectContext";
 import { useParams } from "next/navigation";
 import { getApiHost } from "@/lib/api";
+import { authHeaders } from "@/lib/siteflow";
 
 interface ReliabilityScore {
   id: string;
@@ -68,9 +69,9 @@ export default function LabourPage() {
     setLoading(true);
     try {
       const [relRes, bocwRes, mRes] = await Promise.all([
-        fetch(`${getApiHost()}/apis/v3/labour/reliability/${projectId}`),
-        fetch(`${getApiHost()}/apis/v3/labour/bocw/${projectId}`),
-        fetch(`${getApiHost()}/apis/v3/labour/muster-roll/${projectId}`),
+        fetch(`${getApiHost()}/apis/v3/labour/reliability/${projectId}`, { headers: authHeaders() }),
+        fetch(`${getApiHost()}/apis/v3/labour/bocw/${projectId}`, { headers: authHeaders() }),
+        fetch(`${getApiHost()}/apis/v3/labour/muster-roll/${projectId}`, { headers: authHeaders() }),
       ]);
       if (relRes.ok) setReliability(await relRes.json());
       if (bocwRes.ok) setBocw(await bocwRes.json());
@@ -85,7 +86,7 @@ export default function LabourPage() {
     try {
       const res = await fetch(`${getApiHost()}/apis/v3/labour/muster-roll`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify({
           company_id: companyId,
           project_id: projectId,

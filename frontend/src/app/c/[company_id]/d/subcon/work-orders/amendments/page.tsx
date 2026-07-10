@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { useProject } from "@/context/ProjectContext";
 import { getApiHost } from "@/lib/api";
+import { authHeaders } from "@/lib/siteflow";
 
 interface Amendment {
   id: string;
@@ -41,7 +42,7 @@ export default function WOAmendmentsPage({ params }: { params: { wo_id: string }
   const fetchAmendments = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${getApiHost()}/apis/v3/subcon/work-orders/${woId}/amendments`);
+      const res = await fetch(`${getApiHost()}/apis/v3/subcon/work-orders/${woId}/amendments`, { headers: authHeaders() });
       if (res.ok) setAmendments(await res.json());
     } catch (e) { console.error(e); }
     setLoading(false);
@@ -49,7 +50,7 @@ export default function WOAmendmentsPage({ params }: { params: { wo_id: string }
 
   const fetchWO = async () => {
     try {
-      const res = await fetch(`${getApiHost()}/apis/v3/billing/work-orders?project_id=${projectId}`);
+      const res = await fetch(`${getApiHost()}/apis/v3/billing/work-orders?project_id=${projectId}`, { headers: authHeaders() });
       if (res.ok) {
         const data = await res.json();
         const found = data.find((w: any) => w.id === woId);
@@ -65,7 +66,7 @@ export default function WOAmendmentsPage({ params }: { params: { wo_id: string }
       const parsed = JSON.parse(fieldsJson);
       const res = await fetch(`${getApiHost()}/apis/v3/subcon/work-orders/${woId}/amendments`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify({ amended_by: amendedBy || null, amended_fields: parsed, reason: reason || null }),
       });
       if (res.ok) {

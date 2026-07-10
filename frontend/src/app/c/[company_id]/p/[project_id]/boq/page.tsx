@@ -247,7 +247,7 @@ export default function BoqTab() {
     formData.append("boq_document_id", docId);
     formData.append("file", docFile);
     try {
-      await fetch(getApi("/budgeting/boq/import"), { method: "POST", body: formData });
+      await fetch(getApi("/budgeting/boq/import"), { method: "POST", body: formData, headers: authHeaders() });
       setDocFile(null);
       await loadDocItems(docId);
       await loadDocs();
