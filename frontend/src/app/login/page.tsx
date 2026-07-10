@@ -122,6 +122,7 @@ export default function LoginPage() {
 
     setLoading(true);
     setError("");
+    setMessage("");
 
     let formattedMobile = `${countryCode}${mobile}`;
 
@@ -135,24 +136,29 @@ export default function LoginPage() {
 
       const data = await response.json();
       if (response.ok && data.access_token) {
-        setMessage("Authentication successful! Checking onboarding status...");
+        setMessage("Authentication successful! Redirecting...");
+        setError("");
         localStorage.setItem("access_token", data.access_token);
         localStorage.setItem("company_id", data.company.id);
         localStorage.setItem("user_id", data.user.id);
         localStorage.setItem("user_name", data.user?.name || "");
         localStorage.setItem("creator_name", data.user?.name || "");
-        
-        // Fetch company onboarding status
-        const companyRes = await fetch(`${apiHost}/apis/v3/settings/company/${data.company.id}`, {
-          headers: { "Authorization": `Bearer ${data.access_token}` }
-        });
-        
+
         let shouldOnboard = true;
-        if (companyRes.ok) {
-          const companyData = await companyRes.json();
-          if (companyData.onboarding_completed) {
-            shouldOnboard = false;
+        try {
+          const companyRes = await fetch(`${apiHost}/apis/v3/settings/company/${data.company.id}`, {
+            headers: { "Authorization": `Bearer ${data.access_token}` }
+          });
+          if (companyRes.ok) {
+            const companyData = await companyRes.json();
+            if (companyData.onboarding_completed) {
+              shouldOnboard = false;
+            }
+          } else {
+            console.warn(`Onboarding-status check returned ${companyRes.status}; defaulting to onboarding.`);
           }
+        } catch (onboardErr) {
+          console.error("Onboarding-status check failed (non-fatal), redirecting anyway:", onboardErr);
         }
 
         setTimeout(() => {
@@ -164,9 +170,11 @@ export default function LoginPage() {
         }, 1500);
       } else {
         setError(data.detail || "Invalid OTP code. Please try again.");
+        setMessage("");
       }
     } catch (err) {
       setError("Verification failed. Please check your internet connection.");
+      setMessage("");
     } finally {
       setLoading(false);
     }
