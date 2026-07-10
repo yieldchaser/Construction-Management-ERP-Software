@@ -32,6 +32,12 @@ class Settings(BaseSettings):
     # the OAuth callback. Falls back to the first configured frontend origin.
     FRONTEND_PUBLIC_URL: str = ""
 
+    # Admin migration secret. Temporary, for one-off admin-triggered migrations
+    # (e.g. the file-storage backfill), NOT a general auth mechanism. When empty,
+    # the admin migration routes always reject with 403. Set a random value in the
+    # prod env (e.g. Render) per deployment; never ship a default here.
+    ADMIN_MIGRATION_SECRET: str = ""
+
     model_config = SettingsConfigDict(
         env_file=os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), ".env"),
         env_file_encoding="utf-8",
