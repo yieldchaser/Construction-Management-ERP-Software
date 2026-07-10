@@ -9,6 +9,7 @@ from app.models import (
     CRMLead, CRMQuotation, CRMQuotationItem, Company,
     CRMLeadSource, CRMLeadCategory, CRMLeadStatus, CompanyTeam, User,
 )
+from app.workflow_controls import get_default_terms
 from pydantic import BaseModel
 
 router = APIRouter(
@@ -399,7 +400,9 @@ def create_quotation(lead_id: uuid.UUID, req: QuotationCreateRequest, db: Sessio
         qt_date=req.qt_date.date() if req.qt_date else None,
         bank_account_id=uuid.UUID(str(req.bank_account_id)) if req.bank_account_id else None,
         total_amount=0.0,
-        terms=req.terms
+        # Settings -> Terms & Conditions -> CRM Quotation: pre-fill the
+        # company default when the caller doesn't supply their own terms.
+        terms=req.terms if req.terms else get_default_terms(db, lead.company_id, "quotation")
     )
     db.add(quot)
     db.flush()

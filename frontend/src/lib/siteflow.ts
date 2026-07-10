@@ -27,8 +27,24 @@ export const resolveCompanyId = async (slug: string): Promise<string> => {
   return slug;
 };
 
-export const fmtINR = (n: number | undefined | null): string =>
-  `₹${Math.round(n || 0).toLocaleString("en-IN")}`;
+// decimalPlaces defaults to 0 to preserve the original rounded-integer
+// behavior for the many call sites that don't pass a company's configured
+// Company.currency_decimal_places (Settings -> Document & Fields -> Number
+// Format). Callers that already have the company/settings object in scope
+// can pass it explicitly, e.g. fmtINR(amount, company.currency_decimal_places).
+export const fmtINR = (
+  n: number | undefined | null,
+  decimalPlaces: number = 0
+): string => {
+  const value = n || 0;
+  if (decimalPlaces <= 0) {
+    return `₹${Math.round(value).toLocaleString("en-IN")}`;
+  }
+  return `₹${value.toLocaleString("en-IN", {
+    minimumFractionDigits: decimalPlaces,
+    maximumFractionDigits: decimalPlaces,
+  })}`;
+};
 
 export const initials = (name: string): string =>
   name

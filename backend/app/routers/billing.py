@@ -11,7 +11,7 @@ from app.models import (
 )
 from app.routers.custom_fields import CustomFieldValueInput, upsert_values_for_entity
 from app.zatca import build_zatca_payload
-from app.workflow_controls import enforce_entry_creation_window, get_company
+from app.workflow_controls import enforce_entry_creation_window, get_company, get_default_terms
 from pydantic import BaseModel, Field
 
 router = APIRouter(
@@ -280,7 +280,9 @@ def create_work_order(req: WOCreateRequest, db: Session = Depends(get_db)):
         wo_date=req.wo_date,
         status="active",
         estimated_work_amount=estimated_amount,
-        terms=req.terms
+        # Settings -> Terms & Conditions -> Subcon Work Order: pre-fill the
+        # company default when the caller doesn't supply their own terms.
+        terms=req.terms if req.terms else get_default_terms(db, req.company_id, "subcon")
     )
     db.add(wo)
     db.flush()

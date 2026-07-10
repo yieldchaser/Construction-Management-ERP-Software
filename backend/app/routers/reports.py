@@ -23,7 +23,8 @@ from app.models import (
     ProductionRecipeMaterial,
     CRMQuotation, CRMQuotationItem, CRMLead, CompanyTeam, User,
     BOQItem, MaterialTransaction, GRNItem, GoodsReceiptNote,
-    DebitNote, CreditNote, BankAccount, TransactionDeduction
+    DebitNote, CreditNote, BankAccount, TransactionDeduction,
+    Company, CompanyBranch, PdfTemplate
 )
 from app.utils.pdf_generator import generate_client_report_pdf
 
@@ -111,19 +112,55 @@ def generate_report(
         "quality_tests_pass_rate": quality_tests_pass_rate,
     }
 
-    # 5. Generate PDF stream
-    pdf_bytes = generate_client_report_pdf(payload.report_name, payload.summary_markdown or "", metrics)
+    # 5. Resolve PDF Template settings (Settings -> Document & Fields -> PDF Template)
+    company_name = ""
+    custom_banner = None
+    company = db.query(Company).filter(Company.id == project.company_id).first()
+    if company:
+        # document_company_name_display: "branch" prints the issuing branch's
+        # name instead of the parent company's name (falls back to company
+        # name when the project has no branch or the branch can't be found).
+        if company.document_company_name_display == "branch" and project.branch_id:
+            branch = db.query(CompanyBranch).filter(CompanyBranch.id == project.branch_id).first()
+            company_name = branch.branch_name if branch else company.name
+        else:
+            company_name = company.name
 
-    # 6. Save PDF to static files directory
+        # custom_pdf_template_enabled: switch from the default hardcoded
+        # layout to the company's configured PdfTemplate (falls back to the
+        # default layout when no template has been configured yet).
+        if company.custom_pdf_template_enabled:
+            template = (
+                db.query(PdfTemplate)
+                .filter(PdfTemplate.company_id == company.id, PdfTemplate.is_default == True)  # noqa: E712
+                .first()
+                or db.query(PdfTemplate)
+                .filter(PdfTemplate.company_id == company.id)
+                .order_by(PdfTemplate.created_at.desc())
+                .first()
+            )
+            if template and template.content:
+                custom_banner = template.content
+
+    # 6. Generate PDF stream
+    pdf_bytes = generate_client_report_pdf(
+        payload.report_name,
+        payload.summary_markdown or "",
+        metrics,
+        company_name=company_name,
+        custom_banner=custom_banner,
+    )
+
+    # 7. Save PDF to static files directory
     reports_dir = os.path.join("static", "reports")
     os.makedirs(reports_dir, exist_ok=True)
     pdf_filename = f"{report_id}.pdf"
     pdf_path = os.path.join(reports_dir, pdf_filename)
-    
+
     with open(pdf_path, "wb") as f:
         f.write(pdf_bytes)
 
-    # 7. Create report record in database
+    # 8. Create report record in database
     db_report = ClientReport(
         id=report_id,
         project_id=project_id,

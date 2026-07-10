@@ -14,13 +14,40 @@ from uuid import UUID
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.models import Company, WarehouseInventory
+from app.models import Company, WarehouseInventory, CompanyTerms
 
 
 def get_company(db: Session, company_id: Optional[UUID]) -> Optional[Company]:
     if company_id is None:
         return None
     return db.query(Company).filter(Company.id == company_id).first()
+
+
+def get_default_terms(db: Session, company_id: Optional[UUID], doc_type: str) -> Optional[str]:
+    """Settings -> Document & Fields -> Terms & Conditions.
+
+    Returns the company's configured default Terms & Conditions text for the
+    given document type, or None if the company hasn't configured one (or has
+    no company_terms row yet). Callers should only use this to pre-fill a
+    blank `terms` field on create -- never to overwrite a value the caller
+    explicitly supplied.
+
+    doc_type: one of "invoice", "quotation", "subcon", "boq", "purchase_order"
+    (matches the CompanyTerms column names minus the `_terms` suffix).
+    """
+    if company_id is None:
+        return None
+    row = db.query(CompanyTerms).filter(CompanyTerms.company_id == company_id).first()
+    if not row:
+        return None
+    field_map = {
+        "invoice": row.invoice_terms,
+        "quotation": row.quotation_terms,
+        "subcon": row.subcon_terms,
+        "boq": row.boq_terms,
+        "purchase_order": row.purchase_order_terms,
+    }
+    return field_map.get(doc_type)
 
 
 def _as_utc(dt: datetime) -> datetime:

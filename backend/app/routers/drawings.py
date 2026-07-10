@@ -286,7 +286,20 @@ def delete_pin(pin_id: UUID, db: Session = Depends(get_db)):
     pin = db.query(DrawingPin).filter(DrawingPin.id == pin_id).first()
     if not pin:
         raise HTTPException(status_code=404, detail="Pin not found")
-    
+
+    try:
+        from app.routers.delete_logs import log_deletion
+        from app.models import Project
+        company_id = None
+        revision = db.query(DrawingRevision).filter(DrawingRevision.id == pin.revision_id).first()
+        if revision:
+            drawing = db.query(Drawing).filter(Drawing.id == revision.drawing_id).first()
+            if drawing:
+                proj = db.query(Project).filter(Project.id == drawing.project_id).first()
+                company_id = proj.company_id if proj else None
+        log_deletion(db, company_id, "drawing_pin", pin.id, f"Drawing Pin: {pin.comment[:100]}")
+    except Exception:
+        pass
     db.delete(pin)
     db.commit()
     return {"status": "success", "message": "Pin deleted successfully"}

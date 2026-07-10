@@ -979,6 +979,11 @@ def delete_leave_template(leave_template_id: uuid.UUID, db: Session = Depends(ge
     obj = db.query(LeaveTemplate).filter(LeaveTemplate.id == leave_template_id).first()
     if not obj:
         raise HTTPException(status_code=404, detail="Leave template not found")
+    try:
+        from app.routers.delete_logs import log_deletion
+        log_deletion(db, obj.company_id, "leave_template", obj.id, f"Leave Template: {obj.name}")
+    except Exception:
+        pass
     db.delete(obj)
     db.commit()
 
@@ -1107,6 +1112,11 @@ def delete_holiday(holiday_id: uuid.UUID, db: Session = Depends(get_db)):
     obj = db.query(Holiday).filter(Holiday.id == holiday_id).first()
     if not obj:
         raise HTTPException(status_code=404, detail="Holiday not found")
+    try:
+        from app.routers.delete_logs import log_deletion
+        log_deletion(db, obj.company_id, "holiday", obj.id, f"Holiday: {obj.name}")
+    except Exception:
+        pass
     db.delete(obj)
     db.commit()
 

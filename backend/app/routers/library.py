@@ -236,6 +236,11 @@ def delete_library_asset_type(item_id: uuid.UUID, db: Session = Depends(get_db))
     item = db.query(models.LibraryAssetType).filter(models.LibraryAssetType.id == item_id).first()
     if not item:
         raise HTTPException(status_code=404, detail="Asset type not found")
+    try:
+        from app.routers.delete_logs import log_deletion
+        log_deletion(db, item.company_id, "asset_type", item.id, f"Asset Type: {item.name}")
+    except Exception:
+        pass
     db.delete(item)
     db.commit()
     return {"success": True}
@@ -266,6 +271,11 @@ def delete_library_cost_code(item_id: uuid.UUID, db: Session = Depends(get_db)):
     item = db.query(models.LibraryCostCode).filter(models.LibraryCostCode.id == item_id).first()
     if not item:
         raise HTTPException(status_code=404, detail="Cost code not found")
+    try:
+        from app.routers.delete_logs import log_deletion
+        log_deletion(db, item.company_id, "cost_code", item.id, f"Cost Code: {item.name}")
+    except Exception:
+        pass
     db.delete(item)
     db.commit()
     return {"success": True}
@@ -289,6 +299,11 @@ def delete_library_deduction(item_id: uuid.UUID, db: Session = Depends(get_db)):
     item = db.query(models.LibraryDeduction).filter(models.LibraryDeduction.id == item_id).first()
     if not item:
         raise HTTPException(status_code=404, detail="Deduction not found")
+    try:
+        from app.routers.delete_logs import log_deletion
+        log_deletion(db, item.company_id, "deduction", item.id, f"Deduction: {item.name}")
+    except Exception:
+        pass
     db.delete(item)
     db.commit()
     return {"success": True}
@@ -312,6 +327,11 @@ def delete_library_progress(item_id: uuid.UUID, db: Session = Depends(get_db)):
     item = db.query(models.LibraryProgress).filter(models.LibraryProgress.id == item_id).first()
     if not item:
         raise HTTPException(status_code=404, detail="Progress not found")
+    try:
+        from app.routers.delete_logs import log_deletion
+        log_deletion(db, item.company_id, "progress", item.id, f"Progress: {item.name}")
+    except Exception:
+        pass
     db.delete(item)
     db.commit()
     return {"success": True}
@@ -335,6 +355,11 @@ def delete_library_workforce(item_id: uuid.UUID, db: Session = Depends(get_db)):
     item = db.query(models.LibraryWorkforce).filter(models.LibraryWorkforce.id == item_id).first()
     if not item:
         raise HTTPException(status_code=404, detail="Workforce not found")
+    try:
+        from app.routers.delete_logs import log_deletion
+        log_deletion(db, item.company_id, "workforce", item.id, f"Workforce: {item.name}")
+    except Exception:
+        pass
     db.delete(item)
     db.commit()
     return {"success": True}
@@ -412,6 +437,11 @@ def delete_library_rate(item_id: uuid.UUID, db: Session = Depends(get_db)):
     item = db.query(models.LibraryRate).filter(models.LibraryRate.id == item_id).first()
     if not item:
         raise HTTPException(status_code=404, detail="Rate item not found")
+    try:
+        from app.routers.delete_logs import log_deletion
+        log_deletion(db, item.company_id, "rate", item.id, f"Rate: {item.name}")
+    except Exception:
+        pass
     db.delete(item)
     db.commit()
     return {"success": True}
@@ -443,6 +473,11 @@ def delete_library_retention(item_id: uuid.UUID, db: Session = Depends(get_db)):
     item = db.query(models.LibraryRetention).filter(models.LibraryRetention.id == item_id).first()
     if not item:
         raise HTTPException(status_code=404, detail="Retention not found")
+    try:
+        from app.routers.delete_logs import log_deletion
+        log_deletion(db, item.company_id, "retention", item.id, f"Retention: {item.name}")
+    except Exception:
+        pass
     db.delete(item)
     db.commit()
     return {"success": True}
@@ -479,6 +514,11 @@ def delete_material_category(item_id: uuid.UUID, db: Session = Depends(get_db)):
     item = db.query(models.MaterialCategory).filter(models.MaterialCategory.id == item_id).first()
     if not item:
         raise HTTPException(status_code=404, detail="Material category not found")
+    try:
+        from app.routers.delete_logs import log_deletion
+        log_deletion(db, item.company_id, "material_category", item.id, f"Material Category: {item.name}")
+    except Exception:
+        pass
     db.delete(item)
     db.commit()
     return {"success": True}
@@ -510,6 +550,11 @@ def delete_library_todo(item_id: uuid.UUID, db: Session = Depends(get_db)):
     item = db.query(models.LibraryTodo).filter(models.LibraryTodo.id == item_id).first()
     if not item:
         raise HTTPException(status_code=404, detail="To Do not found")
+    try:
+        from app.routers.delete_logs import log_deletion
+        log_deletion(db, item.company_id, "library_todo", item.id, f"Library Todo: {item.name}")
+    except Exception:
+        pass
     db.delete(item)
     db.commit()
     return {"success": True}

@@ -1724,7 +1724,7 @@ export default function CompanySettingsPage() {
                         );
                       })}
                     </div>
-                    <p className="text-[10px] text-muted">Stored on the company record (custom_pdf_template_enabled). Note: the PDF rendering engine does not yet consume this flag to switch templates — storage + UI wired, enforcement pending.</p>
+                    <p className="text-[10px] text-muted">Stored on the company record (custom_pdf_template_enabled). Consumed by the Client Portal PDF report generator: when enabled, it looks up a configured PDF Template (default-flagged, else most recent) for this company and renders its content as a banner in place of the standard layout. No template configured yet still falls back to Default. Other document PDFs (invoices, quotations, purchase orders) do not generate a server-rendered PDF at all yet, so this flag has no effect there.</p>
                   </div>
 
                   <div className="bg-card border border-border-custom rounded-lg bg-background p-6 space-y-3">
@@ -1744,7 +1744,7 @@ export default function CompanySettingsPage() {
                         );
                       })}
                     </div>
-                    <p className="text-[10px] text-muted">Stored on the company record (document_company_name_display). Note: document generation does not yet read this to choose the printed name — storage + UI wired, enforcement pending.</p>
+                    <p className="text-[10px] text-muted">Stored on the company record (document_company_name_display). Consumed by the Client Portal PDF report generator's masthead: "Branch Name" prints the project's issuing branch (falls back to the company name if the project has no branch), "Company Name" always prints the parent company. Other document PDFs (invoices, quotations, purchase orders) do not generate a server-rendered PDF at all yet, so this flag has no effect there.</p>
                   </div>
 
                   {pdfStatus === "saved" && (<div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-lg">PDF template settings saved</div>)}
@@ -1782,7 +1782,7 @@ export default function CompanySettingsPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <h2 className="text-sm font-bold text-white uppercase tracking-wider text-muted">Terms & Conditions</h2>
-                      <p className="mt-1 text-xs text-muted">Central default text for each document type. Prefills downstream forms (Sales Invoice, Subcon Work Order, CRM Quotation).</p>
+                      <p className="mt-1 text-xs text-muted">Central default text for each document type. Prefills downstream forms that have a terms field (Subcon Work Order, CRM Quotation).</p>
                     </div>
                     <button onClick={saveTerms} disabled={termsStatus === "saving"} className="bg-primary text-white text-xs font-bold px-6 py-2.5 rounded-md disabled:opacity-50">{termsStatus === "saving" ? "Saving…" : "Save"}</button>
                   </div>
@@ -1802,7 +1802,7 @@ export default function CompanySettingsPage() {
                   )}
 
                   <div className="p-4 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs rounded-lg">
-                    Disconnect: the Project Tab document forms (Sales Invoice terms, Subcon Work Order terms, CRM Quotation terms) currently start blank and do <strong>not</strong> yet pull these defaults. Wiring the downstream forms to read from here is out of scope for this round — storage + UI wired here only.
+                    Partially wired: creating a Subcon Work Order or a CRM Quotation without supplying <code>terms</code> now pre-fills it server-side from Subcon Terms / Quotation Terms above. Sales Invoice, BOQ, and Purchase Order do <strong>not</strong> currently have a <code>terms</code> field on their underlying records at all (no such column exists yet), so Invoice Terms / BOQ Terms / Purchase Order Terms above are stored but have nothing to pre-fill downstream.
                   </div>
 
                   {termsStatus === "saved" && (<div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-lg">Terms & Conditions saved</div>)}
@@ -1834,7 +1834,7 @@ export default function CompanySettingsPage() {
                     {numStatus === "error" && (<div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs rounded-lg">Failed to save number format</div>)}
                   </div>
                   <div className="p-4 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs rounded-lg">
-                    Enforcement gap: the shared currency formatter (fmtINR) hardcodes 0 decimal places and does <strong>not</strong> currently read these settings. The values are stored on the company record, but display formatting does not yet honor them — wiring the formatter to the configured decimal count is deferred (would touch every component that renders money/quantities).
+                    Partially wired: the shared currency formatter (fmtINR) now accepts an optional decimal-places argument (fmtINR(amount, company.currency_decimal_places)) instead of always hardcoding 0, so any screen that already has the company record in scope can opt in. It still defaults to 0 decimal places, because none of the existing call sites currently fetch company settings — passing the configured value into all of them would mean adding a new company-settings fetch across many unrelated pages, which is deferred. There is no equivalent shared formatter for Quantity Decimal Places yet; quantities are rendered inline with fixed decimal counts (e.g. toFixed(2)/toFixed(3)) across two dozen+ files, so wiring that in a single safe pass wasn't attempted either.
                   </div>
                 </div>
               )}

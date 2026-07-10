@@ -157,6 +157,11 @@ def delete_timesheet(timesheet_id: UUID, db: Session = Depends(get_db)):
     ).first()
     if not row:
         raise HTTPException(status_code=404, detail="Timesheet not found")
+    try:
+        from app.routers.delete_logs import log_deletion
+        log_deletion(db, row.company_id, "timesheet", row.id, f"Timesheet: {row.party_name or row.id}", party_name=row.party_name)
+    except Exception:
+        pass
     db.delete(row)
     db.commit()
     return {"success": True, "message": "Timesheet deleted successfully"}

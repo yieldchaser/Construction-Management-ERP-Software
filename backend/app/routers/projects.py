@@ -400,6 +400,13 @@ def remove_project_member(project_id: uuid.UUID, member_id: uuid.UUID, db: Sessi
         models.ProjectMember.company_team_id == member_id
     ).first()
     if row:
+        try:
+            from app.routers.delete_logs import log_deletion
+            proj = db.query(models.Project).filter(models.Project.id == project_id).first()
+            company_id = proj.company_id if proj else None
+            log_deletion(db, company_id, "project_member", member_id, f"Project Member removed from: {proj.name if proj else project_id}")
+        except Exception:
+            pass
         db.delete(row)
         db.commit()
     return {"success": True}
@@ -507,6 +514,14 @@ def remove_project_party(project_id: uuid.UUID, party_id: uuid.UUID, db: Session
         models.ProjectParty.party_id == party_id
     ).first()
     if link:
+        try:
+            from app.routers.delete_logs import log_deletion
+            proj = db.query(models.Project).filter(models.Project.id == project_id).first()
+            company_id = proj.company_id if proj else None
+            party = db.query(models.LibraryParty).filter(models.LibraryParty.id == party_id).first()
+            log_deletion(db, company_id, "project_party", link.id, f"Project Party removed: {party.name if party else party_id}", party_name=party.name if party else None)
+        except Exception:
+            pass
         db.delete(link)
         db.commit()
     return {"success": True}
@@ -540,6 +555,13 @@ def delete_location(project_id: uuid.UUID, location_id: uuid.UUID, db: Session =
     ).first()
     if not loc:
         raise HTTPException(status_code=404, detail="Location not found")
+    try:
+        from app.routers.delete_logs import log_deletion
+        proj = db.query(models.Project).filter(models.Project.id == project_id).first()
+        company_id = proj.company_id if proj else None
+        log_deletion(db, company_id, "location", loc.id, f"Location: {loc.name}")
+    except Exception:
+        pass
     db.delete(loc)
     db.commit()
     return {"success": True}

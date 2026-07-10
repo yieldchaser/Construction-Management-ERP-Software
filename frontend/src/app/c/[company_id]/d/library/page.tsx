@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { getApiHost } from "@/lib/api";
+import { UNITS } from "@/lib/units";
 
 type LibraryType =
   | "party"
@@ -57,7 +58,7 @@ export default function LibraryHubPage() {
 
   // Form Fields: Material
   const [matName, setMatName] = useState("");
-  const [matUnit, setMatUnit] = useState("bag");
+  const [matUnit, setMatUnit] = useState("Bag");
   const [matGst, setMatGst] = useState(18.0);
   const [matCategory, setMatCategory] = useState("Cement");
   const [matCost, setMatCost] = useState(420.0);
@@ -1121,14 +1122,15 @@ export default function LibraryHubPage() {
               <div className="grid grid-cols-3 gap-3">
                 <div className="space-y-1">
                   <label className="text-xs font-medium text-muted uppercase tracking-wider block mb-1.5">Unit (UOM)</label>
-                  <input
-                    type="text"
+                  <select
                     required
                     value={matUnit}
                     onChange={(e) => setMatUnit(e.target.value)}
-                    placeholder="bag"
                     className="input-field w-full px-3 py-2 text-xs focus:outline-none"
-                  />
+                  >
+                    <option value="">— Select unit —</option>
+                    {UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
+                  </select>
                 </div>
                 <div className="space-y-1 col-span-2">
                   <label className="text-xs font-medium text-muted uppercase tracking-wider block mb-1.5">GST Rate (%)</label>
@@ -1255,14 +1257,15 @@ export default function LibraryHubPage() {
                 </div>
                 <div className="space-y-1">
                   <label className="text-xs font-medium text-muted uppercase tracking-wider block mb-1.5">Unit (UOM)</label>
-                  <input
-                    type="text"
+                  <select
                     required
                     value={rateUnit}
                     onChange={(e) => setRateUnit(e.target.value)}
-                    placeholder="cum"
                     className="input-field w-full px-3 py-2 text-xs focus:outline-none"
-                  />
+                  >
+                    <option value="">— Select unit —</option>
+                    {UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
+                  </select>
                 </div>
               </div>
 

@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { getApi, authHeaders, resolveCompanyId, fmtINR } from "@/lib/siteflow";
+import { UNITS } from "@/lib/units";
 
 type Material = {
   id: string;
@@ -183,8 +184,18 @@ function NewMaterialModal({
         </div>
         <div className="grid grid-cols-2 gap-3">
           <Field label="Material Name *"><input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground" /></Field>
-          <Field label="Unit (UOM) *"><input value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })} className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground" /></Field>
-          <Field label="Alternate UOM"><input value={form.alternate_unit} onChange={(e) => setForm({ ...form, alternate_unit: e.target.value })} className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground" /></Field>
+          <Field label="Unit (UOM) *">
+            <select value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })} className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground">
+              <option value="">— Select unit —</option>
+              {UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
+            </select>
+          </Field>
+          <Field label="Alternate UOM">
+            <select value={form.alternate_unit} onChange={(e) => setForm({ ...form, alternate_unit: e.target.value })} className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground">
+              <option value="">— None —</option>
+              {UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
+            </select>
+          </Field>
           <Field label="GST %"><input value={form.gst_rate} onChange={(e) => setForm({ ...form, gst_rate: e.target.value })} className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground" /></Field>
           <Field label="Category">
             <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground">

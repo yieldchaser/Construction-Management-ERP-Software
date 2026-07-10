@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { getApi, authHeaders, fmtINR } from "@/lib/siteflow";
 import ZatcaInvoicePanel from "@/components/ZatcaInvoicePanel";
 import { CustomFieldsSection, useCustomFields } from "@/components/CustomFieldsSection";
+import { UNITS } from "@/lib/units";
 
 // ── Transaction taxonomy (exact list from build spec) ────────────────────────
 type Endpoint = "bill" | "debit" | "credit" | "request";
@@ -378,7 +379,7 @@ function NewTransactionModal({
   const [shipTo, setShipTo] = useState("");
 
   // Add Item rows (subtotal calculator; cost code from library)
-  const [items, setItems] = useState<{ desc: string; costCodeId: string; qty: string; rate: string }[]>([]);
+  const [items, setItems] = useState<{ desc: string; costCodeId: string; unit: string; qty: string; rate: string }[]>([]);
   // Deduction rows
   const [deductions, setDeductions] = useState<{ type: string; mode: "amount" | "percent"; value: string; notes: string }[]>([]);
   const [retentionPct, setRetentionPct] = useState("");
@@ -409,7 +410,7 @@ function NewTransactionModal({
     [items]
   );
 
-  const addItem = () => setItems((s) => [...s, { desc: "", costCodeId: "", qty: "", rate: "" }]);
+  const addItem = () => setItems((s) => [...s, { desc: "", costCodeId: "", unit: "", qty: "", rate: "" }]);
   const addDeduction = () => setDeductions((s) => [...s, { type: "TDS", mode: "percent", value: "", notes: "" }]);
 
   const selectedMember = members.find((m) => m.company_team_id === partyId || m.user_id === partyId);
@@ -439,6 +440,7 @@ function NewTransactionModal({
             desc: it.desc,
             cost_code_id: it.costCodeId || null,
             cost_code_name: cc ? `${cc.code} · ${cc.name}` : null,
+            unit: it.unit || null,
             qty: parseFloat(it.qty) || 0,
             rate: parseFloat(it.rate) || 0,
             amount: (parseFloat(it.qty) || 0) * (parseFloat(it.rate) || 0),
@@ -656,10 +658,14 @@ function NewTransactionModal({
             </div>
             {items.map((it, i) => (
               <div key={i} className="grid grid-cols-12 gap-2 mb-2">
-                <input placeholder="Description" value={it.desc} onChange={(e) => setItems((s) => s.map((x, j) => j === i ? { ...x, desc: e.target.value } : x))} className="col-span-4 rounded-md border border-border-custom bg-background px-2 py-1.5 text-sm text-foreground" />
-                <select value={it.costCodeId} onChange={(e) => setItems((s) => s.map((x, j) => j === i ? { ...x, costCodeId: e.target.value } : x))} className="col-span-3 rounded-md border border-border-custom bg-background px-2 py-1.5 text-sm text-foreground">
+                <input placeholder="Description" value={it.desc} onChange={(e) => setItems((s) => s.map((x, j) => j === i ? { ...x, desc: e.target.value } : x))} className="col-span-3 rounded-md border border-border-custom bg-background px-2 py-1.5 text-sm text-foreground" />
+                <select value={it.costCodeId} onChange={(e) => setItems((s) => s.map((x, j) => j === i ? { ...x, costCodeId: e.target.value } : x))} className="col-span-2 rounded-md border border-border-custom bg-background px-2 py-1.5 text-sm text-foreground">
                   <option value="">Cost Code</option>
                   {costCodes.map((c) => <option key={c.id} value={c.id}>{c.code} · {c.name}</option>)}
+                </select>
+                <select value={it.unit} onChange={(e) => setItems((s) => s.map((x, j) => j === i ? { ...x, unit: e.target.value } : x))} className="col-span-2 rounded-md border border-border-custom bg-background px-2 py-1.5 text-sm text-foreground">
+                  <option value="">Unit</option>
+                  {UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
                 </select>
                 <input type="number" placeholder="Qty" value={it.qty} onChange={(e) => setItems((s) => s.map((x, j) => j === i ? { ...x, qty: e.target.value } : x))} className="col-span-2 rounded-md border border-border-custom bg-background px-2 py-1.5 text-sm text-foreground" />
                 <input type="number" placeholder="Rate" value={it.rate} onChange={(e) => setItems((s) => s.map((x, j) => j === i ? { ...x, rate: e.target.value } : x))} className="col-span-2 rounded-md border border-border-custom bg-background px-2 py-1.5 text-sm text-foreground" />

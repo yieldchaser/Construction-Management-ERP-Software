@@ -150,6 +150,11 @@ def delete_todo(todo_id: uuid.UUID, db: Session = Depends(get_db)):
     t = db.query(models.Todo).filter(models.Todo.id == todo_id).first()
     if not t:
         raise HTTPException(status_code=404, detail="Todo not found")
+    try:
+        from app.routers.delete_logs import log_deletion
+        log_deletion(db, t.company_id, "todo", t.id, f"Todo: {t.title}")
+    except Exception:
+        pass
     db.delete(t)
     db.commit()
     return {"success": True}

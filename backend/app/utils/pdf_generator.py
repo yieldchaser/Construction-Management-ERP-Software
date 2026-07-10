@@ -6,10 +6,25 @@ Creates a valid PDF 1.4 document with title, headings, margins, and text lines.
 
 from datetime import datetime
 
-def generate_client_report_pdf(title: str, summary: str, metrics: dict) -> bytes:
+def generate_client_report_pdf(
+    title: str,
+    summary: str,
+    metrics: dict,
+    company_name: str = "",
+    custom_banner: str = None,
+) -> bytes:
     """
     Generates a valid, readable minimal PDF 1.4 byte stream.
     Requires no external packages (pure standard library).
+
+    company_name: printed as a masthead line above the title. Sourced from
+        Company.document_company_name_display ("company" vs "branch") -- the
+        caller resolves which name string to pass in.
+    custom_banner: when the company has Company.custom_pdf_template_enabled
+        set and a PdfTemplate row is configured, its `content` is passed here
+        and rendered as an extra banner line beneath the masthead, giving a
+        visibly different ("custom") layout vs. the default template. None /
+        empty keeps the default layout unchanged.
     """
     pdf = bytearray(b"%PDF-1.4\n")
     objects = []
@@ -28,10 +43,46 @@ def generate_client_report_pdf(title: str, summary: str, metrics: dict) -> bytes
         return obj_id
 
     # Content Stream lines
-    stream_lines = [
-        b"BT",
-        b"/F2 20 Tf",      # Title Font (Helvetica-Bold 20pt)
-        b"50 780 Td",
+    stream_lines = [b"BT"]
+    cursor_placed = False  # True once the first absolute "Td" has been emitted
+
+    # Masthead: company/branch name (Document Company Name Display setting).
+    if company_name:
+        safe_company = company_name.replace('(', '\\(').replace(')', '\\)')
+        stream_lines += [
+            b"/F2 11 Tf",  # Masthead Font (Helvetica-Bold 11pt)
+            b"50 810 Td",  # absolute anchor: top of page
+            f"({safe_company}) Tj".encode("latin1", "replace"),
+            b"0 -18 Td",
+        ]
+        cursor_placed = True
+
+    # Custom banner: only present when custom_pdf_template_enabled + a
+    # PdfTemplate is configured for the company, giving the "Custom" layout
+    # a visibly different look from the "Default" one.
+    if custom_banner:
+        # Single-line Tj with no text wrapping: collapse whitespace/newlines
+        # and cap length so a long template `content` value can't overrun the
+        # page margin.
+        flat_banner = " ".join(custom_banner.split())[:180]
+        safe_banner = flat_banner.replace('(', '\\(').replace(')', '\\)')
+        stream_lines += [b"/F1 9 Tf"]  # Banner Font (Helvetica 9pt)
+        if not cursor_placed:
+            stream_lines += [b"50 810 Td"]  # absolute anchor: top of page
+            cursor_placed = True
+        stream_lines += [
+            f"({safe_banner}) Tj".encode("latin1", "replace"),
+            b"0 -18 Td",
+        ]
+
+    # Title (default layout: absolute-anchored at 780; custom/masthead layout:
+    # continues 12pt below whatever the cursor is at after the lines above).
+    stream_lines += [b"/F2 20 Tf"]  # Title Font (Helvetica-Bold 20pt)
+    if not cursor_placed:
+        stream_lines += [b"50 780 Td"]
+    else:
+        stream_lines += [b"0 -12 Td"]
+    stream_lines += [
         f"({title.replace('(', '\\(').replace(')', '\\)')}) Tj".encode("latin1", "replace"),
         b"0 -30 Td",
         b"/F1 10 Tf",      # Regular Font (Helvetica 10pt)

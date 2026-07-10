@@ -324,6 +324,11 @@ def delete_approval_rule(rule_id: uuid.UUID, db: Session = Depends(get_db)):
     rule = db.query(ApprovalRule).filter(ApprovalRule.id == rule_id).first()
     if not rule:
         raise HTTPException(status_code=404, detail="Approval rule not found")
+    try:
+        from app.routers.delete_logs import log_deletion
+        log_deletion(db, rule.company_id, "approval_rule", rule.id, f"Approval Rule: {rule.feature_type}")
+    except Exception:
+        pass
     db.delete(rule)
     db.commit()
 
@@ -476,6 +481,11 @@ def delete_salary_template(template_id: uuid.UUID, db: Session = Depends(get_db)
     obj = db.query(SalaryTemplate).filter(SalaryTemplate.id == template_id).first()
     if not obj:
         raise HTTPException(status_code=404, detail="Salary template not found")
+    try:
+        from app.routers.delete_logs import log_deletion
+        log_deletion(db, obj.company_id, "salary_template", obj.id, f"Salary Template: {obj.name}")
+    except Exception:
+        pass
     db.delete(obj)
     db.commit()
 

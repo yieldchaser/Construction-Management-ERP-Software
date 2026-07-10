@@ -138,6 +138,14 @@ def delete_tower(tower_id: UUID, db: Session = Depends(get_db)):
     tower = db.query(ProjectTower).filter(ProjectTower.id == tower_id).first()
     if not tower:
         raise HTTPException(status_code=404, detail="Tower not found")
+    try:
+        from app.routers.delete_logs import log_deletion
+        from app.models import Project
+        proj = db.query(Project).filter(Project.id == tower.project_id).first()
+        company_id = proj.company_id if proj else None
+        log_deletion(db, company_id, "tower", tower.id, f"Tower: {tower.tower_name}")
+    except Exception:
+        pass
     db.delete(tower)
     db.commit()
     return None
