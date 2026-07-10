@@ -48,24 +48,81 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
         raise credentials_exception
     return user
 
+def get_company_membership(db: Session, user: models.User, company_id: uuid.UUID) -> models.CompanyTeam:
+    """Verify the user actually belongs to the given company; raise 403 otherwise."""
+    membership = db.query(models.CompanyTeam).filter(
+        models.CompanyTeam.user_id == user.id,
+        models.CompanyTeam.company_id == company_id,
+    ).first()
+    if not membership:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User is not a member of the requested company",
+        )
+    return membership
+
+
 def get_current_active_company_user(
+    token: str = Depends(oauth2_scheme),
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ) -> dict:
-    # Resolves user's active company membership mapping
-    membership = db.query(models.CompanyTeam).filter(
-        models.CompanyTeam.user_id == current_user.id
-    ).first()
-    
+    # Prefer the company context baked into the JWT; verify the user is actually
+    # a member of it rather than blindly grabbing an arbitrary membership row.
+    company_id = None
+    if token:
+        try:
+            payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+            raw_cid = payload.get("company_id")
+            if raw_cid:
+                try:
+                    company_id = uuid.UUID(str(raw_cid))
+                except (ValueError, TypeError):
+                    company_id = None
+        except JWTError:
+            company_id = None
+
+    membership = None
+    if company_id:
+        membership = db.query(models.CompanyTeam).filter(
+            models.CompanyTeam.user_id == current_user.id,
+            models.CompanyTeam.company_id == company_id,
+        ).first()
+
+    if not membership:
+        membership = db.query(models.CompanyTeam).filter(
+            models.CompanyTeam.user_id == current_user.id
+        ).first()
+
     if not membership:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="User is not associated with any company team context"
         )
-        
+
     return {
         "user": current_user,
         "company_id": membership.company_id,
         "role_id": membership.role_id,
-        "priority_type": membership.priority_type
+        "priority_type": membership.priority_type,
+    }
+
+
+def get_verified_company_user(
+    company_id: str,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+) -> dict:
+    """Dependency for URL-routed endpoints: verifies the caller is a member of the
+    company_id taken from the path before authorizing any work on it."""
+    try:
+        cid = uuid.UUID(company_id)
+    except (ValueError, TypeError):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid company id")
+    membership = get_company_membership(db, current_user, cid)
+    return {
+        "user": current_user,
+        "company_id": cid,
+        "role_id": membership.role_id,
+        "priority_type": membership.priority_type,
     }

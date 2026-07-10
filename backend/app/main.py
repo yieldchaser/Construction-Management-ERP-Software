@@ -130,6 +130,24 @@ def ensure_sqlite_company_slug_column():
 ensure_sqlite_library_cost_code_columns()
 ensure_sqlite_company_slug_column()
 
+
+def ensure_sqlite_company_parent_column():
+    """Add the self-referential parent_company_id grouping column to existing companies tables."""
+    if not engine.url.drivername.startswith("sqlite"):
+        return
+    with engine.begin() as conn:
+        existing = {
+            row[1]
+            for row in conn.exec_driver_sql("PRAGMA table_info(companies)").fetchall()
+        }
+        if "parent_company_id" not in existing:
+            conn.exec_driver_sql(
+                'ALTER TABLE companies ADD COLUMN "parent_company_id" VARCHAR(36)'
+            )
+
+
+ensure_sqlite_company_parent_column()
+
 def ensure_sqlite_project_tab_columns():
     """Add columns introduced for the Project Tab parity build to existing tables."""
     if not engine.url.drivername.startswith("sqlite"):

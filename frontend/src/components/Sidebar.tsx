@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
 import { getApiHost } from "@/lib/api";
 import { useProject } from "@/context/ProjectContext";
+import CompanySwitcher from "@/components/CompanySwitcher";
 
 export default function Sidebar() {
   const params = useParams();
@@ -229,6 +230,16 @@ export default function Sidebar() {
       ),
       activePattern: "/d/delete-logs",
     },
+    {
+      label: "Enterprise",
+      href: `/c/${companyId}/enterprise`,
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1v1H9V7zm5 0h1v1h-1V7zm-5 4h1v1H9v-1zm5 0h1v1h-1v-1zm-5 4h1v1H9v-1zm5 0h1v1h-1v-1z" />
+        </svg>
+      ),
+      activePattern: "/enterprise",
+    },
   ];
 
   return (
@@ -239,10 +250,8 @@ export default function Sidebar() {
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary font-bold text-white text-sm">
             S
           </div>
-          <div className="min-w-0">
-            <span suppressHydrationWarning className="font-semibold text-sm text-foreground block truncate w-40">
-              {companyName}
-            </span>
+          <div className="min-w-0 flex-1">
+            <CompanySwitcher currentCompanyId={companyId} fallbackName={companyName} />
             <span className="text-[11px] text-muted uppercase tracking-wider font-medium">SiteFlow Workspace</span>
           </div>
         </div>

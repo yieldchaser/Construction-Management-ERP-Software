@@ -30,6 +30,7 @@ export default function CompanyLayout({ children }: { children: React.ReactNode 
   }
 
   const getPageTitle = (): string => {
+    if (pathname.includes("/enterprise")) return "Enterprise Rollup";
     if (pathname.includes("/d/home")) return "Project Hub";
     if (pathname.includes("/d/library")) return "Library Hub";
     if (pathname.includes("/d/team-action")) return "Team Schedule";

@@ -5,7 +5,8 @@ from fastapi import APIRouter, Depends, HTTPException, status, File, Form, Uploa
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.models import Payment, PaymentSettlement, Bill, PayrollRun, PayrollLineItem, StaffEmployee, ProjectBudget, Project, CompanyTeam, User, Equipment, EquipmentDeployment, FuelLog, BankAccount, PaymentRequest, PaymentRequestPayment, CashAccount, LibraryParty
+from app.models import Payment, PaymentSettlement, Bill, PayrollRun, PayrollLineItem, StaffEmployee, ProjectBudget, Project, CompanyTeam, User, Equipment, EquipmentDeployment, FuelLog, BankAccount, PaymentRequest, PaymentRequestPayment, CashAccount, LibraryParty, Company
+from app.auth import get_current_user
 from pydantic import BaseModel
 
 router = APIRouter(
@@ -661,6 +662,160 @@ def get_company_parties(company_id: uuid.UUID, db: Session = Depends(get_db)):
             status=status,
         ))
     return result
+
+
+# --- Enterprise / multi-company roll-up ---
+def _descendant_company_ids(db: Session, root_id: uuid.UUID):
+    """Recursively collect all company ids that sit under root_id in the
+    parent_company_id grouping tree (breadth-first)."""
+    frontier = [root_id]
+    seen: set = set()
+    descendants: list = []
+    while frontier:
+        children = db.query(Company).filter(
+            Company.parent_company_id.in_(frontier)
+        ).all()
+        frontier = []
+        for c in children:
+            if c.id not in seen:
+                seen.add(c.id)
+                descendants.append(c.id)
+                frontier.append(c.id)
+    return descendants
+
+
+def _company_party_totals(db: Session, company_id: uuid.UUID) -> dict:
+    """Aggregated party balance totals for a single company (reuses the same
+    bill math as get_company_parties but summed, not per-party)."""
+    parties = db.query(LibraryParty).filter(
+        LibraryParty.company_id == company_id
+    ).all()
+    to_pay = to_receive = advance_paid = advance_received = 0.0
+    for lp in parties:
+        team_ids = _company_party_team_ids(db, lp.id)
+        opening_pay = float(lp.opening_balance or 0.0) if lp.opening_balance_type == "pay" else 0.0
+        opening_receive = float(lp.opening_balance or 0.0) if lp.opening_balance_type == "receive" else 0.0
+        pay_net = opening_pay
+        recv_net = opening_receive
+        if team_ids:
+            bills = db.query(Bill).filter(
+                Bill.party_company_user_id.in_(team_ids)
+            ).all()
+            for b in bills:
+                delta = float(b.paid_amount or 0.0) - float(b.total_payable or 0.0)
+                if b.invoice_type == "sale":
+                    recv_net += delta
+                else:
+                    pay_net += delta
+        advance_paid += max(0.0, pay_net)
+        to_pay += max(0.0, -pay_net)
+        advance_received += max(0.0, recv_net)
+        to_receive += max(0.0, -recv_net)
+    return {
+        "to_pay": round(to_pay, 2),
+        "to_receive": round(to_receive, 2),
+        "advance_paid": round(advance_paid, 2),
+        "advance_received": round(advance_received, 2),
+        "party_count": len(parties),
+    }
+
+
+class EnterpriseRollupCompanyOut(BaseModel):
+    id: str
+    name: str
+    project_count: int
+    party_count: int
+    to_pay: float
+    to_receive: float
+    advance_paid: float
+    advance_received: float
+    balance: float
+
+
+class EnterpriseRollupResponse(BaseModel):
+    enterprise_id: str
+    enterprise_name: str
+    company_count: int
+    project_count: int
+    party_count: int
+    total_to_pay: float
+    total_to_receive: float
+    total_advance_paid: float
+    total_advance_received: float
+    total_balance: float
+    companies: list[EnterpriseRollupCompanyOut]
+
+
+@router.get("/enterprise-rollup/{company_id}", response_model=EnterpriseRollupResponse)
+def get_enterprise_rollup(
+    company_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Roll up financials across an enterprise group (the company identified by
+    company_id plus all of its descendants in the parent_company_id tree).
+
+    Authorization: the caller must be a member of the enterprise company or any
+    of its child companies."""
+    descendants = _descendant_company_ids(db, company_id)
+    allowed_ids = [company_id] + descendants
+    member = db.query(CompanyTeam).filter(
+        CompanyTeam.user_id == current_user.id,
+        CompanyTeam.company_id.in_(allowed_ids),
+    ).first()
+    if not member:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User is not a member of this enterprise or its companies",
+        )
+
+    enterprise = db.query(Company).filter(Company.id == company_id).first()
+    enterprise_name = enterprise.name if enterprise else "Enterprise"
+
+    per_company: list = []
+    totals = dict(project_count=0, party_count=0, to_pay=0.0, to_receive=0.0,
+                  advance_paid=0.0, advance_received=0.0)
+    for cid in allowed_ids:
+        comp = db.query(Company).filter(Company.id == cid).first()
+        if not comp:
+            continue
+        proj_count = db.query(Project).filter(Project.company_id == cid).count()
+        p = _company_party_totals(db, cid)
+        balance = p["advance_paid"] + p["advance_received"] - p["to_pay"] - p["to_receive"]
+        per_company.append(EnterpriseRollupCompanyOut(
+            id=str(cid),
+            name=comp.name,
+            project_count=proj_count,
+            party_count=p["party_count"],
+            to_pay=p["to_pay"],
+            to_receive=p["to_receive"],
+            advance_paid=p["advance_paid"],
+            advance_received=p["advance_received"],
+            balance=round(balance, 2),
+        ))
+        totals["project_count"] += proj_count
+        totals["party_count"] += p["party_count"]
+        totals["to_pay"] += p["to_pay"]
+        totals["to_receive"] += p["to_receive"]
+        totals["advance_paid"] += p["advance_paid"]
+        totals["advance_received"] += p["advance_received"]
+
+    total_balance = round(
+        totals["advance_paid"] + totals["advance_received"] - totals["to_pay"] - totals["to_receive"], 2
+    )
+    return EnterpriseRollupResponse(
+        enterprise_id=str(company_id),
+        enterprise_name=enterprise_name,
+        company_count=len(per_company),
+        project_count=totals["project_count"],
+        party_count=totals["party_count"],
+        total_to_pay=round(totals["to_pay"], 2),
+        total_to_receive=round(totals["to_receive"], 2),
+        total_advance_paid=round(totals["advance_paid"], 2),
+        total_advance_received=round(totals["advance_received"], 2),
+        total_balance=total_balance,
+        companies=per_company,
+    )
 
 
 # --- Company-level Transactions & Summary (Finance tab: Transaction sub-tab) ---

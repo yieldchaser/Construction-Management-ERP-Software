@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.auth import create_access_token, get_current_active_company_user
+from app.auth import create_access_token, get_current_active_company_user, get_current_user
 from app import models
 import uuid
 
@@ -182,3 +182,35 @@ def get_me(ctx: dict = Depends(get_current_active_company_user), db: Session = D
         "role": role_name,
         "priority_type": priority_type,
     }
+
+
+@router.get("/my-companies")
+def my_companies(current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """List the companies the authenticated user belongs to, flagging enterprises
+    (companies that are a parent of at least one other company)."""
+    memberships = db.query(models.CompanyTeam).filter(
+        models.CompanyTeam.user_id == current_user.id
+    ).all()
+    company_ids = [m.company_id for m in memberships]
+    if not company_ids:
+        return {"companies": []}
+
+    companies = db.query(models.Company).filter(models.Company.id.in_(company_ids)).all()
+
+    parent_ids = {
+        c.parent_company_id
+        for c in db.query(models.Company).filter(models.Company.parent_company_id.isnot(None)).all()
+        if c.parent_company_id
+    }
+
+    result = [
+        {
+            "id": str(c.id),
+            "name": c.name,
+            "slug": c.slug,
+            "parent_company_id": str(c.parent_company_id) if c.parent_company_id else None,
+            "is_enterprise": c.id in parent_ids,
+        }
+        for c in companies
+    ]
+    return {"companies": result}
