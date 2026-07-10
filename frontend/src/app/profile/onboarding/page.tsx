@@ -142,10 +142,6 @@ export default function OnboardingPage() {
             <p className="text-white/80 text-sm italic">
               "Material tracking and department-wise roles assignment have become easy for us. There is no more material wastage and easy PO generation. Love this software."
             </p>
-            <div>
-              <h4 className="text-xs font-bold text-white">Rocks & logs stone works LLC</h4>
-              <p className="text-[10px] text-white/50">Dubai, UAE</p>
-            </div>
           </div>
         </div>
 

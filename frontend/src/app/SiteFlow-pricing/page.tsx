@@ -66,7 +66,6 @@ const PLANS = [
       "Everything in Professional",
       "Custom integrations & API access",
       "Multi-company / holding structure",
-      "AI Drawing Analysis (BOQ auto-extract)",
       "Dedicated Account Manager",
       "On-site training & onboarding",
       "SLA-backed uptime guarantee",
@@ -81,7 +80,7 @@ const PLANS = [
 const FAQ = [
   {
     q: "Is there a free trial?",
-    a: "Yes — we offer a 14-day full-access trial. No credit card required. Your onboarding manager sets up your data before you start.",
+    a: "Yes. We offer a 14-day full-access trial. No credit card required. Your onboarding manager sets up your data before you start.",
   },
   {
     q: "Are there any hidden fees?",
@@ -93,12 +92,19 @@ const FAQ = [
   },
   {
     q: "What's included in onboarding?",
-    a: "A dedicated manager loads your material library, BOQ files, party master, and rate library. Most clients go live in under 1 day.",
+    a: "A dedicated manager loads your material library, BOQ files, party master, and rate library. Your onboarding manager gets your team started on the platform.",
   },
   {
     q: "Do you offer monthly billing?",
-    a: "Annual plans offer the best value. Monthly billing is available at a 20% premium — ask your sales rep.",
+    a: "Annual plans offer the best value. Monthly billing is available at a 20% premium. Ask your sales rep.",
   },
+];
+
+const PROOF_POINTS = [
+  { value: "16", label: "operational modules, one workspace" },
+  { value: "2", label: "native accounting integrations (Tally, Zoho)" },
+  { value: "IS", label: "456 · 1786 · 516 & CPWD compliant math" },
+  { value: "PWA", label: "with GPS-geofenced attendance" },
 ];
 
 export default function PricingPage() {
@@ -118,6 +124,7 @@ export default function PricingPage() {
         <div className="flex items-center gap-5">
           <Link href="/products" className="hidden md:block text-sm text-muted hover:text-foreground transition-all">Products</Link>
           <Link href="/about" className="hidden md:block text-sm text-muted hover:text-foreground transition-all">About</Link>
+          <Link href="/who-we-serve" className="hidden md:block text-sm text-muted hover:text-foreground transition-all">Who We Serve</Link>
           <Link href="/contact" className="hidden md:block text-sm text-muted hover:text-foreground transition-all">Contact</Link>
           <Link href="/login" className="rounded-md bg-primary px-5 py-2 text-sm font-bold text-white hover:opacity-90 transition-all">
             Start Free Trial
@@ -141,6 +148,18 @@ export default function PricingPage() {
           <span className="flex items-center gap-1.5">✓ 14-day free trial</span>
           <span className="flex items-center gap-1.5">✓ No credit card needed</span>
           <span className="flex items-center gap-1.5">✓ Cancel anytime</span>
+        </div>
+      </section>
+
+      {/* Proof strip, qualitative claim set only (no invented scale numbers) */}
+      <section className="max-w-6xl mx-auto px-6 pb-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-px rounded-lg border border-border-custom bg-border-custom overflow-hidden">
+          {PROOF_POINTS.map((t, i) => (
+            <div key={i} className="bg-card px-4 py-6 text-center space-y-1">
+              <div className="text-2xl font-extrabold text-white">{t.value}</div>
+              <div className="text-xs text-muted">{t.label}</div>
+            </div>
+          ))}
         </div>
       </section>
 
@@ -199,25 +218,8 @@ export default function PricingPage() {
         ))}
       </section>
 
-      {/* Trust Strip */}
-      <section className="max-w-4xl mx-auto px-6 py-14 text-center">
-        <div className="bg-card border border-border-custom rounded-lg rounded-lg p-8 border border-border-custom grid grid-cols-2 md:grid-cols-4 gap-6">
-          {[
-            { num: "500+", label: "Active Clients" },
-            { num: "98%", label: "Renewal Rate" },
-            { num: "<1 day", label: "Avg. Go-Live Time" },
-            { num: "₹500Cr+", label: "Construction Managed" },
-          ].map((s, i) => (
-            <div key={i} className="text-center space-y-1">
-              <div className="text-2xl font-extrabold text-white">{s.num}</div>
-              <div className="text-xs text-muted">{s.label}</div>
-            </div>
-          ))}
-        </div>
-      </section>
-
       {/* FAQ */}
-      <section className="max-w-3xl mx-auto px-6 pb-10 space-y-4">
+      <section className="max-w-3xl mx-auto px-6 pb-10 space-y-4 pt-16">
         <h2 className="text-2xl font-extrabold text-white text-center mb-6">Pricing FAQs</h2>
         {FAQ.map((item, i) => (
           <div
@@ -244,8 +246,8 @@ export default function PricingPage() {
       <section className="max-w-4xl mx-auto px-6">
         <div className="rounded-md bg-gradient-to-r from-primary/20 to-secondary/20 border border-border-custom p-12 text-center space-y-5">
           <h2 className="text-3xl font-extrabold text-white">Start your 14-day free trial today</h2>
-          <p className="text-muted text-sm max-w-md mx-auto">
-            Your dedicated onboarding manager loads your data. Most clients are live in under 1 day.
+          <p className="text-white/70 text-sm max-w-md mx-auto">
+            Your dedicated onboarding manager loads your data and gets your team started.
           </p>
           <div className="flex items-center justify-center gap-4 pt-2">
             <Link href="/login" className="rounded-md bg-primary px-8 py-3 text-sm font-bold text-white hover:opacity-90 transition-all shadow-lg shadow-primary/20">
@@ -257,6 +259,24 @@ export default function PricingPage() {
           </div>
         </div>
       </section>
+
+      {/* Footer */}
+      <footer className="border-t border-border-custom px-6 py-8 text-muted">
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+          <p className="text-xs">
+            SiteFlow is an independent construction operations platform. All product names, logos, and brands are property of their respective owners.
+          </p>
+          <div className="flex items-center gap-6 text-xs">
+            <Link href="/blog" className="hover:text-muted transition-all">Blog</Link>
+            <Link href="/help" className="hover:text-muted transition-all">Help Center</Link>
+            <Link href="/resources/construction-terms-meanings" className="hover:text-muted transition-all">Glossary</Link>
+          <Link href="/resources/construction-calculators" className="hover:text-muted transition-all">Calculators</Link>
+          <Link href="/who-we-serve" className="hover:text-muted transition-all">Who We Serve</Link>
+          <Link href="/terms" className="hover:text-muted transition-all">Terms</Link>
+            <Link href="/privacy" className="hover:text-muted transition-all">Privacy</Link>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

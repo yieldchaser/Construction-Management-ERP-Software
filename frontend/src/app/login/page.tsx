@@ -4,47 +4,6 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { getApiHost } from "@/lib/api";
 
-const TESTIMONIALS = [
-  {
-    title: "#1 Construction Application For Project tracking.",
-    name: "Mr. Mohammad Taqi",
-    company: "Hydro Master, Doha, Qatar",
-    quote: "I can share PDF reports instantly with clients & vendors, streamlining communication. SiteFlow's intuitive platform provides easy-to-use interface."
-  },
-  {
-    title: "#1 Construction Application For Client invoicing.",
-    name: "Rocks & logs stone works LLC",
-    company: "Dubai, UAE",
-    quote: "Material tracking and department-wise roles assignment have become easy for us. There is no more material wastage and easy PO generation. Love this software."
-  },
-  {
-    title: "#1 Construction Application For Attendance/Payroll",
-    name: "Mr. Manish Kumar",
-    company: "Reidius Infra, Jaipur",
-    quote: "With SiteFlow, all the progress and cost details are visible in one place. Client discussions became much smoother because we are now talking with actual site data instead of guesses."
-  },
-  {
-    title: "#1 Construction Application For Material management",
-    name: "Mr. Kathirvel",
-    company: "Theeran Avant, Erode, Tamil Nadu",
-    quote: "Managing site teams and tracking work across projects was becoming difficult. With SiteFlow, site engineers and project managers track progress in one place."
-  },
-  {
-    title: "#1 Construction Application For Cost control",
-    name: "Mr. Hiren Patel",
-    company: "DCC, Mumbai",
-    quote: "SiteFlow helped us monitor spending at activity level instead of discovering overruns later. Financial visibility got much closer to daily execution."
-  }
-];
-
-const LOGOS = [
-  "Hydro Master",
-  "Rocks & Logs",
-  "Reidius Infra",
-  "Theeran Avant",
-  "DCC Mumbai"
-];
-
 export default function LoginPage() {
   const [mobile, setMobile] = useState("9876543210");
   const [otp, setOtp] = useState("123456");
@@ -55,16 +14,6 @@ export default function LoginPage() {
   const [timer, setTimer] = useState(30);
   const [countryCode, setCountryCode] = useState("+91");
   const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false);
-
-  const [activeTestimonialIdx, setActiveTestimonialIdx] = useState(0);
-
-  // Rotate testimonials
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setActiveTestimonialIdx((prev) => (prev + 1) % TESTIMONIALS.length);
-    }, 5000);
-    return () => clearInterval(interval);
-  }, []);
 
   // Countdown timer for OTP resend
   useEffect(() => {
@@ -180,13 +129,11 @@ export default function LoginPage() {
     }
   };
 
-  const currentTestimonial = TESTIMONIALS[activeTestimonialIdx];
-
   return (
     <div className="flex min-h-screen w-full bg-background text-foreground">
-      {/* Testimonials Slide Carousel Left Panel (Desktop only) */}
+      {/* Left Panel (Desktop only) */}
       <div className="relative hidden w-1/2 flex-col justify-between overflow-hidden bg-primary p-16 lg:flex border-r border-border-custom">
-        
+
         <div className="absolute bottom-[-20%] right-[-20%] h-[70%] w-[70%] rounded-full bg-primary opacity-10 blur-[120px]" />
 
         {/* Logo */}
@@ -197,47 +144,6 @@ export default function LoginPage() {
           <span className="text-xl font-bold tracking-tight text-white">
             Site<span className="text-white">Flow</span>
           </span>
-        </div>
-
-        {/* Carousel Content */}
-        <div className="flex flex-1 flex-col justify-center items-start gap-8 z-10 relative">
-          <div className="space-y-6 transition-all duration-500 ease-in-out min-h-[260px] flex flex-col justify-center">
-            <h1 className="text-4xl font-extrabold tracking-tight leading-tight text-white max-w-lg lg:text-5xl">
-              {currentTestimonial.title}
-            </h1>
-            
-            <div className="space-y-2 border-l-2 border-primary/50 pl-4 py-1">
-              <p className="text-white/90 text-lg italic leading-relaxed">
-                "{currentTestimonial.quote}"
-              </p>
-              <div>
-                <h4 className="text-sm font-bold text-white mt-2">{currentTestimonial.name}</h4>
-                <p className="text-white/60 text-xs">{currentTestimonial.company}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Carousel dots */}
-          <div className="flex gap-2">
-            {TESTIMONIALS.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setActiveTestimonialIdx(i)}
-                className={`h-2.5 rounded-full transition-all duration-300 ${
-                  activeTestimonialIdx === i ? "w-6 bg-primary" : "w-2.5 bg-white/10"
-                }`}
-              />
-            ))}
-          </div>
-        </div>
-
-        {/* Footer brand logos */}
-        <div className="flex flex-wrap items-center gap-x-8 gap-y-4 pt-8 border-t border-border-custom z-10">
-          {LOGOS.map((l, idx) => (
-            <span key={idx} className="text-xs font-bold tracking-wider text-white/50 uppercase">
-              {l}
-            </span>
-          ))}
         </div>
       </div>
 

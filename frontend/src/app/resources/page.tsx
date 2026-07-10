@@ -4,9 +4,9 @@ import { getContentItems } from "@/lib/content";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "SiteFlow Resources - Calculators, Case Studies & Comparisons",
+  title: "SiteFlow Resources - Calculators, Comparisons & Glossaries",
   description:
-    "Access free construction calculators, case studies, competitor comparisons, glossaries, and tools built specifically for construction contractors.",
+    "Access free construction calculators, competitor comparisons, glossaries, and tools built specifically for construction contractors.",
 };
 
 const RESOURCE_GROUPS: Record<
@@ -25,12 +25,6 @@ const RESOURCE_GROUPS: Record<
     icon: "⚖️",
     desc: "Side-by-side comparisons of SiteFlow vs competing platforms.",
   },
-  casestudies: {
-    label: "Client Case Studies",
-    slugPrefixes: ["case-study", "abi-builders", "bajrang", "blueline", "cfolios", "gobito", "hydro", "sfc", "shivam", "srinivasa", "tcc", "theeran", "vecttor", "woodofa"],
-    icon: "📋",
-    desc: "Real-world stories of contractors managing projects with SiteFlow.",
-  },
   glossary: {
     label: "Construction Glossary",
     slugPrefixes: ["construction-terms"],
@@ -46,7 +40,6 @@ export default async function ResourcesIndexPage() {
   const grouped: Record<string, typeof resources> = {
     calculators: [],
     comparisons: [],
-    casestudies: [],
     glossary: [],
     other: [],
   };
@@ -107,7 +100,7 @@ export default async function ResourcesIndexPage() {
           SiteFlow Resource Hub
         </h1>
         <p className="text-muted text-sm max-w-xl mx-auto">
-          Free construction calculators, field case studies, software comparisons,
+          Free construction calculators, software comparisons,
           and industry glossaries — built by the SiteFlow team.
         </p>
       </section>
