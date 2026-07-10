@@ -3,7 +3,7 @@ const APP_SHELL = [
   "/",
   "/login",
   "/manifest.json",
-  "/images/recon/logo.svg",
+  "/images/logo.svg",
   "/favicon.ico",
 ];
 
@@ -90,8 +90,8 @@ self.addEventListener("push", (event) => {
   event.waitUntil(
     self.registration.showNotification(payload.title, {
       body: payload.body,
-      icon: "/images/recon/logo.svg",
-      badge: "/images/recon/logo.svg",
+      icon: "/images/logo.svg",
+      badge: "/images/logo.svg",
       data: { url: payload.url || "/login" },
     })
   );
