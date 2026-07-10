@@ -44,6 +44,7 @@ type Bill = {
   due_date: string | null;
   invoice_type: string;
   status: string;
+  party_company_user_id: string;
   subtotal: number;
   gst_amount: number;
   total_payable: number;

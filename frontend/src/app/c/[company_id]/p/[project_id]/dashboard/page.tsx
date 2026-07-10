@@ -298,7 +298,7 @@ export default function ProjectDashboardPage() {
       setCcCode("");
       setCcName("");
       setCcBudget("");
-      await loadCostCodes();
+      await loadCostCodes(companyId);
     } catch (e: any) {
       setError(e?.message || "Failed to add cost code");
     } finally {
