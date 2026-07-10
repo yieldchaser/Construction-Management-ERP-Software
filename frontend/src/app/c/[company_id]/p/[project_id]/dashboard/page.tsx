@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { getApi, authHeaders, fmtINR } from "@/lib/siteflow";
+import { useCompanySettings } from "@/context/CompanySettingsContext";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type ProjectDash = {
@@ -168,6 +169,7 @@ function DrillModal({
 
 // ─── Page ──────────────────────────────────────────────────────────────────────
 export default function ProjectDashboardPage() {
+  const { currencyDecimalPlaces } = useCompanySettings();
   const params = useParams();
   const companyId = params.company_id as string;
   const projectId = params.project_id as string;
@@ -312,9 +314,9 @@ export default function ProjectDashboardPage() {
       Date: b.invoice_date ? new Date(b.invoice_date).toLocaleDateString() : "—",
       Type: b.invoice_type,
       Status: b.status,
-      Total: fmtINR(b.total_payable),
-      Paid: fmtINR(b.paid_amount),
-      Balance: fmtINR((b.total_payable || 0) - (b.paid_amount || 0)),
+      Total: fmtINR(b.total_payable, currencyDecimalPlaces),
+      Paid: fmtINR(b.paid_amount, currencyDecimalPlaces),
+      Balance: fmtINR((b.total_payable || 0) - (b.paid_amount || 0), currencyDecimalPlaces),
     }));
 
   return (
@@ -329,9 +331,9 @@ export default function ProjectDashboardPage() {
       {/* Basic snapshot (existing) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card label="Progress" value={`${project.progress ?? 0}%`} tone="violet" />
-        <Card label="Cash In" value={fmtINR(project.cash_in)} tone="emerald" />
-        <Card label="Cash Out" value={fmtINR(project.cash_out)} tone="rose" />
-        <Card label="Net Margin" value={fmtINR(margin0)} tone={margin0 >= 0 ? "emerald" : "rose"} />
+        <Card label="Cash In" value={fmtINR(project.cash_in, currencyDecimalPlaces)} tone="emerald" />
+        <Card label="Cash Out" value={fmtINR(project.cash_out, currencyDecimalPlaces)} tone="rose" />
+        <Card label="Net Margin" value={fmtINR(margin0, currencyDecimalPlaces)} tone={margin0 >= 0 ? "emerald" : "rose"} />
       </div>
 
       {/* Financial View — 6 spec cards */}
@@ -341,13 +343,13 @@ export default function ProjectDashboardPage() {
           {/* 1. Estimated Budget */}
           <KpiCard
             label="Estimated Budget"
-            value={fmtINR(estimatedBudget)}
+            value={fmtINR(estimatedBudget, currencyDecimalPlaces)}
             sub={`across ${costCodes.length} cost code${costCodes.length === 1 ? "" : "s"}`}
             tone="violet"
             onClick={() =>
               setDrill({
                 title: "Estimate Cost Code Budget",
-                subtitle: `Total estimated budget ${fmtINR(estimatedBudget)} across ${costCodes.length} cost codes`,
+                subtitle: `Total estimated budget ${fmtINR(estimatedBudget, currencyDecimalPlaces)} across ${costCodes.length} cost codes`,
                 cols: [
                   { key: "name", label: "Cost Code Name" },
                   { key: "budget", label: "Budget Amount" },
@@ -355,8 +357,8 @@ export default function ProjectDashboardPage() {
                 ],
                 rows: costCodes.map((c) => ({
                   name: c.name,
-                  budget: fmtINR(c.budget_amount),
-                  actual: fmtINR(expByCC[c.name] || 0),
+                  budget: fmtINR(c.budget_amount, currencyDecimalPlaces),
+                  actual: fmtINR(expByCC[c.name] || 0, currencyDecimalPlaces),
                 })),
                 footer: "Actual Expense is summed from bill line items tagged to each cost code.",
                 action: { label: "+ Add Cost Code", onClick: () => setShowAddCC(true) },
@@ -367,13 +369,13 @@ export default function ProjectDashboardPage() {
           {/* 2. Total BOQ Value */}
           <KpiCard
             label="Total BOQ Value"
-            value={fmtINR(boqValue)}
-            sub={`Estimated Margin: ${fmtINR(estimatedMargin)}`}
+            value={fmtINR(boqValue, currencyDecimalPlaces)}
+            sub={`Estimated Margin: ${fmtINR(estimatedMargin, currencyDecimalPlaces)}`}
             tone="emerald"
             onClick={() =>
               setDrill({
                 title: "Total BOQ Value",
-                subtitle: `BOQ Value ${fmtINR(boqValue)} − Estimated Budget ${fmtINR(estimatedBudget)} = Estimated Margin ${fmtINR(estimatedMargin)}`,
+                subtitle: `BOQ Value ${fmtINR(boqValue, currencyDecimalPlaces)} − Estimated Budget ${fmtINR(estimatedBudget, currencyDecimalPlaces)} = Estimated Margin ${fmtINR(estimatedMargin, currencyDecimalPlaces)}`,
                 cols: [
                   { key: "title", label: "BOQ Document" },
                   { key: "value", label: "BOQ Value" },
@@ -381,7 +383,7 @@ export default function ProjectDashboardPage() {
                 ],
                 rows: docs.map((d) => ({
                   title: d.title,
-                  value: fmtINR(d.boq_value),
+                  value: fmtINR(d.boq_value, currencyDecimalPlaces),
                   progress: `${(d.physical_progress || 0).toFixed(1)}%`,
                 })),
               })
@@ -391,13 +393,13 @@ export default function ProjectDashboardPage() {
           {/* 3. Total Sales Invoice */}
           <KpiCard
             label="Total Sales Invoice"
-            value={fmtINR(saleTotal)}
+            value={fmtINR(saleTotal, currencyDecimalPlaces)}
             sub={`${pct(saleTotal, boqValue)} of BOQ value`}
             tone="emerald"
             onClick={() =>
               setDrill({
                 title: "Total Sales Invoice",
-                subtitle: `${fmtINR(saleTotal)} · ${pct(saleTotal, boqValue)} of Total BOQ Value (${fmtINR(boqValue)})`,
+                subtitle: `${fmtINR(saleTotal, currencyDecimalPlaces)} · ${pct(saleTotal, boqValue)} of Total BOQ Value (${fmtINR(boqValue, currencyDecimalPlaces)})`,
                 cols: [
                   { key: "Invoice #", label: "Invoice #" },
                   { key: "Date", label: "Date" },
@@ -413,13 +415,13 @@ export default function ProjectDashboardPage() {
           {/* 4. Total Expense (Till Date) */}
           <KpiCard
             label="Total Expense (Till Date)"
-            value={fmtINR(expense)}
+            value={fmtINR(expense, currencyDecimalPlaces)}
             sub={`${pct(expense, estimatedBudget)} of Budget used`}
             tone="rose"
             onClick={() =>
               setDrill({
                 title: "Total Expense (Till Date)",
-                subtitle: `${fmtINR(expense)} · ${pct(expense, estimatedBudget)} of Estimated Budget (${fmtINR(estimatedBudget)})`,
+                subtitle: `${fmtINR(expense, currencyDecimalPlaces)} · ${pct(expense, estimatedBudget)} of Estimated Budget (${fmtINR(estimatedBudget, currencyDecimalPlaces)})`,
                 cols: [
                   { key: "Invoice #", label: "Invoice #" },
                   { key: "Date", label: "Date" },
@@ -435,13 +437,13 @@ export default function ProjectDashboardPage() {
           {/* 5. Work done value */}
           <KpiCard
             label="Work Done Value"
-            value={fmtINR(workDone)}
+            value={fmtINR(workDone, currencyDecimalPlaces)}
             sub={`${pct(workDone, boqValue)} of BOQ value`}
             tone="violet"
             onClick={() =>
               setDrill({
                 title: "Work Done Value",
-                subtitle: `Physical-progress-weighted BOQ value · ${pct(workDone, boqValue)} of Total BOQ Value (${fmtINR(boqValue)})`,
+                subtitle: `Physical-progress-weighted BOQ value · ${pct(workDone, boqValue)} of Total BOQ Value (${fmtINR(boqValue, currencyDecimalPlaces)})`,
                 cols: [
                   { key: "title", label: "BOQ Document" },
                   { key: "value", label: "BOQ Value" },
@@ -450,9 +452,9 @@ export default function ProjectDashboardPage() {
                 ],
                 rows: docs.map((d) => ({
                   title: d.title,
-                  value: fmtINR(d.boq_value),
+                  value: fmtINR(d.boq_value, currencyDecimalPlaces),
                   progress: `${(d.physical_progress || 0).toFixed(1)}%`,
-                  done: fmtINR((d.boq_value || 0) * ((d.physical_progress || 0) / 100)),
+                  done: fmtINR((d.boq_value || 0) * ((d.physical_progress || 0) / 100), currencyDecimalPlaces),
                 })),
               })
             }
@@ -461,22 +463,22 @@ export default function ProjectDashboardPage() {
           {/* 6. Net Cash Position */}
           <KpiCard
             label="Net Cash Position"
-            value={fmtINR(netCash)}
+            value={fmtINR(netCash, currencyDecimalPlaces)}
             sub="Project Balance + Receivables − Payables"
             tone={netCash >= 0 ? "emerald" : "rose"}
             onClick={() =>
               setDrill({
                 title: "Net Cash Position",
-                subtitle: `${fmtINR(projectBalance)} (Balance) + ${fmtINR(receivables)} (Receivables) − ${fmtINR(payables)} (Payables) = ${fmtINR(netCash)}`,
+                subtitle: `${fmtINR(projectBalance, currencyDecimalPlaces)} (Balance) + ${fmtINR(receivables, currencyDecimalPlaces)} (Receivables) − ${fmtINR(payables, currencyDecimalPlaces)} (Payables) = ${fmtINR(netCash, currencyDecimalPlaces)}`,
                 cols: [
                   { key: "k", label: "Component" },
                   { key: "v", label: "Amount" },
                 ],
                 rows: [
-                  { k: "Project Balance (cash in − cash out)", v: fmtINR(projectBalance) },
-                  { k: "Receivables (to be collected)", v: fmtINR(receivables) },
-                  { k: "Payables (due to vendors)", v: fmtINR(payables) },
-                  { k: "Net Cash Position", v: fmtINR(netCash) },
+                  { k: "Project Balance (cash in − cash out)", v: fmtINR(projectBalance, currencyDecimalPlaces) },
+                  { k: "Receivables (to be collected)", v: fmtINR(receivables, currencyDecimalPlaces) },
+                  { k: "Payables (due to vendors)", v: fmtINR(payables, currencyDecimalPlaces) },
+                  { k: "Net Cash Position", v: fmtINR(netCash, currencyDecimalPlaces) },
                 ],
               })
             }
@@ -487,7 +489,7 @@ export default function ProjectDashboardPage() {
       {/* Info + Schedule (existing) */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card label="Pending To-Dos" value={`${project.todo_pending ?? 0}`} />
-        <Card label="Project Value" value={fmtINR(project.project_value)} />
+        <Card label="Project Value" value={fmtINR(project.project_value, currencyDecimalPlaces)} />
         <Card label="Status" value={project.status} />
       </div>
 

@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { getApi, authHeaders, resolveCompanyId, fmtINR, initials } from "@/lib/siteflow";
+import { useCompanySettings } from "@/context/CompanySettingsContext";
 
 type Party = {
   party_id: string;
@@ -27,6 +28,7 @@ const PARTY_TYPES = [
 ];
 
 export default function PartyPage() {
+  const { currencyDecimalPlaces } = useCompanySettings();
   const params = useParams();
   const companyId = params.company_id as string;
   const projectId = params.project_id as string;
@@ -98,11 +100,11 @@ export default function PartyPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
         <div className="rounded-lg border border-border-custom bg-card p-4">
           <div className="text-xs uppercase tracking-wider text-emerald-500">Advance Paid</div>
-          <div className="mt-2 text-3xl font-bold text-emerald-500">{fmtINR(balances.advance_paid)}</div>
+          <div className="mt-2 text-3xl font-bold text-emerald-500">{fmtINR(balances.advance_paid, currencyDecimalPlaces)}</div>
         </div>
         <div className="rounded-lg border border-border-custom bg-card p-4">
           <div className="text-xs uppercase tracking-wider text-rose-500">To Pay</div>
-          <div className="mt-2 text-3xl font-bold text-rose-500">{fmtINR(balances.to_pay)}</div>
+          <div className="mt-2 text-3xl font-bold text-rose-500">{fmtINR(balances.to_pay, currencyDecimalPlaces)}</div>
         </div>
       </div>
 
@@ -168,7 +170,7 @@ export default function PartyPage() {
                   </div>
                 </td>
                 <td className="px-4 py-3 text-muted">{p.party_type || "—"}</td>
-                <td className="px-4 py-3 text-right text-foreground">{fmtINR(p.balance)}</td>
+                <td className="px-4 py-3 text-right text-foreground">{fmtINR(p.balance, currencyDecimalPlaces)}</td>
                 <td className="px-4 py-3">
                   <button
                     onClick={() => toggleStatus(p)}

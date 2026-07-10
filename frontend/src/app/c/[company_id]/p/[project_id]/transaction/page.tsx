@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { getApi, authHeaders, fmtINR } from "@/lib/siteflow";
+import { useCompanySettings } from "@/context/CompanySettingsContext";
 import ZatcaInvoicePanel from "@/components/ZatcaInvoicePanel";
 import { CustomFieldsSection, useCustomFields } from "@/components/CustomFieldsSection";
 import { UNITS } from "@/lib/units";
@@ -118,6 +119,7 @@ function Lbl({ children }: { children: React.ReactNode }) {
 }
 
 export default function TransactionPage() {
+  const { currencyDecimalPlaces } = useCompanySettings();
   const params = useParams();
   const companyId = params.company_id as string;
   const projectId = params.project_id as string;
@@ -245,10 +247,10 @@ export default function TransactionPage() {
 
       {/* Summary cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card label="Total In" value={fmtINR(totalIn)} tone="emerald" />
-        <Card label="Total Out" value={fmtINR(totalOut)} tone="rose" />
-        <Card label="Project Balance (In − Out)" value={fmtINR(balance)} tone={balance >= 0 ? "emerald" : "rose"} />
-        <Card label="Margin (Sales − Expense)" value={fmtINR(margin)} tone="violet" />
+        <Card label="Total In" value={fmtINR(totalIn, currencyDecimalPlaces)} tone="emerald" />
+        <Card label="Total Out" value={fmtINR(totalOut, currencyDecimalPlaces)} tone="rose" />
+        <Card label="Project Balance (In − Out)" value={fmtINR(balance, currencyDecimalPlaces)} tone={balance >= 0 ? "emerald" : "rose"} />
+        <Card label="Margin (Sales − Expense)" value={fmtINR(margin, currencyDecimalPlaces)} tone="violet" />
       </div>
 
       {error && <div className="rounded-md border border-rose-500/40 bg-rose-500/10 px-4 py-2 text-sm text-rose-400">{error}</div>}
@@ -307,7 +309,7 @@ export default function TransactionPage() {
                 <td className="px-4 py-3 text-muted">{r.ref}</td>
                 <td className={`px-4 py-3 text-right font-medium ${r.direction === "in" ? "text-emerald-500" : "text-rose-500"}`}>
                   {r.direction === "in" ? "+" : "−"}
-                  {fmtINR(r.amount)}
+                  {fmtINR(r.amount, currencyDecimalPlaces)}
                 </td>
                 <td className="px-4 py-3 text-muted">{r.status}</td>
                 <td className="px-4 py-3">
@@ -362,6 +364,7 @@ function NewTransactionModal({
   onClose: () => void;
   onCreated: () => void;
 }) {
+  const { currencyDecimalPlaces } = useCompanySettings();
   const [typeKey, setTypeKey] = useState<string>(TAXONOMY[0].key);
   const cfg = TAXONOMY.find((t) => t.key === typeKey)!;
   const isSalesInvoice = cfg.key === "sales_invoice";
@@ -670,11 +673,11 @@ function NewTransactionModal({
                 <input type="number" placeholder="Qty" value={it.qty} onChange={(e) => setItems((s) => s.map((x, j) => j === i ? { ...x, qty: e.target.value } : x))} className="col-span-2 rounded-md border border-border-custom bg-background px-2 py-1.5 text-sm text-foreground" />
                 <input type="number" placeholder="Rate" value={it.rate} onChange={(e) => setItems((s) => s.map((x, j) => j === i ? { ...x, rate: e.target.value } : x))} className="col-span-2 rounded-md border border-border-custom bg-background px-2 py-1.5 text-sm text-foreground" />
                 <div className="col-span-1 flex items-center justify-end text-sm text-muted">
-                  {fmtINR((parseFloat(it.qty) || 0) * (parseFloat(it.rate) || 0))}
+                  {fmtINR((parseFloat(it.qty) || 0) * (parseFloat(it.rate) || 0), currencyDecimalPlaces)}
                 </div>
               </div>
             ))}
-            <div className="text-right text-sm font-medium text-foreground">Subtotal: {fmtINR(subtotal)}</div>
+            <div className="text-right text-sm font-medium text-foreground">Subtotal: {fmtINR(subtotal, currencyDecimalPlaces)}</div>
           </div>
         )}
 

@@ -1,17 +1,20 @@
+import json
 from uuid import UUID
 from datetime import datetime
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.auth import get_current_user, verify_project_access
+from app.auth import get_current_user, verify_project_access, get_company_membership
 from app.models import (
     WorkOrder, WorkOrderItem, Bill, TransactionDeduction,
-    DebitNote, CreditNote, CompanyTeam, User, Company
+    DebitNote, CreditNote, CompanyTeam, User, Company, LibraryParty, Project
 )
 from app.routers.custom_fields import CustomFieldValueInput, upsert_values_for_entity
 from app.zatca import build_zatca_payload
 from app.workflow_controls import enforce_entry_creation_window, get_company, get_default_terms
+from app.utils.pdf_generator import generate_document_pdf
+from app.utils.document_pdf import resolve_pdf_branding
 from pydantic import BaseModel, Field
 
 router = APIRouter(
@@ -86,6 +89,7 @@ class BillCreateRequest(BaseModel):
     payment_ref: Optional[str] = None  # cheque no / bank txn ref
     ship_to: Optional[str] = None
     boq_document_id: Optional[UUID] = None  # link this bill to a BOQ document (for Billed Value)
+    terms: Optional[str] = None  # Terms & Conditions; defaults to company Invoice Terms on create
     # Custom Fields (Settings → Custom Fields, entity_type="invoice"). Populated by the
     # Sales Invoice transaction type on the project Transaction tab; harmless no-op for
     # other invoice_type values that don't render a Custom Fields section.
@@ -121,6 +125,7 @@ class BillResponse(BaseModel):
     payment_bank_name: Optional[str] = None
     payment_ref: Optional[str] = None
     ship_to: Optional[str] = None
+    terms: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -372,6 +377,7 @@ def get_bills(project_id: UUID, invoice_type: Optional[str] = None, db: Session 
                 payment_bank_name=b.payment_bank_name,
                 payment_ref=b.payment_ref,
                 ship_to=b.ship_to,
+                terms=b.terms,
             )
         )
     return res
@@ -398,6 +404,80 @@ def get_bill_zatca(bill_id: UUID, db: Session = Depends(get_db)):
         "vat_total": payload["vat_total"],
         "total_incl_vat": payload["total_incl_vat"],
     }
+
+@router.get("/bills/{bill_id}/pdf")
+def get_bill_pdf(bill_id: UUID, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+    bill = db.query(Bill).filter(Bill.id == bill_id).first()
+    if not bill:
+        raise HTTPException(status_code=404, detail="Bill not found")
+    # Tenant check: the bill belongs to a company the caller is a member of.
+    get_company_membership(db, current_user, bill.company_id)
+
+    project = db.query(Project).filter(Project.id == bill.project_id).first() if bill.project_id else None
+    company_name, custom_banner = resolve_pdf_branding(db, bill.company_id, project)
+
+    party = db.query(CompanyTeam).filter(CompanyTeam.id == bill.party_company_user_id).first()
+    party_user = db.query(User).filter(User.id == party.user_id).first() if party else None
+    party_name = party_user.name if party_user and party_user.name else "N/A"
+
+    type_label = {
+        "sale": "Sales Invoice",
+        "purchase": "Purchase Invoice",
+        "subcon": "Subcontractor Invoice",
+    }.get(bill.invoice_type, bill.invoice_type)
+
+    party_lines = [
+        f"Party: {party_name}",
+        f"Invoice No: {bill.invoice_number}",
+        f"Invoice Date: {bill.invoice_date.strftime('%Y-%m-%d') if bill.invoice_date else ''}",
+        f"Type: {type_label}",
+        f"Status: {bill.status}",
+    ]
+    if bill.due_date:
+        party_lines.append(f"Due Date: {bill.due_date.strftime('%Y-%m-%d')}")
+
+    table_headers = ["Description", "Qty", "Rate", "Amount"]
+    col_widths = [54, 10, 16, 16]
+    table_rows = []
+    if bill.items_json:
+        try:
+            for it in json.loads(bill.items_json):
+                table_rows.append([
+                    it.get("desc") or it.get("description") or "",
+                    str(it.get("qty", "")),
+                    str(it.get("rate", "")),
+                    str(it.get("amount", "")),
+                ])
+        except Exception:
+            pass
+    if not table_rows:
+        table_rows.append(["(No line items)", "", "", ""])
+
+    totals_lines = [
+        f"Subtotal: {bill.subtotal}",
+        f"GST Amount: {bill.gst_amount}",
+        f"Total Payable: {bill.total_payable}",
+        f"Paid Amount: {bill.paid_amount}",
+    ]
+
+    pdf_bytes = generate_document_pdf(
+        title=type_label,
+        party_lines=party_lines,
+        table_headers=table_headers,
+        table_rows=table_rows,
+        col_widths=col_widths,
+        totals_lines=totals_lines,
+        terms=bill.terms,
+        company_name=company_name,
+        custom_banner=custom_banner,
+    )
+    filename = f"{bill.invoice_number or 'bill'}.pdf"
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'inline; filename="{filename}"'},
+    )
+
 
 @router.post("/bills", response_model=BillResponse, status_code=201)
 def create_bill(req: BillCreateRequest, db: Session = Depends(get_db)):
@@ -446,6 +526,16 @@ def create_bill(req: BillCreateRequest, db: Session = Depends(get_db)):
         payment_ref=req.payment_ref,
         ship_to=req.ship_to,
         boq_document_id=req.boq_document_id,
+        # Settings -> Terms & Conditions -> Invoice Terms (or Subcon Terms for
+        # subcon invoices): pre-fill the company default when the caller doesn't
+        # supply their own terms. Mirrors the subcon Work Order wiring.
+        terms=req.terms
+        if req.terms
+        else get_default_terms(
+            db,
+            req.company_id,
+            {"sale": "invoice", "purchase": "invoice", "subcon": "subcon"}.get(req.invoice_type, "invoice"),
+        ),
     )
     db.add(bill)
     db.flush()
@@ -503,6 +593,7 @@ def create_bill(req: BillCreateRequest, db: Session = Depends(get_db)):
         payment_bank_name=bill.payment_bank_name,
         payment_ref=bill.payment_ref,
         ship_to=bill.ship_to,
+        terms=bill.terms,
     )
 
 # 3. Debit Notes

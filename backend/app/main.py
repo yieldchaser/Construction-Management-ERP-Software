@@ -379,6 +379,28 @@ auto_seed_database()
 # Ensure static reports directory exists
 os.makedirs("static/reports", exist_ok=True)
 
+# Initialize Sentry error tracking before the FastAPI app is constructed.
+# Gated on a non-empty DSN: calling sentry_sdk.init with an empty DSN is a
+# silent no-op, but we skip it explicitly so behaviour is obvious in logs and
+# we never spend startup cost when Sentry is not configured (e.g. local dev).
+from app.config import settings as _app_settings
+
+if _app_settings.SENTRY_DSN:
+    import sentry_sdk
+    from sentry_sdk.integrations.fastapi import FastApiIntegration
+    from sentry_sdk.integrations.starlette import StarletteIntegration
+
+    sentry_sdk.init(
+        dsn=_app_settings.SENTRY_DSN,
+        integrations=[StarletteIntegration(), FastApiIntegration()],
+        # Error tracking, not full APM: sample a small fraction of transactions
+        # for performance rather than tracing every request in prod.
+        traces_sample_rate=0.1,
+    )
+    print("Sentry error tracking initialized.")
+else:
+    print("SENTRY_DSN not set; Sentry error tracking disabled.")
+
 app = FastAPI(
     title="SiteFlow - Construction Management API",
     description="Backend microservice handling operational logic, calculators, and integrations.",
@@ -475,6 +497,8 @@ app.include_router(delete_logs.router, prefix="/apis/v3")
 from app.routers import files as files_router
 app.include_router(files_router.router, prefix="/apis/v3")
 app.include_router(team_schedule.router, prefix="/apis/v3")
+from app.routers import google_sheets as google_sheets_router
+app.include_router(google_sheets_router.router, prefix="/apis/v3")
 
 @app.get("/")
 def read_root():

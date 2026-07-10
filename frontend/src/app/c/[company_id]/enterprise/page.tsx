@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { getApi, authHeaders, fmtINR } from "@/lib/siteflow";
+import { useCompanySettings } from "@/context/CompanySettingsContext";
 
 type RollupCompany = {
   id: string;
@@ -40,6 +41,7 @@ function StatCard({ label, value, accent }: { label: string; value: string; acce
 }
 
 export default function EnterpriseRollupPage() {
+  const { currencyDecimalPlaces } = useCompanySettings();
   const params = useParams();
   const companyId = params.company_id as string;
   const [data, setData] = useState<Rollup | null>(null);
@@ -104,9 +106,9 @@ export default function EnterpriseRollupPage() {
         <StatCard label="Companies" value={String(data.company_count)} />
         <StatCard label="Projects" value={String(data.project_count)} />
         <StatCard label="Parties" value={String(data.party_count)} />
-        <StatCard label="To Pay" value={fmtINR(data.total_to_pay)} accent="text-amber-500" />
-        <StatCard label="To Receive" value={fmtINR(data.total_to_receive)} accent="text-emerald-500" />
-        <StatCard label="Net Balance" value={fmtINR(data.total_balance)} />
+        <StatCard label="To Pay" value={fmtINR(data.total_to_pay, currencyDecimalPlaces)} accent="text-amber-500" />
+        <StatCard label="To Receive" value={fmtINR(data.total_to_receive, currencyDecimalPlaces)} accent="text-emerald-500" />
+        <StatCard label="Net Balance" value={fmtINR(data.total_balance, currencyDecimalPlaces)} />
       </div>
 
       <div className="rounded-lg border border-border-custom bg-card overflow-hidden">
@@ -130,9 +132,9 @@ export default function EnterpriseRollupPage() {
                 <td className="px-4 py-2 text-foreground">{c.name}</td>
                 <td className="px-4 py-2 text-muted">{c.project_count}</td>
                 <td className="px-4 py-2 text-muted">{c.party_count}</td>
-                <td className="px-4 py-2 text-right text-amber-500">{fmtINR(c.to_pay)}</td>
-                <td className="px-4 py-2 text-right text-emerald-500">{fmtINR(c.to_receive)}</td>
-                <td className="px-4 py-2 text-right text-foreground">{fmtINR(c.balance)}</td>
+                <td className="px-4 py-2 text-right text-amber-500">{fmtINR(c.to_pay, currencyDecimalPlaces)}</td>
+                <td className="px-4 py-2 text-right text-emerald-500">{fmtINR(c.to_receive, currencyDecimalPlaces)}</td>
+                <td className="px-4 py-2 text-right text-foreground">{fmtINR(c.balance, currencyDecimalPlaces)}</td>
               </tr>
             ))}
           </tbody>

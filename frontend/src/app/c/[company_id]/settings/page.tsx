@@ -565,6 +565,17 @@ export default function CompanySettingsPage() {
   const [gsPhones, setGsPhones] = useState<string[]>([]);
   const [gsPhoneInput, setGsPhoneInput] = useState("");
   const [gsStatus, setGsStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [gsConnection, setGsConnection] = useState<{ connected: boolean; connected_by_phone?: string | null; connected_by_name?: string | null }>({ connected: false });
+  useEffect(() => {
+    if (!company_id) return;
+    const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : "";
+    fetch(`${apiHost}/apis/v3/integrations/google-sheets/status/${company_id}`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => { if (data) setGsConnection(data); })
+      .catch(() => {});
+  }, [company_id, apiHost]);
   useEffect(() => {
     if (settings) {
       setGsEnabled(settings.google_sheets_enabled ?? false);
@@ -1801,8 +1812,8 @@ export default function CompanySettingsPage() {
                     </div>
                   )}
 
-                  <div className="p-4 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs rounded-lg">
-                    Partially wired: creating a Subcon Work Order or a CRM Quotation without supplying <code>terms</code> now pre-fills it server-side from Subcon Terms / Quotation Terms above. Sales Invoice, BOQ, and Purchase Order do <strong>not</strong> currently have a <code>terms</code> field on their underlying records at all (no such column exists yet), so Invoice Terms / BOQ Terms / Purchase Order Terms above are stored but have nothing to pre-fill downstream.
+                  <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-lg">
+                    Fully wired: creating a Subcon Work Order, CRM Quotation, Sales / Purchase / Subcon Invoice, BOQ, or Purchase Order without supplying <code>terms</code> now pre-fills it server-side from the matching document terms above. Each of those documents also exposes a Download PDF action that renders the saved terms in its footer.
                   </div>
 
                   {termsStatus === "saved" && (<div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-lg">Terms & Conditions saved</div>)}
@@ -2053,13 +2064,33 @@ export default function CompanySettingsPage() {
                 </div>
 
                 <div className="rounded-lg border border-border-custom p-4 space-y-2">
+                  <div className="text-[10px] uppercase tracking-wider text-muted font-bold">Connection Status</div>
+                  {gsConnection.connected ? (
+                    <div className="flex items-center gap-2 text-xs text-emerald-400">
+                      <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                      <span>
+                        Connected
+                        {gsConnection.connected_by_phone
+                          ? ` by ${gsConnection.connected_by_name || "user"} (${gsConnection.connected_by_phone})`
+                          : ""}
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 text-xs text-muted">
+                      <span className="h-2 w-2 rounded-full bg-zinc-500" />
+                      <span>Not connected. Connect from the Payroll tab (HR) to authorize a Google account.</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="rounded-lg border border-border-custom p-4 space-y-2">
                   <div className="text-[10px] uppercase tracking-wider text-muted font-bold">Activity Log</div>
                   <p className="text-[11px] text-muted">Auth and sync events for the Google Sheets integration will appear here once the connection is live.</p>
                   <div className="text-center text-xs text-muted py-4">No activity recorded yet.</div>
                 </div>
 
                 <div className="p-4 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs rounded-lg">
-                  This is the <strong>auth/storage layer only</strong> — the enable flag, authorized-phone whitelist and activity log are stored, but there is <strong>no working Google Sheets add-on</strong> behind it yet (no live sheet sync/export). Wiring the actual Google Sheets connection is a separate build.
+                  Live export is wired for payroll runs (HR -&gt; Payroll -&gt; Export to Google Sheets). The enable flag and authorized-phone whitelist below gate who may connect a Google account. Other report types are not exported yet.
                 </div>
 
                 {gsStatus === "saved" && (<div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-lg">Integration settings saved</div>)}

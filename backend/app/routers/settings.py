@@ -7,6 +7,7 @@ from pydantic import BaseModel
 from app.database import get_db
 from app.auth import get_current_user, verify_company_access
 from app.models import Company, CompanyBranch, ApprovalRule, CompanyFile, CompanyRole, CompanyPayrollSettings, SalaryTemplate, PdfTemplate, CompanyTerms
+from app import supabase_storage
 
 router = APIRouter(prefix="/settings", tags=["Settings & Configurations"], dependencies=[Depends(get_current_user)])
 
@@ -513,6 +514,20 @@ async def upload_company_file(
     if not contents:
         raise HTTPException(status_code=400, detail="Empty file")
 
+    filename = file.filename or asset_type
+    content_type = file.content_type or "application/octet-stream"
+    storage_path = None
+    data = None
+
+    if supabase_storage.is_storage_configured():
+        storage_path = f"{company_id}/{asset_type}"
+        supabase_storage.upload_bytes(
+            supabase_storage.BUCKET_COMPANY_FILES, storage_path, contents, content_type
+        )
+    else:
+        # Local-dev fallback: keep the bytes in the DB column.
+        data = contents
+
     db.query(CompanyFile).filter(
         CompanyFile.company_id == company_id, CompanyFile.asset_type == asset_type
     ).delete()
@@ -520,9 +535,10 @@ async def upload_company_file(
     cf = CompanyFile(
         company_id=company_id,
         asset_type=asset_type,
-        filename=file.filename or asset_type,
-        content_type=file.content_type or "application/octet-stream",
-        data=contents,
+        filename=filename,
+        content_type=content_type,
+        storage_path=storage_path,
+        data=data,
     )
     db.add(cf)
     db.commit()
@@ -542,17 +558,34 @@ def get_company_file(company_id: uuid.UUID, asset_type: str, db: Session = Depen
     )
     if not cf:
         raise HTTPException(status_code=404, detail="Not found")
-    media_type = cf.content_type or "application/octet-stream"
-    return Response(
-        content=cf.data,
-        media_type=media_type,
-        headers={
-            "Content-Disposition": f'inline; filename="{cf.filename}"',
-            "Content-Type": media_type,
-            "Content-Length": str(len(cf.data)),
-            "Cache-Control": "no-store",
-        },
-    )
+
+    # Prefer object storage; fall back to the DB BLOB for legacy rows.
+    if cf.storage_path and supabase_storage.is_storage_configured():
+        try:
+            signed_url = supabase_storage.create_signed_url(
+                supabase_storage.BUCKET_COMPANY_FILES, cf.storage_path
+            )
+            from fastapi.responses import RedirectResponse
+
+            return RedirectResponse(url=signed_url, status_code=307)
+        except Exception:
+            # Storage unavailable or signed-URL failed: fall through to BLOB.
+            pass
+
+    if cf.data:
+        media_type = cf.content_type or "application/octet-stream"
+        return Response(
+            content=cf.data,
+            media_type=media_type,
+            headers={
+                "Content-Disposition": f'inline; filename="{cf.filename}"',
+                "Content-Type": media_type,
+                "Content-Length": str(len(cf.data)),
+                "Cache-Control": "no-store",
+            },
+        )
+
+    raise HTTPException(status_code=404, detail="Not found")
 
 
 # ─── Company Terms & Conditions (5 documents; central source of default T&C) ───

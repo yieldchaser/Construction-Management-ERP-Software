@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { getApi, authHeaders, resolveCompanyId, fmtINR } from "@/lib/siteflow";
+import { useCompanySettings } from "@/context/CompanySettingsContext";
 import { UNITS } from "@/lib/units";
 
 type Material = {
@@ -22,6 +23,7 @@ type Material = {
 type Category = { id: string; name: string };
 
 export default function MaterialsPage() {
+  const { currencyDecimalPlaces } = useCompanySettings();
   const params = useParams();
   const companyId = params.company_id as string;
 
@@ -103,7 +105,7 @@ export default function MaterialsPage() {
                       <td className="px-4 py-2 font-medium text-foreground">{m.name}</td>
                       <td className="px-4 py-2 text-muted">{m.unit}{m.alternate_unit ? ` / ${m.alternate_unit}` : ""}</td>
                       <td className="px-4 py-2 text-muted">{m.gst_rate}</td>
-                      <td className="px-4 py-2 text-right text-foreground">{fmtINR(m.unit_cost)}</td>
+                      <td className="px-4 py-2 text-right text-foreground">{fmtINR(m.unit_cost, currencyDecimalPlaces)}</td>
                       <td className="px-4 py-2 text-muted">{m.hsn_sac || "—"}{m.item_code ? ` · ${m.item_code}` : ""}</td>
                     </tr>
                   ))}

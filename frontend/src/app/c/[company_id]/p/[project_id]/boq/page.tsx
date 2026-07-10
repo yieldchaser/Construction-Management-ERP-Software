@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { getApi, authHeaders, fmtINR } from "@/lib/siteflow";
+import { useCompanySettings } from "@/context/CompanySettingsContext";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type BOQDocument = {
@@ -36,6 +37,7 @@ type Party = { id: string; name: string; party_type: string | null };
 const UNCAT = "Uncategorized";
 
 export default function BoqTab() {
+  const { currencyDecimalPlaces } = useCompanySettings();
   const params = useParams();
   const companyId = params.company_id as string;
   const projectId = params.project_id as string;
@@ -53,6 +55,8 @@ export default function BoqTab() {
   const [clientSearch, setClientSearch] = useState("");
   const [milestoneDone, setMilestoneDone] = useState(0);
   const [milestoneTotal, setMilestoneTotal] = useState(0);
+  const [terms, setTerms] = useState("");
+  const [boqDefaultTerms, setBoqDefaultTerms] = useState("");
   const [savingDoc, setSavingDoc] = useState(false);
 
   // Inline add party
@@ -102,6 +106,25 @@ export default function BoqTab() {
     loadDocs();
     loadClients();
   }, [loadDocs, loadClients]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const r = await fetch(getApi(`/settings/company-terms/${companyId}`), { headers: authHeaders() || {} });
+        if (r.ok) {
+          const d = await r.json();
+          setBoqDefaultTerms(d.boq_terms || "");
+        }
+      } catch {
+        /* ignore: terms are optional */
+      }
+    })();
+  }, [companyId]);
+
+  useEffect(() => {
+    if (showAdd && !terms) setTerms(boqDefaultTerms);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showAdd]);
 
   const filteredDocs = useMemo(() => {
     if (!search.trim()) return docs;
@@ -185,6 +208,7 @@ export default function BoqTab() {
           client_party_id: clientId,
           milestone_done: milestoneDone,
           milestone_total: milestoneTotal,
+          terms: terms || null,
         }),
       });
       if (res.ok) {
@@ -193,6 +217,7 @@ export default function BoqTab() {
         setClientSearch("");
         setMilestoneDone(0);
         setMilestoneTotal(0);
+        setTerms("");
         setShowAdd(false);
         await loadDocs();
       }
@@ -246,7 +271,7 @@ export default function BoqTab() {
           <div className="text-[10px] text-muted">
             {docs.length} BOQ document(s) · Total BOQ Value{" "}
             <span className="text-primary font-semibold">
-              {fmtINR(docs.reduce((s, d) => s + d.boq_value, 0))}
+              {fmtINR(docs.reduce((s, d) => s + d.boq_value, 0), currencyDecimalPlaces)}
             </span>
           </div>
         </div>
@@ -337,10 +362,10 @@ export default function BoqTab() {
                         </div>
                       </td>
                       <td className="py-3 px-2 text-right font-mono text-zinc-200">
-                        {fmtINR(d.boq_value)}
+                        {fmtINR(d.boq_value, currencyDecimalPlaces)}
                       </td>
                       <td className="py-3 px-2 text-right font-mono font-semibold text-emerald-400">
-                        {fmtINR(d.billed_value)}
+                        {fmtINR(d.billed_value, currencyDecimalPlaces)}
                       </td>
                       <td className="py-3 pr-5 text-center text-muted">
                         {open ? "▾" : "▸"}
@@ -404,6 +429,17 @@ export default function BoqTab() {
                             )}
                           </div>
 
+                          <div className="mb-3" onClick={(e) => e.stopPropagation()}>
+                            <a
+                              href={getApi(`/budgeting/boq-documents/${d.id}/pdf`)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-block px-3 py-1.5 bg-white/5 border border-border-custom text-zinc-300 text-xs rounded-lg hover:bg-white/10"
+                            >
+                              Download PDF
+                            </a>
+                          </div>
+
                           {/* Line items */}
                           {docItemsLoading ? (
                             <div className="text-[10px] text-muted">Loading items…</div>
@@ -438,16 +474,16 @@ export default function BoqTab() {
                                       {Number(i.quantity).toLocaleString("en-IN", { maximumFractionDigits: 4 })}
                                     </td>
                                     <td className="py-1.5 px-2 text-right font-mono text-zinc-300">
-                                      {fmtINR(i.rate)}
+                                      {fmtINR(i.rate, currencyDecimalPlaces)}
                                     </td>
                                     <td className="py-1.5 px-2 text-right font-mono text-zinc-300">
-                                      {fmtINR(i.supply_rate)}
+                                      {fmtINR(i.supply_rate, currencyDecimalPlaces)}
                                     </td>
                                     <td className="py-1.5 px-2 text-right font-mono text-zinc-300">
-                                      {fmtINR(i.installation_rate)}
+                                      {fmtINR(i.installation_rate, currencyDecimalPlaces)}
                                     </td>
                                     <td className="py-1.5 px-2 text-right font-mono font-semibold text-zinc-200">
-                                      {fmtINR(amountOf(i))}
+                                      {fmtINR(amountOf(i), currencyDecimalPlaces)}
                                     </td>
                                   </tr>
                                 ))}
@@ -458,7 +494,7 @@ export default function BoqTab() {
                                     Subtotal
                                   </td>
                                   <td className="py-2 px-2 text-right font-bold text-white font-mono">
-                                    {fmtINR(docItems.reduce((s, i) => s + amountOf(i), 0))}
+                                    {fmtINR(docItems.reduce((s, i) => s + amountOf(i), 0), currencyDecimalPlaces)}
                                   </td>
                                 </tr>
                               </tfoot>
@@ -575,6 +611,17 @@ export default function BoqTab() {
                     className="mt-1 w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-sm text-white"
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-medium text-muted">Terms &amp; Conditions</label>
+                <textarea
+                  value={terms}
+                  onChange={(e) => setTerms(e.target.value)}
+                  placeholder="Pre-filled from company BOQ Terms; edit as needed"
+                  rows={3}
+                  className="mt-1 w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-600"
+                />
               </div>
 
               <div className="flex justify-end gap-2 pt-2">

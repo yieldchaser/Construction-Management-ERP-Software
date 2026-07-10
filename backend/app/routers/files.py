@@ -3,13 +3,14 @@ from datetime import datetime
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, status
-from fastapi.responses import Response
+from fastapi.responses import Response, RedirectResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
 
 from app.database import get_db
 from app.models import FileFolder, ProjectFile, Project
 from app.auth import get_current_user, verify_project_access, get_company_membership
+from app import supabase_storage
 from pydantic import BaseModel, Field
 
 router = APIRouter(prefix="/files", tags=["Project Files"], dependencies=[Depends(get_current_user)])
@@ -137,15 +138,30 @@ async def upload_file(
         raise HTTPException(status_code=400, detail="Empty file")
 
     name = file.filename or "untitled"
+    content_type = file.content_type or "application/octet-stream"
+    file_id = uuid.uuid4()
+
+    storage_path = None
+    data = None
+    if supabase_storage.is_storage_configured():
+        storage_path = f"{project_id}/{file_id}"
+        supabase_storage.upload_bytes(
+            supabase_storage.BUCKET_PROJECT_FILES, storage_path, contents, content_type
+        )
+    else:
+        # Local-dev fallback: keep the bytes in the DB column.
+        data = contents
+
     pf = ProjectFile(
-        id=uuid.uuid4(),
+        id=file_id,
         project_id=project_id,
         folder_id=folder_id,
         name=name,
         original_filename=name,
-        content_type=file.content_type or "application/octet-stream",
+        content_type=content_type,
         size=len(contents),
-        data=contents,
+        storage_path=storage_path,
+        data=data,
     )
     db.add(pf)
     db.commit()
@@ -163,16 +179,42 @@ async def upload_file(
 
 
 @router.get("/file/{file_id}")
-def get_file(file_id: uuid.UUID, download: bool = False, db: Session = Depends(get_db)):
+def get_file(
+    file_id: uuid.UUID,
+    download: bool = False,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    # Tenant check: load the file's project and verify company membership.
+    # (project_id is not in the URL, so we resolve it from the row.)
     pf = db.query(ProjectFile).filter(ProjectFile.id == file_id).first()
     if not pf:
         raise HTTPException(status_code=404, detail="File not found")
-    media_type = pf.content_type or "application/octet-stream"
-    disposition = "attachment" if download else "inline"
-    headers = {
-        "Content-Disposition": f'{disposition}; filename="{pf.original_filename}"',
-        "Content-Type": media_type,
-        "Content-Length": str(pf.size),
-        "Cache-Control": "no-store",
-    }
-    return Response(content=pf.data, media_type=media_type, headers=headers)
+    project = db.query(Project).filter(Project.id == pf.project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, project.company_id)
+
+    # Prefer object storage; fall back to the DB BLOB for legacy rows.
+    if pf.storage_path and supabase_storage.is_storage_configured():
+        try:
+            signed_url = supabase_storage.create_signed_url(
+                supabase_storage.BUCKET_PROJECT_FILES, pf.storage_path
+            )
+            return RedirectResponse(url=signed_url, status_code=307)
+        except Exception:
+            # Storage unavailable or signed-URL failed: fall through to BLOB.
+            pass
+
+    if pf.data:
+        media_type = pf.content_type or "application/octet-stream"
+        disposition = "attachment" if download else "inline"
+        headers = {
+            "Content-Disposition": f'{disposition}; filename="{pf.original_filename}"',
+            "Content-Type": media_type,
+            "Content-Length": str(pf.size),
+            "Cache-Control": "no-store",
+        }
+        return Response(content=pf.data, media_type=media_type, headers=headers)
+
+    raise HTTPException(status_code=404, detail="File not found")

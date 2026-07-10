@@ -313,6 +313,20 @@ export default function ProcurementPage() {
     fetchProcurementData();
   }, [projectId]);
 
+  useEffect(() => {
+    (async () => {
+      try {
+        const r = await fetch(`${getApiHost()}/apis/v3/settings/company-terms/${companyId}`);
+        if (r.ok) {
+          const d = await r.json();
+          setPoDefaultTerms(d.purchase_order_terms || "");
+        }
+      } catch {
+        /* ignore: terms are optional */
+      }
+    })();
+  }, [companyId]);
+
   // Modal and drawer control states
   const [showIndentModal, setShowIndentModal] = useState(false);
   const [showPOModal, setShowPOModal] = useState(false);
@@ -335,6 +349,13 @@ export default function ProcurementPage() {
   const [poFormItems, setPoFormItems] = useState<POItem[]>([
     { name: "UltraTech Cement", qty: 100, unit: "bags", rate: 410 }
   ]);
+  const [newPOTerms, setNewPOTerms] = useState("");
+  const [poDefaultTerms, setPoDefaultTerms] = useState("");
+
+  useEffect(() => {
+    if (showPOModal && !newPOTerms) setNewPOTerms(poDefaultTerms);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showPOModal]);
 
   // GRN form state
   const [selectedPOForGRN, setSelectedPOForGRN] = useState<PO | null>(null);
@@ -452,6 +473,7 @@ export default function ProcurementPage() {
           po_number: newPONum,
           po_date: new Date().toISOString().split("T")[0],
           items: poFormItems.map(item => ({ material_name: item.name, quantity: item.qty, unit: item.unit, rate: item.rate })),
+          terms: newPOTerms || null,
         }),
       });
       if (res.ok) {
@@ -465,6 +487,7 @@ export default function ProcurementPage() {
     setPos([newPO, ...pos]);
     setShowPOModal(false);
     setPoFormItems([{ name: "UltraTech Cement", qty: 100, unit: "bags", rate: 410 }]);
+    setNewPOTerms("");
     setNewPONum(`PO-2026-0${pos.length + 43}`);
   };
 
@@ -819,6 +842,14 @@ export default function ProcurementPage() {
                             <td className="px-5 py-3 text-right font-mono font-bold text-white whitespace-nowrap">₹{po.totalAmount.toLocaleString("en-IN")}</td>
                             <td className="px-5 py-3 text-right whitespace-nowrap">
                               <div className="flex gap-2 justify-end">
+                                <a
+                                  href={`${getApiHost()}/apis/v3/procurement/pos/${po.id}/pdf`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-border-custom text-zinc-300 rounded-lg text-[10px] font-bold"
+                                >
+                                  PDF
+                                </a>
                                 {po.approvalFlag === "pending" && (
                                   <button onClick={() => handleApprovePO(po.id)} className="px-3 py-1.5 bg-primary/10 hover:bg-primary/20 border border-primary/20 text-primary rounded-lg text-[10px] font-bold">
                                     Approve PO
@@ -1283,6 +1314,13 @@ export default function ProcurementPage() {
                     </div>
                   </div>
                 ))}
+              </div>
+
+              <div className="space-y-1 border-t border-border-custom pt-3">
+                <label className="text-muted font-bold">Terms &amp; Conditions</label>
+                <textarea value={newPOTerms} onChange={(e) => setNewPOTerms(e.target.value)}
+                  placeholder="Pre-filled from company Purchase Order Terms; edit as needed" rows={3}
+                  className="w-full bg-input border border-border-custom rounded-lg p-2 text-white" />
               </div>
             </div>
 

@@ -1,7 +1,7 @@
 from uuid import UUID
 from datetime import datetime
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.auth import get_current_user, verify_company_access, verify_project_access, get_company_membership
@@ -13,7 +13,9 @@ from app.models import (
     Project, User, ApprovalRule
 )
 from app.approvals import find_matching_rule, match_approver, levels_approved, user_already_acted, record_action
-from app.workflow_controls import enforce_stock_availability, get_company
+from app.workflow_controls import enforce_stock_availability, get_company, get_default_terms
+from app.utils.pdf_generator import generate_document_pdf
+from app.utils.document_pdf import resolve_pdf_branding
 from pydantic import BaseModel, Field
 
 router = APIRouter(
@@ -62,6 +64,7 @@ class POCreateRequest(BaseModel):
     po_number: str
     po_date: datetime
     items: List[POCreateItemSchema]
+    terms: Optional[str] = None  # Terms & Conditions; defaults to company Purchase Order Terms on create
 
 class POResponseItemSchema(BaseModel):
     id: UUID
@@ -88,6 +91,7 @@ class POResponse(BaseModel):
     approvals_required: int = 0
     approvals_completed: int = 0
     created_at: datetime
+    terms: Optional[str] = None
     items: List[POResponseItemSchema] = []
 
     class Config:
@@ -378,6 +382,7 @@ def _po_response(db: Session, po: PurchaseOrder) -> POResponse:
         approvals_required=levels_required,
         approvals_completed=levels_approved(db, "purchase_order", po.id) if po.approval_rule_id else 0,
         created_at=po.created_at,
+        terms=po.terms,
         items=item_schemas
     )
 
@@ -430,6 +435,11 @@ def create_po(req: POCreateRequest, db: Session = Depends(get_db)):
         # (single approve_po call finalizes it).
         approval_flag="pending_approval" if matched_rule else "pending",
         approval_rule_id=matched_rule.id if matched_rule else None,
+        # Settings -> Terms & Conditions -> Purchase Order Terms: pre-fill the
+        # company default when the caller doesn't supply their own terms.
+        terms=req.terms
+        if req.terms
+        else get_default_terms(db, req.company_id, "purchase_order"),
     )
     db.add(po)
     db.flush()
@@ -838,4 +848,68 @@ def patch_inventory(inventory_id: UUID, req: InventoryPatchRequest, db: Session 
         reserved_qty=float(inv.reserved_qty),
         unit=inv.unit,
         created_at=inv.created_at,
+    )
+
+
+@router.get("/pos/{po_id}/pdf")
+def get_po_pdf(po_id: UUID, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+    po = db.query(PurchaseOrder).filter(PurchaseOrder.id == po_id).first()
+    if not po:
+        raise HTTPException(status_code=404, detail="Purchase order not found")
+    # Tenant check: the PO belongs to a company the caller is a member of.
+    get_company_membership(db, current_user, po.company_id)
+
+    project = db.query(Project).filter(Project.id == po.project_id).first() if po.project_id else None
+    company_name, custom_banner = resolve_pdf_branding(db, po.company_id, project)
+
+    vendor = db.query(CompanyTeam).filter(CompanyTeam.id == po.vendor_id).first() if po.vendor_id else None
+    vendor_user = db.query(User).filter(User.id == vendor.user_id).first() if vendor else None
+    vendor_name = vendor_user.name if vendor_user and vendor_user.name else "N/A"
+
+    party_lines = [
+        f"Vendor: {vendor_name}",
+        f"PO Number: {po.po_number}",
+        f"PO Date: {po.po_date.strftime('%Y-%m-%d') if po.po_date else ''}",
+        f"Status: {po.status}",
+    ]
+
+    items = db.query(PurchaseOrderItem).filter(PurchaseOrderItem.po_id == po.id).all()
+    table_headers = ["Material", "Qty", "Unit", "Rate", "Tax%", "Amount"]
+    col_widths = [34, 10, 8, 14, 8, 16]
+    table_rows = []
+    for it in items:
+        amt = float(it.total_amount) if it.total_amount else float(it.quantity * it.rate)
+        table_rows.append([
+            it.material_name,
+            str(it.quantity),
+            it.unit,
+            str(it.rate),
+            str(it.tax_pct),
+            f"{amt:.2f}",
+        ])
+    if not table_rows:
+        table_rows.append(["(No line items)", "", "", "", "", ""])
+
+    totals_lines = [
+        f"Gross Amount: {po.gross_amount}",
+        f"Tax Amount: {po.tax_amount}",
+        f"Total Amount: {po.total_amount}",
+    ]
+
+    pdf_bytes = generate_document_pdf(
+        title="Purchase Order",
+        party_lines=party_lines,
+        table_headers=table_headers,
+        table_rows=table_rows,
+        col_widths=col_widths,
+        totals_lines=totals_lines,
+        terms=po.terms,
+        company_name=company_name,
+        custom_banner=custom_banner,
+    )
+    filename = f"{po.po_number or 'po'}.pdf"
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'inline; filename="{filename}"'},
     )

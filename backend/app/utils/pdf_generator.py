@@ -2,6 +2,10 @@
 """
 Pure Python PDF Generator for Phase 11 Client Portal & Progress Reports.
 Creates a valid PDF 1.4 document with title, headings, margins, and text lines.
+
+Also provides `generate_document_pdf`, a sibling generator for line-item
+documents (Sales Invoice / Purchase Order / BOQ) that reuses the exact same
+manual PDF object construction style (no external deps).
 """
 
 from datetime import datetime
@@ -178,6 +182,204 @@ def generate_client_report_pdf(
 
     pdf.extend(b"trailer\n")
     pdf.extend(f"<< /Size {len(objects) + 1} /Root 1 0 R >>\n".encode("ascii"))
+    pdf.extend(b"startxref\n")
+    pdf.extend(f"{xref_start}\n".encode("ascii"))
+    pdf.extend(b"%%EOF\n")
+
+    return bytes(pdf)
+
+
+def _esc(s: str) -> str:
+    """PDF text-escape parentheses and backslashes, latin1-safe."""
+    return str(s).replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
+
+
+def _fmt_row(cells, widths):
+    """Render one fixed-width row from cell strings + column widths."""
+    out = []
+    for cell, w in zip(cells, widths):
+        s = _esc(str(cell))
+        if len(s) > w:
+            s = s[: max(w - 1, 1)] + " "
+        out.append(s.ljust(w))
+    return "".join(out)
+
+
+def _wrap_text(text: str, width: int):
+    """Greedy word-wrap, also splitting on explicit newlines. Returns lines."""
+    lines = []
+    for para in str(text).split("\n"):
+        words = para.split(" ")
+        cur = ""
+        for w in words:
+            if not cur:
+                cur = w
+            elif len(cur) + 1 + len(w) <= width:
+                cur += " " + w
+            else:
+                lines.append(cur)
+                cur = w
+        lines.append(cur)
+    return lines
+
+
+def generate_document_pdf(
+    title: str,
+    party_lines=None,
+    table_headers=None,
+    table_rows=None,
+    col_widths=None,
+    totals_lines=None,
+    terms=None,
+    company_name: str = "",
+    custom_banner: str = None,
+) -> bytes:
+    """
+    Pure-Python PDF for a line-item business document (Invoice / PO / BOQ).
+
+    Reuses the same content-stream construction style as
+    `generate_client_report_pdf` (manual object assembly, no external libs)
+    but lays out a party-info block, an optional fixed-width line-item table,
+    a totals block, and a wrapped Terms & Conditions footer. Long documents
+    automatically paginate so content is never clipped off the page bottom.
+
+    company_name / custom_banner: same semantics as the report generator
+    (Document Company Name Display + optional custom PDF template banner).
+    """
+    party_lines = party_lines or []
+    table_headers = table_headers or []
+    table_rows = table_rows or []
+    col_widths = col_widths or []
+    totals_lines = totals_lines or []
+
+    # Build a flat list of (font_key, font_size, text, dy_after) segments.
+    # F2 = Helvetica-Bold, F1 = Helvetica (match the report generator).
+    segs = []
+
+    def add(font_key, size, text, dy):
+        segs.append((font_key, size, text, dy))
+
+    if company_name:
+        add("F2", 11, company_name, 18)
+    if custom_banner:
+        flat = " ".join(custom_banner.split())[:180]
+        add("F1", 9, flat, 18)
+
+    add("F2", 20, title, 30)
+    add("F1", 10, f"Generated on: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}", 30)
+
+    for line in party_lines:
+        add("F1", 10, line, 14)
+    if party_lines:
+        add("F1", 10, "", 8)  # spacer
+
+    if table_headers and col_widths:
+        add("F2", 12, _fmt_row(table_headers, col_widths), 16)
+        for row in table_rows:
+            add("F1", 9, _fmt_row(row, col_widths), 12)
+        add("F1", 9, "", 10)  # spacer
+
+    if totals_lines:
+        add("F2", 12, "SUMMARY / TOTALS", 16)
+        for line in totals_lines:
+            add("F1", 10, line, 14)
+        add("F1", 10, "", 10)  # spacer
+
+    if terms and terms.strip():
+        add("F2", 12, "TERMS & CONDITIONS", 16)
+        for line in _wrap_text(terms, 100):
+            add("F1", 9, line, 12)
+
+    # Paginate: page usable band y in (BOTTOM, TOP]. Top anchor at TOP.
+    TOP, BOTTOM = 800, 50
+    pages = []
+    cur_y = TOP
+    page_segs = []
+    for font_key, size, text, dy in segs:
+        if cur_y - dy < BOTTOM and page_segs:
+            pages.append(page_segs)
+            page_segs = []
+            cur_y = TOP
+        page_segs.append((font_key, size, text, dy))
+        cur_y -= dy
+    if page_segs:
+        pages.append(page_segs)
+
+    pdf = bytearray(b"%PDF-1.4\n")
+    objects = []
+
+    def add_object(obj_def: bytes) -> int:
+        obj_id = len(objects) + 1
+        objects.append(f"{obj_id} 0 obj\n".encode("ascii") + obj_def + b"endobj\n")
+        return obj_id
+
+    # Content streams (one per page).
+    content_ids = []
+    for p_segs in pages:
+        stream_lines = [b"BT"]
+        first = True
+        for font_key, size, text, dy in p_segs:
+            if first:
+                stream_lines.append(b"50 800 Td")
+                first = False
+            else:
+                stream_lines.append(f"0 -{dy} Td".encode("ascii"))
+            stream_lines.append(f"/{font_key} {size} Tf".encode("ascii"))
+            stream_lines.append(f"({_esc(text)}) Tj".encode("latin1", "replace"))
+        stream_lines.append(b"ET")
+        stream_data = b"\n".join(stream_lines)
+        cid = add_object(
+            f"<< /Length {len(stream_data)} >>\nstream\n".encode("ascii")
+            + stream_data
+            + b"\nendstream\n"
+        )
+        content_ids.append(cid)
+
+    # Fonts.
+    f1 = add_object(b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\n")
+    f2 = add_object(b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>\n")
+
+    # Page objects + Pages tree.
+    page_ids = []
+    for cid in content_ids:
+        pid = add_object(
+            b"<< /Type /Page\n"
+            b"   /Parent 2 0 R\n"
+            b"   /Resources << /Font << /F1 "
+            + str(f1).encode()
+            + b" 0 R /F2 "
+            + str(f2).encode()
+            + b" 0 R >> >>\n"
+            b"   /MediaBox [0 0 595 842]\n"
+            b"   /Contents "
+            + str(cid).encode()
+            + b" 0 R\n"
+            b">>\n"
+        )
+        page_ids.append(pid)
+
+    kids = " ".join(f"{pid} 0 R" for pid in page_ids)
+    catalog = add_object(b"<< /Type /Catalog /Pages 2 0 R >>\n")
+    pages_tree = add_object(f"<< /Type /Pages /Kids [{kids}] /Count {len(page_ids)} >>\n".encode("ascii"))
+
+    # Assemble byte offsets.
+    current_offset = len(pdf)
+    offsets = {}
+    for i, obj in enumerate(objects):
+        obj_id = i + 1
+        offsets[obj_id] = current_offset
+        pdf.extend(obj)
+        current_offset += len(obj)
+
+    xref_start = len(pdf)
+    pdf.extend(b"xref\n")
+    pdf.extend(f"0 {len(objects) + 1}\n".encode("ascii"))
+    pdf.extend(b"0000000000 65535 f \n")
+    for obj_id in range(1, len(objects) + 1):
+        pdf.extend(f"{offsets[obj_id]:010d} 00000 n \n".encode("ascii"))
+
+    pdf.extend(b"trailer\n")
+    pdf.extend(f"<< /Size {len(objects) + 1} /Root {catalog} 0 R >>\n".encode("ascii"))
     pdf.extend(b"startxref\n")
     pdf.extend(f"{xref_start}\n".encode("ascii"))
     pdf.extend(b"%%EOF\n")

@@ -4,6 +4,7 @@ import React from "react";
 import { usePathname, useRouter, useParams } from "next/navigation";
 import { useEffect } from "react";
 import { ProjectProvider } from "@/context/ProjectContext";
+import { CompanySettingsProvider } from "@/context/CompanySettingsContext";
 import Sidebar from "@/components/Sidebar";
 import PageHeader from "@/components/PageHeader";
 
@@ -72,7 +73,8 @@ export default function CompanyLayout({ children }: { children: React.ReactNode 
 
   return (
     <ProjectProvider>
-      <div className="flex h-screen bg-background text-foreground overflow-hidden font-sans">
+      <CompanySettingsProvider>
+        <div className="flex h-screen bg-background text-foreground overflow-hidden font-sans">
         {/* Single persistent global Sidebar */}
         <Sidebar />
 
@@ -87,6 +89,7 @@ export default function CompanyLayout({ children }: { children: React.ReactNode 
           </div>
         </main>
       </div>
+      </CompanySettingsProvider>
     </ProjectProvider>
   );
 }

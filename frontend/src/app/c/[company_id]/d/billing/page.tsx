@@ -267,6 +267,20 @@ export default function SubcontractorBillingPage() {
     fetchPNL();
   }, [selectedTower]);
 
+  useEffect(() => {
+    (async () => {
+      try {
+        const r = await fetch(`${getApiHost()}/apis/v3/settings/company-terms/${companyId}`);
+        if (r.ok) {
+          const d = await r.json();
+          setInvoiceDefaultTerms(d.subcon_terms || d.invoice_terms || "");
+        }
+      } catch {
+        /* ignore: terms are optional */
+      }
+    })();
+  }, [companyId]);
+
   // New Work Order Modal & Forms
   const [showWOModal, setShowWOModal] = useState(false);
   const [newWONum, setNewWONum] = useState("WO-2026-004");
@@ -284,6 +298,13 @@ export default function SubcontractorBillingPage() {
   const [newBillRetentionPct, setNewBillRetentionPct] = useState(5);
   const [newBillAdvanceRecovery, setNewBillAdvanceRecovery] = useState(0);
   const [newBillPreTax, setNewBillPreTax] = useState(false);
+  const [newBillTerms, setNewBillTerms] = useState("");
+  const [invoiceDefaultTerms, setInvoiceDefaultTerms] = useState("");
+
+  useEffect(() => {
+    if (showBillModal && !newBillTerms) setNewBillTerms(invoiceDefaultTerms);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showBillModal]);
 
   // Live Bill Calculation Preview
   const calculateBillPreview = (
@@ -391,7 +412,8 @@ export default function SubcontractorBillingPage() {
           subtotal: newBillSubtotal,
           gst_pct: newBillGstPct,
           deductions: deductions,
-          pre_tax_deductions: newBillPreTax
+          pre_tax_deductions: newBillPreTax,
+          terms: newBillTerms || null
         })
       });
       if (res.ok) {
@@ -578,14 +600,24 @@ export default function SubcontractorBillingPage() {
                             </span>
                           </td>
                           <td className="px-5 py-3.5 text-right">
-                            {bill.status === "pending" && (
-                              <button
-                                onClick={() => handleApproveBill(bill.id)}
-                                className="bg-green-600 hover:bg-green-500 text-white rounded-lg px-2.5 py-1 text-[10px] font-bold transition-all cursor-pointer"
+                            <div className="flex items-center justify-end gap-2">
+                              <a
+                                href={`${getApiHost()}/apis/v3/billing/bills/${bill.id}/pdf`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="bg-white/5 border border-border-custom text-zinc-300 rounded-lg px-2.5 py-1 text-[10px] font-bold hover:bg-white/10 transition-all"
                               >
-                                ✓ Auditor Approve
-                              </button>
-                            )}
+                                PDF
+                              </a>
+                              {bill.status === "pending" && (
+                                <button
+                                  onClick={() => handleApproveBill(bill.id)}
+                                  className="bg-green-600 hover:bg-green-500 text-white rounded-lg px-2.5 py-1 text-[10px] font-bold transition-all cursor-pointer"
+                                >
+                                  ✓ Auditor Approve
+                                </button>
+                              )}
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -934,6 +966,17 @@ export default function SubcontractorBillingPage() {
                       className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none font-mono"
                     />
                   </div>
+                </div>
+
+                <div>
+                  <label className="text-[10px] uppercase font-bold text-muted block mb-1">Terms &amp; Conditions</label>
+                  <textarea
+                    value={newBillTerms}
+                    onChange={(e) => setNewBillTerms(e.target.value)}
+                    placeholder="Pre-filled from company Invoice / Subcon Terms; edit as needed"
+                    rows={3}
+                    className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none focus:border-secondary"
+                  />
                 </div>
 
                 {/* Pre-tax toggle */}

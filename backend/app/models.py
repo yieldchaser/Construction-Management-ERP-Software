@@ -111,14 +111,20 @@ class CompanyBranch(Base):
 
 
 class CompanyFile(Base):
-    """Company-scoped BLOB storage for branding assets (logo/signature/stamp/watermark)."""
+    """Company-scoped branding assets (logo/signature/stamp/watermark).
+
+    Bytes live in Supabase Storage (path stored in ``storage_path``) when the
+    service is configured; otherwise they fall back to the ``data`` bytea
+    column. ``data`` is kept nullable for the transition period.
+    """
     __tablename__ = "company_files"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
     asset_type = Column(String(30), nullable=False)  # logo, signature, stamp, watermark
     filename = Column(String(255), nullable=False)
     content_type = Column(String(100), nullable=True)
-    data = Column(LargeBinary, nullable=False)
+    storage_path = Column(String(512), nullable=True)  # object key in Supabase Storage
+    data = Column(LargeBinary, nullable=True)  # legacy/fallback BLOB (nullable during migration)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 
 
@@ -227,6 +233,7 @@ class BOQDocument(Base):
     title = Column(String(255), nullable=False)
     milestone_done = Column(Integer, default=0, nullable=False)
     milestone_total = Column(Integer, default=0, nullable=False)
+    terms = Column(Text, nullable=True)  # Terms & Conditions; pre-filled from CompanyTerms on create
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 
 class ProjectBudget(Base):
@@ -325,6 +332,7 @@ class PurchaseOrder(Base):
     total_amount = Column(Numeric(18, 2), default=0.0, nullable=False)
     approval_flag = Column(String(50), default="pending", nullable=False) # pending, pending_approval, approved, rejected
     approval_rule_id = Column(UUID(as_uuid=True), ForeignKey("approval_rules.id", ondelete="SET NULL"), nullable=True)
+    terms = Column(Text, nullable=True)  # Terms & Conditions; pre-filled from CompanyTerms on create
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 
 class PurchaseOrderItem(Base):
@@ -494,6 +502,7 @@ class Bill(Base):
     payment_bank_name = Column(String(255), nullable=True)
     payment_ref = Column(String(255), nullable=True)  # cheque no / bank txn ref
     ship_to = Column(Text, nullable=True)  # Bill / Ship addressing
+    terms = Column(Text, nullable=True)  # Terms & Conditions; pre-filled from CompanyTerms on create
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), default=func.now(), onupdate=func.now(), nullable=False)
 
@@ -2005,7 +2014,10 @@ class FileFolder(Base):
 
 
 class ProjectFile(Base):
-    """Uploaded document stored as a BLOB (no external storage in this build)."""
+    """Uploaded document. Bytes live in Supabase Storage (``storage_path``) when
+    configured; otherwise they fall back to the ``data`` bytea column. ``data``
+    is kept nullable for the transition period.
+    """
     __tablename__ = "project_files"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
@@ -2014,6 +2026,24 @@ class ProjectFile(Base):
     original_filename = Column(String(512), nullable=False)
     content_type = Column(String(128), nullable=True)
     size = Column(BigInteger, default=0, nullable=False)
-    data = Column(LargeBinary, nullable=False)
+    storage_path = Column(String(512), nullable=True)  # object key in Supabase Storage
+    data = Column(LargeBinary, nullable=True)  # legacy/fallback BLOB (nullable during migration)
     uploaded_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
+class GoogleSheetsConnection(Base):
+    """OAuth connection linking one company to a Google account for Sheets export.
+
+    One connection per company (company_id is unique). Tokens are stored as-is
+    for this proof-of-concept; encrypting them at rest is a follow-up (do not log
+    token values anywhere).
+    """
+    __tablename__ = "google_sheets_connections"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), unique=True, nullable=False)
+    access_token = Column(Text, nullable=True)
+    refresh_token = Column(Text, nullable=True)
+    token_expiry = Column(DateTime(timezone=True), nullable=True)
+    connected_by_user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 

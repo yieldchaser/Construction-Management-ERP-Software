@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { getApi, authHeaders, resolveCompanyId, fmtINR } from "@/lib/siteflow";
 import { useProject } from "@/context/ProjectContext";
+import { useCompanySettings } from "@/context/CompanySettingsContext";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -283,6 +284,7 @@ function SalaryBreakupModal({
   onClose: () => void;
   onSave: (b: Breakup) => void;
 }) {
+  const { currencyDecimalPlaces } = useCompanySettings();
   const [ctc, setCtc] = useState<number>(initial?.monthly_ctc ?? salaryAmount ?? 0);
   const [dayOff, setDayOff] = useState<string>(initial?.day_off ?? "Sunday");
   const [basicPct, setBasicPct] = useState<number>(initial?.basic_pct ?? 40);
@@ -384,7 +386,7 @@ function SalaryBreakupModal({
             <select className={inputCls} value="% of CTC" disabled>
               <option>% of CTC</option>
             </select>
-            <div className="whitespace-nowrap text-sm text-muted">= {fmtINR(basic)}</div>
+            <div className="whitespace-nowrap text-sm text-muted">= {fmtINR(basic, currencyDecimalPlaces)}</div>
           </div>
         </Field>
 
@@ -419,10 +421,10 @@ function SalaryBreakupModal({
             </button>
           </div>
         ))}
-        <div className="text-right text-sm text-muted">Fixed Allowance: {fmtINR(fixedAllowance)}</div>
+        <div className="text-right text-sm text-muted">Fixed Allowance: {fmtINR(fixedAllowance, currencyDecimalPlaces)}</div>
 
         <div className="mt-3 border-t border-border-custom pt-3 text-sm font-semibold text-foreground">
-          Gross Salary: {fmtINR(gross)}
+          Gross Salary: {fmtINR(gross, currencyDecimalPlaces)}
         </div>
       </div>
 
@@ -459,7 +461,7 @@ function SalaryBreakupModal({
           </div>
         ))}
         <div className="mt-3 border-t border-border-custom pt-3 text-sm font-semibold text-foreground">
-          Net Amount (Per Month): {fmtINR(net)}
+          Net Amount (Per Month): {fmtINR(net, currencyDecimalPlaces)}
         </div>
       </div>
 
@@ -753,6 +755,7 @@ function PayrollDetailsDrawer({
   const [costCode, setCostCode] = useState<string | null>(profile?.cost_code ?? null);
   const [breakupOpen, setBreakupOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const { currencyDecimalPlaces } = useCompanySettings();
 
   useEffect(() => {
     setSalaryAmount(profile?.salary_amount ?? emp.basic_salary ?? 0);
@@ -802,7 +805,7 @@ function PayrollDetailsDrawer({
       </button>
       {currentBreakup && (
         <div className="mb-3 rounded-md border border-border-custom p-2 text-xs text-muted">
-          CTC {fmtINR(currentBreakup.monthly_ctc)} · Basic {currentBreakup.basic_pct}% · Net {fmtINR(currentBreakup.net)}
+          CTC {fmtINR(currentBreakup.monthly_ctc, currencyDecimalPlaces)} · Basic {currentBreakup.basic_pct}% · Net {fmtINR(currentBreakup.net, currencyDecimalPlaces)}
         </div>
       )}
 
@@ -910,6 +913,7 @@ function PeopleTab({
   reload: () => void;
   toast: (m: string) => void;
 }) {
+  const { currencyDecimalPlaces } = useCompanySettings();
   const [staffType, setStaffType] = useState<"office" | "site">("office");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("Active");
@@ -1027,7 +1031,7 @@ function PeopleTab({
                 <td className="px-3 py-2 text-muted">{e.designation || "—"}</td>
                 <td className="px-3 py-2 text-muted">{e.department || "—"}</td>
                 <td className="px-3 py-2 text-muted">{e.mobile || "—"}</td>
-                <td className="px-3 py-2 text-right text-foreground">{fmtINR(e.basic_salary + e.hra + e.other_allowances)}</td>
+                <td className="px-3 py-2 text-right text-foreground">{fmtINR(e.basic_salary + e.hra + e.other_allowances, currencyDecimalPlaces)}</td>
               </tr>
             ))}
             {rows.length === 0 && (

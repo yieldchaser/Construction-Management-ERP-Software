@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { getApi, authHeaders, resolveCompanyId, fmtINR } from "@/lib/siteflow";
+import { useCompanySettings } from "@/context/CompanySettingsContext";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -246,6 +247,7 @@ const COUNTRY_CODES = ["+91", "+1", "+44", "+971", "+65", "+61"];
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function CRMPage() {
+  const { currencyDecimalPlaces } = useCompanySettings();
   const params = useParams();
   const slug = params.company_id as string;
   const [companyId, setCompanyId] = useState("");
@@ -615,7 +617,7 @@ export default function CRMPage() {
       case "address":
         return l.address || "—";
       case "budget":
-        return fmtINR(l.budget);
+        return fmtINR(l.budget, currencyDecimalPlaces);
       case "created_at":
         return fmtDate(l.created_at);
       case "next_follow_up":
@@ -984,9 +986,9 @@ export default function CRMPage() {
                     <td className="px-3 py-2 text-foreground">{q.subject}</td>
                     <td className="px-3 py-2 text-foreground">{q.items.length}</td>
                     <td className="px-3 py-2 text-foreground">{q.gst_pct}%</td>
-                    <td className="px-3 py-2 text-foreground">{fmtINR(q.cgst_amount)}</td>
-                    <td className="px-3 py-2 text-foreground">{fmtINR(q.sgst_amount)}</td>
-                    <td className="px-3 py-2 text-foreground">{fmtINR(q.total_amount)}</td>
+                    <td className="px-3 py-2 text-foreground">{fmtINR(q.cgst_amount, currencyDecimalPlaces)}</td>
+                    <td className="px-3 py-2 text-foreground">{fmtINR(q.sgst_amount, currencyDecimalPlaces)}</td>
+                    <td className="px-3 py-2 text-foreground">{fmtINR(q.total_amount, currencyDecimalPlaces)}</td>
                     <td className="px-3 py-2 text-foreground">{q.status}</td>
                   </tr>
                 ))}
@@ -1067,7 +1069,7 @@ export default function CRMPage() {
                         <td className="p-1"><input type="number" className={inputCls + " px-1 py-1 w-20"} value={it.supply_rate} onChange={(e) => qSetItem(idx, { supply_rate: Number(e.target.value) })} /></td>
                         <td className="p-1"><input type="number" className={inputCls + " px-1 py-1 w-20"} value={it.installation_rate} onChange={(e) => qSetItem(idx, { installation_rate: Number(e.target.value) })} /></td>
                         <td className="p-1"><input type="number" className={inputCls + " px-1 py-1 w-16"} value={it.markup} onChange={(e) => qSetItem(idx, { markup: Number(e.target.value) })} /></td>
-                        <td className="p-1 whitespace-nowrap text-foreground">{fmtINR(itemBase(it))}</td>
+                        <td className="p-1 whitespace-nowrap text-foreground">{fmtINR(itemBase(it), currencyDecimalPlaces)}</td>
                         <td className="p-1"><button className={btnGhost} onClick={() => qDelItem(idx)}>✕</button></td>
                       </tr>
                     ))}
@@ -1082,14 +1084,14 @@ export default function CRMPage() {
 
               {/* Totals */}
               <div className="mt-2 space-y-1 rounded-md border border-border-custom p-3 text-sm">
-                <div className="flex justify-between"><span className="text-muted">Subtotal</span><span>{fmtINR(qSubtotal)}</span></div>
-                <div className="flex justify-between"><span className="text-muted">Discount</span><span>- {fmtINR(qForm.discount)}</span></div>
-                <div className="flex justify-between"><span className="text-muted">GST ({qForm.gst_pct}%)</span><span>{fmtINR(qTax)}</span></div>
-                <div className="flex justify-between"><span className="text-muted">CGST ({qForm.cgst_pct}%)</span><span>{fmtINR(qCgst)}</span></div>
-                <div className="flex justify-between"><span className="text-muted">SGST ({qForm.sgst_pct}%)</span><span>{fmtINR(qSgst)}</span></div>
-                <div className="flex justify-between"><span className="text-muted">Additional Charges</span><span>{fmtINR(qForm.additional_charges)}</span></div>
-                <div className="flex justify-between"><span className="text-muted">Round Off</span><span>{fmtINR(qForm.round_off)}</span></div>
-                <div className="flex justify-between border-t border-border-custom pt-1 font-semibold"><span>Grand Total</span><span>{fmtINR(qGrand)}</span></div>
+                <div className="flex justify-between"><span className="text-muted">Subtotal</span><span>{fmtINR(qSubtotal, currencyDecimalPlaces)}</span></div>
+                <div className="flex justify-between"><span className="text-muted">Discount</span><span>- {fmtINR(qForm.discount, currencyDecimalPlaces)}</span></div>
+                <div className="flex justify-between"><span className="text-muted">GST ({qForm.gst_pct}%)</span><span>{fmtINR(qTax, currencyDecimalPlaces)}</span></div>
+                <div className="flex justify-between"><span className="text-muted">CGST ({qForm.cgst_pct}%)</span><span>{fmtINR(qCgst, currencyDecimalPlaces)}</span></div>
+                <div className="flex justify-between"><span className="text-muted">SGST ({qForm.sgst_pct}%)</span><span>{fmtINR(qSgst, currencyDecimalPlaces)}</span></div>
+                <div className="flex justify-between"><span className="text-muted">Additional Charges</span><span>{fmtINR(qForm.additional_charges, currencyDecimalPlaces)}</span></div>
+                <div className="flex justify-between"><span className="text-muted">Round Off</span><span>{fmtINR(qForm.round_off, currencyDecimalPlaces)}</span></div>
+                <div className="flex justify-between border-t border-border-custom pt-1 font-semibold"><span>Grand Total</span><span>{fmtINR(qGrand, currencyDecimalPlaces)}</span></div>
               </div>
 
               {qError && <div className="mb-3 mt-3 rounded bg-red-500/10 px-3 py-2 text-sm text-red-400">{qError}</div>}
@@ -1131,23 +1133,23 @@ export default function CRMPage() {
                         <td className="p-1 text-foreground">{it.width ?? "—"}</td>
                         <td className="p-1 text-foreground">{it.height ?? "—"}</td>
                         <td className="p-1 text-foreground">{it.unit}</td>
-                        <td className="p-1 text-foreground">{fmtINR(it.cost_price)}</td>
-                        <td className="p-1 text-foreground">{fmtINR(it.selling_price)}</td>
-                        <td className="p-1 text-foreground">{fmtINR(it.supply_rate)}</td>
-                        <td className="p-1 text-foreground">{fmtINR(it.installation_rate)}</td>
-                        <td className="p-1 text-foreground">{fmtINR(it.markup)}</td>
-                        <td className="p-1 text-foreground">{fmtINR(it.total_amount)}</td>
+                        <td className="p-1 text-foreground">{fmtINR(it.cost_price, currencyDecimalPlaces)}</td>
+                        <td className="p-1 text-foreground">{fmtINR(it.selling_price, currencyDecimalPlaces)}</td>
+                        <td className="p-1 text-foreground">{fmtINR(it.supply_rate, currencyDecimalPlaces)}</td>
+                        <td className="p-1 text-foreground">{fmtINR(it.installation_rate, currencyDecimalPlaces)}</td>
+                        <td className="p-1 text-foreground">{fmtINR(it.markup, currencyDecimalPlaces)}</td>
+                        <td className="p-1 text-foreground">{fmtINR(it.total_amount, currencyDecimalPlaces)}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
               <div className="mt-3 space-y-1 rounded-md border border-border-custom p-3 text-sm">
-                <div className="flex justify-between"><span className="text-muted">CGST ({qDetail.cgst_pct}%)</span><span>{fmtINR(qDetail.cgst_amount)}</span></div>
-                <div className="flex justify-between"><span className="text-muted">SGST ({qDetail.sgst_pct}%)</span><span>{fmtINR(qDetail.sgst_amount)}</span></div>
-                <div className="flex justify-between"><span className="text-muted">Additional Charges</span><span>{fmtINR(qDetail.additional_charges)}</span></div>
-                <div className="flex justify-between"><span className="text-muted">Round Off</span><span>{fmtINR(qDetail.round_off)}</span></div>
-                <div className="flex justify-between border-t border-border-custom pt-1 font-semibold"><span>Grand Total</span><span>{fmtINR(qDetail.total_amount)}</span></div>
+                <div className="flex justify-between"><span className="text-muted">CGST ({qDetail.cgst_pct}%)</span><span>{fmtINR(qDetail.cgst_amount, currencyDecimalPlaces)}</span></div>
+                <div className="flex justify-between"><span className="text-muted">SGST ({qDetail.sgst_pct}%)</span><span>{fmtINR(qDetail.sgst_amount, currencyDecimalPlaces)}</span></div>
+                <div className="flex justify-between"><span className="text-muted">Additional Charges</span><span>{fmtINR(qDetail.additional_charges, currencyDecimalPlaces)}</span></div>
+                <div className="flex justify-between"><span className="text-muted">Round Off</span><span>{fmtINR(qDetail.round_off, currencyDecimalPlaces)}</span></div>
+                <div className="flex justify-between border-t border-border-custom pt-1 font-semibold"><span>Grand Total</span><span>{fmtINR(qDetail.total_amount, currencyDecimalPlaces)}</span></div>
               </div>
               {qDetail.terms && <div className="mt-3 text-sm text-muted">Terms: {qDetail.terms}</div>}
             </Drawer>

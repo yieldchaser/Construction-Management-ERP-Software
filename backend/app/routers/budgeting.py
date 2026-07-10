@@ -1,13 +1,16 @@
 import io
 from uuid import UUID
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, status
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Response, status
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 from openpyxl import load_workbook
 from app.database import get_db
 from app.auth import get_current_user, verify_project_access, get_company_membership
 from app.models import BOQItem, BOQDocument, ProjectBudget, Project, Bill, LibraryParty, Task
+from app.workflow_controls import get_default_terms
+from app.utils.pdf_generator import generate_document_pdf
+from app.utils.document_pdf import resolve_pdf_branding
 from pydantic import BaseModel, Field
 
 router = APIRouter(
@@ -239,6 +242,7 @@ class BOQDocumentCreate(BaseModel):
     client_party_id: Optional[UUID] = None
     milestone_done: int = 0
     milestone_total: int = 0
+    terms: Optional[str] = None  # Terms & Conditions; defaults to company BOQ Terms on create
 
 
 class BOQDocumentPatch(BaseModel):
@@ -246,6 +250,7 @@ class BOQDocumentPatch(BaseModel):
     client_party_id: Optional[UUID] = None
     milestone_done: Optional[int] = None
     milestone_total: Optional[int] = None
+    terms: Optional[str] = None
 
 
 class BOQDocumentResponse(BaseModel):
@@ -260,6 +265,7 @@ class BOQDocumentResponse(BaseModel):
     billed_value: float
     physical_progress: float  # 0-100, value-weighted linked-task completion
     item_count: int
+    terms: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -306,6 +312,7 @@ def _build_doc_response(db: Session, d: BOQDocument) -> BOQDocumentResponse:
         billed_value=round(billed_value, 2),
         physical_progress=physical_progress,
         item_count=len(items),
+        terms=d.terms,
     )
 
 
@@ -333,6 +340,11 @@ def create_boq_document(req: BOQDocumentCreate, db: Session = Depends(get_db)):
         title=req.title,
         milestone_done=req.milestone_done,
         milestone_total=req.milestone_total,
+        # Settings -> Terms & Conditions -> BOQ Terms: pre-fill the company
+        # default when the caller doesn't supply their own terms.
+        terms=req.terms
+        if req.terms
+        else get_default_terms(db, project.company_id, "boq"),
     )
     db.add(doc)
     db.commit()
@@ -353,6 +365,72 @@ def patch_boq_document(doc_id: UUID, req: BOQDocumentPatch, db: Session = Depend
         doc.milestone_done = req.milestone_done
     if req.milestone_total is not None:
         doc.milestone_total = req.milestone_total
+    if req.terms is not None:
+        doc.terms = req.terms
     db.commit()
     db.refresh(doc)
     return _build_doc_response(db, doc)
+
+
+@router.get("/boq-documents/{doc_id}/pdf")
+def get_boq_document_pdf(doc_id: UUID, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+    doc = db.query(BOQDocument).filter(BOQDocument.id == doc_id).first()
+    if not doc:
+        raise HTTPException(status_code=404, detail="BOQ document not found")
+    # Tenant check: the document's project belongs to a company the caller is a member of.
+    project = db.query(Project).filter(Project.id == doc.project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, project.company_id)
+
+    company_name, custom_banner = resolve_pdf_branding(db, project.company_id, project)
+    party = db.query(LibraryParty).filter(LibraryParty.id == doc.client_party_id).first() if doc.client_party_id else None
+    client_name = party.name if party else "N/A"
+
+    party_lines = [
+        f"Client: {client_name}",
+        f"Title: {doc.title}",
+        f"Milestones: {doc.milestone_done} / {doc.milestone_total}",
+    ]
+
+    items = db.query(BOQItem).filter(BOQItem.boq_document_id == doc.id).all()
+    table_headers = ["Section", "Item", "Unit", "Qty", "Rate", "Amount"]
+    col_widths = [14, 30, 8, 10, 14, 14]
+    table_rows = []
+    boq_value = 0.0
+    for it in items:
+        amt = _item_amount(it)
+        boq_value += amt
+        table_rows.append([
+            it.section_name or "",
+            it.item_name,
+            it.unit,
+            str(it.quantity),
+            str(it.rate),
+            f"{amt:.2f}",
+        ])
+    if not table_rows:
+        table_rows.append(["", "(No line items)", "", "", "", ""])
+
+    totals_lines = [
+        f"BOQ Value: {boq_value:.2f}",
+        f"Line Items: {len(items)}",
+    ]
+
+    pdf_bytes = generate_document_pdf(
+        title="Bill of Quantities (BOQ)",
+        party_lines=party_lines,
+        table_headers=table_headers,
+        table_rows=table_rows,
+        col_widths=col_widths,
+        totals_lines=totals_lines,
+        terms=doc.terms,
+        company_name=company_name,
+        custom_banner=custom_banner,
+    )
+    filename = f"boq-{doc.title or doc.id}.pdf"
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'inline; filename="{filename}"'},
+    )

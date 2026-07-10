@@ -1,5 +1,6 @@
 "use client";
 import { getApiHost } from "@/lib/api";
+import { getApi, authHeaders, resolveCompanyId } from "@/lib/siteflow";
 
 import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
@@ -238,6 +239,10 @@ export default function HRPayrollPage() {
   const [showAddEmp, setShowAddEmp] = useState(false);
   const [selectedPayslip, setSelectedPayslip] = useState<PayslipLine | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // Google Sheets integration (payroll export proof-of-concept)
+  const [gsConnected, setGsConnected] = useState(false);
+  const [gsExporting, setGsExporting] = useState(false);
 
   // New employee form state
   const [empForm, setEmpForm] = useState({
@@ -606,6 +611,80 @@ export default function HRPayrollPage() {
       console.error("Failed to run payroll", e);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // ── Google Sheets: check connection status once we know the company ──
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (!companyId) return;
+      try {
+        const cid = await resolveCompanyId(companyId);
+        const res = await fetch(getApi(`/integrations/google-sheets/status/${cid}`), {
+          headers: authHeaders(),
+        });
+        if (!cancelled && res.ok) {
+          const data = await res.json();
+          setGsConnected(Boolean(data.connected));
+        }
+      } catch {
+        /* leave as not connected */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [companyId]);
+
+  const handleConnectGoogleSheets = async () => {
+    const cid = await resolveCompanyId(companyId);
+    // Authenticated fetch: the access token travels in the Authorization header
+    // like every other API call in this app, never in a URL. The backend returns
+    // the Google consent URL as JSON, and only then do we navigate the browser
+    // directly to accounts.google.com (which carries no SiteFlow token).
+    const res = await fetch(
+      getApi(`/integrations/google-sheets/authorize?company_id=${cid}`),
+      { headers: authHeaders() }
+    );
+    if (!res.ok) {
+      if (res.status === 401 || res.status === 403) {
+        alert("Please sign in again to connect Google Sheets");
+      } else {
+        const detail = await res.text();
+        alert("Could not start Google Sheets connect: " + detail);
+      }
+      return;
+    }
+    const data = await res.json();
+    if (data.consent_url) {
+      window.location.href = data.consent_url;
+    } else {
+      alert("Could not start Google Sheets connect: missing consent URL");
+    }
+  };
+
+  const handleExportPayrollToSheets = async () => {
+    if (!payrollRun) return;
+    setGsExporting(true);
+    try {
+      const res = await fetch(
+        getApi(`/integrations/google-sheets/payroll-runs/${payrollRun.id}/export`),
+        { method: "POST", headers: authHeaders() }
+      );
+      if (!res.ok) {
+        const detail = await res.text();
+        alert("Export failed: " + detail);
+        return;
+      }
+      const data = await res.json();
+      if (data.url) {
+        window.open(data.url, "_blank", "noopener,noreferrer");
+      }
+    } catch (e: any) {
+      alert("Export failed: " + (e?.message || "unknown error"));
+    } finally {
+      setGsExporting(false);
     }
   };
 
@@ -1155,7 +1234,25 @@ export default function HRPayrollPage() {
                   <div className="bg-card border border-border-custom rounded-md overflow-hidden">
                     <div className="px-4 py-3 border-b border-border-custom flex items-center justify-between">
                       <span className="text-xs font-bold text-white">Employee Payslips — {payrollRun.month}</span>
-                      <span className={statusBadge("finalized")}>{payrollRun.status}</span>
+                      <div className="flex items-center gap-2">
+                        {gsConnected ? (
+                          <button
+                            onClick={handleExportPayrollToSheets}
+                            disabled={gsExporting}
+                            className="text-[10px] px-3 py-1.5 rounded-lg bg-green-500/15 text-green-400 border border-green-500/20 font-bold hover:bg-green-500/25 transition-all disabled:opacity-60"
+                          >
+                            {gsExporting ? "Exporting..." : "Export to Google Sheets"}
+                          </button>
+                        ) : (
+                          <button
+                            onClick={handleConnectGoogleSheets}
+                            className="text-[10px] px-3 py-1.5 rounded-lg bg-white/5 text-muted border border-border-custom font-bold hover:bg-white/10 transition-all"
+                          >
+                            Connect Google Sheets
+                          </button>
+                        )}
+                        <span className={statusBadge("finalized")}>{payrollRun.status}</span>
+                      </div>
                     </div>
                     <table className="w-full text-xs">
                       <thead className="bg-elevated border-b border-border-custom">
