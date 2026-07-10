@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { getApi, authHeaders, fmtINR } from "@/lib/siteflow";
 import ZatcaInvoicePanel from "@/components/ZatcaInvoicePanel";
+import { CustomFieldsSection, useCustomFields } from "@/components/CustomFieldsSection";
 
 // ── Transaction taxonomy (exact list from build spec) ────────────────────────
 type Endpoint = "bill" | "debit" | "credit" | "request";
@@ -362,6 +363,11 @@ function NewTransactionModal({
 }) {
   const [typeKey, setTypeKey] = useState<string>(TAXONOMY[0].key);
   const cfg = TAXONOMY.find((t) => t.key === typeKey)!;
+  const isSalesInvoice = cfg.key === "sales_invoice";
+
+  // Custom Fields (Settings → Custom Fields, entity_type="invoice") — only surfaced
+  // for the Sales Invoice transaction type, which is the entity this framework is wired to.
+  const customFields = useCustomFields(companyId, "invoice");
 
   const [partyId, setPartyId] = useState("");
   const [invoiceNumber, setInvoiceNumber] = useState("");
@@ -413,6 +419,10 @@ function NewTransactionModal({
     if (!partyId) { setErr("Select a party."); return; }
     if (!invoiceNumber && cfg.endpoint === "bill") { setErr("Invoice / reference number is required."); return; }
     if (subtotal <= 0 && cfg.endpoint === "bill") { setErr("Add at least one line item with qty × rate > 0."); return; }
+    if (isSalesInvoice) {
+      const cfError = customFields.validate();
+      if (cfError) { setErr(cfError); return; }
+    }
 
     setSaving(true);
     try {
@@ -478,6 +488,7 @@ function NewTransactionModal({
               : null,
             ship_to: shipTo || null,
             boq_document_id: boqDocId || null,
+            custom_fields: isSalesInvoice ? customFields.toPayload() : [],
           }),
         });
       } else if (cfg.endpoint === "debit") {
@@ -687,6 +698,15 @@ function NewTransactionModal({
               </label>
             </div>
           </div>
+        )}
+
+        {/* Custom Fields (Settings → Custom Fields, entity_type="invoice") */}
+        {isSalesInvoice && (
+          <CustomFieldsSection
+            fields={customFields.fields}
+            values={customFields.values}
+            setValue={customFields.setValue}
+          />
         )}
 
         {/* Bill / Ship addressing */}

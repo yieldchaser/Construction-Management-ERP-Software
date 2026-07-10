@@ -9,7 +9,9 @@ from app.models import (
     WorkOrder, WorkOrderItem, Bill, TransactionDeduction,
     DebitNote, CreditNote, CompanyTeam, User, Company
 )
+from app.routers.custom_fields import CustomFieldValueInput, upsert_values_for_entity
 from app.zatca import build_zatca_payload
+from app.workflow_controls import enforce_entry_creation_window, get_company
 from pydantic import BaseModel, Field
 
 router = APIRouter(
@@ -84,6 +86,10 @@ class BillCreateRequest(BaseModel):
     payment_ref: Optional[str] = None  # cheque no / bank txn ref
     ship_to: Optional[str] = None
     boq_document_id: Optional[UUID] = None  # link this bill to a BOQ document (for Billed Value)
+    # Custom Fields (Settings → Custom Fields, entity_type="invoice"). Populated by the
+    # Sales Invoice transaction type on the project Transaction tab; harmless no-op for
+    # other invoice_type values that don't render a Custom Fields section.
+    custom_fields: List[CustomFieldValueInput] = []
 
 class DeductionResponseSchema(BaseModel):
     id: UUID
@@ -172,6 +178,49 @@ class CreditNoteResponse(BaseModel):
         from_attributes = True
 
 # --- Endpoints ---
+
+def _sequential_deduction_calc(deductions: List[DeductionItemSchema], base: float, pretax_order: bool):
+    """Settings -> Workflow Controls -> Finance Controls -> 'Pre-Tax Deduction/Retention'
+    (Company.pretax_deduction_retention).
+
+    Splits the requested deductions into Retention vs everything else (TDS,
+    Security Deposit, Advance Recovery, Material Recovery, ...) and applies
+    them sequentially against `base` so the order actually changes the
+    result:
+      - pretax_order=True  -> TDS/other deductions computed first, Retention
+        is then computed on the post-deduction amount.
+      - pretax_order=False (default) -> Retention computed first, TDS/other
+        deductions are then computed on the post-retention amount.
+
+    Returns (deduction_details, total_deducted) where deduction_details is a
+    list of (DeductionItemSchema, calculated_amount) tuples in the same
+    shape the caller previously built manually."""
+    retention_list = [d for d in deductions if d.deduction_type == "Retention"]
+    other_list = [d for d in deductions if d.deduction_type != "Retention"]
+
+    def _calc(d: DeductionItemSchema, on_amount: float) -> float:
+        if d.percentage:
+            return on_amount * (d.percentage / 100.0)
+        return d.amount
+
+    first_list, second_list = (other_list, retention_list) if pretax_order else (retention_list, other_list)
+
+    details = []
+    first_total = 0.0
+    for d in first_list:
+        amt = _calc(d, base)
+        first_total += amt
+        details.append((d, amt))
+
+    remaining = base - first_total
+    second_total = 0.0
+    for d in second_list:
+        amt = _calc(d, remaining)
+        second_total += amt
+        details.append((d, amt))
+
+    return details, first_total + second_total
+
 
 # 1. Work Orders
 @router.get("/work-orders", response_model=List[WOResponse])
@@ -350,40 +399,27 @@ def get_bill_zatca(bill_id: UUID, db: Session = Depends(get_db)):
 
 @router.post("/bills", response_model=BillResponse, status_code=201)
 def create_bill(req: BillCreateRequest, db: Session = Depends(get_db)):
-    # Mathematical Core Billing Engine
-    ded_amt = 0.0
-    deduction_details = []
+    # Workflow Controls: Entry Controls (creation date window)
+    enforce_entry_creation_window(db, req.company_id, req.invoice_date)
 
+    # Workflow Controls: Finance Controls (Pre-Tax Deduction/Retention order)
+    company = get_company(db, req.company_id)
+    pretax_order = bool(company.pretax_deduction_retention) if company else False
+
+    # Mathematical Core Billing Engine
     # Calculate pre-determined deduction amounts
     if req.pre_tax_deductions:
-        # Pre-Tax Calculations (Deductions subtract from taxable subtotal first, but GST is on gross)
-        for d in req.deductions:
-            item_amt = 0.0
-            if d.percentage:
-                item_amt = req.subtotal * (d.percentage / 100.0)
-            else:
-                item_amt = d.amount
-            ded_amt += item_amt
-            deduction_details.append((d, item_amt))
+        # Pre-Tax Calculations (Deductions subtract from taxable subtotal first, GST is computed on the post-deduction amount)
+        deduction_details, ded_amt = _sequential_deduction_calc(req.deductions, req.subtotal, pretax_order)
 
         gst_amount = (req.subtotal - ded_amt) * (req.gst_pct / 100.0)
         total_payable = req.subtotal - ded_amt + gst_amount
     else:
-        # Post-Tax Calculations (GST calculated on subtotal first, deductions subtracted from gross total)
+        # Post-Tax Calculations (GST calculated on subtotal first, deductions subtracted from the gross total)
         gst_amount = req.subtotal * (req.gst_pct / 100.0)
         gross_total = req.subtotal + gst_amount
 
-        for d in req.deductions:
-            item_amt = 0.0
-            if d.deduction_type == "Retention" and d.percentage:
-                # Retention calculated on gross total post-tax
-                item_amt = gross_total * (d.percentage / 100.0)
-            elif d.percentage:
-                item_amt = req.subtotal * (d.percentage / 100.0)
-            else:
-                item_amt = d.amount
-            ded_amt += item_amt
-            deduction_details.append((d, item_amt))
+        deduction_details, ded_amt = _sequential_deduction_calc(req.deductions, gross_total, pretax_order)
 
         total_payable = gross_total - ded_amt
 
@@ -411,6 +447,11 @@ def create_bill(req: BillCreateRequest, db: Session = Depends(get_db)):
     )
     db.add(bill)
     db.flush()
+
+    upsert_values_for_entity(
+        db, req.company_id, "invoice", bill.id,
+        [cf.model_dump() for cf in req.custom_fields],
+    )
 
     ded_responses = []
     for d, calculated_amt in deduction_details:

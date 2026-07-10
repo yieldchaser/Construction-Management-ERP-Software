@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { getApiHost } from "@/lib/api";
+import { CustomFieldsSection, useCustomFields } from "@/components/CustomFieldsSection";
 
 type Project = {
   id: string;
@@ -470,6 +471,8 @@ function CreateProjectModal({
   const [members, setMembers] = useState<Member[]>([]);
   const [selected, setSelected] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
+  const [resolvedCompanyId, setResolvedCompanyId] = useState("");
+  const [formError, setFormError] = useState<string | null>(null);
 
   useEffect(() => {
     fetch(api(`/projects/company/${companyId}/members`), { headers: authHeaders() })
@@ -491,10 +494,22 @@ function CreateProjectModal({
     return companyId;
   };
 
+  useEffect(() => {
+    resolveCompanyId().then(setResolvedCompanyId);
+  }, [companyId]);
+
+  const customFields = useCustomFields(resolvedCompanyId, "project");
+
   const create = async () => {
+    setFormError(null);
+    const cfError = customFields.validate();
+    if (cfError) {
+      setFormError(cfError);
+      return;
+    }
     setSaving(true);
     try {
-      const cid = await resolveCompanyId();
+      const cid = resolvedCompanyId || (await resolveCompanyId());
       const res = await fetch(api(`/projects/`), {
         method: "POST",
         headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
@@ -504,6 +519,7 @@ function CreateProjectModal({
           address,
           city,
           member_ids: selected,
+          custom_fields: customFields.toPayload(),
         }),
       });
       if (res.ok) onCreated();
@@ -600,6 +616,18 @@ function CreateProjectModal({
                   )}
                 </div>
               </Field>
+              <div className="grid grid-cols-2 gap-3">
+                <CustomFieldsSection
+                  fields={customFields.fields}
+                  values={customFields.values}
+                  setValue={customFields.setValue}
+                />
+              </div>
+              {formError && (
+                <div className="rounded-md border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-sm text-rose-400">
+                  {formError}
+                </div>
+              )}
               <div className="flex justify-between pt-2">
                 <button
                   onClick={() => setStep(1)}
@@ -673,6 +701,33 @@ function ProjectSettingsModal({
   const [newLoc, setNewLoc] = useState("");
   const [members, setMembers] = useState<Member[]>([]);
   const [saving, setSaving] = useState(false);
+  const [resolvedCompanyId, setResolvedCompanyId] = useState("");
+  const [formError, setFormError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(companyId)) {
+      setResolvedCompanyId(companyId);
+      return;
+    }
+    (async () => {
+      const stored = localStorage.getItem("company_slug_mappings");
+      const map = stored ? JSON.parse(stored) : {};
+      if (map[companyId]) {
+        setResolvedCompanyId(map[companyId]);
+        return;
+      }
+      try {
+        const res = await fetch(`${getApiHost()}/apis/v3/auth/resolve-company/${companyId}`);
+        if (res.ok) {
+          setResolvedCompanyId((await res.json()).id);
+          return;
+        }
+      } catch {}
+      setResolvedCompanyId(companyId);
+    })();
+  }, [companyId]);
+
+  const customFields = useCustomFields(resolvedCompanyId, "project", project.id);
 
   const loadLocations = useCallback(() => {
     fetch(api(`/projects/${project.id}/locations`), { headers: authHeaders() })
@@ -690,6 +745,12 @@ function ProjectSettingsModal({
   }, [project.id, loadLocations]);
 
   const saveDetails = async () => {
+    setFormError(null);
+    const cfError = customFields.validate();
+    if (cfError) {
+      setFormError(cfError);
+      return;
+    }
     setSaving(true);
     try {
       await fetch(api(`/projects/${project.id}`), {
@@ -706,6 +767,7 @@ function ProjectSettingsModal({
           dimension: form.dimension,
           scope_of_work: form.scope_of_work,
           attendance_radius_meters: form.attendance_radius_meters,
+          custom_fields: customFields.toPayload(),
         }),
       });
       onSaved();
@@ -796,6 +858,18 @@ function ProjectSettingsModal({
               <Field label="Attendance Radius (meters)">
                 <input type="number" value={form.attendance_radius_meters} onChange={(e) => setForm({ ...form, attendance_radius_meters: parseInt(e.target.value) || 500 })} className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground" />
               </Field>
+              <div className="grid grid-cols-2 gap-3">
+                <CustomFieldsSection
+                  fields={customFields.fields}
+                  values={customFields.values}
+                  setValue={customFields.setValue}
+                />
+              </div>
+              {formError && (
+                <div className="rounded-md border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-sm text-rose-400">
+                  {formError}
+                </div>
+              )}
               <div className="flex justify-end pt-2">
                 <button onClick={saveDetails} disabled={saving} className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white disabled:opacity-40">
                   {saving ? "Saving…" : "Save"}

@@ -6,6 +6,11 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.auth import get_current_user, verify_company_access, verify_project_access
 from app.models import Task, TaskPredecessor, Project, TaskTodo, TaskComment, CompanyTeam, User
+from app.workflow_controls import (
+    enforce_entry_creation_window,
+    enforce_entry_editing_window,
+    enforce_progress_over_estimate,
+)
 from pydantic import BaseModel
 
 router = APIRouter(
@@ -170,6 +175,10 @@ def create_task(request: TaskCreateRequest, db: Session = Depends(get_db)):
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
 
+    # Workflow Controls: Entry Controls (creation date window) & Progress Controls
+    enforce_entry_creation_window(db, project.company_id, request.start_date)
+    enforce_progress_over_estimate(db, project.company_id, request.progress)
+
     # Auto-calculate end_date based on start_date and duration_days
     end_date = request.start_date + timedelta(days=request.duration_days)
 
@@ -196,6 +205,12 @@ def update_task(task_id: UUID, request: TaskUpdateRequest, db: Session = Depends
     task = db.query(Task).filter(Task.id == task_id).first()
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
+
+    # Workflow Controls: Entry Controls (editing date window) & Progress Controls
+    project = db.query(Project).filter(Project.id == task.project_id).first()
+    if project:
+        enforce_entry_editing_window(db, project.company_id, task.start_date)
+        enforce_progress_over_estimate(db, project.company_id, request.progress)
 
     dates_changed = False
 

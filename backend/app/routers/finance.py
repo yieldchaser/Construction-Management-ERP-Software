@@ -5,8 +5,9 @@ from fastapi import APIRouter, Depends, HTTPException, status, File, Form, Uploa
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.models import Payment, PaymentSettlement, Bill, PayrollRun, PayrollLineItem, StaffEmployee, ProjectBudget, Project, CompanyTeam, User, Equipment, EquipmentDeployment, FuelLog, BankAccount, PaymentRequest, PaymentRequestPayment, CashAccount, LibraryParty, Company
+from app.models import Payment, PaymentSettlement, Bill, PayrollRun, PayrollLineItem, StaffEmployee, ProjectBudget, Project, CompanyTeam, User, Equipment, EquipmentDeployment, FuelLog, BankAccount, PaymentRequest, PaymentRequestPayment, CashAccount, LibraryParty, Company, ApprovalRule
 from app.auth import get_current_user, verify_company_access, verify_project_access, get_company_membership
+from app.approvals import find_matching_rule, match_approver, levels_approved, user_already_acted, record_action
 from pydantic import BaseModel
 
 router = APIRouter(
@@ -447,6 +448,9 @@ class PaymentRequestResponse(BaseModel):
     status: str
     due_date: Optional[datetime]
     approval_status: str = "Pending"
+    approval_rule_id: Optional[uuid.UUID] = None
+    approvals_required: int = 0
+    approvals_completed: int = 0
     request_type: Optional[str] = None
     request_no: Optional[str] = None
     created_at: datetime
@@ -948,51 +952,62 @@ def get_company_transactions(company_id: uuid.UUID, db: Session = Depends(get_db
     )
 
 
-@router.get("/payment-requests/{company_id}", response_model=List[PaymentRequestResponse])
-def get_payment_requests(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
-    requests = db.query(PaymentRequest).filter(PaymentRequest.company_id == company_id).all()
-    # Populate party_name if possible
-    res = []
-    for r in requests:
-        user = db.query(User).filter(User.id == r.party_company_user_id).first()
-        party_name = user.name if user else "Unknown Party"
-        payment = (
+PAYMENT_REQUEST_FEATURE_TYPE = "Payment Request"  # must match the Settings > Multi Level Approval category label exactly
+
+
+def _pr_response(db: Session, req: PaymentRequest, payment_row: Optional[PaymentRequestPayment] = None) -> PaymentRequestResponse:
+    user = db.query(User).filter(User.id == req.party_company_user_id).first()
+    party_name = user.name if user else "Unknown Party"
+    if payment_row is None:
+        payment_row = (
             db.query(PaymentRequestPayment)
-            .filter(PaymentRequestPayment.payment_request_id == r.id)
+            .filter(PaymentRequestPayment.payment_request_id == req.id)
             .order_by(PaymentRequestPayment.created_at.desc())
             .first()
         )
-        payment_dict = None
-        if payment:
-            payment_dict = {
-                "id": str(payment.id),
-                "payment_date": payment.payment_date,
-                "payment_mode": payment.payment_mode,
-                "paid_amount": payment.paid_amount,
-                "deduction": payment.deduction,
-                "tds": payment.tds,
-                "balance_due": payment.balance_due,
-                "remarks": payment.remarks,
-                "reference_no": payment.reference_no,
-                "attachment_name": payment.attachment_name,
-            }
-        res.append(PaymentRequestResponse(
-            id=r.id,
-            company_id=r.company_id,
-            project_id=r.project_id,
-            party_company_user_id=r.party_company_user_id,
-            party_name=party_name,
-            amount=r.amount,
-            details=r.details,
-            status=r.status,
-            due_date=r.due_date,
-            approval_status=r.approval_status,
-            request_type=r.request_type,
-            request_no=r.request_no,
-            created_at=r.created_at,
-            payment=payment_dict,
-        ))
-    return res
+    payment_dict = None
+    if payment_row:
+        payment_dict = {
+            "id": str(payment_row.id),
+            "payment_date": payment_row.payment_date,
+            "payment_mode": payment_row.payment_mode,
+            "paid_amount": payment_row.paid_amount,
+            "deduction": payment_row.deduction,
+            "tds": payment_row.tds,
+            "balance_due": payment_row.balance_due,
+            "remarks": payment_row.remarks,
+            "reference_no": payment_row.reference_no,
+            "attachment_name": payment_row.attachment_name,
+        }
+    levels_required = 0
+    if req.approval_rule_id:
+        rule = db.query(ApprovalRule).filter(ApprovalRule.id == req.approval_rule_id).first()
+        levels_required = rule.levels if rule else 0
+    return PaymentRequestResponse(
+        id=req.id,
+        company_id=req.company_id,
+        project_id=req.project_id,
+        party_company_user_id=req.party_company_user_id,
+        party_name=party_name,
+        amount=req.amount,
+        details=req.details,
+        status=req.status,
+        due_date=req.due_date,
+        approval_status=req.approval_status,
+        approval_rule_id=req.approval_rule_id,
+        approvals_required=levels_required,
+        approvals_completed=levels_approved(db, "payment_request", req.id) if req.approval_rule_id else 0,
+        request_type=req.request_type,
+        request_no=req.request_no,
+        created_at=req.created_at,
+        payment=payment_dict,
+    )
+
+
+@router.get("/payment-requests/{company_id}", response_model=List[PaymentRequestResponse])
+def get_payment_requests(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
+    requests = db.query(PaymentRequest).filter(PaymentRequest.company_id == company_id).all()
+    return [_pr_response(db, r) for r in requests]
 
 
 @router.post("/payment-requests/{company_id}", response_model=PaymentRequestResponse)
@@ -1005,6 +1020,13 @@ def create_payment_request(company_id: uuid.UUID, data: PaymentRequestCreate, db
         request_no = f"PR-{count + 1}"
     else:
         request_no = data.request_no
+
+    matched_rule = find_matching_rule(db, company_id, PAYMENT_REQUEST_FEATURE_TYPE, data.amount)
+    # A configured ApprovalRule gates this request regardless of what the caller
+    # passed in approval_status — it always starts "Pending" and only advances
+    # through update_payment_request_status once the required levels sign off.
+    approval_status = "Pending" if matched_rule else (data.approval_status or "Pending")
+
     new_req = PaymentRequest(
         company_id=company_id,
         project_id=data.project_id,
@@ -1013,29 +1035,15 @@ def create_payment_request(company_id: uuid.UUID, data: PaymentRequestCreate, db
         amount=data.amount,
         details=data.details,
         due_date=data.due_date,
-        approval_status=data.approval_status or "Pending",
+        approval_status=approval_status,
+        approval_rule_id=matched_rule.id if matched_rule else None,
         request_type=data.request_type,
         request_no=request_no,
     )
     db.add(new_req)
     db.commit()
     db.refresh(new_req)
-    return PaymentRequestResponse(
-        id=new_req.id,
-        company_id=new_req.company_id,
-        project_id=new_req.project_id,
-        party_company_user_id=new_req.party_company_user_id,
-        party_name=party_name,
-        amount=new_req.amount,
-        details=new_req.details,
-        status=new_req.status,
-        due_date=new_req.due_date,
-        approval_status=new_req.approval_status,
-        request_type=new_req.request_type,
-        request_no=new_req.request_no,
-        created_at=new_req.created_at,
-        payment=None,
-    )
+    return _pr_response(db, new_req, payment_row=None)
 
 
 @router.post("/payment-requests/pay/{request_id}", response_model=PaymentRequestResponse)
@@ -1043,6 +1051,9 @@ def record_payment_request(request_id: uuid.UUID, data: PaymentRequestPaymentCre
     req = db.query(PaymentRequest).filter(PaymentRequest.id == request_id).first()
     if not req:
         raise HTTPException(status_code=404, detail="Payment request not found")
+    if req.approval_rule_id and req.approval_status != "Approved":
+        raise HTTPException(status_code=400, detail="Payment request is pending approval; it cannot be recorded as paid until all required levels have signed off")
+
     balance_due = max(0.0, req.amount - data.paid_amount - data.deduction - data.tds)
     payment = PaymentRequestPayment(
         payment_request_id=req.id,
@@ -1062,68 +1073,66 @@ def record_payment_request(request_id: uuid.UUID, data: PaymentRequestPaymentCre
     req.approval_status = "Approved"
     db.commit()
     db.refresh(req)
-    user = db.query(User).filter(User.id == req.party_company_user_id).first()
-    party_name = user.name if user else "Unknown Party"
-    return PaymentRequestResponse(
-        id=req.id,
-        company_id=req.company_id,
-        project_id=req.project_id,
-        party_company_user_id=req.party_company_user_id,
-        party_name=party_name,
-        amount=req.amount,
-        details=req.details,
-        status=req.status,
-        due_date=req.due_date,
-        approval_status=req.approval_status,
-        request_type=req.request_type,
-        request_no=req.request_no,
-        created_at=req.created_at,
-        payment={
-            "id": str(payment.id),
-            "payment_date": payment.payment_date,
-            "payment_mode": payment.payment_mode,
-            "paid_amount": payment.paid_amount,
-            "deduction": payment.deduction,
-            "tds": payment.tds,
-            "balance_due": payment.balance_due,
-            "remarks": payment.remarks,
-            "reference_no": payment.reference_no,
-            "attachment_name": payment.attachment_name,
-        },
-    )
+    return _pr_response(db, req, payment_row=payment)
 
 
 class PaymentRequestStatusUpdate(BaseModel):
     status: str
 
 @router.put("/payment-requests/approve/{request_id}", response_model=PaymentRequestResponse)
-def update_payment_request_status(request_id: uuid.UUID, payload: PaymentRequestStatusUpdate, db: Session = Depends(get_db)):
+def update_payment_request_status(request_id: uuid.UUID, payload: PaymentRequestStatusUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     req = db.query(PaymentRequest).filter(PaymentRequest.id == request_id).first()
     if not req:
         raise HTTPException(status_code=404, detail="Payment request not found")
-    req.status = payload.status
-    if payload.status in ("Approved", "Paid"):
-        req.approval_status = "Approved"
+
+    rule = db.query(ApprovalRule).filter(ApprovalRule.id == req.approval_rule_id).first() if req.approval_rule_id else None
+    action_status = payload.status
+
+    if action_status == "Rejected":
+        if rule:
+            matched = match_approver(rule.approvers, current_user)
+            if not matched:
+                raise HTTPException(status_code=403, detail="You are not a configured approver for this payment request")
+            record_action(
+                db, company_id=req.company_id, rule_id=rule.id, entity_type="payment_request", entity_id=req.id,
+                level=levels_approved(db, "payment_request", req.id) + 1, action="rejected", user=current_user, matched_label=matched,
+            )
+        req.status = "Rejected"
+        req.approval_status = "Rejected"
+
+    elif action_status in ("Approved", "Paid"):
+        if req.approval_status == "Rejected":
+            raise HTTPException(status_code=400, detail="Payment request was rejected; cannot approve")
+        if req.approval_status == "Approved":
+            # Already fully signed off — idempotently move to the requested terminal status.
+            req.status = action_status
+        elif rule:
+            if action_status == "Paid":
+                raise HTTPException(status_code=400, detail="Payment request is pending approval; approve all required levels before marking it paid")
+            matched = match_approver(rule.approvers, current_user)
+            if not matched:
+                raise HTTPException(status_code=403, detail="You are not a configured approver for this payment request")
+            if user_already_acted(db, "payment_request", req.id, current_user.id):
+                raise HTTPException(status_code=400, detail="You have already recorded a decision on this payment request")
+
+            next_level = levels_approved(db, "payment_request", req.id) + 1
+            record_action(
+                db, company_id=req.company_id, rule_id=rule.id, entity_type="payment_request", entity_id=req.id,
+                level=next_level, action="approved", user=current_user, matched_label=matched,
+            )
+            if next_level >= rule.levels:
+                req.approval_status = "Approved"
+                req.status = "Approved"
+            # else: still pending_approval, awaiting further levels — status/approval_status unchanged
+        else:
+            req.status = action_status
+            req.approval_status = "Approved"
+    else:
+        req.status = action_status
+
     db.commit()
     db.refresh(req)
-    
-    user = db.query(User).filter(User.id == req.party_company_user_id).first()
-    party_name = user.name if user else "Unknown Party"
-    
-    return PaymentRequestResponse(
-        id=req.id,
-        company_id=req.company_id,
-        project_id=req.project_id,
-        party_company_user_id=req.party_company_user_id,
-        party_name=party_name,
-        amount=req.amount,
-        details=req.details,
-        status=req.status,
-        due_date=req.due_date,
-        approval_status=req.approval_status,
-        request_type=req.request_type,
-        created_at=req.created_at
-    )
+    return _pr_response(db, req)
 
 
 # --- P2P Transfer Endpoints ---

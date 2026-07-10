@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.auth import get_current_user, verify_project_access
 from app.models import DailyProgressReport, Task, WarehouseInventory, MaterialTransaction, Project
+from app.workflow_controls import enforce_entry_creation_window
 from pydantic import BaseModel, Field
 
 router = APIRouter(
@@ -58,6 +59,9 @@ def create_dpr(req: DPRCreateRequest, db: Session = Depends(get_db)):
     project = db.query(Project).filter(Project.id == project_uuid).first()
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
+
+    # Workflow Controls: Entry Controls (creation date window)
+    enforce_entry_creation_window(db, project.company_id, req.dpr_date)
 
     task_uuid = None
     if req.task_id:

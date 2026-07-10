@@ -323,7 +323,8 @@ class PurchaseOrder(Base):
     gross_amount = Column(Numeric(18, 2), default=0.0, nullable=False)
     tax_amount = Column(Numeric(18, 2), default=0.0, nullable=False)
     total_amount = Column(Numeric(18, 2), default=0.0, nullable=False)
-    approval_flag = Column(String(50), default="pending", nullable=False) # pending, approved, rejected
+    approval_flag = Column(String(50), default="pending", nullable=False) # pending, pending_approval, approved, rejected
+    approval_rule_id = Column(UUID(as_uuid=True), ForeignKey("approval_rules.id", ondelete="SET NULL"), nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 
 class PurchaseOrderItem(Base):
@@ -1246,11 +1247,35 @@ class ApprovalRule(Base):
     __tablename__ = "approval_rules"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
-    feature_type = Column(String(100), nullable=False) # purchase_order, material_request, expense
+    # Set from Settings > Multi Level Approval. Values are the human-readable category labels
+    # the UI presents (APPROVAL_CATEGORIES in settings/page.tsx), e.g. "Purchase Order",
+    # "Payment Request", "GRN Material" — NOT snake_case identifiers.
+    feature_type = Column(String(100), nullable=False)
     min_amount = Column(Float, default=0.0, nullable=False)
     max_amount = Column(Float, nullable=True)
     levels = Column(Integer, default=1, nullable=False)
     approvers = Column(String, nullable=False) # comma-separated emails/names
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
+class ApprovalAction(Base):
+    """Per-level sign-off audit trail for entities gated by an ApprovalRule.
+
+    One row per approve/reject decision. An entity is fully approved once the
+    count of action="approved" rows for it reaches the governing rule's
+    `levels`. A single action="rejected" row ends the chain immediately.
+    """
+    __tablename__ = "approval_actions"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    rule_id = Column(UUID(as_uuid=True), ForeignKey("approval_rules.id", ondelete="SET NULL"), nullable=True)
+    entity_type = Column(String(50), nullable=False)  # "purchase_order", "payment_request"
+    entity_id = Column(UUID(as_uuid=True), nullable=False)
+    level = Column(Integer, nullable=False)  # 1-indexed level this action satisfies
+    action = Column(String(20), nullable=False)  # approved, rejected
+    approver_user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    approver_label = Column(String(255), nullable=True)  # the matched entry from ApprovalRule.approvers, for audit
+    comment = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 
 
@@ -1366,6 +1391,7 @@ class PaymentRequest(Base):
     status = Column(String(50), default="Pending", nullable=False) # Pending, Paid, Rejected
     due_date = Column(DateTime(timezone=True), nullable=True)
     approval_status = Column(String(50), default="Pending", nullable=False)  # Pending, Approved, Rejected
+    approval_rule_id = Column(UUID(as_uuid=True), ForeignKey("approval_rules.id", ondelete="SET NULL"), nullable=True)
     request_type = Column(String(100), nullable=True)  # Advance, Final, Material, Retention
     request_no = Column(String(50), nullable=True)  # e.g. PR-1
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)

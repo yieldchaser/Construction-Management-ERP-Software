@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.auth import create_access_token, get_current_active_company_user, get_current_user
+from app.rate_limit import limiter
 from app import models
 import uuid
 
@@ -67,29 +68,31 @@ class OTPVerifyRequest(BaseModel):
     code: str = Field(..., example="123456")
 
 @router.post("/otp/send")
-def send_otp(request: OTPSendRequest):
+@limiter.limit("5/minute")
+def send_otp(request: Request, payload: OTPSendRequest):
     # Mock OTP always succeeds during development. Mock code is hardcoded to 123456.
     return {
         "success": True,
-        "message": f"Mock OTP code sent successfully to {request.mobile}",
+        "message": f"Mock OTP code sent successfully to {payload.mobile}",
         "mock_code": "123456"
     }
 
 @router.post("/otp/verify")
-def verify_otp(request: OTPVerifyRequest, db: Session = Depends(get_db)):
-    if request.code != "123456":
+@limiter.limit("5/minute")
+def verify_otp(request: Request, payload: OTPVerifyRequest, db: Session = Depends(get_db)):
+    if payload.code != "123456":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid OTP code. Use mock code '123456'"
         )
 
     # 1. Check if user exists, else auto-create
-    user = db.query(models.User).filter(models.User.mobile == request.mobile).first()
+    user = db.query(models.User).filter(models.User.mobile == payload.mobile).first()
     if not user:
         user = models.User(
             id=uuid.uuid4(),
             name="Demo Engineer",
-            mobile=request.mobile,
+            mobile=payload.mobile,
             email=f"demo_{str(uuid.uuid4())[:8]}@siteflow.co",
         )
         db.add(user)

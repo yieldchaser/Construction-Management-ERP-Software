@@ -7,6 +7,7 @@ from typing import List, Optional
 from app.database import get_db
 from app import models
 from app.auth import get_current_user, verify_company_access, verify_project_access
+from app.routers.custom_fields import CustomFieldValueInput, upsert_values_for_entity
 import uuid
 
 router = APIRouter(prefix="/projects", tags=["Projects"], dependencies=[Depends(get_current_user)])
@@ -178,6 +179,7 @@ class ProjectCreate(BaseModel):
     attendance_radius_meters: int = 500
     branch_id: Optional[uuid.UUID] = None
     member_ids: List[uuid.UUID] = []
+    custom_fields: List[CustomFieldValueInput] = []
 
 
 class ProjectUpdate(BaseModel):
@@ -200,6 +202,7 @@ class ProjectUpdate(BaseModel):
     project_avatar: Optional[str] = None
     attendance_radius_meters: Optional[int] = None
     branch_id: Optional[uuid.UUID] = None
+    custom_fields: Optional[List[CustomFieldValueInput]] = None
 
 
 class LocationCreate(BaseModel):
@@ -285,6 +288,10 @@ def create_project(payload: ProjectCreate, db: Session = Depends(get_db)):
     db.flush()
     for mid in payload.member_ids:
         db.add(models.ProjectMember(project_id=proj.id, company_team_id=mid))
+    upsert_values_for_entity(
+        db, payload.company_id, "project", proj.id,
+        [cf.model_dump() for cf in payload.custom_fields],
+    )
     db.commit()
     db.refresh(proj)
     return _serialize_project(db, proj, include_members=True)
@@ -303,10 +310,13 @@ def update_project(project_id: uuid.UUID, payload: ProjectUpdate, db: Session = 
     p = db.query(models.Project).filter(models.Project.id == project_id).first()
     if not p:
         raise HTTPException(status_code=404, detail="Project not found")
-    for field, value in payload.model_dump(exclude_unset=True).items():
+    updates = payload.model_dump(exclude_unset=True)
+    custom_fields = updates.pop("custom_fields", None)
+    for field, value in updates.items():
         if field in ("planned_start_date", "planned_end_date", "actual_start_date", "actual_end_date"):
             value = _parse_dt(value)
         setattr(p, field, value)
+    upsert_values_for_entity(db, p.company_id, "project", p.id, custom_fields)
     db.commit()
     db.refresh(p)
     return _serialize_project(db, p, include_members=True)

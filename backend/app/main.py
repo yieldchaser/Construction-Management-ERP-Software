@@ -3,6 +3,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import os
 from sqlalchemy import DateTime, String, Numeric, Boolean, Text, func
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from app.rate_limit import limiter
 from app.routers import (
     auth, calculators, budgeting, planning, drawings, procurement,
     billing, hr, quality, reports, equipment, safety, analytics,
@@ -381,6 +384,13 @@ app = FastAPI(
     description="Backend microservice handling operational logic, calculators, and integrations.",
     version="3.0.0"
 )
+
+# Rate limiting (slowapi). The limiter instance itself lives in app.rate_limit so
+# routers can import it directly and decorate individual endpoints without a
+# circular import. Only applied per-route (see e.g. app/routers/auth.py OTP
+# endpoints) rather than globally, so no SlowAPIMiddleware is registered here.
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Configure CORS for Next.js frontend communication.
 # Origins are restricted to an explicit allowlist. The production frontend origin is

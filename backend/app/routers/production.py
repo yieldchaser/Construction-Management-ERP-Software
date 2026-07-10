@@ -28,6 +28,7 @@ from app.models import (
     Project,
     WarehouseInventory,
 )
+from app.workflow_controls import enforce_stock_availability, get_company
 
 router = APIRouter(prefix="/production", tags=["Production Management"], dependencies=[Depends(get_current_user)])
 
@@ -323,6 +324,10 @@ def create_batch(payload: BatchCreate, db: Session = Depends(get_db)):
     if batch_exists:
         raise HTTPException(status_code=400, detail="Batch number already exists for this company")
 
+    # Workflow Controls: Material Controls -> Restrict Production Material
+    company = get_company(db, payload.company_id)
+    restrict_production_material = bool(company and company.restrict_production_material)
+
     recipe_materials = db.query(ProductionRecipeMaterial).filter(ProductionRecipeMaterial.recipe_id == recipe.id).all()
     override_map = {item.material_name: item for item in (payload.materials or [])}
 
@@ -383,6 +388,8 @@ def create_batch(payload: BatchCreate, db: Session = Depends(get_db)):
         )
         
         if batch.status == "completed":
+            if restrict_production_material:
+                enforce_stock_availability(db, payload.project_id, recipe_material.material_name, actual_qty, "Restrict Production Material")
             db.add(
                 MaterialTransaction(
                     project_id=payload.project_id,
@@ -412,6 +419,8 @@ def create_batch(payload: BatchCreate, db: Session = Depends(get_db)):
         )
         
         if batch.status == "completed":
+            if restrict_production_material:
+                enforce_stock_availability(db, payload.project_id, extra_material.material_name, actual_qty, "Restrict Production Material")
             db.add(
                 MaterialTransaction(
                     project_id=payload.project_id,
@@ -440,6 +449,10 @@ def complete_batch(batch_id: UUID, db: Session = Depends(get_db)):
     if batch.status == "completed":
         return _batch_response(db, batch)
 
+    # Workflow Controls: Material Controls -> Restrict Production Material
+    company = get_company(db, batch.company_id)
+    restrict_production_material = bool(company and company.restrict_production_material)
+
     batch.status = "completed"
     batch.completed_at = datetime.utcnow()
 
@@ -447,10 +460,12 @@ def complete_batch(batch_id: UUID, db: Session = Depends(get_db)):
     tx_exists = db.query(MaterialTransaction).filter(
         MaterialTransaction.source_ref_id == batch.id
     ).first()
-    
+
     if not tx_exists:
         batch_materials = db.query(ProductionBatchMaterial).filter(ProductionBatchMaterial.batch_id == batch.id).all()
         for bm in batch_materials:
+            if restrict_production_material:
+                enforce_stock_availability(db, batch.project_id, bm.material_name, float(bm.actual_qty), "Restrict Production Material")
             db.add(
                 MaterialTransaction(
                     project_id=batch.project_id,

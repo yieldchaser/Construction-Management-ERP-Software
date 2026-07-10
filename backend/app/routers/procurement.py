@@ -10,8 +10,10 @@ from app.models import (
     PurchaseOrder, PurchaseOrderItem,
     GoodsReceiptNote, GRNItem,
     WarehouseInventory, MaterialTransaction,
-    Project, User
+    Project, User, ApprovalRule
 )
+from app.approvals import find_matching_rule, match_approver, levels_approved, user_already_acted, record_action
+from app.workflow_controls import enforce_stock_availability, get_company
 from pydantic import BaseModel, Field
 
 router = APIRouter(
@@ -82,6 +84,9 @@ class POResponse(BaseModel):
     tax_amount: float
     total_amount: float
     approval_flag: str
+    approval_rule_id: Optional[UUID] = None
+    approvals_required: int = 0
+    approvals_completed: int = 0
     created_at: datetime
     items: List[POResponseItemSchema] = []
 
@@ -96,7 +101,7 @@ class GRNCreateRequest(BaseModel):
     company_id: UUID
     project_id: UUID
     po_id: UUID
-    grn_number: str
+    grn_number: Optional[str] = None  # omit to auto-generate per Settings -> Workflow Controls -> GRN Numbering
     received_date: datetime
     received_by: Optional[UUID] = None
     items: List[GRNCreateItemSchema]
@@ -169,6 +174,10 @@ class TransactionCreateRequest(BaseModel):
     category: str = "Uncategorized"
     unit: Optional[str] = None
     source_ref_id: Optional[UUID] = None
+    # Marks a "used"/"transferred" movement as material issued to a subcontractor, so
+    # Workflow Controls -> Material Controls -> Restrict Subcontractor Material Issue
+    # can be checked independently of the generic Restrict Material Usage / Transfer flags.
+    is_subcon_issue: bool = False
 
 class InventoryPatchRequest(BaseModel):
     category: Optional[str] = None
@@ -332,41 +341,51 @@ def approve_indent(indent_id: UUID, db: Session = Depends(get_db)):
     )
 
 # 2. Purchase Orders
+
+PO_FEATURE_TYPE = "Purchase Order"  # must match the Settings > Multi Level Approval category label exactly
+
+
+def _po_response(db: Session, po: PurchaseOrder) -> POResponse:
+    items = db.query(PurchaseOrderItem).filter(PurchaseOrderItem.po_id == po.id).all()
+    item_schemas = [
+        POResponseItemSchema(
+            id=i.id,
+            material_name=i.material_name,
+            quantity=float(i.quantity),
+            unit=i.unit,
+            rate=float(i.rate),
+            tax_pct=float(i.tax_pct),
+            total_amount=float(i.total_amount) if i.total_amount else float(i.quantity * i.rate)
+        ) for i in items
+    ]
+    levels_required = 0
+    if po.approval_rule_id:
+        rule = db.query(ApprovalRule).filter(ApprovalRule.id == po.approval_rule_id).first()
+        levels_required = rule.levels if rule else 0
+    return POResponse(
+        id=po.id,
+        company_id=po.company_id,
+        project_id=po.project_id,
+        vendor_id=po.vendor_id,
+        po_number=po.po_number,
+        po_date=po.po_date,
+        status=po.status,
+        gross_amount=float(po.gross_amount),
+        tax_amount=float(po.tax_amount),
+        total_amount=float(po.total_amount),
+        approval_flag=po.approval_flag,
+        approval_rule_id=po.approval_rule_id,
+        approvals_required=levels_required,
+        approvals_completed=levels_approved(db, "purchase_order", po.id) if po.approval_rule_id else 0,
+        created_at=po.created_at,
+        items=item_schemas
+    )
+
+
 @router.get("/pos", response_model=List[POResponse])
 def get_pos(project_id: UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     pos = db.query(PurchaseOrder).filter(PurchaseOrder.project_id == project_id).all()
-    res = []
-    for po in pos:
-        items = db.query(PurchaseOrderItem).filter(PurchaseOrderItem.po_id == po.id).all()
-        item_schemas = [
-            POResponseItemSchema(
-                id=i.id,
-                material_name=i.material_name,
-                quantity=float(i.quantity),
-                unit=i.unit,
-                rate=float(i.rate),
-                tax_pct=float(i.tax_pct),
-                total_amount=float(i.total_amount) if i.total_amount else float(i.quantity * i.rate)
-            ) for i in items
-        ]
-        res.append(
-            POResponse(
-                id=po.id,
-                company_id=po.company_id,
-                project_id=po.project_id,
-                vendor_id=po.vendor_id,
-                po_number=po.po_number,
-                po_date=po.po_date,
-                status=po.status,
-                gross_amount=float(po.gross_amount),
-                tax_amount=float(po.tax_amount),
-                total_amount=float(po.total_amount),
-                approval_flag=po.approval_flag,
-                created_at=po.created_at,
-                items=item_schemas
-            )
-        )
-    return res
+    return [_po_response(db, po) for po in pos]
 
 @router.post("/pos", response_model=POResponse, status_code=201)
 def create_po(req: POCreateRequest, db: Session = Depends(get_db)):
@@ -392,6 +411,9 @@ def create_po(req: POCreateRequest, db: Session = Depends(get_db)):
 
         po_items.append((item, item_total))
 
+    total_amount = gross_amount + tax_amount
+    matched_rule = find_matching_rule(db, req.company_id, PO_FEATURE_TYPE, total_amount)
+
     po = PurchaseOrder(
         company_id=req.company_id,
         project_id=req.project_id,
@@ -401,13 +423,17 @@ def create_po(req: POCreateRequest, db: Session = Depends(get_db)):
         status="draft",
         gross_amount=gross_amount,
         tax_amount=tax_amount,
-        total_amount=gross_amount + tax_amount,
-        approval_flag="pending"
+        total_amount=total_amount,
+        # A configured ApprovalRule gates this PO: it starts life needing
+        # `matched_rule.levels` sign-offs before approve_po can mark it
+        # approved/sent. No matching rule = unchanged legacy behaviour
+        # (single approve_po call finalizes it).
+        approval_flag="pending_approval" if matched_rule else "pending",
+        approval_rule_id=matched_rule.id if matched_rule else None,
     )
     db.add(po)
     db.flush()
 
-    item_responses = []
     for item, total in po_items:
         db_item = PurchaseOrderItem(
             po_id=po.id,
@@ -419,79 +445,95 @@ def create_po(req: POCreateRequest, db: Session = Depends(get_db)):
             total_amount=total
         )
         db.add(db_item)
-        db.flush()
-        
-        item_responses.append(
-            POResponseItemSchema(
-                id=db_item.id,
-                material_name=db_item.material_name,
-                quantity=float(db_item.quantity),
-                unit=db_item.unit,
-                rate=float(db_item.rate),
-                tax_pct=float(db_item.tax_pct),
-                total_amount=float(db_item.total_amount)
-            )
-        )
 
     db.commit()
     db.refresh(po)
 
-    return POResponse(
-        id=po.id,
-        company_id=po.company_id,
-        project_id=po.project_id,
-        vendor_id=po.vendor_id,
-        po_number=po.po_number,
-        po_date=po.po_date,
-        status=po.status,
-        gross_amount=float(po.gross_amount),
-        tax_amount=float(po.tax_amount),
-        total_amount=float(po.total_amount),
-        approval_flag=po.approval_flag,
-        created_at=po.created_at,
-        items=item_responses
-    )
+    return _po_response(db, po)
 
 @router.post("/pos/{po_id}/approve", response_model=POResponse)
-def approve_po(po_id: UUID, db: Session = Depends(get_db)):
+def approve_po(po_id: UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     po = db.query(PurchaseOrder).filter(PurchaseOrder.id == po_id).first()
     if not po:
         raise HTTPException(status_code=404, detail="PO not found")
-    
-    po.approval_flag = "approved"
-    po.status = "sent"
+    if po.approval_flag == "approved":
+        raise HTTPException(status_code=400, detail="Purchase order is already fully approved")
+    if po.approval_flag == "rejected":
+        raise HTTPException(status_code=400, detail="Purchase order was rejected; cannot approve")
+
+    rule = db.query(ApprovalRule).filter(ApprovalRule.id == po.approval_rule_id).first() if po.approval_rule_id else None
+
+    if rule:
+        matched = match_approver(rule.approvers, current_user)
+        if not matched:
+            raise HTTPException(status_code=403, detail="You are not a configured approver for this purchase order")
+        if user_already_acted(db, "purchase_order", po.id, current_user.id):
+            raise HTTPException(status_code=400, detail="You have already recorded a decision on this purchase order")
+
+        next_level = levels_approved(db, "purchase_order", po.id) + 1
+        record_action(
+            db, company_id=po.company_id, rule_id=rule.id, entity_type="purchase_order", entity_id=po.id,
+            level=next_level, action="approved", user=current_user, matched_label=matched,
+        )
+        if next_level >= rule.levels:
+            po.approval_flag = "approved"
+            po.status = "sent"
+        # else: still pending_approval, awaiting further levels
+    else:
+        po.approval_flag = "approved"
+        po.status = "sent"
+
     db.commit()
     db.refresh(po)
+    return _po_response(db, po)
 
-    items = db.query(PurchaseOrderItem).filter(PurchaseOrderItem.po_id == po.id).all()
-    item_schemas = [
-        POResponseItemSchema(
-            id=i.id,
-            material_name=i.material_name,
-            quantity=float(i.quantity),
-            unit=i.unit,
-            rate=float(i.rate),
-            tax_pct=float(i.tax_pct),
-            total_amount=float(i.total_amount) if i.total_amount else float(i.quantity * i.rate)
-        ) for i in items
-    ]
-    return POResponse(
-        id=po.id,
-        company_id=po.company_id,
-        project_id=po.project_id,
-        vendor_id=po.vendor_id,
-        po_number=po.po_number,
-        po_date=po.po_date,
-        status=po.status,
-        gross_amount=float(po.gross_amount),
-        tax_amount=float(po.tax_amount),
-        total_amount=float(po.total_amount),
-        approval_flag=po.approval_flag,
-        created_at=po.created_at,
-        items=item_schemas
-    )
+@router.post("/pos/{po_id}/reject", response_model=POResponse)
+def reject_po(po_id: UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    po = db.query(PurchaseOrder).filter(PurchaseOrder.id == po_id).first()
+    if not po:
+        raise HTTPException(status_code=404, detail="PO not found")
+    if po.approval_flag == "approved":
+        raise HTTPException(status_code=400, detail="Purchase order is already fully approved")
+    if po.approval_flag == "rejected":
+        raise HTTPException(status_code=400, detail="Purchase order is already rejected")
+
+    rule = db.query(ApprovalRule).filter(ApprovalRule.id == po.approval_rule_id).first() if po.approval_rule_id else None
+    if rule:
+        matched = match_approver(rule.approvers, current_user)
+        if not matched:
+            raise HTTPException(status_code=403, detail="You are not a configured approver for this purchase order")
+        record_action(
+            db, company_id=po.company_id, rule_id=rule.id, entity_type="purchase_order", entity_id=po.id,
+            level=levels_approved(db, "purchase_order", po.id) + 1, action="rejected", user=current_user, matched_label=matched,
+        )
+
+    po.approval_flag = "rejected"
+    db.commit()
+    db.refresh(po)
+    return _po_response(db, po)
 
 # 3. Goods Receipt Notes (GRN) & Inventory State Trigger
+
+def _generate_grn_number(db: Session, company_id: UUID, project_id: UUID) -> str:
+    """Settings -> Workflow Controls -> Material Controls -> GRN Numbering.
+    'Project Level' scopes the running sequence to the project; 'Company
+    Level' shares one running sequence across every project in the company."""
+    company = get_company(db, company_id)
+    scope = (company.grn_numbering if company else None) or "Project Level"
+    if scope == "Company Level":
+        count = db.query(GoodsReceiptNote).filter(GoodsReceiptNote.company_id == company_id).count()
+    else:
+        count = db.query(GoodsReceiptNote).filter(GoodsReceiptNote.project_id == project_id).count()
+    candidate = f"GRN-{count + 1:04d}"
+    # Guard against a rare collision (e.g. concurrent creates) by bumping until free.
+    while db.query(GoodsReceiptNote).filter(
+        GoodsReceiptNote.company_id == company_id, GoodsReceiptNote.grn_number == candidate
+    ).first():
+        count += 1
+        candidate = f"GRN-{count + 1:04d}"
+    return candidate
+
+
 @router.get("/grns", response_model=List[GRNResponse])
 def get_grns(project_id: UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     grns = db.query(GoodsReceiptNote).filter(GoodsReceiptNote.project_id == project_id).all()
@@ -522,10 +564,14 @@ def get_grns(project_id: UUID, db: Session = Depends(get_db), _: None = Depends(
 
 @router.post("/grns", response_model=GRNResponse, status_code=201)
 def create_grn(req: GRNCreateRequest, db: Session = Depends(get_db)):
+    grn_number = req.grn_number.strip() if req.grn_number else None
+    if not grn_number:
+        grn_number = _generate_grn_number(db, req.company_id, req.project_id)
+
     # Check if GRN number already exists
     existing = db.query(GoodsReceiptNote).filter(
         GoodsReceiptNote.company_id == req.company_id,
-        GoodsReceiptNote.grn_number == req.grn_number
+        GoodsReceiptNote.grn_number == grn_number
     ).first()
     if existing:
         raise HTTPException(status_code=400, detail="GRN number already exists for this company")
@@ -539,7 +585,7 @@ def create_grn(req: GRNCreateRequest, db: Session = Depends(get_db)):
         company_id=req.company_id,
         project_id=req.project_id,
         po_id=req.po_id,
-        grn_number=req.grn_number,
+        grn_number=grn_number,
         received_date=req.received_date,
         received_by=req.received_by
     )
@@ -699,6 +745,24 @@ def get_stock(project_id: UUID, db: Session = Depends(get_db), _: None = Depends
 def create_transaction(req: TransactionCreateRequest, db: Session = Depends(get_db)):
     if req.type not in RECEIVED_TYPES and req.type not in CONSUMED_TYPES:
         raise HTTPException(status_code=400, detail=f"Unsupported type '{req.type}'. Use one of {sorted(RECEIVED_TYPES | CONSUMED_TYPES)}")
+
+    # Workflow Controls: Material Controls (insufficient-stock restrictions)
+    if req.type in CONSUMED_TYPES:
+        project = db.query(Project).filter(Project.id == req.project_id).first()
+        if not project:
+            raise HTTPException(status_code=404, detail="Project not found")
+        company = get_company(db, project.company_id)
+        if company:
+            if req.is_subcon_issue:
+                if company.restrict_subcon_material_issue:
+                    enforce_stock_availability(db, req.project_id, req.material_name, req.qty, "Restrict Subcontractor Material Issue")
+            elif req.type == "transferred":
+                if company.restrict_material_transfer:
+                    enforce_stock_availability(db, req.project_id, req.material_name, req.qty, "Restrict Material Transfer")
+            elif req.type == "used":
+                if company.negative_stock_lock:
+                    enforce_stock_availability(db, req.project_id, req.material_name, req.qty, "Restrict Material Usage")
+
     txn = MaterialTransaction(
         project_id=req.project_id,
         material_name=req.material_name,

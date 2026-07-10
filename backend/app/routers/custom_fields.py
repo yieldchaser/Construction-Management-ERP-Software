@@ -1,6 +1,7 @@
 import uuid
 from datetime import datetime
-from typing import List, Optional
+from decimal import Decimal, InvalidOperation
+from typing import Any, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
@@ -63,12 +64,125 @@ class CustomFieldValueResponse(BaseModel):
     value_text: Optional[str]
     value_number: Optional[float]
     value_date: Optional[datetime]
-    value_json: Optional[dict]
+    value_json: Optional[Any]
     created_at: datetime
     updated_at: datetime
 
     class Config:
         from_attributes = True
+
+
+class CustomFieldValueInput(BaseModel):
+    """Generic {field_id, value} pair submitted alongside an entity create/update
+    payload (e.g. from a Project or Sales Invoice form). `value` is intentionally
+    untyped — its shape depends on the target CustomField.field_type and is
+    normalized into value_text/value_number/value_date/value_json by
+    `upsert_values_for_entity` below."""
+    field_id: uuid.UUID
+    value: Optional[Any] = None
+
+
+def _parse_field_date(value: Any) -> Optional[datetime]:
+    if value is None or value == "":
+        return None
+    if isinstance(value, datetime):
+        return value
+    candidate = str(value).strip()
+    if not candidate:
+        return None
+    normalized = candidate.replace("Z", "+00:00")
+    try:
+        return datetime.fromisoformat(normalized)
+    except ValueError:
+        pass
+    for fmt in ("%Y-%m-%d", "%d-%m-%Y", "%d/%m/%Y"):
+        try:
+            return datetime.strptime(candidate, fmt)
+        except ValueError:
+            continue
+    return None
+
+
+def upsert_values_for_entity(
+    db: Session,
+    company_id: uuid.UUID,
+    entity_type: str,
+    entity_id: uuid.UUID,
+    values: Optional[List[dict]],
+) -> None:
+    """Persist a batch of custom field values for a single entity record.
+
+    `values` is a list of dict-like {"field_id": ..., "value": ...} pairs (the
+    result of calling `.model_dump()` on a list of CustomFieldValueInput). Each
+    field's `field_type` (looked up from CustomField) decides which physical
+    column the value lands in:
+      - text / select      -> value_text
+      - number             -> value_number
+      - date                -> value_date
+      - multiselect         -> value_json (list)
+      - checkbox            -> value_json (bool) — there is no dedicated
+        boolean column on CustomFieldValue, so booleans are stored in the
+        JSONB column rather than stringified into value_text.
+    Rows are upserted (matched on field_id + entity_type + entity_id) so
+    calling this again on an update simply overwrites the previous value.
+    Does not commit — caller is expected to commit as part of its own
+    create/update transaction.
+    """
+    if not values:
+        return
+    for item in values:
+        field_id = item.get("field_id") if isinstance(item, dict) else getattr(item, "field_id", None)
+        if not field_id:
+            continue
+        raw_value = item.get("value") if isinstance(item, dict) else getattr(item, "value", None)
+
+        field = db.query(CustomField).filter(CustomField.id == field_id).first()
+        if not field:
+            continue
+
+        value_text = value_number = value_date = value_json = None
+        if field.field_type == "number":
+            if raw_value not in (None, ""):
+                try:
+                    value_number = Decimal(str(raw_value))
+                except (InvalidOperation, ValueError, TypeError):
+                    value_number = None
+        elif field.field_type == "date":
+            value_date = _parse_field_date(raw_value)
+        elif field.field_type == "multiselect":
+            if isinstance(raw_value, list):
+                value_json = raw_value
+            elif raw_value not in (None, ""):
+                value_json = [raw_value]
+            else:
+                value_json = []
+        elif field.field_type == "checkbox":
+            value_json = bool(raw_value)
+        else:  # text, select, and any unrecognized type default to text storage
+            value_text = None if raw_value in (None, "") else str(raw_value)
+
+        existing = db.query(CustomFieldValue).filter(
+            CustomFieldValue.field_id == field_id,
+            CustomFieldValue.entity_type == entity_type,
+            CustomFieldValue.entity_id == entity_id,
+        ).first()
+
+        if existing:
+            existing.value_text = value_text
+            existing.value_number = value_number
+            existing.value_date = value_date
+            existing.value_json = value_json
+        else:
+            db.add(CustomFieldValue(
+                company_id=company_id,
+                field_id=field_id,
+                entity_type=entity_type,
+                entity_id=entity_id,
+                value_text=value_text,
+                value_number=value_number,
+                value_date=value_date,
+                value_json=value_json,
+            ))
 
 
 @router.post("/fields", response_model=CustomFieldResponse, status_code=status.HTTP_201_CREATED)
