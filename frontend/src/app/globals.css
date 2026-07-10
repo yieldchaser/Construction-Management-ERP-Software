@@ -113,3 +113,272 @@ body {
   border-radius: 8px;
   padding: 20px;
 }
+
+/* Accent gradient text (used by marketing headlines). Defined here so the
+   utility actually renders instead of being a dead class. */
+.text-gradient-accent {
+  background: linear-gradient(90deg, var(--primary) 0%, #a78bfa 55%, #f0abfc 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ============================================================
+   Marketing content article body
+   Applied via className="help-article" on the dangerouslySetInnerHTML
+   wrappers. Replaces the dead Tailwind prose-* chains (the typography
+   plugin was never installed). Token-based so it works in both themes.
+   ============================================================ */
+.help-article {
+  color: var(--foreground);
+  font-size: 1rem;
+  line-height: 1.75;
+}
+.help-article > :first-child {
+  margin-top: 0;
+}
+.help-article > :last-child {
+  margin-bottom: 0;
+}
+
+.help-article p {
+  margin: 0.9em 0;
+  line-height: 1.75;
+  color: var(--foreground);
+}
+
+.help-article h1,
+.help-article h2,
+.help-article h3,
+.help-article h4 {
+  color: var(--foreground);
+  font-weight: 800;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+.help-article h1 {
+  font-size: 2rem;
+  margin: 1.6em 0 0.5em;
+}
+.help-article h2 {
+  font-size: 1.5rem;
+  margin: 2em 0 0.6em;
+}
+.help-article h3 {
+  font-size: 1.25rem;
+  margin: 1.6em 0 0.5em;
+}
+.help-article h4 {
+  font-size: 1.075rem;
+  margin: 1.4em 0 0.4em;
+}
+
+.help-article a {
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 500;
+}
+.help-article a:hover {
+  text-decoration: underline;
+}
+
+.help-article strong {
+  color: var(--foreground);
+  font-weight: 700;
+}
+
+.help-article ul,
+.help-article ol {
+  margin: 0.9em 0;
+  padding-left: 1.5em;
+}
+.help-article ul {
+  list-style: disc;
+}
+.help-article ol {
+  list-style: decimal;
+}
+.help-article li {
+  margin: 0.4em 0;
+  padding-left: 0.25em;
+}
+.help-article li::marker {
+  color: var(--primary);
+}
+
+.help-article blockquote {
+  margin: 1.3em 0;
+  padding: 0.25em 0 0.25em 1em;
+  border-left: 3px solid var(--primary);
+  color: var(--muted);
+  font-style: italic;
+}
+
+.help-article code {
+  background: var(--elevated);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 0.12em 0.4em;
+  font-size: 0.875em;
+}
+.help-article pre {
+  background: var(--elevated);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1em 1.2em;
+  overflow-x: auto;
+  margin: 1.3em 0;
+}
+.help-article pre code {
+  background: none;
+  border: 0;
+  padding: 0;
+}
+
+.help-article img {
+  border-radius: 10px;
+  max-width: 100%;
+  height: auto;
+  margin: 1.3em 0;
+}
+.help-article hr {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 2em 0;
+}
+
+/* Tables. The CMS wraps them in figure.wp-block-table, which becomes the
+   rounded, horizontally scrollable frame; overflow clips the rounded corners. */
+.help-article figure.wp-block-table,
+.help-article .table-wrap {
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.help-article figure.wp-block-table > table {
+  margin: 0;
+}
+.help-article table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.925rem;
+}
+/* Bare tables not wrapped in a figure still scroll and get a frame. */
+.help-article > table {
+  display: block;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.help-article th,
+.help-article td {
+  padding: 0.75em 0.85em;
+  border: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+.help-article thead th {
+  background: var(--elevated);
+  color: var(--foreground);
+  font-weight: 700;
+}
+.help-article tbody tr:nth-child(even) {
+  background: rgba(127, 127, 127, 0.05);
+}
+
+/* ============================================================
+   Homepage living elements: dotted grid, aurora panel, typewriter
+   Compositor-only animation (transform/opacity). Static blur.
+   ============================================================ */
+
+/* Subtle dot grid, hero only, fades out toward the bottom. */
+.hero-dot-grid {
+  background-image: radial-gradient(circle, var(--border) 1px, transparent 1px);
+  background-size: 24px 24px;
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.9) 0%, transparent 88%);
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.9) 0%, transparent 88%);
+}
+
+/* Aurora panel: layered blurred blobs that slowly drift and rotate. */
+.aurora-panel {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.aurora-blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(56px);
+  will-change: transform;
+}
+.aurora-blob-1 {
+  width: 65%;
+  height: 65%;
+  top: -12%;
+  left: -8%;
+  opacity: 0.75;
+  background: radial-gradient(circle at center, #7c3aed 0%, rgba(124, 58, 237, 0) 70%);
+  animation: aurora-drift-1 24s ease-in-out infinite;
+}
+.aurora-blob-2 {
+  width: 70%;
+  height: 70%;
+  bottom: -18%;
+  right: -12%;
+  opacity: 0.7;
+  background: radial-gradient(circle at center, #2563eb 0%, rgba(37, 99, 235, 0) 70%);
+  animation: aurora-drift-2 30s ease-in-out infinite;
+}
+.aurora-blob-3 {
+  width: 45%;
+  height: 45%;
+  top: 30%;
+  left: 35%;
+  opacity: 0.55;
+  background: radial-gradient(circle at center, #fdf3e7 0%, rgba(253, 243, 231, 0) 70%);
+  animation: aurora-drift-3 20s ease-in-out infinite;
+}
+
+@keyframes aurora-drift-1 {
+  0%, 100% { transform: translate(0, 0) rotate(0deg) scale(1); }
+  50% { transform: translate(14%, 12%) rotate(38deg) scale(1.18); }
+}
+@keyframes aurora-drift-2 {
+  0%, 100% { transform: translate(0, 0) rotate(0deg) scale(1.05); }
+  50% { transform: translate(-16%, -10%) rotate(-30deg) scale(1.25); }
+}
+@keyframes aurora-drift-3 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-12%, 14%) scale(1.3); }
+}
+
+/* Typewriter: reserve the longest phrase, overlay the animated one. */
+.tw-wrap {
+  display: inline-grid;
+  text-align: left;
+}
+.tw-wrap > * {
+  grid-area: 1 / 1;
+}
+.tw-sizer {
+  visibility: hidden;
+}
+.typewriter-caret {
+  display: inline-block;
+  width: 0.06em;
+  margin-left: 0.04em;
+  background: currentColor;
+  align-self: stretch;
+  transform: translateY(0.08em);
+  animation: caret-blink 1.05s steps(1) infinite;
+}
+@keyframes caret-blink {
+  0%, 50% { opacity: 1; }
+  50.01%, 100% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aurora-blob { animation: none !important; }
+  .typewriter-caret { animation: none !important; }
+}

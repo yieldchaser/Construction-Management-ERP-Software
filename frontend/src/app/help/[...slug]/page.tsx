@@ -61,12 +61,12 @@ export default async function HelpArticlePage({ params }: RouteParams) {
       <div className="absolute bottom-[-10%] left-[-10%] h-[40vw] w-[40vw] rounded-full bg-primary opacity-5 blur-[120px] pointer-events-none" />
 
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-card border border-border-custom rounded-lg border-b border-border-custom px-6 py-4 flex items-center justify-between">
+      <header className="sticky top-0 z-50 bg-card border-b border-border-custom px-6 py-4 flex items-center justify-between">
         <Link href="/help" className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-md bg-gradient-to-tr bg-primary font-sans font-bold text-white shadow-md">
+          <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary font-sans font-bold text-white shadow-md">
             S
           </div>
-          <span className="text-lg font-bold tracking-tight text-white">
+          <span className="text-lg font-bold tracking-tight text-foreground">
             Site<span className="text-primary">Flow</span> Help
           </span>
         </Link>
@@ -77,7 +77,7 @@ export default async function HelpArticlePage({ params }: RouteParams) {
           >
             All Categories
           </Link>
-          <span className="text-zinc-700">|</span>
+          <span className="text-border-custom">|</span>
           <Link
             href="/"
             className="text-sm font-semibold text-muted hover:text-foreground transition-all"
@@ -105,7 +105,7 @@ export default async function HelpArticlePage({ params }: RouteParams) {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Sidebar Navigation */}
           <aside className="lg:col-span-1 space-y-6">
-            <div className="bg-card border border-border-custom rounded-lg rounded-lg p-5 border border-border-custom space-y-4">
+            <div className="bg-card border border-border-custom rounded-lg p-5 space-y-4">
               <h3 className="text-xs font-bold text-muted uppercase tracking-widest border-b border-border-custom pb-2">
                 In this Category
               </h3>
@@ -113,24 +113,31 @@ export default async function HelpArticlePage({ params }: RouteParams) {
                 {/* Category Main Page Link */}
                 <Link
                   href={`/help/${category}`}
-                  className={`block text-xs font-semibold hover:text-primary transition-all truncate cursor-pointer ${
+                  className={`flex items-center gap-2 text-xs font-semibold hover:text-primary transition-all cursor-pointer ${
                     slugPath === category || slugPath === `${category}/${category}`
                       ? "text-primary"
                       : "text-muted"
                   }`}
                 >
-                  📁 Category Overview
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
+                    <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                  </svg>
+                  <span className="truncate">Category Overview</span>
                 </Link>
 
                 {categoryArticles.map((art, idx) => (
                   <Link
                     key={idx}
                     href={`/help/${art.slug}`}
-                    className={`block text-xs hover:text-primary transition-all truncate cursor-pointer ${
+                    className={`flex items-center gap-2 text-xs hover:text-primary transition-all cursor-pointer ${
                       slugPath === art.slug ? "text-primary font-semibold" : "text-muted"
                     }`}
                   >
-                    📄 {art.title}
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
+                      <path d="M14 3v4a1 1 0 0 0 1 1h4" />
+                      <path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z" />
+                    </svg>
+                    <span className="truncate">{art.title}</span>
                   </Link>
                 ))}
                 
@@ -153,15 +160,15 @@ export default async function HelpArticlePage({ params }: RouteParams) {
 
           {/* Article Viewer */}
           <main className="lg:col-span-3 space-y-8">
-            <div className="bg-card border border-border-custom rounded-lg shadow-sm rounded-md p-8 md:p-12 border border-border-custom space-y-6">
-              <div className="space-y-3 border-b border-border-custom pb-6">
+            <div className="bg-card border border-border-custom rounded-lg shadow-sm p-8 md:p-12 space-y-6">
+              <div className="space-y-4 border-b border-border-custom pb-7">
                 <span className="inline-block text-xs font-bold text-primary px-2.5 py-1 rounded-md bg-primary/10 capitalize">
                   {category.replace("-", " ")}
                 </span>
-                <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-white leading-tight">
+                <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-foreground leading-tight">
                   {article.title}
                 </h1>
-                <div className="flex items-center gap-4 text-xs text-muted pt-2">
+                <div className="flex items-center gap-4 text-xs text-muted pt-1">
                   <span>Written by {article.author}</span>
                   <span>•</span>
                   <span>
@@ -177,7 +184,7 @@ export default async function HelpArticlePage({ params }: RouteParams) {
 
               {/* Render html body safely */}
               <div
-                className="prose prose-invert max-w-none prose-zinc prose-headings:text-white prose-headings:font-extrabold prose-p:text-zinc-300 prose-p:leading-relaxed prose-li:text-zinc-300 prose-strong:text-white prose-a:text-secondary hover:prose-a:underline prose-table:border-collapse prose-table:w-full prose-td:border prose-td:border-border-custom prose-td:p-3 prose-th:border prose-th:border-border-custom prose-th:p-3 prose-th:bg-elevated prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:pl-4 prose-blockquote:italic prose-img:rounded-lg"
+                className="help-article"
                 dangerouslySetInnerHTML={{ __html: article.body }}
               />
             </div>

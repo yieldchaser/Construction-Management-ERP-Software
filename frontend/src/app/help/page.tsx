@@ -116,12 +116,12 @@ export default async function HelpCenterPage() {
       <div className="absolute bottom-[-10%] left-[-10%] h-[50vw] w-[50vw] rounded-full bg-primary opacity-5 blur-[120px] pointer-events-none" />
 
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-card border border-border-custom rounded-lg border-b border-border-custom px-6 py-4 flex items-center justify-between">
+      <header className="sticky top-0 z-50 bg-card border-b border-border-custom px-6 py-4 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-md bg-gradient-to-tr bg-primary font-sans font-bold text-white shadow-md">
+          <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary font-sans font-bold text-white shadow-md">
             S
           </div>
-          <span className="text-lg font-bold tracking-tight text-white">
+          <span className="text-lg font-bold tracking-tight text-foreground">
             Site<span className="text-primary">Flow</span> Help
           </span>
         </Link>
@@ -138,7 +138,7 @@ export default async function HelpCenterPage() {
         <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-4 py-1.5 text-xs font-semibold text-primary border border-primary/20">
           📖 SiteFlow Knowledge Base
         </span>
-        <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-white leading-tight">
+        <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-foreground leading-tight">
           How can we help you today?
         </h1>
         <p className="text-muted text-sm max-w-xl mx-auto">

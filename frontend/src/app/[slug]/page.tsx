@@ -41,10 +41,10 @@ export default async function GenericPage({ params }: RouteParams) {
       <div className="min-h-screen bg-background text-foreground pb-20 relative">
         <header className="sticky top-0 z-50 bg-card border border-border-custom rounded-lg border-b border-border-custom px-6 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-md bg-gradient-to-tr bg-primary font-sans font-bold text-white shadow-md">
+            <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary font-sans font-bold text-white shadow-md">
               S
             </div>
-            <span className="text-lg font-bold tracking-tight text-white">
+            <span className="text-lg font-bold tracking-tight text-foreground">
               Site<span className="text-primary">Flow</span>
             </span>
           </Link>
@@ -115,17 +115,7 @@ export default async function GenericPage({ params }: RouteParams) {
       <main className="max-w-5xl mx-auto px-6 py-12">
         <div className="bg-card border border-border-custom rounded-lg shadow-sm rounded-md p-8 md:p-12 border border-border-custom">
           <div
-            className="prose prose-invert max-w-none
-              prose-headings:text-white prose-headings:font-extrabold
-              prose-h1:text-4xl prose-h2:text-2xl prose-h3:text-xl
-              prose-p:text-zinc-300 prose-p:leading-relaxed
-              prose-li:text-zinc-300 prose-strong:text-white
-              prose-a:text-secondary hover:prose-a:underline
-              prose-table:border-collapse prose-table:w-full
-              prose-td:border prose-td:border-border-custom prose-td:p-3
-              prose-th:border prose-th:border-border-custom prose-th:p-3 prose-th:bg-elevated
-              prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:pl-4
-              prose-img:rounded-lg prose-hr:border-border-custom"
+            className="help-article"
             dangerouslySetInnerHTML={{ __html: page.body }}
           />
         </div>

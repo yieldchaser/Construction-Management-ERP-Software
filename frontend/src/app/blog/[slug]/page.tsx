@@ -47,10 +47,10 @@ export default async function BlogPostPage({ params }: RouteParams) {
       {/* Header */}
       <header className="sticky top-0 z-50 bg-card border border-border-custom rounded-lg border-b border-border-custom px-6 py-4 flex items-center justify-between">
         <Link href="/blog" className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-md bg-gradient-to-tr bg-primary font-sans font-bold text-white shadow-md">
+          <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary font-sans font-bold text-white shadow-md">
             S
           </div>
-          <span className="text-lg font-bold tracking-tight text-white">
+          <span className="text-lg font-bold tracking-tight text-foreground">
             Site<span className="text-primary">Flow</span> Blog
           </span>
         </Link>
@@ -61,7 +61,7 @@ export default async function BlogPostPage({ params }: RouteParams) {
           >
             All Articles
           </Link>
-          <span className="text-zinc-700">|</span>
+          <span className="text-border-custom">|</span>
           <Link
             href="/help"
             className="text-sm font-semibold text-muted hover:text-foreground transition-all"
@@ -89,10 +89,10 @@ export default async function BlogPostPage({ params }: RouteParams) {
           <main className="lg:col-span-3 space-y-8">
             <div className="bg-card border border-border-custom rounded-lg shadow-sm rounded-md p-8 md:p-12 border border-border-custom space-y-6">
               <div className="space-y-4 border-b border-border-custom pb-6">
-                <span className="inline-block text-xs font-semibold text-secondary px-2.5 py-1 rounded bg-secondary/10 uppercase tracking-wider">
+                <span className="inline-block text-xs font-semibold text-primary px-2.5 py-1 rounded bg-primary/10 uppercase tracking-wider">
                   SiteFlow operations
                 </span>
-                <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-white leading-tight">
+                <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-foreground leading-tight">
                   {article.title}
                 </h1>
                 <div className="flex items-center gap-4 text-xs text-muted pt-2">
@@ -111,7 +111,7 @@ export default async function BlogPostPage({ params }: RouteParams) {
 
               {/* Render article body */}
               <div
-                className="prose prose-invert max-w-none prose-zinc prose-headings:text-white prose-headings:font-extrabold prose-p:text-zinc-300 prose-p:leading-relaxed prose-li:text-zinc-300 prose-strong:text-white prose-a:text-secondary hover:prose-a:underline prose-table:border-collapse prose-table:w-full prose-td:border prose-td:border-border-custom prose-td:p-3 prose-th:border prose-th:border-border-custom prose-th:p-3 prose-th:bg-elevated prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:pl-4 prose-blockquote:italic prose-img:rounded-lg"
+                className="help-article"
                 dangerouslySetInnerHTML={{ __html: article.body }}
               />
             </div>

@@ -3,6 +3,15 @@
 import React from "react";
 import Link from "next/link";
 import BeforeAfterTestimonial from "@/components/marketing/BeforeAfterTestimonial";
+import TypewriterText from "@/components/marketing/TypewriterText";
+import StatBand from "@/components/marketing/StatBand";
+
+const HEADLINE_PHRASES = [
+  "a single source of truth",
+  "one site record",
+  "one project ledger",
+  "one workspace",
+];
 
 const PILLARS = [
   {
@@ -68,7 +77,7 @@ const MODULES = [
   },
   {
     section: "Project Execution",
-    color: "border-secondary/30 text-secondary",
+    color: "border-primary/30 text-primary",
     items: [
       { name: "Progress Tracking (DPR)", desc: "Daily field reports with GPS photo validation", path: "dpr" },
       { name: "Quality Management", desc: "Checklists gating subsequent task runs", path: "quality" },
@@ -115,10 +124,10 @@ export default function LandingPage() {
       {/* Navigation Header */}
       <header className="sticky top-0 z-50 bg-card border border-border-custom rounded-lg border-b border-border-custom px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-md bg-gradient-to-tr bg-primary font-sans font-bold text-white shadow-md">
+          <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary font-sans font-bold text-white shadow-md">
             S
           </div>
-          <span className="text-lg font-bold tracking-tight text-white">
+          <span className="text-lg font-bold tracking-tight text-foreground">
             Site<span className="text-primary">Flow</span>
           </span>
         </div>
@@ -149,61 +158,104 @@ export default function LandingPage() {
           </Link>
           <Link
             href="/login"
-            className="flex items-center justify-center rounded-md bg-primary px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-primary/10 hover:opacity-90 active:scale-[0.98] transition-all cursor-pointer"
+            className="flex items-center justify-center rounded-md bg-primary px-5 py-2 text-sm font-semibold text-foreground shadow-lg shadow-primary/10 hover:opacity-90 active:scale-[0.98] transition-all cursor-pointer"
           >
             Free Trial
           </Link>
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="relative px-6 py-24 text-center max-w-5xl mx-auto space-y-8">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-4 py-1.5 text-xs font-semibold text-primary border border-primary/20">
-          ✨ One workspace for the whole site
-        </span>
+      {/* Hero Section: copy left, aurora panel right (two living elements only) */}
+      <section className="relative px-6 pt-20 pb-24">
+        {/* Static dotted grid texture, hero only, fades toward the bottom */}
+        <div className="hero-dot-grid absolute inset-0 pointer-events-none" aria-hidden="true" />
 
-        <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-white leading-tight">
-          Run every project from a <br />
-          <span className="text-gradient-accent">single source of truth</span>
-        </h1>
+        <div className="relative max-w-6xl mx-auto grid lg:grid-cols-2 gap-12 lg:gap-10 items-center">
+          {/* Copy column */}
+          <div className="text-center lg:text-left space-y-7">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-4 py-1.5 text-xs font-semibold text-primary border border-primary/20">
+              One workspace for the whole site
+            </span>
 
-        <p className="text-muted text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
-          SiteFlow brings planning, daily progress, procurement and project finance into one
-          Indian-construction-grade workspace, so your site records and your ledgers finally agree.
-        </p>
+            <h1 className="text-5xl md:text-6xl xl:text-7xl font-extrabold tracking-tight text-foreground leading-[1.1]">
+              Run every project from
+              <br />
+              <TypewriterText
+                phrases={HEADLINE_PHRASES}
+                className="text-gradient-accent"
+              />
+            </h1>
 
-        <div className="flex flex-col sm:flex-row gap-4 items-center justify-center pt-4">
-          <Link
-            href="/login"
-            className="w-full sm:w-auto flex items-center justify-center rounded-md bg-primary px-8 py-4 text-base font-bold text-white shadow-xl shadow-primary/20 hover:opacity-90 active:scale-[0.98] transition-all cursor-pointer"
-          >
-            Start Free Trial
-          </Link>
-          <a
-            href="#modules"
-            className="w-full sm:w-auto flex items-center justify-center rounded-md bg-white/[0.03] border border-border-custom px-8 py-4 text-base font-bold hover:bg-primary/10 hover:border-white/20 transition-all"
-          >
-            Explore 16 Modules
-          </a>
+            <p className="text-muted text-lg md:text-xl max-w-xl mx-auto lg:mx-0 leading-relaxed">
+              SiteFlow brings planning, daily progress, procurement and project finance into one
+              Indian-construction-grade workspace, so your site records and your ledgers finally agree.
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-4 items-center lg:justify-start justify-center pt-2">
+              <Link
+                href="/login"
+                className="w-full sm:w-auto flex items-center justify-center rounded-md bg-primary px-8 py-4 text-base font-bold text-white shadow-xl shadow-primary/20 hover:opacity-90 active:scale-[0.98] transition-all cursor-pointer"
+              >
+                Start Free Trial
+              </Link>
+              <a
+                href="#modules"
+                className="w-full sm:w-auto flex items-center justify-center rounded-md bg-white/[0.03] border border-border-custom px-8 py-4 text-base font-bold hover:bg-primary/10 hover:border-primary/30 transition-all"
+              >
+                Explore 16 Modules
+              </a>
+            </div>
+          </div>
+
+          {/* Aurora panel with a static UI echo card */}
+          <div className="aurora-panel rounded-2xl border border-border-custom h-64 sm:h-80 lg:h-[26rem] w-full">
+            <div className="aurora-blob aurora-blob-1" aria-hidden="true" />
+            <div className="aurora-blob aurora-blob-2" aria-hidden="true" />
+            <div className="aurora-blob aurora-blob-3" aria-hidden="true" />
+
+            {/* Static mock project card floating on the aurora (honest demo strings) */}
+            <div className="absolute inset-0 flex items-center justify-center p-6">
+              <div className="w-full max-w-xs rounded-xl border border-border-custom bg-card/80 backdrop-blur-md p-5 space-y-4 shadow-2xl">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-sm font-semibold text-foreground">Greenline Residency</span>
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-primary bg-primary/10 rounded-full px-2 py-0.5">
+                    Phase 2
+                  </span>
+                </div>
+
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between text-[11px] text-muted">
+                    <span>Weighted progress</span>
+                    <span className="text-foreground font-semibold">62%</span>
+                  </div>
+                  <div className="h-2 w-full rounded-full bg-elevated overflow-hidden">
+                    <div className="h-full w-[62%] rounded-full bg-primary" />
+                  </div>
+                </div>
+
+                <div className="space-y-2 pt-1">
+                  <div className="h-2.5 w-3/4 rounded bg-foreground/10" />
+                  <div className="h-2.5 w-1/2 rounded bg-foreground/10" />
+                </div>
+
+                <div className="rounded-md border border-primary/20 bg-primary/10 px-3 py-2 text-[11px] text-foreground">
+                  Project P&amp;L: revenue Rs 61L, cost Rs 44L, margin 28%
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
       {/* Trust bar, qualitative proof points only (no invented scale numbers) */}
       <section className="max-w-6xl mx-auto px-6">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-px rounded-lg border border-border-custom bg-border-custom overflow-hidden">
-          {TRUST_POINTS.map((t, i) => (
-            <div key={i} className="bg-card px-4 py-6 text-center space-y-1">
-              <div className="text-2xl font-extrabold text-white">{t.value}</div>
-              <div className="text-xs text-muted">{t.label}</div>
-            </div>
-          ))}
-        </div>
+        <StatBand stats={TRUST_POINTS} />
       </section>
 
       {/* Differentiators */}
       <section className="max-w-6xl mx-auto px-6 py-20 space-y-10">
         <div className="text-center space-y-3">
-          <h2 className="text-3xl font-extrabold text-white">Why teams move to SiteFlow</h2>
+          <h2 className="text-3xl font-extrabold text-foreground">Why teams move to SiteFlow</h2>
           <p className="text-muted text-base max-w-xl mx-auto">
             The spreadsheet-and-WhatsApp stack breaks the moment a project scales. SiteFlow is built
             for the way Indian sites actually run.
@@ -214,7 +266,7 @@ export default function LandingPage() {
           {PILLARS.map((p, i) => (
             <div key={i} className="rounded-lg bg-card border border-border-custom p-7 space-y-3">
               <div className="text-2xl">{p.icon}</div>
-              <h3 className="font-semibold text-white text-base leading-snug">{p.title}</h3>
+              <h3 className="font-semibold text-foreground text-base leading-snug">{p.title}</h3>
               <p className="text-sm text-muted leading-relaxed">{p.body}</p>
             </div>
           ))}
@@ -224,7 +276,7 @@ export default function LandingPage() {
       {/* Lead-module deep dives (priority order), demo scenario threaded throughout */}
       <section className="max-w-6xl mx-auto px-6 py-8 space-y-10">
         <div className="text-center space-y-3">
-          <h2 className="text-3xl font-extrabold text-white">What you get on day one</h2>
+          <h2 className="text-3xl font-extrabold text-foreground">What you get on day one</h2>
           <p className="text-muted text-base max-w-xl mx-auto">
             Six of the modules teams reach for first, shown against a single demo project,
             <span className="text-foreground"> Greenline Residency (Phase 2)</span>.
@@ -234,9 +286,9 @@ export default function LandingPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {LEAD_MODULES.map((m, i) => (
             <div key={i} className="rounded-lg bg-card border border-border-custom p-6 space-y-3 flex flex-col">
-              <h3 className="font-semibold text-white text-base">{m.name}</h3>
+              <h3 className="font-semibold text-foreground text-base">{m.name}</h3>
               <p className="text-sm text-muted leading-relaxed flex-1">{m.desc}</p>
-              <div className="rounded-md border border-primary/20 bg-primary/5 px-3 py-2 text-xs text-zinc-200">
+              <div className="rounded-md border border-primary/20 bg-primary/5 px-3 py-2 text-xs text-foreground">
                 <span className="text-[10px] uppercase tracking-wider text-primary font-semibold">Demo scenario · </span>
                 {m.mock}
               </div>
@@ -248,7 +300,7 @@ export default function LandingPage() {
       {/* Full module grid */}
       <section id="modules" className="max-w-6xl mx-auto px-6 py-16 space-y-12">
         <div className="text-center space-y-3">
-          <h2 className="text-3xl font-extrabold text-white">Full-Suite Feature Coverage</h2>
+          <h2 className="text-3xl font-extrabold text-foreground">Full-Suite Feature Coverage</h2>
           <p className="text-muted text-base max-w-md mx-auto">
             Sixteen modules across pre-construction, execution, resources and finance.
           </p>
@@ -270,7 +322,7 @@ export default function LandingPage() {
                     href={`/c/e0000000-0000-0000-0000-000000000000/p/d0000000-0000-0000-0000-000000000001/${item.path}`}
                     className="p-4 rounded-md bg-white/[0.01] border border-border-custom space-y-1 hover:bg-white/[0.03] hover:border-border-custom active:scale-[0.98] transition-all cursor-pointer block"
                   >
-                    <h3 className="font-semibold text-white text-sm">{item.name}</h3>
+                    <h3 className="font-semibold text-foreground text-sm">{item.name}</h3>
                     <p className="text-xs text-muted">{item.desc}</p>
                   </Link>
                 ))}
@@ -283,7 +335,7 @@ export default function LandingPage() {
       {/* Testimonials, signature ✕/✓ before-after device (clearly-labeled illustrative) */}
       <section className="max-w-5xl mx-auto px-6 py-16 space-y-10">
         <div className="text-center space-y-3">
-          <h2 className="text-3xl font-extrabold text-white">What swapping the spreadsheet looks like</h2>
+          <h2 className="text-3xl font-extrabold text-foreground">What swapping the spreadsheet looks like</h2>
           <p className="text-muted text-base max-w-xl mx-auto">
             The examples below are illustrative. They show the before/after pattern, not real
             customer endorsements.

@@ -45,10 +45,10 @@ export default async function ProductFeaturePage({ params }: RouteParams) {
       {/* Header */}
       <header className="sticky top-0 z-50 bg-card border border-border-custom rounded-lg border-b border-border-custom px-6 py-4 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-md bg-gradient-to-tr bg-primary font-sans font-bold text-white shadow-md">
+          <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary font-sans font-bold text-white shadow-md">
             S
           </div>
-          <span className="text-lg font-bold tracking-tight text-white">
+          <span className="text-lg font-bold tracking-tight text-foreground">
             Site<span className="text-primary">Flow</span> Platform
           </span>
         </Link>
@@ -59,7 +59,7 @@ export default async function ProductFeaturePage({ params }: RouteParams) {
           >
             Help Center
           </Link>
-          <span className="text-zinc-700">|</span>
+          <span className="text-border-custom">|</span>
           <Link
             href="/blog"
             className="text-sm font-semibold text-muted hover:text-foreground transition-all"
@@ -79,14 +79,14 @@ export default async function ProductFeaturePage({ params }: RouteParams) {
                 <span className="inline-block text-xs font-semibold text-primary px-2.5 py-1 rounded bg-primary/10 uppercase tracking-wider">
                   Product Modules
                 </span>
-                <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-white leading-tight">
+                <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-foreground leading-tight">
                   {article.title}
                 </h1>
               </div>
 
               {/* Render article body */}
               <div
-                className="prose prose-invert max-w-none prose-zinc prose-headings:text-white prose-headings:font-extrabold prose-p:text-zinc-300 prose-p:leading-relaxed prose-li:text-zinc-300 prose-strong:text-white prose-a:text-secondary hover:prose-a:underline prose-table:border-collapse prose-table:w-full prose-td:border prose-td:border-border-custom prose-td:p-3 prose-th:border prose-th:border-border-custom prose-th:p-3 prose-th:bg-elevated prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:pl-4 prose-blockquote:italic prose-img:rounded-lg"
+                className="help-article"
                 dangerouslySetInnerHTML={{ __html: article.body }}
               />
             </div>
