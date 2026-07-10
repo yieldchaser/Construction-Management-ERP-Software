@@ -396,6 +396,7 @@ export default function CompanySettingsPage() {
   const DOC_TYPES = [
     "Project", "Task", "Lead", "Vendor", "Customer", "Invoice", "Bill",
     "Work Order", "Purchase Order", "Quotation", "BOQ", "Payment", "Expense", "Material", "Equipment",
+    "Party", "Labour Party", "Sales Invoice", "Subcon Work Order", "Payroll", "CRM Lead",
   ];
   const CF_DATA_TYPES = ["text", "number", "date", "select", "multiselect", "checkbox"];
   const [cfEntity, setCfEntity] = useState(DOC_TYPES[0]);
