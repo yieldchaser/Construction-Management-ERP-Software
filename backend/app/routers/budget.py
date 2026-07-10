@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from app.database import get_db
+from app.auth import get_current_user, verify_project_access
 from app.models import (
     PurchaseOrder, Bill, WorkOrder, WorkOrderItem,
     ProjectTower, ProjectBudget
@@ -13,7 +14,8 @@ from pydantic import BaseModel
 
 router = APIRouter(
     prefix="/budget",
-    tags=["Budget & Committed Cost Tracking"]
+    tags=["Budget & Committed Cost Tracking"],
+    dependencies=[Depends(get_current_user)]
 )
 
 
@@ -59,7 +61,7 @@ class TowerBudgetBreakdown(BaseModel):
 
 
 @router.get("/committed/{project_id}", response_model=BudgetWithCommitted)
-def get_committed_costs(project_id: UUID, db: Session = Depends(get_db)):
+def get_committed_costs(project_id: UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     budget = db.query(ProjectBudget).filter(ProjectBudget.project_id == project_id).first()
     if not budget:
         budget = ProjectBudget(
@@ -129,7 +131,7 @@ def get_committed_costs(project_id: UUID, db: Session = Depends(get_db)):
 
 
 @router.get("/committed/{project_id}/towers", response_model=List[TowerBudgetBreakdown])
-def get_tower_budget(project_id: UUID, db: Session = Depends(get_db)):
+def get_tower_budget(project_id: UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     towers = db.query(ProjectTower).filter(ProjectTower.project_id == project_id).all()
     if not towers:
         budget = db.query(ProjectBudget).filter(ProjectBudget.project_id == project_id).first()

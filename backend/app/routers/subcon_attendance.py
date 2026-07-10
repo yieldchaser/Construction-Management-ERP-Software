@@ -5,9 +5,10 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from app.database import get_db
+from app.auth import get_current_user, verify_project_access
 from app.models import SubcontractorAttendance
 
-router = APIRouter(prefix="/subcon", tags=["Subcontractor Attendance"])
+router = APIRouter(prefix="/subcon", tags=["Subcontractor Attendance"], dependencies=[Depends(get_current_user)])
 
 class SubconAttendanceCreate(BaseModel):
     project_id: uuid.UUID
@@ -73,7 +74,7 @@ def create_subcon_attendance(payload: SubconAttendanceCreate, db: Session = Depe
     return log
 
 @router.get("/attendance/{project_id}/{date_str}", response_model=List[SubconAttendanceResponse])
-def get_subcon_attendance(project_id: uuid.UUID, date_str: str, db: Session = Depends(get_db)):
+def get_subcon_attendance(project_id: uuid.UUID, date_str: str, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     try:
         target = datetime.strptime(date_str, "%Y-%m-%d").date()
     except ValueError:

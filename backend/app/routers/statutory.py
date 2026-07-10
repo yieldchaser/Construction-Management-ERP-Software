@@ -5,10 +5,11 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from app.database import get_db
+from app.auth import get_current_user, verify_company_access
 from app.models import StatutoryReport, StaffEmployee, PayrollRun, PayrollLineItem
 from decimal import Decimal
 
-router = APIRouter(prefix="/statutory", tags=["Statutory Reports"])
+router = APIRouter(prefix="/statutory", tags=["Statutory Reports"], dependencies=[Depends(get_current_user)])
 
 
 class StatutoryReportCreate(BaseModel):
@@ -106,7 +107,7 @@ def create_report(payload: StatutoryReportCreate, db: Session = Depends(get_db))
 
 
 @router.get("/{company_id}", response_model=List[StatutoryReportResponse])
-def list_reports(company_id: uuid.UUID, report_type: Optional[str] = None, db: Session = Depends(get_db)):
+def list_reports(company_id: uuid.UUID, report_type: Optional[str] = None, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     query = db.query(StatutoryReport).filter(StatutoryReport.company_id == company_id)
     if report_type:
         query = query.filter(StatutoryReport.report_type == report_type)
@@ -115,7 +116,7 @@ def list_reports(company_id: uuid.UUID, report_type: Optional[str] = None, db: S
 
 
 @router.get("/{company_id}/auto-populate", response_model=StatutoryReportResponse)
-def auto_populate(company_id: uuid.UUID, report_type: str = Query(...), return_period: str = Query(...), project_id: Optional[uuid.UUID] = None, db: Session = Depends(get_db)):
+def auto_populate(company_id: uuid.UUID, report_type: str = Query(...), return_period: str = Query(...), project_id: Optional[uuid.UUID] = None, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     year, month = map(int, return_period.split("-"))
     start_date = datetime(year, month, 1)
     if month == 12:
@@ -177,7 +178,7 @@ def file_report(report_id: uuid.UUID, acknowledgment_number: str, filed_by: str,
 
 
 @router.get("/{company_id}/penalty", response_model=dict)
-def estimate_penalty(company_id: uuid.UUID, report_type: str = Query(...), return_period: str = Query(...), total_wages: float = Query(...), db: Session = Depends(get_db)):
+def estimate_penalty(company_id: uuid.UUID, report_type: str = Query(...), return_period: str = Query(...), total_wages: float = Query(...), db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     penalty = calculate_penalty(report_type, total_wages, return_period, None)
     return {
         "report_type": report_type,

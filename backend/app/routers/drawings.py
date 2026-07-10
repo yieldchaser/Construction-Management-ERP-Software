@@ -4,12 +4,14 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.database import get_db
+from app.auth import get_current_user, verify_project_access
 from app.models import Drawing, DrawingRevision, DrawingPin
 from pydantic import BaseModel, Field
 
 router = APIRouter(
     prefix="/drawings",
-    tags=["Drawings & Design Management"]
+    tags=["Drawings & Design Management"],
+    dependencies=[Depends(get_current_user)]
 )
 
 # Pydantic Schemas
@@ -79,7 +81,7 @@ class PinCreateRequest(BaseModel):
 # Endpoints
 
 @router.get("", response_model=List[DrawingResponse])
-def get_drawings(project_id: UUID, db: Session = Depends(get_db)):
+def get_drawings(project_id: UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     drawings = db.query(Drawing).filter(Drawing.project_id == project_id).all()
     res = []
     for d in drawings:

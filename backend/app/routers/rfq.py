@@ -4,12 +4,14 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.database import get_db
+from app.auth import get_current_user, verify_project_access
 from app.models import RFQ, RFQItem, RFQQuote
 from pydantic import BaseModel, Field
 
 router = APIRouter(
     prefix="/procurement",
-    tags=["RFQ Management"]
+    tags=["RFQ Management"],
+    dependencies=[Depends(get_current_user)]
 )
 
 
@@ -149,7 +151,7 @@ def create_rfq(req: RFQCreateRequest, db: Session = Depends(get_db)):
 
 
 @router.get("/rfq/{project_id}", response_model=List[RFQResponse])
-def list_rfq(project_id: UUID, db: Session = Depends(get_db)):
+def list_rfq(project_id: UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     rfqs = db.query(RFQ).filter(RFQ.project_id == project_id).all()
     result = []
     for rfq in rfqs:

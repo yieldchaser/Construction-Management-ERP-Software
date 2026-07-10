@@ -108,6 +108,45 @@ def get_current_active_company_user(
     }
 
 
+def verify_company_access(
+    company_id: uuid.UUID,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> None:
+    """Dependency for URL-routed endpoints: 403s unless the caller is a member
+    of the company_id path/query param already declared on the endpoint."""
+    membership = db.query(models.CompanyTeam).filter(
+        models.CompanyTeam.company_id == company_id,
+        models.CompanyTeam.user_id == current_user.id,
+    ).first()
+    if not membership:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have access to this company",
+        )
+
+
+def verify_project_access(
+    project_id: uuid.UUID,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> None:
+    """Dependency for URL-routed endpoints: 403s unless the caller belongs to
+    the company that owns the project_id path/query param on the endpoint."""
+    project = db.query(models.Project).filter(models.Project.id == project_id).first()
+    if not project:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
+    membership = db.query(models.CompanyTeam).filter(
+        models.CompanyTeam.company_id == project.company_id,
+        models.CompanyTeam.user_id == current_user.id,
+    ).first()
+    if not membership:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have access to this project",
+        )
+
+
 def get_verified_company_user(
     company_id: str,
     current_user: models.User = Depends(get_current_user),

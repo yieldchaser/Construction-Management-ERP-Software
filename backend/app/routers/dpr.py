@@ -5,12 +5,14 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 from app.database import get_db
+from app.auth import get_current_user, verify_project_access
 from app.models import DailyProgressReport, Task, WarehouseInventory, MaterialTransaction, Project
 from pydantic import BaseModel, Field
 
 router = APIRouter(
     prefix="/dpr",
-    tags=["Daily Progress Reports (DPR)"]
+    tags=["Daily Progress Reports (DPR)"],
+    dependencies=[Depends(get_current_user)]
 )
 
 class MaterialConsumptionSchema(BaseModel):
@@ -127,14 +129,14 @@ def create_dpr(req: DPRCreateRequest, db: Session = Depends(get_db)):
     return dpr
 
 @router.get("", response_model=List[DPRResponse])
-def get_dprs(project_id: uuid.UUID, db: Session = Depends(get_db)):
+def get_dprs(project_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     project_uuid = uuid.UUID(str(project_id))
     return db.query(DailyProgressReport).filter(
         DailyProgressReport.project_id == project_uuid
     ).order_by(DailyProgressReport.dpr_date.desc()).all()
 
 @router.get("/summary")
-def get_dpr_summary(project_id: uuid.UUID, db: Session = Depends(get_db)):
+def get_dpr_summary(project_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     project_uuid = uuid.UUID(str(project_id))
     dprs = db.query(DailyProgressReport).filter(DailyProgressReport.project_id == project_uuid).all()
     

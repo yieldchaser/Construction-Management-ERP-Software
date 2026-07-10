@@ -9,7 +9,7 @@ from sqlalchemy import desc
 
 from app.database import get_db
 from app.models import FileFolder, ProjectFile, Project
-from app.auth import get_current_user
+from app.auth import get_current_user, verify_project_access, get_company_membership
 from pydantic import BaseModel, Field
 
 router = APIRouter(prefix="/files", tags=["Project Files"], dependencies=[Depends(get_current_user)])
@@ -98,7 +98,7 @@ def create_folder(req: FolderCreateRequest, db: Session = Depends(get_db)):
 
 
 @router.get("/folders", response_model=List[FolderResponse])
-def list_folders(project_id: uuid.UUID, parent_id: Optional[uuid.UUID] = None, db: Session = Depends(get_db)):
+def list_folders(project_id: uuid.UUID, parent_id: Optional[uuid.UUID] = None, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     q = db.query(FileFolder).filter(FileFolder.project_id == project_id)
     if parent_id is None:
         q = q.filter(FileFolder.parent_id.is_(None))
@@ -108,7 +108,7 @@ def list_folders(project_id: uuid.UUID, parent_id: Optional[uuid.UUID] = None, d
 
 
 @router.get("/files", response_model=List[FileMetaResponse])
-def list_files(project_id: uuid.UUID, folder_id: Optional[uuid.UUID] = None, db: Session = Depends(get_db)):
+def list_files(project_id: uuid.UUID, folder_id: Optional[uuid.UUID] = None, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     q = db.query(ProjectFile).filter(ProjectFile.project_id == project_id)
     if folder_id is None:
         q = q.filter(ProjectFile.folder_id.is_(None))
@@ -123,8 +123,13 @@ async def upload_file(
     folder_id: Optional[uuid.UUID] = Form(None),
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
 ):
-    _require_project(project_id, db)
+    # project_id here comes from multipart form data (not the URL path/query),
+    # so it can't share a value with a plain Depends(verify_project_access)
+    # sub-dependency; verify membership inline once the project is loaded instead.
+    project = _require_project(project_id, db)
+    get_company_membership(db, current_user, project.company_id)
     _require_folder_or_root(folder_id, project_id, db)
 
     contents = await file.read()

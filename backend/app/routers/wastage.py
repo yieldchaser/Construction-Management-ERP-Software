@@ -5,10 +5,11 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from app.database import get_db
+from app.auth import get_current_user, verify_project_access
 from app.models import MaterialWastage
 from decimal import Decimal
 
-router = APIRouter(prefix="/wastage", tags=["Material Wastage & Scrap"])
+router = APIRouter(prefix="/wastage", tags=["Material Wastage & Scrap"], dependencies=[Depends(get_current_user)])
 
 
 class MaterialWastageCreate(BaseModel):
@@ -57,7 +58,7 @@ def create_wastage(payload: MaterialWastageCreate, db: Session = Depends(get_db)
 
 
 @router.get("/{project_id}", response_model=List[MaterialWastageResponse])
-def list_wastage(project_id: uuid.UUID, db: Session = Depends(get_db)):
+def list_wastage(project_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     return db.query(MaterialWastage).filter(
         MaterialWastage.project_id == project_id
     ).order_by(MaterialWastage.created_at.desc()).all()

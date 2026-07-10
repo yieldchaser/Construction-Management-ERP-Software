@@ -7,13 +7,14 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import func as sqlfunc
 from app.database import get_db
-from app.models import SafetyIncident, ToolboxTalk, PPECheck, Project, AttendanceLog
+from app.auth import get_current_user, get_company_membership
+from app.models import SafetyIncident, ToolboxTalk, PPECheck, Project, AttendanceLog, User
 from pydantic import BaseModel
 from typing import Optional, List
 from datetime import datetime
 import uuid
 
-router = APIRouter(prefix="/safety", tags=["Safety & HSE"])
+router = APIRouter(prefix="/safety", tags=["Safety & HSE"], dependencies=[Depends(get_current_user)])
 
 
 # ─── Pydantic Schemas ────────────────────────────────────────────────────────
@@ -83,8 +84,16 @@ def log_incident(payload: IncidentCreate, db: Session = Depends(get_db)):
 
 
 @router.get("/incidents/{project_id}")
-def list_incidents(project_id: str, db: Session = Depends(get_db)):
+def list_incidents(
+    project_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     """List all incidents for a project, ordered newest first."""
+    project = db.query(Project).filter(Project.id == uuid.UUID(project_id)).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, project.company_id)
     incidents = (
         db.query(SafetyIncident)
         .filter(SafetyIncident.project_id == uuid.UUID(project_id))
@@ -138,13 +147,22 @@ def close_incident(incident_id: str, payload: IncidentClose, db: Session = Depen
 
 
 @router.get("/stats/{project_id}")
-def get_safety_stats(project_id: str, total_manhours: float = 10000.0, db: Session = Depends(get_db)):
+def get_safety_stats(
+    project_id: str,
+    total_manhours: float = 10000.0,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     """
     Compute HSE statistics for a project.
     LTIF = (Number of LTIs × 200,000) / Total Manhours worked
     total_manhours defaults to 10,000 for demo; pass as query param in production.
     """
     proj_uuid = uuid.UUID(project_id)
+    project = db.query(Project).filter(Project.id == proj_uuid).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, project.company_id)
     incidents = db.query(SafetyIncident).filter(SafetyIncident.project_id == proj_uuid).all()
 
     # Calculate actual manhours from AttendanceLog
@@ -210,8 +228,16 @@ def log_toolbox_talk(payload: ToolboxTalkCreate, db: Session = Depends(get_db)):
 
 
 @router.get("/toolbox-talks/{project_id}")
-def list_toolbox_talks(project_id: str, db: Session = Depends(get_db)):
+def list_toolbox_talks(
+    project_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     """List all toolbox talks for a project, ordered newest first."""
+    project = db.query(Project).filter(Project.id == uuid.UUID(project_id)).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, project.company_id)
     talks = (
         db.query(ToolboxTalk)
         .filter(ToolboxTalk.project_id == uuid.UUID(project_id))
@@ -264,8 +290,16 @@ def log_ppe_check(payload: PPECheckCreate, db: Session = Depends(get_db)):
 
 
 @router.get("/ppe-checks/{project_id}")
-def list_ppe_checks(project_id: str, db: Session = Depends(get_db)):
+def list_ppe_checks(
+    project_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     """List all PPE compliance checks for a project with computed compliance %."""
+    project = db.query(Project).filter(Project.id == uuid.UUID(project_id)).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, project.company_id)
     checks = (
         db.query(PPECheck)
         .filter(PPECheck.project_id == uuid.UUID(project_id))

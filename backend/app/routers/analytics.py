@@ -16,6 +16,7 @@ from sqlalchemy import Date, cast, func
 from sqlalchemy.orm import Session
 
 from app.database import get_db
+from app.auth import get_current_user, verify_company_access
 from app.models import (
     AttendanceLog,
     Bill,
@@ -33,7 +34,7 @@ from app.models import (
     WorkOrder,
 )
 
-router = APIRouter(prefix="/analytics", tags=["Analytics & Executive Dashboard"])
+router = APIRouter(prefix="/analytics", tags=["Analytics & Executive Dashboard"], dependencies=[Depends(get_current_user)])
 
 AREA_UNITS = {
     "m2",
@@ -93,7 +94,7 @@ def _resolve_team_name(team: CompanyTeam, users_by_id: Dict[uuid.UUID, User]) ->
 
 
 @router.get("/company/{company_id}")
-def get_company_analytics(company_id: uuid.UUID, db: Session = Depends(get_db)):
+def get_company_analytics(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     company = db.query(Company).filter(Company.id == company_id).first()
     if not company:
         raise HTTPException(status_code=404, detail="Company not found")
@@ -388,7 +389,7 @@ def get_company_analytics(company_id: uuid.UUID, db: Session = Depends(get_db)):
 
 
 @router.get("/company/{company_id}/operational")
-def get_company_operational_analytics(company_id: uuid.UUID, db: Session = Depends(get_db)):
+def get_company_operational_analytics(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     company = db.query(Company).filter(Company.id == company_id).first()
     if not company:
         raise HTTPException(status_code=404, detail="Company not found")
@@ -503,7 +504,7 @@ def get_company_operational_analytics(company_id: uuid.UUID, db: Session = Depen
 
 
 @router.get("/company/{company_id}/financial")
-def get_company_financial_analytics(company_id: uuid.UUID, db: Session = Depends(get_db)):
+def get_company_financial_analytics(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     company = db.query(Company).filter(Company.id == company_id).first()
     if not company:
         raise HTTPException(status_code=404, detail="Company not found")

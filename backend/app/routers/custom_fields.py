@@ -5,9 +5,10 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from app.database import get_db
+from app.auth import get_current_user, verify_company_access
 from app.models import CustomField, CustomFieldValue
 
-router = APIRouter(prefix="/custom-fields", tags=["Custom Fields"])
+router = APIRouter(prefix="/custom-fields", tags=["Custom Fields"], dependencies=[Depends(get_current_user)])
 
 
 class CustomFieldCreate(BaseModel):
@@ -80,7 +81,7 @@ def create_field(payload: CustomFieldCreate, db: Session = Depends(get_db)):
 
 
 @router.get("/fields/{company_id}", response_model=List[CustomFieldResponse])
-def list_fields(company_id: uuid.UUID, entity_type: Optional[str] = None, db: Session = Depends(get_db)):
+def list_fields(company_id: uuid.UUID, entity_type: Optional[str] = None, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     query = db.query(CustomField).filter(
         CustomField.company_id == company_id,
         CustomField.is_active == True

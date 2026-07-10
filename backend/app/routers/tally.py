@@ -4,12 +4,14 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.database import get_db
+from app.auth import get_current_user, verify_company_access
 from app.models import TallyConnection, TallyAgent, TallyLedgerMapping, TallyPartyMapping, TallyCostCentreMapping, TallyBankMapping, Company, Bill, Payment, CompanyTeam, User
 from pydantic import BaseModel
 
 router = APIRouter(
     prefix="/tally",
-    tags=["Tally ERP Integration"]
+    tags=["Tally ERP Integration"],
+    dependencies=[Depends(get_current_user)]
 )
 
 # Schemas
@@ -116,7 +118,7 @@ def create_connection(req: ConnectionCreateRequest, db: Session = Depends(get_db
 
 
 @router.get("/connections", response_model=ConnectionResponse)
-def get_connection(company_id: uuid.UUID, db: Session = Depends(get_db)):
+def get_connection(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     comp_uuid = uuid.UUID(str(company_id))
     conn = db.query(TallyConnection).filter(TallyConnection.company_id == comp_uuid).first()
     if not conn:
@@ -141,7 +143,7 @@ def register_agent(req: AgentCreateRequest, db: Session = Depends(get_db)):
 
 
 @router.get("/agents", response_model=List[AgentResponse])
-def get_agents(company_id: uuid.UUID, db: Session = Depends(get_db)):
+def get_agents(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     comp_uuid = uuid.UUID(str(company_id))
     return db.query(TallyAgent).filter(TallyAgent.company_id == comp_uuid).all()
 
@@ -180,13 +182,13 @@ def create_ledger_mapping(req: LedgerMappingCreateRequest, db: Session = Depends
 
 
 @router.get("/mappings/ledger", response_model=List[LedgerMappingResponse])
-def get_ledger_mappings(company_id: uuid.UUID, db: Session = Depends(get_db)):
+def get_ledger_mappings(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     comp_uuid = uuid.UUID(str(company_id))
     return db.query(TallyLedgerMapping).filter(TallyLedgerMapping.company_id == comp_uuid).all()
 
 
 @router.post("/sync")
-def sync_tally_vouchers(company_id: uuid.UUID, db: Session = Depends(get_db)):
+def sync_tally_vouchers(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     comp_uuid = uuid.UUID(str(company_id))
     
     # Verify tally connection exists

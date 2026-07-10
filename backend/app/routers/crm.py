@@ -4,6 +4,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.database import get_db
+from app.auth import get_current_user, verify_company_access
 from app.models import (
     CRMLead, CRMQuotation, CRMQuotationItem, Company,
     CRMLeadSource, CRMLeadCategory, CRMLeadStatus, CompanyTeam, User,
@@ -12,7 +13,8 @@ from pydantic import BaseModel
 
 router = APIRouter(
     prefix="/crm",
-    tags=["CRM & Lead Management"]
+    tags=["CRM & Lead Management"],
+    dependencies=[Depends(get_current_user)]
 )
 
 # Lead Schemas
@@ -209,7 +211,7 @@ def create_lead(req: LeadCreateRequest, db: Session = Depends(get_db)):
     return lead
 
 @router.get("/leads", response_model=List[LeadResponse])
-def get_leads(company_id: uuid.UUID, db: Session = Depends(get_db)):
+def get_leads(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     comp_uuid = uuid.UUID(str(company_id))
     return db.query(CRMLead).filter(CRMLead.company_id == comp_uuid).all()
 
@@ -281,7 +283,7 @@ class TeamMemberResponse(BaseModel):
 
 
 @router.get("/team-members/{company_id}", response_model=List[TeamMemberResponse])
-def list_team_members(company_id: uuid.UUID, db: Session = Depends(get_db)):
+def list_team_members(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     comp_uuid = uuid.UUID(str(company_id))
     rows = (
         db.query(CompanyTeam, User)
@@ -323,13 +325,13 @@ def _get_or_seed(db: Session, model, comp_uuid: uuid.UUID, defaults: list[str]):
 
 
 @router.get("/lead-sources/{company_id}", response_model=List[LookupResponse])
-def list_lead_sources(company_id: uuid.UUID, db: Session = Depends(get_db)):
+def list_lead_sources(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     comp_uuid = uuid.UUID(str(company_id))
     return _get_or_seed(db, CRMLeadSource, comp_uuid, DEFAULT_SOURCES)
 
 
 @router.post("/lead-sources/{company_id}", response_model=LookupResponse, status_code=status.HTTP_201_CREATED)
-def create_lead_source(company_id: uuid.UUID, payload: LookupCreate, db: Session = Depends(get_db)):
+def create_lead_source(company_id: uuid.UUID, payload: LookupCreate, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     comp_uuid = uuid.UUID(str(company_id))
     obj = CRMLeadSource(company_id=comp_uuid, name=payload.name)
     db.add(obj)
@@ -338,13 +340,13 @@ def create_lead_source(company_id: uuid.UUID, payload: LookupCreate, db: Session
 
 
 @router.get("/lead-categories/{company_id}", response_model=List[LookupResponse])
-def list_lead_categories(company_id: uuid.UUID, db: Session = Depends(get_db)):
+def list_lead_categories(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     comp_uuid = uuid.UUID(str(company_id))
     return _get_or_seed(db, CRMLeadCategory, comp_uuid, [])
 
 
 @router.post("/lead-categories/{company_id}", response_model=LookupResponse, status_code=status.HTTP_201_CREATED)
-def create_lead_category(company_id: uuid.UUID, payload: LookupCreate, db: Session = Depends(get_db)):
+def create_lead_category(company_id: uuid.UUID, payload: LookupCreate, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     comp_uuid = uuid.UUID(str(company_id))
     obj = CRMLeadCategory(company_id=comp_uuid, name=payload.name)
     db.add(obj)
@@ -353,13 +355,13 @@ def create_lead_category(company_id: uuid.UUID, payload: LookupCreate, db: Sessi
 
 
 @router.get("/lead-statuses/{company_id}", response_model=List[LookupResponse])
-def list_lead_statuses(company_id: uuid.UUID, db: Session = Depends(get_db)):
+def list_lead_statuses(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     comp_uuid = uuid.UUID(str(company_id))
     return _get_or_seed(db, CRMLeadStatus, comp_uuid, DEFAULT_STATUSES)
 
 
 @router.post("/lead-statuses/{company_id}", response_model=LookupResponse, status_code=status.HTTP_201_CREATED)
-def create_lead_status(company_id: uuid.UUID, payload: LookupCreate, db: Session = Depends(get_db)):
+def create_lead_status(company_id: uuid.UUID, payload: LookupCreate, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     comp_uuid = uuid.UUID(str(company_id))
     obj = CRMLeadStatus(company_id=comp_uuid, name=payload.name)
     db.add(obj)

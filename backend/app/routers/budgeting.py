@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import select
 from openpyxl import load_workbook
 from app.database import get_db
-from app.auth import get_current_user
+from app.auth import get_current_user, verify_project_access, get_company_membership
 from app.models import BOQItem, BOQDocument, ProjectBudget, Project, Bill, LibraryParty, Task
 from pydantic import BaseModel, Field
 
@@ -51,7 +51,7 @@ class BudgetResponse(BaseModel):
         from_attributes = True
 
 @router.get("/boq", response_model=List[BOQItemResponse])
-def get_boq_items(project_id: UUID, boq_document_id: Optional[UUID] = None, db: Session = Depends(get_db)):
+def get_boq_items(project_id: UUID, boq_document_id: Optional[UUID] = None, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     # Check if project exists
     project = db.query(Project).filter(Project.id == project_id).first()
     if not project:
@@ -84,11 +84,16 @@ async def import_boq(
     project_id: UUID = Form(...),
     file: UploadFile = File(...),
     boq_document_id: Optional[UUID] = Form(None),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user)
 ):
+    # project_id here comes from multipart form data (not the URL path/query),
+    # so it can't share a value with a plain Depends(verify_project_access)
+    # sub-dependency; verify membership inline once the project is loaded instead.
     project = db.query(Project).filter(Project.id == project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, project.company_id)
 
     if not file.filename.endswith(('.xlsx', '.xlsm')):
         raise HTTPException(status_code=400, detail="Only .xlsx or .xlsm Excel files are supported")
@@ -305,7 +310,7 @@ def _build_doc_response(db: Session, d: BOQDocument) -> BOQDocumentResponse:
 
 
 @router.get("/boq-documents", response_model=List[BOQDocumentResponse])
-def list_boq_documents(project_id: UUID, db: Session = Depends(get_db)):
+def list_boq_documents(project_id: UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     project = db.query(Project).filter(Project.id == project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")

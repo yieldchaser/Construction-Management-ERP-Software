@@ -18,6 +18,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.database import get_db
+from app.auth import get_current_user, verify_project_access
 from app.models import (
     MaterialTransaction,
     ProductionBatch,
@@ -28,7 +29,7 @@ from app.models import (
     WarehouseInventory,
 )
 
-router = APIRouter(prefix="/production", tags=["Production Management"])
+router = APIRouter(prefix="/production", tags=["Production Management"], dependencies=[Depends(get_current_user)])
 
 
 class RecipeMaterialCreate(BaseModel):
@@ -302,7 +303,7 @@ def create_recipe(payload: RecipeCreate, db: Session = Depends(get_db)):
 
 
 @router.get("/recipes", response_model=List[RecipeResponse])
-def list_recipes(project_id: UUID, db: Session = Depends(get_db)):
+def list_recipes(project_id: UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     recipes = db.query(ProductionRecipe).filter(ProductionRecipe.project_id == project_id).order_by(ProductionRecipe.created_at.desc()).all()
     return [_recipe_response(db, recipe) for recipe in recipes]
 
@@ -468,13 +469,13 @@ def complete_batch(batch_id: UUID, db: Session = Depends(get_db)):
 
 
 @router.get("/batches", response_model=List[BatchResponse])
-def list_batches(project_id: UUID, db: Session = Depends(get_db)):
+def list_batches(project_id: UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     batches = db.query(ProductionBatch).filter(ProductionBatch.project_id == project_id).order_by(ProductionBatch.created_at.desc()).all()
     return [_batch_response(db, batch) for batch in batches]
 
 
 @router.get("/summary", response_model=ProductionSummaryResponse)
-def production_summary(project_id: UUID, db: Session = Depends(get_db)):
+def production_summary(project_id: UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     project = db.query(Project).filter(Project.id == project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")

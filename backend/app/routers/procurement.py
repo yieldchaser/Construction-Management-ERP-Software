@@ -4,12 +4,13 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.auth import get_current_user
+from app.auth import get_current_user, verify_company_access, verify_project_access, get_company_membership
 from app.models import (
-    MaterialIndent, MaterialIndentItem, 
-    PurchaseOrder, PurchaseOrderItem, 
-    GoodsReceiptNote, GRNItem, 
-    WarehouseInventory, MaterialTransaction
+    MaterialIndent, MaterialIndentItem,
+    PurchaseOrder, PurchaseOrderItem,
+    GoodsReceiptNote, GRNItem,
+    WarehouseInventory, MaterialTransaction,
+    Project, User
 )
 from pydantic import BaseModel, Field
 
@@ -184,10 +185,19 @@ CONSUMED_TYPES = {"used", "transferred"}
 def get_indents(
     project_id: Optional[UUID] = Query(None),
     company_id: Optional[UUID] = Query(None),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     if project_id is None and company_id is None:
         raise HTTPException(status_code=400, detail="Either project_id or company_id must be provided")
+
+    if project_id is not None:
+        project = db.query(Project).filter(Project.id == project_id).first()
+        if not project:
+            raise HTTPException(status_code=404, detail="Project not found")
+        get_company_membership(db, current_user, project.company_id)
+    else:
+        get_company_membership(db, current_user, company_id)
 
     query = db.query(MaterialIndent)
     if project_id is not None:
@@ -221,7 +231,7 @@ def get_indents(
     return res
 
 @router.get("/indents/company/{company_id}", response_model=List[IndentResponse])
-def get_company_indents(company_id: UUID, db: Session = Depends(get_db)):
+def get_company_indents(company_id: UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     indents = db.query(MaterialIndent).filter(MaterialIndent.company_id == company_id).all()
     res = []
     for ind in indents:
@@ -323,7 +333,7 @@ def approve_indent(indent_id: UUID, db: Session = Depends(get_db)):
 
 # 2. Purchase Orders
 @router.get("/pos", response_model=List[POResponse])
-def get_pos(project_id: UUID, db: Session = Depends(get_db)):
+def get_pos(project_id: UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     pos = db.query(PurchaseOrder).filter(PurchaseOrder.project_id == project_id).all()
     res = []
     for po in pos:
@@ -483,7 +493,7 @@ def approve_po(po_id: UUID, db: Session = Depends(get_db)):
 
 # 3. Goods Receipt Notes (GRN) & Inventory State Trigger
 @router.get("/grns", response_model=List[GRNResponse])
-def get_grns(project_id: UUID, db: Session = Depends(get_db)):
+def get_grns(project_id: UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     grns = db.query(GoodsReceiptNote).filter(GoodsReceiptNote.project_id == project_id).all()
     res = []
     for g in grns:
@@ -609,7 +619,7 @@ def create_grn(req: GRNCreateRequest, db: Session = Depends(get_db)):
 
 # 4. Warehouse Inventory
 @router.get("/inventory", response_model=List[InventoryResponse])
-def get_inventory(project_id: UUID, db: Session = Depends(get_db)):
+def get_inventory(project_id: UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     inv = db.query(WarehouseInventory).filter(WarehouseInventory.project_id == project_id).all()
     return [
         InventoryResponse(
@@ -625,7 +635,7 @@ def get_inventory(project_id: UUID, db: Session = Depends(get_db)):
 
 # 5. Material Transactions
 @router.get("/transactions", response_model=List[TransactionResponse])
-def get_transactions(project_id: UUID, db: Session = Depends(get_db)):
+def get_transactions(project_id: UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     txns = db.query(MaterialTransaction).filter(MaterialTransaction.project_id == project_id).order_by(MaterialTransaction.created_at.desc()).all()
     return [
         TransactionResponse(
@@ -644,7 +654,7 @@ def get_transactions(project_id: UUID, db: Session = Depends(get_db)):
 
 # 6. Computed Stock (Received - Consumed), negative allowed
 @router.get("/stock", response_model=List[StockRow])
-def get_stock(project_id: UUID, db: Session = Depends(get_db)):
+def get_stock(project_id: UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     invs = db.query(WarehouseInventory).filter(WarehouseInventory.project_id == project_id).all()
     txns = db.query(MaterialTransaction).filter(MaterialTransaction.project_id == project_id).all()
 

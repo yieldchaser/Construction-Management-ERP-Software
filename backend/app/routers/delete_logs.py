@@ -8,9 +8,10 @@ from datetime import datetime
 import uuid
 
 from app.database import get_db
-from app.models import DeleteLog
+from app.auth import get_current_user, get_company_membership
+from app.models import DeleteLog, User
 
-router = APIRouter(tags=["Delete Logs"])
+router = APIRouter(tags=["Delete Logs"], dependencies=[Depends(get_current_user)])
 
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -67,8 +68,10 @@ def list_delete_logs(
     from_date: str = None,
     to_date: str = None,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     """List deletion logs for a company, with optional filters."""
+    get_company_membership(db, current_user, uuid.UUID(company_id))
     query = db.query(DeleteLog).filter(DeleteLog.company_id == uuid.UUID(company_id))
     if entity_type:
         query = query.filter(DeleteLog.entity_type == entity_type)
@@ -89,8 +92,14 @@ def list_delete_logs(
 
 
 @router.delete("/{company_id}/{log_id}")
-def purge_delete_log(company_id: str, log_id: str, db: Session = Depends(get_db)):
+def purge_delete_log(
+    company_id: str,
+    log_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     """Permanently purge a single delete-log entry."""
+    get_company_membership(db, current_user, uuid.UUID(company_id))
     log = (
         db.query(DeleteLog)
         .filter(DeleteLog.id == uuid.UUID(log_id), DeleteLog.company_id == uuid.UUID(company_id))

@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import List, Optional
 from app.database import get_db
 from app import models
-from app.auth import get_current_user
+from app.auth import get_current_user, verify_company_access, verify_project_access
 import uuid
 
 router = APIRouter(prefix="/library", tags=["Company Libraries"], dependencies=[Depends(get_current_user)])
@@ -128,7 +128,7 @@ def _parse_optional_datetime(value: Optional[str]) -> Optional[datetime]:
 
 # ─── PARTIES ───
 @router.get("/parties/{company_id}")
-def get_library_parties(company_id: uuid.UUID, db: Session = Depends(get_db)):
+def get_library_parties(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     return db.query(models.LibraryParty).filter(models.LibraryParty.company_id == company_id).all()
 
 @router.post("/parties")
@@ -190,7 +190,13 @@ def create_library_party(payload: PartyCreate, db: Session = Depends(get_db)):
 
 
 @router.get("/parties/{company_id}/balances")
-def get_party_balances(company_id: uuid.UUID, project_id: Optional[uuid.UUID] = None, db: Session = Depends(get_db)):
+def get_party_balances(
+    company_id: uuid.UUID,
+    project_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    _: None = Depends(verify_company_access),
+    _project: None = Depends(verify_project_access),
+):
     q = db.query(models.ProjectParty).filter(models.ProjectParty.project_id == project_id)
     balances = q.all()
     advance_paid = sum(float(b.advance_paid) for b in balances)
@@ -214,7 +220,7 @@ def delete_library_party(party_id: uuid.UUID, db: Session = Depends(get_db)):
 
 # ─── ASSET TYPES ───
 @router.get("/asset-types/{company_id}")
-def get_library_asset_types(company_id: uuid.UUID, db: Session = Depends(get_db)):
+def get_library_asset_types(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     return db.query(models.LibraryAssetType).filter(models.LibraryAssetType.company_id == company_id).all()
 
 @router.post("/asset-types")
@@ -237,7 +243,7 @@ def delete_library_asset_type(item_id: uuid.UUID, db: Session = Depends(get_db))
 
 # ─── COST CODES ───
 @router.get("/cost-codes/{company_id}")
-def get_library_cost_codes(company_id: uuid.UUID, db: Session = Depends(get_db)):
+def get_library_cost_codes(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     return db.query(models.LibraryCostCode).filter(models.LibraryCostCode.company_id == company_id).all()
 
 @router.post("/cost-codes")
@@ -267,7 +273,7 @@ def delete_library_cost_code(item_id: uuid.UUID, db: Session = Depends(get_db)):
 
 # ─── DEDUCTIONS ───
 @router.get("/deductions/{company_id}")
-def get_library_deductions(company_id: uuid.UUID, db: Session = Depends(get_db)):
+def get_library_deductions(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     return db.query(models.LibraryDeduction).filter(models.LibraryDeduction.company_id == company_id).all()
 
 @router.post("/deductions")
@@ -290,7 +296,7 @@ def delete_library_deduction(item_id: uuid.UUID, db: Session = Depends(get_db)):
 
 # ─── PROGRESSES ───
 @router.get("/progresses/{company_id}")
-def get_library_progresses(company_id: uuid.UUID, db: Session = Depends(get_db)):
+def get_library_progresses(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     return db.query(models.LibraryProgress).filter(models.LibraryProgress.company_id == company_id).all()
 
 @router.post("/progresses")
@@ -313,7 +319,7 @@ def delete_library_progress(item_id: uuid.UUID, db: Session = Depends(get_db)):
 
 # ─── WORKFORCES ───
 @router.get("/workforces/{company_id}")
-def get_library_workforces(company_id: uuid.UUID, db: Session = Depends(get_db)):
+def get_library_workforces(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     return db.query(models.LibraryWorkforce).filter(models.LibraryWorkforce.company_id == company_id).all()
 
 @router.post("/workforces")
@@ -336,7 +342,7 @@ def delete_library_workforce(item_id: uuid.UUID, db: Session = Depends(get_db)):
 
 # ─── MATERIALS ───
 @router.get("/materials/{company_id}")
-def get_library_materials(company_id: uuid.UUID, db: Session = Depends(get_db)):
+def get_library_materials(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     return db.query(models.LibraryMaterial).filter(models.LibraryMaterial.company_id == company_id).all()
 
 @router.post("/materials")
@@ -376,7 +382,7 @@ def delete_library_material(item_id: uuid.UUID, db: Session = Depends(get_db)):
 
 # ─── RATES ───
 @router.get("/rates/{company_id}")
-def get_library_rates(company_id: uuid.UUID, db: Session = Depends(get_db)):
+def get_library_rates(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     return db.query(models.LibraryRate).filter(models.LibraryRate.company_id == company_id).all()
 
 @router.post("/rates")
@@ -419,7 +425,7 @@ class RetentionCreate(BaseModel):
 
 
 @router.get("/retentions/{company_id}")
-def get_library_retentions(company_id: uuid.UUID, db: Session = Depends(get_db)):
+def get_library_retentions(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     return db.query(models.LibraryRetention).filter(models.LibraryRetention.company_id == company_id).all()
 
 
@@ -451,7 +457,7 @@ class MaterialCategoryCreate(BaseModel):
 
 
 @router.get("/material-categories/{company_id}")
-def get_material_categories(company_id: uuid.UUID, db: Session = Depends(get_db)):
+def get_material_categories(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     return db.query(models.MaterialCategory).filter(models.MaterialCategory.company_id == company_id).all()
 
 
@@ -486,7 +492,7 @@ class TodoCreate(BaseModel):
 
 
 @router.get("/todos/{company_id}")
-def get_library_todos(company_id: uuid.UUID, db: Session = Depends(get_db)):
+def get_library_todos(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     return db.query(models.LibraryTodo).filter(models.LibraryTodo.company_id == company_id).all()
 
 

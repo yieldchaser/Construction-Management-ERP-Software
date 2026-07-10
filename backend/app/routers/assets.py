@@ -5,10 +5,11 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from app.database import get_db
+from app.auth import get_current_user, verify_company_access
 from app.models import AssetDepreciationSchedule, AssetDepreciationEntry, Equipment
 from decimal import Decimal
 
-router = APIRouter(prefix="/assets", tags=["Asset Depreciation"])
+router = APIRouter(prefix="/assets", tags=["Asset Depreciation"], dependencies=[Depends(get_current_user)])
 
 
 class DepreciationScheduleCreate(BaseModel):
@@ -79,7 +80,7 @@ def create_schedule(payload: DepreciationScheduleCreate, db: Session = Depends(g
 
 
 @router.get("/schedules/{company_id}", response_model=List[DepreciationScheduleResponse])
-def list_schedules(company_id: uuid.UUID, db: Session = Depends(get_db)):
+def list_schedules(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     return db.query(AssetDepreciationSchedule).filter(
         AssetDepreciationSchedule.company_id == company_id,
         AssetDepreciationSchedule.is_active == True
@@ -99,7 +100,7 @@ def create_entry(payload: DepreciationEntryCreate, db: Session = Depends(get_db)
 
 
 @router.get("/entries/{company_id}", response_model=List[DepreciationEntryResponse])
-def list_entries(company_id: uuid.UUID, asset_id: Optional[uuid.UUID] = None, db: Session = Depends(get_db)):
+def list_entries(company_id: uuid.UUID, asset_id: Optional[uuid.UUID] = None, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     query = db.query(AssetDepreciationEntry).filter(AssetDepreciationEntry.company_id == company_id)
     if asset_id:
         query = query.filter(AssetDepreciationEntry.asset_id == asset_id)

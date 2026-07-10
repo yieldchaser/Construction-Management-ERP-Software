@@ -4,12 +4,14 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from app.database import get_db
+from app.auth import get_current_user, verify_company_access, verify_project_access
 from app.models import PurchaseOrder, VendorPerformance, CompanyTeam
 from pydantic import BaseModel
 
 router = APIRouter(
     prefix="/procurement",
-    tags=["Vendor Performance & Duplicate Checks"]
+    tags=["Vendor Performance & Duplicate Checks"],
+    dependencies=[Depends(get_current_user)]
 )
 
 
@@ -38,7 +40,7 @@ class DuplicatePOCheckResponse(BaseModel):
 
 
 @router.get("/vendors/performance/{project_id}", response_model=List[VendorPerformanceResponse])
-def get_vendor_performance(project_id: UUID, db: Session = Depends(get_db)):
+def get_vendor_performance(project_id: UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     records = db.query(VendorPerformance).filter(
         VendorPerformance.project_id == project_id
     ).all()
@@ -133,7 +135,8 @@ def refresh_vendor_performance(db: Session, project_id: UUID, company_id: UUID):
 def check_duplicate_po(
     company_id: UUID,
     po_number: str = Query(..., description="PO number to check"),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    _: None = Depends(verify_company_access)
 ):
     existing = db.query(PurchaseOrder).filter(
         PurchaseOrder.company_id == company_id,

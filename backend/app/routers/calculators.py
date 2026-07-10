@@ -1,9 +1,11 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from typing import Optional, List, Dict
 import math
 
-router = APIRouter(prefix="/calculators", tags=["Calculators"])
+from app.auth import get_current_user
+
+router = APIRouter(prefix="/calculators", tags=["Calculators"], dependencies=[Depends(get_current_user)])
 
 # 1. Steel Calculator
 class SteelCalcRequest(BaseModel):

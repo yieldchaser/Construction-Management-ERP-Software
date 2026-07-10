@@ -3,9 +3,10 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app import models
+from app.auth import get_current_user
 import uuid
 
-router = APIRouter(prefix="/profile", tags=["Profile & Onboarding"])
+router = APIRouter(prefix="/profile", tags=["Profile & Onboarding"], dependencies=[Depends(get_current_user)])
 
 class OnboardingRequest(BaseModel):
     company_id: str = Field(..., example="e0000000-0000-0000-0000-000000000000")

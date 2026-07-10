@@ -5,9 +5,10 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from app.database import get_db
+from app.auth import get_current_user, verify_project_access
 from app.models import ChatGroup, ChatMessage, ChatGroupMember
 
-router = APIRouter(prefix="/chat", tags=["Chat & MOM"])
+router = APIRouter(prefix="/chat", tags=["Chat & MOM"], dependencies=[Depends(get_current_user)])
 
 
 class ChatGroupCreate(BaseModel):
@@ -110,7 +111,7 @@ def create_group(payload: ChatGroupCreate, db: Session = Depends(get_db)):
 
 
 @router.get("/groups/{project_id}", response_model=List[ChatGroupResponse])
-def list_groups(project_id: uuid.UUID, db: Session = Depends(get_db)):
+def list_groups(project_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     groups = db.query(ChatGroup).filter(
         ChatGroup.project_id == project_id,
         ChatGroup.is_archived == False

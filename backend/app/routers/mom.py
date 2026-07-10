@@ -7,13 +7,14 @@ from sqlalchemy.orm import Session
 from sqlalchemy import cast
 from sqlalchemy import Date as SA_Date
 from app.database import get_db
-from app.models import MoM, Project
+from app.auth import get_current_user, get_company_membership
+from app.models import MoM, Project, User
 from pydantic import BaseModel
 from typing import Optional, List
 from datetime import datetime
 import uuid
 
-router = APIRouter(prefix="/mom", tags=["Minutes of Meeting"])
+router = APIRouter(prefix="/mom", tags=["Minutes of Meeting"], dependencies=[Depends(get_current_user)])
 
 
 # ─── Pydantic Schemas ────────────────────────────────────────────────────────
@@ -62,8 +63,10 @@ def list_mom(
     attendee: Optional[str] = None,
     date: Optional[str] = None,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     """List MOM records for a company, with optional filters."""
+    get_company_membership(db, current_user, uuid.UUID(company_id))
     query = db.query(MoM).filter(MoM.company_id == uuid.UUID(company_id))
     if project_id:
         query = query.filter(MoM.project_id == uuid.UUID(project_id))
@@ -84,8 +87,14 @@ def list_mom(
 
 
 @router.post("/{company_id}")
-def create_mom(company_id: str, payload: MoMCreate, db: Session = Depends(get_db)):
+def create_mom(
+    company_id: str,
+    payload: MoMCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     """Create a new MOM record."""
+    get_company_membership(db, current_user, uuid.UUID(company_id))
     mom = MoM(
         company_id=uuid.UUID(company_id),
         project_id=uuid.UUID(payload.project_id) if payload.project_id else None,
@@ -102,8 +111,14 @@ def create_mom(company_id: str, payload: MoMCreate, db: Session = Depends(get_db
 
 
 @router.get("/{company_id}/{mom_id}")
-def get_mom(company_id: str, mom_id: str, db: Session = Depends(get_db)):
+def get_mom(
+    company_id: str,
+    mom_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     """Get a single MOM record by id."""
+    get_company_membership(db, current_user, uuid.UUID(company_id))
     mom = (
         db.query(MoM)
         .filter(MoM.id == uuid.UUID(mom_id), MoM.company_id == uuid.UUID(company_id))
@@ -115,8 +130,15 @@ def get_mom(company_id: str, mom_id: str, db: Session = Depends(get_db)):
 
 
 @router.put("/{company_id}/{mom_id}")
-def update_mom(company_id: str, mom_id: str, payload: MoMUpdate, db: Session = Depends(get_db)):
+def update_mom(
+    company_id: str,
+    mom_id: str,
+    payload: MoMUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     """Update an existing MOM record."""
+    get_company_membership(db, current_user, uuid.UUID(company_id))
     mom = (
         db.query(MoM)
         .filter(MoM.id == uuid.UUID(mom_id), MoM.company_id == uuid.UUID(company_id))
@@ -140,8 +162,14 @@ def update_mom(company_id: str, mom_id: str, payload: MoMUpdate, db: Session = D
 
 
 @router.delete("/{company_id}/{mom_id}")
-def delete_mom(company_id: str, mom_id: str, db: Session = Depends(get_db)):
+def delete_mom(
+    company_id: str,
+    mom_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     """Delete a MOM record."""
+    get_company_membership(db, current_user, uuid.UUID(company_id))
     mom = (
         db.query(MoM)
         .filter(MoM.id == uuid.UUID(mom_id), MoM.company_id == uuid.UUID(company_id))

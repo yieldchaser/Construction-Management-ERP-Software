@@ -11,9 +11,10 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
 from app.database import get_db
+from app.auth import get_current_user, verify_company_access, verify_project_access
 from app.models import Equipment, EquipmentDeployment, FuelLog, MaintenanceSchedule, Project
 
-router = APIRouter(prefix="/equipment", tags=["Equipment & Machinery Tracking"])
+router = APIRouter(prefix="/equipment", tags=["Equipment & Machinery Tracking"], dependencies=[Depends(get_current_user)])
 
 
 # ─── Schemas ─────────────────────────────────────────────────────────────────
@@ -125,7 +126,7 @@ def add_equipment(payload: EquipmentCreate, db: Session = Depends(get_db)):
 
 
 @router.get("/{company_id}", response_model=List[EquipmentResponse])
-def list_fleet(company_id: uuid.UUID, db: Session = Depends(get_db)):
+def list_fleet(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     return db.query(Equipment).filter(Equipment.company_id == company_id).order_by(Equipment.created_at.desc()).all()
 
 
@@ -167,7 +168,7 @@ def deploy_equipment(
 
 
 @router.get("/deployments/{project_id}", response_model=List[DeploymentResponse])
-def list_deployments(project_id: uuid.UUID, db: Session = Depends(get_db)):
+def list_deployments(project_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     return db.query(EquipmentDeployment).filter(
         EquipmentDeployment.project_id == project_id
     ).order_by(EquipmentDeployment.start_date.desc()).all()
@@ -223,7 +224,7 @@ def log_fuel(
 
 
 @router.get("/fuel-logs/{project_id}", response_model=List[FuelLogResponse])
-def list_fuel_logs(project_id: uuid.UUID, db: Session = Depends(get_db)):
+def list_fuel_logs(project_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     return db.query(FuelLog).filter(
         FuelLog.project_id == project_id
     ).order_by(FuelLog.logged_date.desc()).all()

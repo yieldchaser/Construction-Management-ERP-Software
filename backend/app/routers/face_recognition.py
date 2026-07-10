@@ -6,9 +6,10 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from collections import defaultdict
 from app.database import get_db
+from app.auth import get_current_user, verify_company_access
 from app.models import FaceRecognitionLog, StaffEmployee
 
-router = APIRouter(prefix="/face", tags=["Face Recognition Attendance"])
+router = APIRouter(prefix="/face", tags=["Face Recognition Attendance"], dependencies=[Depends(get_current_user)])
 
 
 class FacePunchRequest(BaseModel):
@@ -74,7 +75,7 @@ def face_punch(payload: FacePunchRequest, db: Session = Depends(get_db)):
 
 
 @router.get("/logs/{company_id}", response_model=List[FacePunchResponse])
-def list_logs(company_id: uuid.UUID, project_id: Optional[uuid.UUID] = None, db: Session = Depends(get_db)):
+def list_logs(company_id: uuid.UUID, project_id: Optional[uuid.UUID] = None, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     query = db.query(FaceRecognitionLog).filter(FaceRecognitionLog.company_id == company_id)
     if project_id:
         query = query.filter(FaceRecognitionLog.project_id == project_id)
@@ -82,7 +83,7 @@ def list_logs(company_id: uuid.UUID, project_id: Optional[uuid.UUID] = None, db:
 
 
 @router.get("/employees/{company_id}", response_model=List[EmployeeRef])
-def list_employees(company_id: uuid.UUID, project_id: Optional[uuid.UUID] = None, db: Session = Depends(get_db)):
+def list_employees(company_id: uuid.UUID, project_id: Optional[uuid.UUID] = None, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     query = db.query(StaffEmployee).filter(StaffEmployee.company_id == company_id, StaffEmployee.status == "active")
     if project_id:
         query = query.filter(StaffEmployee.project_id == project_id)
@@ -90,7 +91,7 @@ def list_employees(company_id: uuid.UUID, project_id: Optional[uuid.UUID] = None
 
 
 @router.get("/summary/{company_id}", response_model=List[DailySummary])
-def daily_summary(company_id: uuid.UUID, date: str = Query(...), project_id: Optional[uuid.UUID] = None, db: Session = Depends(get_db)):
+def daily_summary(company_id: uuid.UUID, date: str = Query(...), project_id: Optional[uuid.UUID] = None, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     try:
         target_date = datetime.strptime(date, "%Y-%m-%d")
     except ValueError:

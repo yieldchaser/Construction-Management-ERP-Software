@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from app.database import get_db
+from app.auth import get_current_user, verify_project_access
 from app.models import (
     WorkOrder, WorkOrderAmendment, SubcontractorPerformance,
     WorkOrderItem, Bill, TransactionDeduction, CompanyTeam, User
@@ -13,7 +14,8 @@ from pydantic import BaseModel, Field
 
 router = APIRouter(
     prefix="/subcon",
-    tags=["Subcontractor Performance & Amendments"]
+    tags=["Subcontractor Performance & Amendments"],
+    dependencies=[Depends(get_current_user)]
 )
 
 
@@ -118,7 +120,7 @@ def _resolve_subcontractor_name(db: Session, subcontractor_id: UUID) -> str:
 
 
 @router.get("/scorecards/{project_id}", response_model=List[ScorecardResponse])
-def get_scorecards(project_id: UUID, db: Session = Depends(get_db)):
+def get_scorecards(project_id: UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     scorecards = db.query(SubcontractorPerformance).filter(
         SubcontractorPerformance.project_id == project_id
     ).all()
@@ -145,7 +147,7 @@ def get_scorecards(project_id: UUID, db: Session = Depends(get_db)):
 
 
 @router.get("/scorecards/{project_id}/comparative", response_model=List[ComparativeItem])
-def get_comparative(project_id: UUID, db: Session = Depends(get_db)):
+def get_comparative(project_id: UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     scorecards = db.query(SubcontractorPerformance).filter(
         SubcontractorPerformance.project_id == project_id
     ).all()

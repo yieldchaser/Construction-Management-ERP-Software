@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from app.database import get_db
+from app.auth import get_current_user, verify_project_access
 from app.models import (
     WorkOrder, CompanyTeam, SubcontractorPerformance,
     BOCWRecord, MusterRoll, Bill, User
@@ -15,7 +16,8 @@ import io
 
 router = APIRouter(
     prefix="/labour",
-    tags=["Labour Management"]
+    tags=["Labour Management"],
+    dependencies=[Depends(get_current_user)]
 )
 
 
@@ -100,7 +102,7 @@ class MusterRollCreate(BaseModel):
 # --- Contractor Reliability ---
 
 @router.get("/reliability/{project_id}", response_model=List[ReliabilityResponse])
-def get_reliability(project_id: UUID, db: Session = Depends(get_db)):
+def get_reliability(project_id: UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     scorecards = db.query(SubcontractorPerformance).filter(
         SubcontractorPerformance.project_id == project_id
     ).all()
@@ -129,7 +131,7 @@ def get_reliability(project_id: UUID, db: Session = Depends(get_db)):
 # --- BOCW Records ---
 
 @router.get("/bocw/{project_id}", response_model=List[BOCWResponse])
-def get_bocw(project_id: UUID, month_year: Optional[str] = None, db: Session = Depends(get_db)):
+def get_bocw(project_id: UUID, month_year: Optional[str] = None, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     query = db.query(BOCWRecord).filter(BOCWRecord.project_id == project_id)
     if month_year:
         query = query.filter(BOCWRecord.month_year == month_year)
@@ -152,7 +154,7 @@ def get_bocw(project_id: UUID, month_year: Optional[str] = None, db: Session = D
 
 
 @router.get("/bocw/{project_id}/export")
-def export_bocw(project_id: UUID, month_year: Optional[str] = None, db: Session = Depends(get_db)):
+def export_bocw(project_id: UUID, month_year: Optional[str] = None, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     query = db.query(BOCWRecord).filter(BOCWRecord.project_id == project_id)
     if month_year:
         query = query.filter(BOCWRecord.month_year == month_year)
@@ -189,7 +191,7 @@ def export_bocw(project_id: UUID, month_year: Optional[str] = None, db: Session 
 # --- Muster Roll ---
 
 @router.get("/muster-roll/{project_id}", response_model=List[MusterRollResponse])
-def get_muster_roll(project_id: UUID, db: Session = Depends(get_db)):
+def get_muster_roll(project_id: UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     records = db.query(MusterRoll).filter(MusterRoll.project_id == project_id).all()
     return [
         MusterRollResponse(

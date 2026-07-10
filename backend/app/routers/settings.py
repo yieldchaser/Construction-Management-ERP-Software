@@ -5,9 +5,10 @@ from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File,
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from app.database import get_db
+from app.auth import get_current_user, verify_company_access
 from app.models import Company, CompanyBranch, ApprovalRule, CompanyFile, CompanyRole, CompanyPayrollSettings, SalaryTemplate, PdfTemplate, CompanyTerms
 
-router = APIRouter(prefix="/settings", tags=["Settings & Configurations"])
+router = APIRouter(prefix="/settings", tags=["Settings & Configurations"], dependencies=[Depends(get_current_user)])
 
 
 # ─── Pydantic Schemas ────────────────────────────────────────────────────────
@@ -194,7 +195,7 @@ DEFAULT_ROLES = [
 # ─── Endpoints ───────────────────────────────────────────────────────────────
 
 @router.get("/company/{company_id}", response_model=CompanySettingsResponse)
-def get_company_settings(company_id: uuid.UUID, db: Session = Depends(get_db)):
+def get_company_settings(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     company = db.query(Company).filter(Company.id == company_id).first()
     if not company:
         if str(company_id) == "e0000000-0000-0000-0000-000000000000":
@@ -225,7 +226,7 @@ def get_company_settings(company_id: uuid.UUID, db: Session = Depends(get_db)):
 
 
 @router.put("/company/{company_id}", response_model=CompanySettingsResponse)
-def update_company_settings(company_id: uuid.UUID, settings_data: CompanySettingsUpdate, db: Session = Depends(get_db)):
+def update_company_settings(company_id: uuid.UUID, settings_data: CompanySettingsUpdate, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     company = db.query(Company).filter(Company.id == company_id).first()
     if not company:
         raise HTTPException(status_code=404, detail="Company not found")
@@ -247,12 +248,12 @@ def update_company_settings(company_id: uuid.UUID, settings_data: CompanySetting
 
 
 @router.get("/branches/{company_id}", response_model=List[BranchResponse])
-def list_branches(company_id: uuid.UUID, db: Session = Depends(get_db)):
+def list_branches(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     return db.query(CompanyBranch).filter(CompanyBranch.company_id == company_id).all()
 
 
 @router.post("/branches/{company_id}", response_model=BranchResponse)
-def create_branch(company_id: uuid.UUID, branch_data: BranchCreate, db: Session = Depends(get_db)):
+def create_branch(company_id: uuid.UUID, branch_data: BranchCreate, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     existing_count = db.query(CompanyBranch).filter(CompanyBranch.company_id == company_id).count()
     new_branch = CompanyBranch(
         company_id=company_id,
@@ -286,12 +287,12 @@ def set_primary_branch(branch_id: uuid.UUID, db: Session = Depends(get_db)):
 
 
 @router.get("/approval-rules/{company_id}", response_model=List[ApprovalRuleResponse])
-def list_approval_rules(company_id: uuid.UUID, db: Session = Depends(get_db)):
+def list_approval_rules(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     return db.query(ApprovalRule).filter(ApprovalRule.company_id == company_id).all()
 
 
 @router.post("/approval-rules/{company_id}", response_model=ApprovalRuleResponse)
-def create_approval_rule(company_id: uuid.UUID, rule_data: ApprovalRuleCreate, db: Session = Depends(get_db)):
+def create_approval_rule(company_id: uuid.UUID, rule_data: ApprovalRuleCreate, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     new_rule = ApprovalRule(
         company_id=company_id,
         feature_type=rule_data.feature_type,
@@ -327,12 +328,12 @@ def delete_approval_rule(rule_id: uuid.UUID, db: Session = Depends(get_db)):
     db.commit()
 
 @router.get("/roles/{company_id}", response_model=List[RoleResponse])
-def list_roles(company_id: uuid.UUID, db: Session = Depends(get_db)):
+def list_roles(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     return db.query(CompanyRole).filter(CompanyRole.company_id == company_id).order_by(CompanyRole.created_at).all()
 
 
 @router.post("/roles/{company_id}", response_model=RoleResponse)
-def create_role(company_id: uuid.UUID, role_data: RoleCreate, db: Session = Depends(get_db)):
+def create_role(company_id: uuid.UUID, role_data: RoleCreate, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     name = role_data.role_name.strip()
     if not name:
         raise HTTPException(status_code=400, detail="Role name is required")
@@ -349,7 +350,7 @@ def create_role(company_id: uuid.UUID, role_data: RoleCreate, db: Session = Depe
 
 
 @router.post("/roles/seed/{company_id}", response_model=List[RoleResponse])
-def seed_default_roles(company_id: uuid.UUID, db: Session = Depends(get_db)):
+def seed_default_roles(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     if db.query(CompanyRole).filter(CompanyRole.company_id == company_id).count() > 0:
         raise HTTPException(status_code=409, detail="Roles already exist for this company")
     created = []
@@ -399,12 +400,12 @@ def _get_or_create_payroll_settings(company_id: uuid.UUID, db: Session):
 
 
 @router.get("/payroll/{company_id}", response_model=PayrollSettingsResponse)
-def get_payroll_settings(company_id: uuid.UUID, db: Session = Depends(get_db)):
+def get_payroll_settings(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     return _get_or_create_payroll_settings(company_id, db)
 
 
 @router.put("/payroll/{company_id}", response_model=PayrollSettingsResponse)
-def update_payroll_settings(company_id: uuid.UUID, payload: PayrollSettingsUpdate, db: Session = Depends(get_db)):
+def update_payroll_settings(company_id: uuid.UUID, payload: PayrollSettingsUpdate, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     row = _get_or_create_payroll_settings(company_id, db)
     for field, val in payload.model_dump(exclude_unset=True).items():
         setattr(row, field, val)
@@ -443,12 +444,12 @@ class SalaryTemplateUpdate(BaseModel):
 
 
 @router.get("/salary-templates/{company_id}", response_model=List[SalaryTemplateResponse])
-def list_salary_templates(company_id: uuid.UUID, db: Session = Depends(get_db)):
+def list_salary_templates(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     return db.query(SalaryTemplate).filter(SalaryTemplate.company_id == company_id).order_by(SalaryTemplate.name).all()
 
 
 @router.post("/salary-templates/{company_id}", response_model=SalaryTemplateResponse, status_code=status.HTTP_201_CREATED)
-def create_salary_template(company_id: uuid.UUID, payload: SalaryTemplateCreate, db: Session = Depends(get_db)):
+def create_salary_template(company_id: uuid.UUID, payload: SalaryTemplateCreate, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     data = payload.model_dump()
     data["breakup"] = payload.breakup
     obj = SalaryTemplate(company_id=company_id, **data)
@@ -490,6 +491,7 @@ async def upload_company_file(
     asset_type: str,
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
+    _: None = Depends(verify_company_access),
 ):
     if asset_type not in ALLOWED_ASSET_TYPES:
         raise HTTPException(status_code=400, detail="Invalid asset type")
@@ -519,7 +521,7 @@ async def upload_company_file(
 
 
 @router.get("/company-file/{company_id}/{asset_type}")
-def get_company_file(company_id: uuid.UUID, asset_type: str, db: Session = Depends(get_db)):
+def get_company_file(company_id: uuid.UUID, asset_type: str, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     if asset_type not in ALLOWED_ASSET_TYPES:
         raise HTTPException(status_code=400, detail="Invalid asset type")
     cf = (
@@ -578,13 +580,13 @@ def _get_or_create_company_terms(company_id: uuid.UUID, db: Session) -> CompanyT
 
 
 @router.get("/company-terms/{company_id}", response_model=CompanyTermsResponse)
-def get_company_terms(company_id: uuid.UUID, db: Session = Depends(get_db)):
+def get_company_terms(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     row = _get_or_create_company_terms(company_id, db)
     return row
 
 
 @router.put("/company-terms/{company_id}", response_model=CompanyTermsResponse)
-def update_company_terms(company_id: uuid.UUID, payload: CompanyTermsUpdate, db: Session = Depends(get_db)):
+def update_company_terms(company_id: uuid.UUID, payload: CompanyTermsUpdate, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     row = _get_or_create_company_terms(company_id, db)
     for field, val in payload.model_dump(exclude_unset=True).items():
         setattr(row, field, val)

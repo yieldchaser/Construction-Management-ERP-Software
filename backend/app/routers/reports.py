@@ -13,6 +13,7 @@ from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from app.database import get_db
+from app.auth import get_current_user, verify_project_access, get_company_membership
 from app.models import (
     ClientReport, Project, Task, Bill, WorkOrder,
     MaterialIndent, PurchaseOrder, SiteInspection, NCR, MaterialTestResult,
@@ -26,7 +27,7 @@ from app.models import (
 )
 from app.utils.pdf_generator import generate_client_report_pdf
 
-router = APIRouter(prefix="/reports", tags=["Client Reports Portal"])
+router = APIRouter(prefix="/reports", tags=["Client Reports Portal"], dependencies=[Depends(get_current_user)])
 
 
 # ─── Schemas ─────────────────────────────────────────────────────────────────
@@ -56,7 +57,8 @@ class ReportResponse(BaseModel):
 def generate_report(
     project_id: uuid.UUID,
     payload: ReportCreate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    _: None = Depends(verify_project_access)
 ):
     project = db.query(Project).filter(Project.id == project_id).first()
     if not project:
@@ -139,7 +141,7 @@ def generate_report(
 
 
 @router.get("/{project_id}", response_model=List[ReportResponse])
-def list_reports(project_id: uuid.UUID, db: Session = Depends(get_db)):
+def list_reports(project_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     return db.query(ClientReport).filter(
         ClientReport.project_id == project_id
     ).order_by(ClientReport.report_date.desc()).all()
@@ -1207,7 +1209,8 @@ def get_report_data(
     slug: str,
     company_id: str,
     project_id: Optional[str] = None,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     generated_at = datetime.utcnow().isoformat()
     try:
@@ -1215,6 +1218,13 @@ def get_report_data(
         pid = uuid.UUID(project_id) if project_id else None
     except Exception:
         return {"slug": slug, "rows": [], "generated_at": generated_at}
+
+    get_company_membership(db, current_user, cid)
+    if pid is not None:
+        project = db.query(Project).filter(Project.id == pid).first()
+        if not project:
+            raise HTTPException(status_code=404, detail="Project not found")
+        get_company_membership(db, current_user, project.company_id)
 
     rows: List[dict] = []
     handler = _REPORT_HANDLERS.get(slug)

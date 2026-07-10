@@ -4,12 +4,14 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from app.database import get_db
+from app.auth import get_current_user, verify_project_access
 from app.models import ProjectTower, ProjectBudget, PurchaseOrder, Bill, WorkOrder
 from pydantic import BaseModel, Field
 
 router = APIRouter(
     prefix="/towers",
-    tags=["Multi-Tower / Phase Support"]
+    tags=["Multi-Tower / Phase Support"],
+    dependencies=[Depends(get_current_user)]
 )
 
 
@@ -62,7 +64,7 @@ class ConsolidatedPNLItem(BaseModel):
 # --- Endpoints ---
 
 @router.get("/{project_id}", response_model=List[ProjectTowerResponse])
-def list_towers(project_id: UUID, db: Session = Depends(get_db)):
+def list_towers(project_id: UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     towers = db.query(ProjectTower).filter(ProjectTower.project_id == project_id).all()
     return [
         ProjectTowerResponse(
@@ -142,7 +144,7 @@ def delete_tower(tower_id: UUID, db: Session = Depends(get_db)):
 
 
 @router.get("/{project_id}/consolidated-pnl", response_model=List[ConsolidatedPNLItem])
-def consolidated_pnl(project_id: UUID, tower_id: Optional[UUID] = Query(None), db: Session = Depends(get_db)):
+def consolidated_pnl(project_id: UUID, tower_id: Optional[UUID] = Query(None), db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     towers = db.query(ProjectTower).filter(ProjectTower.project_id == project_id).all()
 
     if not towers:

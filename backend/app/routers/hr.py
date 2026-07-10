@@ -23,13 +23,14 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
 from app.database import get_db
+from app.auth import get_current_user, verify_company_access, verify_project_access, get_company_membership
 from app.models import (
     StaffEmployee, AttendanceLog, Timesheet,
     TimesheetEntry, PayrollRun, PayrollLineItem, Project, LeaveRequest,
     Holiday, Designation, LeaveTemplate, PayrollProfile
 )
 
-router = APIRouter(prefix="/hr", tags=["HR, Attendance & Payroll"])
+router = APIRouter(prefix="/hr", tags=["HR, Attendance & Payroll"], dependencies=[Depends(get_current_user)])
 
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -245,7 +246,7 @@ def create_employee(payload: EmployeeCreate, db: Session = Depends(get_db)):
 
 
 @router.get("/employees/{project_id}", response_model=List[EmployeeResponse])
-def list_employees(project_id: uuid.UUID, db: Session = Depends(get_db)):
+def list_employees(project_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     return db.query(StaffEmployee).filter(
         StaffEmployee.project_id == project_id,
         StaffEmployee.status == "active"
@@ -338,7 +339,7 @@ def punch(payload: PunchRequest, db: Session = Depends(get_db)):
 
 
 @router.get("/attendance/{project_id}/{date_str}", response_model=List[AttendanceResponse])
-def daily_attendance(project_id: uuid.UUID, date_str: str, db: Session = Depends(get_db)):
+def daily_attendance(project_id: uuid.UUID, date_str: str, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     try:
         target = datetime.strptime(date_str, "%Y-%m-%d")
     except ValueError:
@@ -395,7 +396,7 @@ def add_timesheet_entry(ts_id: uuid.UUID, payload: TimesheetEntryCreate, db: Ses
 
 
 @router.get("/timesheets/project/{project_id}", response_model=List[TimesheetEntryResponse])
-def list_project_timesheet_entries(project_id: uuid.UUID, db: Session = Depends(get_db)):
+def list_project_timesheet_entries(project_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     results = db.query(
         TimesheetEntry,
         StaffEmployee.name.label("employee_name"),
@@ -417,7 +418,7 @@ def list_project_timesheet_entries(project_id: uuid.UUID, db: Session = Depends(
 
 
 @router.get("/timesheets/company/{company_id}")
-def list_company_timesheet_entries(company_id: uuid.UUID, db: Session = Depends(get_db)):
+def list_company_timesheet_entries(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     results = db.query(
         TimesheetEntry,
         StaffEmployee.name.label("employee_name"),
@@ -696,12 +697,12 @@ class LeaveStatusUpdate(BaseModel):
 
 
 @router.get("/leaves/{company_id}", response_model=List[LeaveRequestResponse])
-def list_leaves(company_id: uuid.UUID, db: Session = Depends(get_db)):
+def list_leaves(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     return db.query(LeaveRequest).filter(LeaveRequest.company_id == company_id).all()
 
 
 @router.post("/leaves/{company_id}", response_model=LeaveRequestResponse)
-def create_leave_request(company_id: uuid.UUID, data: LeaveRequestCreate, db: Session = Depends(get_db)):
+def create_leave_request(company_id: uuid.UUID, data: LeaveRequestCreate, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     new_leave = LeaveRequest(
         company_id=company_id,
         project_id=data.project_id,
@@ -734,17 +735,22 @@ def upload_payroll(
     company_id: uuid.UUID = Form(...),
     project_id: Optional[uuid.UUID] = Form(None),
     file: UploadFile = File(...),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user)
 ):
+    # company_id here comes from multipart form data (not the URL path/query),
+    # so it can't share a value with a plain Depends(verify_company_access)
+    # sub-dependency; verify membership inline instead.
+    get_company_membership(db, current_user, company_id)
     import csv
     import io
-    
+
     try:
         content = file.file.read().decode("utf-8")
         csv_reader = csv.reader(io.StringIO(content))
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Failed to read file: {str(e)}")
-    
+
     headers = next(csv_reader, None)
     if not headers:
         raise HTTPException(status_code=400, detail="Empty CSV file")
@@ -857,7 +863,7 @@ class EmployeeUpdate(BaseModel):
 
 
 @router.get("/company/employees/{company_id}", response_model=List[EmployeeResponse])
-def list_company_employees(company_id: uuid.UUID, db: Session = Depends(get_db)):
+def list_company_employees(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     """Company-wide active employee list (Payroll → People tab)."""
     return db.query(StaffEmployee).filter(
         StaffEmployee.company_id == company_id,
@@ -894,12 +900,12 @@ class DesignationCreate(BaseModel):
 
 
 @router.get("/designations/{company_id}", response_model=List[DesignationResponse])
-def list_designations(company_id: uuid.UUID, db: Session = Depends(get_db)):
+def list_designations(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     return db.query(Designation).filter(Designation.company_id == company_id).order_by(Designation.name).all()
 
 
 @router.post("/designations/{company_id}", response_model=DesignationResponse, status_code=status.HTTP_201_CREATED)
-def create_designation(company_id: uuid.UUID, payload: DesignationCreate, db: Session = Depends(get_db)):
+def create_designation(company_id: uuid.UUID, payload: DesignationCreate, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     obj = Designation(company_id=company_id, name=payload.name)
     db.add(obj)
     db.commit()
@@ -944,12 +950,12 @@ class LeaveTemplateUpdate(BaseModel):
 
 
 @router.get("/leave-templates/{company_id}", response_model=List[LeaveTemplateResponse])
-def list_leave_templates(company_id: uuid.UUID, db: Session = Depends(get_db)):
+def list_leave_templates(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     return db.query(LeaveTemplate).filter(LeaveTemplate.company_id == company_id).order_by(LeaveTemplate.name).all()
 
 
 @router.post("/leave-templates/{company_id}", response_model=LeaveTemplateResponse, status_code=status.HTTP_201_CREATED)
-def create_leave_template(company_id: uuid.UUID, payload: LeaveTemplateCreate, db: Session = Depends(get_db)):
+def create_leave_template(company_id: uuid.UUID, payload: LeaveTemplateCreate, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     obj = LeaveTemplate(company_id=company_id, **payload.model_dump())
     db.add(obj)
     db.commit()
@@ -1072,12 +1078,12 @@ class HolidayUpdate(BaseModel):
 
 
 @router.get("/holidays/{company_id}", response_model=List[HolidayResponse])
-def list_holidays(company_id: uuid.UUID, db: Session = Depends(get_db)):
+def list_holidays(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     return db.query(Holiday).filter(Holiday.company_id == company_id).order_by(Holiday.date).all()
 
 
 @router.post("/holidays/{company_id}", response_model=HolidayResponse, status_code=status.HTTP_201_CREATED)
-def create_holiday(company_id: uuid.UUID, payload: HolidayCreate, db: Session = Depends(get_db)):
+def create_holiday(company_id: uuid.UUID, payload: HolidayCreate, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     obj = Holiday(company_id=company_id, name=payload.name, date=payload.date)
     db.add(obj)
     db.commit()
@@ -1123,7 +1129,7 @@ class CompanyAttendanceResponse(BaseModel):
 
 
 @router.get("/attendance/company/{company_id}/{date_str}", response_model=List[CompanyAttendanceResponse])
-def company_attendance(company_id: uuid.UUID, date_str: str, db: Session = Depends(get_db)):
+def company_attendance(company_id: uuid.UUID, date_str: str, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     """Company-wide attendance rollup for a single day (Payroll → Attendance tab)."""
     try:
         target = datetime.strptime(date_str, "%Y-%m-%d")

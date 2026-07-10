@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import List, Optional
 from app.database import get_db
 from app import models
-from app.auth import get_current_user
+from app.auth import get_current_user, verify_company_access
 import uuid
 
 router = APIRouter(prefix="/todos", tags=["Todos"], dependencies=[Depends(get_current_user)])
@@ -88,6 +88,7 @@ def list_todos(
     status: Optional[str] = None,
     assignee_id: Optional[uuid.UUID] = None,
     db: Session = Depends(get_db),
+    _: None = Depends(verify_company_access),
 ):
     q = db.query(models.Todo).filter(models.Todo.company_id == company_id)
     if project_id:

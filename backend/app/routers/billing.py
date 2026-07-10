@@ -4,7 +4,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.auth import get_current_user
+from app.auth import get_current_user, verify_project_access
 from app.models import (
     WorkOrder, WorkOrderItem, Bill, TransactionDeduction,
     DebitNote, CreditNote, CompanyTeam, User, Company
@@ -175,7 +175,7 @@ class CreditNoteResponse(BaseModel):
 
 # 1. Work Orders
 @router.get("/work-orders", response_model=List[WOResponse])
-def get_work_orders(project_id: UUID, db: Session = Depends(get_db)):
+def get_work_orders(project_id: UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     orders = db.query(WorkOrder).filter(WorkOrder.project_id == project_id).all()
     res = []
     for wo in orders:
@@ -279,7 +279,7 @@ def create_work_order(req: WOCreateRequest, db: Session = Depends(get_db)):
 
 # 2. Bills
 @router.get("/bills", response_model=List[BillResponse])
-def get_bills(project_id: UUID, invoice_type: Optional[str] = None, db: Session = Depends(get_db)):
+def get_bills(project_id: UUID, invoice_type: Optional[str] = None, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     query = db.query(Bill).filter(Bill.project_id == project_id)
     if invoice_type:
         query = query.filter(Bill.invoice_type == invoice_type)
@@ -464,7 +464,7 @@ def create_bill(req: BillCreateRequest, db: Session = Depends(get_db)):
 
 # 3. Debit Notes
 @router.get("/debit-notes", response_model=List[DebitNoteResponse])
-def get_debit_notes(project_id: UUID, db: Session = Depends(get_db)):
+def get_debit_notes(project_id: UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     notes = db.query(DebitNote).filter(DebitNote.project_id == project_id).all()
     return [
         DebitNoteResponse(
@@ -518,7 +518,7 @@ def create_debit_note(req: DebitNoteCreateRequest, db: Session = Depends(get_db)
 
 # 4. Credit Notes
 @router.get("/credit-notes", response_model=List[CreditNoteResponse])
-def get_credit_notes(project_id: UUID, db: Session = Depends(get_db)):
+def get_credit_notes(project_id: UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     notes = db.query(CreditNote).filter(CreditNote.project_id == project_id).all()
     return [
         CreditNoteResponse(

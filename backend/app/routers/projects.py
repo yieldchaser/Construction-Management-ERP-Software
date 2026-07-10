@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import List, Optional
 from app.database import get_db
 from app import models
-from app.auth import get_current_user
+from app.auth import get_current_user, verify_company_access, verify_project_access
 import uuid
 
 router = APIRouter(prefix="/projects", tags=["Projects"], dependencies=[Depends(get_current_user)])
@@ -210,13 +210,13 @@ class LocationCreate(BaseModel):
 # ─── project CRUD ───
 
 @router.get("/company/{company_id}")
-def list_projects(company_id: uuid.UUID, db: Session = Depends(get_db)):
+def list_projects(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     projects = db.query(models.Project).filter(models.Project.company_id == company_id).all()
     return [_serialize_project(db, p) for p in projects]
 
 
 @router.get("/company/{company_id}/summary")
-def project_summary(company_id: uuid.UUID, user_id: Optional[uuid.UUID] = None, db: Session = Depends(get_db)):
+def project_summary(company_id: uuid.UUID, user_id: Optional[uuid.UUID] = None, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     project_ids = [p.id for p in db.query(models.Project.id).filter(models.Project.company_id == company_id).all()]
 
     # Approval (Pending) — drawing revisions + credit notes + payment requests
@@ -291,7 +291,7 @@ def create_project(payload: ProjectCreate, db: Session = Depends(get_db)):
 
 
 @router.get("/{project_id}")
-def get_project(project_id: uuid.UUID, db: Session = Depends(get_db)):
+def get_project(project_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     p = db.query(models.Project).filter(models.Project.id == project_id).first()
     if not p:
         raise HTTPException(status_code=404, detail="Project not found")
@@ -299,7 +299,7 @@ def get_project(project_id: uuid.UUID, db: Session = Depends(get_db)):
 
 
 @router.put("/{project_id}")
-def update_project(project_id: uuid.UUID, payload: ProjectUpdate, db: Session = Depends(get_db)):
+def update_project(project_id: uuid.UUID, payload: ProjectUpdate, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     p = db.query(models.Project).filter(models.Project.id == project_id).first()
     if not p:
         raise HTTPException(status_code=404, detail="Project not found")
@@ -313,7 +313,7 @@ def update_project(project_id: uuid.UUID, payload: ProjectUpdate, db: Session = 
 
 
 @router.post("/{project_id}/pin")
-def toggle_pin(project_id: uuid.UUID, db: Session = Depends(get_db)):
+def toggle_pin(project_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     p = db.query(models.Project).filter(models.Project.id == project_id).first()
     if not p:
         raise HTTPException(status_code=404, detail="Project not found")
@@ -324,7 +324,7 @@ def toggle_pin(project_id: uuid.UUID, db: Session = Depends(get_db)):
 
 
 @router.delete("/{project_id}")
-def delete_project(project_id: uuid.UUID, db: Session = Depends(get_db)):
+def delete_project(project_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     p = db.query(models.Project).filter(models.Project.id == project_id).first()
     if not p:
         raise HTTPException(status_code=404, detail="Project not found")
@@ -341,7 +341,7 @@ def delete_project(project_id: uuid.UUID, db: Session = Depends(get_db)):
 # ─── Members (Settings → Members) ───
 
 @router.get("/{project_id}/members")
-def list_project_members(project_id: uuid.UUID, search: Optional[str] = None, db: Session = Depends(get_db)):
+def list_project_members(project_id: uuid.UUID, search: Optional[str] = None, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     p = db.query(models.Project).filter(models.Project.id == project_id).first()
     if not p:
         raise HTTPException(status_code=404, detail="Project not found")
@@ -369,7 +369,7 @@ def list_project_members(project_id: uuid.UUID, search: Optional[str] = None, db
 
 
 @router.post("/{project_id}/members")
-def add_project_member(project_id: uuid.UUID, member_id: uuid.UUID, db: Session = Depends(get_db)):
+def add_project_member(project_id: uuid.UUID, member_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     p = db.query(models.Project).filter(models.Project.id == project_id).first()
     if not p:
         raise HTTPException(status_code=404, detail="Project not found")
@@ -384,7 +384,7 @@ def add_project_member(project_id: uuid.UUID, member_id: uuid.UUID, db: Session 
 
 
 @router.delete("/{project_id}/members/{member_id}")
-def remove_project_member(project_id: uuid.UUID, member_id: uuid.UUID, db: Session = Depends(get_db)):
+def remove_project_member(project_id: uuid.UUID, member_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     row = db.query(models.ProjectMember).filter(
         models.ProjectMember.project_id == project_id,
         models.ProjectMember.company_team_id == member_id
@@ -404,7 +404,7 @@ class ProjectPartyCreate(BaseModel):
 
 
 @router.get("/{project_id}/parties")
-def list_project_parties(project_id: uuid.UUID, db: Session = Depends(get_db)):
+def list_project_parties(project_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     links = db.query(models.ProjectParty).filter(models.ProjectParty.project_id == project_id).all()
     result = []
     for link in links:
@@ -425,7 +425,7 @@ def list_project_parties(project_id: uuid.UUID, db: Session = Depends(get_db)):
 
 
 @router.post("/{project_id}/parties")
-def add_project_party(project_id: uuid.UUID, payload: ProjectPartyCreate, db: Session = Depends(get_db)):
+def add_project_party(project_id: uuid.UUID, payload: ProjectPartyCreate, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     p = db.query(models.Project).filter(models.Project.id == project_id).first()
     if not p:
         raise HTTPException(status_code=404, detail="Project not found")
@@ -461,7 +461,8 @@ def add_project_party(project_id: uuid.UUID, payload: ProjectPartyCreate, db: Se
 
 @router.put("/{project_id}/parties/{party_id}")
 def set_project_party_status(
-    project_id: uuid.UUID, party_id: uuid.UUID, payload: dict, db: Session = Depends(get_db)
+    project_id: uuid.UUID, party_id: uuid.UUID, payload: dict, db: Session = Depends(get_db),
+    _: None = Depends(verify_project_access)
 ):
     link = db.query(models.ProjectParty).filter(
         models.ProjectParty.project_id == project_id,
@@ -478,7 +479,7 @@ def set_project_party_status(
 
 
 @router.get("/{project_id}/parties/balances")
-def project_party_balances(project_id: uuid.UUID, db: Session = Depends(get_db)):
+def project_party_balances(project_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     links = db.query(models.ProjectParty).filter(models.ProjectParty.project_id == project_id).all()
     advance_paid = 0.0
     to_pay = 0.0
@@ -490,7 +491,7 @@ def project_party_balances(project_id: uuid.UUID, db: Session = Depends(get_db))
 
 
 @router.delete("/{project_id}/parties/{party_id}")
-def remove_project_party(project_id: uuid.UUID, party_id: uuid.UUID, db: Session = Depends(get_db)):
+def remove_project_party(project_id: uuid.UUID, party_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     link = db.query(models.ProjectParty).filter(
         models.ProjectParty.project_id == project_id,
         models.ProjectParty.party_id == party_id
@@ -504,13 +505,13 @@ def remove_project_party(project_id: uuid.UUID, party_id: uuid.UUID, db: Session
 # ─── Location Structure (Settings → Location Structure) ───
 
 @router.get("/{project_id}/locations")
-def list_locations(project_id: uuid.UUID, db: Session = Depends(get_db)):
+def list_locations(project_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     locs = db.query(models.ProjectLocation).filter(models.ProjectLocation.project_id == project_id).all()
     return [{"id": str(l.id), "name": l.name, "parent_id": str(l.parent_id) if l.parent_id else None} for l in locs]
 
 
 @router.post("/{project_id}/locations")
-def create_location(project_id: uuid.UUID, payload: LocationCreate, db: Session = Depends(get_db)):
+def create_location(project_id: uuid.UUID, payload: LocationCreate, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     p = db.query(models.Project).filter(models.Project.id == project_id).first()
     if not p:
         raise HTTPException(status_code=404, detail="Project not found")
@@ -522,7 +523,7 @@ def create_location(project_id: uuid.UUID, payload: LocationCreate, db: Session 
 
 
 @router.delete("/{project_id}/locations/{location_id}")
-def delete_location(project_id: uuid.UUID, location_id: uuid.UUID, db: Session = Depends(get_db)):
+def delete_location(project_id: uuid.UUID, location_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     loc = db.query(models.ProjectLocation).filter(
         models.ProjectLocation.id == location_id,
         models.ProjectLocation.project_id == project_id

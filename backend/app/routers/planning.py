@@ -4,7 +4,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.auth import get_current_user
+from app.auth import get_current_user, verify_company_access, verify_project_access
 from app.models import Task, TaskPredecessor, Project, TaskTodo, TaskComment, CompanyTeam, User
 from pydantic import BaseModel
 
@@ -113,7 +113,7 @@ def propagate_schedule(task_id: UUID, db: Session):
             propagate_schedule(successor.id, db)
 
 @router.get("/tasks", response_model=List[TaskResponse])
-def get_tasks(project_id: UUID, db: Session = Depends(get_db)):
+def get_tasks(project_id: UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     project = db.query(Project).filter(Project.id == project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
@@ -122,7 +122,7 @@ def get_tasks(project_id: UUID, db: Session = Depends(get_db)):
     return tasks
 
 @router.get("/tasks/company/{company_id}", response_model=List[CompanyTaskResponse])
-def get_company_tasks(company_id: UUID, db: Session = Depends(get_db)):
+def get_company_tasks(company_id: UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     """Cross-project rollup of every task in the company (Team Schedule Gantt)."""
     company = db.query(Project).filter(Project.company_id == company_id).first()
     if not company:
@@ -439,11 +439,11 @@ class ProjectResponseSchema(BaseModel):
         from_attributes = True
 
 @router.get("/projects", response_model=List[ProjectResponseSchema])
-def list_projects_v3(company_id: UUID, db: Session = Depends(get_db)):
+def list_projects_v3(company_id: UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     return db.query(Project).filter(Project.company_id == company_id).all()
 
 @router.get("/projects/{project_id}", response_model=ProjectResponseSchema)
-def get_project_v3(project_id: UUID, db: Session = Depends(get_db)):
+def get_project_v3(project_id: UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     proj = db.query(Project).filter(Project.id == project_id).first()
     if not proj:
         raise HTTPException(status_code=404, detail="Project not found")
@@ -473,7 +473,7 @@ def create_project_v3(payload: ProjectCreateSchema, db: Session = Depends(get_db
     return proj
 
 @router.patch("/projects/{project_id}", response_model=ProjectResponseSchema)
-def update_project_v3(project_id: UUID, payload: ProjectUpdateSchema, db: Session = Depends(get_db)):
+def update_project_v3(project_id: UUID, payload: ProjectUpdateSchema, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     proj = db.query(Project).filter(Project.id == project_id).first()
     if not proj:
         raise HTTPException(status_code=404, detail="Project not found")

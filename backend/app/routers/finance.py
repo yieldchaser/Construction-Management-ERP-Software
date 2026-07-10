@@ -6,12 +6,13 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import Payment, PaymentSettlement, Bill, PayrollRun, PayrollLineItem, StaffEmployee, ProjectBudget, Project, CompanyTeam, User, Equipment, EquipmentDeployment, FuelLog, BankAccount, PaymentRequest, PaymentRequestPayment, CashAccount, LibraryParty, Company
-from app.auth import get_current_user
+from app.auth import get_current_user, verify_company_access, verify_project_access, get_company_membership
 from pydantic import BaseModel
 
 router = APIRouter(
     prefix="/finance",
-    tags=["Finance & P&L"]
+    tags=["Finance & P&L"],
+    dependencies=[Depends(get_current_user)]
 )
 
 # Pydantic Schemas
@@ -161,7 +162,7 @@ def create_payment(req: PaymentCreateRequest, db: Session = Depends(get_db)):
 
 
 @router.get("/ledger", response_model=List[LedgerTransactionResponse])
-def get_ledger(project_id: uuid.UUID, db: Session = Depends(get_db)):
+def get_ledger(project_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     proj_uuid = uuid.UUID(str(project_id))
     
     # 1. Fetch payments
@@ -294,7 +295,7 @@ def get_ledger(project_id: uuid.UUID, db: Session = Depends(get_db)):
 
 
 @router.get("/pl", response_model=List[PLItemResponse])
-def get_project_pl(project_id: uuid.UUID, db: Session = Depends(get_db)):
+def get_project_pl(project_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     proj_uuid = uuid.UUID(str(project_id))
     
     # Fetch project budgets
@@ -466,12 +467,12 @@ class PaymentRequestPaymentCreate(BaseModel):
 
 
 @router.get("/accounts/{company_id}", response_model=List[BankAccountResponse])
-def get_bank_accounts(company_id: uuid.UUID, db: Session = Depends(get_db)):
+def get_bank_accounts(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     return db.query(BankAccount).filter(BankAccount.company_id == company_id).all()
 
 
 @router.post("/accounts/{company_id}", response_model=BankAccountResponse)
-def create_bank_account(company_id: uuid.UUID, data: BankAccountCreate, db: Session = Depends(get_db)):
+def create_bank_account(company_id: uuid.UUID, data: BankAccountCreate, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     new_acc = BankAccount(
         company_id=company_id,
         account_holder_name=data.account_holder_name,
@@ -521,7 +522,7 @@ class CashAccountResponse(BaseModel):
 
 
 @router.get("/cash-account/{company_id}", response_model=Optional[CashAccountResponse])
-def get_cash_account(company_id: uuid.UUID, db: Session = Depends(get_db)):
+def get_cash_account(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     acc = db.query(CashAccount).filter(CashAccount.company_id == company_id).first()
     if not acc:
         return None
@@ -536,7 +537,7 @@ def get_cash_account(company_id: uuid.UUID, db: Session = Depends(get_db)):
 
 
 @router.post("/cash-account/{company_id}", response_model=CashAccountResponse)
-def create_cash_account(company_id: uuid.UUID, data: CashAccountCreate, db: Session = Depends(get_db)):
+def create_cash_account(company_id: uuid.UUID, data: CashAccountCreate, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     existing = db.query(CashAccount).filter(CashAccount.company_id == company_id).first()
     if existing:
         raise HTTPException(status_code=400, detail="Cash account already exists for this company")
@@ -605,7 +606,7 @@ class CompanyPartyResponse(BaseModel):
 
 
 @router.get("/parties/{company_id}", response_model=List[CompanyPartyResponse])
-def get_company_parties(company_id: uuid.UUID, db: Session = Depends(get_db)):
+def get_company_parties(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     parties = db.query(LibraryParty).filter(LibraryParty.company_id == company_id).all()
     result = []
     for lp in parties:
@@ -860,7 +861,7 @@ class FinanceSummaryResponse(BaseModel):
 
 
 @router.get("/transactions/{company_id}", response_model=FinanceSummaryResponse)
-def get_company_transactions(company_id: uuid.UUID, db: Session = Depends(get_db)):
+def get_company_transactions(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     project_ids = [p.id for p in db.query(Project).filter(Project.company_id == company_id).all()]
 
     bills = []
@@ -948,7 +949,7 @@ def get_company_transactions(company_id: uuid.UUID, db: Session = Depends(get_db
 
 
 @router.get("/payment-requests/{company_id}", response_model=List[PaymentRequestResponse])
-def get_payment_requests(company_id: uuid.UUID, db: Session = Depends(get_db)):
+def get_payment_requests(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     requests = db.query(PaymentRequest).filter(PaymentRequest.company_id == company_id).all()
     # Populate party_name if possible
     res = []
@@ -995,7 +996,7 @@ def get_payment_requests(company_id: uuid.UUID, db: Session = Depends(get_db)):
 
 
 @router.post("/payment-requests/{company_id}", response_model=PaymentRequestResponse)
-def create_payment_request(company_id: uuid.UUID, data: PaymentRequestCreate, db: Session = Depends(get_db)):
+def create_payment_request(company_id: uuid.UUID, data: PaymentRequestCreate, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     user = db.query(User).filter(User.id == data.party_company_user_id).first()
     party_name = user.name if user else "Unknown Party"
     # Auto-generate sequential request no (PR-1, PR-2, ...) per company
@@ -1141,7 +1142,8 @@ class P2PTransferResponse(BaseModel):
 
 cashbook_router = APIRouter(
     prefix="/cashbook",
-    tags=["Cashbook & P2P"]
+    tags=["Cashbook & P2P"],
+    dependencies=[Depends(get_current_user)]
 )
 
 def perform_p2p_transfer(req: P2PTransferRequest, db: Session):
@@ -1210,11 +1212,16 @@ def p2p_transfer_finance(req: P2PTransferRequest, db: Session = Depends(get_db))
 def upload_payments(
     company_id: uuid.UUID = Form(...),
     file: UploadFile = File(...),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user)
 ):
+    # company_id here comes from multipart form data (not the URL path/query),
+    # so it can't share a value with a plain Depends(verify_company_access)
+    # sub-dependency; verify membership inline instead.
+    get_company_membership(db, current_user, company_id)
     import csv
     import io
-    
+
     try:
         content = file.file.read().decode("utf-8")
         csv_reader = csv.reader(io.StringIO(content))

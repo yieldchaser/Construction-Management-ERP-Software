@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
 from app.database import get_db
-from app.auth import get_current_user
+from app.auth import get_current_user, verify_company_access
 from app import models
 
 
@@ -91,6 +91,7 @@ def list_timesheets(
     date_to: Optional[datetime] = None,
     search: Optional[str] = None,
     db: Session = Depends(get_db),
+    _: None = Depends(verify_company_access),
 ):
     q = db.query(models.TeamScheduleTimesheet).filter(
         models.TeamScheduleTimesheet.company_id == company_id

@@ -24,12 +24,13 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
 from app.database import get_db
+from app.auth import get_current_user, verify_company_access, verify_project_access
 from app.models import (
     QualityChecklist, ChecklistItem, SiteInspection,
     InspectionResponse, NCR, MaterialTestResult
 )
 
-router = APIRouter(prefix="/quality", tags=["Quality Control & Inspections"])
+router = APIRouter(prefix="/quality", tags=["Quality Control & Inspections"], dependencies=[Depends(get_current_user)])
 
 
 # ─── Schemas ─────────────────────────────────────────────────────────────────
@@ -187,7 +188,7 @@ def create_checklist(payload: ChecklistCreate, db: Session = Depends(get_db)):
 
 
 @router.get("/checklists/{company_id}", response_model=List[ChecklistResponse])
-def list_checklists(company_id: uuid.UUID, db: Session = Depends(get_db)):
+def list_checklists(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     return db.query(QualityChecklist).filter(
         QualityChecklist.company_id == company_id,
         QualityChecklist.is_active == True
@@ -225,7 +226,7 @@ def create_inspection(payload: InspectionCreate, db: Session = Depends(get_db)):
 
 
 @router.get("/inspections/{project_id}", response_model=List[InspectionResponse_])
-def list_inspections(project_id: uuid.UUID, db: Session = Depends(get_db)):
+def list_inspections(project_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     return db.query(SiteInspection).filter(
         SiteInspection.project_id == project_id
     ).order_by(SiteInspection.inspection_date.desc()).all()
@@ -300,7 +301,7 @@ def raise_ncr(payload: NCRCreate, db: Session = Depends(get_db)):
 
 
 @router.get("/ncr/{project_id}", response_model=List[NCRResponse])
-def list_ncrs(project_id: uuid.UUID, db: Session = Depends(get_db)):
+def list_ncrs(project_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     return db.query(NCR).filter(
         NCR.project_id == project_id
     ).order_by(NCR.created_at.desc()).all()
@@ -369,7 +370,7 @@ def log_material_test(payload: MaterialTestCreate, db: Session = Depends(get_db)
 
 
 @router.get("/material-tests/{project_id}", response_model=List[MaterialTestResponse])
-def list_material_tests(project_id: uuid.UUID, db: Session = Depends(get_db)):
+def list_material_tests(project_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     return db.query(MaterialTestResult).filter(
         MaterialTestResult.project_id == project_id
     ).order_by(MaterialTestResult.test_date.desc()).all()
