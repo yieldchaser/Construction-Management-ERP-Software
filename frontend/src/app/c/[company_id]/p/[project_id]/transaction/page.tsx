@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { getApi, authHeaders, fmtINR } from "@/lib/siteflow";
+import ZatcaInvoicePanel from "@/components/ZatcaInvoicePanel";
 
 // ── Transaction taxonomy (exact list from build spec) ────────────────────────
 type Endpoint = "bill" | "debit" | "credit" | "request";
@@ -129,6 +130,7 @@ export default function TransactionPage() {
   const [typeFilter, setTypeFilter] = useState("All");
   const [search, setSearch] = useState("");
   const [addOpen, setAddOpen] = useState(false);
+  const [zatcaBillId, setZatcaBillId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -285,12 +287,13 @@ export default function TransactionPage() {
               <th className="text-left px-4 py-3 font-medium">Ref</th>
               <th className="text-right px-4 py-3 font-medium">Amount</th>
               <th className="text-left px-4 py-3 font-medium">Status</th>
+              <th className="text-left px-4 py-3 font-medium">ZATCA</th>
             </tr>
           </thead>
           <tbody>
-            {loading && <tr><td colSpan={6} className="px-4 py-8 text-center text-muted">Loading…</td></tr>}
+            {loading &&               <tr><td colSpan={7} className="px-4 py-8 text-center text-muted">Loading…</td></tr>}
             {!loading && filtered.length === 0 && (
-              <tr><td colSpan={6} className="px-4 py-8 text-center text-muted">No transactions for this filter.</td></tr>
+              <tr><td colSpan={7} className="px-4 py-8 text-center text-muted">No transactions for this filter.</td></tr>
             )}
             {!loading && filtered.map((r) => (
               <tr key={`${r.kind}-${r.id}`} className="border-t border-border-custom hover:bg-elevated/50">
@@ -305,6 +308,17 @@ export default function TransactionPage() {
                   {fmtINR(r.amount)}
                 </td>
                 <td className="px-4 py-3 text-muted">{r.status}</td>
+                <td className="px-4 py-3">
+                  {r.kind === "Bill" && r.type === "sale" ? (
+                    <button
+                      type="button"
+                      onClick={() => setZatcaBillId(r.id)}
+                      className="rounded-md border border-border-custom px-2 py-1 text-xs text-muted hover:border-primary hover:text-foreground"
+                    >
+                      ZATCA
+                    </button>
+                  ) : null}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -320,6 +334,16 @@ export default function TransactionPage() {
           onClose={() => setAddOpen(false)}
           onCreated={() => { setAddOpen(false); load(); }}
         />
+      )}
+
+      {zatcaBillId && (
+        <Modal title="ZATCA E-Invoice" onClose={() => setZatcaBillId(null)}>
+          <ZatcaInvoicePanel
+            billId={zatcaBillId}
+            companyId={companyId}
+            onClose={() => setZatcaBillId(null)}
+          />
+        </Modal>
       )}
     </div>
   );

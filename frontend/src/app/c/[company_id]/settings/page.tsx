@@ -48,6 +48,8 @@ interface CompanySettings {
   subscription_start?: string | null;
   subscription_end?: string | null;
   subscription_renewal?: string | null;
+  is_zatca_enable?: boolean;
+  vat_number?: string | null;
 }
 
 interface Branch {
@@ -312,6 +314,23 @@ export default function CompanySettingsPage() {
       if (res.ok) { setSettings(await res.json()); setPdfStatus("saved"); setTimeout(() => setPdfStatus("idle"), 2000); }
       else setPdfStatus("error");
     } catch { setPdfStatus("error"); }
+  };
+
+  // ZATCA e-invoicing settings
+  const [vatNumber, setVatNumber] = useState("");
+  const [zatcaStatus, setZatcaStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  useEffect(() => {
+    if (settings) setVatNumber(settings.vat_number ?? "");
+  }, [settings]);
+  const saveZatca = async (patch: { is_zatca_enable?: boolean; vat_number?: string }) => {
+    setZatcaStatus("saving");
+    try {
+      const res = await fetch(`${apiHost}/apis/v3/settings/company/${company_id}`, {
+        method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(patch),
+      });
+      if (res.ok) { setSettings(await res.json()); setZatcaStatus("saved"); setTimeout(() => setZatcaStatus("idle"), 2000); }
+      else setZatcaStatus("error");
+    } catch { setZatcaStatus("error"); }
   };
 
   // Terms & Conditions — 5 independent documents; central source of default T&C
@@ -1730,6 +1749,30 @@ export default function CompanySettingsPage() {
 
                   {pdfStatus === "saved" && (<div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-lg">PDF template settings saved</div>)}
                   {pdfStatus === "error" && (<div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs rounded-lg">Failed to save PDF template settings</div>)}
+
+                  <div className="bg-card border border-border-custom rounded-lg bg-background p-6 space-y-3">
+                    <h3 className="text-[10px] uppercase tracking-wider text-muted font-bold">ZATCA E-Invoicing (Saudi)</h3>
+                    <p className="text-[10px] text-muted">When enabled, sale invoices show a ZATCA Phase 1 QR (TLV base64) and a downloadable UBL 2.1 XML. The VAT registration number is printed in the QR.</p>
+                    <div className="grid grid-cols-2 gap-4">
+                      {([{ v: true, t: "Enabled", d: "Generate ZATCA QR + XML on sale invoices." }, { v: false, t: "Disabled", d: "No ZATCA e-invoice data." }] as const).map((o) => {
+                        const active = Boolean(settings.is_zatca_enable) === o.v;
+                        return (
+                          <button key={o.t} type="button" onClick={() => saveZatca({ is_zatca_enable: o.v })}
+                            className={`text-left rounded-lg border p-4 space-y-1.5 transition-all ${active ? "border-primary bg-primary/10" : "border-border-custom bg-elevated hover:border-primary/50"}`}>
+                            <div className="text-xs font-bold text-white">{o.t}</div>
+                            <div className="text-[10px] text-muted">{o.d}</div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <div className="space-y-1">
+                      <div className="text-[10px] uppercase tracking-wider text-muted font-bold">VAT Registration Number</div>
+                      <input value={vatNumber} onChange={(e) => setVatNumber(e.target.value)} onBlur={() => saveZatca({ vat_number: vatNumber })}
+                        placeholder="e.g. 300000000000003" className="w-full rounded-md border border-border-custom bg-elevated px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary" />
+                    </div>
+                    {zatcaStatus === "saved" && (<div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-lg">ZATCA settings saved</div>)}
+                    {zatcaStatus === "error" && (<div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs rounded-lg">Failed to save ZATCA settings</div>)}
+                  </div>
                 </div>
               )}
 

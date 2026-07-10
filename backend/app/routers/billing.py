@@ -6,9 +6,10 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.auth import get_current_user
 from app.models import (
-    WorkOrder, WorkOrderItem, Bill, TransactionDeduction, 
-    DebitNote, CreditNote, CompanyTeam, User
+    WorkOrder, WorkOrderItem, Bill, TransactionDeduction,
+    DebitNote, CreditNote, CompanyTeam, User, Company
 )
+from app.zatca import build_zatca_payload
 from pydantic import BaseModel, Field
 
 router = APIRouter(
@@ -323,6 +324,29 @@ def get_bills(project_id: UUID, invoice_type: Optional[str] = None, db: Session 
             )
         )
     return res
+
+@router.get("/bills/{bill_id}/zatca")
+def get_bill_zatca(bill_id: UUID, db: Session = Depends(get_db)):
+    bill = db.query(Bill).filter(Bill.id == bill_id).first()
+    if not bill:
+        raise HTTPException(status_code=404, detail="Bill not found")
+    if bill.invoice_type != "sale":
+        raise HTTPException(status_code=400, detail="ZATCA e-invoicing applies to sale (simplified tax) invoices")
+    company = db.query(Company).filter(Company.id == bill.company_id).first()
+    if not company:
+        raise HTTPException(status_code=404, detail="Company not found")
+    enabled = bool(getattr(company, "is_zatca_enable", False))
+    payload = build_zatca_payload(company, bill)
+    return {
+        "is_zatca_enabled": enabled,
+        "qr_tlv_base64": payload["qr_tlv_base64"],
+        "ubl_xml": payload["ubl_xml"],
+        "invoice_number": payload["invoice_number"],
+        "issue_date": payload["issue_date"],
+        "total_excl_vat": payload["total_excl_vat"],
+        "vat_total": payload["vat_total"],
+        "total_incl_vat": payload["total_incl_vat"],
+    }
 
 @router.post("/bills", response_model=BillResponse, status_code=201)
 def create_bill(req: BillCreateRequest, db: Session = Depends(get_db)):

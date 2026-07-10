@@ -72,6 +72,8 @@ class Company(Base):
     onboarding_categories = Column(String(500), nullable=True)
     onboarding_city = Column(String(100), nullable=True)
     onboarding_completed = Column(Boolean, default=False, nullable=False)
+    is_zatca_enable = Column(Boolean, default=False, server_default="0", nullable=False)
+    vat_number = Column(String(50), nullable=True)  # ZATCA VAT registration number (Saudi). Falls back to gstin.
     business_segment = Column(String(50), nullable=True)  # avg business / year
     company_size = Column(String(50), nullable=True)  # headcount band
     construction_types = Column(JSONB, default=list, nullable=False)

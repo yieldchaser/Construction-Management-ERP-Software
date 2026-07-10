@@ -59,6 +59,8 @@ class CompanySettingsResponse(BaseModel):
     onboarding_categories: Optional[str] = None
     onboarding_city: Optional[str] = None
     onboarding_completed: bool = False
+    is_zatca_enable: bool = False
+    vat_number: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -68,6 +70,8 @@ class CompanySettingsUpdate(BaseModel):
     name: Optional[str] = None
     legal_business_name: Optional[str] = None
     gstin: Optional[str] = None
+    vat_number: Optional[str] = None
+    is_zatca_enable: Optional[bool] = None
     phone: Optional[str] = None
     billing_address: Optional[str] = None
     business_segment: Optional[str] = None
