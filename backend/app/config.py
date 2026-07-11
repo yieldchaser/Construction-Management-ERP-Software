@@ -49,6 +49,11 @@ class Settings(BaseSettings):
     # Supabase's SMTP relay (Project Settings -> Auth -> SMTP) or any provider.
     # When SMTP is not configured, email OTP is disabled for non-allowlisted
     # addresses and returns 503 (mirrors SMS), never a silent bypass.
+    # Preferred transport: Brevo's transactional email HTTPS API (port 443),
+    # which avoids outbound-SMTP-port blocking on hosts like Render's free/
+    # starter tiers. Get the key from Brevo -> SMTP & API -> API Keys (this is
+    # a different credential from the SMTP key).
+    BREVO_API_KEY: str = ""
     SMTP_HOST: str = ""
     SMTP_PORT: int = 587
     SMTP_USER: str = ""
