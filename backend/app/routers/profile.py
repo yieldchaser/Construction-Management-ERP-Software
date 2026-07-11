@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app import models
-from app.auth import get_current_user
+from app.auth import get_current_user, get_company_membership
 import uuid
 
 router = APIRouter(prefix="/profile", tags=["Profile & Onboarding"], dependencies=[Depends(get_current_user)])
@@ -16,11 +16,19 @@ class OnboardingRequest(BaseModel):
     categories: str = Field("", example="Residential Real Estate")
 
 @router.post("/onboarding")
-def update_onboarding(request: OnboardingRequest, db: Session = Depends(get_db)):
+def update_onboarding(
+    request: OnboardingRequest,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
     try:
         co_uuid = uuid.UUID(request.company_id)
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid company UUID")
+
+    # Multi-tenant: the caller must belong to the company they are updating.
+    # Without this any authenticated user could rename an arbitrary company by id.
+    get_company_membership(db, current_user, co_uuid)
 
     company = db.query(models.Company).filter(models.Company.id == co_uuid).first()
     if not company:

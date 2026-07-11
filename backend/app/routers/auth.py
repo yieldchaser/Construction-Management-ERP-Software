@@ -5,32 +5,42 @@ import uuid
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, EmailStr, Field
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from app.database import get_db
 from app.auth import create_access_token, get_current_active_company_user, get_current_user
 from app.config import settings
 from app.rate_limit import limiter
-from app import models, sms
+from app import models, sms, email_otp, security
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 DEMO_COMPANY_ID = "e0000000-0000-0000-0000-000000000000"
 
 
+# ── OTP primitives (shared by SMS and email) ─────────────────────────────────
+
 def _generate_otp_code() -> str:
     """Cryptographically-random 6-digit code."""
     return f"{pysecrets.randbelow(1_000_000):06d}"
 
 
-def _hash_otp(mobile: str, code: str) -> str:
-    """HMAC-SHA256 of the code keyed by SECRET_KEY, bound to the mobile number.
+def _hash_otp(identifier: str, code: str) -> str:
+    """HMAC-SHA256 of the code keyed by SECRET_KEY, bound to the identifier.
 
-    The plaintext code is never persisted; only this hash is stored, so a DB
-    leak does not expose live codes.
+    The identifier is the phone number (SMS) or email (email OTP). The plaintext
+    code is never persisted; only this hash is stored, so a DB leak does not
+    expose live codes. Phone codes keep the same hash as before (identifier ==
+    mobile), so the existing SMS flow is unchanged.
     """
-    msg = f"{mobile}:{code}".encode("utf-8")
+    msg = f"{identifier}:{code}".encode("utf-8")
     return hmac.new(settings.SECRET_KEY.encode("utf-8"), msg, hashlib.sha256).hexdigest()
+
+
+def _hash_handoff(code: str) -> str:
+    """HMAC-SHA256 of a one-time OAuth handoff code, keyed by SECRET_KEY."""
+    return hmac.new(settings.SECRET_KEY.encode("utf-8"), code.encode("utf-8"), hashlib.sha256).hexdigest()
 
 
 def _aware(dt: datetime) -> datetime:
@@ -38,17 +48,116 @@ def _aware(dt: datetime) -> datetime:
     return dt if dt.tzinfo is not None else dt.replace(tzinfo=timezone.utc)
 
 
+def _issue_otp(db: Session, identifier: str, channel: str, code: str, purpose: str = "login") -> None:
+    """Invalidate earlier unconsumed codes for this identifier+purpose, then store
+    the new one hashed with a TTL and a fresh attempt counter. Shared by both
+    channels so there is a single, hardened OTP implementation."""
+    db.query(models.OTPCode).filter(
+        models.OTPCode.identifier == identifier,
+        models.OTPCode.purpose == purpose,
+        models.OTPCode.consumed.is_(False),
+    ).update({models.OTPCode.consumed: True})
+    otp = models.OTPCode(
+        id=uuid.uuid4(),
+        mobile=identifier if channel == "sms" else None,
+        channel=channel,
+        identifier=identifier,
+        purpose=purpose,
+        code_hash=_hash_otp(identifier, code),
+        expires_at=datetime.now(timezone.utc) + timedelta(seconds=settings.OTP_TTL_SECONDS),
+        attempts=0,
+        consumed=False,
+    )
+    db.add(otp)
+    db.commit()
+
+
+def _verify_otp_code(db: Session, identifier: str, submitted: str, purpose: str = "login") -> None:
+    """Verify and burn a code for identifier+purpose. Raises HTTPException on any
+    failure (no active code, expired, too many attempts, wrong code). On success
+    the code is consumed so it cannot be replayed. Identical rules for SMS and
+    email: TTL, attempt cap, constant-time compare, single-use."""
+    now = datetime.now(timezone.utc)
+    otp = (
+        db.query(models.OTPCode)
+        .filter(
+            models.OTPCode.identifier == identifier,
+            models.OTPCode.purpose == purpose,
+            models.OTPCode.consumed.is_(False),
+        )
+        .order_by(models.OTPCode.created_at.desc())
+        .first()
+    )
+    if not otp:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No active code. Please request a new one.",
+        )
+
+    if _aware(otp.expires_at) < now:
+        otp.consumed = True
+        db.commit()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Code has expired. Please request a new one.",
+        )
+
+    if otp.attempts >= settings.OTP_MAX_ATTEMPTS:
+        otp.consumed = True
+        db.commit()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Too many incorrect attempts. Please request a new code.",
+        )
+
+    if not hmac.compare_digest(_hash_otp(identifier, (submitted or "").strip()), otp.code_hash):
+        otp.attempts += 1
+        if otp.attempts >= settings.OTP_MAX_ATTEMPTS:
+            otp.consumed = True
+        db.commit()
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid code.")
+
+    otp.consumed = True
+    db.commit()
+
+
+# ── Account-linking / provider bookkeeping ───────────────────────────────────
+#
+# Account-linking policy (v1, deliberately conservative):
+#   * A login attempt resolves to an existing user ONLY by a VERIFIED identifier
+#     (verified email matches users.email, verified phone matches users.mobile).
+#   * An unverified identifier is never treated as proof of identity.
+#   * If a verified Google/email-OTP email matches an existing account that has a
+#     PASSWORD set, we do NOT silently merge the Google/OTP login onto it (that
+#     could let one method hijack a password account). We require that account's
+#     own password login instead. (Deferred edge case: an explicit, user-driven
+#     "link Google to my account" flow.)
+#   * We never auto-merge a phone-only account onto an email login or vice versa.
+
+def _add_provider(user: models.User, name: str) -> None:
+    existing = {p for p in (user.auth_providers or "").split(",") if p}
+    if name not in existing:
+        existing.add(name)
+        user.auth_providers = ",".join(sorted(existing))
+
+
+def _has_password(user: models.User) -> bool:
+    return bool((user.password_hash or "").strip())
+
+
+# ── Demo company seeding (demo-allowlist only) ───────────────────────────────
+
 def _seed_demo_projects(db: Session, company_id: uuid.UUID):
     PROJ_1 = uuid.UUID("d0000000-0000-0000-0000-000000000001")
     PROJ_2 = uuid.UUID("d0000000-0000-0000-0000-000000000002")
     PROJ_3 = uuid.UUID("d0000000-0000-0000-0000-000000000003")
-    
+
     project_data = [
         (PROJ_1, "Metro Terminal (Phase 2)", "MET-02", "Mumbai", "Maharashtra"),
         (PROJ_2, "Bypass Highway Flyover", "HWY-FLY", "Pune", "Maharashtra"),
         (PROJ_3, "Alpha Premium Residences", "ALF-RES", "Delhi", "Delhi"),
     ]
-    
+
     for pid, name, code, city, state in project_data:
         proj = db.query(models.Project).filter(models.Project.id == pid).first()
         if not proj:
@@ -59,10 +168,11 @@ def _seed_demo_projects(db: Session, company_id: uuid.UUID):
                 code=code,
                 city=city,
                 state=state,
-                status="Ongoing"
+                status="Ongoing",
             )
             db.add(proj)
     db.commit()
+
 
 def _ensure_demo_company(db: Session) -> models.Company:
     company = db.query(models.Company).filter(models.Company.id == uuid.UUID(DEMO_COMPANY_ID)).first()
@@ -82,9 +192,142 @@ def _ensure_demo_company(db: Session) -> models.Company:
     db.add(company)
     db.commit()
     db.refresh(company)
-    
+
     _seed_demo_projects(db, company.id)
     return company
+
+
+def _is_demo_mobile(mobile: str) -> bool:
+    return mobile in settings.demo_allowlist
+
+
+# ── Shared post-auth: company resolution, session minting, onboarding ─────────
+
+def _list_companies(db: Session, user: models.User) -> list[dict]:
+    memberships = db.query(models.CompanyTeam).filter(
+        models.CompanyTeam.user_id == user.id
+    ).all()
+    company_ids = [m.company_id for m in memberships]
+    if not company_ids:
+        return []
+    companies = db.query(models.Company).filter(models.Company.id.in_(company_ids)).all()
+    prio = {m.company_id: m.priority_type for m in memberships}
+    return [
+        {
+            "id": str(c.id),
+            "name": c.name,
+            "slug": c.slug,
+            "priority_type": prio.get(c.id),
+        }
+        for c in companies
+    ]
+
+
+def _resolve_company_context(db: Session, user: models.User):
+    """Return (company_id | None, companies, onboarding_bool).
+
+    company_id is the user's most-recent membership; onboarding is True only when
+    the user belongs to no company yet (a brand-new real signup)."""
+    membership = (
+        db.query(models.CompanyTeam)
+        .filter(models.CompanyTeam.user_id == user.id)
+        .order_by(models.CompanyTeam.created_at.desc())
+        .first()
+    )
+    companies = _list_companies(db, user)
+    if not membership:
+        return None, companies, True
+    return membership.company_id, companies, False
+
+
+def _user_payload(user: models.User) -> dict:
+    return {
+        "id": str(user.id),
+        "name": user.name,
+        "mobile": user.mobile,
+        "email": user.email,
+        "email_verified": bool(user.email_verified),
+    }
+
+
+def _mint_session_response(db: Session, user: models.User, company_id, onboarding: bool) -> dict:
+    """Build the auth response. In onboarding state the JWT carries no company
+    claim and the frontend routes to the create-company screen; otherwise the JWT
+    is scoped to the selected company."""
+    if onboarding or company_id is None:
+        token = create_access_token(
+            data={"sub": str(user.id), "user_name": user.name, "onboarding": True}
+        )
+        return {
+            "access_token": token,
+            "token_type": "bearer",
+            "onboarding": True,
+            "user": _user_payload(user),
+            "company": None,
+            "companies": _list_companies(db, user),
+        }
+
+    membership = db.query(models.CompanyTeam).filter(
+        models.CompanyTeam.user_id == user.id,
+        models.CompanyTeam.company_id == company_id,
+    ).first()
+    company = db.query(models.Company).filter(models.Company.id == company_id).first()
+
+    claims = {"sub": str(user.id), "company_id": str(company_id), "user_name": user.name}
+    if user.mobile:
+        claims["mobile"] = user.mobile
+    token = create_access_token(data=claims)
+
+    companies = _list_companies(db, user)
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "onboarding": False,
+        "needs_company_selection": len(companies) > 1,
+        "user": _user_payload(user),
+        "company": {
+            "id": str(company_id),
+            "name": company.name if company else None,
+            "priority_type": membership.priority_type if membership else None,
+        },
+        "companies": companies,
+    }
+
+
+def _post_auth(db: Session, user: models.User, provider: str) -> dict:
+    """Single convergence point for ALL auth methods after identity is proven.
+
+    Records the provider, resolves the user's company context, and mints the
+    session (or an onboarding-state session for brand-new users). No auth method
+    is ever force-attached to the shared demo tenant here."""
+    _add_provider(user, provider)
+    db.commit()
+    company_id, _companies, onboarding = _resolve_company_context(db, user)
+    return _mint_session_response(db, user, company_id, onboarding)
+
+
+def _create_handoff(db: Session, user: models.User, company_id, onboarding: bool, provider: str) -> str:
+    """Create a single-use, short-lived handoff and return its plaintext code.
+
+    Used by OAuth callbacks so the real session JWT is never placed in a redirect
+    URL; the frontend exchanges this code via POST /auth/oauth/exchange."""
+    code = pysecrets.token_urlsafe(32)
+    handoff = models.OAuthHandoff(
+        id=uuid.uuid4(),
+        code_hash=_hash_handoff(code),
+        user_id=user.id,
+        company_id=company_id,
+        onboarding=onboarding,
+        provider=provider,
+        expires_at=datetime.now(timezone.utc) + timedelta(minutes=5),
+        consumed=False,
+    )
+    db.add(handoff)
+    db.commit()
+    return code
+
+
+# ── Phone OTP (unchanged hardening, now on the shared core) ───────────────────
 
 class OTPSendRequest(BaseModel):
     mobile: str = Field(..., example="+919876543210")
@@ -93,24 +336,18 @@ class OTPVerifyRequest(BaseModel):
     mobile: str = Field(..., example="+919876543210")
     code: str = Field(..., example="123456")
 
+
 @router.post("/otp/send")
 @limiter.limit("5/minute")
 def send_otp(request: Request, payload: OTPSendRequest, db: Session = Depends(get_db)):
-    """Generate a one-time code, store it hashed with a short TTL, and deliver it.
-
-    Delivery depends on configuration:
-    - When an SMS provider is configured (SMS_PROVIDER_API_KEY set), a random
-      6-digit code is sent by SMS and NEVER returned in the response.
-    - When no provider is configured, only demo-allowlisted numbers can proceed,
-      using the fixed demo code (returned for that number only, for demo use).
-      Any other number gets a clear 503 instead of a silent mock login.
-    """
+    """Generate a one-time code, store it hashed with a short TTL, and deliver it
+    by SMS. Only demo-allowlisted numbers work when no SMS provider is wired."""
     mobile = (payload.mobile or "").strip()
     if not mobile:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Mobile number is required")
 
     provider_ready = sms.is_configured()
-    is_demo = mobile in settings.demo_allowlist
+    is_demo = _is_demo_mobile(mobile)
 
     if not provider_ready and not is_demo:
         raise HTTPException(
@@ -118,26 +355,10 @@ def send_otp(request: Request, payload: OTPSendRequest, db: Session = Depends(ge
             detail="OTP delivery is not configured on this server. Please contact support.",
         )
 
-    # Demo numbers use the fixed demo code ONLY while no real provider is wired.
     use_demo_code = is_demo and not provider_ready
     code = settings.OTP_DEMO_CODE if use_demo_code else _generate_otp_code()
 
-    # Invalidate any earlier unconsumed codes for this number, then store the new
-    # one hashed with an expiry and a fresh attempt counter.
-    db.query(models.OTPCode).filter(
-        models.OTPCode.mobile == mobile,
-        models.OTPCode.consumed.is_(False),
-    ).update({models.OTPCode.consumed: True})
-    otp = models.OTPCode(
-        id=uuid.uuid4(),
-        mobile=mobile,
-        code_hash=_hash_otp(mobile, code),
-        expires_at=datetime.now(timezone.utc) + timedelta(seconds=settings.OTP_TTL_SECONDS),
-        attempts=0,
-        consumed=False,
-    )
-    db.add(otp)
-    db.commit()
+    _issue_otp(db, mobile, channel="sms", code=code, purpose="login")
 
     response = {"success": True, "message": f"OTP sent successfully to {mobile}"}
 
@@ -145,15 +366,17 @@ def send_otp(request: Request, payload: OTPSendRequest, db: Session = Depends(ge
         try:
             sms.send_otp_sms(mobile, code)
         except Exception:
-            # Roll the code back so a failed send does not leave a live code.
-            otp.consumed = True
+            db.query(models.OTPCode).filter(
+                models.OTPCode.identifier == mobile,
+                models.OTPCode.purpose == "login",
+                models.OTPCode.consumed.is_(False),
+            ).update({models.OTPCode.consumed: True})
             db.commit()
             raise HTTPException(
                 status_code=status.HTTP_502_BAD_GATEWAY,
                 detail="Failed to send OTP. Please try again.",
             )
     elif use_demo_code:
-        # Demo convenience for the allowlisted number only; never a real user's code.
         response["demo_mode"] = True
         response["mock_code"] = code
 
@@ -164,111 +387,364 @@ def send_otp(request: Request, payload: OTPSendRequest, db: Session = Depends(ge
 @limiter.limit("5/minute")
 def verify_otp(request: Request, payload: OTPVerifyRequest, db: Session = Depends(get_db)):
     mobile = (payload.mobile or "").strip()
-    submitted = (payload.code or "").strip()
-    now = datetime.now(timezone.utc)
+    _verify_otp_code(db, mobile, payload.code, purpose="login")
 
-    otp = (
-        db.query(models.OTPCode)
-        .filter(models.OTPCode.mobile == mobile, models.OTPCode.consumed.is_(False))
-        .order_by(models.OTPCode.created_at.desc())
-        .first()
-    )
-    if not otp:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="No active OTP for this number. Please request a new code.",
-        )
-
-    if _aware(otp.expires_at) < now:
-        otp.consumed = True
-        db.commit()
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="OTP has expired. Please request a new code.",
-        )
-
-    if otp.attempts >= settings.OTP_MAX_ATTEMPTS:
-        otp.consumed = True
-        db.commit()
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Too many incorrect attempts. Please request a new code.",
-        )
-
-    # Constant-time comparison against the stored hash.
-    if not hmac.compare_digest(_hash_otp(mobile, submitted), otp.code_hash):
-        otp.attempts += 1
-        if otp.attempts >= settings.OTP_MAX_ATTEMPTS:
-            otp.consumed = True
-        db.commit()
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid OTP code.",
-        )
-
-    # Correct code: burn it so it cannot be replayed.
-    otp.consumed = True
-    db.commit()
-
-    # 1. Check if user exists, else auto-create
     user = db.query(models.User).filter(models.User.mobile == mobile).first()
     if not user:
         user = models.User(
             id=uuid.uuid4(),
-            name="Demo Engineer",
+            name="Site User",
             mobile=mobile,
-            email=f"demo_{str(uuid.uuid4())[:8]}@siteflow.co",
+            auth_providers="phone",
         )
         db.add(user)
         db.commit()
         db.refresh(user)
 
-    # 2. Ensure demo company with the frontend-expected UUID exists
-    company = _ensure_demo_company(db)
-
-    # 3. Ensure user has an active membership for the demo company
-    team_member = db.query(models.CompanyTeam).filter(models.CompanyTeam.user_id == user.id).first()
-    if not team_member:
-        team_member = models.CompanyTeam(
-            id=uuid.uuid4(),
-            company_id=company.id,
-            user_id=user.id,
-            priority_type="partner",
-        )
-        db.add(team_member)
-        db.commit()
-        db.refresh(team_member)
-    else:
-        if str(team_member.company_id) != DEMO_COMPANY_ID:
-            team_member.company_id = uuid.UUID(DEMO_COMPANY_ID)
+    # Demo-allowlist number (and only it) may still land in the shared demo
+    # company for showcasing. Real signups never touch the demo tenant.
+    if _is_demo_mobile(mobile):
+        company = _ensure_demo_company(db)
+        membership = db.query(models.CompanyTeam).filter(
+            models.CompanyTeam.user_id == user.id,
+            models.CompanyTeam.company_id == company.id,
+        ).first()
+        if not membership:
+            membership = models.CompanyTeam(
+                id=uuid.uuid4(),
+                company_id=company.id,
+                user_id=user.id,
+                priority_type="partner",
+            )
+            db.add(membership)
             db.commit()
-            db.refresh(team_member)
+        _add_provider(user, "phone")
+        db.commit()
+        return _mint_session_response(db, user, company.id, onboarding=False)
 
-    # 4. Create access token
-    access_token = create_access_token(
-        data={
-            "sub": str(user.id),
-            "company_id": DEMO_COMPANY_ID,
-            "user_name": user.name,
-            "mobile": user.mobile,
-        }
+    return _post_auth(db, user, provider="phone")
+
+
+# ── Email OTP (Part C) ───────────────────────────────────────────────────────
+
+class EmailOTPSendRequest(BaseModel):
+    email: EmailStr = Field(..., example="user@example.com")
+
+class EmailOTPVerifyRequest(BaseModel):
+    email: EmailStr = Field(..., example="user@example.com")
+    code: str = Field(..., example="123456")
+
+
+def _normalize_email(email: str) -> str:
+    return (email or "").strip().lower()
+
+
+def _deliver_email_code(db: Session, email: str, purpose: str) -> dict:
+    """Shared email-OTP send: configured -> real SMTP; else demo-allowlist only.
+    Returns a response dict (never contains the code except demo convenience)."""
+    provider_ready = email_otp.is_configured()
+    is_demo = email in settings.email_demo_allowlist
+
+    if not provider_ready and not is_demo:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Email delivery is not configured on this server. Please contact support.",
+        )
+
+    use_demo_code = is_demo and not provider_ready
+    code = settings.OTP_DEMO_CODE if use_demo_code else _generate_otp_code()
+    _issue_otp(db, email, channel="email", code=code, purpose=purpose)
+
+    response = {"success": True, "message": f"Verification code sent to {email}"}
+    if provider_ready:
+        try:
+            email_otp.send_otp_email(email, code)
+        except Exception:
+            db.query(models.OTPCode).filter(
+                models.OTPCode.identifier == email,
+                models.OTPCode.purpose == purpose,
+                models.OTPCode.consumed.is_(False),
+            ).update({models.OTPCode.consumed: True})
+            db.commit()
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail="Failed to send verification email. Please try again.",
+            )
+    elif use_demo_code:
+        response["demo_mode"] = True
+        response["mock_code"] = code
+    return response
+
+
+@router.post("/email-otp/send")
+@limiter.limit("5/minute")
+def send_email_otp(request: Request, payload: EmailOTPSendRequest, db: Session = Depends(get_db)):
+    email = _normalize_email(payload.email)
+    if not email:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email is required")
+    return _deliver_email_code(db, email, purpose="login")
+
+
+@router.post("/email-otp/verify")
+@limiter.limit("5/minute")
+def verify_email_otp(request: Request, payload: EmailOTPVerifyRequest, db: Session = Depends(get_db)):
+    email = _normalize_email(payload.email)
+    _verify_otp_code(db, email, payload.code, purpose="login")
+
+    user = db.query(models.User).filter(func.lower(models.User.email) == email).first()
+    if not user:
+        user = models.User(
+            id=uuid.uuid4(),
+            name=email.split("@")[0],
+            email=email,
+            email_verified=True,
+            auth_providers="email_otp",
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+    else:
+        user.email_verified = True
+        db.commit()
+
+    return _post_auth(db, user, provider="email_otp")
+
+
+# ── Email + password (Part E) ────────────────────────────────────────────────
+
+class RegisterRequest(BaseModel):
+    email: EmailStr
+    password: str = Field(..., min_length=1)
+    name: str = Field(..., min_length=1)
+
+class LoginRequest(BaseModel):
+    email: EmailStr
+    password: str = Field(..., min_length=1)
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+class ResetPasswordRequest(BaseModel):
+    email: EmailStr
+    code: str
+    new_password: str = Field(..., min_length=1)
+
+
+@router.post("/register")
+@limiter.limit("5/minute")
+def register(request: Request, payload: RegisterRequest, db: Session = Depends(get_db)):
+    """Create an email+password account. The account cannot access any company
+    until its email is verified via email OTP (Part C)."""
+    email = _normalize_email(payload.email)
+    pw_error = security.validate_password_strength(payload.password)
+    if pw_error:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=pw_error)
+
+    existing = db.query(models.User).filter(func.lower(models.User.email) == email).first()
+    if existing:
+        # Do not silently link; direct them to login / reset (see linking policy).
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="An account with this email already exists. Please log in or reset your password.",
+        )
+
+    # Verification must be deliverable before we create the account, otherwise the
+    # user could never reach a company. Mirrors the SMS 503 behaviour.
+    if not email_otp.is_configured() and email not in settings.email_demo_allowlist:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Email verification is not configured on this server. Please contact support.",
+        )
+
+    user = models.User(
+        id=uuid.uuid4(),
+        name=payload.name.strip(),
+        email=email,
+        password_hash=security.hash_password(payload.password),
+        email_verified=False,
+        auth_providers="password",
     )
+    db.add(user)
+    db.commit()
 
+    delivery = _deliver_email_code(db, email, purpose="login")
     return {
-        "access_token": access_token,
-        "token_type": "bearer",
-        "user": {
-            "id": str(user.id),
-            "name": user.name,
-            "mobile": user.mobile,
-            "email": user.email,
-        },
-        "company": {
-            "id": DEMO_COMPANY_ID,
-            "name": company.name,
-            "priority_type": team_member.priority_type,
-        },
+        "success": True,
+        "verification_required": True,
+        "email": email,
+        "message": "Account created. Verify your email with the code we sent to continue.",
+        **({"demo_mode": True, "mock_code": delivery.get("mock_code")} if delivery.get("demo_mode") else {}),
     }
+
+
+@router.post("/login")
+@limiter.limit("5/minute")
+def login(request: Request, payload: LoginRequest, db: Session = Depends(get_db)):
+    """Email + password login. Errors are generic so they do not reveal whether
+    an email exists; bcrypt verification is constant-time."""
+    email = _normalize_email(payload.email)
+    invalid = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password."
+    )
+    user = db.query(models.User).filter(func.lower(models.User.email) == email).first()
+    if not user or not _has_password(user):
+        # Run a dummy verify to keep timing similar whether or not the user exists.
+        security.dummy_verify(payload.password)
+        raise invalid
+    if not security.verify_password(payload.password, user.password_hash):
+        raise invalid
+    if not user.email_verified:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Please verify your email before logging in.",
+        )
+    return _post_auth(db, user, provider="password")
+
+
+@router.post("/password/forgot")
+@limiter.limit("5/minute")
+def forgot_password(request: Request, payload: ForgotPasswordRequest, db: Session = Depends(get_db)):
+    """Send a password-reset code via email OTP. Always returns a generic success
+    so it does not disclose whether the email is registered."""
+    email = _normalize_email(payload.email)
+    generic = {
+        "success": True,
+        "message": "If an account exists for that email, a reset code has been sent.",
+    }
+    user = db.query(models.User).filter(func.lower(models.User.email) == email).first()
+    if not user:
+        return generic
+    # Only attempt delivery when possible; swallow the 503/502 into the generic
+    # response so existence is never revealed via error codes.
+    if not email_otp.is_configured() and email not in settings.email_demo_allowlist:
+        return generic
+    try:
+        _deliver_email_code(db, email, purpose="password_reset")
+    except HTTPException:
+        pass
+    return generic
+
+
+@router.post("/password/reset")
+@limiter.limit("5/minute")
+def reset_password(request: Request, payload: ResetPasswordRequest, db: Session = Depends(get_db)):
+    """Reset the password using an email-OTP code (single-use). Verifying the code
+    also proves email ownership, so email_verified is set true."""
+    email = _normalize_email(payload.email)
+    pw_error = security.validate_password_strength(payload.new_password)
+    if pw_error:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=pw_error)
+
+    _verify_otp_code(db, email, payload.code, purpose="password_reset")
+
+    user = db.query(models.User).filter(func.lower(models.User.email) == email).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid reset request.")
+
+    user.password_hash = security.hash_password(payload.new_password)
+    user.email_verified = True
+    _add_provider(user, "password")
+    db.commit()
+    return {"success": True, "message": "Password updated. Please log in."}
+
+
+# ── OAuth handoff exchange (Part D + F) ──────────────────────────────────────
+
+class OAuthExchangeRequest(BaseModel):
+    code: str = Field(..., min_length=1)
+
+
+@router.post("/oauth/exchange")
+@limiter.limit("10/minute")
+def oauth_exchange(request: Request, payload: OAuthExchangeRequest, db: Session = Depends(get_db)):
+    """Exchange a single-use OAuth handoff code (from a callback redirect) for the
+    real session JWT. The handoff is burned on first use."""
+    now = datetime.now(timezone.utc)
+    handoff = (
+        db.query(models.OAuthHandoff)
+        .filter(
+            models.OAuthHandoff.code_hash == _hash_handoff(payload.code.strip()),
+            models.OAuthHandoff.consumed.is_(False),
+        )
+        .order_by(models.OAuthHandoff.created_at.desc())
+        .first()
+    )
+    if not handoff or _aware(handoff.expires_at) < now:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired login code.")
+
+    handoff.consumed = True
+    db.commit()
+
+    user = db.query(models.User).filter(models.User.id == handoff.user_id).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid login code.")
+
+    return _mint_session_response(db, user, handoff.company_id, onboarding=bool(handoff.onboarding))
+
+
+# ── Real onboarding: create the user's own company (Part F) ───────────────────
+
+class CreateCompanyRequest(BaseModel):
+    name: str = Field(..., min_length=1, example="My Construction Co")
+    legal_business_name: str | None = Field(default=None, example="My Construction Pvt Ltd")
+    gstin: str | None = Field(default=None, example="27AADCD2424B1ZP")
+    phone: str | None = None
+    city: str | None = None
+    billing_address: str | None = None
+
+
+@router.post("/onboarding/create-company")
+def create_company(
+    payload: CreateCompanyRequest,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Create the caller's OWN company and make them its owner, then re-issue the
+    JWT scoped to it. This replaces the old force-attach-to-demo behaviour: a new
+    real user owns their company and never the shared demo tenant."""
+    name = (payload.name or "").strip()
+    if not name:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Company name is required")
+
+    company = models.Company(
+        id=uuid.uuid4(),
+        name=name,
+        legal_business_name=(payload.legal_business_name or "").strip() or None,
+        gstin=(payload.gstin or "").strip() or None,
+        phone=(payload.phone or "").strip() or None,
+        billing_address=(payload.billing_address or "").strip() or None,
+        onboarding_city=(payload.city or "").strip() or None,
+    )
+    db.add(company)
+    db.commit()
+    db.refresh(company)
+
+    # Seed an Owner role for the new tenant and attach the creator as owner.
+    owner_role = models.CompanyRole(
+        id=uuid.uuid4(),
+        company_id=company.id,
+        role_name="Owner",
+        permissions={"all": True},
+    )
+    db.add(owner_role)
+    db.commit()
+
+    membership = models.CompanyTeam(
+        id=uuid.uuid4(),
+        company_id=company.id,
+        user_id=current_user.id,
+        role_id=owner_role.id,
+        priority_type="partner",
+    )
+    db.add(membership)
+    db.commit()
+
+    resp = _mint_session_response(db, current_user, company.id, onboarding=False)
+    resp["success"] = True
+    return resp
+
+
+# ── Existing helpers (unchanged) ─────────────────────────────────────────────
 
 @router.get("/resolve-company/{slug}")
 def resolve_company(slug: str, db: Session = Depends(get_db)):
@@ -279,14 +755,14 @@ def resolve_company(slug: str, db: Session = Depends(get_db)):
             company = db.query(models.Company).filter(models.Company.id == company_uuid).first()
         except ValueError:
             pass
-            
+
     if not company:
         raise HTTPException(status_code=404, detail="Company not found")
-        
+
     return {
         "id": str(company.id),
         "name": company.name,
-        "slug": company.slug
+        "slug": company.slug,
     }
 
 

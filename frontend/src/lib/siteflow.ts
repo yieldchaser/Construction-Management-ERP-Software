@@ -9,6 +9,22 @@ export const authHeaders = (): Record<string, string> | undefined => {
   return token ? { Authorization: `Bearer ${token}` } : undefined;
 };
 
+// Persist a successful auth response (any method: phone, email OTP, Google,
+// password) into localStorage the same way the app already reads it elsewhere.
+// The token is stored client-side only; it is never placed in a URL.
+export const persistAuth = (data: {
+  access_token: string;
+  user?: { id?: string; name?: string };
+  company?: { id?: string } | null;
+}): void => {
+  if (typeof window === "undefined") return;
+  localStorage.setItem("access_token", data.access_token);
+  if (data.user?.id) localStorage.setItem("user_id", data.user.id);
+  localStorage.setItem("user_name", data.user?.name || "");
+  localStorage.setItem("creator_name", data.user?.name || "");
+  if (data.company?.id) localStorage.setItem("company_id", data.company.id);
+};
+
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export const resolveCompanyId = async (slug: string): Promise<string> => {

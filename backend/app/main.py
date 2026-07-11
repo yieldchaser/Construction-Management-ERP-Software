@@ -503,6 +503,8 @@ app.include_router(files_router.router, prefix="/apis/v3")
 app.include_router(team_schedule.router, prefix="/apis/v3")
 from app.routers import google_sheets as google_sheets_router
 app.include_router(google_sheets_router.router, prefix="/apis/v3")
+from app.routers import google_auth as google_auth_router
+app.include_router(google_auth_router.router, prefix="/apis/v3")
 from app.routers import admin_migrations as admin_migrations_router
 app.include_router(admin_migrations_router.router, prefix="/apis/v3")
 

@@ -165,24 +165,66 @@ class User(Base):
     __tablename__ = "users"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = Column(String(255), nullable=False)
-    mobile = Column(String(20), unique=True, nullable=False)
+    # Multi-provider auth: phone is no longer the sole identity. Email/Google/
+    # password users may have no phone, so mobile is nullable. It stays unique;
+    # both Postgres and SQLite allow multiple NULLs under a unique index, so many
+    # phone-less users can coexist. Email becomes the primary identity for
+    # email-OTP / Google / password users.
+    mobile = Column(String(20), unique=True, nullable=True)
     email = Column(String(255), unique=True, nullable=True)
+    # bcrypt hash (passlib), only set for email+password users. Never a plaintext.
+    password_hash = Column(String(255), nullable=True)
+    # True once the email has been proven via email OTP (or a verified Google
+    # email). An unverified email is never treated as proof of identity.
+    email_verified = Column(Boolean, default=False, server_default="0", nullable=False)
+    # Audit trail of which login methods this user has linked, as a comma string
+    # (e.g. "phone,google"). Kept as a plain string for SQLite/Postgres parity.
+    auth_providers = Column(String(255), nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 
 
 class OTPCode(Base):
-    """Short-lived, hashed one-time login codes.
+    """Short-lived, hashed one-time login codes (SMS and email).
 
     Never stores the plaintext code: only an HMAC-SHA256 hash keyed by SECRET_KEY
     (see app/routers/auth.py). Codes expire quickly (OTP_TTL_SECONDS) and are
     invalidated after OTP_MAX_ATTEMPTS wrong tries or on successful use.
+
+    The same hardened machinery serves both channels: ``channel`` records whether
+    the code was sent by "sms" or "email" and ``identifier`` holds the phone or
+    email it was bound to. ``mobile`` is retained (nullable) for the phone flow's
+    backward-compatible column, but ``identifier`` is the generic key.
     """
     __tablename__ = "otp_codes"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    mobile = Column(String(20), nullable=False, index=True)
+    mobile = Column(String(20), nullable=True, index=True)
+    channel = Column(String(10), default="sms", server_default="sms", nullable=False)  # sms | email
+    identifier = Column(String(255), nullable=True, index=True)  # phone or email
+    purpose = Column(String(20), default="login", server_default="login", nullable=False)  # login | password_reset
     code_hash = Column(String(128), nullable=False)
     expires_at = Column(DateTime(timezone=True), nullable=False)
     attempts = Column(Integer, default=0, nullable=False)
+    consumed = Column(Boolean, default=False, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
+class OAuthHandoff(Base):
+    """Single-use, short-lived handoff for OAuth logins (e.g. Google).
+
+    After the OAuth callback authenticates a user, the real session JWT must NOT
+    be placed in a redirect URL. Instead we store a one-time code (only its
+    HMAC-SHA256 hash, like OTP codes) here and redirect the browser with that
+    code. The frontend then POSTs the code to the exchange endpoint to receive
+    the real JWT. The row is burned on first use and expires quickly.
+    """
+    __tablename__ = "oauth_handoffs"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    code_hash = Column(String(128), nullable=False, index=True)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=True)
+    onboarding = Column(Boolean, default=False, server_default="0", nullable=False)
+    provider = Column(String(20), default="google", server_default="google", nullable=False)
+    expires_at = Column(DateTime(timezone=True), nullable=False)
     consumed = Column(Boolean, default=False, nullable=False)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 

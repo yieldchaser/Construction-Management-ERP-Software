@@ -1,367 +1,630 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import Link from "next/link";
 import { getApiHost } from "@/lib/api";
+import { getApi, persistAuth } from "@/lib/siteflow";
+
+type Method = "phone" | "email_otp" | "password";
+type Stage =
+  | "input"        // phone / email / password entry
+  | "otp"          // phone or email code entry
+  | "register"     // email + password + name
+  | "verify"       // verify email OTP after register
+  | "forgot"       // request reset code
+  | "reset"        // enter reset code + new password
+  | "pick";        // choose a company (multi-membership)
+
+interface AuthCompany {
+  id: string;
+  name: string;
+  slug?: string | null;
+}
+interface AuthResponse {
+  access_token: string;
+  onboarding?: boolean;
+  needs_company_selection?: boolean;
+  user?: { id?: string; name?: string };
+  company?: { id?: string; name?: string } | null;
+  companies?: AuthCompany[];
+}
+
+const COUNTRY_CODES = [
+  { code: "+91", flag: "IN", label: "India" },
+  { code: "+971", flag: "AE", label: "UAE" },
+  { code: "+974", flag: "QA", label: "Qatar" },
+  { code: "+966", flag: "SA", label: "KSA" },
+];
 
 export default function LoginPage() {
-  const [mobile, setMobile] = useState("9876543210");
-  const [otp, setOtp] = useState("123456");
-  const [step, setStep] = useState<"phone" | "otp">("phone");
+  const [method, setMethod] = useState<Method>("phone");
+  const [stage, setStage] = useState<Stage>("input");
+
+  const [mobile, setMobile] = useState("");
+  const [countryCode, setCountryCode] = useState("+91");
+  const [isCountryOpen, setIsCountryOpen] = useState(false);
+
+  const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
+  const [password, setPassword] = useState("");
+  const [otp, setOtp] = useState("");
+
+  const [companies, setCompanies] = useState<AuthCompany[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
-  const [timer, setTimer] = useState(30);
-  const [countryCode, setCountryCode] = useState("+91");
-  const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false);
+  const [timer, setTimer] = useState(0);
 
-  // Countdown timer for OTP resend
   useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (step === "otp" && timer > 0) {
-      interval = setInterval(() => {
-        setTimer((prev) => prev - 1);
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [step, timer]);
+    if (timer <= 0) return;
+    const id = setInterval(() => setTimer((t) => t - 1), 1000);
+    return () => clearInterval(id);
+  }, [timer]);
 
-  const handleSendOtp = async (e: React.FormEvent) => {
+  const reset = (m: Method) => {
+    setMethod(m);
+    setStage(m === "password" ? "input" : "input");
+    setError("");
+    setMessage("");
+    setOtp("");
+    setPassword("");
+  };
+
+  const fmtMobile = () => `${countryCode}${mobile}`;
+
+  const call = async (path: string, body: Record<string, unknown>) => {
+    const res = await fetch(getApi(path), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const data = await res.json().catch(() => ({}));
+    return { res, data } as { res: Response; data: any };
+  };
+
+  // Route the user after any successful auth.
+  const finishLogin = async (data: AuthResponse) => {
+    persistAuth(data);
+    if (data.onboarding) {
+      window.location.href = "/onboarding";
+      return;
+    }
+    if (data.needs_company_selection && (data.companies?.length || 0) > 1) {
+      setCompanies(data.companies || []);
+      setStage("pick");
+      setLoading(false);
+      return;
+    }
+    const companyId = data.company?.id;
+    if (!companyId) {
+      window.location.href = "/onboarding";
+      return;
+    }
+    // Preserve the existing behaviour: send new companies through the segment
+    // questionnaire, otherwise straight to the console.
+    let shouldOnboard = true;
+    try {
+      const r = await fetch(`${getApiHost()}/apis/v3/settings/company/${companyId}`, {
+        headers: { Authorization: `Bearer ${data.access_token}` },
+      });
+      if (r.ok) {
+        const c = await r.json();
+        if (c.onboarding_completed) shouldOnboard = false;
+      }
+    } catch {
+      /* non-fatal */
+    }
+    window.location.href = shouldOnboard
+      ? "/profile/onboarding"
+      : `/c/${companyId}/reports`;
+  };
+
+  const pickCompany = (companyId: string) => {
+    localStorage.setItem("company_id", companyId);
+    window.location.href = `/c/${companyId}/reports`;
+  };
+
+  // ── Handlers ────────────────────────────────────────────────────────────
+  const guard = () => {
+    setLoading(true);
+    setError("");
+    setMessage("");
+  };
+
+  const handlePhoneSend = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!mobile || mobile.length < 10) {
       setError("Please enter a valid mobile number.");
       return;
     }
-
-    setLoading(true);
-    setError("");
-    setMessage("");
-
-    let formattedMobile = `${countryCode}${mobile}`;
-
+    guard();
     try {
-      const apiHost = getApiHost();
-      const response = await fetch(`${apiHost}/apis/v3/auth/otp/send`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mobile: formattedMobile }),
-      });
-
-      const data = await response.json();
-      if (response.ok && data.success) {
-        setStep("otp");
+      const { res, data } = await call("/auth/otp/send", { mobile: fmtMobile() });
+      if (res.ok && data.success) {
+        setStage("otp");
         setTimer(30);
-        setMessage(`OTP sent successfully! Demo code: ${data.mock_code || "123456"}`);
-      } else {
-        setError(data.detail || "Failed to send OTP. Please try again.");
-      }
-    } catch (err) {
-      setError("Could not connect to authentication server. Is the backend running?");
+        setMessage(data.demo_mode ? `Demo code: ${data.mock_code}` : "Code sent to your phone.");
+      } else setError(data.detail || "Failed to send code.");
+    } catch {
+      setError("Could not reach the server. Is the backend running?");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleVerifyOtp = async (e: React.FormEvent) => {
+  const handleEmailOtpSend = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!otp || otp.length < 6) {
-      setError("Please enter the 6-digit OTP code.");
+    if (!email) {
+      setError("Please enter your email.");
       return;
     }
-
-    setLoading(true);
-    setError("");
-    setMessage("");
-
-    let formattedMobile = `${countryCode}${mobile}`;
-
+    guard();
     try {
-      const apiHost = getApiHost();
-      const response = await fetch(`${apiHost}/apis/v3/auth/otp/verify`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mobile: formattedMobile, code: otp }),
-      });
-
-      const data = await response.json();
-      if (response.ok && data.access_token) {
-        setMessage("Authentication successful! Redirecting...");
-        setError("");
-        localStorage.setItem("access_token", data.access_token);
-        localStorage.setItem("company_id", data.company.id);
-        localStorage.setItem("user_id", data.user.id);
-        localStorage.setItem("user_name", data.user?.name || "");
-        localStorage.setItem("creator_name", data.user?.name || "");
-
-        let shouldOnboard = true;
-        try {
-          const companyRes = await fetch(`${apiHost}/apis/v3/settings/company/${data.company.id}`, {
-            headers: { "Authorization": `Bearer ${data.access_token}` }
-          });
-          if (companyRes.ok) {
-            const companyData = await companyRes.json();
-            if (companyData.onboarding_completed) {
-              shouldOnboard = false;
-            }
-          } else {
-            console.warn(`Onboarding-status check returned ${companyRes.status}; defaulting to onboarding.`);
-          }
-        } catch (onboardErr) {
-          console.error("Onboarding-status check failed (non-fatal), redirecting anyway:", onboardErr);
-        }
-
-        setTimeout(() => {
-          if (shouldOnboard) {
-            window.location.href = `/profile/onboarding`;
-          } else {
-            window.location.href = `/c/${data.company.id}/reports`;
-          }
-        }, 1500);
-      } else {
-        setError(data.detail || "Invalid OTP code. Please try again.");
-        setMessage("");
-      }
-    } catch (err) {
-      setError("Verification failed. Please check your internet connection.");
-      setMessage("");
+      const { res, data } = await call("/auth/email-otp/send", { email });
+      if (res.ok && data.success) {
+        setStage("otp");
+        setTimer(30);
+        setMessage(data.demo_mode ? `Demo code: ${data.mock_code}` : "Code sent to your email.");
+      } else setError(data.detail || "Failed to send code.");
+    } catch {
+      setError("Could not reach the server.");
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleOtpVerify = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!otp || otp.length < 6) {
+      setError("Enter the 6-digit code.");
+      return;
+    }
+    guard();
+    try {
+      const path = method === "phone" ? "/auth/otp/verify" : "/auth/email-otp/verify";
+      const body = method === "phone" ? { mobile: fmtMobile(), code: otp } : { email, code: otp };
+      const { res, data } = await call(path, body);
+      if (res.ok && data.access_token) {
+        setMessage("Success. Redirecting...");
+        await finishLogin(data);
+      } else {
+        setError(data.detail || "Invalid code.");
+      }
+    } catch {
+      setError("Verification failed.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePasswordLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    guard();
+    try {
+      const { res, data } = await call("/auth/login", { email, password });
+      if (res.ok && data.access_token) {
+        setMessage("Success. Redirecting...");
+        await finishLogin(data);
+      } else if (res.status === 403) {
+        // Email not verified: move the user into the verify step.
+        setError("");
+        setMessage("Verify your email to continue. We can send you a code.");
+        setStage("verify");
+      } else {
+        setError(data.detail || "Invalid email or password.");
+      }
+    } catch {
+      setError("Could not reach the server.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim()) {
+      setError("Please enter your name.");
+      return;
+    }
+    guard();
+    try {
+      const { res, data } = await call("/auth/register", { email, password, name });
+      if (res.ok && data.success) {
+        setStage("verify");
+        setTimer(30);
+        setMessage(
+          data.demo_mode
+            ? `Account created. Demo code: ${data.mock_code}`
+            : "Account created. Enter the code we emailed you."
+        );
+      } else {
+        setError(data.detail || "Could not create the account.");
+      }
+    } catch {
+      setError("Could not reach the server.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Verify email after register (or after a 403 login), then log in.
+  const handleVerifyEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!otp || otp.length < 6) {
+      setError("Enter the 6-digit code.");
+      return;
+    }
+    guard();
+    try {
+      const { res, data } = await call("/auth/email-otp/verify", { email, code: otp });
+      if (res.ok && data.access_token) {
+        setMessage("Verified. Redirecting...");
+        await finishLogin(data);
+      } else {
+        setError(data.detail || "Invalid code.");
+      }
+    } catch {
+      setError("Verification failed.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendVerify = async () => {
+    guard();
+    try {
+      const { res, data } = await call("/auth/email-otp/send", { email });
+      if (res.ok) {
+        setTimer(30);
+        setMessage(data.demo_mode ? `Demo code: ${data.mock_code}` : "Code sent to your email.");
+      } else setError(data.detail || "Failed to send code.");
+    } catch {
+      setError("Could not reach the server.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleForgotSend = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) {
+      setError("Please enter your email.");
+      return;
+    }
+    guard();
+    try {
+      const { res, data } = await call("/auth/password/forgot", { email });
+      if (res.ok) {
+        setStage("reset");
+        setTimer(30);
+        setMessage("If an account exists, a reset code has been sent to your email.");
+      } else setError(data.detail || "Could not send a reset code.");
+    } catch {
+      setError("Could not reach the server.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    guard();
+    try {
+      const { res, data } = await call("/auth/password/reset", {
+        email,
+        code: otp,
+        new_password: password,
+      });
+      if (res.ok && data.success) {
+        setStage("input");
+        setOtp("");
+        setPassword("");
+        setMessage("Password updated. Please log in.");
+      } else {
+        setError(data.detail || "Could not reset the password.");
+      }
+    } catch {
+      setError("Could not reach the server.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const SUBMIT_CLASS =
+    "w-full flex justify-center items-center py-2.5 px-6 rounded-md text-white font-medium bg-primary hover:bg-primary-hover shadow-sm transition-colors motion-reduce:transition-none cursor-pointer disabled:opacity-50 disabled:pointer-events-none";
+
+  const startGoogle = () => {
+    // Public GET: the backend 307-redirects to Google. No token in any URL.
+    window.location.href = getApi("/auth/google/authorize");
+  };
+
+  // ── UI helpers ────────────────────────────────────────────────────────────
+  const tabBtn = (m: Method, label: string) => (
+    <button
+      type="button"
+      onClick={() => reset(m)}
+      className={`flex-1 py-2 text-xs font-semibold rounded-md transition-colors motion-reduce:transition-none ${
+        method === m
+          ? "bg-primary text-white"
+          : "bg-input text-muted hover:text-foreground border border-border-custom"
+      }`}
+    >
+      {label}
+    </button>
+  );
+
+  const heading = () => {
+    if (stage === "pick") return "Choose a company";
+    if (stage === "otp" || stage === "verify") return "Enter verification code";
+    if (stage === "forgot") return "Reset your password";
+    if (stage === "reset") return "Set a new password";
+    if (method === "password" && stage === "register") return "Create your account";
+    return "Login & Sign Up";
   };
 
   return (
     <div className="flex min-h-screen w-full bg-background text-foreground">
-      {/* Left Panel (Desktop only) */}
+      {/* Brand panel */}
       <div className="relative hidden w-1/2 flex-col justify-between overflow-hidden bg-primary p-16 lg:flex border-r border-border-custom">
-
         <div className="absolute bottom-[-20%] right-[-20%] h-[70%] w-[70%] rounded-full bg-primary opacity-10 blur-[120px]" />
-
-        {/* Logo */}
         <div className="flex items-center gap-3 z-10">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary font-bold text-white shadow-sm">
-            S
-          </div>
-          <span className="text-xl font-bold tracking-tight text-white">
-            Site<span className="text-white">Flow</span>
-          </span>
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary font-bold text-white shadow-sm">S</div>
+          <span className="text-xl font-bold tracking-tight text-white">SiteFlow</span>
         </div>
-
-        {/* Value proposition */}
         <div className="z-10 max-w-md">
           <h2 className="text-3xl font-extrabold leading-tight text-white">
             Your whole construction business in one workspace.
           </h2>
           <p className="mt-4 text-sm leading-relaxed text-white/80">
-            Projects, billing, procurement, payroll and CRM stay connected, so
-            your office and your site work from the same numbers.
+            Projects, billing, procurement, payroll and CRM stay connected, so your office and your site work from the same numbers.
           </p>
-          <ul className="mt-8 space-y-3">
-            {[
-              "Track projects, tasks and daily progress in one place",
-              "Run RA billing, procurement and 3-way match without spreadsheets",
-              "Give your team role-based access from office to site",
-            ].map((point) => (
-              <li key={point} className="flex items-start gap-3 text-sm text-white/90">
-                <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/15 text-xs font-bold text-white">
-                  ✓
-                </span>
-                <span>{point}</span>
-              </li>
-            ))}
-          </ul>
         </div>
       </div>
 
-      {/* Interactive Form Panel */}
+      {/* Form panel */}
       <div className="flex w-full flex-col justify-center items-center p-8 lg:w-1/2 bg-background relative">
-        
-        
-        {/* Mobile Header */}
-        <div className="mb-12 flex items-center gap-3 lg:hidden absolute top-8 left-8">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary font-bold text-white">
-            S
-          </div>
-          <span className="text-lg font-bold tracking-tight text-foreground">
-            Site<span className="text-white">Flow</span>
-          </span>
-        </div>
-
-        <div className="w-full max-w-md space-y-8 z-10">
-          {/* Header */}
-          <div className="space-y-4 text-center">
-            {step === "phone" && (
-              <div className="flex justify-center mb-6">
-                {/* Visual phone hand SVG/CSS */}
-                <div className="relative h-28 w-28 bg-card border border-border-custom rounded-full flex items-center justify-center shadow-lg">
-                  
-                  <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-primary">
-                    <rect x="5" y="2" width="14" height="20" rx="2" />
-                    <line x1="12" y1="18" x2="12" y2="18" strokeLinecap="round" strokeWidth="2" />
-                    <path d="M9 5h6" />
-                  </svg>
-                </div>
-              </div>
-            )}
-            
-            <h2 className="text-3xl font-bold tracking-tight text-foreground">
-              {step === "phone" ? "Login & Sign Up" : "Enter Verification Code"}
-            </h2>
+        <div className="w-full max-w-md space-y-6 z-10">
+          <div className="space-y-2 text-center">
+            <h2 className="text-3xl font-bold tracking-tight text-foreground">{heading()}</h2>
             <p className="text-muted text-sm">
-              {step === "phone"
-                ? "Enter your country code and mobile number to request OTP."
-                : `Enter the code sent to your phone.`}
+              {stage === "input" && method === "phone" && "Enter your mobile number to receive a code."}
+              {stage === "input" && method === "email_otp" && "Enter your email to receive a code."}
+              {stage === "input" && method === "password" && "Log in with your email and password."}
+              {stage === "register" && "Sign up with your email and a password."}
+              {(stage === "otp" || stage === "verify") && "Enter the 6-digit code we sent you."}
+              {stage === "forgot" && "We will email you a code to reset your password."}
+              {stage === "reset" && "Enter the code and choose a new password."}
+              {stage === "pick" && "You belong to more than one company."}
             </p>
           </div>
 
-          {/* Messages */}
           {error && (
-            <div className="rounded-lg border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-400 text-center">
+            <div className="rounded-lg border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-400 text-center">
               {error}
             </div>
           )}
           {message && (
-            <div className="rounded-lg border border-success/20 bg-success/10 p-4 text-sm text-success text-center">
+            <div className="rounded-lg border border-success/20 bg-success/10 p-3 text-sm text-success text-center">
               {message}
             </div>
           )}
 
-          {/* Phone Form */}
-          {step === "phone" && (
-            <form onSubmit={handleSendOtp} className="space-y-6">
-              <div className="space-y-2">
-                <div className="relative flex rounded-md bg-input border border-border-custom focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all overflow-visible items-center p-1.5">
-                  {/* Country Selector Dropdown */}
-                  <div className="relative">
-                    <button
-                      type="button"
-                      onClick={() => setIsCountryDropdownOpen(!isCountryDropdownOpen)}
-                      className="flex items-center gap-1.5 px-3 py-2 bg-elevated rounded-lg border border-border-custom text-sm font-semibold hover:bg-elevated/80 transition-all cursor-pointer text-foreground"
-                    >
-                      <span>🇮🇳</span>
-                      <span>{countryCode}</span>
-                      <span className="text-[10px] opacity-60">▼</span>
-                    </button>
-                    {isCountryDropdownOpen && (
-                      <div className="absolute top-[120%] left-0 w-32 bg-card border border-border-custom rounded-lg shadow-2xl z-50 overflow-hidden">
-                        {[
-                          { code: "+91", flag: "🇮🇳", label: "India" },
-                          { code: "+971", flag: "🇦🇪", label: "UAE" },
-                          { code: "+974", flag: "🇶🇦", label: "Qatar" },
-                          { code: "+966", flag: "🇸🇦", label: "KSA" }
-                        ].map((c) => (
-                          <button
-                            key={c.code}
-                            type="button"
-                            onClick={() => {
-                              setCountryCode(c.code);
-                              setIsCountryDropdownOpen(false);
-                            }}
-                            className="w-full px-3 py-2 text-left text-xs font-semibold hover:bg-primary/20 hover:text-foreground transition-all flex items-center gap-2 cursor-pointer text-foreground"
-                          >
-                            <span>{c.flag}</span>
-                            <span>{c.code}</span>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  <input
-                    type="tel"
-                    value={mobile}
-                    onChange={(e) => setMobile(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                    placeholder="Mobile Number"
-                    required
-                    disabled={loading}
-                    className="w-full bg-transparent px-4 py-2 text-base font-semibold tracking-wide placeholder-muted focus:outline-none text-foreground"
-                  />
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full flex justify-center items-center py-2.5 px-6 rounded-md text-white font-medium bg-primary hover:bg-primary-hover shadow-sm transition-all duration-150 cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
-              >
-                {loading ? "Sending OTP..." : "Next"}
-              </button>
-
-              <div className="relative flex py-2 items-center">
-                <div className="flex-grow border-t border-border-custom"></div>
-                <span className="flex-shrink mx-4 text-xs font-bold text-muted uppercase tracking-widest">Or</span>
-                <div className="flex-grow border-t border-border-custom"></div>
-              </div>
-
+          {/* Google + method tabs shown only on the primary entry stages */}
+          {(stage === "input" || stage === "register") && (
+            <>
               <button
                 type="button"
-                className="w-full flex justify-center items-center py-3.5 px-6 rounded-md text-muted font-semibold border border-border-custom hover:bg-elevated hover:text-foreground transition-all cursor-pointer"
+                onClick={startGoogle}
+                className="w-full flex justify-center items-center gap-2 py-2.5 px-6 rounded-md font-semibold border border-border-custom bg-input hover:bg-elevated hover:text-foreground text-foreground transition-colors motion-reduce:transition-none cursor-pointer"
               >
-                Login with App
+                Continue with Google
+              </button>
+              <div className="relative flex py-1 items-center">
+                <div className="flex-grow border-t border-border-custom" />
+                <span className="flex-shrink mx-4 text-xs font-bold text-muted uppercase tracking-widest">Or</span>
+                <div className="flex-grow border-t border-border-custom" />
+              </div>
+              <div className="flex gap-2">
+                {tabBtn("phone", "Phone OTP")}
+                {tabBtn("email_otp", "Email OTP")}
+                {tabBtn("password", "Password")}
+              </div>
+            </>
+          )}
+
+          {/* Phone input */}
+          {stage === "input" && method === "phone" && (
+            <form onSubmit={handlePhoneSend} className="space-y-5">
+              <div className="relative flex rounded-md bg-input border border-border-custom focus-within:border-primary transition-colors motion-reduce:transition-none items-center p-1.5">
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setIsCountryOpen(!isCountryOpen)}
+                    className="flex items-center gap-1.5 px-3 py-2 bg-elevated rounded-lg border border-border-custom text-sm font-semibold hover:bg-elevated/80 transition-colors motion-reduce:transition-none cursor-pointer text-foreground"
+                  >
+                    <span>{countryCode}</span>
+                    <span className="text-[10px] opacity-60">v</span>
+                  </button>
+                  {isCountryOpen && (
+                    <div className="absolute top-[120%] left-0 w-32 bg-card border border-border-custom rounded-lg shadow-2xl z-50 overflow-hidden">
+                      {COUNTRY_CODES.map((c) => (
+                        <button
+                          key={c.code}
+                          type="button"
+                          onClick={() => {
+                            setCountryCode(c.code);
+                            setIsCountryOpen(false);
+                          }}
+                          className="w-full px-3 py-2 text-left text-xs font-semibold hover:bg-primary/20 hover:text-foreground transition-colors motion-reduce:transition-none cursor-pointer text-foreground"
+                        >
+                          {c.code} {c.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <input
+                  type="tel"
+                  value={mobile}
+                  onChange={(e) => setMobile(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                  placeholder="Mobile number"
+                  required
+                  disabled={loading}
+                  className="w-full bg-transparent px-4 py-2 text-base font-semibold tracking-wide placeholder-muted focus:outline-none text-foreground"
+                />
+              </div>
+              <button type="submit" disabled={loading} className={SUBMIT_CLASS}>
+                {loading ? "Sending..." : "Send code"}
               </button>
             </form>
           )}
 
-          {/* OTP Verification Form */}
-          {step === "otp" && (
-            <form onSubmit={handleVerifyOtp} className="space-y-6">
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <label className="text-xs font-semibold uppercase tracking-wider text-muted">
-                    6-Digit Verification Code
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => setStep("phone")}
-                    className="text-xs font-medium text-secondary hover:text-foreground transition-colors"
-                  >
-                    Change Number
-                  </button>
-                </div>
-                <input
-                  type="text"
-                  maxLength={6}
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                  placeholder="123456"
-                  required
-                  disabled={loading}
-                  className="input-field w-full px-4 py-3.5 text-center text-2xl font-bold tracking-widest placeholder-muted"
-                />
-              </div>
-
-              <button
-                type="submit"
+          {/* Email OTP input */}
+          {stage === "input" && method === "email_otp" && (
+            <form onSubmit={handleEmailOtpSend} className="space-y-5">
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@company.com"
+                required
                 disabled={loading}
-                className="w-full flex justify-center items-center py-2.5 px-6 rounded-md text-white font-medium bg-primary hover:bg-primary-hover shadow-sm transition-all duration-150 cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
-              >
-                {loading ? "Verifying Code..." : "Verify & Log In"}
+                className="input-field w-full px-4 py-3 text-sm focus:outline-none"
+              />
+              <button type="submit" disabled={loading} className={SUBMIT_CLASS}>
+                {loading ? "Sending..." : "Send code"}
               </button>
+            </form>
+          )}
 
-              <div className="flex justify-between items-center text-xs text-muted pt-2">
-                <span>Didn't receive code?</span>
+          {/* Password login */}
+          {stage === "input" && method === "password" && (
+            <form onSubmit={handlePasswordLogin} className="space-y-4">
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@company.com"
+                required
+                disabled={loading}
+                className="input-field w-full px-4 py-3 text-sm focus:outline-none"
+              />
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Password"
+                required
+                disabled={loading}
+                className="input-field w-full px-4 py-3 text-sm focus:outline-none"
+              />
+              <button type="submit" disabled={loading} className={SUBMIT_CLASS}>
+                {loading ? "Signing in..." : "Log in"}
+              </button>
+              <div className="flex justify-between text-xs text-muted pt-1">
+                <button type="button" onClick={() => { setStage("register"); setError(""); setMessage(""); }} className="font-medium text-primary hover:text-foreground">
+                  Create account
+                </button>
+                <button type="button" onClick={() => { setStage("forgot"); setError(""); setMessage(""); }} className="font-medium text-secondary hover:text-foreground">
+                  Forgot password?
+                </button>
+              </div>
+            </form>
+          )}
+
+          {/* Register */}
+          {stage === "register" && (
+            <form onSubmit={handleRegister} className="space-y-4">
+              <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Full name" required disabled={loading} className="input-field w-full px-4 py-3 text-sm focus:outline-none" />
+              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@company.com" required disabled={loading} className="input-field w-full px-4 py-3 text-sm focus:outline-none" />
+              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password (min 8 characters)" required disabled={loading} className="input-field w-full px-4 py-3 text-sm focus:outline-none" />
+              <button type="submit" disabled={loading} className={SUBMIT_CLASS}>
+                {loading ? "Creating..." : "Create account"}
+              </button>
+              <button type="button" onClick={() => { setStage("input"); setError(""); setMessage(""); }} className="w-full text-xs font-medium text-muted hover:text-foreground pt-1">
+                Back to login
+              </button>
+            </form>
+          )}
+
+          {/* OTP / verify code */}
+          {(stage === "otp" || stage === "verify") && (
+            <form onSubmit={stage === "otp" ? handleOtpVerify : handleVerifyEmail} className="space-y-5">
+              <input
+                type="text"
+                inputMode="numeric"
+                maxLength={6}
+                value={otp}
+                onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                placeholder="123456"
+                required
+                disabled={loading}
+                className="input-field w-full px-4 py-3.5 text-center text-2xl font-bold tracking-widest placeholder-muted"
+              />
+              <button type="submit" disabled={loading} className={SUBMIT_CLASS}>
+                {loading ? "Verifying..." : "Verify"}
+              </button>
+              <div className="flex justify-between items-center text-xs text-muted">
+                <button type="button" onClick={() => { setStage("input"); setOtp(""); setError(""); }} className="font-medium text-secondary hover:text-foreground">
+                  Back
+                </button>
                 {timer > 0 ? (
                   <span>Resend in {timer}s</span>
                 ) : (
                   <button
                     type="button"
-                    onClick={handleSendOtp}
+                    onClick={stage === "otp" ? (method === "phone" ? handlePhoneSend : handleEmailOtpSend) as any : handleResendVerify}
                     disabled={loading}
-                    className="font-medium text-primary hover:text-foreground transition-colors"
+                    className="font-medium text-primary hover:text-foreground"
                   >
-                    Resend Code
+                    Resend code
                   </button>
                 )}
               </div>
             </form>
           )}
 
-          {/* Developer Notice */}
-          <div className="rounded-md border border-border-custom bg-elevated p-4 text-xs text-muted space-y-2">
-            <span className="font-semibold text-muted block">⚡ Developer Notice:</span>
-            <p>
-              Use OTP code <code className="text-secondary font-mono font-bold">123456</code> to log in.
-            </p>
-          </div>
+          {/* Forgot */}
+          {stage === "forgot" && (
+            <form onSubmit={handleForgotSend} className="space-y-5">
+              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@company.com" required disabled={loading} className="input-field w-full px-4 py-3 text-sm focus:outline-none" />
+              <button type="submit" disabled={loading} className={SUBMIT_CLASS}>
+                {loading ? "Sending..." : "Send reset code"}
+              </button>
+              <button type="button" onClick={() => { setStage("input"); setError(""); setMessage(""); }} className="w-full text-xs font-medium text-muted hover:text-foreground">
+                Back to login
+              </button>
+            </form>
+          )}
+
+          {/* Reset */}
+          {stage === "reset" && (
+            <form onSubmit={handleReset} className="space-y-4">
+              <input type="text" inputMode="numeric" maxLength={6} value={otp} onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="Reset code" required disabled={loading} className="input-field w-full px-4 py-3 text-center text-xl font-bold tracking-widest" />
+              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="New password (min 8 characters)" required disabled={loading} className="input-field w-full px-4 py-3 text-sm focus:outline-none" />
+              <button type="submit" disabled={loading} className={SUBMIT_CLASS}>
+                {loading ? "Updating..." : "Update password"}
+              </button>
+              <button type="button" onClick={() => { setStage("input"); setError(""); setMessage(""); }} className="w-full text-xs font-medium text-muted hover:text-foreground">
+                Back to login
+              </button>
+            </form>
+          )}
+
+          {/* Company picker */}
+          {stage === "pick" && (
+            <div className="space-y-3">
+              {companies.map((c) => (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => pickCompany(c.id)}
+                  className="w-full text-left px-4 py-3 rounded-md border border-border-custom bg-input hover:border-primary hover:bg-elevated transition-colors motion-reduce:transition-none text-foreground font-semibold"
+                >
+                  {c.name}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

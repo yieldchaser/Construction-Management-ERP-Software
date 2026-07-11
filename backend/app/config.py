@@ -43,6 +43,34 @@ class Settings(BaseSettings):
     OTP_DEMO_ALLOWLIST: str = "9876543210,+919876543210"
     OTP_DEMO_CODE: str = "123456"
 
+    # --- Email OTP login delivery (SMTP) ---
+    # Email OTP reuses the SAME hardened otp_codes machinery as SMS (HMAC-hashed
+    # code, TTL, attempt cap, single-use). Delivery is by SMTP: point these at
+    # Supabase's SMTP relay (Project Settings -> Auth -> SMTP) or any provider.
+    # When SMTP is not configured, email OTP is disabled for non-allowlisted
+    # addresses and returns 503 (mirrors SMS), never a silent bypass.
+    SMTP_HOST: str = ""
+    SMTP_PORT: int = 587
+    SMTP_USER: str = ""
+    SMTP_PASSWORD: str = ""
+    SMTP_FROM: str = ""  # e.g. "SiteFlow <no-reply@siteflow.co>"
+    SMTP_USE_TLS: bool = True  # STARTTLS on the configured port
+    # Comma-separated demo emails allowed to log in with OTP_DEMO_CODE when SMTP
+    # is not configured (dev/demo only; never bypasses real delivery once set).
+    EMAIL_OTP_DEMO_ALLOWLIST: str = "demo@siteflow.co"
+
+    # --- Password policy (email + password auth) ---
+    PASSWORD_MIN_LENGTH: int = 8
+
+    # --- Google login (identity) ---
+    # SEPARATE from the Google Sheets integration: this consent uses the identity
+    # scopes (openid email profile), not the spreadsheets scope, and its own
+    # redirect URI ({BACKEND_PUBLIC_URL}/apis/v3/auth/google/callback). To reuse
+    # the same Google OAuth client, leave these empty and the Sheets client
+    # credentials are used; otherwise set dedicated login credentials here.
+    GOOGLE_LOGIN_CLIENT_ID: str = ""
+    GOOGLE_LOGIN_CLIENT_SECRET: str = ""
+
     # --- CORS preview origins ---
     # Regex for THIS project's own Vercel preview deployments only (not all of
     # *.vercel.app). Override via env if the Vercel project slug/scope changes.
@@ -94,6 +122,19 @@ class Settings(BaseSettings):
     @property
     def demo_allowlist(self) -> set[str]:
         return {p.strip() for p in (self.OTP_DEMO_ALLOWLIST or "").split(",") if p.strip()}
+
+    @property
+    def email_demo_allowlist(self) -> set[str]:
+        return {p.strip().lower() for p in (self.EMAIL_OTP_DEMO_ALLOWLIST or "").split(",") if p.strip()}
+
+    @property
+    def google_login_client_id(self) -> str:
+        """Dedicated login client id, falling back to the Sheets client when unset."""
+        return (self.GOOGLE_LOGIN_CLIENT_ID or self.GOOGLE_SHEETS_CLIENT_ID or "").strip()
+
+    @property
+    def google_login_client_secret(self) -> str:
+        return (self.GOOGLE_LOGIN_CLIENT_SECRET or self.GOOGLE_SHEETS_CLIENT_SECRET or "").strip()
 
     @model_validator(mode="after")
     def _require_secret_key(self):
