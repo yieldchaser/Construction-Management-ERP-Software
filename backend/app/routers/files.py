@@ -15,6 +15,9 @@ from pydantic import BaseModel, Field
 
 router = APIRouter(prefix="/files", tags=["Project Files"], dependencies=[Depends(get_current_user)])
 
+# Reject oversized uploads before buffering the whole body in memory.
+MAX_UPLOAD_BYTES = 50 * 1024 * 1024  # 50 MB
+
 
 # ─── Schemas ───────────────────────────────────────────────────────────────────
 class FolderCreateRequest(BaseModel):
@@ -68,8 +71,13 @@ def _require_folder_or_root(folder_id: Optional[uuid.UUID], project_id: uuid.UUI
 
 # ─── Endpoints ──────────────────────────────────────────────────────────────────
 @router.post("/folders", response_model=FolderResponse, status_code=status.HTTP_201_CREATED)
-def create_folder(req: FolderCreateRequest, db: Session = Depends(get_db)):
-    _require_project(req.project_id, db)
+def create_folder(req: FolderCreateRequest, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+    # project_id arrives in the request body (not the URL), so the plain
+    # verify_project_access dependency cannot bind to it. Load the project and
+    # verify company membership inline, otherwise any logged-in user could create
+    # folders inside another tenant's project by guessing its id.
+    project = _require_project(req.project_id, db)
+    get_company_membership(db, current_user, project.company_id)
     _require_folder_or_root(req.parent_id, req.project_id, db)
 
     existing = db.query(FileFolder).filter(
@@ -136,6 +144,11 @@ async def upload_file(
     contents = await file.read()
     if not contents:
         raise HTTPException(status_code=400, detail="Empty file")
+    if len(contents) > MAX_UPLOAD_BYTES:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail=f"File exceeds the {MAX_UPLOAD_BYTES // (1024 * 1024)} MB upload limit",
+        )
 
     name = file.filename or "untitled"
     content_type = file.content_type or "application/octet-stream"
@@ -209,8 +222,11 @@ def get_file(
     if pf.data:
         media_type = pf.content_type or "application/octet-stream"
         disposition = "attachment" if download else "inline"
+        # Strip characters that could break out of the header value (CR/LF/quotes)
+        # to prevent response-header injection via a crafted filename.
+        safe_name = (pf.original_filename or "download").replace("\r", "").replace("\n", "").replace('"', "")
         headers = {
-            "Content-Disposition": f'{disposition}; filename="{pf.original_filename}"',
+            "Content-Disposition": f'{disposition}; filename="{safe_name}"',
             "Content-Type": media_type,
             "Content-Length": str(pf.size),
             "Cache-Control": "no-store",

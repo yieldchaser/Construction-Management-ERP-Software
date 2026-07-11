@@ -8,6 +8,7 @@ return 403, so an unset secret never means "open".
 """
 from fastapi import APIRouter, Depends, Header, HTTPException, status
 from sqlalchemy.orm import Session
+import hmac
 
 from app.config import settings
 from app.database import get_db
@@ -23,7 +24,7 @@ def _require_admin_secret(x_admin_secret: str | None = Header(default=None)) -> 
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Admin migrations are not enabled",
         )
-    if x_admin_secret != settings.ADMIN_MIGRATION_SECRET:
+    if not hmac.compare_digest(x_admin_secret or "", settings.ADMIN_MIGRATION_SECRET):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Invalid admin secret",

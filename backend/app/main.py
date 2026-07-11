@@ -442,13 +442,17 @@ def get_allowed_origins() -> list[str]:
 
 ALLOWED_ORIGINS = get_allowed_origins()
 
+# Preview deployments: restrict to THIS project's own Vercel pattern rather than
+# every *.vercel.app origin. Configurable via FRONTEND_ORIGIN_REGEX if the Vercel
+# project slug/scope changes. Credentialed CORS with an over-broad regex would let
+# any Vercel-hosted site call the API, so the pattern is scoped and anchored.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
-    allow_origin_regex=r"https://.*\.vercel\.app",
+    allow_origin_regex=_app_settings.FRONTEND_ORIGIN_REGEX,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "X-Admin-Secret"],
 )
 
 app.mount("/static", StaticFiles(directory="static"), name="static")

@@ -169,6 +169,23 @@ class User(Base):
     email = Column(String(255), unique=True, nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 
+
+class OTPCode(Base):
+    """Short-lived, hashed one-time login codes.
+
+    Never stores the plaintext code: only an HMAC-SHA256 hash keyed by SECRET_KEY
+    (see app/routers/auth.py). Codes expire quickly (OTP_TTL_SECONDS) and are
+    invalidated after OTP_MAX_ATTEMPTS wrong tries or on successful use.
+    """
+    __tablename__ = "otp_codes"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    mobile = Column(String(20), nullable=False, index=True)
+    code_hash = Column(String(128), nullable=False)
+    expires_at = Column(DateTime(timezone=True), nullable=False)
+    attempts = Column(Integer, default=0, nullable=False)
+    consumed = Column(Boolean, default=False, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
 class CompanyRole(Base):
     __tablename__ = "company_roles"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)

@@ -1,15 +1,41 @@
+import hashlib
+import hmac
+import secrets as pysecrets
+import uuid
+from datetime import datetime, timedelta, timezone
+
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.auth import create_access_token, get_current_active_company_user, get_current_user
+from app.config import settings
 from app.rate_limit import limiter
-from app import models
-import uuid
+from app import models, sms
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 DEMO_COMPANY_ID = "e0000000-0000-0000-0000-000000000000"
+
+
+def _generate_otp_code() -> str:
+    """Cryptographically-random 6-digit code."""
+    return f"{pysecrets.randbelow(1_000_000):06d}"
+
+
+def _hash_otp(mobile: str, code: str) -> str:
+    """HMAC-SHA256 of the code keyed by SECRET_KEY, bound to the mobile number.
+
+    The plaintext code is never persisted; only this hash is stored, so a DB
+    leak does not expose live codes.
+    """
+    msg = f"{mobile}:{code}".encode("utf-8")
+    return hmac.new(settings.SECRET_KEY.encode("utf-8"), msg, hashlib.sha256).hexdigest()
+
+
+def _aware(dt: datetime) -> datetime:
+    """Treat naive datetimes (SQLite) as UTC for safe comparison."""
+    return dt if dt.tzinfo is not None else dt.replace(tzinfo=timezone.utc)
 
 
 def _seed_demo_projects(db: Session, company_id: uuid.UUID):
@@ -69,30 +95,128 @@ class OTPVerifyRequest(BaseModel):
 
 @router.post("/otp/send")
 @limiter.limit("5/minute")
-def send_otp(request: Request, payload: OTPSendRequest):
-    # Mock OTP always succeeds during development. Mock code is hardcoded to 123456.
-    return {
-        "success": True,
-        "message": f"Mock OTP code sent successfully to {payload.mobile}",
-        "mock_code": "123456"
-    }
+def send_otp(request: Request, payload: OTPSendRequest, db: Session = Depends(get_db)):
+    """Generate a one-time code, store it hashed with a short TTL, and deliver it.
+
+    Delivery depends on configuration:
+    - When an SMS provider is configured (SMS_PROVIDER_API_KEY set), a random
+      6-digit code is sent by SMS and NEVER returned in the response.
+    - When no provider is configured, only demo-allowlisted numbers can proceed,
+      using the fixed demo code (returned for that number only, for demo use).
+      Any other number gets a clear 503 instead of a silent mock login.
+    """
+    mobile = (payload.mobile or "").strip()
+    if not mobile:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Mobile number is required")
+
+    provider_ready = sms.is_configured()
+    is_demo = mobile in settings.demo_allowlist
+
+    if not provider_ready and not is_demo:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="OTP delivery is not configured on this server. Please contact support.",
+        )
+
+    # Demo numbers use the fixed demo code ONLY while no real provider is wired.
+    use_demo_code = is_demo and not provider_ready
+    code = settings.OTP_DEMO_CODE if use_demo_code else _generate_otp_code()
+
+    # Invalidate any earlier unconsumed codes for this number, then store the new
+    # one hashed with an expiry and a fresh attempt counter.
+    db.query(models.OTPCode).filter(
+        models.OTPCode.mobile == mobile,
+        models.OTPCode.consumed.is_(False),
+    ).update({models.OTPCode.consumed: True})
+    otp = models.OTPCode(
+        id=uuid.uuid4(),
+        mobile=mobile,
+        code_hash=_hash_otp(mobile, code),
+        expires_at=datetime.now(timezone.utc) + timedelta(seconds=settings.OTP_TTL_SECONDS),
+        attempts=0,
+        consumed=False,
+    )
+    db.add(otp)
+    db.commit()
+
+    response = {"success": True, "message": f"OTP sent successfully to {mobile}"}
+
+    if provider_ready:
+        try:
+            sms.send_otp_sms(mobile, code)
+        except Exception:
+            # Roll the code back so a failed send does not leave a live code.
+            otp.consumed = True
+            db.commit()
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail="Failed to send OTP. Please try again.",
+            )
+    elif use_demo_code:
+        # Demo convenience for the allowlisted number only; never a real user's code.
+        response["demo_mode"] = True
+        response["mock_code"] = code
+
+    return response
+
 
 @router.post("/otp/verify")
 @limiter.limit("5/minute")
 def verify_otp(request: Request, payload: OTPVerifyRequest, db: Session = Depends(get_db)):
-    if payload.code != "123456":
+    mobile = (payload.mobile or "").strip()
+    submitted = (payload.code or "").strip()
+    now = datetime.now(timezone.utc)
+
+    otp = (
+        db.query(models.OTPCode)
+        .filter(models.OTPCode.mobile == mobile, models.OTPCode.consumed.is_(False))
+        .order_by(models.OTPCode.created_at.desc())
+        .first()
+    )
+    if not otp:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid OTP code. Use mock code '123456'"
+            detail="No active OTP for this number. Please request a new code.",
         )
 
+    if _aware(otp.expires_at) < now:
+        otp.consumed = True
+        db.commit()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="OTP has expired. Please request a new code.",
+        )
+
+    if otp.attempts >= settings.OTP_MAX_ATTEMPTS:
+        otp.consumed = True
+        db.commit()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Too many incorrect attempts. Please request a new code.",
+        )
+
+    # Constant-time comparison against the stored hash.
+    if not hmac.compare_digest(_hash_otp(mobile, submitted), otp.code_hash):
+        otp.attempts += 1
+        if otp.attempts >= settings.OTP_MAX_ATTEMPTS:
+            otp.consumed = True
+        db.commit()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid OTP code.",
+        )
+
+    # Correct code: burn it so it cannot be replayed.
+    otp.consumed = True
+    db.commit()
+
     # 1. Check if user exists, else auto-create
-    user = db.query(models.User).filter(models.User.mobile == payload.mobile).first()
+    user = db.query(models.User).filter(models.User.mobile == mobile).first()
     if not user:
         user = models.User(
             id=uuid.uuid4(),
             name="Demo Engineer",
-            mobile=payload.mobile,
+            mobile=mobile,
             email=f"demo_{str(uuid.uuid4())[:8]}@siteflow.co",
         )
         db.add(user)
