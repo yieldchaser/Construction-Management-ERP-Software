@@ -1187,7 +1187,7 @@ function AttendanceTab({
           <button className={btnGhost} onClick={() => shift(-1)}>
             ‹
           </button>
-          <div className="rounded-md border border-border-custom px-3 py-2 text-sm text-foreground">{date}</div>
+          <div className="whitespace-nowrap rounded-md border border-border-custom px-3 py-2 text-sm text-foreground">{date}</div>
           <button className={btnGhost} onClick={() => shift(1)}>
             ›
           </button>
