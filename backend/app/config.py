@@ -80,7 +80,7 @@ class Settings(BaseSettings):
     # Regex for THIS project's own Vercel preview deployments only (not all of
     # *.vercel.app). Override via env if the Vercel project slug/scope changes.
     FRONTEND_ORIGIN_REGEX: str = (
-        r"^https://(construction-management-erp-softwar[a-z0-9-]*|siteflow[a-z0-9-]*)\.vercel\.app$"
+        r"^https://(construction-management-erp-softwar[a-z0-9-]*|siteflow[a-z0-9-]*|site-flow[a-z0-9-]*)\.vercel\.app$"
     )
 
     # Supabase Storage (file blobs moved out of the DB bytea columns).
