@@ -19,8 +19,10 @@ export default function ContactPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground pb-20 relative">
-      <div className="absolute top-[-10%] right-[-10%] h-[50vw] w-[50vw] rounded-full bg-primary opacity-5 blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] left-[-10%] h-[50vw] w-[50vw] rounded-full bg-primary opacity-5 blur-[120px] pointer-events-none" />
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute top-[-10%] right-[-10%] h-[50vw] w-[50vw] rounded-full bg-primary opacity-5 blur-[120px]" />
+        <div className="absolute bottom-[-10%] left-[-10%] h-[50vw] w-[50vw] rounded-full bg-primary opacity-5 blur-[120px]" />
+      </div>
 
       {/* Header */}
       <header className="sticky top-0 z-50 bg-card border border-border-custom rounded-lg border-b border-border-custom px-6 py-4 flex items-center justify-between">
@@ -46,7 +48,7 @@ export default function ContactPage() {
           Get in touch with SiteFlow
         </h1>
         <p className="text-muted text-sm">
-          Whether you want a product demo, have a sales question, or need support — we're reachable on WhatsApp and respond same day.
+          Whether you want a product demo, have a sales question, or need support, we're reachable on WhatsApp and respond same day.
         </p>
       </section>
 
@@ -59,9 +61,9 @@ export default function ContactPage() {
           <div className="bg-card border border-border-custom rounded-lg rounded-lg p-6 border border-border-custom space-y-5">
             <h2 className="text-sm font-bold text-muted uppercase tracking-widest">Fastest ways to reach us</h2>
             {[
-              { icon: "💬", label: "WhatsApp (Fastest)", value: "+91 98765 00000", sub: "Usually responds in < 2 hours" },
+              { icon: "💬", label: "WhatsApp (Fastest)", value: "+91 76673 59544", sub: "Usually responds in < 2 hours" },
               { icon: "📧", label: "Email", value: "hello@siteflow.com", sub: "Response within 1 business day" },
-              { icon: "📞", label: "Phone", value: "+91 98765 00000", sub: "Mon–Sat, 9 AM – 7 PM IST" },
+              { icon: "📞", label: "Phone", value: "+91 76673 59544", sub: "Mon-Sat, 9 AM to 7 PM IST" },
             ].map((c, i) => (
               <div key={i} className="flex items-start gap-3">
                 <span className="text-xl mt-0.5">{c.icon}</span>
@@ -92,7 +94,7 @@ export default function ContactPage() {
           <div className="bg-card border border-border-custom rounded-lg rounded-lg p-5 border border-primary/20 bg-primary/5 space-y-2">
             <div className="text-sm font-bold text-primary">🚀 Our promise</div>
             <p className="text-xs text-muted leading-relaxed">
-              Every inquiry gets a real response — not an auto-reply. If you fill the form, your dedicated rep will call or WhatsApp you within 4 business hours.
+              Every inquiry gets a real response, not an auto-reply. If you fill the form, your dedicated rep will call or WhatsApp you within 4 business hours.
             </p>
           </div>
         </aside>
@@ -165,7 +167,7 @@ export default function ContactPage() {
                   type="submit"
                   className="w-full rounded-md bg-primary py-4 text-sm font-bold text-white hover:opacity-90 active:scale-[0.99] transition-all shadow-lg shadow-primary/20"
                 >
-                  Send Message — Get Demo →
+                  Send Message, Get Demo →
                 </button>
                 <p className="text-[10px] text-muted text-center">
                   No spam. Your details are only used to set up your demo.
