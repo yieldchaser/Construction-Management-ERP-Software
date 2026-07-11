@@ -5,6 +5,7 @@ import { getContentItemBySlug, getContentItems } from "@/lib/content";
 import { Metadata } from "next";
 import CalculatorTools from "@/components/resources/CalculatorTools";
 import CalcProse from "@/components/resources/CalcProse";
+import ComparisonProse from "@/components/resources/ComparisonProse";
 import { isCalculatorSlug } from "@/components/resources/calculatorSlugs";
 
 interface RouteParams {
@@ -51,6 +52,78 @@ export default async function ResourcePage({ params }: RouteParams) {
   );
 
   const isCalc = isCalculatorSlug(slugPath);
+  const isComparison = slugPath.startsWith("feature-comparisons/");
+  const hasBody = !!article.body && article.body.trim().length > 20;
+
+  if (isComparison) {
+    return (
+      <div className="min-h-screen bg-background text-foreground pb-20 relative">
+        <div className="absolute top-[-10%] right-[-10%] h-[40vw] w-[40vw] rounded-full bg-primary opacity-5 blur-[120px] pointer-events-none" />
+
+        {/* Header */}
+        <header className="sticky top-0 z-50 bg-card border-b border-border-custom px-6 py-4 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary font-sans font-bold text-white shadow-md">
+              S
+            </div>
+            <span className="text-lg font-bold tracking-tight text-foreground">
+              Site<span className="text-primary">Flow</span> Resources
+            </span>
+          </Link>
+          <Link
+            href="/resources/feature-comparisons"
+            className="text-sm font-semibold text-muted hover:text-foreground transition-all"
+          >
+            All comparisons
+          </Link>
+        </header>
+
+        <main className="relative">
+          {hasBody ? (
+            <ComparisonProse html={article.body} />
+          ) : (
+            <div className="comparison-fallback px-6">
+              <span className="inline-block text-xs font-semibold text-primary px-2.5 py-1 rounded bg-primary/10 uppercase tracking-wider">
+                Software comparison
+              </span>
+              <h1 className="mt-4 text-3xl md:text-4xl font-extrabold tracking-tight text-foreground">
+                {article.title}
+              </h1>
+              <p className="mt-4 text-muted leading-relaxed">
+                {article.metaDescription ||
+                  "See how SiteFlow compares and why execution-first construction teams choose it."}
+              </p>
+              <div className="mt-8 flex justify-center gap-3">
+                <Link
+                  href="/"
+                  className="inline-flex items-center justify-center bg-primary text-white font-bold px-6 py-3 rounded-lg shadow-md hover:opacity-90 transition"
+                >
+                  Book a Free Demo
+                </Link>
+                <Link
+                  href="/resources/feature-comparisons"
+                  className="inline-flex items-center justify-center border border-border-custom text-foreground font-bold px-6 py-3 rounded-lg hover:border-primary transition"
+                >
+                  View all comparisons
+                </Link>
+              </div>
+            </div>
+          )}
+          <div className="max-w-3xl mx-auto px-6 mt-8">
+            <Link
+              href="/"
+              className="inline-flex items-center gap-2 text-xs text-muted hover:text-foreground transition-all group"
+            >
+              <span className="group-hover:-translate-x-0.5 transition-transform">
+                ←
+              </span>
+              Back to Home page
+            </Link>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background text-foreground pb-20 relative">
