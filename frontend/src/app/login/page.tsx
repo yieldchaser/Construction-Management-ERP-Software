@@ -1,8 +1,14 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { getApiHost } from "@/lib/api";
 import { getApi, persistAuth } from "@/lib/siteflow";
+import { getFirebaseAuth, isFirebaseConfigured } from "@/lib/firebase";
+import {
+  RecaptchaVerifier,
+  signInWithPhoneNumber,
+  type ConfirmationResult,
+} from "firebase/auth";
 
 type Method = "phone" | "email_otp" | "password";
 type Stage =
@@ -53,6 +59,14 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [timer, setTimer] = useState(0);
+
+  // Firebase Phone Auth (client-side). When the public Firebase config is
+  // present, the "Phone OTP" tab uses Firebase (which handles carrier routing
+  // and DLT compliance); otherwise it falls back to the MSG91/demo-allowlist
+  // flow unchanged. See src/lib/firebase.ts.
+  const firebaseReady = isFirebaseConfigured();
+  const recaptchaRef = useRef<RecaptchaVerifier | null>(null);
+  const confirmationRef = useRef<ConfirmationResult | null>(null);
 
   useEffect(() => {
     if (timer <= 0) return;
@@ -136,6 +150,10 @@ export default function LoginPage() {
       setError("Please enter a valid mobile number.");
       return;
     }
+    if (firebaseReady) {
+      await handleFirebasePhoneSend();
+      return;
+    }
     guard();
     try {
       const { res, data } = await call("/auth/otp/send", { mobile: fmtMobile() });
@@ -146,6 +164,42 @@ export default function LoginPage() {
       } else setError(data.detail || "Failed to send code.");
     } catch {
       setError("Could not reach the server. Is the backend running?");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Firebase phone send: run the invisible reCAPTCHA and send the SMS via the
+  // Firebase JS SDK (no MSG91 involved). The resulting confirmationResult is
+  // held so the code-entry step can confirm it.
+  const handleFirebasePhoneSend = async () => {
+    guard();
+    try {
+      const auth = getFirebaseAuth();
+      if (!auth) {
+        setError("Phone login is temporarily unavailable.");
+        setLoading(false);
+        return;
+      }
+      if (!recaptchaRef.current) {
+        recaptchaRef.current = new RecaptchaVerifier(auth, "firebase-recaptcha", {
+          size: "invisible",
+        });
+      }
+      const confirmation = await signInWithPhoneNumber(auth, fmtMobile(), recaptchaRef.current);
+      confirmationRef.current = confirmation;
+      setStage("otp");
+      setTimer(30);
+      setMessage("Code sent to your phone.");
+    } catch {
+      // Reset the verifier so a retry gets a fresh challenge.
+      try {
+        recaptchaRef.current?.clear();
+      } catch {
+        /* ignore */
+      }
+      recaptchaRef.current = null;
+      setError("Could not send the code. Please check the number and try again.");
     } finally {
       setLoading(false);
     }
@@ -178,6 +232,10 @@ export default function LoginPage() {
       setError("Enter the 6-digit code.");
       return;
     }
+    if (method === "phone" && firebaseReady) {
+      await handleFirebaseOtpVerify();
+      return;
+    }
     guard();
     try {
       const path = method === "phone" ? "/auth/otp/verify" : "/auth/email-otp/verify";
@@ -191,6 +249,35 @@ export default function LoginPage() {
       }
     } catch {
       setError("Verification failed.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Firebase phone verify: confirm the code with Firebase to obtain a signed ID
+  // token, then hand that token to the backend which verifies it and mints our
+  // session (same post-login handling as every other method).
+  const handleFirebaseOtpVerify = async () => {
+    guard();
+    try {
+      const confirmation = confirmationRef.current;
+      if (!confirmation) {
+        setError("Your session expired. Please request a new code.");
+        setStage("input");
+        setLoading(false);
+        return;
+      }
+      const credential = await confirmation.confirm(otp);
+      const idToken = await credential.user.getIdToken();
+      const { res, data } = await call("/auth/firebase/verify", { id_token: idToken });
+      if (res.ok && data.access_token) {
+        setMessage("Success. Redirecting...");
+        await finishLogin(data);
+      } else {
+        setError(data.detail || "Could not complete sign-in.");
+      }
+    } catch {
+      setError("Invalid code. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -625,6 +712,10 @@ export default function LoginPage() {
               ))}
             </div>
           )}
+
+          {/* Invisible reCAPTCHA host for Firebase Phone Auth (no-op when the
+              MSG91 fallback is active). */}
+          <div id="firebase-recaptcha" />
         </div>
       </div>
     </div>

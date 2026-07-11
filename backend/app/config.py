@@ -76,6 +76,19 @@ class Settings(BaseSettings):
     GOOGLE_LOGIN_CLIENT_ID: str = ""
     GOOGLE_LOGIN_CLIENT_SECRET: str = ""
 
+    # --- Firebase Phone Auth (identity) ---
+    # An ADDITIVE phone-verification path alongside MSG91 OTP. Firebase Phone Auth
+    # runs client-side (reCAPTCHA + SMS + code) in the browser via the Firebase JS
+    # SDK; the backend only verifies the resulting Firebase ID token with the
+    # Admin SDK (see app/firebase_auth.py) and mints OUR session. Provide the
+    # Admin SDK service account as FIREBASE_SERVICE_ACCOUNT_JSON (the entire
+    # service-account JSON as a single-line env var string; preferred for hosts
+    # like Render), or FIREBASE_SERVICE_ACCOUNT_PATH (path to a JSON file) as a
+    # fallback. When both are empty, /auth/firebase/verify returns 503, exactly
+    # like the other methods, and MSG91 OTP is unaffected.
+    FIREBASE_SERVICE_ACCOUNT_JSON: str = ""
+    FIREBASE_SERVICE_ACCOUNT_PATH: str = ""
+
     # --- CORS preview origins ---
     # Regex for THIS project's own Vercel preview deployments only (not all of
     # *.vercel.app). Override via env if the Vercel project slug/scope changes.

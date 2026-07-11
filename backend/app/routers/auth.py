@@ -12,7 +12,7 @@ from app.database import get_db
 from app.auth import create_access_token, get_current_active_company_user, get_current_user
 from app.config import settings
 from app.rate_limit import limiter
-from app import models, sms, email_otp, security
+from app import models, sms, email_otp, security, firebase_auth
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -425,8 +425,62 @@ def verify_otp(request: Request, payload: OTPVerifyRequest, db: Session = Depend
     return _post_auth(db, user, provider="phone")
 
 
-# ── Email OTP (Part C) ───────────────────────────────────────────────────────
+# ── Firebase Phone Auth (client-side verification, additive) ─────────────────
+#
+# Firebase Phone Auth is additive to the MSG91/demo-allowlist OTP above: the
+# browser (Firebase JS SDK) runs reCAPTCHA + SMS + code entry and produces a
+# signed Firebase ID token; this endpoint only VERIFIES that token server-side
+# (see app/firebase_auth.py) and mints our session. The verified phone_number
+# claim is the sole proof of identity here - a client-supplied number is never
+# trusted. New users funnel through the same _post_auth path as every other
+# method. The MSG91 flow above is untouched.
 
+class FirebaseVerifyRequest(BaseModel):
+    id_token: str = Field(..., min_length=1)
+
+
+@router.post("/firebase/verify")
+@limiter.limit("5/minute")
+def verify_firebase(request: Request, payload: FirebaseVerifyRequest, db: Session = Depends(get_db)):
+    if not firebase_auth.is_configured():
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Firebase phone login is not configured on this server. Please contact support.",
+        )
+
+    try:
+        claims = firebase_auth.verify_id_token(payload.id_token)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired verification. Please try again.",
+        )
+
+    mobile = (claims.get("phone_number") or "").strip()
+    if not mobile:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This Firebase account has no verified phone number.",
+        )
+
+    # Find-or-create by the VERIFIED phone number, same identity-linking policy as
+    # the rest of auth.py (match by verified identifier only).
+    user = db.query(models.User).filter(models.User.mobile == mobile).first()
+    if not user:
+        user = models.User(
+            id=uuid.uuid4(),
+            name="Site User",
+            mobile=mobile,
+            auth_providers="firebase_phone",
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+
+    return _post_auth(db, user, provider="firebase_phone")
+
+
+# ── Email OTP (Part C) ───────────────────────────────────────────────────────
 class EmailOTPSendRequest(BaseModel):
     email: EmailStr = Field(..., example="user@example.com")
 
