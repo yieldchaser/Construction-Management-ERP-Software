@@ -3,6 +3,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getContentItemBySlug, getContentItems } from "@/lib/content";
 import { Metadata } from "next";
+import CalculatorTools from "@/components/resources/CalculatorTools";
+import CalcProse from "@/components/resources/CalcProse";
+import { isCalculatorSlug } from "@/components/resources/calculatorSlugs";
 
 interface RouteParams {
   params: Promise<{
@@ -47,6 +50,8 @@ export default async function ResourcePage({ params }: RouteParams) {
     (r) => r.slug !== slugPath && r.slug.startsWith(slug[0])
   );
 
+  const isCalc = isCalculatorSlug(slugPath);
+
   return (
     <div className="min-h-screen bg-background text-foreground pb-20 relative">
       {/* Background Glow */}
@@ -85,22 +90,31 @@ export default async function ResourcePage({ params }: RouteParams) {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Main Body */}
           <main className="lg:col-span-3 space-y-8">
-            <div className="bg-card border border-border-custom rounded-lg shadow-sm rounded-md p-8 md:p-12 border border-border-custom space-y-6">
-              <div className="space-y-4 border-b border-border-custom pb-6">
-                <span className="inline-block text-xs font-semibold text-primary px-2.5 py-1 rounded bg-primary/10 uppercase tracking-wider">
-                  Platform resources
-                </span>
-                <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-foreground leading-tight">
-                  {article.title}
-                </h1>
-              </div>
+            {isCalc ? (
+              <>
+                <CalculatorTools slug={slugPath} />
+                <div className="bg-card border border-border-custom rounded-lg shadow-sm rounded-md p-8 md:p-12 border border-border-custom">
+                  <CalcProse html={article.body} />
+                </div>
+              </>
+            ) : (
+              <div className="bg-card border border-border-custom rounded-lg shadow-sm rounded-md p-8 md:p-12 border border-border-custom space-y-6">
+                <div className="space-y-4 border-b border-border-custom pb-6">
+                  <span className="inline-block text-xs font-semibold text-primary px-2.5 py-1 rounded bg-primary/10 uppercase tracking-wider">
+                    Platform resources
+                  </span>
+                  <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-foreground leading-tight">
+                    {article.title}
+                  </h1>
+                </div>
 
-              {/* Render html body safely */}
-              <div
-                className="help-article"
-                dangerouslySetInnerHTML={{ __html: article.body }}
-              />
-            </div>
+                {/* Render html body safely */}
+                <div
+                  className="help-article"
+                  dangerouslySetInnerHTML={{ __html: article.body }}
+                />
+              </div>
+            )}
           </main>
 
           {/* Sidebar */}

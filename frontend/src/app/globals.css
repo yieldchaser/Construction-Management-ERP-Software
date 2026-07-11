@@ -312,6 +312,120 @@ body {
   color: var(--primary) !important;
 }
 
+/* ------------------------------------------------------------
+   Resource calculator prose (.calc-prose): the educational
+   content that surrounds the interactive React calculator. The
+   dead HTML "tool" is stripped from the body at build; this styles
+   the remaining formula / example / reference / FAQ prose. Class
+   prefixes differ per source file, so FAQ interactivity is wired
+   generically in CalcProse.tsx and normalized to cp-faq-* here.
+   Theme-token based, works in both themes.
+   ------------------------------------------------------------ */
+.calc-prose [class*="table-wrap"],
+.calc-prose [class*="tbl-wrap"],
+.calc-prose [class*="twrap"] {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.calc-prose code {
+  overflow-wrap: anywhere;
+}
+/* Native <details> FAQ (paint) */
+.calc-prose details {
+  border: 1px solid var(--border);
+  border-radius: 0.6rem;
+  background: var(--card);
+  margin: 0.6rem 0;
+  padding: 0.25rem 0;
+}
+.calc-prose details > summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 0.9rem 1.1rem;
+  font-weight: 600;
+  color: var(--foreground);
+}
+.calc-prose details > summary::-webkit-details-marker { display: none; }
+.calc-prose details[open] > summary { border-bottom: 1px solid var(--border); }
+.calc-prose details > *:not(summary) {
+  padding: 0.9rem 1.1rem;
+  color: var(--muted);
+  line-height: 1.65;
+}
+/* Generic accordion (normalized in JS) */
+.calc-prose .cp-faq-item {
+  border: 1px solid var(--border);
+  border-radius: 0.6rem;
+  background: var(--card);
+  margin: 0.6rem 0;
+  overflow: hidden;
+}
+.calc-prose .cp-faq-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  padding: 1rem 1.1rem;
+  margin: 0;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--foreground);
+  background: transparent;
+  border: 0;
+}
+.calc-prose .cp-faq-trigger:hover {
+  background: color-mix(in srgb, var(--primary) 5%, transparent);
+}
+.calc-prose .cp-faq-item > *:not(.cp-faq-trigger) {
+  display: none;
+  padding: 0 1.1rem 1rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.65;
+}
+.calc-prose .cp-faq-item.cp-open > *:not(.cp-faq-trigger) {
+  display: block;
+}
+.calc-prose .cp-faq-trigger [class*="icon"] {
+  flex: none;
+  transition: transform 0.2s ease;
+}
+.calc-prose .cp-faq-item.cp-open .cp-faq-trigger [class*="icon"] {
+  transform: rotate(180deg);
+}
+.calc-prose .cp-faq-trigger [class*="icon"] svg {
+  width: 0.85rem;
+  height: 0.85rem;
+}
+/* Tabbed education sections (progressive: panels visible until JS hides them) */
+.calc-prose [role="tablist"] {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1.25rem 0 1rem;
+}
+.calc-prose [role="tablist"] [data-panel] {
+  cursor: pointer;
+  padding: 0.5rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--card);
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.calc-prose [role="tablist"] [data-panel].cp-tab-active {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 8%, transparent);
+}
+.calc-prose [role="tabpanel"].cp-tab-hide {
+  display: none;
+}
+
 /* ============================================================
    Homepage living elements: dotted grid, aurora panel, typewriter
    Compositor-only animation (transform/opacity). Static blur.
