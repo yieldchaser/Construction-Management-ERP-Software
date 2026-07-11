@@ -15,6 +15,14 @@ const SUPABASE_HOSTS = "https://*.supabase.co";
 //   'unsafe-eval' only if a client library actually needs it.
 // - img-src allows https:, data: and blob: so Supabase Storage images, inline
 //   data URIs, and camera-captured blobs (face recognition) all load.
+// Firebase Phone Auth (see src/lib/firebase.ts, app/login/page.tsx) loads the
+// reCAPTCHA challenge from Google and calls the Identity Toolkit / Secure Token
+// APIs directly from the browser. These hosts are required for that flow only;
+// nothing else in the app needs them.
+const RECAPTCHA_SCRIPT_HOSTS = "https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/";
+const RECAPTCHA_FRAME_HOSTS = "https://www.google.com/recaptcha/";
+const FIREBASE_CONNECT_HOSTS = "https://identitytoolkit.googleapis.com https://securetoken.googleapis.com";
+
 const contentSecurityPolicy = [
   "default-src 'self'",
   "base-uri 'self'",
@@ -24,8 +32,10 @@ const contentSecurityPolicy = [
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
   "style-src 'self' 'unsafe-inline'",
-  "script-src 'self' 'unsafe-inline'",
-  `connect-src 'self' ${API_HOST} ${SUPABASE_HOSTS}`,
+  `script-src 'self' 'unsafe-inline' ${RECAPTCHA_SCRIPT_HOSTS}`,
+  `script-src-elem 'self' 'unsafe-inline' ${RECAPTCHA_SCRIPT_HOSTS}`,
+  `frame-src 'self' ${RECAPTCHA_FRAME_HOSTS}`,
+  `connect-src 'self' ${API_HOST} ${SUPABASE_HOSTS} ${FIREBASE_CONNECT_HOSTS}`,
   "worker-src 'self' blob:",
   "media-src 'self' blob:",
 ].join("; ");
