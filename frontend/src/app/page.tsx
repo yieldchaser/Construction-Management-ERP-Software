@@ -7,10 +7,10 @@ import TypewriterText from "@/components/marketing/TypewriterText";
 import StatBand from "@/components/marketing/StatBand";
 
 const HEADLINE_PHRASES = [
-  "a single source of truth",
-  "one site record",
-  "one project ledger",
   "one workspace",
+  "one dashboard",
+  "one ledger",
+  "one record",
 ];
 
 const PILLARS = [
@@ -207,11 +207,14 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Aurora panel with a static UI echo card */}
+          {/* Aurora panel: night sky with soft light curtains + a static UI echo card */}
           <div className="aurora-panel rounded-2xl border border-border-custom h-64 sm:h-80 lg:h-[26rem] w-full">
-            <div className="aurora-blob aurora-blob-1" aria-hidden="true" />
-            <div className="aurora-blob aurora-blob-2" aria-hidden="true" />
-            <div className="aurora-blob aurora-blob-3" aria-hidden="true" />
+            <div className="aurora-ribbon aurora-ribbon-1" aria-hidden="true" />
+            <div className="aurora-ribbon aurora-ribbon-2" aria-hidden="true" />
+            <div className="aurora-ribbon aurora-ribbon-3" aria-hidden="true" />
+            <div className="aurora-ribbon aurora-ribbon-4" aria-hidden="true" />
+            <div className="aurora-ribbon aurora-ribbon-5" aria-hidden="true" />
+            <div className="aurora-ribbon aurora-ribbon-6" aria-hidden="true" />
 
             {/* Static mock project card floating on the aurora (honest demo strings) */}
             <div className="absolute inset-0 flex items-center justify-center p-6">
@@ -403,19 +406,72 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-border-custom px-6 py-8 text-muted">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-xs">
-            SiteFlow is an independent construction operations platform. All product names, logos, and brands are property of their respective owners.
-          </p>
-          <div className="flex items-center gap-6 text-xs">
-            <Link href="/blog" className="hover:text-muted transition-all">Blog</Link>
-            <Link href="/help" className="hover:text-muted transition-all">Help Center</Link>
-            <Link href="/resources/construction-terms-meanings" className="hover:text-muted transition-all">Glossary</Link>
-          <Link href="/resources/construction-calculators" className="hover:text-muted transition-all">Calculators</Link>
-          <Link href="/who-we-serve" className="hover:text-muted transition-all">Who We Serve</Link>
-          <Link href="/terms" className="hover:text-muted transition-all">Terms</Link>
-            <Link href="/privacy" className="hover:text-muted transition-all">Privacy</Link>
+      <footer className="border-t border-border-custom">
+        <div className="max-w-6xl mx-auto px-6 py-14">
+          <div className="grid grid-cols-2 gap-10 sm:grid-cols-3 lg:grid-cols-6">
+            {/* Brand + tagline */}
+            <div className="col-span-2 space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary font-sans font-bold text-white shadow-md">
+                  S
+                </div>
+                <span className="text-lg font-bold tracking-tight text-foreground">
+                  Site<span className="text-primary">Flow</span>
+                </span>
+              </div>
+              <p className="text-sm text-muted leading-relaxed max-w-xs">
+                Planning, progress, procurement and project finance for Indian construction, in one workspace.
+              </p>
+            </div>
+
+            {/* Product */}
+            <div className="space-y-3">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">Product</h3>
+              <ul className="space-y-2 text-sm">
+                <li><Link href="/products" className="text-muted hover:text-foreground transition-all">Products</Link></li>
+                <li><Link href="/SiteFlow-pricing" className="text-muted hover:text-foreground transition-all">Pricing</Link></li>
+                <li><Link href="/who-we-serve" className="text-muted hover:text-foreground transition-all">Who We Serve</Link></li>
+                <li><Link href="/integrations" className="text-muted hover:text-foreground transition-all">Integrations</Link></li>
+              </ul>
+            </div>
+
+            {/* Resources */}
+            <div className="space-y-3">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">Resources</h3>
+              <ul className="space-y-2 text-sm">
+                <li><Link href="/blog" className="text-muted hover:text-foreground transition-all">Blog</Link></li>
+                <li><Link href="/help" className="text-muted hover:text-foreground transition-all">Help Center</Link></li>
+                <li><Link href="/resources/construction-terms-meanings" className="text-muted hover:text-foreground transition-all">Glossary</Link></li>
+                <li><Link href="/resources/construction-calculators" className="text-muted hover:text-foreground transition-all">Calculators</Link></li>
+              </ul>
+            </div>
+
+            {/* Company */}
+            <div className="space-y-3">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">Company</h3>
+              <ul className="space-y-2 text-sm">
+                <li><Link href="/about" className="text-muted hover:text-foreground transition-all">About</Link></li>
+                <li><Link href="/contact" className="text-muted hover:text-foreground transition-all">Contact</Link></li>
+              </ul>
+            </div>
+
+            {/* Legal */}
+            <div className="space-y-3">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">Legal</h3>
+              <ul className="space-y-2 text-sm">
+                <li><Link href="/terms" className="text-muted hover:text-foreground transition-all">Terms</Link></li>
+                <li><Link href="/privacy" className="text-muted hover:text-foreground transition-all">Privacy</Link></li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="mt-12 pt-6 border-t border-border-custom flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <p className="text-xs text-muted max-w-2xl leading-relaxed">
+              SiteFlow is an independent construction operations platform. All product names, logos, and brands are property of their respective owners.
+            </p>
+            <p className="text-xs text-muted whitespace-nowrap">
+              &copy; {new Date().getFullYear()} SiteFlow
+            </p>
           </div>
         </div>
       </footer>

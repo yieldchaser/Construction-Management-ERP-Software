@@ -2,7 +2,13 @@ import React from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getContentItemBySlug } from "@/lib/content";
+import MarketingArticle from "@/components/marketing/MarketingArticle";
 import { Metadata } from "next";
+
+// Pages authored as bespoke, full-bleed landing pages with their own scoped
+// CSS systems (styled in globals.css). They render full width, without the
+// boxed .help-article prose wrapper, and use interactive FAQ accordions.
+const BESPOKE_SLUGS = new Set(["who-we-serve", "tally"]);
 
 interface RouteParams {
   params: Promise<{ slug: string }>;
@@ -35,6 +41,53 @@ export default async function GenericPage({ params }: RouteParams) {
   if (!page) notFound();
 
   const isCustomLayout = slug === "about";
+  const isBespoke = BESPOKE_SLUGS.has(slug);
+
+  if (isBespoke) {
+    return (
+      <div className="min-h-screen bg-background text-foreground relative overflow-x-hidden">
+        {/* Header */}
+        <header className="sticky top-0 z-50 bg-card border border-border-custom rounded-lg border-b border-border-custom px-6 py-4 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary font-sans font-bold text-white shadow-md">
+              S
+            </div>
+            <span className="text-lg font-bold tracking-tight text-foreground">
+              Site<span className="text-primary">Flow</span>
+            </span>
+          </Link>
+          <div className="flex items-center gap-5">
+            <Link href="/products" className="hidden md:block text-sm text-muted hover:text-foreground transition-all">Products</Link>
+            <Link href="/who-we-serve" className="hidden md:block text-sm text-muted hover:text-foreground transition-all">Who We Serve</Link>
+            <Link href="/resources" className="hidden md:block text-sm text-muted hover:text-foreground transition-all">Resources</Link>
+            <Link
+              href="/login"
+              className="rounded-md bg-primary px-5 py-2 text-sm font-bold text-white hover:opacity-90 transition-all"
+            >
+              Get Started
+            </Link>
+          </div>
+        </header>
+
+        <main className="w-full">
+          <MarketingArticle html={page.body} />
+        </main>
+
+        {/* Footer */}
+        <footer className="border-t border-border-custom px-6 py-8 text-muted">
+          <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+            <p className="text-xs">© 2026 SiteFlow. All rights reserved.</p>
+            <div className="flex items-center gap-5 text-xs">
+              <Link href="/privacy" className="hover:text-foreground transition-all">Privacy</Link>
+              <Link href="/terms" className="hover:text-foreground transition-all">Terms</Link>
+              <Link href="/contact" className="hover:text-foreground transition-all">Contact</Link>
+              <Link href="/blog" className="hover:text-foreground transition-all">Blog</Link>
+            </div>
+          </div>
+        </footer>
+      </div>
+    );
+  }
 
   if (isCustomLayout) {
     return (

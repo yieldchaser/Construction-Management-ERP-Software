@@ -25,7 +25,6 @@ export default function TypewriterText({
   holdTime = 2200,
 }: TypewriterTextProps) {
   const first = phrases[0] ?? "";
-  const longest = phrases.reduce((a, b) => (b.length > a.length ? b : a), "");
 
   const [text, setText] = React.useState(first);
   const [animate, setAnimate] = React.useState(false);
@@ -78,14 +77,9 @@ export default function TypewriterText({
   }, [animate, first, phrases, typeSpeed, deleteSpeed, holdTime]);
 
   return (
-    <span className="tw-wrap">
-      <span className="tw-sizer" aria-hidden="true">
-        {longest}
-      </span>
-      <span className={className}>
-        {text}
-        {animate && <span className="typewriter-caret" aria-hidden="true" />}
-      </span>
+    <span className={`tw-line${className ? ` ${className}` : ""}`}>
+      {text}
+      {animate && <span className="typewriter-caret" aria-hidden="true" />}
     </span>
   );
 }
