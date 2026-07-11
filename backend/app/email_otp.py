@@ -66,4 +66,7 @@ def send_otp_email(email: str, code: str) -> None:
                     server.login(user, password)
                 server.send_message(msg)
     except Exception as exc:  # noqa: BLE001 - do not leak transport detail to caller
+        # Server-side only: the caller never sees this, but without it an SMTP
+        # auth/TLS/sender failure is completely invisible, even in prod logs.
+        print(f"[email_otp] SMTP send failed (host={host} port={port}): {exc!r}")
         raise RuntimeError("Email provider request failed") from exc
