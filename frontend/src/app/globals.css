@@ -287,6 +287,31 @@ body {
   background: rgba(127, 127, 127, 0.05);
 }
 
+/* ------------------------------------------------------------
+   Neutralize competitor WordPress light-theme palette classes.
+   Injected product/blog/resource bodies carry has-*-color and
+   has-*-background-color classes authored for a light theme
+   (e.g. has-black-color text, has-white-background-color callout
+   cards), which render unreadable on our dark surface. Remap them
+   to theme tokens so contrast is correct in both themes. Class
+   based only; inline style="" colors (semantic data-viz) untouched.
+   ------------------------------------------------------------ */
+.help-article [class*="has-"][class*="-background-color"] {
+  background-color: var(--elevated) !important;
+}
+.help-article .has-black-color,
+.help-article .has-white-color,
+.help-article [class*="has-palette-color-"][class*="-color"]:not([class*="background"]):not([class*="border"]) {
+  color: inherit !important;
+}
+.help-article [class*="has-"][class*="-border-color"] {
+  border-color: var(--border) !important;
+}
+.help-article .has-link-color,
+.help-article a {
+  color: var(--primary) !important;
+}
+
 /* ============================================================
    Homepage living elements: dotted grid, aurora panel, typewriter
    Compositor-only animation (transform/opacity). Static blur.
