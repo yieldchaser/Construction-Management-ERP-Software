@@ -470,11 +470,29 @@ body {
 .calc-prose details > summary {
   cursor: pointer;
   list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
   padding: 0.9rem 1.1rem;
   font-weight: 600;
   color: var(--foreground);
 }
 .calc-prose details > summary::-webkit-details-marker { display: none; }
+.calc-prose details > summary::after {
+  content: "";
+  flex: none;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-right: 2px solid var(--muted);
+  border-bottom: 2px solid var(--muted);
+  transform: rotate(45deg);
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+.calc-prose details[open] > summary::after {
+  transform: rotate(-135deg);
+  border-color: var(--primary);
+}
 .calc-prose details[open] > summary { border-bottom: 1px solid var(--border); }
 .calc-prose details > *:not(summary) {
   padding: 0.9rem 1.1rem;
@@ -518,16 +536,25 @@ body {
 .calc-prose .cp-faq-item.cp-open > *:not(.cp-faq-trigger) {
   display: block;
 }
+/* Unified toggle icon: hide whatever bespoke +/chevron each source file ships
+   (sc-fqi-icon "+", ohcc-f-icon red SVG, etc.) and render ONE consistent
+   theme-colored chevron so every calculator FAQ looks identical. */
 .calc-prose .cp-faq-trigger [class*="icon"] {
+  display: none;
+}
+.calc-prose .cp-faq-trigger::after {
+  content: "";
   flex: none;
-  transition: transform 0.2s ease;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-right: 2px solid var(--muted);
+  border-bottom: 2px solid var(--muted);
+  transform: rotate(45deg);
+  transition: transform 0.2s ease, border-color 0.2s ease;
 }
-.calc-prose .cp-faq-item.cp-open .cp-faq-trigger [class*="icon"] {
-  transform: rotate(180deg);
-}
-.calc-prose .cp-faq-trigger [class*="icon"] svg {
-  width: 0.85rem;
-  height: 0.85rem;
+.calc-prose .cp-faq-item.cp-open .cp-faq-trigger::after {
+  transform: rotate(-135deg);
+  border-color: var(--primary);
 }
 /* Tabbed education sections (progressive: panels visible until JS hides them) */
 .calc-prose [role="tablist"] {
@@ -900,9 +927,9 @@ body {
 
 /* ---------- Who We Serve: closing CTA ---------- */
 .owwcta-outer { padding: 2rem 1.5rem 4.5rem; }
-.owwcta-wrap { max-width: 52rem; margin: 0 auto; text-align: center; background: color-mix(in srgb, var(--primary) 10%, var(--card)); border: 1px solid color-mix(in srgb, var(--primary) 22%, transparent); border-radius: 1.25rem; padding: 3rem 2rem; }
+.owwcta-wrap { max-width: 52rem; margin: 0 auto; text-align: center; background: var(--card); border: 1px solid color-mix(in srgb, var(--primary) 22%, transparent); border-radius: 1.25rem; padding: 3rem 2rem; }
 .owwcta-pills { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem; margin-bottom: 1.25rem; }
-.owwcta-pill { font-size: 0.74rem; font-weight: 600; padding: 0.35rem 0.75rem; border-radius: 999px; background: var(--card); border: 1px solid var(--border); color: var(--foreground); }
+.owwcta-pill { font-size: 0.74rem; font-weight: 600; padding: 0.35rem 0.75rem; border-radius: 999px; background: var(--elevated); border: 1px solid var(--border); color: var(--foreground); }
 .owwcta-h2 { font-size: clamp(1.7rem, 3.5vw, 2.3rem); font-weight: 800; color: var(--foreground); letter-spacing: -0.02em; }
 .owwcta-desc { margin: 0.9rem auto 0; max-width: 34rem; color: var(--muted); line-height: 1.65; }
 .owwcta-btns { margin-top: 1.75rem; }
@@ -2491,4 +2518,51 @@ body {
 }
 .help-article [class*="-win"]:not([class*="-window"]):not([class*="-win-"]):not([class*="-icon-win"]) {
   color: var(--primary) !important;
+}
+
+/* ---- Glossary (oterm-) stat strip: value stacked above label with spacing ---- */
+.help-article .oterm-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 0.3rem;
+}
+.help-article .oterm-stat-num {
+  font-size: 1.5rem;
+  line-height: 1.1;
+}
+
+/* ---- Calculators index (osclg-) category filter pills ----
+   Override the generic -fbtn button rules so pill text stays readable in
+   every state (base, hover, active). Active = filled violet + white text,
+   inactive = elevated surface + muted text that darkens on hover. */
+.help-article .osclg-fbtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem 0.95rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--elevated);
+  color: var(--muted) !important;
+  transition: color .15s ease, background .15s ease, border-color .15s ease;
+}
+.help-article .osclg-fbtn:hover {
+  background: var(--elevated);
+  border-color: var(--primary);
+  color: var(--foreground) !important;
+}
+.help-article .osclg-fbtn.osclg-on {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff !important;
+}
+.help-article .osclg-fbtn.osclg-on:hover {
+  background: var(--primary);
+  color: #fff !important;
 }

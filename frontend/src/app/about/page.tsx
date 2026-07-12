@@ -161,7 +161,7 @@ export default function AboutPage() {
           <div className="pt-2">
             <Link
               href="/login"
-              className="inline-flex items-center justify-center rounded-md bg-primary px-8 py-3.5 text-sm font-bold text-white shadow-lg shadow-secondary/15 hover:opacity-90 active:scale-[0.98] transition-all cursor-pointer"
+              className="inline-flex items-center justify-center rounded-md bg-white px-8 py-3.5 text-sm font-bold text-primary shadow-lg shadow-black/20 hover:bg-white/90 active:scale-[0.98] transition-all cursor-pointer"
             >
               Start Free Trial
             </Link>
