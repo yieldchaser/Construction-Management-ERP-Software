@@ -159,7 +159,7 @@ export default function ThreeWayPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-white">3-Way Matching</h1>
+            <h1 className="text-3xl font-bold text-foreground">3-Way Matching</h1>
             <p className="text-muted mt-1">Reconcile PO ↔ GRN ↔ Invoice automatically</p>
           </div>
           <button
@@ -225,36 +225,36 @@ export default function ThreeWayPage() {
         {showModal && (
           <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
             <div className="bg-elevated border border-border-custom rounded-lg p-6 w-full max-w-lg">
-              <h2 className="text-xl font-bold text-white mb-4">New 3-Way Match</h2>
+              <h2 className="text-xl font-bold text-foreground mb-4">New 3-Way Match</h2>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="block text-xs font-medium text-muted mb-1">Purchase Order</label>
-                  <select required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-white" value={form.po_id} onChange={(e) => setForm({...form, po_id: e.target.value})}>
+                  <select required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-foreground" value={form.po_id} onChange={(e) => setForm({...form, po_id: e.target.value})}>
                     <option value="">Select PO</option>
                     {pos.map((p) => <option key={p.id} value={p.id}>{p.po_number} — ₹{Number(p.total_amount).toLocaleString()}</option>)}
                   </select>
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-muted mb-1">Goods Receipt Note</label>
-                  <select required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-white" value={form.grn_id} onChange={(e) => setForm({...form, grn_id: e.target.value})}>
+                  <select required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-foreground" value={form.grn_id} onChange={(e) => setForm({...form, grn_id: e.target.value})}>
                     <option value="">Select GRN</option>
                     {grns.map((g) => <option key={g.id} value={g.id}>{g.grn_number}</option>)}
                   </select>
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-muted mb-1">Invoiced Amount (₹)</label>
-                  <input type="number" required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-white" value={form.invoiced_amount} onChange={(e) => setForm({...form, invoiced_amount: parseFloat(e.target.value)})} />
+                  <input type="number" required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-foreground" value={form.invoiced_amount} onChange={(e) => setForm({...form, invoiced_amount: parseFloat(e.target.value)})} />
                   {selectedPo && (
                     <p className="text-xs text-muted mt-1">PO Amount: ₹{Number(selectedPo.total_amount).toLocaleString()} • Variance: <span className={autoVariance < 0 ? "text-red-400" : autoVariance > 0 ? "text-amber-400" : "text-emerald-400"}>₹{Number(autoVariance).toLocaleString()}</span></p>
                   )}
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-muted mb-1">Variance Reason (if any)</label>
-                  <textarea className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-white" value={form.variance_reason} onChange={(e) => setForm({...form, variance_reason: e.target.value})} />
+                  <textarea className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-foreground" value={form.variance_reason} onChange={(e) => setForm({...form, variance_reason: e.target.value})} />
                 </div>
                 <div className="flex gap-3 pt-2">
                   <button type="submit" className="flex-1 px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-md text-sm font-semibold">Create Match</button>
-                  <button type="button" onClick={() => { setShowModal(false); setMessage(""); }} className="px-4 py-2 bg-white/10 hover:bg-white/15 text-white rounded-md text-sm font-semibold">Cancel</button>
+                  <button type="button" onClick={() => { setShowModal(false); setMessage(""); }} className="px-4 py-2 bg-white/10 hover:bg-white/15 text-foreground rounded-md text-sm font-semibold">Cancel</button>
                 </div>
               </form>
             </div>

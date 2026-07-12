@@ -82,7 +82,7 @@ export default function FaceRecognitionPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-white">Face Recognition Attendance</h1>
+            <h1 className="text-3xl font-bold text-foreground">Face Recognition Attendance</h1>
             <p className="text-muted mt-1">Face verification audit trail for attendance punches</p>
           </div>
           <div className="flex gap-3">
@@ -90,7 +90,7 @@ export default function FaceRecognitionPage() {
               <button onClick={() => setView("logs")} className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${view === "logs" ? "bg-primary text-white" : "text-muted hover:text-foreground"}`}>Audit Logs</button>
               <button onClick={() => setView("summary")} className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${view === "summary" ? "bg-primary text-white" : "text-muted hover:text-foreground"}`}>Daily Summary</button>
             </div>
-            <button onClick={fetchLogs} className="px-4 py-2 bg-white/10 hover:bg-white/15 text-white rounded-md text-sm font-semibold transition-all">
+            <button onClick={fetchLogs} className="px-4 py-2 bg-white/10 hover:bg-white/15 text-foreground rounded-md text-sm font-semibold transition-all">
               Refresh
             </button>
           </div>
@@ -143,7 +143,7 @@ export default function FaceRecognitionPage() {
           <div className="bg-white/5 border border-border-custom rounded-lg overflow-hidden">
             <div className="p-4 border-b border-border-custom flex items-center gap-3">
               <label className="text-xs font-medium text-muted">Date</label>
-              <input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} className="bg-white/5 border border-border-custom rounded-md px-4 py-2 text-white text-sm" />
+              <input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} className="bg-white/5 border border-border-custom rounded-md px-4 py-2 text-foreground text-sm" />
             </div>
             <table className="w-full text-left text-sm">
               <thead className="bg-white/5 text-muted">

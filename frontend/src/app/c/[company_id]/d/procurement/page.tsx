@@ -702,18 +702,18 @@ export default function ProcurementPage() {
         )}
         <header className="h-16 border-b border-border-custom px-8 flex items-center justify-between bg-card shrink-0">
           <div className="flex items-center gap-4">
-            <h1 className="text-sm font-bold text-white uppercase tracking-wider">Site Material Procurement</h1>
-            <span className="h-4 w-px bg-white/10" />
+            <h1 className="text-sm font-bold text-foreground uppercase tracking-wider">Site Material Procurement</h1>
+            <span className="h-4 w-px bg-elevated" />
             <span className="text-xs font-medium text-muted">SiteFlow workflows</span>
           </div>
           <div className="flex gap-2">
             <button onClick={() => { setSelectedRFQItem("UltraTech Cement"); setShowRFQDrawer(true); }} className="px-4 py-2 border border-primary/20 hover:bg-primary/10 rounded-md text-xs font-bold text-primary transition-all">
               ⚡ Compare RFQs
             </button>
-            <button onClick={() => setShowIndentModal(true)} className="px-4 py-2 border border-border-custom hover:bg-white/5 rounded-md text-xs font-bold text-white transition-all">
+            <button onClick={() => setShowIndentModal(true)} className="px-4 py-2 border border-border-custom hover:bg-elevated rounded-md text-xs font-bold text-foreground transition-all">
               + Material Indent
             </button>
-            <button onClick={() => setShowPOModal(true)} className="px-4 py-2 border border-border-custom hover:bg-white/5 rounded-md text-xs font-bold text-white transition-all">
+            <button onClick={() => setShowPOModal(true)} className="px-4 py-2 border border-border-custom hover:bg-elevated rounded-md text-xs font-bold text-foreground transition-all">
               + Purchase Order
             </button>
             <button onClick={() => setShowUseModal(true)} className="px-4 py-2 bg-primary rounded-md text-xs font-bold text-white hover:opacity-90 transition-all shadow-lg">
@@ -733,7 +733,7 @@ export default function ProcurementPage() {
                 {indents.map((ind) => (
                   <div key={ind.id} className="bg-card border border-border-custom rounded-lg p-5 space-y-4">
                     <div className="flex justify-between items-center text-xs">
-                      <strong className="text-white font-extrabold">{ind.indentNumber}</strong>
+                      <strong className="text-foreground font-extrabold">{ind.indentNumber}</strong>
                       <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${
                         ind.status === "approved" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "bg-amber-500/10 text-amber-400 border border-amber-500/20"
                       }`}>{ind.status}</span>
@@ -817,8 +817,8 @@ export default function ProcurementPage() {
                         </tr>
                       ) : (
                         pos.map((po) => (
-                          <tr key={po.id} className="border-b border-white/[0.03] hover:bg-white/[0.015] transition-all align-top">
-                            <td className="px-5 py-3 font-mono font-bold text-white whitespace-nowrap">{po.poNumber}</td>
+                          <tr key={po.id} className="border-b border-border-custom hover:bg-elevated transition-all align-top">
+                            <td className="px-5 py-3 font-mono font-bold text-foreground whitespace-nowrap">{po.poNumber}</td>
                             <td className="px-5 py-3 text-zinc-200 whitespace-nowrap">{po.vendor}</td>
                             <td className="px-5 py-3 space-y-1">
                               {po.items.map((item, i) => (
@@ -840,14 +840,14 @@ export default function ProcurementPage() {
                                 po.status === "received" || po.status === "closed" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "bg-primary/10 text-primary border border-primary/20"
                               }`}>{po.status}</span>
                             </td>
-                            <td className="px-5 py-3 text-right font-mono font-bold text-white whitespace-nowrap">₹{po.totalAmount.toLocaleString("en-IN")}</td>
+                            <td className="px-5 py-3 text-right font-mono font-bold text-foreground whitespace-nowrap">₹{po.totalAmount.toLocaleString("en-IN")}</td>
                             <td className="px-5 py-3 text-right whitespace-nowrap">
                               <div className="flex gap-2 justify-end">
                                 <a
                                   href={`${getApiHost()}/apis/v3/procurement/pos/${po.id}/pdf`}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-border-custom text-zinc-300 rounded-lg text-[10px] font-bold"
+                                  className="px-3 py-1.5 bg-elevated hover:bg-elevated border border-border-custom text-zinc-300 rounded-lg text-[10px] font-bold"
                                 >
                                   PDF
                                 </a>
@@ -891,8 +891,8 @@ export default function ProcurementPage() {
                   </thead>
                   <tbody>
                     {inventory.map((inv, idx) => (
-                      <tr key={idx} className="border-b border-white/[0.03] hover:bg-white/[0.015] transition-all">
-                        <td className="px-5 py-3 font-bold text-white">{inv.name}</td>
+                      <tr key={idx} className="border-b border-border-custom hover:bg-elevated transition-all">
+                        <td className="px-5 py-3 font-bold text-foreground">{inv.name}</td>
                         <td className="px-5 py-3 text-muted font-mono uppercase">{inv.unit}</td>
                         <td className={`px-5 py-3 font-mono font-bold ${inv.onHand < 0 ? "text-red-400 font-extrabold" : "text-zinc-200"}`}>
                           {inv.onHand} {inv.unit}
@@ -933,8 +933,8 @@ export default function ProcurementPage() {
                   </thead>
                   <tbody>
                     {transactions.map((txn, idx) => (
-                      <tr key={idx} className="border-b border-white/[0.03] hover:bg-white/[0.015] transition-all">
-                        <td className="px-5 py-3 font-bold text-white">{txn.materialName}</td>
+                      <tr key={idx} className="border-b border-border-custom hover:bg-elevated transition-all">
+                        <td className="px-5 py-3 font-bold text-foreground">{txn.materialName}</td>
                         <td className={`px-5 py-3 font-mono font-bold ${txn.type === "used" ? "text-amber-400" : "text-emerald-400"}`}>
                           {txn.type === "used" ? "-" : "+"}{txn.qty} {txn.unit}
                         </td>
@@ -990,7 +990,7 @@ export default function ProcurementPage() {
                     <div className="flex items-center justify-between px-5 py-3 bg-amber-500/5 border-b border-amber-500/10">
                       <div className="flex items-center gap-3">
                         <span className="text-[9px] font-extrabold uppercase tracking-widest text-amber-500">⚠ Unbilled</span>
-                        <span className="text-xs font-bold text-white">{group.vendor}</span>
+                        <span className="text-xs font-bold text-foreground">{group.vendor}</span>
                         <span className="text-[9px] text-muted">{group.grns.length} GRN{group.grns.length > 1 ? "s" : ""} pending</span>
                       </div>
                       <div className="text-right">
@@ -1016,9 +1016,9 @@ export default function ProcurementPage() {
                           const grnValue = grn.items.reduce((s, i) => s + i.qty * i.rate, 0);
                           const threeWay = getThreeWayMatchStatus(grn);
                           return (
-                            <tr key={grn.id} className="border-b border-white/[0.03] hover:bg-white/[0.015] transition-all">
+                            <tr key={grn.id} className="border-b border-border-custom hover:bg-elevated transition-all">
                               <td className="px-5 py-3">
-                                <span className="font-mono font-bold text-white">{grn.grnNumber}</span>
+                                <span className="font-mono font-bold text-foreground">{grn.grnNumber}</span>
                                 <span className="block text-[9px] text-muted mt-0.5">PO: {grn.poNumber}</span>
                               </td>
                               <td className="px-5 py-3 text-muted">{grn.receivedDate}</td>
@@ -1060,7 +1060,7 @@ export default function ProcurementPage() {
                     <table className="w-full text-xs">
                       <tbody>
                         {grns.filter(g => g.isBilled).map(grn => (
-                          <tr key={grn.id} className="border-b border-white/[0.03]">
+                          <tr key={grn.id} className="border-b border-border-custom">
                             <td className="px-5 py-3 font-mono font-bold text-muted">{grn.grnNumber}</td>
                             <td className="px-5 py-3 text-muted">{grn.vendor}</td>
                             <td className="px-5 py-3 text-muted">{grn.receivedDate}</td>
@@ -1084,19 +1084,19 @@ export default function ProcurementPage() {
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-background border border-border-custom rounded-lg w-full max-w-md shadow-2xl p-6 space-y-4 text-xs">
             <div className="flex justify-between items-center border-b border-border-custom pb-2">
-              <h3 className="text-xs font-extrabold text-white">Create Material Indent (Requisition)</h3>
+              <h3 className="text-xs font-extrabold text-foreground">Create Material Indent (Requisition)</h3>
               <button onClick={() => setShowIndentModal(false)} className="text-muted hover:text-foreground">✕</button>
             </div>
 
             <div className="space-y-3">
               <div className="space-y-1">
                 <label className="text-muted">Indent Number</label>
-                <input type="text" value={newIndentNum} onChange={(e) => setNewIndentNum(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-white" />
+                <input type="text" value={newIndentNum} onChange={(e) => setNewIndentNum(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground" />
               </div>
               
               <div className="space-y-1">
                 <label className="text-muted">Material Item</label>
-                <select value={newIndentMaterial} onChange={(e) => setNewIndentMaterial(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-white">
+                <select value={newIndentMaterial} onChange={(e) => setNewIndentMaterial(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground">
                   <option value="UltraTech Cement">UltraTech Cement</option>
                   <option value="TMT Steel 16mm">TMT Steel 16mm</option>
                   <option value="Traditional Clay Bricks">Traditional Clay Bricks</option>
@@ -1107,18 +1107,18 @@ export default function ProcurementPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <label className="text-muted">Required Quantity</label>
-                  <input type="number" value={newIndentQty} onChange={(e) => setNewIndentQty(parseFloat(e.target.value) || 0)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-white" />
+                  <input type="number" value={newIndentQty} onChange={(e) => setNewIndentQty(parseFloat(e.target.value) || 0)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground" />
                 </div>
                 <div className="space-y-1">
                   <label className="text-muted">Unit</label>
-                  <input type="text" value={newIndentUnit} onChange={(e) => setNewIndentUnit(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-white" />
+                  <input type="text" value={newIndentUnit} onChange={(e) => setNewIndentUnit(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground" />
                 </div>
               </div>
 
               {/* Item-level Spec & Photo override (Screen 5761-5762) */}
               <div className="space-y-1">
                 <label className="text-muted">Line-Item Custom Specification Override</label>
-                <input type="text" value={newIndentSpec} onChange={(e) => setNewIndentSpec(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-white" placeholder="Grade 53 OPC Cement, Fe 550D Rebars..." />
+                <input type="text" value={newIndentSpec} onChange={(e) => setNewIndentSpec(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground" placeholder="Grade 53 OPC Cement, Fe 550D Rebars..." />
               </div>
 
               <div className="space-y-2 border-t border-border-custom pt-3">
@@ -1146,7 +1146,7 @@ export default function ProcurementPage() {
           <div className="bg-background border border-border-custom rounded-lg w-full max-w-lg shadow-2xl p-6 space-y-4 text-xs">
             <div className="flex justify-between items-center border-b border-border-custom pb-2">
               <div>
-                <h3 className="text-xs font-extrabold text-white">Record Goods Receipt Note (GRN)</h3>
+                <h3 className="text-xs font-extrabold text-foreground">Record Goods Receipt Note (GRN)</h3>
                 <p className="text-[10px] text-muted mt-0.5">PO: {selectedPOForGRN.poNumber} · Vendor: {selectedPOForGRN.vendor}</p>
               </div>
               <button onClick={() => { setShowGRNModal(false); setSelectedPOForGRN(null); }} className="text-muted hover:text-foreground">✕</button>
@@ -1155,7 +1155,7 @@ export default function ProcurementPage() {
             <div className="space-y-3">
               <div className="space-y-1">
                 <label className="text-muted">GRN Serial Number</label>
-                <input type="text" value={grnNum} onChange={(e) => setGrnNum(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-white" />
+                <input type="text" value={grnNum} onChange={(e) => setGrnNum(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground" />
               </div>
 
               {/* Checklist list of PO items (Screen 5768) */}
@@ -1172,7 +1172,7 @@ export default function ProcurementPage() {
                           onChange={(e) => setGrnItemsChecked({ ...grnItemsChecked, [idxStr]: e.target.checked })}
                           className="accent-primary h-4 w-4 rounded cursor-pointer"
                         />
-                        <span className="text-white font-bold">{item.name}</span>
+                        <span className="text-foreground font-bold">{item.name}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-muted">Rec Qty:</span>
@@ -1181,7 +1181,7 @@ export default function ProcurementPage() {
                           value={grnReceivedQtys[idxStr] || "0"}
                           onChange={(e) => setGrnReceivedQtys({ ...grnReceivedQtys, [idxStr]: e.target.value })}
                           disabled={!grnItemsChecked[idxStr]}
-                          className="bg-elevated border border-border-custom rounded px-2 py-1 text-white w-20 text-center font-bold disabled:opacity-50"
+                          className="bg-elevated border border-border-custom rounded px-2 py-1 text-foreground w-20 text-center font-bold disabled:opacity-50"
                         />
                         <span className="text-muted">{item.unit}</span>
                       </div>
@@ -1216,14 +1216,14 @@ export default function ProcurementPage() {
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-background border border-border-custom rounded-lg w-full max-w-md shadow-2xl p-6 space-y-4 text-xs">
             <div className="flex justify-between items-center border-b border-border-custom pb-2">
-              <h3 className="text-xs font-extrabold text-white">Log Site Material Usage</h3>
+              <h3 className="text-xs font-extrabold text-foreground">Log Site Material Usage</h3>
               <button onClick={() => setShowUseModal(false)} className="text-muted hover:text-foreground">✕</button>
             </div>
 
             <div className="space-y-3">
               <div className="space-y-1">
                 <label className="text-muted">Select Material Item</label>
-                <select value={useMaterialName} onChange={(e) => setUseMaterialName(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-white">
+                <select value={useMaterialName} onChange={(e) => setUseMaterialName(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground">
                   <option value="UltraTech Cement">UltraTech Cement</option>
                   <option value="TMT Steel 16mm">TMT Steel 16mm</option>
                   <option value="Traditional Clay Bricks">Traditional Clay Bricks</option>
@@ -1233,12 +1233,12 @@ export default function ProcurementPage() {
 
               <div className="space-y-1">
                 <label className="text-muted">Usage Quantity</label>
-                <input type="number" value={useQty} onChange={(e) => setUseQty(parseFloat(e.target.value) || 0)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-white" />
+                <input type="number" value={useQty} onChange={(e) => setUseQty(parseFloat(e.target.value) || 0)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground" />
               </div>
 
               <div className="space-y-1">
                 <label className="text-muted">Consumption Reference (Location / Lorry No.)</label>
-                <input type="text" value={useSourceRef} onChange={(e) => setUseSourceRef(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-white" />
+                <input type="text" value={useSourceRef} onChange={(e) => setUseSourceRef(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground" />
               </div>
             </div>
 
@@ -1255,19 +1255,19 @@ export default function ProcurementPage() {
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-background border border-border-custom rounded-lg w-full max-w-md shadow-2xl p-6 space-y-4 text-xs font-sans max-h-[85vh] overflow-y-auto">
             <div className="flex justify-between items-center border-b border-border-custom pb-2">
-              <h3 className="text-xs font-extrabold text-white">Create Purchase Order (PO)</h3>
+              <h3 className="text-xs font-extrabold text-foreground">Create Purchase Order (PO)</h3>
               <button onClick={() => setShowPOModal(false)} className="text-muted hover:text-foreground">✕</button>
             </div>
 
             <div className="space-y-3">
               <div className="space-y-1">
                 <label className="text-muted font-bold">PO Number</label>
-                <input type="text" value={newPONum} onChange={(e) => setNewPONum(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-white" />
+                <input type="text" value={newPONum} onChange={(e) => setNewPONum(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground" />
               </div>
 
               <div className="space-y-1">
                 <label className="text-muted font-bold">Supplier Vendor</label>
-                <select value={newPOVendor} onChange={(e) => setNewPOVendor(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-white">
+                <select value={newPOVendor} onChange={(e) => setNewPOVendor(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground">
                   {VENDORS.map(v => (
                     <option key={v.id} value={v.name}>{v.name}</option>
                   ))}
@@ -1282,7 +1282,7 @@ export default function ProcurementPage() {
                     className="text-[9px] text-primary font-bold hover:underline">+ Add Item Line</button>
                 </div>
                 {poFormItems.map((item, idx) => (
-                  <div key={idx} className="bg-black/25 p-3 rounded-lg border border-border-custom space-y-2 relative">
+                  <div key={idx} className="bg-elevated p-3 rounded-lg border border-border-custom space-y-2 relative">
                     <button type="button" onClick={() => setPoFormItems(poFormItems.filter((_, i) => i !== idx))}
                       className="absolute top-2 right-2 text-muted hover:text-red-400">✕</button>
                     <div className="space-y-1">
@@ -1294,7 +1294,7 @@ export default function ProcurementPage() {
                           next[idx].unit = e.target.value.includes("Cement") ? "bags" : "tons";
                           setPoFormItems(next);
                         }}
-                        className="w-full bg-input border border-border-custom rounded p-1 text-white text-[11px]">
+                        className="w-full bg-input border border-border-custom rounded p-1 text-foreground text-[11px]">
                         <option value="UltraTech Cement">UltraTech Cement</option>
                         <option value="TMT Steel 16mm">TMT Steel 16mm</option>
                       </select>
@@ -1304,13 +1304,13 @@ export default function ProcurementPage() {
                         <label className="text-muted text-[9px]">Quantity ({item.unit})</label>
                         <input type="number" value={item.qty}
                           onChange={e => { const next = [...poFormItems]; next[idx].qty = parseFloat(e.target.value) || 0; setPoFormItems(next); }}
-                          className="w-full bg-input border border-border-custom rounded p-1 text-white text-[11px]" />
+                          className="w-full bg-input border border-border-custom rounded p-1 text-foreground text-[11px]" />
                       </div>
                       <div className="space-y-1">
                         <label className="text-muted text-[9px]">Rate (₹)</label>
                         <input type="number" value={item.rate}
                           onChange={e => { const next = [...poFormItems]; next[idx].rate = parseFloat(e.target.value) || 0; setPoFormItems(next); }}
-                          className="w-full bg-input border border-border-custom rounded p-1 text-white text-[11px]" />
+                          className="w-full bg-input border border-border-custom rounded p-1 text-foreground text-[11px]" />
                       </div>
                     </div>
                   </div>
@@ -1321,7 +1321,7 @@ export default function ProcurementPage() {
                 <label className="text-muted font-bold">Terms &amp; Conditions</label>
                 <textarea value={newPOTerms} onChange={(e) => setNewPOTerms(e.target.value)}
                   placeholder="Pre-filled from company Purchase Order Terms; edit as needed" rows={3}
-                  className="w-full bg-input border border-border-custom rounded-lg p-2 text-white" />
+                  className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground" />
               </div>
             </div>
 
@@ -1340,7 +1340,7 @@ export default function ProcurementPage() {
             <div className="px-6 py-4 border-b border-border-custom flex items-center justify-between bg-background">
               <div>
                 <span className="text-[9px] uppercase tracking-wider font-extrabold text-primary">RFQ Analysis Center</span>
-                <h2 className="text-base font-extrabold text-white mt-1">Vendor Quote Comparisons</h2>
+                <h2 className="text-base font-extrabold text-foreground mt-1">Vendor Quote Comparisons</h2>
               </div>
               <button onClick={() => setShowRFQDrawer(false)} className="text-muted hover:text-foreground">✕ Close</button>
             </div>
@@ -1349,7 +1349,7 @@ export default function ProcurementPage() {
               <span className="text-muted font-bold">Select Material Item:</span>
               {["UltraTech Cement", "TMT Steel 16mm"].map((item) => (
                 <button key={item} onClick={() => setSelectedRFQItem(item as any)}
-                  className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all ${selectedRFQItem === item ? "bg-primary text-white" : "bg-white/5 text-muted hover:text-foreground"}`}>
+                  className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all ${selectedRFQItem === item ? "bg-primary text-white" : "bg-elevated text-muted hover:text-foreground"}`}>
                   {item}
                 </button>
               ))}
@@ -1358,27 +1358,27 @@ export default function ProcurementPage() {
             <div className="flex-1 p-6 overflow-y-auto space-y-6">
               <div className="grid grid-cols-3 gap-4">
                 {(RFQ_DATA[selectedRFQItem] || []).map((quote, idx) => (
-                  <div key={idx} className={`border rounded-lg p-4 space-y-4 relative flex flex-col justify-between ${quote.isL1 ? "border-emerald-500/30 bg-emerald-500/[0.02]" : "border-border-custom bg-white/[0.01]"}`}>
+                  <div key={idx} className={`border rounded-lg p-4 space-y-4 relative flex flex-col justify-between ${quote.isL1 ? "border-emerald-500/30 bg-emerald-500/[0.02]" : "border-border-custom bg-elevated"}`}>
                     {quote.isL1 && (
                       <span className="absolute -top-2.5 left-4 bg-emerald-500 text-black text-[8px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider">L1 Preferred</span>
                     )}
                     <div className="space-y-1">
-                      <h4 className="font-bold text-white text-xs">{quote.vendor}</h4>
+                      <h4 className="font-bold text-foreground text-xs">{quote.vendor}</h4>
                       <span className="text-[9px] text-muted">Commercial terms</span>
                     </div>
 
                     <div className="space-y-2 font-mono text-[10px]">
                       <div className="flex justify-between border-b border-border-custom pb-1">
                         <span className="text-muted">Rate:</span>
-                        <strong className={quote.isL1 ? "text-emerald-400" : "text-white"}>₹{quote.rate.toLocaleString()}/unit</strong>
+                        <strong className={quote.isL1 ? "text-emerald-400" : "text-foreground"}>₹{quote.rate.toLocaleString()}/unit</strong>
                       </div>
                       <div className="flex justify-between border-b border-border-custom pb-1">
                         <span className="text-muted">Delivery:</span>
-                        <strong className="text-white">{quote.delivery} days</strong>
+                        <strong className="text-foreground">{quote.delivery} days</strong>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-muted">Payment:</span>
-                        <strong className="text-white">{quote.terms}</strong>
+                        <strong className="text-foreground">{quote.terms}</strong>
                       </div>
                     </div>
 

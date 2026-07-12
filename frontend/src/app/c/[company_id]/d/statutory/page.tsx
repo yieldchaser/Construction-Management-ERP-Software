@@ -185,14 +185,14 @@ export default function StatutoryPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-white">Statutory Reports</h1>
+            <h1 className="text-3xl font-bold text-foreground">Statutory Reports</h1>
             <p className="text-muted mt-1">PF, ESI, BOCW, TDS and other compliance filings</p>
           </div>
           <div className="flex gap-3">
             <select
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
-              className="bg-white/5 border border-border-custom rounded-md px-4 py-2 text-white text-sm"
+              className="bg-white/5 border border-border-custom rounded-md px-4 py-2 text-foreground text-sm"
             >
               <option value="">All Types</option>
               <option value="pf">PF</option>
@@ -267,27 +267,27 @@ export default function StatutoryPage() {
 
         {showPenalty && penaltyData && (
           <div className="mt-6 bg-white/5 border border-border-custom rounded-lg p-6">
-            <h3 className="text-lg font-bold text-white mb-4">Penalty Estimate</h3>
+            <h3 className="text-lg font-bold text-foreground mb-4">Penalty Estimate</h3>
             <div className="grid grid-cols-2 gap-4 text-sm">
-              <div><span className="text-muted">Report Type:</span> <span className="text-white">{penaltyData.report_type}</span></div>
-              <div><span className="text-muted">Period:</span> <span className="text-white">{penaltyData.return_period}</span></div>
-              <div><span className="text-muted">Total Wages:</span> <span className="text-white">₹{Number(penaltyData.total_wages).toLocaleString()}</span></div>
-              <div><span className="text-muted">Due Date:</span> <span className="text-white">{penaltyData.due_date ? new Date(penaltyData.due_date as string).toLocaleDateString() : "-"}</span></div>
+              <div><span className="text-muted">Report Type:</span> <span className="text-foreground">{penaltyData.report_type}</span></div>
+              <div><span className="text-muted">Period:</span> <span className="text-foreground">{penaltyData.return_period}</span></div>
+              <div><span className="text-muted">Total Wages:</span> <span className="text-foreground">₹{Number(penaltyData.total_wages).toLocaleString()}</span></div>
+              <div><span className="text-muted">Due Date:</span> <span className="text-foreground">{penaltyData.due_date ? new Date(penaltyData.due_date as string).toLocaleDateString() : "-"}</span></div>
               <div><span className="text-muted">Estimated Penalty:</span> <span className="text-red-400 font-medium">₹{Number(penaltyData.estimated_penalty).toLocaleString()}</span></div>
             </div>
-            <button onClick={() => setShowPenalty(false)} className="mt-4 px-4 py-2 bg-white/10 hover:bg-white/15 text-white rounded-md text-sm font-semibold">Close</button>
+            <button onClick={() => setShowPenalty(false)} className="mt-4 px-4 py-2 bg-white/10 hover:bg-white/15 text-foreground rounded-md text-sm font-semibold">Close</button>
           </div>
         )}
 
         {showModal && (
           <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
             <div className="bg-elevated border border-border-custom rounded-lg p-6 w-full max-w-2xl">
-              <h2 className="text-xl font-bold text-white mb-4">New Statutory Report</h2>
+              <h2 className="text-xl font-bold text-foreground mb-4">New Statutory Report</h2>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-medium text-muted mb-1">Report Type</label>
-                    <select className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-white" value={form.report_type} onChange={(e) => setForm({...form, report_type: e.target.value})}>
+                    <select className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-foreground" value={form.report_type} onChange={(e) => setForm({...form, report_type: e.target.value})}>
                       <option value="pf">Provident Fund</option>
                       <option value="esi">ESI</option>
                       <option value="bocw">BOCW Cess</option>
@@ -298,7 +298,7 @@ export default function StatutoryPage() {
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-muted mb-1">Return Period (YYYY-MM)</label>
-                    <input type="text" required placeholder="2026-06" className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-white" value={form.return_period} onChange={(e) => setForm({...form, return_period: e.target.value})} />
+                    <input type="text" required placeholder="2026-06" className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-foreground" value={form.return_period} onChange={(e) => setForm({...form, return_period: e.target.value})} />
                   </div>
                 </div>
                 <div className="flex gap-3">
@@ -308,46 +308,46 @@ export default function StatutoryPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-medium text-muted mb-1">Total Employees</label>
-                    <input type="number" required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-white" value={form.total_employees} onChange={(e) => setForm({...form, total_employees: parseInt(e.target.value)})} />
+                    <input type="number" required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-foreground" value={form.total_employees} onChange={(e) => setForm({...form, total_employees: parseInt(e.target.value)})} />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-muted mb-1">Total Wages (₹)</label>
-                    <input type="number" required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-white" value={form.total_wages} onChange={(e) => setForm({...form, total_wages: parseFloat(e.target.value)})} />
+                    <input type="number" required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-foreground" value={form.total_wages} onChange={(e) => setForm({...form, total_wages: parseFloat(e.target.value)})} />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-medium text-muted mb-1">PF Employee (₹)</label>
-                    <input type="number" required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-white" value={form.pf_employee_contribution} onChange={(e) => setForm({...form, pf_employee_contribution: parseFloat(e.target.value)})} />
+                    <input type="number" required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-foreground" value={form.pf_employee_contribution} onChange={(e) => setForm({...form, pf_employee_contribution: parseFloat(e.target.value)})} />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-muted mb-1">PF Employer (₹)</label>
-                    <input type="number" required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-white" value={form.pf_employer_contribution} onChange={(e) => setForm({...form, pf_employer_contribution: parseFloat(e.target.value)})} />
+                    <input type="number" required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-foreground" value={form.pf_employer_contribution} onChange={(e) => setForm({...form, pf_employer_contribution: parseFloat(e.target.value)})} />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-medium text-muted mb-1">ESI Employee (₹)</label>
-                    <input type="number" required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-white" value={form.esi_employee_contribution} onChange={(e) => setForm({...form, esi_employee_contribution: parseFloat(e.target.value)})} />
+                    <input type="number" required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-foreground" value={form.esi_employee_contribution} onChange={(e) => setForm({...form, esi_employee_contribution: parseFloat(e.target.value)})} />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-muted mb-1">ESI Employer (₹)</label>
-                    <input type="number" required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-white" value={form.esi_employer_contribution} onChange={(e) => setForm({...form, esi_employer_contribution: parseFloat(e.target.value)})} />
+                    <input type="number" required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-foreground" value={form.esi_employer_contribution} onChange={(e) => setForm({...form, esi_employer_contribution: parseFloat(e.target.value)})} />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-medium text-muted mb-1">BOCW Cess (₹)</label>
-                    <input type="number" required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-white" value={form.bocw_cess} onChange={(e) => setForm({...form, bocw_cess: parseFloat(e.target.value)})} />
+                    <input type="number" required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-foreground" value={form.bocw_cess} onChange={(e) => setForm({...form, bocw_cess: parseFloat(e.target.value)})} />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-muted mb-1">TDS Deducted (₹)</label>
-                    <input type="number" required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-white" value={form.tds_deducted} onChange={(e) => setForm({...form, tds_deducted: parseFloat(e.target.value)})} />
+                    <input type="number" required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-foreground" value={form.tds_deducted} onChange={(e) => setForm({...form, tds_deducted: parseFloat(e.target.value)})} />
                   </div>
                 </div>
                 <div className="flex gap-3 pt-2">
                   <button type="submit" className="flex-1 px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-md text-sm font-semibold">Create Report</button>
-                  <button type="button" onClick={() => { setShowModal(false); setMessage(""); }} className="px-4 py-2 bg-white/10 hover:bg-white/15 text-white rounded-md text-sm font-semibold">Cancel</button>
+                  <button type="button" onClick={() => { setShowModal(false); setMessage(""); }} className="px-4 py-2 bg-white/10 hover:bg-white/15 text-foreground rounded-md text-sm font-semibold">Cancel</button>
                 </div>
               </form>
             </div>

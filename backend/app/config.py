@@ -127,6 +127,17 @@ class Settings(BaseSettings):
     # prod env (e.g. Render) per deployment; never ship a default here.
     ADMIN_MIGRATION_SECRET: str = ""
 
+    # Encryption key for OAuth tokens stored at rest (currently
+    # GoogleSheetsConnection.access_token / refresh_token; see app/crypto.py).
+    # Must be 32 url-safe base64-encoded bytes, e.g.:
+    #   python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+    # Optional at boot (Sheets is an optional integration) so the app does not
+    # fail to start without it, but app/crypto.py fails closed on writes: it
+    # refuses to encrypt/store a token when this is empty. Reads fall back to
+    # treating stored values as legacy plaintext when this is unset or when a
+    # value does not decrypt (see app/crypto.py decrypt_token).
+    TOKEN_ENCRYPTION_KEY: str = ""
+
     model_config = SettingsConfigDict(
         env_file=os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), ".env"),
         env_file_encoding="utf-8",

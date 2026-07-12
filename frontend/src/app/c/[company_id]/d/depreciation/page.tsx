@@ -142,7 +142,7 @@ export default function DepreciationPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-white">Asset Depreciation</h1>
+            <h1 className="text-3xl font-bold text-foreground">Asset Depreciation</h1>
             <p className="text-muted mt-1">Track asset value decline and maintain depreciation schedules</p>
           </div>
           <div className="flex gap-3">
@@ -154,7 +154,7 @@ export default function DepreciationPage() {
             </button>
             <button
               onClick={() => { setShowEntryModal(true); setMessage(""); }}
-              className="px-4 py-2 bg-white/10 hover:bg-white/15 text-white rounded-md text-sm font-semibold transition-all"
+              className="px-4 py-2 bg-elevated hover:bg-elevated text-foreground rounded-md text-sm font-semibold transition-all"
             >
               Record Entry
             </button>
@@ -184,9 +184,9 @@ export default function DepreciationPage() {
         </div>
 
         {activeTab === "schedules" && (
-          <div className="bg-white/5 border border-border-custom rounded-lg overflow-hidden">
+          <div className="bg-elevated border border-border-custom rounded-lg overflow-hidden">
             <table className="w-full text-left text-sm">
-              <thead className="bg-white/5 text-muted">
+              <thead className="bg-elevated text-muted">
                 <tr>
                   <th className="px-6 py-4 font-medium">Method</th>
                   <th className="px-6 py-4 font-medium">Life (Yrs)</th>
@@ -201,7 +201,7 @@ export default function DepreciationPage() {
                   <tr><td colSpan={6} className="px-6 py-8 text-center text-muted">No schedules found</td></tr>
                 ) : (
                   schedules.map((s) => (
-                    <tr key={s.id} className="hover:bg-white/5 transition-colors">
+                    <tr key={s.id} className="hover:bg-elevated transition-colors">
                       <td className="px-6 py-4 capitalize">{s.method.replace("_", " ")}</td>
                       <td className="px-6 py-4">{s.useful_life_years}</td>
                       <td className="px-6 py-4">₹{Number(s.salvage_value).toLocaleString()}</td>
@@ -221,9 +221,9 @@ export default function DepreciationPage() {
         )}
 
         {activeTab === "entries" && (
-          <div className="bg-white/5 border border-border-custom rounded-lg overflow-hidden">
+          <div className="bg-elevated border border-border-custom rounded-lg overflow-hidden">
             <table className="w-full text-left text-sm">
-              <thead className="bg-white/5 text-muted">
+              <thead className="bg-elevated text-muted">
                 <tr>
                   <th className="px-6 py-4 font-medium">Date</th>
                   <th className="px-6 py-4 font-medium">Depreciation</th>
@@ -237,7 +237,7 @@ export default function DepreciationPage() {
                   <tr><td colSpan={5} className="px-6 py-8 text-center text-muted">No entries found</td></tr>
                 ) : (
                   entries.map((e) => (
-                    <tr key={e.id} className="hover:bg-white/5 transition-colors">
+                    <tr key={e.id} className="hover:bg-elevated transition-colors">
                       <td className="px-6 py-4">{new Date(e.entry_date).toLocaleDateString()}</td>
                       <td className="px-6 py-4">₹{Number(e.depreciation_amount).toLocaleString()}</td>
                       <td className="px-6 py-4">₹{Number(e.accumulated_depreciation).toLocaleString()}</td>
@@ -255,16 +255,16 @@ export default function DepreciationPage() {
       {showSchedModal && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
           <div className="bg-elevated border border-border-custom rounded-lg p-6 w-full max-w-lg">
-            <h2 className="text-xl font-bold text-white mb-4">New Depreciation Schedule</h2>
+            <h2 className="text-xl font-bold text-foreground mb-4">New Depreciation Schedule</h2>
             <form onSubmit={handleCreateSchedule} className="space-y-4">
               <div>
                 <label className="block text-xs font-medium text-muted mb-1">Asset ID</label>
-                <input type="text" required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-white" value={schedForm.asset_id} onChange={(e) => setSchedForm({...schedForm, asset_id: e.target.value})} />
+                <input type="text" required className="w-full bg-elevated border border-border-custom rounded-md px-4 py-2 text-foreground" value={schedForm.asset_id} onChange={(e) => setSchedForm({...schedForm, asset_id: e.target.value})} />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-medium text-muted mb-1">Method</label>
-                  <select className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-white" value={schedForm.method} onChange={(e) => setSchedForm({...schedForm, method: e.target.value})}>
+                  <select className="w-full bg-elevated border border-border-custom rounded-md px-4 py-2 text-foreground" value={schedForm.method} onChange={(e) => setSchedForm({...schedForm, method: e.target.value})}>
                     <option value="straight_line">Straight Line</option>
                     <option value="reducing_balance">Reducing Balance</option>
                     <option value="written_down_value">Written Down Value</option>
@@ -272,26 +272,26 @@ export default function DepreciationPage() {
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-muted mb-1">Useful Life (Years)</label>
-                  <input type="number" required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-white" value={schedForm.useful_life_years} onChange={(e) => setSchedForm({...schedForm, useful_life_years: parseInt(e.target.value)})} />
+                  <input type="number" required className="w-full bg-elevated border border-border-custom rounded-md px-4 py-2 text-foreground" value={schedForm.useful_life_years} onChange={(e) => setSchedForm({...schedForm, useful_life_years: parseInt(e.target.value)})} />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-medium text-muted mb-1">Salvage Value (₹)</label>
-                  <input type="number" required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-white" value={schedForm.salvage_value} onChange={(e) => setSchedForm({...schedForm, salvage_value: parseFloat(e.target.value)})} />
+                  <input type="number" required className="w-full bg-elevated border border-border-custom rounded-md px-4 py-2 text-foreground" value={schedForm.salvage_value} onChange={(e) => setSchedForm({...schedForm, salvage_value: parseFloat(e.target.value)})} />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-muted mb-1">Depreciation %</label>
-                  <input type="number" required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-white" value={schedForm.depreciation_pct} onChange={(e) => setSchedForm({...schedForm, depreciation_pct: parseFloat(e.target.value)})} />
+                  <input type="number" required className="w-full bg-elevated border border-border-custom rounded-md px-4 py-2 text-foreground" value={schedForm.depreciation_pct} onChange={(e) => setSchedForm({...schedForm, depreciation_pct: parseFloat(e.target.value)})} />
                 </div>
               </div>
               <div>
                 <label className="block text-xs font-medium text-muted mb-1">Start Date</label>
-                <input type="date" required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-white" value={schedForm.start_date} onChange={(e) => setSchedForm({...schedForm, start_date: e.target.value})} />
+                <input type="date" required className="w-full bg-elevated border border-border-custom rounded-md px-4 py-2 text-foreground" value={schedForm.start_date} onChange={(e) => setSchedForm({...schedForm, start_date: e.target.value})} />
               </div>
               <div className="flex gap-3 pt-2">
                 <button type="submit" className="flex-1 px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-md text-sm font-semibold">Create Schedule</button>
-                <button type="button" onClick={() => { setShowSchedModal(false); setMessage(""); }} className="px-4 py-2 bg-white/10 hover:bg-white/15 text-white rounded-md text-sm font-semibold">Cancel</button>
+                <button type="button" onClick={() => { setShowSchedModal(false); setMessage(""); }} className="px-4 py-2 bg-elevated hover:bg-elevated text-foreground rounded-md text-sm font-semibold">Cancel</button>
               </div>
             </form>
           </div>
@@ -301,41 +301,41 @@ export default function DepreciationPage() {
       {showEntryModal && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
           <div className="bg-elevated border border-border-custom rounded-lg p-6 w-full max-w-lg">
-            <h2 className="text-xl font-bold text-white mb-4">New Depreciation Entry</h2>
+            <h2 className="text-xl font-bold text-foreground mb-4">New Depreciation Entry</h2>
             <form onSubmit={handleCreateEntry} className="space-y-4">
               <div>
                 <label className="block text-xs font-medium text-muted mb-1">Schedule ID</label>
-                <input type="text" required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-white" value={entryForm.schedule_id} onChange={(e) => setEntryForm({...entryForm, schedule_id: e.target.value})} />
+                <input type="text" required className="w-full bg-elevated border border-border-custom rounded-md px-4 py-2 text-foreground" value={entryForm.schedule_id} onChange={(e) => setEntryForm({...entryForm, schedule_id: e.target.value})} />
               </div>
               <div>
                 <label className="block text-xs font-medium text-muted mb-1">Asset ID</label>
-                <input type="text" required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-white" value={entryForm.asset_id} onChange={(e) => setEntryForm({...entryForm, asset_id: e.target.value})} />
+                <input type="text" required className="w-full bg-elevated border border-border-custom rounded-md px-4 py-2 text-foreground" value={entryForm.asset_id} onChange={(e) => setEntryForm({...entryForm, asset_id: e.target.value})} />
               </div>
               <div>
                 <label className="block text-xs font-medium text-muted mb-1">Entry Date</label>
-                <input type="date" required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-white" value={entryForm.entry_date} onChange={(e) => setEntryForm({...entryForm, entry_date: e.target.value})} />
+                <input type="date" required className="w-full bg-elevated border border-border-custom rounded-md px-4 py-2 text-foreground" value={entryForm.entry_date} onChange={(e) => setEntryForm({...entryForm, entry_date: e.target.value})} />
               </div>
               <div className="grid grid-cols-3 gap-4">
                 <div>
                   <label className="block text-xs font-medium text-muted mb-1">Depreciation (₹)</label>
-                  <input type="number" required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-white" value={entryForm.depreciation_amount} onChange={(e) => setEntryForm({...entryForm, depreciation_amount: parseFloat(e.target.value)})} />
+                  <input type="number" required className="w-full bg-elevated border border-border-custom rounded-md px-4 py-2 text-foreground" value={entryForm.depreciation_amount} onChange={(e) => setEntryForm({...entryForm, depreciation_amount: parseFloat(e.target.value)})} />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-muted mb-1">Accumulated (₹)</label>
-                  <input type="number" required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-white" value={entryForm.accumulated_depreciation} onChange={(e) => setEntryForm({...entryForm, accumulated_depreciation: parseFloat(e.target.value)})} />
+                  <input type="number" required className="w-full bg-elevated border border-border-custom rounded-md px-4 py-2 text-foreground" value={entryForm.accumulated_depreciation} onChange={(e) => setEntryForm({...entryForm, accumulated_depreciation: parseFloat(e.target.value)})} />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-muted mb-1">Book Value (₹)</label>
-                  <input type="number" required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-white" value={entryForm.book_value} onChange={(e) => setEntryForm({...entryForm, book_value: parseFloat(e.target.value)})} />
+                  <input type="number" required className="w-full bg-elevated border border-border-custom rounded-md px-4 py-2 text-foreground" value={entryForm.book_value} onChange={(e) => setEntryForm({...entryForm, book_value: parseFloat(e.target.value)})} />
                 </div>
               </div>
               <div>
                 <label className="block text-xs font-medium text-muted mb-1">Notes</label>
-                <textarea className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-white" value={entryForm.notes} onChange={(e) => setEntryForm({...entryForm, notes: e.target.value})} />
+                <textarea className="w-full bg-elevated border border-border-custom rounded-md px-4 py-2 text-foreground" value={entryForm.notes} onChange={(e) => setEntryForm({...entryForm, notes: e.target.value})} />
               </div>
               <div className="flex gap-3 pt-2">
                 <button type="submit" className="flex-1 px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-md text-sm font-semibold">Record Entry</button>
-                <button type="button" onClick={() => { setShowEntryModal(false); setMessage(""); }} className="px-4 py-2 bg-white/10 hover:bg-white/15 text-white rounded-md text-sm font-semibold">Cancel</button>
+                <button type="button" onClick={() => { setShowEntryModal(false); setMessage(""); }} className="px-4 py-2 bg-elevated hover:bg-elevated text-foreground rounded-md text-sm font-semibold">Cancel</button>
               </div>
             </form>
           </div>

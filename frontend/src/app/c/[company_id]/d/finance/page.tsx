@@ -821,7 +821,7 @@ export default function FinancePage() {
       <div className="flex-1 flex flex-col overflow-hidden">
         <header className="h-14 border-b border-border-custom bg-background px-6 flex items-center justify-between shrink-0">
           <div>
-            <h1 className="text-sm font-bold text-white">
+            <h1 className="text-sm font-bold text-foreground">
               {tab === "ledger" ? "Dashboard" : tab === "party" ? "Party-wise Ledgers" : tab === "payment_requests" ? "Payment Requests Ledger" : tab === "accounts" ? "Company Cash & Bank Accounts" : tab === "cashbook" ? "Cash Book (Bank Ledger)" : tab === "pl" ? "Project P&L" : tab === "tally" ? "Tally Sync Gateway" : "Cost Variance Report"}
             </h1>
             <p className="text-[10px] text-muted">Real-time sequential approval tracking & running balance ledger</p>
@@ -1380,16 +1380,16 @@ export default function FinancePage() {
                       <th className="px-5 py-3 text-right">Cash Balance</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-white/[0.03] font-sans">
+                  <tbody className="divide-y divide-border-custom font-sans">
                     {cashBookRows.map((row, idx) => (
-                      <tr key={idx} className="hover:bg-white/[0.015]">
+                      <tr key={idx} className="hover:bg-elevated">
                         <td className="px-5 py-3 text-muted">{row.date}</td>
-                        <td className="px-5 py-3 text-white font-bold">{row.ref}</td>
+                        <td className="px-5 py-3 text-foreground font-bold">{row.ref}</td>
                         <td className="px-5 py-3 text-zinc-300 font-sans">{row.narration}</td>
                         <td className="px-5 py-3 text-muted font-sans">{row.party}</td>
                         <td className="px-5 py-3 text-right text-red-400">{row.debit > 0 ? `₹${row.debit.toLocaleString("en-IN")}` : "—"}</td>
                         <td className="px-5 py-3 text-right text-emerald-400">{row.credit > 0 ? `₹${row.credit.toLocaleString("en-IN")}` : "—"}</td>
-                        <td className="px-5 py-3 text-right text-white font-extrabold">₹{row.running_balance.toLocaleString("en-IN")}</td>
+                        <td className="px-5 py-3 text-right text-foreground font-extrabold">₹{row.running_balance.toLocaleString("en-IN")}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -1434,14 +1434,14 @@ export default function FinancePage() {
                       </tr>
                     ) : (
                       paymentRequests.map((req) => (
-                        <tr key={req.id} onClick={() => setSelectedPR(req)} className="border-t border-border-custom hover:bg-white/[0.04] cursor-pointer transition-colors">
-                          <td className="px-5 py-3 text-white font-mono font-bold">{req.request_no || "—"}</td>
+                        <tr key={req.id} onClick={() => setSelectedPR(req)} className="border-t border-border-custom hover:bg-elevated cursor-pointer transition-colors">
+                          <td className="px-5 py-3 text-foreground font-mono font-bold">{req.request_no || "—"}</td>
                           <td className="px-5 py-3 text-muted font-mono">
                             {new Date(req.created_at).toLocaleDateString("en-IN")}
                           </td>
-                          <td className="px-5 py-3 font-semibold text-white">{req.party_name}</td>
+                          <td className="px-5 py-3 font-semibold text-foreground">{req.party_name}</td>
                           <td className="px-5 py-3 text-muted">{req.request_type || "—"}</td>
-                          <td className="px-5 py-3 text-white font-bold font-sans">₹{req.amount.toLocaleString("en-IN")}</td>
+                          <td className="px-5 py-3 text-foreground font-bold font-sans">₹{req.amount.toLocaleString("en-IN")}</td>
                           <td className="px-5 py-3 text-muted">{req.details}</td>
                           <td className="px-5 py-3">
                             <span className={`px-2 py-0.5 rounded text-[8px] font-bold border ${
@@ -1494,14 +1494,14 @@ export default function FinancePage() {
                         💵
                       </div>
                       <div>
-                        <h4 className="text-xs font-bold text-white">{cashAccount.name}</h4>
+                        <h4 className="text-xs font-bold text-foreground">{cashAccount.name}</h4>
                         <p className="text-[10px] text-muted mt-0.5">Opening: ₹{(cashAccount.opening_balance || 0).toLocaleString("en-IN")}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-4">
                       <div className="text-right">
                         <p className="text-[8px] text-muted uppercase tracking-wider">Running Balance</p>
-                        <span className="text-base font-bold text-white">₹{cashRunning.toLocaleString("en-IN")}</span>
+                        <span className="text-base font-bold text-foreground">₹{cashRunning.toLocaleString("en-IN")}</span>
                       </div>
                       <button className="px-3 py-1.5 bg-sidebar hover:bg-elevated border border-border-custom rounded-lg text-[10px] font-bold text-muted hover:text-foreground transition-all flex items-center gap-1">
                         View Statement <span className="text-[9px]">↗</span>
@@ -1532,7 +1532,7 @@ export default function FinancePage() {
                               🏦
                             </div>
                             <div>
-                              <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                              <div className="text-xs font-bold text-foreground flex items-center gap-1.5">
                                 {acc.bank_name}
                                 <span className="text-[8px] bg-primary/15 text-primary border border-primary/25 px-1.5 py-0.5 rounded-full font-bold">PRIMARY</span>
                               </div>
@@ -1544,7 +1544,7 @@ export default function FinancePage() {
                             <button className="px-3 py-1.5 bg-sidebar hover:bg-elevated border border-border-custom rounded-lg text-[10px] font-bold text-muted hover:text-foreground transition-all flex items-center gap-1">
                               View Statement <span className="text-[9px]">↗</span>
                             </button>
-                            <span className="text-muted cursor-pointer hover:text-white font-bold p-1">⋮</span>
+                            <span className="text-muted cursor-pointer hover:text-foreground font-bold p-1">⋮</span>
                           </div>
                         </div>
 
@@ -1552,27 +1552,27 @@ export default function FinancePage() {
                         <div className="grid grid-cols-2 gap-3 pt-3 border-t border-border-custom/50 text-[10px]">
                           <div>
                             <span className="text-muted block uppercase font-medium text-[8px] tracking-wider">AC Holder</span>
-                            <span className="text-white font-semibold mt-0.5 block">{acc.account_holder_name || "—"}</span>
+                            <span className="text-foreground font-semibold mt-0.5 block">{acc.account_holder_name || "—"}</span>
                           </div>
                           <div>
                             <span className="text-muted block uppercase font-medium text-[8px] tracking-wider">IFSC Code</span>
-                            <span className="text-white font-semibold mt-0.5 block font-mono">{acc.ifsc_code || "—"}</span>
+                            <span className="text-foreground font-semibold mt-0.5 block font-mono">{acc.ifsc_code || "—"}</span>
                           </div>
                           <div>
                             <span className="text-muted block uppercase font-medium text-[8px] tracking-wider">UPI</span>
-                            <span className="text-white font-semibold mt-0.5 block">{acc.upi_id || "—"}</span>
+                            <span className="text-foreground font-semibold mt-0.5 block">{acc.upi_id || "—"}</span>
                           </div>
                           <div>
                             <span className="text-muted block uppercase font-medium text-[8px] tracking-wider">IBAN No</span>
-                            <span className="text-white font-semibold mt-0.5 block font-mono">Not provided</span>
+                            <span className="text-foreground font-semibold mt-0.5 block font-mono">Not provided</span>
                           </div>
                           <div className="col-span-2">
                             <span className="text-muted block uppercase font-medium text-[8px] tracking-wider">Running Balance</span>
-                            <span className="text-white font-bold mt-0.5 block text-xs">₹{acc.balance.toLocaleString("en-IN")}</span>
+                            <span className="text-foreground font-bold mt-0.5 block text-xs">₹{acc.balance.toLocaleString("en-IN")}</span>
                           </div>
                           <div className="col-span-2">
                             <span className="text-muted block uppercase font-medium text-[8px] tracking-wider">Opening Balance</span>
-                            <span className="text-white font-semibold mt-0.5 block text-[10px]">₹{(acc.opening_balance ?? 0).toLocaleString("en-IN")}</span>
+                            <span className="text-foreground font-semibold mt-0.5 block text-[10px]">₹{(acc.opening_balance ?? 0).toLocaleString("en-IN")}</span>
                           </div>
                         </div>
                       </div>
@@ -1605,7 +1605,7 @@ export default function FinancePage() {
           {tab === "tally" && (
             <div className="space-y-5">
               <div className="bg-card border border-border-custom rounded-lg p-5 rounded-lg border border-border-custom bg-input space-y-4">
-                <h2 className="text-sm font-bold text-white">Tally ERP 9 Gateway Sync</h2>
+                <h2 className="text-sm font-bold text-foreground">Tally ERP 9 Gateway Sync</h2>
                 <div className="text-xs text-muted">Push verified vouchers directly to Tally Desktop Agent via XML.</div>
                 <div className="flex gap-2">
                   <button onClick={handleTriggerSync} disabled={syncing} className="px-4 py-2 bg-primary text-white text-xs font-bold rounded-md hover:opacity-90">
@@ -1613,7 +1613,7 @@ export default function FinancePage() {
                   </button>
                 </div>
                 {syncLogs.length > 0 && (
-                  <div className="p-4 bg-black/40 border border-border-custom rounded-md text-[10px] font-sans text-muted space-y-1 max-h-36 overflow-y-auto">
+                  <div className="p-4 bg-elevated border border-border-custom rounded-md text-[10px] font-sans text-muted space-y-1 max-h-36 overflow-y-auto">
                     {syncLogs.map((log, i) => <div key={i}>{log}</div>)}
                   </div>
                 )}
@@ -1668,7 +1668,7 @@ export default function FinancePage() {
 
                 <div className="grid grid-cols-4 gap-3">
                   {[
-                    { label: "Total Budget", value: `₹${totalBudget.toLocaleString()}`, color: "text-white" },
+                    { label: "Total Budget", value: `₹${totalBudget.toLocaleString()}`, color: "text-foreground" },
                     { label: "Actual Spend", value: `₹${totalActual.toLocaleString()}`, color: "text-primary" },
                     { label: "Variance", value: `₹${totalVariance.toLocaleString()}`, color: totalVariance >= 0 ? "text-emerald-400" : "text-red-400" },
                     { label: "EAC (at 60%)", value: `₹${Math.round(totalEAC).toLocaleString()}`, color: totalEAC > totalBudget ? "text-red-400" : "text-emerald-400" },
@@ -1703,9 +1703,9 @@ export default function FinancePage() {
                         return (
                           <tr key={row.code} className={`border-b border-white/[0.03] hover:bg-white/[0.015] transition-all ${isOver ? "bg-red-500/[0.02]" : ""}`}>
                             <td className="px-5 py-3 font-sans text-muted">{row.code}</td>
-                            <td className="px-5 py-3 font-semibold text-white">{row.head}</td>
+                            <td className="px-5 py-3 font-semibold text-foreground">{row.head}</td>
                             <td className="px-5 py-3 text-right font-sans text-zinc-300">₹{row.budget.toLocaleString()}</td>
-                            <td className="px-5 py-3 text-right font-mono font-bold text-white">₹{row.actual.toLocaleString()}</td>
+                            <td className="px-5 py-3 text-right font-mono font-bold text-foreground">₹{row.actual.toLocaleString()}</td>
                             <td className={`px-5 py-3 text-right font-mono font-bold ${isOver ? "text-red-400" : "text-emerald-400"}`}>
                               {row.variance >= 0 ? "+" : ""}₹{row.variance.toLocaleString()}
                             </td>
@@ -1747,7 +1747,7 @@ export default function FinancePage() {
             <div className="px-6 py-4 border-b border-border-custom flex items-center justify-between bg-background">
               <div>
                 <span className="text-[9px] uppercase tracking-wider font-extrabold text-primary">Voucher Details</span>
-                <h2 className="text-base font-extrabold text-white mt-1">{selectedVoucher.ref}</h2>
+                <h2 className="text-base font-extrabold text-foreground mt-1">{selectedVoucher.ref}</h2>
               </div>
               <button onClick={() => setSelectedVoucher(null)} className="text-muted hover:text-foreground">✕ Close</button>
             </div>
@@ -1755,7 +1755,7 @@ export default function FinancePage() {
             <div className="flex-1 p-6 overflow-y-auto space-y-6">
               <div className="space-y-1 border-b border-border-custom pb-4">
                 <span className="text-muted uppercase text-[9px] tracking-wider block">Ledger Classification</span>
-                <strong className="text-white block mt-0.5 text-sm">{selectedVoucher.ledger}</strong>
+                <strong className="text-foreground block mt-0.5 text-sm">{selectedVoucher.ledger}</strong>
                 {selectedVoucher.cost_code && (
                   <span className="text-[10px] text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-full inline-block mt-1.5 font-bold">
                     Cost Code: {selectedVoucher.cost_code}
@@ -1775,7 +1775,7 @@ export default function FinancePage() {
                   <div className="flex items-center gap-3">
                     <div className="h-5 w-5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center font-bold text-[10px]">✓</div>
                     <div>
-                      <div className="text-[11px] font-bold text-white">1. Site Supervisor</div>
+                      <div className="text-[11px] font-bold text-foreground">1. Site Supervisor</div>
                       <div className="text-[9px] text-muted">Verified upon entry & photo upload</div>
                     </div>
                   </div>
@@ -1784,7 +1784,7 @@ export default function FinancePage() {
                       {selectedVoucher.status === "Approved" ? "✓" : "🕒"}
                     </div>
                     <div>
-                      <div className="text-[11px] font-bold text-white">2. Project Manager</div>
+                      <div className="text-[11px] font-bold text-foreground">2. Project Manager</div>
                       <div className="text-[9px] text-muted">Required for values &gt; ₹50k</div>
                     </div>
                   </div>
@@ -1806,7 +1806,7 @@ export default function FinancePage() {
               {selectedVoucher.photo_url && (
                 <div className="space-y-2">
                   <span className="text-muted block uppercase text-[9px] tracking-wider">Voucher Photo Receipt</span>
-                  <div className="border border-border-custom rounded-md overflow-hidden aspect-[4/3] bg-black relative">
+                  <div className="border border-border-custom rounded-md overflow-hidden aspect-[4/3] bg-elevated relative">
                     <img src={selectedVoucher.photo_url} alt="Voucher Receipt" className="object-cover h-full w-full opacity-80" />
                   </div>
                 </div>
@@ -1833,7 +1833,7 @@ export default function FinancePage() {
               {/* Dynamic Header */}
               <div className="flex justify-between items-center border-b border-border-custom pb-4 mb-5">
                 <div>
-                  <h3 className="text-sm font-bold text-white uppercase tracking-wider">
+                  <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">
                     {selectedTxnType === "Upload Payments"
                       ? "ADD PAYMENT"
                       : selectedTxnType === "Equipment Expense"
@@ -1851,7 +1851,7 @@ export default function FinancePage() {
                   <p className="text-[10px] text-muted font-mono mt-0.5">PRESTIGE DEVELOPERS</p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <button onClick={() => setShowAddModal(false)} className="text-xs text-muted hover:text-white transition-colors cursor-pointer">Cancel</button>
+                  <button onClick={() => setShowAddModal(false)} className="text-xs text-muted hover:text-foreground transition-colors cursor-pointer">Cancel</button>
                   <button onClick={handleRecordPayment} className="bg-primary hover:bg-primary/90 text-white font-bold text-xs px-4 py-1.5 rounded-lg shadow transition-all cursor-pointer">Save</button>
                 </div>
               </div>
@@ -1864,7 +1864,7 @@ export default function FinancePage() {
                     <div className="flex items-start gap-2.5">
                       <span className="text-sm">ℹ️</span>
                       <div className="space-y-1">
-                        <strong className="text-white block">How to import Excel/CSV in SiteFlow:</strong>
+                        <strong className="text-foreground block">How to import Excel/CSV in SiteFlow:</strong>
                         <ol className="list-decimal pl-4 space-y-1 text-muted leading-relaxed">
                           <li>Remove any unnecessary header rows from the Excel file.</li>
                           <li>
@@ -1899,7 +1899,7 @@ export default function FinancePage() {
                       onChange={handleCsvSelect}
                     />
                     <span className="text-2xl text-primary">📤</span>
-                    <strong className="text-white font-bold text-xs">Upload Csv</strong>
+                    <strong className="text-foreground font-bold text-xs">Upload Csv</strong>
                     <span className="text-[9px] text-muted">Supports .csv formats up to 10MB</span>
                   </div>
 
@@ -1942,9 +1942,9 @@ export default function FinancePage() {
                   <div className="flex justify-between items-center bg-background/50 border border-border-custom rounded-lg p-2.5">
                     <div>
                       <span className="text-muted text-[10px] font-bold uppercase block">Other Expenses</span>
-                      <span className="text-white font-semibold font-mono">05 Jul 2026 #OE-1</span>
+                      <span className="text-foreground font-semibold font-mono">05 Jul 2026 #OE-1</span>
                     </div>
-                    <span className="text-muted cursor-pointer hover:text-white">✏️</span>
+                    <span className="text-muted cursor-pointer hover:text-foreground">✏️</span>
                   </div>
 
                   <div>
@@ -1955,7 +1955,7 @@ export default function FinancePage() {
                         value={partyName}
                         onChange={e => setPartyName(e.target.value)}
                         placeholder="Search or select party..."
-                        className="w-full bg-background border border-border-custom rounded-lg pl-9 pr-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                        className="w-full bg-background border border-border-custom rounded-lg pl-9 pr-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs"
                       />
                       <span className="absolute left-3 top-2.5 text-muted text-xs">🔍</span>
                     </div>
@@ -1984,7 +1984,7 @@ export default function FinancePage() {
                             setQty(val);
                             setAmount((val * rate).toString());
                           }}
-                          className="w-full bg-background border border-border-custom rounded-lg px-2.5 py-1.5 text-white text-xs font-mono"
+                          className="w-full bg-background border border-border-custom rounded-lg px-2.5 py-1.5 text-foreground text-xs font-mono"
                         />
                       </div>
                       <div>
@@ -1997,7 +1997,7 @@ export default function FinancePage() {
                             setRate(val);
                             setAmount((qty * val).toString());
                           }}
-                          className="w-full bg-background border border-border-custom rounded-lg px-2.5 py-1.5 text-white text-xs font-mono"
+                          className="w-full bg-background border border-border-custom rounded-lg px-2.5 py-1.5 text-foreground text-xs font-mono"
                         />
                       </div>
                     </div>
@@ -2014,7 +2014,7 @@ export default function FinancePage() {
                       type="number"
                       value={amount || "0"}
                       onChange={e => setAmount(e.target.value)}
-                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white font-mono text-sm focus:outline-none focus:border-primary"
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground font-mono text-sm focus:outline-none focus:border-primary"
                     />
                   </div>
 
@@ -2040,7 +2040,7 @@ export default function FinancePage() {
                           <select
                             value={gstPercent}
                             onChange={e => setGstPercent(e.target.value)}
-                            className="bg-background border border-border-custom rounded px-2 py-1 text-xs text-white focus:outline-none"
+                            className="bg-background border border-border-custom rounded px-2 py-1 text-xs text-foreground focus:outline-none"
                           >
                             <option value="5">5%</option>
                             <option value="12">12%</option>
@@ -2053,7 +2053,7 @@ export default function FinancePage() {
                     {enableGst && (
                       <div className="flex justify-between items-center bg-background/30 px-3 py-2 rounded-lg border border-border-custom/50">
                         <span className="text-[10px] text-muted uppercase font-bold">GST Amount (₹)</span>
-                        <span className="font-mono text-white font-bold">
+                        <span className="font-mono text-foreground font-bold">
                           {(Number(amount || 0) * (Number(gstPercent) / 100)).toFixed(2)}
                         </span>
                       </div>
@@ -2063,7 +2063,7 @@ export default function FinancePage() {
                   <div className="border-t border-b border-border-custom/50 py-3 flex justify-between items-center cursor-pointer hover:bg-elevated/20 px-2 rounded-lg transition-colors">
                     <div>
                       <span className="text-muted block text-[9px] uppercase font-bold">Add Cost Code</span>
-                      <span className="text-white font-semibold block text-xs mt-0.5">{costCode}</span>
+                      <span className="text-foreground font-semibold block text-xs mt-0.5">{costCode}</span>
                     </div>
                     <span className="text-muted text-xs">▶</span>
                   </div>
@@ -2071,7 +2071,7 @@ export default function FinancePage() {
                   <div className="bg-elevated/20 border border-border-custom p-4 rounded-xl flex justify-between items-center">
                     <div>
                       <span className="text-[10px] text-muted uppercase font-bold block">Total Amount</span>
-                      <strong className="text-white text-base font-mono block mt-0.5">
+                      <strong className="text-foreground text-base font-mono block mt-0.5">
                         ₹{(Number(amount || 0) + (enableGst ? Number(amount || 0) * (Number(gstPercent) / 100) : 0)).toLocaleString("en-IN")}
                       </strong>
                     </div>
@@ -2084,9 +2084,9 @@ export default function FinancePage() {
                   <div className="flex justify-between items-center bg-background/50 border border-border-custom rounded-lg p-2.5">
                     <div>
                       <span className="text-muted text-[10px] font-bold uppercase block">Equipment Expense</span>
-                      <span className="text-white font-semibold font-mono">05 Jul 2026 #EE-1</span>
+                      <span className="text-foreground font-semibold font-mono">05 Jul 2026 #EE-1</span>
                     </div>
-                    <span className="text-muted cursor-pointer hover:text-white">✏️</span>
+                    <span className="text-muted cursor-pointer hover:text-foreground">✏️</span>
                   </div>
 
                   <div>
@@ -2097,7 +2097,7 @@ export default function FinancePage() {
                         value={partyName}
                         onChange={e => setPartyName(e.target.value)}
                         placeholder="Search or select party..."
-                        className="w-full bg-background border border-border-custom rounded-lg pl-9 pr-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                        className="w-full bg-background border border-border-custom rounded-lg pl-9 pr-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs"
                       />
                       <span className="absolute left-3 top-2.5 text-muted text-xs">🔍</span>
                     </div>
@@ -2105,7 +2105,7 @@ export default function FinancePage() {
 
                   <div>
                     <label className="text-[10px] text-muted uppercase font-bold block mb-1">Date Range</label>
-                    <div className="bg-background border border-border-custom rounded-lg px-3 py-2 text-white flex justify-between items-center cursor-pointer hover:bg-elevated/20">
+                    <div className="bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground flex justify-between items-center cursor-pointer hover:bg-elevated/20">
                       <span>05/07/2026 - 05/07/2026</span>
                       <span className="text-muted text-[10px]">▼</span>
                     </div>
@@ -2125,7 +2125,7 @@ export default function FinancePage() {
                         type="number"
                         value={amount || "0"}
                         onChange={e => setAmount(e.target.value)}
-                        className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white font-mono"
+                        className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground font-mono"
                       />
                     </div>
                     <div>
@@ -2134,7 +2134,7 @@ export default function FinancePage() {
                         type="number"
                         value={discount || "0"}
                         onChange={e => setDiscount(Number(e.target.value))}
-                        className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white font-mono"
+                        className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground font-mono"
                       />
                     </div>
                   </div>
@@ -2156,7 +2156,7 @@ export default function FinancePage() {
                           <select
                             value={gstPercent}
                             onChange={e => setGstPercent(e.target.value)}
-                            className="bg-background border border-border-custom rounded px-2 py-1 text-xs text-white focus:outline-none"
+                            className="bg-background border border-border-custom rounded px-2 py-1 text-xs text-foreground focus:outline-none"
                           >
                             <option value="5">5%</option>
                             <option value="12">12%</option>
@@ -2169,7 +2169,7 @@ export default function FinancePage() {
                     {enableGst && (
                       <div className="flex justify-between items-center bg-background/30 px-3 py-2 rounded-lg border border-border-custom/50">
                         <span className="text-[10px] text-muted uppercase font-bold">GST Amount (₹)</span>
-                        <span className="font-mono text-white font-bold">
+                        <span className="font-mono text-foreground font-bold">
                           {(Number(amount || 0) * (Number(gstPercent) / 100)).toFixed(2)}
                         </span>
                       </div>
@@ -2183,7 +2183,7 @@ export default function FinancePage() {
                         type="number"
                         readOnly
                         value={(Number(amount || 0) - discount + (enableGst ? Number(amount || 0) * (Number(gstPercent) / 100) : 0)).toFixed(0)}
-                        className="w-full bg-background/50 border border-border-custom rounded-lg px-3 py-2 text-white font-mono"
+                        className="w-full bg-background/50 border border-border-custom rounded-lg px-3 py-2 text-foreground font-mono"
                       />
                     </div>
                     <div>
@@ -2192,7 +2192,7 @@ export default function FinancePage() {
                         type="number"
                         value={deduction}
                         onChange={e => setDeduction(e.target.value)}
-                        className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white font-mono"
+                        className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground font-mono"
                       />
                     </div>
                   </div>
@@ -2205,7 +2205,7 @@ export default function FinancePage() {
                           type="number"
                           readOnly
                           value={(Number(amount || 0) - discount + (enableGst ? Number(amount || 0) * (Number(gstPercent) / 100) : 0) - Number(deduction)).toFixed(0)}
-                          className="w-full bg-background/50 border border-border-custom rounded-lg px-3 py-2 text-white font-mono"
+                          className="w-full bg-background/50 border border-border-custom rounded-lg px-3 py-2 text-foreground font-mono"
                         />
                         <div className="absolute right-2 top-2 flex items-center gap-1">
                           <input type="checkbox" id="roundOffCheck" checked={roundOff} onChange={e => setRoundOff(e.target.checked)} className="accent-primary" />
@@ -2219,7 +2219,7 @@ export default function FinancePage() {
                         type="number"
                         value={paidAmount}
                         onChange={e => setPaidAmount(e.target.value)}
-                        className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white font-mono"
+                        className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground font-mono"
                       />
                     </div>
                   </div>
@@ -2230,7 +2230,7 @@ export default function FinancePage() {
                       type="number"
                       readOnly
                       value={Math.max(0, Number(amount || 0) - discount + (enableGst ? Number(amount || 0) * (Number(gstPercent) / 100) : 0) - Number(deduction) - Number(paidAmount)).toFixed(0)}
-                      className="w-full bg-background/30 border border-border-custom rounded-lg px-3 py-2 text-white font-mono font-bold"
+                      className="w-full bg-background/30 border border-border-custom rounded-lg px-3 py-2 text-foreground font-mono font-bold"
                     />
                   </div>
 
@@ -2241,14 +2241,14 @@ export default function FinancePage() {
                       value={refNum}
                       onChange={e => setRefNum(e.target.value)}
                       placeholder="e.g. REF-EE-001"
-                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white"
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground"
                     />
                   </div>
 
                   <div className="border border-border-custom rounded-xl p-3 bg-elevated/10 flex justify-between items-center text-xs">
                     <div>
                       <span className="text-muted block text-[9px] uppercase font-bold">Add Cost Code</span>
-                      <span className="text-white block font-semibold mt-0.5">{costCode}</span>
+                      <span className="text-foreground block font-semibold mt-0.5">{costCode}</span>
                     </div>
                     <span className="text-muted text-[10px]">▶</span>
                   </div>
@@ -2256,7 +2256,7 @@ export default function FinancePage() {
                   <div className="border border-border-custom rounded-xl p-3 bg-elevated/10 flex justify-between items-center text-xs cursor-pointer" onClick={() => setShowBillShipModal(true)}>
                     <div>
                       <span className="text-muted block text-[9px] uppercase font-bold">Bill To / Ship To</span>
-                      <span className="text-white block font-semibold mt-0.5">
+                      <span className="text-foreground block font-semibold mt-0.5">
                         {billShip.billTo || billShip.billFrom ? "Configured" : "Not set"}
                       </span>
                     </div>
@@ -2270,7 +2270,7 @@ export default function FinancePage() {
                       onChange={e => setDesc(e.target.value)}
                       rows={3}
                       placeholder="Add narration note..."
-                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white text-xs resize-none"
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground text-xs resize-none"
                     />
                   </div>
 
@@ -2288,9 +2288,9 @@ export default function FinancePage() {
                       <span className="text-muted text-[10px] font-bold uppercase block">
                         {["Material Sales", "Sales Invoice"].includes(selectedTxnType) ? "Client Party" : "Vendor Party"}
                       </span>
-                      <span className="text-white font-semibold font-mono">05 Jul 2026 #MS-0</span>
+                      <span className="text-foreground font-semibold font-mono">05 Jul 2026 #MS-0</span>
                     </div>
-                    <span className="text-muted cursor-pointer hover:text-white">✏️</span>
+                    <span className="text-muted cursor-pointer hover:text-foreground">✏️</span>
                   </div>
 
                   <div>
@@ -2302,7 +2302,7 @@ export default function FinancePage() {
                       value={partyName}
                       onChange={e => setPartyName(e.target.value)}
                       placeholder="e.g. Skyline Towers PM, Sai Traders"
-                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs"
                     />
                   </div>
 
@@ -2327,10 +2327,10 @@ export default function FinancePage() {
                         {items.map(item => (
                           <div key={item.id} className="p-3 flex justify-between items-center text-xs">
                             <div>
-                              <span className="font-semibold text-white block">{item.name}</span>
+                              <span className="font-semibold text-foreground block">{item.name}</span>
                               <span className="text-[10px] text-muted">{item.qty} {item.unit} × ₹{item.rate}</span>
                             </div>
-                            <span className="font-mono text-white font-bold">₹{(item.qty * item.rate).toLocaleString()}</span>
+                            <span className="font-mono text-foreground font-bold">₹{(item.qty * item.rate).toLocaleString()}</span>
                           </div>
                         ))}
                       </div>
@@ -2340,11 +2340,11 @@ export default function FinancePage() {
                   <div className="space-y-2 border-t border-border-custom/50 pt-3 font-sans">
                     <div className="flex justify-between">
                       <span className="text-muted">Item Subtotal</span>
-                      <span className="font-mono text-white">₹{Number(amount || 0).toLocaleString()}</span>
+                      <span className="font-mono text-foreground">₹{Number(amount || 0).toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted">Tax (GST {gstPercent}%)</span>
-                      <span className="font-mono text-white">₹{(Number(amount || 0) * (Number(gstPercent) / 100)).toLocaleString()}</span>
+                      <span className="font-mono text-foreground">₹{(Number(amount || 0) * (Number(gstPercent) / 100)).toLocaleString()}</span>
                     </div>
                   </div>
 
@@ -2354,7 +2354,7 @@ export default function FinancePage() {
                   </div>
 
                   <div className="flex items-center justify-between border-t border-border-custom/40 pt-2">
-                    <span className="text-xs font-bold text-white uppercase">Total Amount</span>
+                    <span className="text-xs font-bold text-foreground uppercase">Total Amount</span>
                     <div className="flex items-center gap-3">
                       <label className="flex items-center gap-1.5 cursor-pointer text-muted select-none">
                         <input
@@ -2365,7 +2365,7 @@ export default function FinancePage() {
                         />
                         <span className="text-[10px]">Round Off</span>
                       </label>
-                      <strong className="text-white text-base font-mono">
+                      <strong className="text-foreground text-base font-mono">
                         ₹{(Number(amount || 0) * (1 + Number(gstPercent) / 100)).toLocaleString(undefined, { maximumFractionDigits: 0 })}
                       </strong>
                     </div>
@@ -2374,7 +2374,7 @@ export default function FinancePage() {
                   <div className="border border-border-custom rounded-xl p-3 bg-elevated/10 flex justify-between items-center text-xs">
                     <div>
                       <span className="text-muted block text-[9px] uppercase font-bold">Bill To / Ship To</span>
-                      <span className="text-white block font-semibold mt-0.5">{billToShipTo}</span>
+                      <span className="text-foreground block font-semibold mt-0.5">{billToShipTo}</span>
                     </div>
                     <button type="button" className="text-primary hover:underline font-bold text-[10px]">View</button>
                   </div>
@@ -2392,8 +2392,8 @@ export default function FinancePage() {
                     <div>
                       <span className="text-muted text-[10px] font-bold uppercase block">Transfer Out No</span>
                       <div className="flex items-center gap-1.5 mt-0.5">
-                        <span className="text-white font-semibold font-mono">{transferOutNo}</span>
-                        <span className="text-muted cursor-pointer hover:text-white" onClick={() => {
+                        <span className="text-foreground font-semibold font-mono">{transferOutNo}</span>
+                        <span className="text-muted cursor-pointer hover:text-foreground" onClick={() => {
                           const val = prompt("Enter Transfer Out No:", transferOutNo);
                           if (val !== null) setTransferOutNo(val);
                         }}>✏️</span>
@@ -2401,7 +2401,7 @@ export default function FinancePage() {
                     </div>
                     <div className="text-right">
                       <span className="text-muted text-[10px] font-bold uppercase block">Transfer Date</span>
-                      <span className="text-white font-semibold font-mono">05 Jul 2026</span>
+                      <span className="text-foreground font-semibold font-mono">05 Jul 2026</span>
                     </div>
                   </div>
 
@@ -2411,7 +2411,7 @@ export default function FinancePage() {
                       type="text"
                       readOnly
                       value="Prestige Developers"
-                      className="w-full bg-background/50 border border-border-custom rounded-lg px-3 py-2 text-white text-xs"
+                      className="w-full bg-background/50 border border-border-custom rounded-lg px-3 py-2 text-foreground text-xs"
                     />
                   </div>
 
@@ -2420,7 +2420,7 @@ export default function FinancePage() {
                     <select
                       value={paymentToParty}
                       onChange={e => setPaymentToParty(e.target.value)}
-                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs"
                     >
                       <option value="">Select Project</option>
                       <option value="Skyline Premium Towers">Skyline Premium Towers</option>
@@ -2440,7 +2440,7 @@ export default function FinancePage() {
                       value={amount}
                       onChange={e => setAmount(e.target.value)}
                       placeholder="0"
-                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white font-mono"
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground font-mono"
                     />
                   </div>
 
@@ -2451,7 +2451,7 @@ export default function FinancePage() {
                       value={refNum}
                       onChange={e => setRefNum(e.target.value)}
                       placeholder="e.g. TRF-REF-902"
-                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white"
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground"
                     />
                   </div>
 
@@ -2462,7 +2462,7 @@ export default function FinancePage() {
                       value={ewayBill}
                       onChange={e => setEwayBill(e.target.value)}
                       placeholder="e.g. 192837461928"
-                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white"
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground"
                     />
                   </div>
 
@@ -2473,7 +2473,7 @@ export default function FinancePage() {
                       value={vehicleNo}
                       onChange={e => setVehicleNo(e.target.value)}
                       placeholder="e.g. MH-12-PQ-1928"
-                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white"
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground"
                     />
                   </div>
 
@@ -2484,7 +2484,7 @@ export default function FinancePage() {
                       onChange={e => setDesc(e.target.value)}
                       rows={3}
                       placeholder="Transfer narration details..."
-                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white text-xs resize-none"
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground text-xs resize-none"
                     />
                   </div>
                 </div>
@@ -2493,7 +2493,7 @@ export default function FinancePage() {
                 <div className="space-y-4 text-xs">
                   <div className="flex justify-between items-center bg-background/50 border border-border-custom rounded-lg p-2.5">
                     <span className="text-muted text-[10px] font-bold uppercase">Transfer Date</span>
-                    <span className="text-white font-semibold font-mono">2026-07-05</span>
+                    <span className="text-foreground font-semibold font-mono">2026-07-05</span>
                   </div>
 
                   <div className="space-y-1">
@@ -2521,7 +2521,7 @@ export default function FinancePage() {
                         <select
                           value={fromBank}
                           onChange={e => setFromBank(e.target.value)}
-                          className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                          className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs"
                         >
                           <option value="Main Savings Account">Main Savings Account (HDFC)</option>
                           <option value="Escrow Account">Escrow Account (SBI)</option>
@@ -2532,7 +2532,7 @@ export default function FinancePage() {
                         <select
                           value={toBank}
                           onChange={e => setToBank(e.target.value)}
-                          className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                          className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs"
                         >
                           <option value="Petty Cash Account">Petty Cash Account (HDFC)</option>
                           <option value="Escrow Account">Escrow Account (SBI)</option>
@@ -2546,7 +2546,7 @@ export default function FinancePage() {
                       <div>
                         <label className="text-[10px] text-muted uppercase font-bold block mb-1">From</label>
                         <div className="flex justify-between items-center bg-background/50 border border-border-custom rounded-lg px-3 py-2.5">
-                          <span className="text-white font-medium text-xs">Cash Account (Company Wallet)</span>
+                          <span className="text-foreground font-medium text-xs">Cash Account (Company Wallet)</span>
                           <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[9px] font-bold px-2 py-0.5 rounded-full font-mono">₹ 0</span>
                         </div>
                       </div>
@@ -2555,7 +2555,7 @@ export default function FinancePage() {
                         <select
                           value={toBank}
                           onChange={e => setToBank(e.target.value)}
-                          className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                          className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs"
                         >
                           <option value="Main Savings Account">Main Savings Account (HDFC)</option>
                           <option value="Escrow Account">Escrow Account (SBI)</option>
@@ -2571,7 +2571,7 @@ export default function FinancePage() {
                         <select
                           value={fromBank}
                           onChange={e => setFromBank(e.target.value)}
-                          className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                          className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs"
                         >
                           <option value="Main Savings Account">Main Savings Account (HDFC)</option>
                           <option value="Escrow Account">Escrow Account (SBI)</option>
@@ -2580,7 +2580,7 @@ export default function FinancePage() {
                       <div>
                         <label className="text-[10px] text-muted uppercase font-bold block mb-1">To</label>
                         <div className="flex justify-between items-center bg-background/50 border border-border-custom rounded-lg px-3 py-2.5">
-                          <span className="text-white font-medium text-xs">Cash Account (Company Wallet)</span>
+                          <span className="text-foreground font-medium text-xs">Cash Account (Company Wallet)</span>
                           <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[9px] font-bold px-2 py-0.5 rounded-full font-mono">₹ 0</span>
                         </div>
                       </div>
@@ -2594,7 +2594,7 @@ export default function FinancePage() {
                       value={amount}
                       onChange={e => setAmount(e.target.value)}
                       placeholder="0"
-                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white text-xs font-mono font-bold"
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground text-xs font-mono font-bold"
                     />
                   </div>
 
@@ -2605,7 +2605,7 @@ export default function FinancePage() {
                       value={refNum}
                       onChange={e => setRefNum(e.target.value)}
                       placeholder="e.g. TXN-1904"
-                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white text-xs"
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground text-xs"
                     />
                   </div>
 
@@ -2616,7 +2616,7 @@ export default function FinancePage() {
                       onChange={e => setDesc(e.target.value)}
                       rows={3}
                       placeholder="Narration notes..."
-                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white text-xs resize-none"
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground text-xs resize-none"
                     />
                   </div>
 
@@ -2632,9 +2632,9 @@ export default function FinancePage() {
                   <div className="flex justify-between items-center bg-background/50 border border-border-custom rounded-lg p-2.5">
                     <div>
                       <span className="text-muted text-[10px] font-bold uppercase block">Invoice No</span>
-                      <span className="text-white font-semibold font-mono">{selectedTxnType === "Credit Note" ? "CN-1" : "DN-1"}</span>
+                      <span className="text-foreground font-semibold font-mono">{selectedTxnType === "Credit Note" ? "CN-1" : "DN-1"}</span>
                     </div>
-                    <span className="text-muted cursor-pointer hover:text-white">✏️</span>
+                    <span className="text-muted cursor-pointer hover:text-foreground">✏️</span>
                   </div>
 
                   <div>
@@ -2645,7 +2645,7 @@ export default function FinancePage() {
                         value={partyName}
                         onChange={e => setPartyName(e.target.value)}
                         placeholder="Search or select party..."
-                        className="w-full bg-background border border-border-custom rounded-lg pl-9 pr-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                        className="w-full bg-background border border-border-custom rounded-lg pl-9 pr-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs"
                       />
                       <span className="absolute left-3 top-2.5 text-muted text-xs">🔍</span>
                     </div>
@@ -2660,13 +2660,13 @@ export default function FinancePage() {
                       value={amount}
                       onChange={e => setAmount(e.target.value)}
                       placeholder="0"
-                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white text-xs font-mono font-bold"
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground text-xs font-mono font-bold"
                     />
                   </div>
 
                   <div className="bg-elevated/20 border border-border-custom p-4 rounded-xl flex justify-between items-center">
                     <span className="text-[10px] text-muted uppercase font-bold">Total Amount</span>
-                    <strong className="text-white text-base font-mono">₹{Number(amount || 0).toLocaleString()}</strong>
+                    <strong className="text-foreground text-base font-mono">₹{Number(amount || 0).toLocaleString()}</strong>
                   </div>
 
                   <div className="flex gap-4">
@@ -2686,7 +2686,7 @@ export default function FinancePage() {
                 <div className="space-y-4 text-xs">
                   <div className="flex justify-between items-center bg-background/50 border border-border-custom rounded-lg p-2.5">
                     <span className="text-muted text-[10px] font-bold uppercase">Date</span>
-                    <span className="text-white font-semibold font-mono">2026-07-05</span>
+                    <span className="text-foreground font-semibold font-mono">2026-07-05</span>
                   </div>
 
                   <div>
@@ -2695,7 +2695,7 @@ export default function FinancePage() {
                       value={paymentFromParty}
                       onChange={e => setPaymentFromParty(e.target.value)}
                       required
-                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs"
                     >
                       <option value="">Select party to debit...</option>
                       {usersList.map((u: any) => (
@@ -2710,7 +2710,7 @@ export default function FinancePage() {
                       value={paymentToParty}
                       onChange={e => setPaymentToParty(e.target.value)}
                       required
-                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs"
                     >
                       <option value="">Select party to credit...</option>
                       {usersList.map((u: any) => (
@@ -2726,7 +2726,7 @@ export default function FinancePage() {
                       value={amount}
                       onChange={e => setAmount(e.target.value)}
                       placeholder="0"
-                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white text-xs font-mono font-bold"
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground text-xs font-mono font-bold"
                     />
                   </div>
 
@@ -2737,7 +2737,7 @@ export default function FinancePage() {
                       onChange={e => setDesc(e.target.value)}
                       rows={3}
                       placeholder="Describe transfer reason..."
-                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white text-xs resize-none"
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground text-xs resize-none"
                     />
                   </div>
 
@@ -2746,7 +2746,7 @@ export default function FinancePage() {
                     <select
                       value={costCode}
                       onChange={e => setCostCode(e.target.value)}
-                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs"
                     >
                       <option value="1.2.1 Site Conveyance">Select Cost Code</option>
                       <option value="1.2.1 Site Conveyance">1.2.1 Site Conveyance</option>
@@ -2761,18 +2761,18 @@ export default function FinancePage() {
                       value={refNum}
                       onChange={e => setRefNum(e.target.value)}
                       placeholder="e.g. Reference transaction ID"
-                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white text-xs"
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground text-xs"
                     />
                   </div>
 
-                  <span className="text-[10px] text-muted hover:text-white cursor-pointer block">More Details (Optional) ▽</span>
+                  <span className="text-[10px] text-muted hover:text-foreground cursor-pointer block">More Details (Optional) ▽</span>
                 </div>
               ) : (
                 /* DEFAULT PAYMENTS / STANDARD VOUCHER DRAWER */
                 <form onSubmit={handleRecordPayment} className="space-y-4 text-xs font-sans">
                   <div className="flex justify-between items-center bg-background/50 border border-border-custom rounded-lg p-2.5">
                     <span className="text-muted text-[10px] font-bold uppercase">Payment Date</span>
-                    <span className="text-white font-semibold font-mono">2026-07-05</span>
+                    <span className="text-foreground font-semibold font-mono">2026-07-05</span>
                   </div>
 
                   <div>
@@ -2784,7 +2784,7 @@ export default function FinancePage() {
                         onChange={e => setPartyName(e.target.value)}
                         required
                         placeholder="Search or specify vendor party..."
-                        className="w-full bg-background border border-border-custom rounded-lg pl-9 pr-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                        className="w-full bg-background border border-border-custom rounded-lg pl-9 pr-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs"
                       />
                       <span className="absolute left-3 top-2.5 text-muted text-xs">🔍</span>
                     </div>
@@ -2798,7 +2798,7 @@ export default function FinancePage() {
                       onChange={e => setAmount(e.target.value)}
                       required
                       placeholder="0"
-                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs font-mono text-lg font-bold"
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs font-mono text-lg font-bold"
                     />
                   </div>
 
@@ -2806,7 +2806,7 @@ export default function FinancePage() {
                     <label className="text-[10px] text-muted uppercase font-bold block mb-1.5">Payment Method</label>
                     <div className="flex gap-4">
                       {["Cash", "Bank Transfer", "Cheque"].map((m) => (
-                        <label key={m} className="flex items-center gap-2 text-muted hover:text-white cursor-pointer select-none">
+                        <label key={m} className="flex items-center gap-2 text-muted hover:text-foreground cursor-pointer select-none">
                           <input
                             type="radio"
                             name="paymentMethod"
@@ -2824,7 +2824,7 @@ export default function FinancePage() {
                     <select
                       value={costCode}
                       onChange={e => setCostCode(e.target.value)}
-                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs"
                     >
                       <option value="1.2.1 Site Conveyance">Select Cost Code</option>
                       <option value="1.2.1 Site Conveyance">1.2.1 Site Conveyance (Conveyance)</option>
@@ -2840,7 +2840,7 @@ export default function FinancePage() {
                       value={refNum}
                       onChange={e => setRefNum(e.target.value)}
                       placeholder="e.g. PO number, cheque details"
-                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs"
                     />
                   </div>
 
@@ -2853,7 +2853,7 @@ export default function FinancePage() {
                         onChange={e => setRefInvoice(e.target.value)}
                         required
                         placeholder="e.g. INV-2026-4412"
-                        className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                        className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs"
                       />
                     </div>
                   )}
@@ -2865,7 +2865,7 @@ export default function FinancePage() {
                       value={desc}
                       onChange={e => setDesc(e.target.value)}
                       placeholder="Narration details..."
-                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs"
                     />
                   </div>
 
@@ -2885,8 +2885,8 @@ export default function FinancePage() {
               <div className="absolute inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-6">
                 <div className="bg-card border border-border-custom rounded-xl p-5 w-full max-w-sm space-y-4 text-xs">
                   <div className="flex justify-between items-center pb-2 border-b border-border-custom">
-                    <h4 className="text-xs font-bold text-white uppercase tracking-wider">Add Item</h4>
-                    <button type="button" onClick={() => setShowAddItemForm(false)} className="text-muted hover:text-white text-lg">✕</button>
+                    <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">Add Item</h4>
+                    <button type="button" onClick={() => setShowAddItemForm(false)} className="text-muted hover:text-foreground text-lg">✕</button>
                   </div>
 
                   <div className="space-y-3">
@@ -2897,7 +2897,7 @@ export default function FinancePage() {
                         value={newItemName}
                         onChange={e => setNewItemName(e.target.value)}
                         placeholder="e.g. Cement Bags (Grade 53)"
-                        className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none"
+                        className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none"
                       />
                     </div>
 
@@ -2908,7 +2908,7 @@ export default function FinancePage() {
                           type="number"
                           value={newItemQty}
                           onChange={e => setNewItemQty(e.target.value)}
-                          className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white font-mono focus:outline-none"
+                          className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground font-mono focus:outline-none"
                         />
                       </div>
                       <div>
@@ -2916,7 +2916,7 @@ export default function FinancePage() {
                         <select
                           value={newItemUnit}
                           onChange={e => setNewItemUnit(e.target.value)}
-                          className="w-full bg-background border border-border-custom rounded-lg px-2 py-2 text-white focus:outline-none"
+                          className="w-full bg-background border border-border-custom rounded-lg px-2 py-2 text-foreground focus:outline-none"
                         >
                           <option value="Bags">Bags</option>
                           <option value="CFT">CFT</option>
@@ -2933,7 +2933,7 @@ export default function FinancePage() {
                           type="number"
                           value={newItemRate}
                           onChange={e => setNewItemRate(e.target.value)}
-                          className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white font-mono focus:outline-none"
+                          className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground font-mono focus:outline-none"
                         />
                       </div>
                       <div>
@@ -2941,7 +2941,7 @@ export default function FinancePage() {
                         <select
                           value={newItemGst}
                           onChange={e => setNewItemGst(e.target.value)}
-                          className="w-full bg-background border border-border-custom rounded-lg px-2 py-2 text-white focus:outline-none"
+                          className="w-full bg-background border border-border-custom rounded-lg px-2 py-2 text-foreground focus:outline-none"
                         >
                           <option value="0">0%</option>
                           <option value="5">5%</option>
@@ -2967,7 +2967,7 @@ export default function FinancePage() {
                     <button
                       type="button"
                       onClick={() => setShowAddItemForm(false)}
-                      className="px-3 py-1.5 bg-zinc-800 text-muted hover:text-white rounded-lg text-xs"
+                      className="px-3 py-1.5 bg-zinc-800 text-muted hover:text-foreground rounded-lg text-xs"
                     >
                       Cancel
                     </button>
@@ -3002,8 +3002,8 @@ export default function FinancePage() {
           <div className="bg-card w-full max-w-md h-full border-l border-border-custom shadow-2xl p-6 flex flex-col justify-between overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div>
               <div className="flex justify-between items-center border-b border-border-custom pb-4 mb-5">
-                <h3 className="text-sm font-bold text-white uppercase tracking-wider">Add New Account</h3>
-                <button onClick={() => setShowAddBankModal(false)} className="text-muted hover:text-white text-lg cursor-pointer">✕</button>
+                <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">Add New Account</h3>
+                <button onClick={() => setShowAddBankModal(false)} className="text-muted hover:text-foreground text-lg cursor-pointer">✕</button>
               </div>
 
               <form onSubmit={handleAddBankAccount} className="space-y-4 text-xs font-sans">
@@ -3015,7 +3015,7 @@ export default function FinancePage() {
                     onChange={e => setNewBank({ ...newBank, holder: e.target.value })}
                     required
                     placeholder="e.g. YASH DESAI"
-                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs"
                   />
                 </div>
 
@@ -3027,7 +3027,7 @@ export default function FinancePage() {
                     onChange={e => setNewBank({ ...newBank, number: e.target.value })}
                     required
                     placeholder="e.g. ICIC000239181289"
-                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs"
                   />
                 </div>
 
@@ -3039,7 +3039,7 @@ export default function FinancePage() {
                     onChange={e => setNewBank({ ...newBank, ifsc: e.target.value })}
                     required
                     placeholder="e.g. ICIC000"
-                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs font-mono"
+                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs font-mono"
                   />
                 </div>
 
@@ -3051,7 +3051,7 @@ export default function FinancePage() {
                     onChange={e => setNewBank({ ...newBank, name: e.target.value })}
                     required
                     placeholder="e.g. ICICI BANK"
-                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs"
                   />
                 </div>
 
@@ -3062,7 +3062,7 @@ export default function FinancePage() {
                     value={newBank.upi} // Map temporary local fields safely
                     onChange={e => setNewBank({ ...newBank, upi: e.target.value })}
                     placeholder="Bank Branch Address"
-                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs"
                   />
                 </div>
 
@@ -3071,7 +3071,7 @@ export default function FinancePage() {
                   <input
                     type="text"
                     placeholder="Not provided"
-                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs"
                   />
                 </div>
 
@@ -3080,7 +3080,7 @@ export default function FinancePage() {
                   <input
                     type="text"
                     placeholder="e.g. pay@upi"
-                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs"
                   />
                 </div>
 
@@ -3093,7 +3093,7 @@ export default function FinancePage() {
                       value={newBank.balance}
                       onChange={e => setNewBank({ ...newBank, balance: e.target.value })}
                       placeholder="Opening balance"
-                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs"
                     />
                   </div>
                 </div>
@@ -3107,7 +3107,7 @@ export default function FinancePage() {
               >
                 Save
               </button>
-              <button onClick={() => setShowAddBankModal(false)} className="px-4 py-2.5 rounded-lg border border-border-custom text-muted hover:text-white hover:border-white/20 text-xs">Cancel</button>
+              <button onClick={() => setShowAddBankModal(false)} className="px-4 py-2.5 rounded-lg border border-border-custom text-muted hover:text-foreground hover:border-border-custom text-xs">Cancel</button>
             </div>
           </div>
         </div>
@@ -3119,10 +3119,10 @@ export default function FinancePage() {
           <div className="bg-card w-full max-w-md border border-border-custom shadow-2xl rounded-xl p-6" onClick={e => e.stopPropagation()}>
             <div className="flex justify-between items-center border-b border-border-custom pb-4 mb-5">
               <div>
-                <h3 className="text-sm font-bold text-white uppercase tracking-wider">New Cash Account</h3>
+                <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">New Cash Account</h3>
                 <p className="text-[10px] text-muted mt-0.5">Set the opening cash balance for the company</p>
               </div>
-              <button onClick={() => setShowAddCashModal(false)} className="text-muted hover:text-white text-lg cursor-pointer">✕</button>
+              <button onClick={() => setShowAddCashModal(false)} className="text-muted hover:text-foreground text-lg cursor-pointer">✕</button>
             </div>
 
             <form onSubmit={handleCreateCashAccount} className="space-y-4 text-xs font-sans">
@@ -3133,7 +3133,7 @@ export default function FinancePage() {
                   value={newCash.name}
                   onChange={e => setNewCash({ ...newCash, name: e.target.value })}
                   placeholder="Cash Account"
-                  className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                  className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs"
                 />
               </div>
               <div>
@@ -3144,7 +3144,7 @@ export default function FinancePage() {
                   onChange={e => setNewCash({ ...newCash, opening: e.target.value })}
                   required
                   placeholder="e.g. 50000"
-                  className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs font-mono"
+                  className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs font-mono"
                 />
               </div>
               <div className="flex gap-3 pt-2">
@@ -3154,7 +3154,7 @@ export default function FinancePage() {
                 >
                   Create Cash Account
                 </button>
-                <button onClick={() => setShowAddCashModal(false)} className="px-4 py-2.5 rounded-lg border border-border-custom text-muted hover:text-white hover:border-white/20 text-xs">Cancel</button>
+                <button onClick={() => setShowAddCashModal(false)} className="px-4 py-2.5 rounded-lg border border-border-custom text-muted hover:text-foreground hover:border-border-custom text-xs">Cancel</button>
               </div>
             </form>
           </div>
@@ -3168,10 +3168,10 @@ export default function FinancePage() {
             <div>
               <div className="flex justify-between items-center border-b border-border-custom pb-4 mb-5">
                 <div>
-                  <h3 className="text-sm font-bold text-white uppercase tracking-wider">New Payment Request</h3>
+                  <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">New Payment Request</h3>
                   <p className="text-[10px] text-muted font-mono mt-0.5">Voucher: PR-{paymentRequests.length + 1}</p>
                 </div>
-                <button onClick={() => setShowAddRequestModal(false)} className="text-muted hover:text-white text-lg cursor-pointer">✕</button>
+                <button onClick={() => setShowAddRequestModal(false)} className="text-muted hover:text-foreground text-lg cursor-pointer">✕</button>
               </div>
 
               {prStep === "type" ? (
@@ -3186,7 +3186,7 @@ export default function FinancePage() {
                         className="flex items-center gap-3 w-full text-left bg-background border border-border-custom hover:border-primary/60 hover:bg-primary/5 rounded-lg px-4 py-3 transition-all"
                       >
                         <span className="text-lg">{t.icon}</span>
-                        <span className="text-xs font-semibold text-white">{t.label}</span>
+                        <span className="text-xs font-semibold text-foreground">{t.label}</span>
                       </button>
                     ))}
                   </div>
@@ -3225,7 +3225,7 @@ export default function FinancePage() {
                       value={newRequest.partyId}
                       onChange={e => setNewRequest({ ...newRequest, partyId: e.target.value })}
                       required
-                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs"
                     >
                       <option value="">Search or select party...</option>
                       {usersList.map((u: any) => (
@@ -3245,7 +3245,7 @@ export default function FinancePage() {
                         value={newRequest.extra}
                         onChange={e => setNewRequest({ ...newRequest, extra: e.target.value })}
                         placeholder={prType.extraPlaceholder}
-                        className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                        className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs"
                       />
                     </div>
                   )}
@@ -3258,7 +3258,7 @@ export default function FinancePage() {
                       onChange={e => setNewRequest({ ...newRequest, amount: e.target.value })}
                       required
                       placeholder="e.g. 15000"
-                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs font-mono"
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs font-mono"
                     />
                   </div>
 
@@ -3268,7 +3268,7 @@ export default function FinancePage() {
                       type="date"
                       value={newRequest.dueDate}
                       onChange={e => setNewRequest({ ...newRequest, dueDate: e.target.value })}
-                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs"
                     />
                   </div>
 
@@ -3279,7 +3279,7 @@ export default function FinancePage() {
                       onChange={e => setNewRequest({ ...newRequest, details: e.target.value })}
                       placeholder="Provide details for this payment request..."
                       rows={3}
-                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs resize-none"
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs resize-none"
                     />
                   </div>
 
@@ -3304,7 +3304,7 @@ export default function FinancePage() {
                   Save Request
                 </button>
               )}
-              <button onClick={() => setShowAddRequestModal(false)} className="px-4 py-2.5 rounded-lg border border-border-custom text-muted hover:text-white hover:border-white/20 text-xs">Cancel</button>
+              <button onClick={() => setShowAddRequestModal(false)} className="px-4 py-2.5 rounded-lg border border-border-custom text-muted hover:text-foreground hover:border-border-custom text-xs">Cancel</button>
             </div>
           </div>
         </div>
@@ -3317,17 +3317,17 @@ export default function FinancePage() {
             <div className="flex justify-between items-start border-b border-border-custom pb-4 mb-5">
               <div>
                 <p className="text-[10px] text-muted font-mono">Voucher: {selectedPR.request_no || "—"}</p>
-                <h3 className="text-sm font-bold text-white uppercase tracking-wider mt-0.5">{selectedPR.request_type || "Payment Request"}</h3>
-                <p className="text-xs text-white mt-1">{selectedPR.party_name}</p>
+                <h3 className="text-sm font-bold text-foreground uppercase tracking-wider mt-0.5">{selectedPR.request_type || "Payment Request"}</h3>
+                <p className="text-xs text-foreground mt-1">{selectedPR.party_name}</p>
               </div>
-              <button onClick={() => setSelectedPR(null)} className="text-muted hover:text-white text-lg cursor-pointer">✕</button>
+              <button onClick={() => setSelectedPR(null)} className="text-muted hover:text-foreground text-lg cursor-pointer">✕</button>
             </div>
 
             <div className="space-y-4 text-xs font-sans">
               <div className="grid grid-cols-2 gap-3">
                 <div className="bg-background border border-border-custom rounded-lg p-3">
                   <p className="text-[9px] text-muted uppercase font-bold">Requested Amount</p>
-                  <p className="text-white font-bold font-sans mt-1">₹{(selectedPR.amount || 0).toLocaleString("en-IN")}</p>
+                  <p className="text-foreground font-bold font-sans mt-1">₹{(selectedPR.amount || 0).toLocaleString("en-IN")}</p>
                 </div>
                 <div className="bg-background border border-border-custom rounded-lg p-3">
                   <p className="text-[9px] text-muted uppercase font-bold">Status</p>
@@ -3353,7 +3353,7 @@ export default function FinancePage() {
               {selectedPR.payment && (
                 <div className="bg-primary/5 border border-primary/20 rounded-lg p-3">
                   <p className="text-[9px] text-primary uppercase font-bold mb-1">Payment Recorded</p>
-                  <p className="text-white font-sans">₹{selectedPR.payment.paid_amount.toLocaleString("en-IN")} via {selectedPR.payment.payment_mode} on {new Date(selectedPR.payment.payment_date).toLocaleDateString("en-IN")}</p>
+                  <p className="text-foreground font-sans">₹{selectedPR.payment.paid_amount.toLocaleString("en-IN")} via {selectedPR.payment.payment_mode} on {new Date(selectedPR.payment.payment_date).toLocaleDateString("en-IN")}</p>
                   <p className="text-[9px] text-muted mt-1">Deduction ₹{selectedPR.payment.deduction} · TDS ₹{selectedPR.payment.tds} · Balance Due ₹{selectedPR.payment.balance_due}</p>
                   {selectedPR.payment.reference_no && <p className="text-[9px] text-muted mt-1">Ref: {selectedPR.payment.reference_no}</p>}
                   {selectedPR.payment.remarks && <p className="text-[9px] text-muted mt-1">Remarks: {selectedPR.payment.remarks}</p>}
@@ -3389,7 +3389,7 @@ export default function FinancePage() {
               <button
                 onClick={() => { setPrPayment({ date: new Date().toISOString().slice(0, 10), mode: "Cash", paidAmount: String(selectedPR.amount || ""), deduction: "0", tds: "0", remarks: "", referenceNo: "", attachmentName: "" }); setShowRecordPaymentModal(true); }}
                 disabled={selectedPR.status === "Paid"}
-                className="w-full py-2.5 bg-white/10 text-white font-bold rounded-lg hover:bg-white/20 text-xs transition-all disabled:opacity-40"
+                className="w-full py-2.5 bg-elevated text-foreground font-bold rounded-lg hover:bg-elevated text-xs transition-all disabled:opacity-40"
               >Record Payment</button>
             </div>
           </div>
@@ -3402,10 +3402,10 @@ export default function FinancePage() {
           <div className="bg-card w-full max-w-md border border-border-custom shadow-2xl rounded-xl p-6 overflow-y-auto max-h-[90vh]" onClick={e => e.stopPropagation()}>
             <div className="flex justify-between items-center border-b border-border-custom pb-4 mb-5">
               <div>
-                <h3 className="text-sm font-bold text-white uppercase tracking-wider">Record Payment</h3>
+                <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">Record Payment</h3>
                 <p className="text-[10px] text-muted font-mono mt-0.5">{selectedPR.request_no} · {selectedPR.party_name}</p>
               </div>
-              <button onClick={() => setShowRecordPaymentModal(false)} className="text-muted hover:text-white text-lg cursor-pointer">✕</button>
+              <button onClick={() => setShowRecordPaymentModal(false)} className="text-muted hover:text-foreground text-lg cursor-pointer">✕</button>
             </div>
 
             <div className="space-y-4 text-xs font-sans">
@@ -3414,13 +3414,13 @@ export default function FinancePage() {
                   <label className="text-[10px] text-muted uppercase font-bold block mb-1">Payment Date*</label>
                   <input type="date" value={prPayment.date}
                     onChange={e => setPrPayment({ ...prPayment, date: e.target.value })}
-                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs" />
+                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs" />
                 </div>
                 <div>
                   <label className="text-[10px] text-muted uppercase font-bold block mb-1">Payment Mode*</label>
                   <select value={prPayment.mode}
                     onChange={e => setPrPayment({ ...prPayment, mode: e.target.value })}
-                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs">
+                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs">
                     <option value="Cash">Cash</option>
                     <option value="Bank">Bank</option>
                     <option value="UPI">UPI</option>
@@ -3434,13 +3434,13 @@ export default function FinancePage() {
                   <label className="text-[10px] text-muted uppercase font-bold block mb-1">Paid Amount (₹)*</label>
                   <input type="number" value={prPayment.paidAmount}
                     onChange={e => setPrPayment({ ...prPayment, paidAmount: e.target.value })}
-                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs font-mono" />
+                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs font-mono" />
                 </div>
                 <div>
                   <label className="text-[10px] text-muted uppercase font-bold block mb-1">Deduction (₹)</label>
                   <input type="number" value={prPayment.deduction}
                     onChange={e => setPrPayment({ ...prPayment, deduction: e.target.value })}
-                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs font-mono" />
+                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs font-mono" />
                 </div>
               </div>
 
@@ -3449,7 +3449,7 @@ export default function FinancePage() {
                   <label className="text-[10px] text-muted uppercase font-bold block mb-1">TDS (₹)</label>
                   <input type="number" value={prPayment.tds}
                     onChange={e => setPrPayment({ ...prPayment, tds: e.target.value })}
-                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs font-mono" />
+                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs font-mono" />
                 </div>
                 <div>
                   <label className="text-[10px] text-muted uppercase font-bold block mb-1">Balance Due (₹)</label>
@@ -3464,7 +3464,7 @@ export default function FinancePage() {
                 <input type="text" value={prPayment.referenceNo}
                   onChange={e => setPrPayment({ ...prPayment, referenceNo: e.target.value })}
                   placeholder="e.g. TXN-1234 / Cheque no."
-                  className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs" />
+                  className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs" />
               </div>
 
               <div>
@@ -3472,13 +3472,13 @@ export default function FinancePage() {
                 <textarea value={prPayment.remarks}
                   onChange={e => setPrPayment({ ...prPayment, remarks: e.target.value })}
                   rows={2} placeholder="Optional remarks..."
-                  className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs resize-none" />
+                  className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs resize-none" />
               </div>
 
               <div>
                 <label className="text-[10px] text-muted uppercase font-bold block mb-1">Attach File(s)</label>
                 <input type="file" onChange={e => setPrPayment({ ...prPayment, attachmentName: e.target.files?.[0]?.name || "" })}
-                  className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs file:mr-3 file:rounded file:border-0 file:bg-primary/20 file:px-3 file:py-1 file:text-primary" />
+                  className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs file:mr-3 file:rounded file:border-0 file:bg-primary/20 file:px-3 file:py-1 file:text-primary" />
                 {prPayment.attachmentName && <p className="text-[9px] text-muted mt-1">📎 {prPayment.attachmentName}</p>}
               </div>
 
@@ -3509,7 +3509,7 @@ export default function FinancePage() {
                   }}
                   className="flex-1 py-2.5 bg-primary text-white font-bold rounded-lg hover:bg-primary/95 text-xs transition-all"
                 >Save Payment</button>
-                <button onClick={() => setShowRecordPaymentModal(false)} className="px-4 py-2.5 rounded-lg border border-border-custom text-muted hover:text-white hover:border-white/20 text-xs">Cancel</button>
+                <button onClick={() => setShowRecordPaymentModal(false)} className="px-4 py-2.5 rounded-lg border border-border-custom text-muted hover:text-foreground hover:border-border-custom text-xs">Cancel</button>
               </div>
             </div>
           </div>

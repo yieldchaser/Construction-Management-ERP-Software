@@ -398,7 +398,7 @@ export default function DrawingsPage() {
         {/* Header */}
         <header className="h-14 border-b border-border-custom bg-card px-6 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
-            <h1 className="text-sm font-bold text-white">
+            <h1 className="text-sm font-bold text-foreground">
               {tab === "drawings" ? "Blueprint & RFI System" : "Project Files Directory"}
             </h1>
             <span className="text-[10px] text-muted">
@@ -423,7 +423,7 @@ export default function DrawingsPage() {
                 {/* Drawing header bar */}
                 <div className="flex items-center justify-between bg-input border border-border-custom rounded-md px-4 py-2.5 text-xs shrink-0">
                   <div>
-                    <div className="font-bold text-white text-sm">{activeDrawing.name}</div>
+                    <div className="font-bold text-foreground text-sm">{activeDrawing.name}</div>
                     <div className="text-[10px] text-muted mt-0.5">{activeDrawing.category} · Active: {currentRev?.version} · {currentRev?.date}</div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -545,7 +545,7 @@ export default function DrawingsPage() {
                         <div className={`mb-2 rounded-md p-3 border transition-all ${isActive ? "bg-primary/10 border-primary/20" : "border-transparent hover:bg-elevated"}`}>
                           <button onClick={() => { setActiveRevId(rev.id); setSelectedPinId(null); setImgLoaded(false); }} className="w-full text-left">
                             <div className="flex items-center justify-between mb-1">
-                              <span className="text-xs font-extrabold text-white">{rev.version}</span>
+                              <span className="text-xs font-extrabold text-foreground">{rev.version}</span>
                               <span className={`text-[8px] px-1.5 py-0.5 rounded border font-bold ${m.badge}`}>{m.icon} {m.label}</span>
                             </div>
                             <div className="text-[10px] text-muted line-clamp-2">{rev.comments}</div>
@@ -622,7 +622,7 @@ export default function DrawingsPage() {
                       <div className="flex items-center gap-3">
                         <span className="text-2xl">📁</span>
                         <div>
-                          <div className="text-xs font-semibold text-white">{f.name}</div>
+                          <div className="text-xs font-semibold text-foreground">{f.name}</div>
                           <div className="text-[10px] text-muted">{f.count} files</div>
                         </div>
                       </div>
@@ -645,7 +645,7 @@ export default function DrawingsPage() {
           <div className="bg-background border border-border-custom rounded-lg w-full max-w-sm shadow-2xl p-5 space-y-4 text-xs">
             <div className="flex justify-between items-start border-b border-border-custom pb-3">
               <div>
-                <div className="text-sm font-extrabold text-white">Drop Pin on Drawing</div>
+                <div className="text-sm font-extrabold text-foreground">Drop Pin on Drawing</div>
                 <div className="text-[10px] text-muted mt-0.5">Position: {tempXY.x.toFixed(1)}% × {tempXY.y.toFixed(1)}%</div>
               </div>
               <button onClick={() => setShowPinModal(false)} className="text-muted hover:text-foreground text-lg leading-none">×</button>
@@ -667,7 +667,7 @@ export default function DrawingsPage() {
             <div>
               <div className="text-muted mb-1">Description / Query</div>
               <textarea rows={3} autoFocus value={newPinComment} onChange={e => setNewPinComment(e.target.value)}
-                className="w-full bg-input border border-border-custom rounded-lg p-2.5 text-white resize-none text-xs"
+                className="w-full bg-input border border-border-custom rounded-lg p-2.5 text-foreground resize-none text-xs"
                 placeholder="Describe the issue, clash, or observation clearly..." />
             </div>
             <label className="flex items-center gap-2 cursor-pointer select-none">
@@ -691,7 +691,7 @@ export default function DrawingsPage() {
           <div className="bg-background border border-border-custom rounded-lg w-full max-w-md shadow-2xl p-5 space-y-4 text-xs">
             <div className="flex justify-between items-start border-b border-border-custom pb-3">
               <div>
-                <div className="text-sm font-extrabold text-white">Upload New Revision</div>
+                <div className="text-sm font-extrabold text-foreground">Upload New Revision</div>
                 <div className="text-[10px] text-muted mt-0.5">Current revision will be automatically archived as Superseded</div>
               </div>
               <button onClick={() => setShowRevModal(false)} className="text-muted hover:text-foreground text-lg leading-none">×</button>
@@ -709,7 +709,7 @@ export default function DrawingsPage() {
                 </div>
               ))}
               <div className="flex items-center gap-2 text-[10px] border-t border-border-custom pt-1.5">
-                <span className="text-white font-bold w-6 shrink-0">{newRevCode}</span>
+                <span className="text-foreground font-bold w-6 shrink-0">{newRevCode}</span>
                 <span className="text-muted">→</span>
                 <span className="px-1.5 py-0.5 rounded text-[8px] font-bold border bg-emerald-500/10 border-emerald-500/20 text-emerald-400">New Current</span>
               </div>
@@ -717,12 +717,12 @@ export default function DrawingsPage() {
             <div>
               <div className="text-muted mb-1">Version Code</div>
               <input type="text" value={newRevCode} onChange={e => setNewRevCode(e.target.value)}
-                className="w-full bg-input border border-border-custom rounded-lg p-2.5 text-white font-mono font-bold" />
+                className="w-full bg-input border border-border-custom rounded-lg p-2.5 text-foreground font-mono font-bold" />
             </div>
             <div>
               <div className="text-muted mb-1">Release Notes</div>
               <textarea rows={3} value={newRevComment} onChange={e => setNewRevComment(e.target.value)}
-                className="w-full bg-input border border-border-custom rounded-lg p-2.5 text-white resize-none"
+                className="w-full bg-input border border-border-custom rounded-lg p-2.5 text-foreground resize-none"
                 placeholder="Incorporated RFI comments, updated column grid..." />
             </div>
             <div className="flex gap-2 justify-end border-t border-border-custom pt-3">

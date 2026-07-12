@@ -475,7 +475,7 @@ export default function QualityPage() {
 
   const tabBtn = (key: typeof tab, label: string) => (
     <button onClick={() => setTab(key)}
-      className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${tab === key ? "bg-primary/15 text-primary border border-border-custom" : "text-muted hover:text-foreground hover:bg-white/[0.04]"}`}>
+      className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${tab === key ? "bg-primary/15 text-primary border border-border-custom" : "text-muted hover:text-foreground hover:bg-elevated"}`}>
       {label}
     </button>
   );
@@ -485,7 +485,7 @@ export default function QualityPage() {
       {/* Main */}
       <main className="flex-1 flex flex-col overflow-hidden">
         <header className="h-14 border-b border-border-custom px-6 flex items-center justify-between bg-card shrink-0">
-          <h1 className="text-sm font-bold text-white uppercase tracking-widest">
+          <h1 className="text-sm font-bold text-foreground uppercase tracking-widest">
             {tab === "inspections" && "Site Inspections"}
             {tab === "checklists" && "IS-Code Checklist Library"}
             {tab === "ncr" && "Non-Conformance Reports (NCR)"}
@@ -534,7 +534,7 @@ export default function QualityPage() {
               {/* KPI row */}
               <div className="grid grid-cols-4 gap-4 mb-4">
                 {[
-                  { label: "Total Inspections", val: inspections.length, color: "text-white" },
+                  { label: "Total Inspections", val: inspections.length, color: "text-foreground" },
                   { label: "All Pass", val: inspections.filter(i => i.status === "pass").length, color: "text-green-400" },
                   { label: "Partial", val: inspections.filter(i => i.status === "partial").length, color: "text-yellow-400" },
                   { label: "Fail", val: inspections.filter(i => i.status === "fail").length, color: "text-red-400" },
@@ -565,7 +565,7 @@ export default function QualityPage() {
                       value={inspectionSearch}
                       onChange={(e) => setInspectionSearch(e.target.value)}
                       placeholder="Search zone, checklist, or inspector..."
-                      className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-xs text-white placeholder:text-muted"
+                      className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-xs text-foreground placeholder:text-muted"
                     />
                   </div>
                   <div className="space-y-1">
@@ -573,7 +573,7 @@ export default function QualityPage() {
                     <select
                       value={inspectionInspectorFilter}
                       onChange={(e) => setInspectionInspectorFilter(e.target.value)}
-                      className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-xs text-white"
+                      className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-xs text-foreground"
                     >
                       <option value="all">All Inspectors</option>
                       {inspectionInspectorOptions.map((name) => (
@@ -586,7 +586,7 @@ export default function QualityPage() {
                     <select
                       value={inspectionStatusFilter}
                       onChange={(e) => setInspectionStatusFilter(e.target.value)}
-                      className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-xs text-white"
+                      className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-xs text-foreground"
                     >
                       <option value="all">All Statuses</option>
                       {inspectionStatusOptions.map((status) => (
@@ -620,14 +620,14 @@ export default function QualityPage() {
                         filteredInspections.map((insp) => {
                           const rate = passRate(insp.passCount, insp.failCount);
                           return (
-                            <tr key={insp.id} className="border-b border-white/[0.03] hover:bg-white/[0.015] transition-all">
-                              <td className="px-5 py-3 font-bold text-white">{insp.zone}</td>
+                            <tr key={insp.id} className="border-b border-border-custom hover:bg-elevated transition-all">
+                              <td className="px-5 py-3 font-bold text-foreground">{insp.zone}</td>
                               <td className="px-5 py-3 text-zinc-200">{insp.checklist}</td>
                               <td className="px-5 py-3 text-muted">{insp.date}</td>
                               <td className="px-5 py-3 text-muted">{insp.inspector}</td>
                               <td className="px-5 py-3">
                                 <div className="flex items-center gap-3">
-                                  <div className="flex-1 h-1.5 bg-white/5 rounded-full overflow-hidden max-w-28">
+                                  <div className="flex-1 h-1.5 bg-elevated rounded-full overflow-hidden max-w-28">
                                     <div className="h-full bg-gradient-to-r from-green-500 to-green-400 rounded-full" style={{ width: `${rate}%` }} />
                                   </div>
                                   <div className="text-[10px] text-muted whitespace-nowrap">
@@ -664,7 +664,7 @@ export default function QualityPage() {
                 <div key={cl.id} className="bg-card border border-border-custom rounded-md overflow-hidden">
                   <div className="px-5 py-4 border-b border-border-custom flex items-center justify-between">
                     <div>
-                      <p className="font-bold text-white">{cl.title}</p>
+                      <p className="font-bold text-foreground">{cl.title}</p>
                       <div className="flex items-center gap-2 mt-1">
                         <span className="text-[10px] bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded-full font-bold">{cl.category}</span>
                         <span className="text-[10px] bg-purple-500/10 text-purple-400 border border-purple-500/20 px-2 py-0.5 rounded-full font-bold">{cl.isCode}</span>
@@ -689,9 +689,9 @@ export default function QualityPage() {
                         ))}
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-white/[0.03]">
+                    <tbody className="divide-y divide-border-custom">
                       {cl.items.map(item => (
-                        <tr key={item.id} className="hover:bg-white/[0.01]">
+                        <tr key={item.id} className="hover:bg-elevated">
                           <td className="px-4 py-2.5 text-muted font-mono">{item.sequence}</td>
                           <td className="px-4 py-2.5 text-zinc-200">{item.description}</td>
                           <td className="px-4 py-2.5 text-muted">{item.criteria}</td>
@@ -725,7 +725,7 @@ export default function QualityPage() {
                       {badge(ncr.severity, severityColors[ncr.severity])}
                       <span className="text-[10px] text-muted font-mono">{ncr.number}</span>
                     </div>
-                    <p className="text-xs font-semibold text-white leading-snug">{ncr.title}</p>
+                    <p className="text-xs font-semibold text-foreground leading-snug">{ncr.title}</p>
                     <p className="text-[10px] text-muted">{ncr.zone} · Due {ncr.dueDate}</p>
                     <button onClick={() => moveNCR(ncr.id, "under_review")}
                       className="w-full text-[10px] py-1 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 font-bold transition-all cursor-pointer">
@@ -748,7 +748,7 @@ export default function QualityPage() {
                       {badge(ncr.severity, severityColors[ncr.severity])}
                       <span className="text-[10px] text-muted font-mono">{ncr.number}</span>
                     </div>
-                    <p className="text-xs font-semibold text-white leading-snug">{ncr.title}</p>
+                    <p className="text-xs font-semibold text-foreground leading-snug">{ncr.title}</p>
                     <p className="text-[10px] text-muted">{ncr.zone} · Due {ncr.dueDate}</p>
                     <button onClick={() => moveNCR(ncr.id, "closed")}
                       className="w-full text-[10px] py-1 rounded bg-green-500/10 text-green-400 border border-green-500/20 hover:bg-green-500/20 font-bold transition-all cursor-pointer">
@@ -771,7 +771,7 @@ export default function QualityPage() {
                       {badge(ncr.severity, severityColors[ncr.severity])}
                       <span className="text-[10px] text-muted font-mono">{ncr.number}</span>
                     </div>
-                    <p className="text-xs font-semibold text-white leading-snug">{ncr.title}</p>
+                    <p className="text-xs font-semibold text-foreground leading-snug">{ncr.title}</p>
                     <p className="text-[10px] text-muted italic">{ncr.resolution}</p>
                     {badge("Closed", statusColors["closed"])}
                   </div>
@@ -786,7 +786,7 @@ export default function QualityPage() {
               {/* Summary row */}
               <div className="grid grid-cols-4 gap-4 mb-2">
                 {[
-                  { label: "Total Tests", val: labTests.length, color: "text-white" },
+                  { label: "Total Tests", val: labTests.length, color: "text-foreground" },
                   { label: "Passed", val: labTests.filter(t => t.pass).length, color: "text-green-400" },
                   { label: "Failed", val: labTests.filter(t => !t.pass).length, color: "text-red-400" },
                   { label: "Pass Rate", val: labTests.length ? `${Math.round(labTests.filter(t => t.pass).length / labTests.length * 100)}%` : "0%", color: "text-primary" },
@@ -800,7 +800,7 @@ export default function QualityPage() {
 
               <div className="bg-card border border-border-custom rounded-md overflow-hidden">
                 <div className="px-5 py-3 border-b border-border-custom flex items-center justify-between">
-                  <span className="text-xs font-bold text-white">Test Results Log</span>
+                  <span className="text-xs font-bold text-foreground">Test Results Log</span>
                   <button onClick={() => setShowTestForm(true)} className="px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-bold border border-primary/20 hover:bg-primary/20 cursor-pointer">+ Log Test</button>
                 </div>
                 <table className="w-full text-xs">
@@ -811,10 +811,10 @@ export default function QualityPage() {
                       ))}
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-white/[0.03]">
+                  <tbody className="divide-y divide-border-custom">
                     {labTests.map(t => (
                       <tr key={t.id} className="hover:bg-elevated transition-colors">
-                        <td className="px-4 py-3 font-semibold text-white">{t.type}</td>
+                        <td className="px-4 py-3 font-semibold text-foreground">{t.type}</td>
                         <td className="px-4 py-3 text-zinc-300">{t.material}</td>
                         <td className="px-4 py-3 font-mono text-muted text-[10px]">{t.sampleRef}</td>
                         <td className="px-4 py-3 text-muted">{t.date}</td>
@@ -847,25 +847,25 @@ export default function QualityPage() {
           <div className="bg-card border border-border-custom rounded-lg w-full max-w-xl p-6 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-5">
               <div>
-                <h2 className="font-bold text-white">{selectedInspection.zone}</h2>
+                <h2 className="font-bold text-foreground">{selectedInspection.zone}</h2>
                 <p className="text-xs text-muted">{selectedInspection.checklist} · {selectedInspection.date}</p>
               </div>
               <button onClick={() => setSelectedInspection(null)} className="text-muted hover:text-foreground text-xl cursor-pointer">✕</button>
             </div>
 
             <div className="flex items-center gap-4 mb-5">
-              <div className="flex-1 h-2 bg-white/5 rounded-full overflow-hidden">
+              <div className="flex-1 h-2 bg-elevated rounded-full overflow-hidden">
                 <div className="h-full bg-gradient-to-r from-green-500 to-emerald-400 rounded-full"
                   style={{ width: `${passRate(selectedInspection.passCount, selectedInspection.failCount)}%` }} />
               </div>
-              <span className="text-sm font-bold text-white">{passRate(selectedInspection.passCount, selectedInspection.failCount)}%</span>
+              <span className="text-sm font-bold text-foreground">{passRate(selectedInspection.passCount, selectedInspection.failCount)}%</span>
             </div>
 
             <div className="grid grid-cols-3 gap-3 mb-5">
               {[
                 { label: "Pass", val: selectedInspection.passCount, color: "text-green-400 bg-green-500/10 border-green-500/20" },
                 { label: "Fail", val: selectedInspection.failCount, color: "text-red-400 bg-red-500/10 border-red-500/20" },
-                { label: "N/A", val: selectedInspection.naCount, color: "text-muted bg-white/5 border-border-custom" },
+                { label: "N/A", val: selectedInspection.naCount, color: "text-muted bg-elevated border-border-custom" },
               ].map(({ label, val, color }) => (
                 <div key={label} className={`rounded-md border p-3 text-center ${color}`}>
                   <p className="text-xl font-bold">{val}</p>
@@ -886,7 +886,7 @@ export default function QualityPage() {
                   {activeInspectionItems.map((item) => (
                     <div key={item.id} className="p-3 rounded-lg bg-elevated border border-border-custom flex flex-col md:flex-row md:items-center justify-between gap-3 text-left">
                       <div className="text-left">
-                        <p className="text-xs text-white font-semibold">{item.sequence}. {item.description}</p>
+                        <p className="text-xs text-foreground font-semibold">{item.sequence}. {item.description}</p>
                         <p className="text-[10px] text-muted mt-0.5">Criteria: {item.criteria}</p>
                       </div>
                       <div className="flex gap-1.5 shrink-0">
@@ -903,7 +903,7 @@ export default function QualityPage() {
                                     : res === "Fail"
                                     ? "bg-red-500/20 border-red-500 text-red-400"
                                     : "bg-zinc-500/20 border-zinc-500 text-muted"
-                                  : "bg-white/5 border-border-custom text-muted hover:text-foreground"
+                                  : "bg-elevated border-border-custom text-muted hover:text-foreground"
                               }`}
                             >
                               {res}
@@ -931,7 +931,7 @@ export default function QualityPage() {
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-card border border-border-custom rounded-lg w-full max-w-md border border-border-custom rounded-md p-6 space-y-4 text-left">
             <div>
-              <h3 className="text-sm font-extrabold text-white">Start Site Inspection</h3>
+              <h3 className="text-sm font-extrabold text-foreground">Start Site Inspection</h3>
               <p className="text-xs text-muted mt-1">Initiate a quality control verification event.</p>
             </div>
             <div className="space-y-3">
@@ -940,11 +940,11 @@ export default function QualityPage() {
                 <select
                   value={inspForm.checklistId}
                   onChange={(e) => setInspForm(prev => ({ ...prev, checklistId: e.target.value }))}
-                  className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none focus:border-secondary font-semibold"
+                  className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none focus:border-secondary font-semibold"
                 >
                   <option value="">-- Choose Template --</option>
                   {checklists.map(cl => (
-                    <option key={cl.id} value={cl.id} className="bg-card text-white">{cl.title} ({cl.isCode})</option>
+                    <option key={cl.id} value={cl.id} className="bg-card text-foreground">{cl.title} ({cl.isCode})</option>
                   ))}
                 </select>
               </div>
@@ -955,7 +955,7 @@ export default function QualityPage() {
                   placeholder="Floor 3 Grid C-D"
                   value={inspForm.zone}
                   onChange={(e) => setInspForm(prev => ({ ...prev, zone: e.target.value }))}
-                  className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none focus:border-secondary"
+                  className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none focus:border-secondary"
                 />
               </div>
               <div>
@@ -965,12 +965,12 @@ export default function QualityPage() {
                   value={inspForm.overallRemarks}
                   onChange={(e) => setInspForm(prev => ({ ...prev, overallRemarks: e.target.value }))}
                   rows={2}
-                  className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none focus:border-secondary"
+                  className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none focus:border-secondary"
                 />
               </div>
             </div>
             <div className="flex gap-3 justify-end pt-2">
-              <button onClick={() => setShowInspForm(false)} className="px-4 py-2 rounded-md border border-border-custom text-xs font-bold hover:bg-white/[0.05] cursor-pointer">Cancel</button>
+              <button onClick={() => setShowInspForm(false)} className="px-4 py-2 rounded-md border border-border-custom text-xs font-bold hover:bg-elevated cursor-pointer">Cancel</button>
               <button onClick={handleCreateInspection} className="bg-primary hover:opacity-90 text-white px-5 py-2 rounded-md text-xs font-bold cursor-pointer">Start Inspection</button>
             </div>
           </div>
@@ -982,7 +982,7 @@ export default function QualityPage() {
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-card border border-border-custom rounded-lg w-full max-w-md border border-border-custom rounded-md p-6 space-y-4 text-left">
             <div>
-              <h3 className="text-sm font-extrabold text-white">Raise Non-Conformance Report (NCR)</h3>
+              <h3 className="text-sm font-extrabold text-foreground">Raise Non-Conformance Report (NCR)</h3>
               <p className="text-xs text-muted mt-1">Issue a formal quality deviation report.</p>
             </div>
             <div className="space-y-3">
@@ -993,7 +993,7 @@ export default function QualityPage() {
                   placeholder="Shuttering misalignment >10mm"
                   value={ncrForm.title}
                   onChange={(e) => setNcrForm(prev => ({ ...prev, title: e.target.value }))}
-                  className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none focus:border-secondary"
+                  className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none focus:border-secondary"
                 />
               </div>
               <div>
@@ -1003,7 +1003,7 @@ export default function QualityPage() {
                   value={ncrForm.description}
                   onChange={(e) => setNcrForm(prev => ({ ...prev, description: e.target.value }))}
                   rows={2}
-                  className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none focus:border-secondary"
+                  className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none focus:border-secondary"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -1012,11 +1012,11 @@ export default function QualityPage() {
                   <select
                     value={ncrForm.severity}
                     onChange={(e) => setNcrForm(prev => ({ ...prev, severity: e.target.value as any }))}
-                    className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none focus:border-secondary font-semibold"
+                    className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none focus:border-secondary font-semibold"
                   >
-                    <option value="Minor" className="bg-card text-white">Minor</option>
-                    <option value="Major" className="bg-card text-white">Major</option>
-                    <option value="Critical" className="bg-card text-white">Critical</option>
+                    <option value="Minor" className="bg-card text-foreground">Minor</option>
+                    <option value="Major" className="bg-card text-foreground">Major</option>
+                    <option value="Critical" className="bg-card text-foreground">Critical</option>
                   </select>
                 </div>
                 <div>
@@ -1025,13 +1025,13 @@ export default function QualityPage() {
                     type="date"
                     value={ncrForm.dueDate}
                     onChange={(e) => setNcrForm(prev => ({ ...prev, dueDate: e.target.value }))}
-                    className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none focus:border-secondary"
+                    className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none focus:border-secondary"
                   />
                 </div>
               </div>
             </div>
             <div className="flex gap-3 justify-end pt-2">
-              <button onClick={() => setShowNCRForm(false)} className="px-4 py-2 rounded-md border border-border-custom text-xs font-bold hover:bg-white/[0.05] cursor-pointer">Cancel</button>
+              <button onClick={() => setShowNCRForm(false)} className="px-4 py-2 rounded-md border border-border-custom text-xs font-bold hover:bg-elevated cursor-pointer">Cancel</button>
               <button onClick={handleCreateNCR} className="bg-primary hover:opacity-90 text-white px-5 py-2 rounded-md text-xs font-bold cursor-pointer">Raise NCR</button>
             </div>
           </div>
@@ -1043,7 +1043,7 @@ export default function QualityPage() {
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-card border border-border-custom rounded-lg w-full max-w-md border border-border-custom rounded-md p-6 space-y-4 text-left">
             <div>
-              <h3 className="text-sm font-extrabold text-white">Log Material Lab Test</h3>
+              <h3 className="text-sm font-extrabold text-foreground">Log Material Lab Test</h3>
               <p className="text-xs text-muted mt-1">Record on-site / lab compressive, slump, or soil test results.</p>
             </div>
             <div className="space-y-3">
@@ -1055,7 +1055,7 @@ export default function QualityPage() {
                     placeholder="Cube Test"
                     value={testForm.type}
                     onChange={(e) => setTestForm(prev => ({ ...prev, type: e.target.value }))}
-                    className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none focus:border-secondary"
+                    className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none focus:border-secondary"
                   />
                 </div>
                 <div>
@@ -1065,7 +1065,7 @@ export default function QualityPage() {
                     placeholder="Concrete M25"
                     value={testForm.material}
                     onChange={(e) => setTestForm(prev => ({ ...prev, material: e.target.value }))}
-                    className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none focus:border-secondary font-semibold"
+                    className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none focus:border-secondary font-semibold"
                   />
                 </div>
               </div>
@@ -1077,7 +1077,7 @@ export default function QualityPage() {
                     step="0.1"
                     value={testForm.value}
                     onChange={(e) => setTestForm(prev => ({ ...prev, value: e.target.value }))}
-                    className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none focus:border-secondary"
+                    className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none focus:border-secondary"
                   />
                 </div>
                 <div>
@@ -1087,7 +1087,7 @@ export default function QualityPage() {
                     placeholder="MPa"
                     value={testForm.unit}
                     onChange={(e) => setTestForm(prev => ({ ...prev, unit: e.target.value }))}
-                    className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none focus:border-secondary"
+                    className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none focus:border-secondary"
                   />
                 </div>
                 <div>
@@ -1097,7 +1097,7 @@ export default function QualityPage() {
                     placeholder="CB-001"
                     value={testForm.sampleRef}
                     onChange={(e) => setTestForm(prev => ({ ...prev, sampleRef: e.target.value }))}
-                    className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none focus:border-secondary"
+                    className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none focus:border-secondary"
                   />
                 </div>
               </div>
@@ -1109,7 +1109,7 @@ export default function QualityPage() {
                     step="0.1"
                     value={testForm.min}
                     onChange={(e) => setTestForm(prev => ({ ...prev, min: e.target.value }))}
-                    className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none focus:border-secondary"
+                    className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none focus:border-secondary"
                   />
                 </div>
                 <div>
@@ -1119,7 +1119,7 @@ export default function QualityPage() {
                     step="0.1"
                     value={testForm.max}
                     onChange={(e) => setTestForm(prev => ({ ...prev, max: e.target.value }))}
-                    className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none focus:border-secondary"
+                    className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none focus:border-secondary"
                   />
                 </div>
               </div>
@@ -1130,12 +1130,12 @@ export default function QualityPage() {
                   placeholder="Floor 3 Column C3"
                   value={testForm.zone}
                   onChange={(e) => setTestForm(prev => ({ ...prev, zone: e.target.value }))}
-                  className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none focus:border-secondary"
+                  className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none focus:border-secondary"
                 />
               </div>
             </div>
             <div className="flex gap-3 justify-end pt-2">
-              <button onClick={() => setShowTestForm(false)} className="px-4 py-2 rounded-md border border-border-custom text-xs font-bold hover:bg-white/[0.05] cursor-pointer">Cancel</button>
+              <button onClick={() => setShowTestForm(false)} className="px-4 py-2 rounded-md border border-border-custom text-xs font-bold hover:bg-elevated cursor-pointer">Cancel</button>
               <button onClick={handleCreateTest} className="bg-primary hover:opacity-90 text-white px-5 py-2 rounded-md text-xs font-bold cursor-pointer">Log Test</button>
             </div>
           </div>

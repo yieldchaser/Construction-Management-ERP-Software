@@ -252,7 +252,7 @@ export default function ToDoPage() {
                       className="h-4.5 w-4.5 rounded border-white/20 bg-transparent text-primary focus:ring-primary/20 accent-primary cursor-pointer"
                     />
                   </td>
-                  <td className={`px-6 py-4 font-semibold text-white ${t.is_completed ? "line-through text-muted" : ""}`}>
+                  <td className={`px-6 py-4 font-semibold text-foreground ${t.is_completed ? "line-through text-muted" : ""}`}>
                     {t.title}
                   </td>
                   <td className="px-5 py-3 text-muted">
@@ -285,7 +285,7 @@ export default function ToDoPage() {
         <div className="fixed inset-0 bg-background/80 flex items-center justify-center z-50 p-4">
           <div className="w-full max-w-md bg-card border border-border-custom rounded-lg overflow-hidden shadow-lg animate-in fade-in zoom-in-95 duration-150 relative">
             <div className="p-6 border-b border-border-custom flex justify-between items-center">
-              <h3 className="text-sm font-bold text-white uppercase tracking-wider">Add New To Do</h3>
+              <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">Add New To Do</h3>
               <button onClick={() => setIsNewTodoOpen(false)} className="text-muted hover:text-foreground font-bold">×</button>
             </div>
 
@@ -383,14 +383,14 @@ export default function ToDoPage() {
               <div className="absolute inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                 <div className="bg-card border border-border-custom w-full max-w-sm rounded-xl p-5 space-y-4">
                   <div className="flex justify-between items-center pb-2 border-b border-border-custom">
-                    <h4 className="text-xs font-bold text-white uppercase tracking-wider">Repeat Settings</h4>
-                    <button type="button" onClick={() => setIsRepeatModalOpen(false)} className="text-muted hover:text-white font-bold">✕</button>
+                    <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">Repeat Settings</h4>
+                    <button type="button" onClick={() => setIsRepeatModalOpen(false)} className="text-muted hover:text-foreground font-bold">✕</button>
                   </div>
 
                   <div className="space-y-4 text-xs">
                     {/* Repeat Types */}
                     <div className="flex gap-4">
-                      <label className="flex items-center gap-2 cursor-pointer text-muted hover:text-white select-none">
+                      <label className="flex items-center gap-2 cursor-pointer text-muted hover:text-foreground select-none">
                         <input
                           type="radio"
                           name="repeatType"
@@ -400,7 +400,7 @@ export default function ToDoPage() {
                         />
                         <span>Week Days</span>
                       </label>
-                      <label className="flex items-center gap-2 cursor-pointer text-muted hover:text-white select-none">
+                      <label className="flex items-center gap-2 cursor-pointer text-muted hover:text-foreground select-none">
                         <input
                           type="radio"
                           name="repeatType"
@@ -446,7 +446,7 @@ export default function ToDoPage() {
                     <div className="space-y-3 pt-2 border-t border-border-custom/50">
                       <span className="text-[10px] text-muted uppercase font-bold block">Ends</span>
                       <div className="space-y-2">
-                        <label className="flex items-center gap-2 cursor-pointer text-muted hover:text-white select-none">
+                        <label className="flex items-center gap-2 cursor-pointer text-muted hover:text-foreground select-none">
                           <input
                             type="radio"
                             name="endsOption"
@@ -470,7 +470,7 @@ export default function ToDoPage() {
                             type="date"
                             value={endsDate}
                             onChange={(e) => setEndsDate(e.target.value)}
-                            className="bg-background border border-border-custom rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-primary font-mono"
+                            className="bg-background border border-border-custom rounded px-2 py-1 text-xs text-foreground focus:outline-none focus:border-primary font-mono"
                           />
                         </div>
                       </div>

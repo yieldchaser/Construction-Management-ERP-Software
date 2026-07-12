@@ -85,7 +85,7 @@ export default function WOAmendmentsPage({ params }: { params: { wo_id: string }
         <div className="absolute top-[-10%] right-[-10%] h-[50vw] w-[50vw] rounded-full bg-primary opacity-[0.02] blur-[120px] pointer-events-none" />
         <div className="border-b border-border-custom bg-background px-6 py-3.5 flex items-center justify-between z-10">
           <div>
-            <h1 className="text-sm font-bold text-white uppercase tracking-wider">WO Amendment Version Control</h1>
+            <h1 className="text-sm font-bold text-foreground uppercase tracking-wider">WO Amendment Version Control</h1>
             <p className="text-[10px] text-muted">{wo ? `${wo.wo_number} · ${wo.subcontractor_name}` : woId}</p>
           </div>
           <button onClick={() => setShowModal(true)} className="px-4 py-2 rounded-md bg-primary text-xs font-bold text-white hover:opacity-90 cursor-pointer">+ New Amendment</button>
@@ -112,7 +112,7 @@ export default function WOAmendmentsPage({ params }: { params: { wo_id: string }
                   <div className="mt-2 flex flex-wrap gap-2">
                     {Object.entries(am.amended_fields).map(([key, val]) => (
                       <span key={key} className="bg-white/5 border border-border-custom text-[10px] px-2 py-1 rounded-lg text-zinc-300">
-                        {key}: <span className="font-mono font-bold text-white">{String(val)}</span>
+                        {key}: <span className="font-mono font-bold text-foreground">{String(val)}</span>
                       </span>
                     ))}
                   </div>
@@ -130,21 +130,21 @@ export default function WOAmendmentsPage({ params }: { params: { wo_id: string }
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-card border border-border-custom rounded-lg w-full max-w-md border border-border-custom rounded-md p-6 space-y-4">
             <div>
-              <h3 className="text-sm font-extrabold text-white">New Amendment</h3>
+              <h3 className="text-sm font-extrabold text-foreground">New Amendment</h3>
               <p className="text-xs text-muted mt-1">Record changes to the work order.</p>
             </div>
             <div className="space-y-3">
               <div>
                 <label className="text-[10px] uppercase font-bold text-muted block mb-1">Amended By</label>
-                <input type="text" value={amendedBy} onChange={(e) => setAmendedBy(e.target.value)} className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none" />
+                <input type="text" value={amendedBy} onChange={(e) => setAmendedBy(e.target.value)} className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none" />
               </div>
               <div>
                 <label className="text-[10px] uppercase font-bold text-muted block mb-1">Amended Fields (JSON)</label>
-                <textarea value={fieldsJson} onChange={(e) => setFieldsJson(e.target.value)} rows={3} className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none font-mono" />
+                <textarea value={fieldsJson} onChange={(e) => setFieldsJson(e.target.value)} rows={3} className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none font-mono" />
               </div>
               <div>
                 <label className="text-[10px] uppercase font-bold text-muted block mb-1">Reason</label>
-                <textarea value={reason} onChange={(e) => setReason(e.target.value)} rows={2} className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none" />
+                <textarea value={reason} onChange={(e) => setReason(e.target.value)} rows={2} className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none" />
               </div>
             </div>
             <div className="flex gap-3 justify-end pt-2">

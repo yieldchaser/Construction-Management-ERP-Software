@@ -126,11 +126,11 @@ export default function LabourPage() {
         <div className="absolute top-[-10%] right-[-10%] h-[50vw] w-[50vw] rounded-full bg-primary opacity-[0.02] blur-[120px] pointer-events-none" />
         <div className="border-b border-border-custom bg-background px-6 py-3.5 flex items-center justify-between z-10">
           <div>
-            <h1 className="text-sm font-bold text-white uppercase tracking-wider">Labour Management</h1>
+            <h1 className="text-sm font-bold text-foreground uppercase tracking-wider">Labour Management</h1>
             <p className="text-[10px] text-muted">Contractor reliability · BOCW compliance · Muster rolls</p>
           </div>
           {activeTab === "muster" && <button onClick={() => setShowMusterModal(true)} className="px-4 py-2 rounded-md bg-primary text-xs font-bold text-white hover:opacity-90 cursor-pointer">+ Add Muster</button>}
-          {activeTab === "bocw" && <button onClick={handleBOCWExport} className="px-4 py-2 rounded-md border border-border-custom text-xs font-bold hover:bg-white/[0.05] cursor-pointer">Export CSV</button>}
+          {activeTab === "bocw" && <button onClick={handleBOCWExport} className="px-4 py-2 rounded-md border border-border-custom text-xs font-bold hover:bg-elevated cursor-pointer">Export CSV</button>}
         </div>
 
         <div className="flex-1 overflow-y-auto p-6 z-10">
@@ -145,7 +145,7 @@ export default function LabourPage() {
                   <div key={r.id} className="bg-card border border-border-custom rounded-lg p-5 rounded-lg border border-border-custom">
                     <div className="flex items-start justify-between">
                       <div>
-                        <h3 className="text-sm font-bold text-white">{r.contractor_name}</h3>
+                        <h3 className="text-sm font-bold text-foreground">{r.contractor_name}</h3>
                         <p className="text-[10px] text-muted">{r.period_start?.split("T")[0]} – {r.period_end?.split("T")[0]}</p>
                       </div>
                       <div className="text-right">
@@ -188,8 +188,8 @@ export default function LabourPage() {
                   <thead><tr className="border-b border-border-custom text-muted"><th className="px-5 py-3 font-bold">Contractor</th><th className="px-5 py-3 font-bold">Month</th><th className="px-5 py-3 font-bold text-right">Workers</th><th className="px-5 py-3 font-bold text-right">Wages Paid</th><th className="px-5 py-3 font-bold text-right">Contribution</th><th className="px-5 py-3 font-bold">Ack. No.</th></tr></thead>
                   <tbody>
                     {bocw.map((r) => (
-                      <tr key={r.id} className="border-b border-white/[0.02] hover:bg-white/[0.015] transition-all">
-                        <td className="px-5 py-3.5 text-white font-semibold">{r.contractor_name}</td>
+                      <tr key={r.id} className="border-b border-border-custom hover:bg-elevated transition-all">
+                        <td className="px-5 py-3.5 text-foreground font-semibold">{r.contractor_name}</td>
                         <td className="px-5 py-3.5 text-muted">{r.month_year}</td>
                         <td className="px-5 py-3.5 text-right font-mono">{r.workers_count}</td>
                         <td className="px-5 py-3.5 text-right font-mono">₹{r.wages_paid.toLocaleString()}</td>
@@ -214,9 +214,9 @@ export default function LabourPage() {
                   <thead><tr className="border-b border-border-custom text-muted"><th className="px-5 py-3 font-bold">Date</th><th className="px-5 py-3 font-bold">Role</th><th className="px-5 py-3 font-bold text-right">Present</th><th className="px-5 py-3 font-bold text-right">Absent</th><th className="px-5 py-3 font-bold text-right">Hours</th><th className="px-5 py-3 font-bold text-right">OT</th><th className="px-5 py-3 font-bold">Notes</th></tr></thead>
                   <tbody>
                     {muster.map((m) => (
-                      <tr key={m.id} className="border-b border-white/[0.02] hover:bg-white/[0.015] transition-all">
+                      <tr key={m.id} className="border-b border-border-custom hover:bg-elevated transition-all">
                         <td className="px-5 py-3.5 text-zinc-300">{m.date}</td>
-                        <td className="px-5 py-3.5 text-white font-semibold">{m.labor_role}</td>
+                        <td className="px-5 py-3.5 text-foreground font-semibold">{m.labor_role}</td>
                         <td className="px-5 py-3.5 text-right font-mono text-green-400">{m.workers_present}</td>
                         <td className="px-5 py-3.5 text-right font-mono text-red-400">{m.workers_absent}</td>
                         <td className="px-5 py-3.5 text-right font-mono">{m.hours_worked}h</td>
@@ -236,45 +236,45 @@ export default function LabourPage() {
       {showMusterModal && (
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-card border border-border-custom rounded-lg w-full max-w-md border border-border-custom rounded-md p-6 space-y-4">
-            <div><h3 className="text-sm font-extrabold text-white">Add Muster Roll Entry</h3></div>
+            <div><h3 className="text-sm font-extrabold text-foreground">Add Muster Roll Entry</h3></div>
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-[10px] uppercase font-bold text-muted block mb-1">Date</label>
-                  <input type="date" value={musterDate} onChange={(e) => setMusterDate(e.target.value)} className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none" />
+                  <input type="date" value={musterDate} onChange={(e) => setMusterDate(e.target.value)} className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none" />
                 </div>
                 <div>
                   <label className="text-[10px] uppercase font-bold text-muted block mb-1">Labor Role</label>
-                  <select value={musterRole} onChange={(e) => setMusterRole(e.target.value)} className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none"><option>Mason</option><option>Helper</option><option>Supervisor</option><option>Steel Fixer</option><option>Electrician</option></select>
+                  <select value={musterRole} onChange={(e) => setMusterRole(e.target.value)} className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none"><option>Mason</option><option>Helper</option><option>Supervisor</option><option>Steel Fixer</option><option>Electrician</option></select>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-[10px] uppercase font-bold text-muted block mb-1">Present</label>
-                  <input type="number" value={musterPresent} onChange={(e) => setMusterPresent(parseInt(e.target.value) || 0)} className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none" />
+                  <input type="number" value={musterPresent} onChange={(e) => setMusterPresent(parseInt(e.target.value) || 0)} className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none" />
                 </div>
                 <div>
                   <label className="text-[10px] uppercase font-bold text-muted block mb-1">Absent</label>
-                  <input type="number" value={musterAbsent} onChange={(e) => setMusterAbsent(parseInt(e.target.value) || 0)} className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none" />
+                  <input type="number" value={musterAbsent} onChange={(e) => setMusterAbsent(parseInt(e.target.value) || 0)} className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-[10px] uppercase font-bold text-muted block mb-1">Hours Worked</label>
-                  <input type="number" step="0.5" value={musterHours} onChange={(e) => setMusterHours(parseFloat(e.target.value) || 0)} className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none" />
+                  <input type="number" step="0.5" value={musterHours} onChange={(e) => setMusterHours(parseFloat(e.target.value) || 0)} className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none" />
                 </div>
                 <div>
                   <label className="text-[10px] uppercase font-bold text-muted block mb-1">Overtime</label>
-                  <input type="number" step="0.5" value={musterOT} onChange={(e) => setMusterOT(parseFloat(e.target.value) || 0)} className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none" />
+                  <input type="number" step="0.5" value={musterOT} onChange={(e) => setMusterOT(parseFloat(e.target.value) || 0)} className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none" />
                 </div>
               </div>
               <div>
                 <label className="text-[10px] uppercase font-bold text-muted block mb-1">Notes</label>
-                <textarea value={musterNotes} onChange={(e) => setMusterNotes(e.target.value)} rows={2} className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none" />
+                <textarea value={musterNotes} onChange={(e) => setMusterNotes(e.target.value)} rows={2} className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none" />
               </div>
             </div>
             <div className="flex gap-3 justify-end pt-2">
-              <button onClick={() => setShowMusterModal(false)} className="px-4 py-2 rounded-md border border-border-custom text-xs font-bold hover:bg-white/[0.05] cursor-pointer">Cancel</button>
+              <button onClick={() => setShowMusterModal(false)} className="px-4 py-2 rounded-md border border-border-custom text-xs font-bold hover:bg-elevated cursor-pointer">Cancel</button>
               <button onClick={handleMusterSubmit} className="bg-primary hover:opacity-90 text-white px-5 py-2 rounded-md text-xs font-bold cursor-pointer">Save</button>
             </div>
           </div>

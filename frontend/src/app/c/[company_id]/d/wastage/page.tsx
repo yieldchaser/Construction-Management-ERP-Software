@@ -113,7 +113,7 @@ export default function WastagePage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-white">Material Wastage</h1>
+            <h1 className="text-3xl font-bold text-foreground">Material Wastage</h1>
             <p className="text-muted mt-1">Track scrap, offcuts, damage and theft on site</p>
           </div>
           <button
@@ -138,7 +138,7 @@ export default function WastagePage() {
               <div key={r.id} className="bg-white/5 border border-border-custom rounded-lg p-6 hover:bg-white/10 transition-all">
                 <div className="flex items-start justify-between mb-4">
                   <div>
-                    <h3 className="text-white font-semibold">{r.material_name}</h3>
+                    <h3 className="text-foreground font-semibold">{r.material_name}</h3>
                     <p className="text-muted text-xs mt-1">{typeLabels[r.wastage_type] || r.wastage_type} • {r.unit}</p>
                   </div>
                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[r.status]}`}>
@@ -148,11 +148,11 @@ export default function WastagePage() {
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-muted">Quantity</span>
-                    <span className="text-white font-medium">{Number(r.quantity).toLocaleString()}</span>
+                    <span className="text-foreground font-medium">{Number(r.quantity).toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted">Est. Value</span>
-                    <span className="text-white font-medium">₹{Number(r.estimated_value).toLocaleString()}</span>
+                    <span className="text-foreground font-medium">₹{Number(r.estimated_value).toLocaleString()}</span>
                   </div>
                   {r.reason && (
                     <div>
@@ -187,16 +187,16 @@ export default function WastagePage() {
         {showModal && (
           <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
             <div className="bg-elevated border border-border-custom rounded-lg p-6 w-full max-w-lg">
-              <h2 className="text-xl font-bold text-white mb-4">Record Material Wastage</h2>
+              <h2 className="text-xl font-bold text-foreground mb-4">Record Material Wastage</h2>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="block text-xs font-medium text-muted mb-1">Material Name</label>
-                  <input type="text" required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-white" value={form.material_name} onChange={(e) => setForm({...form, material_name: e.target.value})} />
+                  <input type="text" required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-foreground" value={form.material_name} onChange={(e) => setForm({...form, material_name: e.target.value})} />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-medium text-muted mb-1">Type</label>
-                    <select className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-white" value={form.wastage_type} onChange={(e) => setForm({...form, wastage_type: e.target.value})}>
+                    <select className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-foreground" value={form.wastage_type} onChange={(e) => setForm({...form, wastage_type: e.target.value})}>
                       <option value="scrap">Scrap</option>
                       <option value="offcut">Offcut</option>
                       <option value="damaged">Damaged</option>
@@ -206,30 +206,30 @@ export default function WastagePage() {
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-muted mb-1">Quantity</label>
-                    <input type="number" required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-white" value={form.quantity} onChange={(e) => setForm({...form, quantity: parseFloat(e.target.value)})} />
+                    <input type="number" required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-foreground" value={form.quantity} onChange={(e) => setForm({...form, quantity: parseFloat(e.target.value)})} />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-medium text-muted mb-1">Unit</label>
-                    <input type="text" required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-white" value={form.unit} onChange={(e) => setForm({...form, unit: e.target.value})} />
+                    <input type="text" required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-foreground" value={form.unit} onChange={(e) => setForm({...form, unit: e.target.value})} />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-muted mb-1">Est. Value (₹)</label>
-                    <input type="number" required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-white" value={form.estimated_value} onChange={(e) => setForm({...form, estimated_value: parseFloat(e.target.value)})} />
+                    <input type="number" required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-foreground" value={form.estimated_value} onChange={(e) => setForm({...form, estimated_value: parseFloat(e.target.value)})} />
                   </div>
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-muted mb-1">Reported By</label>
-                  <input type="text" required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-white" value={form.reported_by} onChange={(e) => setForm({...form, reported_by: e.target.value})} />
+                  <input type="text" required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-foreground" value={form.reported_by} onChange={(e) => setForm({...form, reported_by: e.target.value})} />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-muted mb-1">Reason</label>
-                  <textarea className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-white" value={form.reason} onChange={(e) => setForm({...form, reason: e.target.value})} />
+                  <textarea className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-foreground" value={form.reason} onChange={(e) => setForm({...form, reason: e.target.value})} />
                 </div>
                 <div className="flex gap-3 pt-2">
                   <button type="submit" className="flex-1 px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-md text-sm font-semibold">Record Wastage</button>
-                  <button type="button" onClick={() => { setShowModal(false); setMessage(""); }} className="px-4 py-2 bg-white/10 hover:bg-white/15 text-white rounded-md text-sm font-semibold">Cancel</button>
+                  <button type="button" onClick={() => { setShowModal(false); setMessage(""); }} className="px-4 py-2 bg-white/10 hover:bg-white/15 text-foreground rounded-md text-sm font-semibold">Cancel</button>
                 </div>
               </form>
             </div>

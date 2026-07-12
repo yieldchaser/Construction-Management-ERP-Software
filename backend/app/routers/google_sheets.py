@@ -5,8 +5,9 @@ a PayrollRun's PayrollLineItem rows into a live Google Sheet. Other report types
 are intentionally out of scope for this pass.
 
 Notes / follow-ups:
-- Tokens are stored as-is on GoogleSheetsConnection. Encrypting them at rest is a
-  tracked follow-up; this module never logs token values.
+- access_token / refresh_token are encrypted at rest (app/crypto.py, Fernet)
+  before being written to GoogleSheetsConnection, and decrypted here right
+  before use. This module never logs token values.
 - The OAuth `state` is a short-lived signed JWT (reusing app.auth.create_access_token
   + the same SECRET_KEY/ALGORITHM) so the company_id round-tripped through Google
   cannot be tampered with.
@@ -23,6 +24,7 @@ from sqlalchemy.orm import Session
 
 from app.auth import create_access_token, get_company_membership, get_current_user
 from app.config import settings
+from app.crypto import decrypt_token, encrypt_token
 from app.database import get_db
 from app import models
 
@@ -96,6 +98,18 @@ def _verify_state(state: str) -> tuple[uuid.UUID, Optional[uuid.UUID]]:
     return company_id, user_id
 
 
+def _store_encrypted(*, missing_key_detail: str, encrypt_fn) -> str:
+    """Run an encrypt_token() call, turning a missing/invalid
+    TOKEN_ENCRYPTION_KEY into a clear HTTP error instead of a raw 500."""
+    try:
+        return encrypt_fn()
+    except RuntimeError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=missing_key_detail,
+        ) from exc
+
+
 def _valid_access_token(connection: models.GoogleSheetsConnection) -> str:
     """Return a usable access token, refreshing it via the refresh_token grant
     when the stored one is missing or expired."""
@@ -109,9 +123,10 @@ def _valid_access_token(connection: models.GoogleSheetsConnection) -> str:
         and expiry - timedelta(seconds=60) > now
     )
     if still_valid:
-        return connection.access_token
+        return decrypt_token(connection.access_token)
 
-    if not connection.refresh_token:
+    refresh_token = decrypt_token(connection.refresh_token) if connection.refresh_token else None
+    if not refresh_token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Google Sheets access expired; please reconnect",
@@ -122,7 +137,7 @@ def _valid_access_token(connection: models.GoogleSheetsConnection) -> str:
         data={
             "client_id": settings.GOOGLE_SHEETS_CLIENT_ID,
             "client_secret": settings.GOOGLE_SHEETS_CLIENT_SECRET,
-            "refresh_token": connection.refresh_token,
+            "refresh_token": refresh_token,
             "grant_type": "refresh_token",
         },
         timeout=30,
@@ -133,15 +148,22 @@ def _valid_access_token(connection: models.GoogleSheetsConnection) -> str:
             detail="Failed to refresh Google access token",
         )
     tok = resp.json()
-    connection.access_token = tok.get("access_token")
+    new_access_token = tok.get("access_token")
     expires_in = int(tok.get("expires_in", 3600))
     connection.token_expiry = now + timedelta(seconds=expires_in)
-    if not connection.access_token:
+    if not new_access_token:
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail="Google did not return an access token",
         )
-    return connection.access_token
+    connection.access_token = _store_encrypted(
+        missing_key_detail=(
+            "Google Sheets integration is not fully configured on the server "
+            "(missing TOKEN_ENCRYPTION_KEY); cannot store the refreshed token"
+        ),
+        encrypt_fn=lambda: encrypt_token(new_access_token),
+    )
+    return new_access_token
 
 
 # ── Endpoints ────────────────────────────────────────────────────────────────
@@ -240,11 +262,23 @@ def callback(
     if connection is None:
         connection = models.GoogleSheetsConnection(company_id=company_id)
         db.add(connection)
-    connection.access_token = access_token
+    connection.access_token = _store_encrypted(
+        missing_key_detail=(
+            "Google Sheets integration is not fully configured on the server "
+            "(missing TOKEN_ENCRYPTION_KEY); cannot store the access token"
+        ),
+        encrypt_fn=lambda: encrypt_token(access_token),
+    )
     # Google only returns a refresh_token on first consent; keep the existing one
     # if this grant did not include a new one.
     if refresh_token:
-        connection.refresh_token = refresh_token
+        connection.refresh_token = _store_encrypted(
+            missing_key_detail=(
+                "Google Sheets integration is not fully configured on the server "
+                "(missing TOKEN_ENCRYPTION_KEY); cannot store the refresh token"
+            ),
+            encrypt_fn=lambda: encrypt_token(refresh_token),
+        )
     connection.token_expiry = token_expiry
     if user_id:
         connection.connected_by_user_id = user_id

@@ -518,7 +518,7 @@ export default function LibraryHubPage() {
                       <td className="px-6 py-4 text-muted font-bold whitespace-nowrap">{formatLibraryCell(item.party_id_custom)}</td>
                       <td className="px-6 py-4 font-semibold text-foreground whitespace-nowrap">{formatLibraryCell(item.name)}</td>
                       <td className="px-5 py-3 whitespace-nowrap">
-                        <span className="bg-white/5 text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider text-zinc-300">
+                        <span className="bg-elevated text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider text-zinc-300">
                           {formatLibraryCell(item.party_type)}
                         </span>
                       </td>

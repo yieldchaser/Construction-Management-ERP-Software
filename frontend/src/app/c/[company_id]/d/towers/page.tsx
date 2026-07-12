@@ -136,7 +136,7 @@ export default function TowersPage() {
 
         <div className="border-b border-border-custom bg-background px-6 py-3.5 flex items-center justify-between z-10">
           <div>
-            <h1 className="text-sm font-bold text-white uppercase tracking-wider">Tower & Phase Management</h1>
+            <h1 className="text-sm font-bold text-foreground uppercase tracking-wider">Tower & Phase Management</h1>
             <p className="text-[10px] text-muted">Multi-tower P&L tracking · Budget per tower/phase</p>
           </div>
           <button onClick={() => { resetForm(); setShowForm(true); }} className="px-4 py-2 rounded-md bg-primary text-xs font-bold text-white hover:opacity-90 cursor-pointer">+ New Tower</button>
@@ -152,7 +152,7 @@ export default function TowersPage() {
                   <div key={t.id} className="bg-card border border-border-custom rounded-lg border border-border-custom rounded-lg p-5 space-y-3">
                     <div className="flex items-center justify-between">
                       <div>
-                        <h3 className="text-xs font-extrabold text-white uppercase tracking-wider">{t.tower_name}</h3>
+                        <h3 className="text-xs font-extrabold text-foreground uppercase tracking-wider">{t.tower_name}</h3>
                         <p className="text-[10px] text-muted">Code: {t.tower_code} · {t.status}</p>
                       </div>
                       <div className="flex gap-1">
@@ -161,9 +161,9 @@ export default function TowersPage() {
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-2 text-[10px]">
-                      <div><span className="text-muted block">Budget</span><span className="text-white font-mono font-bold">₹{fmt(t.budget)}</span></div>
-                      <div><span className="text-muted block">Start</span><span className="text-white font-mono">{t.start_date ? t.start_date.split("T")[0] : "-"}</span></div>
-                      <div><span className="text-muted block">End</span><span className="text-white font-mono">{t.end_date ? t.end_date.split("T")[0] : "-"}</span></div>
+                      <div><span className="text-muted block">Budget</span><span className="text-foreground font-mono font-bold">₹{fmt(t.budget)}</span></div>
+                      <div><span className="text-muted block">Start</span><span className="text-foreground font-mono">{t.start_date ? t.start_date.split("T")[0] : "-"}</span></div>
+                      <div><span className="text-muted block">End</span><span className="text-foreground font-mono">{t.end_date ? t.end_date.split("T")[0] : "-"}</span></div>
                     </div>
                   </div>
                 ))}
@@ -191,7 +191,7 @@ export default function TowersPage() {
                     <tbody>
                       {pnl.map((p) => (
                         <tr key={p.tower_id} className="border-b border-white/[0.02] hover:bg-white/[0.015] transition-all">
-                          <td className="px-5 py-3.5 text-white font-semibold">{p.tower_name} <span className="text-muted">({p.tower_code})</span></td>
+                          <td className="px-5 py-3.5 text-foreground font-semibold">{p.tower_name} <span className="text-muted">({p.tower_code})</span></td>
                           <td className="px-5 py-3.5 text-right font-mono text-zinc-300">₹{fmt(p.total_po_value)}</td>
                           <td className="px-5 py-3.5 text-right font-mono text-zinc-300">₹{fmt(p.total_wo_value)}</td>
                           <td className="px-5 py-3.5 text-right font-mono text-primary">₹{fmt(p.total_billed)}</td>
@@ -215,21 +215,21 @@ export default function TowersPage() {
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-background border border-border-custom rounded-lg w-full max-w-md shadow-2xl p-6 space-y-4 text-xs font-sans max-h-[85vh] overflow-y-auto">
             <div className="flex justify-between items-center border-b border-border-custom pb-2">
-              <h3 className="text-xs font-extrabold text-white">{editingId ? "Edit Tower / Phase" : "New Tower / Phase"}</h3>
+              <h3 className="text-xs font-extrabold text-foreground">{editingId ? "Edit Tower / Phase" : "New Tower / Phase"}</h3>
               <button onClick={resetForm} className="text-muted hover:text-foreground">✕</button>
             </div>
             <div className="space-y-3">
               <div className="space-y-1">
                 <label className="text-muted font-bold">Tower Name</label>
-                <input type="text" value={formName} onChange={(e) => setFormName(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-white" placeholder="e.g. Tower A" />
+                <input type="text" value={formName} onChange={(e) => setFormName(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground" placeholder="e.g. Tower A" />
               </div>
               <div className="space-y-1">
                 <label className="text-muted font-bold">Tower Code</label>
-                <input type="text" value={formCode} onChange={(e) => setFormCode(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-white" placeholder="e.g. TA" />
+                <input type="text" value={formCode} onChange={(e) => setFormCode(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground" placeholder="e.g. TA" />
               </div>
               <div className="space-y-1">
                 <label className="text-muted font-bold">Status</label>
-                <select value={formStatus} onChange={(e) => setFormStatus(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-white">
+                <select value={formStatus} onChange={(e) => setFormStatus(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground">
                   <option value="Ongoing">Ongoing</option>
                   <option value="Completed">Completed</option>
                   <option value="On Hold">On Hold</option>
@@ -238,16 +238,16 @@ export default function TowersPage() {
               </div>
               <div className="space-y-1">
                 <label className="text-muted font-bold">Tower Budget (INR)</label>
-                <input type="number" value={formBudget} onChange={(e) => setFormBudget(parseFloat(e.target.value) || 0)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-white font-mono" />
+                <input type="number" value={formBudget} onChange={(e) => setFormBudget(parseFloat(e.target.value) || 0)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground font-mono" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <label className="text-muted font-bold">Start Date</label>
-                  <input type="date" value={formStart} onChange={(e) => setFormStart(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-white" />
+                  <input type="date" value={formStart} onChange={(e) => setFormStart(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground" />
                 </div>
                 <div className="space-y-1">
                   <label className="text-muted font-bold">End Date</label>
-                  <input type="date" value={formEnd} onChange={(e) => setFormEnd(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-white" />
+                  <input type="date" value={formEnd} onChange={(e) => setFormEnd(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground" />
                 </div>
               </div>
             </div>

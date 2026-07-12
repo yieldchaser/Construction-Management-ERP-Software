@@ -204,7 +204,7 @@ export default function DPRPage() {
       <main className="flex-1 flex flex-col overflow-hidden">
         <header className="h-16 border-b border-border-custom px-8 flex items-center justify-between bg-card shrink-0">
           <div className="flex items-center gap-4">
-            <h1 className="text-sm font-bold text-white uppercase tracking-wider">Project Daily Progress Report (DPR)</h1>
+            <h1 className="text-sm font-bold text-foreground uppercase tracking-wider">Project Daily Progress Report (DPR)</h1>
             <span className="h-4 w-px bg-white/10" />
             <span className="text-xs font-medium text-muted">SiteFlow daily feed</span>
           </div>
@@ -252,7 +252,7 @@ export default function DPRPage() {
                       <span>Weather: <strong className="text-muted">{log.weather}</strong> · {new Date(log.dpr_date).toLocaleDateString()}</span>
                     </div>
                     <div className="border-l-2 border-primary pl-3 my-2">
-                      <p className="text-white text-xs font-semibold">Qty Executed: {log.executed_qty}</p>
+                      <p className="text-foreground text-xs font-semibold">Qty Executed: {log.executed_qty}</p>
                       {log.notes && <p className="text-muted mt-1">{log.notes}</p>}
                     </div>
                     {log.issues && (
@@ -274,7 +274,7 @@ export default function DPRPage() {
           <div className="bg-background border border-border-custom rounded-lg w-full max-w-lg shadow-2xl overflow-hidden flex flex-col">
             <div className="px-6 py-4 border-b border-border-custom flex items-center justify-between">
               <div>
-                <h3 className="text-sm font-extrabold text-white">Create Daily Progress Report (DPR)</h3>
+                <h3 className="text-sm font-extrabold text-foreground">Create Daily Progress Report (DPR)</h3>
                 <p className="text-[10px] text-muted">Log task physical status, workers, and consumption</p>
               </div>
               <button onClick={() => { setIsCreateDPROpen(false); setMessage(""); }} className="text-muted hover:text-foreground">✕</button>
@@ -292,7 +292,7 @@ export default function DPRPage() {
                 <select
                   value={selectedTaskId}
                   onChange={(e) => setSelectedTaskId(e.target.value)}
-                  className="w-full bg-input border border-border-custom rounded-lg p-2 text-white"
+                  className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground"
                 >
                   {tasks.map(t => (
                     <option key={t.id} value={t.id}>{t.name} ({t.status})</option>
@@ -302,7 +302,7 @@ export default function DPRPage() {
 
               <div className="space-y-1">
                 <label className="text-muted">Reported By</label>
-                <input type="text" value={reportedBy} onChange={(e) => setReportedBy(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-white" placeholder="e.g. Er. Suresh R (PM)" />
+                <input type="text" value={reportedBy} onChange={(e) => setReportedBy(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground" placeholder="e.g. Er. Suresh R (PM)" />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -317,18 +317,18 @@ export default function DPRPage() {
                       📐 Open M.B. Sheet
                     </button>
                   </div>
-                  <input type="number" step="0.01" value={executedQty} onChange={(e) => setExecutedQty(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-white" placeholder="e.g. 45" />
+                  <input type="number" step="0.01" value={executedQty} onChange={(e) => setExecutedQty(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground" placeholder="e.g. 45" />
                 </div>
                 <div className="space-y-1">
                   <label className="text-muted">Workers Deployed</label>
-                  <input type="number" value={workersDeployed} onChange={(e) => setWorkersDeployed(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-white" placeholder="e.g. 15" />
+                  <input type="number" value={workersDeployed} onChange={(e) => setWorkersDeployed(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground" placeholder="e.g. 15" />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <label className="text-muted">Weather Condition</label>
-                  <select value={weather} onChange={(e) => setWeather(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-white">
+                  <select value={weather} onChange={(e) => setWeather(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground">
                     <option value="Clear">Clear</option>
                     <option value="Rainy">Rainy</option>
                     <option value="Overcast">Overcast</option>
@@ -336,18 +336,18 @@ export default function DPRPage() {
                 </div>
                 <div className="space-y-1">
                   <label className="text-muted">Cement Consumed (Bags)</label>
-                  <input type="number" value={cementConsumed} onChange={(e) => setCementConsumed(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-white" placeholder="e.g. 45" />
+                  <input type="number" value={cementConsumed} onChange={(e) => setCementConsumed(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground" placeholder="e.g. 45" />
                 </div>
               </div>
 
               <div className="space-y-1">
                 <label className="text-muted">General Notes</label>
-                <textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-white resize-none" placeholder="Cast grid concrete..." />
+                <textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground resize-none" placeholder="Cast grid concrete..." />
               </div>
 
               <div className="space-y-1">
                 <label className="text-muted">Site Issues / Blockers</label>
-                <input type="text" value={issues} onChange={(e) => setIssues(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-white" placeholder="Water logging, shortage of steel..." />
+                <input type="text" value={issues} onChange={(e) => setIssues(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground" placeholder="Water logging, shortage of steel..." />
               </div>
 
               {/* Photo uploading slots simulator */}
@@ -380,7 +380,7 @@ export default function DPRPage() {
           <div className="bg-background border border-border-custom rounded-lg w-full max-w-3xl shadow-2xl overflow-hidden flex flex-col">
             <div className="px-6 py-4 border-b border-border-custom flex items-center justify-between">
               <div>
-                <h3 className="text-sm font-extrabold text-white">📐 Measurement Book (M.B.) Takeoff Sheet</h3>
+                <h3 className="text-sm font-extrabold text-foreground">📐 Measurement Book (M.B.) Takeoff Sheet</h3>
                 <p className="text-[10px] text-muted">Calculate quantities by structural dimensions (N × L × W × H)</p>
               </div>
               <button onClick={() => setShowMBModal(false)} className="text-muted hover:text-foreground">✕</button>
@@ -414,7 +414,7 @@ export default function DPRPage() {
                               setMbRows(next);
                             }}
                             placeholder="e.g. Column C1"
-                            className="bg-input border border-border-custom rounded px-2 py-1 text-white w-full"
+                            className="bg-input border border-border-custom rounded px-2 py-1 text-foreground w-full"
                           />
                         </td>
                         <td className="px-4 py-2">
@@ -426,7 +426,7 @@ export default function DPRPage() {
                               next[idx].nos = parseFloat(e.target.value) || 0;
                               setMbRows(next);
                             }}
-                            className="bg-input border border-border-custom rounded px-2 py-1 text-white w-16"
+                            className="bg-input border border-border-custom rounded px-2 py-1 text-foreground w-16"
                           />
                         </td>
                         <td className="px-4 py-2">
@@ -438,7 +438,7 @@ export default function DPRPage() {
                               next[idx].l = parseFloat(e.target.value) || 0;
                               setMbRows(next);
                             }}
-                            className="bg-input border border-border-custom rounded px-2 py-1 text-white w-16"
+                            className="bg-input border border-border-custom rounded px-2 py-1 text-foreground w-16"
                           />
                         </td>
                         <td className="px-4 py-2">
@@ -450,7 +450,7 @@ export default function DPRPage() {
                               next[idx].w = parseFloat(e.target.value) || 0;
                               setMbRows(next);
                             }}
-                            className="bg-input border border-border-custom rounded px-2 py-1 text-white w-16"
+                            className="bg-input border border-border-custom rounded px-2 py-1 text-foreground w-16"
                           />
                         </td>
                         <td className="px-4 py-2">
@@ -462,7 +462,7 @@ export default function DPRPage() {
                               next[idx].h = parseFloat(e.target.value) || 0;
                               setMbRows(next);
                             }}
-                            className="bg-input border border-border-custom rounded px-2 py-1 text-white w-16"
+                            className="bg-input border border-border-custom rounded px-2 py-1 text-foreground w-16"
                           />
                         </td>
                         <td className="px-4 py-2 text-right font-mono text-zinc-300">

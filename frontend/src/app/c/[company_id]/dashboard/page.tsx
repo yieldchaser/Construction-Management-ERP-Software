@@ -497,9 +497,9 @@ export default function DashboardPage() {
       {/* Main Workspace Frame */}
       <main className="flex-1 flex flex-col overflow-hidden h-full">
         {/* Top Header */}
-        <header className="h-16 border-b border-border-custom [.light-theme_&]:border-zinc-200 px-6 flex items-center justify-between bg-card [.light-theme_&]:bg-white shrink-0">
+        <header className="h-16 border-b border-border-custom px-6 flex items-center justify-between bg-card shrink-0">
           <div className="flex items-center gap-4">
-            <h1 className="text-base font-bold text-foreground [.light-theme_&]:text-zinc-800 uppercase tracking-wider">
+            <h1 className="text-base font-bold text-foreground uppercase tracking-wider">
               Company Dashboard
             </h1>
           </div>
@@ -508,14 +508,14 @@ export default function DashboardPage() {
             {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
-              className="flex items-center justify-center h-8 w-8 rounded-lg bg-white/[0.04] [.light-theme_&]:bg-zinc-100 border border-border-custom [.light-theme_&]:border-zinc-300 text-muted hover:text-foreground transition-all cursor-pointer"
+              className="flex items-center justify-center h-8 w-8 rounded-lg bg-elevated border border-border-custom text-muted hover:text-foreground transition-all cursor-pointer"
               title="Toggle Theme"
             >
               {isLightTheme ? "🌙" : "☀️"}
             </button>
 
             {/* Tally Connection status dot */}
-            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-elevated [.light-theme_&]:bg-zinc-50 border border-border-custom [.light-theme_&]:border-zinc-300 text-xs text-muted">
+            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-elevated border border-border-custom text-xs text-muted">
               <span className="h-2 w-2 rounded-full bg-success" />
               <span>Tally Agent: {tallySyncStatus}</span>
             </div>
@@ -541,7 +541,7 @@ export default function DashboardPage() {
             {/* Refresh Button */}
             <button
               onClick={() => window.location.reload()}
-              className="flex items-center justify-center h-8 w-8 rounded-lg bg-white/[0.04] [.light-theme_&]:bg-zinc-100 border border-border-custom [.light-theme_&]:border-zinc-300 text-muted hover:text-foreground transition-all cursor-pointer"
+              className="flex items-center justify-center h-8 w-8 rounded-lg bg-elevated border border-border-custom text-muted hover:text-foreground transition-all cursor-pointer"
               title="Refresh Dashboard"
             >
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-4 h-4">
@@ -552,7 +552,7 @@ export default function DashboardPage() {
         </header>
 
         {/* Tab Selector Row (Under Header) */}
-        <div className="flex border-b border-border-custom [.light-theme_&]:border-zinc-200 px-6 bg-card [.light-theme_&]:bg-white shrink-0">
+        <div className="flex border-b border-border-custom px-6 bg-card shrink-0">
           <button
             onClick={() => setOverviewTab("operational")}
             className={`px-4 py-3 text-xs font-bold transition-all border-b-2 -mb-px ${
@@ -625,14 +625,14 @@ export default function DashboardPage() {
                 return (
                   <div className="space-y-6 font-sans">
                     {/* Filters Bar */}
-                    <div className="bg-card [.light-theme_&]:bg-white border border-border-custom [.light-theme_&]:border-zinc-200 rounded-lg p-4 flex flex-wrap gap-4 items-center justify-between transition-all">
+                    <div className="bg-card border border-border-custom rounded-lg p-4 flex flex-wrap gap-4 items-center justify-between transition-all">
                       <div className="flex flex-wrap gap-4 items-center">
                         <div className="space-y-1">
-                          <label className="text-[9px] text-muted [.light-theme_&]:text-zinc-500 uppercase tracking-wider font-bold block">Project Name</label>
+                          <label className="text-[9px] text-muted uppercase tracking-wider font-bold block">Project Name</label>
                           <select 
                             value={selProject}
                             onChange={(e) => setSelProject(e.target.value)}
-                            className="bg-input [.light-theme_&]:bg-zinc-100 border border-border-custom [.light-theme_&]:border-zinc-300 rounded-lg px-3 py-1.5 text-xs text-white [.light-theme_&]:text-zinc-800 focus:outline-none min-w-[150px] transition-all"
+                            className="bg-input border border-border-custom rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-none min-w-[150px] transition-all"
                           >
                             <option value="All">All</option>
                             {projects.map((p) => (
@@ -642,11 +642,11 @@ export default function DashboardPage() {
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-[9px] text-muted [.light-theme_&]:text-zinc-500 uppercase tracking-wider font-bold block">Project Status</label>
+                          <label className="text-[9px] text-muted uppercase tracking-wider font-bold block">Project Status</label>
                           <select 
                             value={selStatus}
                             onChange={(e) => setSelStatus(e.target.value)}
-                            className="bg-input [.light-theme_&]:bg-zinc-100 border border-border-custom [.light-theme_&]:border-zinc-300 rounded-lg px-3 py-1.5 text-xs text-white [.light-theme_&]:text-zinc-800 focus:outline-none min-w-[150px] transition-all"
+                            className="bg-input border border-border-custom rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-none min-w-[150px] transition-all"
                           >
                             <option value="All">All</option>
                             <option value="Ongoing">Ongoing</option>
@@ -657,11 +657,11 @@ export default function DashboardPage() {
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-[9px] text-muted [.light-theme_&]:text-zinc-500 uppercase tracking-wider font-bold block">Project Health</label>
+                          <label className="text-[9px] text-muted uppercase tracking-wider font-bold block">Project Health</label>
                           <select 
                             value={selHealth}
                             onChange={(e) => setSelHealth(e.target.value)}
-                            className="bg-input [.light-theme_&]:bg-zinc-100 border border-border-custom [.light-theme_&]:border-zinc-300 rounded-lg px-3 py-1.5 text-xs text-white [.light-theme_&]:text-zinc-800 focus:outline-none min-w-[150px] transition-all"
+                            className="bg-input border border-border-custom rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-none min-w-[150px] transition-all"
                           >
                             <option value="All">All</option>
                             <option value="Healthy">Healthy</option>
@@ -674,27 +674,27 @@ export default function DashboardPage() {
 
                     {/* Summary Counters Grid */}
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-                      <div className="rounded-md border border-border-custom [.light-theme_&]:border-zinc-200 bg-card [.light-theme_&]:bg-white p-5 flex flex-col justify-center items-center text-center transition-all">
+                      <div className="rounded-md border border-border-custom bg-card p-5 flex flex-col justify-center items-center text-center transition-all">
                         <span className="text-[11px] font-bold text-red-500 [.light-theme_&]:text-red-600 uppercase tracking-wider block mb-1">Not Started Projects</span>
-                        <span className="text-2xl font-bold text-foreground [.light-theme_&]:text-zinc-800">{notStartedCount}</span>
+                        <span className="text-2xl font-bold text-foreground">{notStartedCount}</span>
                       </div>
-                      <div className="rounded-md border border-border-custom [.light-theme_&]:border-zinc-200 bg-card [.light-theme_&]:bg-white p-5 flex flex-col justify-center items-center text-center transition-all">
+                      <div className="rounded-md border border-border-custom bg-card p-5 flex flex-col justify-center items-center text-center transition-all">
                         <span className="text-[11px] font-bold text-success [.light-theme_&]:text-green-600 uppercase tracking-wider block mb-1">Ongoing Projects</span>
-                        <span className="text-2xl font-bold text-foreground [.light-theme_&]:text-zinc-800">{ongoingCount}</span>
+                        <span className="text-2xl font-bold text-foreground">{ongoingCount}</span>
                       </div>
-                      <div className="rounded-md border border-border-custom [.light-theme_&]:border-zinc-200 bg-card [.light-theme_&]:bg-white p-5 flex flex-col justify-center items-center text-center transition-all">
+                      <div className="rounded-md border border-border-custom bg-card p-5 flex flex-col justify-center items-center text-center transition-all">
                         <span className="text-[11px] font-bold text-yellow-500 [.light-theme_&]:text-yellow-600 uppercase tracking-wider block mb-1">Onhold Projects</span>
-                        <span className="text-2xl font-bold text-foreground [.light-theme_&]:text-zinc-800">{onHoldCount}</span>
+                        <span className="text-2xl font-bold text-foreground">{onHoldCount}</span>
                       </div>
-                      <div className="rounded-md border border-border-custom [.light-theme_&]:border-zinc-200 bg-card [.light-theme_&]:bg-white p-5 flex flex-col justify-center items-center text-center transition-all">
-                        <span className="text-[11px] font-bold text-muted [.light-theme_&]:text-zinc-400 uppercase tracking-wider block mb-1">Completed Projects</span>
-                        <span className="text-2xl font-bold text-foreground [.light-theme_&]:text-zinc-800">{completedCount}</span>
+                      <div className="rounded-md border border-border-custom bg-card p-5 flex flex-col justify-center items-center text-center transition-all">
+                        <span className="text-[11px] font-bold text-muted uppercase tracking-wider block mb-1">Completed Projects</span>
+                        <span className="text-2xl font-bold text-foreground">{completedCount}</span>
                       </div>
                     </div>
 
                     {/* Project Health Card */}
-                    <div className="bg-card [.light-theme_&]:bg-white border border-border-custom [.light-theme_&]:border-zinc-200 rounded-lg p-6 transition-all">
-                      <h4 className="text-xs font-bold text-muted [.light-theme_&]:text-zinc-500 uppercase tracking-wider mb-6">Project Health</h4>
+                    <div className="bg-card border border-border-custom rounded-lg p-6 transition-all">
+                      <h4 className="text-xs font-bold text-muted uppercase tracking-wider mb-6">Project Health</h4>
                       <div className="flex flex-col md:flex-row items-center justify-around gap-8">
                         {/* Half donut chart */}
                         <div className="relative w-80 h-40 flex items-center justify-center overflow-visible">
@@ -703,7 +703,6 @@ export default function DashboardPage() {
                             <path
                               d="M 50 150 A 110 110 0 0 1 270 150 L 230 150 A 70 70 0 0 0 90 150 Z"
                               fill="var(--border)"
-                              className="[.light-theme_&]:fill-zinc-100"
                             />
                             {/* Slice 1: Healthy */}
                             {healthyCount > 0 && (
@@ -814,7 +813,7 @@ export default function DashboardPage() {
                               x="160"
                               y="140"
                               fill="currentColor"
-                              className="text-foreground [.light-theme_&]:text-zinc-800 font-extrabold"
+                              className="text-foreground font-extrabold"
                               fontSize="22"
                               textAnchor="middle"
                             >
@@ -835,13 +834,13 @@ export default function DashboardPage() {
                         </div>
 
                         {/* Legend Checklist Table */}
-                        <div className="w-full max-w-sm rounded-lg border border-border-custom [.light-theme_&]:border-zinc-200 bg-white/[0.01] [.light-theme_&]:bg-zinc-50 p-4 space-y-3">
-                          <div className="flex items-center gap-2.5 pb-2 border-b border-border-custom [.light-theme_&]:border-zinc-200 text-xs font-bold text-foreground [.light-theme_&]:text-zinc-800">
+                        <div className="w-full max-w-sm rounded-lg border border-border-custom bg-elevated p-4 space-y-3">
+                          <div className="flex items-center gap-2.5 pb-2 border-b border-border-custom text-xs font-bold text-foreground">
                             <input
                               type="checkbox"
                               checked={true}
                               readOnly
-                              className="rounded border-border-custom [.light-theme_&]:border-zinc-300 text-primary focus:ring-primary h-3.5 w-3.5 cursor-pointer"
+                              className="rounded border-border-custom text-primary focus:ring-primary h-3.5 w-3.5 cursor-pointer"
                             />
                             <span>Project Health</span>
                           </div>
@@ -852,11 +851,11 @@ export default function DashboardPage() {
                                 type="checkbox"
                                 checked={healthyCount > 0}
                                 readOnly
-                                className="rounded border-border-custom [.light-theme_&]:border-zinc-300 text-[#26A69A] focus:ring-[#26A69A] h-3.5 w-3.5 cursor-pointer"
+                                className="rounded border-border-custom text-[#26A69A] focus:ring-[#26A69A] h-3.5 w-3.5 cursor-pointer"
                               />
                               <div className="h-2.5 w-2.5 rounded-full bg-[#26A69A]" />
-                              <span className="text-muted [.light-theme_&]:text-zinc-600 font-medium">Healthy</span>
-                              <strong className="text-foreground [.light-theme_&]:text-zinc-800 font-bold ml-auto">{healthyCount}</strong>
+                              <span className="text-muted font-medium">Healthy</span>
+                              <strong className="text-foreground font-bold ml-auto">{healthyCount}</strong>
                             </div>
 
                             <div className="flex items-center gap-2.5">
@@ -864,11 +863,11 @@ export default function DashboardPage() {
                                 type="checkbox"
                                 checked={warningCount > 0}
                                 readOnly
-                                className="rounded border-border-custom [.light-theme_&]:border-zinc-300 text-[#FFA726] focus:ring-[#FFA726] h-3.5 w-3.5 cursor-pointer"
+                                className="rounded border-border-custom text-[#FFA726] focus:ring-[#FFA726] h-3.5 w-3.5 cursor-pointer"
                               />
                               <div className="h-2.5 w-2.5 rounded-full bg-[#FFA726]" />
-                              <span className="text-muted [.light-theme_&]:text-zinc-600 font-medium">Warning</span>
-                              <strong className="text-foreground [.light-theme_&]:text-zinc-800 font-bold ml-auto">{warningCount}</strong>
+                              <span className="text-muted font-medium">Warning</span>
+                              <strong className="text-foreground font-bold ml-auto">{warningCount}</strong>
                             </div>
 
                             <div className="flex items-center gap-2.5">
@@ -876,11 +875,11 @@ export default function DashboardPage() {
                                 type="checkbox"
                                 checked={criticalCount > 0}
                                 readOnly
-                                className="rounded border-border-custom [.light-theme_&]:border-zinc-300 text-[#EF5350] focus:ring-[#EF5350] h-3.5 w-3.5 cursor-pointer"
+                                className="rounded border-border-custom text-[#EF5350] focus:ring-[#EF5350] h-3.5 w-3.5 cursor-pointer"
                               />
                               <div className="h-2.5 w-2.5 rounded-full bg-[#EF5350]" />
-                              <span className="text-muted [.light-theme_&]:text-zinc-600 font-medium">Critical</span>
-                              <strong className="text-foreground [.light-theme_&]:text-zinc-800 font-bold ml-auto">{criticalCount}</strong>
+                              <span className="text-muted font-medium">Critical</span>
+                              <strong className="text-foreground font-bold ml-auto">{criticalCount}</strong>
                             </div>
                           </div>
                         </div>
@@ -889,19 +888,19 @@ export default function DashboardPage() {
 
                     {/* Attendance & Material Cards */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      <div className="bg-card [.light-theme_&]:bg-white border border-border-custom [.light-theme_&]:border-zinc-200 rounded-lg p-5 flex flex-col justify-between transition-all">
+                      <div className="bg-card border border-border-custom rounded-lg p-5 flex flex-col justify-between transition-all">
                         <div className="space-y-4">
-                          <h4 className="text-xs font-bold text-muted [.light-theme_&]:text-zinc-500 uppercase tracking-wider">Last 7 Days Attendance</h4>
+                          <h4 className="text-xs font-bold text-muted uppercase tracking-wider">Last 7 Days Attendance</h4>
                           <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-1">
-                              <label className="text-[9px] text-muted [.light-theme_&]:text-zinc-500 uppercase tracking-wider font-bold block">Payroll Type</label>
-                              <select className="bg-input [.light-theme_&]:bg-zinc-100 border border-border-custom [.light-theme_&]:border-zinc-300 rounded px-2 py-1 text-[11px] text-white [.light-theme_&]:text-zinc-800 focus:outline-none w-full">
+                              <label className="text-[9px] text-muted uppercase tracking-wider font-bold block">Payroll Type</label>
+                              <select className="bg-input border border-border-custom rounded px-2 py-1 text-[11px] text-foreground focus:outline-none w-full">
                                 <option>All</option>
                               </select>
                             </div>
                             <div className="space-y-1">
-                              <label className="text-[9px] text-muted [.light-theme_&]:text-zinc-500 uppercase tracking-wider font-bold block">Workforce Name</label>
-                              <select className="bg-input [.light-theme_&]:bg-zinc-100 border border-border-custom [.light-theme_&]:border-zinc-300 rounded px-2 py-1 text-[11px] text-white [.light-theme_&]:text-zinc-800 focus:outline-none w-full">
+                              <label className="text-[9px] text-muted uppercase tracking-wider font-bold block">Workforce Name</label>
+                              <select className="bg-input border border-border-custom rounded px-2 py-1 text-[11px] text-foreground focus:outline-none w-full">
                                 <option>All</option>
                               </select>
                             </div>
@@ -927,7 +926,7 @@ export default function DashboardPage() {
                               <div className="h-40 flex items-center justify-center bg-transparent relative overflow-visible">
                                 <svg className="w-full h-full overflow-visible" viewBox="0 0 280 120">
                                   {/* Gridline / Baseline */}
-                                  <line x1="20" y1="90" x2="260" y2="90" stroke="var(--border)" strokeWidth="1" className="[.light-theme_&]:stroke-zinc-200" />
+                                  <line x1="20" y1="90" x2="260" y2="90" stroke="var(--border)" strokeWidth="1" />
                                   
                                   {series.map((day: any, idx: number) => {
                                     const x = 30 + idx * (chartWidth / series.length);
@@ -976,19 +975,19 @@ export default function DashboardPage() {
                         </div>
                       </div>
 
-                      <div className="bg-card [.light-theme_&]:bg-white border border-border-custom [.light-theme_&]:border-zinc-200 rounded-lg p-5 flex flex-col justify-between transition-all">
+                      <div className="bg-card border border-border-custom rounded-lg p-5 flex flex-col justify-between transition-all">
                         <div className="space-y-4">
-                          <h4 className="text-xs font-bold text-muted [.light-theme_&]:text-zinc-500 uppercase tracking-wider">Last 7 Days Material Received</h4>
+                          <h4 className="text-xs font-bold text-muted uppercase tracking-wider">Last 7 Days Material Received</h4>
                           <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-1">
-                              <label className="text-[9px] text-muted [.light-theme_&]:text-zinc-500 uppercase tracking-wider font-bold block">Material Name</label>
-                              <select className="bg-input [.light-theme_&]:bg-zinc-100 border border-border-custom [.light-theme_&]:border-zinc-300 rounded px-2 py-1 text-[11px] text-white [.light-theme_&]:text-zinc-800 focus:outline-none w-full">
+                              <label className="text-[9px] text-muted uppercase tracking-wider font-bold block">Material Name</label>
+                              <select className="bg-input border border-border-custom rounded px-2 py-1 text-[11px] text-foreground focus:outline-none w-full">
                                 <option>All</option>
                               </select>
                             </div>
                             <div className="space-y-1">
-                              <label className="text-[9px] text-muted [.light-theme_&]:text-zinc-500 uppercase tracking-wider font-bold block">Material Category</label>
-                              <select className="bg-input [.light-theme_&]:bg-zinc-100 border border-border-custom [.light-theme_&]:border-zinc-300 rounded px-2 py-1 text-[11px] text-white [.light-theme_&]:text-zinc-800 focus:outline-none w-full">
+                              <label className="text-[9px] text-muted uppercase tracking-wider font-bold block">Material Category</label>
+                              <select className="bg-input border border-border-custom rounded px-2 py-1 text-[11px] text-foreground focus:outline-none w-full">
                                 <option>All</option>
                               </select>
                             </div>
@@ -1013,7 +1012,7 @@ export default function DashboardPage() {
                               <div className="h-40 flex items-center justify-center bg-transparent relative overflow-visible">
                                 <svg className="w-full h-full overflow-visible" viewBox="0 0 280 120">
                                   {/* Gridline / Baseline */}
-                                  <line x1="20" y1="90" x2="260" y2="90" stroke="var(--border)" strokeWidth="1" className="[.light-theme_&]:stroke-zinc-200" />
+                                  <line x1="20" y1="90" x2="260" y2="90" stroke="var(--border)" strokeWidth="1" />
                                   
                                   {series.map((day: any, idx: number) => {
                                     const x = 30 + idx * (chartWidth / series.length);
@@ -1051,11 +1050,11 @@ export default function DashboardPage() {
                     </div>
 
                     {/* Table */}
-                    <div className="bg-card [.light-theme_&]:bg-white border border-border-custom [.light-theme_&]:border-zinc-200 rounded-lg p-5 space-y-4 transition-all">
+                    <div className="bg-card border border-border-custom rounded-lg p-5 space-y-4 transition-all">
                       <div className="flex justify-between items-center">
-                        <h4 className="text-xs font-bold text-muted [.light-theme_&]:text-zinc-500 uppercase tracking-wider">Project Operational Summary Dashboard</h4>
+                        <h4 className="text-xs font-bold text-muted uppercase tracking-wider">Project Operational Summary Dashboard</h4>
                       </div>
-                      <div className="overflow-x-auto rounded-lg border border-border-custom [.light-theme_&]:border-zinc-200">
+                      <div className="overflow-x-auto rounded-lg border border-border-custom">
                         <table className="w-full text-left text-xs border-collapse min-w-[1200px]">
                           <thead>
                             <tr className="bg-[#673AB7] text-white font-semibold text-[11px] tracking-wider uppercase border-b border-[#673AB7]">
@@ -1067,24 +1066,24 @@ export default function DashboardPage() {
                               <th className="px-4 py-3 border-r border-[#7E57C2] font-semibold text-center w-28">Project Health</th>
                               <th className="px-4 py-3 border-r border-[#7E57C2] font-semibold text-center w-28">Start Date</th>
                               <th className="px-4 py-3 border-r border-[#7E57C2] font-semibold text-center w-28">End Date</th>
-                              <th className="px-4 py-3 border-r border-border-custom [.light-theme_&]:border-zinc-200 font-semibold text-right w-24">Progress</th>
+                              <th className="px-4 py-3 border-r border-border-custom font-semibold text-right w-24">Progress</th>
                               <th className="px-4 py-3 border-r border-[#7E57C2] font-semibold">Customer Name</th>
                               <th className="px-4 py-3 font-semibold">Project Stage</th>
                             </tr>
                           </thead>
-                          <tbody className="divide-y divide-border-custom [.light-theme_&]:divide-zinc-200">
+                          <tbody className="divide-y divide-border-custom">
                             {filteredProjList.length === 0 ? (
                               <tr>
                                 <td colSpan={11} className="px-4 py-8 text-center text-muted font-medium">No projects found.</td>
                               </tr>
                             ) : (
                               filteredProjList.map((p, idx) => (
-                                <tr key={p.id} className="hover:bg-white/[0.02] [.light-theme_&]:hover:bg-zinc-50 transition-colors">
-                                  <td className="px-4 py-3 text-center border-r border-border-custom [.light-theme_&]:border-zinc-200 text-muted font-mono">{idx + 1}</td>
-                                  <td className="px-4 py-3 border-r border-border-custom [.light-theme_&]:border-zinc-200 font-bold text-foreground [.light-theme_&]:text-zinc-800">{p.name}</td>
-                                  <td className="px-4 py-3 border-r border-border-custom [.light-theme_&]:border-zinc-200 text-muted [.light-theme_&]:text-zinc-500 font-semibold">{p.category || "-"}</td>
-                                  <td className="px-4 py-3 border-r border-border-custom [.light-theme_&]:border-zinc-200 text-muted [.light-theme_&]:text-zinc-500 font-semibold">{p.keyPersonnel || "-"}</td>
-                                  <td className="px-4 py-3 text-center border-r border-border-custom [.light-theme_&]:border-zinc-200">
+                                <tr key={p.id} className="hover:bg-elevated transition-colors">
+                                  <td className="px-4 py-3 text-center border-r border-border-custom text-muted font-mono">{idx + 1}</td>
+                                  <td className="px-4 py-3 border-r border-border-custom font-bold text-foreground">{p.name}</td>
+                                  <td className="px-4 py-3 border-r border-border-custom text-muted font-semibold">{p.category || "-"}</td>
+                                  <td className="px-4 py-3 border-r border-border-custom text-muted font-semibold">{p.keyPersonnel || "-"}</td>
+                                  <td className="px-4 py-3 text-center border-r border-border-custom">
                                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
                                       p.status === "Ongoing" ? "bg-success/15 text-success border-success/30" :
                                       p.status === "Onhold" ? "bg-yellow-500/15 text-yellow-500 border-yellow-500/30" :
@@ -1094,7 +1093,7 @@ export default function DashboardPage() {
                                       {p.status}
                                     </span>
                                   </td>
-                                  <td className="px-4 py-3 text-center border-r border-border-custom [.light-theme_&]:border-zinc-200">
+                                  <td className="px-4 py-3 text-center border-r border-border-custom">
                                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
                                       p.health === "Healthy" ? "bg-success/15 text-success border-success/30" :
                                       p.health === "Warning" ? "bg-yellow-500/15 text-yellow-500 border-yellow-500/30" :
@@ -1103,11 +1102,11 @@ export default function DashboardPage() {
                                       {p.health}
                                     </span>
                                   </td>
-                                  <td className="px-4 py-3 text-center border-r border-border-custom [.light-theme_&]:border-zinc-200 text-muted [.light-theme_&]:text-zinc-500 font-semibold font-mono">{p.startDate || "-"}</td>
-                                  <td className="px-4 py-3 text-center border-r border-border-custom [.light-theme_&]:border-zinc-200 text-muted [.light-theme_&]:text-zinc-500 font-semibold font-mono">{p.endDate || "-"}</td>
-                                  <td className="px-4 py-3 text-right border-r border-border-custom [.light-theme_&]:border-zinc-200 font-bold text-foreground [.light-theme_&]:text-zinc-800 font-sans">{p.progress.toFixed(2)}%</td>
-                                  <td className="px-4 py-3 border-r border-border-custom [.light-theme_&]:border-zinc-200 text-zinc-400 [.light-theme_&]:text-zinc-600 font-medium">{p.customerName || "-"}</td>
-                                  <td className="px-4 py-3 text-zinc-400 [.light-theme_&]:text-zinc-600 font-medium">{p.projectStage || "-"}</td>
+                                  <td className="px-4 py-3 text-center border-r border-border-custom text-muted font-semibold font-mono">{p.startDate || "-"}</td>
+                                  <td className="px-4 py-3 text-center border-r border-border-custom text-muted font-semibold font-mono">{p.endDate || "-"}</td>
+                                  <td className="px-4 py-3 text-right border-r border-border-custom font-bold text-foreground font-sans">{p.progress.toFixed(2)}%</td>
+                                  <td className="px-4 py-3 border-r border-border-custom text-muted font-medium">{p.customerName || "-"}</td>
+                                  <td className="px-4 py-3 text-muted font-medium">{p.projectStage || "-"}</td>
                                 </tr>
                               ))
                             )}
@@ -1122,11 +1121,11 @@ export default function DashboardPage() {
               {overviewTab === "financial" && (
                 <div className="space-y-6 font-sans">
                   {/* Filters Bar */}
-                  <div className="bg-card [.light-theme_&]:bg-white border border-border-custom [.light-theme_&]:border-zinc-200 rounded-lg p-4 flex flex-wrap gap-4 items-center justify-between transition-all">
+                  <div className="bg-card border border-border-custom rounded-lg p-4 flex flex-wrap gap-4 items-center justify-between transition-all">
                     <div className="flex gap-4 items-center">
                       <div className="space-y-1">
-                        <label className="text-[9px] text-muted [.light-theme_&]:text-zinc-500 uppercase tracking-wider font-bold block">Project Name</label>
-                        <select className="bg-input [.light-theme_&]:bg-zinc-100 border border-border-custom [.light-theme_&]:border-zinc-300 rounded-lg px-3 py-1.5 text-xs text-white [.light-theme_&]:text-zinc-800 focus:outline-none min-w-[150px] transition-all">
+                        <label className="text-[9px] text-muted uppercase tracking-wider font-bold block">Project Name</label>
+                        <select className="bg-input border border-border-custom rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-none min-w-[150px] transition-all">
                           <option>All</option>
                           {financialData?.project_summaries?.map((p: any, idx: number) => (
                             <option key={idx}>{p.project_name}</option>
@@ -1134,8 +1133,8 @@ export default function DashboardPage() {
                         </select>
                       </div>
                       <div className="space-y-1">
-                        <label className="text-[9px] text-muted [.light-theme_&]:text-zinc-500 uppercase tracking-wider font-bold block">Txn Date</label>
-                        <div className="flex items-center gap-2 bg-input [.light-theme_&]:bg-zinc-100 border border-border-custom [.light-theme_&]:border-zinc-300 rounded-lg px-3 py-1.5 text-xs text-muted [.light-theme_&]:text-zinc-600 transition-all">
+                        <label className="text-[9px] text-muted uppercase tracking-wider font-bold block">Txn Date</label>
+                        <div className="flex items-center gap-2 bg-input border border-border-custom rounded-lg px-3 py-1.5 text-xs text-muted transition-all">
                           <span>📅</span>
                           <span>01 Jan 2026 to 31 Jul 2026</span>
                         </div>
@@ -1144,9 +1143,9 @@ export default function DashboardPage() {
                   </div>
 
                   {/* Company Party Balance (All Projects) - Half-circle Donut & Metrics */}
-                  <div className="bg-card [.light-theme_&]:bg-white border border-border-custom [.light-theme_&]:border-zinc-200 rounded-lg p-5 space-y-6 transition-all">
-                    <div className="flex justify-between items-center border-b border-border-custom [.light-theme_&]:border-zinc-100 pb-3">
-                      <h4 className="text-xs font-bold text-muted [.light-theme_&]:text-zinc-500 uppercase tracking-wider">Company Party Balance (All Projects)</h4>
+                  <div className="bg-card border border-border-custom rounded-lg p-5 space-y-6 transition-all">
+                    <div className="flex justify-between items-center border-b border-border-custom pb-3">
+                      <h4 className="text-xs font-bold text-muted uppercase tracking-wider">Company Party Balance (All Projects)</h4>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
@@ -1214,38 +1213,38 @@ export default function DashboardPage() {
 
                       {/* Right: Legend Checklist */}
                       <div className="md:col-span-5 space-y-3">
-                        <div className="flex items-center gap-2 border-b border-border-custom [.light-theme_&]:border-zinc-100 pb-2">
+                        <div className="flex items-center gap-2 border-b border-border-custom pb-2">
                           <input type="checkbox" checked readOnly className="accent-primary rounded cursor-pointer" />
-                          <span className="text-[11px] font-bold text-white [.light-theme_&]:text-zinc-800">Balance Type</span>
+                          <span className="text-[11px] font-bold text-foreground">Balance Type</span>
                         </div>
                         <div className="space-y-2">
                           <div className="flex justify-between items-center text-xs">
                             <div className="flex items-center gap-2">
                               <span className="h-2.5 w-2.5 rounded-sm bg-[#5C6BC0]" />
-                              <span className="text-zinc-300 [.light-theme_&]:text-zinc-600 font-medium">Advance Paid</span>
+                              <span className="text-muted font-medium">Advance Paid</span>
                             </div>
-                            <span className="font-semibold text-white [.light-theme_&]:text-zinc-800">{formatCompact(advPaid)}</span>
+                            <span className="font-semibold text-foreground">{formatCompact(advPaid)}</span>
                           </div>
                           <div className="flex justify-between items-center text-xs">
                             <div className="flex items-center gap-2">
                               <span className="h-2.5 w-2.5 rounded-sm bg-[#26A69A]" />
-                              <span className="text-zinc-300 [.light-theme_&]:text-zinc-600 font-medium">To Pay</span>
+                              <span className="text-muted font-medium">To Pay</span>
                             </div>
-                            <span className="font-semibold text-white [.light-theme_&]:text-zinc-800">{formatCompact(toPay)}</span>
+                            <span className="font-semibold text-foreground">{formatCompact(toPay)}</span>
                           </div>
                           <div className="flex justify-between items-center text-xs">
                             <div className="flex items-center gap-2">
                               <span className="h-2.5 w-2.5 rounded-sm bg-[#EF5350]" />
-                              <span className="text-zinc-300 [.light-theme_&]:text-zinc-600 font-medium">To Receive</span>
+                              <span className="text-muted font-medium">To Receive</span>
                             </div>
-                            <span className="font-semibold text-white [.light-theme_&]:text-zinc-800">{formatCompact(toReceive)}</span>
+                            <span className="font-semibold text-foreground">{formatCompact(toReceive)}</span>
                           </div>
                         </div>
                       </div>
                     </div>
 
                     {/* Bottom metrics grid */}
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 pt-4 border-t border-border-custom [.light-theme_&]:border-zinc-100">
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 pt-4 border-t border-border-custom">
                       {/* Advance Paid */}
                       <div className="bg-emerald-950/10 border border-emerald-500/10 [.light-theme_&]:bg-[#E8F5E9]/60 [.light-theme_&]:border-emerald-200 rounded-lg p-3 flex flex-col items-center justify-center transition-all">
                         <span className="text-[10px] font-bold text-emerald-400 [.light-theme_&]:text-emerald-700 uppercase tracking-wider block text-center">Advance Paid</span>
@@ -1271,9 +1270,9 @@ export default function DashboardPage() {
                       </div>
 
                       {/* Advance Received */}
-                      <div className="bg-white/[0.01] border border-border-custom [.light-theme_&]:bg-zinc-100/60 [.light-theme_&]:border-zinc-200 rounded-lg p-3 flex flex-col items-center justify-center transition-all">
-                        <span className="text-[10px] font-bold text-muted [.light-theme_&]:text-zinc-500 uppercase tracking-wider block text-center">Advance Received</span>
-                        <strong className="text-md font-bold text-white [.light-theme_&]:text-zinc-700 mt-1 block text-center">
+                      <div className="bg-elevated border border-border-custom rounded-lg p-3 flex flex-col items-center justify-center transition-all">
+                        <span className="text-[10px] font-bold text-muted uppercase tracking-wider block text-center">Advance Received</span>
+                        <strong className="text-md font-bold text-foreground mt-1 block text-center">
                           {advReceived > 0 ? advReceived.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "-"}
                         </strong>
                       </div>
@@ -1281,7 +1280,7 @@ export default function DashboardPage() {
                   </div>
 
                   {/* Project Financial Summary Table */}
-                  <div className="bg-card [.light-theme_&]:bg-white border border-border-custom [.light-theme_&]:border-zinc-200 rounded-lg overflow-hidden transition-all shadow-sm">
+                  <div className="bg-card border border-border-custom rounded-lg overflow-hidden transition-all shadow-sm">
                     <div className="overflow-x-auto">
                       <table className="w-full text-xs text-left border-collapse">
                         <thead>
@@ -1309,11 +1308,11 @@ export default function DashboardPage() {
                             </tr>
                           ) : (
                             financialData.project_summaries.map((p: any, idx: number) => (
-                              <tr key={idx} className="border-t border-border-custom [.light-theme_&]:border-zinc-200 hover:bg-white/[0.01] [.light-theme_&]:hover:bg-zinc-50 transition-all text-white [.light-theme_&]:text-zinc-800">
-                                <td className="px-3 py-3 text-center border-r border-border-custom [.light-theme_&]:border-zinc-200 text-muted font-mono font-bold">{idx + 1}</td>
-                                <td className="px-4 py-3 border-r border-border-custom [.light-theme_&]:border-zinc-200 font-bold text-white [.light-theme_&]:text-zinc-800">{p.project_name}</td>
-                                <td className="px-4 py-3 border-r border-border-custom [.light-theme_&]:border-zinc-200 text-zinc-300 [.light-theme_&]:text-zinc-600">{p.project_status}</td>
-                                <td className="px-4 py-3 text-center border-r border-border-custom [.light-theme_&]:border-zinc-200">
+                              <tr key={idx} className="border-t border-border-custom hover:bg-elevated transition-all text-foreground">
+                                <td className="px-3 py-3 text-center border-r border-border-custom text-muted font-mono font-bold">{idx + 1}</td>
+                                <td className="px-4 py-3 border-r border-border-custom font-bold text-foreground">{p.project_name}</td>
+                                <td className="px-4 py-3 border-r border-border-custom text-muted">{p.project_status}</td>
+                                <td className="px-4 py-3 text-center border-r border-border-custom">
                                   {p.project_health === "-" ? (
                                     <span className="text-muted font-bold font-mono">-</span>
                                   ) : (
@@ -1328,28 +1327,28 @@ export default function DashboardPage() {
                                     </span>
                                   )}
                                 </td>
-                                <td className="px-4 py-3 text-right border-r border-border-custom [.light-theme_&]:border-zinc-200 font-semibold text-zinc-300 [.light-theme_&]:text-zinc-700">
+                                <td className="px-4 py-3 text-right border-r border-border-custom font-semibold text-muted">
                                   {p.project_budget ? p.project_budget.toLocaleString("en-US") : "0"}
                                 </td>
-                                <td className="px-4 py-3 text-right border-r border-border-custom [.light-theme_&]:border-zinc-200 font-semibold text-zinc-300 [.light-theme_&]:text-zinc-700">
+                                <td className="px-4 py-3 text-right border-r border-border-custom font-semibold text-muted">
                                   {p.total_expense ? p.total_expense.toLocaleString("en-US") : "0"}
                                 </td>
-                                <td className="px-4 py-3 text-right border-r border-border-custom [.light-theme_&]:border-zinc-200 font-semibold text-zinc-300 [.light-theme_&]:text-zinc-700">
+                                <td className="px-4 py-3 text-right border-r border-border-custom font-semibold text-muted">
                                   {p.budget_remaining ? p.budget_remaining.toLocaleString("en-US") : "0"}
                                 </td>
-                                <td className="px-4 py-3 text-right border-r border-border-custom [.light-theme_&]:border-zinc-200 font-semibold text-zinc-300 [.light-theme_&]:text-zinc-700">
+                                <td className="px-4 py-3 text-right border-r border-border-custom font-semibold text-muted">
                                   {p.total_sales ? p.total_sales.toLocaleString("en-US") : "0"}
                                 </td>
-                                <td className="px-4 py-3 text-right border-r border-border-custom [.light-theme_&]:border-zinc-200 font-semibold text-zinc-300 [.light-theme_&]:text-zinc-700">
+                                <td className="px-4 py-3 text-right border-r border-border-custom font-semibold text-muted">
                                   {p.project_margin ? p.project_margin.toLocaleString("en-US") : "0"}
                                 </td>
-                                <td className="px-4 py-3 text-right border-r border-border-custom [.light-theme_&]:border-zinc-200 font-semibold text-zinc-300 [.light-theme_&]:text-zinc-700">
+                                <td className="px-4 py-3 text-right border-r border-border-custom font-semibold text-muted">
                                   {p.payment_in ? p.payment_in.toLocaleString("en-US") : "0"}
                                 </td>
-                                <td className="px-4 py-3 text-right border-r border-border-custom [.light-theme_&]:border-zinc-200 font-semibold text-zinc-300 [.light-theme_&]:text-zinc-700">
+                                <td className="px-4 py-3 text-right border-r border-border-custom font-semibold text-muted">
                                   {p.payment_out ? p.payment_out.toLocaleString("en-US") : "0"}
                                 </td>
-                                <td className="px-4 py-3 text-right font-bold text-zinc-300 [.light-theme_&]:text-zinc-700">
+                                <td className="px-4 py-3 text-right font-bold text-muted">
                                   {p.cash_balance ? p.cash_balance.toLocaleString("en-US") : "0"}
                                 </td>
                               </tr>
@@ -1363,9 +1362,9 @@ export default function DashboardPage() {
                   {/* Charts Grid - First Row (Sales, Expense, Margin) */}
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Sales */}
-                    <div className="bg-card [.light-theme_&]:bg-white border border-border-custom [.light-theme_&]:border-zinc-200 rounded-lg p-5 flex flex-col justify-between transition-all">
+                    <div className="bg-card border border-border-custom rounded-lg p-5 flex flex-col justify-between transition-all">
                       <div className="space-y-4">
-                        <h4 className="text-xs font-bold text-muted [.light-theme_&]:text-zinc-500 uppercase tracking-wider">Sales</h4>
+                        <h4 className="text-xs font-bold text-muted uppercase tracking-wider">Sales</h4>
                         {(() => {
                           const series = financialData?.sales_series || [];
                           const months = financialData?.chart_months || [];
@@ -1385,8 +1384,8 @@ export default function DashboardPage() {
                           return (
                             <div className="h-40 flex items-center justify-center bg-transparent relative overflow-visible">
                               <svg className="w-full h-full overflow-visible" viewBox="0 0 200 120">
-                                <line x1="20" y1="40" x2="180" y2="40" stroke="var(--border)" strokeWidth="1" className="[.light-theme_&]:stroke-zinc-200" />
-                                <line x1="20" y1="90" x2="180" y2="90" stroke="var(--border)" strokeWidth="1" strokeDasharray="3" className="[.light-theme_&]:stroke-zinc-200" />
+                                <line x1="20" y1="40" x2="180" y2="40" stroke="var(--border)" strokeWidth="1" />
+                                <line x1="20" y1="90" x2="180" y2="90" stroke="var(--border)" strokeWidth="1" strokeDasharray="3" />
                                 <text x="15" y="43" fill="#6b7280" fontSize="8" textAnchor="end">0</text>
                                 <text x="15" y="93" fill="#6b7280" fontSize="8" textAnchor="end">-{maxVal >= 1000000 ? `${(maxVal/1000000).toFixed(1)}M` : `${Math.round(maxVal/1000)}K`}</text>
 
@@ -1414,8 +1413,8 @@ export default function DashboardPage() {
                           );
                         })()}
                       </div>
-                      <div className="border-t border-border-custom [.light-theme_&]:border-zinc-100 pt-3 flex justify-between items-center text-xs mt-4">
-                        <span className="text-muted [.light-theme_&]:text-zinc-500 font-medium">Total Sales</span>
+                      <div className="border-t border-border-custom pt-3 flex justify-between items-center text-xs mt-4">
+                        <span className="text-muted font-medium">Total Sales</span>
                         {(() => {
                           const totalSales = financialData?.sales_series?.reduce((a: number, b: number) => a + b, 0) || 0;
                           return (
@@ -1430,9 +1429,9 @@ export default function DashboardPage() {
                     </div>
 
                     {/* Expense */}
-                    <div className="bg-card [.light-theme_&]:bg-white border border-border-custom [.light-theme_&]:border-zinc-200 rounded-lg p-5 flex flex-col justify-between transition-all">
+                    <div className="bg-card border border-border-custom rounded-lg p-5 flex flex-col justify-between transition-all">
                       <div className="space-y-4">
-                        <h4 className="text-xs font-bold text-muted [.light-theme_&]:text-zinc-500 uppercase tracking-wider">Expense</h4>
+                        <h4 className="text-xs font-bold text-muted uppercase tracking-wider">Expense</h4>
                         {(() => {
                           const series = financialData?.expense_series || [];
                           const months = financialData?.chart_months || [];
@@ -1452,8 +1451,8 @@ export default function DashboardPage() {
                           return (
                             <div className="h-40 flex items-center justify-center bg-transparent relative overflow-visible">
                               <svg className="w-full h-full overflow-visible" viewBox="0 0 200 120">
-                                <line x1="20" y1="40" x2="180" y2="40" stroke="var(--border)" strokeWidth="1" className="[.light-theme_&]:stroke-zinc-200" />
-                                <line x1="20" y1="90" x2="180" y2="90" stroke="var(--border)" strokeWidth="1" strokeDasharray="3" className="[.light-theme_&]:stroke-zinc-200" />
+                                <line x1="20" y1="40" x2="180" y2="40" stroke="var(--border)" strokeWidth="1" />
+                                <line x1="20" y1="90" x2="180" y2="90" stroke="var(--border)" strokeWidth="1" strokeDasharray="3" />
                                 <text x="15" y="43" fill="#6b7280" fontSize="8" textAnchor="end">0</text>
                                 <text x="15" y="93" fill="#6b7280" fontSize="8" textAnchor="end">-{maxVal >= 1000000 ? `${(maxVal/1000000).toFixed(1)}M` : `${Math.round(maxVal/1000)}K`}</text>
 
@@ -1481,8 +1480,8 @@ export default function DashboardPage() {
                           );
                         })()}
                       </div>
-                      <div className="border-t border-border-custom [.light-theme_&]:border-zinc-100 pt-3 flex justify-between items-center text-xs mt-4">
-                        <span className="text-muted [.light-theme_&]:text-zinc-500 font-medium">Total Expense</span>
+                      <div className="border-t border-border-custom pt-3 flex justify-between items-center text-xs mt-4">
+                        <span className="text-muted font-medium">Total Expense</span>
                         {(() => {
                           const totalExpense = financialData?.expense_series?.reduce((a: number, b: number) => a + b, 0) || 0;
                           return (
@@ -1495,9 +1494,9 @@ export default function DashboardPage() {
                     </div>
 
                     {/* Margin */}
-                    <div className="bg-card [.light-theme_&]:bg-white border border-border-custom [.light-theme_&]:border-zinc-200 rounded-lg p-5 flex flex-col justify-between transition-all">
+                    <div className="bg-card border border-border-custom rounded-lg p-5 flex flex-col justify-between transition-all">
                       <div className="space-y-4">
-                        <h4 className="text-xs font-bold text-muted [.light-theme_&]:text-zinc-500 uppercase tracking-wider">Margin</h4>
+                        <h4 className="text-xs font-bold text-muted uppercase tracking-wider">Margin</h4>
                         {(() => {
                           const series = financialData?.margin_series || [];
                           const months = financialData?.chart_months || [];
@@ -1517,8 +1516,8 @@ export default function DashboardPage() {
                           return (
                             <div className="h-40 flex items-center justify-center bg-transparent relative overflow-visible">
                               <svg className="w-full h-full overflow-visible" viewBox="0 0 200 120">
-                                <line x1="20" y1="40" x2="180" y2="40" stroke="var(--border)" strokeWidth="1" className="[.light-theme_&]:stroke-zinc-200" />
-                                <line x1="20" y1="90" x2="180" y2="90" stroke="var(--border)" strokeWidth="1" strokeDasharray="3" className="[.light-theme_&]:stroke-zinc-200" />
+                                <line x1="20" y1="40" x2="180" y2="40" stroke="var(--border)" strokeWidth="1" />
+                                <line x1="20" y1="90" x2="180" y2="90" stroke="var(--border)" strokeWidth="1" strokeDasharray="3" />
                                 <text x="15" y="43" fill="#6b7280" fontSize="8" textAnchor="end">0</text>
                                 <text x="15" y="93" fill="#6b7280" fontSize="8" textAnchor="end">-{maxVal >= 1000000 ? `${(maxVal/1000000).toFixed(1)}M` : `${Math.round(maxVal/1000)}K`}</text>
 
@@ -1547,8 +1546,8 @@ export default function DashboardPage() {
                           );
                         })()}
                       </div>
-                      <div className="border-t border-border-custom [.light-theme_&]:border-zinc-100 pt-3 flex justify-between items-center text-xs mt-4">
-                        <span className="text-muted [.light-theme_&]:text-zinc-500 font-medium">Total Margin</span>
+                      <div className="border-t border-border-custom pt-3 flex justify-between items-center text-xs mt-4">
+                        <span className="text-muted font-medium">Total Margin</span>
                         {(() => {
                           const totalMargin = financialData?.margin_series?.reduce((a: number, b: number) => a + b, 0) || 0;
                           return (
@@ -1566,9 +1565,9 @@ export default function DashboardPage() {
                   {/* Charts Grid - Second Row (Payments, Expense Type) */}
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* Payments */}
-                    <div className="bg-card [.light-theme_&]:bg-white border border-border-custom [.light-theme_&]:border-zinc-200 rounded-lg p-5 flex flex-col justify-between transition-all">
+                    <div className="bg-card border border-border-custom rounded-lg p-5 flex flex-col justify-between transition-all">
                       <div className="space-y-4">
-                        <h4 className="text-xs font-bold text-muted [.light-theme_&]:text-zinc-500 uppercase tracking-wider">Payments</h4>
+                        <h4 className="text-xs font-bold text-muted uppercase tracking-wider">Payments</h4>
                         {(() => {
                           const totalPaymentIn = financialData?.project_summaries?.reduce((acc: number, p: any) => acc + (p.payment_in || 0), 0) || 0;
                           const totalPaymentOut = financialData?.project_summaries?.reduce((acc: number, p: any) => acc + (p.payment_out || 0), 0) || 0;
@@ -1589,7 +1588,7 @@ export default function DashboardPage() {
                           return (
                             <div className="h-40 flex items-center justify-center rounded-md bg-transparent relative overflow-visible">
                               <svg className="w-full h-full overflow-visible" viewBox="0 0 240 120">
-                                <line x1="20" y1="90" x2="220" y2="90" stroke="var(--border)" strokeWidth="1" className="[.light-theme_&]:stroke-zinc-200" />
+                                <line x1="20" y1="90" x2="220" y2="90" stroke="var(--border)" strokeWidth="1" />
                                 
                                 {/* Payments In Bar */}
                                 <rect x="60" y={90 - bar1Height} width="40" height={bar1Height} fill="#26A69A" rx="2" className="transition-all hover:opacity-90" />
@@ -1609,16 +1608,16 @@ export default function DashboardPage() {
                           );
                         })()}
                       </div>
-                      <div className="border-t border-border-custom [.light-theme_&]:border-zinc-100 pt-3 flex justify-between items-center text-xs mt-4">
-                        <span className="text-muted [.light-theme_&]:text-zinc-500 font-medium">Payment Inflow vs Outflow</span>
-                        <span className="font-bold text-muted [.light-theme_&]:text-zinc-500 bg-white/[0.02] [.light-theme_&]:bg-zinc-100 px-2 py-0.5 rounded">Live</span>
+                      <div className="border-t border-border-custom pt-3 flex justify-between items-center text-xs mt-4">
+                        <span className="text-muted font-medium">Payment Inflow vs Outflow</span>
+                        <span className="font-bold text-muted bg-elevated px-2 py-0.5 rounded">Live</span>
                       </div>
                     </div>
 
                     {/* Expense Type */}
-                    <div className="bg-card [.light-theme_&]:bg-white border border-border-custom [.light-theme_&]:border-zinc-200 rounded-lg p-5 flex flex-col justify-between transition-all">
+                    <div className="bg-card border border-border-custom rounded-lg p-5 flex flex-col justify-between transition-all">
                       <div className="space-y-4 w-full">
-                        <h4 className="text-xs font-bold text-muted [.light-theme_&]:text-zinc-500 uppercase tracking-wider">Expense Type</h4>
+                        <h4 className="text-xs font-bold text-muted uppercase tracking-wider">Expense Type</h4>
                         {(() => {
                           const expenseItems = financialData?.expense_by_type || [];
                           const hasExpenseData = expenseItems.length > 0 && expenseItems.some((e: any) => e.value > 0);
@@ -1641,11 +1640,11 @@ export default function DashboardPage() {
                                 const color = colors[idx % colors.length];
                                 return (
                                   <div key={idx} className="space-y-1">
-                                    <div className="flex justify-between items-center text-xs font-medium text-zinc-300 [.light-theme_&]:text-zinc-700">
+                                    <div className="flex justify-between items-center text-xs font-medium text-muted">
                                       <span>{item.name}</span>
                                       <span className="font-bold">{item.value.toLocaleString("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 })} ({pct}%)</span>
                                     </div>
-                                    <div className="w-full bg-white/5 [.light-theme_&]:bg-zinc-100 rounded-full h-2">
+                                    <div className="w-full bg-elevated rounded-full h-2">
                                       <div className="rounded-full h-2 transition-all duration-500" style={{ width: `${pct}%`, backgroundColor: color }} />
                                     </div>
                                   </div>
@@ -1655,9 +1654,9 @@ export default function DashboardPage() {
                           );
                         })()}
                       </div>
-                      <div className="border-t border-border-custom [.light-theme_&]:border-zinc-100 pt-3 flex justify-between items-center text-xs mt-4">
-                        <span className="text-muted [.light-theme_&]:text-zinc-500 font-medium">Expense Breakdown</span>
-                        <span className="font-bold text-muted [.light-theme_&]:text-zinc-500 bg-white/[0.02] [.light-theme_&]:bg-zinc-100 px-2 py-0.5 rounded">Live</span>
+                      <div className="border-t border-border-custom pt-3 flex justify-between items-center text-xs mt-4">
+                        <span className="text-muted font-medium">Expense Breakdown</span>
+                        <span className="font-bold text-muted bg-elevated px-2 py-0.5 rounded">Live</span>
                       </div>
                     </div>
                   </div>
@@ -1670,7 +1669,7 @@ export default function DashboardPage() {
           {activeTab === "scheduler" && (
             <div className="rounded-lg bg-card border border-border-custom rounded-lg p-6 space-y-6">
               <div className="flex justify-between items-center border-b border-border-custom pb-4">
-                <h3 className="font-bold text-sm uppercase tracking-wider text-white">✨ Interactive Gantt Timeline Scheduler</h3>
+                <h3 className="font-bold text-sm uppercase tracking-wider text-foreground">✨ Interactive Gantt Timeline Scheduler</h3>
                 <span className="text-xs text-muted">Module 1: Planning</span>
               </div>
 
@@ -1691,7 +1690,7 @@ export default function DashboardPage() {
                 <div className="space-y-4 pt-2">
                   {/* Task 1 */}
                   <div className="grid grid-cols-12 gap-2 items-center text-xs">
-                    <div className="col-span-3 font-semibold text-white">Shoring Wall Piling</div>
+                    <div className="col-span-3 font-semibold text-foreground">Shoring Wall Piling</div>
                     <div className="col-span-1 text-center text-muted">14</div>
                     <div className="col-span-8 relative h-6 bg-elevated rounded-lg">
                       <div className="absolute left-[5%] w-[45%] h-full bg-primary rounded-lg flex items-center px-2 text-[10px] font-bold text-white shadow-lg">
@@ -1702,7 +1701,7 @@ export default function DashboardPage() {
 
                   {/* Task 2 */}
                   <div className="grid grid-cols-12 gap-2 items-center text-xs">
-                    <div className="col-span-3 font-semibold text-white">Raft Foundation Rebar</div>
+                    <div className="col-span-3 font-semibold text-foreground">Raft Foundation Rebar</div>
                     <div className="col-span-1 text-center text-muted">10</div>
                     <div className="col-span-8 relative h-6 bg-elevated rounded-lg">
                       <div className="absolute left-[48%] w-[32%] h-full bg-primary rounded-lg flex items-center px-2 text-[10px] font-bold text-white shadow-lg animate-shimmer">
@@ -1713,7 +1712,7 @@ export default function DashboardPage() {
 
                   {/* Task 3 */}
                   <div className="grid grid-cols-12 gap-2 items-center text-xs">
-                    <div className="col-span-3 font-semibold text-white">Base slab Concrete Pouring</div>
+                    <div className="col-span-3 font-semibold text-foreground">Base slab Concrete Pouring</div>
                     <div className="col-span-1 text-center text-muted">5</div>
                     <div className="col-span-8 relative h-6 bg-elevated rounded-lg">
                       <div className="absolute left-[78%] w-[18%] h-full bg-zinc-800 rounded-lg flex items-center px-2 text-[10px] font-medium text-muted">
@@ -1729,7 +1728,7 @@ export default function DashboardPage() {
           {activeTab === "finance" && (
             <div className="rounded-lg bg-card border border-border-custom rounded-lg p-6 space-y-6">
               <div className="flex justify-between items-center border-b border-border-custom pb-4">
-                <h3 className="font-bold text-sm uppercase tracking-wider text-white">📊 Waterfall Cashflow Chart</h3>
+                <h3 className="font-bold text-sm uppercase tracking-wider text-foreground">📊 Waterfall Cashflow Chart</h3>
                 <span className="text-xs text-muted">Module 13: Project P&L</span>
               </div>
 
@@ -1769,7 +1768,7 @@ export default function DashboardPage() {
                   <div className="flex flex-col items-center gap-2 w-16">
                     <span className="text-[10px] font-semibold text-gradient-accent">Rs 9.2 L</span>
                     <div className="w-full bg-gradient-to-t from-secondary to-primary rounded-t-md h-24 shadow-[0_0_20px_rgba(124,92,255,0.15)] animate-pulse" />
-                    <span className="text-[10px] text-zinc-300 font-medium">Net Profit</span>
+                    <span className="text-[10px] text-muted font-medium">Net Profit</span>
                   </div>
                 </div>
 
@@ -1778,11 +1777,11 @@ export default function DashboardPage() {
                   <div className="space-y-3 text-xs">
                     <div className="flex justify-between">
                       <span className="text-muted">Client billing cleared:</span>
-                      <span className="font-semibold text-white">Rs 18,50,000</span>
+                      <span className="font-semibold text-foreground">Rs 18,50,000</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted">Total project spend:</span>
-                      <span className="font-semibold text-white">Rs 9,30,000</span>
+                      <span className="font-semibold text-foreground">Rs 9,30,000</span>
                     </div>
                     <hr className="border-border-custom" />
                     <div className="flex justify-between">
@@ -1798,12 +1797,12 @@ export default function DashboardPage() {
           {activeTab === "tally" && (
             <div className="rounded-lg bg-card border border-border-custom rounded-lg p-6 space-y-6">
               <div className="flex justify-between items-center border-b border-border-custom pb-4">
-                <h3 className="font-bold text-sm uppercase tracking-wider text-white">🔌 SiteFlow Tally Integration Control</h3>
+                <h3 className="font-bold text-sm uppercase tracking-wider text-foreground">🔌 SiteFlow Tally Integration Control</h3>
                 <span className="text-xs text-muted">Module 16: Ledgers Synchronization</span>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="p-5 rounded-md border border-border-custom bg-white/[0.01] space-y-3">
+                <div className="p-5 rounded-md border border-border-custom bg-elevated space-y-3">
                   <div className="text-xs font-bold text-muted uppercase tracking-wider">XML Agent Authentication</div>
                   <div className="p-3 bg-input rounded-lg border border-border-custom flex items-center justify-between text-xs">
                     <code className="text-secondary font-mono font-bold">SF-TALLY-1082-MUM</code>
@@ -1812,7 +1811,7 @@ export default function DashboardPage() {
                   <p className="text-[10px] text-muted">Enter this key into your desktop Tally.ERP agent configuration panel.</p>
                 </div>
 
-                <div className="p-5 rounded-md border border-border-custom bg-white/[0.01] space-y-3">
+                <div className="p-5 rounded-md border border-border-custom bg-elevated space-y-3">
                   <div className="text-xs font-bold text-muted uppercase tracking-wider">Sync Mode Settings</div>
                   <div className="space-y-2 text-xs">
                     <label className="flex items-center gap-2">
@@ -1826,11 +1825,11 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
-                <div className="p-5 rounded-md border border-border-custom bg-white/[0.01] space-y-3 flex flex-col justify-between">
+                <div className="p-5 rounded-md border border-border-custom bg-elevated space-y-3 flex flex-col justify-between">
                   <div>
                     <div className="text-xs font-bold text-muted uppercase tracking-wider">Voucher sync logs</div>
                     <div className="text-xs text-muted mt-2">
-                      Last sync window: <span className="text-white font-medium">Today, 18:42</span>
+                      Last sync window: <span className="text-foreground font-medium">Today, 18:42</span>
                     </div>
                     <div className="text-xs text-muted">
                       Vouchers sent: <span className="text-success font-medium">18 Purchases, 2 Payments</span>
@@ -1854,9 +1853,9 @@ export default function DashboardPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm">
           <div className="bg-card border border-border-custom rounded-lg w-full max-w-lg overflow-hidden shadow-2xl">
             {/* Header */}
-            <div className="p-6 border-b border-border-custom flex items-center justify-between bg-white/[0.01]">
+            <div className="p-6 border-b border-border-custom flex items-center justify-between bg-elevated">
               <div>
-                <h3 className="text-sm font-bold uppercase tracking-wider text-white">Creating Project</h3>
+                <h3 className="text-sm font-bold uppercase tracking-wider text-foreground">Creating Project</h3>
                 <p className="text-[10px] text-muted mt-0.5">Set up your project workspace in 2 steps</p>
               </div>
               <button
@@ -1873,14 +1872,14 @@ export default function DashboardPage() {
                 <span className={`h-6 w-6 rounded-full flex items-center justify-center text-[10px] font-bold ${wizardStep === 1 ? "bg-primary text-white" : "bg-success text-white"}`}>
                   {wizardStep > 1 ? "✓" : "1"}
                 </span>
-                <span className={`text-xs font-semibold ${wizardStep === 1 ? "text-white" : "text-muted"}`}>Project Details</span>
+                <span className={`text-xs font-semibold ${wizardStep === 1 ? "text-foreground" : "text-muted"}`}>Project Details</span>
               </div>
-              <div className="h-px w-12 bg-white/10" />
+              <div className="h-px w-12 bg-border-custom" />
               <div className="flex items-center gap-2">
-                <span className={`h-6 w-6 rounded-full flex items-center justify-center text-[10px] font-bold ${wizardStep === 2 ? "bg-primary text-white" : "bg-white/5 text-muted"}`}>
+                <span className={`h-6 w-6 rounded-full flex items-center justify-center text-[10px] font-bold ${wizardStep === 2 ? "bg-primary text-white" : "bg-elevated text-muted"}`}>
                   2
                 </span>
-                <span className={`text-xs font-semibold ${wizardStep === 2 ? "text-white" : "text-muted"}`}>Add Team Member</span>
+                <span className={`text-xs font-semibold ${wizardStep === 2 ? "text-foreground" : "text-muted"}`}>Add Team Member</span>
               </div>
             </div>
 
@@ -1896,7 +1895,7 @@ export default function DashboardPage() {
                         placeholder="e.g. MP SITE"
                         value={wizardData.name}
                         onChange={(e) => setWizardData({ ...wizardData, name: e.target.value })}
-                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-foreground"
                       />
                     </div>
                     <div className="space-y-1">
@@ -1906,7 +1905,7 @@ export default function DashboardPage() {
                         placeholder="e.g. MP-01"
                         value={wizardData.code}
                         onChange={(e) => setWizardData({ ...wizardData, code: e.target.value })}
-                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-foreground"
                       />
                     </div>
                   </div>
@@ -1918,7 +1917,7 @@ export default function DashboardPage() {
                       placeholder="e.g. MP ,SATNA"
                       value={wizardData.address}
                       onChange={(e) => setWizardData({ ...wizardData, address: e.target.value })}
-                      className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-white"
+                      className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-foreground"
                     />
                   </div>
 
@@ -1930,7 +1929,7 @@ export default function DashboardPage() {
                         placeholder="e.g. Satna"
                         value={wizardData.city}
                         onChange={(e) => setWizardData({ ...wizardData, city: e.target.value })}
-                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-foreground"
                       />
                     </div>
                     <div className="space-y-1">
@@ -1940,7 +1939,7 @@ export default function DashboardPage() {
                         placeholder="500"
                         value={wizardData.attendance_radius_meters}
                         onChange={(e) => setWizardData({ ...wizardData, attendance_radius_meters: Number(e.target.value) })}
-                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-foreground"
                       />
                     </div>
                   </div>
@@ -1954,7 +1953,7 @@ export default function DashboardPage() {
                       placeholder="e.g. PrateekUpadhyay"
                       value={wizardData.teamMember}
                       onChange={(e) => setWizardData({ ...wizardData, teamMember: e.target.value })}
-                      className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-white"
+                      className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-foreground"
                     />
                   </div>
                   <p className="text-[10px] text-muted italic">
@@ -1965,7 +1964,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Footer */}
-            <div className="p-6 border-t border-border-custom flex items-center justify-between bg-white/[0.01]">
+            <div className="p-6 border-t border-border-custom flex items-center justify-between bg-elevated">
               <button
                 onClick={() => {
                   if (wizardStep === 2) {

@@ -439,7 +439,7 @@ export default function GanttSchedulerPage() {
         {/* Header */}
         <header className="h-14 border-b border-border-custom px-6 flex items-center justify-between bg-card shrink-0">
           <div className="flex items-center gap-3">
-            <h1 className="text-sm font-bold text-white">Project Scheduler & WBS</h1>
+            <h1 className="text-sm font-bold text-foreground">Project Scheduler & WBS</h1>
           </div>
         </header>
 
@@ -479,12 +479,12 @@ export default function GanttSchedulerPage() {
                 return (
                   <div key={m.id} className={`flex items-start gap-4 p-4 rounded-md border ${colors[m.type]}`}>
                     <div className="flex flex-col items-center gap-1 shrink-0">
-                      <div className="w-8 h-8 rounded-lg bg-white/5 border border-border-custom flex items-center justify-center text-lg">{icon[m.type]}</div>
+                      <div className="w-8 h-8 rounded-lg bg-elevated border border-border-custom flex items-center justify-center text-lg">{icon[m.type]}</div>
                       <div className="text-[9px] font-mono text-muted">{m.date}</div>
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="font-bold text-white text-xs">{m.name}</span>
+                        <span className="font-bold text-foreground text-xs">{m.name}</span>
                         <span className={`text-[8px] px-1.5 py-0.5 rounded border font-bold ${statusCls}`}>{m.status.toUpperCase()}</span>
                       </div>
                       <p className="text-[11px] text-muted">{m.description}</p>
@@ -510,7 +510,7 @@ export default function GanttSchedulerPage() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         {t.is_critical && <span className="text-[8px] bg-red-500/10 border border-red-500/20 text-red-400 px-1.5 py-0.5 rounded font-bold">CRITICAL</span>}
-                        <span className="text-xs font-semibold text-white">{t.name}</span>
+                        <span className="text-xs font-semibold text-foreground">{t.name}</span>
                       </div>
                       <div className="text-right text-[10px]">
                         {delay > 0 && <span className="text-red-400 font-bold">+{delay.toFixed(0)}d delay</span>}
@@ -525,7 +525,7 @@ export default function GanttSchedulerPage() {
                     </div>
                     {/* Actual bar */}
                     <div className="text-[9px] text-muted">Actual: {t.actual_start ?? "Not started"} → {t.actual_end ?? "Ongoing"}</div>
-                    <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                    <div className="h-2 bg-elevated rounded-full overflow-hidden">
                       <div className="h-full rounded-full bg-emerald-400" style={{ width: `${t.pct}%` }} />
                     </div>
                   </div>
@@ -539,7 +539,7 @@ export default function GanttSchedulerPage() {
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-xs font-bold text-white">14-Day Lookahead Schedule</h3>
+                  <h3 className="text-xs font-bold text-foreground">14-Day Lookahead Schedule</h3>
                   <p className="text-[10px] text-muted mt-0.5">Rolling 2-week plan for site supervisors · Updated every Monday</p>
                 </div>
                 <div className="text-[10px] text-muted">Jul 01 – Jul 14, 2026</div>
@@ -551,7 +551,7 @@ export default function GanttSchedulerPage() {
                     <div className="shrink-0 text-[9px] font-mono text-muted w-20">{t.start}<br/>→ {t.end}</div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xs font-semibold text-white">{t.name}</span>
+                        <span className="text-xs font-semibold text-foreground">{t.name}</span>
                         <span className={`text-[8px] px-1.5 py-0.5 rounded border font-bold ${statusCls}`}>{t.status.replace("_"," ").toUpperCase()}</span>
                       </div>
                       <div className="text-[10px] text-muted">Responsible: {t.responsible}</div>
@@ -569,7 +569,7 @@ export default function GanttSchedulerPage() {
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
             {/* Create Task Form */}
             <div className="bg-card border border-border-custom rounded-lg p-6 rounded-lg border border-border-custom bg-input space-y-4">
-              <h2 className="text-xs font-bold text-white uppercase tracking-wider">
+              <h2 className="text-xs font-bold text-foreground uppercase tracking-wider">
                 Create WBS Task
               </h2>
               <form onSubmit={handleCreateTask} className="grid grid-cols-2 gap-3 text-xs">
@@ -580,7 +580,7 @@ export default function GanttSchedulerPage() {
                     value={taskName}
                     onChange={(e) => setTaskName(e.target.value)}
                     placeholder="Slab casting, foundation excav..."
-                    className="w-full bg-elevated border border-border-custom rounded-lg p-2 text-white focus:outline-none focus:border-primary/50"
+                    className="w-full bg-elevated border border-border-custom rounded-lg p-2 text-foreground focus:outline-none focus:border-primary/50"
                   />
                 </div>
                 <div className="space-y-1">
@@ -589,7 +589,7 @@ export default function GanttSchedulerPage() {
                     type="number"
                     value={duration}
                     onChange={(e) => setDuration(parseInt(e.target.value) || 1)}
-                    className="w-full bg-elevated border border-border-custom rounded-lg p-2 text-white focus:outline-none"
+                    className="w-full bg-elevated border border-border-custom rounded-lg p-2 text-foreground focus:outline-none"
                   />
                 </div>
                 <div className="space-y-1">
@@ -598,7 +598,7 @@ export default function GanttSchedulerPage() {
                     type="date"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
-                    className="w-full bg-elevated border border-border-custom rounded-lg p-2 text-white focus:outline-none"
+                    className="w-full bg-elevated border border-border-custom rounded-lg p-2 text-foreground focus:outline-none"
                   />
                 </div>
                 <div className="space-y-1 col-span-2">
@@ -606,7 +606,7 @@ export default function GanttSchedulerPage() {
                   <select
                     value={priority}
                     onChange={(e) => setPriority(e.target.value)}
-                    className="w-full bg-elevated border border-border-custom rounded-lg p-2 text-white"
+                    className="w-full bg-elevated border border-border-custom rounded-lg p-2 text-foreground"
                   >
                     <option value="high">🔴 High Priority</option>
                     <option value="medium">🟡 Medium Priority</option>
@@ -624,7 +624,7 @@ export default function GanttSchedulerPage() {
 
             {/* Predecessors / Linker Form */}
             <div className="bg-card border border-border-custom rounded-lg p-6 rounded-lg border border-border-custom bg-input space-y-4">
-              <h2 className="text-xs font-bold text-white uppercase tracking-wider">
+              <h2 className="text-xs font-bold text-foreground uppercase tracking-wider">
                 Link CPM Predecessors
               </h2>
               <form onSubmit={handleAddPredecessor} className="space-y-3 text-xs">
@@ -633,7 +633,7 @@ export default function GanttSchedulerPage() {
                   <select
                     value={selectedTaskForLink}
                     onChange={(e) => setSelectedTaskForLink(e.target.value)}
-                    className="w-full bg-elevated border border-border-custom rounded-lg p-2 text-white"
+                    className="w-full bg-elevated border border-border-custom rounded-lg p-2 text-foreground"
                   >
                     <option value="">-- Choose Task --</option>
                     {tasks.map(t => (
@@ -646,7 +646,7 @@ export default function GanttSchedulerPage() {
                   <select
                     value={selectedPredecessor}
                     onChange={(e) => setSelectedPredecessor(e.target.value)}
-                    className="w-full bg-elevated border border-border-custom rounded-lg p-2 text-white"
+                    className="w-full bg-elevated border border-border-custom rounded-lg p-2 text-foreground"
                   >
                     <option value="">-- Choose Predecessor --</option>
                     {tasks
@@ -659,7 +659,7 @@ export default function GanttSchedulerPage() {
                 </div>
                 <button
                   type="submit"
-                  className="w-full bg-elevated hover:bg-elevated border border-border-custom rounded-md py-2.5 font-bold text-white transition-all text-xs"
+                  className="w-full bg-elevated hover:bg-elevated border border-border-custom rounded-md py-2.5 font-bold text-foreground transition-all text-xs"
                 >
                   🔗 Establish Link Dependency
                 </button>
@@ -670,7 +670,7 @@ export default function GanttSchedulerPage() {
           {/* WBS Task Gantt List */}
           <div className="bg-card border border-border-custom rounded-lg rounded-lg border border-border-custom p-6 space-y-4">
             <div>
-              <h2 className="text-xs font-bold text-white uppercase tracking-wider">WBS Execution Nodes</h2>
+              <h2 className="text-xs font-bold text-foreground uppercase tracking-wider">WBS Execution Nodes</h2>
               <p className="text-[10px] text-muted">Click a task card below to open its real-time collaboration feed, subtasks and progress takeoff book.</p>
             </div>
 
@@ -686,7 +686,7 @@ export default function GanttSchedulerPage() {
                   >
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <strong className="text-white text-xs group-hover:text-primary transition-all">
+                        <strong className="text-foreground text-xs group-hover:text-primary transition-all">
                           {task.name}
                         </strong>
                         <span className={`text-[9px] px-2 py-0.5 rounded font-bold uppercase ${
@@ -717,7 +717,7 @@ export default function GanttSchedulerPage() {
             <div className="px-6 py-4 border-b border-border-custom flex items-center justify-between bg-background">
               <div>
                 <span className="text-[9px] uppercase tracking-wider font-extrabold text-primary">WBS Task details</span>
-                <h2 className="text-base font-extrabold text-white mt-1">{selectedTask.name}</h2>
+                <h2 className="text-base font-extrabold text-foreground mt-1">{selectedTask.name}</h2>
               </div>
               <button onClick={() => setSelectedTask(null)} className="text-muted hover:text-foreground">✕ Close</button>
             </div>
@@ -734,9 +734,9 @@ export default function GanttSchedulerPage() {
                     placeholder="Add new subtask item..."
                     value={newTodoTitle}
                     onChange={(e) => setNewTodoTitle(e.target.value)}
-                    className="flex-1 bg-input border border-border-custom rounded-lg px-3 py-2 text-xs text-white focus:outline-none"
+                    className="flex-1 bg-input border border-border-custom rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none"
                   />
-                  <button onClick={handleAddTodo} className="px-4 py-2 bg-zinc-800 border border-border-custom hover:bg-zinc-700 text-white rounded-lg text-xs font-bold">
+                  <button onClick={handleAddTodo} className="px-4 py-2 bg-zinc-800 border border-border-custom hover:bg-zinc-700 text-foreground rounded-lg text-xs font-bold">
                     + Todo
                   </button>
                 </div>
@@ -786,19 +786,19 @@ export default function GanttSchedulerPage() {
                   <div className="grid grid-cols-4 gap-2 bg-input p-3 rounded-lg border border-border-custom text-xs">
                     <div className="space-y-1">
                       <span className="text-[10px] text-muted block">No. (N)</span>
-                      <input type="number" value={takeoffN} onChange={(e) => setTakeoffN(parseFloat(e.target.value) || 1)} className="w-full bg-elevated border border-border-custom rounded p-1 text-white text-center" />
+                      <input type="number" value={takeoffN} onChange={(e) => setTakeoffN(parseFloat(e.target.value) || 1)} className="w-full bg-elevated border border-border-custom rounded p-1 text-foreground text-center" />
                     </div>
                     <div className="space-y-1">
                       <span className="text-[10px] text-muted block">Length (L)</span>
-                      <input type="number" value={takeoffL} onChange={(e) => setTakeoffL(parseFloat(e.target.value) || 1)} className="w-full bg-elevated border border-border-custom rounded p-1 text-white text-center" />
+                      <input type="number" value={takeoffL} onChange={(e) => setTakeoffL(parseFloat(e.target.value) || 1)} className="w-full bg-elevated border border-border-custom rounded p-1 text-foreground text-center" />
                     </div>
                     <div className="space-y-1">
                       <span className="text-[10px] text-muted block">Width (W)</span>
-                      <input type="number" value={takeoffW} onChange={(e) => setTakeoffW(parseFloat(e.target.value) || 1)} className="w-full bg-elevated border border-border-custom rounded p-1 text-white text-center" />
+                      <input type="number" value={takeoffW} onChange={(e) => setTakeoffW(parseFloat(e.target.value) || 1)} className="w-full bg-elevated border border-border-custom rounded p-1 text-foreground text-center" />
                     </div>
                     <div className="space-y-1">
                       <span className="text-[10px] text-muted block">Height (H)</span>
-                      <input type="number" value={takeoffH} onChange={(e) => setTakeoffH(parseFloat(e.target.value) || 1)} className="w-full bg-elevated border border-border-custom rounded p-1 text-white text-center" />
+                      <input type="number" value={takeoffH} onChange={(e) => setTakeoffH(parseFloat(e.target.value) || 1)} className="w-full bg-elevated border border-border-custom rounded p-1 text-foreground text-center" />
                     </div>
                   </div>
                 )}
@@ -811,7 +811,7 @@ export default function GanttSchedulerPage() {
                       value={progressQty}
                       onChange={(e) => setProgressQty(e.target.value)}
                       disabled={useTakeoff}
-                      className="flex-1 bg-input border border-border-custom rounded-lg px-3 py-2 text-xs text-white focus:outline-none disabled:opacity-70 disabled:text-emerald-400 disabled:font-bold"
+                      className="flex-1 bg-input border border-border-custom rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none disabled:opacity-70 disabled:text-emerald-400 disabled:font-bold"
                     />
                     <button
                       onClick={() => handleSaveComment()}
@@ -824,7 +824,7 @@ export default function GanttSchedulerPage() {
                   {/* Expression evaluation preview (Screen 5794) */}
                   {!useTakeoff && progressQty && isNaN(Number(progressQty)) && (
                     <div className="text-[10px] text-muted mt-1 pl-1">
-                      Evaluated Output: <strong className="text-white font-mono">{evaluateFormula(progressQty)}</strong>
+                      Evaluated Output: <strong className="text-foreground font-mono">{evaluateFormula(progressQty)}</strong>
                     </div>
                   )}
                 </div>
@@ -859,7 +859,7 @@ export default function GanttSchedulerPage() {
                       <p className="text-zinc-300 text-xs">{comm.message_text}</p>
                       
                       {comm.voice_note_url && (
-                        <div className="flex items-center gap-2 p-1.5 rounded bg-black/20 border border-border-custom text-[9px] text-muted font-mono">
+                        <div className="flex items-center gap-2 p-1.5 rounded bg-elevated border border-border-custom text-[9px] text-muted font-mono">
                           <span>🔊 Audio Note:</span>
                           <span className="text-primary underline cursor-pointer truncate max-w-[150px]">{comm.voice_note_url}</span>
                         </div>
@@ -877,7 +877,7 @@ export default function GanttSchedulerPage() {
                     placeholder="Post progress comments..."
                     value={newCommentText}
                     onChange={(e) => setNewCommentText(e.target.value)}
-                    className="flex-1 bg-input border border-border-custom rounded-lg px-3 py-2 text-xs text-white focus:outline-none"
+                    className="flex-1 bg-input border border-border-custom rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none"
                   />
                   <button onClick={() => handleSaveComment()} className="px-4 py-2 bg-elevated border border-border-custom hover:bg-elevated text-zinc-300 hover:text-foreground rounded-lg text-xs font-bold">
                     Send

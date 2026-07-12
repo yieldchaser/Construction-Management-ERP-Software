@@ -48,10 +48,10 @@ export default function VendorPerformancePage() {
 
         <div className="border-b border-border-custom bg-background px-6 py-3.5 flex items-center justify-between z-10">
           <div>
-            <h1 className="text-sm font-bold text-white uppercase tracking-wider">Vendor Performance</h1>
+            <h1 className="text-sm font-bold text-foreground uppercase tracking-wider">Vendor Performance</h1>
             <p className="text-[10px] text-muted">On-time delivery · GRN history · Quality issues</p>
           </div>
-          <button onClick={fetchData} className="px-4 py-2 rounded-md border border-border-custom text-xs font-bold hover:bg-white/[0.05] cursor-pointer">Refresh</button>
+          <button onClick={fetchData} className="px-4 py-2 rounded-md border border-border-custom text-xs font-bold hover:bg-elevated cursor-pointer">Refresh</button>
         </div>
 
         <div className="flex-1 overflow-y-auto p-6 z-10">
@@ -81,8 +81,8 @@ export default function VendorPerformancePage() {
                       const otp = parseFloat(onTimePct(v));
                       const rating = otp >= 90 ? "text-green-400" : otp >= 70 ? "text-amber-400" : "text-red-400";
                       return (
-                        <tr key={v.id} className="border-b border-white/[0.02] hover:bg-white/[0.015] transition-all">
-                          <td className="px-5 py-3.5 text-white font-semibold">{v.vendor_name}</td>
+                        <tr key={v.id} className="border-b border-border-custom hover:bg-elevated transition-all">
+                          <td className="px-5 py-3.5 text-foreground font-semibold">{v.vendor_name}</td>
                           <td className="px-5 py-3.5 text-right font-mono text-zinc-300">{v.total_pos}</td>
                           <td className="px-5 py-3.5 text-right font-mono text-zinc-300">{v.total_grns}</td>
                           <td className="px-5 py-3.5 text-right font-mono text-primary">{otp}%</td>
