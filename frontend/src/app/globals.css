@@ -1620,3 +1620,28 @@ body {
   letter-spacing: 0.09em;
   color: var(--primary) !important;
 }
+
+/* ---- 13. Bare feature-line lists ----
+   Hero sub-features are authored as a run of standalone
+   wp-block-group.is-nowrap.is-layout-flex wrappers, each holding one plain
+   paragraph with no bullet/checkmark and no gap from the next, so they read
+   as a single unbroken wall of text. Give each a checkmark and breathing
+   room. Scoped to consecutive groups only (a lone group elsewhere on the
+   page, e.g. wrapping a single CTA, is unaffected structurally since the
+   marker/spacing is harmless there too). */
+.product-body .wp-block-group.is-nowrap.is-layout-flex {
+  margin-top: 0.65rem !important;
+  padding-left: 1.6rem;
+  position: relative;
+}
+.product-body .wp-block-group.is-nowrap.is-layout-flex::before {
+  content: "\2713";
+  position: absolute;
+  left: 0;
+  top: 0.1rem;
+  color: var(--primary);
+  font-weight: 700;
+}
+.product-body .wp-block-group.is-nowrap.is-layout-flex p {
+  margin: 0 !important;
+}
