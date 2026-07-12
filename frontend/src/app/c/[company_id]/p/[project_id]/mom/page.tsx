@@ -189,7 +189,7 @@ export default function MoMPage() {
     }
   };
 
-  const inputCls = "w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none focus:border-secondary font-semibold";
+  const inputCls = "w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none focus:border-secondary font-semibold";
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
@@ -199,7 +199,7 @@ export default function MoMPage() {
       {/* Main */}
       <main className="flex-1 flex flex-col overflow-hidden">
         <header className="h-14 border-b border-border-custom px-6 flex items-center justify-between bg-card shrink-0">
-          <h1 className="text-sm font-bold text-white uppercase tracking-widest">Minutes of Meeting</h1>
+          <h1 className="text-sm font-bold text-foreground uppercase tracking-widest">Minutes of Meeting</h1>
           <button onClick={openCreate}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-white text-xs font-bold hover:bg-primary/90 transition-all cursor-pointer">
             + New MOM
@@ -226,18 +226,18 @@ export default function MoMPage() {
               <div className="space-y-1">
                 <label className="text-[10px] uppercase font-bold text-muted tracking-wider">Date</label>
                 <input type="date" value={filterDate} onChange={(e) => setFilterDate(e.target.value)}
-                  className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-xs text-white" />
+                  className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-xs text-foreground" />
               </div>
               <div className="space-y-1">
                 <label className="text-[10px] uppercase font-bold text-muted tracking-wider">Attendee</label>
                 <input value={filterAttendee} onChange={(e) => setFilterAttendee(e.target.value)}
                   placeholder="Attendee name..."
-                  className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-xs text-white placeholder:text-muted" />
+                  className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-xs text-foreground placeholder:text-muted" />
               </div>
               <div className="space-y-1">
                 <label className="text-[10px] uppercase font-bold text-muted tracking-wider">Status</label>
                 <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}
-                  className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-xs text-white">
+                  className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-xs text-foreground">
                   <option value="all">All Statuses</option>
                   {MOM_STATUSES.map((s) => (
                     <option key={s} value={s}>{s}</option>
@@ -268,9 +268,9 @@ export default function MoMPage() {
                     </tr>
                   ) : (
                     moms.map((m) => (
-                      <tr key={m.id} className="border-b border-white/[0.03] hover:bg-white/[0.015] transition-all">
-                        <td className="px-5 py-3 font-bold text-white">{(m.attendees || []).join(", ") || "—"}</td>
-                        <td className="px-5 py-3 text-zinc-200">{projectName(m.project_id)}</td>
+                      <tr key={m.id} className="border-b border-border-custom hover:bg-elevated transition-all">
+                        <td className="px-5 py-3 font-bold text-foreground">{(m.attendees || []).join(", ") || "—"}</td>
+                        <td className="px-5 py-3 text-muted">{projectName(m.project_id)}</td>
                         <td className="px-5 py-3 text-muted">{m.type}</td>
                         <td className="px-5 py-3">{badge(m.status, statusColors[m.status])}</td>
                         <td className="px-5 py-3 text-muted max-w-xs truncate">{m.notes || "—"}</td>
@@ -299,7 +299,7 @@ export default function MoMPage() {
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-card border border-border-custom rounded-lg w-full max-w-md rounded-md p-6 space-y-4 text-left">
             <div>
-              <h3 className="text-sm font-extrabold text-white">{selectedMom ? "Edit MOM" : "New Minutes of Meeting"}</h3>
+              <h3 className="text-sm font-extrabold text-foreground">{selectedMom ? "Edit MOM" : "New Minutes of Meeting"}</h3>
               <p className="text-xs text-muted mt-1">Capture attendees, notes, and meeting status.</p>
             </div>
             <div className="space-y-3">
@@ -314,7 +314,7 @@ export default function MoMPage() {
                 <select value={form.project_id} onChange={(e) => setForm(prev => ({ ...prev, project_id: e.target.value }))}
                   className={inputCls}>
                   {projects.map((p) => (
-                    <option key={p.id} value={p.id} className="bg-card text-white">{p.name}</option>
+                    <option key={p.id} value={p.id} className="bg-card text-foreground">{p.name}</option>
                   ))}
                 </select>
               </div>
@@ -352,7 +352,7 @@ export default function MoMPage() {
               </div>
             </div>
             <div className="flex gap-3 justify-end pt-2">
-              <button onClick={() => { setShowForm(false); setSelectedMom(null); }} className="px-4 py-2 rounded-md border border-border-custom text-xs font-bold hover:bg-white/[0.05] cursor-pointer">Cancel</button>
+              <button onClick={() => { setShowForm(false); setSelectedMom(null); }} className="px-4 py-2 rounded-md border border-border-custom text-xs font-bold hover:bg-elevated cursor-pointer">Cancel</button>
               <button onClick={handleSave} className="bg-primary hover:opacity-90 text-white px-5 py-2 rounded-md text-xs font-bold cursor-pointer">Save MOM</button>
             </div>
           </div>

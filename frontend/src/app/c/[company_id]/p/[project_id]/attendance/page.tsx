@@ -404,11 +404,11 @@ export default function AttendancePage() {
       <div className="flex-1 flex flex-col overflow-hidden">
         <div className="border-b border-border-custom bg-background px-6 py-3 flex items-center justify-between">
           <div>
-            <h1 className="text-sm font-bold text-white">{strings.title}</h1>
+            <h1 className="text-sm font-bold text-foreground">{strings.title}</h1>
             <p className="text-[10px] text-muted">{strings.subtitle}</p>
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-xs text-muted bg-white/5 border border-border-custom px-3 py-1.5 rounded-lg">{strings.gpsActive}</span>
+            <span className="text-xs text-muted bg-elevated border border-border-custom px-3 py-1.5 rounded-lg">{strings.gpsActive}</span>
             <button
               onClick={() => {
                 fetchProjectSettings();
@@ -448,7 +448,7 @@ export default function AttendancePage() {
                     type="date"
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
-                    className="bg-input border border-border-custom text-white rounded-lg px-2.5 py-1 text-xs font-semibold focus:outline-none focus:border-primary text-right"
+                    className="bg-input border border-border-custom text-foreground rounded-lg px-2.5 py-1 text-xs font-semibold focus:outline-none focus:border-primary text-right"
                   />
                 </div>
               </div>
@@ -463,7 +463,7 @@ export default function AttendancePage() {
                         <select 
                           value={selectedEmpId} 
                           onChange={(e) => setSelectedEmpId(e.target.value)}
-                          className="w-full bg-input border border-border-custom text-white rounded-lg p-2 text-xs"
+                          className="w-full bg-input border border-border-custom text-foreground rounded-lg p-2 text-xs"
                         >
                           {employees.length === 0 ? (
                             <option>No active employees found</option>
@@ -506,7 +506,7 @@ export default function AttendancePage() {
                             value={customMultiplierVal}
                             onChange={(e) => setCustomMultiplierVal(e.target.value)}
                             placeholder="e.g. 0.36"
-                            className="bg-input border border-border-custom text-white rounded-lg p-2 text-xs w-28"
+                            className="bg-input border border-border-custom text-foreground rounded-lg p-2 text-xs w-28"
                           />
                         </div>
                       )}
@@ -530,7 +530,7 @@ export default function AttendancePage() {
                       <button onClick={() => queuePunch("IN")} className="rounded-md bg-primary px-5 py-2.5 text-xs font-bold text-white transition-opacity hover:opacity-90">
                         Clock Punch In
                       </button>
-                      <button onClick={() => queuePunch("OUT")} className="rounded-md border border-border-custom bg-white/[0.03] px-5 py-2.5 text-xs font-bold text-zinc-200 transition-colors hover:bg-white/[0.05]">
+                      <button onClick={() => queuePunch("OUT")} className="rounded-md border border-border-custom bg-white/[0.03] px-5 py-2.5 text-xs font-bold text-muted transition-colors hover:bg-elevated">
                         Clock Punch Out
                       </button>
                       <button onClick={flushQueue} className="rounded-md border border-secondary/20 bg-secondary/15 px-5 py-2.5 text-xs font-bold text-secondary transition-colors hover:bg-secondary/20 ml-auto">
@@ -568,11 +568,11 @@ export default function AttendancePage() {
                             dbLogs.map((log) => {
                               const empName = employees.find(e => e.id === log.employee_id)?.name || "Ramesh Kumar";
                               return (
-                                <tr key={log.id} className="border-b border-white/[0.03] hover:bg-white/[0.015] transition-all">
-                                  <td className="px-5 py-3 font-semibold text-white">{empName}</td>
-                                  <td className="px-5 py-3 text-zinc-300 font-mono">{log.punch_in ? new Date(log.punch_in).toLocaleTimeString() : "—"}</td>
-                                  <td className="px-5 py-3 text-zinc-300 font-mono">{log.punch_out ? new Date(log.punch_out).toLocaleTimeString() : "—"}</td>
-                                  <td className="px-5 py-3 text-zinc-300 font-bold">{log.shift_multiplier || 1.0}x</td>
+                                <tr key={log.id} className="border-b border-border-custom hover:bg-elevated transition-all">
+                                  <td className="px-5 py-3 font-semibold text-foreground">{empName}</td>
+                                  <td className="px-5 py-3 text-muted font-mono">{log.punch_in ? new Date(log.punch_in).toLocaleTimeString() : "—"}</td>
+                                  <td className="px-5 py-3 text-muted font-mono">{log.punch_out ? new Date(log.punch_out).toLocaleTimeString() : "—"}</td>
+                                  <td className="px-5 py-3 text-muted font-bold">{log.shift_multiplier || 1.0}x</td>
                                   <td className="px-5 py-3">
                                     {log.location_verified ? (
                                       <span className="text-emerald-400">✓ Yes</span>
@@ -603,7 +603,7 @@ export default function AttendancePage() {
                     {SUBCONTRACTORS.map((sc) => (
                       <div key={sc.id} className="bg-card border border-border-custom rounded-lg border border-border-custom rounded-lg p-5 flex flex-col justify-between hover:border-border-custom transition-all">
                         <div>
-                          <h3 className="text-sm font-bold text-white">{sc.name}</h3>
+                          <h3 className="text-sm font-bold text-foreground">{sc.name}</h3>
                           <p className="text-[10px] text-muted mt-1">Labour Provider Crew</p>
                           <div className="mt-4 flex items-center justify-between text-xs">
                             <span className="text-muted">Active Workers Today:</span>
@@ -626,7 +626,7 @@ export default function AttendancePage() {
                       <div className="bg-background border border-border-custom rounded-lg w-full max-w-4xl max-h-[85vh] overflow-hidden flex flex-col shadow-2xl">
                         <div className="px-6 py-4 border-b border-border-custom flex items-center justify-between">
                           <div>
-                            <h2 className="text-sm font-extrabold text-white">Log Subcontractor Crew Attendance</h2>
+                            <h2 className="text-sm font-extrabold text-foreground">Log Subcontractor Crew Attendance</h2>
                             <p className="text-[10px] text-muted mt-0.5">{selectedSubcon.name} · Role Allocation Grid</p>
                           </div>
                           <button onClick={() => setSelectedSubcon(null)} className="text-muted hover:text-foreground">✕</button>
@@ -651,7 +651,7 @@ export default function AttendancePage() {
                                 </thead>
                                 <tbody>
                                   {subconRows.map((row, idx) => (
-                                    <tr key={idx} className="border-b border-border-custom hover:bg-white/[0.01]">
+                                    <tr key={idx} className="border-b border-border-custom hover:bg-elevated">
                                       <td className="px-4 py-2">
                                         <input
                                           type="text"
@@ -661,7 +661,7 @@ export default function AttendancePage() {
                                             next[idx].role = e.target.value;
                                             setSubconRows(next);
                                           }}
-                                          className="bg-elevated border border-border-custom rounded px-2 py-1 text-xs text-white w-28"
+                                          className="bg-elevated border border-border-custom rounded px-2 py-1 text-xs text-foreground w-28"
                                         />
                                       </td>
                                       <td className="px-4 py-2">
@@ -673,7 +673,7 @@ export default function AttendancePage() {
                                             next[idx].count = parseInt(e.target.value) || 0;
                                             setSubconRows(next);
                                           }}
-                                          className="bg-elevated border border-border-custom rounded px-2 py-1 text-xs text-white w-16"
+                                          className="bg-elevated border border-border-custom rounded px-2 py-1 text-xs text-foreground w-16"
                                         />
                                       </td>
                                       <td className="px-4 py-2">
@@ -686,7 +686,7 @@ export default function AttendancePage() {
                                             next[idx].shift = parseFloat(e.target.value) || 1.0;
                                             setSubconRows(next);
                                           }}
-                                          className="bg-elevated border border-border-custom rounded px-2 py-1 text-xs text-white w-16"
+                                          className="bg-elevated border border-border-custom rounded px-2 py-1 text-xs text-foreground w-16"
                                         />
                                       </td>
                                       <td className="px-4 py-2">
@@ -698,7 +698,7 @@ export default function AttendancePage() {
                                             next[idx].ot = parseFloat(e.target.value) || 0;
                                             setSubconRows(next);
                                           }}
-                                          className="bg-elevated border border-border-custom rounded px-2 py-1 text-xs text-white w-16"
+                                          className="bg-elevated border border-border-custom rounded px-2 py-1 text-xs text-foreground w-16"
                                         />
                                       </td>
                                       <td className="px-4 py-2">
@@ -710,7 +710,7 @@ export default function AttendancePage() {
                                             next[idx].allowance = parseFloat(e.target.value) || 0;
                                             setSubconRows(next);
                                           }}
-                                          className="bg-elevated border border-border-custom rounded px-2 py-1 text-xs text-white w-20"
+                                          className="bg-elevated border border-border-custom rounded px-2 py-1 text-xs text-foreground w-20"
                                         />
                                       </td>
                                       <td className="px-4 py-2">
@@ -722,7 +722,7 @@ export default function AttendancePage() {
                                             next[idx].deduction = parseFloat(e.target.value) || 0;
                                             setSubconRows(next);
                                           }}
-                                          className="bg-elevated border border-border-custom rounded px-2 py-1 text-xs text-white w-20"
+                                          className="bg-elevated border border-border-custom rounded px-2 py-1 text-xs text-foreground w-20"
                                         />
                                       </td>
                                       <td className="px-4 py-2">
@@ -735,7 +735,7 @@ export default function AttendancePage() {
                                             setSubconRows(next);
                                           }}
                                           placeholder="Remarks"
-                                          className="bg-elevated border border-border-custom rounded px-2 py-1 text-xs text-white w-full"
+                                          className="bg-elevated border border-border-custom rounded px-2 py-1 text-xs text-foreground w-full"
                                         />
                                       </td>
                                     </tr>
@@ -752,7 +752,7 @@ export default function AttendancePage() {
                             <div className="flex items-center gap-4">
                               <button
                                 onClick={() => setSubconPhoto("https://images.unsplash.com/photo-1541888946425-d81bb19240f5?w=500")}
-                                className="flex items-center gap-2 px-4 py-2 bg-input hover:bg-elevated border border-border-custom rounded-md text-xs font-bold text-zinc-300 transition-all"
+                                className="flex items-center gap-2 px-4 py-2 bg-input hover:bg-elevated border border-border-custom rounded-md text-xs font-bold text-muted transition-all"
                               >
                                 📷 Camera / Capture Crew Photo
                               </button>
@@ -823,23 +823,23 @@ export default function AttendancePage() {
                       {subconRows.map((row: any, idx: number) => {
                         const daily = row.count * row.rate * (row.shift || 1) + row.count * (row.ot || 0) * (row.rate / 8) + (row.allowance || 0) - (row.deduction || 0);
                         return (
-                          <tr key={idx} className="border-b border-white/[0.03]">
-                            <td className="py-2.5 pl-4 pr-3 text-zinc-300 font-semibold">{row.role || `Role ${idx + 1}`}</td>
-                            <td className="py-2.5 px-3 text-center font-mono text-white font-bold">{row.count}</td>
-                            <td className="py-2.5 px-3 text-center font-mono text-zinc-300">₹{row.rate}</td>
+                          <tr key={idx} className="border-b border-border-custom">
+                            <td className="py-2.5 pl-4 pr-3 text-muted font-semibold">{row.role || `Role ${idx + 1}`}</td>
+                            <td className="py-2.5 px-3 text-center font-mono text-foreground font-bold">{row.count}</td>
+                            <td className="py-2.5 px-3 text-center font-mono text-muted">₹{row.rate}</td>
                             <td className="py-2.5 px-3 text-center">
                               <select value={row.shift || 1}
                                 onChange={(e) => { const next = [...subconRows]; (next[idx] as any).shift = parseFloat(e.target.value); setSubconRows(next); }}
-                                className="bg-elevated border border-border-custom rounded px-1.5 py-0.5 text-[10px] text-white">
+                                className="bg-elevated border border-border-custom rounded px-1.5 py-0.5 text-[10px] text-foreground">
                                 {[0.25, 0.5, 0.75, 1.0, 1.5, 2.0].map(v => <option key={v} value={v}>{v}×</option>)}
                               </select>
                             </td>
                             <td className="py-2.5 px-3 text-center">
                               <input type="number" min={0} value={row.ot || 0}
                                 onChange={(e) => { const next = [...subconRows]; (next[idx] as any).ot = parseFloat(e.target.value) || 0; setSubconRows(next); }}
-                                className="bg-elevated border border-border-custom rounded px-1.5 py-0.5 text-[10px] text-white w-12 text-center" placeholder="0" />
+                                className="bg-elevated border border-border-custom rounded px-1.5 py-0.5 text-[10px] text-foreground w-12 text-center" placeholder="0" />
                             </td>
-                            <td className="py-2.5 px-3 text-center font-mono text-zinc-300">₹{row.allowance || 0}</td>
+                            <td className="py-2.5 px-3 text-center font-mono text-muted">₹{row.allowance || 0}</td>
                             <td className="py-2.5 pr-4 text-right font-mono font-bold text-emerald-400">₹{daily.toLocaleString("en-IN")}</td>
                           </tr>
                         );
@@ -847,7 +847,7 @@ export default function AttendancePage() {
                     </tbody>
                     <tfoot>
                       <tr className="border-t border-border-custom bg-background">
-                        <td colSpan={6} className="py-2.5 pl-4 text-xs font-bold text-zinc-300">Subcontractor Daily Total</td>
+                        <td colSpan={6} className="py-2.5 pl-4 text-xs font-bold text-muted">Subcontractor Daily Total</td>
                         <td className="py-2.5 pr-4 text-right font-bold text-primary font-mono text-sm">
                           ₹{subconRows.reduce((s: any, r: any) => s + r.count * r.rate * (r.shift || 1) + r.count * (r.ot || 0) * (r.rate / 8) + (r.allowance || 0) - (r.deduction || 0), 0).toLocaleString("en-IN")}
                         </td>
@@ -861,7 +861,7 @@ export default function AttendancePage() {
               <div className="bg-input border border-border-custom rounded-lg overflow-hidden">
                 <div className="px-5 py-3 border-b border-border-custom flex items-center justify-between">
                   <div>
-                    <h2 className="text-xs font-bold text-white uppercase tracking-wider">Monthly Payroll Compilation — June 2026</h2>
+                    <h2 className="text-xs font-bold text-foreground uppercase tracking-wider">Monthly Payroll Compilation — June 2026</h2>
                     <p className="text-[10px] text-muted mt-0.5">Salary + PF + ESI statutory deductions per IS code. Download payslip per employee.</p>
                   </div>
                   <button className="px-3 py-1.5 bg-primary text-white text-[10px] font-bold rounded-lg hover:opacity-90">📤 Export All Payslips</button>
@@ -890,10 +890,10 @@ export default function AttendancePage() {
                       ].map((emp, i) => {
                         const net = emp.gross - emp.pf - emp.esi - emp.tds;
                         return (
-                          <tr key={i} className="hover:bg-white/[0.015]">
-                            <td className="py-3 pl-5 pr-3 font-semibold text-white">{emp.name}</td>
+                          <tr key={i} className="hover:bg-elevated">
+                            <td className="py-3 pl-5 pr-3 font-semibold text-foreground">{emp.name}</td>
                             <td className="py-3 px-3 text-muted">{emp.role}</td>
-                            <td className="py-3 px-3 text-right font-mono text-zinc-200">₹{emp.gross.toLocaleString("en-IN")}</td>
+                            <td className="py-3 px-3 text-right font-mono text-muted">₹{emp.gross.toLocaleString("en-IN")}</td>
                             <td className="py-3 px-3 text-right font-mono text-red-400">₹{emp.pf.toLocaleString("en-IN")}</td>
                             <td className="py-3 px-3 text-right font-mono text-red-400">₹{emp.esi.toLocaleString("en-IN")}</td>
                             <td className="py-3 px-3 text-right font-mono text-red-400">₹{emp.tds.toLocaleString("en-IN")}</td>
@@ -910,8 +910,8 @@ export default function AttendancePage() {
                     </tbody>
                     <tfoot>
                       <tr className="border-t-2 border-border-custom bg-background">
-                        <td colSpan={2} className="py-3 pl-5 font-bold text-white">TOTAL PAYROLL</td>
-                        <td className="py-3 px-3 text-right font-bold font-mono text-white">₹1,95,000</td>
+                        <td colSpan={2} className="py-3 pl-5 font-bold text-foreground">TOTAL PAYROLL</td>
+                        <td className="py-3 px-3 text-right font-bold font-mono text-foreground">₹1,95,000</td>
                         <td className="py-3 px-3 text-right font-bold font-mono text-red-400">₹9,000</td>
                         <td className="py-3 px-3 text-right font-bold font-mono text-red-400">₹825</td>
                         <td className="py-3 px-3 text-right font-bold font-mono text-red-400">₹5,000</td>
@@ -933,7 +933,7 @@ export default function AttendancePage() {
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-background border border-border-custom rounded-lg w-full max-w-md shadow-2xl p-6 space-y-4">
             <div className="flex items-center justify-between border-b border-border-custom pb-2">
-              <h3 className="text-sm font-extrabold text-white">Select Regional Language</h3>
+              <h3 className="text-sm font-extrabold text-foreground">Select Regional Language</h3>
               <button onClick={() => setShowLanguageDrawer(false)} className="text-muted hover:text-foreground">✕</button>
             </div>
             
@@ -957,9 +957,9 @@ export default function AttendancePage() {
         <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-card border border-border-custom rounded-lg w-full max-w-2xl shadow-2xl overflow-hidden">
             {/* Header */}
-            <div className="p-6 border-b border-border-custom flex items-center justify-between bg-white/[0.01]">
+            <div className="p-6 border-b border-border-custom flex items-center justify-between bg-elevated">
               <div>
-                <h3 className="text-sm font-bold uppercase tracking-wider text-white">Project Setting</h3>
+                <h3 className="text-sm font-bold uppercase tracking-wider text-foreground">Project Setting</h3>
                 <p className="text-[10px] text-muted mt-0.5">Configure project details, members and geofence parameters</p>
               </div>
               <button onClick={() => setIsSettingsModalOpen(false)} className="text-muted hover:text-foreground cursor-pointer">✕</button>
@@ -1014,7 +1014,7 @@ export default function AttendancePage() {
                           type="text"
                           value={projectSettings.code || ""}
                           onChange={(e) => setProjectSettings({ ...projectSettings, code: e.target.value })}
-                          className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                          className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs"
                         />
                       </div>
                       <div className="space-y-1">
@@ -1023,7 +1023,7 @@ export default function AttendancePage() {
                           type="text"
                           value={projectSettings.name || ""}
                           onChange={(e) => setProjectSettings({ ...projectSettings, name: e.target.value })}
-                          className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                          className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs"
                         />
                       </div>
                     </div>
@@ -1034,7 +1034,7 @@ export default function AttendancePage() {
                         <select
                           value={projectSettings.stage}
                           onChange={(e) => setProjectSettings({ ...projectSettings, stage: e.target.value })}
-                          className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                          className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs"
                         >
                           <option value="Ongoing">Ongoing</option>
                           <option value="Planning">Planning</option>
@@ -1047,7 +1047,7 @@ export default function AttendancePage() {
                         <select
                           value={projectSettings.category}
                           onChange={(e) => setProjectSettings({ ...projectSettings, category: e.target.value })}
-                          className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                          className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs"
                         >
                           <option value="Residential">Residential</option>
                           <option value="Commercial">Commercial</option>
@@ -1063,7 +1063,7 @@ export default function AttendancePage() {
                           type="date"
                           value={projectSettings.start_date}
                           onChange={(e) => setProjectSettings({ ...projectSettings, start_date: e.target.value })}
-                          className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs font-mono"
+                          className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs font-mono"
                         />
                       </div>
                       <div className="space-y-1">
@@ -1072,7 +1072,7 @@ export default function AttendancePage() {
                           type="date"
                           value={projectSettings.end_date}
                           onChange={(e) => setProjectSettings({ ...projectSettings, end_date: e.target.value })}
-                          className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs font-mono"
+                          className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs font-mono"
                         />
                       </div>
                     </div>
@@ -1083,7 +1083,7 @@ export default function AttendancePage() {
                         value={projectSettings.address}
                         onChange={(e) => setProjectSettings({ ...projectSettings, address: e.target.value })}
                         rows={2}
-                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs resize-none"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs resize-none"
                       />
                     </div>
 
@@ -1092,7 +1092,7 @@ export default function AttendancePage() {
                       <select
                         value={projectSettings.company_branch}
                         onChange={(e) => setProjectSettings({ ...projectSettings, company_branch: e.target.value })}
-                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs"
                       >
                         <option value="Select Company Address">Select Company Address</option>
                         <option value="Pune Main Office">Pune Main Office (Branch #1)</option>
@@ -1107,7 +1107,7 @@ export default function AttendancePage() {
                           type="number"
                           value={projectSettings.attendance_radius_meters}
                           onChange={(e) => setProjectSettings({ ...projectSettings, attendance_radius_meters: Number(e.target.value) })}
-                          className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                          className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs"
                         />
                       </div>
                       <div className="space-y-1">
@@ -1116,7 +1116,7 @@ export default function AttendancePage() {
                           type="number"
                           value={projectSettings.value}
                           onChange={(e) => setProjectSettings({ ...projectSettings, value: Number(e.target.value) })}
-                          className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs font-mono"
+                          className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs font-mono"
                         />
                       </div>
                     </div>
@@ -1129,7 +1129,7 @@ export default function AttendancePage() {
                           value={projectSettings.orientation}
                           onChange={(e) => setProjectSettings({ ...projectSettings, orientation: e.target.value })}
                           placeholder="e.g. North-Facing"
-                          className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                          className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs"
                         />
                       </div>
                       <div className="space-y-1">
@@ -1139,7 +1139,7 @@ export default function AttendancePage() {
                           value={projectSettings.dimension}
                           onChange={(e) => setProjectSettings({ ...projectSettings, dimension: e.target.value })}
                           placeholder="e.g. 50x120"
-                          className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                          className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs"
                         />
                       </div>
                     </div>
@@ -1155,11 +1155,11 @@ export default function AttendancePage() {
                   </div>
                   <div className="divide-y divide-border-custom/50 bg-elevated/20 border border-border-custom rounded-xl p-3 text-xs">
                     <div className="py-2 flex justify-between">
-                      <span className="font-semibold text-white">Yash Desai</span>
+                      <span className="font-semibold text-foreground">Yash Desai</span>
                       <span className="text-muted">Administrator</span>
                     </div>
                     <div className="py-2 flex justify-between">
-                      <span className="font-semibold text-white">Ramesh Sharma</span>
+                      <span className="font-semibold text-foreground">Ramesh Sharma</span>
                       <span className="text-muted">Site Engineer</span>
                     </div>
                   </div>
@@ -1169,7 +1169,7 @@ export default function AttendancePage() {
               {settingsTab === "location" && (
                 <div className="space-y-4 text-center py-6">
                   <span className="text-3xl">📍</span>
-                  <h4 className="text-xs font-bold text-white uppercase tracking-wider">Geofence Boundary Map</h4>
+                  <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">Geofence Boundary Map</h4>
                   <p className="text-[10px] text-muted max-w-xs mx-auto leading-relaxed">
                     Geofencing matches GPS punch coordinates to project boundaries within a {projectSettings.attendance_radius_meters}m radius limit.
                   </p>
@@ -1178,7 +1178,7 @@ export default function AttendancePage() {
             </div>
 
             {/* Footer */}
-            <div className="p-6 border-t border-border-custom flex items-center justify-end gap-3 bg-white/[0.01]">
+            <div className="p-6 border-t border-border-custom flex items-center justify-end gap-3 bg-elevated">
               <button
                 onClick={() => setIsSettingsModalOpen(false)}
                 className="px-4 py-2 border border-border-custom rounded-lg text-xs font-semibold text-muted hover:text-foreground cursor-pointer"

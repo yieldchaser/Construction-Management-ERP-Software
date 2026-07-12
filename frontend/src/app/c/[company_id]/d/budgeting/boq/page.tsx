@@ -162,7 +162,7 @@ export default function BOQPage() {
       <div className="flex-1 flex flex-col overflow-hidden">
         <header className="h-14 border-b border-border-custom bg-card px-6 flex items-center justify-between shrink-0">
           <div>
-            <h1 className="text-sm font-bold text-white">
+            <h1 className="text-sm font-bold text-foreground">
               {tab === "boq" ? "Bill of Quantities (BOQ)" : tab === "variance" ? "Budget vs Actual Variance" : "Budget Revisions"}
             </h1>
             <div className="text-[10px] text-muted">Total Budget: {fmt(totalBudget)} · Spent: {fmt(totalActual)}</div>
@@ -187,11 +187,11 @@ export default function BOQPage() {
             <div className="flex flex-col h-full overflow-hidden">
               {/* Filters */}
               <div className="flex items-center gap-3 px-5 py-3 border-b border-border-custom shrink-0">
-                <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search item, code, section..." className="flex-1 bg-input border border-border-custom rounded-lg px-3 py-1.5 text-xs text-white placeholder-zinc-600" />
+                <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search item, code, section..." className="flex-1 bg-input border border-border-custom rounded-lg px-3 py-1.5 text-xs text-foreground placeholder-muted" />
                 <div className="flex gap-1">
                   {["All", ...sections].map(s => (
                     <button key={s} onClick={() => setFilterSection(s)}
-                      className={`px-2.5 py-1 text-[9px] font-bold rounded-lg transition-all ${filterSection === s ? "bg-primary text-white" : "bg-white/5 text-muted hover:text-foreground"}`}>
+                      className={`px-2.5 py-1 text-[9px] font-bold rounded-lg transition-all ${filterSection === s ? "bg-primary text-white" : "bg-elevated text-muted hover:text-foreground"}`}>
                       {s === "All" ? "All" : s.split("—")[0].trim()}
                     </button>
                   ))}
@@ -223,7 +223,7 @@ export default function BOQPage() {
                         <React.Fragment key={section}>
                           {/* Section header */}
                           <tr className="border-b border-border-custom">
-                            <td colSpan={9} className="py-2 pl-5 bg-white/[0.01]">
+                            <td colSpan={9} className="py-2 pl-5 bg-elevated">
                               <div className="flex items-center gap-3">
                                 <span className={`text-[9px] font-bold px-2 py-0.5 rounded border ${sColor}`}>{section}</span>
                                 <span className="text-[10px] text-muted">Budget: {fmt(secBudget)} · Actual: {fmt(secActual)}</span>
@@ -236,14 +236,14 @@ export default function BOQPage() {
                             const vAmt = item.actual_spent - item.amount;
                             const sb = statusBadge(vPct);
                             return (
-                              <tr key={item.id} className="border-b border-white/[0.03] hover:bg-white/[0.015] transition-colors">
+                              <tr key={item.id} className="border-b border-border-custom hover:bg-elevated transition-colors">
                                 <td className="py-3 pl-5 pr-3 font-mono text-muted">{item.costCode}</td>
-                                <td className="py-3 pr-4 text-white font-medium">{item.item_name}</td>
+                                <td className="py-3 pr-4 text-foreground font-medium">{item.item_name}</td>
                                 <td className="py-3 px-3 text-center text-muted">{item.unit}</td>
-                                <td className="py-3 px-3 text-right font-mono text-zinc-300">{fmtN(item.quantity)}</td>
-                                <td className="py-3 px-3 text-right font-mono text-zinc-300">{fmtN(item.rate)}</td>
-                                <td className="py-3 px-3 text-right font-mono font-semibold text-zinc-200">{fmt(item.amount)}</td>
-                                <td className="py-3 px-3 text-right font-mono font-semibold text-zinc-200">{fmt(item.actual_spent)}</td>
+                                <td className="py-3 px-3 text-right font-mono text-muted">{fmtN(item.quantity)}</td>
+                                <td className="py-3 px-3 text-right font-mono text-muted">{fmtN(item.rate)}</td>
+                                <td className="py-3 px-3 text-right font-mono font-semibold text-foreground">{fmt(item.amount)}</td>
+                                <td className="py-3 px-3 text-right font-mono font-semibold text-foreground">{fmt(item.actual_spent)}</td>
                                 <td className={`py-3 px-3 text-right font-mono font-bold ${varColor(vPct)}`}>
                                   {vAmt >= 0 ? "+" : ""}{fmt(vAmt)}
                                   <span className="text-[9px] ml-1 opacity-70">({vPct > 0 ? "+" : ""}{vPct.toFixed(1)}%)</span>
@@ -260,9 +260,9 @@ export default function BOQPage() {
                   </tbody>
                   <tfoot className="border-t-2 border-border-custom">
                     <tr className="bg-input">
-                      <td colSpan={5} className="py-3 pl-5 font-bold text-white text-xs">PROJECT TOTAL</td>
-                      <td className="py-3 px-3 text-right font-bold text-white font-mono">{fmt(totalBudget)}</td>
-                      <td className="py-3 px-3 text-right font-bold text-white font-mono">{fmt(totalActual)}</td>
+                      <td colSpan={5} className="py-3 pl-5 font-bold text-foreground text-xs">PROJECT TOTAL</td>
+                      <td className="py-3 px-3 text-right font-bold text-foreground font-mono">{fmt(totalBudget)}</td>
+                      <td className="py-3 px-3 text-right font-bold text-foreground font-mono">{fmt(totalActual)}</td>
                       <td className={`py-3 px-3 text-right font-bold font-mono ${varColor(overallPct)}`}>
                         {totalVariance >= 0 ? "+" : ""}{fmt(totalVariance)}
                         <span className="text-[9px] ml-1 opacity-70">({overallPct > 0 ? "+" : ""}{overallPct.toFixed(1)}%)</span>
@@ -284,7 +284,7 @@ export default function BOQPage() {
               <div className="grid grid-cols-4 gap-3">
                 {[
                   { label: "Total Budget", value: fmt(totalBudget), sub: "Original contract value", color: "text-blue-400" },
-                  { label: "Total Actual Spent", value: fmt(totalActual), sub: "As of today", color: "text-white" },
+                  { label: "Total Actual Spent", value: fmt(totalActual), sub: "As of today", color: "text-foreground" },
                   { label: "Variance (₹)", value: (totalVariance >= 0 ? "+" : "") + fmt(totalVariance), sub: totalVariance > 0 ? "Over budget" : "Under budget", color: varColor(overallPct) },
                   { label: "Variance (%)", value: (overallPct > 0 ? "+" : "") + overallPct.toFixed(1) + "%", sub: statusBadge(overallPct).label, color: varColor(overallPct) },
                 ].map(k => (
@@ -298,7 +298,7 @@ export default function BOQPage() {
 
               {/* Section summary bars */}
               <div className="bg-input border border-border-custom rounded-md p-5 space-y-4">
-                <h3 className="text-xs font-bold text-zinc-300 uppercase tracking-wider">Section-wise Budget vs Actual</h3>
+                <h3 className="text-xs font-bold text-muted uppercase tracking-wider">Section-wise Budget vs Actual</h3>
                 {sections.map(section => {
                   const secItems = boqItems.filter(i => i.section === section);
                   const sBudget = secItems.reduce((s, i) => s + i.amount, 0);
@@ -311,13 +311,13 @@ export default function BOQPage() {
                       <div className="flex items-center justify-between text-xs">
                         <span className={`text-[9px] font-bold px-2 py-0.5 rounded border ${sColor}`}>{section}</span>
                         <div className="text-right">
-                          <span className="text-zinc-300 font-mono">{fmt(sActual)}</span>
+                          <span className="text-muted font-mono">{fmt(sActual)}</span>
                           <span className="text-muted mx-1">/</span>
                           <span className="text-muted font-mono">{fmt(sBudget)}</span>
                           <span className={`ml-2 text-[10px] font-bold ${varColor(vp)}`}>({vp > 0 ? "+" : ""}{vp.toFixed(1)}%)</span>
                         </div>
                       </div>
-                      <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                      <div className="h-2 bg-elevated rounded-full overflow-hidden">
                         <div className={`h-full rounded-full transition-all ${pct > 110 ? "bg-red-500" : pct > 100 ? "bg-amber-500" : "bg-emerald-500"}`}
                           style={{ width: `${Math.min(pct, 100)}%` }} />
                       </div>
@@ -328,7 +328,7 @@ export default function BOQPage() {
 
               {/* Variance table by cost code */}
               <div className="bg-input border border-border-custom rounded-md overflow-hidden">
-                <div className="px-5 py-3 border-b border-border-custom text-xs font-bold text-zinc-300">Cost Code Variance Detail</div>
+                <div className="px-5 py-3 border-b border-border-custom text-xs font-bold text-muted">Cost Code Variance Detail</div>
                 <table className="w-full text-xs text-left">
                   <thead>
                     <tr className="border-b border-border-custom text-muted text-[9px] uppercase tracking-wider">
@@ -340,7 +340,7 @@ export default function BOQPage() {
                       <th className="py-2.5 pr-5 text-right">EAC*</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-white/[0.03]">
+                  <tbody className="divide-y divide-border-custom">
                     {boqItems.map(item => {
                       const vPct = varPct(item.amount, item.actual_spent);
                       const vAmt = item.actual_spent - item.amount;
@@ -348,11 +348,11 @@ export default function BOQPage() {
                       const pctComplete = item.actual_spent > 0 ? Math.min((item.actual_spent / item.amount) * 0.6, 0.95) : 0;
                       const eac = pctComplete > 0 ? item.actual_spent / pctComplete : item.amount;
                       return (
-                        <tr key={item.id} className="hover:bg-white/[0.01]">
+                        <tr key={item.id} className="hover:bg-elevated">
                           <td className="py-2.5 pl-5 pr-3 font-mono text-muted">{item.costCode}</td>
-                          <td className="py-2.5 pr-4 text-zinc-300 line-clamp-1">{item.item_name}</td>
+                          <td className="py-2.5 pr-4 text-muted line-clamp-1">{item.item_name}</td>
                           <td className="py-2.5 px-3 text-right font-mono text-muted">{fmt(item.amount)}</td>
-                          <td className="py-2.5 px-3 text-right font-mono text-zinc-300">{fmt(item.actual_spent)}</td>
+                          <td className="py-2.5 px-3 text-right font-mono text-muted">{fmt(item.actual_spent)}</td>
                           <td className={`py-2.5 px-3 text-right font-mono font-bold ${varColor(vPct)}`}>
                             {vAmt >= 0 ? "+" : ""}{fmt(vAmt)}
                           </td>
@@ -377,10 +377,10 @@ export default function BOQPage() {
                   <div key={rev.id} className={`bg-input border rounded-md p-5 ${idx === revisions.length - 1 ? "border-border-custom ring-1 ring-primary/10" : "border-border-custom"}`}>
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-3">
-                        <span className={`text-[9px] font-bold px-2 py-0.5 rounded border ${idx === revisions.length - 1 ? "bg-primary/10 border-primary/20 text-primary" : "bg-zinc-700/30 border-zinc-600/20 text-muted"}`}>
+                        <span className={`text-[9px] font-bold px-2 py-0.5 rounded border ${idx === revisions.length - 1 ? "bg-primary/10 border-primary/20 text-primary" : "bg-elevated border-border-custom text-muted"}`}>
                           {idx === revisions.length - 1 ? "CURRENT" : `REV ${idx}`}
                         </span>
-                        <span className="text-sm font-bold text-white">{rev.version}</span>
+                        <span className="text-sm font-bold text-foreground">{rev.version}</span>
                       </div>
                       <span className="text-[10px] text-muted">{rev.date}</span>
                     </div>
@@ -395,7 +395,7 @@ export default function BOQPage() {
                 <div className="text-[10px] text-muted">Upload an Excel (.xlsx) with columns: item_name, unit, qty, rate, cost_code</div>
                 {importMsg && <div className="text-xs text-emerald-400">{importMsg}</div>}
                 <form onSubmit={handleImport} className="flex justify-center gap-2">
-                  <label className="px-4 py-2 bg-white/5 border border-border-custom text-zinc-300 text-xs rounded-lg cursor-pointer hover:bg-white/10">
+                  <label className="px-4 py-2 bg-elevated border border-border-custom text-muted text-xs rounded-lg cursor-pointer hover:bg-elevated/70">
                     {file ? file.name : "Select Excel File"}
                     <input type="file" accept=".xlsx,.xlsm" className="hidden" onChange={e => { if (e.target.files?.[0]) setFile(e.target.files[0]); }} />
                   </label>

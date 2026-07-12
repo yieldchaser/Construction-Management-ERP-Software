@@ -234,7 +234,7 @@ function ChartCard({
               transform: "translateX(-50%)",
             }}
           >
-            <div className="font-extrabold text-white border-b border-border-custom pb-1">{labels[hoveredIndex]}</div>
+            <div className="font-extrabold text-foreground border-b border-border-custom pb-1">{labels[hoveredIndex]}</div>
             <div className="flex items-center justify-between gap-4">
               <span className="text-muted">{plannedLabel}:</span>
               <span className="font-bold font-mono" style={{ color: chartColors.planned }}>{plannedValues[hoveredIndex]}%</span>
@@ -355,7 +355,7 @@ export default function CompanyAnalyticsPage() {
         <header className="flex flex-col gap-4 border-b border-border-custom bg-card px-6 py-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <div className="text-[10px] uppercase tracking-[0.28em] text-muted">Phase 14</div>
-            <h1 className="mt-2 text-2xl font-extrabold tracking-tight text-white">Advanced Analytics Dashboard</h1>
+            <h1 className="mt-2 text-2xl font-extrabold tracking-tight text-foreground">Advanced Analytics Dashboard</h1>
             <p className="mt-2 max-w-3xl text-sm text-muted">
               Cross-project KPI view for burn rate, progress cadence, labour productivity, procurement leakage, and subcontractor performance.
             </p>
@@ -372,7 +372,7 @@ export default function CompanyAnalyticsPage() {
                 label: "Budget Variance",
                 value: data ? `Rs ${formatCurrency(data.budget_variance)}` : "—",
                 hint: data ? `Spend ${formatCurrency(data.total_spend)} vs budget ${formatCurrency(data.total_budget)}` : "Loading",
-                tone: "text-white",
+                tone: "text-foreground",
               },
               {
                 label: "Burn Rate",
@@ -485,7 +485,7 @@ export default function CompanyAnalyticsPage() {
                       transform: "translateX(-50%)",
                     }}
                   >
-                    <div className="font-extrabold text-white border-b border-border-custom pb-1">
+                    <div className="font-extrabold text-foreground border-b border-border-custom pb-1">
                       {data.budget_burn_series[hoveredBurnIndex].label}
                     </div>
                     <div className="flex items-center justify-between gap-4">
@@ -496,7 +496,7 @@ export default function CompanyAnalyticsPage() {
                     </div>
                     <div className="flex items-center justify-between gap-4">
                       <span className="text-muted">Cumulative:</span>
-                      <span className="font-bold font-mono text-white">
+                      <span className="font-bold font-mono text-foreground">
                         Rs {formatCurrency(data.budget_burn_series[hoveredBurnIndex].spend)}
                       </span>
                     </div>
@@ -506,15 +506,15 @@ export default function CompanyAnalyticsPage() {
               <div className="mt-4 grid grid-cols-3 gap-3 text-xs">
                 <div className="rounded-lg border border-border-custom bg-elevated p-3">
                   <div className="text-[10px] uppercase tracking-[0.2em] text-muted">Projects</div>
-                  <div className="mt-2 text-lg font-bold text-white">{data?.project_count ?? "—"}</div>
+                  <div className="mt-2 text-lg font-bold text-foreground">{data?.project_count ?? "—"}</div>
                 </div>
                 <div className="rounded-lg border border-border-custom bg-elevated p-3">
                   <div className="text-[10px] uppercase tracking-[0.2em] text-muted">Tasks Completed</div>
-                  <div className="mt-2 text-lg font-bold text-white">{data?.completed_tasks ?? "—"}</div>
+                  <div className="mt-2 text-lg font-bold text-foreground">{data?.completed_tasks ?? "—"}</div>
                 </div>
                 <div className="rounded-lg border border-border-custom bg-elevated p-3">
                   <div className="text-[10px] uppercase tracking-[0.2em] text-muted">Area Delivered</div>
-                  <div className="mt-2 text-lg font-bold text-white">{data?.labour_productivity.completed_area_m2 ?? "—"} m2</div>
+                  <div className="mt-2 text-lg font-bold text-foreground">{data?.labour_productivity.completed_area_m2 ?? "—"} m2</div>
                 </div>
               </div>
             </div>
@@ -541,17 +541,17 @@ export default function CompanyAnalyticsPage() {
                   </thead>
                   <tbody>
                     {(data?.projects ?? []).map((project) => (
-                      <tr key={project.project_id} className="border-t border-border-custom hover:bg-white/[0.015]">
+                      <tr key={project.project_id} className="border-t border-border-custom hover:bg-elevated">
                         <td className="px-4 py-3">
-                          <div className="font-semibold text-white">{project.project_name}</div>
+                          <div className="font-semibold text-foreground">{project.project_name}</div>
                           <div className="text-[11px] text-muted">{project.code ?? "No code"}</div>
                         </td>
-                        <td className="px-4 py-3 text-right text-zinc-300">Rs {formatCurrency(project.budget)}</td>
-                        <td className="px-4 py-3 text-right text-zinc-300">Rs {formatCurrency(project.spend)}</td>
+                        <td className="px-4 py-3 text-right text-muted">Rs {formatCurrency(project.budget)}</td>
+                        <td className="px-4 py-3 text-right text-muted">Rs {formatCurrency(project.spend)}</td>
                         <td className={`px-4 py-3 text-right font-semibold ${project.variance >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
                           Rs {formatCurrency(project.variance)}
                         </td>
-                        <td className="px-4 py-3 text-right text-white">{project.completion_pct}%</td>
+                        <td className="px-4 py-3 text-right text-foreground">{project.completion_pct}%</td>
                       </tr>
                     ))}
                   </tbody>
@@ -565,11 +565,11 @@ export default function CompanyAnalyticsPage() {
                 <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
                   <div className="rounded-lg border border-border-custom bg-elevated p-4">
                     <div className="text-[10px] uppercase tracking-[0.2em] text-muted">Hours Logged</div>
-                    <div className="mt-2 text-2xl font-black text-white">{data?.labour_productivity.total_hours ?? "—"}</div>
+                    <div className="mt-2 text-2xl font-black text-foreground">{data?.labour_productivity.total_hours ?? "—"}</div>
                   </div>
                   <div className="rounded-lg border border-border-custom bg-elevated p-4">
                     <div className="text-[10px] uppercase tracking-[0.2em] text-muted">Labour Days</div>
-                    <div className="mt-2 text-2xl font-black text-white">{data?.labour_productivity.labour_days ?? "—"}</div>
+                    <div className="mt-2 text-2xl font-black text-foreground">{data?.labour_productivity.labour_days ?? "—"}</div>
                   </div>
                 </div>
               </div>
@@ -582,7 +582,7 @@ export default function CompanyAnalyticsPage() {
                       <span>Ordered</span>
                       <span>{data?.material_wastage.ordered_qty ?? "—"}</span>
                     </div>
-                    <div className="mt-2 h-2 rounded-full bg-white/[0.04]">
+                    <div className="mt-2 h-2 rounded-full bg-elevated">
                       <div className="h-2 rounded-full bg-secondary" style={{ width: "100%" }} />
                     </div>
                   </div>
@@ -591,7 +591,7 @@ export default function CompanyAnalyticsPage() {
                       <span>Consumed</span>
                       <span>{data?.material_wastage.consumed_qty ?? "—"}</span>
                     </div>
-                    <div className="mt-2 h-2 rounded-full bg-white/[0.04]">
+                    <div className="mt-2 h-2 rounded-full bg-elevated">
                       <div
                         className="h-2 rounded-full bg-emerald-500"
                         style={{
@@ -628,12 +628,12 @@ export default function CompanyAnalyticsPage() {
                 </thead>
                 <tbody>
                   {(data?.subcontractor_scorecard ?? []).map((row) => (
-                    <tr key={row.subcontractor_id} className="border-t border-border-custom hover:bg-white/[0.015]">
-                      <td className="px-4 py-3 font-semibold text-white">{row.subcontractor_name}</td>
+                    <tr key={row.subcontractor_id} className="border-t border-border-custom hover:bg-elevated">
+                      <td className="px-4 py-3 font-semibold text-foreground">{row.subcontractor_name}</td>
                       <td className="px-4 py-3 text-xs text-muted">
                         {row.project_names.length > 0 ? row.project_names.join(", ") : "No linked projects"}
                       </td>
-                      <td className="px-4 py-3 text-right text-zinc-300">{row.bill_count}</td>
+                      <td className="px-4 py-3 text-right text-muted">{row.bill_count}</td>
                       <td className="px-4 py-3 text-right font-semibold text-emerald-400">{row.on_time_rate}%</td>
                       <td className="px-4 py-3 text-right text-rose-400">{row.ncr_count}</td>
                     </tr>

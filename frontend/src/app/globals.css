@@ -12,6 +12,7 @@
   
   --primary: #7C3AED;
   --primary-hover: #6D28D9;
+  --secondary: #14B8A6;
   --success: #10B981;
   --warning: #F59E0B;
   --danger: #EF4444;
@@ -30,6 +31,7 @@
   
   --primary: #6D28D9;
   --primary-hover: #5B21B6;
+  --secondary: #0D9488;
   --success: #10B981;
   --warning: #F59E0B;
   --danger: #EF4444;
@@ -45,9 +47,10 @@
   --color-border-custom: var(--border);
   --color-input: var(--input);
   --color-muted: var(--muted);
-  
+
   --color-primary: var(--primary);
   --color-primary-hover: var(--primary-hover);
+  --color-secondary: var(--secondary);
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-danger: var(--danger);

@@ -147,7 +147,7 @@ export default function MaterialTab() {
     <div className="flex-1 flex flex-col overflow-hidden">
       <header className="h-14 border-b border-border-custom bg-card px-6 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
-          <h1 className="text-sm font-bold text-white">Material Stock</h1>
+          <h1 className="text-sm font-bold text-foreground">Material Stock</h1>
           <div className="text-[10px] text-muted">
             Current Stock = <span className="text-primary font-semibold">Received − Consumed</span>
           </div>
@@ -155,7 +155,7 @@ export default function MaterialTab() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setModalType("used")}
-            className="px-3 py-1.5 bg-rose-600/90 text-white text-xs font-bold rounded-lg hover:opacity-90 transition-all"
+            className="px-3 py-1.5 bg-rose-600/90 text-foreground text-xs font-bold rounded-lg hover:opacity-90 transition-all"
           >
             − Issue
           </button>
@@ -169,19 +169,19 @@ export default function MaterialTab() {
       </header>
 
       <div className="px-5 py-3 border-b border-border-custom shrink-0 flex flex-wrap gap-3">
-        <div className="px-3 py-1.5 rounded-lg bg-white/5 border border-border-custom text-[11px]">
+        <div className="px-3 py-1.5 rounded-lg bg-elevated border border-border-custom text-[11px]">
           <span className="text-muted">Materials</span>{" "}
-          <span className="text-white font-bold font-mono">{rows.length}</span>
+          <span className="text-foreground font-bold font-mono">{rows.length}</span>
         </div>
-        <div className="px-3 py-1.5 rounded-lg bg-white/5 border border-border-custom text-[11px]">
+        <div className="px-3 py-1.5 rounded-lg bg-elevated border border-border-custom text-[11px]">
           <span className="text-muted">Received</span>{" "}
           <span className="text-emerald-400 font-bold font-mono">{num(totRecv)}</span>
         </div>
-        <div className="px-3 py-1.5 rounded-lg bg-white/5 border border-border-custom text-[11px]">
+        <div className="px-3 py-1.5 rounded-lg bg-elevated border border-border-custom text-[11px]">
           <span className="text-muted">Consumed</span>{" "}
           <span className="text-amber-400 font-bold font-mono">{num(totCons)}</span>
         </div>
-        <div className="px-3 py-1.5 rounded-lg bg-white/5 border border-border-custom text-[11px]">
+        <div className="px-3 py-1.5 rounded-lg bg-elevated border border-border-custom text-[11px]">
           <span className="text-muted">Over-consumed</span>{" "}
           <span className={negCount > 0 ? "text-rose-400 font-bold font-mono" : "text-muted font-mono"}>
             {negCount}
@@ -231,10 +231,10 @@ export default function MaterialTab() {
                       return (
                         <tr
                           key={(r.inventory_id || r.material_name) + i}
-                          className="hover:bg-white/[0.015] transition-colors"
+                          className="hover:bg-elevated transition-colors"
                         >
                           <td className="py-2.5 pl-4 pr-2 font-mono text-muted">{i + 1}</td>
-                          <td className="py-2.5 px-2 text-white font-medium">{r.material_name}</td>
+                          <td className="py-2.5 px-2 text-foreground font-medium">{r.material_name}</td>
                           <td className="py-2.5 px-2 text-center text-muted">{r.unit || "—"}</td>
                           <td className="py-2.5 px-2 text-right font-mono text-emerald-400">
                             {num(r.received)}
@@ -243,7 +243,7 @@ export default function MaterialTab() {
                             {num(r.consumed)}
                           </td>
                           <td className="py-2.5 px-2 text-right font-mono font-semibold">
-                            <span className={neg ? "text-rose-400" : zero ? "text-zinc-400" : "text-zinc-100"}>
+                            <span className={neg ? "text-rose-400" : zero ? "text-muted" : "text-foreground"}>
                               {num(r.current_stock)}
                             </span>
                             {neg && (
@@ -256,7 +256,7 @@ export default function MaterialTab() {
                             <select
                               value={r.category}
                               onChange={(e) => recategorize(r, e.target.value)}
-                              className="bg-input border border-border-custom rounded px-1.5 py-1 text-[11px] text-zinc-200"
+                              className="bg-input border border-border-custom rounded px-1.5 py-1 text-[11px] text-muted"
                             >
                               {CATEGORIES.map((c) => (
                                 <option key={c} value={c}>
@@ -282,7 +282,7 @@ export default function MaterialTab() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="w-full max-w-md rounded-lg border border-border-custom bg-card p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-white">
+              <h3 className="text-lg font-semibold text-foreground">
                 {modalType === "received" ? "Receive Material" : "Issue Material"}
               </h3>
               <button onClick={closeModal} className="text-muted hover:text-foreground">
@@ -297,7 +297,7 @@ export default function MaterialTab() {
                   value={matName}
                   onChange={(e) => setMatName(e.target.value)}
                   placeholder="e.g. Cement OPC 53"
-                  className="mt-1 w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-600"
+                  className="mt-1 w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-sm text-foreground placeholder-muted"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -306,7 +306,7 @@ export default function MaterialTab() {
                   <select
                     value={cat}
                     onChange={(e) => setCat(e.target.value)}
-                    className="mt-1 w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-sm text-white"
+                    className="mt-1 w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-sm text-foreground"
                   >
                     {CATEGORIES.map((c) => (
                       <option key={c} value={c}>
@@ -321,7 +321,7 @@ export default function MaterialTab() {
                     value={unit}
                     onChange={(e) => setUnit(e.target.value)}
                     placeholder="bags / ltr / kg"
-                    className="mt-1 w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-600"
+                    className="mt-1 w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-sm text-foreground placeholder-muted"
                   />
                 </div>
               </div>
@@ -336,7 +336,7 @@ export default function MaterialTab() {
                   value={qty}
                   onChange={(e) => setQty(e.target.value)}
                   placeholder="0"
-                  className="mt-1 w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-600"
+                  className="mt-1 w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-sm text-foreground placeholder-muted"
                 />
               </div>
               {error && <div className="text-[11px] text-rose-400">{error}</div>}
@@ -344,14 +344,14 @@ export default function MaterialTab() {
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="px-4 py-2 bg-white/5 text-zinc-300 text-sm rounded-lg"
+                  className="px-4 py-2 bg-elevated text-muted text-sm rounded-lg"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={saving}
-                  className={`px-4 py-2 text-white text-sm font-bold rounded-lg disabled:opacity-40 ${
+                  className={`px-4 py-2 text-foreground text-sm font-bold rounded-lg disabled:opacity-40 ${
                     modalType === "received" ? "bg-primary" : "bg-rose-600"
                   }`}
                 >

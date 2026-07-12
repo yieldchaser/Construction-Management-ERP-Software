@@ -160,7 +160,7 @@ export default function ClientReportsPage() {
         {/* Header */}
         <div className="border-b border-border-custom bg-background px-6 py-4 flex items-center justify-between">
           <div>
-            <h1 className="text-sm font-bold text-white">Client Progress Reports</h1>
+            <h1 className="text-sm font-bold text-foreground">Client Progress Reports</h1>
             <p className="text-[10px] text-muted">
               Compile WBS milestones, subcontractor billing audits, and quality control indicators.
             </p>
@@ -199,11 +199,11 @@ export default function ClientReportsPage() {
                   className={`p-3.5 rounded-md border transition-all cursor-pointer ${
                     selectedReport?.id === report.id
                       ? "bg-primary/5 border-border-custom shadow-md shadow-primary/5"
-                      : "bg-white/[0.01] border-border-custom hover:bg-white/[0.03]"
+                      : "bg-elevated/40 border-border-custom hover:bg-elevated"
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2">
-                    <span className="text-xs font-semibold text-white line-clamp-2">
+                    <span className="text-xs font-semibold text-foreground line-clamp-2">
                       {report.report_name}
                     </span>
                     <span
@@ -233,7 +233,7 @@ export default function ClientReportsPage() {
                 {/* Details Header */}
                 <div className="bg-card border border-border-custom rounded-lg p-5 rounded-lg border border-border-custom bg-input flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div>
-                    <h2 className="text-sm font-bold text-white">{selectedReport.report_name}</h2>
+                    <h2 className="text-sm font-bold text-foreground">{selectedReport.report_name}</h2>
                     <p className="text-[10px] text-muted mt-0.5">
                       Created: {new Date(selectedReport.report_date).toLocaleString()}
                     </p>
@@ -250,7 +250,7 @@ export default function ClientReportsPage() {
                     <a
                       href={`${getApiHost()}/apis/v3/reports/${selectedReport.id}/download`}
                       download
-                      className="rounded-md bg-white/5 hover:bg-white/10 text-white border border-border-custom px-4 py-2 text-xs font-bold transition-all text-center"
+                      className="rounded-md bg-elevated hover:bg-sidebar text-foreground border border-border-custom px-4 py-2 text-xs font-bold transition-all text-center"
                     >
                       Download PDF
                     </a>
@@ -259,18 +259,18 @@ export default function ClientReportsPage() {
 
                 {/* Summary remarks */}
                 {selectedReport.summary_markdown && (
-                  <div className="bg-card border border-border-custom rounded-lg p-4 rounded-md border border-border-custom bg-white/[0.01]">
+                  <div className="bg-card border border-border-custom rounded-lg p-4 rounded-md border border-border-custom bg-elevated">
                     <h3 className="text-[10px] font-bold text-muted uppercase tracking-wider">
                       Executive Summary Notes
                     </h3>
-                    <p className="text-xs text-zinc-300 mt-1.5 leading-relaxed">
+                    <p className="text-xs text-muted mt-1.5 leading-relaxed">
                       {selectedReport.summary_markdown}
                     </p>
                   </div>
                 )}
 
                 {/* Embedded PDF Viewer */}
-                <div className="flex-1 bg-card border border-border-custom rounded-lg rounded-lg border border-border-custom overflow-hidden bg-zinc-950 flex flex-col min-h-[400px]">
+                <div className="flex-1 bg-card border border-border-custom rounded-lg rounded-lg border border-border-custom overflow-hidden bg-background flex flex-col min-h-[400px]">
                   <iframe
                     src={`${getApiHost()}/apis/v3/reports/${selectedReport.id}/download#toolbar=0`}
                     className="w-full h-full border-0"
@@ -279,9 +279,9 @@ export default function ClientReportsPage() {
                 </div>
               </>
             ) : (
-              <div className="flex-1 flex flex-col items-center justify-center text-center p-10 bg-white/[0.01] rounded-lg border border-border-custom">
+              <div className="flex-1 flex flex-col items-center justify-center text-center p-10 bg-elevated rounded-lg border border-border-custom">
                 <span className="text-3xl mb-3">📊</span>
-                <h2 className="text-sm font-bold text-white">No Report Selected</h2>
+                <h2 className="text-sm font-bold text-foreground">No Report Selected</h2>
                 <p className="text-xs text-muted max-w-xs mt-1">
                   Choose an existing progress report from the side log panel or click the generate button to compile a new one.
                 </p>
@@ -296,7 +296,7 @@ export default function ClientReportsPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="w-full max-w-md bg-input border border-border-custom rounded-lg overflow-hidden shadow-2xl">
             <div className="px-5 py-4 border-b border-border-custom flex items-center justify-between">
-              <h3 className="text-xs font-bold text-white uppercase tracking-wider">
+              <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">
                 Compile Progress Report
               </h3>
               <button
@@ -323,7 +323,7 @@ export default function ClientReportsPage() {
                   placeholder="e.g. Monthly Progress Report - June 2026"
                   value={reportName}
                   onChange={(e) => setReportName(e.target.value)}
-                  className="w-full bg-elevated border border-border-custom rounded-md px-3 py-2 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-primary transition-all"
+                  className="w-full bg-elevated border border-border-custom rounded-md px-3 py-2 text-xs text-foreground placeholder-muted focus:outline-none focus:border-primary transition-all"
                 />
               </div>
 
@@ -336,7 +336,7 @@ export default function ClientReportsPage() {
                   value={summaryMarkdown}
                   onChange={(e) => setSummaryMarkdown(e.target.value)}
                   rows={4}
-                  className="w-full bg-elevated border border-border-custom rounded-md px-3 py-2 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-primary transition-all resize-none"
+                  className="w-full bg-elevated border border-border-custom rounded-md px-3 py-2 text-xs text-foreground placeholder-muted focus:outline-none focus:border-primary transition-all resize-none"
                 />
               </div>
 
@@ -344,7 +344,7 @@ export default function ClientReportsPage() {
                 <button
                   type="button"
                   onClick={() => setIsOpen(false)}
-                  className="px-4 py-2 rounded-md text-xs font-bold text-muted hover:bg-white/5 transition-all"
+                  className="px-4 py-2 rounded-md text-xs font-bold text-muted hover:bg-elevated transition-all"
                 >
                   Cancel
                 </button>

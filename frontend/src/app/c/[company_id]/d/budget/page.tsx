@@ -63,10 +63,10 @@ export default function BudgetPage() {
 
         <div className="border-b border-border-custom bg-background px-6 py-3.5 flex items-center justify-between z-10">
           <div>
-            <h1 className="text-sm font-bold text-white uppercase tracking-wider">Budget & Committed Costs</h1>
+            <h1 className="text-sm font-bold text-foreground uppercase tracking-wider">Budget & Committed Costs</h1>
             <p className="text-[10px] text-muted">Committed vs Actuals · POs and WOs vs Bills</p>
           </div>
-          <button onClick={fetchData} className="px-4 py-2 rounded-md border border-border-custom text-xs font-bold hover:bg-white/[0.05] cursor-pointer">Refresh</button>
+          <button onClick={fetchData} className="px-4 py-2 rounded-md border border-border-custom text-xs font-bold hover:bg-elevated cursor-pointer">Refresh</button>
         </div>
 
         <div className="flex-1 overflow-y-auto p-6 z-10 space-y-6">
@@ -78,7 +78,7 @@ export default function BudgetPage() {
             <>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {[
-                  { label: "Total Budget", value: `₹${fmt(budget.total_budget)}`, color: "text-white" },
+                  { label: "Total Budget", value: `₹${fmt(budget.total_budget)}`, color: "text-foreground" },
                   { label: "Total Committed", value: `₹${fmt(budget.total_committed)}`, color: "text-amber-400" },
                   { label: "Total Actual", value: `₹${fmt(budget.total_actual)}`, color: "text-primary" },
                   { label: "Committed Variance", value: `₹${fmt(budget.total_committed_variance)}`, color: budget.total_committed_variance >= 0 ? "text-green-400" : "text-red-400" },
@@ -114,16 +114,16 @@ export default function BudgetPage() {
                         { label: "Subcontractor", b: budget.subcon_budget, c: budget.subcon_committed, a: budget.subcon_actual },
                         { label: "Equipment", b: budget.equipment_budget, c: budget.equipment_committed, a: budget.equipment_actual },
                       ].map((row) => (
-                        <tr key={row.label} className="border-b border-white/[0.02] hover:bg-white/[0.015] transition-all">
-                          <td className="px-5 py-3.5 text-white font-semibold">{row.label}</td>
-                          <td className="px-5 py-3.5 text-right font-mono text-zinc-300">₹{fmt(row.b)}</td>
+                        <tr key={row.label} className="border-b border-border-custom hover:bg-elevated transition-all">
+                          <td className="px-5 py-3.5 text-foreground font-semibold">{row.label}</td>
+                          <td className="px-5 py-3.5 text-right font-mono text-muted">₹{fmt(row.b)}</td>
                           <td className="px-5 py-3.5 text-right font-mono text-amber-400">₹{fmt(row.c)}</td>
                           <td className="px-5 py-3.5 text-right font-mono text-primary">₹{fmt(row.a)}</td>
                           <td className="px-5 py-3.5 text-right font-mono text-muted">₹{fmt(row.b - row.c)}</td>
                           <td className="px-5 py-3.5 text-right font-mono text-muted">₹{fmt(row.b - row.a)}</td>
                           <td className="px-5 py-3.5 text-center">
                             <div className="flex items-center justify-center gap-2">
-                              <div className="w-24 bg-white/5 rounded-full h-1.5 overflow-hidden">
+                              <div className="w-24 bg-elevated rounded-full h-1.5 overflow-hidden">
                                 <div className="h-full bg-primary rounded-full" style={{ width: `${Math.min(Number(pct(row.a, row.b)), 100)}%` }} />
                               </div>
                               <span className="text-[10px] text-muted w-10 text-right">{pct(row.a, row.b)}%</span>

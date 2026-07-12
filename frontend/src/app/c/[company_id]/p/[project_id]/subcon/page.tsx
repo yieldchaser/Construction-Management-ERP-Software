@@ -170,8 +170,8 @@ export default function SubconPage() {
                   filteredWO.map(wo => (
                     <tr key={wo.id} className="hover:bg-elevated/40 transition-colors">
                       <td className="px-4 py-3 text-muted">{wo.sNo}</td>
-                      <td className="px-4 py-3 font-mono text-zinc-300">{wo.id}</td>
-                      <td className="px-4 py-3 font-semibold text-white">{wo.subContractor}</td>
+                      <td className="px-4 py-3 font-mono text-muted">{wo.id}</td>
+                      <td className="px-4 py-3 font-semibold text-foreground">{wo.subContractor}</td>
                       <td className="px-4 py-3 text-muted">
                         <div className="flex items-center gap-2">
                           <div className="w-20 bg-background h-1.5 rounded-full overflow-hidden border border-border-custom">
@@ -180,8 +180,8 @@ export default function SubconPage() {
                           <span>{wo.progress}</span>
                         </div>
                       </td>
-                      <td className="px-4 py-3 font-bold text-white">{fmt(wo.woValue)}</td>
-                      <td className="px-4 py-3 text-zinc-300">{fmt(wo.billedValue)}</td>
+                      <td className="px-4 py-3 font-bold text-foreground">{fmt(wo.woValue)}</td>
+                      <td className="px-4 py-3 text-muted">{fmt(wo.billedValue)}</td>
                       <td className="px-4 py-3">
                         <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
                           wo.status === "Approved" ? "bg-green-500/10 text-green-400 border border-green-500/20" :
@@ -203,19 +203,19 @@ export default function SubconPage() {
             <div className="bg-card border border-border-custom rounded-xl w-full max-w-sm p-5 relative overflow-hidden" onClick={e => e.stopPropagation()}>
               <div className="flex justify-between items-start mb-4">
                 <div>
-                  <h3 className="text-xs font-bold text-white uppercase tracking-wider">Sub-Con Workorder</h3>
+                  <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Sub-Con Workorder</h3>
                   <div className="flex items-center gap-1 mt-0.5">
                     <span className="text-[11px] text-muted font-mono">#WO--1</span>
-                    <span className="text-[10px] text-muted cursor-pointer hover:text-white">✏️</span>
+                    <span className="text-[10px] text-muted cursor-pointer hover:text-foreground">✏️</span>
                   </div>
                 </div>
-                <button onClick={() => setShowWOModal(false)} className="text-muted hover:text-white text-base">✕</button>
+                <button onClick={() => setShowWOModal(false)} className="text-muted hover:text-foreground text-base">✕</button>
               </div>
 
               <div className="space-y-4 my-4 text-xs">
                 <div>
                   <label className="text-[9px] text-muted uppercase font-bold block mb-1">Date</label>
-                  <div className="bg-background border border-border-custom rounded-lg px-2.5 py-1.5 text-white flex justify-between items-center cursor-pointer">
+                  <div className="bg-background border border-border-custom rounded-lg px-2.5 py-1.5 text-foreground flex justify-between items-center cursor-pointer">
                     <span>2026-07-05</span>
                     <span className="text-muted text-[10px]">▼</span>
                   </div>
@@ -229,10 +229,10 @@ export default function SubconPage() {
                       placeholder="Search or select party..."
                       value={woForm.partyName}
                       onChange={e => setWoForm({ ...woForm, partyName: e.target.value })}
-                      className="w-full bg-background border border-border-custom rounded-lg pl-3 pr-8 py-2 text-white focus:outline-none focus:border-primary text-xs"
+                      className="w-full bg-background border border-border-custom rounded-lg pl-3 pr-8 py-2 text-foreground focus:outline-none focus:border-primary text-xs"
                     />
                     {woForm.partyName && (
-                      <button type="button" onClick={() => setWoForm({ ...woForm, partyName: "" })} className="absolute right-2.5 top-2.5 text-muted hover:text-white">✕</button>
+                      <button type="button" onClick={() => setWoForm({ ...woForm, partyName: "" })} className="absolute right-2.5 top-2.5 text-muted hover:text-foreground">✕</button>
                     )}
                   </div>
 
@@ -252,7 +252,7 @@ export default function SubconPage() {
                 {/* Upload zone */}
                 <div className="border border-dashed border-border-custom hover:border-primary/50 transition-all rounded-lg p-5 flex flex-col items-center justify-center bg-background cursor-pointer">
                   <span className="text-xl mb-1 text-primary">📤</span>
-                  <strong className="text-[11px] text-white font-bold">Attach Media</strong>
+                  <strong className="text-[11px] text-foreground font-bold">Attach Media</strong>
                 </div>
               </div>
 
@@ -263,7 +263,7 @@ export default function SubconPage() {
                 >
                   Create Workorder
                 </button>
-                <button onClick={() => setShowWOModal(false)} className="text-[11px] text-muted hover:text-white font-medium self-center mt-1">close</button>
+                <button onClick={() => setShowWOModal(false)} className="text-[11px] text-muted hover:text-foreground font-medium self-center mt-1">close</button>
               </div>
             </div>
           </div>
@@ -275,8 +275,8 @@ export default function SubconPage() {
             <div className="bg-card w-full max-w-md h-full border-l border-border-custom shadow-2xl p-6 flex flex-col justify-between overflow-y-auto" onClick={e => e.stopPropagation()}>
               <div>
                 <div className="flex items-center justify-between pb-4 border-b border-border-custom mb-5">
-                  <h2 className="text-sm font-bold text-white uppercase tracking-wider">Add Party</h2>
-                  <button onClick={() => setShowAddPartyDrawer(false)} className="text-muted hover:text-white text-lg">✕</button>
+                  <h2 className="text-sm font-bold text-foreground uppercase tracking-wider">Add Party</h2>
+                  <button onClick={() => setShowAddPartyDrawer(false)} className="text-muted hover:text-foreground text-lg">✕</button>
                 </div>
 
                 <div className="space-y-4 text-xs">
@@ -287,14 +287,14 @@ export default function SubconPage() {
                       placeholder="e.g. Yash"
                       value={partyForm.name}
                       onChange={e => setPartyForm({ ...partyForm, name: e.target.value })}
-                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary"
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary"
                     />
                   </div>
 
                   <div>
                     <label className="text-[10px] text-muted uppercase font-bold block mb-1">Phone Number</label>
                     <div className="flex gap-2">
-                      <select className="bg-background border border-border-custom rounded-lg px-2 text-white focus:outline-none">
+                      <select className="bg-background border border-border-custom rounded-lg px-2 text-foreground focus:outline-none">
                         <option>+91 (IN)</option>
                         <option>+1 (US)</option>
                         <option>+44 (UK)</option>
@@ -304,7 +304,7 @@ export default function SubconPage() {
                         placeholder="Phone number"
                         value={partyForm.phone}
                         onChange={e => setPartyForm({ ...partyForm, phone: e.target.value })}
-                        className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary"
+                        className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary"
                       />
                     </div>
                   </div>
@@ -316,7 +316,7 @@ export default function SubconPage() {
                       placeholder="email@domain.com"
                       value={partyForm.email}
                       onChange={e => setPartyForm({ ...partyForm, email: e.target.value })}
-                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary"
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary"
                     />
                   </div>
 
@@ -336,7 +336,7 @@ export default function SubconPage() {
                         "Contractor"
                       ].map((type) => (
                         <label key={type} className="flex items-center justify-between py-1 cursor-pointer hover:bg-elevated/20 px-2 rounded transition-colors select-none text-[11px]">
-                          <span className={partyForm.type === type ? "text-primary font-semibold" : "text-white"}>{type}</span>
+                          <span className={partyForm.type === type ? "text-primary font-semibold" : "text-foreground"}>{type}</span>
                           <input
                             type="radio"
                             name="partyTypeRadio"
@@ -356,21 +356,21 @@ export default function SubconPage() {
                   <div className="border border-border-custom rounded-lg divide-y divide-border-custom bg-background/50">
                     <div className="p-3 flex justify-between items-center cursor-pointer hover:bg-elevated/20">
                       <div>
-                        <span className="font-semibold text-white block">Opening Balance</span>
+                        <span className="font-semibold text-foreground block">Opening Balance</span>
                         <span className="text-[10px] text-muted">₹0.00 (Outstanding)</span>
                       </div>
                       <span className="text-muted">▶</span>
                     </div>
                     <div className="p-3 flex justify-between items-center cursor-pointer hover:bg-elevated/20">
                       <div>
-                        <span className="font-semibold text-white block">Bank Account</span>
+                        <span className="font-semibold text-foreground block">Bank Account</span>
                         <span className="text-[10px] text-muted">Add banking info</span>
                       </div>
                       <span className="text-muted">▶</span>
                     </div>
                     <div className="p-3 flex justify-between items-center cursor-pointer hover:bg-elevated/20">
                       <div>
-                        <span className="font-semibold text-white block">Address details</span>
+                        <span className="font-semibold text-foreground block">Address details</span>
                         <span className="text-[10px] text-muted">Add corporate address</span>
                       </div>
                       <span className="text-muted">▶</span>
@@ -384,7 +384,7 @@ export default function SubconPage() {
                         type="text"
                         value={partyForm.partyId}
                         onChange={e => setPartyForm({ ...partyForm, partyId: e.target.value })}
-                        className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary"
+                        className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary"
                       />
                     </div>
                     <div>
@@ -393,7 +393,7 @@ export default function SubconPage() {
                         type="date"
                         value={partyForm.joinedDate}
                         onChange={e => setPartyForm({ ...partyForm, joinedDate: e.target.value })}
-                        className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary"
+                        className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary"
                       />
                     </div>
                   </div>
@@ -408,7 +408,7 @@ export default function SubconPage() {
                 >
                   Save
                 </button>
-                <button onClick={() => setShowAddPartyDrawer(false)} className="px-4 py-2.5 rounded-lg border border-border-custom text-muted hover:text-white hover:border-white/20 text-xs">Cancel</button>
+                <button onClick={() => setShowAddPartyDrawer(false)} className="px-4 py-2.5 rounded-lg border border-border-custom text-muted hover:text-foreground hover:border-muted text-xs">Cancel</button>
               </div>
             </div>
           </div>

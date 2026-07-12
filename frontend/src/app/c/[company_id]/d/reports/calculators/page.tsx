@@ -262,7 +262,7 @@ export default function CalculatorsPage() {
         {/* Header */}
         <header className="h-16 border-b border-border-custom px-8 flex items-center justify-between bg-card shrink-0">
           <div>
-            <h1 className="text-sm font-bold text-white uppercase tracking-wider">
+            <h1 className="text-sm font-bold text-foreground uppercase tracking-wider">
               {activeCalc.replace("_", " ")} Quantity Estimator
             </h1>
             <p className="text-[10px] text-muted">IS 456 & CPWD standard quantity takeoff engine</p>
@@ -279,7 +279,7 @@ export default function CalculatorsPage() {
             {/* INPUT PANEL */}
             <div className="lg:col-span-2 rounded-lg border border-border-custom bg-card p-6 space-y-6">
               <div className="flex justify-between items-center border-b border-border-custom pb-3">
-                <h3 className="font-bold text-sm uppercase tracking-wider text-white">
+                <h3 className="font-bold text-sm uppercase tracking-wider text-foreground">
                   Takeoff Parameters
                 </h3>
                 <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold">
@@ -300,7 +300,7 @@ export default function CalculatorsPage() {
                           setColHeight(Number(e.target.value));
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary"
                       />
                     </div>
                     <div className="space-y-1">
@@ -312,7 +312,7 @@ export default function CalculatorsPage() {
                           setSlabThick(Number(e.target.value));
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary"
                       />
                     </div>
                     <div className="space-y-1">
@@ -324,7 +324,7 @@ export default function CalculatorsPage() {
                           setSizeA(Number(e.target.value));
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary"
                       />
                     </div>
                     <div className="space-y-1">
@@ -336,7 +336,7 @@ export default function CalculatorsPage() {
                           setSizeB(Number(e.target.value));
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary"
                       />
                     </div>
                     <div className="space-y-1">
@@ -347,7 +347,7 @@ export default function CalculatorsPage() {
                           setMainBarDia(Number(e.target.value));
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary"
                       >
                         {[8, 10, 12, 16, 20, 25, 32].map((d) => (
                           <option key={d} value={d}>
@@ -365,7 +365,7 @@ export default function CalculatorsPage() {
                           setMainBarCount(Number(e.target.value));
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary"
                       />
                     </div>
                     <div className="space-y-1">
@@ -377,7 +377,7 @@ export default function CalculatorsPage() {
                           setStirrupSpacing(Number(e.target.value));
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary"
                       />
                     </div>
                     <div className="space-y-1">
@@ -389,7 +389,7 @@ export default function CalculatorsPage() {
                           setSteelWastage(Number(e.target.value));
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary"
                       />
                     </div>
                   </>
@@ -407,7 +407,7 @@ export default function CalculatorsPage() {
                           setSlabLength(Number(e.target.value));
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       />
                     </div>
                     <div className="space-y-1">
@@ -419,7 +419,7 @@ export default function CalculatorsPage() {
                           setSlabWidth(Number(e.target.value));
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       />
                     </div>
                     <div className="space-y-1">
@@ -430,7 +430,7 @@ export default function CalculatorsPage() {
                           setSlabMainDia(Number(e.target.value));
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       >
                         {[8, 10, 12, 16].map((d) => (
                           <option key={d} value={d}>
@@ -448,7 +448,7 @@ export default function CalculatorsPage() {
                           setSlabMainSpacing(Number(e.target.value));
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       />
                     </div>
                     <div className="space-y-1">
@@ -459,7 +459,7 @@ export default function CalculatorsPage() {
                           setSlabDistDia(Number(e.target.value));
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       >
                         {[8, 10, 12].map((d) => (
                           <option key={d} value={d}>
@@ -477,7 +477,7 @@ export default function CalculatorsPage() {
                           setSlabDistSpacing(Number(e.target.value));
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       />
                     </div>
                   </>
@@ -494,7 +494,7 @@ export default function CalculatorsPage() {
                           setConcreteForm(e.target.value as any);
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       >
                         <option value="slab">Flat Slab / Beam</option>
                         <option value="column">Column / Pedestal</option>
@@ -509,7 +509,7 @@ export default function CalculatorsPage() {
                           setConcreteGrade(e.target.value);
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       >
                         <option value="M10">M10 (Nominal PCC 1:3:6)</option>
                         <option value="M15">M15 (Nominal PCC 1:2:4)</option>
@@ -529,7 +529,7 @@ export default function CalculatorsPage() {
                               setConcreteL(Number(e.target.value));
                               handleTriggerCalc();
                             }}
-                            className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
+                            className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                           />
                         </div>
                         <div className="space-y-1">
@@ -541,7 +541,7 @@ export default function CalculatorsPage() {
                               setConcreteW(Number(e.target.value));
                               handleTriggerCalc();
                             }}
-                            className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
+                            className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                           />
                         </div>
                         <div className="space-y-1 col-span-2">
@@ -553,7 +553,7 @@ export default function CalculatorsPage() {
                               setConcreteD(Number(e.target.value));
                               handleTriggerCalc();
                             }}
-                            className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
+                            className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                           />
                         </div>
                       </>
@@ -570,7 +570,7 @@ export default function CalculatorsPage() {
                               setSizeA(Number(e.target.value));
                               handleTriggerCalc();
                             }}
-                            className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
+                            className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                           />
                         </div>
                         <div className="space-y-1">
@@ -582,7 +582,7 @@ export default function CalculatorsPage() {
                               setSizeB(Number(e.target.value));
                               handleTriggerCalc();
                             }}
-                            className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
+                            className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                           />
                         </div>
                         <div className="space-y-1 col-span-2">
@@ -594,7 +594,7 @@ export default function CalculatorsPage() {
                               setColHeight(Number(e.target.value));
                               handleTriggerCalc();
                             }}
-                            className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
+                            className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                           />
                         </div>
                       </>
@@ -611,7 +611,7 @@ export default function CalculatorsPage() {
                               setStairSteps(Number(e.target.value));
                               handleTriggerCalc();
                             }}
-                            className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
+                            className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                           />
                         </div>
                         <div className="space-y-1">
@@ -623,7 +623,7 @@ export default function CalculatorsPage() {
                               setStairWidth(Number(e.target.value));
                               handleTriggerCalc();
                             }}
-                            className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
+                            className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                           />
                         </div>
                         <div className="space-y-1">
@@ -635,7 +635,7 @@ export default function CalculatorsPage() {
                               setStairRiser(Number(e.target.value));
                               handleTriggerCalc();
                             }}
-                            className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
+                            className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                           />
                         </div>
                         <div className="space-y-1">
@@ -647,7 +647,7 @@ export default function CalculatorsPage() {
                               setStairTread(Number(e.target.value));
                               handleTriggerCalc();
                             }}
-                            className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
+                            className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                           />
                         </div>
                         <div className="space-y-1 col-span-2">
@@ -659,7 +659,7 @@ export default function CalculatorsPage() {
                               setStairWaist(Number(e.target.value));
                               handleTriggerCalc();
                             }}
-                            className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
+                            className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                           />
                         </div>
                       </>
@@ -679,7 +679,7 @@ export default function CalculatorsPage() {
                           setRmcVolume(Number(e.target.value));
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       />
                     </div>
                     <div className="space-y-1">
@@ -690,7 +690,7 @@ export default function CalculatorsPage() {
                           setRmcMixerSize(Number(e.target.value));
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       >
                         <option value={6}>6 m³ (Standard India)</option>
                         <option value={7}>7 m³ (Standard GCC)</option>
@@ -712,7 +712,7 @@ export default function CalculatorsPage() {
                           setBrickWallL(Number(e.target.value));
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       />
                     </div>
                     <div className="space-y-1">
@@ -724,7 +724,7 @@ export default function CalculatorsPage() {
                           setBrickWallH(Number(e.target.value));
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       />
                     </div>
                     <div className="space-y-1">
@@ -735,7 +735,7 @@ export default function CalculatorsPage() {
                           setBrickSizePreset(e.target.value);
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       >
                         <option value="modular"> modular (190 x 90 x 90 mm)</option>
                         <option value="traditional">traditional (230 x 110 x 75 mm)</option>
@@ -750,7 +750,7 @@ export default function CalculatorsPage() {
                           setBrickLeaves(Number(e.target.value) > 115 ? 2 : 1);
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       >
                         <option value={115}>4.5 inch (Half Brick - Single Leaf)</option>
                         <option value={230}>9 inch (Full Brick - Double Leaf)</option>
@@ -764,7 +764,7 @@ export default function CalculatorsPage() {
                           setBrickMortarRatio(e.target.value);
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       >
                         <option value="1:3">1:3 (High Strength)</option>
                         <option value="1:4">1:4 (External Walls)</option>
@@ -786,7 +786,7 @@ export default function CalculatorsPage() {
                           setRoomL(Number(e.target.value));
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       />
                     </div>
                     <div className="space-y-1">
@@ -798,7 +798,7 @@ export default function CalculatorsPage() {
                           setRoomW(Number(e.target.value));
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       />
                     </div>
                     <div className="space-y-1">
@@ -810,7 +810,7 @@ export default function CalculatorsPage() {
                           setCeilingH(Number(e.target.value));
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       />
                     </div>
                     <div className="space-y-1">
@@ -821,7 +821,7 @@ export default function CalculatorsPage() {
                           setPaintQuality(e.target.value);
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       >
                         <option value="economy">Economy Emulsion</option>
                         <option value="premium">Premium Emulsion</option>
@@ -837,7 +837,7 @@ export default function CalculatorsPage() {
                           setDoorsCount(Number(e.target.value));
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       />
                     </div>
                     <div className="space-y-1">
@@ -849,7 +849,7 @@ export default function CalculatorsPage() {
                           setWindowsCount(Number(e.target.value));
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       />
                     </div>
                     <div className="flex items-center gap-2 pt-4 col-span-2">
@@ -879,7 +879,7 @@ export default function CalculatorsPage() {
                           setTileRoomL(Number(e.target.value));
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       />
                     </div>
                     <div className="space-y-1">
@@ -891,7 +891,7 @@ export default function CalculatorsPage() {
                           setTileRoomW(Number(e.target.value));
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       />
                     </div>
                     <div className="space-y-1">
@@ -903,7 +903,7 @@ export default function CalculatorsPage() {
                           setTileLInch(Number(e.target.value));
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       />
                     </div>
                     <div className="space-y-1">
@@ -915,7 +915,7 @@ export default function CalculatorsPage() {
                           setTileWInch(Number(e.target.value));
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       />
                     </div>
                   </>
@@ -933,7 +933,7 @@ export default function CalculatorsPage() {
                           setPlasterArea(Number(e.target.value));
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       />
                     </div>
                     <div className="space-y-1">
@@ -945,7 +945,7 @@ export default function CalculatorsPage() {
                           setPlasterThick(Number(e.target.value));
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       />
                     </div>
                     <div className="space-y-1">
@@ -956,7 +956,7 @@ export default function CalculatorsPage() {
                           setPlasterRatio(e.target.value);
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       >
                         <option value="1:3">1:3 (Ceilings / Wet areas)</option>
                         <option value="1:4">1:4 (Internal plaster standard)</option>
@@ -978,7 +978,7 @@ export default function CalculatorsPage() {
                           setWpArea(Number(e.target.value));
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       />
                     </div>
                     <div className="space-y-1">
@@ -990,7 +990,7 @@ export default function CalculatorsPage() {
                           setWpCoverage(Number(e.target.value));
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       />
                     </div>
                   </>
@@ -1008,7 +1008,7 @@ export default function CalculatorsPage() {
                           setHouseArea(Number(e.target.value));
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       />
                     </div>
                     <div className="space-y-1">
@@ -1019,7 +1019,7 @@ export default function CalculatorsPage() {
                           setHouseFloors(Number(e.target.value));
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       >
                         <option value={1}>G floor (1 floor)</option>
                         <option value={2}>G+1 (2 floors)</option>
@@ -1055,7 +1055,7 @@ export default function CalculatorsPage() {
                           setHouseCurrency(e.target.value as any);
                           handleTriggerCalc();
                         }}
-                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       >
                         <option value="INR">India (₹)</option>
                         <option value="AED">UAE (AED)</option>
@@ -1071,7 +1071,7 @@ export default function CalculatorsPage() {
             <div className="rounded-lg border border-border-custom bg-card p-6 space-y-6 flex flex-col justify-between">
               <div className="space-y-5">
                 <div className="border-b border-border-custom pb-3">
-                  <h4 className="text-xs font-bold text-white uppercase tracking-wider">
+                  <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">
                     Calculated Result
                   </h4>
                 </div>
@@ -1083,7 +1083,7 @@ export default function CalculatorsPage() {
                       <span className="text-muted text-[10px] uppercase font-bold block">
                         Main Vertical Steel
                       </span>
-                      <strong className="text-lg font-black text-white mt-1 block">
+                      <strong className="text-lg font-black text-foreground mt-1 block">
                         {colMainWeight.toFixed(2)} kg
                       </strong>
                       <span className="text-[10px] text-muted italic block mt-0.5">
@@ -1094,7 +1094,7 @@ export default function CalculatorsPage() {
                       <span className="text-muted text-[10px] uppercase font-bold block">
                         Stirrups / Ties Steel
                       </span>
-                      <strong className="text-lg font-black text-white mt-1 block">
+                      <strong className="text-lg font-black text-foreground mt-1 block">
                         {colStirrupWeight.toFixed(2)} kg
                       </strong>
                       <span className="text-[10px] text-muted italic block mt-0.5">
@@ -1129,7 +1129,7 @@ export default function CalculatorsPage() {
                       <span className="text-muted text-[10px] uppercase font-bold block">
                         Main Reinforcement
                       </span>
-                      <strong className="text-lg font-black text-white mt-1 block">
+                      <strong className="text-lg font-black text-foreground mt-1 block">
                         {slabMainWeight.toFixed(2)} kg
                       </strong>
                       <span className="text-[10px] text-muted italic block mt-0.5">
@@ -1140,7 +1140,7 @@ export default function CalculatorsPage() {
                       <span className="text-muted text-[10px] uppercase font-bold block">
                         Distribution Reinforcement
                       </span>
-                      <strong className="text-lg font-black text-white mt-1 block">
+                      <strong className="text-lg font-black text-foreground mt-1 block">
                         {slabDistWeight.toFixed(2)} kg
                       </strong>
                       <span className="text-[10px] text-muted italic block mt-0.5">
@@ -1165,7 +1165,7 @@ export default function CalculatorsPage() {
                       <span className="text-muted text-[10px] uppercase font-bold block">
                         Wet Concrete Volume
                       </span>
-                      <strong className="text-xl font-black text-white mt-1 block">
+                      <strong className="text-xl font-black text-foreground mt-1 block">
                         {concVolume.toFixed(3)} m³
                       </strong>
                     </div>
@@ -1174,20 +1174,20 @@ export default function CalculatorsPage() {
                         Dry Mix Materials (1.54 Factor)
                       </span>
                       <div className="grid grid-cols-3 gap-2 mt-3 text-center">
-                        <div className="bg-black/30 p-2 rounded">
-                          <strong className="text-sm font-bold text-white block">
+                        <div className="bg-elevated p-2 rounded">
+                          <strong className="text-sm font-bold text-foreground block">
                             {Math.ceil(concCementBags)}
                           </strong>
                           <span className="text-[9px] text-muted uppercase">Cement Bags</span>
                         </div>
-                        <div className="bg-black/30 p-2 rounded">
-                          <strong className="text-sm font-bold text-white block">
+                        <div className="bg-elevated p-2 rounded">
+                          <strong className="text-sm font-bold text-foreground block">
                             {concSandM3.toFixed(2)}
                           </strong>
                           <span className="text-[9px] text-muted uppercase">Sand (m³)</span>
                         </div>
-                        <div className="bg-black/30 p-2 rounded">
-                          <strong className="text-sm font-bold text-white block">
+                        <div className="bg-elevated p-2 rounded">
+                          <strong className="text-sm font-bold text-foreground block">
                             {concAggM3.toFixed(2)}
                           </strong>
                           <span className="text-[9px] text-muted uppercase">Aggregate (m³)</span>
@@ -1236,14 +1236,14 @@ export default function CalculatorsPage() {
                         Dry Mortar Material Split
                       </span>
                       <div className="grid grid-cols-2 gap-3 mt-2">
-                        <div className="bg-black/30 p-2 rounded text-center">
-                          <strong className="text-sm font-bold text-white block">
+                        <div className="bg-elevated p-2 rounded text-center">
+                          <strong className="text-sm font-bold text-foreground block">
                             {brickCementBags.toFixed(1)}
                           </strong>
                           <span className="text-[9px] text-muted uppercase">Cement Bags</span>
                         </div>
-                        <div className="bg-black/30 p-2 rounded text-center">
-                          <strong className="text-sm font-bold text-white block">
+                        <div className="bg-elevated p-2 rounded text-center">
+                          <strong className="text-sm font-bold text-foreground block">
                             {brickSandM3.toFixed(2)}
                           </strong>
                           <span className="text-[9px] text-muted uppercase">Sand (m³)</span>
@@ -1260,7 +1260,7 @@ export default function CalculatorsPage() {
                       <span className="text-muted text-[10px] uppercase font-bold block">
                         Paintable Wall Area
                       </span>
-                      <strong className="text-lg font-black text-white mt-1 block">
+                      <strong className="text-lg font-black text-foreground mt-1 block">
                         {paintableArea.toFixed(0)} sqft
                       </strong>
                       <span className="text-[10px] text-muted italic block mt-0.5">
@@ -1268,20 +1268,20 @@ export default function CalculatorsPage() {
                       </span>
                     </div>
                     <div className="bg-input p-4 rounded-md border border-border-custom grid grid-cols-3 gap-2 text-center">
-                      <div className="bg-black/30 p-2 rounded">
-                        <strong className="text-sm font-bold text-white block">
+                      <div className="bg-elevated p-2 rounded">
+                        <strong className="text-sm font-bold text-foreground block">
                           {paintLitres.toFixed(1)} L
                         </strong>
                         <span className="text-[9px] text-muted uppercase">Paint</span>
                       </div>
-                      <div className="bg-black/30 p-2 rounded">
-                        <strong className="text-sm font-bold text-white block">
+                      <div className="bg-elevated p-2 rounded">
+                        <strong className="text-sm font-bold text-foreground block">
                           {paintPuttyKg.toFixed(0)} kg
                         </strong>
                         <span className="text-[9px] text-muted uppercase">Putty</span>
                       </div>
-                      <div className="bg-black/30 p-2 rounded">
-                        <strong className="text-sm font-bold text-white block">
+                      <div className="bg-elevated p-2 rounded">
+                        <strong className="text-sm font-bold text-foreground block">
                           {paintPrimerL.toFixed(1)} L
                         </strong>
                         <span className="text-[9px] text-muted uppercase">Primer</span>
@@ -1297,7 +1297,7 @@ export default function CalculatorsPage() {
                       <span className="text-muted text-[10px] uppercase font-bold block">
                         Total Room Area
                       </span>
-                      <strong className="text-xl font-black text-white mt-1 block">
+                      <strong className="text-xl font-black text-foreground mt-1 block">
                         {tileRoomArea.toFixed(1)} sqft
                       </strong>
                     </div>
@@ -1322,7 +1322,7 @@ export default function CalculatorsPage() {
                       <span className="text-muted text-[10px] uppercase font-bold block">
                         Plaster Wet Volume
                       </span>
-                      <strong className="text-base font-black text-white mt-1 block">
+                      <strong className="text-base font-black text-foreground mt-1 block">
                         {plasterWetVol.toFixed(3)} m³
                       </strong>
                     </div>
@@ -1389,12 +1389,12 @@ export default function CalculatorsPage() {
                           <div key={i} className="space-y-1 text-[11px]">
                             <div className="flex justify-between text-muted">
                               <span>{item.name}</span>
-                              <span className="font-semibold text-white">
+                              <span className="font-semibold text-foreground">
                                 {currencySymbol}
                                 {itemVal.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                               </span>
                             </div>
-                            <div className="w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
+                            <div className="w-full bg-elevated h-1.5 rounded-full overflow-hidden">
                               <div
                                 className={`${item.color} h-full`}
                                 style={{ width: `${item.percentage * 100}%` }}

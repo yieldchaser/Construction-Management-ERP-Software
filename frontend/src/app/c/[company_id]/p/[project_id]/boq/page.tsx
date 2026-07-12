@@ -267,7 +267,7 @@ export default function BoqTab() {
       {/* Header */}
       <header className="h-14 border-b border-border-custom bg-card px-6 flex items-center justify-between shrink-0">
         <div>
-          <h1 className="text-sm font-bold text-white">BOQ Documents</h1>
+          <h1 className="text-sm font-bold text-foreground">BOQ Documents</h1>
           <div className="text-[10px] text-muted">
             {docs.length} BOQ document(s) · Total BOQ Value{" "}
             <span className="text-primary font-semibold">
@@ -292,7 +292,7 @@ export default function BoqTab() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search client or BOQ title..."
-          className="flex-1 bg-input border border-border-custom rounded-lg px-3 py-1.5 text-xs text-white placeholder-zinc-600 w-full"
+          className="flex-1 bg-input border border-border-custom rounded-lg px-3 py-1.5 text-xs text-foreground placeholder-muted w-full"
         />
       </div>
 
@@ -329,19 +329,19 @@ export default function BoqTab() {
                 return (
                   <React.Fragment key={d.id}>
                     <tr
-                      className="border-b border-white/[0.03] hover:bg-white/[0.015] transition-colors cursor-pointer"
+                      className="border-b border-border-custom hover:bg-elevated transition-colors cursor-pointer"
                       onClick={() => toggleExpand(d.id)}
                     >
                       <td className="py-3 pl-5 pr-2 font-mono text-muted">{idx + 1}</td>
-                      <td className="py-3 px-2 text-white font-medium">
+                      <td className="py-3 px-2 text-foreground font-medium">
                         {d.client_name || <span className="text-muted">—</span>}
                       </td>
-                      <td className="py-3 px-2 text-zinc-300">{d.title}</td>
+                      <td className="py-3 px-2 text-muted">{d.title}</td>
                       <td className="py-3 px-2 text-center">
-                        <span className="font-mono text-zinc-300">
+                        <span className="font-mono text-muted">
                           {d.milestone_done}/{d.milestone_total}
                         </span>
-                        <div className="mt-1 h-1 w-16 bg-white/5 rounded-full overflow-hidden mx-auto">
+                        <div className="mt-1 h-1 w-16 bg-elevated rounded-full overflow-hidden mx-auto">
                           <div
                             className="h-full bg-amber-500 rounded-full"
                             style={{ width: `${milestonePct}%` }}
@@ -349,10 +349,10 @@ export default function BoqTab() {
                         </div>
                       </td>
                       <td className="py-3 px-2 text-right">
-                        <span className="font-mono text-zinc-200 font-semibold">
+                        <span className="font-mono text-muted font-semibold">
                           {pct.toFixed(1)}%
                         </span>
-                        <div className="mt-1 h-1 w-20 bg-white/5 rounded-full overflow-hidden ml-auto">
+                        <div className="mt-1 h-1 w-20 bg-elevated rounded-full overflow-hidden ml-auto">
                           <div
                             className={`h-full rounded-full ${
                               pct >= 100 ? "bg-emerald-500" : pct > 0 ? "bg-blue-500" : "bg-zinc-600"
@@ -361,7 +361,7 @@ export default function BoqTab() {
                           />
                         </div>
                       </td>
-                      <td className="py-3 px-2 text-right font-mono text-zinc-200">
+                      <td className="py-3 px-2 text-right font-mono text-muted">
                         {fmtINR(d.boq_value, currencyDecimalPlaces)}
                       </td>
                       <td className="py-3 px-2 text-right font-mono font-semibold text-emerald-400">
@@ -373,7 +373,7 @@ export default function BoqTab() {
                     </tr>
 
                     {open && (
-                      <tr className="border-b border-border-custom bg-white/[0.01]">
+                      <tr className="border-b border-border-custom bg-elevated">
                         <td colSpan={8} className="px-5 py-4">
                           {/* Milestone editor */}
                           <div className="flex items-center gap-3 mb-4 text-[10px] text-muted">
@@ -386,7 +386,7 @@ export default function BoqTab() {
                               onChange={(e) =>
                                 updateMilestone(d, Math.max(0, Number(e.target.value) || 0), d.milestone_total)
                               }
-                              className="w-14 bg-input border border-border-custom rounded px-2 py-1 text-white"
+                              className="w-14 bg-input border border-border-custom rounded px-2 py-1 text-foreground"
                             />
                             <span>/</span>
                             <input
@@ -397,7 +397,7 @@ export default function BoqTab() {
                               onChange={(e) =>
                                 updateMilestone(d, d.milestone_done, Math.max(0, Number(e.target.value) || 0))
                               }
-                              className="w-14 bg-input border border-border-custom rounded px-2 py-1 text-white"
+                              className="w-14 bg-input border border-border-custom rounded px-2 py-1 text-foreground"
                             />
                             <span>· {d.item_count} line item(s)</span>
                           </div>
@@ -407,7 +407,7 @@ export default function BoqTab() {
                             className="flex items-center gap-2 mb-3"
                             onClick={(e) => e.stopPropagation()}
                           >
-                            <label className="px-3 py-1.5 bg-white/5 border border-border-custom text-zinc-300 text-xs rounded-lg cursor-pointer hover:bg-white/10">
+                            <label className="px-3 py-1.5 bg-elevated border border-border-custom text-muted text-xs rounded-lg cursor-pointer hover:bg-elevated">
                               {docFile ? docFile.name : "Import Excel items into this BOQ"}
                               <input
                                 type="file"
@@ -434,7 +434,7 @@ export default function BoqTab() {
                               href={getApi(`/budgeting/boq-documents/${d.id}/pdf`)}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-block px-3 py-1.5 bg-white/5 border border-border-custom text-zinc-300 text-xs rounded-lg hover:bg-white/10"
+                              className="inline-block px-3 py-1.5 bg-elevated border border-border-custom text-muted text-xs rounded-lg hover:bg-elevated"
                             >
                               Download PDF
                             </a>
@@ -463,26 +463,26 @@ export default function BoqTab() {
                               <tbody className="divide-y divide-white/[0.03]">
                                 {docItems.map((i) => (
                                   <tr key={i.id}>
-                                    <td className="py-1.5 pl-1 pr-2 text-white">
+                                    <td className="py-1.5 pl-1 pr-2 text-foreground">
                                       {i.item_name}
                                       {i.section_name && (
                                         <span className="text-muted ml-1">· {i.section_name}</span>
                                       )}
                                     </td>
                                     <td className="py-1.5 px-2 text-center text-muted">{i.unit}</td>
-                                    <td className="py-1.5 px-2 text-right font-mono text-zinc-300">
+                                    <td className="py-1.5 px-2 text-right font-mono text-muted">
                                       {Number(i.quantity).toLocaleString("en-IN", { maximumFractionDigits: 4 })}
                                     </td>
-                                    <td className="py-1.5 px-2 text-right font-mono text-zinc-300">
+                                    <td className="py-1.5 px-2 text-right font-mono text-muted">
                                       {fmtINR(i.rate, currencyDecimalPlaces)}
                                     </td>
-                                    <td className="py-1.5 px-2 text-right font-mono text-zinc-300">
+                                    <td className="py-1.5 px-2 text-right font-mono text-muted">
                                       {fmtINR(i.supply_rate, currencyDecimalPlaces)}
                                     </td>
-                                    <td className="py-1.5 px-2 text-right font-mono text-zinc-300">
+                                    <td className="py-1.5 px-2 text-right font-mono text-muted">
                                       {fmtINR(i.installation_rate, currencyDecimalPlaces)}
                                     </td>
-                                    <td className="py-1.5 px-2 text-right font-mono font-semibold text-zinc-200">
+                                    <td className="py-1.5 px-2 text-right font-mono font-semibold text-muted">
                                       {fmtINR(amountOf(i), currencyDecimalPlaces)}
                                     </td>
                                   </tr>
@@ -490,10 +490,10 @@ export default function BoqTab() {
                               </tbody>
                               <tfoot>
                                 <tr className="border-t border-border-custom">
-                                  <td colSpan={6} className="py-2 pl-1 font-bold text-white">
+                                  <td colSpan={6} className="py-2 pl-1 font-bold text-foreground">
                                     Subtotal
                                   </td>
-                                  <td className="py-2 px-2 text-right font-bold text-white font-mono">
+                                  <td className="py-2 px-2 text-right font-bold text-foreground font-mono">
                                     {fmtINR(docItems.reduce((s, i) => s + amountOf(i), 0), currencyDecimalPlaces)}
                                   </td>
                                 </tr>
@@ -516,7 +516,7 @@ export default function BoqTab() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="w-full max-w-md rounded-lg border border-border-custom bg-card p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-white">New BOQ Document</h3>
+              <h3 className="text-lg font-semibold text-foreground">New BOQ Document</h3>
               <button onClick={() => setShowAdd(false)} className="text-muted hover:text-foreground">
                 ✕
               </button>
@@ -528,7 +528,7 @@ export default function BoqTab() {
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="e.g. BOQ for Tower A - Finishes"
-                  className="mt-1 w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-600"
+                  className="mt-1 w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-sm text-foreground placeholder-muted"
                   required
                 />
               </div>
@@ -541,12 +541,12 @@ export default function BoqTab() {
                       value={clientSearch}
                       onChange={(e) => setClientSearch(e.target.value)}
                       placeholder="Search clients..."
-                      className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-600"
+                      className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-sm text-foreground placeholder-muted"
                     />
                     <select
                       value={clientId || ""}
                       onChange={(e) => setClientId(e.target.value || null)}
-                      className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-sm text-white"
+                      className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-sm text-foreground"
                     >
                       <option value="">— Select client —</option>
                       {filteredClients.map((c) => (
@@ -569,7 +569,7 @@ export default function BoqTab() {
                       value={partyName}
                       onChange={(e) => setPartyName(e.target.value)}
                       placeholder="New client name"
-                      className="flex-1 bg-input border border-border-custom rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-600"
+                      className="flex-1 bg-input border border-border-custom rounded-lg px-3 py-2 text-sm text-foreground placeholder-muted"
                     />
                     <button
                       type="button"
@@ -582,7 +582,7 @@ export default function BoqTab() {
                     <button
                       type="button"
                       onClick={() => setShowParty(false)}
-                      className="px-3 py-2 bg-white/5 text-zinc-300 text-xs rounded-lg"
+                      className="px-3 py-2 bg-elevated text-muted text-xs rounded-lg"
                     >
                       Cancel
                     </button>
@@ -598,7 +598,7 @@ export default function BoqTab() {
                     min={0}
                     value={milestoneDone}
                     onChange={(e) => setMilestoneDone(Math.max(0, Number(e.target.value) || 0))}
-                    className="mt-1 w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-sm text-white"
+                    className="mt-1 w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-sm text-foreground"
                   />
                 </div>
                 <div className="flex-1">
@@ -608,7 +608,7 @@ export default function BoqTab() {
                     min={0}
                     value={milestoneTotal}
                     onChange={(e) => setMilestoneTotal(Math.max(0, Number(e.target.value) || 0))}
-                    className="mt-1 w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-sm text-white"
+                    className="mt-1 w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-sm text-foreground"
                   />
                 </div>
               </div>
@@ -620,7 +620,7 @@ export default function BoqTab() {
                   onChange={(e) => setTerms(e.target.value)}
                   placeholder="Pre-filled from company BOQ Terms; edit as needed"
                   rows={3}
-                  className="mt-1 w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-600"
+                  className="mt-1 w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-sm text-foreground placeholder-muted"
                 />
               </div>
 
@@ -628,7 +628,7 @@ export default function BoqTab() {
                 <button
                   type="button"
                   onClick={() => setShowAdd(false)}
-                  className="px-4 py-2 bg-white/5 text-zinc-300 text-sm rounded-lg"
+                  className="px-4 py-2 bg-elevated text-muted text-sm rounded-lg"
                 >
                   Cancel
                 </button>

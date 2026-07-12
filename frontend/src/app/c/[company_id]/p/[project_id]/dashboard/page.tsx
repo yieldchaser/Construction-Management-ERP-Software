@@ -119,7 +119,7 @@ function DrillModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-1">
-          <h3 className="text-lg font-semibold text-white">{data.title}</h3>
+          <h3 className="text-lg font-semibold text-foreground">{data.title}</h3>
           <button onClick={onClose} className="text-muted hover:text-foreground text-lg">
             ✕
           </button>
@@ -140,9 +140,9 @@ function DrillModal({
             </thead>
             <tbody className="divide-y divide-white/[0.03]">
               {data.rows.map((r, i) => (
-                <tr key={i} className="hover:bg-white/[0.015]">
+                <tr key={i} className="hover:bg-elevated">
                   {data.cols.map((c) => (
-                    <td key={c.key} className="py-2 px-2 text-zinc-200">
+                    <td key={c.key} className="py-2 px-2 text-muted">
                       {String(r[c.key] ?? "")}
                     </td>
                   ))}
@@ -531,7 +531,7 @@ export default function ProjectDashboardPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="w-full max-w-sm rounded-lg border border-border-custom bg-card p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-white">Add Cost Code</h3>
+              <h3 className="text-lg font-semibold text-foreground">Add Cost Code</h3>
               <button onClick={() => setShowAddCC(false)} className="text-muted hover:text-foreground">
                 ✕
               </button>
@@ -543,7 +543,7 @@ export default function ProjectDashboardPage() {
                   value={ccCode}
                   onChange={(e) => setCcCode(e.target.value)}
                   placeholder="e.g. CC-CIV-01"
-                  className="mt-1 w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-600"
+                  className="mt-1 w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-sm text-foreground placeholder-muted"
                 />
               </div>
               <div>
@@ -552,7 +552,7 @@ export default function ProjectDashboardPage() {
                   value={ccName}
                   onChange={(e) => setCcName(e.target.value)}
                   placeholder="e.g. Civil Works"
-                  className="mt-1 w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-600"
+                  className="mt-1 w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-sm text-foreground placeholder-muted"
                 />
               </div>
               <div>
@@ -564,7 +564,7 @@ export default function ProjectDashboardPage() {
                   value={ccBudget}
                   onChange={(e) => setCcBudget(e.target.value)}
                   placeholder="0"
-                  className="mt-1 w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-600"
+                  className="mt-1 w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-sm text-foreground placeholder-muted"
                 />
               </div>
               {error && <div className="text-[11px] text-rose-400">{error}</div>}
@@ -572,7 +572,7 @@ export default function ProjectDashboardPage() {
                 <button
                   type="button"
                   onClick={() => setShowAddCC(false)}
-                  className="px-4 py-2 bg-white/5 text-zinc-300 text-sm rounded-lg"
+                  className="px-4 py-2 bg-elevated text-muted text-sm rounded-lg"
                 >
                   Cancel
                 </button>

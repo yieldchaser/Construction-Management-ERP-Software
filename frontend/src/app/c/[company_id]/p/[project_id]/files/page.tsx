@@ -144,11 +144,11 @@ export default function FilesTab() {
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       <header className="h-14 border-b border-border-custom bg-card px-6 flex items-center justify-between shrink-0">
-        <h1 className="text-sm font-bold text-white">Documents</h1>
+        <h1 className="text-sm font-bold text-foreground">Documents</h1>
         <div className="flex items-center gap-2">
           <button
             onClick={() => setShowNewFolder(true)}
-            className="px-3 py-1.5 bg-white/5 text-zinc-200 text-xs font-bold rounded-lg hover:bg-white/10 transition-all"
+            className="px-3 py-1.5 bg-elevated text-muted text-xs font-bold rounded-lg hover:bg-elevated transition-all"
           >
             + New Folder
           </button>
@@ -166,7 +166,7 @@ export default function FilesTab() {
       <div className="px-5 py-2 border-b border-border-custom shrink-0 flex items-center gap-1 text-[11px] text-muted">
         {path.map((c, i) => (
           <span key={i} className="flex items-center gap-1">
-            {i > 0 && <span className="text-zinc-600">/</span>}
+            {i > 0 && <span className="text-muted">/</span>}
             <button
               onClick={() => jumpTo(i)}
               className={i === path.length - 1 ? "text-primary font-semibold" : "hover:text-foreground"}
@@ -196,7 +196,7 @@ export default function FilesTab() {
                 className="group rounded-lg border border-border-custom bg-card p-3 text-left hover:border-primary/50 transition-colors"
               >
                 <div className="text-2xl mb-2">📁</div>
-                <div className="text-xs text-white font-medium truncate">{f.name}</div>
+                <div className="text-xs text-foreground font-medium truncate">{f.name}</div>
                 <div className="text-[9px] text-muted mt-0.5">Folder</div>
               </button>
             ))}
@@ -208,11 +208,11 @@ export default function FilesTab() {
               >
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-2xl">📄</span>
-                  <span className="text-[8px] uppercase px-1 py-0.5 rounded bg-white/5 text-zinc-400">
+                  <span className="text-[8px] uppercase px-1 py-0.5 rounded bg-elevated text-muted">
                     {ext(f.name)}
                   </span>
                 </div>
-                <div className="text-xs text-white font-medium truncate">{f.name}</div>
+                <div className="text-xs text-foreground font-medium truncate">{f.name}</div>
                 <div className="text-[9px] text-muted mt-0.5">{fmtSize(f.size)}</div>
               </button>
             ))}
@@ -224,7 +224,7 @@ export default function FilesTab() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="w-full max-w-sm rounded-lg border border-border-custom bg-card p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-white">New Folder</h3>
+              <h3 className="text-lg font-semibold text-foreground">New Folder</h3>
               <button onClick={() => setShowNewFolder(false)} className="text-muted hover:text-foreground">
                 ✕
               </button>
@@ -237,7 +237,7 @@ export default function FilesTab() {
                   value={newFolderName}
                   onChange={(e) => setNewFolderName(e.target.value)}
                   placeholder="e.g. Structural Drawings"
-                  className="mt-1 w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-600"
+                  className="mt-1 w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-sm text-foreground placeholder-muted"
                 />
               </div>
               {error && <div className="text-[11px] text-rose-400">{error}</div>}
@@ -245,7 +245,7 @@ export default function FilesTab() {
                 <button
                   type="button"
                   onClick={() => setShowNewFolder(false)}
-                  className="px-4 py-2 bg-white/5 text-zinc-300 text-sm rounded-lg"
+                  className="px-4 py-2 bg-elevated text-muted text-sm rounded-lg"
                 >
                   Cancel
                 </button>
@@ -267,7 +267,7 @@ export default function FilesTab() {
           <div className="w-full max-w-4xl h-[88vh] rounded-lg border border-border-custom bg-card flex flex-col">
             <div className="flex items-center justify-between px-4 py-3 border-b border-border-custom">
               <div className="min-w-0">
-                <div className="text-sm font-semibold text-white truncate">{preview.name}</div>
+                <div className="text-sm font-semibold text-foreground truncate">{preview.name}</div>
                 <div className="text-[10px] text-muted">{fmtSize(preview.size)}</div>
               </div>
               <div className="flex items-center gap-2">
@@ -282,13 +282,13 @@ export default function FilesTab() {
                 </button>
               </div>
             </div>
-            <div className="flex-1 bg-zinc-900 overflow-hidden">
+            <div className="flex-1 bg-elevated overflow-hidden">
               {isPdf(preview) ? (
                 <iframe src={previewSrc} title={preview.name} className="w-full h-full border-0" />
               ) : (
                 <div className="h-full flex flex-col items-center justify-center gap-3 text-center p-6">
                   <div className="text-5xl">📄</div>
-                  <div className="text-sm text-zinc-300">Preview not available for this file type.</div>
+                  <div className="text-sm text-muted">Preview not available for this file type.</div>
                   <a
                     href={downloadSrc}
                     className="px-4 py-2 bg-primary text-white text-xs font-bold rounded-lg hover:opacity-90"

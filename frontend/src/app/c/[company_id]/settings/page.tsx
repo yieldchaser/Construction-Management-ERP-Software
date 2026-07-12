@@ -938,7 +938,7 @@ export default function CompanySettingsPage() {
       <main className="flex-1 p-8 overflow-y-auto">
         <header className="flex items-center justify-between border-b border-border-custom pb-6">
           <div>
-            <h1 className="text-2xl font-black text-white tracking-tight">{SECTIONS.find((s) => s.id === activeSection)?.label}</h1>
+            <h1 className="text-2xl font-black text-foreground tracking-tight">{SECTIONS.find((s) => s.id === activeSection)?.label}</h1>
             <p className="mt-1 text-xs text-muted">Configure company-wide settings for this organization.</p>
           </div>
           <PwaControls />
@@ -972,29 +972,29 @@ export default function CompanySettingsPage() {
               {/* Company Details */}
               {companyTab === "details" && (
                 <div className="bg-card border border-border-custom rounded-lg max-w-3xl bg-background p-6 rounded-md space-y-6">
-                  <h2 className="text-sm font-bold text-white uppercase tracking-wider text-muted border-b border-border-custom pb-3">Company Details</h2>
+                  <h2 className="text-sm font-bold text-foreground uppercase tracking-wider text-muted border-b border-border-custom pb-3">Company Details</h2>
                   <div className="grid grid-cols-2 gap-6">
                     <Field label="Company Name">
                       <input type="text" value={cDraft.name} onChange={(e) => setCDraft({ ...cDraft, name: e.target.value })}
-                        className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-4 py-2.5 text-xs text-white outline-none" />
+                        className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-4 py-2.5 text-xs text-foreground outline-none" />
                     </Field>
                     <Field label="Phone Number">
                       <input type="text" value={cDraft.phone} onChange={(e) => setCDraft({ ...cDraft, phone: e.target.value })}
-                        className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-4 py-2.5 text-xs text-white outline-none" placeholder="Company phone number" />
+                        className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-4 py-2.5 text-xs text-foreground outline-none" placeholder="Company phone number" />
                     </Field>
                     <Field label="Legal Business Name">
                       <input type="text" value={cDraft.legal_business_name} onChange={(e) => setCDraft({ ...cDraft, legal_business_name: e.target.value })}
-                        className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-4 py-2.5 text-xs text-white outline-none" placeholder="Enter Legal Entity Name" />
+                        className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-4 py-2.5 text-xs text-foreground outline-none" placeholder="Enter Legal Entity Name" />
                     </Field>
                     <Field label="GSTIN">
                       <input type="text" value={cDraft.gstin} onChange={(e) => { const v = e.target.value.toUpperCase(); setCDraft({ ...cDraft, gstin: v }); setGstinError(v ? !validateGSTIN(v) : false); }}
-                        className={`w-full bg-elevated border rounded-md px-4 py-2.5 text-xs text-white outline-none ${gstinError ? "border-rose-500" : "border-border-custom focus:border-primary"}`} placeholder="Enter 15-digit GSTIN" />
+                        className={`w-full bg-elevated border rounded-md px-4 py-2.5 text-xs text-foreground outline-none ${gstinError ? "border-rose-500" : "border-border-custom focus:border-primary"}`} placeholder="Enter 15-digit GSTIN" />
                       {gstinError && <p className="text-[10px] text-rose-400 mt-1">Invalid GSTIN format.</p>}
                     </Field>
                   </div>
                   <Field label="Company Primary Address">
                     <textarea value={cDraft.billing_address} onChange={(e) => setCDraft({ ...cDraft, billing_address: e.target.value })}
-                      rows={3} className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-4 py-2.5 text-xs text-white outline-none resize-none" placeholder="Registered business address" />
+                      rows={3} className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-4 py-2.5 text-xs text-foreground outline-none resize-none" placeholder="Registered business address" />
                   </Field>
 
                   {/* Branding upload slots */}
@@ -1038,24 +1038,24 @@ export default function CompanySettingsPage() {
                   </div>
 
                   <div className="flex items-center justify-between">
-                    <h2 className="text-sm font-bold text-white uppercase tracking-wider text-muted">Company Branches</h2>
+                    <h2 className="text-sm font-bold text-foreground uppercase tracking-wider text-muted">Company Branches</h2>
                     <button onClick={() => setShowAddBranch(true)} className="bg-primary text-white text-xs font-bold px-4 py-2.5 rounded-md">+ New Branch</button>
                   </div>
 
                   {showAddBranch && (
                     <form onSubmit={addBranch} className="bg-card border border-border-custom rounded-lg max-w-xl bg-background p-6 rounded-md space-y-4">
-                      <h3 className="text-xs font-bold text-white uppercase tracking-wider">New Branch Details</h3>
+                      <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">New Branch Details</h3>
                       <div className="grid grid-cols-2 gap-4">
-                        <input type="text" placeholder="Branch Name" value={nb.branch_name} onChange={(e) => setNb({ ...nb, branch_name: e.target.value })} required className="bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
-                        <input type="text" placeholder="Branch GSTIN" value={nb.gstin} onChange={(e) => setNb({ ...nb, gstin: e.target.value })} required className="bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
+                        <input type="text" placeholder="Branch Name" value={nb.branch_name} onChange={(e) => setNb({ ...nb, branch_name: e.target.value })} required className="bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-foreground outline-none" />
+                        <input type="text" placeholder="Branch GSTIN" value={nb.gstin} onChange={(e) => setNb({ ...nb, gstin: e.target.value })} required className="bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-foreground outline-none" />
                       </div>
-                      <textarea placeholder="Project Geo Location (Google Address)" value={nb.geo_location} onChange={(e) => setNb({ ...nb, geo_location: e.target.value })} rows={2} className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none resize-none" />
+                      <textarea placeholder="Project Geo Location (Google Address)" value={nb.geo_location} onChange={(e) => setNb({ ...nb, geo_location: e.target.value })} rows={2} className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-foreground outline-none resize-none" />
                       <div className="grid grid-cols-2 gap-4">
-                        <input type="text" placeholder="Address Line 1" value={nb.address_line1} onChange={(e) => setNb({ ...nb, address_line1: e.target.value })} className="bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
-                        <input type="text" placeholder="City" value={nb.city} onChange={(e) => setNb({ ...nb, city: e.target.value })} className="bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
-                        <input type="text" placeholder="State / Province" value={nb.state} onChange={(e) => setNb({ ...nb, state: e.target.value })} className="bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
-                        <input type="text" placeholder="Zip" value={nb.zip} onChange={(e) => setNb({ ...nb, zip: e.target.value })} className="bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
-                        <select value={nb.country} onChange={(e) => setNb({ ...nb, country: e.target.value })} className="bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none">
+                        <input type="text" placeholder="Address Line 1" value={nb.address_line1} onChange={(e) => setNb({ ...nb, address_line1: e.target.value })} className="bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-foreground outline-none" />
+                        <input type="text" placeholder="City" value={nb.city} onChange={(e) => setNb({ ...nb, city: e.target.value })} className="bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-foreground outline-none" />
+                        <input type="text" placeholder="State / Province" value={nb.state} onChange={(e) => setNb({ ...nb, state: e.target.value })} className="bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-foreground outline-none" />
+                        <input type="text" placeholder="Zip" value={nb.zip} onChange={(e) => setNb({ ...nb, zip: e.target.value })} className="bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-foreground outline-none" />
+                        <select value={nb.country} onChange={(e) => setNb({ ...nb, country: e.target.value })} className="bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-foreground outline-none">
                           {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
                         </select>
                       </div>
@@ -1074,14 +1074,14 @@ export default function CompanySettingsPage() {
                         <div className="flex justify-between items-center">
                           <div className="flex items-center gap-3">
                             <div className="h-9 w-9 rounded-full bg-primary/15 text-primary font-bold flex items-center justify-center text-sm">{b.branch_name.charAt(0).toUpperCase()}</div>
-                            <div className="font-bold text-white text-sm">{b.branch_name}</div>
+                            <div className="font-bold text-foreground text-sm">{b.branch_name}</div>
                           </div>
                           {b.is_primary && <span className="text-[10px] bg-emerald-500/15 text-emerald-400 px-2 py-0.5 rounded-full font-bold">Primary</span>}
                         </div>
                         <div className="text-xs space-y-1">
-                          <div className="text-muted">GSTIN: <span className="font-mono text-zinc-300">{b.gstin}</span></div>
-                          <div className="text-muted line-clamp-2">Address: <span className="text-zinc-300">{b.billing_address}</span></div>
-                          {b.is_primary && <span className="inline-block mt-1 text-[10px] bg-zinc-800 text-muted px-2 py-0.5 rounded-full">Primary Address</span>}
+                          <div className="text-muted">GSTIN: <span className="font-mono text-muted">{b.gstin}</span></div>
+                          <div className="text-muted line-clamp-2">Address: <span className="text-muted">{b.billing_address}</span></div>
+                          {b.is_primary && <span className="inline-block mt-1 text-[10px] bg-elevated text-muted px-2 py-0.5 rounded-full">Primary Address</span>}
                         </div>
                         <div className="flex justify-end">
                           <button onClick={() => setPrimary(b.id)} disabled={b.is_primary} className="text-[10px] text-muted hover:text-primary disabled:opacity-40 disabled:cursor-default font-bold">
@@ -1097,7 +1097,7 @@ export default function CompanySettingsPage() {
               {/* Business Profile */}
               {companyTab === "business" && (
                 <div className="space-y-6 max-w-3xl">
-                  <h2 className="text-sm font-bold text-white uppercase tracking-wider text-muted border-b border-border-custom pb-3">Business Profile</h2>
+                  <h2 className="text-sm font-bold text-foreground uppercase tracking-wider text-muted border-b border-border-custom pb-3">Business Profile</h2>
 
                   <SelectorCard title="Avg. Business / Year" options={BUSINESS_SEGMENTS} selected={bSeg} onSelect={setBSeg} />
                   <SelectorCard title="Company Size" options={COMPANY_SIZES} selected={bSize} onSelect={setBSize} />
@@ -1114,7 +1114,7 @@ export default function CompanySettingsPage() {
                       {bTypes.length === 0 && <span className="text-xs text-muted">None selected</span>}
                     </div>
                     <div className="flex gap-2">
-                      <select value={ctypeInput} onChange={(e) => setCtypeInput(e.target.value)} className="bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none flex-1">
+                      <select value={ctypeInput} onChange={(e) => setCtypeInput(e.target.value)} className="bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-foreground outline-none flex-1">
                         <option value="">Add or pick a type…</option>
                         {CONSTRUCTION_TYPES.filter((t) => !bTypes.includes(t)).map((t) => <option key={t} value={t}>{t}</option>)}
                       </select>
@@ -1143,12 +1143,12 @@ export default function CompanySettingsPage() {
 
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-sm font-bold text-white uppercase tracking-wider text-muted">Company Roles</h2>
+                  <h2 className="text-sm font-bold text-foreground uppercase tracking-wider text-muted">Company Roles</h2>
                   <p className="mt-1 text-xs text-muted">Flat list of access roles for this organization. {roles.length} role{roles.length === 1 ? "" : "s"} configured.</p>
                 </div>
                 <div className="flex gap-2">
                   {roles.length === 0 && (
-                    <button onClick={seedRoles} disabled={roleBusy} className="bg-elevated text-white text-xs font-bold px-4 py-2.5 rounded-md border border-border-custom hover:border-primary/50 disabled:opacity-50">
+                    <button onClick={seedRoles} disabled={roleBusy} className="bg-elevated text-foreground text-xs font-bold px-4 py-2.5 rounded-md border border-border-custom hover:border-primary/50 disabled:opacity-50">
                       Seed 10 Defaults
                     </button>
                   )}
@@ -1158,10 +1158,10 @@ export default function CompanySettingsPage() {
 
               {showAddRole && (
                 <form onSubmit={addRole} className="bg-card border border-border-custom rounded-lg bg-background p-6 space-y-4 max-w-xl">
-                  <h3 className="text-xs font-bold text-white uppercase tracking-wider">New Role</h3>
+                  <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">New Role</h3>
                   <input type="text" placeholder="Role name (e.g. Safety Officer)" value={roleName}
                     onChange={(e) => setRoleName(e.target.value)} required
-                    className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
+                    className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-foreground outline-none" />
                   <div className="flex gap-2 justify-end">
                     <button type="button" onClick={() => setShowAddRole(false)} className="text-muted hover:text-foreground text-xs font-bold px-4 py-2">Cancel</button>
                     <button type="submit" disabled={roleBusy} className="bg-primary text-white text-xs font-bold px-4 py-2 rounded-md disabled:opacity-50">Add Role</button>
@@ -1181,9 +1181,9 @@ export default function CompanySettingsPage() {
                         {r.role_name.charAt(0).toUpperCase()}
                       </div>
                       <div>
-                        <div className="font-bold text-white text-sm">{r.role_name}</div>
+                        <div className="font-bold text-foreground text-sm">{r.role_name}</div>
                         {DEFAULT_ROLES.includes(r.role_name) && (
-                          <span className="text-[10px] bg-zinc-800 text-muted px-2 py-0.5 rounded-full">Default</span>
+                          <span className="text-[10px] bg-elevated text-muted px-2 py-0.5 rounded-full">Default</span>
                         )}
                       </div>
                     </div>
@@ -1211,17 +1211,17 @@ export default function CompanySettingsPage() {
               {payrollTab === "leave" && (
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
-                    <h2 className="text-sm font-bold text-white uppercase tracking-wider text-muted">Leave Policy Templates</h2>
+                    <h2 className="text-sm font-bold text-foreground uppercase tracking-wider text-muted">Leave Policy Templates</h2>
                     <button onClick={() => setShowAddLeave(true)} className="bg-primary text-white text-xs font-bold px-4 py-2.5 rounded-md">+ Create New</button>
                   </div>
 
                   {showAddLeave && (
                     <form onSubmit={createLeaveTemplate} className="bg-card border border-border-custom rounded-lg bg-background p-6 space-y-4 max-w-xl">
-                      <h3 className="text-xs font-bold text-white uppercase tracking-wider">New Leave Policy</h3>
+                      <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">New Leave Policy</h3>
                       <Field label="Template Name">
                         <input type="text" placeholder="e.g. Standard Leave Policy" value={ltName}
                           onChange={(e) => setLtName(e.target.value)} required
-                          className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
+                          className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-foreground outline-none" />
                       </Field>
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
@@ -1232,10 +1232,10 @@ export default function CompanySettingsPage() {
                           <div key={i} className="flex gap-2">
                             <input type="text" placeholder="Type (e.g. Casual)" value={t.type}
                               onChange={(e) => editLtType(i, "type", e.target.value)}
-                              className="flex-1 bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
+                              className="flex-1 bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-foreground outline-none" />
                             <input type="number" placeholder="Days" value={t.days}
                               onChange={(e) => editLtType(i, "days", Number(e.target.value) || 0)}
-                              className="w-24 bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
+                              className="w-24 bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-foreground outline-none" />
                             <button type="button" onClick={() => removeLtType(i)} className="text-muted hover:text-rose-500 px-2">✕</button>
                           </div>
                         ))}
@@ -1258,12 +1258,12 @@ export default function CompanySettingsPage() {
                         return (
                           <div key={t.id} className="bg-card border border-border-custom rounded-lg bg-background p-5 space-y-3">
                             <div className="flex items-center justify-between">
-                              <div className="font-bold text-white text-sm">{t.name}</div>
+                              <div className="font-bold text-foreground text-sm">{t.name}</div>
                               <button onClick={() => deleteLeaveTemplate(t.id)} className="text-[10px] text-muted hover:text-rose-400">Delete</button>
                             </div>
                             <div className="text-xs text-muted space-y-1">
                               {quotas.map((q) => (
-                                <div key={q.type}>{q.type}: <span className="text-zinc-300">{q.days} days</span></div>
+                                <div key={q.type}>{q.type}: <span className="text-muted">{q.days} days</span></div>
                               ))}
                             </div>
                           </div>
@@ -1278,22 +1278,22 @@ export default function CompanySettingsPage() {
               {payrollTab === "holiday" && (
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
-                    <h2 className="text-sm font-bold text-white uppercase tracking-wider text-muted">Holiday Calendar</h2>
+                    <h2 className="text-sm font-bold text-foreground uppercase tracking-wider text-muted">Holiday Calendar</h2>
                     <button onClick={() => setShowAddHoliday(true)} className="bg-primary text-white text-xs font-bold px-4 py-2.5 rounded-md">+ Add Holiday</button>
                   </div>
 
                   {showAddHoliday && (
                     <form onSubmit={createHoliday} className="bg-card border border-border-custom rounded-lg bg-background p-6 space-y-4 max-w-xl">
-                      <h3 className="text-xs font-bold text-white uppercase tracking-wider">New Holiday</h3>
+                      <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">New Holiday</h3>
                       <Field label="Holiday Name">
                         <input type="text" placeholder="e.g. Independence Day" value={hName}
                           onChange={(e) => setHName(e.target.value)} required
-                          className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
+                          className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-foreground outline-none" />
                       </Field>
                       <Field label="Date">
                         <input type="date" value={hDate}
                           onChange={(e) => setHDate(e.target.value)}
-                          className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
+                          className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-foreground outline-none" />
                       </Field>
                       <div className="flex gap-2 justify-end">
                         <button type="button" onClick={() => setShowAddHoliday(false)} className="text-muted hover:text-foreground text-xs font-bold px-4 py-2">Cancel</button>
@@ -1309,7 +1309,7 @@ export default function CompanySettingsPage() {
                       {holidays.map((h) => (
                         <div key={h.id} className="bg-card border border-border-custom rounded-lg bg-background p-5 flex items-center justify-between">
                           <div>
-                            <div className="font-bold text-white text-sm">{h.name}</div>
+                            <div className="font-bold text-foreground text-sm">{h.name}</div>
                             <div className="text-xs text-muted">{new Date(h.date).toLocaleDateString("en-IN")}</div>
                           </div>
                           <button onClick={() => deleteHoliday(h.id)} className="text-[10px] text-muted hover:text-rose-400">Delete</button>
@@ -1324,7 +1324,7 @@ export default function CompanySettingsPage() {
               {payrollTab === "salary" && (
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
-                    <h2 className="text-sm font-bold text-white uppercase tracking-wider text-muted">Salary Templates</h2>
+                    <h2 className="text-sm font-bold text-foreground uppercase tracking-wider text-muted">Salary Templates</h2>
                     <button onClick={() => setShowAddSalary(true)} className="bg-primary text-white text-xs font-bold px-4 py-2.5 rounded-md">+ Create New</button>
                   </div>
 
@@ -1334,24 +1334,24 @@ export default function CompanySettingsPage() {
                         <Field label="Template Name">
                           <input type="text" placeholder="e.g. Grade A Engineer" value={stName}
                             onChange={(e) => setStName(e.target.value)} required
-                            className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
+                            className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-foreground outline-none" />
                         </Field>
                         <Field label="Description">
                           <input type="text" placeholder="Optional" value={stDesc}
                             onChange={(e) => setStDesc(e.target.value)}
-                            className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
+                            className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-foreground outline-none" />
                         </Field>
                         <Field label="Monthly CTC">
                           <div className="flex gap-2">
                             <input type="number" value={stCtc}
                               onChange={(e) => setStCtc(parseFloat(e.target.value) || 0)}
-                              className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
-                            <select disabled className="bg-elevated border border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none"><option>Monthly</option></select>
+                              className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-foreground outline-none" />
+                            <select disabled className="bg-elevated border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none"><option>Monthly</option></select>
                           </div>
                         </Field>
                         <Field label="Day Off">
                           <select value={stDayOff} onChange={(e) => setStDayOff(e.target.value)}
-                            className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none">
+                            className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-foreground outline-none">
                             {WEEKDAYS.map((d) => <option key={d}>{d}</option>)}
                           </select>
                         </Field>
@@ -1363,8 +1363,8 @@ export default function CompanySettingsPage() {
                           <div className="flex items-center gap-2">
                             <input type="number" value={stBasicPct}
                               onChange={(e) => setStBasicPct(parseFloat(e.target.value) || 0)}
-                              className="w-32 bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
-                            <select disabled className="bg-elevated border border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none"><option>% of CTC</option></select>
+                              className="w-32 bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-foreground outline-none" />
+                            <select disabled className="bg-elevated border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none"><option>% of CTC</option></select>
                             <div className="whitespace-nowrap text-sm text-muted">= ₹{stBasic.toLocaleString("en-IN")}</div>
                           </div>
                         </Field>
@@ -1378,10 +1378,10 @@ export default function CompanySettingsPage() {
                           <div key={i} className="flex gap-2">
                             <input placeholder="Allowance name" value={a.name}
                               onChange={(e) => editLine(stAllowances, setStAllowances, i, "name", e.target.value)}
-                              className="flex-1 bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
+                              className="flex-1 bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-foreground outline-none" />
                             <input type="number" placeholder="Amount" value={a.amount}
                               onChange={(e) => editLine(stAllowances, setStAllowances, i, "amount", parseFloat(e.target.value) || 0)}
-                              className="w-32 bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
+                              className="w-32 bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-foreground outline-none" />
                             <button type="button" onClick={() => setStAllowances(stAllowances.filter((_, j) => j !== i))} className="text-muted hover:text-rose-500 px-2">✕</button>
                           </div>
                         ))}
@@ -1399,10 +1399,10 @@ export default function CompanySettingsPage() {
                           <div key={i} className="flex gap-2">
                             <input placeholder="Deduction name" value={d.name}
                               onChange={(e) => editLine(stDeductions, setStDeductions, i, "name", e.target.value)}
-                              className="flex-1 bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
+                              className="flex-1 bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-foreground outline-none" />
                             <input type="number" placeholder="Amount" value={d.amount}
                               onChange={(e) => editLine(stDeductions, setStDeductions, i, "amount", parseFloat(e.target.value) || 0)}
-                              className="w-32 bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
+                              className="w-32 bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-foreground outline-none" />
                             <button type="button" onClick={() => setStDeductions(stDeductions.filter((_, j) => j !== i))} className="text-muted hover:text-rose-500 px-2">✕</button>
                           </div>
                         ))}
@@ -1425,7 +1425,7 @@ export default function CompanySettingsPage() {
                       </div>
                       {salaryTemplates.map((t) => (
                         <div key={t.id} className="bg-card border border-border-custom rounded-lg bg-background p-5 grid grid-cols-[2fr_3fr_1fr_auto] gap-4 items-center">
-                          <div className="font-bold text-white text-sm">{t.name}</div>
+                          <div className="font-bold text-foreground text-sm">{t.name}</div>
                           <div className="text-xs text-muted truncate">{t.description || "—"}</div>
                           <div><span className="text-[10px] bg-emerald-500/15 text-emerald-400 px-2 py-0.5 rounded-full font-bold">{t.status}</span></div>
                           <button onClick={() => deleteSalaryTemplate(t.id)} className="text-[10px] text-muted hover:text-rose-400 justify-self-end">Delete</button>
@@ -1439,7 +1439,7 @@ export default function CompanySettingsPage() {
               {/* ── Statutory (PF/ESI/TDS) — bonus section ── */}
               {payrollTab === "statutory" && (
                 <div className="space-y-6 max-w-3xl">
-                  <h2 className="text-sm font-bold text-white uppercase tracking-wider text-muted border-b border-border-custom pb-3">Statutory Payroll Defaults</h2>
+                  <h2 className="text-sm font-bold text-foreground uppercase tracking-wider text-muted border-b border-border-custom pb-3">Statutory Payroll Defaults</h2>
                   <p className="text-xs text-muted -mt-2">Company-wide default PF / ESI / TDS rates. These are inherited by new employees; per-employee overrides are set on the employee record in HR.</p>
 
                   <div className="bg-card border border-border-custom rounded-lg bg-background p-6 rounded-md space-y-6">
@@ -1447,27 +1447,27 @@ export default function CompanySettingsPage() {
                       <Field label="PF Employee %">
                         <input type="number" step="0.01" value={pDraft.pf_employee_pct}
                           onChange={(e) => setPDraft({ ...pDraft, pf_employee_pct: Number(e.target.value) })}
-                          className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-4 py-2.5 text-xs text-white outline-none" />
+                          className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-4 py-2.5 text-xs text-foreground outline-none" />
                       </Field>
                       <Field label="PF Employer %">
                         <input type="number" step="0.01" value={pDraft.pf_employer_pct}
                           onChange={(e) => setPDraft({ ...pDraft, pf_employer_pct: Number(e.target.value) })}
-                          className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-4 py-2.5 text-xs text-white outline-none" />
+                          className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-4 py-2.5 text-xs text-foreground outline-none" />
                       </Field>
                       <Field label="ESI Employee %">
                         <input type="number" step="0.01" value={pDraft.esi_employee_pct}
                           onChange={(e) => setPDraft({ ...pDraft, esi_employee_pct: Number(e.target.value) })}
-                          className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-4 py-2.5 text-xs text-white outline-none" />
+                          className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-4 py-2.5 text-xs text-foreground outline-none" />
                       </Field>
                       <Field label="ESI Employer %">
                         <input type="number" step="0.01" value={pDraft.esi_employer_pct}
                           onChange={(e) => setPDraft({ ...pDraft, esi_employer_pct: Number(e.target.value) })}
-                          className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-4 py-2.5 text-xs text-white outline-none" />
+                          className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-4 py-2.5 text-xs text-foreground outline-none" />
                       </Field>
                       <Field label="TDS (Monthly ₹)">
                         <input type="number" step="0.01" value={pDraft.tds_monthly}
                           onChange={(e) => setPDraft({ ...pDraft, tds_monthly: Number(e.target.value) })}
-                          className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-4 py-2.5 text-xs text-white outline-none" />
+                          className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-4 py-2.5 text-xs text-foreground outline-none" />
                       </Field>
                       <div className="space-y-1.5">
                         <label className="text-[10px] uppercase tracking-wider text-muted font-bold">ESI Applicable</label>
@@ -1475,7 +1475,7 @@ export default function CompanySettingsPage() {
                           <input type="checkbox" checked={pDraft.is_esi_applicable}
                             onChange={(e) => setPDraft({ ...pDraft, is_esi_applicable: e.target.checked })}
                             className="h-4 w-4 accent-[#3b82f6]" />
-                          <span className="text-xs text-white">{pDraft.is_esi_applicable ? "Yes" : "No"}</span>
+                          <span className="text-xs text-foreground">{pDraft.is_esi_applicable ? "Yes" : "No"}</span>
                         </label>
                       </div>
                     </div>
@@ -1499,13 +1499,13 @@ export default function CompanySettingsPage() {
                     <div className="grid grid-cols-2 gap-6 pt-2">
                       <div>
                         <div className="text-[10px] uppercase tracking-wider text-emerald-400 font-bold mb-2">Earnings</div>
-                        <ul className="text-xs text-zinc-300 space-y-1">
+                        <ul className="text-xs text-muted space-y-1">
                           <li>• Basic</li><li>• HRA</li><li>• Other Allowances</li>
                         </ul>
                       </div>
                       <div>
                         <div className="text-[10px] uppercase tracking-wider text-rose-400 font-bold mb-2">Deductions</div>
-                        <ul className="text-xs text-zinc-300 space-y-1">
+                        <ul className="text-xs text-muted space-y-1">
                           <li>• PF (Employee) — Basic × PF Employee %</li>
                           <li>• PF (Employer) — Basic × PF Employer %</li>
                           <li>• ESI (Employee) — Gross × ESI Employee %</li>
@@ -1526,22 +1526,22 @@ export default function CompanySettingsPage() {
               {/* Holidays — reuses HR's /hr/holidays (single source of truth) */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-sm font-bold text-white uppercase tracking-wider text-muted">Holiday Calendar</h2>
+                  <h2 className="text-sm font-bold text-foreground uppercase tracking-wider text-muted">Holiday Calendar</h2>
                   <button onClick={() => setShowAddHoliday(true)} className="bg-primary text-white text-xs font-bold px-4 py-2.5 rounded-md">+ Add Holiday</button>
                 </div>
 
                 {showAddHoliday && (
                   <form onSubmit={createHoliday} className="bg-card border border-border-custom rounded-lg bg-background p-6 space-y-4 max-w-xl">
-                    <h3 className="text-xs font-bold text-white uppercase tracking-wider">New Holiday</h3>
+                    <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">New Holiday</h3>
                     <Field label="Holiday Name">
                       <input type="text" placeholder="e.g. Independence Day" value={hName}
                         onChange={(e) => setHName(e.target.value)} required
-                        className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
+                        className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-foreground outline-none" />
                     </Field>
                     <Field label="Date">
                       <input type="date" value={hDate}
                         onChange={(e) => setHDate(e.target.value)}
-                        className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
+                        className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-foreground outline-none" />
                     </Field>
                     <div className="flex gap-2 justify-end">
                       <button type="button" onClick={() => setShowAddHoliday(false)} className="text-muted hover:text-foreground text-xs font-bold px-4 py-2">Cancel</button>
@@ -1557,7 +1557,7 @@ export default function CompanySettingsPage() {
                     {holidays.map((h) => (
                       <div key={h.id} className="bg-card border border-border-custom rounded-lg bg-background p-5 flex items-center justify-between">
                         <div>
-                          <div className="font-bold text-white text-sm">{h.name}</div>
+                          <div className="font-bold text-foreground text-sm">{h.name}</div>
                           <div className="text-xs text-muted">{new Date(h.date).toLocaleDateString("en-IN")}</div>
                         </div>
                         <button onClick={() => deleteHoliday(h.id)} className="text-[10px] text-muted hover:text-rose-400">Delete</button>
@@ -1569,7 +1569,7 @@ export default function CompanySettingsPage() {
 
               {/* Weekly Off — company default (bonus; not part of /hr/holidays) */}
               <div className="bg-card border border-border-custom rounded-lg bg-background p-6 space-y-4 max-w-xl">
-                <h2 className="text-sm font-bold text-white uppercase tracking-wider text-muted border-b border-border-custom pb-3">Weekly Off</h2>
+                <h2 className="text-sm font-bold text-foreground uppercase tracking-wider text-muted border-b border-border-custom pb-3">Weekly Off</h2>
                 <p className="text-[11px] text-muted -mt-2">Default weekly off day for this company. Stored on the company record (separate from the Holiday Calendar above).</p>
                 <Field label="Weekly Off Days">
                   <div className="flex gap-2">
@@ -1684,7 +1684,7 @@ export default function CompanySettingsPage() {
                   <WfToggleRow label="Restrict BOM Material" desc="Restrict edits to Bills of Material" value={wf.bom_restriction} onChange={(v) => setWf({ ...wf, bom_restriction: v })} />
                   <div className="flex items-center justify-between bg-elevated border border-border-custom rounded-lg px-4 py-3">
                     <div>
-                      <div className="text-xs font-bold text-white">GRN Numbering</div>
+                      <div className="text-xs font-bold text-foreground">GRN Numbering</div>
                       <div className="text-[10px] text-muted">Scope for GRN numbering</div>
                     </div>
                     <div className="flex gap-2">
@@ -1717,7 +1717,7 @@ export default function CompanySettingsPage() {
               {/* ── PDF Template ── */}
               {docTab === "pdf" && (
                 <div className="space-y-6 max-w-3xl">
-                  <h2 className="text-sm font-bold text-white uppercase tracking-wider text-muted border-b border-border-custom pb-3">PDF Template</h2>
+                  <h2 className="text-sm font-bold text-foreground uppercase tracking-wider text-muted border-b border-border-custom pb-3">PDF Template</h2>
 
                   <div className="bg-card border border-border-custom rounded-lg bg-background p-6 space-y-3">
                     <h3 className="text-[10px] uppercase tracking-wider text-muted font-bold">Choose your Own PDF Template</h3>
@@ -1730,7 +1730,7 @@ export default function CompanySettingsPage() {
                         return (
                           <button key={o.v} type="button" onClick={() => savePdfSettings({ custom_pdf_template_enabled: o.v === "Custom" })}
                             className={`text-left rounded-lg border p-4 space-y-1.5 transition-all ${active ? "border-primary bg-primary/10" : "border-border-custom bg-elevated hover:border-primary/50"}`}>
-                            <div className="text-xs font-bold text-white">{o.t}</div>
+                            <div className="text-xs font-bold text-foreground">{o.t}</div>
                             <div className="text-[10px] text-muted">{o.d}</div>
                           </button>
                         );
@@ -1750,7 +1750,7 @@ export default function CompanySettingsPage() {
                         return (
                           <button key={o.v} type="button" onClick={() => savePdfSettings({ document_company_name_display: o.v })}
                             className={`text-left rounded-lg border p-4 space-y-1.5 transition-all ${active ? "border-primary bg-primary/10" : "border-border-custom bg-elevated hover:border-primary/50"}`}>
-                            <div className="text-xs font-bold text-white">{o.t}</div>
+                            <div className="text-xs font-bold text-foreground">{o.t}</div>
                             <div className="text-[10px] text-muted">{o.d}</div>
                           </button>
                         );
@@ -1771,7 +1771,7 @@ export default function CompanySettingsPage() {
                         return (
                           <button key={o.t} type="button" onClick={() => saveZatca({ is_zatca_enable: o.v })}
                             className={`text-left rounded-lg border p-4 space-y-1.5 transition-all ${active ? "border-primary bg-primary/10" : "border-border-custom bg-elevated hover:border-primary/50"}`}>
-                            <div className="text-xs font-bold text-white">{o.t}</div>
+                            <div className="text-xs font-bold text-foreground">{o.t}</div>
                             <div className="text-[10px] text-muted">{o.d}</div>
                           </button>
                         );
@@ -1793,7 +1793,7 @@ export default function CompanySettingsPage() {
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h2 className="text-sm font-bold text-white uppercase tracking-wider text-muted">Terms & Conditions</h2>
+                      <h2 className="text-sm font-bold text-foreground uppercase tracking-wider text-muted">Terms & Conditions</h2>
                       <p className="mt-1 text-xs text-muted">Central default text for each document type. Prefills downstream forms that have a terms field (Subcon Work Order, CRM Quotation).</p>
                     </div>
                     <button onClick={saveTerms} disabled={termsStatus === "saving"} className="bg-primary text-white text-xs font-bold px-6 py-2.5 rounded-md disabled:opacity-50">{termsStatus === "saving" ? "Saving…" : "Save"}</button>
@@ -1807,7 +1807,7 @@ export default function CompanySettingsPage() {
                         <div key={f.key} className="bg-card border border-border-custom rounded-lg bg-background p-5 space-y-2">
                           <label className="text-[10px] uppercase tracking-wider text-muted font-bold">{f.label}</label>
                           <textarea value={terms[f.key]} onChange={(e) => setTerms((t) => ({ ...t, [f.key]: e.target.value }))} rows={5}
-                            className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-4 py-2.5 text-xs text-white outline-none resize-y font-mono" />
+                            className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-4 py-2.5 text-xs text-foreground outline-none resize-y font-mono" />
                         </div>
                       ))}
                     </div>
@@ -1825,18 +1825,18 @@ export default function CompanySettingsPage() {
               {/* ── Number Format ── */}
               {docTab === "number" && (
                 <div className="space-y-6 max-w-2xl">
-                  <h2 className="text-sm font-bold text-white uppercase tracking-wider text-muted border-b border-border-custom pb-3">Number Format</h2>
+                  <h2 className="text-sm font-bold text-foreground uppercase tracking-wider text-muted border-b border-border-custom pb-3">Number Format</h2>
                   <div className="bg-card border border-border-custom rounded-lg bg-background p-6 rounded-md space-y-6">
                     <div className="grid grid-cols-2 gap-6">
                       <Field label="Currency Decimal Places">
                         <input type="number" min={0} max={6} value={numFmt.currency_decimal_places}
                           onChange={(e) => setNumFmt({ ...numFmt, currency_decimal_places: parseInt(e.target.value || "0", 10) || 0 })}
-                          className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-4 py-2.5 text-xs text-white outline-none" />
+                          className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-4 py-2.5 text-xs text-foreground outline-none" />
                       </Field>
                       <Field label="Quantity Decimal Places">
                         <input type="number" min={0} max={6} value={numFmt.quantity_decimal_places}
                           onChange={(e) => setNumFmt({ ...numFmt, quantity_decimal_places: parseInt(e.target.value || "0", 10) || 0 })}
-                          className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-4 py-2.5 text-xs text-white outline-none" />
+                          className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-4 py-2.5 text-xs text-foreground outline-none" />
                       </Field>
                     </div>
                     <div className="flex justify-end">
@@ -1856,7 +1856,7 @@ export default function CompanySettingsPage() {
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h2 className="text-sm font-bold text-white uppercase tracking-wider text-muted">Custom Fields</h2>
+                      <h2 className="text-sm font-bold text-foreground uppercase tracking-wider text-muted">Custom Fields</h2>
                       <p className="mt-1 text-xs text-muted">Define extra fields attached to a document/entity type. Wired to the generic CustomField backend (entity_type-based).</p>
                     </div>
                     <button onClick={() => setShowAddCf(true)} className="bg-primary text-white text-xs font-bold px-4 py-2.5 rounded-md">+ New Custom Field</button>
@@ -1865,7 +1865,7 @@ export default function CompanySettingsPage() {
                   <div className="flex items-center gap-3 max-w-sm">
                     <label className="text-[10px] uppercase tracking-wider text-muted font-bold">Document / Entity Type</label>
                     <select value={cfEntity} onChange={(e) => setCfEntity(e.target.value)}
-                      className="flex-1 bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none">
+                      className="flex-1 bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-foreground outline-none">
                       {DOC_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
                     </select>
                   </div>
@@ -1874,27 +1874,27 @@ export default function CompanySettingsPage() {
 
                   {showAddCf && (
                     <form onSubmit={addCf} className="bg-card border border-border-custom rounded-lg bg-background p-6 space-y-4 max-w-xl">
-                      <h3 className="text-xs font-bold text-white uppercase tracking-wider">New Custom Field — {cfEntity}</h3>
+                      <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">New Custom Field — {cfEntity}</h3>
                       <Field label="Field Name">
                         <input type="text" placeholder="e.g. Client PO Reference" value={cfDraft.field_name}
                           onChange={(e) => setCfDraft({ ...cfDraft, field_name: e.target.value })} required
-                          className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
+                          className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-foreground outline-none" />
                       </Field>
                       <Field label="Data Type">
                         <select value={cfDraft.field_type} onChange={(e) => setCfDraft({ ...cfDraft, field_type: e.target.value })}
-                          className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none">
+                          className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-foreground outline-none">
                           {CF_DATA_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
                         </select>
                       </Field>
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input type="checkbox" checked={cfDraft.set_default} onChange={(e) => setCfDraft({ ...cfDraft, set_default: e.target.checked })} className="h-4 w-4 accent-[#3b82f6]" />
-                        <span className="text-xs text-white">Set Default</span>
+                        <span className="text-xs text-foreground">Set Default</span>
                       </label>
                       {cfDraft.set_default && (
                         <Field label="Default Value">
                           <input type="text" placeholder="Default value" value={cfDraft.default_value}
                             onChange={(e) => setCfDraft({ ...cfDraft, default_value: e.target.value })}
-                            className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
+                            className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-foreground outline-none" />
                         </Field>
                       )}
                       <div className="flex gap-2 justify-end">
@@ -1913,10 +1913,10 @@ export default function CompanySettingsPage() {
                     ) : (
                       cfList.map((f) => (
                         <div key={f.id} className="grid grid-cols-[2fr_1.5fr_1fr_2fr] gap-4 px-5 py-3 items-center border-b border-border-custom last:border-0">
-                          <div className="font-bold text-white text-sm">{f.field_name}</div>
+                          <div className="font-bold text-foreground text-sm">{f.field_name}</div>
                           <div className="text-xs text-muted">{f.field_type}</div>
                           <div>{f.set_default ? <span className="text-[10px] bg-emerald-500/15 text-emerald-400 px-2 py-0.5 rounded-full font-bold">Yes</span> : <span className="text-[10px] text-muted">—</span>}</div>
-                          <div className="text-xs text-zinc-300 truncate">{f.default_value || "—"}</div>
+                          <div className="text-xs text-muted truncate">{f.default_value || "—"}</div>
                         </div>
                       ))
                     )}
@@ -1935,11 +1935,11 @@ export default function CompanySettingsPage() {
             <div className="space-y-6">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <h2 className="text-sm font-bold text-white uppercase tracking-wider text-muted">Multi Level Approval</h2>
+                  <h2 className="text-sm font-bold text-foreground uppercase tracking-wider text-muted">Multi Level Approval</h2>
                   <p className="mt-1 text-xs text-muted">Define approver chains per document/transaction category. One block with no upper limit = a flat chain; multiple Min/Max blocks = amount-range routing (each published independently).</p>
                 </div>
                 <select value={approvalCat} onChange={(e) => setApprovalCat(e.target.value)}
-                  className="bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none">
+                  className="bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-foreground outline-none">
                   {APPROVAL_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
@@ -1955,24 +1955,24 @@ export default function CompanySettingsPage() {
                   <Field label="Min Amount (₹)">
                     <input type="number" min={0} value={newRule.min_amount}
                       onChange={(e) => setNewRule({ ...newRule, min_amount: parseInt(e.target.value || "0", 10) || 0 })}
-                      className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
+                      className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-foreground outline-none" />
                   </Field>
                   <Field label="Max Amount (₹, blank = no limit)">
                     <input type="number" min={0} value={newRule.max_amount}
                       onChange={(e) => setNewRule({ ...newRule, max_amount: e.target.value })}
                       placeholder="No upper limit"
-                      className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
+                      className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-foreground outline-none" />
                   </Field>
                   <Field label="Levels">
                     <input type="number" min={1} value={newRule.levels}
                       onChange={(e) => setNewRule({ ...newRule, levels: parseInt(e.target.value || "1", 10) || 1 })}
-                      className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
+                      className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-foreground outline-none" />
                   </Field>
                   <Field label="Approvers (comma-separated)">
                     <input type="text" value={newRule.approvers}
                       onChange={(e) => setNewRule({ ...newRule, approvers: e.target.value })}
                       placeholder="e.g. manager@co.in, finance@co.in"
-                      className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
+                      className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-foreground outline-none" />
                   </Field>
                 </div>
                 <div className="flex justify-end">
@@ -1993,24 +1993,24 @@ export default function CompanySettingsPage() {
                           <Field label="Min Amount (₹)">
                             <input type="number" min={0} value={e.min_amount}
                               onChange={(ev) => approveEdit(r.id, { min_amount: parseInt(ev.target.value || "0", 10) || 0 })}
-                              className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
+                              className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-foreground outline-none" />
                           </Field>
                           <Field label="Max Amount (₹, blank = no limit)">
                             <input type="number" min={0} value={e.max_amount}
                               onChange={(ev) => approveEdit(r.id, { max_amount: ev.target.value })}
                               placeholder="No upper limit"
-                              className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
+                              className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-foreground outline-none" />
                           </Field>
                           <Field label="Levels">
                             <input type="number" min={1} value={e.levels}
                               onChange={(ev) => approveEdit(r.id, { levels: parseInt(ev.target.value || "1", 10) || 1 })}
-                              className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
+                              className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-foreground outline-none" />
                           </Field>
                           <Field label="Approvers (comma-separated)">
                             <input type="text" value={e.approvers}
                               onChange={(ev) => approveEdit(r.id, { approvers: ev.target.value })}
                               placeholder="e.g. manager@co.in, finance@co.in"
-                              className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
+                              className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-foreground outline-none" />
                           </Field>
                         </div>
                         <div className="flex justify-end gap-2">
@@ -2032,12 +2032,12 @@ export default function CompanySettingsPage() {
           {/* ════════════════════════════ INTEGRATIONS ════════════════════════════ */}
           {activeSection === "integrations" && settings && (
             <div className="space-y-6 max-w-3xl">
-              <h2 className="text-sm font-bold text-white uppercase tracking-wider text-muted border-b border-border-custom pb-3">Integrations</h2>
+              <h2 className="text-sm font-bold text-foreground uppercase tracking-wider text-muted border-b border-border-custom pb-3">Integrations</h2>
 
               <div className="bg-card border border-border-custom rounded-lg bg-background p-6 space-y-5">
                 <div className="flex items-center justify-between">
                   <div>
-                    <div className="text-sm font-bold text-white">Google Sheets</div>
+                    <div className="text-sm font-bold text-foreground">Google Sheets</div>
                     <div className="text-[10px] text-muted">Enable the Google Sheets integration for this company.</div>
                   </div>
                   <WfSwitch checked={gsEnabled} onChange={(v) => { setGsEnabled(v); saveGs({ google_sheets_enabled: v }); }} />
@@ -2049,7 +2049,7 @@ export default function CompanySettingsPage() {
                     <input type="text" placeholder="e.g. +919812345678" value={gsPhoneInput}
                       onChange={(e) => setGsPhoneInput(e.target.value)}
                       onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addGsPhone(); } }}
-                      className="flex-1 bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
+                      className="flex-1 bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-foreground outline-none" />
                     <button onClick={addGsPhone} className="bg-primary text-white text-xs font-bold px-4 py-2 rounded-md">Add</button>
                   </div>
                   <div className="flex flex-wrap gap-2 pt-1">
@@ -2103,7 +2103,7 @@ export default function CompanySettingsPage() {
           {/* ════════════════════════════ SUBSCRIPTION ════════════════════════════ */}
           {activeSection === "subscription" && settings && (
             <div className="space-y-6 max-w-3xl">
-              <h2 className="text-sm font-bold text-white uppercase tracking-wider text-muted border-b border-border-custom pb-3">Subscription</h2>
+              <h2 className="text-sm font-bold text-foreground uppercase tracking-wider text-muted border-b border-border-custom pb-3">Subscription</h2>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <StatCard label="Current Plan" value={settings.subscription_plan || "—"} />
@@ -2116,7 +2116,7 @@ export default function CompanySettingsPage() {
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-full bg-primary/15 text-primary font-bold flex items-center justify-center text-lg">★</div>
                   <div>
-                    <div className="text-sm font-bold text-white">Need to change your plan?</div>
+                    <div className="text-sm font-bold text-foreground">Need to change your plan?</div>
                     <div className="text-[10px] text-muted">Plan, billing cycle and renewal are managed by the billing team.</div>
                   </div>
                 </div>
@@ -2166,13 +2166,13 @@ function WfEntryRow({ label, desc, enabled, days, onToggle, onDays }: {
   return (
     <div className="flex items-center justify-between gap-4 bg-elevated border border-border-custom rounded-lg px-4 py-3">
       <div className="min-w-0">
-        <div className="text-xs font-bold text-white">{label}</div>
+        <div className="text-xs font-bold text-foreground">{label}</div>
         <div className="text-[10px] text-muted">{desc}</div>
       </div>
       <div className="flex items-center gap-3 shrink-0">
         <input type="number" min={0} value={days}
           onChange={(e) => onDays(parseInt(e.target.value || "0", 10) || 0)}
-          className="w-20 bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-white outline-none" />
+          className="w-20 bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-foreground outline-none" />
         <WfSwitch checked={enabled} onChange={onToggle} />
       </div>
     </div>
@@ -2185,7 +2185,7 @@ function WfToggleRow({ label, desc, value, onChange }: {
   return (
     <div className="flex items-center justify-between gap-4 bg-elevated border border-border-custom rounded-lg px-4 py-3">
       <div className="min-w-0">
-        <div className="text-xs font-bold text-white">{label}</div>
+        <div className="text-xs font-bold text-foreground">{label}</div>
         <div className="text-[10px] text-muted">{desc}</div>
       </div>
       <WfSwitch checked={value} onChange={onChange} />
@@ -2218,7 +2218,7 @@ function StatCard({ label, value }: { label: string; value: string }) {
   return (
     <div className="bg-card border border-border-custom rounded-lg bg-background p-5 rounded-lg">
       <div className="text-[10px] uppercase tracking-wider text-muted font-bold">{label}</div>
-      <div className="mt-2 text-lg font-bold text-white truncate">{value}</div>
+      <div className="mt-2 text-lg font-bold text-foreground truncate">{value}</div>
     </div>
   );
 }
@@ -2243,7 +2243,7 @@ function SelectorCard({ title, options, selected, onSelect }: { title: string; o
 function Placeholder({ section }: { section: string }) {
   return (
     <div className="bg-card border border-dashed border-border-custom rounded-lg p-10 text-center space-y-2">
-      <div className="text-sm font-bold text-white">{section}</div>
+      <div className="text-sm font-bold text-foreground">{section}</div>
       <p className="text-xs text-muted max-w-md mx-auto">
         This section is implemented in a later build round (per the Setting tab build order). Round 1 covers <span className="text-primary font-bold">Company</span> (Details, Branches, Business Profile).
       </p>

@@ -80,7 +80,7 @@ export default function DPRReportPage() {
               <select
                 value={selectedProject}
                 onChange={e => setSelectedProject(e.target.value)}
-                className="bg-card border border-border-custom rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-primary"
+                className="bg-card border border-border-custom rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary"
               >
                 <option value="All">All Projects</option>
                 <option value="Metro Terminal">Metro Terminal (Phase 2)</option>
@@ -95,7 +95,7 @@ export default function DPRReportPage() {
               <select
                 value={selectedDateFilter}
                 onChange={e => setSelectedDateFilter(e.target.value)}
-                className="bg-card border border-border-custom rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-primary"
+                className="bg-card border border-border-custom rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary"
               >
                 <option value="Today">Today</option>
                 <option value="Yesterday">Yesterday</option>
@@ -110,7 +110,7 @@ export default function DPRReportPage() {
               <input
                 type="date"
                 defaultValue="2026-07-04"
-                className="bg-card border border-border-custom rounded-lg px-3 py-1 text-xs text-white focus:outline-none focus:border-primary"
+                className="bg-card border border-border-custom rounded-lg px-3 py-1 text-xs text-foreground focus:outline-none focus:border-primary"
               />
             </div>
           </div>
@@ -137,7 +137,7 @@ export default function DPRReportPage() {
             
             {/* To Do Table */}
             <div className="bg-card border border-border-custom rounded-xl p-4">
-              <h3 className="text-xs font-bold text-white mb-3 flex items-center justify-between">
+              <h3 className="text-xs font-bold text-foreground mb-3 flex items-center justify-between">
                 <span>To Do For DPR</span>
                 <span className="text-[10px] text-muted font-normal">{todoRows.length} items</span>
               </h3>
@@ -157,7 +157,7 @@ export default function DPRReportPage() {
                     ) : (
                       todoRows.map((row, i) => (
                         <tr key={i} className="border-b border-border-custom/40 last:border-0 hover:bg-elevated/40">
-                          <td className="py-2.5 font-medium text-white">{cell(row, "Project Name")}</td>
+                          <td className="py-2.5 font-medium text-foreground">{cell(row, "Project Name")}</td>
                           <td className="py-2.5 text-muted">{cell(row, "Activity Name")}</td>
                           <td className="py-2.5">
                             <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${statusBadge(cell(row, "Status"))}`}>{cell(row, "Status")}</span>
@@ -173,7 +173,7 @@ export default function DPRReportPage() {
 
             {/* Material Request Table */}
             <div className="bg-card border border-border-custom rounded-xl p-4">
-              <h3 className="text-xs font-bold text-white mb-3 flex items-center justify-between">
+              <h3 className="text-xs font-bold text-foreground mb-3 flex items-center justify-between">
                 <span>Material Request for DPR</span>
                 <span className="text-[10px] text-muted font-normal">{matReqRows.length} items</span>
               </h3>
@@ -194,9 +194,9 @@ export default function DPRReportPage() {
                     ) : (
                       matReqRows.map((row, i) => (
                         <tr key={i} className="border-b border-border-custom/40 last:border-0 hover:bg-elevated/40">
-                          <td className="py-2.5 font-medium text-white">{cell(row, "Project Name")}</td>
+                          <td className="py-2.5 font-medium text-foreground">{cell(row, "Project Name")}</td>
                           <td className="py-2.5 text-muted">{cell(row, "Material Name")}</td>
-                          <td className="py-2.5 text-white">{cell(row, "Request Qty")}</td>
+                          <td className="py-2.5 text-foreground">{cell(row, "Request Qty")}</td>
                           <td className="py-2.5 text-muted">{cell(row, "Unsettled Qty")}</td>
                           <td className="py-2.5">
                             <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${statusBadge(cell(row, "Status"))}`}>{cell(row, "Status")}</span>
@@ -213,7 +213,7 @@ export default function DPRReportPage() {
 
           {/* Row 2: Task Report for DPR */}
           <div className="bg-card border border-border-custom rounded-xl p-4">
-            <h3 className="text-xs font-bold text-white mb-3">Task Report for DPR</h3>
+            <h3 className="text-xs font-bold text-foreground mb-3">Task Report for DPR</h3>
             <div className="overflow-x-auto">
               <table className="w-full text-xs text-left min-w-[900px]">
                 <thead>
@@ -238,18 +238,18 @@ export default function DPRReportPage() {
                   ) : (
                     taskRows.map((row, i) => (
                       <tr key={i} className="border-b border-border-custom/40 last:border-0 hover:bg-elevated/40">
-                        <td className="py-2.5 font-medium text-white">{cell(row, "Project Name")}</td>
+                        <td className="py-2.5 font-medium text-foreground">{cell(row, "Project Name")}</td>
                         <td className="py-2.5 text-muted">{cell(row, "Main Task Name")}</td>
                         <td className="py-2.5 text-muted">{cell(row, "Group Task Name")}</td>
-                        <td className="py-2.5 text-white">{cell(row, "Task Name")}</td>
+                        <td className="py-2.5 text-foreground">{cell(row, "Task Name")}</td>
                         <td className="py-2.5 text-muted">{cell(row, "Start Date")}</td>
                         <td className="py-2.5 text-muted">{cell(row, "End Date")}</td>
                         <td className="py-2.5 text-muted">{cell(row, "Unit")}</td>
-                        <td className="py-2.5 text-white">{cell(row, "Estimated Qty")}</td>
+                        <td className="py-2.5 text-foreground">{cell(row, "Estimated Qty")}</td>
                         <td className="py-2.5 text-muted">{cell(row, "Opening Qty")}</td>
                         <td className="py-2.5 text-success font-semibold">+{cell(row, "Progress Qty")}</td>
-                        <td className="py-2.5 font-bold text-white">{cell(row, "Max % Complete")}</td>
-                        <td className="py-2.5 text-white">{cell(row, "Closing Qty")}</td>
+                        <td className="py-2.5 font-bold text-foreground">{cell(row, "Max % Complete")}</td>
+                        <td className="py-2.5 text-foreground">{cell(row, "Closing Qty")}</td>
                       </tr>
                     ))
                   )}
@@ -260,7 +260,7 @@ export default function DPRReportPage() {
 
           {/* Row 3: Attendance Report for DPR */}
           <div className="bg-card border border-border-custom rounded-xl p-4">
-            <h3 className="text-xs font-bold text-white mb-3">Attendance Report for DPR</h3>
+            <h3 className="text-xs font-bold text-foreground mb-3">Attendance Report for DPR</h3>
             <div className="overflow-x-auto">
               <table className="w-full text-xs text-left">
                 <thead>
@@ -278,11 +278,11 @@ export default function DPRReportPage() {
                   ) : (
                     attendanceRows.map((row, i) => (
                       <tr key={i} className="border-b border-border-custom/40 last:border-0 hover:bg-elevated/40">
-                        <td className="py-2.5 font-medium text-white">{cell(row, "Project Name")}</td>
+                        <td className="py-2.5 font-medium text-foreground">{cell(row, "Project Name")}</td>
                         <td className="py-2.5 text-muted">{cell(row, "Party Name")}</td>
-                        <td className="py-2.5 text-white">{cell(row, "Workforce Name")}</td>
-                        <td className="py-2.5 font-semibold text-white">{cell(row, "No of Workers")}</td>
-                        <td className="py-2.5 text-white">{cell(row, "Total Shift")}</td>
+                        <td className="py-2.5 text-foreground">{cell(row, "Workforce Name")}</td>
+                        <td className="py-2.5 font-semibold text-foreground">{cell(row, "No of Workers")}</td>
+                        <td className="py-2.5 text-foreground">{cell(row, "Total Shift")}</td>
                       </tr>
                     ))
                   )}
@@ -293,7 +293,7 @@ export default function DPRReportPage() {
 
           {/* Row 4: Material Report for DPR */}
           <div className="bg-card border border-border-custom rounded-xl p-4">
-            <h3 className="text-xs font-bold text-white mb-3">Material Report for DPR</h3>
+            <h3 className="text-xs font-bold text-foreground mb-3">Material Report for DPR</h3>
             <div className="overflow-x-auto">
               <table className="w-full text-xs text-left">
                 <thead>
@@ -311,8 +311,8 @@ export default function DPRReportPage() {
                   ) : (
                     materialRows.map((row, i) => (
                       <tr key={i} className="border-b border-border-custom/40 last:border-0 hover:bg-elevated/40">
-                        <td className="py-2.5 font-medium text-white">{cell(row, "Project Name")}</td>
-                        <td className="py-2.5 text-white">{cell(row, "Material")}</td>
+                        <td className="py-2.5 font-medium text-foreground">{cell(row, "Project Name")}</td>
+                        <td className="py-2.5 text-foreground">{cell(row, "Material")}</td>
                         <td className="py-2.5 text-muted">{cell(row, "Unit")}</td>
                         <td className="py-2.5 text-success font-semibold">{cell(row, "Received Qty")}</td>
                         <td className="py-2.5 text-orange-400 font-semibold">{cell(row, "Used Qty")}</td>
@@ -326,7 +326,7 @@ export default function DPRReportPage() {
 
           {/* Row 5: Equipment Report for DPR */}
           <div className="bg-card border border-border-custom rounded-xl p-4">
-            <h3 className="text-xs font-bold text-white mb-3">Equipment Report for DPR</h3>
+            <h3 className="text-xs font-bold text-foreground mb-3">Equipment Report for DPR</h3>
             <div className="overflow-x-auto">
               <table className="w-full text-xs text-left">
                 <thead>
@@ -343,10 +343,10 @@ export default function DPRReportPage() {
                   ) : (
                     equipmentRows.map((row, i) => (
                       <tr key={i} className="border-b border-border-custom/40 last:border-0 hover:bg-elevated/40">
-                        <td className="py-2.5 font-medium text-white">{cell(row, "Project Name")}</td>
-                        <td className="py-2.5 text-white">{cell(row, "Equipment Name")}</td>
+                        <td className="py-2.5 font-medium text-foreground">{cell(row, "Project Name")}</td>
+                        <td className="py-2.5 text-foreground">{cell(row, "Equipment Name")}</td>
                         <td className="py-2.5 text-muted">{cell(row, "Vehicle No")}</td>
-                        <td className="py-2.5 font-semibold text-white">{cell(row, "Unit")}</td>
+                        <td className="py-2.5 font-semibold text-foreground">{cell(row, "Unit")}</td>
                       </tr>
                     ))
                   )}

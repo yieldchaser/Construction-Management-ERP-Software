@@ -140,7 +140,7 @@ export default function CustomFieldsPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-white">Custom Fields</h1>
+            <h1 className="text-3xl font-bold text-foreground">Custom Fields</h1>
             <p className="text-muted mt-1">Add dynamic fields to projects, tasks, bills, and more</p>
           </div>
           <button onClick={() => setShowFieldModal(true)} className="px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-md text-sm font-semibold transition-all">
@@ -159,10 +159,10 @@ export default function CustomFieldsPage() {
             <div className="col-span-full text-center text-muted py-12">No custom fields defined yet</div>
           ) : (
             fields.map((f) => (
-              <div key={f.id} className="bg-white/5 border border-border-custom rounded-lg p-6 hover:bg-white/10 transition-all">
+              <div key={f.id} className="bg-card border border-border-custom rounded-lg p-6 hover:bg-elevated transition-all">
                 <div className="flex items-start justify-between mb-3">
                   <div>
-                    <h3 className="text-white font-semibold">{f.field_label}</h3>
+                    <h3 className="text-foreground font-semibold">{f.field_label}</h3>
                     <p className="text-muted text-xs mt-1">{f.field_name} • {f.field_type}</p>
                   </div>
                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${f.is_active ? "bg-emerald-500/10 text-emerald-400" : "bg-zinc-500/10 text-muted"}`}>
@@ -173,7 +173,7 @@ export default function CustomFieldsPage() {
                   <span className="capitalize">{f.entity_type}</span>
                   {f.is_required && <span className="text-red-400">Required</span>}
                 </div>
-                <button onClick={() => openValueModal(f)} className="w-full px-3 py-2 bg-white/5 hover:bg-white/10 text-white rounded-md text-xs font-medium transition-all">
+                <button onClick={() => openValueModal(f)} className="w-full px-3 py-2 bg-input hover:bg-elevated text-foreground rounded-md text-xs font-medium transition-all">
                   Set Value
                 </button>
               </div>
@@ -185,11 +185,11 @@ export default function CustomFieldsPage() {
       {showFieldModal && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
           <div className="bg-elevated border border-border-custom rounded-lg p-6 w-full max-w-lg">
-            <h2 className="text-xl font-bold text-white mb-4">New Custom Field</h2>
+            <h2 className="text-xl font-bold text-foreground mb-4">New Custom Field</h2>
             <form onSubmit={handleCreateField} className="space-y-4">
               <div>
                 <label className="block text-xs font-medium text-muted mb-1">Entity Type</label>
-                <select className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-white" value={fieldForm.entity_type} onChange={(e) => setFieldForm({...fieldForm, entity_type: e.target.value})}>
+                <select className="w-full bg-input border border-border-custom rounded-md px-4 py-2 text-foreground" value={fieldForm.entity_type} onChange={(e) => setFieldForm({...fieldForm, entity_type: e.target.value})}>
                   <option value="project">Project</option>
                   <option value="task">Task</option>
                   <option value="bill">Bill</option>
@@ -200,15 +200,15 @@ export default function CustomFieldsPage() {
               </div>
               <div>
                 <label className="block text-xs font-medium text-muted mb-1">Field Name</label>
-                <input type="text" required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-white" value={fieldForm.field_name} onChange={(e) => setFieldForm({...fieldForm, field_name: e.target.value})} />
+                <input type="text" required className="w-full bg-input border border-border-custom rounded-md px-4 py-2 text-foreground" value={fieldForm.field_name} onChange={(e) => setFieldForm({...fieldForm, field_name: e.target.value})} />
               </div>
               <div>
                 <label className="block text-xs font-medium text-muted mb-1">Field Label</label>
-                <input type="text" required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-white" value={fieldForm.field_label} onChange={(e) => setFieldForm({...fieldForm, field_label: e.target.value})} />
+                <input type="text" required className="w-full bg-input border border-border-custom rounded-md px-4 py-2 text-foreground" value={fieldForm.field_label} onChange={(e) => setFieldForm({...fieldForm, field_label: e.target.value})} />
               </div>
               <div>
                 <label className="block text-xs font-medium text-muted mb-1">Type</label>
-                <select className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-white" value={fieldForm.field_type} onChange={(e) => setFieldForm({...fieldForm, field_type: e.target.value})}>
+                <select className="w-full bg-input border border-border-custom rounded-md px-4 py-2 text-foreground" value={fieldForm.field_type} onChange={(e) => setFieldForm({...fieldForm, field_type: e.target.value})}>
                   <option value="text">Text</option>
                   <option value="number">Number</option>
                   <option value="date">Date</option>
@@ -219,11 +219,11 @@ export default function CustomFieldsPage() {
               </div>
               <div>
                 <label className="block text-xs font-medium text-muted mb-1">Options (comma-separated, for select)</label>
-                <input type="text" className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-white" value={fieldForm.options} onChange={(e) => setFieldForm({...fieldForm, options: e.target.value})} />
+                <input type="text" className="w-full bg-input border border-border-custom rounded-md px-4 py-2 text-foreground" value={fieldForm.options} onChange={(e) => setFieldForm({...fieldForm, options: e.target.value})} />
               </div>
               <div className="flex gap-3 pt-2">
                 <button type="submit" className="flex-1 px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-md text-sm font-semibold">Create Field</button>
-                <button type="button" onClick={() => { setShowFieldModal(false); setMessage(""); }} className="px-4 py-2 bg-white/10 hover:bg-white/15 text-white rounded-md text-sm font-semibold">Cancel</button>
+                <button type="button" onClick={() => { setShowFieldModal(false); setMessage(""); }} className="px-4 py-2 bg-elevated hover:bg-elevated/70 text-foreground rounded-md text-sm font-semibold">Cancel</button>
               </div>
             </form>
           </div>
@@ -233,33 +233,33 @@ export default function CustomFieldsPage() {
       {showValueModal && selectedField && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
           <div className="bg-elevated border border-border-custom rounded-lg p-6 w-full max-w-lg">
-            <h2 className="text-xl font-bold text-white mb-4">Set Value: {selectedField.field_label}</h2>
+            <h2 className="text-xl font-bold text-foreground mb-4">Set Value: {selectedField.field_label}</h2>
             <form onSubmit={handleSetValue} className="space-y-4">
               <div>
                 <label className="block text-xs font-medium text-muted mb-1">Entity ID</label>
-                <input type="text" required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-white" value={valueForm.entity_id} onChange={(e) => setValueForm({...valueForm, entity_id: e.target.value})} />
+                <input type="text" required className="w-full bg-input border border-border-custom rounded-md px-4 py-2 text-foreground" value={valueForm.entity_id} onChange={(e) => setValueForm({...valueForm, entity_id: e.target.value})} />
               </div>
               {selectedField.field_type === "text" && (
                 <div>
                   <label className="block text-xs font-medium text-muted mb-1">Value</label>
-                  <input type="text" required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-white" value={valueForm.value_text} onChange={(e) => setValueForm({...valueForm, value_text: e.target.value})} />
+                  <input type="text" required className="w-full bg-input border border-border-custom rounded-md px-4 py-2 text-foreground" value={valueForm.value_text} onChange={(e) => setValueForm({...valueForm, value_text: e.target.value})} />
                 </div>
               )}
               {selectedField.field_type === "number" && (
                 <div>
                   <label className="block text-xs font-medium text-muted mb-1">Value</label>
-                  <input type="number" required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-white" value={valueForm.value_number} onChange={(e) => setValueForm({...valueForm, value_number: parseFloat(e.target.value)})} />
+                  <input type="number" required className="w-full bg-input border border-border-custom rounded-md px-4 py-2 text-foreground" value={valueForm.value_number} onChange={(e) => setValueForm({...valueForm, value_number: parseFloat(e.target.value)})} />
                 </div>
               )}
               {selectedField.field_type === "date" && (
                 <div>
                   <label className="block text-xs font-medium text-muted mb-1">Value</label>
-                  <input type="date" required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-white" value={valueForm.value_date} onChange={(e) => setValueForm({...valueForm, value_date: e.target.value})} />
+                  <input type="date" required className="w-full bg-input border border-border-custom rounded-md px-4 py-2 text-foreground" value={valueForm.value_date} onChange={(e) => setValueForm({...valueForm, value_date: e.target.value})} />
                 </div>
               )}
               <div className="flex gap-3 pt-2">
                 <button type="submit" className="flex-1 px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-md text-sm font-semibold">Save Value</button>
-                <button type="button" onClick={() => { setShowValueModal(false); setMessage(""); }} className="px-4 py-2 bg-white/10 hover:bg-white/15 text-white rounded-md text-sm font-semibold">Cancel</button>
+                <button type="button" onClick={() => { setShowValueModal(false); setMessage(""); }} className="px-4 py-2 bg-elevated hover:bg-elevated/70 text-foreground rounded-md text-sm font-semibold">Cancel</button>
               </div>
             </form>
           </div>

@@ -463,11 +463,11 @@ export default function SubcontractorBillingPage() {
         {/* Top Header */}
         <div className="border-b border-border-custom bg-background px-6 py-3.5 flex items-center justify-between z-10">
           <div>
-            <h1 className="text-sm font-bold text-white uppercase tracking-wider">Subcontractor Billing & WOs</h1>
+            <h1 className="text-sm font-bold text-foreground uppercase tracking-wider">Subcontractor Billing & WOs</h1>
             <p className="text-[10px] text-muted">RA Billing Engine · Post-tax & Pre-tax Retentions · TDS Auditor Logs</p>
           </div>
           <div className="flex items-center gap-3">
-            <select value={selectedTower} onChange={(e) => setSelectedTower(e.target.value)} className="bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none">
+            <select value={selectedTower} onChange={(e) => setSelectedTower(e.target.value)} className="bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none">
               <option value="all">All Towers/Phases</option>
               {towers.map((t) => <option key={t.id} value={t.id}>{t.tower_name} ({t.tower_code})</option>)}
             </select>
@@ -493,7 +493,7 @@ export default function SubcontractorBillingPage() {
               {/* Quick stats row */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {[
-                  { label: "Total RA Billing MTD", value: "₹1.80L", sub: "Subtotal billed", color: "text-white" },
+                  { label: "Total RA Billing MTD", value: "₹1.80L", sub: "Subtotal billed", color: "text-foreground" },
                   { label: "Pending Audit Approval", value: "₹88.8K", sub: "1 Bill pending", color: "text-amber-400" },
                   { label: "Total Retentions Held", value: "₹9.9K", sub: "Post-tax contract buffer", color: "text-blue-400" },
                   { label: "Net Payable Settled", value: "₹1.00L", sub: "B-01 fully paid", color: "text-primary" }
@@ -528,10 +528,10 @@ export default function SubcontractorBillingPage() {
                     </thead>
                     <tbody>
                       {bills.map((bill) => (
-                        <tr key={bill.id} className="border-b border-white/[0.02] hover:bg-white/[0.015] transition-all">
+                        <tr key={bill.id} className="border-b border-border-custom hover:bg-elevated transition-all">
                           <td className="px-5 py-3.5 font-mono text-primary font-bold">{bill.invoiceNumber}</td>
-                          <td className="px-5 py-3.5 text-white font-semibold">{bill.subcontractor}</td>
-                          <td className="px-5 py-3.5 font-bold text-zinc-300">₹{bill.subtotal.toLocaleString()}</td>
+                          <td className="px-5 py-3.5 text-foreground font-semibold">{bill.subcontractor}</td>
+                          <td className="px-5 py-3.5 font-bold text-muted">₹{bill.subtotal.toLocaleString()}</td>
                           <td className="px-5 py-3.5 text-muted">
                             <div className="flex flex-col">
                               <span className="text-[10px] text-muted">Total: ₹{bill.gstAmount.toLocaleString()}</span>
@@ -545,7 +545,7 @@ export default function SubcontractorBillingPage() {
                           <td className="px-5 py-3.5 text-muted max-w-[200px]">
                             <div className="flex flex-wrap gap-1">
                               {bill.deductions.map((d, idx) => (
-                                <span key={idx} className="bg-white/5 border border-border-custom text-[9px] px-1.5 py-0.5 rounded text-muted">
+                                <span key={idx} className="bg-elevated border border-border-custom text-[9px] px-1.5 py-0.5 rounded text-muted">
                                   {d.type}: ₹{d.amount.toLocaleString()}
                                 </span>
                               ))}
@@ -571,9 +571,9 @@ export default function SubcontractorBillingPage() {
                       </thead>
                       <tbody>
                         {pnlData.map((p) => (
-                          <tr key={p.tower_id} className="border-b border-white/[0.02] hover:bg-white/[0.015] transition-all">
-                            <td className="px-5 py-3.5 text-white font-semibold">{p.tower_name}</td>
-                            <td className="px-5 py-3.5 text-right font-mono text-zinc-300">₹{(p.budget || 0).toLocaleString()}</td>
+                          <tr key={p.tower_id} className="border-b border-border-custom hover:bg-elevated transition-all">
+                            <td className="px-5 py-3.5 text-foreground font-semibold">{p.tower_name}</td>
+                            <td className="px-5 py-3.5 text-right font-mono text-muted">₹{(p.budget || 0).toLocaleString()}</td>
                             <td className="px-5 py-3.5 text-right font-mono text-amber-400">₹{(p.total_po_value || 0).toLocaleString()}</td>
                             <td className="px-5 py-3.5 text-right font-mono">₹{(p.total_wo_value || 0).toLocaleString()}</td>
                             <td className="px-5 py-3.5 text-right font-mono text-primary">₹{(p.total_billed || 0).toLocaleString()}</td>
@@ -590,7 +590,7 @@ export default function SubcontractorBillingPage() {
                           <td className="px-5 py-3.5">
                             <span className="text-muted font-bold uppercase text-[10px]">{bill.preTax ? "Pre-Tax" : "Post-Tax"}</span>
                           </td>
-                          <td className="px-5 py-3.5 font-extrabold text-white">₹{bill.totalPayable.toLocaleString()}</td>
+                          <td className="px-5 py-3.5 font-extrabold text-foreground">₹{bill.totalPayable.toLocaleString()}</td>
                           <td className="px-5 py-3.5">
                             <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
                               bill.status === "approved"
@@ -606,7 +606,7 @@ export default function SubcontractorBillingPage() {
                                 href={`${getApiHost()}/apis/v3/billing/bills/${bill.id}/pdf`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="bg-white/5 border border-border-custom text-zinc-300 rounded-lg px-2.5 py-1 text-[10px] font-bold hover:bg-white/10 transition-all"
+                                className="bg-elevated border border-border-custom text-muted rounded-lg px-2.5 py-1 text-[10px] font-bold hover:bg-elevated/70 transition-all"
                               >
                                 PDF
                               </a>
@@ -651,11 +651,11 @@ export default function SubcontractorBillingPage() {
                     </thead>
                     <tbody>
                       {workOrders.map((wo) => (
-                        <tr key={wo.id} className="border-b border-white/[0.02] hover:bg-white/[0.015] transition-all">
+                        <tr key={wo.id} className="border-b border-border-custom hover:bg-elevated transition-all">
                           <td className="px-5 py-3.5 font-mono text-secondary font-bold">{wo.woNumber}</td>
-                          <td className="px-5 py-3.5 text-white font-semibold">{wo.subcontractor}</td>
+                          <td className="px-5 py-3.5 text-foreground font-semibold">{wo.subcontractor}</td>
                           <td className="px-5 py-3.5 text-muted">{wo.item}</td>
-                          <td className="px-5 py-3.5 font-bold text-white">₹{wo.value.toLocaleString()}</td>
+                          <td className="px-5 py-3.5 font-bold text-foreground">₹{wo.value.toLocaleString()}</td>
                           <td className="px-5 py-3.5 text-muted">{wo.date}</td>
                           <td className="px-5 py-3.5">
                             <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
@@ -697,9 +697,9 @@ export default function SubcontractorBillingPage() {
                     </thead>
                     <tbody>
                       {notes.map((note) => (
-                        <tr key={note.id} className="border-b border-white/[0.02] hover:bg-white/[0.015] transition-all">
+                        <tr key={note.id} className="border-b border-border-custom hover:bg-elevated transition-all">
                           <td className="px-5 py-3.5 font-mono text-muted">{note.id}</td>
-                          <td className="px-5 py-3.5 text-white font-semibold">{note.subcontractor}</td>
+                          <td className="px-5 py-3.5 text-foreground font-semibold">{note.subcontractor}</td>
                           <td className={`px-5 py-3.5 font-mono font-bold ${note.type === "credit" ? "text-green-400" : "text-red-400"}`}>
                             {note.type === "credit" ? "+" : "-"}${(note.amount).toLocaleString()}
                           </td>
@@ -732,7 +732,7 @@ export default function SubcontractorBillingPage() {
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-card border border-border-custom rounded-lg w-full max-w-md border border-border-custom rounded-md p-6 space-y-4">
             <div>
-              <h3 className="text-sm font-extrabold text-white">Create Work Order (WO)</h3>
+              <h3 className="text-sm font-extrabold text-foreground">Create Work Order (WO)</h3>
               <p className="text-xs text-muted mt-1">Issue a formal contract scope for labor works.</p>
             </div>
 
@@ -744,7 +744,7 @@ export default function SubcontractorBillingPage() {
                     type="text"
                     value={newWONum}
                     onChange={(e) => setNewWONum(e.target.value)}
-                    className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none focus:border-secondary font-mono"
+                    className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none focus:border-secondary font-mono"
                   />
                 </div>
                 <div>
@@ -752,7 +752,7 @@ export default function SubcontractorBillingPage() {
                   <select
                     value={newWOSub}
                     onChange={(e) => setNewWOSub(e.target.value)}
-                    className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none focus:border-secondary font-semibold"
+                    className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none focus:border-secondary font-semibold"
                   >
                     <option value="Karan Masonry Works">Karan Masonry Works</option>
                     <option value="Apex Bar-Bending Co">Apex Bar-Bending Co</option>
@@ -768,7 +768,7 @@ export default function SubcontractorBillingPage() {
                   onChange={(e) => setNewWOItem(e.target.value)}
                   placeholder="Bricklaying, plastering, or BBS detailing..."
                   rows={2}
-                  className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none focus:border-secondary"
+                  className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none focus:border-secondary"
                 />
               </div>
 
@@ -778,13 +778,13 @@ export default function SubcontractorBillingPage() {
                   type="number"
                   value={newWOValue}
                   onChange={(e) => setNewWOValue(parseInt(e.target.value))}
-                  className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none"
+                  className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none"
                 />
               </div>
             </div>
 
             <div className="flex gap-3 justify-end pt-2">
-              <button onClick={() => setShowWOModal(false)} className="px-4 py-2 rounded-md border border-border-custom text-xs font-bold hover:bg-white/[0.05] cursor-pointer">Cancel</button>
+              <button onClick={() => setShowWOModal(false)} className="px-4 py-2 rounded-md border border-border-custom text-xs font-bold hover:bg-elevated cursor-pointer">Cancel</button>
               <button onClick={handleCreateWO} className="bg-primary hover:opacity-90 text-white px-5 py-2 rounded-md text-xs font-bold cursor-pointer">Submit WO</button>
             </div>
           </div>
@@ -799,7 +799,7 @@ export default function SubcontractorBillingPage() {
             {/* Form Column */}
             <div className="col-span-12 md:col-span-7 space-y-4">
               <div>
-                <h3 className="text-sm font-extrabold text-white font-sans">Submit Subcontractor RA Bill</h3>
+                <h3 className="text-sm font-extrabold text-foreground font-sans">Submit Subcontractor RA Bill</h3>
                 <p className="text-xs text-muted mt-1">Submit subcontractor bills with real-time deduction auditing.</p>
               </div>
 
@@ -811,7 +811,7 @@ export default function SubcontractorBillingPage() {
                       type="text"
                       value={newBillNum}
                       onChange={(e) => setNewBillNum(e.target.value)}
-                      className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none font-mono"
+                      className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none font-mono"
                     />
                   </div>
                   <div>
@@ -819,7 +819,7 @@ export default function SubcontractorBillingPage() {
                     <select
                       value={newBillSub}
                       onChange={(e) => setNewBillSub(e.target.value)}
-                      className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none font-semibold"
+                      className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none font-semibold"
                     >
                       <option value="Karan Masonry Works">Karan Masonry Works</option>
                       <option value="Apex Bar-Bending Co">Apex Bar-Bending Co</option>
@@ -835,7 +835,7 @@ export default function SubcontractorBillingPage() {
                       type="number"
                       value={newBillSubtotal}
                       onChange={(e) => setNewBillSubtotal(parseInt(e.target.value))}
-                      className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none focus:border-secondary font-mono font-bold"
+                      className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none focus:border-secondary font-mono font-bold"
                     />
                   </div>
                   <div>
@@ -844,7 +844,7 @@ export default function SubcontractorBillingPage() {
                       type="number"
                       value={newBillGstPct}
                       onChange={(e) => setNewBillGstPct(parseInt(e.target.value))}
-                      className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none"
+                      className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none"
                     />
                   </div>
                 </div>
@@ -893,7 +893,7 @@ export default function SubcontractorBillingPage() {
                         step="0.1"
                         value={newBillTdsPct}
                         onChange={(e) => setNewBillTdsPct(parseFloat(e.target.value) || 0)}
-                        className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none focus:border-secondary font-mono"
+                        className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none focus:border-secondary font-mono"
                       />
                       <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted text-[10px]">%</span>
                     </div>
@@ -907,7 +907,7 @@ export default function SubcontractorBillingPage() {
                         onClick={() => setNewBillGstPct(18)}
                         className={`px-1.5 py-0.5 rounded text-[8px] font-bold border transition-all cursor-pointer ${
                           newBillGstPct === 18
-                            ? "bg-secondary border-secondary text-white"
+                            ? "bg-secondary border-secondary text-foreground"
                             : "bg-elevated border-border-custom text-muted hover:text-foreground"
                         }`}
                       >
@@ -918,7 +918,7 @@ export default function SubcontractorBillingPage() {
                         onClick={() => setNewBillGstPct(12)}
                         className={`px-1.5 py-0.5 rounded text-[8px] font-bold border transition-all cursor-pointer ${
                           newBillGstPct === 12
-                            ? "bg-secondary border-secondary text-white"
+                            ? "bg-secondary border-secondary text-foreground"
                             : "bg-elevated border-border-custom text-muted hover:text-foreground"
                         }`}
                       >
@@ -929,7 +929,7 @@ export default function SubcontractorBillingPage() {
                         onClick={() => setNewBillGstPct(5)}
                         className={`px-1.5 py-0.5 rounded text-[8px] font-bold border transition-all cursor-pointer ${
                           newBillGstPct === 5
-                            ? "bg-secondary border-secondary text-white"
+                            ? "bg-secondary border-secondary text-foreground"
                             : "bg-elevated border-border-custom text-muted hover:text-foreground"
                         }`}
                       >
@@ -941,7 +941,7 @@ export default function SubcontractorBillingPage() {
                         type="number"
                         value={newBillGstPct}
                         onChange={(e) => setNewBillGstPct(parseInt(e.target.value) || 0)}
-                        className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none focus:border-secondary font-mono"
+                        className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none focus:border-secondary font-mono"
                       />
                       <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted text-[10px]">%</span>
                     </div>
@@ -955,7 +955,7 @@ export default function SubcontractorBillingPage() {
                       type="number"
                       value={newBillRetentionPct}
                       onChange={(e) => setNewBillRetentionPct(parseInt(e.target.value) || 0)}
-                      className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none font-mono"
+                      className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none font-mono"
                     />
                   </div>
                   <div>
@@ -964,7 +964,7 @@ export default function SubcontractorBillingPage() {
                       type="number"
                       value={newBillAdvanceRecovery}
                       onChange={(e) => setNewBillAdvanceRecovery(parseInt(e.target.value) || 0)}
-                      className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none font-mono"
+                      className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none font-mono"
                     />
                   </div>
                 </div>
@@ -976,14 +976,14 @@ export default function SubcontractorBillingPage() {
                     onChange={(e) => setNewBillTerms(e.target.value)}
                     placeholder="Pre-filled from company Invoice / Subcon Terms; edit as needed"
                     rows={3}
-                    className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none focus:border-secondary"
+                    className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none focus:border-secondary"
                   />
                 </div>
 
                 {/* Pre-tax toggle */}
                 <div className="flex items-center justify-between p-3 rounded-md bg-elevated border border-border-custom">
                   <div>
-                    <span className="text-xs font-bold text-white block">Pre-Tax Deductions Order</span>
+                    <span className="text-xs font-bold text-foreground block">Pre-Tax Deductions Order</span>
                     <span className="text-[9px] text-muted">Calculate retentions and TDS before applying GST.</span>
                   </div>
                   <input
@@ -996,7 +996,7 @@ export default function SubcontractorBillingPage() {
               </div>
 
               <div className="flex gap-3 justify-end pt-2">
-                <button onClick={() => setShowBillModal(false)} className="px-4 py-2 rounded-md border border-border-custom text-xs font-bold hover:bg-white/[0.05] cursor-pointer">Cancel</button>
+                <button onClick={() => setShowBillModal(false)} className="px-4 py-2 rounded-md border border-border-custom text-xs font-bold hover:bg-elevated cursor-pointer">Cancel</button>
                 <button onClick={handleCreateBill} className="bg-primary hover:opacity-90 text-white px-5 py-2 rounded-md text-xs font-bold cursor-pointer">Submit RA Bill</button>
               </div>
             </div>
@@ -1011,7 +1011,7 @@ export default function SubcontractorBillingPage() {
               <div className="space-y-2.5 text-xs">
                 <div className="flex justify-between text-muted">
                   <span>Gross Subtotal:</span>
-                  <span className="font-mono font-bold text-white">₹{newBillSubtotal.toLocaleString()}</span>
+                  <span className="font-mono font-bold text-foreground">₹{newBillSubtotal.toLocaleString()}</span>
                 </div>
                 
                 <div className="flex justify-between text-muted">
@@ -1036,7 +1036,7 @@ export default function SubcontractorBillingPage() {
                   <span className="font-mono text-green-400">+₹{preview.gstAmt.toLocaleString()}</span>
                 </div>
 
-                <div className="flex justify-between items-center text-white border-t border-border-custom pt-3 mt-1 font-extrabold text-sm">
+                <div className="flex justify-between items-center text-foreground border-t border-border-custom pt-3 mt-1 font-extrabold text-sm">
                   <span>Net Payable:</span>
                   <span className="font-mono text-primary bg-primary/10 border border-primary/20 px-2 py-1 rounded-lg">
                     ₹{preview.totalPayable.toLocaleString()}
