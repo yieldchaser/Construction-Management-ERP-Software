@@ -49,24 +49,45 @@ def start_server():
 
 
 def seed_db(company_id_raw, project_id_raw):
+    """company_id_raw / project_id_raw must be hyphenated str(uuid) forms —
+    the app's SQLiteUUID type (models.py) stores UUIDs as plain String(36)
+    matching str(uuid_obj) exactly, not 32-char hex. Also seeds a user +
+    tenant membership since all routers now require authentication; returns
+    the raw user id so the caller can mint a bearer token."""
     time.sleep(1)
     conn = sqlite3.connect(DB_FILE)
     conn.execute(
         "INSERT INTO companies (id, name, currency_decimal_places, quantity_decimal_places, "
         "back_dated_limit_days, negative_stock_lock, bom_restriction, po_restriction, "
         "material_request_restriction, negative_balance_warning, custom_pdf_template_enabled, "
-        "onboarding_completed, created_at, updated_at) "
-        "VALUES (?, 'QC Test Co', 2, 3, 7, 0, 0, 0, 0, 0, 0, 0, datetime('now'), datetime('now'))",
+        "onboarding_completed, google_sheets_authorized_phones, construction_types, weekly_off_days, "
+        "restrict_entry_creation_enabled, restrict_entry_creation_days, restrict_entry_editing_enabled, "
+        "restrict_entry_editing_days, restrict_progress_over_estimate, pretax_deduction_retention, "
+        "restrict_subcon_material_issue, restrict_material_transfer, restrict_production_material, "
+        "grn_numbering, created_at, updated_at) "
+        "VALUES (?, 'QC Test Co', 2, 3, 7, 0, 0, 0, 0, 0, 0, 0, '[]', '[]', '[]', 0, 0, 0, 0, 0, 0, 0, 0, 0, "
+        "'Project Level', datetime('now'), datetime('now'))",
         (company_id_raw,)
     )
     conn.execute(
         "INSERT INTO projects (id, company_id, name, status, attendance_radius_meters, "
-        "is_location_required, custom_pdf_template_enabled, created_at, updated_at) "
-        "VALUES (?, ?, 'QC Test Project', 'Ongoing', 500, 1, 0, datetime('now'), datetime('now'))",
+        "is_location_required, custom_pdf_template_enabled, project_value, is_pinned, created_at, updated_at) "
+        "VALUES (?, ?, 'QC Test Project', 'Ongoing', 500, 1, 0, 0, 0, datetime('now'), datetime('now'))",
         (project_id_raw, company_id_raw)
+    )
+    user_id_raw = str(uuid.uuid4())
+    conn.execute(
+        "INSERT INTO users (id, name, created_at) VALUES (?, 'QC Test User', datetime('now'))",
+        (user_id_raw,)
+    )
+    conn.execute(
+        "INSERT INTO company_team (id, company_id, user_id, priority_type, created_at) "
+        "VALUES (?, ?, ?, 'partner', datetime('now'))",
+        (str(uuid.uuid4()), company_id_raw, user_id_raw)
     )
     conn.commit()
     conn.close()
+    return user_id_raw
 
 
 def test_phase10():
@@ -78,7 +99,11 @@ def test_phase10():
         project_obj = uuid.uuid4()
         company_id = str(company_obj)
         project_id = str(project_obj)
-        seed_db(company_obj.hex, project_obj.hex)
+        user_id_raw = seed_db(company_id, project_id)
+
+        from app.auth import create_access_token
+        token = create_access_token({"sub": user_id_raw, "company_id": company_id})
+        s.headers.update({"Authorization": f"Bearer {token}"})
 
         # ── 1. Create IS-456 checklist ──────────────────────────────────────
         cl_payload = {

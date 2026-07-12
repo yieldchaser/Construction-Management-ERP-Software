@@ -68,9 +68,13 @@ def test_phase9():
         # API calls use hyphenated UUID strings
         company_id = str(company_id_obj)
         project_id  = str(project_id_obj)
-        # SQLAlchemy stores UUIDs in SQLite as 32-char hex (no hyphens)
-        company_id_raw = company_id_obj.hex
-        project_id_raw = project_id_obj.hex
+        # The app's SQLiteUUID type (see models.py) stores UUIDs as plain
+        # hyphenated String(36) on SQLite, matching str(uuid_obj) exactly —
+        # NOT 32-char hex. Raw-SQL rows must use the same format the ORM's
+        # process_bind_param produces, or ORM lookups (e.g. get_current_user's
+        # User query) silently find nothing and 401.
+        company_id_raw = company_id
+        project_id_raw = project_id
 
         # Wait a tick to ensure server has created the schema
         time.sleep(1)
@@ -78,18 +82,41 @@ def test_phase9():
         conn.execute(
             "INSERT INTO companies (id, name, currency_decimal_places, quantity_decimal_places, back_dated_limit_days, "
             "negative_stock_lock, bom_restriction, po_restriction, material_request_restriction, negative_balance_warning, "
-            "custom_pdf_template_enabled, onboarding_completed, created_at, updated_at) "
-            "VALUES (?, 'Test Co', 2, 3, 7, 0, 0, 0, 0, 0, 0, 0, datetime('now'), datetime('now'))",
+            "custom_pdf_template_enabled, onboarding_completed, google_sheets_authorized_phones, construction_types, "
+            "weekly_off_days, restrict_entry_creation_enabled, restrict_entry_creation_days, "
+            "restrict_entry_editing_enabled, restrict_entry_editing_days, restrict_progress_over_estimate, "
+            "pretax_deduction_retention, restrict_subcon_material_issue, restrict_material_transfer, "
+            "restrict_production_material, grn_numbering, created_at, updated_at) "
+            "VALUES (?, 'Test Co', 2, 3, 7, 0, 0, 0, 0, 0, 0, 0, '[]', '[]', '[]', 0, 0, 0, 0, 0, 0, 0, 0, 0, "
+            "'Project Level', datetime('now'), datetime('now'))",
             (company_id_raw,)
         )
         conn.execute(
             "INSERT INTO projects (id, company_id, name, status, attendance_radius_meters, is_location_required, "
-            "custom_pdf_template_enabled, created_at, updated_at) "
-            "VALUES (?, ?, 'Test Project', 'Ongoing', 500, 1, 0, datetime('now'), datetime('now'))",
+            "custom_pdf_template_enabled, project_value, is_pinned, created_at, updated_at) "
+            "VALUES (?, ?, 'Test Project', 'Ongoing', 500, 1, 0, 0, 0, datetime('now'), datetime('now'))",
             (project_id_raw, company_id_raw)
+        )
+        # All 41 routers require an authenticated user (added after this script
+        # was written) — seed a user + tenant membership and attach a real
+        # bearer token to the session for every subsequent request.
+        user_id_obj = uuid.uuid4()
+        user_id_raw = str(user_id_obj)
+        conn.execute(
+            "INSERT INTO users (id, name, created_at) VALUES (?, 'Test User', datetime('now'))",
+            (user_id_raw,)
+        )
+        conn.execute(
+            "INSERT INTO company_team (id, company_id, user_id, priority_type, created_at) "
+            "VALUES (?, ?, ?, 'partner', datetime('now'))",
+            (str(uuid.uuid4()), company_id_raw, user_id_raw)
         )
         conn.commit()
         conn.close()
+
+        from app.auth import create_access_token
+        token = create_access_token({"sub": str(user_id_obj), "company_id": company_id})
+        s.headers.update({"Authorization": f"Bearer {token}"})
 
         # ── 1. Create employees ─────────────────────────────────────────────
         emp1_payload = {

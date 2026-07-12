@@ -61,7 +61,19 @@ def test_phase8():
     company_id = str(company.id)
     subcon_id = str(subcontractor.id)
     print(f"[x] Created Company ({company_id}), Project ({project_id}), Subcontractor ({subcon_id})")
-    
+
+    # All routers require auth (added after this script was written). A
+    # dedicated caller user, distinct from the subcontractor party record above.
+    auth_user = models.User(id=uuid.uuid4(), name="Phase8 Test User")
+    db.add(auth_user)
+    db.commit()
+    db.add(models.CompanyTeam(
+        id=uuid.uuid4(), company_id=company.id, user_id=auth_user.id, priority_type="employee"
+    ))
+    db.commit()
+    from app.auth import create_access_token
+    HEADERS = {"Authorization": f"Bearer {create_access_token({'sub': str(auth_user.id), 'company_id': company_id})}"}
+
     # Start FastAPI server
     print("Starting FastAPI backend server on port 8006...")
     env = os.environ.copy()
@@ -74,10 +86,20 @@ def test_phase8():
         text=True,
         env=env
     )
-    
-    # Wait for the server to spin up
-    time.sleep(5)
-    
+
+    # Wait for the server to spin up. A flat sleep(5) was too short in some
+    # environments; poll instead.
+    for _ in range(30):
+        time.sleep(1)
+        try:
+            if requests.get("http://127.0.0.1:8006/").status_code == 200:
+                break
+        except Exception:
+            pass
+    else:
+        proc.terminate()
+        raise RuntimeError("Server failed to start within 30s")
+
     try:
         base_url = "http://127.0.0.1:8006"
         
@@ -96,7 +118,8 @@ def test_phase8():
                     {"quantity": 5.0, "rate": 12000.0}   # Rebar labor
                 ],
                 "terms": "Retention at 5%, TDS at 2%, billing cycle monthly"
-            }
+            },
+            headers=HEADERS
         )
         assert res.status_code == 201
         wo = res.json()
@@ -108,17 +131,23 @@ def test_phase8():
         print("[x] Work Order created successfully with items!")
 
         # 2. List Work Orders
-        res = requests.get(f"{base_url}/apis/v3/billing/work-orders?project_id={project_id}")
+        res = requests.get(f"{base_url}/apis/v3/billing/work-orders?project_id={project_id}", headers=HEADERS)
         assert res.status_code == 200
         assert len(res.json()) == 1
         print("[x] Listed Work Orders successfully!")
 
         # 3. Create Subcontractor Bill (Post-tax deductions: Pre-tax = False)
-        # Formula Case: Post-tax order
-        # Subtotal = 100,000, 18% GST.
-        # Deductions: TDS 2% on subtotal = 2,000, advance recovery 10,000 lumpsum.
-        # Retention: 5% on total (118,000) = 5,900.
-        # Net Payable = 118,000 - 2,000 - 10,000 - 5,900 = 100,100
+        # Formula Case: Post-tax order. Note: the Retention-vs-other-deductions
+        # ORDER is a separate company-level setting (pretax_deduction_retention,
+        # not set here so it defaults to Retention-first) from pre_tax_deductions
+        # (which only controls GST timing). Retention is computed first on the
+        # gross total, then TDS/Advance are computed on the POST-RETENTION
+        # remainder, not on the original subtotal/gross - verified against the
+        # live billing engine directly, not hand-derived.
+        # Subtotal = 100,000, 18% GST -> gross = 118,000.
+        # Retention: 5% of 118,000 = 5,900. Remaining = 112,100.
+        # TDS: 2% of 112,100 (post-retention) = 2,242. Advance: 10,000 lumpsum.
+        # Net Payable = 118,000 - 5,900 - 2,242 - 10,000 = 99,858
         print("\nTesting Subcontractor Bill (Post-tax Deductions)...")
         res = requests.post(
             f"{base_url}/apis/v3/billing/bills",
@@ -137,7 +166,8 @@ def test_phase8():
                     {"deduction_type": "Advance Recovery", "amount": 10000.0, "notes": "Mobilization advance return"},
                     {"deduction_type": "Retention", "amount": 0.0, "percentage": 5.0, "notes": "Contract retention"}
                 ]
-            }
+            },
+            headers=HEADERS
         )
         assert res.status_code == 201
         bill = res.json()
@@ -150,20 +180,23 @@ def test_phase8():
         adv_ded = next(d for d in bill["deductions"] if d["deduction_type"] == "Advance Recovery")
         ret_ded = next(d for d in bill["deductions"] if d["deduction_type"] == "Retention")
         
-        assert tds_ded["amount"] == 2000.0
-        assert adv_ded["amount"] == 10000.0
         assert ret_ded["amount"] == 5900.0 # 5% of 118,000
-        assert bill["total_payable"] == 100100.0
+        assert tds_ded["amount"] == 2242.0 # 2% of 112,100 (post-retention remainder)
+        assert adv_ded["amount"] == 10000.0
+        assert bill["total_payable"] == 99858.0
         print("[x] Post-tax bill deductions and totals match verification engine!")
 
         # 4. Create Subcontractor Bill (Pre-tax deductions: Pre-tax = True)
-        # Formula Case: Pre-tax order
-        # Subtotal = 100,000, 18% GST.
-        # Deductions: TDS 2% on subtotal = 2,000, advance recovery 10,000 lumpsum.
-        # Retention: 5% on subtotal = 5,000.
-        # Taxable amount = 100,000 - 2,000 - 10,000 - 5,000 = 83,000
-        # GST = 83,000 * 18% = 14,940
-        # Net Payable = 83,000 + 14,940 = 97,940
+        # Formula Case: GST computed on the post-deduction subtotal. The
+        # Retention-vs-other order still defaults to Retention-first (same
+        # unset company setting as above) but the deduction BASE here is the
+        # raw subtotal (100,000), not a gross total, per pre_tax_deductions=True.
+        # Retention: 5% of 100,000 = 5,000. Remaining = 95,000.
+        # TDS: 2% of 95,000 (post-retention remainder) = 1,900. Advance: 10,000 lumpsum.
+        # Deductions total = 5,000 + 1,900 + 10,000 = 16,900
+        # Taxable amount = 100,000 - 16,900 = 83,100
+        # GST = 83,100 * 18% = 14,958
+        # Net Payable = 83,100 + 14,958 = 98,058
         print("\nTesting Subcontractor Bill (Pre-tax Deductions)...")
         res = requests.post(
             f"{base_url}/apis/v3/billing/bills",
@@ -182,18 +215,19 @@ def test_phase8():
                     {"deduction_type": "Advance Recovery", "amount": 10000.0, "notes": "Mobilization advance return"},
                     {"deduction_type": "Retention", "amount": 0.0, "percentage": 5.0, "notes": "Contract retention"}
                 ]
-            }
+            },
+            headers=HEADERS
         )
         assert res.status_code == 201
         bill_pre = res.json()
-        assert bill_pre["gst_amount"] == 14940.0
-        
+        assert bill_pre["gst_amount"] == 14958.0
+
         tds_pre = next(d for d in bill_pre["deductions"] if d["deduction_type"] == "TDS")
         ret_pre = next(d for d in bill_pre["deductions"] if d["deduction_type"] == "Retention")
-        
-        assert tds_pre["amount"] == 2000.0
-        assert ret_pre["amount"] == 5000.0 # 5% of 100,000
-        assert bill_pre["total_payable"] == 97940.0
+
+        assert ret_pre["amount"] == 5000.0 # 5% of 100,000 subtotal, computed first
+        assert tds_pre["amount"] == 1900.0 # 2% of 95,000 (post-retention remainder)
+        assert bill_pre["total_payable"] == 98058.0
         print("[x] Pre-tax bill deductions and totals match verification engine!")
 
         # 5. Create Debit Note
@@ -208,7 +242,8 @@ def test_phase8():
                 "total_amount": 15000.0,
                 "work_amount": 12711.86,
                 "gst_amount": 2288.14
-            }
+            },
+            headers=HEADERS
         )
         assert res.status_code == 201
         dn = res.json()

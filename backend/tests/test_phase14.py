@@ -68,6 +68,17 @@ def seed_db(company_obj, project_a_obj, project_b_obj):
     db.add_all([project_a, project_b])
     db.commit()
 
+    # All routers require auth (added after this script was written). A
+    # dedicated caller user, distinct from the subcontractor/vendor party
+    # records seeded further below.
+    auth_user = models.User(id=uuid.uuid4(), name="Analytics Test User")
+    db.add(auth_user)
+    db.commit()
+    db.add(models.CompanyTeam(
+        id=uuid.uuid4(), company_id=company.id, user_id=auth_user.id, priority_type="employee"
+    ))
+    db.commit()
+
     db.add_all([
         models.ProjectBudget(
             project_id=project_a.id,
@@ -359,7 +370,9 @@ def seed_db(company_obj, project_a_obj, project_b_obj):
         )
     )
     db.commit()
+    auth_user_id = auth_user.id
     db.close()
+    return auth_user_id
 
 
 def assert_eq(label, actual, expected):
@@ -392,11 +405,14 @@ def test_phase14():
     project_a_obj = uuid.uuid4()
     project_b_obj = uuid.uuid4()
 
-    seed_db(company_obj, project_a_obj, project_b_obj)
+    auth_user_id = seed_db(company_obj, project_a_obj, project_b_obj)
 
     proc = start_server()
     try:
         s = requests.Session()
+        from app.auth import create_access_token
+        token = create_access_token({"sub": str(auth_user_id), "company_id": str(company_obj)})
+        s.headers.update({"Authorization": f"Bearer {token}"})
         r = s.get(f"{BASE}/analytics/company/{company_obj}")
         payload = ok("Fetch company analytics", r)
 

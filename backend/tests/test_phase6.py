@@ -50,7 +50,18 @@ def test_phase6():
 
     project_id = str(project.id)
     print(f"[x] Created Test Company ({company.id}) and Test Project ({project_id})")
-    
+
+    # All routers require auth (added after this script was written).
+    user = models.User(id=uuid.uuid4(), name="Phase6 Test User")
+    db.add(user)
+    db.commit()
+    db.add(models.CompanyTeam(
+        id=uuid.uuid4(), company_id=company.id, user_id=user.id, priority_type="employee"
+    ))
+    db.commit()
+    from app.auth import create_access_token
+    HEADERS = {"Authorization": f"Bearer {create_access_token({'sub': str(user.id), 'company_id': str(company.id)})}"}
+
     # Start FastAPI server
     print("Starting FastAPI backend server...")
     env = os.environ.copy()
@@ -63,10 +74,20 @@ def test_phase6():
         text=True,
         env=env
     )
-    
-    # Wait for the server to spin up
-    time.sleep(5)
-    
+
+    # Wait for the server to spin up. A flat sleep(5) was too short in some
+    # environments; poll instead.
+    for _ in range(30):
+        time.sleep(1)
+        try:
+            if requests.get("http://127.0.0.1:8004/").status_code == 200:
+                break
+        except Exception:
+            pass
+    else:
+        proc.terminate()
+        raise RuntimeError("Server failed to start within 30s")
+
     try:
         base_url = "http://127.0.0.1:8004"
         
@@ -79,7 +100,8 @@ def test_phase6():
                 "name": "Architectural Foundation Layout",
                 "category": "2D Layout",
                 "file_url": "/images/drawings/foundation_v1.pdf"
-            }
+            },
+            headers=HEADERS
         )
         assert res.status_code == 200
         drawing = res.json()
@@ -94,7 +116,7 @@ def test_phase6():
 
         # 2. List drawings for project
         print("\nTesting List Drawings...")
-        res = requests.get(f"{base_url}/apis/v3/drawings?project_id={project_id}")
+        res = requests.get(f"{base_url}/apis/v3/drawings?project_id={project_id}", headers=HEADERS)
         assert res.status_code == 200
         drawings = res.json()
         assert len(drawings) == 1
@@ -109,7 +131,8 @@ def test_phase6():
                 "version_code": "V2",
                 "file_url": "/images/drawings/foundation_v2.pdf",
                 "comments": "Shifted columns grid-line C to the left by 100mm"
-            }
+            },
+            headers=HEADERS
         )
         assert res.status_code == 200
         v2_rev = res.json()
@@ -125,7 +148,8 @@ def test_phase6():
             json={
                 "approval_status": "approved",
                 "comments": "Reviewed by lead structural engineer, looks good."
-            }
+            },
+            headers=HEADERS
         )
         assert res.status_code == 200
         v2_approved = res.json()
@@ -141,7 +165,8 @@ def test_phase6():
                 "x_coordinate": 25.4,
                 "y_coordinate": 75.8,
                 "comment": "Check slab overlap thickness at column C-4"
-            }
+            },
+            headers=HEADERS
         )
         assert res.status_code == 200
         pin = res.json()
@@ -152,7 +177,7 @@ def test_phase6():
         print("[x] Canvas pin added successfully!")
 
         # 6. Verify drawing lists with new revision and pin
-        res = requests.get(f"{base_url}/apis/v3/drawings?project_id={project_id}")
+        res = requests.get(f"{base_url}/apis/v3/drawings?project_id={project_id}", headers=HEADERS)
         assert res.status_code == 200
         drawings = res.json()
         revs = drawings[0]["revisions"]
@@ -165,12 +190,12 @@ def test_phase6():
 
         # 7. Delete canvas pin
         print("\nTesting Delete Canvas Pin...")
-        res = requests.delete(f"{base_url}/apis/v3/drawings/pins/{pin_id}")
+        res = requests.delete(f"{base_url}/apis/v3/drawings/pins/{pin_id}", headers=HEADERS)
         assert res.status_code == 200
         assert res.json()["status"] == "success"
         
         # Verify pin is deleted
-        res = requests.get(f"{base_url}/apis/v3/drawings?project_id={project_id}")
+        res = requests.get(f"{base_url}/apis/v3/drawings?project_id={project_id}", headers=HEADERS)
         revs = res.json()[0]["revisions"]
         v2_list = next(r for r in revs if r["id"] == v2_id)
         assert len(v2_list["pins"]) == 0

@@ -26,12 +26,21 @@ def test_backend():
         env=env
     )
     
-    # Wait for the server to spin up
-    time.sleep(5)
-    
+    # Wait for the server to spin up. A flat sleep(5) was too short in some
+    # environments; poll instead.
+    base_url = "http://127.0.0.1:8020"
+    for _ in range(30):
+        time.sleep(1)
+        try:
+            if requests.get(f"{base_url}/").status_code == 200:
+                break
+        except Exception:
+            pass
+    else:
+        proc.terminate()
+        raise RuntimeError("Server failed to start within 30s")
+
     try:
-        base_url = "http://127.0.0.1:8020"
-        
         # 1. Health Check
         print("Testing health check endpoint...")
         res = requests.get(f"{base_url}/")
@@ -60,7 +69,11 @@ def test_backend():
         assert data["user"]["mobile"] == "+919876543210"
         assert data["company"]["name"] == "Demo Construction Ltd"
         print("[x] OTP Verify passed: User and Demo Company auto-onboarded successfully!")
-        
+
+        # Calculators require auth too (added after this script was written) -
+        # reuse the token from OTP verify above rather than minting a new one.
+        HEADERS = {"Authorization": f"Bearer {data['access_token']}"}
+
         # 4. Steel Calculator
         print("\nTesting Steel Calculator API...")
         res = requests.post(
@@ -71,11 +84,12 @@ def test_backend():
                 "length_or_height": 3.0,
                 "is_column": True,
                 "slab_thickness": 0.15
-            }
+            },
+            headers=HEADERS
         )
         assert res.status_code == 200
         print("[x] Steel Calculator API passed:", res.json())
-        
+
         # 5. Concrete Calculator
         print("\nTesting Concrete Calculator API...")
         res = requests.post(
@@ -83,7 +97,8 @@ def test_backend():
             json={
                 "wet_volume": 2.0,
                 "grade": "M20"
-            }
+            },
+            headers=HEADERS
         )
         assert res.status_code == 200
         print("[x] Concrete Calculator API passed:", res.json())

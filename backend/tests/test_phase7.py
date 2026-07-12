@@ -51,7 +51,18 @@ def test_phase7():
     project_id = str(project.id)
     company_id = str(company.id)
     print(f"[x] Created Test Company ({company_id}) and Test Project ({project_id})")
-    
+
+    # All routers require auth (added after this script was written).
+    user = models.User(id=uuid.uuid4(), name="Phase7 Test User")
+    db.add(user)
+    db.commit()
+    db.add(models.CompanyTeam(
+        id=uuid.uuid4(), company_id=company.id, user_id=user.id, priority_type="employee"
+    ))
+    db.commit()
+    from app.auth import create_access_token
+    HEADERS = {"Authorization": f"Bearer {create_access_token({'sub': str(user.id), 'company_id': company_id})}"}
+
     # Start FastAPI server
     print("Starting FastAPI backend server...")
     env = os.environ.copy()
@@ -94,7 +105,8 @@ def test_phase7():
                     {"material_name": "UltraTech Cement", "quantity": 150.0, "unit": "bags"},
                     {"material_name": "TMT Steel 16mm", "quantity": 5.5, "unit": "tons"}
                 ]
-            }
+            },
+            headers=HEADERS
         )
         assert res.status_code == 201
         indent = res.json()
@@ -106,7 +118,7 @@ def test_phase7():
 
         # 1a. List the created indent through the shared listing route
         print("\nTesting List Material Indents by project_id...")
-        res = requests.get(f"{base_url}/apis/v3/procurement/indents?project_id={project_id}")
+        res = requests.get(f"{base_url}/apis/v3/procurement/indents?project_id={project_id}", headers=HEADERS)
         assert res.status_code == 200
         project_indents = res.json()
         assert any(item["id"] == indent_id for item in project_indents)
@@ -114,7 +126,7 @@ def test_phase7():
         assert project_indent["indent_number"] == "IND-2026-001"
 
         print("\nTesting List Material Indents by company_id...")
-        res = requests.get(f"{base_url}/apis/v3/procurement/indents?company_id={company_id}")
+        res = requests.get(f"{base_url}/apis/v3/procurement/indents?company_id={company_id}", headers=HEADERS)
         assert res.status_code == 200
         company_indents = res.json()
         assert any(item["id"] == indent_id for item in company_indents)
@@ -122,19 +134,19 @@ def test_phase7():
         assert company_indent["indent_number"] == "IND-2026-001"
 
         print("\nTesting existing company-specific indent listing route...")
-        res = requests.get(f"{base_url}/apis/v3/procurement/indents/company/{company_id}")
+        res = requests.get(f"{base_url}/apis/v3/procurement/indents/company/{company_id}", headers=HEADERS)
         assert res.status_code == 200
         company_path_indents = res.json()
         assert any(item["id"] == indent_id for item in company_path_indents)
 
         print("\nTesting List Material Indents without query params...")
-        res = requests.get(f"{base_url}/apis/v3/procurement/indents")
+        res = requests.get(f"{base_url}/apis/v3/procurement/indents", headers=HEADERS)
         assert res.status_code == 400
         assert res.json()["detail"] == "Either project_id or company_id must be provided"
 
         # 2. Approve Material Indent
         print("\nTesting Approve Material Indent...")
-        res = requests.post(f"{base_url}/apis/v3/procurement/indents/{indent_id}/approve")
+        res = requests.post(f"{base_url}/apis/v3/procurement/indents/{indent_id}/approve", headers=HEADERS)
         assert res.status_code == 200
         approved_indent = res.json()
         assert approved_indent["status"] == "approved"
@@ -153,7 +165,8 @@ def test_phase7():
                     {"material_name": "UltraTech Cement", "quantity": 100.0, "unit": "bags", "rate": 410.0, "tax_pct": 18.0},
                     {"material_name": "TMT Steel 16mm", "quantity": 4.0, "unit": "tons", "rate": 62000.0, "tax_pct": 18.0}
                 ]
-            }
+            },
+            headers=HEADERS
         )
         assert res.status_code == 201
         po = res.json()
@@ -173,7 +186,7 @@ def test_phase7():
 
         # 4. Approve Purchase Order
         print("\nTesting Approve Purchase Order...")
-        res = requests.post(f"{base_url}/apis/v3/procurement/pos/{po_id}/approve")
+        res = requests.post(f"{base_url}/apis/v3/procurement/pos/{po_id}/approve", headers=HEADERS)
         assert res.status_code == 200
         approved_po = res.json()
         assert approved_po["approval_flag"] == "approved"
@@ -194,7 +207,8 @@ def test_phase7():
                     {"po_item_id": cement_po_item_id, "received_qty": 60.0},
                     {"po_item_id": steel_po_item_id, "received_qty": 2.5}
                 ]
-            }
+            },
+            headers=HEADERS
         )
         assert res.status_code == 201
         grn = res.json()
@@ -204,7 +218,7 @@ def test_phase7():
 
         # 6. Verify Warehouse Inventory quantities incremented
         print("\nVerifying stateful Warehouse Inventory updates...")
-        res = requests.get(f"{base_url}/apis/v3/procurement/inventory?project_id={project_id}")
+        res = requests.get(f"{base_url}/apis/v3/procurement/inventory?project_id={project_id}", headers=HEADERS)
         assert res.status_code == 200
         inventory = res.json()
         assert len(inventory) == 2
@@ -218,7 +232,7 @@ def test_phase7():
 
         # 7. Verify Transaction logs created
         print("\nVerifying Material Transaction ledger logs...")
-        res = requests.get(f"{base_url}/apis/v3/procurement/transactions?project_id={project_id}")
+        res = requests.get(f"{base_url}/apis/v3/procurement/transactions?project_id={project_id}", headers=HEADERS)
         assert res.status_code == 200
         transactions = res.json()
         assert len(transactions) == 2

@@ -39,7 +39,19 @@ def test_onboarding_and_libraries():
     db.add(company)
     db.commit()
     print(f"Company seeded successfully. ID: {company_id}")
-    
+
+    # All routers require auth (added after this script was written).
+    user = models.User(id=uuid.uuid4(), name="Libraries Test User")
+    db.add(user)
+    db.commit()
+    db.add(models.CompanyTeam(
+        id=uuid.uuid4(), company_id=company.id, user_id=user.id, priority_type="employee"
+    ))
+    db.commit()
+    from app.auth import create_access_token
+    token = create_access_token({"sub": str(user.id), "company_id": str(company_id)})
+    client.headers.update({"Authorization": f"Bearer {token}"})
+
     # 2. Trigger Onboarding API
     print("\n--- Testing Onboarding API ---")
     onboard_payload = {

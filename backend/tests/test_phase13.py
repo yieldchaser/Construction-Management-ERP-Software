@@ -77,7 +77,20 @@ def seed_db(company_obj, project_obj):
     )
     db.add(project)
     db.commit()
+
+    # All routers require auth (added after this script was written).
+    user = models.User(id=uuid.uuid4(), name="Safety Test User")
+    db.add(user)
+    db.commit()
+    team_member = models.CompanyTeam(
+        id=uuid.uuid4(), company_id=company.id, user_id=user.id, priority_type="employee"
+    )
+    db.add(team_member)
+    db.commit()
+
+    user_id = user.id
     db.close()
+    return user_id
 
 
 def assert_eq(label, actual, expected):
@@ -106,11 +119,14 @@ def test_phase13():
     company_id = str(company_obj)
     project_id = str(project_obj)
 
-    seed_db(company_obj, project_obj)
+    user_id = seed_db(company_obj, project_obj)
 
     proc = start_server()
     try:
         s = requests.Session()
+        from app.auth import create_access_token
+        token = create_access_token({"sub": str(user_id), "company_id": company_id})
+        s.headers.update({"Authorization": f"Bearer {token}"})
 
         # ── 1. Log Near Miss incident ─────────────────────────────────────────
         r = s.post(f"{BASE}/safety/incidents", json={

@@ -189,7 +189,9 @@ def seed_db(company_obj, project_obj):
     db.add(test_res)
     db.commit()
 
+    user_id = user.id
     db.close()
+    return user_id
 
 
 def test_phase11():
@@ -208,11 +210,15 @@ def test_phase11():
     project_id = str(project_obj)
 
     # Seed the database first (while server is not holding lock)
-    seed_db(company_obj, project_obj)
+    user_id = seed_db(company_obj, project_obj)
 
     proc = start_server()
     try:
         s = requests.Session()
+        # All routers require auth (added after this script was written).
+        from app.auth import create_access_token
+        token = create_access_token({"sub": str(user_id), "company_id": company_id})
+        s.headers.update({"Authorization": f"Bearer {token}"})
 
         # ── 1. Generate Report ───────────────────────────────────────────────
         report_payload = {

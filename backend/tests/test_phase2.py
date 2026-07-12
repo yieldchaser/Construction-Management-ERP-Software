@@ -74,6 +74,17 @@ def test_phase2():
 
     project_id = str(project.id)
     print(f"[x] Created Test Company ({company.id}) and Test Project ({project_id})")
+
+    # All routers require auth (added after this script was written).
+    user = models.User(id=uuid.uuid4(), name="Phase2 Test User")
+    db.add(user)
+    db.commit()
+    db.add(models.CompanyTeam(
+        id=uuid.uuid4(), company_id=company.id, user_id=user.id, priority_type="employee"
+    ))
+    db.commit()
+    from app.auth import create_access_token
+    HEADERS = {"Authorization": f"Bearer {create_access_token({'sub': str(user.id), 'company_id': str(company.id)})}"}
     
     # 2. Build mock Excel sheet
     excel_file = setup_excel_file()
@@ -91,9 +102,20 @@ def test_phase2():
         env=env
     )
     
-    # Wait for the server to spin up
-    time.sleep(5)
-    
+    # Wait for the server to spin up. A flat sleep(5) was too short in some
+    # environments (slower Python/uvicorn boot) and produced a spurious
+    # connection-refused failure unrelated to the app; poll instead.
+    for _ in range(30):
+        time.sleep(1)
+        try:
+            if requests.get("http://127.0.0.1:8002/").status_code == 200:
+                break
+        except Exception:
+            pass
+    else:
+        proc.terminate()
+        raise RuntimeError("Server failed to start within 30s")
+
     try:
         base_url = "http://127.0.0.1:8002"
         
@@ -103,7 +125,8 @@ def test_phase2():
             res = requests.post(
                 f"{base_url}/apis/v3/budgeting/boq/import",
                 data={"project_id": project_id},
-                files={"file": ("test_boq.xlsx", f, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")}
+                files={"file": ("test_boq.xlsx", f, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")},
+                headers=HEADERS
             )
         if res.status_code != 201:
             print("Response status code:", res.status_code)
@@ -116,7 +139,7 @@ def test_phase2():
 
         # 5. Fetch BOQ and verify quantity precision limits
         print("\nTesting quantity precision limits & calculations...")
-        res = requests.get(f"{base_url}/apis/v3/budgeting/boq?project_id={project_id}")
+        res = requests.get(f"{base_url}/apis/v3/budgeting/boq?project_id={project_id}", headers=HEADERS)
         assert res.status_code == 200
         items = res.json()
         
@@ -143,7 +166,8 @@ def test_phase2():
                 "name": "Task A: Shoring excavation",
                 "duration_days": 10,
                 "start_date": start_a
-            }
+            },
+            headers=HEADERS
         )
         assert res.status_code == 201
         task_a = res.json()
@@ -164,7 +188,8 @@ def test_phase2():
                 "name": "Task B: Reinforcement steel base",
                 "duration_days": 5,
                 "start_date": start_b
-            }
+            },
+            headers=HEADERS
         )
         assert res.status_code == 201
         task_b = res.json()
@@ -178,13 +203,14 @@ def test_phase2():
             json={
                 "predecessor_id": task_a_id,
                 "type": "finish_to_start"
-            }
+            },
+            headers=HEADERS
         )
         assert res.status_code == 201
         print("[x] Predecessor linked successfully!")
 
         # Fetch Task B again to verify start date shifted to Task A end date
-        res = requests.get(f"{base_url}/apis/v3/planning/tasks?project_id={project_id}")
+        res = requests.get(f"{base_url}/apis/v3/planning/tasks?project_id={project_id}", headers=HEADERS)
         tasks_list = res.json()
         task_b_updated = next(t for t in tasks_list if t["id"] == task_b_id)
         
@@ -204,7 +230,8 @@ def test_phase2():
             json={
                 "predecessor_id": task_b_id,
                 "type": "finish_to_start"
-            }
+            },
+            headers=HEADERS
         )
         # Should fail with 400 Bad Request
         assert res.status_code == 400
