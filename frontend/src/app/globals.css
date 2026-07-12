@@ -1800,6 +1800,531 @@ body {
 }
 
 /* ============================================================
+   Product widget system (.pw-*)
+   ------------------------------------------------------------
+   ONE clean, reusable, on-brand widget vocabulary shared across
+   ALL /products/* pages. This is the permanent replacement for
+   the ~60 bespoke per-page prefixes (osblp-, oscp-, ownw2-, ...)
+   that were normalized above with attribute-substring selectors.
+   As each product page is rebuilt, its old bespoke widget markup
+   is deleted and re-authored with ONLY these .pw-* classes.
+
+   Design rules:
+   - Theme-token driven -> works in BOTH dark and light themes.
+   - Violet primary scheme (#7C3AED); success/warning/danger/info/
+     secondary(teal) used only for semantic status. NO hardcoded
+     competitor red/pink.
+   - Every value/label + icon/text pair uses real flex spacing, so
+     numbers never glue to labels and dots never collide with text.
+   - Scoped to .product-body so it can't leak into blog/help/
+     resources (which share .help-article).
+
+   NOTE on !important: the generic attribute-substring selectors
+   above (e.g. [class*="-dot"], [class*="-stat"], [class*="-row"],
+   [class*="-badge"], [class*="-icon"], [class*="-timeline"],
+   [class*="-step"], [class$="-val"], [class*="-lbl"]) ALSO match
+   these .pw-* names and some carry higher specificity / their own
+   !important. The !important on the .pw-* rules below is therefore
+   deliberate: it guarantees this clean system wins regardless of
+   the legacy catch-all rules, so pw pages render predictably.
+   ============================================================ */
+
+/* ---- Container / card ---- */
+.product-body .pw {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: clamp(1rem, 2.5vw, 1.5rem);
+  margin: 1.5rem 0;
+}
+.product-body .pw-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+.product-body .pw-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--foreground) !important;
+  margin: 0;
+}
+.product-body .pw-sub {
+  font-size: 0.85rem !important;
+  color: var(--muted) !important;
+  margin: 0.3rem 0 0;
+  line-height: 1.45;
+}
+/* Section heading (real <h2>) used between widget blocks. */
+.product-body .pw-h2 {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--foreground) !important;
+  margin: 2.25rem 0 0.75rem;
+  line-height: 1.25;
+}
+
+/* ---- Chips + badges ---- */
+.product-body .pw-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin: 0.5rem 0;
+}
+.product-body .pw-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--primary) 12%, transparent) !important;
+  color: var(--primary) !important;
+  white-space: nowrap;
+  width: fit-content;
+}
+.product-body .pw-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  white-space: nowrap;
+  width: fit-content;
+  background: var(--elevated) !important;
+  color: var(--muted) !important;
+}
+.product-body .pw-badge-primary {
+  background: color-mix(in srgb, var(--primary) 15%, transparent) !important;
+  color: var(--primary) !important;
+}
+.product-body .pw-badge-success {
+  background: color-mix(in srgb, var(--success) 16%, transparent) !important;
+  color: var(--success) !important;
+}
+.product-body .pw-badge-warning {
+  background: color-mix(in srgb, var(--warning) 20%, transparent) !important;
+  color: var(--warning) !important;
+}
+.product-body .pw-badge-danger {
+  background: color-mix(in srgb, var(--danger) 15%, transparent) !important;
+  color: var(--danger) !important;
+}
+.product-body .pw-badge-info {
+  background: color-mix(in srgb, var(--info) 15%, transparent) !important;
+  color: var(--info) !important;
+}
+.product-body .pw-badge-secondary {
+  background: color-mix(in srgb, var(--secondary) 16%, transparent) !important;
+  color: var(--secondary) !important;
+}
+.product-body .pw-badge-muted {
+  background: var(--elevated) !important;
+  color: var(--muted) !important;
+}
+
+/* ---- Stat strip (fixes the "18Complete" glue bug) ---- */
+.product-body .pw-stats {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+  gap: 0.75rem !important;
+  margin: 1rem 0;
+}
+.product-body .pw-stat {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start;
+  gap: 0.35rem !important;
+  background: var(--elevated) !important;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.9rem 1rem;
+}
+.product-body .pw-stat-val {
+  font-size: 1.6rem;
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--primary) !important;
+  font-variant-numeric: tabular-nums;
+}
+.product-body .pw-stat-lbl {
+  font-size: 0.8rem !important;
+  color: var(--muted) !important;
+  line-height: 1.3;
+}
+
+/* ---- Timeline / changelog (dot sits ON the spine, never inline) ---- */
+.product-body .pw-timeline {
+  display: block !important;
+  margin: 1.5rem 0;
+  padding: 0;
+}
+.product-body .pw-tl-year,
+.product-body .pw-tl-item {
+  position: relative;
+  margin-left: 0.4rem;
+  padding-left: 1.75rem;
+  border-left: 2px solid var(--border);
+}
+.product-body .pw-tl-year {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--foreground) !important;
+  padding-top: 0.1rem;
+  padding-bottom: 1rem;
+}
+.product-body .pw-tl-year::before {
+  content: "";
+  position: absolute;
+  left: -7px;
+  top: 0.35rem;
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  background: var(--primary);
+  border: 2px solid var(--card);
+  box-sizing: border-box;
+}
+.product-body .pw-tl-item {
+  padding-bottom: 1.5rem;
+}
+.product-body .pw-tl-item:last-child {
+  border-left-color: transparent;
+  padding-bottom: 0;
+}
+.product-body .pw-tl-dot {
+  position: absolute !important;
+  left: -8px !important;
+  top: 0.2rem !important;
+  width: 14px !important;
+  height: 14px !important;
+  min-width: 14px !important;
+  border-radius: 50% !important;
+  background: var(--primary) !important;
+  border: 3px solid var(--card) !important;
+  box-shadow: 0 0 0 1px var(--border);
+  display: block !important;
+  box-sizing: border-box;
+}
+.product-body .pw-dot-success { background: var(--success) !important; }
+.product-body .pw-dot-warning { background: var(--warning) !important; }
+.product-body .pw-dot-info { background: var(--info) !important; }
+.product-body .pw-dot-secondary { background: var(--secondary) !important; }
+.product-body .pw-tl-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+}
+.product-body .pw-tl-date {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--muted) !important;
+  font-variant-numeric: tabular-nums;
+}
+.product-body .pw-tl-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--foreground) !important;
+  margin: 0 0 0.5rem;
+}
+.product-body .pw-tl-body { color: var(--foreground) !important; }
+.product-body .pw-tl-body p { margin: 0 0 0.6rem; }
+.product-body .pw-tl-body p:last-child { margin-bottom: 0; }
+
+/* ---- Status pipeline (horizontal steps, stacks on mobile) ---- */
+.product-body .pw-pipeline {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+.product-body .pw-step {
+  flex: 1 1 8rem;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  justify-content: flex-start !important;
+  gap: 0.3rem;
+  background: var(--elevated) !important;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--muted) !important;
+  border-radius: 10px;
+  padding: 0.7rem 0.9rem;
+}
+.product-body .pw-step-done { border-left-color: var(--success) !important; }
+.product-body .pw-step-active { border-left-color: var(--primary) !important; }
+.product-body .pw-step-pending { border-left-color: var(--muted) !important; }
+.product-body .pw-step-lbl,
+.product-body .pw-step-time {
+  display: block !important;
+  background: transparent !important;
+  border: 0 !important;
+  padding: 0 !important;
+}
+.product-body .pw-step-lbl {
+  font-weight: 700;
+  color: var(--foreground) !important;
+  font-size: 0.88rem;
+}
+.product-body .pw-step-time {
+  font-size: 0.75rem;
+  color: var(--muted) !important;
+}
+
+/* ---- Entry / card list (checklist rows, feature lists, logs) ---- */
+.product-body .pw-list {
+  list-style: none !important;
+  margin: 0.6rem 0 !important;
+  padding: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.6rem !important;
+}
+.product-body .pw-row {
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: flex-start !important;
+  gap: 0.7rem !important;
+}
+.product-body .pw-row-icon {
+  flex: 0 0 auto !important;
+  width: 1.4rem !important;
+  height: 1.4rem !important;
+  min-width: 1.4rem !important;
+  border-radius: 999px !important;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1;
+  margin-top: 0.1rem;
+  background: color-mix(in srgb, var(--success) 16%, transparent) !important;
+  color: var(--success) !important;
+}
+.product-body .pw-row-icon svg {
+  width: 0.85rem;
+  height: 0.85rem;
+  fill: currentColor;
+}
+.product-body .pw-row-icon-primary {
+  background: color-mix(in srgb, var(--primary) 15%, transparent) !important;
+  color: var(--primary) !important;
+}
+.product-body .pw-row-icon-muted {
+  background: var(--elevated) !important;
+  color: var(--muted) !important;
+}
+.product-body .pw-row-main {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: var(--foreground) !important;
+  line-height: 1.55;
+}
+.product-body .pw-row-main strong { color: var(--foreground); font-weight: 700; }
+.product-body .pw-row-meta {
+  font-size: 0.78rem !important;
+  color: var(--muted) !important;
+  margin-top: 0.15rem;
+}
+.product-body .pw-row-trail {
+  flex: none;
+  margin-left: auto;
+  padding-left: 0.5rem;
+}
+
+/* ---- Sub-heading inside a widget body ---- */
+.product-body .pw-subhead {
+  font-size: 0.78rem !important;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted) !important;
+  margin: 1rem 0 0.5rem;
+}
+
+/* ---- Progress bar ---- */
+.product-body .pw-bar {
+  position: relative;
+  width: 100%;
+  height: 0.5rem;
+  background: var(--elevated) !important;
+  border-radius: 999px;
+  overflow: hidden;
+  margin: 0.4rem 0;
+}
+.product-body .pw-bar-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: var(--primary) !important;
+  border-radius: 999px;
+}
+
+/* ---- Table (quotation / comparison) ---- */
+.product-body .pw-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+  font-size: 0.9rem;
+}
+.product-body .pw-table th {
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--muted) !important;
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+.product-body .pw-table td {
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--foreground) !important;
+}
+.product-body .pw-table tr:last-child td { border-bottom: 0; }
+.product-body .pw-table .pw-num { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* ---- Inline CTA / callout (on-brand violet, never competitor red/pink) ---- */
+.product-body .pw-cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  background: color-mix(in srgb, var(--primary) 8%, var(--card));
+  border: 1px solid color-mix(in srgb, var(--primary) 25%, transparent);
+  border-radius: 16px;
+  padding: clamp(1rem, 2.5vw, 1.5rem);
+  margin: 1.5rem 0;
+}
+.product-body .pw-cta-main { min-width: 0; }
+.product-body .pw-cta-title {
+  font-weight: 700;
+  color: var(--foreground) !important;
+  font-size: 1rem;
+  margin: 0 0 0.25rem;
+}
+.product-body .pw-cta-sub {
+  color: var(--muted) !important;
+  font-size: 0.85rem !important;
+  margin: 0;
+  line-height: 1.45;
+}
+.product-body a.pw-cta-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex: none;
+  background: var(--primary) !important;
+  color: #fff !important;
+  font-weight: 700;
+  font-size: 0.9rem;
+  padding: 0.7rem 1.3rem;
+  border-radius: 10px;
+  text-decoration: none !important;
+  white-space: nowrap;
+  transition: background 0.15s ease;
+}
+.product-body a.pw-cta-btn:hover { background: var(--primary-hover) !important; }
+.product-body a.pw-cta-btn-outline {
+  background: transparent !important;
+  color: var(--primary) !important;
+  border: 1px solid color-mix(in srgb, var(--primary) 40%, transparent);
+}
+.product-body a.pw-cta-btn-outline:hover {
+  background: color-mix(in srgb, var(--primary) 10%, transparent) !important;
+}
+.product-body .pw-cta-btns {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.product-body .pw-cta-center {
+  flex-direction: column;
+  text-align: center;
+  align-items: center;
+}
+.product-body .pw-cta-center .pw-cta-btns { justify-content: center; }
+.product-body .pw-cta-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--primary) !important;
+  margin-bottom: 0.5rem;
+}
+.product-body .pw-cta-kicker::before {
+  content: "";
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--primary);
+  flex: none;
+}
+.product-body .pw-cta-fine {
+  color: var(--muted) !important;
+  font-size: 0.78rem !important;
+  margin: 0.75rem 0 0;
+}
+
+/* ---- FAQ accordion (native <details>, no JS required) ---- */
+.product-body .pw-faq {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+  margin: 1.5rem 0;
+}
+@media (max-width: 640px) {
+  .product-body .pw-faq { grid-template-columns: 1fr; }
+}
+.product-body .pw-faq-item {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  height: fit-content;
+}
+.product-body .pw-faq-q {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.9rem 1rem;
+  font-weight: 700;
+  color: var(--foreground);
+}
+.product-body .pw-faq-q::-webkit-details-marker { display: none; }
+.product-body .pw-faq-q::after {
+  content: "+";
+  color: var(--primary);
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1;
+  flex: none;
+}
+.product-body .pw-faq-item[open] .pw-faq-q::after { content: "\2212"; }
+.product-body .pw-faq-item[open] .pw-faq-q { border-bottom: 1px solid var(--border); }
+.product-body .pw-faq-a { padding: 0.85rem 1rem 1rem; }
+.product-body .pw-faq-a p { margin: 0; color: var(--muted) !important; line-height: 1.55; }
+
+/* ============================================================
    Resources pages (/resources/*) - .help-article bespoke widgets
    ------------------------------------------------------------
    Every resources body (calculators index + each calculator,
