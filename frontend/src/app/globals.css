@@ -1588,9 +1588,14 @@ body {
 }
 .product-body [class*="-dy"] { font-weight: 700; color: var(--foreground) !important; }
 .product-body [class*="-lt"] { font-size: 0.8rem; color: var(--muted) !important; }
-/* the round check marker inside oscrm3-style timeline nodes */
-.product-body [class$="-r"],
-.product-body [class*="-r "] {
+/* the round check marker inside oscrm3-style timeline nodes.
+   Scoped to the literal oscrm3-r class only: a generic [class$="-r"]
+   suffix match was hijacking dozens of unrelated "-r" suffixed
+   modifier classes across other widgets (column-header "right-align"
+   modifiers, red/negative value variants, etc — "-r" is not a
+   reserved suffix, it collides with real widget class names), forcing
+   them into a 22px circle and breaking their layout. */
+.product-body .oscrm3-r {
   display: inline-flex;
   align-items: center;
   justify-content: center;
