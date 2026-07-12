@@ -456,18 +456,73 @@ export default function LoginPage() {
     <div className="flex min-h-screen w-full bg-background text-foreground">
       {/* Brand panel */}
       <div className="relative hidden w-1/2 flex-col justify-between overflow-hidden bg-primary p-16 lg:flex border-r border-border-custom">
-        <div className="absolute bottom-[-20%] right-[-20%] h-[70%] w-[70%] rounded-full bg-primary opacity-10 blur-[120px]" />
+        {/* Soft light glows — white so they read against the primary fill
+            (a bg-primary blob on a bg-primary panel is invisible). */}
+        <div className="absolute bottom-[-20%] right-[-20%] h-[70%] w-[70%] rounded-full bg-white opacity-10 blur-[120px]" />
+        <div className="absolute top-[-15%] left-[-10%] h-[45%] w-[45%] rounded-full bg-white opacity-[0.07] blur-[110px]" />
+
         <div className="flex items-center gap-3 z-10">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary font-bold text-white shadow-sm">S</div>
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white font-bold text-primary shadow-md ring-1 ring-white/70">S</div>
           <span className="text-xl font-bold tracking-tight text-white">SiteFlow</span>
         </div>
-        <div className="z-10 max-w-md">
-          <h2 className="text-3xl font-extrabold leading-tight text-white">
-            Your whole construction business in one workspace.
-          </h2>
-          <p className="mt-4 text-sm leading-relaxed text-white/80">
-            Projects, billing, procurement, payroll and CRM stay connected, so your office and your site work from the same numbers.
-          </p>
+
+        <div className="z-10 max-w-md space-y-8">
+          <div className="space-y-4">
+            <h2 className="text-3xl font-extrabold leading-tight text-white">
+              Your whole construction business in one workspace.
+            </h2>
+            <p className="text-sm leading-relaxed text-white/80">
+              Projects, billing, procurement, payroll and CRM stay connected, so your office and your site work from the same numbers.
+            </p>
+          </div>
+
+          {/* Compact live-project mock, echoing the homepage hero card
+              (same honest demo strings), adapted for this fixed half-width panel. */}
+          <div className="rounded-xl border border-white/20 bg-white/10 p-4 shadow-lg backdrop-blur-sm space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-sm font-semibold text-white">Greenline Residency</span>
+              <span className="rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white">
+                Phase 2
+              </span>
+            </div>
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between text-[11px] text-white/70">
+                <span>Weighted progress</span>
+                <span className="font-semibold text-white">62%</span>
+              </div>
+              <div className="h-2 w-full overflow-hidden rounded-full bg-white/20">
+                <div className="h-full w-[62%] rounded-full bg-white" />
+              </div>
+            </div>
+            <div className="rounded-md border border-white/20 bg-white/10 px-3 py-2 text-[11px] text-white/90">
+              Project P&amp;L: revenue Rs 61L, cost Rs 44L, margin 28%
+            </div>
+          </div>
+
+          {/* Proportionate, honest proof points (mirrors the homepage trust bar). */}
+          <ul className="space-y-2.5">
+            {[
+              "16 operational modules under one login",
+              "Tally & Zoho accounting integrations",
+              "GPS-geofenced attendance, IS-code compliant math",
+            ].map((point) => (
+              <li key={point} className="flex items-center gap-2.5 text-sm text-white/85">
+                <svg
+                  className="h-4 w-4 flex-shrink-0 text-white"
+                  viewBox="0 0 20 20"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2.5}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="m5 10.5 3.5 3.5 7-8" />
+                </svg>
+                {point}
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
 

@@ -76,7 +76,7 @@ export default async function ResourcesIndexPage() {
             Site<span className="text-primary">Flow</span> Resources
           </span>
         </Link>
-        <div className="flex items-center gap-4">
+        <div className="flex shrink-0 items-center gap-4 whitespace-nowrap">
           <Link
             href="/blog"
             className="text-sm font-semibold text-muted hover:text-foreground transition-all"

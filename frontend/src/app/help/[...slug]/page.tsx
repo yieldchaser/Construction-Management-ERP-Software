@@ -72,7 +72,7 @@ export default async function HelpArticlePage({ params }: RouteParams) {
             Site<span className="text-primary">Flow</span> Help
           </span>
         </Link>
-        <div className="flex items-center gap-4">
+        <div className="flex shrink-0 items-center gap-4 whitespace-nowrap">
           <Link
             href="/help"
             className="text-sm font-semibold text-muted hover:text-foreground transition-all"

@@ -1768,3 +1768,724 @@ body {
   margin-right: 0.4rem;
   font-variant-numeric: tabular-nums;
 }
+
+/* ============================================================
+   Resources pages (/resources/*) - .help-article bespoke widgets
+   ------------------------------------------------------------
+   Every resources body (calculators index + each calculator,
+   feature-comparisons index + each comparison, glossary) is a
+   scraped/generated document that embeds bespoke widget systems
+   (formula equations, step timelines, stat strips, score panels,
+   comparison matrices, CTA bands, FAQ accordions). Each article
+   uses its own class PREFIX (osrmc-, oscls-, ovc-, ohcc-, bcs-,
+   bbss-, pc-, sc-, oterm-, ...) but shares one SUFFIX vocabulary
+   (-outer/-inner, -card/-panel/-item, -stat/-num/-val/-lbl,
+    -badge/-pill/-tag/-dot, -step/-step-num, -formula-x/-fvar-x,
+    -bar-track/-bar-fill, -btn/-btn-primary, -icon, -eyebrow, ...).
+   None of it had any CSS, so it rendered as raw unstyled divs and
+   giant black SVGs. This is the .help-article equivalent of the
+   .product-body widget sheet: attribute-substring selectors that
+   normalize the shared vocabulary into clean, bounded, readable
+   cards. Goal is a coherent static illustration, not a pixel copy.
+
+   Substring (*=) selectors are required because widget elements
+   frequently carry a second modifier class (e.g.
+   "osrmc-b-grade-bar-fill osrmc-b-bf-m15"), so ends-with ($=)
+   would miss them. Every broad rule is guarded with :not() to
+   avoid the over-broad-selector regressions fixed earlier this
+   session. .help-article prose rules already cover paragraphs,
+   headings, links, lists and tables; this only adds the widgets.
+   ============================================================ */
+
+/* ---- 1. Section container bands ---- */
+.help-article [class*="-outer"] {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin: 1.6em 0;
+}
+.help-article [class*="-inner"] {
+  width: 100%;
+}
+
+/* ---- 2. Grid / flex containers ---- */
+.help-article [class*="-grid"]:not([class*="-grid-"]),
+.help-article [class*="-cards"],
+.help-article [class*="-panels"],
+.help-article [class*="-two-col"],
+.help-article [class*="-pgrid"],
+.help-article [class*="-card-pair"],
+.help-article [class*="-features"] {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+  gap: 0.9rem;
+  margin: 1rem 0;
+}
+.help-article [class*="-stats"],
+.help-article [class*="-chips"],
+.help-article [class*="-pills"],
+.help-article [class*="-btns"],
+.help-article [class*="-market-strip"],
+.help-article [class*="-alpha"]:not([class*="-alpha-"]),
+.help-article [class*="-filters"] {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin: 0.6rem 0;
+}
+.help-article [class*="-stats"] > * {
+  flex: 1 1 8rem;
+}
+
+/* ---- 3. Heads, eyebrows, kickers, headings, subtext ---- */
+.help-article [class*="-head"]:not([class*="-header"]):not([class*="-head-sub"]):not([class*="-heading"]) {
+  margin-bottom: 1rem;
+}
+.help-article [class*="-hdr"]:not([class*="-hdr-"]),
+.help-article [class*="-hd"]:not([class*="-hdr"]):not([class*="-hd-"]),
+.help-article [class*="-header"]:not([class*="-header-"]) {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.help-article [class*="-eyebrow"]:not([class*="-eyebrow-"]),
+.help-article [class*="-ey"]:not([class*="-ey-"]):not([class*="-eyebrow"]):not([class*="-eyes"]),
+.help-article [class*="-kicker"],
+.help-article [class*="-score-eyebrow"] {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--primary) !important;
+  margin-bottom: 0.4rem;
+}
+.help-article [class*="-ey-txt"],
+.help-article [class*="-eyebrow-txt"] {
+  color: var(--primary) !important;
+}
+.help-article [class*="-h1"]:not([class*="-h1-"]),
+.help-article [class*="-h2"]:not([class*="-h2-"]),
+.help-article [class*="-h3"]:not([class*="-h3-"]) {
+  color: var(--foreground) !important;
+  font-weight: 800;
+  line-height: 1.25;
+  margin: 0 0 0.6rem;
+}
+.help-article [class*="-h1-em"],
+.help-article [class*="-h2-em"],
+.help-article [class*="-h1-vs"] {
+  color: var(--primary) !important;
+  font-style: normal;
+}
+.help-article [class*="-lead"],
+.help-article [class*="-intro"],
+.help-article [class*="-sub"]:not([class*="-sub-"]):not([class*="-suggest"]),
+.help-article [class*="-head-sub"],
+.help-article [class*="-h2-sub"],
+.help-article [class*="-fine"] {
+  color: var(--muted) !important;
+}
+
+/* ---- 4. Sub-cards / panels / items ---- */
+.help-article [class*="-card"]:not([class*="-cards"]):not([class*="-card-"]),
+.help-article [class*="-panel"]:not([class*="-panels"]):not([class*="-panel-"]),
+.help-article [class*="-item"]:not([class*="-item-"]):not([class*="-tip-item"]),
+.help-article [class*="-info-card"],
+.help-article [class*="-wall-card"],
+.help-article [class*="-ref-card"],
+.help-article [class*="-tips-card"],
+.help-article [class*="-block"]:not([class*="-block-"]),
+.help-article [class*="-stat"]:not([class*="-stats"]):not([class*="-stat-"]),
+.help-article [class*="-module"],
+.help-article [class*="-example"]:not([class*="-example-"]),
+.help-article [class*="-example-box"],
+.help-article [class*="-tab"]:not([class*="-tabs"]):not([class*="-tab-"]) {
+  background: var(--elevated);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem 1.1rem;
+}
+/* card sub-parts: header row + body get inner spacing, no double border */
+.help-article [class*="-card-hdr"],
+.help-article [class*="-card-header"],
+.help-article [class*="-panel-hdr"],
+.help-article [class*="-mod-hdr"],
+.help-article [class*="-tips-hdr"] {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.6rem;
+}
+.help-article [class*="-card-body"],
+.help-article [class*="-panel-body"],
+.help-article [class*="-mod-body"],
+.help-article [class*="-tips-body"] {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* ---- 5. Label/value rows ---- */
+.help-article [class*="-info-row"],
+.help-article [class*="-grade-row"],
+.help-article [class*="-price-row"],
+.help-article [class*="-wall-row"]:not([class*="-wall-row-"]),
+.help-article [class*="-example-row"],
+.help-article [class*="-calc-line"],
+.help-article [class*="-bar-row"],
+.help-article [class*="-comp-block"] {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+/* ---- 6. Text roles: values, labels, titles ---- */
+.help-article [class*="-num"]:not([class*="-num-col"]):not([class*="-step-num"]):not([class*="-fstep-num"]):not([class*="-q-num"]),
+.help-article [class*="-val"],
+.help-article [class*="-pct"],
+.help-article [class*="-price-val"],
+.help-article [class*="-count"],
+.help-article [class*="-score-num"] {
+  font-weight: 800;
+  color: var(--primary) !important;
+  line-height: 1.1;
+}
+.help-article [class*="-lbl"],
+.help-article [class*="-label"]:not([class*="-labelled"]),
+.help-article [class*="-meta"],
+.help-article [class*="-note"],
+.help-article [class*="-desc"],
+.help-article [class*="-caption"] {
+  font-size: 0.8rem;
+  color: var(--muted) !important;
+  letter-spacing: 0.01em;
+}
+.help-article [class*="-title"]:not([class*="-formula-title"]),
+.help-article [class*="-name"]:not([class*="-name-"]),
+.help-article [class*="-stage"] {
+  font-weight: 700;
+  color: var(--foreground) !important;
+}
+
+/* ---- 7. Badges / pills / chips / tags ---- */
+.help-article [class*="-badge"]:not([class*="-badge-dot"]),
+.help-article [class*="-pill"]:not([class*="-pills"]),
+.help-article [class*="-tag"]:not([class*="-tag-"]),
+.help-article [class*="-grade-badge"],
+.help-article [class*="-flag"],
+.help-article [class*="-protip-badge"],
+.help-article [class*="-live-pill"] {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+  color: var(--primary) !important;
+  white-space: nowrap;
+  width: fit-content;
+}
+/* color-modifier text/badges */
+.help-article [class*="-gold"],
+.help-article [class*="-amber"] { color: #f59e0b !important; }
+.help-article [class*="-green"]:not([class*="-background"]) { color: #10b981 !important; }
+.help-article [class*="-blue"] { color: #3b82f6 !important; }
+
+/* ---- 8. Status dots ---- */
+.help-article [class*="-dot"]:not([class*="-dots"]):not([class*="-dot-wrap"]):not([class*="-dot-col"]):not([class*="-ey-dot"]):not([class*="-eyebrow-dot"]):not([class*="-chip-dot"]):not([class*="-badge-dot"]):not([class*="-panel-dot"]),
+.help-article [class*="-cdot"]:not([class*="-cdot-"]),
+.help-article [class*="-uc-dot"],
+.help-article [class*="-live-dot"],
+.help-article [class*="-rec-dot"],
+.help-article [class*="-footer-dot"],
+.help-article [class*="-chip-dot"],
+.help-article [class*="-badge-dot"],
+.help-article [class*="-panel-dot"] {
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: var(--primary);
+  flex: none;
+}
+.help-article [class*="-ey-dot"],
+.help-article [class*="-eyebrow-dot"] {
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: var(--primary);
+  flex: none;
+}
+.help-article [class*="-dot-g"],
+.help-article [class*="-cdot-g"],
+.help-article [class*="-dot-me"] { background: #10b981 !important; }
+.help-article [class*="-dot-r"],
+.help-article [class*="-cdot-r"] { background: #ef4444 !important; }
+.help-article [class*="-dot-a"],
+.help-article [class*="-cdot-a"],
+.help-article [class*="-dot-y"] { background: #f59e0b !important; }
+.help-article [class*="-dot-them"] { background: var(--muted) !important; }
+
+/* ---- 9. Progress bars (+ ready-mix / house-cost width modifiers) ---- */
+.help-article [class*="-bar-track"],
+.help-article [class*="-phase-track"] {
+  position: relative;
+  width: 100%;
+  height: 0.5rem;
+  background: var(--border);
+  border-radius: 999px;
+  overflow: hidden;
+  margin: 0.3rem 0;
+}
+.help-article [class*="-bar-fill"],
+.help-article [class*="-phase-fill"] {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 60%;
+  background: var(--primary);
+  border-radius: 999px;
+}
+/* concrete grade strength bars (ascending), no inline width in the markup */
+.help-article [class*="-bf-m15"] { width: 40%; }
+.help-article [class*="-bf-m20"] { width: 55%; }
+.help-article [class*="-bf-m25"] { width: 68%; }
+.help-article [class*="-bf-m30"] { width: 80%; }
+.help-article [class*="-bf-m35"] { width: 90%; }
+.help-article [class*="-bf-m40"] { width: 100%; }
+/* concrete price bars */
+.help-article [class*="-bf-1"] { width: 35%; }
+.help-article [class*="-bf-2"] { width: 50%; }
+.help-article [class*="-bf-3"] { width: 65%; }
+.help-article [class*="-bf-4"] { width: 80%; }
+.help-article [class*="-bf-5"] { width: 95%; }
+
+/* ---- 10. Step / timeline components ---- */
+.help-article [class*="-steps"],
+.help-article [class*="-timeline"]:not([class*="-timeline-"]) {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  margin: 1rem 0;
+}
+.help-article [class*="-step-card"],
+.help-article [class*="-step"]:not([class*="-steps"]):not([class*="-step-num"]):not([class*="-step-line"]):not([class*="-step-left"]):not([class*="-step-content"]):not([class*="-step-title"]):not([class*="-step-desc"]):not([class*="-step-body"]):not([class*="-step-chip"]):not([class*="-step-chips"]):not([class*="-step-tag"]):not([class*="-step-h"]):not([class*="-step-bullet"]),
+.help-article [class*="-fstep"]:not([class*="-fstep-num"]) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0.5rem 0.9rem;
+  background: var(--elevated);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--primary);
+  border-radius: 10px;
+  padding: 0.9rem 1rem;
+}
+.help-article [class*="-step-num"]:not([class*="-step-num-col"]),
+.help-article [class*="-fstep-num"],
+.help-article [class*="-q-num"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.85rem;
+  height: 1.85rem;
+  min-width: 1.85rem;
+  border-radius: 999px;
+  background: var(--primary);
+  color: #fff !important;
+  font-weight: 800;
+  font-size: 0.85rem;
+  flex: none;
+}
+.help-article [class*="-step-left"],
+.help-article [class*="-step-num-col"] {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: none;
+}
+.help-article [class*="-step-line"] {
+  width: 2px;
+  flex: 1 0 auto;
+  min-height: 1.2rem;
+  background: var(--border);
+  margin-top: 0.4rem;
+}
+.help-article [class*="-step-content"] {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  flex: 1 1 60%;
+}
+.help-article [class*="-step-title"],
+.help-article [class*="-step-h"] {
+  font-weight: 700;
+  color: var(--foreground) !important;
+  margin: 0;
+  flex: 1 1 55%;
+}
+.help-article [class*="-step-desc"],
+.help-article [class*="-step-body"] {
+  color: var(--foreground);
+  margin: 0;
+  font-size: 0.95rem;
+  flex: 1 1 100%;
+}
+.help-article [class*="-step-chips"] {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.3rem;
+}
+.help-article [class*="-step-chip"]:not([class*="-step-chips"]):not([class*="-step-chip-dot"]) {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  background: var(--elevated);
+  border: 1px solid var(--border);
+  color: var(--foreground);
+}
+.help-article [class*="-step-chip-dot"] {
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 999px;
+  background: var(--primary);
+  flex: none;
+}
+
+/* ---- 11. Formula equations (labeled boxes on one horizontal line) ---- */
+.help-article [class*="-formula-wrap"],
+.help-article [class*="-formula-box"],
+.help-article [class*="-formula-hero"],
+.help-article [class*="-info-outer"] {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.25rem;
+  margin: 1rem 0;
+  text-align: center;
+}
+.help-article [class*="-formula-title"],
+.help-article [class*="-formula-label"] {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted) !important;
+  margin-bottom: 0.7rem;
+}
+.help-article [class*="-formula-note"] {
+  font-size: 0.8rem;
+  color: var(--muted) !important;
+  margin-top: 0.7rem;
+}
+.help-article [class*="-formula-eq"],
+.help-article [class*="-formula-vars"],
+.help-article [class*="-formula-steps"] {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem 0.75rem;
+  margin: 0.5rem 0;
+}
+.help-article [class*="-fvar"]:not([class*="-fvar-box"]):not([class*="-fvar-lbl"]) {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+}
+.help-article [class*="-fvar-box"],
+.help-article [class*="-fbox"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.6rem;
+  height: 2.6rem;
+  padding: 0 0.65rem;
+  border-radius: 10px;
+  background: var(--elevated);
+  border: 1px solid var(--border);
+  font-weight: 800;
+  color: var(--foreground);
+  text-align: center;
+  line-height: 1.15;
+}
+.help-article [class*="-fvar-box"][class*="-violet"],
+.help-article [class*="-fvar-box"][class*="-result"],
+.help-article [class*="-fbox"][class*="-result"] {
+  background: color-mix(in srgb, var(--primary) 15%, transparent);
+  color: var(--primary);
+  border-color: transparent;
+}
+.help-article [class*="-fvar-lbl"] {
+  font-size: 0.7rem;
+  color: var(--muted) !important;
+  text-align: center;
+}
+.help-article [class*="-fop"] {
+  font-weight: 700;
+  color: var(--muted);
+  font-size: 1.15rem;
+}
+.help-article [class*="-feq"] {
+  font-weight: 800;
+  color: var(--primary);
+  font-size: 1.3rem;
+}
+
+/* ---- 12. Table wrappers (horizontal scroll; tables use prose rules) ---- */
+.help-article [class*="-table-wrap"],
+.help-article [class*="-tbl-wrap"],
+.help-article [class*="-twrap"] {
+  overflow-x: auto;
+  margin: 1.3em 0;
+  border-radius: 10px;
+}
+
+/* ---- 13. Buttons ---- */
+/* CTA action buttons (real links styled as buttons) */
+.help-article [class*="-btn-primary"],
+.help-article [class*="-primary"]:not([class*="-primary-"]),
+.help-article [class*="-suggest-btn"],
+.help-article [class*="-cta-btn"]:not([class*="-cta-btns"]),
+.help-article [class*="-fbtn"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-decoration: none;
+  border: 1px solid transparent;
+  background: var(--primary);
+  color: #fff !important;
+  cursor: pointer;
+  transition: opacity 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.help-article [class*="-btn-ghost"],
+.help-article [class*="-btn-outline"],
+.help-article [class*="-btn-secondary"],
+.help-article [class*="-outline"]:not([class*="-outline-"]),
+.help-article [class*="-secondary"]:not([class*="-secondary-"]) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-decoration: none;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--foreground) !important;
+  cursor: pointer;
+  transition: opacity 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.help-article [class*="-btn-primary"]:hover,
+.help-article [class*="-primary"]:not([class*="-primary-"]):hover,
+.help-article [class*="-suggest-btn"]:hover,
+.help-article [class*="-cta-btn"]:not([class*="-cta-btns"]):hover {
+  opacity: 0.9;
+  text-decoration: none;
+}
+.help-article [class*="-btn-ghost"]:hover,
+.help-article [class*="-btn-outline"]:hover,
+.help-article [class*="-btn-secondary"]:hover,
+.help-article [class*="-outline"]:not([class*="-outline-"]):hover,
+.help-article [class*="-secondary"]:not([class*="-secondary-"]):hover,
+.help-article [class*="-fbtn"]:hover {
+  border-color: var(--primary);
+  color: var(--primary) !important;
+  text-decoration: none;
+}
+/* FAQ accordion toggle rows (class ends in -btn, but NOT a CTA) */
+.help-article [class*="-btn"]:not([class*="-btn-"]):not([class*="-btns"]):not([class*="-suggest-btn"]):not([class*="-cta-btn"]):not([class*="-fbtn"]),
+.help-article [class*="-faq-toggle"] {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  padding: 0.9rem 0.2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--foreground);
+  cursor: pointer;
+}
+.help-article [class*="-btn-txt"] {
+  flex: 1;
+}
+/* FAQ +/- indicator */
+.help-article [class*="-arr"]:not([class*="-arrow"]):not([class*="-arr-path"]):not([class*="-arr-svg"]) {
+  margin-left: auto;
+  color: var(--muted);
+  font-weight: 700;
+  flex: none;
+}
+/* FAQ answer text (shown when the accordion is toggled open) */
+.help-article [class*="-ans"]:not([class*="-anim"]),
+.help-article [class*="-faq-a"],
+.help-article [class*="-faq-answer"] {
+  color: var(--foreground);
+  font-size: 0.95rem;
+}
+
+/* ---- 14. Icons ---- */
+/* Icon holders: small flex boxes. */
+.help-article [class*="-icon"]:not([class*="-icons"]) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  color: var(--primary);
+}
+/* Line-style SVGs (feather/lucide) with no fill/stroke render as giant
+   solid-black shapes by default. Constrain size and paint as strokes. */
+.help-article [class*="-icon"]:not([class*="-icons"]) svg {
+  width: 1.2rem;
+  height: 1.2rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+/* Header / tip / faq icon chips get a tinted rounded background. */
+.help-article [class*="-tip-icon"],
+.help-article [class*="-tips-hdr-icon"],
+.help-article [class*="-d-icon"],
+.help-article [class*="-faq-icon"],
+.help-article [class*="-suggest-icon"],
+.help-article [class*="-mod-icon"]:not([class*="-mod-icon-"]),
+.help-article [class*="-cta-icon"] {
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+}
+.help-article [class*="-tip-icon"] svg,
+.help-article [class*="-tips-hdr-icon"] svg,
+.help-article [class*="-d-icon"] svg,
+.help-article [class*="-faq-icon"] svg,
+.help-article [class*="-suggest-icon"] svg,
+.help-article [class*="-mod-icon"]:not([class*="-mod-icon-"]) svg,
+.help-article [class*="-cta-icon"] svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+/* Semantic icon colors */
+.help-article [class*="-icon-win"],
+.help-article [class*="-icon-check"]:not([class*="-check-them"]),
+.help-article [class*="-icon-me"],
+.help-article [class*="-li-icon-green"] { color: #10b981; }
+.help-article [class*="-icon-warn"],
+.help-article [class*="-icon-them"],
+.help-article [class*="-icon-check-them"],
+.help-article [class*="-icon-neutral"] { color: var(--muted); }
+/* Self-contained illustration SVGs (own child fills) — size only, keep fills */
+.help-article [class*="-img-wrap"] {
+  display: flex;
+  justify-content: center;
+  margin: 0.75rem 0;
+}
+.help-article [class*="-img-wrap"] svg {
+  max-width: 100%;
+  height: auto;
+}
+/* Fallback sizing for any remaining SVG so nothing renders oversized. */
+.help-article svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ---- 15. Feature / bullet lists ---- */
+.help-article [class*="-list"]:not([class*="-list-"]) {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0.6rem 0;
+}
+.help-article [class*="-bullet"]:not([class*="-bullet-icon"]):not([class*="-bullet-txt"]),
+.help-article [class*="-feat"]:not([class*="-feature"]):not([class*="-feat-icon"]):not([class*="-feat-label"]):not([class*="-feat-txt"]):not([class*="-features"]),
+.help-article [class*="-li"]:not([class*="-li-"]):not([class*="-list"]):not([class*="-line"]):not([class*="-live"]):not([class*="-link"]) {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+.help-article [class*="-li-txt"],
+.help-article [class*="-bullet-txt"],
+.help-article [class*="-feat-txt"],
+.help-article [class*="-list-txt"],
+.help-article [class*="-comp-text"] {
+  color: var(--foreground);
+}
+
+/* ---- 16. Dividers ---- */
+.help-article [class*="-divider"]:not([class*="-card-divider"]),
+.help-article [class*="-tip-div"] {
+  height: 1px;
+  width: 100%;
+  background: var(--border);
+  border: 0;
+  margin: 0.9rem 0;
+}
+.help-article [class*="-stat-div"],
+.help-article [class*="-card-divider"] {
+  width: 1px;
+  align-self: stretch;
+  background: var(--border);
+}
+
+/* ---- 17. Misc accents ---- */
+.help-article [class*="-tip-item"] {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.4rem 0;
+}
+.help-article [class*="-tip-text"] {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+.help-article [class*="-protip"]:not([class*="-protip-"]) {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: color-mix(in srgb, var(--primary) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--primary) 25%, transparent);
+  border-radius: 10px;
+  padding: 0.8rem 1rem;
+  margin: 1rem 0;
+}
+.help-article [class*="-tab-active"],
+.help-article [class*="-block-SiteFlow"],
+.help-article [class*="-card-SiteFlow"],
+.help-article [class*="-panel-SiteFlow"] {
+  border-color: var(--primary) !important;
+}
+.help-article [class*="-win"]:not([class*="-window"]):not([class*="-win-"]):not([class*="-icon-win"]) {
+  color: var(--primary) !important;
+}
