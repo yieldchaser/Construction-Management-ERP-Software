@@ -1277,11 +1277,20 @@ body {
   border-radius: 16px;
 }
 /* Scraped "highlight" spans carry a dark inline color; make them a
-   readable brand accent instead. */
-.product-body [class*="highlight"] {
+   readable brand accent instead. stk-highlight is an intro paragraph
+   class, not a UI accent — keep it as body text. */
+.product-body [class*="highlight"]:not(.stk-highlight) {
   color: var(--primary) !important;
   background: transparent !important;
 }
+.product-body .stk-highlight {
+  color: var(--foreground) !important;
+  background: transparent !important;
+}
+/* wp-block-spacer divs carry large inline heights (55px-100px) that
+   create blank voids between sections. Sections have their own
+   padding-top/bottom, so collapse spacers entirely. */
+.product-body .wp-block-spacer { height: 0 !important; }
 /* WordPress button blocks -> real buttons. */
 .product-body .wp-block-button__link {
   display: inline-block;
