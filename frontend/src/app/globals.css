@@ -313,6 +313,132 @@ body {
 }
 
 /* ------------------------------------------------------------
+   Help category-overview intro (.help-cat): the 15 category
+   landing pages originally embedded a scraped client-side search
+   widget and an "All articles / Loading..." list that never worked
+   statically. Those dead widgets are removed at the content level;
+   what remains is a short real intro (lead paragraph) plus the
+   category CTA. The in-page sidebar already lists the category's
+   articles, so no listing is rebuilt here. Theme-token based.
+   ------------------------------------------------------------ */
+.help-article .help-cat-lead {
+  font-size: 1.05rem;
+  line-height: 1.7;
+  color: var(--muted);
+  margin: 0 0 2rem;
+}
+.help-article .help-cat-cta {
+  background: var(--elevated);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  padding: 2rem;
+  text-align: center;
+}
+.help-article .help-cat-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--primary) 30%, transparent);
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+}
+.help-article .help-cat-ey-dot {
+  width: 0.42rem;
+  height: 0.42rem;
+  border-radius: 999px;
+  background: var(--primary);
+}
+.help-article .help-cat-title {
+  font-size: clamp(1.5rem, 3.2vw, 2.1rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  color: var(--foreground);
+  margin: 1rem 0 0.75rem;
+}
+.help-article .help-cat-title em {
+  color: var(--primary);
+  font-style: normal;
+}
+.help-article .help-cat-sub {
+  max-width: 44rem;
+  margin: 0 auto 1.5rem;
+  color: var(--muted);
+  font-size: 1rem;
+  line-height: 1.65;
+}
+.help-article .help-cat-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+.help-article .help-cat-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.95rem;
+  padding: 0.8rem 1.6rem;
+  border-radius: 0.6rem;
+  transition: opacity 0.15s ease, border-color 0.15s ease;
+}
+.help-article .help-cat-btn-primary {
+  background: var(--primary);
+  color: #fff !important;
+  box-shadow: 0 10px 30px -12px color-mix(in srgb, var(--primary) 60%, transparent);
+}
+.help-article .help-cat-btn-primary:hover {
+  opacity: 0.9;
+}
+.help-article .help-cat-btn-outline {
+  background: transparent;
+  color: var(--foreground) !important;
+  border: 1px solid var(--border);
+}
+.help-article .help-cat-btn-outline:hover {
+  border-color: var(--primary);
+}
+.help-article .help-cat-reassure {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem 1.5rem;
+  margin: 0;
+  padding: 0;
+}
+.help-article .help-cat-reassure li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin: 0;
+  padding: 0;
+}
+.help-article .help-cat-reassure li::marker {
+  content: "";
+}
+.help-article .help-cat-reassure li::before {
+  content: "";
+  width: 0.95rem;
+  height: 0.95rem;
+  flex: none;
+  border-radius: 999px;
+  background: var(--primary);
+  -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><polyline points='20 6 9 17 4 12'/></svg>") center / 0.7rem no-repeat;
+  mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><polyline points='20 6 9 17 4 12'/></svg>") center / 0.7rem no-repeat;
+}
+
+/* ------------------------------------------------------------
    Resource calculator prose (.calc-prose): the educational
    content that surrounds the interactive React calculator. The
    dead HTML "tool" is stripped from the body at build; this styles
@@ -1094,3 +1220,403 @@ body {
 
 /* empty-content fallback (e.g. nyggs) */
 .comparison-fallback { max-width: 40rem; margin: 4rem auto; text-align: center; }
+
+/* ============================================================
+   Product pages (/products/*) - .product-body
+   ------------------------------------------------------------
+   The 20 product bodies are WordPress light-theme exports that
+   each embed 2-4 bespoke, per-product widget systems (hero
+   dashboard mockups, stat cards, progress bars, KPI grids, step
+   timelines). Every file uses a different class PREFIX, but the
+   class SUFFIX vocabulary is shared (-stat, -snum, -slbl, -card,
+   -bar-track/-bar-fill/-bar-pct, -chrome, -kpi, -entry, -row,
+   -badge, -pill, -dot, etc.), so - as was done for the comparison
+   pages - these are normalized to one canonical stylesheet using
+   attribute-substring selectors rather than 20 one-off sheets.
+   These render the widgets as clean, bounded, readable cards; the
+   original design relied on absolute positioning + JS animation
+   that cannot be reproduced faithfully here, so the goal is a
+   coherent static illustration, not a pixel copy.
+   Scoped to .product-body so blog/help/resources (which also use
+   .help-article) are unaffected. Theme-token based (both themes).
+   ============================================================ */
+
+/* ---- 1. Neutralize scraped WordPress light-theme inline styles ---- */
+/* Prose text: force theme foreground, overriding inline dark colors
+   (e.g. #000000a8, #4A5568) and the has-link-color purple bleed that
+   hits product paragraphs lacking a palette-color class. */
+.product-body p,
+.product-body li,
+.product-body h1,
+.product-body h2,
+.product-body h3,
+.product-body h4,
+.product-body h5,
+.product-body h6,
+.product-body .wp-block-paragraph,
+.product-body .wp-block-heading,
+.product-body .has-link-color:not(a) {
+  color: var(--foreground) !important;
+}
+.product-body a:not(.wp-block-button__link) {
+  color: var(--primary) !important;
+}
+/* Layout wrappers: drop inline light/gradient backgrounds so nothing
+   renders as a light island with dark text on our dark surface. */
+.product-body .wp-block-columns,
+.product-body .wp-block-group,
+.product-body .wp-block-column {
+  background: transparent !important;
+  background-image: none !important;
+  border-color: var(--border) !important;
+}
+/* Blocks explicitly meant to be cards keep a surface. */
+.product-body .wp-block-column.has-background,
+.product-body .wp-block-group.has-background {
+  background: var(--card) !important;
+  border-radius: 16px;
+}
+/* Scraped "highlight" spans carry a dark inline color; make them a
+   readable brand accent instead. */
+.product-body [class*="highlight"] {
+  color: var(--primary) !important;
+  background: transparent !important;
+}
+/* WordPress button blocks -> real buttons. */
+.product-body .wp-block-button__link {
+  display: inline-block;
+  background: var(--primary) !important;
+  color: #fff !important;
+  border: 1px solid transparent !important;
+  border-radius: 8px;
+  padding: 0.7rem 1.4rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+.product-body .wp-block-button.is-style-outline .wp-block-button__link,
+.product-body .wp-block-button__link.is-style-outline {
+  background: transparent !important;
+  color: var(--foreground) !important;
+  border-color: var(--border) !important;
+}
+.product-body .wp-block-button__link:hover { opacity: 0.9; }
+
+/* ---- 2. Constrain every bespoke SVG (no more giant shapes) ---- */
+.product-body svg { max-width: 100%; height: auto; }
+.product-body [class*="-arc"],
+.product-body [class*="-spark"],
+.product-body [class*="-chart"] {
+  position: relative;
+  width: 100%;
+  max-height: 140px;
+  overflow: hidden;
+}
+.product-body [class*="-arc"] svg,
+.product-body [class*="-spark"] svg,
+.product-body [class*="-chart"] svg {
+  width: 100%;
+  height: 140px;
+}
+.product-body [class*="-ring"] svg,
+.product-body [class*="-donut"] svg {
+  width: 120px;
+  height: 120px;
+}
+
+/* ---- 3. Bespoke widget layout: container cards + inner spacing ---- */
+.product-body [class*="-outer"],
+.product-body [class*="-visual"],
+.product-body [class*="-window"],
+.product-body [class*="-screenshot"] {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1.25rem;
+  margin: 1rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  overflow: hidden;
+}
+.product-body [class*="-card"]:not([class*="-card-"]),
+.product-body [class*="-hero"]:not([class*="-hero-"]),
+.product-body [class*="-panel"]:not([class*="-panel-"]),
+.product-body [class*="-peek"]:not([class*="-peek-"]),
+.product-body [class*="-rate"]:not([class*="-rate-"]),
+.product-body [class*="-margin"]:not([class*="-margin-"]),
+.product-body [class*="-kpi"]:not([class*="-kpi-"]),
+.product-body [class*="-entry"]:not([class*="-entry-"]),
+.product-body [class*="-mini-row"],
+.product-body [class*="-stock-row"],
+.product-body [class*="-tool"]:not([class*="-tool-"]) {
+  background: var(--elevated);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.9rem 1rem;
+}
+/* stat cell (but not the -stats grid container) */
+.product-body [class*="-stat"]:not([class*="-stats"]):not([class*="-stat-"]) {
+  background: var(--elevated);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.9rem 1rem;
+}
+/* grid/flex containers */
+.product-body [class*="-stats"],
+.product-body [class*="-rows"],
+.product-body [class*="-pills"],
+.product-body [class*="-list"]:not([class*="-list-"]),
+.product-body [class*="-pi"]:not([class*="-pic"]):not([class*="-pill"]) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin: 0.5rem 0;
+}
+.product-body [class*="-stats"] > *,
+.product-body [class*="-pi"] > * { flex: 1 1 8rem; }
+
+/* rows: label/value on a line */
+.product-body [class*="-row"]:not([class*="-rows"]):not([class*="-row-"]),
+.product-body [class*="-trow"],
+.product-body [class*="-thead"],
+.product-body [class*="-sum"]:not([class*="-sum-"]),
+.product-body [class*="-phead"],
+.product-body [class*="-bar-row"],
+.product-body [class*="-ret-cell"],
+.product-body [class*="-hd-l"],
+.product-body [class*="-header"]:not([class*="-header-"]) {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+/* ---- 4. Values, labels, titles, meta ---- */
+.product-body [class*="-snum"],
+.product-body [class*="-kpi-val"],
+.product-body [class*="-sn-v"],
+.product-body [class*="-rval"],
+.product-body [class*="-rc-val"],
+.product-body [class*="-sum-v"],
+.product-body [class*="-m-pct"],
+.product-body [class*="-hero-count"],
+.product-body [class*="-stat-n"],
+.product-body [class$="-val"],
+.product-body [class$="-num"],
+.product-body [class$="-pct"],
+.product-body [class*="-price"],
+.product-body [class*="-delta"] {
+  font-weight: 800;
+  color: var(--primary) !important;
+  line-height: 1.1;
+}
+.product-body [class*="-slbl"],
+.product-body [class*="-lbl"],
+.product-body [class*="-kpi-lbl"],
+.product-body [class*="-col-lbl"],
+.product-body [class*="-bar-lbl"],
+.product-body [class*="-stat-l"],
+.product-body [class*="-meta"],
+.product-body [class*="-rmeta"],
+.product-body [class*="-sub"]:not([class*="-sub-heading"]),
+.product-body [class*="-tsub"],
+.product-body [class*="-entry-date"],
+.product-body [class*="-entry-meta"] {
+  font-size: 0.75rem;
+  color: var(--muted) !important;
+  letter-spacing: 0.02em;
+}
+.product-body [class*="-title"],
+.product-body [class$="-name"],
+.product-body [class*="-rname"],
+.product-body [class*="-pname"],
+.product-body [class*="-titem"],
+.product-body [class*="-row-name"],
+.product-body [class*="-bar-name"],
+.product-body [class*="-mini-name"],
+.product-body [class*="-sub-heading"],
+.product-body [class*="-entry-title"],
+.product-body [class*="-stage"] {
+  font-weight: 700;
+  color: var(--foreground) !important;
+}
+
+/* ---- 5. Badges / pills / tags / checks ---- */
+.product-body [class*="-badge"],
+.product-body [class*="-pill"]:not([class*="-pills"]),
+.product-body [class*="-tag"],
+.product-body [class*="-check"]:not([class*="-check-"]),
+.product-body [class*="-pck"],
+.product-body [class*="-qid"],
+.product-body [class*="-vbadge"],
+.product-body [class*="-ev-tag"],
+.product-body [class*="-chrome-live"],
+.product-body [class*="-rate-live"] {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+  color: var(--primary) !important;
+  white-space: nowrap;
+  width: fit-content;
+}
+
+/* ---- 6. Dots (status indicators) ---- */
+.product-body [class*="-dot"]:not([class*="-dots"]):not([class*="-dot-wrap"]):not([class*="-dot-col"]),
+.product-body [class*="-ldot"],
+.product-body [class*="-cdot"],
+.product-body [class*="-hdot"],
+.product-body [class*="-live-dot"] {
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: var(--primary);
+  flex: none;
+}
+.product-body [class*="-dot-g"],
+.product-body [class*="-li-icon-green"] { background: #10b981 !important; }
+.product-body [class*="-dot-r"] { background: #ef4444 !important; }
+.product-body [class*="-dot-y"] { background: #f59e0b !important; }
+
+/* ---- 7. Progress bars ---- */
+.product-body [class*="-bar-track"],
+.product-body [class*="-mbar"]:not([class*="-mbar-"]) {
+  position: relative;
+  width: 100%;
+  height: 0.5rem;
+  background: var(--border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.product-body [class*="-bar-fill"],
+.product-body [class*="-mbar-fill"] {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  min-width: 40%;
+  width: 62%;
+  background: var(--primary);
+  border-radius: 999px;
+}
+
+/* ---- 8. Icons (emoji chips) ---- */
+.product-body [class*="-icon"]:not([class*="-li-icon"]):not([class*="-icons"]),
+.product-body [class*="-ricon"],
+.product-body [class*="-li-icon"],
+.product-body [class*="-pic"],
+.product-body [class*="-thumb"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--primary) 10%, transparent);
+  flex: none;
+  font-size: 1rem;
+}
+
+/* ---- 9. Chrome strip (fake browser window) ---- */
+.product-body [class*="-chrome"]:not([class*="-chrome-"]) {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid var(--border);
+}
+.product-body [class*="-chrome-dot"],
+.product-body [class*="-cdot"] {
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 999px;
+  background: var(--border);
+}
+.product-body [class*="-chrome-title"],
+.product-body [class*="-ctitle"] {
+  font-size: 0.78rem;
+  color: var(--muted) !important;
+  font-weight: 600;
+}
+
+/* ---- 10. Step / timeline components (Day N roadmaps) ---- */
+.product-body [class*="-timeline"]:not([class*="-timeline-"]),
+.product-body [class*="-steps"] {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 0.75rem 0;
+}
+.product-body [class*="-step"]:not([class*="-steps"]):not([class*="-step-dot"]),
+.product-body [class$="-n"],
+.product-body [class*="-n1"],
+.product-body [class*="-n2"],
+.product-body [class*="-n3"],
+.product-body [class*="-n4"] {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: var(--elevated);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--primary);
+  border-radius: 10px;
+  padding: 0.7rem 0.9rem;
+}
+.product-body [class*="-step-dot"],
+.product-body [class*="-timeline-dot"],
+.product-body [class*="-spine-seg"] {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 999px;
+  background: var(--primary);
+  flex: none;
+}
+.product-body [class*="-dy"] { font-weight: 700; color: var(--foreground) !important; }
+.product-body [class*="-lt"] { font-size: 0.8rem; color: var(--muted) !important; }
+/* the round check marker inside oscrm3-style timeline nodes */
+.product-body [class$="-r"],
+.product-body [class*="-r "] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.4rem;
+  height: 1.4rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--primary) 15%, transparent);
+  color: var(--primary) !important;
+  font-size: 0.8rem;
+  flex: none;
+}
+
+/* ---- 11. Separators + dividers (were empty, unstyled) ---- */
+.product-body [class*="-sep"]:not([class*="-sept"]) {
+  display: inline-block;
+  margin: 0 0.45rem;
+  color: var(--muted);
+}
+.product-body span[class*="-sep"]:empty::before { content: "\00b7"; }
+.product-body [class*="-divider"] {
+  height: 1px;
+  width: 100%;
+  background: var(--border);
+  border: 0;
+  margin: 0.75rem 0;
+}
+
+/* ---- 12. Eyebrow (section kicker) ---- */
+.product-body [class*="-eyebrow"] {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--primary) !important;
+}

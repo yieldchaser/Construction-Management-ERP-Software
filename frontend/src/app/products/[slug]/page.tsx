@@ -84,9 +84,14 @@ export default async function ProductFeaturePage({ params }: RouteParams) {
                 </h1>
               </div>
 
-              {/* Render article body */}
+              {/* Render article body. The extra `product-body` scope lets
+                  globals.css normalize the bespoke per-product widget systems
+                  (hero mockups, stat dashboards, progress bars, timelines) and
+                  neutralize the scraped WordPress light-theme inline colors
+                  without affecting blog/help/resources, which share
+                  `.help-article`. */}
               <div
-                className="help-article"
+                className="help-article product-body"
                 dangerouslySetInnerHTML={{ __html: article.body }}
               />
             </div>
