@@ -484,6 +484,7 @@ app.add_middleware(
     allow_headers=["Authorization", "Content-Type", "X-Admin-Secret"],
 )
 
+os.makedirs("static/reports", exist_ok=True)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Register routers
