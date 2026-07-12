@@ -1,36 +1,58 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SiteFlow frontend
 
-## Getting Started
+The Next.js 16 application for SiteFlow. It serves both the authenticated console and the public marketing site, and acts as the installable PWA shell.
 
-First, run the development server:
+## Stack
+
+- Next.js 16.2.9 (App Router), React 19.2.4, TypeScript 5, Tailwind CSS v4
+- firebase 11.10.0 (browser-side phone auth)
+- No charting library: dashboard charts are inline SVG
+
+## Scripts
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev      # http://localhost:3000
+npm run build    # production build
+npm run start    # serve the production build
+npm run lint     # eslint
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Structure
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```
+frontend/src/
+├── app/
+│   ├── page.tsx                      # public landing
+│   ├── products/ blog/ resources/ integrations/   # marketing content
+│   ├── login/ onboarding/ auth/callback/
+│   └── c/[company_id]/...            # company console
+│       └── p/[project_id]/...        # project console
+├── components/                       # Sidebar, ThemeToggle, PWA, marketing
+├── context/                          # CompanySettingsContext, ProjectContext
+├── lib/                              # api.ts (host resolver), firebase.ts, siteflow.ts, units.ts
+└── content/                          # JSON-driven marketing/help/blog/articles
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## API host resolution
 
-## Learn More
+`lib/api.ts` resolves the backend at runtime: in development it uses `http://localhost:8000`; on any non-local hostname it targets the production Render backend. `NEXT_PUBLIC_API_URL` is read only by the PWA bootstrap (`components/pwa/PwaBootstrap.tsx`).
 
-To learn more about Next.js, take a look at the following resources:
+## Environment variables (build-time)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Variable | Purpose |
+| --- | --- |
+| `NEXT_PUBLIC_API_URL` | Used by the PWA bootstrap; the main client resolves the host at runtime. |
+| `NEXT_PUBLIC_FIREBASE_API_KEY` / `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` / `NEXT_PUBLIC_FIREBASE_PROJECT_ID` / `NEXT_PUBLIC_FIREBASE_APP_ID` | Firebase phone auth in the browser. |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Theming
 
-## Deploy on Vercel
+Dark by default. Light theme adds a `light-theme` class to `<html>` (see `components/ThemeToggle.tsx`). Colors are CSS custom properties in `app/globals.css` (dark background `#111113`, card `#19191C`, primary `#7C3AED`; light background `#F3F4F6`, card `#FFFFFF`).
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## PWA
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+`public/manifest.json` and `public/sw.js` provide installability and an offline punch queue. `components/pwa/PwaBootstrap.tsx` registers the service worker.
+
+## Deploy
+
+Deployed on Vercel, configured to build from this `frontend/` directory on pushes to `main`.
