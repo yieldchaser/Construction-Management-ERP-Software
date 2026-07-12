@@ -56,9 +56,7 @@ const securityHeaders = [
     value: "geolocation=(self), camera=(self), microphone=(), payment=(), usb=(), browsing-topics=()",
   },
   {
-    // Report-Only: observe violations without blocking. Promote to
-    // "Content-Security-Policy" once the app is confirmed clean.
-    key: "Content-Security-Policy-Report-Only",
+    key: "Content-Security-Policy",
     value: contentSecurityPolicy,
   },
 ];
