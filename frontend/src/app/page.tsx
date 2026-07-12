@@ -324,7 +324,7 @@ export default function LandingPage() {
                 {sec.items.map((item, itemIdx) => (
                   <Link
                     key={itemIdx}
-                    href={`/c/e0000000-0000-0000-0000-000000000000/p/d0000000-0000-0000-0000-000000000001/${item.path}`}
+                    href="/login"
                     className="p-4 rounded-md bg-white/[0.01] border border-border-custom space-y-1 hover:bg-white/[0.03] hover:border-border-custom active:scale-[0.98] transition-all cursor-pointer block"
                   >
                     <h3 className="font-semibold text-foreground text-sm">{item.name}</h3>
