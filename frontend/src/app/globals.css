@@ -1607,7 +1607,6 @@ body {
   border-radius: 10px;
   padding: 0.7rem 0.9rem;
 }
-.product-body [class*="-step-dot"],
 .product-body [class*="-timeline-dot"],
 .product-body [class*="-spine-seg"] {
   width: 0.7rem;
@@ -1688,4 +1687,84 @@ body {
 }
 .product-body .wp-block-group.is-nowrap.is-layout-flex p {
   margin: 0 !important;
+}
+
+/* ------------------------------------------------------------
+   Resource index card grids (feature-comparisons + construction-
+   calculators landing pages). These pages render their body via
+   .help-article dangerouslySetInnerHTML. The original markup only
+   contained a JS-populated "Loading…" placeholder that never runs
+   under server rendering, so the browse-all grid was permanently
+   empty; it is now static <a> cards. Selectors are scoped to the
+   exact class names introduced (res-idx-*, res-faq-num) to avoid
+   the over-broad-selector regression that previously broke other
+   widgets. .help-article prefix gives enough specificity to beat
+   the generic .help-article a link rule.
+   ------------------------------------------------------------ */
+.help-article .res-idx-grid {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: 0.9rem;
+  margin: 1.4em 0;
+}
+@media (min-width: 640px) {
+  .help-article .res-idx-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1024px) {
+  .help-article .res-idx-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+.help-article .res-idx-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-height: 7.5rem;
+  padding: 1.1rem 1.15rem;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--foreground);
+  text-decoration: none;
+  font-weight: 500;
+  transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+.help-article .res-idx-card:hover {
+  border-color: var(--primary);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  text-decoration: none;
+}
+.help-article .res-idx-card-title {
+  color: var(--foreground);
+  font-weight: 700;
+  font-size: 0.95rem;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+}
+.help-article .res-idx-card-go {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--primary);
+  font-weight: 700;
+  font-size: 0.8rem;
+}
+.help-article .res-idx-card:hover .res-idx-card-arr {
+  transform: translateX(3px);
+}
+.help-article .res-idx-card-arr {
+  display: inline-block;
+  transition: transform 0.15s ease;
+}
+
+/* Numbered FAQ question badge (resources FAQ blocks). */
+.help-article .res-faq-num {
+  color: var(--primary);
+  font-weight: 800;
+  margin-right: 0.4rem;
+  font-variant-numeric: tabular-nums;
 }
