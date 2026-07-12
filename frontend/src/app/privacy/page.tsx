@@ -1,12 +1,13 @@
-/* Legal placeholders to fill before go-live (do not ship with brackets):
-   [Company Legal Name], [Registered Address], [Contact Email],
-   [Grievance Officer Name/Contact], [Effective Date]. */
+/* Legal contact values (kept in one place for easy update):
+   controller/brand name "SiteFlow", contact + grievance email
+   puwork09@gmail.com, effective date 01-01-2026. A formal registered
+   legal entity name can be substituted for "SiteFlow" once incorporated. */
 import Link from "next/link";
 
 const SECTIONS = [
   {
     title: "Introduction",
-    body: "This Privacy Policy explains how [Company Legal Name] (we, us, our) collects, uses, and protects information when you use SiteFlow (the Service). It applies to users in India and is written to align with the Digital Personal Data Protection Act, 2023 (DPDP Act). By using the Service, you consent to the practices described here.",
+    body: "This Privacy Policy explains how SiteFlow (we, us, our) collects, uses, and protects information when you use SiteFlow (the Service). It applies to users in India and is written to align with the Digital Personal Data Protection Act, 2023 (DPDP Act). By using the Service, you consent to the practices described here.",
   },
   {
     title: "Information We Collect",
@@ -38,11 +39,11 @@ const SECTIONS = [
   },
   {
     title: "Changes to this Policy",
-    body: "We may update this Privacy Policy from time to time. Material changes will be communicated through the Service or by email. The current version is effective as of [Effective Date].",
+    body: "We may update this Privacy Policy from time to time. Material changes will be communicated through the Service or by email. The current version is effective as of 01-01-2026.",
   },
   {
-    title: "Contact and Grievance Officer",
-    body: "For privacy questions or to exercise your rights, contact [Contact Email]. You may also reach our Grievance Officer at [Grievance Officer Name/Contact]. We will acknowledge and address complaints in line with the DPDP Act, 2023.",
+    title: "Contact and Grievances",
+    body: "For privacy questions, to exercise your rights, or to raise a grievance about how your data is handled, contact us at puwork09@gmail.com. We will acknowledge and address complaints in line with the DPDP Act, 2023.",
   },
 ];
 
@@ -100,7 +101,7 @@ export default function PrivacyPage() {
       <section className="relative px-6 py-16 max-w-3xl mx-auto space-y-10">
         <div className="space-y-2">
           <h1 className="text-4xl md:text-5xl font-extrabold text-white">Privacy Policy</h1>
-          <p className="text-xs text-muted">Last updated: [Effective Date]</p>
+          <p className="text-xs text-muted">Last updated: 01-01-2026</p>
         </div>
 
         {SECTIONS.map((s, i) => (

@@ -62,7 +62,7 @@ export default function ContactPage() {
             <h2 className="text-sm font-bold text-muted uppercase tracking-widest">Fastest ways to reach us</h2>
             {[
               { icon: "💬", label: "WhatsApp (Fastest)", value: "+91 76673 59544", sub: "Usually responds in < 2 hours" },
-              { icon: "📧", label: "Email", value: "hello@siteflow.com", sub: "Response within 1 business day" },
+              { icon: "📧", label: "Email", value: "puwork09@gmail.com", sub: "Response within 1 business day" },
               { icon: "📞", label: "Phone", value: "+91 76673 59544", sub: "Mon-Sat, 9 AM to 7 PM IST" },
             ].map((c, i) => (
               <div key={i} className="flex items-start gap-3">

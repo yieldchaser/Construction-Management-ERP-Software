@@ -1,10 +1,28 @@
+<p align="center">
+  <img width="100%" alt="SiteFlow Banner" src="siteflow_banner.png" />
+</p>
+
+<p align="center">
+  <a href="./LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="MIT License" /></a>
+  <a href="https://site-flow-omega.vercel.app"><img src="https://img.shields.io/badge/Live_Site-Vercel-success?style=flat-square&logo=vercel" alt="Live Site" /></a>
+  <a href="https://construction-erp-backend-73vm.onrender.com"><img src="https://img.shields.io/badge/Live_API-Render-009688?style=flat-square&logo=fastapi&logoColor=white" alt="Live API" /></a>
+  <img src="https://img.shields.io/badge/Next.js-16_App_Router-black?style=flat-square&logo=next.js" alt="Next.js" />
+  <img src="https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=white" alt="React 19" />
+  <img src="https://img.shields.io/badge/FastAPI-Python_3.12-009688?style=flat-square&logo=fastapi&logoColor=white" alt="FastAPI" />
+  <img src="https://img.shields.io/badge/PostgreSQL-Supabase-3ECF8E?style=flat-square&logo=supabase&logoColor=white" alt="Supabase" />
+</p>
+
+<p align="center"><em>A construction management ERP for builders, contractors, subcontractors, and project management consultancies in India and the Gulf.</em></p>
+
+---
+
 # SiteFlow
 
-SiteFlow is a construction management ERP built for builders, contractors, subcontractors, and project management consultancies in India and the Gulf. It connects the office and the site: BOQ and budgets, task scheduling, procurement, subcontractor running-account billing, finance and cashbook, HR and payroll, quality and safety, equipment, production, and executive reporting all run on one multi-tenant data model. The field side is a mobile-first PWA with GPS-geofenced and face-recognised attendance, so site activity feeds cost and progress in real time.
+SiteFlow connects the office and the site: BOQ and budgets, task scheduling, procurement, subcontractor running-account billing, finance and cashbook, HR and payroll, quality and safety, equipment, production, and executive reporting all run on one multi-tenant data model. The field side is a mobile-first PWA with GPS-geofenced and face-recognised attendance, so site activity feeds cost and progress in real time.
 
 This repository is the application source. It is not a marketing site generator: the marketing pages live inside the same Next.js app, but they are content, not the product.
 
-## Live deployments
+## 🚀 Live deployments
 
 | Surface | URL |
 | --- | --- |
@@ -13,9 +31,7 @@ This repository is the application source. It is not a marketing site generator:
 
 The API is versioned under `/apis/v3`. Both URLs above were checked directly and return 200. The older `siteflow-erp.vercel.app` domain referenced in earlier docs no longer resolves (returns 404) and is not the current production frontend.
 
-> Note on verification: the production URLs above are taken from the deployment config in this repo (the keep-alive workflow pings the Render backend, and the frontend API client targets the Render host in production). Live reachability could not be confirmed from the environment used to write this README, so treat the URLs as "configured production targets" rather than ping-verified endpoints.
-
-## Tech stack
+## 🧱 Tech stack
 
 | Layer | Technology |
 | --- | --- |
@@ -29,7 +45,7 @@ The API is versioned under `/apis/v3`. Both URLs above were checked directly and
 
 Versions are read from `frontend/package.json` and `backend/requirements.txt`. They are minimums where ranges are specified (for example `fastapi>=0.110.0`).
 
-## Architecture
+## 🏗️ Architecture
 
 The repo is a monorepo with two independent packages (no workspace linker at the root):
 
@@ -44,21 +60,51 @@ siteflow/
 └── static/                   # Generated report artifacts
 ```
 
+The deployment topology and request flow:
+
+```mermaid
+graph TD
+    subgraph Client["Frontend - Next.js 16 on Vercel"]
+        MKT["Marketing site: / /products /resources /blog ..."]
+        CON["Console: /c/[company_id]/..."]
+        PRJ["Project: /c/[company_id]/p/[project_id]/..."]
+        PWA["Mobile PWA: geofenced + face attendance, offline punch queue"]
+    end
+
+    subgraph API["Backend - FastAPI on Render"]
+        GW["API gateway: /apis/v3"]
+        RT["Feature routers: finance, hr, procurement, reports, billing, tally, ..."]
+        AU["Auth + session JWT"]
+        GW --> RT
+        GW --> AU
+    end
+
+    subgraph Store["Supabase"]
+        DB[("PostgreSQL - one multi-tenant model")]
+        BLOB[("Storage - file blobs")]
+    end
+
+    MKT -->|HTTPS REST| GW
+    CON -->|HTTPS REST| GW
+    PRJ -->|HTTPS REST| GW
+    PWA -->|HTTPS REST| GW
+    RT --> DB
+    RT --> BLOB
+    RT -->|XML sync| TALLY["Tally Prime"]
+    RT -->|OAuth| GS["Google Sheets"]
+```
+
 ### Multi-tenant model
 
 `Company` is the tenant root. A `User` joins a company through a `CompanyTeam` membership row (with a role), so data is isolated per company. Transactional tables carry a `company_id` (and usually a `project_id`) and enforce company-scoped uniqueness where numbering matters (for example `UNIQUE(company_id, po_number)`). The frontend resolves a human-readable company slug to the UUID primary key.
 
-### Authentication
-
-All login methods funnel into one shared session JWT and one post-auth/onboarding path:
-
-- Phone OTP (MSG91) with HMAC-hashed, TTL-bound, single-use codes
-- Email OTP (SMTP or Brevo HTTPS API) using the same hardened OTP machinery
-- Google OAuth (identity scopes), exchanged via a one-time signed handoff code
-- Email + password (bcrypt hashed)
-- Firebase phone auth (additive; the backend verifies the Firebase ID token and mints its own session)
-
-When no SMS/email provider is configured, only a demo allowlist can log in; everyone else gets a clear 503. The app refuses to start in a non-local environment without a strong `SECRET_KEY`.
+```mermaid
+graph TD
+    Company["Company - tenant root"] --> Team["CompanyTeam - membership + role"]
+    Team --> User["User"]
+    Company --> Project["Project - carries company_id"]
+    Project --> Txn["Transactional tables - company_id (+ project_id)"]
+```
 
 ### Console vs marketing site
 
@@ -76,11 +122,33 @@ Dark is the default. The light theme is toggled by adding a `light-theme` class 
 - Dark: background `#111113`, card `#19191C`, border `rgba(255,255,255,0.07)`, primary `#7C3AED`
 - Light: background `#F3F4F6`, card `#FFFFFF`, primary `#6D28D9`
 
-## Feature inventory
+## 🔐 Authentication
+
+All login methods funnel into one shared session JWT and one post-auth/onboarding path:
+
+```mermaid
+graph LR
+    P["Phone OTP - MSG91"] --> S
+    E["Email OTP - SMTP or Brevo"] --> S
+    G["Google OAuth - signed handoff code"] --> S
+    PW["Email + password - bcrypt"] --> S
+    F["Firebase phone auth - ID token verify"] --> S
+    S["Shared session JWT"] --> O["One post-auth / onboarding path"]
+```
+
+- Phone OTP (MSG91) with HMAC-hashed, TTL-bound, single-use codes
+- Email OTP (SMTP or Brevo HTTPS API) using the same hardened OTP machinery
+- Google OAuth (identity scopes), exchanged via a one-time signed handoff code
+- Email + password (bcrypt hashed)
+- Firebase phone auth (additive; the backend verifies the Firebase ID token and mints its own session)
+
+When no SMS/email provider is configured, only a demo allowlist can log in; everyone else gets a clear 503. The app refuses to start in a non-local environment without a strong `SECRET_KEY`.
+
+## 📦 Feature inventory
 
 Derived from the backend routers and the frontend page tree, not from prior docs.
 
-### Project and execution
+### 🏗️ Project and execution
 - Projects, company/project dashboards (financial and operational views)
 - Task scheduler with hierarchical tasks, dependencies, and Critical Path Method floats
 - Gantt, list, and resources views; S-curve progress
@@ -88,13 +156,13 @@ Derived from the backend routers and the frontend page tree, not from prior docs
 - Drawings: versioned revisions, pin-based RFI/clash/observation markups, approval workflow
 - Daily Progress Report (DPR), team schedule, todos, towers, project files
 
-### Procurement and inventory
+### 📦 Procurement and inventory
 - Material indents, purchase orders (with approval workflow), goods receipt notes
 - Warehouse inventory and material transactions
 - Three-way PO/GRN/invoice matching
 - RFQ and vendor performance scoring
 
-### Billing, finance, and compliance
+### 💰 Billing, finance, and compliance
 - Subcontractor work orders and RA bills with TDS/retention deductions (pre-tax and post-tax paths)
 - Debit and credit notes
 - Finance payments, cashbook, ledger, project P&L
@@ -102,18 +170,18 @@ Derived from the backend routers and the frontend page tree, not from prior docs
 - Tally Prime sync (`/apis/v3/tally`) and ZATCA e-invoice generation (`/bills/{id}/zatca`)
 - Statutory reports (PF, ESI, BOCW cess, TDS, professional tax) via the statutory router
 
-### Subcontractor and labour
+### 🧑‍💼 Subcontractor and labour
 - Subcontractor attendance, performance, and scorecards
 - Staff employees, geofenced attendance (Haversine), face recognition, weekly timesheets
 - Payroll runs (PF/ESI/TDS), leave management
 
-### Quality, safety, equipment, production
+### ✅ Quality, safety, equipment, production
 - Quality checklists (IS-code library), site inspections, NCR, material/lab tests
 - Safety incidents, toolbox talks, PPE compliance, LTIF rate
 - Equipment fleet registry, fuel burn, maintenance
 - Production recipes, batches, material consumption, and variance tracking
 
-### CRM, library, and reporting
+### 📈 CRM, library, and reporting
 - CRM leads, quotations, RFQ
 - Library: parties, materials, cost codes
 - Company and project analytics (operational + financial S-curve, burn rate)
@@ -121,13 +189,13 @@ Derived from the backend routers and the frontend page tree, not from prior docs
 - Client progress reports with PDF export
 - Minutes of meeting, site chat, custom fields
 
-### Cross-cutting
+### 🔧 Cross-cutting
 - Multi-company switching (`CompanySwitcher`), branches, roles, approval rules, payroll settings, company terms, company file assets
 - Pure inline-SVG charts with a built-in chart-type switcher (bar, line, area, smooth, pie, donut, scatter, funnel, heatmap/grid, sunburst/rose, stacked, grouped, table) on the company dashboard
 - Installable PWA with a service worker (`public/sw.js`) and offline punch queue
 - Integrations: Tally Prime and Google Sheets are implemented as backend routers. Zoho Books is referenced in marketing copy but no corresponding backend router was found in this review (treat as not-yet-implemented or verify separately).
 
-## Getting started
+## ⚙️ Getting started
 
 Prerequisites: Node.js 18+ and npm, Python 3.12+, and either a Supabase project (production) or a local SQLite file (development).
 
@@ -163,7 +231,7 @@ The app runs at `http://localhost:3000`.
 
 Local development uses SQLite (`DATABASE_URL=sqlite:///./test.db`). Production uses Supabase PostgreSQL (`DATABASE_URL=postgresql://...`). The models adapt the UUID type per dialect (a `SQLiteUUID` shim avoids a known SQLite float-read bug), so the same code runs on both.
 
-## Environment variables
+## 🔑 Environment variables
 
 Copy `.env.example` to `.env` for the backend. Frontend variables are build-time (`NEXT_PUBLIC_*`).
 
@@ -201,17 +269,17 @@ Copy `.env.example` to `.env` for the backend. Frontend variables are build-time
 | `NEXT_PUBLIC_API_URL` | Optional | Used by the PWA bootstrap. The main API client resolves the host at runtime: `localhost:8000` in dev, the Render backend URL in production. |
 | `NEXT_PUBLIC_FIREBASE_API_KEY` / `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` / `NEXT_PUBLIC_FIREBASE_PROJECT_ID` / `NEXT_PUBLIC_FIREBASE_APP_ID` | Optional | Firebase phone auth in the browser. |
 
-## Database and migrations
+## 🗄️ Database and migrations
 
 `supabase/migrations/` holds hand-authored, additive SQL migrations. There is no ORM migration tool (no Alembic). In local dev the schema is created from the models via `Base.metadata.create_all`. In production, apply the migration SQL to the Supabase database (via the Supabase SQL editor or your migration workflow). New migrations should be additive and backward-compatible; do not drop or rename columns in place without a backfill plan.
 
-## Deployment
+## ☁️ Deployment
 
 - Frontend: Vercel (Next.js 16). Backend: Render (Uvicorn/FastAPI). Database and file storage: Supabase (Postgres + Storage).
 - Vercel and Render are configured to deploy on pushes to `main` (provider dashboards). No infrastructure-as-code manifests are committed in this repo.
 - A GitHub Actions workflow (`.github/workflows/keep_alive.yml`) pings the Render backend every 10 minutes. This exists because the Render free/starter tier spins the service down after inactivity; the ping keeps it warm and avoids cold-start delays.
 
-## Security posture
+## 🛡️ Security posture
 
 Hardened (verified in code):
 
@@ -228,7 +296,7 @@ Known debt / deferred (be honest, not hidden):
 - Security headers (HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy) and a Content-Security-Policy are set in the frontend itself, in `frontend/next.config.ts`'s `headers()` function, not at the hosting edge. The CSP is currently shipped as `Content-Security-Policy-Report-Only` (observes violations without blocking) as a deliberate first step; it has not yet been promoted to the enforcing `Content-Security-Policy` header. This is a real, tracked next step, not an oversight.
 - Multi-language attendance (English, Hinglish, Hindi, Tamil) is real and implemented client-side: translation objects for all four languages exist in `frontend/src/app/c/[company_id]/d/attendance/page.tsx` and the equivalent project-level attendance page.
 
-## Conventions
+## 📐 Conventions
 
 Inferred from the codebase and standing project policy:
 
@@ -238,6 +306,6 @@ Inferred from the codebase and standing project policy:
 - Theme changes use the CSS custom properties in `globals.css`, never hardcoded colors in components.
 - New backend modules are routers registered under the `/apis/v3` prefix in `app/main.py`.
 
-## License
+## 📄 License
 
 SiteFlow is released under the MIT License. See [LICENSE](LICENSE).

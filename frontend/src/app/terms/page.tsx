@@ -1,12 +1,14 @@
-/* Legal placeholders to fill before go-live (do not ship with brackets):
-   [Company Legal Name], [Registered Address], [Jurisdiction City],
-   [Contact Email], [Grievance Officer Name/Contact], [Effective Date]. */
+/* Legal contact values (kept in one place for easy update):
+   brand/operator name "SiteFlow", contact email puwork09@gmail.com,
+   jurisdiction New Delhi, India, effective date 01-01-2026. A formal
+   registered legal entity name and address can be substituted for
+   "SiteFlow" here once incorporated. */
 import Link from "next/link";
 
 const SECTIONS = [
   {
     title: "Acceptance of Terms",
-    body: "These Terms of Service (the Terms) govern your access to and use of the SiteFlow platform, including our website, application programming interfaces, and related services (the Service). The Service is operated by [Company Legal Name] (we, us, our). By creating an account or using the Service, you agree to be bound by these Terms and by our Privacy Policy. If you do not agree, do not use the Service.",
+    body: "These Terms of Service (the Terms) govern your access to and use of the SiteFlow platform, including our website, application programming interfaces, and related services (the Service). The Service is operated by SiteFlow (we, us, our). By creating an account or using the Service, you agree to be bound by these Terms and by our Privacy Policy. If you do not agree, do not use the Service.",
   },
   {
     title: "Description of Service",
@@ -30,7 +32,7 @@ const SECTIONS = [
   },
   {
     title: "Intellectual Property",
-    body: "The SiteFlow software, branding, documentation, and related materials are owned by [Company Legal Name] or its licensors and are protected by applicable law. These Terms do not grant you any rights in our intellectual property except the limited right to use the Service as permitted. Feedback you provide may be used by us without obligation.",
+    body: "The SiteFlow software, branding, documentation, and related materials are owned by SiteFlow or its licensors and are protected by applicable law. These Terms do not grant you any rights in our intellectual property except the limited right to use the Service as permitted. Feedback you provide may be used by us without obligation.",
   },
   {
     title: "Limitation of Liability",
@@ -42,7 +44,7 @@ const SECTIONS = [
   },
   {
     title: "Governing Law",
-    body: "These Terms are governed by the laws of India. The courts of [Jurisdiction City], India have exclusive jurisdiction over any dispute arising from these Terms or the Service, subject to mandatory consumer protection provisions. If any provision is unenforceable, the remaining provisions continue in effect.",
+    body: "These Terms are governed by the laws of India. The courts of New Delhi, India have exclusive jurisdiction over any dispute arising from these Terms or the Service, subject to mandatory consumer protection provisions. If any provision is unenforceable, the remaining provisions continue in effect.",
   },
   {
     title: "Changes to these Terms",
@@ -50,7 +52,7 @@ const SECTIONS = [
   },
   {
     title: "Contact",
-    body: "Questions about these Terms can be directed to [Contact Email] or to [Company Legal Name], [Registered Address].",
+    body: "Questions about these Terms can be directed to puwork09@gmail.com.",
   },
 ];
 
@@ -108,7 +110,7 @@ export default function TermsPage() {
       <section className="relative px-6 py-16 max-w-3xl mx-auto space-y-10">
         <div className="space-y-2">
           <h1 className="text-4xl md:text-5xl font-extrabold text-white">Terms of Service</h1>
-          <p className="text-xs text-muted">Last updated: [Effective Date]</p>
+          <p className="text-xs text-muted">Last updated: 01-01-2026</p>
         </div>
 
         {SECTIONS.map((s, i) => (
