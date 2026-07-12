@@ -1476,7 +1476,7 @@ body {
 }
 
 /* ---- 6. Dots (status indicators) ---- */
-.product-body [class*="-dot"]:not([class*="-dots"]):not([class*="-dot-wrap"]):not([class*="-dot-col"]),
+.product-body [class*="-dot"]:not([class*="-dots"]):not([class*="-dot-wrap"]):not([class*="-dot-col"]):not([class*="-step-dot"]):not([class*="osfu-dot"]),
 .product-body [class*="-ldot"],
 .product-body [class*="-cdot"],
 .product-body [class*="-hdot"],
@@ -1492,6 +1492,36 @@ body {
 .product-body [class*="-li-icon-green"] { background: #10b981 !important; }
 .product-body [class*="-dot-r"] { background: #ef4444 !important; }
 .product-body [class*="-dot-y"] { background: #f59e0b !important; }
+/* Step/workflow marker dots that hold real content (checkmark, initials,
+   emoji) — not plain color bullets, need room to actually show that
+   content instead of being squashed to the 0.5rem plain-dot size. */
+.product-body [class*="-step-dot"],
+.product-body [class*="osfu-dot"]:not([class*="-dot-wrap"]) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.4rem;
+  height: 1.4rem;
+  min-width: 1.4rem;
+  border-radius: 999px;
+  background: var(--elevated);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 700;
+  flex: none;
+}
+.product-body [class*="-step-dot"][class*="-done"],
+.product-body [class*="osfu-dot"][class*="-done"] {
+  background: color-mix(in srgb, var(--primary) 15%, transparent);
+  color: var(--primary) !important;
+  border-color: transparent;
+}
+.product-body [class*="-step-dot"][class*="-active"] {
+  background: var(--primary);
+  color: #fff !important;
+  border-color: transparent;
+}
 
 /* ---- 7. Progress bars ---- */
 .product-body [class*="-bar-track"],
