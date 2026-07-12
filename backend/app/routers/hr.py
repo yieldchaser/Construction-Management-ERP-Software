@@ -27,7 +27,7 @@ from app.auth import get_current_user, verify_company_access, verify_project_acc
 from app.models import (
     StaffEmployee, AttendanceLog, Timesheet,
     TimesheetEntry, PayrollRun, PayrollLineItem, Project, LeaveRequest,
-    Holiday, Designation, LeaveTemplate, PayrollProfile
+    Holiday, Designation, LeaveTemplate, PayrollProfile, User
 )
 
 router = APIRouter(prefix="/hr", tags=["HR, Attendance & Payroll"], dependencies=[Depends(get_current_user)])
@@ -474,6 +474,30 @@ def approve_timesheet(ts_id: uuid.UUID, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(ts)
     return ts
+
+
+@router.delete("/timesheets/{ts_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_timesheet(ts_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Delete a weekly timesheet. Tenant-scoped: the caller must belong to the
+    timesheet's company, and the deletion is written to the DeleteLog audit trail.
+
+    Timesheet has no company_id column of its own; tenancy is resolved via
+    its project (same relationship list_company_timesheet_entries joins
+    through)."""
+    ts = db.query(Timesheet).filter(Timesheet.id == ts_id).first()
+    if not ts:
+        raise HTTPException(status_code=404, detail="Timesheet not found")
+    project = db.query(Project).filter(Project.id == ts.project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Timesheet's project not found")
+    get_company_membership(db, current_user, project.company_id)
+    try:
+        from app.routers.delete_logs import log_deletion
+        log_deletion(db, project.company_id, "timesheet", ts.id, f"Timesheet {ts.id}")
+    except Exception:
+        pass
+    db.delete(ts)
+    db.commit()
 
 
 # ─── Payroll Engine ──────────────────────────────────────────────────────────

@@ -1,4 +1,12 @@
 export const getApiHost = (): string => {
+  // Prefer an explicit, deploy-time environment variable so the backend host can
+  // be changed without a code change + redeploy. Falls back to the previously
+  // hardcoded production host when the var is unset, and keeps the localhost dev
+  // fallback for local development.
+  const envHost = process.env.NEXT_PUBLIC_API_URL;
+  if (envHost && envHost.trim().length > 0) {
+    return envHost.trim();
+  }
   if (typeof window !== "undefined") {
     const hostname = window.location.hostname;
     if (hostname !== "localhost" && hostname !== "127.0.0.1" && !hostname.startsWith("192.168.")) {

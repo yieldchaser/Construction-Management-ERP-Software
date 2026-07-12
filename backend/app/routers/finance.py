@@ -162,6 +162,23 @@ def create_payment(req: PaymentCreateRequest, db: Session = Depends(get_db)):
     return payment
 
 
+@router.delete("/payments/{payment_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_payment(payment_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Delete a finance payment. Tenant-scoped: the caller must belong to the
+    payment's company, and the deletion is written to the DeleteLog audit trail."""
+    payment = db.query(Payment).filter(Payment.id == payment_id).first()
+    if not payment:
+        raise HTTPException(status_code=404, detail="Payment not found")
+    get_company_membership(db, current_user, payment.company_id)
+    try:
+        from app.routers.delete_logs import log_deletion
+        log_deletion(db, payment.company_id, "payment", payment.id, f"Payment {payment.id}")
+    except Exception:
+        pass
+    db.delete(payment)
+    db.commit()
+
+
 @router.get("/ledger", response_model=List[LedgerTransactionResponse])
 def get_ledger(project_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     proj_uuid = uuid.UUID(str(project_id))
@@ -1133,6 +1150,23 @@ def update_payment_request_status(request_id: uuid.UUID, payload: PaymentRequest
     db.commit()
     db.refresh(req)
     return _pr_response(db, req)
+
+
+@router.delete("/payment-requests/{request_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_payment_request(request_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Delete a payment request. Tenant-scoped: the caller must belong to the
+    request's company, and the deletion is written to the DeleteLog audit trail."""
+    req = db.query(PaymentRequest).filter(PaymentRequest.id == request_id).first()
+    if not req:
+        raise HTTPException(status_code=404, detail="Payment request not found")
+    get_company_membership(db, current_user, req.company_id)
+    try:
+        from app.routers.delete_logs import log_deletion
+        log_deletion(db, req.company_id, "payment_request", req.id, f"Payment Request: {req.request_no or req.id}")
+    except Exception:
+        pass
+    db.delete(req)
+    db.commit()
 
 
 # --- P2P Transfer Endpoints ---

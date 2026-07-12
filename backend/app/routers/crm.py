@@ -4,7 +4,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.auth import get_current_user, verify_company_access
+from app.auth import get_current_user, verify_company_access, get_company_membership
 from app.models import (
     CRMLead, CRMQuotation, CRMQuotationItem, Company,
     CRMLeadSource, CRMLeadCategory, CRMLeadStatus, CompanyTeam, User,
@@ -25,6 +25,7 @@ class LeadCreateRequest(BaseModel):
     lead_type: str
     contact_name: str
     phone_no: str
+    country_code: Optional[str] = None
     email: Optional[str] = None
     client_company_name: Optional[str] = None
     address: Optional[str] = None
@@ -33,7 +34,9 @@ class LeadCreateRequest(BaseModel):
     status: str = "New Lead"
     priority: str = "medium"
     budget: float = 0.0
+    lead_name: Optional[str] = None
     description: Optional[str] = None
+    last_contacted: Optional[datetime] = None
     next_follow_up: Optional[datetime] = None
     expected_closure: Optional[datetime] = None
 
@@ -271,6 +274,23 @@ def get_lead(lead_id: uuid.UUID, db: Session = Depends(get_db)):
     if not lead:
         raise HTTPException(status_code=404, detail="Lead not found")
     return lead
+
+
+@router.delete("/leads/{lead_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_lead(lead_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Delete a CRM lead. Tenant-scoped: the caller must belong to the lead's
+    company, and the deletion is written to the DeleteLog audit trail."""
+    lead = db.query(CRMLead).filter(CRMLead.id == lead_id).first()
+    if not lead:
+        raise HTTPException(status_code=404, detail="Lead not found")
+    get_company_membership(db, current_user, lead.company_id)
+    try:
+        from app.routers.delete_logs import log_deletion
+        log_deletion(db, lead.company_id, "crm_lead", lead.id, f"CRM Lead: {lead.contact_name}")
+    except Exception:
+        pass
+    db.delete(lead)
+    db.commit()
 
 
 # ─── Company team members (Assignee dropdown) ────────────────────────────────

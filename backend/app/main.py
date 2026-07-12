@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import os
+from contextlib import asynccontextmanager
 from sqlalchemy import DateTime, String, Numeric, Boolean, Text, func
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
@@ -18,8 +19,8 @@ from app.database import engine, Base, SessionLocal
 from app import models
 
 # Initialize SQLAlchemy tables if they do not exist
-# Note: In production this is handled via Supabase SQL migrations, but for local/SQLite dev it serves as an auto-fallback
-Base.metadata.create_all(bind=engine)
+# Note: In production this is handled via Supabase SQL migrations, but for local/SQLite dev it serves as an auto-fallback.
+# The actual create_all() call runs ONCE PER BOOT inside the FastAPI lifespan (see lifespan()), NOT at import time.
 
 def ensure_sqlite_library_party_columns():
     if not engine.url.drivername.startswith("sqlite"):
@@ -51,7 +52,7 @@ def ensure_sqlite_library_party_columns():
                 f'ALTER TABLE library_parties ADD COLUMN "{column_name}" {column_type.compile(dialect=engine.dialect)}'
             )
 
-ensure_sqlite_library_party_columns()
+    # (call runs in lifespan)
 
 
 def ensure_sqlite_company_team_party_link():
@@ -89,12 +90,7 @@ def backfill_company_team_party_links(db):
     return linked
 
 
-ensure_sqlite_company_team_party_link()
-_db = SessionLocal()
-try:
-    backfill_company_team_party_links(_db)
-finally:
-    _db.close()
+    # (call runs in lifespan)
 
 
 def ensure_sqlite_library_cost_code_columns():
@@ -130,8 +126,7 @@ def ensure_sqlite_company_slug_column():
                 'ALTER TABLE companies ADD COLUMN "slug" VARCHAR(255)'
             )
 
-ensure_sqlite_library_cost_code_columns()
-ensure_sqlite_company_slug_column()
+    # (call runs in lifespan)
 
 
 def ensure_sqlite_company_parent_column():
@@ -149,7 +144,8 @@ def ensure_sqlite_company_parent_column():
             )
 
 
-ensure_sqlite_company_parent_column()
+    # (call runs in lifespan)
+
 
 def ensure_sqlite_project_tab_columns():
     """Add columns introduced for the Project Tab parity build to existing tables."""
@@ -190,7 +186,7 @@ def ensure_sqlite_project_tab_columns():
                     f'ALTER TABLE "{table}" ADD COLUMN "{col_name}" {col_type.compile(dialect=engine.dialect)}'
                 )
 
-ensure_sqlite_project_tab_columns()
+    # (call runs in lifespan)
 
 
 def ensure_sqlite_bill_columns():
@@ -231,8 +227,8 @@ def ensure_sqlite_task_columns():
             )
 
 
-ensure_sqlite_bill_columns()
-ensure_sqlite_task_columns()
+    # (call runs in lifespan)
+
 
 def ensure_sqlite_schema_sync():
     """Catch-all migration for SQLite dev DBs: add any model column that is
@@ -260,7 +256,8 @@ def ensure_sqlite_schema_sync():
                 except Exception as e:
                     print(f"schema_sync skipped {tname}.{col.name}: {e}")
 
-ensure_sqlite_schema_sync()
+    # (call runs in lifespan)
+
 
 import uuid
 from app.database import SessionLocal
@@ -374,10 +371,11 @@ def auto_seed_database():
     finally:
         db.close()
 
-auto_seed_database()
+    # (call runs in lifespan)
 
-# Ensure static reports directory exists
-os.makedirs("static/reports", exist_ok=True)
+
+# Ensure static reports directory exists (now handled in lifespan)
+# os.makedirs("static/reports", exist_ok=True)
 
 # Initialize Sentry error tracking before the FastAPI app is constructed.
 # Gated on a non-empty DSN: calling sentry_sdk.init with an empty DSN is a
@@ -401,10 +399,42 @@ if _app_settings.SENTRY_DSN:
 else:
     print("SENTRY_DSN not set; Sentry error tracking disabled.")
 
+# ── Startup lifecycle ─────────────────────────────────────────────────────────
+# All schema-sync / demo-seed side effects that historically ran at MODULE IMPORT
+# time now live here. Running them in the FastAPI lifespan guarantees they
+# execute exactly once per process boot — and crucially NOT once per worker when
+# the app is served by Gunicorn/Uvicorn with --workers N (each worker re-imports
+# the module, so import-time code double-seeds/races). Importing this module
+# (e.g. from pytest) no longer touches the database.
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # SQLite dev schema sync + demo seed (local/SQLite auto-fallback only; in
+    # production these run via Supabase SQL migrations).
+    Base.metadata.create_all(bind=engine)
+    ensure_sqlite_library_party_columns()
+    ensure_sqlite_company_team_party_link()
+    _seed_db = SessionLocal()
+    try:
+        backfill_company_team_party_links(_seed_db)
+    finally:
+        _seed_db.close()
+    ensure_sqlite_library_cost_code_columns()
+    ensure_sqlite_company_slug_column()
+    ensure_sqlite_company_parent_column()
+    ensure_sqlite_project_tab_columns()
+    ensure_sqlite_bill_columns()
+    ensure_sqlite_task_columns()
+    ensure_sqlite_schema_sync()
+    auto_seed_database()
+    os.makedirs("static/reports", exist_ok=True)
+    yield
+
+
 app = FastAPI(
     title="SiteFlow - Construction Management API",
     description="Backend microservice handling operational logic, calculators, and integrations.",
-    version="3.0.0"
+    version="3.0.0",
+    lifespan=lifespan,
 )
 
 # Rate limiting (slowapi). The limiter instance itself lives in app.rate_limit so
