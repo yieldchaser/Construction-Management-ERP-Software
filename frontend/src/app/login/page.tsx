@@ -455,7 +455,7 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen w-full bg-background text-foreground">
       {/* Brand panel */}
-      <div className="relative hidden w-1/2 flex-col justify-between overflow-hidden bg-primary p-16 lg:flex border-r border-border-custom">
+      <div className="relative hidden w-2/5 flex-col justify-between overflow-hidden bg-primary p-12 lg:flex border-r border-border-custom">
         {/* Soft light glows — white so they read against the primary fill
             (a bg-primary blob on a bg-primary panel is invisible). */}
         <div className="absolute bottom-[-20%] right-[-20%] h-[70%] w-[70%] rounded-full bg-white opacity-10 blur-[120px]" />
@@ -527,7 +527,7 @@ export default function LoginPage() {
       </div>
 
       {/* Form panel */}
-      <div className="flex w-full flex-col justify-center items-center p-8 lg:w-1/2 bg-background relative">
+      <div className="flex w-full flex-col justify-center items-center p-8 lg:w-3/5 bg-background relative">
         <div className="w-full max-w-md space-y-6 z-10">
           <div className="space-y-2 text-center">
             <h2 className="text-3xl font-bold tracking-tight text-foreground">{heading()}</h2>
