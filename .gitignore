@@ -224,3 +224,8 @@ __marimo__/
 # Local IDE settings and traces
 .vscode/
 *.har
+
+# Competitor recon material (screenshots, scraped marketing PDFs, HAR
+# captures, minified JS) used to drive the marketing-site build — not
+# product source, kept locally for reference only.
+onsiteteams-recon/

@@ -1,4 +1,0 @@
-Name,Staff Type,Shift Hours,Day Off,Overtime Rate (Per Hour),Designation,Cost Code,Salary Basis,Salary Type,CTC,Basic,Allowance Name (A1),A1 Relation Type,% of A1 Relation,A1 Amount,Allowance Name (A2),A2 Relation Type,% of A2 Relation,A2 Amount,Allowance Name (A3),A3 Relation Type,% of A3 Relation,A3 Amount,Fixed Allowance,Gross Salary,Deduction Name (D1),D1 Relation Type,% of D1 Relation,D1 Amount,Deduction Name (D2),D2 Relation Type,% of D2 Relation,D2 Amount,Net Amount,Projects
-Payrole-05,Office,8,"Sat,Sun, tuesday",100,plumbing,bth-03,Punch,Monthly,10000,5000,allowance 6,basic,50,2500,allowance 5,ctc,20,2000,allowance 4,fixed,,500,0,10000,,,,,,,,,10000,
-Payrole-06,Site,7,Sun,600,plumbing,bth-03,shift,Monthly,0,,,,,,,,,,,,,,,,,,,,,,,,,
-Payrole-07,Office,8,"Sat,Sun, tuesday",100,plumbing,bth-03,Punch,Monthly,25000,10000,allowance 6,basic,50,5000,,,,,,,,,10000,25000,PF,gross,10,2500,,,,,22500, Rohan Heights1256

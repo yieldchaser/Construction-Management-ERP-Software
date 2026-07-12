@@ -430,7 +430,6 @@ def get_allowed_origins() -> list[str]:
         "http://127.0.0.1:3001",
         "https://construction-management-erp-softwar-ten.vercel.app",
         "https://construction-management-erp-software.vercel.app",
-        "https://siteflow-erp.vercel.app",
         "https://siteflow.vercel.app",
         "https://siteflow.co",
         "https://app.siteflow.co"
