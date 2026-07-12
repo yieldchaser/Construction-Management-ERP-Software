@@ -191,7 +191,11 @@ export default function LoginPage() {
       setStage("otp");
       setTimer(30);
       setMessage("Code sent to your phone.");
-    } catch {
+    } catch (err: any) {
+      // Log the real Firebase error code/message to the browser console (dev
+      // visibility only, not sent anywhere) - swallowing it entirely made every
+      // failure indistinguishable (bad number vs quota vs captcha vs billing).
+      console.error("[firebase phone] signInWithPhoneNumber failed:", err?.code, err?.message, err);
       // Reset the verifier so a retry gets a fresh challenge.
       try {
         recaptchaRef.current?.clear();
