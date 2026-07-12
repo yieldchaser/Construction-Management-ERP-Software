@@ -223,7 +223,7 @@ export default function Sidebar() {
               <div
                 className={`flex items-center gap-3 px-3 py-2 text-sm rounded-md transition-all cursor-pointer ${
                   isActive
-                    ? "bg-primary/10 text-primary border-l-2 border-primary font-medium"
+                    ? "bg-primary/10 text-primary font-medium"
                     : "text-muted hover:text-foreground hover:bg-elevated"
                 }`}
                 onClick={item.action}
