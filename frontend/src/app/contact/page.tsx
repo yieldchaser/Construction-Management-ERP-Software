@@ -9,7 +9,7 @@ const OFFICES = [
 ];
 
 export default function ContactPage() {
-  const [form, setForm] = useState({ name: "", company: "", phone: "", email: "", message: "" });
+  const [form, setForm] = useState({ name: "", company: "", phone: "", email: "", role: "", sites: "", message: "" });
   const [submitted, setSubmitted] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -100,9 +100,9 @@ export default function ContactPage() {
         </aside>
 
         {/* Contact Form */}
-        <main className="lg:col-span-3">
+        <main className="lg:col-span-3 h-full flex flex-col">
           {submitted ? (
-            <div className="bg-card border border-border-custom rounded-lg shadow-sm rounded-md p-12 border border-border-custom text-center space-y-5 h-full flex flex-col items-center justify-center">
+            <div className="bg-card border border-border-custom rounded-lg shadow-sm rounded-md p-12 border border-border-custom text-center space-y-5 h-full flex flex-col items-center justify-center flex-grow">
               <div className="text-5xl">🎉</div>
               <h2 className="text-2xl font-extrabold text-white">Message received!</h2>
               <p className="text-muted text-sm max-w-xs">
@@ -111,68 +111,93 @@ export default function ContactPage() {
               <Link href="/" className="text-sm text-primary hover:underline">← Back to Home</Link>
             </div>
           ) : (
-            <div className="bg-card border border-border-custom rounded-lg shadow-sm rounded-md p-8 border border-border-custom space-y-6">
-              <h2 className="text-lg font-extrabold text-white">Send us a message</h2>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {[
-                    { id: "name", label: "Your Name *", placeholder: "Rajesh Kumar", type: "text", required: true },
-                    { id: "company", label: "Company Name *", placeholder: "ABC Contractors Pvt Ltd", type: "text", required: true },
-                  ].map((f) => (
-                    <div key={f.id} className="space-y-1.5">
-                      <label htmlFor={f.id} className="text-xs font-semibold text-muted">{f.label}</label>
-                      <input
-                        id={f.id}
-                        type={f.type}
-                        required={f.required}
-                        placeholder={f.placeholder}
-                        value={form[f.id as keyof typeof form]}
-                        onChange={(e) => setForm({ ...form, [f.id]: e.target.value })}
-                        className="w-full bg-white/[0.03] border border-border-custom rounded-md px-4 py-3 text-sm text-white placeholder:text-muted focus:outline-none focus:border-primary/50 transition-all"
+            <div className="bg-card border border-border-custom rounded-lg shadow-sm rounded-md p-8 border border-border-custom space-y-6 flex-grow flex flex-col justify-between h-full">
+              <div>
+                <h2 className="text-lg font-extrabold text-white mb-5">Send us a message</h2>
+                <form onSubmit={handleSubmit} className="space-y-4 flex-grow flex flex-col justify-between">
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {[
+                        { id: "name", label: "Your Name *", placeholder: "Rajesh Kumar", type: "text", required: true },
+                        { id: "company", label: "Company Name *", placeholder: "ABC Contractors Pvt Ltd", type: "text", required: true },
+                      ].map((f) => (
+                        <div key={f.id} className="space-y-1.5">
+                          <label htmlFor={f.id} className="text-xs font-semibold text-muted">{f.label}</label>
+                          <input
+                            id={f.id}
+                            type={f.type}
+                            required={f.required}
+                            placeholder={f.placeholder}
+                            value={form[f.id as keyof typeof form]}
+                            onChange={(e) => setForm({ ...form, [f.id]: e.target.value })}
+                            className="w-full bg-white/[0.03] border border-border-custom rounded-md px-4 py-3 text-sm text-white placeholder:text-muted focus:outline-none focus:border-primary/50 transition-all"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {[
+                        { id: "phone", label: "Phone / WhatsApp *", placeholder: "+91 98765 00000", type: "tel", required: true },
+                        { id: "email", label: "Email Address", placeholder: "you@company.com", type: "email", required: false },
+                      ].map((f) => (
+                        <div key={f.id} className="space-y-1.5">
+                          <label htmlFor={f.id} className="text-xs font-semibold text-muted">{f.label}</label>
+                          <input
+                            id={f.id}
+                            type={f.type}
+                            required={f.required}
+                            placeholder={f.placeholder}
+                            value={form[f.id as keyof typeof form]}
+                            onChange={(e) => setForm({ ...form, [f.id]: e.target.value })}
+                            className="w-full bg-white/[0.03] border border-border-custom rounded-md px-4 py-3 text-sm text-white placeholder:text-muted focus:outline-none focus:border-primary/50 transition-all"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {[
+                        { id: "role", label: "Your Role / Designation", placeholder: "e.g. Owner, PM, Accountant", type: "text", required: false },
+                        { id: "sites", label: "Number of Active Sites", placeholder: "e.g. 3", type: "text", required: false },
+                      ].map((f) => (
+                        <div key={f.id} className="space-y-1.5">
+                          <label htmlFor={f.id} className="text-xs font-semibold text-muted">{f.label}</label>
+                          <input
+                            id={f.id}
+                            type={f.type}
+                            required={f.required}
+                            placeholder={f.placeholder}
+                            value={form[f.id as keyof typeof form]}
+                            onChange={(e) => setForm({ ...form, [f.id]: e.target.value })}
+                            className="w-full bg-white/[0.03] border border-border-custom rounded-md px-4 py-3 text-sm text-white placeholder:text-muted focus:outline-none focus:border-primary/50 transition-all"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                    <div className="space-y-1.5">
+                      <label htmlFor="message" className="text-xs font-semibold text-muted">What do you need help with?</label>
+                      <textarea
+                        id="message"
+                        rows={4}
+                        placeholder="E.g. I want to see a demo of the BOQ + Procurement module for a 3-site civil project..."
+                        value={form.message}
+                        onChange={(e) => setForm({ ...form, message: e.target.value })}
+                        className="w-full bg-white/[0.03] border border-border-custom rounded-md px-4 py-3 text-sm text-white placeholder:text-muted focus:outline-none focus:border-primary/50 transition-all resize-none"
                       />
                     </div>
-                  ))}
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {[
-                    { id: "phone", label: "Phone / WhatsApp *", placeholder: "+91 98765 00000", type: "tel", required: true },
-                    { id: "email", label: "Email Address", placeholder: "you@company.com", type: "email", required: false },
-                  ].map((f) => (
-                    <div key={f.id} className="space-y-1.5">
-                      <label htmlFor={f.id} className="text-xs font-semibold text-muted">{f.label}</label>
-                      <input
-                        id={f.id}
-                        type={f.type}
-                        required={f.required}
-                        placeholder={f.placeholder}
-                        value={form[f.id as keyof typeof form]}
-                        onChange={(e) => setForm({ ...form, [f.id]: e.target.value })}
-                        className="w-full bg-white/[0.03] border border-border-custom rounded-md px-4 py-3 text-sm text-white placeholder:text-muted focus:outline-none focus:border-primary/50 transition-all"
-                      />
-                    </div>
-                  ))}
-                </div>
-                <div className="space-y-1.5">
-                  <label htmlFor="message" className="text-xs font-semibold text-muted">What do you need help with?</label>
-                  <textarea
-                    id="message"
-                    rows={4}
-                    placeholder="E.g. I want to see a demo of the BOQ + Procurement module for a 3-site civil project..."
-                    value={form.message}
-                    onChange={(e) => setForm({ ...form, message: e.target.value })}
-                    className="w-full bg-white/[0.03] border border-border-custom rounded-md px-4 py-3 text-sm text-white placeholder:text-muted focus:outline-none focus:border-primary/50 transition-all resize-none"
-                  />
-                </div>
-                <button
-                  type="submit"
-                  className="w-full rounded-md bg-primary py-4 text-sm font-bold text-white hover:opacity-90 active:scale-[0.99] transition-all shadow-lg shadow-primary/20"
-                >
-                  Send Message, Get Demo →
-                </button>
-                <p className="text-[10px] text-muted text-center">
-                  No spam. Your details are only used to set up your demo.
-                </p>
-              </form>
+                  </div>
+                  <div className="space-y-4 pt-4">
+                    <button
+                      type="submit"
+                      className="w-full rounded-md bg-primary py-4 text-sm font-bold text-white hover:opacity-90 active:scale-[0.99] transition-all shadow-lg shadow-primary/20"
+                    >
+                      Send Message, Get Demo →
+                    </button>
+                    <p className="text-[10px] text-muted text-center">
+                      No spam. Your details are only used to set up your demo.
+                    </p>
+                  </div>
+                </form>
+              </div>
             </div>
           )}
         </main>
