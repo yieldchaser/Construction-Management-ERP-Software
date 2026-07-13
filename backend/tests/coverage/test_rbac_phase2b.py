@@ -94,3 +94,54 @@ def test_finance_read_allows_with_view(client, db, make_tenant, auth_headers):
     _, _, hdr = _make_employee(db, comp, {"finance:view": True}, auth_headers)
     r = client.get(f"/apis/v3/finance/accounts/{comp.id}", headers=hdr)
     assert r.status_code != 403
+
+
+# ── self-service endpoints must NOT require an admin :edit permission ────────
+# (tenant guard / company membership still applies; only the RBAC edit gate is
+# removed so an ordinary member — e.g. Manager with payroll:view only — can do
+# basic self-service: request their own leave, clock their own attendance.)
+
+def _make_project(db, company):
+    project = models.Project(
+        id=uuid.uuid4(), company_id=company.id, name="P", code=uuid.uuid4().hex[:6], status="Ongoing"
+    )
+    db.add(project)
+    db.commit()
+    return project
+
+
+def test_create_leave_request_allows_view_only_self_service(client, db, make_tenant, auth_headers):
+    comp, _, _ = make_tenant(company_name="A", user_name="UA", mobile="+919888803001", email="ls1@t.com")
+    _, _, hdr = _make_employee(db, comp, {"payroll:view": True}, auth_headers)
+    project = _make_project(db, comp)
+    r = client.post(
+        f"/apis/v3/hr/leaves/{comp.id}",
+        json={
+            "project_id": str(project.id),
+            "employee_name": "Self User",
+            "leave_type": "Casual",
+            "start_date": "2026-02-01T00:00:00",
+            "end_date": "2026-02-02T00:00:00",
+            "days_count": 2,
+        },
+        headers=hdr,
+    )
+    assert r.status_code != 403
+
+
+def test_punch_allows_view_only_self_service(client, db, make_tenant, auth_headers):
+    comp, _, _ = make_tenant(company_name="A", user_name="UA", mobile="+919888803002", email="ls2@t.com")
+    _, _, hdr = _make_employee(db, comp, {"payroll:view": True}, auth_headers)
+    project = _make_project(db, comp)
+    r = client.post(
+        "/apis/v3/hr/attendance/punch",
+        json={
+            "employee_id": str(uuid.uuid4()),
+            "project_id": str(project.id),
+            "lat": 12.0,
+            "lng": 77.0,
+            "punch_type": "in",
+        },
+        headers=hdr,
+    )
+    assert r.status_code != 403

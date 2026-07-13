@@ -263,7 +263,6 @@ def punch(payload: PunchRequest, db: Session = Depends(get_db), current_user: Us
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     get_company_membership(db, current_user, project.company_id)
-    require_permission(db, current_user, project.company_id, "attendance:edit")
 
     site_lat, site_lng = _parse_site_coords(project.location)
     radius = project.attendance_radius_meters or 500
@@ -473,7 +472,6 @@ def submit_timesheet(ts_id: uuid.UUID, db: Session = Depends(get_db), current_us
     if not project:
         raise HTTPException(status_code=404, detail="Timesheet's project not found")
     get_company_membership(db, current_user, project.company_id)
-    require_permission(db, current_user, project.company_id, "attendance:edit")
     if ts.status != "draft":
         raise HTTPException(status_code=400, detail="Only draft timesheets can be submitted")
     ts.status = "submitted"
@@ -758,8 +756,7 @@ def list_leaves(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = 
 
 
 @router.post("/leaves/{company_id}", response_model=LeaveRequestResponse)
-def create_leave_request(company_id: uuid.UUID, data: LeaveRequestCreate, db: Session = Depends(get_db), _: None = Depends(verify_company_access), current_user: User = Depends(get_current_user)):
-    require_permission(db, current_user, company_id, "payroll:edit")
+def create_leave_request(company_id: uuid.UUID, data: LeaveRequestCreate, db: Session = Depends(get_db),     _: None = Depends(verify_company_access), current_user: User = Depends(get_current_user)):
     new_leave = LeaveRequest(
         company_id=company_id,
         project_id=data.project_id,
