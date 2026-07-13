@@ -125,14 +125,16 @@ export default function TermsPage() {
       <footer className="border-t border-border-custom px-6 py-8 text-muted">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-xs">
-            SiteFlow is a site operations platform. All logos are property of their owners.
+            SiteFlow is a site operations platform. All product logos are property of their respective owners.
           </p>
-          <div className="flex items-center flex-wrap gap-x-4 gap-y-1 text-xs">
+          <div className="flex items-center flex-wrap gap-x-6 gap-y-2 text-xs">
             <Link href="/blog" className="hover:text-muted transition-all whitespace-nowrap">Blog</Link>
             <Link href="/help" className="hover:text-muted transition-all whitespace-nowrap">Help Center</Link>
+            <Link href="/resources/construction-terms-meanings" className="hover:text-muted transition-all whitespace-nowrap">Glossary</Link>
+            <Link href="/resources/construction-calculators" className="hover:text-muted transition-all whitespace-nowrap">Calculators</Link>
+            <Link href="/who-we-serve" className="hover:text-muted transition-all whitespace-nowrap">Who We Serve</Link>
             <Link href="/terms" className="hover:text-muted transition-all whitespace-nowrap">Terms</Link>
             <Link href="/privacy" className="hover:text-muted transition-all whitespace-nowrap">Privacy</Link>
-            <Link href="/who-we-serve" className="hover:text-muted transition-all whitespace-nowrap">Who We Serve</Link>
           </div>
         </div>
       </footer>
