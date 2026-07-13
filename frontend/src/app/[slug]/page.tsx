@@ -75,9 +75,9 @@ export default async function GenericPage({ params }: RouteParams) {
 
         {/* Footer */}
         <footer className="border-t border-border-custom px-6 py-8 text-muted">
-          <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="max-w-[52rem] mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-xs">
-              © 2026 SiteFlow. All logos are property of their respective owners.
+              SiteFlow is a site operations platform. All product logos are property of their respective owners.
             </p>
             <div className="flex items-center flex-wrap gap-x-6 gap-y-2 text-xs">
               <Link href="/blog" className="hover:text-muted transition-all whitespace-nowrap">Blog</Link>
@@ -124,9 +124,9 @@ export default async function GenericPage({ params }: RouteParams) {
         </main>
 
         <footer className="border-t border-border-custom px-6 py-8 text-muted">
-          <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="max-w-[52rem] mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-xs">
-              © 2026 SiteFlow. All logos are property of their respective owners.
+              SiteFlow is a site operations platform. All product logos are property of their respective owners.
             </p>
             <div className="flex items-center flex-wrap gap-x-6 gap-y-2 text-xs">
               <Link href="/blog" className="hover:text-muted transition-all whitespace-nowrap">Blog</Link>

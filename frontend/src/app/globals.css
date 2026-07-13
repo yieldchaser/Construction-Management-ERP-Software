@@ -801,10 +801,10 @@ body {
   display: flex; flex-direction: column; overflow: hidden;
   background: var(--card); border: 1px solid var(--border); border-radius: 1rem;
 }
-.owc-epc-row { margin-top: 1.5rem; }
+.owc-epc-row { margin-top: 3.5rem; }
 @media (min-width: 900px) {
   .owc-epc-row .owc-card { flex-direction: row; }
-  .owc-epc-row .owc-dash { width: 46%; border-bottom: none; border-right: 1px solid var(--border); display: flex; flex-direction: column; justify-content: flex-start; }
+  .owc-epc-row .owc-dash { width: 46%; border-bottom: none; border-right: 1px solid var(--border); display: flex; flex-direction: column; justify-content: space-between; }
   .owc-epc-row .owc-body { width: 54%; }
 }
 
