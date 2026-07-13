@@ -275,7 +275,11 @@ def schedule_maintenance(
 
 
 @router.get("/maintenance-schedules/{equipment_id}", response_model=List[MaintenanceResponse])
-def list_maintenance_schedules(equipment_id: uuid.UUID, db: Session = Depends(get_db)):
+def list_maintenance_schedules(equipment_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    eq = db.query(Equipment).filter(Equipment.id == equipment_id).first()
+    if not eq:
+        raise HTTPException(status_code=404, detail="Equipment not found")
+    get_company_membership(db, current_user, eq.company_id)
     return db.query(MaintenanceSchedule).filter(
         MaintenanceSchedule.equipment_id == equipment_id
     ).order_by(MaintenanceSchedule.scheduled_date.desc()).all()

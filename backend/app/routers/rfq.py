@@ -221,10 +221,11 @@ def submit_quote(rfq_id: UUID, req: RFQQuoteCreate, db: Session = Depends(get_db
 
 
 @router.get("/rfq/{rfq_id}/comparison", response_model=List[ComparisonRow])
-def get_comparison(rfq_id: UUID, db: Session = Depends(get_db)):
+def get_comparison(rfq_id: UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     rfq = db.query(RFQ).filter(RFQ.id == rfq_id).first()
     if not rfq:
         raise HTTPException(status_code=404, detail="RFQ not found")
+    get_company_membership(db, current_user, rfq.company_id)
 
     items = db.query(RFQItem).filter(RFQItem.rfq_id == rfq_id).all()
     result = []

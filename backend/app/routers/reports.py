@@ -197,10 +197,15 @@ def approve_report(report_id: uuid.UUID, db: Session = Depends(get_db)):
 
 
 @router.get("/{report_id}/download")
-def download_report(report_id: uuid.UUID, db: Session = Depends(get_db)):
+def download_report(report_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     report = db.query(ClientReport).filter(ClientReport.id == report_id).first()
     if not report:
         raise HTTPException(status_code=404, detail="Report not found")
+    project = db.query(Project).filter(Project.id == report.project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    # Tenant check: the report's project belongs to a company the caller is a member of.
+    get_company_membership(db, current_user, project.company_id)
 
     pdf_filename = f"{report.id}.pdf"
     pdf_path = os.path.join("static", "reports", pdf_filename)

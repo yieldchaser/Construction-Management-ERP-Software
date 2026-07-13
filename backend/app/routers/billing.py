@@ -386,10 +386,12 @@ def get_bills(project_id: UUID, invoice_type: Optional[str] = None, db: Session 
     return res
 
 @router.get("/bills/{bill_id}/zatca")
-def get_bill_zatca(bill_id: UUID, db: Session = Depends(get_db)):
+def get_bill_zatca(bill_id: UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     bill = db.query(Bill).filter(Bill.id == bill_id).first()
     if not bill:
         raise HTTPException(status_code=404, detail="Bill not found")
+    # Tenant check: the bill belongs to a company the caller is a member of.
+    get_company_membership(db, current_user, bill.company_id)
     if bill.invoice_type != "sale":
         raise HTTPException(status_code=400, detail="ZATCA e-invoicing applies to sale (simplified tax) invoices")
     company = db.query(Company).filter(Company.id == bill.company_id).first()

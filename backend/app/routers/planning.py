@@ -334,7 +334,14 @@ class CommentResponse(BaseModel):
 
 
 @router.get("/tasks/{task_id}/todos", response_model=List[TodoResponse])
-def get_task_todos(task_id: UUID, db: Session = Depends(get_db)):
+def get_task_todos(task_id: UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    task = db.query(Task).filter(Task.id == task_id).first()
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    project = db.query(Project).filter(Project.id == task.project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, project.company_id)
     return db.query(TaskTodo).filter(TaskTodo.task_id == task_id).order_by(TaskTodo.created_at.asc()).all()
 
 
@@ -396,7 +403,14 @@ def delete_task_todo(todo_id: UUID, db: Session = Depends(get_db), current_user:
 
 
 @router.get("/tasks/{task_id}/comments", response_model=List[CommentResponse])
-def get_task_comments(task_id: UUID, db: Session = Depends(get_db)):
+def get_task_comments(task_id: UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    task = db.query(Task).filter(Task.id == task_id).first()
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    project = db.query(Project).filter(Project.id == task.project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, project.company_id)
     return db.query(TaskComment).filter(TaskComment.task_id == task_id).order_by(TaskComment.created_at.asc()).all()
 
 

@@ -10,7 +10,7 @@ from app.models import (
     PurchaseOrder, PurchaseOrderItem,
     GoodsReceiptNote, GRNItem,
     WarehouseInventory, MaterialTransaction,
-    Project, User, ApprovalRule
+    Project, User, ApprovalRule, CompanyTeam
 )
 from app.approvals import find_matching_rule, match_approver, levels_approved, user_already_acted, record_action
 from app.workflow_controls import enforce_stock_availability, get_company, get_default_terms

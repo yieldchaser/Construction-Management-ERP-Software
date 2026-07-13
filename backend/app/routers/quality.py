@@ -24,10 +24,10 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
 from app.database import get_db
-from app.auth import get_current_user, verify_company_access, verify_project_access
+from app.auth import get_current_user, verify_company_access, verify_project_access, get_company_membership
 from app.models import (
     QualityChecklist, ChecklistItem, SiteInspection,
-    InspectionResponse, NCR, MaterialTestResult
+    InspectionResponse, NCR, MaterialTestResult, User
 )
 
 router = APIRouter(prefix="/quality", tags=["Quality Control & Inspections"], dependencies=[Depends(get_current_user)])
@@ -208,7 +208,11 @@ def add_checklist_item(cl_id: uuid.UUID, payload: ChecklistItemCreate, db: Sessi
 
 
 @router.get("/checklists/{cl_id}/items", response_model=List[ChecklistItemResponse])
-def get_checklist_items(cl_id: uuid.UUID, db: Session = Depends(get_db)):
+def get_checklist_items(cl_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    cl = db.query(QualityChecklist).filter(QualityChecklist.id == cl_id).first()
+    if not cl:
+        raise HTTPException(status_code=404, detail="Checklist not found")
+    get_company_membership(db, current_user, cl.company_id)
     return db.query(ChecklistItem).filter(
         ChecklistItem.checklist_id == cl_id
     ).order_by(ChecklistItem.sequence).all()

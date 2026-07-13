@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from app.database import get_db
-from app.auth import get_current_user, verify_project_access
+from app.auth import get_current_user, verify_project_access, get_company_membership
 from app.models import (
     WorkOrder, WorkOrderAmendment, SubcontractorPerformance,
     WorkOrderItem, Bill, TransactionDeduction, CompanyTeam, User
@@ -76,7 +76,11 @@ class ComparativeItem(BaseModel):
 # --- Work Order Amendments ---
 
 @router.get("/work-orders/{wo_id}/amendments", response_model=List[AmendmentResponse])
-def get_amendments(wo_id: UUID, db: Session = Depends(get_db)):
+def get_amendments(wo_id: UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    wo = db.query(WorkOrder).filter(WorkOrder.id == wo_id).first()
+    if not wo:
+        raise HTTPException(status_code=404, detail="Work order not found")
+    get_company_membership(db, current_user, wo.company_id)
     amendments = db.query(WorkOrderAmendment).filter(
         WorkOrderAmendment.wo_id == wo_id
     ).order_by(WorkOrderAmendment.amendment_number.desc()).all()

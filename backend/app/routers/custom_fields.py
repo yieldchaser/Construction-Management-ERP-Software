@@ -6,8 +6,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from app.database import get_db
-from app.auth import get_current_user, verify_company_access
-from app.models import CustomField, CustomFieldValue
+from app.auth import get_current_user, verify_company_access, get_company_membership
+from app.models import CustomField, CustomFieldValue, User
 
 router = APIRouter(prefix="/custom-fields", tags=["Custom Fields"], dependencies=[Depends(get_current_user)])
 
@@ -232,8 +232,11 @@ def set_value(payload: CustomFieldValueCreate, db: Session = Depends(get_db)):
 
 
 @router.get("/values/{entity_type}/{entity_id}", response_model=List[CustomFieldValueResponse])
-def get_values(entity_type: str, entity_id: uuid.UUID, db: Session = Depends(get_db)):
-    return db.query(CustomFieldValue).filter(
+def get_values(entity_type: str, entity_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    values = db.query(CustomFieldValue).filter(
         CustomFieldValue.entity_type == entity_type,
         CustomFieldValue.entity_id == entity_id
     ).all()
+    if values:
+        get_company_membership(db, current_user, values[0].company_id)
+    return values

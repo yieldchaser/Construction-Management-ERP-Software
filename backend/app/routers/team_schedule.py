@@ -143,12 +143,13 @@ def create_timesheet(payload: TimesheetCreate, db: Session = Depends(get_db), cu
 
 
 @router.get("/timesheets/{timesheet_id}", response_model=TimesheetResponse)
-def get_timesheet(timesheet_id: UUID, db: Session = Depends(get_db)):
+def get_timesheet(timesheet_id: UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     row = db.query(models.TeamScheduleTimesheet).filter(
         models.TeamScheduleTimesheet.id == timesheet_id
     ).first()
     if not row:
         raise HTTPException(status_code=404, detail="Timesheet not found")
+    get_company_membership(db, current_user, row.company_id)
     return _serialize(row, db)
 
 

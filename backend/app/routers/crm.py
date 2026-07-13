@@ -270,11 +270,12 @@ def update_lead(lead_id: uuid.UUID, req: LeadUpdateRequest, db: Session = Depend
 
 
 @router.get("/leads/{lead_id}", response_model=LeadResponse)
-def get_lead(lead_id: uuid.UUID, db: Session = Depends(get_db)):
+def get_lead(lead_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     lead_uuid = uuid.UUID(str(lead_id))
     lead = db.query(CRMLead).filter(CRMLead.id == lead_uuid).first()
     if not lead:
         raise HTTPException(status_code=404, detail="Lead not found")
+    get_company_membership(db, current_user, lead.company_id)
     return lead
 
 
@@ -578,8 +579,12 @@ def create_quotation(lead_id: uuid.UUID, req: QuotationCreateRequest, db: Sessio
     return res
 
 @router.get("/leads/{lead_id}/quotations", response_model=List[QuotationResponse])
-def get_quotations(lead_id: uuid.UUID, db: Session = Depends(get_db)):
+def get_quotations(lead_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     lead_uuid = uuid.UUID(str(lead_id))
+    lead = db.query(CRMLead).filter(CRMLead.id == lead_uuid).first()
+    if not lead:
+        raise HTTPException(status_code=404, detail="Lead not found")
+    get_company_membership(db, current_user, lead.company_id)
     quots = db.query(CRMQuotation).filter(CRMQuotation.lead_id == lead_uuid).all()
     
     results = []

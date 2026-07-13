@@ -683,7 +683,11 @@ def run_payroll(payload: PayrollRunCreate, db: Session = Depends(get_db), curren
 
 
 @router.get("/payroll/{run_id}/payslips")
-def get_payslips(run_id: uuid.UUID, db: Session = Depends(get_db)):
+def get_payslips(run_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    run = db.query(PayrollRun).filter(PayrollRun.id == run_id).first()
+    if not run:
+        raise HTTPException(status_code=404, detail="Payroll run not found")
+    get_company_membership(db, current_user, run.company_id)
     lines = db.query(PayrollLineItem).filter(PayrollLineItem.payroll_run_id == run_id).all()
     result = []
     for line in lines:
@@ -1071,10 +1075,11 @@ def _to_decimal(val):
 
 
 @router.get("/payroll-profiles/{employee_id}", response_model=PayrollProfileResponse)
-def get_payroll_profile(employee_id: uuid.UUID, db: Session = Depends(get_db)):
+def get_payroll_profile(employee_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     prof = db.query(PayrollProfile).filter(PayrollProfile.employee_id == employee_id).first()
     if not prof:
         raise HTTPException(status_code=404, detail="Payroll profile not found")
+    get_company_membership(db, current_user, prof.company_id)
     return prof
 
 

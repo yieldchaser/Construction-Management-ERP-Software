@@ -138,7 +138,11 @@ def send_message(payload: ChatMessageCreate, db: Session = Depends(get_db), curr
 
 
 @router.get("/messages/{group_id}", response_model=List[ChatMessageResponse])
-def list_messages(group_id: uuid.UUID, db: Session = Depends(get_db)):
+def list_messages(group_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    group = db.query(ChatGroup).filter(ChatGroup.id == group_id).first()
+    if not group:
+        raise HTTPException(status_code=404, detail="Chat group not found")
+    get_company_membership(db, current_user, group.company_id)
     messages = db.query(ChatMessage).filter(
         ChatMessage.group_id == group_id
     ).order_by(ChatMessage.created_at.asc()).all()
@@ -146,7 +150,11 @@ def list_messages(group_id: uuid.UUID, db: Session = Depends(get_db)):
 
 
 @router.get("/groups/{group_id}/members", response_model=List[ChatGroupMemberResponse])
-def list_members(group_id: uuid.UUID, db: Session = Depends(get_db)):
+def list_members(group_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    group = db.query(ChatGroup).filter(ChatGroup.id == group_id).first()
+    if not group:
+        raise HTTPException(status_code=404, detail="Chat group not found")
+    get_company_membership(db, current_user, group.company_id)
     return db.query(ChatGroupMember).filter(ChatGroupMember.group_id == group_id).all()
 
 
