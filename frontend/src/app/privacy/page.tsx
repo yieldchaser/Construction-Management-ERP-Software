@@ -116,9 +116,9 @@ export default function PrivacyPage() {
       <footer className="border-t border-border-custom px-6 py-8 text-muted">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-xs">
-            SiteFlow is a site operations platform. All product logos are property of their respective owners.
+            SiteFlow is a site operations platform. All logos are property of their owners.
           </p>
-          <div className="flex items-center flex-wrap gap-x-6 gap-y-2 text-xs">
+          <div className="flex items-center flex-wrap gap-x-4 gap-y-1 text-xs">
             <Link href="/blog" className="hover:text-muted transition-all whitespace-nowrap">Blog</Link>
             <Link href="/help" className="hover:text-muted transition-all whitespace-nowrap">Help Center</Link>
             <Link href="/terms" className="hover:text-muted transition-all whitespace-nowrap">Terms</Link>
