@@ -77,8 +77,9 @@ class PLItemResponse(BaseModel):
 # --- Endpoints ---
 
 @router.post("/payments", response_model=PaymentResponse, status_code=status.HTTP_201_CREATED)
-def create_payment(req: PaymentCreateRequest, db: Session = Depends(get_db)):
+def create_payment(req: PaymentCreateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     comp_uuid = uuid.UUID(str(req.company_id))
+    get_company_membership(db, current_user, comp_uuid)
     proj_uuid = uuid.UUID(str(req.project_id)) if req.project_id else None
     party_uuid = uuid.UUID(str(req.party_company_user_id)) if req.party_company_user_id else None
 
@@ -408,15 +409,17 @@ def get_project_pl(project_id: uuid.UUID, db: Session = Depends(get_db), _: None
 
 
 @router.patch("/approve/{transaction_id}")
-def approve_transaction(transaction_id: uuid.UUID, db: Session = Depends(get_db)):
+def approve_transaction(transaction_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     bill = db.query(Bill).filter(Bill.id == transaction_id).first()
     if bill:
+        get_company_membership(db, current_user, bill.company_id)
         bill.approval_flag = "approved"
         db.commit()
         return {"status": "success", "message": "Bill approved successfully", "type": "bill"}
-    
+
     payment = db.query(Payment).filter(Payment.id == transaction_id).first()
     if payment:
+        get_company_membership(db, current_user, payment.company_id)
         return {"status": "success", "message": "Payment confirmed", "type": "payment"}
         
     raise HTTPException(status_code=404, detail="Transaction not found")
@@ -1064,10 +1067,11 @@ def create_payment_request(company_id: uuid.UUID, data: PaymentRequestCreate, db
 
 
 @router.post("/payment-requests/pay/{request_id}", response_model=PaymentRequestResponse)
-def record_payment_request(request_id: uuid.UUID, data: PaymentRequestPaymentCreate, db: Session = Depends(get_db)):
+def record_payment_request(request_id: uuid.UUID, data: PaymentRequestPaymentCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     req = db.query(PaymentRequest).filter(PaymentRequest.id == request_id).first()
     if not req:
         raise HTTPException(status_code=404, detail="Payment request not found")
+    get_company_membership(db, current_user, req.company_id)
     if req.approval_rule_id and req.approval_status != "Approved":
         raise HTTPException(status_code=400, detail="Payment request is pending approval; it cannot be recorded as paid until all required levels have signed off")
 
@@ -1101,6 +1105,7 @@ def update_payment_request_status(request_id: uuid.UUID, payload: PaymentRequest
     req = db.query(PaymentRequest).filter(PaymentRequest.id == request_id).first()
     if not req:
         raise HTTPException(status_code=404, detail="Payment request not found")
+    get_company_membership(db, current_user, req.company_id)
 
     rule = db.query(ApprovalRule).filter(ApprovalRule.id == req.approval_rule_id).first() if req.approval_rule_id else None
     action_status = payload.status
