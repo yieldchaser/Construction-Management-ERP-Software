@@ -28,7 +28,7 @@ frontend/src/
 │   ├── login/ onboarding/ auth/callback/
 │   └── c/[company_id]/...            # company console
 │       └── p/[project_id]/...        # project console
-├── components/                       # Sidebar, ThemeToggle, PWA, marketing
+├── components/                       # Sidebar, ThemeToggle, PWA, marketing, rbac (Roles/Team editor + permission gating)
 ├── context/                          # CompanySettingsContext, ProjectContext
 ├── lib/                              # api.ts (host resolver), firebase.ts, siteflow.ts, units.ts
 └── content/                          # JSON-driven marketing/help/blog/articles

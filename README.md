@@ -259,6 +259,7 @@ Copy `.env.example` to `.env` for the backend. Frontend variables are build-time
 | `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` | Optional | File blobs move to Supabase Storage; otherwise stored in the DB `data` column. |
 | `SENTRY_DSN` | Optional | Backend error reporting; cleanly skipped when empty. |
 | `GOOGLE_SHEETS_CLIENT_ID` / `GOOGLE_SHEETS_CLIENT_SECRET` | Optional | Google Sheets integration OAuth. |
+| `TOKEN_ENCRYPTION_KEY` | Optional | Fernet (base64) key that encrypts Google Sheets OAuth tokens at rest in `GoogleSheetsConnection`; connections created while it is unset store plaintext tokens. |
 | `BACKEND_PUBLIC_URL` / `FRONTEND_PUBLIC_URL` | Optional | OAuth redirect bases; fall back to request/frontend origins. |
 | `ADMIN_MIGRATION_SECRET` | Optional | One-off admin migrations (for example file backfill); routes reject with 403 when empty. |
 
@@ -288,12 +289,15 @@ Hardened (verified in code):
 - Passwords are bcrypt-hashed (passlib). Google OAuth uses a one-time signed handoff code; the session JWT is never placed in a redirect URL.
 - CORS is scoped (explicit origins plus a Vercel preview regex) in `main.py`.
 - Rate limiting is applied per-endpoint via slowapi on sensitive routes (auth/OTP).
-- IDOR protections were added in the security-hardening pass (company-membership checks on tenant-scoped routes).
+- Multi-tenant isolation is enforced on every write endpoint and on tenant-scoped read endpoints via company/project membership guards (`get_company_membership` / `verify_company_access` / `verify_project_access`). Cross-tenant rejection is covered by regression tests in `backend/tests/coverage/test_router_tenant_isolation.py` and `test_finance_tenant_isolation.py`.
+- Role-based access control (RBAC): a flat `module:action` permission taxonomy lives in `backend/app/permissions.py`; per-role grants are stored on `CompanyRole.permissions` and enforced with `require_permission(...)` on high-risk actions (`approve`, `payroll:run`, `settings:manage`, `team:manage`, `data:delete`) and on everyday create/update (`<module>:edit`) writes, plus `:view` gating on sensitive financial/payroll reads. Failsafes: `partner` members always pass, and members with no un-migrated role (empty permissions) fail open. A secret-gated backfill (`POST /apis/v3/admin/migrations/backfill-rbac`) seeds the default roles and assigns un-roled members.
+- A settings Roles/Team editor in the console (`frontend/src/components/rbac/*`, `PermissionsContext`) lets admins configure role permissions and assign members.
+- Pydantic request models validate value ranges at the API boundary (non-negative amounts/quantities, 0–100 percentages).
 
 Known debt / deferred (be honest, not hidden):
 
-- Google Sheets OAuth tokens (including the refresh token) are persisted as-is on `GoogleSheetsConnection`. Encryption at rest is a tracked follow-up (`backend/app/routers/google_sheets.py`).
-- Security headers (HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy) and a Content-Security-Policy are set in the frontend itself, in `frontend/next.config.ts`'s `headers()` function, not at the hosting edge. The CSP is currently shipped as `Content-Security-Policy-Report-Only` (observes violations without blocking) as a deliberate first step; it has not yet been promoted to the enforcing `Content-Security-Policy` header. This is a real, tracked next step, not an oversight.
+- Google Sheets OAuth tokens (access + refresh) are encrypted at rest with Fernet (`backend/app/crypto.py`) using `TOKEN_ENCRYPTION_KEY` before being written to `GoogleSheetsConnection`; legacy connection rows created before the key was configured remain plaintext.
+- Security headers (HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy) and the Content-Security-Policy are set in the frontend itself, in `frontend/next.config.ts`'s `headers()` function (not at the hosting edge); the CSP is enforced via the `Content-Security-Policy` header (not Report-Only).
 - Multi-language attendance (English, Hinglish, Hindi, Tamil) is real and implemented client-side: translation objects for all four languages exist in `frontend/src/app/c/[company_id]/d/attendance/page.tsx` and the equivalent project-level attendance page.
 
 ## 📐 Conventions

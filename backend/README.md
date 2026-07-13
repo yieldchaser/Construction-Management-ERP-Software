@@ -44,6 +44,10 @@ auth, calculators, budgeting, planning, drawings, procurement, billing, hr, qual
 
 See `README.md` (repo root) for the full feature mapping and the environment-variable reference.
 
+## Security
+
+All write endpoints and tenant-scoped read endpoints enforce company/project membership (`get_company_membership` / `verify_company_access` / `verify_project_access`). Role-based access control is enforced with `require_permission(...)` in `app/auth.py` against the taxonomy in `app/permissions.py`; a secret-gated `POST /apis/v3/admin/migrations/backfill-rbac` seeds the default roles and assigns un-roled members. See the root README's Security posture section for the full model and failsafes.
+
 ## Database and migrations
 
 Local dev builds the schema from models via `Base.metadata.create_all`. Production uses hand-authored, additive SQL in `../supabase/migrations/` (no Alembic). Apply those to Supabase; keep migrations additive and backward-compatible.
@@ -51,3 +55,5 @@ Local dev builds the schema from models via `Base.metadata.create_all`. Producti
 ## Tests
 
 `backend/tests/` contains per-phase integration tests that spin up a fresh SQLite database. Run an example with `python tests/test_phase2.py` (BOQ + Gantt), or `test_phase7.py` (procurement), `test_phase8.py` (billing), and so on.
+
+`backend/tests/coverage/` holds the security regression suite: `test_router_tenant_isolation.py` and `test_finance_tenant_isolation.py` (cross-tenant rejection on write and read endpoints), `test_rbac_phase1.py` / `test_rbac_phase2b.py` (permission taxonomy, enforcement, and failsafes), `test_auth_security.py`, and `test_delete_audit.py`. Run them with `python -m pytest tests/coverage/ -q`.
