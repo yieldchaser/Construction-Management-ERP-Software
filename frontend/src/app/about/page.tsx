@@ -180,11 +180,9 @@ export default function AboutPage() {
           <div className="flex items-center flex-wrap gap-x-6 gap-y-2 text-xs">
             <Link href="/blog" className="hover:text-muted transition-all whitespace-nowrap">Blog</Link>
             <Link href="/help" className="hover:text-muted transition-all whitespace-nowrap">Help Center</Link>
-            <Link href="/resources/construction-terms-meanings" className="hover:text-muted transition-all whitespace-nowrap">Glossary</Link>
-            <Link href="/resources/construction-calculators" className="hover:text-muted transition-all whitespace-nowrap">Calculators</Link>
-            <Link href="/who-we-serve" className="hover:text-muted transition-all whitespace-nowrap">Who We Serve</Link>
             <Link href="/terms" className="hover:text-muted transition-all whitespace-nowrap">Terms</Link>
             <Link href="/privacy" className="hover:text-muted transition-all whitespace-nowrap">Privacy</Link>
+            <Link href="/who-we-serve" className="hover:text-muted transition-all whitespace-nowrap">Who We Serve</Link>
           </div>
         </div>
       </footer>
