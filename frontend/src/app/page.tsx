@@ -388,7 +388,7 @@ export default function LandingPage() {
       </section>
 
       {/* Final CTA */}
-      <section className="max-w-6xl mx-auto px-6 py-16">
+      <section className="max-w-5xl mx-auto px-6 py-16">
         <div className="rounded-md bg-gradient-to-r from-primary/20 to-secondary/20 border border-border-custom p-12 text-center space-y-6 relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-full bg-radial opacity-10 pointer-events-none" />
           <h2 className="text-3xl font-extrabold text-white">See your site in one workspace</h2>
@@ -415,7 +415,7 @@ export default function LandingPage() {
 
       {/* Footer */}
       <footer className="border-t border-border-custom">
-        <div className="max-w-6xl mx-auto px-6 py-14">
+        <div className="max-w-5xl mx-auto px-6 py-14">
           <div className="grid grid-cols-2 gap-10 sm:grid-cols-3 lg:grid-cols-6">
             {/* Brand + tagline */}
             <div className="col-span-2 space-y-4">
@@ -438,8 +438,8 @@ export default function LandingPage() {
               <ul className="space-y-2 text-sm">
                 <li><Link href="/SiteFlow-pricing" className="text-muted hover:text-foreground transition-all">Pricing</Link></li>
                 <li><Link href="/products" className="text-muted hover:text-foreground transition-all">Products</Link></li>
-                <li><Link href="/who-we-serve" className="text-muted hover:text-foreground transition-all">Who We Serve</Link></li>
                 <li><Link href="/integrations" className="text-muted hover:text-foreground transition-all">Integrations</Link></li>
+                <li><Link href="/who-we-serve" className="text-muted hover:text-foreground transition-all">Who We Serve</Link></li>
               </ul>
             </div>
 
@@ -449,8 +449,8 @@ export default function LandingPage() {
               <ul className="space-y-2 text-sm">
                 <li><Link href="/blog" className="text-muted hover:text-foreground transition-all">Blog</Link></li>
                 <li><Link href="/resources/construction-terms-meanings" className="text-muted hover:text-foreground transition-all">Glossary</Link></li>
-                <li><Link href="/help" className="text-muted hover:text-foreground transition-all">Help Center</Link></li>
                 <li><Link href="/resources/construction-calculators" className="text-muted hover:text-foreground transition-all">Calculators</Link></li>
+                <li><Link href="/help" className="text-muted hover:text-foreground transition-all">Help Center</Link></li>
               </ul>
             </div>
 
