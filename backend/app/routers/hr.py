@@ -66,14 +66,14 @@ class EmployeeCreate(BaseModel):
     designation: Optional[str] = None
     department: Optional[str] = None
     mobile: Optional[str] = None
-    basic_salary: float = 0.0
-    hra: float = 0.0
-    other_allowances: float = 0.0
-    pf_employee_pct: float = 12.0
-    pf_employer_pct: float = 12.0
-    esi_employee_pct: float = 0.75
-    esi_employer_pct: float = 3.25
-    tds_monthly: float = 0.0
+    basic_salary: float = Field(0.0, ge=0)
+    hra: float = Field(0.0, ge=0)
+    other_allowances: float = Field(0.0, ge=0)
+    pf_employee_pct: float = Field(12.0, ge=0, le=100)
+    pf_employer_pct: float = Field(12.0, ge=0, le=100)
+    esi_employee_pct: float = Field(0.75, ge=0, le=100)
+    esi_employer_pct: float = Field(3.25, ge=0, le=100)
+    tds_monthly: float = Field(0.0, ge=0)
     is_esi_applicable: bool = True
     date_of_joining: Optional[datetime] = None
 
@@ -722,7 +722,7 @@ class LeaveRequestCreate(BaseModel):
     leave_type: str
     start_date: datetime
     end_date: datetime
-    days_count: float
+    days_count: float = Field(..., ge=0)
 
 class LeaveRequestResponse(BaseModel):
     id: uuid.UUID
@@ -902,10 +902,10 @@ class EmployeeUpdate(BaseModel):
     designation: Optional[str] = None
     department: Optional[str] = None
     mobile: Optional[str] = None
-    basic_salary: Optional[float] = None
-    hra: Optional[float] = None
-    other_allowances: Optional[float] = None
-    tds_monthly: Optional[float] = None
+    basic_salary: Optional[float] = Field(None, ge=0)
+    hra: Optional[float] = Field(None, ge=0)
+    other_allowances: Optional[float] = Field(None, ge=0)
+    tds_monthly: Optional[float] = Field(None, ge=0)
     status: Optional[str] = None
     date_of_joining: Optional[datetime] = None
 
@@ -965,7 +965,7 @@ def create_designation(company_id: uuid.UUID, payload: DesignationCreate, db: Se
 
 class LeaveTypeQuota(BaseModel):
     type: str
-    days: float
+    days: float = Field(..., ge=0)
 
 
 class LeaveTemplateResponse(BaseModel):
@@ -984,17 +984,17 @@ class LeaveTemplateResponse(BaseModel):
 
 class LeaveTemplateCreate(BaseModel):
     name: str
-    casual_leave_days: float = 0.0
-    sick_leave_days: float = 0.0
-    earned_leave_days: float = 0.0
+    casual_leave_days: float = Field(0.0, ge=0)
+    sick_leave_days: float = Field(0.0, ge=0)
+    earned_leave_days: float = Field(0.0, ge=0)
     leave_types: List[LeaveTypeQuota] = []
 
 
 class LeaveTemplateUpdate(BaseModel):
     name: Optional[str] = None
-    casual_leave_days: Optional[float] = None
-    sick_leave_days: Optional[float] = None
-    earned_leave_days: Optional[float] = None
+    casual_leave_days: Optional[float] = Field(None, ge=0)
+    sick_leave_days: Optional[float] = Field(None, ge=0)
+    earned_leave_days: Optional[float] = Field(None, ge=0)
     leave_types: Optional[List[LeaveTypeQuota]] = None
 
 
@@ -1060,11 +1060,11 @@ class PayrollProfileResponse(BaseModel):
 
 
 class PayrollProfileUpdate(BaseModel):
-    salary_amount: Optional[float] = None
+    salary_amount: Optional[float] = Field(None, ge=0)
     shift_start: Optional[str] = None
     shift_end: Optional[str] = None
-    shift_hours: Optional[float] = None
-    overtime_rate: Optional[float] = None
+    shift_hours: Optional[float] = Field(None, ge=0, le=24)
+    overtime_rate: Optional[float] = Field(None, ge=0)
     cost_code: Optional[str] = None
     leave_template_id: Optional[uuid.UUID] = None
     salary_breakup: Optional[str] = None

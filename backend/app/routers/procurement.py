@@ -27,7 +27,7 @@ router = APIRouter(
 # Pydantic Schemas
 class IndentItemSchema(BaseModel):
     material_name: str
-    quantity: float
+    quantity: float = Field(..., ge=0)
     unit: str
 
 class IndentCreateRequest(BaseModel):
@@ -52,10 +52,10 @@ class IndentResponse(BaseModel):
 
 class POCreateItemSchema(BaseModel):
     material_name: str
-    quantity: float
+    quantity: float = Field(..., ge=0)
     unit: str
-    rate: float
-    tax_pct: float = 18.00
+    rate: float = Field(..., ge=0)
+    tax_pct: float = Field(18.00, ge=0, le=100)
 
 class POCreateRequest(BaseModel):
     company_id: UUID
@@ -99,7 +99,7 @@ class POResponse(BaseModel):
 
 class GRNCreateItemSchema(BaseModel):
     po_item_id: UUID
-    received_qty: float
+    received_qty: float = Field(..., ge=0)
 
 class GRNCreateRequest(BaseModel):
     company_id: UUID

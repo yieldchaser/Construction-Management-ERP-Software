@@ -38,7 +38,7 @@ class TowerCreateRequest(BaseModel):
     status: str = "Ongoing"
     start_date: Optional[datetime] = None
     end_date: Optional[datetime] = None
-    budget: float = 0.0
+    budget: float = Field(0.0, ge=0)
 
 
 class TowerUpdateRequest(BaseModel):
@@ -47,7 +47,7 @@ class TowerUpdateRequest(BaseModel):
     status: Optional[str] = None
     start_date: Optional[datetime] = None
     end_date: Optional[datetime] = None
-    budget: Optional[float] = None
+    budget: Optional[float] = Field(None, ge=0)
 
 
 class ConsolidatedPNLItem(BaseModel):

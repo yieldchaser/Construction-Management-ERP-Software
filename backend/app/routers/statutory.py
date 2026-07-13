@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from app.database import get_db
 from app.auth import get_current_user, verify_company_access
 from app.models import StatutoryReport, StaffEmployee, PayrollRun, PayrollLineItem
@@ -17,14 +17,14 @@ class StatutoryReportCreate(BaseModel):
     project_id: Optional[uuid.UUID] = None
     report_type: str
     return_period: str
-    total_employees: int = 0
-    total_wages: float = 0.0
-    pf_employee_contribution: float = 0.0
-    pf_employer_contribution: float = 0.0
-    esi_employee_contribution: float = 0.0
-    esi_employer_contribution: float = 0.0
-    bocw_cess: float = 0.0
-    tds_deducted: float = 0.0
+    total_employees: int = Field(0, ge=0)
+    total_wages: float = Field(0.0, ge=0)
+    pf_employee_contribution: float = Field(0.0, ge=0)
+    pf_employer_contribution: float = Field(0.0, ge=0)
+    esi_employee_contribution: float = Field(0.0, ge=0)
+    esi_employer_contribution: float = Field(0.0, ge=0)
+    bocw_cess: float = Field(0.0, ge=0)
+    tds_deducted: float = Field(0.0, ge=0)
     filed_by: Optional[str] = None
     acknowledgment_number: Optional[str] = None
     status: str = "draft"

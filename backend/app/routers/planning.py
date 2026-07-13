@@ -11,7 +11,7 @@ from app.workflow_controls import (
     enforce_entry_editing_window,
     enforce_progress_over_estimate,
 )
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 router = APIRouter(
     prefix="/planning",
@@ -51,7 +51,7 @@ class TaskCreateRequest(BaseModel):
     priority: str = "medium"
     assigned_to: Optional[UUID] = None
     boq_item_id: Optional[UUID] = None
-    progress: float = 0.0
+    progress: float = Field(0.0, ge=0, le=100)
 
 class TaskUpdateRequest(BaseModel):
     name: Optional[str] = None
@@ -60,7 +60,7 @@ class TaskUpdateRequest(BaseModel):
     status: Optional[str] = None
     priority: Optional[str] = None
     assigned_to: Optional[UUID] = None
-    progress: Optional[float] = None
+    progress: Optional[float] = Field(None, ge=0, le=100)
 
 class PredecessorCreateRequest(BaseModel):
     predecessor_id: UUID

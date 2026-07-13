@@ -25,7 +25,7 @@ class EquipmentCreate(BaseModel):
     code: str
     category: str
     ownership_type: str = Field(..., pattern="^(Owned|Hired)$")
-    hourly_rate: float = 0.0
+    hourly_rate: float = Field(0.0, ge=0)
 
 
 class EquipmentResponse(BaseModel):
@@ -64,9 +64,9 @@ class DeploymentResponse(BaseModel):
 class FuelLogCreate(BaseModel):
     project_id: uuid.UUID
     logged_date: datetime
-    liters: float
-    cost_per_liter: float
-    odometer_hours: Optional[float] = None
+    liters: float = Field(..., gt=0)
+    cost_per_liter: float = Field(..., ge=0)
+    odometer_hours: Optional[float] = Field(None, ge=0)
     remarks: Optional[str] = None
 
 
@@ -88,7 +88,7 @@ class FuelLogResponse(BaseModel):
 class MaintenanceCreate(BaseModel):
     service_type: str
     scheduled_date: datetime
-    cost: Optional[float] = 0.0
+    cost: Optional[float] = Field(0.0, ge=0)
     status: str = Field("scheduled", pattern="^(scheduled|completed|overdue)$")
     remarks: Optional[str] = None
 

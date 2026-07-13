@@ -10,7 +10,7 @@ from app.models import (
     WorkOrder, CompanyTeam, SubcontractorPerformance,
     BOCWRecord, MusterRoll, Bill, User
 )
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 import csv
 import io
 
@@ -92,10 +92,10 @@ class MusterRollCreate(BaseModel):
     contractor_id: Optional[UUID] = None
     date: datetime
     labor_role: str
-    workers_present: int
-    workers_absent: int
-    hours_worked: float
-    overtime_hours: float = 0.0
+    workers_present: int = Field(..., ge=0)
+    workers_absent: int = Field(..., ge=0)
+    hours_worked: float = Field(..., ge=0)
+    overtime_hours: float = Field(0.0, ge=0)
     notes: Optional[str] = None
 
 

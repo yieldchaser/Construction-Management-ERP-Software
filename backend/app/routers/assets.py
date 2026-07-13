@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from app.database import get_db
 from app.auth import get_current_user, verify_company_access
 from app.models import AssetDepreciationSchedule, AssetDepreciationEntry, Equipment
@@ -16,9 +16,9 @@ class DepreciationScheduleCreate(BaseModel):
     company_id: uuid.UUID
     asset_id: uuid.UUID
     method: str = "straight_line"
-    useful_life_years: int
-    salvage_value: float = 0.0
-    depreciation_pct: float = 10.0
+    useful_life_years: int = Field(..., gt=0)
+    salvage_value: float = Field(0.0, ge=0)
+    depreciation_pct: float = Field(10.0, ge=0, le=100)
     start_date: datetime
 
 
@@ -44,9 +44,9 @@ class DepreciationEntryCreate(BaseModel):
     asset_id: uuid.UUID
     project_id: Optional[uuid.UUID] = None
     entry_date: datetime
-    depreciation_amount: float
-    accumulated_depreciation: float
-    book_value: float
+    depreciation_amount: float = Field(..., ge=0)
+    accumulated_depreciation: float = Field(..., ge=0)
+    book_value: float = Field(..., ge=0)
     notes: Optional[str] = None
 
 

@@ -37,10 +37,10 @@ class BOQItemResponse(BaseModel):
 
 class BudgetAllocationRequest(BaseModel):
     project_id: UUID
-    material_budget: float = 0.0
-    labour_budget: float = 0.0
-    subcon_budget: float = 0.0
-    equipment_budget: float = 0.0
+    material_budget: float = Field(0.0, ge=0)
+    labour_budget: float = Field(0.0, ge=0)
+    subcon_budget: float = Field(0.0, ge=0)
+    equipment_budget: float = Field(0.0, ge=0)
 
 class BudgetResponse(BaseModel):
     id: UUID
@@ -242,16 +242,16 @@ class BOQDocumentCreate(BaseModel):
     project_id: UUID
     title: str
     client_party_id: Optional[UUID] = None
-    milestone_done: int = 0
-    milestone_total: int = 0
+    milestone_done: int = Field(0, ge=0)
+    milestone_total: int = Field(0, ge=0)
     terms: Optional[str] = None  # Terms & Conditions; defaults to company BOQ Terms on create
 
 
 class BOQDocumentPatch(BaseModel):
     title: Optional[str] = None
     client_party_id: Optional[UUID] = None
-    milestone_done: Optional[int] = None
-    milestone_total: Optional[int] = None
+    milestone_done: Optional[int] = Field(None, ge=0)
+    milestone_total: Optional[int] = Field(None, ge=0)
     terms: Optional[str] = None
 
 

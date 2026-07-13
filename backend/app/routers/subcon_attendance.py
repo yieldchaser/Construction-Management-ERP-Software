@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from app.database import get_db
 from app.auth import get_current_user, verify_project_access, get_company_membership
 from app.models import SubcontractorAttendance, Project, User
@@ -15,11 +15,11 @@ class SubconAttendanceCreate(BaseModel):
     subcontractor_id: uuid.UUID
     attendance_date: datetime
     labor_role: str
-    worker_count: int
+    worker_count: int = Field(..., ge=0)
     shift_multiplier: float = 1.0
-    overtime_hours: float = 0.0
-    allowance: float = 0.0
-    deduction: float = 0.0
+    overtime_hours: float = Field(0.0, ge=0)
+    allowance: float = Field(0.0, ge=0)
+    deduction: float = Field(0.0, ge=0)
     notes: Optional[str] = None
     photo_url: Optional[str] = None
 

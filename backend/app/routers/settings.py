@@ -3,7 +3,7 @@ from typing import List, Optional
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Response
 from sqlalchemy.orm import Session
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from app.database import get_db
 from app.auth import get_current_user, verify_company_access, get_company_membership
 from app.models import Company, CompanyBranch, ApprovalRule, CompanyFile, CompanyRole, CompanyPayrollSettings, SalaryTemplate, PdfTemplate, CompanyTerms, User
@@ -143,8 +143,8 @@ class BranchResponse(BaseModel):
 
 class ApprovalRuleCreate(BaseModel):
     feature_type: str
-    min_amount: float
-    max_amount: Optional[float] = None
+    min_amount: float = Field(..., ge=0)
+    max_amount: Optional[float] = Field(None, ge=0)
     levels: int
     approvers: str
 

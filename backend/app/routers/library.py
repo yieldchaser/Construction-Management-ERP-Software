@@ -40,12 +40,12 @@ class PartyCreate(BaseModel):
     aadhaar_file: Optional[str] = None
     pan_file: Optional[str] = None
     opening_balance_direction: Optional[str] = None  # will_pay / will_receive
-    opening_balance_amount: Optional[float] = 0.0
+    opening_balance_amount: Optional[float] = Field(0.0, ge=0)
     # Finance tab company-level extensions
     contractor_role: Optional[str] = None
     service_rate_categories: Optional[str] = None  # JSON list of tag strings
     bank_account_id: Optional[uuid.UUID] = None
-    opening_balance: Optional[float] = 0.0
+    opening_balance: Optional[float] = Field(0.0, ge=0)
     opening_balance_type: Optional[str] = None  # "pay" / "receive"
 
 class AssetTypeCreate(BaseModel):
@@ -58,7 +58,7 @@ class CostCodeCreate(BaseModel):
     sub_cost_code: Optional[str] = None
     parent_id: Optional[uuid.UUID] = None
     name: str
-    budget_amount: float = 0.0
+    budget_amount: float = Field(0.0, ge=0)
 
 class DeductionCreate(BaseModel):
     company_id: uuid.UUID
@@ -77,10 +77,10 @@ class MaterialCreate(BaseModel):
     name: str
     unit: str
     alternate_unit: Optional[str] = None
-    gst_rate: float = 0.0
+    gst_rate: float = Field(0.0, ge=0, le=100)
     category: Optional[str] = None
-    unit_cost: float = 0.0
-    lead_time_days: int = 0
+    unit_cost: float = Field(0.0, ge=0)
+    lead_time_days: int = Field(0, ge=0)
     hsn_sac: Optional[str] = None
     item_code: Optional[str] = None
     specifications: Optional[str] = None
@@ -90,12 +90,12 @@ class RateCreate(BaseModel):
     name: str
     item_code: Optional[str] = None
     unit: str
-    gst_rate: float = 0.0
+    gst_rate: float = Field(0.0, ge=0, le=100)
     category: Optional[str] = None
-    unit_cost: float = 0.0
+    unit_cost: float = Field(0.0, ge=0)
     markup_value: float = 0.0
     markup_type: str = "percent"
-    unit_sale_price: float = 0.0
+    unit_sale_price: float = Field(0.0, ge=0)
     note: Optional[str] = None
     cost_code: Optional[str] = None
     hsn_sac: Optional[str] = None

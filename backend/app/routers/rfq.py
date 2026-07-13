@@ -18,7 +18,7 @@ router = APIRouter(
 # --- Schemas ---
 class RFQItemCreate(BaseModel):
     material_name: str
-    quantity: float
+    quantity: float = Field(..., ge=0)
     unit: str
     specifications: Optional[str] = None
 
@@ -63,10 +63,10 @@ class RFQQuoteCreate(BaseModel):
     vendor_id: Optional[UUID] = None
     vendor_name: str
     item_id: UUID
-    quoted_rate: float
-    delivery_days: Optional[int] = None
+    quoted_rate: float = Field(..., ge=0)
+    delivery_days: Optional[int] = Field(None, ge=0)
     terms: Optional[str] = None
-    validity_days: int = 30
+    validity_days: int = Field(30, ge=0)
 
 
 class RFQQuoteResponse(BaseModel):

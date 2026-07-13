@@ -36,7 +36,7 @@ router = APIRouter(prefix="/production", tags=["Production Management"], depende
 
 class RecipeMaterialCreate(BaseModel):
     material_name: str
-    planned_qty: float
+    planned_qty: float = Field(..., ge=0)
     unit: str
     is_optional: bool = False
 
@@ -59,8 +59,8 @@ class RecipeCreate(BaseModel):
     product_name: str
     mix_type: str
     unit: str = "m3"
-    target_output_qty: float = 1.0
-    wastage_pct: float = 5.0
+    target_output_qty: float = Field(1.0, gt=0)
+    wastage_pct: float = Field(5.0, ge=0, le=100)
     notes: Optional[str] = None
     materials: List[RecipeMaterialCreate]
 
@@ -86,7 +86,7 @@ class RecipeResponse(BaseModel):
 
 class BatchMaterialInput(BaseModel):
     material_name: str
-    actual_qty: Optional[float] = None
+    actual_qty: Optional[float] = Field(None, ge=0)
     unit: str
 
 
@@ -108,8 +108,8 @@ class BatchCreate(BaseModel):
     recipe_id: UUID
     batch_number: str
     task_id: Optional[UUID] = None
-    planned_output_qty: Optional[float] = None
-    actual_output_qty: Optional[float] = None
+    planned_output_qty: Optional[float] = Field(None, ge=0)
+    actual_output_qty: Optional[float] = Field(None, ge=0)
     started_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
     status: str = Field("completed", pattern="^(draft|running|completed|cancelled)$")

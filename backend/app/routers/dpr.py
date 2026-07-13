@@ -27,8 +27,8 @@ class DPRCreateRequest(BaseModel):
     reported_by: str
     dpr_date: datetime
     weather: str = "Clear"
-    executed_qty: float
-    workers_deployed: int = 0
+    executed_qty: float = Field(..., ge=0)
+    workers_deployed: int = Field(0, ge=0)
     materials_consumed: List[MaterialConsumptionSchema] = []
     photos: List[str] = []
     notes: Optional[str] = None

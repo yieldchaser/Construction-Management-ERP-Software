@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from decimal import Decimal
 from app.database import get_db
 from app.auth import get_current_user, verify_company_access, get_company_membership
@@ -18,7 +18,7 @@ class ThreeWayMatchCreate(BaseModel):
     po_id: uuid.UUID
     grn_id: uuid.UUID
     invoice_id: Optional[uuid.UUID] = None
-    invoiced_amount: float
+    invoiced_amount: float = Field(..., ge=0)
     variance_reason: Optional[str] = None
     matched_by: Optional[uuid.UUID] = None
     match_status: str = "pending"

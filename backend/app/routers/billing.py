@@ -27,8 +27,8 @@ router = APIRouter(
 class WOItemSchema(BaseModel):
     boq_item_id: Optional[UUID] = None
     task_id: Optional[UUID] = None
-    quantity: float
-    rate: float
+    quantity: float = Field(..., ge=0)
+    rate: float = Field(..., ge=0)
 
 class WOCreateRequest(BaseModel):
     company_id: UUID
@@ -66,8 +66,8 @@ class WOResponse(BaseModel):
 
 class DeductionItemSchema(BaseModel):
     deduction_type: str = Field(..., example="TDS") # TDS, Retention, Security Deposit, Advance Recovery, Material Recovery
-    amount: float
-    percentage: Optional[float] = None
+    amount: float = Field(..., ge=0)
+    percentage: Optional[float] = Field(None, ge=0, le=100)
     notes: Optional[str] = None
 
 class BillCreateRequest(BaseModel):
@@ -78,8 +78,8 @@ class BillCreateRequest(BaseModel):
     invoice_date: datetime
     due_date: Optional[datetime] = None
     invoice_type: str = Field(..., example="subcon") # sale, purchase, subcon
-    subtotal: float
-    gst_pct: float = 18.00
+    subtotal: float = Field(..., ge=0)
+    gst_pct: float = Field(18.00, ge=0, le=100)
     deductions: List[DeductionItemSchema] = []
     pre_tax_deductions: bool = False
     # Transaction sub-entity persistence (Project Tab Transaction build)
@@ -135,9 +135,9 @@ class DebitNoteCreateRequest(BaseModel):
     company_id: UUID
     party_company_user_id: UUID
     notes: Optional[str] = None
-    total_amount: float
-    work_amount: float = 0.0
-    gst_amount: float = 0.0
+    total_amount: float = Field(..., ge=0)
+    work_amount: float = Field(0.0, ge=0)
+    gst_amount: float = Field(0.0, ge=0)
     bill_id: Optional[UUID] = None
     reference_number: Optional[str] = None
 
@@ -163,7 +163,7 @@ class CreditNoteCreateRequest(BaseModel):
     company_id: UUID
     party_company_user_id: UUID
     notes: Optional[str] = None
-    total_amount: float
+    total_amount: float = Field(..., ge=0)
     bill_id: Optional[UUID] = None
     reference_number: Optional[str] = None
 

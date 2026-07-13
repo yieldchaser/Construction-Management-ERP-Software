@@ -10,7 +10,7 @@ from app.models import (
     CRMLeadSource, CRMLeadCategory, CRMLeadStatus, CompanyTeam, User,
 )
 from app.workflow_controls import get_default_terms
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 router = APIRouter(
     prefix="/crm",
@@ -33,7 +33,7 @@ class LeadCreateRequest(BaseModel):
     category: Optional[str] = None
     status: str = "New Lead"
     priority: str = "medium"
-    budget: float = 0.0
+    budget: float = Field(0.0, ge=0)
     lead_name: Optional[str] = None
     description: Optional[str] = None
     last_contacted: Optional[datetime] = None
@@ -53,7 +53,7 @@ class LeadUpdateRequest(BaseModel):
     category: Optional[str] = None
     status: Optional[str] = None
     priority: Optional[str] = None
-    budget: Optional[float] = None
+    budget: Optional[float] = Field(None, ge=0)
     description: Optional[str] = None
     lead_name: Optional[str] = None
     last_contacted: Optional[datetime] = None
@@ -92,14 +92,14 @@ class LeadResponse(BaseModel):
 class QuotationItemCreateRequest(BaseModel):
     section_name: Optional[str] = None
     item_name: str
-    qty: float
+    qty: float = Field(..., ge=0)
     unit: str
-    cost_price: float = 0.0
-    selling_price: float = 0.0
-    supply_rate: float = 0.0
-    installation_rate: float = 0.0
-    supply_tax_pct: float = 18.00
-    installation_tax_pct: float = 12.00
+    cost_price: float = Field(0.0, ge=0)
+    selling_price: float = Field(0.0, ge=0)
+    supply_rate: float = Field(0.0, ge=0)
+    installation_rate: float = Field(0.0, ge=0)
+    supply_tax_pct: float = Field(18.00, ge=0, le=100)
+    installation_tax_pct: float = Field(12.00, ge=0, le=100)
     markup: float = 0.0
     item_code: Optional[str] = None
     hsn_sac: Optional[str] = None
@@ -107,17 +107,17 @@ class QuotationItemCreateRequest(BaseModel):
     length: Optional[float] = None
     width: Optional[float] = None
     height: Optional[float] = None
-    billed_qty: float = 0.0
-    unbilled_qty: float = 0.0
+    billed_qty: float = Field(0.0, ge=0)
+    unbilled_qty: float = Field(0.0, ge=0)
 
 class QuotationCreateRequest(BaseModel):
     subject: str
     tax_type: str = "bill_level"  # item_level, bill_level
-    gst_pct: float = 18.00
-    cgst_pct: Optional[float] = None
-    sgst_pct: Optional[float] = None
-    discount: float = 0.0
-    additional_charges: float = 0.0
+    gst_pct: float = Field(18.00, ge=0, le=100)
+    cgst_pct: Optional[float] = Field(None, ge=0, le=100)
+    sgst_pct: Optional[float] = Field(None, ge=0, le=100)
+    discount: float = Field(0.0, ge=0)
+    additional_charges: float = Field(0.0, ge=0)
     round_off: float = 0.0
     qt_no: Optional[str] = None
     qt_date: Optional[datetime] = None

@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from app.database import get_db
 from app.auth import get_current_user, verify_project_access
 from app.models import MaterialWastage
@@ -17,9 +17,9 @@ class MaterialWastageCreate(BaseModel):
     project_id: uuid.UUID
     material_name: str
     wastage_type: str
-    quantity: float
+    quantity: float = Field(..., ge=0)
     unit: str
-    estimated_value: float = 0.0
+    estimated_value: float = Field(0.0, ge=0)
     reason: Optional[str] = None
     reported_by: Optional[str] = None
     photo_urls: List[str] = []

@@ -8,7 +8,7 @@ from app.database import get_db
 from app.models import Payment, PaymentSettlement, Bill, PayrollRun, PayrollLineItem, StaffEmployee, ProjectBudget, Project, CompanyTeam, User, Equipment, EquipmentDeployment, FuelLog, BankAccount, PaymentRequest, PaymentRequestPayment, CashAccount, LibraryParty, Company, ApprovalRule
 from app.auth import get_current_user, verify_company_access, verify_project_access, get_company_membership
 from app.approvals import find_matching_rule, match_approver, levels_approved, user_already_acted, record_action
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 router = APIRouter(
     prefix="/finance",
@@ -22,7 +22,7 @@ class PaymentCreateRequest(BaseModel):
     project_id: Optional[uuid.UUID] = None
     party_company_user_id: Optional[uuid.UUID] = None
     payment_type: str  # "in" or "out"
-    amount: float
+    amount: float = Field(..., gt=0)
     payment_method: str  # Cash, Bank Transfer, Cheque
     reference_number: Optional[str] = None
     description: Optional[str] = None
@@ -450,7 +450,7 @@ class BankAccountResponse(BaseModel):
 class PaymentRequestCreate(BaseModel):
     party_company_user_id: uuid.UUID
     project_id: Optional[uuid.UUID] = None
-    amount: float
+    amount: float = Field(..., gt=0)
     details: str
     due_date: Optional[datetime] = None
     approval_status: Optional[str] = None
@@ -482,9 +482,9 @@ class PaymentRequestResponse(BaseModel):
 class PaymentRequestPaymentCreate(BaseModel):
     payment_date: datetime
     payment_mode: str  # Cash, Bank, UPI, Cheque
-    paid_amount: float
-    deduction: float = 0.0
-    tds: float = 0.0
+    paid_amount: float = Field(..., gt=0)
+    deduction: float = Field(0.0, ge=0)
+    tds: float = Field(0.0, ge=0)
     remarks: Optional[str] = None
     reference_no: Optional[str] = None
     attachment_name: Optional[str] = None
@@ -530,7 +530,7 @@ def _cash_running_balance(db, company_id: uuid.UUID) -> float:
 
 class CashAccountCreate(BaseModel):
     name: Optional[str] = "Cash Account"
-    opening_balance: float = 0.0
+    opening_balance: float = Field(0.0, ge=0)
 
 
 class CashAccountResponse(BaseModel):
@@ -1179,7 +1179,7 @@ class P2PTransferRequest(BaseModel):
     company_id: uuid.UUID
     sender_company_user_id: uuid.UUID
     receiver_company_user_id: uuid.UUID
-    amount: float
+    amount: float = Field(..., gt=0)
     payment_date: datetime
     description: Optional[str] = None
 
