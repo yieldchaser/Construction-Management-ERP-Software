@@ -7,7 +7,7 @@ from sqlalchemy import select
 from openpyxl import load_workbook
 from app.database import get_db
 from app.auth import get_current_user, verify_project_access, get_company_membership
-from app.models import BOQItem, BOQDocument, ProjectBudget, Project, Bill, LibraryParty, Task
+from app.models import BOQItem, BOQDocument, ProjectBudget, Project, Bill, LibraryParty, Task, User
 from app.workflow_controls import get_default_terms
 from app.utils.pdf_generator import generate_document_pdf
 from app.utils.document_pdf import resolve_pdf_branding
@@ -204,11 +204,13 @@ async def import_boq(
 @router.post("/allocation", response_model=BudgetResponse)
 def allocate_project_budgets(
     request: BudgetAllocationRequest,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     project = db.query(Project).filter(Project.id == request.project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, project.company_id)
 
     budget = db.query(ProjectBudget).filter(ProjectBudget.project_id == request.project_id).first()
     if not budget:
@@ -326,10 +328,11 @@ def list_boq_documents(project_id: UUID, db: Session = Depends(get_db), _: None 
 
 
 @router.post("/boq-documents", response_model=BOQDocumentResponse, status_code=201)
-def create_boq_document(req: BOQDocumentCreate, db: Session = Depends(get_db)):
+def create_boq_document(req: BOQDocumentCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     project = db.query(Project).filter(Project.id == req.project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, project.company_id)
     if req.client_party_id:
         party = db.query(LibraryParty).filter(LibraryParty.id == req.client_party_id).first()
         if not party:
@@ -353,10 +356,14 @@ def create_boq_document(req: BOQDocumentCreate, db: Session = Depends(get_db)):
 
 
 @router.patch("/boq-documents/{doc_id}", response_model=BOQDocumentResponse)
-def patch_boq_document(doc_id: UUID, req: BOQDocumentPatch, db: Session = Depends(get_db)):
+def patch_boq_document(doc_id: UUID, req: BOQDocumentPatch, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     doc = db.query(BOQDocument).filter(BOQDocument.id == doc_id).first()
     if not doc:
         raise HTTPException(status_code=404, detail="BOQ document not found")
+    project = db.query(Project).filter(Project.id == doc.project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, project.company_id)
     if req.title is not None:
         doc.title = req.title
     if req.client_party_id is not None:

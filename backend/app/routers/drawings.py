@@ -4,8 +4,8 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.auth import get_current_user, verify_project_access
-from app.models import Drawing, DrawingRevision, DrawingPin
+from app.auth import get_current_user, verify_project_access, get_company_membership
+from app.models import Drawing, DrawingRevision, DrawingPin, Project, User
 from pydantic import BaseModel, Field
 
 router = APIRouter(
@@ -129,7 +129,12 @@ def get_drawings(project_id: UUID, db: Session = Depends(get_db), _: None = Depe
     return res
 
 @router.post("", response_model=DrawingResponse)
-def create_drawing(req: DrawingCreateRequest, db: Session = Depends(get_db)):
+def create_drawing(req: DrawingCreateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    project = db.query(Project).filter(Project.id == req.project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, project.company_id)
+
     # 1. Create drawing row
     drawing = Drawing(
         project_id=req.project_id,
@@ -175,11 +180,15 @@ def create_drawing(req: DrawingCreateRequest, db: Session = Depends(get_db)):
     )
 
 @router.post("/{drawing_id}/revisions", response_model=DrawingRevisionResponse)
-def add_drawing_revision(drawing_id: UUID, req: RevisionCreateRequest, db: Session = Depends(get_db)):
+def add_drawing_revision(drawing_id: UUID, req: RevisionCreateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     drawing = db.query(Drawing).filter(Drawing.id == drawing_id).first()
     if not drawing:
         raise HTTPException(status_code=404, detail="Drawing not found")
-    
+    project = db.query(Project).filter(Project.id == drawing.project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, project.company_id)
+
     # Check for duplicate version code
     existing_rev = db.query(DrawingRevision).filter(
         DrawingRevision.drawing_id == drawing_id,
@@ -212,11 +221,18 @@ def add_drawing_revision(drawing_id: UUID, req: RevisionCreateRequest, db: Sessi
     )
 
 @router.post("/revisions/{revision_id}/approve", response_model=DrawingRevisionResponse)
-def approve_drawing_revision(revision_id: UUID, req: RevisionApproveRequest, db: Session = Depends(get_db)):
+def approve_drawing_revision(revision_id: UUID, req: RevisionApproveRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     revision = db.query(DrawingRevision).filter(DrawingRevision.id == revision_id).first()
     if not revision:
         raise HTTPException(status_code=404, detail="Revision not found")
-    
+    drawing = db.query(Drawing).filter(Drawing.id == revision.drawing_id).first()
+    if not drawing:
+        raise HTTPException(status_code=404, detail="Drawing not found")
+    project = db.query(Project).filter(Project.id == drawing.project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, project.company_id)
+
     revision.approval_status = req.approval_status
     revision.approved_by = req.approved_by
     if req.comments:
@@ -253,11 +269,18 @@ def approve_drawing_revision(revision_id: UUID, req: RevisionApproveRequest, db:
     )
 
 @router.post("/revisions/{revision_id}/pins", response_model=DrawingPinResponse)
-def add_pin_to_revision(revision_id: UUID, req: PinCreateRequest, db: Session = Depends(get_db)):
+def add_pin_to_revision(revision_id: UUID, req: PinCreateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     revision = db.query(DrawingRevision).filter(DrawingRevision.id == revision_id).first()
     if not revision:
         raise HTTPException(status_code=404, detail="Revision not found")
-        
+    drawing = db.query(Drawing).filter(Drawing.id == revision.drawing_id).first()
+    if not drawing:
+        raise HTTPException(status_code=404, detail="Drawing not found")
+    project = db.query(Project).filter(Project.id == drawing.project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, project.company_id)
+
     pin = DrawingPin(
         revision_id=revision_id,
         x_coordinate=req.x_coordinate,
@@ -282,22 +305,25 @@ def add_pin_to_revision(revision_id: UUID, req: PinCreateRequest, db: Session = 
     )
 
 @router.delete("/pins/{pin_id}")
-def delete_pin(pin_id: UUID, db: Session = Depends(get_db)):
+def delete_pin(pin_id: UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     pin = db.query(DrawingPin).filter(DrawingPin.id == pin_id).first()
     if not pin:
         raise HTTPException(status_code=404, detail="Pin not found")
 
+    revision = db.query(DrawingRevision).filter(DrawingRevision.id == pin.revision_id).first()
+    if not revision:
+        raise HTTPException(status_code=404, detail="Revision not found")
+    drawing = db.query(Drawing).filter(Drawing.id == revision.drawing_id).first()
+    if not drawing:
+        raise HTTPException(status_code=404, detail="Drawing not found")
+    proj = db.query(Project).filter(Project.id == drawing.project_id).first()
+    if not proj:
+        raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, proj.company_id)
+
     try:
         from app.routers.delete_logs import log_deletion
-        from app.models import Project
-        company_id = None
-        revision = db.query(DrawingRevision).filter(DrawingRevision.id == pin.revision_id).first()
-        if revision:
-            drawing = db.query(Drawing).filter(Drawing.id == revision.drawing_id).first()
-            if drawing:
-                proj = db.query(Project).filter(Project.id == drawing.project_id).first()
-                company_id = proj.company_id if proj else None
-        log_deletion(db, company_id, "drawing_pin", pin.id, f"Drawing Pin: {pin.comment[:100]}")
+        log_deletion(db, proj.company_id, "drawing_pin", pin.id, f"Drawing Pin: {pin.comment[:100]}")
     except Exception:
         pass
     db.delete(pin)

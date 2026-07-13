@@ -6,8 +6,9 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
 from app.database import get_db
-from app.auth import get_current_user, verify_company_access
+from app.auth import get_current_user, verify_company_access, get_company_membership
 from app import models
+from app.models import User
 
 
 router = APIRouter(
@@ -115,7 +116,8 @@ def list_timesheets(
 
 
 @router.post("/timesheets", response_model=TimesheetResponse, status_code=status.HTTP_201_CREATED)
-def create_timesheet(payload: TimesheetCreate, db: Session = Depends(get_db)):
+def create_timesheet(payload: TimesheetCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    get_company_membership(db, current_user, payload.company_id)
     party_name = None
     if payload.party_id:
         party = db.query(models.LibraryParty).filter(models.LibraryParty.id == payload.party_id).first()
@@ -151,12 +153,13 @@ def get_timesheet(timesheet_id: UUID, db: Session = Depends(get_db)):
 
 
 @router.delete("/timesheets/{timesheet_id}", status_code=status.HTTP_200_OK)
-def delete_timesheet(timesheet_id: UUID, db: Session = Depends(get_db)):
+def delete_timesheet(timesheet_id: UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     row = db.query(models.TeamScheduleTimesheet).filter(
         models.TeamScheduleTimesheet.id == timesheet_id
     ).first()
     if not row:
         raise HTTPException(status_code=404, detail="Timesheet not found")
+    get_company_membership(db, current_user, row.company_id)
     try:
         from app.routers.delete_logs import log_deletion
         log_deletion(db, row.company_id, "timesheet", row.id, f"Timesheet: {row.party_name or row.id}", party_name=row.party_name)

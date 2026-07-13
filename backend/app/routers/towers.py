@@ -4,8 +4,8 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.auth import get_current_user, verify_project_access
-from app.models import ProjectTower, ProjectBudget, PurchaseOrder, Bill, WorkOrder
+from app.auth import get_current_user, verify_project_access, get_company_membership
+from app.models import ProjectTower, ProjectBudget, PurchaseOrder, Bill, WorkOrder, Project, User
 from pydantic import BaseModel, Field
 
 router = APIRouter(
@@ -82,7 +82,11 @@ def list_towers(project_id: UUID, db: Session = Depends(get_db), _: None = Depen
 
 
 @router.post("/", response_model=ProjectTowerResponse, status_code=201)
-def create_tower(req: TowerCreateRequest, db: Session = Depends(get_db)):
+def create_tower(req: TowerCreateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    project = db.query(Project).filter(Project.id == req.project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, project.company_id)
     tower = ProjectTower(
         project_id=req.project_id,
         tower_name=req.tower_name,
@@ -109,10 +113,14 @@ def create_tower(req: TowerCreateRequest, db: Session = Depends(get_db)):
 
 
 @router.patch("/{tower_id}", response_model=ProjectTowerResponse)
-def update_tower(tower_id: UUID, req: TowerUpdateRequest, db: Session = Depends(get_db)):
+def update_tower(tower_id: UUID, req: TowerUpdateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     tower = db.query(ProjectTower).filter(ProjectTower.id == tower_id).first()
     if not tower:
         raise HTTPException(status_code=404, detail="Tower not found")
+    project = db.query(Project).filter(Project.id == tower.project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, project.company_id)
 
     update_data = req.model_dump(exclude_unset=True)
     for field, val in update_data.items():
@@ -134,14 +142,16 @@ def update_tower(tower_id: UUID, req: TowerUpdateRequest, db: Session = Depends(
 
 
 @router.delete("/{tower_id}", status_code=204)
-def delete_tower(tower_id: UUID, db: Session = Depends(get_db)):
+def delete_tower(tower_id: UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     tower = db.query(ProjectTower).filter(ProjectTower.id == tower_id).first()
     if not tower:
         raise HTTPException(status_code=404, detail="Tower not found")
+    proj = db.query(Project).filter(Project.id == tower.project_id).first()
+    if not proj:
+        raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, proj.company_id)
     try:
         from app.routers.delete_logs import log_deletion
-        from app.models import Project
-        proj = db.query(Project).filter(Project.id == tower.project_id).first()
         company_id = proj.company_id if proj else None
         log_deletion(db, company_id, "tower", tower.id, f"Tower: {tower.tower_name}")
     except Exception:

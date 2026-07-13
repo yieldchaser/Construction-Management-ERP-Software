@@ -11,8 +11,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
 from app.database import get_db
-from app.auth import get_current_user, verify_company_access, verify_project_access
-from app.models import Equipment, EquipmentDeployment, FuelLog, MaintenanceSchedule, Project
+from app.auth import get_current_user, verify_company_access, verify_project_access, get_company_membership
+from app.models import Equipment, EquipmentDeployment, FuelLog, MaintenanceSchedule, Project, User
 
 router = APIRouter(prefix="/equipment", tags=["Equipment & Machinery Tracking"], dependencies=[Depends(get_current_user)])
 
@@ -110,7 +110,8 @@ class MaintenanceResponse(BaseModel):
 # ─── Fleet Endpoints ─────────────────────────────────────────────────────────
 
 @router.post("", response_model=EquipmentResponse, status_code=status.HTTP_201_CREATED)
-def add_equipment(payload: EquipmentCreate, db: Session = Depends(get_db)):
+def add_equipment(payload: EquipmentCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    get_company_membership(db, current_user, payload.company_id)
     # Check if code already exists
     existing = db.query(Equipment).filter(Equipment.code == payload.code).first()
     if existing:
@@ -136,12 +137,14 @@ def list_fleet(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = D
 def deploy_equipment(
     equipment_id: uuid.UUID,
     payload: DeploymentCreate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     eq = db.query(Equipment).filter(Equipment.id == equipment_id).first()
     if not eq:
         raise HTTPException(status_code=404, detail="Equipment not found")
-    
+    get_company_membership(db, current_user, eq.company_id)
+
     proj = db.query(Project).filter(Project.id == payload.project_id).first()
     if not proj:
         raise HTTPException(status_code=404, detail="Project not found")
@@ -175,15 +178,17 @@ def list_deployments(project_id: uuid.UUID, db: Session = Depends(get_db), _: No
 
 
 @router.patch("/deployments/{deployment_id}/return", response_model=DeploymentResponse)
-def return_deployment(deployment_id: uuid.UUID, db: Session = Depends(get_db)):
+def return_deployment(deployment_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     dep = db.query(EquipmentDeployment).filter(EquipmentDeployment.id == deployment_id).first()
     if not dep:
         raise HTTPException(status_code=404, detail="Deployment not found")
+    eq = db.query(Equipment).filter(Equipment.id == dep.equipment_id).first()
+    if not eq:
+        raise HTTPException(status_code=404, detail="Equipment not found")
+    get_company_membership(db, current_user, eq.company_id)
 
     dep.end_date = datetime.utcnow()
-    eq = db.query(Equipment).filter(Equipment.id == dep.equipment_id).first()
-    if eq:
-        eq.status = "available"
+    eq.status = "available"
     db.commit()
     db.refresh(dep)
     return dep
@@ -195,11 +200,13 @@ def return_deployment(deployment_id: uuid.UUID, db: Session = Depends(get_db)):
 def log_fuel(
     equipment_id: uuid.UUID,
     payload: FuelLogCreate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     eq = db.query(Equipment).filter(Equipment.id == equipment_id).first()
     if not eq:
         raise HTTPException(status_code=404, detail="Equipment not found")
+    get_company_membership(db, current_user, eq.company_id)
 
     data = payload.model_dump()
     total_cost = data["liters"] * data["cost_per_liter"]
@@ -236,11 +243,13 @@ def list_fuel_logs(project_id: uuid.UUID, db: Session = Depends(get_db), _: None
 def schedule_maintenance(
     equipment_id: uuid.UUID,
     payload: MaintenanceCreate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     eq = db.query(Equipment).filter(Equipment.id == equipment_id).first()
     if not eq:
         raise HTTPException(status_code=404, detail="Equipment not found")
+    get_company_membership(db, current_user, eq.company_id)
 
     data = payload.model_dump()
     db_data = {
