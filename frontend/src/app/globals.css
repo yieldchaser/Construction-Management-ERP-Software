@@ -850,6 +850,9 @@ body {
 
 /* mini-dashboard 1: budget bars */
 .owdb1-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.6rem; margin-bottom: 0.9rem; }
+.owdb1-stats > :nth-child(1) { text-align: left; }
+.owdb1-stats > :nth-child(2) { text-align: center; }
+.owdb1-stats > :nth-child(3) { text-align: right; }
 .owdb1-stat-n { font-size: 1.05rem; font-weight: 800; color: var(--foreground); }
 .owdb1-stat-l { font-size: 0.62rem; color: var(--muted); }
 .owdb1-bars, .owdb2-bars { display: flex; flex-direction: column; gap: 0.85rem; }
@@ -894,6 +897,9 @@ body {
 .owdb3-s-rev { background: rgba(252,211,141,0.16); color: #eab308; }
 .owdb3-proj-amount { font-weight: 700; color: var(--foreground); }
 .owdb3-bills { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.6rem; padding-top: 0.4rem; border-top: 1px solid var(--border); }
+.owdb3-bills > :nth-child(1) { text-align: left; }
+.owdb3-bills > :nth-child(2) { text-align: center; }
+.owdb3-bills > :nth-child(3) { text-align: right; }
 .owdb3-bill-n { font-size: 1.05rem; font-weight: 800; }
 .owdb3-bill-l { font-size: 0.6rem; color: var(--muted); }
 
