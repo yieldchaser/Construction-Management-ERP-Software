@@ -172,8 +172,8 @@ export default function AboutPage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-border-custom px-6 py-8 text-muted">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+      <footer className="border-t border-border-custom py-8 text-muted">
+        <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-xs">
             SiteFlow is a site operations platform. All product logos are property of their respective owners.
           </p>
