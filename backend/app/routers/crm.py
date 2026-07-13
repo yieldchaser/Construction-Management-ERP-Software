@@ -187,6 +187,7 @@ def create_lead(req: LeadCreateRequest, db: Session = Depends(get_db), current_u
     if not company:
         raise HTTPException(status_code=404, detail="Company not found")
     get_company_membership(db, current_user, comp_uuid)
+    require_permission(db, current_user, comp_uuid, "crm:edit")
 
     lead = CRMLead(
         id=uuid.uuid4(),
@@ -227,6 +228,7 @@ def update_lead(lead_id: uuid.UUID, req: LeadUpdateRequest, db: Session = Depend
     if not lead:
         raise HTTPException(status_code=404, detail="Lead not found")
     get_company_membership(db, current_user, lead.company_id)
+    require_permission(db, current_user, lead.company_id, "crm:edit")
 
     if req.status is not None:
         lead.status = req.status
@@ -358,6 +360,7 @@ def list_lead_sources(company_id: uuid.UUID, db: Session = Depends(get_db), _: N
 @router.post("/lead-sources/{company_id}", response_model=LookupResponse, status_code=status.HTTP_201_CREATED)
 def create_lead_source(company_id: uuid.UUID, payload: LookupCreate, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     comp_uuid = uuid.UUID(str(company_id))
+    require_permission(db, current_user, comp_uuid, "crm:edit")
     obj = CRMLeadSource(company_id=comp_uuid, name=payload.name)
     db.add(obj)
     db.commit()
@@ -373,6 +376,7 @@ def list_lead_categories(company_id: uuid.UUID, db: Session = Depends(get_db), _
 @router.post("/lead-categories/{company_id}", response_model=LookupResponse, status_code=status.HTTP_201_CREATED)
 def create_lead_category(company_id: uuid.UUID, payload: LookupCreate, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     comp_uuid = uuid.UUID(str(company_id))
+    require_permission(db, current_user, comp_uuid, "crm:edit")
     obj = CRMLeadCategory(company_id=comp_uuid, name=payload.name)
     db.add(obj)
     db.commit()
@@ -388,6 +392,7 @@ def list_lead_statuses(company_id: uuid.UUID, db: Session = Depends(get_db), _: 
 @router.post("/lead-statuses/{company_id}", response_model=LookupResponse, status_code=status.HTTP_201_CREATED)
 def create_lead_status(company_id: uuid.UUID, payload: LookupCreate, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     comp_uuid = uuid.UUID(str(company_id))
+    require_permission(db, current_user, comp_uuid, "crm:edit")
     obj = CRMLeadStatus(company_id=comp_uuid, name=payload.name)
     db.add(obj)
     db.commit()
@@ -403,6 +408,7 @@ def create_quotation(lead_id: uuid.UUID, req: QuotationCreateRequest, db: Sessio
     if not lead:
         raise HTTPException(status_code=404, detail="Lead not found")
     get_company_membership(db, current_user, lead.company_id)
+    require_permission(db, current_user, lead.company_id, "crm:edit")
 
     gst_pct = req.gst_pct
     cgst_pct = req.cgst_pct if req.cgst_pct is not None else gst_pct / 2.0

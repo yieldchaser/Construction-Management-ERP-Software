@@ -82,6 +82,22 @@ def has_permission(perms: Optional[Dict], key: str) -> bool:
     return bool(perms.get(SUPERUSER_KEY) is True or perms.get(key) is True)
 
 
+def has_module_access(perms: Optional[Dict], module: str) -> bool:
+    """True if the caller has ANY permission on `module` (view/edit/approve) or
+    is a superuser. Used for sensitive-read gating where "being able to edit or
+    approve clearly implies being able to view".
+    """
+    if not perms:
+        return False
+    if perms.get(SUPERUSER_KEY) is True:
+        return True
+    return bool(
+        perms.get(f"{module}:view") is True
+        or perms.get(f"{module}:edit") is True
+        or perms.get(f"{module}:approve") is True
+    )
+
+
 def validate_permissions(perms: Dict) -> Dict:
     """Validate an incoming permission dict against the canonical key set.
 

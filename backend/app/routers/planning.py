@@ -175,6 +175,7 @@ def create_task(request: TaskCreateRequest, db: Session = Depends(get_db), curre
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     get_company_membership(db, current_user, project.company_id)
+    require_permission(db, current_user, project.company_id, "planning:edit")
 
     # Workflow Controls: Entry Controls (creation date window) & Progress Controls
     enforce_entry_creation_window(db, project.company_id, request.start_date)
@@ -211,6 +212,7 @@ def update_task(task_id: UUID, request: TaskUpdateRequest, db: Session = Depends
     project = db.query(Project).filter(Project.id == task.project_id).first()
     if project:
         get_company_membership(db, current_user, project.company_id)
+        require_permission(db, current_user, project.company_id, "planning:edit")
         enforce_entry_editing_window(db, project.company_id, task.start_date)
         enforce_progress_over_estimate(db, project.company_id, request.progress)
 
@@ -260,6 +262,7 @@ def add_predecessor(task_id: UUID, request: PredecessorCreateRequest, db: Sessio
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     get_company_membership(db, current_user, project.company_id)
+    require_permission(db, current_user, project.company_id, "planning:edit")
 
     if task_id == request.predecessor_id:
         raise HTTPException(status_code=400, detail="A task cannot be its own predecessor")
@@ -354,6 +357,7 @@ def create_task_todo(task_id: UUID, payload: TodoCreate, db: Session = Depends(g
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     get_company_membership(db, current_user, project.company_id)
+    require_permission(db, current_user, project.company_id, "planning:edit")
     todo = TaskTodo(task_id=task_id, title=payload.title, is_completed=False)
     db.add(todo)
     db.commit()
@@ -373,6 +377,7 @@ def toggle_task_todo(todo_id: UUID, db: Session = Depends(get_db), current_user:
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     get_company_membership(db, current_user, project.company_id)
+    require_permission(db, current_user, project.company_id, "planning:edit")
     todo.is_completed = not todo.is_completed
     db.commit()
     db.refresh(todo)
@@ -424,6 +429,7 @@ def create_task_comment(task_id: UUID, payload: CommentCreate, db: Session = Dep
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     get_company_membership(db, current_user, project.company_id)
+    require_permission(db, current_user, project.company_id, "planning:edit")
 
     comment = TaskComment(
         task_id=task_id,
@@ -509,6 +515,7 @@ def get_project_v3(project_id: UUID, db: Session = Depends(get_db), _: None = De
 def create_project_v3(payload: ProjectCreateSchema, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     import uuid
     get_company_membership(db, current_user, payload.company_id)
+    require_permission(db, current_user, payload.company_id, "planning:edit")
     proj = Project(
         id=uuid.uuid4(),
         company_id=payload.company_id,
@@ -530,10 +537,11 @@ def create_project_v3(payload: ProjectCreateSchema, db: Session = Depends(get_db
     return proj
 
 @router.patch("/projects/{project_id}", response_model=ProjectResponseSchema)
-def update_project_v3(project_id: UUID, payload: ProjectUpdateSchema, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
+def update_project_v3(project_id: UUID, payload: ProjectUpdateSchema, db: Session = Depends(get_db), current_user: User = Depends(get_current_user), _: None = Depends(verify_project_access)):
     proj = db.query(Project).filter(Project.id == project_id).first()
     if not proj:
         raise HTTPException(status_code=404, detail="Project not found")
+    require_permission(db, current_user, proj.company_id, "planning:edit")
     
     if payload.name is not None:
         proj.name = payload.name

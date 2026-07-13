@@ -118,6 +118,7 @@ def list_timesheets(
 @router.post("/timesheets", response_model=TimesheetResponse, status_code=status.HTTP_201_CREATED)
 def create_timesheet(payload: TimesheetCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     get_company_membership(db, current_user, payload.company_id)
+    require_permission(db, current_user, payload.company_id, "attendance:edit")
     party_name = None
     if payload.party_id:
         party = db.query(models.LibraryParty).filter(models.LibraryParty.id == payload.party_id).first()

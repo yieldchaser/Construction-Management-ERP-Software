@@ -106,6 +106,7 @@ def list_todos(
 @router.post("/")
 def create_todo(payload: TodoCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
     get_company_membership(db, current_user, payload.company_id)
+    require_permission(db, current_user, payload.company_id, "planning:edit")
     t = models.Todo(
         company_id=payload.company_id,
         project_id=payload.project_id,

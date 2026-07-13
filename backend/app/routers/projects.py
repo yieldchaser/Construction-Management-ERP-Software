@@ -272,6 +272,7 @@ def project_summary(company_id: uuid.UUID, user_id: Optional[uuid.UUID] = None, 
 @router.post("/")
 def create_project(payload: ProjectCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
     get_company_membership(db, current_user, payload.company_id)
+    require_permission(db, current_user, payload.company_id, "projects:edit")
     proj = models.Project(
         company_id=payload.company_id,
         name=payload.name,
@@ -313,10 +314,11 @@ def get_project(project_id: uuid.UUID, db: Session = Depends(get_db), _: None = 
 
 
 @router.put("/{project_id}")
-def update_project(project_id: uuid.UUID, payload: ProjectUpdate, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
+def update_project(project_id: uuid.UUID, payload: ProjectUpdate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user), _: None = Depends(verify_project_access)):
     p = db.query(models.Project).filter(models.Project.id == project_id).first()
     if not p:
         raise HTTPException(status_code=404, detail="Project not found")
+    require_permission(db, current_user, p.company_id, "projects:edit")
     updates = payload.model_dump(exclude_unset=True)
     custom_fields = updates.pop("custom_fields", None)
     for field, value in updates.items():
@@ -330,10 +332,11 @@ def update_project(project_id: uuid.UUID, payload: ProjectUpdate, db: Session = 
 
 
 @router.post("/{project_id}/pin")
-def toggle_pin(project_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
+def toggle_pin(project_id: uuid.UUID, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user), _: None = Depends(verify_project_access)):
     p = db.query(models.Project).filter(models.Project.id == project_id).first()
     if not p:
         raise HTTPException(status_code=404, detail="Project not found")
+    require_permission(db, current_user, p.company_id, "projects:edit")
     p.is_pinned = not bool(p.is_pinned)
     db.commit()
     db.refresh(p)
@@ -455,10 +458,11 @@ def list_project_parties(project_id: uuid.UUID, db: Session = Depends(get_db), _
 
 
 @router.post("/{project_id}/parties")
-def add_project_party(project_id: uuid.UUID, payload: ProjectPartyCreate, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
+def add_project_party(project_id: uuid.UUID, payload: ProjectPartyCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user), _: None = Depends(verify_project_access)):
     p = db.query(models.Project).filter(models.Project.id == project_id).first()
     if not p:
         raise HTTPException(status_code=404, detail="Project not found")
+    require_permission(db, current_user, p.company_id, "projects:edit")
     existing = db.query(models.ProjectParty).filter(
         models.ProjectParty.project_id == project_id,
         models.ProjectParty.party_id == payload.party_id
@@ -492,8 +496,11 @@ def add_project_party(project_id: uuid.UUID, payload: ProjectPartyCreate, db: Se
 @router.put("/{project_id}/parties/{party_id}")
 def set_project_party_status(
     project_id: uuid.UUID, party_id: uuid.UUID, payload: dict, db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
     _: None = Depends(verify_project_access)
 ):
+    project = db.query(models.Project).filter(models.Project.id == project_id).first()
+    require_permission(db, current_user, project.company_id, "projects:edit")
     link = db.query(models.ProjectParty).filter(
         models.ProjectParty.project_id == project_id,
         models.ProjectParty.party_id == party_id,
@@ -549,10 +556,11 @@ def list_locations(project_id: uuid.UUID, db: Session = Depends(get_db), _: None
 
 
 @router.post("/{project_id}/locations")
-def create_location(project_id: uuid.UUID, payload: LocationCreate, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
+def create_location(project_id: uuid.UUID, payload: LocationCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user), _: None = Depends(verify_project_access)):
     p = db.query(models.Project).filter(models.Project.id == project_id).first()
     if not p:
         raise HTTPException(status_code=404, detail="Project not found")
+    require_permission(db, current_user, p.company_id, "projects:edit")
     loc = models.ProjectLocation(project_id=project_id, name=payload.name, parent_id=payload.parent_id)
     db.add(loc)
     db.commit()

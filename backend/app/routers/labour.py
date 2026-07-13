@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.auth import get_current_user, verify_project_access, get_company_membership
+from app.auth import get_current_user, verify_project_access, get_company_membership, require_permission
 from app.models import (
     WorkOrder, CompanyTeam, SubcontractorPerformance,
     BOCWRecord, MusterRoll, Bill, User
@@ -213,6 +213,7 @@ def get_muster_roll(project_id: UUID, db: Session = Depends(get_db), _: None = D
 @router.post("/muster-roll", response_model=MusterRollResponse, status_code=201)
 def create_muster_roll(req: MusterRollCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     get_company_membership(db, current_user, req.company_id)
+    require_permission(db, current_user, req.company_id, "attendance:edit")
     record = MusterRoll(
         company_id=req.company_id,
         project_id=req.project_id,

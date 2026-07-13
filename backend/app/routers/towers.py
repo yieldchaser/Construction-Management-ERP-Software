@@ -87,6 +87,7 @@ def create_tower(req: TowerCreateRequest, db: Session = Depends(get_db), current
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     get_company_membership(db, current_user, project.company_id)
+    require_permission(db, current_user, project.company_id, "projects:edit")
     tower = ProjectTower(
         project_id=req.project_id,
         tower_name=req.tower_name,
@@ -121,6 +122,7 @@ def update_tower(tower_id: UUID, req: TowerUpdateRequest, db: Session = Depends(
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     get_company_membership(db, current_user, project.company_id)
+    require_permission(db, current_user, project.company_id, "projects:edit")
 
     update_data = req.model_dump(exclude_unset=True)
     for field, val in update_data.items():

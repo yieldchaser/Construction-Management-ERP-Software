@@ -134,6 +134,7 @@ def create_drawing(req: DrawingCreateRequest, db: Session = Depends(get_db), cur
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     get_company_membership(db, current_user, project.company_id)
+    require_permission(db, current_user, project.company_id, "drawings:edit")
 
     # 1. Create drawing row
     drawing = Drawing(
@@ -188,6 +189,7 @@ def add_drawing_revision(drawing_id: UUID, req: RevisionCreateRequest, db: Sessi
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     get_company_membership(db, current_user, project.company_id)
+    require_permission(db, current_user, project.company_id, "drawings:edit")
 
     # Check for duplicate version code
     existing_rev = db.query(DrawingRevision).filter(
@@ -281,6 +283,7 @@ def add_pin_to_revision(revision_id: UUID, req: PinCreateRequest, db: Session = 
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     get_company_membership(db, current_user, project.company_id)
+    require_permission(db, current_user, project.company_id, "drawings:edit")
 
     pin = DrawingPin(
         revision_id=revision_id,

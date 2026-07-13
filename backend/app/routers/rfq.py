@@ -4,7 +4,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.auth import get_current_user, verify_project_access, get_company_membership
+from app.auth import get_current_user, verify_project_access, get_company_membership, require_permission
 from app.models import RFQ, RFQItem, RFQQuote, User
 from pydantic import BaseModel, Field
 
@@ -98,6 +98,7 @@ class ComparisonRow(BaseModel):
 @router.post("/rfq", response_model=RFQResponse, status_code=201)
 def create_rfq(req: RFQCreateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     get_company_membership(db, current_user, req.company_id)
+    require_permission(db, current_user, req.company_id, "procurement:edit")
     existing = db.query(RFQ).filter(
         RFQ.company_id == req.company_id,
         RFQ.rfq_number == req.rfq_number
@@ -187,6 +188,7 @@ def submit_quote(rfq_id: UUID, req: RFQQuoteCreate, db: Session = Depends(get_db
     if not rfq:
         raise HTTPException(status_code=404, detail="RFQ not found")
     get_company_membership(db, current_user, rfq.company_id)
+    require_permission(db, current_user, rfq.company_id, "procurement:edit")
 
     db_item = db.query(RFQItem).filter(RFQItem.id == req.item_id).first()
     if not db_item or db_item.rfq_id != rfq_id:

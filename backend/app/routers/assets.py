@@ -5,8 +5,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
 from app.database import get_db
-from app.auth import get_current_user, verify_company_access
-from app.models import AssetDepreciationSchedule, AssetDepreciationEntry, Equipment
+from app.auth import get_current_user, verify_company_access, require_permission
+from app.models import AssetDepreciationSchedule, AssetDepreciationEntry, Equipment, User
 from decimal import Decimal
 
 router = APIRouter(prefix="/assets", tags=["Asset Depreciation"], dependencies=[Depends(get_current_user)])
@@ -68,7 +68,8 @@ class DepreciationEntryResponse(BaseModel):
 
 
 @router.post("/schedules", response_model=DepreciationScheduleResponse, status_code=status.HTTP_201_CREATED)
-def create_schedule(payload: DepreciationScheduleCreate, db: Session = Depends(get_db)):
+def create_schedule(payload: DepreciationScheduleCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    require_permission(db, current_user, payload.company_id, "finance:edit")
     data = payload.model_dump()
     for k in ("salvage_value", "depreciation_pct"):
         data[k] = Decimal(str(data[k]))
@@ -88,7 +89,8 @@ def list_schedules(company_id: uuid.UUID, db: Session = Depends(get_db), _: None
 
 
 @router.post("/entries", response_model=DepreciationEntryResponse, status_code=status.HTTP_201_CREATED)
-def create_entry(payload: DepreciationEntryCreate, db: Session = Depends(get_db)):
+def create_entry(payload: DepreciationEntryCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    require_permission(db, current_user, payload.company_id, "finance:edit")
     data = payload.model_dump()
     for k in ("depreciation_amount", "accumulated_depreciation", "book_value"):
         data[k] = Decimal(str(data[k]))

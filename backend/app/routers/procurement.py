@@ -273,6 +273,7 @@ def get_company_indents(company_id: UUID, db: Session = Depends(get_db), _: None
 @router.post("/indents", response_model=IndentResponse, status_code=201)
 def create_indent(req: IndentCreateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     get_company_membership(db, current_user, req.company_id)
+    require_permission(db, current_user, req.company_id, "procurement:edit")
     # Check if indent number already exists for the company
     existing = db.query(MaterialIndent).filter(
         MaterialIndent.company_id == req.company_id,
@@ -398,6 +399,7 @@ def get_pos(project_id: UUID, db: Session = Depends(get_db), _: None = Depends(v
 @router.post("/pos", response_model=POResponse, status_code=201)
 def create_po(req: POCreateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     get_company_membership(db, current_user, req.company_id)
+    require_permission(db, current_user, req.company_id, "procurement:edit")
     # Check if PO number already exists
     existing = db.query(PurchaseOrder).filter(
         PurchaseOrder.company_id == req.company_id,
@@ -579,6 +581,7 @@ def get_grns(project_id: UUID, db: Session = Depends(get_db), _: None = Depends(
 @router.post("/grns", response_model=GRNResponse, status_code=201)
 def create_grn(req: GRNCreateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     get_company_membership(db, current_user, req.company_id)
+    require_permission(db, current_user, req.company_id, "procurement:edit")
     grn_number = req.grn_number.strip() if req.grn_number else None
     if not grn_number:
         grn_number = _generate_grn_number(db, req.company_id, req.project_id)
@@ -762,6 +765,7 @@ def create_transaction(req: TransactionCreateRequest, db: Session = Depends(get_
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     get_company_membership(db, current_user, project.company_id)
+    require_permission(db, current_user, project.company_id, "procurement:edit")
 
     if req.type not in RECEIVED_TYPES and req.type not in CONSUMED_TYPES:
         raise HTTPException(status_code=400, detail=f"Unsupported type '{req.type}'. Use one of {sorted(RECEIVED_TYPES | CONSUMED_TYPES)}")
@@ -844,6 +848,7 @@ def patch_inventory(inventory_id: UUID, req: InventoryPatchRequest, db: Session 
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     get_company_membership(db, current_user, project.company_id)
+    require_permission(db, current_user, project.company_id, "procurement:edit")
     if req.category is not None:
         inv.category = req.category
     if req.unit is not None:

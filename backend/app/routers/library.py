@@ -135,6 +135,7 @@ def get_library_parties(company_id: uuid.UUID, db: Session = Depends(get_db), _:
 @router.post("/parties")
 def create_library_party(payload: PartyCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     get_company_membership(db, current_user, payload.company_id)
+    require_permission(db, current_user, payload.company_id, "library:edit")
     # Automatically generate custom PID if not supplied
     if not payload.party_id_custom:
         count = db.query(models.LibraryParty).filter(models.LibraryParty.company_id == payload.company_id).count()
@@ -230,6 +231,7 @@ def get_library_asset_types(company_id: uuid.UUID, db: Session = Depends(get_db)
 @router.post("/asset-types")
 def create_library_asset_type(payload: AssetTypeCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     get_company_membership(db, current_user, payload.company_id)
+    require_permission(db, current_user, payload.company_id, "library:edit")
     item = models.LibraryAssetType(company_id=payload.company_id, name=payload.name)
     db.add(item)
     db.commit()
@@ -261,6 +263,7 @@ def get_library_cost_codes(company_id: uuid.UUID, db: Session = Depends(get_db),
 @router.post("/cost-codes")
 def create_library_cost_code(payload: CostCodeCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     get_company_membership(db, current_user, payload.company_id)
+    require_permission(db, current_user, payload.company_id, "library:edit")
     item = models.LibraryCostCode(
         company_id=payload.company_id,
         code=payload.code,
@@ -299,6 +302,7 @@ def get_library_deductions(company_id: uuid.UUID, db: Session = Depends(get_db),
 @router.post("/deductions")
 def create_library_deduction(payload: DeductionCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     get_company_membership(db, current_user, payload.company_id)
+    require_permission(db, current_user, payload.company_id, "library:edit")
     item = models.LibraryDeduction(company_id=payload.company_id, name=payload.name)
     db.add(item)
     db.commit()
@@ -330,6 +334,7 @@ def get_library_progresses(company_id: uuid.UUID, db: Session = Depends(get_db),
 @router.post("/progresses")
 def create_library_progress(payload: ProgressCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     get_company_membership(db, current_user, payload.company_id)
+    require_permission(db, current_user, payload.company_id, "library:edit")
     item = models.LibraryProgress(company_id=payload.company_id, name=payload.name)
     db.add(item)
     db.commit()
@@ -361,6 +366,7 @@ def get_library_workforces(company_id: uuid.UUID, db: Session = Depends(get_db),
 @router.post("/workforces")
 def create_library_workforce(payload: WorkforceCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     get_company_membership(db, current_user, payload.company_id)
+    require_permission(db, current_user, payload.company_id, "library:edit")
     item = models.LibraryWorkforce(company_id=payload.company_id, name=payload.name)
     db.add(item)
     db.commit()
@@ -392,6 +398,7 @@ def get_library_materials(company_id: uuid.UUID, db: Session = Depends(get_db), 
 @router.post("/materials")
 def create_library_material(payload: MaterialCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     get_company_membership(db, current_user, payload.company_id)
+    require_permission(db, current_user, payload.company_id, "library:edit")
     item = models.LibraryMaterial(
         company_id=payload.company_id,
         name=payload.name,
@@ -435,6 +442,7 @@ def get_library_rates(company_id: uuid.UUID, db: Session = Depends(get_db), _: N
 @router.post("/rates")
 def create_library_rate(payload: RateCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     get_company_membership(db, current_user, payload.company_id)
+    require_permission(db, current_user, payload.company_id, "library:edit")
     item = models.LibraryRate(
         company_id=payload.company_id,
         name=payload.name,
@@ -487,6 +495,7 @@ def get_library_retentions(company_id: uuid.UUID, db: Session = Depends(get_db),
 @router.post("/retentions")
 def create_library_retention(payload: RetentionCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     get_company_membership(db, current_user, payload.company_id)
+    require_permission(db, current_user, payload.company_id, "library:edit")
     item = models.LibraryRetention(company_id=payload.company_id, name=payload.name)
     db.add(item)
     db.commit()
@@ -527,6 +536,7 @@ def get_material_categories(company_id: uuid.UUID, db: Session = Depends(get_db)
 @router.post("/material-categories")
 def create_material_category(payload: MaterialCategoryCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     get_company_membership(db, current_user, payload.company_id)
+    require_permission(db, current_user, payload.company_id, "library:edit")
     item = models.MaterialCategory(
         company_id=payload.company_id,
         name=payload.name,
@@ -570,6 +580,7 @@ def get_library_todos(company_id: uuid.UUID, db: Session = Depends(get_db), _: N
 @router.post("/todos")
 def create_library_todo(payload: TodoCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     get_company_membership(db, current_user, payload.company_id)
+    require_permission(db, current_user, payload.company_id, "library:edit")
     item = models.LibraryTodo(company_id=payload.company_id, name=payload.name)
     db.add(item)
     db.commit()

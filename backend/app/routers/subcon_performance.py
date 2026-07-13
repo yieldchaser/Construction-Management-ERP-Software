@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from app.database import get_db
-from app.auth import get_current_user, verify_project_access, get_company_membership
+from app.auth import get_current_user, verify_project_access, get_company_membership, require_permission
 from app.models import (
     WorkOrder, WorkOrderAmendment, SubcontractorPerformance,
     WorkOrderItem, Bill, TransactionDeduction, CompanyTeam, User
@@ -88,10 +88,11 @@ def get_amendments(wo_id: UUID, db: Session = Depends(get_db), current_user: Use
 
 
 @router.post("/work-orders/{wo_id}/amendments", response_model=AmendmentResponse, status_code=201)
-def create_amendment(wo_id: UUID, req: AmendmentCreateRequest, db: Session = Depends(get_db)):
+def create_amendment(wo_id: UUID, req: AmendmentCreateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     wo = db.query(WorkOrder).filter(WorkOrder.id == wo_id).first()
     if not wo:
         raise HTTPException(status_code=404, detail="Work Order not found")
+    require_permission(db, current_user, wo.company_id, "subcontractor:edit")
 
     last = db.query(WorkOrderAmendment).filter(
         WorkOrderAmendment.wo_id == wo_id

@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import func as sqlfunc
 from app.database import get_db
-from app.auth import get_current_user, get_company_membership
+from app.auth import get_current_user, get_company_membership, require_permission
 from app.models import SafetyIncident, ToolboxTalk, PPECheck, Project, AttendanceLog, User
 from pydantic import BaseModel
 from typing import Optional, List
@@ -63,6 +63,7 @@ def log_incident(payload: IncidentCreate, db: Session = Depends(get_db), current
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     get_company_membership(db, current_user, project.company_id)
+    require_permission(db, current_user, project.company_id, "safety:edit")
     incident = SafetyIncident(
         project_id=uuid.UUID(payload.project_id),
         incident_type=payload.incident_type,
@@ -135,6 +136,7 @@ def close_incident(incident_id: str, payload: IncidentClose, db: Session = Depen
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     get_company_membership(db, current_user, project.company_id)
+    require_permission(db, current_user, project.company_id, "safety:edit")
     if incident.status == "closed":
         raise HTTPException(status_code=400, detail="Incident is already closed.")
 
@@ -219,6 +221,7 @@ def log_toolbox_talk(payload: ToolboxTalkCreate, db: Session = Depends(get_db), 
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     get_company_membership(db, current_user, project.company_id)
+    require_permission(db, current_user, project.company_id, "safety:edit")
     talk = ToolboxTalk(
         project_id=uuid.UUID(payload.project_id),
         topic=payload.topic,
@@ -282,6 +285,7 @@ def log_ppe_check(payload: PPECheckCreate, db: Session = Depends(get_db), curren
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     get_company_membership(db, current_user, project.company_id)
+    require_permission(db, current_user, project.company_id, "safety:edit")
 
     check = PPECheck(
         project_id=uuid.UUID(payload.project_id),

@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from app.database import get_db
-from app.auth import get_current_user, verify_company_access, get_company_membership
+from app.auth import get_current_user, verify_company_access, get_company_membership, require_permission
 from app.models import CustomField, CustomFieldValue, User
 
 router = APIRouter(prefix="/custom-fields", tags=["Custom Fields"], dependencies=[Depends(get_current_user)])
@@ -186,7 +186,8 @@ def upsert_values_for_entity(
 
 
 @router.post("/fields", response_model=CustomFieldResponse, status_code=status.HTTP_201_CREATED)
-def create_field(payload: CustomFieldCreate, db: Session = Depends(get_db)):
+def create_field(payload: CustomFieldCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    require_permission(db, current_user, payload.company_id, "settings:manage")
     field = CustomField(**payload.model_dump())
     db.add(field)
     db.commit()
@@ -206,7 +207,8 @@ def list_fields(company_id: uuid.UUID, entity_type: Optional[str] = None, db: Se
 
 
 @router.post("/values", response_model=CustomFieldValueResponse, status_code=status.HTTP_201_CREATED)
-def set_value(payload: CustomFieldValueCreate, db: Session = Depends(get_db)):
+def set_value(payload: CustomFieldValueCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    require_permission(db, current_user, payload.company_id, "settings:manage")
     existing = db.query(CustomFieldValue).filter(
         CustomFieldValue.field_id == payload.field_id,
         CustomFieldValue.entity_type == payload.entity_type,

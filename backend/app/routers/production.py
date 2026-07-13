@@ -18,7 +18,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.auth import get_current_user, verify_project_access, get_company_membership
+from app.auth import get_current_user, verify_project_access, get_company_membership, require_permission
 from app.models import (
     MaterialTransaction,
     ProductionBatch,
@@ -264,6 +264,7 @@ def _upsert_inventory(db: Session, project_id: UUID, material_name: str, unit: s
 @router.post("/recipes", response_model=RecipeResponse, status_code=status.HTTP_201_CREATED)
 def create_recipe(payload: RecipeCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     get_company_membership(db, current_user, payload.company_id)
+    require_permission(db, current_user, payload.company_id, "production:edit")
     project = db.query(Project).filter(Project.id == payload.project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
@@ -314,6 +315,7 @@ def list_recipes(project_id: UUID, db: Session = Depends(get_db), _: None = Depe
 @router.post("/batches", response_model=BatchResponse, status_code=status.HTTP_201_CREATED)
 def create_batch(payload: BatchCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     get_company_membership(db, current_user, payload.company_id)
+    require_permission(db, current_user, payload.company_id, "production:edit")
     recipe = db.query(ProductionRecipe).filter(ProductionRecipe.id == payload.recipe_id).first()
     if not recipe:
         raise HTTPException(status_code=404, detail="Production recipe not found")
@@ -450,6 +452,7 @@ def complete_batch(batch_id: UUID, db: Session = Depends(get_db), current_user: 
     if not batch:
         raise HTTPException(status_code=404, detail="Batch not found")
     get_company_membership(db, current_user, batch.company_id)
+    require_permission(db, current_user, batch.company_id, "production:edit")
     if batch.status == "completed":
         return _batch_response(db, batch)
 

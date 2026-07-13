@@ -70,6 +70,7 @@ class GRNRef(BaseModel):
 @router.post("", response_model=ThreeWayMatchResponse, status_code=status.HTTP_201_CREATED)
 def create_match(payload: ThreeWayMatchCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     get_company_membership(db, current_user, payload.company_id)
+    require_permission(db, current_user, payload.company_id, "finance:edit")
     po_id = str(payload.po_id)
     grn_id = str(payload.grn_id)
 

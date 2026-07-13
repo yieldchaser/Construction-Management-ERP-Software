@@ -5,7 +5,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.auth import get_current_user, verify_project_access, get_company_membership
+from app.auth import get_current_user, verify_project_access, get_company_membership, require_permission, require_module_view
 from app.models import (
     WorkOrder, WorkOrderItem, Bill, TransactionDeduction,
     DebitNote, CreditNote, CompanyTeam, User, Company, LibraryParty, Project
@@ -229,7 +229,9 @@ def _sequential_deduction_calc(deductions: List[DeductionItemSchema], base: floa
 
 # 1. Work Orders
 @router.get("/work-orders", response_model=List[WOResponse])
-def get_work_orders(project_id: UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
+def get_work_orders(project_id: UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access), current_user: User = Depends(get_current_user)):
+    project = db.query(Project).filter(Project.id == project_id).first()
+    require_module_view(db, current_user, project.company_id, "billing")
     orders = db.query(WorkOrder).filter(WorkOrder.project_id == project_id).all()
     res = []
     for wo in orders:
@@ -269,6 +271,7 @@ def get_work_orders(project_id: UUID, db: Session = Depends(get_db), _: None = D
 def create_work_order(req: WOCreateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     # Tenant check: the caller must be a member of the company this work order belongs to.
     get_company_membership(db, current_user, req.company_id)
+    require_permission(db, current_user, req.company_id, "billing:edit")
 
     # Check if WO number already exists for company
     existing = db.query(WorkOrder).filter(
@@ -338,7 +341,9 @@ def create_work_order(req: WOCreateRequest, db: Session = Depends(get_db), curre
 
 # 2. Bills
 @router.get("/bills", response_model=List[BillResponse])
-def get_bills(project_id: UUID, invoice_type: Optional[str] = None, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
+def get_bills(project_id: UUID, invoice_type: Optional[str] = None, db: Session = Depends(get_db), _: None = Depends(verify_project_access), current_user: User = Depends(get_current_user)):
+    project = db.query(Project).filter(Project.id == project_id).first()
+    require_module_view(db, current_user, project.company_id, "billing")
     query = db.query(Bill).filter(Bill.project_id == project_id)
     if invoice_type:
         query = query.filter(Bill.invoice_type == invoice_type)
@@ -392,6 +397,7 @@ def get_bill_zatca(bill_id: UUID, db: Session = Depends(get_db), current_user: U
         raise HTTPException(status_code=404, detail="Bill not found")
     # Tenant check: the bill belongs to a company the caller is a member of.
     get_company_membership(db, current_user, bill.company_id)
+    require_module_view(db, current_user, bill.company_id, "billing")
     if bill.invoice_type != "sale":
         raise HTTPException(status_code=400, detail="ZATCA e-invoicing applies to sale (simplified tax) invoices")
     company = db.query(Company).filter(Company.id == bill.company_id).first()
@@ -417,6 +423,7 @@ def get_bill_pdf(bill_id: UUID, db: Session = Depends(get_db), current_user=Depe
         raise HTTPException(status_code=404, detail="Bill not found")
     # Tenant check: the bill belongs to a company the caller is a member of.
     get_company_membership(db, current_user, bill.company_id)
+    require_module_view(db, current_user, bill.company_id, "billing")
 
     project = db.query(Project).filter(Project.id == bill.project_id).first() if bill.project_id else None
     company_name, custom_banner = resolve_pdf_branding(db, bill.company_id, project)
@@ -488,6 +495,7 @@ def get_bill_pdf(bill_id: UUID, db: Session = Depends(get_db), current_user=Depe
 def create_bill(req: BillCreateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     # Tenant check: the caller must be a member of the company this bill belongs to.
     get_company_membership(db, current_user, req.company_id)
+    require_permission(db, current_user, req.company_id, "billing:edit")
 
     # Workflow Controls: Entry Controls (creation date window)
     enforce_entry_creation_window(db, req.company_id, req.invoice_date)
@@ -606,7 +614,9 @@ def create_bill(req: BillCreateRequest, db: Session = Depends(get_db), current_u
 
 # 3. Debit Notes
 @router.get("/debit-notes", response_model=List[DebitNoteResponse])
-def get_debit_notes(project_id: UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
+def get_debit_notes(project_id: UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access), current_user: User = Depends(get_current_user)):
+    project = db.query(Project).filter(Project.id == project_id).first()
+    require_module_view(db, current_user, project.company_id, "billing")
     notes = db.query(DebitNote).filter(DebitNote.project_id == project_id).all()
     return [
         DebitNoteResponse(
@@ -629,6 +639,7 @@ def get_debit_notes(project_id: UUID, db: Session = Depends(get_db), _: None = D
 def create_debit_note(req: DebitNoteCreateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     # Tenant check: the caller must be a member of the company this debit note belongs to.
     get_company_membership(db, current_user, req.company_id)
+    require_permission(db, current_user, req.company_id, "billing:edit")
 
     note = DebitNote(
         project_id=req.project_id,
@@ -663,7 +674,9 @@ def create_debit_note(req: DebitNoteCreateRequest, db: Session = Depends(get_db)
 
 # 4. Credit Notes
 @router.get("/credit-notes", response_model=List[CreditNoteResponse])
-def get_credit_notes(project_id: UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
+def get_credit_notes(project_id: UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access), current_user: User = Depends(get_current_user)):
+    project = db.query(Project).filter(Project.id == project_id).first()
+    require_module_view(db, current_user, project.company_id, "billing")
     notes = db.query(CreditNote).filter(CreditNote.project_id == project_id).all()
     return [
         CreditNoteResponse(
@@ -684,6 +697,7 @@ def get_credit_notes(project_id: UUID, db: Session = Depends(get_db), _: None = 
 def create_credit_note(req: CreditNoteCreateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     # Tenant check: the caller must be a member of the company this credit note belongs to.
     get_company_membership(db, current_user, req.company_id)
+    require_permission(db, current_user, req.company_id, "billing:edit")
 
     note = CreditNote(
         project_id=req.project_id,

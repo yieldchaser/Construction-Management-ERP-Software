@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from app.config import settings
 from app.database import get_db
 from app import models
-from app.permissions import has_permission
+from app.permissions import has_permission, has_module_access
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token", auto_error=False)
 
@@ -97,6 +97,43 @@ def require_permission(db: Session, current_user: models.User, company_id: uuid.
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail=f"You do not have the required permission: {permission_key}",
+        )
+
+
+def require_module_view(
+    db: Session, current_user: models.User, company_id: uuid.UUID, module: str
+) -> None:
+    """Sibling of `require_permission` for SENSITIVE READ gating.
+
+    Passes if the caller has ANY access to `module` (view/edit/approve), is a
+    partner, has `all`, or has no configured role/permissions yet (fail-open so
+    un-migrated tenants keep working). 403s otherwise. Used only for the
+    sensitive financial/payroll GETs called out in the Phase 2b spec.
+    """
+    membership = get_company_membership(db, current_user, company_id)
+
+    # Failsafe 1: partners can never be locked out.
+    if membership.priority_type == "partner":
+        return
+
+    role_perms: dict = {}
+    if membership.role_id is not None:
+        role = db.query(models.CompanyRole).filter(models.CompanyRole.id == membership.role_id).first()
+        if role is not None:
+            role_perms = role.permissions or {}
+
+    # Failsafe 2: un-migrated / empty permissions -> fail-open (allow).
+    if not role_perms:
+        return
+
+    # Superuser flag bypasses every check.
+    if role_perms.get("all") is True:
+        return
+
+    if not has_module_access(role_perms, module):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"You do not have access to view {module}.",
         )
 
 

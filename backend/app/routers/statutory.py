@@ -5,8 +5,8 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
 from app.database import get_db
-from app.auth import get_current_user, verify_company_access
-from app.models import StatutoryReport, StaffEmployee, PayrollRun, PayrollLineItem
+from app.auth import get_current_user, verify_company_access, require_permission, require_module_view
+from app.models import StatutoryReport, StaffEmployee, PayrollRun, PayrollLineItem, User
 from decimal import Decimal
 
 router = APIRouter(prefix="/statutory", tags=["Statutory Reports"], dependencies=[Depends(get_current_user)])
@@ -92,7 +92,8 @@ def calculate_penalty(report_type: str, total_wages: float, return_period: str, 
 
 
 @router.post("", response_model=StatutoryReportResponse, status_code=status.HTTP_201_CREATED)
-def create_report(payload: StatutoryReportCreate, db: Session = Depends(get_db)):
+def create_report(payload: StatutoryReportCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    require_permission(db, current_user, payload.company_id, "payroll:edit")
     data = payload.model_dump()
     for k in ("total_wages", "pf_employee_contribution", "pf_employer_contribution",
               "esi_employee_contribution", "esi_employer_contribution", "bocw_cess", "tds_deducted"):
@@ -107,7 +108,8 @@ def create_report(payload: StatutoryReportCreate, db: Session = Depends(get_db))
 
 
 @router.get("/{company_id}", response_model=List[StatutoryReportResponse])
-def list_reports(company_id: uuid.UUID, report_type: Optional[str] = None, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
+def list_reports(company_id: uuid.UUID, report_type: Optional[str] = None, db: Session = Depends(get_db), _: None = Depends(verify_company_access), current_user: User = Depends(get_current_user)):
+    require_module_view(db, current_user, company_id, "payroll")
     query = db.query(StatutoryReport).filter(StatutoryReport.company_id == company_id)
     if report_type:
         query = query.filter(StatutoryReport.report_type == report_type)
@@ -116,7 +118,8 @@ def list_reports(company_id: uuid.UUID, report_type: Optional[str] = None, db: S
 
 
 @router.get("/{company_id}/auto-populate", response_model=StatutoryReportResponse)
-def auto_populate(company_id: uuid.UUID, report_type: str = Query(...), return_period: str = Query(...), project_id: Optional[uuid.UUID] = None, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
+def auto_populate(company_id: uuid.UUID, report_type: str = Query(...), return_period: str = Query(...), project_id: Optional[uuid.UUID] = None, db: Session = Depends(get_db), _: None = Depends(verify_company_access), current_user: User = Depends(get_current_user)):
+    require_module_view(db, current_user, company_id, "payroll")
     year, month = map(int, return_period.split("-"))
     start_date = datetime(year, month, 1)
     if month == 12:
@@ -164,10 +167,11 @@ def auto_populate(company_id: uuid.UUID, report_type: str = Query(...), return_p
 
 
 @router.patch("/{report_id}/file", response_model=StatutoryReportResponse)
-def file_report(report_id: uuid.UUID, acknowledgment_number: str, filed_by: str, db: Session = Depends(get_db)):
+def file_report(report_id: uuid.UUID, acknowledgment_number: str, filed_by: str, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     report = db.query(StatutoryReport).filter(StatutoryReport.id == report_id).first()
     if not report:
         raise HTTPException(status_code=404, detail="Report not found")
+    require_permission(db, current_user, report.company_id, "payroll:edit")
     report.status = "filed"
     report.filed_at = datetime.utcnow()
     report.filed_by = filed_by
@@ -178,7 +182,8 @@ def file_report(report_id: uuid.UUID, acknowledgment_number: str, filed_by: str,
 
 
 @router.get("/{company_id}/penalty", response_model=dict)
-def estimate_penalty(company_id: uuid.UUID, report_type: str = Query(...), return_period: str = Query(...), total_wages: float = Query(...), db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
+def estimate_penalty(company_id: uuid.UUID, report_type: str = Query(...), return_period: str = Query(...), total_wages: float = Query(...), db: Session = Depends(get_db), _: None = Depends(verify_company_access), current_user: User = Depends(get_current_user)):
+    require_module_view(db, current_user, company_id, "payroll")
     penalty = calculate_penalty(report_type, total_wages, return_period, None)
     return {
         "report_type": report_type,

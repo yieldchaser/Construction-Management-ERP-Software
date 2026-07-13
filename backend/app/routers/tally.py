@@ -4,7 +4,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.auth import get_current_user, verify_company_access, get_company_membership
+from app.auth import get_current_user, verify_company_access, get_company_membership, require_permission
 from app.models import TallyConnection, TallyAgent, TallyLedgerMapping, TallyPartyMapping, TallyCostCentreMapping, TallyBankMapping, Company, Bill, Payment, CompanyTeam, User
 from pydantic import BaseModel
 
@@ -85,6 +85,7 @@ class LedgerMappingResponse(BaseModel):
 def create_connection(req: ConnectionCreateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     comp_uuid = uuid.UUID(str(req.company_id))
     get_company_membership(db, current_user, comp_uuid)
+    require_permission(db, current_user, comp_uuid, "settings:manage")
     company = db.query(Company).filter(Company.id == comp_uuid).first()
     if not company:
         raise HTTPException(status_code=404, detail="Company not found")
@@ -131,6 +132,7 @@ def get_connection(company_id: uuid.UUID, db: Session = Depends(get_db), _: None
 def register_agent(req: AgentCreateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     comp_uuid = uuid.UUID(str(req.company_id))
     get_company_membership(db, current_user, comp_uuid)
+    require_permission(db, current_user, comp_uuid, "settings:manage")
     agent = TallyAgent(
         id=uuid.uuid4(),
         company_id=comp_uuid,
@@ -154,6 +156,7 @@ def get_agents(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = D
 def create_ledger_mapping(req: LedgerMappingCreateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     comp_uuid = uuid.UUID(str(req.company_id))
     get_company_membership(db, current_user, comp_uuid)
+    require_permission(db, current_user, comp_uuid, "settings:manage")
 
     mapping = db.query(TallyLedgerMapping).filter(
         TallyLedgerMapping.company_id == comp_uuid,

@@ -23,7 +23,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
 from app.database import get_db
-from app.auth import get_current_user, verify_company_access, verify_project_access, get_company_membership, require_permission
+from app.auth import get_current_user, verify_company_access, verify_project_access, get_company_membership, require_permission, require_module_view
 from app.models import (
     StaffEmployee, AttendanceLog, Timesheet,
     TimesheetEntry, PayrollRun, PayrollLineItem, Project, LeaveRequest,
@@ -239,6 +239,7 @@ class PayrollRunResponse(BaseModel):
 @router.post("/employees", response_model=EmployeeResponse, status_code=status.HTTP_201_CREATED)
 def create_employee(payload: EmployeeCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     get_company_membership(db, current_user, payload.company_id)
+    require_permission(db, current_user, payload.company_id, "payroll:edit")
     emp = StaffEmployee(**payload.model_dump())
     db.add(emp)
     db.commit()
@@ -262,6 +263,7 @@ def punch(payload: PunchRequest, db: Session = Depends(get_db), current_user: Us
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     get_company_membership(db, current_user, project.company_id)
+    require_permission(db, current_user, project.company_id, "attendance:edit")
 
     site_lat, site_lng = _parse_site_coords(project.location)
     radius = project.attendance_radius_meters or 500
@@ -362,6 +364,7 @@ def create_timesheet(payload: TimesheetCreate, db: Session = Depends(get_db), cu
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     get_company_membership(db, current_user, project.company_id)
+    require_permission(db, current_user, project.company_id, "attendance:edit")
     ts = Timesheet(**payload.model_dump())
     db.add(ts)
     db.commit()
@@ -378,6 +381,7 @@ def add_timesheet_entry(ts_id: uuid.UUID, payload: TimesheetEntryCreate, db: Ses
     if not project:
         raise HTTPException(status_code=404, detail="Timesheet's project not found")
     get_company_membership(db, current_user, project.company_id)
+    require_permission(db, current_user, project.company_id, "attendance:edit")
     if ts.status not in ("draft", "rejected"):
         raise HTTPException(status_code=400, detail=f"Cannot add entries to timesheet in status '{ts.status}'")
 
@@ -469,6 +473,7 @@ def submit_timesheet(ts_id: uuid.UUID, db: Session = Depends(get_db), current_us
     if not project:
         raise HTTPException(status_code=404, detail="Timesheet's project not found")
     get_company_membership(db, current_user, project.company_id)
+    require_permission(db, current_user, project.company_id, "attendance:edit")
     if ts.status != "draft":
         raise HTTPException(status_code=400, detail="Only draft timesheets can be submitted")
     ts.status = "submitted"
@@ -691,6 +696,7 @@ def get_payslips(run_id: uuid.UUID, db: Session = Depends(get_db), current_user:
     if not run:
         raise HTTPException(status_code=404, detail="Payroll run not found")
     get_company_membership(db, current_user, run.company_id)
+    require_module_view(db, current_user, run.company_id, "payroll")
     lines = db.query(PayrollLineItem).filter(PayrollLineItem.payroll_run_id == run_id).all()
     result = []
     for line in lines:
@@ -752,7 +758,8 @@ def list_leaves(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = 
 
 
 @router.post("/leaves/{company_id}", response_model=LeaveRequestResponse)
-def create_leave_request(company_id: uuid.UUID, data: LeaveRequestCreate, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
+def create_leave_request(company_id: uuid.UUID, data: LeaveRequestCreate, db: Session = Depends(get_db), _: None = Depends(verify_company_access), current_user: User = Depends(get_current_user)):
+    require_permission(db, current_user, company_id, "payroll:edit")
     new_leave = LeaveRequest(
         company_id=company_id,
         project_id=data.project_id,
@@ -793,6 +800,7 @@ def upload_payroll(
     # so it can't share a value with a plain Depends(verify_company_access)
     # sub-dependency; verify membership inline instead.
     get_company_membership(db, current_user, company_id)
+    require_permission(db, current_user, company_id, "payroll:edit")
     import csv
     import io
 
@@ -914,8 +922,9 @@ class EmployeeUpdate(BaseModel):
 
 
 @router.get("/company/employees/{company_id}", response_model=List[EmployeeResponse])
-def list_company_employees(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
+def list_company_employees(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access), current_user: User = Depends(get_current_user)):
     """Company-wide active employee list (Payroll → People tab)."""
+    require_module_view(db, current_user, company_id, "payroll")
     return db.query(StaffEmployee).filter(
         StaffEmployee.company_id == company_id,
         StaffEmployee.status == "active"
@@ -928,6 +937,7 @@ def update_employee(employee_id: uuid.UUID, payload: EmployeeUpdate, db: Session
     if not emp:
         raise HTTPException(status_code=404, detail="Employee not found")
     get_company_membership(db, current_user, emp.company_id)
+    require_permission(db, current_user, emp.company_id, "payroll:edit")
     for k, v in payload.model_dump(exclude_unset=True).items():
         setattr(emp, k, v)
     db.commit()
@@ -957,7 +967,8 @@ def list_designations(company_id: uuid.UUID, db: Session = Depends(get_db), _: N
 
 
 @router.post("/designations/{company_id}", response_model=DesignationResponse, status_code=status.HTTP_201_CREATED)
-def create_designation(company_id: uuid.UUID, payload: DesignationCreate, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
+def create_designation(company_id: uuid.UUID, payload: DesignationCreate, db: Session = Depends(get_db), _: None = Depends(verify_company_access), current_user: User = Depends(get_current_user)):
+    require_permission(db, current_user, company_id, "payroll:edit")
     obj = Designation(company_id=company_id, name=payload.name)
     db.add(obj)
     db.commit()
@@ -1007,7 +1018,8 @@ def list_leave_templates(company_id: uuid.UUID, db: Session = Depends(get_db), _
 
 
 @router.post("/leave-templates/{company_id}", response_model=LeaveTemplateResponse, status_code=status.HTTP_201_CREATED)
-def create_leave_template(company_id: uuid.UUID, payload: LeaveTemplateCreate, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
+def create_leave_template(company_id: uuid.UUID, payload: LeaveTemplateCreate, db: Session = Depends(get_db), _: None = Depends(verify_company_access), current_user: User = Depends(get_current_user)):
+    require_permission(db, current_user, company_id, "payroll:edit")
     obj = LeaveTemplate(company_id=company_id, **payload.model_dump())
     db.add(obj)
     db.commit()
@@ -1020,6 +1032,7 @@ def update_leave_template(leave_template_id: uuid.UUID, payload: LeaveTemplateUp
     if not obj:
         raise HTTPException(status_code=404, detail="Leave template not found")
     get_company_membership(db, current_user, obj.company_id)
+    require_permission(db, current_user, obj.company_id, "payroll:edit")
     for k, v in payload.model_dump(exclude_unset=True).items():
         setattr(obj, k, v)
     db.commit()
@@ -1084,6 +1097,7 @@ def get_payroll_profile(employee_id: uuid.UUID, db: Session = Depends(get_db), c
     if not prof:
         raise HTTPException(status_code=404, detail="Payroll profile not found")
     get_company_membership(db, current_user, prof.company_id)
+    require_module_view(db, current_user, prof.company_id, "payroll")
     return prof
 
 
@@ -1093,6 +1107,7 @@ def upsert_payroll_profile(employee_id: uuid.UUID, payload: PayrollProfileUpdate
     if not emp:
         raise HTTPException(status_code=404, detail="Employee not found")
     get_company_membership(db, current_user, emp.company_id)
+    require_permission(db, current_user, emp.company_id, "payroll:edit")
     prof = db.query(PayrollProfile).filter(PayrollProfile.employee_id == employee_id).first()
     data = payload.model_dump(exclude_unset=True)
     if not prof:
@@ -1145,7 +1160,8 @@ def list_holidays(company_id: uuid.UUID, db: Session = Depends(get_db), _: None 
 
 
 @router.post("/holidays/{company_id}", response_model=HolidayResponse, status_code=status.HTTP_201_CREATED)
-def create_holiday(company_id: uuid.UUID, payload: HolidayCreate, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
+def create_holiday(company_id: uuid.UUID, payload: HolidayCreate, db: Session = Depends(get_db), _: None = Depends(verify_company_access), current_user: User = Depends(get_current_user)):
+    require_permission(db, current_user, company_id, "payroll:edit")
     obj = Holiday(company_id=company_id, name=payload.name, date=payload.date)
     db.add(obj)
     db.commit()
@@ -1158,6 +1174,7 @@ def update_holiday(holiday_id: uuid.UUID, payload: HolidayUpdate, db: Session = 
     if not obj:
         raise HTTPException(status_code=404, detail="Holiday not found")
     get_company_membership(db, current_user, obj.company_id)
+    require_permission(db, current_user, obj.company_id, "payroll:edit")
     for k, v in payload.model_dump(exclude_unset=True).items():
         setattr(obj, k, v)
     db.commit()

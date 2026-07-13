@@ -24,10 +24,10 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
 from app.database import get_db
-from app.auth import get_current_user, verify_company_access, verify_project_access, get_company_membership
+from app.auth import get_current_user, verify_company_access, verify_project_access, get_company_membership, require_permission
 from app.models import (
     QualityChecklist, ChecklistItem, SiteInspection,
-    InspectionResponse, NCR, MaterialTestResult, User
+    InspectionResponse, NCR, MaterialTestResult, Project, User
 )
 
 router = APIRouter(prefix="/quality", tags=["Quality Control & Inspections"], dependencies=[Depends(get_current_user)])
@@ -179,7 +179,8 @@ class MaterialTestResponse(BaseModel):
 # ─── Checklists ───────────────────────────────────────────────────────────────
 
 @router.post("/checklists", response_model=ChecklistResponse, status_code=status.HTTP_201_CREATED)
-def create_checklist(payload: ChecklistCreate, db: Session = Depends(get_db)):
+def create_checklist(payload: ChecklistCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    require_permission(db, current_user, payload.company_id, "quality:edit")
     cl = QualityChecklist(**payload.model_dump())
     db.add(cl)
     db.commit()

@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import select
 from openpyxl import load_workbook
 from app.database import get_db
-from app.auth import get_current_user, verify_project_access, get_company_membership
+from app.auth import get_current_user, verify_project_access, get_company_membership, require_permission, require_module_view
 from app.models import BOQItem, BOQDocument, ProjectBudget, Project, Bill, LibraryParty, Task, User
 from app.workflow_controls import get_default_terms
 from app.utils.pdf_generator import generate_document_pdf
@@ -54,12 +54,13 @@ class BudgetResponse(BaseModel):
         from_attributes = True
 
 @router.get("/boq", response_model=List[BOQItemResponse])
-def get_boq_items(project_id: UUID, boq_document_id: Optional[UUID] = None, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
+def get_boq_items(project_id: UUID, boq_document_id: Optional[UUID] = None, db: Session = Depends(get_db), current_user: User = Depends(get_current_user), _: None = Depends(verify_project_access)):
     # Check if project exists
     project = db.query(Project).filter(Project.id == project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
-    
+    require_module_view(db, current_user, project.company_id, "budgeting")
+
     q = db.query(BOQItem).filter(BOQItem.project_id == project_id)
     if boq_document_id is not None:
         q = q.filter(BOQItem.boq_document_id == boq_document_id)
@@ -97,6 +98,7 @@ async def import_boq(
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     get_company_membership(db, current_user, project.company_id)
+    require_permission(db, current_user, project.company_id, "budgeting:edit")
 
     if not file.filename.endswith(('.xlsx', '.xlsm')):
         raise HTTPException(status_code=400, detail="Only .xlsx or .xlsm Excel files are supported")
@@ -211,6 +213,7 @@ def allocate_project_budgets(
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     get_company_membership(db, current_user, project.company_id)
+    require_permission(db, current_user, project.company_id, "budgeting:edit")
 
     budget = db.query(ProjectBudget).filter(ProjectBudget.project_id == request.project_id).first()
     if not budget:
@@ -319,10 +322,11 @@ def _build_doc_response(db: Session, d: BOQDocument) -> BOQDocumentResponse:
 
 
 @router.get("/boq-documents", response_model=List[BOQDocumentResponse])
-def list_boq_documents(project_id: UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
+def list_boq_documents(project_id: UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user), _: None = Depends(verify_project_access)):
     project = db.query(Project).filter(Project.id == project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
+    require_module_view(db, current_user, project.company_id, "budgeting")
     docs = db.query(BOQDocument).filter(BOQDocument.project_id == project_id).all()
     return [_build_doc_response(db, d) for d in docs]
 
@@ -333,6 +337,7 @@ def create_boq_document(req: BOQDocumentCreate, db: Session = Depends(get_db), c
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     get_company_membership(db, current_user, project.company_id)
+    require_permission(db, current_user, project.company_id, "budgeting:edit")
     if req.client_party_id:
         party = db.query(LibraryParty).filter(LibraryParty.id == req.client_party_id).first()
         if not party:
@@ -364,6 +369,7 @@ def patch_boq_document(doc_id: UUID, req: BOQDocumentPatch, db: Session = Depend
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     get_company_membership(db, current_user, project.company_id)
+    require_permission(db, current_user, project.company_id, "budgeting:edit")
     if req.title is not None:
         doc.title = req.title
     if req.client_party_id is not None:
@@ -389,6 +395,7 @@ def get_boq_document_pdf(doc_id: UUID, db: Session = Depends(get_db), current_us
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     get_company_membership(db, current_user, project.company_id)
+    require_module_view(db, current_user, project.company_id, "budgeting")
 
     company_name, custom_banner = resolve_pdf_branding(db, project.company_id, project)
     party = db.query(LibraryParty).filter(LibraryParty.id == doc.client_party_id).first() if doc.client_party_id else None

@@ -11,7 +11,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
 from app.database import get_db
-from app.auth import get_current_user, verify_company_access, verify_project_access, get_company_membership
+from app.auth import get_current_user, verify_company_access, verify_project_access, get_company_membership, require_permission
 from app.models import Equipment, EquipmentDeployment, FuelLog, MaintenanceSchedule, Project, User
 
 router = APIRouter(prefix="/equipment", tags=["Equipment & Machinery Tracking"], dependencies=[Depends(get_current_user)])
@@ -112,6 +112,7 @@ class MaintenanceResponse(BaseModel):
 @router.post("", response_model=EquipmentResponse, status_code=status.HTTP_201_CREATED)
 def add_equipment(payload: EquipmentCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     get_company_membership(db, current_user, payload.company_id)
+    require_permission(db, current_user, payload.company_id, "equipment:edit")
     # Check if code already exists
     existing = db.query(Equipment).filter(Equipment.code == payload.code).first()
     if existing:
@@ -144,6 +145,7 @@ def deploy_equipment(
     if not eq:
         raise HTTPException(status_code=404, detail="Equipment not found")
     get_company_membership(db, current_user, eq.company_id)
+    require_permission(db, current_user, eq.company_id, "equipment:edit")
 
     proj = db.query(Project).filter(Project.id == payload.project_id).first()
     if not proj:
@@ -186,6 +188,7 @@ def return_deployment(deployment_id: uuid.UUID, db: Session = Depends(get_db), c
     if not eq:
         raise HTTPException(status_code=404, detail="Equipment not found")
     get_company_membership(db, current_user, eq.company_id)
+    require_permission(db, current_user, eq.company_id, "equipment:edit")
 
     dep.end_date = datetime.utcnow()
     eq.status = "available"
@@ -207,6 +210,7 @@ def log_fuel(
     if not eq:
         raise HTTPException(status_code=404, detail="Equipment not found")
     get_company_membership(db, current_user, eq.company_id)
+    require_permission(db, current_user, eq.company_id, "equipment:edit")
 
     data = payload.model_dump()
     total_cost = data["liters"] * data["cost_per_liter"]
@@ -250,6 +254,7 @@ def schedule_maintenance(
     if not eq:
         raise HTTPException(status_code=404, detail="Equipment not found")
     get_company_membership(db, current_user, eq.company_id)
+    require_permission(db, current_user, eq.company_id, "equipment:edit")
 
     data = payload.model_dump()
     db_data = {
