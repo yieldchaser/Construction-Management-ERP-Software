@@ -542,6 +542,21 @@ body {
 .calc-prose .cp-faq-trigger [class*="icon"] {
   display: none;
 }
+/* Every calc source file ships its own bespoke FAQ toggle glyph (pc-faq-toggle
+   "+" span, brick/bbs/concrete-volume *-faq-icon divs, concrete-mix/house/steel
+   *-d-icon / *-f-icon / *-fqi-icon boxes, etc). Hide all of them, in both
+   native <details><summary> and .cp-faq-trigger markup, so only the unified
+   CSS chevron (.calc-prose details > summary::after / .cp-faq-trigger::after)
+   remains. !important is required to beat the .help-article [class*="-faq-icon"]
+   box-styling rule further down this file (calc pages carry both
+   help-article and calc-prose classes). Scoped to .calc-prose, which only
+   calculator pages carry, so comparison/glossary/help pages are unaffected. */
+.calc-prose [class*="-faq-icon"],
+.calc-prose [class*="-faq-toggle"],
+.calc-prose .cp-faq-trigger [class*="icon"],
+.calc-prose details > summary [class*="icon"] {
+  display: none !important;
+}
 .calc-prose .cp-faq-trigger::after {
   content: "";
   flex: none;
