@@ -5,6 +5,10 @@ import { authHeaders } from "@/lib/siteflow";
 import { useParams } from "next/navigation";
 import { useEffect, useState, useRef, useCallback } from "react";
 import PwaControls from "@/components/pwa/PwaControls";
+import RolePermissionsModal, { RoleForEditor } from "@/components/rbac/RolePermissionsModal";
+import TeamSection from "@/components/rbac/TeamSection";
+import { usePermissions } from "@/context/PermissionsContext";
+import { LOCKED_ROLES } from "@/lib/rbac";
 
 interface CompanySettings {
   id: string;
@@ -72,6 +76,7 @@ interface Role {
   id: string;
   company_id: string;
   role_name: string;
+  permissions?: Record<string, boolean> | null;
   created_at: string;
 }
 
@@ -158,12 +163,13 @@ const DEFAULT_ROLES = [
 ];
 
 type SectionId =
-  | "company" | "roles" | "payroll" | "holiday" | "workflow"
+  | "company" | "roles" | "team" | "payroll" | "holiday" | "workflow"
   | "docfields" | "approval" | "integrations" | "subscription";
 
 const SECTIONS: { id: SectionId; label: string }[] = [
   { id: "company", label: "Company" },
   { id: "roles", label: "Roles & Access" },
+  { id: "team", label: "Team" },
   { id: "payroll", label: "Payroll" },
   { id: "holiday", label: "Holiday & Weekoff" },
   { id: "workflow", label: "Workflow Controls" },
@@ -187,6 +193,7 @@ const ASSET_LABELS: { type: "logo" | "signature" | "stamp" | "watermark"; label:
 
 export default function CompanySettingsPage() {
   const { company_id } = useParams();
+  const { can } = usePermissions();
   const [settings, setSettings] = useState<CompanySettings | null>(null);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [activeSection, setActiveSection] = useState<SectionId>("company");
@@ -692,6 +699,7 @@ export default function CompanySettingsPage() {
 
   // ─── Roles & Access (flat list of roles) ──────────────────────────────────
   const [roles, setRoles] = useState<Role[]>([]);
+  const [permRole, setPermRole] = useState<RoleForEditor | null>(null);
   const [roleName, setRoleName] = useState("");
   const [showAddRole, setShowAddRole] = useState(false);
   const [roleBusy, setRoleBusy] = useState(false);
@@ -920,7 +928,7 @@ export default function CompanySettingsPage() {
       <aside className="w-60 shrink-0 border-r border-border-custom bg-card p-4 overflow-y-auto">
         <div className="px-2 pb-4 text-[10px] uppercase tracking-[0.2em] text-muted font-bold">Settings</div>
         <nav className="space-y-1">
-          {SECTIONS.map((s) => (
+          {SECTIONS.filter((s) => s.id !== "team" || can("team:manage")).map((s) => (
             <button
               key={s.id}
               onClick={() => setActiveSection(s.id)}
@@ -1147,12 +1155,14 @@ export default function CompanySettingsPage() {
                   <p className="mt-1 text-xs text-muted">Flat list of access roles for this organization. {roles.length} role{roles.length === 1 ? "" : "s"} configured.</p>
                 </div>
                 <div className="flex gap-2">
-                  {roles.length === 0 && (
+                  {can("settings:manage") && roles.length === 0 && (
                     <button onClick={seedRoles} disabled={roleBusy} className="bg-elevated text-foreground text-xs font-bold px-4 py-2.5 rounded-md border border-border-custom hover:border-primary/50 disabled:opacity-50">
                       Seed 10 Defaults
                     </button>
                   )}
-                  <button onClick={() => setShowAddRole(true)} className="bg-primary text-white text-xs font-bold px-4 py-2.5 rounded-md">+ Add Role</button>
+                  {can("settings:manage") && (
+                    <button onClick={() => setShowAddRole(true)} className="bg-primary text-white text-xs font-bold px-4 py-2.5 rounded-md">+ Add Role</button>
+                  )}
                 </div>
               </div>
 
@@ -1180,16 +1190,48 @@ export default function CompanySettingsPage() {
                       <div className="h-9 w-9 shrink-0 rounded-full bg-primary/15 text-primary font-bold flex items-center justify-center text-sm">
                         {r.role_name.charAt(0).toUpperCase()}
                       </div>
-                      <div>
+                      <div className="min-w-0 flex-1">
                         <div className="font-bold text-foreground text-sm">{r.role_name}</div>
-                        {DEFAULT_ROLES.includes(r.role_name) && (
-                          <span className="text-[10px] bg-elevated text-muted px-2 py-0.5 rounded-full">Default</span>
-                        )}
+                        <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                          {DEFAULT_ROLES.includes(r.role_name) && (
+                            <span className="text-[10px] bg-elevated text-muted px-2 py-0.5 rounded-full">Default</span>
+                          )}
+                          {LOCKED_ROLES.has(r.role_name) && (
+                            <span className="text-[10px] bg-emerald-500/15 text-emerald-400 px-2 py-0.5 rounded-full font-bold">Full access</span>
+                          )}
+                        </div>
                       </div>
+                      {can("settings:manage") && (
+                        <button
+                          onClick={() => setPermRole({ id: r.id, role_name: r.role_name, permissions: r.permissions })}
+                          className="shrink-0 text-[10px] bg-primary/10 text-primary border border-primary/20 px-3 py-1.5 rounded-md hover:bg-primary/20 whitespace-nowrap"
+                        >
+                          Edit Permissions
+                        </button>
+                      )}
                     </div>
                   ))}
                 </div>
               )}
+            </div>
+          )}
+
+          {permRole && (
+            <RolePermissionsModal
+              role={permRole}
+              onClose={() => setPermRole(null)}
+              onSaved={(updated) =>
+                setRoles((prev) =>
+                  prev.map((r) => (r.id === updated.id ? { ...r, permissions: updated.permissions } : r))
+                )
+              }
+            />
+          )}
+
+          {/* ════════════════════════════ TEAM ════════════════════════════ */}
+          {activeSection === "team" && can("team:manage") && (
+            <div className="space-y-6">
+              <TeamSection companyId={String(company_id)} />
             </div>
           )}
 

@@ -6,7 +6,10 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
 from app.database import get_db
 from app.auth import get_current_user, verify_company_access, get_company_membership, require_permission
-from app.models import Company, CompanyBranch, ApprovalRule, CompanyFile, CompanyRole, CompanyPayrollSettings, SalaryTemplate, PdfTemplate, CompanyTerms, User
+from app.models import (
+    Company, CompanyBranch, ApprovalRule, CompanyFile, CompanyRole, CompanyTeam,
+    CompanyPayrollSettings, SalaryTemplate, PdfTemplate, CompanyTerms, User,
+)
 from app import supabase_storage
 from app.permissions import (
     DEFAULT_ROLE_PRESETS,
@@ -478,6 +481,107 @@ def delete_role(
         )
     db.delete(role)
     db.commit()
+
+
+# ─── Company team members (RBAC role assignment) ────────────────────────────
+# Phase 3 frontend surface: list members with their current role and (re)assign
+# a role. Both endpoints require `team:manage`; partners / superusers always pass
+# via the failsafe in `require_permission`.
+
+class TeamMemberResponse(BaseModel):
+    id: uuid.UUID
+    name: str
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    role_id: Optional[uuid.UUID] = None
+    role_name: Optional[str] = None
+    priority_type: str
+
+    class Config:
+        from_attributes = True
+
+
+class TeamMemberRoleUpdate(BaseModel):
+    role_id: Optional[uuid.UUID] = None
+
+
+@router.get("/team/{company_id}", response_model=List[TeamMemberResponse])
+def list_team_members(
+    company_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    _: None = Depends(verify_company_access),
+):
+    """List every CompanyTeam member of `company_id` with their assigned role."""
+    require_permission(db, current_user, company_id, "team:manage")
+    rows = (
+        db.query(CompanyTeam, User, CompanyRole)
+        .join(User, User.id == CompanyTeam.user_id)
+        .outerjoin(CompanyRole, CompanyRole.id == CompanyTeam.role_id)
+        .filter(CompanyTeam.company_id == company_id)
+        .order_by(User.name)
+        .all()
+    )
+    return [
+        TeamMemberResponse(
+            id=t.id,
+            name=u.name,
+            email=u.email,
+            phone=u.phone,
+            role_id=t.role_id,
+            role_name=r.role_name if r else None,
+            priority_type=t.priority_type,
+        )
+        for t, u, r in rows
+    ]
+
+
+@router.put("/team/{member_id}/role", response_model=TeamMemberResponse)
+def assign_member_role(
+    member_id: uuid.UUID,
+    payload: TeamMemberRoleUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Assign (or clear) a CompanyRole on a team member.
+
+    The target role must belong to the same company as the member (cross-company
+    role assignment is rejected). Partners keep their `priority_type` regardless of
+    the chosen role, so this can never lock an owner out.
+    """
+    member = db.query(CompanyTeam).filter(CompanyTeam.id == member_id).first()
+    if not member:
+        raise HTTPException(status_code=404, detail="Team member not found")
+    get_company_membership(db, current_user, member.company_id)
+    require_permission(db, current_user, member.company_id, "team:manage")
+
+    if payload.role_id is not None:
+        role = db.query(CompanyRole).filter(CompanyRole.id == payload.role_id).first()
+        if not role:
+            raise HTTPException(status_code=404, detail="Role not found")
+        if role.company_id != member.company_id:
+            raise HTTPException(
+                status_code=400,
+                detail="Role does not belong to this company",
+            )
+        member.role_id = role.id
+    else:
+        member.role_id = None
+
+    db.commit()
+    role = (
+        db.query(CompanyRole).filter(CompanyRole.id == member.role_id).first()
+        if member.role_id else None
+    )
+    return TeamMemberResponse(
+        id=member.id,
+        name=db.query(User).filter(User.id == member.user_id).first().name,
+        email=db.query(User).filter(User.id == member.user_id).first().email,
+        phone=db.query(User).filter(User.id == member.user_id).first().phone,
+        role_id=member.role_id,
+        role_name=role.role_name if role else None,
+        priority_type=member.priority_type,
+    )
 
 
 # ─── Payroll Settings (company-level default statutory rates) ───────────────
