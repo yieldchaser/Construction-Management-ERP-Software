@@ -118,13 +118,13 @@ export default function PrivacyPage() {
           <p className="text-xs">
             SiteFlow is an independent construction operations platform. All product names, logos, and brands are property of their respective owners.
           </p>
-          <div className="flex items-center gap-6 text-xs">
-            <Link href="/blog" className="hover:text-muted transition-all">Blog</Link>
-            <Link href="/help" className="hover:text-muted transition-all">Help Center</Link>
-            <Link href="/resources/construction-terms-meanings" className="hover:text-muted transition-all">Glossary</Link>
-            <Link href="/resources/construction-calculators" className="hover:text-muted transition-all">Calculators</Link>
-            <Link href="/terms" className="hover:text-muted transition-all">Terms</Link>
-            <Link href="/privacy" className="hover:text-muted transition-all">Privacy</Link>
+          <div className="flex items-center flex-wrap gap-x-6 gap-y-2 text-xs">
+            <Link href="/blog" className="hover:text-muted transition-all whitespace-nowrap">Blog</Link>
+            <Link href="/help" className="hover:text-muted transition-all whitespace-nowrap">Help Center</Link>
+            <Link href="/resources/construction-terms-meanings" className="hover:text-muted transition-all whitespace-nowrap">Glossary</Link>
+            <Link href="/resources/construction-calculators" className="hover:text-muted transition-all whitespace-nowrap">Calculators</Link>
+            <Link href="/terms" className="hover:text-muted transition-all whitespace-nowrap">Terms</Link>
+            <Link href="/privacy" className="hover:text-muted transition-all whitespace-nowrap">Privacy</Link>
           </div>
         </div>
       </footer>

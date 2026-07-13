@@ -118,6 +118,18 @@ export default function AboutPage() {
         </p>
       </section>
 
+      {/* Proof strip, same claim set as homepage and pricing (no invented numbers) */}
+      <section className="max-w-6xl mx-auto px-6 py-10">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-px rounded-lg border border-border-custom bg-border-custom overflow-hidden">
+          {PROOF_POINTS.map((t, i) => (
+            <div key={i} className="bg-card px-4 py-6 text-center space-y-1">
+              <div className="text-2xl font-extrabold text-white">{t.value}</div>
+              <div className="text-xs text-muted">{t.label}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* Product philosophy */}
       <section className="max-w-6xl mx-auto px-6 py-12 space-y-10">
         <div className="text-center space-y-3">
@@ -138,32 +150,26 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Proof strip, same claim set as homepage and pricing (no invented numbers) */}
-      <section className="max-w-6xl mx-auto px-6 py-10">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-px rounded-lg border border-border-custom bg-border-custom overflow-hidden">
-          {PROOF_POINTS.map((t, i) => (
-            <div key={i} className="bg-card px-4 py-6 text-center space-y-1">
-              <div className="text-2xl font-extrabold text-white">{t.value}</div>
-              <div className="text-xs text-muted">{t.label}</div>
-            </div>
-          ))}
-        </div>
-      </section>
-
       {/* Final CTA */}
       <section className="max-w-4xl mx-auto px-6 py-16">
-        <div className="rounded-md bg-radial bg-primary border border-border-custom p-12 text-center space-y-6 relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-full bg-cover opacity-10 pointer-events-none" />
-          <h2 className="text-3xl font-bold text-white">See the workspace for yourself</h2>
+        <div className="rounded-md bg-card border border-border-custom p-12 text-center space-y-6 relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-full bg-radial opacity-10 pointer-events-none" />
+          <h2 className="text-3xl font-extrabold text-white">See the workspace for yourself</h2>
           <p className="text-white/70 text-sm max-w-md mx-auto">
             Start a free trial and explore planning, progress, procurement and project finance in one place.
           </p>
-          <div className="pt-2">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
             <Link
               href="/login"
-              className="inline-flex items-center justify-center rounded-md bg-white px-8 py-3.5 text-sm font-bold text-primary shadow-lg shadow-black/20 hover:bg-white/90 active:scale-[0.98] transition-all cursor-pointer"
+              className="w-full sm:w-auto inline-flex items-center justify-center rounded-md bg-primary px-8 py-3.5 text-sm font-bold text-white shadow-lg shadow-primary/20 hover:opacity-90 active:scale-[0.98] transition-all cursor-pointer"
             >
               Start Free Trial
+            </Link>
+            <Link
+              href="/contact"
+              className="w-full sm:w-auto inline-flex items-center justify-center rounded-md border border-white/20 px-8 py-3.5 text-sm font-bold text-white hover:bg-white/5 active:scale-[0.98] transition-all cursor-pointer"
+            >
+              Talk to Sales
             </Link>
           </div>
         </div>
@@ -175,14 +181,14 @@ export default function AboutPage() {
           <p className="text-xs">
             SiteFlow is an independent construction operations platform. All product names, logos, and brands are property of their respective owners.
           </p>
-          <div className="flex items-center gap-6 text-xs">
-            <Link href="/blog" className="hover:text-muted transition-all">Blog</Link>
-            <Link href="/help" className="hover:text-muted transition-all">Help Center</Link>
-            <Link href="/resources/construction-terms-meanings" className="hover:text-muted transition-all">Glossary</Link>
-          <Link href="/resources/construction-calculators" className="hover:text-muted transition-all">Calculators</Link>
-          <Link href="/who-we-serve" className="hover:text-muted transition-all">Who We Serve</Link>
-          <Link href="/terms" className="hover:text-muted transition-all">Terms</Link>
-            <Link href="/privacy" className="hover:text-muted transition-all">Privacy</Link>
+          <div className="flex items-center flex-wrap gap-x-6 gap-y-2 text-xs">
+            <Link href="/blog" className="hover:text-muted transition-all whitespace-nowrap">Blog</Link>
+            <Link href="/help" className="hover:text-muted transition-all whitespace-nowrap">Help Center</Link>
+            <Link href="/resources/construction-terms-meanings" className="hover:text-muted transition-all whitespace-nowrap">Glossary</Link>
+            <Link href="/resources/construction-calculators" className="hover:text-muted transition-all whitespace-nowrap">Calculators</Link>
+            <Link href="/who-we-serve" className="hover:text-muted transition-all whitespace-nowrap">Who We Serve</Link>
+            <Link href="/terms" className="hover:text-muted transition-all whitespace-nowrap">Terms</Link>
+            <Link href="/privacy" className="hover:text-muted transition-all whitespace-nowrap">Privacy</Link>
           </div>
         </div>
       </footer>
