@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from app.config import settings
 from app.database import get_db
 from app import models
+from app.permissions import has_permission
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token", auto_error=False)
 
@@ -60,6 +61,43 @@ def get_company_membership(db: Session, user: models.User, company_id: uuid.UUID
             detail="User is not a member of the requested company",
         )
     return membership
+
+
+def require_permission(db: Session, current_user: models.User, company_id: uuid.UUID, permission_key: str) -> None:
+    """PHASE 2 RBAC enforcement.
+
+    Reuses the tenant guard (`get_company_membership`) and then denies unless the
+    caller's role holds `permission_key`. Failsafes (SECURITY_rbac_design.md):
+      - A `partner` member always passes (never lockable out).
+      - An empty / null role permissions dict fails OPEN (allows) so un-migrated
+        tenants keep working until an admin actually configures roles.
+      - The `all` superuser flag bypasses every check (Owner / Admin).
+    """
+    membership = get_company_membership(db, current_user, company_id)
+
+    # Failsafe 1: partners can never be locked out.
+    if membership.priority_type == "partner":
+        return
+
+    role_perms: dict = {}
+    if membership.role_id is not None:
+        role = db.query(models.CompanyRole).filter(models.CompanyRole.id == membership.role_id).first()
+        if role is not None:
+            role_perms = role.permissions or {}
+
+    # Failsafe 2: un-migrated / empty permissions -> fail-open (allow).
+    if not role_perms:
+        return
+
+    # Superuser flag bypasses every check.
+    if role_perms.get("all") is True:
+        return
+
+    if not has_permission(role_perms, permission_key):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"You do not have the required permission: {permission_key}",
+        )
 
 
 def get_current_active_company_user(

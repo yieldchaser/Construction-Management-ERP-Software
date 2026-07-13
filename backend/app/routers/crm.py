@@ -4,7 +4,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.auth import get_current_user, verify_company_access, get_company_membership
+from app.auth import get_current_user, verify_company_access, get_company_membership, require_permission
 from app.models import (
     CRMLead, CRMQuotation, CRMQuotationItem, Company,
     CRMLeadSource, CRMLeadCategory, CRMLeadStatus, CompanyTeam, User,
@@ -287,6 +287,7 @@ def delete_lead(lead_id: uuid.UUID, db: Session = Depends(get_db), current_user:
     if not lead:
         raise HTTPException(status_code=404, detail="Lead not found")
     get_company_membership(db, current_user, lead.company_id)
+    require_permission(db, current_user, lead.company_id, "data:delete")
     try:
         from app.routers.delete_logs import log_deletion
         log_deletion(db, lead.company_id, "crm_lead", lead.id, f"CRM Lead: {lead.contact_name}")

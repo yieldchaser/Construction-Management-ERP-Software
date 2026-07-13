@@ -4,7 +4,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.auth import get_current_user, verify_company_access, verify_project_access, get_company_membership
+from app.auth import get_current_user, verify_company_access, verify_project_access, get_company_membership, require_permission
 from app.models import Task, TaskPredecessor, Project, TaskTodo, TaskComment, CompanyTeam, User
 from app.workflow_controls import (
     enforce_entry_creation_window,
@@ -391,6 +391,7 @@ def delete_task_todo(todo_id: UUID, db: Session = Depends(get_db), current_user:
     if not proj:
         raise HTTPException(status_code=404, detail="Project not found")
     get_company_membership(db, current_user, proj.company_id)
+    require_permission(db, current_user, proj.company_id, "data:delete")
     try:
         from app.routers.delete_logs import log_deletion
         company_id = str(proj.company_id) if proj else None

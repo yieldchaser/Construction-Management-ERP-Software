@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import List, Optional
 from app.database import get_db
 from app import models
-from app.auth import get_current_user, verify_company_access, get_company_membership
+from app.auth import get_current_user, verify_company_access, get_company_membership, require_permission
 import uuid
 
 router = APIRouter(prefix="/todos", tags=["Todos"], dependencies=[Depends(get_current_user)])
@@ -133,26 +133,7 @@ def update_todo(todo_id: uuid.UUID, payload: TodoUpdate, db: Session = Depends(g
     if not t:
         raise HTTPException(status_code=404, detail="Todo not found")
     get_company_membership(db, current_user, t.company_id)
-    for field, value in payload.model_dump(exclude_unset=True).items():
-        if field == "due_date":
-            value = _parse_dt(value)
-        if field == "assignee_ids":
-            db.query(models.TodoAssignee).filter(models.TodoAssignee.todo_id == t.id).delete()
-            for aid in value:
-                db.add(models.TodoAssignee(todo_id=t.id, assignee_id=aid))
-            continue
-        setattr(t, field, value)
-    db.commit()
-    db.refresh(t)
-    return _serialize(db, t)
-
-
-@router.delete("/{todo_id}")
-def delete_todo(todo_id: uuid.UUID, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    t = db.query(models.Todo).filter(models.Todo.id == todo_id).first()
-    if not t:
-        raise HTTPException(status_code=404, detail="Todo not found")
-    get_company_membership(db, current_user, t.company_id)
+    require_permission(db, current_user, t.company_id, "data:delete")
     try:
         from app.routers.delete_logs import log_deletion
         log_deletion(db, t.company_id, "todo", t.id, f"Todo: {t.title}")

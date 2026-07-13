@@ -4,7 +4,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.auth import get_current_user, verify_company_access, verify_project_access, get_company_membership
+from app.auth import get_current_user, verify_company_access, verify_project_access, get_company_membership, require_permission
 from app.models import (
     MaterialIndent, MaterialIndentItem,
     PurchaseOrder, PurchaseOrderItem,
@@ -322,6 +322,7 @@ def approve_indent(indent_id: UUID, db: Session = Depends(get_db), current_user:
     if not indent:
         raise HTTPException(status_code=404, detail="Indent not found")
     get_company_membership(db, current_user, indent.company_id)
+    require_permission(db, current_user, indent.company_id, "procurement:approve")
 
     indent.status = "approved"
     db.commit()
@@ -470,6 +471,7 @@ def approve_po(po_id: UUID, db: Session = Depends(get_db), current_user: User = 
     if not po:
         raise HTTPException(status_code=404, detail="PO not found")
     get_company_membership(db, current_user, po.company_id)
+    require_permission(db, current_user, po.company_id, "procurement:approve")
     if po.approval_flag == "approved":
         raise HTTPException(status_code=400, detail="Purchase order is already fully approved")
     if po.approval_flag == "rejected":
@@ -501,12 +503,14 @@ def approve_po(po_id: UUID, db: Session = Depends(get_db), current_user: User = 
     db.refresh(po)
     return _po_response(db, po)
 
+
 @router.post("/pos/{po_id}/reject", response_model=POResponse)
 def reject_po(po_id: UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     po = db.query(PurchaseOrder).filter(PurchaseOrder.id == po_id).first()
     if not po:
         raise HTTPException(status_code=404, detail="PO not found")
     get_company_membership(db, current_user, po.company_id)
+    require_permission(db, current_user, po.company_id, "procurement:approve")
     if po.approval_flag == "approved":
         raise HTTPException(status_code=400, detail="Purchase order is already fully approved")
     if po.approval_flag == "rejected":
@@ -521,11 +525,6 @@ def reject_po(po_id: UUID, db: Session = Depends(get_db), current_user: User = D
             db, company_id=po.company_id, rule_id=rule.id, entity_type="purchase_order", entity_id=po.id,
             level=levels_approved(db, "purchase_order", po.id) + 1, action="rejected", user=current_user, matched_label=matched,
         )
-
-    po.approval_flag = "rejected"
-    db.commit()
-    db.refresh(po)
-    return _po_response(db, po)
 
 # 3. Goods Receipt Notes (GRN) & Inventory State Trigger
 

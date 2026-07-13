@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import List, Optional
 from app.database import get_db
 from app import models
-from app.auth import get_current_user, verify_company_access, verify_project_access, get_company_membership
+from app.auth import get_current_user, verify_company_access, verify_project_access, get_company_membership, require_permission
 from app.routers.custom_fields import CustomFieldValueInput, upsert_values_for_entity
 import uuid
 
@@ -341,10 +341,11 @@ def toggle_pin(project_id: uuid.UUID, db: Session = Depends(get_db), _: None = D
 
 
 @router.delete("/{project_id}")
-def delete_project(project_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
+def delete_project(project_id: uuid.UUID, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user), _: None = Depends(verify_project_access)):
     p = db.query(models.Project).filter(models.Project.id == project_id).first()
     if not p:
         raise HTTPException(status_code=404, detail="Project not found")
+    require_permission(db, current_user, p.company_id, "data:delete")
     try:
         from app.routers.delete_logs import log_deletion
         log_deletion(db, p.company_id, "project", str(p.id), f"Project: {p.name}", party_name=p.name)
@@ -386,10 +387,11 @@ def list_project_members(project_id: uuid.UUID, search: Optional[str] = None, db
 
 
 @router.post("/{project_id}/members")
-def add_project_member(project_id: uuid.UUID, member_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
+def add_project_member(project_id: uuid.UUID, member_id: uuid.UUID, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user), _: None = Depends(verify_project_access)):
     p = db.query(models.Project).filter(models.Project.id == project_id).first()
     if not p:
         raise HTTPException(status_code=404, detail="Project not found")
+    require_permission(db, current_user, p.company_id, "team:manage")
     existing = db.query(models.ProjectMember).filter(
         models.ProjectMember.project_id == project_id,
         models.ProjectMember.company_team_id == member_id
@@ -401,7 +403,11 @@ def add_project_member(project_id: uuid.UUID, member_id: uuid.UUID, db: Session 
 
 
 @router.delete("/{project_id}/members/{member_id}")
-def remove_project_member(project_id: uuid.UUID, member_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
+def remove_project_member(project_id: uuid.UUID, member_id: uuid.UUID, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user), _: None = Depends(verify_project_access)):
+    proj = db.query(models.Project).filter(models.Project.id == project_id).first()
+    if not proj:
+        raise HTTPException(status_code=404, detail="Project not found")
+    require_permission(db, current_user, proj.company_id, "team:manage")
     row = db.query(models.ProjectMember).filter(
         models.ProjectMember.project_id == project_id,
         models.ProjectMember.company_team_id == member_id

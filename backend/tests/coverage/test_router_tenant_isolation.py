@@ -238,3 +238,253 @@ def test_create_lead_allows_own_company(client, db, make_tenant, auth_headers):
         headers=hdr_a,
     )
     assert r.status_code != 403
+
+
+# ─── PHASE 2a — RBAC require_permission regression tests ──────────────────────
+#
+# These verify the high-risk gate introduced in Phase 2a. A member whose role
+# lacks the required key is 403'd; an Owner/partner always passes; a member
+# WITH the key passes; and an un-configured (empty {}) role fails OPEN (passes)
+# so pre-migration tenants keep working.
+
+
+def _make_employee(db, company, perms, auth_headers):
+    """Create an employee-priority member with a custom role (perms dict)."""
+    user = models.User(id=uuid.uuid4(), name="Emp", mobile=f"+919{uuid.uuid4().hex[:9]}")
+    db.add(user)
+    db.flush()
+    role = models.CompanyRole(
+        company_id=company.id,
+        role_name=f"Role-{uuid.uuid4().hex[:6]}",
+        permissions=perms,
+    )
+    db.add(role)
+    db.flush()
+    team = models.CompanyTeam(
+        id=uuid.uuid4(),
+        company_id=company.id,
+        user_id=user.id,
+        priority_type="employee",
+        role_id=role.id,
+    )
+    db.add(team)
+    db.commit()
+    return user, role, auth_headers(user, company)
+
+
+# A role that holds nothing risky — used to prove the "lacks permission" 403.
+_READ_ONLY = {"projects:view": True}
+
+
+# ── finance:approve (PATCH /finance/approve/{payment_id}) ─────────────────────
+
+def test_finance_approve_denies_without_permission(client, db, make_tenant, auth_headers):
+    comp, _, _ = make_tenant(company_name="A", user_name="UA", mobile="+919888801001", email="a1@t.com")
+    _, _, hdr = _make_employee(db, comp, _READ_ONLY, auth_headers)
+    pay = models.Payment(
+        id=uuid.uuid4(), company_id=comp.id, payment_type="out", amount=100,
+        unsettled_amount=100, payment_method="Cash", payment_date=datetime.datetime(2026, 1, 1),
+    )
+    db.add(pay)
+    db.commit()
+    r = client.patch(f"/apis/v3/finance/approve/{pay.id}", headers=hdr)
+    assert r.status_code == 403
+
+
+def test_finance_approve_allows_partner(client, db, make_tenant, auth_headers):
+    comp, user, _ = make_tenant(company_name="A", user_name="UA", mobile="+919888801002", email="a2@t.com")
+    hdr = auth_headers(user, comp)
+    pay = models.Payment(
+        id=uuid.uuid4(), company_id=comp.id, payment_type="out", amount=100,
+        unsettled_amount=100, payment_method="Cash", payment_date=datetime.datetime(2026, 1, 1),
+    )
+    db.add(pay)
+    db.commit()
+    r = client.patch(f"/apis/v3/finance/approve/{pay.id}", headers=hdr)
+    assert r.status_code != 403
+
+
+def test_finance_approve_allows_with_permission(client, db, make_tenant, auth_headers):
+    comp, _, _ = make_tenant(company_name="A", user_name="UA", mobile="+919888801003", email="a3@t.com")
+    _, _, hdr = _make_employee(db, comp, {"finance:approve": True}, auth_headers)
+    pay = models.Payment(
+        id=uuid.uuid4(), company_id=comp.id, payment_type="out", amount=100,
+        unsettled_amount=100, payment_method="Cash", payment_date=datetime.datetime(2026, 1, 1),
+    )
+    db.add(pay)
+    db.commit()
+    r = client.patch(f"/apis/v3/finance/approve/{pay.id}", headers=hdr)
+    assert r.status_code != 403
+
+
+def test_finance_approve_fail_open_empty_perms(client, db, make_tenant, auth_headers):
+    comp, _, _ = make_tenant(company_name="A", user_name="UA", mobile="+919888801004", email="a4@t.com")
+    _, _, hdr = _make_employee(db, comp, {}, auth_headers)
+    pay = models.Payment(
+        id=uuid.uuid4(), company_id=comp.id, payment_type="out", amount=100,
+        unsettled_amount=100, payment_method="Cash", payment_date=datetime.datetime(2026, 1, 1),
+    )
+    db.add(pay)
+    db.commit()
+    r = client.patch(f"/apis/v3/finance/approve/{pay.id}", headers=hdr)
+    assert r.status_code != 403
+
+
+# ── data:delete (DELETE /library/materials/{item_id}) ────────────────────────
+
+def test_data_delete_denies_without_permission(client, db, make_tenant, auth_headers):
+    comp, _, _ = make_tenant(company_name="A", user_name="UA", mobile="+919888801011", email="b1@t.com")
+    _, _, hdr = _make_employee(db, comp, _READ_ONLY, auth_headers)
+    item = models.LibraryMaterial(id=uuid.uuid4(), company_id=comp.id, name="M", unit="bags")
+    db.add(item)
+    db.commit()
+    r = client.delete(f"/apis/v3/library/materials/{item.id}", headers=hdr)
+    assert r.status_code == 403
+    db.refresh(item)
+
+
+def test_data_delete_allows_partner(client, db, make_tenant, auth_headers):
+    comp, user, _ = make_tenant(company_name="A", user_name="UA", mobile="+919888801012", email="b2@t.com")
+    hdr = auth_headers(user, comp)
+    item = models.LibraryMaterial(id=uuid.uuid4(), company_id=comp.id, name="M", unit="bags")
+    db.add(item)
+    db.commit()
+    r = client.delete(f"/apis/v3/library/materials/{item.id}", headers=hdr)
+    assert r.status_code != 403
+
+
+def test_data_delete_allows_with_permission(client, db, make_tenant, auth_headers):
+    comp, _, _ = make_tenant(company_name="A", user_name="UA", mobile="+919888801013", email="b3@t.com")
+    _, _, hdr = _make_employee(db, comp, {"data:delete": True}, auth_headers)
+    item = models.LibraryMaterial(id=uuid.uuid4(), company_id=comp.id, name="M", unit="bags")
+    db.add(item)
+    db.commit()
+    r = client.delete(f"/apis/v3/library/materials/{item.id}", headers=hdr)
+    assert r.status_code != 403
+
+
+def test_data_delete_fail_open_empty_perms(client, db, make_tenant, auth_headers):
+    comp, _, _ = make_tenant(company_name="A", user_name="UA", mobile="+919888801014", email="b4@t.com")
+    _, _, hdr = _make_employee(db, comp, {}, auth_headers)
+    item = models.LibraryMaterial(id=uuid.uuid4(), company_id=comp.id, name="M", unit="bags")
+    db.add(item)
+    db.commit()
+    r = client.delete(f"/apis/v3/library/materials/{item.id}", headers=hdr)
+    assert r.status_code != 403
+
+
+# ── settings:manage (POST /settings/roles/{company_id}) ──────────────────────
+
+def test_settings_manage_denies_without_permission(client, db, make_tenant, auth_headers):
+    comp, _, _ = make_tenant(company_name="A", user_name="UA", mobile="+919888801021", email="c1@t.com")
+    _, _, hdr = _make_employee(db, comp, _READ_ONLY, auth_headers)
+    r = client.post(
+        f"/apis/v3/settings/roles/{comp.id}",
+        json={"role_name": "CustomX"},
+        headers=hdr,
+    )
+    assert r.status_code == 403
+
+
+def test_settings_manage_allows_with_permission(client, db, make_tenant, auth_headers):
+    comp, _, _ = make_tenant(company_name="A", user_name="UA", mobile="+919888801023", email="c3@t.com")
+    _, _, hdr = _make_employee(db, comp, {"settings:manage": True}, auth_headers)
+    r = client.post(
+        f"/apis/v3/settings/roles/{comp.id}",
+        json={"role_name": "CustomY"},
+        headers=hdr,
+    )
+    assert r.status_code != 403
+
+
+def test_settings_manage_fail_open_empty_perms(client, db, make_tenant, auth_headers):
+    comp, _, _ = make_tenant(company_name="A", user_name="UA", mobile="+919888801024", email="c4@t.com")
+    _, _, hdr = _make_employee(db, comp, {}, auth_headers)
+    r = client.post(
+        f"/apis/v3/settings/roles/{comp.id}",
+        json={"role_name": "CustomZ"},
+        headers=hdr,
+    )
+    assert r.status_code != 403
+
+
+# ── team:manage (POST /projects/{project_id}/members) ────────────────────────
+
+def test_team_manage_denies_without_permission(client, db, make_tenant, auth_headers):
+    comp, _, _ = make_tenant(company_name="A", user_name="UA", mobile="+919888801031", email="d1@t.com")
+    _, _, hdr = _make_employee(db, comp, _READ_ONLY, auth_headers)
+    proj = models.Project(id=uuid.uuid4(), company_id=comp.id, name="P")
+    db.add(proj)
+    target = models.CompanyTeam(
+        id=uuid.uuid4(), company_id=comp.id,
+        user_id=models.User(id=uuid.uuid4(), name="T", mobile=f"+919{uuid.uuid4().hex[:9]}").id,
+        priority_type="employee",
+    )
+    db.add(models.User(id=target.user_id, name="T", mobile=f"+919{uuid.uuid4().hex[:9]}"))
+    db.add(target)
+    db.commit()
+    r = client.post(f"/apis/v3/projects/{proj.id}/members?member_id={target.id}", headers=hdr)
+    assert r.status_code == 403
+
+
+def test_team_manage_allows_with_permission(client, db, make_tenant, auth_headers):
+    comp, _, _ = make_tenant(company_name="A", user_name="UA", mobile="+919888801033", email="d3@t.com")
+    _, _, hdr = _make_employee(db, comp, {"team:manage": True}, auth_headers)
+    proj = models.Project(id=uuid.uuid4(), company_id=comp.id, name="P")
+    db.add(proj)
+    target_user = models.User(id=uuid.uuid4(), name="T", mobile=f"+919{uuid.uuid4().hex[:9]}")
+    db.add(target_user)
+    target = models.CompanyTeam(id=uuid.uuid4(), company_id=comp.id, user_id=target_user.id, priority_type="employee")
+    db.add(target)
+    db.commit()
+    r = client.post(f"/apis/v3/projects/{proj.id}/members?member_id={target.id}", headers=hdr)
+    assert r.status_code != 403
+
+
+def test_team_manage_fail_open_empty_perms(client, db, make_tenant, auth_headers):
+    comp, _, _ = make_tenant(company_name="A", user_name="UA", mobile="+919888801034", email="d4@t.com")
+    _, _, hdr = _make_employee(db, comp, {}, auth_headers)
+    proj = models.Project(id=uuid.uuid4(), company_id=comp.id, name="P")
+    db.add(proj)
+    target_user = models.User(id=uuid.uuid4(), name="T", mobile=f"+919{uuid.uuid4().hex[:9]}")
+    db.add(target_user)
+    target = models.CompanyTeam(id=uuid.uuid4(), company_id=comp.id, user_id=target_user.id, priority_type="employee")
+    db.add(target)
+    db.commit()
+    r = client.post(f"/apis/v3/projects/{proj.id}/members?member_id={target.id}", headers=hdr)
+    assert r.status_code != 403
+
+
+# ── payroll:run (POST /hr/payroll/run) ───────────────────────────────────────
+
+def test_payroll_run_denies_without_permission(client, db, make_tenant, auth_headers):
+    comp, _, _ = make_tenant(company_name="A", user_name="UA", mobile="+919888801041", email="e1@t.com")
+    _, _, hdr = _make_employee(db, comp, _READ_ONLY, auth_headers)
+    r = client.post(
+        f"/apis/v3/hr/payroll/run",
+        json={"company_id": str(comp.id), "payroll_month": "2026-01"},
+        headers=hdr,
+    )
+    assert r.status_code == 403
+
+
+def test_payroll_run_allows_with_permission(client, db, make_tenant, auth_headers):
+    comp, _, _ = make_tenant(company_name="A", user_name="UA", mobile="+919888801043", email="e3@t.com")
+    _, _, hdr = _make_employee(db, comp, {"payroll:run": True}, auth_headers)
+    r = client.post(
+        f"/apis/v3/hr/payroll/run",
+        json={"company_id": str(comp.id), "payroll_month": "2026-01"},
+        headers=hdr,
+    )
+    assert r.status_code != 403
+
+
+def test_payroll_run_fail_open_empty_perms(client, db, make_tenant, auth_headers):
+    comp, _, _ = make_tenant(company_name="A", user_name="UA", mobile="+919888801044", email="e4@t.com")
+    _, _, hdr = _make_employee(db, comp, {}, auth_headers)
+    r = client.post(
+        f"/apis/v3/hr/payroll/run",
+        json={"company_id": str(comp.id), "payroll_month": "2026-01"},
+        headers=hdr,
+    )
+    assert r.status_code != 403

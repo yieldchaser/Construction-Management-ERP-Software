@@ -13,7 +13,7 @@ from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from app.database import get_db
-from app.auth import get_current_user, verify_project_access, get_company_membership
+from app.auth import get_current_user, verify_project_access, get_company_membership, require_permission
 from app.models import (
     ClientReport, Project, Task, Bill, WorkOrder,
     MaterialIndent, PurchaseOrder, SiteInspection, NCR, MaterialTestResult,
@@ -185,11 +185,16 @@ def list_reports(project_id: uuid.UUID, db: Session = Depends(get_db), _: None =
 
 
 @router.patch("/{report_id}/approve", response_model=ReportResponse)
-def approve_report(report_id: uuid.UUID, db: Session = Depends(get_db)):
+def approve_report(report_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     report = db.query(ClientReport).filter(ClientReport.id == report_id).first()
     if not report:
         raise HTTPException(status_code=404, detail="Report not found")
-    
+    project = db.query(Project).filter(Project.id == report.project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, project.company_id)
+    require_permission(db, current_user, project.company_id, "reports:approve")
+
     report.is_approved = True
     db.commit()
     db.refresh(report)

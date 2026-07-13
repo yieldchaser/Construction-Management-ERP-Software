@@ -6,7 +6,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import Payment, PaymentSettlement, Bill, PayrollRun, PayrollLineItem, StaffEmployee, ProjectBudget, Project, CompanyTeam, User, Equipment, EquipmentDeployment, FuelLog, BankAccount, PaymentRequest, PaymentRequestPayment, CashAccount, LibraryParty, Company, ApprovalRule
-from app.auth import get_current_user, verify_company_access, verify_project_access, get_company_membership
+from app.auth import get_current_user, verify_company_access, verify_project_access, get_company_membership, require_permission
 from app.approvals import find_matching_rule, match_approver, levels_approved, user_already_acted, record_action
 from pydantic import BaseModel, Field
 
@@ -171,6 +171,7 @@ def delete_payment(payment_id: uuid.UUID, db: Session = Depends(get_db), current
     if not payment:
         raise HTTPException(status_code=404, detail="Payment not found")
     get_company_membership(db, current_user, payment.company_id)
+    require_permission(db, current_user, payment.company_id, "data:delete")
     try:
         from app.routers.delete_logs import log_deletion
         log_deletion(db, payment.company_id, "payment", payment.id, f"Payment {payment.id}")
@@ -413,6 +414,7 @@ def approve_transaction(transaction_id: uuid.UUID, db: Session = Depends(get_db)
     bill = db.query(Bill).filter(Bill.id == transaction_id).first()
     if bill:
         get_company_membership(db, current_user, bill.company_id)
+        require_permission(db, current_user, bill.company_id, "finance:approve")
         bill.approval_flag = "approved"
         db.commit()
         return {"status": "success", "message": "Bill approved successfully", "type": "bill"}
@@ -420,6 +422,7 @@ def approve_transaction(transaction_id: uuid.UUID, db: Session = Depends(get_db)
     payment = db.query(Payment).filter(Payment.id == transaction_id).first()
     if payment:
         get_company_membership(db, current_user, payment.company_id)
+        require_permission(db, current_user, payment.company_id, "finance:approve")
         return {"status": "success", "message": "Payment confirmed", "type": "payment"}
         
     raise HTTPException(status_code=404, detail="Transaction not found")
@@ -1072,6 +1075,7 @@ def record_payment_request(request_id: uuid.UUID, data: PaymentRequestPaymentCre
     if not req:
         raise HTTPException(status_code=404, detail="Payment request not found")
     get_company_membership(db, current_user, req.company_id)
+    require_permission(db, current_user, req.company_id, "billing:approve")
     if req.approval_rule_id and req.approval_status != "Approved":
         raise HTTPException(status_code=400, detail="Payment request is pending approval; it cannot be recorded as paid until all required levels have signed off")
 
@@ -1106,6 +1110,7 @@ def update_payment_request_status(request_id: uuid.UUID, payload: PaymentRequest
     if not req:
         raise HTTPException(status_code=404, detail="Payment request not found")
     get_company_membership(db, current_user, req.company_id)
+    require_permission(db, current_user, req.company_id, "billing:approve")
 
     rule = db.query(ApprovalRule).filter(ApprovalRule.id == req.approval_rule_id).first() if req.approval_rule_id else None
     action_status = payload.status
@@ -1165,6 +1170,7 @@ def delete_payment_request(request_id: uuid.UUID, db: Session = Depends(get_db),
     if not req:
         raise HTTPException(status_code=404, detail="Payment request not found")
     get_company_membership(db, current_user, req.company_id)
+    require_permission(db, current_user, req.company_id, "data:delete")
     try:
         from app.routers.delete_logs import log_deletion
         log_deletion(db, req.company_id, "payment_request", req.id, f"Payment Request: {req.request_no or req.id}")

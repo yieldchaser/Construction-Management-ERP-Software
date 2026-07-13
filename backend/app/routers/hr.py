@@ -23,7 +23,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
 from app.database import get_db
-from app.auth import get_current_user, verify_company_access, verify_project_access, get_company_membership
+from app.auth import get_current_user, verify_company_access, verify_project_access, get_company_membership, require_permission
 from app.models import (
     StaffEmployee, AttendanceLog, Timesheet,
     TimesheetEntry, PayrollRun, PayrollLineItem, Project, LeaveRequest,
@@ -486,6 +486,7 @@ def approve_timesheet(ts_id: uuid.UUID, db: Session = Depends(get_db), current_u
     if not project:
         raise HTTPException(status_code=404, detail="Timesheet's project not found")
     get_company_membership(db, current_user, project.company_id)
+    require_permission(db, current_user, project.company_id, "attendance:approve")
     if ts.status != "submitted":
         raise HTTPException(status_code=400, detail="Only submitted timesheets can be approved")
     ts.status = "approved"
@@ -509,6 +510,7 @@ def delete_timesheet(ts_id: uuid.UUID, db: Session = Depends(get_db), current_us
     if not project:
         raise HTTPException(status_code=404, detail="Timesheet's project not found")
     get_company_membership(db, current_user, project.company_id)
+    require_permission(db, current_user, project.company_id, "data:delete")
     try:
         from app.routers.delete_logs import log_deletion
         log_deletion(db, project.company_id, "timesheet", ts.id, f"Timesheet {ts.id}")
@@ -582,6 +584,7 @@ def run_payroll(payload: PayrollRunCreate, db: Session = Depends(get_db), curren
     Days present is determined by counting AttendanceLog records for that month with status 'Present' or 'Present (Off-Site)'.
     """
     get_company_membership(db, current_user, payload.company_id)
+    require_permission(db, current_user, payload.company_id, "payroll:run")
     # Parse month boundaries
     year, month = map(int, payload.payroll_month.split("-"))
     month_start = datetime(year, month, 1)
@@ -1030,6 +1033,7 @@ def delete_leave_template(leave_template_id: uuid.UUID, db: Session = Depends(ge
     if not obj:
         raise HTTPException(status_code=404, detail="Leave template not found")
     get_company_membership(db, current_user, obj.company_id)
+    require_permission(db, current_user, obj.company_id, "data:delete")
     try:
         from app.routers.delete_logs import log_deletion
         log_deletion(db, obj.company_id, "leave_template", obj.id, f"Leave Template: {obj.name}")
@@ -1167,6 +1171,7 @@ def delete_holiday(holiday_id: uuid.UUID, db: Session = Depends(get_db), current
     if not obj:
         raise HTTPException(status_code=404, detail="Holiday not found")
     get_company_membership(db, current_user, obj.company_id)
+    require_permission(db, current_user, obj.company_id, "data:delete")
     try:
         from app.routers.delete_logs import log_deletion
         log_deletion(db, obj.company_id, "holiday", obj.id, f"Holiday: {obj.name}")

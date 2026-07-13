@@ -7,7 +7,7 @@ from typing import List, Optional
 from app.database import get_db
 from app import models
 from app.models import User
-from app.auth import get_current_user, verify_company_access, verify_project_access, get_company_membership
+from app.auth import get_current_user, verify_company_access, verify_project_access, get_company_membership, require_permission
 import uuid
 
 router = APIRouter(prefix="/library", tags=["Company Libraries"], dependencies=[Depends(get_current_user)])
@@ -211,6 +211,7 @@ def delete_library_party(party_id: uuid.UUID, db: Session = Depends(get_db), cur
     if not party:
         raise HTTPException(status_code=404, detail="Party not found")
     get_company_membership(db, current_user, party.company_id)
+    require_permission(db, current_user, party.company_id, "data:delete")
     try:
         from app.routers.delete_logs import log_deletion
         log_deletion(db, party.company_id, "party", party.id, f"Party: {party.name}", party_name=party.name)
@@ -241,6 +242,7 @@ def delete_library_asset_type(item_id: uuid.UUID, db: Session = Depends(get_db),
     if not item:
         raise HTTPException(status_code=404, detail="Asset type not found")
     get_company_membership(db, current_user, item.company_id)
+    require_permission(db, current_user, item.company_id, "data:delete")
     try:
         from app.routers.delete_logs import log_deletion
         log_deletion(db, item.company_id, "asset_type", item.id, f"Asset Type: {item.name}")
@@ -278,6 +280,7 @@ def delete_library_cost_code(item_id: uuid.UUID, db: Session = Depends(get_db), 
     if not item:
         raise HTTPException(status_code=404, detail="Cost code not found")
     get_company_membership(db, current_user, item.company_id)
+    require_permission(db, current_user, item.company_id, "data:delete")
     try:
         from app.routers.delete_logs import log_deletion
         log_deletion(db, item.company_id, "cost_code", item.id, f"Cost Code: {item.name}")
@@ -308,6 +311,7 @@ def delete_library_deduction(item_id: uuid.UUID, db: Session = Depends(get_db), 
     if not item:
         raise HTTPException(status_code=404, detail="Deduction not found")
     get_company_membership(db, current_user, item.company_id)
+    require_permission(db, current_user, item.company_id, "data:delete")
     try:
         from app.routers.delete_logs import log_deletion
         log_deletion(db, item.company_id, "deduction", item.id, f"Deduction: {item.name}")
@@ -338,6 +342,7 @@ def delete_library_progress(item_id: uuid.UUID, db: Session = Depends(get_db), c
     if not item:
         raise HTTPException(status_code=404, detail="Progress not found")
     get_company_membership(db, current_user, item.company_id)
+    require_permission(db, current_user, item.company_id, "data:delete")
     try:
         from app.routers.delete_logs import log_deletion
         log_deletion(db, item.company_id, "progress", item.id, f"Progress: {item.name}")
@@ -368,6 +373,7 @@ def delete_library_workforce(item_id: uuid.UUID, db: Session = Depends(get_db), 
     if not item:
         raise HTTPException(status_code=404, detail="Workforce not found")
     get_company_membership(db, current_user, item.company_id)
+    require_permission(db, current_user, item.company_id, "data:delete")
     try:
         from app.routers.delete_logs import log_deletion
         log_deletion(db, item.company_id, "workforce", item.id, f"Workforce: {item.name}")
@@ -410,6 +416,7 @@ def delete_library_material(item_id: uuid.UUID, db: Session = Depends(get_db), c
     if not item:
         raise HTTPException(status_code=404, detail="Material not found")
     get_company_membership(db, current_user, item.company_id)
+    require_permission(db, current_user, item.company_id, "data:delete")
     try:
         from app.routers.delete_logs import log_deletion
         log_deletion(db, item.company_id, "material", item.id, f"Material: {item.name}")
@@ -454,6 +461,7 @@ def delete_library_rate(item_id: uuid.UUID, db: Session = Depends(get_db), curre
     if not item:
         raise HTTPException(status_code=404, detail="Rate item not found")
     get_company_membership(db, current_user, item.company_id)
+    require_permission(db, current_user, item.company_id, "data:delete")
     try:
         from app.routers.delete_logs import log_deletion
         log_deletion(db, item.company_id, "rate", item.id, f"Rate: {item.name}")
@@ -492,6 +500,7 @@ def delete_library_retention(item_id: uuid.UUID, db: Session = Depends(get_db), 
     if not item:
         raise HTTPException(status_code=404, detail="Retention not found")
     get_company_membership(db, current_user, item.company_id)
+    require_permission(db, current_user, item.company_id, "data:delete")
     try:
         from app.routers.delete_logs import log_deletion
         log_deletion(db, item.company_id, "retention", item.id, f"Retention: {item.name}")
@@ -535,6 +544,7 @@ def delete_material_category(item_id: uuid.UUID, db: Session = Depends(get_db), 
     if not item:
         raise HTTPException(status_code=404, detail="Material category not found")
     get_company_membership(db, current_user, item.company_id)
+    require_permission(db, current_user, item.company_id, "data:delete")
     try:
         from app.routers.delete_logs import log_deletion
         log_deletion(db, item.company_id, "material_category", item.id, f"Material Category: {item.name}")
@@ -573,6 +583,7 @@ def delete_library_todo(item_id: uuid.UUID, db: Session = Depends(get_db), curre
     if not item:
         raise HTTPException(status_code=404, detail="To Do not found")
     get_company_membership(db, current_user, item.company_id)
+    require_permission(db, current_user, item.company_id, "data:delete")
     try:
         from app.routers.delete_logs import log_deletion
         log_deletion(db, item.company_id, "library_todo", item.id, f"Library Todo: {item.name}")

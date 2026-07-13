@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import cast
 from sqlalchemy import Date as SA_Date
 from app.database import get_db
-from app.auth import get_current_user, get_company_membership
+from app.auth import get_current_user, get_company_membership, require_permission
 from app.models import MoM, Project, User
 from pydantic import BaseModel
 from typing import Optional, List

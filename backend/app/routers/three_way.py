@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
 from decimal import Decimal
 from app.database import get_db
-from app.auth import get_current_user, verify_company_access, get_company_membership
+from app.auth import get_current_user, verify_company_access, get_company_membership, require_permission
 from app.models import ThreeWayMatch, PurchaseOrder, GoodsReceiptNote, GRNItem, User
 
 router = APIRouter(prefix="/three-way", tags=["3-Way Matching"], dependencies=[Depends(get_current_user)])
@@ -151,6 +151,7 @@ def approve_match(match_id: uuid.UUID, approved_by: Optional[uuid.UUID] = None, 
     if not match:
         raise HTTPException(status_code=404, detail="Match not found")
     get_company_membership(db, current_user, match.company_id)
+    require_permission(db, current_user, match.company_id, "finance:approve")
     match.match_status = "approved"
     match.matched_by = approved_by
     match.matched_at = datetime.utcnow()
@@ -171,6 +172,7 @@ def reject_match(match_id: uuid.UUID, reason: Optional[str] = None, db: Session 
     if not match:
         raise HTTPException(status_code=404, detail="Match not found")
     get_company_membership(db, current_user, match.company_id)
+    require_permission(db, current_user, match.company_id, "finance:approve")
     match.match_status = "rejected"
     match.variance_reason = reason or match.variance_reason
     db.commit()

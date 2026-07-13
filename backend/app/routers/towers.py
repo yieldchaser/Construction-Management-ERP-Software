@@ -4,7 +4,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.auth import get_current_user, verify_project_access, get_company_membership
+from app.auth import get_current_user, verify_project_access, get_company_membership, require_permission
 from app.models import ProjectTower, ProjectBudget, PurchaseOrder, Bill, WorkOrder, Project, User
 from pydantic import BaseModel, Field
 
@@ -150,6 +150,7 @@ def delete_tower(tower_id: UUID, db: Session = Depends(get_db), current_user: Us
     if not proj:
         raise HTTPException(status_code=404, detail="Project not found")
     get_company_membership(db, current_user, proj.company_id)
+    require_permission(db, current_user, proj.company_id, "data:delete")
     try:
         from app.routers.delete_logs import log_deletion
         company_id = proj.company_id if proj else None

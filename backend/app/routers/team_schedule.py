@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
 from app.database import get_db
-from app.auth import get_current_user, verify_company_access, get_company_membership
+from app.auth import get_current_user, verify_company_access, get_company_membership, require_permission
 from app import models
 from app.models import User
 
@@ -161,6 +161,7 @@ def delete_timesheet(timesheet_id: UUID, db: Session = Depends(get_db), current_
     if not row:
         raise HTTPException(status_code=404, detail="Timesheet not found")
     get_company_membership(db, current_user, row.company_id)
+    require_permission(db, current_user, row.company_id, "data:delete")
     try:
         from app.routers.delete_logs import log_deletion
         log_deletion(db, row.company_id, "timesheet", row.id, f"Timesheet: {row.party_name or row.id}", party_name=row.party_name)

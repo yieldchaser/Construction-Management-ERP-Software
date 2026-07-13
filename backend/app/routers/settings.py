@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File,
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
 from app.database import get_db
-from app.auth import get_current_user, verify_company_access, get_company_membership
+from app.auth import get_current_user, verify_company_access, get_company_membership, require_permission
 from app.models import Company, CompanyBranch, ApprovalRule, CompanyFile, CompanyRole, CompanyPayrollSettings, SalaryTemplate, PdfTemplate, CompanyTerms, User
 from app import supabase_storage
 from app.permissions import (
@@ -240,7 +240,8 @@ def get_company_settings(company_id: uuid.UUID, db: Session = Depends(get_db), _
 
 
 @router.put("/company/{company_id}", response_model=CompanySettingsResponse)
-def update_company_settings(company_id: uuid.UUID, settings_data: CompanySettingsUpdate, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
+def update_company_settings(company_id: uuid.UUID, settings_data: CompanySettingsUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user), _: None = Depends(verify_company_access)):
+    require_permission(db, current_user, company_id, "settings:manage")
     company = db.query(Company).filter(Company.id == company_id).first()
     if not company:
         raise HTTPException(status_code=404, detail="Company not found")
@@ -267,7 +268,8 @@ def list_branches(company_id: uuid.UUID, db: Session = Depends(get_db), _: None 
 
 
 @router.post("/branches/{company_id}", response_model=BranchResponse)
-def create_branch(company_id: uuid.UUID, branch_data: BranchCreate, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
+def create_branch(company_id: uuid.UUID, branch_data: BranchCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user), _: None = Depends(verify_company_access)):
+    require_permission(db, current_user, company_id, "settings:manage")
     existing_count = db.query(CompanyBranch).filter(CompanyBranch.company_id == company_id).count()
     new_branch = CompanyBranch(
         company_id=company_id,
@@ -294,6 +296,7 @@ def set_primary_branch(branch_id: uuid.UUID, db: Session = Depends(get_db), curr
     if not branch:
         raise HTTPException(status_code=404, detail="Branch not found")
     get_company_membership(db, current_user, branch.company_id)
+    require_permission(db, current_user, branch.company_id, "settings:manage")
     db.query(CompanyBranch).filter(CompanyBranch.company_id == branch.company_id).update({"is_primary": False})
     branch.is_primary = True
     db.commit()
@@ -307,7 +310,8 @@ def list_approval_rules(company_id: uuid.UUID, db: Session = Depends(get_db), _:
 
 
 @router.post("/approval-rules/{company_id}", response_model=ApprovalRuleResponse)
-def create_approval_rule(company_id: uuid.UUID, rule_data: ApprovalRuleCreate, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
+def create_approval_rule(company_id: uuid.UUID, rule_data: ApprovalRuleCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user), _: None = Depends(verify_company_access)):
+    require_permission(db, current_user, company_id, "settings:manage")
     new_rule = ApprovalRule(
         company_id=company_id,
         feature_type=rule_data.feature_type,
@@ -328,6 +332,7 @@ def update_approval_rule(rule_id: uuid.UUID, rule_data: ApprovalRuleCreate, db: 
     if not rule:
         raise HTTPException(status_code=404, detail="Approval rule not found")
     get_company_membership(db, current_user, rule.company_id)
+    require_permission(db, current_user, rule.company_id, "settings:manage")
     for field, val in rule_data.model_dump(exclude_unset=True).items():
         setattr(rule, field, val)
     db.commit()
@@ -341,6 +346,7 @@ def delete_approval_rule(rule_id: uuid.UUID, db: Session = Depends(get_db), curr
     if not rule:
         raise HTTPException(status_code=404, detail="Approval rule not found")
     get_company_membership(db, current_user, rule.company_id)
+    require_permission(db, current_user, rule.company_id, "settings:manage")
     try:
         from app.routers.delete_logs import log_deletion
         log_deletion(db, rule.company_id, "approval_rule", rule.id, f"Approval Rule: {rule.feature_type}")
@@ -355,7 +361,8 @@ def list_roles(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = D
 
 
 @router.post("/roles/{company_id}", response_model=RoleResponse)
-def create_role(company_id: uuid.UUID, role_data: RoleCreate, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
+def create_role(company_id: uuid.UUID, role_data: RoleCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user), _: None = Depends(verify_company_access)):
+    require_permission(db, current_user, company_id, "settings:manage")
     name = role_data.role_name.strip()
     if not name:
         raise HTTPException(status_code=400, detail="Role name is required")
@@ -421,6 +428,7 @@ _LOCKED_ROLES = {"Owner", "Admin"}
 def update_role_permissions(
     role: CompanyRole = Depends(_load_role_and_verify_access),
     payload: RolePermissionsUpdate = None,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """Replace a role's permission set.
@@ -429,6 +437,7 @@ def update_role_permissions(
     - Owner / Admin are locked to full access (`all=true`) so they can never be
       locked out (failsafe).
     """
+    require_permission(db, current_user, role.company_id, "settings:manage")
     if payload is None:
         raise HTTPException(status_code=400, detail="permissions body is required")
     if role.role_name in _LOCKED_ROLES and not payload.permissions.get("all"):
@@ -449,9 +458,11 @@ def update_role_permissions(
 @router.delete("/roles/{role_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_role(
     role: CompanyRole = Depends(_load_role_and_verify_access),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """Delete a custom (non-default) role that is not assigned to any member."""
+    require_permission(db, current_user, role.company_id, "settings:manage")
     if role.role_name in DEFAULT_ROLES:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -583,6 +594,7 @@ def delete_salary_template(template_id: uuid.UUID, db: Session = Depends(get_db)
     if not obj:
         raise HTTPException(status_code=404, detail="Salary template not found")
     get_company_membership(db, current_user, obj.company_id)
+    require_permission(db, current_user, obj.company_id, "data:delete")
     try:
         from app.routers.delete_logs import log_deletion
         log_deletion(db, obj.company_id, "salary_template", obj.id, f"Salary Template: {obj.name}")
@@ -730,7 +742,8 @@ def get_company_terms(company_id: uuid.UUID, db: Session = Depends(get_db), _: N
 
 
 @router.put("/company-terms/{company_id}", response_model=CompanyTermsResponse)
-def update_company_terms(company_id: uuid.UUID, payload: CompanyTermsUpdate, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
+def update_company_terms(company_id: uuid.UUID, payload: CompanyTermsUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user), _: None = Depends(verify_company_access)):
+    require_permission(db, current_user, company_id, "settings:manage")
     row = _get_or_create_company_terms(company_id, db)
     for field, val in payload.model_dump(exclude_unset=True).items():
         setattr(row, field, val)
