@@ -11,6 +11,16 @@ from app.models import ChatGroup, ChatMessage, ChatGroupMember, User
 router = APIRouter(prefix="/chat", tags=["Chat & MOM"], dependencies=[Depends(get_current_user)])
 
 
+def verify_group_membership(db: Session, current_user: User, group_id: uuid.UUID):
+    membership = db.query(ChatGroupMember).filter(
+        ChatGroupMember.group_id == group_id,
+        ChatGroupMember.user_id == current_user.id
+    ).first()
+    if not membership:
+        raise HTTPException(status_code=403, detail="Not a member of this chat group")
+    return membership
+
+
 class ChatGroupCreate(BaseModel):
     company_id: uuid.UUID
     project_id: uuid.UUID
@@ -130,6 +140,7 @@ def send_message(payload: ChatMessageCreate, db: Session = Depends(get_db), curr
     if not group:
         raise HTTPException(status_code=404, detail="Chat group not found")
     get_company_membership(db, current_user, group.company_id)
+    verify_group_membership(db, current_user, group.id)
     msg = ChatMessage(**payload.model_dump())
     db.add(msg)
     db.commit()
@@ -143,6 +154,7 @@ def list_messages(group_id: uuid.UUID, db: Session = Depends(get_db), current_us
     if not group:
         raise HTTPException(status_code=404, detail="Chat group not found")
     get_company_membership(db, current_user, group.company_id)
+    verify_group_membership(db, current_user, group.id)
     messages = db.query(ChatMessage).filter(
         ChatMessage.group_id == group_id
     ).order_by(ChatMessage.created_at.asc()).all()
@@ -155,6 +167,7 @@ def list_members(group_id: uuid.UUID, db: Session = Depends(get_db), current_use
     if not group:
         raise HTTPException(status_code=404, detail="Chat group not found")
     get_company_membership(db, current_user, group.company_id)
+    verify_group_membership(db, current_user, group.id)
     return db.query(ChatGroupMember).filter(ChatGroupMember.group_id == group_id).all()
 
 
@@ -166,6 +179,7 @@ def add_member(group_id: uuid.UUID, payload: ChatGroupMemberCreate, db: Session 
     if not group:
         raise HTTPException(status_code=404, detail="Chat group not found")
     get_company_membership(db, current_user, group.company_id)
+    verify_group_membership(db, current_user, group.id)
     member = ChatGroupMember(**payload.model_dump())
     db.add(member)
     db.commit()
@@ -185,6 +199,7 @@ def remove_member(group_id: uuid.UUID, user_id: uuid.UUID, db: Session = Depends
     if not group:
         raise HTTPException(status_code=404, detail="Chat group not found")
     get_company_membership(db, current_user, group.company_id)
+    verify_group_membership(db, current_user, group.id)
     try:
         from app.routers.delete_logs import log_deletion
         company_id = group.company_id if group else None
@@ -208,6 +223,7 @@ def update_member_role(group_id: uuid.UUID, user_id: uuid.UUID, role: str = Quer
     if not group:
         raise HTTPException(status_code=404, detail="Chat group not found")
     get_company_membership(db, current_user, group.company_id)
+    verify_group_membership(db, current_user, group.id)
     member.role = role
     db.commit()
     db.refresh(member)
