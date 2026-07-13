@@ -804,14 +804,14 @@ body {
 .owc-epc-row { margin-top: 1.5rem; }
 @media (min-width: 900px) {
   .owc-epc-row .owc-card { flex-direction: row; }
-  .owc-epc-row .owc-dash { width: 46%; border-bottom: none; border-right: 1px solid var(--border); display: flex; flex-direction: column; justify-content: center; }
+  .owc-epc-row .owc-dash { width: 46%; border-bottom: none; border-right: 1px solid var(--border); display: flex; flex-direction: column; justify-content: flex-start; }
   .owc-epc-row .owc-body { width: 54%; }
 }
 
 /* mini-dashboard shell */
 .owc-dash { background: var(--elevated); border-bottom: 1px solid var(--border); padding: 1rem 1.1rem 1.25rem; }
 @media (min-width: 900px) {
-  .owc-dash { min-height: 235px; }
+  .owc-dash { min-height: 275px; }
 }
 .owc-dash-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.9rem; }
 .owc-dash-title { font-size: 0.78rem; font-weight: 700; color: var(--foreground); }
@@ -852,7 +852,7 @@ body {
 .owdb1-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.6rem; margin-bottom: 0.9rem; }
 .owdb1-stat-n { font-size: 1.05rem; font-weight: 800; color: var(--foreground); }
 .owdb1-stat-l { font-size: 0.62rem; color: var(--muted); }
-.owdb1-bars, .owdb2-bars { display: flex; flex-direction: column; gap: 0.55rem; }
+.owdb1-bars, .owdb2-bars { display: flex; flex-direction: column; gap: 0.85rem; }
 .owdb1-meta { display: flex; justify-content: space-between; font-size: 0.68rem; margin-bottom: 0.2rem; }
 .owdb1-lbl { color: var(--muted); } .owdb1-val { color: var(--foreground); font-weight: 600; }
 .owdb1-track, .owdb2-track, .owdb4-track { height: 0.4rem; border-radius: 999px; background: color-mix(in srgb, var(--foreground) 10%, transparent); overflow: hidden; }
@@ -914,8 +914,8 @@ body {
 .owdb4-ms-todo { background: color-mix(in srgb, var(--foreground) 8%, transparent); color: var(--muted); }
 
 /* mini-dashboard 5: EPC phases + PO */
-.owdb5-wrap { display: flex; flex-direction: column; gap: 0.85rem; }
-.owdb5-phases { display: flex; flex-direction: column; gap: 0.55rem; }
+.owdb5-wrap { display: flex; flex-direction: column; gap: 1.5rem; }
+.owdb5-phases { display: flex; flex-direction: column; gap: 0.85rem; }
 .owdb5-phase { text-align: center; padding: 0.5rem 0.25rem; border-radius: 0.5rem; background: color-mix(in srgb, var(--foreground) 5%, transparent); }
 .owdb5-phase-n { font-size: 1.1rem; font-weight: 800; }
 .owdb5-phase-l { font-size: 0.56rem; color: var(--muted); margin-top: 0.15rem; }
