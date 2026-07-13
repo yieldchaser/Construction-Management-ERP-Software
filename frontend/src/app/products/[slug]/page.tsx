@@ -117,16 +117,6 @@ export default async function ProductFeaturePage({ params }: RouteParams) {
                 ))}
               </div>
             </div>
-
-            <Link
-              href="/"
-              className="inline-flex items-center gap-2 text-xs text-muted hover:text-foreground transition-all group"
-            >
-              <span className="group-hover:-translate-x-0.5 transition-transform">
-                ←
-              </span>
-              Back to Home page
-            </Link>
           </aside>
         </div>
       </div>

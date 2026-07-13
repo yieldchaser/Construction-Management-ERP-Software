@@ -39,7 +39,7 @@ export default async function BlogPostPage({ params }: RouteParams) {
     .slice(0, 4);
 
   return (
-    <div className="min-h-screen bg-background text-foreground pb-20 relative">
+    <div className="min-h-screen bg-background text-foreground pb-12 relative">
       {/* Background Glow */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute top-[-10%] right-[-10%] h-[40vw] w-[40vw] rounded-full bg-primary opacity-5 blur-[120px]" />
@@ -74,7 +74,7 @@ export default async function BlogPostPage({ params }: RouteParams) {
       </header>
 
       {/* Content Area */}
-      <div className="max-w-6xl mx-auto px-6 py-12">
+      <div className="max-w-6xl mx-auto px-6 pt-12 pb-8">
         {/* Breadcrumbs */}
         <div className="flex items-center gap-2 text-xs text-muted mb-8">
           <Link href="/blog" className="hover:text-foreground transition-all">

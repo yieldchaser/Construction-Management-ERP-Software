@@ -1128,7 +1128,7 @@ body {
 
 /* score widget */
 .comparison-article .ovc-score-wrap { background: var(--card); border: 1px solid var(--border); border-radius: 1rem; padding: 1.5rem; margin-top: 2rem; }
-.comparison-article .ovc-score-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.comparison-article .ovc-score-head { display: grid; grid-template-columns: 1.5fr 1fr 1fr; align-items: center; gap: 0.5rem; }
 .comparison-article .ovc-score-eyebrow { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
 .comparison-article .ovc-score-title { font-size: 1.05rem; font-weight: 700; color: var(--foreground); }
 .comparison-article .ovc-live-pill { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.7rem; font-weight: 700; color: var(--ok); border: 1px solid color-mix(in srgb, var(--ok) 35%, transparent); border-radius: 999px; padding: 0.25rem 0.6rem; }
@@ -1239,6 +1239,10 @@ body {
 .comparison-article [class*="4-cn"],
 .comparison-article [class*="4-co"] { color: var(--muted); }
 .comparison-article [class*="4-cell-rival-win"] { color: var(--foreground); background: var(--them-soft); border-radius: 0.35rem; padding: 0.1rem 0.4rem; }
+/* Center the two platform columns (SiteFlow + competitor) in both the header
+   labels and the value cells; the Feature column stays left-aligned. */
+.comparison-article [class*="4-ch-SiteFlow"], .comparison-article [class*="4-ch-rival"] { justify-content: center; text-align: center; }
+.comparison-article [class*="4-cell-SiteFlow"], .comparison-article [class*="4-cell-win"], .comparison-article [class*="4-cell-rival"] { text-align: center; }
 
 /* item 6: only SiteFlow carries the "you-are-here" dot. Hide the competitor's
    duplicate/orphan dots (table header, score panel, decision card) so the
@@ -1264,7 +1268,7 @@ body {
 @media (min-width: 860px) { .comparison-article .ovc6-grid { grid-template-columns: 1fr 1fr; } }
 .comparison-article .ovc6-col { display: flex; flex-direction: column; gap: 1rem; }
 .comparison-article .ovc6-item { background: var(--card); border: 1px solid var(--border); border-radius: 0.7rem; overflow: hidden; }
-.comparison-article .ovc6-btn { display: flex; align-items: center; justify-content: space-between; gap: 1rem; width: 100%; text-align: left; background: transparent; border: 0; cursor: pointer; padding: 1.1rem 1.25rem; }
+.comparison-article .ovc6-btn { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; width: 100%; text-align: left; background: transparent; border: 0; cursor: pointer; padding: 1.1rem 1.25rem; }
 .comparison-article .ovc6-btn:hover { background: var(--me-soft); }
 .comparison-article .ovc6-q { font-size: 0.95rem; font-weight: 600; color: var(--foreground); }
 /* Unified toggle icon: hide the bespoke "+" each source file ships and render
