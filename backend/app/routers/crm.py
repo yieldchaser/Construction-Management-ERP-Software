@@ -181,11 +181,12 @@ class QuotationResponse(BaseModel):
 # --- Lead Endpoints ---
 
 @router.post("/leads", response_model=LeadResponse, status_code=status.HTTP_201_CREATED)
-def create_lead(req: LeadCreateRequest, db: Session = Depends(get_db)):
+def create_lead(req: LeadCreateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     comp_uuid = uuid.UUID(str(req.company_id))
     company = db.query(Company).filter(Company.id == comp_uuid).first()
     if not company:
         raise HTTPException(status_code=404, detail="Company not found")
+    get_company_membership(db, current_user, comp_uuid)
 
     lead = CRMLead(
         id=uuid.uuid4(),
@@ -220,11 +221,12 @@ def get_leads(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = De
     return db.query(CRMLead).filter(CRMLead.company_id == comp_uuid).all()
 
 @router.put("/leads/{lead_id}", response_model=LeadResponse)
-def update_lead(lead_id: uuid.UUID, req: LeadUpdateRequest, db: Session = Depends(get_db)):
+def update_lead(lead_id: uuid.UUID, req: LeadUpdateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     lead_uuid = uuid.UUID(str(lead_id))
     lead = db.query(CRMLead).filter(CRMLead.id == lead_uuid).first()
     if not lead:
         raise HTTPException(status_code=404, detail="Lead not found")
+    get_company_membership(db, current_user, lead.company_id)
 
     if req.status is not None:
         lead.status = req.status
@@ -393,11 +395,12 @@ def create_lead_status(company_id: uuid.UUID, payload: LookupCreate, db: Session
 # --- Quotation Endpoints ---
 
 @router.post("/leads/{lead_id}/quotations", response_model=QuotationResponse, status_code=status.HTTP_201_CREATED)
-def create_quotation(lead_id: uuid.UUID, req: QuotationCreateRequest, db: Session = Depends(get_db)):
+def create_quotation(lead_id: uuid.UUID, req: QuotationCreateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     lead_uuid = uuid.UUID(str(lead_id))
     lead = db.query(CRMLead).filter(CRMLead.id == lead_uuid).first()
     if not lead:
         raise HTTPException(status_code=404, detail="Lead not found")
+    get_company_membership(db, current_user, lead.company_id)
 
     gst_pct = req.gst_pct
     cgst_pct = req.cgst_pct if req.cgst_pct is not None else gst_pct / 2.0

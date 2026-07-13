@@ -237,7 +237,8 @@ class PayrollRunResponse(BaseModel):
 # ─── Employees ───────────────────────────────────────────────────────────────
 
 @router.post("/employees", response_model=EmployeeResponse, status_code=status.HTTP_201_CREATED)
-def create_employee(payload: EmployeeCreate, db: Session = Depends(get_db)):
+def create_employee(payload: EmployeeCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    get_company_membership(db, current_user, payload.company_id)
     emp = StaffEmployee(**payload.model_dump())
     db.add(emp)
     db.commit()
@@ -256,10 +257,11 @@ def list_employees(project_id: uuid.UUID, db: Session = Depends(get_db), _: None
 # ─── Attendance / Geofence ───────────────────────────────────────────────────
 
 @router.post("/attendance/punch", response_model=AttendanceResponse, status_code=status.HTTP_201_CREATED)
-def punch(payload: PunchRequest, db: Session = Depends(get_db)):
+def punch(payload: PunchRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     project = db.query(Project).filter(Project.id == payload.project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, project.company_id)
 
     site_lat, site_lng = _parse_site_coords(project.location)
     radius = project.attendance_radius_meters or 500
@@ -355,7 +357,11 @@ def daily_attendance(project_id: uuid.UUID, date_str: str, db: Session = Depends
 # ─── Timesheets ──────────────────────────────────────────────────────────────
 
 @router.post("/timesheets", response_model=TimesheetResponse, status_code=status.HTTP_201_CREATED)
-def create_timesheet(payload: TimesheetCreate, db: Session = Depends(get_db)):
+def create_timesheet(payload: TimesheetCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    project = db.query(Project).filter(Project.id == payload.project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, project.company_id)
     ts = Timesheet(**payload.model_dump())
     db.add(ts)
     db.commit()
@@ -364,10 +370,14 @@ def create_timesheet(payload: TimesheetCreate, db: Session = Depends(get_db)):
 
 
 @router.post("/timesheets/{ts_id}/entries", status_code=status.HTTP_201_CREATED)
-def add_timesheet_entry(ts_id: uuid.UUID, payload: TimesheetEntryCreate, db: Session = Depends(get_db)):
+def add_timesheet_entry(ts_id: uuid.UUID, payload: TimesheetEntryCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     ts = db.query(Timesheet).filter(Timesheet.id == ts_id).first()
     if not ts:
         raise HTTPException(status_code=404, detail="Timesheet not found")
+    project = db.query(Project).filter(Project.id == ts.project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Timesheet's project not found")
+    get_company_membership(db, current_user, project.company_id)
     if ts.status not in ("draft", "rejected"):
         raise HTTPException(status_code=400, detail=f"Cannot add entries to timesheet in status '{ts.status}'")
 
@@ -451,10 +461,14 @@ def list_company_timesheet_entries(company_id: uuid.UUID, db: Session = Depends(
 
 
 @router.patch("/timesheets/{ts_id}/submit", response_model=TimesheetResponse)
-def submit_timesheet(ts_id: uuid.UUID, db: Session = Depends(get_db)):
+def submit_timesheet(ts_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     ts = db.query(Timesheet).filter(Timesheet.id == ts_id).first()
     if not ts:
         raise HTTPException(status_code=404, detail="Timesheet not found")
+    project = db.query(Project).filter(Project.id == ts.project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Timesheet's project not found")
+    get_company_membership(db, current_user, project.company_id)
     if ts.status != "draft":
         raise HTTPException(status_code=400, detail="Only draft timesheets can be submitted")
     ts.status = "submitted"
@@ -464,10 +478,14 @@ def submit_timesheet(ts_id: uuid.UUID, db: Session = Depends(get_db)):
 
 
 @router.patch("/timesheets/{ts_id}/approve", response_model=TimesheetResponse)
-def approve_timesheet(ts_id: uuid.UUID, db: Session = Depends(get_db)):
+def approve_timesheet(ts_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     ts = db.query(Timesheet).filter(Timesheet.id == ts_id).first()
     if not ts:
         raise HTTPException(status_code=404, detail="Timesheet not found")
+    project = db.query(Project).filter(Project.id == ts.project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Timesheet's project not found")
+    get_company_membership(db, current_user, project.company_id)
     if ts.status != "submitted":
         raise HTTPException(status_code=400, detail="Only submitted timesheets can be approved")
     ts.status = "approved"
@@ -558,11 +576,12 @@ def _compute_payslip(emp: StaffEmployee, days_present: float, days_in_month: int
 
 
 @router.post("/payroll/run", response_model=PayrollRunResponse, status_code=status.HTTP_201_CREATED)
-def run_payroll(payload: PayrollRunCreate, db: Session = Depends(get_db)):
+def run_payroll(payload: PayrollRunCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """
     Triggers a monthly payroll run for all active employees in the project.
     Days present is determined by counting AttendanceLog records for that month with status 'Present' or 'Present (Off-Site)'.
     """
+    get_company_membership(db, current_user, payload.company_id)
     # Parse month boundaries
     year, month = map(int, payload.payroll_month.split("-"))
     month_start = datetime(year, month, 1)
@@ -743,11 +762,12 @@ def create_leave_request(company_id: uuid.UUID, data: LeaveRequestCreate, db: Se
 
 
 @router.put("/leaves/approve/{leave_id}", response_model=LeaveRequestResponse)
-def update_leave_status(leave_id: uuid.UUID, data: LeaveStatusUpdate, db: Session = Depends(get_db)):
+def update_leave_status(leave_id: uuid.UUID, data: LeaveStatusUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     leave = db.query(LeaveRequest).filter(LeaveRequest.id == leave_id).first()
     if not leave:
         raise HTTPException(status_code=404, detail="Leave request not found")
-    
+    get_company_membership(db, current_user, leave.company_id)
+
     leave.status = data.status
     db.commit()
     db.refresh(leave)
@@ -896,10 +916,11 @@ def list_company_employees(company_id: uuid.UUID, db: Session = Depends(get_db),
 
 
 @router.put("/employees/{employee_id}", response_model=EmployeeResponse)
-def update_employee(employee_id: uuid.UUID, payload: EmployeeUpdate, db: Session = Depends(get_db)):
+def update_employee(employee_id: uuid.UUID, payload: EmployeeUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     emp = db.query(StaffEmployee).filter(StaffEmployee.id == employee_id).first()
     if not emp:
         raise HTTPException(status_code=404, detail="Employee not found")
+    get_company_membership(db, current_user, emp.company_id)
     for k, v in payload.model_dump(exclude_unset=True).items():
         setattr(emp, k, v)
     db.commit()
@@ -987,10 +1008,11 @@ def create_leave_template(company_id: uuid.UUID, payload: LeaveTemplateCreate, d
 
 
 @router.put("/leave-templates/{leave_template_id}", response_model=LeaveTemplateResponse)
-def update_leave_template(leave_template_id: uuid.UUID, payload: LeaveTemplateUpdate, db: Session = Depends(get_db)):
+def update_leave_template(leave_template_id: uuid.UUID, payload: LeaveTemplateUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     obj = db.query(LeaveTemplate).filter(LeaveTemplate.id == leave_template_id).first()
     if not obj:
         raise HTTPException(status_code=404, detail="Leave template not found")
+    get_company_membership(db, current_user, obj.company_id)
     for k, v in payload.model_dump(exclude_unset=True).items():
         setattr(obj, k, v)
     db.commit()
@@ -999,10 +1021,11 @@ def update_leave_template(leave_template_id: uuid.UUID, payload: LeaveTemplateUp
 
 
 @router.delete("/leave-templates/{leave_template_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_leave_template(leave_template_id: uuid.UUID, db: Session = Depends(get_db)):
+def delete_leave_template(leave_template_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     obj = db.query(LeaveTemplate).filter(LeaveTemplate.id == leave_template_id).first()
     if not obj:
         raise HTTPException(status_code=404, detail="Leave template not found")
+    get_company_membership(db, current_user, obj.company_id)
     try:
         from app.routers.delete_logs import log_deletion
         log_deletion(db, obj.company_id, "leave_template", obj.id, f"Leave Template: {obj.name}")
@@ -1056,10 +1079,11 @@ def get_payroll_profile(employee_id: uuid.UUID, db: Session = Depends(get_db)):
 
 
 @router.put("/payroll-profiles/{employee_id}", response_model=PayrollProfileResponse)
-def upsert_payroll_profile(employee_id: uuid.UUID, payload: PayrollProfileUpdate, db: Session = Depends(get_db)):
+def upsert_payroll_profile(employee_id: uuid.UUID, payload: PayrollProfileUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     emp = db.query(StaffEmployee).filter(StaffEmployee.id == employee_id).first()
     if not emp:
         raise HTTPException(status_code=404, detail="Employee not found")
+    get_company_membership(db, current_user, emp.company_id)
     prof = db.query(PayrollProfile).filter(PayrollProfile.employee_id == employee_id).first()
     data = payload.model_dump(exclude_unset=True)
     if not prof:
@@ -1120,10 +1144,11 @@ def create_holiday(company_id: uuid.UUID, payload: HolidayCreate, db: Session = 
 
 
 @router.put("/holidays/{holiday_id}", response_model=HolidayResponse)
-def update_holiday(holiday_id: uuid.UUID, payload: HolidayUpdate, db: Session = Depends(get_db)):
+def update_holiday(holiday_id: uuid.UUID, payload: HolidayUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     obj = db.query(Holiday).filter(Holiday.id == holiday_id).first()
     if not obj:
         raise HTTPException(status_code=404, detail="Holiday not found")
+    get_company_membership(db, current_user, obj.company_id)
     for k, v in payload.model_dump(exclude_unset=True).items():
         setattr(obj, k, v)
     db.commit()
@@ -1132,10 +1157,11 @@ def update_holiday(holiday_id: uuid.UUID, payload: HolidayUpdate, db: Session = 
 
 
 @router.delete("/holidays/{holiday_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_holiday(holiday_id: uuid.UUID, db: Session = Depends(get_db)):
+def delete_holiday(holiday_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     obj = db.query(Holiday).filter(Holiday.id == holiday_id).first()
     if not obj:
         raise HTTPException(status_code=404, detail="Holiday not found")
+    get_company_membership(db, current_user, obj.company_id)
     try:
         from app.routers.delete_logs import log_deletion
         log_deletion(db, obj.company_id, "holiday", obj.id, f"Holiday: {obj.name}")

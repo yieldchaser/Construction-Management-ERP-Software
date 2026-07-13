@@ -4,7 +4,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.auth import get_current_user, verify_company_access, verify_project_access
+from app.auth import get_current_user, verify_company_access, verify_project_access, get_company_membership
 from app.models import Task, TaskPredecessor, Project, TaskTodo, TaskComment, CompanyTeam, User
 from app.workflow_controls import (
     enforce_entry_creation_window,
@@ -170,10 +170,11 @@ def get_company_tasks(company_id: UUID, db: Session = Depends(get_db), _: None =
 
 
 @router.post("/tasks", response_model=TaskResponse, status_code=status.HTTP_201_CREATED)
-def create_task(request: TaskCreateRequest, db: Session = Depends(get_db)):
+def create_task(request: TaskCreateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     project = db.query(Project).filter(Project.id == request.project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, project.company_id)
 
     # Workflow Controls: Entry Controls (creation date window) & Progress Controls
     enforce_entry_creation_window(db, project.company_id, request.start_date)
@@ -201,7 +202,7 @@ def create_task(request: TaskCreateRequest, db: Session = Depends(get_db)):
     return task
 
 @router.put("/tasks/{task_id}", response_model=TaskResponse)
-def update_task(task_id: UUID, request: TaskUpdateRequest, db: Session = Depends(get_db)):
+def update_task(task_id: UUID, request: TaskUpdateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     task = db.query(Task).filter(Task.id == task_id).first()
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
@@ -209,6 +210,7 @@ def update_task(task_id: UUID, request: TaskUpdateRequest, db: Session = Depends
     # Workflow Controls: Entry Controls (editing date window) & Progress Controls
     project = db.query(Project).filter(Project.id == task.project_id).first()
     if project:
+        get_company_membership(db, current_user, project.company_id)
         enforce_entry_editing_window(db, project.company_id, task.start_date)
         enforce_progress_over_estimate(db, project.company_id, request.progress)
 
@@ -247,12 +249,17 @@ def update_task(task_id: UUID, request: TaskUpdateRequest, db: Session = Depends
     return task
 
 @router.post("/tasks/{task_id}/predecessors", status_code=status.HTTP_201_CREATED)
-def add_predecessor(task_id: UUID, request: PredecessorCreateRequest, db: Session = Depends(get_db)):
+def add_predecessor(task_id: UUID, request: PredecessorCreateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     task = db.query(Task).filter(Task.id == task_id).first()
     predecessor = db.query(Task).filter(Task.id == request.predecessor_id).first()
 
     if not task or not predecessor:
         raise HTTPException(status_code=404, detail="Task or Predecessor not found")
+
+    project = db.query(Project).filter(Project.id == task.project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, project.company_id)
 
     if task_id == request.predecessor_id:
         raise HTTPException(status_code=400, detail="A task cannot be its own predecessor")
@@ -332,10 +339,14 @@ def get_task_todos(task_id: UUID, db: Session = Depends(get_db)):
 
 
 @router.post("/tasks/{task_id}/todos", response_model=TodoResponse, status_code=status.HTTP_201_CREATED)
-def create_task_todo(task_id: UUID, payload: TodoCreate, db: Session = Depends(get_db)):
+def create_task_todo(task_id: UUID, payload: TodoCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     task = db.query(Task).filter(Task.id == task_id).first()
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
+    project = db.query(Project).filter(Project.id == task.project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, project.company_id)
     todo = TaskTodo(task_id=task_id, title=payload.title, is_completed=False)
     db.add(todo)
     db.commit()
@@ -344,10 +355,17 @@ def create_task_todo(task_id: UUID, payload: TodoCreate, db: Session = Depends(g
 
 
 @router.patch("/tasks/todos/{todo_id}/toggle", response_model=TodoResponse)
-def toggle_task_todo(todo_id: UUID, db: Session = Depends(get_db)):
+def toggle_task_todo(todo_id: UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     todo = db.query(TaskTodo).filter(TaskTodo.id == todo_id).first()
     if not todo:
         raise HTTPException(status_code=404, detail="Todo not found")
+    task = db.query(Task).filter(Task.id == todo.task_id).first()
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    project = db.query(Project).filter(Project.id == task.project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, project.company_id)
     todo.is_completed = not todo.is_completed
     db.commit()
     db.refresh(todo)
@@ -355,16 +373,20 @@ def toggle_task_todo(todo_id: UUID, db: Session = Depends(get_db)):
 
 
 @router.delete("/tasks/todos/{todo_id}")
-def delete_task_todo(todo_id: UUID, db: Session = Depends(get_db)):
+def delete_task_todo(todo_id: UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     todo = db.query(TaskTodo).filter(TaskTodo.id == todo_id).first()
     if not todo:
         raise HTTPException(status_code=404, detail="Todo not found")
+    task = db.query(Task).filter(Task.id == todo.task_id).first()
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    proj = db.query(Project).filter(Project.id == task.project_id).first()
+    if not proj:
+        raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, proj.company_id)
     try:
         from app.routers.delete_logs import log_deletion
-        company_id = None
-        if todo.task_id:
-            proj = db.query(Project).filter(Project.id == todo.task_id).first()
-            company_id = str(proj.company_id) if proj else None
+        company_id = str(proj.company_id) if proj else None
         log_deletion(db, company_id, "task", todo.id, f"Task Todo: {todo.title}")
     except Exception:
         pass
@@ -379,11 +401,15 @@ def get_task_comments(task_id: UUID, db: Session = Depends(get_db)):
 
 
 @router.post("/tasks/{task_id}/comments", response_model=CommentResponse, status_code=status.HTTP_201_CREATED)
-def create_task_comment(task_id: UUID, payload: CommentCreate, db: Session = Depends(get_db)):
+def create_task_comment(task_id: UUID, payload: CommentCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     task = db.query(Task).filter(Task.id == task_id).first()
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
-    
+    project = db.query(Project).filter(Project.id == task.project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, project.company_id)
+
     comment = TaskComment(
         task_id=task_id,
         user_id=payload.user_id,
@@ -465,8 +491,9 @@ def get_project_v3(project_id: UUID, db: Session = Depends(get_db), _: None = De
     return proj
 
 @router.post("/projects", response_model=ProjectResponseSchema, status_code=status.HTTP_201_CREATED)
-def create_project_v3(payload: ProjectCreateSchema, db: Session = Depends(get_db)):
+def create_project_v3(payload: ProjectCreateSchema, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     import uuid
+    get_company_membership(db, current_user, payload.company_id)
     proj = Project(
         id=uuid.uuid4(),
         company_id=payload.company_id,
