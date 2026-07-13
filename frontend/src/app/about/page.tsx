@@ -118,27 +118,36 @@ export default function AboutPage() {
         </p>
       </section>
 
-      {/* Proof strip, same claim set as homepage and pricing (no invented numbers) */}
-      <section className="max-w-6xl mx-auto px-6 py-10">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-px rounded-lg border border-border-custom bg-border-custom overflow-hidden">
-          {PROOF_POINTS.map((t, i) => (
-            <div key={i} className="bg-card px-4 py-6 text-center space-y-1">
-              <div className="text-2xl font-extrabold text-white">{t.value}</div>
-              <div className="text-xs text-muted">{t.label}</div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Product philosophy */}
-      <section className="max-w-6xl mx-auto px-6 py-12 space-y-10">
+      {/* Product philosophy header */}
+      <section className="max-w-6xl mx-auto px-6 pt-12 space-y-3">
         <div className="text-center space-y-3">
           <h2 className="text-3xl font-extrabold text-white">How we build it</h2>
           <p className="text-muted text-base max-w-xl mx-auto">
             Three principles shape every module, from planning to final invoice.
           </p>
         </div>
+      </section>
 
+      {/* Final CTA */}
+      <section className="max-w-4xl mx-auto px-6 py-8">
+        <div className="rounded-md bg-gradient-to-r from-primary/20 to-secondary/20 border border-border-custom p-12 text-center space-y-6 relative overflow-hidden">
+          <h2 className="text-3xl font-extrabold text-white">See the workspace for yourself</h2>
+          <p className="text-white/70 text-sm max-w-md mx-auto">
+            Start a free trial and explore planning, progress, procurement and project finance in one place.
+          </p>
+          <div className="pt-2">
+            <Link
+              href="/login"
+              className="inline-flex items-center justify-center rounded-md bg-primary px-8 py-3.5 text-sm font-bold text-white shadow-lg shadow-primary/20 hover:opacity-90 active:scale-[0.98] transition-all cursor-pointer"
+            >
+              Start Free Trial
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Product pillars */}
+      <section className="max-w-6xl mx-auto px-6 py-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {PILLARS.map((p, i) => (
             <div key={i} className="rounded-lg bg-card border border-border-custom p-7 space-y-3">
@@ -150,28 +159,15 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Final CTA */}
-      <section className="max-w-4xl mx-auto px-6 py-16">
-        <div className="rounded-md bg-card border border-border-custom p-12 text-center space-y-6 relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-full bg-radial opacity-10 pointer-events-none" />
-          <h2 className="text-3xl font-extrabold text-white">See the workspace for yourself</h2>
-          <p className="text-white/70 text-sm max-w-md mx-auto">
-            Start a free trial and explore planning, progress, procurement and project finance in one place.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
-            <Link
-              href="/login"
-              className="w-full sm:w-auto inline-flex items-center justify-center rounded-md bg-primary px-8 py-3.5 text-sm font-bold text-white shadow-lg shadow-primary/20 hover:opacity-90 active:scale-[0.98] transition-all cursor-pointer"
-            >
-              Start Free Trial
-            </Link>
-            <Link
-              href="/contact"
-              className="w-full sm:w-auto inline-flex items-center justify-center rounded-md border border-white/20 px-8 py-3.5 text-sm font-bold text-white hover:bg-white/5 active:scale-[0.98] transition-all cursor-pointer"
-            >
-              Talk to Sales
-            </Link>
-          </div>
+      {/* Proof strip, same claim set as homepage and pricing (no invented numbers) */}
+      <section className="max-w-6xl mx-auto px-6 py-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-px rounded-lg border border-border-custom bg-border-custom overflow-hidden">
+          {PROOF_POINTS.map((t, i) => (
+            <div key={i} className="bg-card px-4 py-6 text-center space-y-1">
+              <div className="text-2xl font-extrabold text-white">{t.value}</div>
+              <div className="text-xs text-muted">{t.label}</div>
+            </div>
+          ))}
         </div>
       </section>
 
