@@ -8,6 +8,11 @@ from app.database import get_db
 from app.auth import get_current_user, verify_company_access, get_company_membership
 from app.models import Company, CompanyBranch, ApprovalRule, CompanyFile, CompanyRole, CompanyPayrollSettings, SalaryTemplate, PdfTemplate, CompanyTerms, User
 from app import supabase_storage
+from app.permissions import (
+    DEFAULT_ROLE_PRESETS,
+    validate_permissions,
+    default_view_permissions,
+)
 
 router = APIRouter(prefix="/settings", tags=["Settings & Configurations"], dependencies=[Depends(get_current_user)])
 
@@ -165,12 +170,20 @@ class ApprovalRuleResponse(BaseModel):
 
 class RoleCreate(BaseModel):
     role_name: str
+    # Optional initial permission dict (validated against the taxonomy). When
+    # omitted a new custom role defaults to read-only across every module.
+    permissions: Optional[dict] = None
+
+
+class RolePermissionsUpdate(BaseModel):
+    permissions: dict
 
 
 class RoleResponse(BaseModel):
     id: uuid.UUID
     company_id: uuid.UUID
     role_name: str
+    permissions: Optional[dict] = None
     created_at: datetime
 
     class Config:
@@ -351,7 +364,14 @@ def create_role(company_id: uuid.UUID, role_data: RoleCreate, db: Session = Depe
     ).first()
     if existing:
         raise HTTPException(status_code=409, detail="Role already exists")
-    role = CompanyRole(company_id=company_id, role_name=name, permissions={})
+    if role_data.permissions is not None:
+        try:
+            perms = validate_permissions(role_data.permissions)
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e))
+    else:
+        perms = default_view_permissions()
+    role = CompanyRole(company_id=company_id, role_name=name, permissions=perms)
     db.add(role)
     db.commit()
     db.refresh(role)
@@ -364,13 +384,89 @@ def seed_default_roles(company_id: uuid.UUID, db: Session = Depends(get_db), _: 
         raise HTTPException(status_code=409, detail="Roles already exist for this company")
     created = []
     for name in DEFAULT_ROLES:
-        role = CompanyRole(company_id=company_id, role_name=name, permissions={})
+        # Seed with the real preset (not {}); fall back to read-only for any
+        # role name without a preset.
+        preset = DEFAULT_ROLE_PRESETS.get(name, default_view_permissions())
+        role = CompanyRole(company_id=company_id, role_name=name, permissions=preset)
         db.add(role)
         created.append(role)
     db.commit()
     for role in created:
         db.refresh(role)
     return created
+
+
+def _load_role_and_verify_access(
+    role_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> CompanyRole:
+    """Resolve a role by id and verify the caller belongs to its company.
+
+    Mirrors the `verify_company_access` dependency but resolves the company via
+    the role's own `company_id` (the path carries `role_id`, not `company_id`).
+    """
+    role = db.query(CompanyRole).filter(CompanyRole.id == role_id).first()
+    if not role:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Role not found")
+    get_company_membership(db, current_user, role.company_id)
+    return role
+
+
+# Locked roles must keep full access; never allow them to be restricted.
+_LOCKED_ROLES = {"Owner", "Admin"}
+
+
+@router.put("/roles/{role_id}/permissions", response_model=RoleResponse)
+def update_role_permissions(
+    role: CompanyRole = Depends(_load_role_and_verify_access),
+    payload: RolePermissionsUpdate = None,
+    db: Session = Depends(get_db),
+):
+    """Replace a role's permission set.
+
+    - Keys are validated against the canonical taxonomy; unknown keys are 400'd.
+    - Owner / Admin are locked to full access (`all=true`) so they can never be
+      locked out (failsafe).
+    """
+    if payload is None:
+        raise HTTPException(status_code=400, detail="permissions body is required")
+    if role.role_name in _LOCKED_ROLES and not payload.permissions.get("all"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"The {role.role_name} role must retain full access (all=true) and cannot be restricted.",
+        )
+    try:
+        normalized = validate_permissions(payload.permissions)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    role.permissions = normalized
+    db.commit()
+    db.refresh(role)
+    return role
+
+
+@router.delete("/roles/{role_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_role(
+    role: CompanyRole = Depends(_load_role_and_verify_access),
+    db: Session = Depends(get_db),
+):
+    """Delete a custom (non-default) role that is not assigned to any member."""
+    if role.role_name in DEFAULT_ROLES:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Default roles cannot be deleted",
+        )
+    assigned = (
+        db.query(CompanyTeam).filter(CompanyTeam.role_id == role.id).first()
+    )
+    if assigned:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Role is assigned to members and cannot be deleted",
+        )
+    db.delete(role)
+    db.commit()
 
 
 # ─── Payroll Settings (company-level default statutory rates) ───────────────

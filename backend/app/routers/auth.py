@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 from app.database import get_db
 from app.auth import create_access_token, get_current_active_company_user, get_current_user
+from app.permissions import effective_permissions
 from app.config import settings
 from app.rate_limit import limiter
 from app import models, sms, email_otp, security, firebase_auth
@@ -822,15 +823,22 @@ def resolve_company(slug: str, db: Session = Depends(get_db)):
 
 @router.get("/me")
 def get_me(ctx: dict = Depends(get_current_active_company_user), db: Session = Depends(get_db)):
-    """Return the current authenticated user's company role context."""
+    """Return the current authenticated user's company role context.
+
+    Includes the caller's effective `permissions` dict (resolved role
+    permissions, or `{"all": true}` for partners) so the frontend can gate UI.
+    """
     user = ctx["user"]
     company_id = ctx["company_id"]
     role_id = ctx.get("role_id")
     priority_type = ctx.get("priority_type")
     role_name = None
+    role_perms = None
     if role_id:
         role = db.query(models.CompanyRole).filter(models.CompanyRole.id == role_id).first()
-        role_name = role.role_name if role else None
+        if role:
+            role_name = role.role_name
+            role_perms = role.permissions
     return {
         "user_id": str(user.id),
         "name": user.name,
@@ -838,6 +846,29 @@ def get_me(ctx: dict = Depends(get_current_active_company_user), db: Session = D
         "role_id": str(role_id) if role_id else None,
         "role": role_name,
         "priority_type": priority_type,
+        "permissions": effective_permissions(role_perms, priority_type),
+    }
+
+
+@router.get("/me/permissions")
+def get_my_permissions(ctx: dict = Depends(get_current_active_company_user), db: Session = Depends(get_db)):
+    """Return just the caller's effective permission set (see get_me)."""
+    company_id = ctx["company_id"]
+    role_id = ctx.get("role_id")
+    priority_type = ctx.get("priority_type")
+    role_name = None
+    role_perms = None
+    if role_id:
+        role = db.query(models.CompanyRole).filter(models.CompanyRole.id == role_id).first()
+        if role:
+            role_name = role.role_name
+            role_perms = role.permissions
+    return {
+        "company_id": str(company_id),
+        "role_id": str(role_id) if role_id else None,
+        "role": role_name,
+        "priority_type": priority_type,
+        "permissions": effective_permissions(role_perms, priority_type),
     }
 
 
