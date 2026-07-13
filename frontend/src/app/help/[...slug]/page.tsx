@@ -55,7 +55,7 @@ export default async function HelpArticlePage({ params }: RouteParams) {
   );
 
   return (
-    <div className="min-h-screen bg-background text-foreground pb-20 relative">
+    <div className="min-h-screen bg-background text-foreground relative">
       {/* Background Glow */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute top-[-10%] right-[-10%] h-[40vw] w-[40vw] rounded-full bg-primary opacity-5 blur-[120px]" />

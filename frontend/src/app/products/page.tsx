@@ -160,7 +160,7 @@ export default async function ProductsIndexPage() {
   const products = await getContentItems("products");
 
   return (
-    <div className="min-h-screen bg-background text-foreground pb-20 relative">
+    <div className="min-h-screen bg-background text-foreground relative">
       {/* Background glow */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute top-[-10%] right-[-10%] h-[50vw] w-[50vw] rounded-full bg-primary opacity-5 blur-[120px]" />

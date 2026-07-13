@@ -75,13 +75,18 @@ export default async function GenericPage({ params }: RouteParams) {
 
         {/* Footer */}
         <footer className="border-t border-border-custom px-6 py-8 text-muted">
-          <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-            <p className="text-xs">© 2026 SiteFlow. All rights reserved.</p>
-            <div className="flex items-center gap-5 text-xs">
-              <Link href="/privacy" className="hover:text-foreground transition-all">Privacy</Link>
-              <Link href="/terms" className="hover:text-foreground transition-all">Terms</Link>
-              <Link href="/contact" className="hover:text-foreground transition-all">Contact</Link>
-              <Link href="/blog" className="hover:text-foreground transition-all">Blog</Link>
+          <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+            <p className="text-xs">
+              © 2026 SiteFlow. All rights reserved. SiteFlow is a site operations platform. All product logos are property of their respective owners.
+            </p>
+            <div className="flex items-center flex-wrap gap-x-6 gap-y-2 text-xs">
+              <Link href="/blog" className="hover:text-muted transition-all whitespace-nowrap">Blog</Link>
+              <Link href="/help" className="hover:text-muted transition-all whitespace-nowrap">Help Center</Link>
+              <Link href="/resources/construction-terms-meanings" className="hover:text-muted transition-all whitespace-nowrap">Glossary</Link>
+              <Link href="/resources/construction-calculators" className="hover:text-muted transition-all whitespace-nowrap">Calculators</Link>
+              <Link href="/who-we-serve" className="hover:text-muted transition-all whitespace-nowrap">Who We Serve</Link>
+              <Link href="/terms" className="hover:text-muted transition-all whitespace-nowrap">Terms</Link>
+              <Link href="/privacy" className="hover:text-muted transition-all whitespace-nowrap">Privacy</Link>
             </div>
           </div>
         </footer>
@@ -91,7 +96,7 @@ export default async function GenericPage({ params }: RouteParams) {
 
   if (isCustomLayout) {
     return (
-      <div className="min-h-screen bg-background text-foreground pb-20 relative">
+      <div className="min-h-screen bg-background text-foreground relative">
         <header className="sticky top-0 z-50 bg-card border border-border-custom rounded-lg border-b border-border-custom px-6 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary font-sans font-bold text-white shadow-md">
@@ -119,15 +124,18 @@ export default async function GenericPage({ params }: RouteParams) {
         </main>
 
         <footer className="border-t border-border-custom px-6 py-8 text-muted">
-          <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-xs">
-              © 2026 SiteFlow. All rights reserved.
+              © 2026 SiteFlow. All rights reserved. SiteFlow is a site operations platform. All product logos are property of their respective owners.
             </p>
-            <div className="flex items-center gap-5 text-xs">
-              <Link href="/privacy" className="hover:text-muted transition-all">Privacy</Link>
-              <Link href="/terms" className="hover:text-muted transition-all">Terms</Link>
-              <Link href="/contact" className="hover:text-muted transition-all">Contact</Link>
-              <Link href="/blog" className="hover:text-muted transition-all">Blog</Link>
+            <div className="flex items-center flex-wrap gap-x-6 gap-y-2 text-xs">
+              <Link href="/blog" className="hover:text-muted transition-all whitespace-nowrap">Blog</Link>
+              <Link href="/help" className="hover:text-muted transition-all whitespace-nowrap">Help Center</Link>
+              <Link href="/resources/construction-terms-meanings" className="hover:text-muted transition-all whitespace-nowrap">Glossary</Link>
+              <Link href="/resources/construction-calculators" className="hover:text-muted transition-all whitespace-nowrap">Calculators</Link>
+              <Link href="/who-we-serve" className="hover:text-muted transition-all whitespace-nowrap">Who We Serve</Link>
+              <Link href="/terms" className="hover:text-muted transition-all whitespace-nowrap">Terms</Link>
+              <Link href="/privacy" className="hover:text-muted transition-all whitespace-nowrap">Privacy</Link>
             </div>
           </div>
         </footer>

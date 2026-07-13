@@ -810,6 +810,9 @@ body {
 
 /* mini-dashboard shell */
 .owc-dash { background: var(--elevated); border-bottom: 1px solid var(--border); padding: 1rem 1.1rem 1.25rem; }
+@media (min-width: 900px) {
+  .owc-dash { min-height: 235px; }
+}
 .owc-dash-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.9rem; }
 .owc-dash-title { font-size: 0.78rem; font-weight: 700; color: var(--foreground); }
 .owc-dash-live { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.62rem; font-weight: 700; letter-spacing: 0.08em; color: #34d399; }
@@ -912,7 +915,7 @@ body {
 
 /* mini-dashboard 5: EPC phases + PO */
 .owdb5-wrap { display: flex; flex-direction: column; gap: 0.85rem; }
-.owdb5-phases { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; }
+.owdb5-phases { display: flex; flex-direction: column; gap: 0.55rem; }
 .owdb5-phase { text-align: center; padding: 0.5rem 0.25rem; border-radius: 0.5rem; background: color-mix(in srgb, var(--foreground) 5%, transparent); }
 .owdb5-phase-n { font-size: 1.1rem; font-weight: 800; }
 .owdb5-phase-l { font-size: 0.56rem; color: var(--muted); margin-top: 0.15rem; }
