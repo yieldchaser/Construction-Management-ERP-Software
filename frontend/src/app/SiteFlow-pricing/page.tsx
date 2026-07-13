@@ -111,7 +111,7 @@ export default function PricingPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   return (
-    <div className="min-h-screen bg-background text-foreground pb-20 relative">
+    <div className="min-h-screen bg-background text-foreground relative">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute top-[-10%] right-[-10%] h-[50vw] w-[50vw] rounded-full bg-primary opacity-5 blur-[120px]" />
         <div className="absolute bottom-[-10%] left-[-10%] h-[50vw] w-[50vw] rounded-full bg-primary opacity-5 blur-[120px]" />
@@ -266,7 +266,7 @@ export default function PricingPage() {
       <footer className="border-t border-border-custom px-6 py-8 text-muted">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-xs">
-            SiteFlow is an independent construction operations platform. All product names, logos, and brands are property of their respective owners.
+            SiteFlow is a site operations platform. All product logos are property of their respective owners.
           </p>
           <div className="flex items-center flex-wrap gap-x-6 gap-y-2 text-xs">
             <Link href="/blog" className="hover:text-muted transition-all whitespace-nowrap">Blog</Link>

@@ -475,7 +475,7 @@ export default function LandingPage() {
 
           <div className="mt-12 pt-6 border-t border-border-custom flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <p className="text-xs text-muted max-w-2xl leading-relaxed">
-              SiteFlow is an independent construction operations platform. All product names, logos, and brands are property of their respective owners.
+              SiteFlow is a site operations platform. All product logos are property of their respective owners.
             </p>
             <p className="text-xs text-muted whitespace-nowrap">
               &copy; {new Date().getFullYear()} SiteFlow
