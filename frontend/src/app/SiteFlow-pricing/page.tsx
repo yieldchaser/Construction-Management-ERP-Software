@@ -264,7 +264,7 @@ export default function PricingPage() {
 
       {/* Footer */}
       <footer className="border-t border-border-custom py-8 text-muted">
-        <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="max-w-4xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-xs">
             SiteFlow is a site operations platform. All product logos are property of their respective owners.
           </p>
