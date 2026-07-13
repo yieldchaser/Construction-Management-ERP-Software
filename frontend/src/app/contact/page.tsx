@@ -111,10 +111,9 @@ export default function ContactPage() {
               <Link href="/" className="text-sm text-primary hover:underline">← Back to Home</Link>
             </div>
           ) : (
-            <div className="bg-card border border-border-custom rounded-lg shadow-sm rounded-md p-8 border border-border-custom space-y-6 flex-grow flex flex-col justify-between h-full">
-              <div>
-                <h2 className="text-lg font-extrabold text-white mb-5">Send us a message</h2>
-                <form onSubmit={handleSubmit} className="space-y-4 flex-grow flex flex-col justify-between">
+            <div className="bg-card border border-border-custom rounded-lg shadow-sm rounded-md p-8 border border-border-custom flex-grow flex flex-col justify-between h-full">
+              <h2 className="text-lg font-extrabold text-white mb-5">Send us a message</h2>
+              <form onSubmit={handleSubmit} className="space-y-4 flex-grow flex flex-col justify-between">
                   <div className="space-y-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       {[
@@ -197,7 +196,6 @@ export default function ContactPage() {
                     </p>
                   </div>
                 </form>
-              </div>
             </div>
           )}
         </main>
