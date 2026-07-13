@@ -6,6 +6,7 @@ import { Metadata } from "next";
 import CalculatorTools from "@/components/resources/CalculatorTools";
 import CalcProse from "@/components/resources/CalcProse";
 import ComparisonProse from "@/components/resources/ComparisonProse";
+import ResourceIndexProse from "@/components/resources/ResourceIndexProse";
 import { isCalculatorSlug } from "@/components/resources/calculatorSlugs";
 
 interface RouteParams {
@@ -53,6 +54,9 @@ export default async function ResourcePage({ params }: RouteParams) {
 
   const isCalc = isCalculatorSlug(slugPath);
   const isComparison = slugPath.startsWith("feature-comparisons/");
+  const isResourceIndex =
+    slugPath === "construction-calculators" ||
+    slugPath === "construction-terms-meanings";
   const hasBody = !!article.body && article.body.trim().length > 20;
 
   if (isComparison) {
@@ -186,10 +190,14 @@ export default async function ResourcePage({ params }: RouteParams) {
                 </div>
 
                 {/* Render html body safely */}
-                <div
-                  className="help-article"
-                  dangerouslySetInnerHTML={{ __html: article.body }}
-                />
+                {isResourceIndex ? (
+                  <ResourceIndexProse html={article.body} />
+                ) : (
+                  <div
+                    className="help-article"
+                    dangerouslySetInnerHTML={{ __html: article.body }}
+                  />
+                )}
               </div>
             )}
           </main>

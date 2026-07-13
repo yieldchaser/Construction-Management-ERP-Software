@@ -554,7 +554,9 @@ body {
 .calc-prose [class*="-faq-icon"],
 .calc-prose [class*="-faq-toggle"],
 .calc-prose .cp-faq-trigger [class*="icon"],
-.calc-prose details > summary [class*="icon"] {
+.calc-prose details > summary [class*="icon"],
+.calc-prose .osclf-arr,
+.calc-prose .oterm3-arr {
   display: none !important;
 }
 .calc-prose .cp-faq-trigger::after {
@@ -802,7 +804,7 @@ body {
 .owc-epc-row { margin-top: 1.5rem; }
 @media (min-width: 900px) {
   .owc-epc-row .owc-card { flex-direction: row; }
-  .owc-epc-row .owc-dash { width: 46%; border-bottom: none; border-right: 1px solid var(--border); }
+  .owc-epc-row .owc-dash { width: 46%; border-bottom: none; border-right: 1px solid var(--border); display: flex; flex-direction: column; justify-content: center; }
   .owc-epc-row .owc-body { width: 54%; }
 }
 
@@ -835,11 +837,11 @@ body {
 
 /* per-segment accent tints */
 .owc-icon-2 { background: rgba(34,211,238,0.16); }
-.owc-icon-3 { background: rgba(253,164,184,0.16); }
+.owc-icon-3 { background: rgba(167,139,250,0.16); }
 .owc-icon-4 { background: rgba(129,140,248,0.16); }
 .owc-icon-5 { background: rgba(252,211,141,0.18); }
 .owc-tag-2 { color: #22d3ee; }
-.owc-tag-3 { color: #fda4b8; }
+.owc-tag-3 { color: #a78bfa; }
 .owc-tag-4 { color: #818cf8; }
 .owc-tag-5 { color: #eab308; }
 
@@ -854,7 +856,7 @@ body {
 .owdb1-bar-g, .owdb1-bar-a, .owdb1-bar-r { height: 100%; border-radius: 999px; }
 .owdb1-bar-g { width: 78%; background: #34d399; }
 .owdb1-bar-a { width: 62%; background: #fcd34d; }
-.owdb1-bar-r { width: 91%; background: #fda4b8; }
+.owdb1-bar-r { width: 91%; background: #f87171; }
 
 /* mini-dashboard 2: attendance + materials */
 .owdb2-wrap { display: flex; flex-direction: column; gap: 0.75rem; }
@@ -885,7 +887,7 @@ body {
 .owdb3-proj-name { color: var(--foreground); }
 .owdb3-proj-status { font-size: 0.6rem; font-weight: 700; padding: 0.12rem 0.4rem; border-radius: 0.35rem; }
 .owdb3-s-done { background: rgba(52,211,153,0.16); color: #34d399; }
-.owdb3-s-wip { background: rgba(253,164,184,0.16); color: #fda4b8; }
+.owdb3-s-wip { background: rgba(34,211,238,0.16); color: #22d3ee; }
 .owdb3-s-rev { background: rgba(252,211,141,0.16); color: #eab308; }
 .owdb3-proj-amount { font-weight: 700; color: var(--foreground); }
 .owdb3-bills { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.6rem; padding-top: 0.4rem; border-top: 1px solid var(--border); }
@@ -900,7 +902,7 @@ body {
 .owdb4-site-pct { font-weight: 700; }
 .owdb4-bar-1, .owdb4-bar-2, .owdb4-bar-3 { height: 100%; border-radius: 999px; }
 .owdb4-bar-1 { width: 72%; background: #818cf8; }
-.owdb4-bar-2 { width: 45%; background: #fda4b8; }
+.owdb4-bar-2 { width: 45%; background: #f87171; }
 .owdb4-bar-3 { width: 88%; background: #22d3ee; }
 .owdb4-milestones { display: flex; flex-wrap: wrap; gap: 0.35rem; }
 .owdb4-ms { font-size: 0.64rem; font-weight: 600; padding: 0.22rem 0.5rem; border-radius: 0.4rem; }
@@ -1079,10 +1081,10 @@ body {
    ========================================================================= */
 .comparison-article {
   --me: var(--primary);
-  --me-soft: color-mix(in srgb, var(--primary) 12%, transparent);
-  --me-line: color-mix(in srgb, var(--primary) 32%, transparent);
+  --me-soft: color-mix(in srgb, var(--primary) 14%, var(--card));
+  --me-line: color-mix(in srgb, var(--primary) 34%, var(--card));
   --them: var(--muted);
-  --them-soft: color-mix(in srgb, var(--foreground) 6%, transparent);
+  --them-soft: color-mix(in srgb, var(--foreground) 7%, var(--card));
   --ok: #10b981;
   color: var(--foreground);
   font-size: 16px;
@@ -1158,7 +1160,8 @@ body {
 @media (min-width: 860px) { .comparison-article .ovc2-grid, .comparison-article .ovc5-grid { grid-template-columns: 1fr 1fr; } }
 .comparison-article .ovc2-card, .comparison-article .ovc5-card { background: var(--card); border: 1px solid var(--border); border-radius: 1rem; overflow: hidden; }
 .comparison-article .ovc2-card-SiteFlow, .comparison-article .ovc5-card-SiteFlow { border-color: var(--me-line); }
-.comparison-article .ovc2-img-wrap:empty { display: none; }
+.comparison-article .ovc2-img-wrap:empty,
+.comparison-article .ovc2-img-wrap:not(:has(img)):not(:has(svg)) { display: none; }
 .comparison-article .ovc2-card-body { padding: 1.5rem; }
 .comparison-article [class*="-tag"]:not([class*="-panel-tag"]) { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; padding: 0.25rem 0.6rem; border-radius: 999px; color: var(--muted); background: var(--them-soft); }
 .comparison-article [class*="-tag-SiteFlow"] { color: var(--me); background: var(--me-soft); }
@@ -1225,9 +1228,26 @@ body {
 .comparison-article .ovc4-row, .comparison-article [class*="4-row"] { display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 0.5rem; padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); font-size: 0.85rem; line-height: 1.45; }
 .comparison-article .ovc4-row:last-child { border-bottom: 0; }
 .comparison-article [class*="4-cell-feature"], .comparison-article [class*="4-cf"] { font-weight: 600; color: var(--foreground); }
-.comparison-article [class*="4-cell-SiteFlow"], .comparison-article [class*="4-cell-rival"], .comparison-article [class*="4-cn"], .comparison-article [class*="4-co"] { color: var(--muted); }
-.comparison-article [class*="4-cell-win"], .comparison-article [class*="4-cell-SiteFlow-win"] { color: var(--foreground); background: var(--me-soft); border-radius: 0.35rem; padding: 0.1rem 0.4rem; }
+.comparison-article [class*="4-cell-SiteFlow"],
+.comparison-article [class*="4-cell-win"] {
+  color: var(--foreground);
+  background: var(--me-soft);
+  border-radius: 0.35rem;
+  padding: 0.1rem 0.4rem;
+}
+.comparison-article [class*="4-cell-rival"],
+.comparison-article [class*="4-cn"],
+.comparison-article [class*="4-co"] { color: var(--muted); }
 .comparison-article [class*="4-cell-rival-win"] { color: var(--foreground); background: var(--them-soft); border-radius: 0.35rem; padding: 0.1rem 0.4rem; }
+
+/* item 6: only SiteFlow carries the "you-are-here" dot. Hide the competitor's
+   duplicate/orphan dots (table header, score panel, decision card) so the
+   header reads cleanly as "Feature / • SiteFlow / Competitor". */
+.comparison-article .ovc4-ch-rival-dot,
+.comparison-article .ovc4-col-h-rival-dot,
+.comparison-article [class*="-dot-them"] {
+  display: none !important;
+}
 
 /* ---- Section 5: decision cards ---- */
 .comparison-article .ovc5-card-hdr { display: flex; align-items: center; gap: 0.75rem; padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); }
@@ -1247,13 +1267,29 @@ body {
 .comparison-article .ovc6-btn { display: flex; align-items: center; justify-content: space-between; gap: 1rem; width: 100%; text-align: left; background: transparent; border: 0; cursor: pointer; padding: 1.1rem 1.25rem; }
 .comparison-article .ovc6-btn:hover { background: var(--me-soft); }
 .comparison-article .ovc6-q { font-size: 0.95rem; font-weight: 600; color: var(--foreground); }
-.comparison-article .ovc6-arr { flex: none; font-size: 1.2rem; font-weight: 700; color: var(--me); transition: transform 0.15s ease; }
+/* Unified toggle icon: hide the bespoke "+" each source file ships and render
+   ONE chevron, matching the calculator/glossary FAQ (.calc-prose) so every
+   resources FAQ looks identical. Single indicator per row, no double-icon. */
+.comparison-article .ovc6-btn::after {
+  content: "";
+  flex: none;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-right: 2px solid var(--muted);
+  border-bottom: 2px solid var(--muted);
+  transform: rotate(45deg);
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+.comparison-article .ovc6-item.cp-open .ovc6-btn::after {
+  transform: rotate(-135deg);
+  border-color: var(--me);
+}
+.comparison-article .ovc6-arr { display: none; }
 .comparison-article .ovc6-body { padding: 0 1.25rem 1.2rem; }
 .comparison-article .ovc6-ans { font-size: 0.88rem; line-height: 1.65; color: var(--muted); margin: 0; }
 /* progressive enhancement: answers visible without JS, collapsed once wired */
 .comparison-article.cp-js .ovc6-body { display: none; }
 .comparison-article.cp-js .ovc6-item.cp-open .ovc6-body { display: block; }
-.comparison-article.cp-js .ovc6-item.cp-open .ovc6-arr { transform: rotate(45deg); }
 
 /* ---- Section 7: CTA ---- */
 .comparison-article .ovc7-outer { background: color-mix(in srgb, var(--primary) 8%, var(--card)); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
@@ -3111,4 +3147,51 @@ body {
 .help-article .osclg-fbtn.osclg-on:hover {
   background: var(--primary);
   color: #fff !important;
+}
+
+/* ---- Calculators index & glossary FAQ grids (resources index pages) ----
+   Mirror the comparison .ovc6-grid: a 2-column grid whose items are
+   top-aligned (align-items: start) so cards in a row keep their natural
+   height instead of stretching to the tallest and looking ragged. Scoped to
+   .help-article so unrelated pages are untouched. */
+.help-article .osclf-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  align-items: start;
+}
+@media (min-width: 860px) {
+  .help-article .osclf-grid { grid-template-columns: 1fr 1fr; }
+}
+.help-article .oterm3-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  align-items: start;
+}
+@media (min-width: 860px) {
+  .help-article .oterm3-grid { grid-template-columns: 1fr 1fr; }
+}
+.help-article .oterm3-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* ---- "Request a calculator" use-case list (calculators index) ----
+   The dot was glued to the label with no spacing and had no size. Make it a
+   spaced, visible bullet. */
+.help-article .oscls-uc {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+.help-article .oscls-uc-dot {
+  flex: none;
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 999px;
+  background: var(--primary);
 }
