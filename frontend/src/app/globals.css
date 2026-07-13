@@ -1339,6 +1339,29 @@ body {
   border-color: var(--border) !important;
 }
 .product-body .wp-block-button__link:hover { opacity: 0.9; }
+/* Section kicker pill (e.g. "Industry Challenges") sits directly above the
+   section H2, which carries an inline margin-top:0, so the pill collides
+   with the heading. Give the pill clear breathing room. Shared across all
+   product pages (the kicker is always a centered .wp-block-buttons group). */
+.product-body .wp-block-buttons { margin-bottom: 1.25rem; }
+/* Two-column section layouts: the scraped WP markup uses
+   .wp-block-columns.is-layout-flex but no WP block CSS is loaded here, so the
+   columns fall back to stacked block divs. Restore the intended side-by-side
+   layout (shared across all 20 product pages). align-items:flex-start stops a
+   short card from stretching to a taller sibling and leaving dead space at the
+   bottom — the exact "empty gap inside a feature card" symptom. Removed/empty
+   widget columns have already been deleted from the JSON, so no blank halves
+   remain. */
+.product-body .wp-block-columns.is-layout-flex {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 1.5rem;
+}
+.product-body .wp-block-columns.is-layout-flex > .wp-block-column {
+  flex: 1 1 0 !important;
+  min-width: 0;
+}
 
 /* ---- 2. Constrain every bespoke SVG (no more giant shapes) ---- */
 .product-body svg { max-width: 100%; height: auto; }
