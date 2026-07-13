@@ -5,8 +5,8 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from app.database import get_db
-from app.auth import get_current_user, verify_project_access
-from app.models import ChatGroup, ChatMessage, ChatGroupMember
+from app.auth import get_current_user, verify_project_access, get_company_membership
+from app.models import ChatGroup, ChatMessage, ChatGroupMember, User
 
 router = APIRouter(prefix="/chat", tags=["Chat & MOM"], dependencies=[Depends(get_current_user)])
 
@@ -98,7 +98,8 @@ class ChatGroupMemberResponse(BaseModel):
 
 
 @router.post("/groups", response_model=ChatGroupResponse, status_code=status.HTTP_201_CREATED)
-def create_group(payload: ChatGroupCreate, db: Session = Depends(get_db)):
+def create_group(payload: ChatGroupCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    get_company_membership(db, current_user, payload.company_id)
     group = ChatGroup(**payload.model_dump())
     db.add(group)
     db.commit()
@@ -124,7 +125,11 @@ def list_groups(project_id: uuid.UUID, db: Session = Depends(get_db), _: None = 
 
 
 @router.post("/messages", response_model=ChatMessageResponse, status_code=status.HTTP_201_CREATED)
-def send_message(payload: ChatMessageCreate, db: Session = Depends(get_db)):
+def send_message(payload: ChatMessageCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    group = db.query(ChatGroup).filter(ChatGroup.id == payload.group_id).first()
+    if not group:
+        raise HTTPException(status_code=404, detail="Chat group not found")
+    get_company_membership(db, current_user, group.company_id)
     msg = ChatMessage(**payload.model_dump())
     db.add(msg)
     db.commit()
@@ -146,9 +151,13 @@ def list_members(group_id: uuid.UUID, db: Session = Depends(get_db)):
 
 
 @router.post("/groups/{group_id}/members", response_model=ChatGroupMemberResponse, status_code=status.HTTP_201_CREATED)
-def add_member(group_id: uuid.UUID, payload: ChatGroupMemberCreate, db: Session = Depends(get_db)):
+def add_member(group_id: uuid.UUID, payload: ChatGroupMemberCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     if payload.group_id != group_id:
         raise HTTPException(status_code=400, detail="Group ID mismatch")
+    group = db.query(ChatGroup).filter(ChatGroup.id == group_id).first()
+    if not group:
+        raise HTTPException(status_code=404, detail="Chat group not found")
+    get_company_membership(db, current_user, group.company_id)
     member = ChatGroupMember(**payload.model_dump())
     db.add(member)
     db.commit()
@@ -157,16 +166,19 @@ def add_member(group_id: uuid.UUID, payload: ChatGroupMemberCreate, db: Session 
 
 
 @router.delete("/groups/{group_id}/members/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
-def remove_member(group_id: uuid.UUID, user_id: uuid.UUID, db: Session = Depends(get_db)):
+def remove_member(group_id: uuid.UUID, user_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     member = db.query(ChatGroupMember).filter(
         ChatGroupMember.group_id == group_id,
         ChatGroupMember.user_id == user_id
     ).first()
     if not member:
         raise HTTPException(status_code=404, detail="Member not found")
+    group = db.query(ChatGroup).filter(ChatGroup.id == group_id).first()
+    if not group:
+        raise HTTPException(status_code=404, detail="Chat group not found")
+    get_company_membership(db, current_user, group.company_id)
     try:
         from app.routers.delete_logs import log_deletion
-        group = db.query(ChatGroup).filter(ChatGroup.id == group_id).first()
         company_id = group.company_id if group else None
         log_deletion(db, company_id, "chat_group_member", member.id, f"Chat Group Member removed from: {group.name if group else group_id}")
     except Exception:
@@ -177,13 +189,17 @@ def remove_member(group_id: uuid.UUID, user_id: uuid.UUID, db: Session = Depends
 
 
 @router.patch("/groups/{group_id}/members/{user_id}/role", response_model=ChatGroupMemberResponse)
-def update_member_role(group_id: uuid.UUID, user_id: uuid.UUID, role: str = Query(...), db: Session = Depends(get_db)):
+def update_member_role(group_id: uuid.UUID, user_id: uuid.UUID, role: str = Query(...), db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     member = db.query(ChatGroupMember).filter(
         ChatGroupMember.group_id == group_id,
         ChatGroupMember.user_id == user_id
     ).first()
     if not member:
         raise HTTPException(status_code=404, detail="Member not found")
+    group = db.query(ChatGroup).filter(ChatGroup.id == group_id).first()
+    if not group:
+        raise HTTPException(status_code=404, detail="Chat group not found")
+    get_company_membership(db, current_user, group.company_id)
     member.role = role
     db.commit()
     db.refresh(member)

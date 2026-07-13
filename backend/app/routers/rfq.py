@@ -4,8 +4,8 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.auth import get_current_user, verify_project_access
-from app.models import RFQ, RFQItem, RFQQuote
+from app.auth import get_current_user, verify_project_access, get_company_membership
+from app.models import RFQ, RFQItem, RFQQuote, User
 from pydantic import BaseModel, Field
 
 router = APIRouter(
@@ -96,7 +96,8 @@ class ComparisonRow(BaseModel):
 # --- Endpoints ---
 
 @router.post("/rfq", response_model=RFQResponse, status_code=201)
-def create_rfq(req: RFQCreateRequest, db: Session = Depends(get_db)):
+def create_rfq(req: RFQCreateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    get_company_membership(db, current_user, req.company_id)
     existing = db.query(RFQ).filter(
         RFQ.company_id == req.company_id,
         RFQ.rfq_number == req.rfq_number
@@ -181,10 +182,11 @@ def list_rfq(project_id: UUID, db: Session = Depends(get_db), _: None = Depends(
 
 
 @router.post("/rfq/{rfq_id}/quotes", response_model=RFQQuoteResponse, status_code=201)
-def submit_quote(rfq_id: UUID, req: RFQQuoteCreate, db: Session = Depends(get_db)):
+def submit_quote(rfq_id: UUID, req: RFQQuoteCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     rfq = db.query(RFQ).filter(RFQ.id == rfq_id).first()
     if not rfq:
         raise HTTPException(status_code=404, detail="RFQ not found")
+    get_company_membership(db, current_user, rfq.company_id)
 
     db_item = db.query(RFQItem).filter(RFQItem.id == req.item_id).first()
     if not db_item or db_item.rfq_id != rfq_id:

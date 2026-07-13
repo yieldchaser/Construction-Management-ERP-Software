@@ -5,8 +5,8 @@ from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File,
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from app.database import get_db
-from app.auth import get_current_user, verify_company_access
-from app.models import Company, CompanyBranch, ApprovalRule, CompanyFile, CompanyRole, CompanyPayrollSettings, SalaryTemplate, PdfTemplate, CompanyTerms
+from app.auth import get_current_user, verify_company_access, get_company_membership
+from app.models import Company, CompanyBranch, ApprovalRule, CompanyFile, CompanyRole, CompanyPayrollSettings, SalaryTemplate, PdfTemplate, CompanyTerms, User
 from app import supabase_storage
 
 router = APIRouter(prefix="/settings", tags=["Settings & Configurations"], dependencies=[Depends(get_current_user)])
@@ -276,10 +276,11 @@ def create_branch(company_id: uuid.UUID, branch_data: BranchCreate, db: Session 
 
 
 @router.patch("/branches/{branch_id}/primary", response_model=BranchResponse)
-def set_primary_branch(branch_id: uuid.UUID, db: Session = Depends(get_db)):
+def set_primary_branch(branch_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     branch = db.query(CompanyBranch).filter(CompanyBranch.id == branch_id).first()
     if not branch:
         raise HTTPException(status_code=404, detail="Branch not found")
+    get_company_membership(db, current_user, branch.company_id)
     db.query(CompanyBranch).filter(CompanyBranch.company_id == branch.company_id).update({"is_primary": False})
     branch.is_primary = True
     db.commit()
@@ -309,10 +310,11 @@ def create_approval_rule(company_id: uuid.UUID, rule_data: ApprovalRuleCreate, d
 
 
 @router.put("/approval-rules/{rule_id}", response_model=ApprovalRuleResponse)
-def update_approval_rule(rule_id: uuid.UUID, rule_data: ApprovalRuleCreate, db: Session = Depends(get_db)):
+def update_approval_rule(rule_id: uuid.UUID, rule_data: ApprovalRuleCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     rule = db.query(ApprovalRule).filter(ApprovalRule.id == rule_id).first()
     if not rule:
         raise HTTPException(status_code=404, detail="Approval rule not found")
+    get_company_membership(db, current_user, rule.company_id)
     for field, val in rule_data.model_dump(exclude_unset=True).items():
         setattr(rule, field, val)
     db.commit()
@@ -321,10 +323,11 @@ def update_approval_rule(rule_id: uuid.UUID, rule_data: ApprovalRuleCreate, db: 
 
 
 @router.delete("/approval-rules/{rule_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_approval_rule(rule_id: uuid.UUID, db: Session = Depends(get_db)):
+def delete_approval_rule(rule_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     rule = db.query(ApprovalRule).filter(ApprovalRule.id == rule_id).first()
     if not rule:
         raise HTTPException(status_code=404, detail="Approval rule not found")
+    get_company_membership(db, current_user, rule.company_id)
     try:
         from app.routers.delete_logs import log_deletion
         log_deletion(db, rule.company_id, "approval_rule", rule.id, f"Approval Rule: {rule.feature_type}")
@@ -466,10 +469,11 @@ def create_salary_template(company_id: uuid.UUID, payload: SalaryTemplateCreate,
 
 
 @router.put("/salary-templates/{template_id}", response_model=SalaryTemplateResponse)
-def update_salary_template(template_id: uuid.UUID, payload: SalaryTemplateUpdate, db: Session = Depends(get_db)):
+def update_salary_template(template_id: uuid.UUID, payload: SalaryTemplateUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     obj = db.query(SalaryTemplate).filter(SalaryTemplate.id == template_id).first()
     if not obj:
         raise HTTPException(status_code=404, detail="Salary template not found")
+    get_company_membership(db, current_user, obj.company_id)
     for k, v in payload.model_dump(exclude_unset=True).items():
         setattr(obj, k, v)
     db.commit()
@@ -478,10 +482,11 @@ def update_salary_template(template_id: uuid.UUID, payload: SalaryTemplateUpdate
 
 
 @router.delete("/salary-templates/{template_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_salary_template(template_id: uuid.UUID, db: Session = Depends(get_db)):
+def delete_salary_template(template_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     obj = db.query(SalaryTemplate).filter(SalaryTemplate.id == template_id).first()
     if not obj:
         raise HTTPException(status_code=404, detail="Salary template not found")
+    get_company_membership(db, current_user, obj.company_id)
     try:
         from app.routers.delete_logs import log_deletion
         log_deletion(db, obj.company_id, "salary_template", obj.id, f"Salary Template: {obj.name}")

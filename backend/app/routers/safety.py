@@ -57,8 +57,12 @@ class PPECheckCreate(BaseModel):
 # ─── Incidents ───────────────────────────────────────────────────────────────
 
 @router.post("/incidents")
-def log_incident(payload: IncidentCreate, db: Session = Depends(get_db)):
+def log_incident(payload: IncidentCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """Log a new safety incident on site."""
+    project = db.query(Project).filter(Project.id == uuid.UUID(payload.project_id)).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, project.company_id)
     incident = SafetyIncident(
         project_id=uuid.UUID(payload.project_id),
         incident_type=payload.incident_type,
@@ -122,11 +126,15 @@ def list_incidents(
 
 
 @router.patch("/incidents/{incident_id}/close")
-def close_incident(incident_id: str, payload: IncidentClose, db: Session = Depends(get_db)):
+def close_incident(incident_id: str, payload: IncidentClose, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """Close an incident with a root cause and corrective action."""
     incident = db.query(SafetyIncident).filter(SafetyIncident.id == uuid.UUID(incident_id)).first()
     if not incident:
         raise HTTPException(status_code=404, detail="Incident not found.")
+    project = db.query(Project).filter(Project.id == incident.project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, project.company_id)
     if incident.status == "closed":
         raise HTTPException(status_code=400, detail="Incident is already closed.")
 
@@ -205,8 +213,12 @@ def get_safety_stats(
 # ─── Toolbox Talks ───────────────────────────────────────────────────────────
 
 @router.post("/toolbox-talks")
-def log_toolbox_talk(payload: ToolboxTalkCreate, db: Session = Depends(get_db)):
+def log_toolbox_talk(payload: ToolboxTalkCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """Record a toolbox talk session conducted on site."""
+    project = db.query(Project).filter(Project.id == uuid.UUID(payload.project_id)).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, project.company_id)
     talk = ToolboxTalk(
         project_id=uuid.UUID(payload.project_id),
         topic=payload.topic,
@@ -261,10 +273,15 @@ def list_toolbox_talks(
 # ─── PPE Checks ──────────────────────────────────────────────────────────────
 
 @router.post("/ppe-checks")
-def log_ppe_check(payload: PPECheckCreate, db: Session = Depends(get_db)):
+def log_ppe_check(payload: PPECheckCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """Record a PPE compliance audit for site workers."""
     if payload.compliant_workers > payload.total_workers:
         raise HTTPException(status_code=400, detail="Compliant workers cannot exceed total workers.")
+
+    project = db.query(Project).filter(Project.id == uuid.UUID(payload.project_id)).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, project.company_id)
 
     check = PPECheck(
         project_id=uuid.UUID(payload.project_id),

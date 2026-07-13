@@ -5,8 +5,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.auth import get_current_user, verify_project_access
-from app.models import DailyProgressReport, Task, WarehouseInventory, MaterialTransaction, Project
+from app.auth import get_current_user, verify_project_access, get_company_membership
+from app.models import DailyProgressReport, Task, WarehouseInventory, MaterialTransaction, Project, User
 from app.workflow_controls import enforce_entry_creation_window
 from pydantic import BaseModel, Field
 
@@ -54,11 +54,12 @@ class DPRResponse(BaseModel):
         from_attributes = True
 
 @router.post("", response_model=DPRResponse, status_code=status.HTTP_201_CREATED)
-def create_dpr(req: DPRCreateRequest, db: Session = Depends(get_db)):
+def create_dpr(req: DPRCreateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     project_uuid = uuid.UUID(str(req.project_id))
     project = db.query(Project).filter(Project.id == project_uuid).first()
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, project.company_id)
 
     # Workflow Controls: Entry Controls (creation date window)
     enforce_entry_creation_window(db, project.company_id, req.dpr_date)

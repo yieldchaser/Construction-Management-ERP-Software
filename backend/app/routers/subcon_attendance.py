@@ -5,8 +5,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from app.database import get_db
-from app.auth import get_current_user, verify_project_access
-from app.models import SubcontractorAttendance
+from app.auth import get_current_user, verify_project_access, get_company_membership
+from app.models import SubcontractorAttendance, Project, User
 
 router = APIRouter(prefix="/subcon", tags=["Subcontractor Attendance"], dependencies=[Depends(get_current_user)])
 
@@ -42,7 +42,11 @@ class SubconAttendanceResponse(BaseModel):
         from_attributes = True
 
 @router.post("/attendance", response_model=SubconAttendanceResponse, status_code=status.HTTP_201_CREATED)
-def create_subcon_attendance(payload: SubconAttendanceCreate, db: Session = Depends(get_db)):
+def create_subcon_attendance(payload: SubconAttendanceCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    project = db.query(Project).filter(Project.id == payload.project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, project.company_id)
     # Check if entry already exists for subcontractor, date, and role
     date_only = payload.attendance_date.date()
     existing = db.query(SubcontractorAttendance).filter(

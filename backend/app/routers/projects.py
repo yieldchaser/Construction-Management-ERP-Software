@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import List, Optional
 from app.database import get_db
 from app import models
-from app.auth import get_current_user, verify_company_access, verify_project_access
+from app.auth import get_current_user, verify_company_access, verify_project_access, get_company_membership
 from app.routers.custom_fields import CustomFieldValueInput, upsert_values_for_entity
 import uuid
 
@@ -270,7 +270,8 @@ def project_summary(company_id: uuid.UUID, user_id: Optional[uuid.UUID] = None, 
 
 
 @router.post("/")
-def create_project(payload: ProjectCreate, db: Session = Depends(get_db)):
+def create_project(payload: ProjectCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    get_company_membership(db, current_user, payload.company_id)
     proj = models.Project(
         company_id=payload.company_id,
         name=payload.name,

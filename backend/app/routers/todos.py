@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import List, Optional
 from app.database import get_db
 from app import models
-from app.auth import get_current_user, verify_company_access
+from app.auth import get_current_user, verify_company_access, get_company_membership
 import uuid
 
 router = APIRouter(prefix="/todos", tags=["Todos"], dependencies=[Depends(get_current_user)])
@@ -104,7 +104,8 @@ def list_todos(
 
 
 @router.post("/")
-def create_todo(payload: TodoCreate, db: Session = Depends(get_db)):
+def create_todo(payload: TodoCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    get_company_membership(db, current_user, payload.company_id)
     t = models.Todo(
         company_id=payload.company_id,
         project_id=payload.project_id,
@@ -127,10 +128,11 @@ def create_todo(payload: TodoCreate, db: Session = Depends(get_db)):
 
 
 @router.put("/{todo_id}")
-def update_todo(todo_id: uuid.UUID, payload: TodoUpdate, db: Session = Depends(get_db)):
+def update_todo(todo_id: uuid.UUID, payload: TodoUpdate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
     t = db.query(models.Todo).filter(models.Todo.id == todo_id).first()
     if not t:
         raise HTTPException(status_code=404, detail="Todo not found")
+    get_company_membership(db, current_user, t.company_id)
     for field, value in payload.model_dump(exclude_unset=True).items():
         if field == "due_date":
             value = _parse_dt(value)
@@ -146,10 +148,11 @@ def update_todo(todo_id: uuid.UUID, payload: TodoUpdate, db: Session = Depends(g
 
 
 @router.delete("/{todo_id}")
-def delete_todo(todo_id: uuid.UUID, db: Session = Depends(get_db)):
+def delete_todo(todo_id: uuid.UUID, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
     t = db.query(models.Todo).filter(models.Todo.id == todo_id).first()
     if not t:
         raise HTTPException(status_code=404, detail="Todo not found")
+    get_company_membership(db, current_user, t.company_id)
     try:
         from app.routers.delete_logs import log_deletion
         log_deletion(db, t.company_id, "todo", t.id, f"Todo: {t.title}")

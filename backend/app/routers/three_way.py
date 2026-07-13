@@ -6,8 +6,8 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from decimal import Decimal
 from app.database import get_db
-from app.auth import get_current_user, verify_company_access
-from app.models import ThreeWayMatch, PurchaseOrder, GoodsReceiptNote, GRNItem
+from app.auth import get_current_user, verify_company_access, get_company_membership
+from app.models import ThreeWayMatch, PurchaseOrder, GoodsReceiptNote, GRNItem, User
 
 router = APIRouter(prefix="/three-way", tags=["3-Way Matching"], dependencies=[Depends(get_current_user)])
 
@@ -68,7 +68,8 @@ class GRNRef(BaseModel):
 
 
 @router.post("", response_model=ThreeWayMatchResponse, status_code=status.HTTP_201_CREATED)
-def create_match(payload: ThreeWayMatchCreate, db: Session = Depends(get_db)):
+def create_match(payload: ThreeWayMatchCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    get_company_membership(db, current_user, payload.company_id)
     po_id = str(payload.po_id)
     grn_id = str(payload.grn_id)
 
@@ -145,10 +146,11 @@ def list_grns(company_id: uuid.UUID, project_id: Optional[uuid.UUID] = None, db:
 
 
 @router.patch("/{match_id}/approve", response_model=ThreeWayMatchResponse)
-def approve_match(match_id: uuid.UUID, approved_by: Optional[uuid.UUID] = None, db: Session = Depends(get_db)):
+def approve_match(match_id: uuid.UUID, approved_by: Optional[uuid.UUID] = None, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     match = db.query(ThreeWayMatch).filter(ThreeWayMatch.id == match_id).first()
     if not match:
         raise HTTPException(status_code=404, detail="Match not found")
+    get_company_membership(db, current_user, match.company_id)
     match.match_status = "approved"
     match.matched_by = approved_by
     match.matched_at = datetime.utcnow()
@@ -164,10 +166,11 @@ def approve_match(match_id: uuid.UUID, approved_by: Optional[uuid.UUID] = None, 
 
 
 @router.patch("/{match_id}/reject", response_model=ThreeWayMatchResponse)
-def reject_match(match_id: uuid.UUID, reason: Optional[str] = None, db: Session = Depends(get_db)):
+def reject_match(match_id: uuid.UUID, reason: Optional[str] = None, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     match = db.query(ThreeWayMatch).filter(ThreeWayMatch.id == match_id).first()
     if not match:
         raise HTTPException(status_code=404, detail="Match not found")
+    get_company_membership(db, current_user, match.company_id)
     match.match_status = "rejected"
     match.variance_reason = reason or match.variance_reason
     db.commit()

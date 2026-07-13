@@ -18,7 +18,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.auth import get_current_user, verify_project_access
+from app.auth import get_current_user, verify_project_access, get_company_membership
 from app.models import (
     MaterialTransaction,
     ProductionBatch,
@@ -26,6 +26,7 @@ from app.models import (
     ProductionRecipe,
     ProductionRecipeMaterial,
     Project,
+    User,
     WarehouseInventory,
 )
 from app.workflow_controls import enforce_stock_availability, get_company
@@ -261,7 +262,8 @@ def _upsert_inventory(db: Session, project_id: UUID, material_name: str, unit: s
 
 
 @router.post("/recipes", response_model=RecipeResponse, status_code=status.HTTP_201_CREATED)
-def create_recipe(payload: RecipeCreate, db: Session = Depends(get_db)):
+def create_recipe(payload: RecipeCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    get_company_membership(db, current_user, payload.company_id)
     project = db.query(Project).filter(Project.id == payload.project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
@@ -310,7 +312,8 @@ def list_recipes(project_id: UUID, db: Session = Depends(get_db), _: None = Depe
 
 
 @router.post("/batches", response_model=BatchResponse, status_code=status.HTTP_201_CREATED)
-def create_batch(payload: BatchCreate, db: Session = Depends(get_db)):
+def create_batch(payload: BatchCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    get_company_membership(db, current_user, payload.company_id)
     recipe = db.query(ProductionRecipe).filter(ProductionRecipe.id == payload.recipe_id).first()
     if not recipe:
         raise HTTPException(status_code=404, detail="Production recipe not found")
@@ -442,10 +445,11 @@ def create_batch(payload: BatchCreate, db: Session = Depends(get_db)):
 
 
 @router.patch("/batches/{batch_id}/complete", response_model=BatchResponse)
-def complete_batch(batch_id: UUID, db: Session = Depends(get_db)):
+def complete_batch(batch_id: UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     batch = db.query(ProductionBatch).filter(ProductionBatch.id == batch_id).first()
     if not batch:
         raise HTTPException(status_code=404, detail="Batch not found")
+    get_company_membership(db, current_user, batch.company_id)
     if batch.status == "completed":
         return _batch_response(db, batch)
 

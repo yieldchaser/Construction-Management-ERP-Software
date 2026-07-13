@@ -6,7 +6,8 @@ from datetime import datetime
 from typing import List, Optional
 from app.database import get_db
 from app import models
-from app.auth import get_current_user, verify_company_access, verify_project_access
+from app.models import User
+from app.auth import get_current_user, verify_company_access, verify_project_access, get_company_membership
 import uuid
 
 router = APIRouter(prefix="/library", tags=["Company Libraries"], dependencies=[Depends(get_current_user)])
@@ -132,7 +133,8 @@ def get_library_parties(company_id: uuid.UUID, db: Session = Depends(get_db), _:
     return db.query(models.LibraryParty).filter(models.LibraryParty.company_id == company_id).all()
 
 @router.post("/parties")
-def create_library_party(payload: PartyCreate, db: Session = Depends(get_db)):
+def create_library_party(payload: PartyCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    get_company_membership(db, current_user, payload.company_id)
     # Automatically generate custom PID if not supplied
     if not payload.party_id_custom:
         count = db.query(models.LibraryParty).filter(models.LibraryParty.company_id == payload.company_id).count()
@@ -204,10 +206,11 @@ def get_party_balances(
     return {"advance_paid": round(advance_paid, 2), "to_pay": round(to_pay, 2)}
 
 @router.delete("/parties/{party_id}")
-def delete_library_party(party_id: uuid.UUID, db: Session = Depends(get_db)):
+def delete_library_party(party_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     party = db.query(models.LibraryParty).filter(models.LibraryParty.id == party_id).first()
     if not party:
         raise HTTPException(status_code=404, detail="Party not found")
+    get_company_membership(db, current_user, party.company_id)
     try:
         from app.routers.delete_logs import log_deletion
         log_deletion(db, party.company_id, "party", party.id, f"Party: {party.name}", party_name=party.name)
@@ -224,7 +227,8 @@ def get_library_asset_types(company_id: uuid.UUID, db: Session = Depends(get_db)
     return db.query(models.LibraryAssetType).filter(models.LibraryAssetType.company_id == company_id).all()
 
 @router.post("/asset-types")
-def create_library_asset_type(payload: AssetTypeCreate, db: Session = Depends(get_db)):
+def create_library_asset_type(payload: AssetTypeCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    get_company_membership(db, current_user, payload.company_id)
     item = models.LibraryAssetType(company_id=payload.company_id, name=payload.name)
     db.add(item)
     db.commit()
@@ -232,10 +236,11 @@ def create_library_asset_type(payload: AssetTypeCreate, db: Session = Depends(ge
     return item
 
 @router.delete("/asset-types/{item_id}")
-def delete_library_asset_type(item_id: uuid.UUID, db: Session = Depends(get_db)):
+def delete_library_asset_type(item_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     item = db.query(models.LibraryAssetType).filter(models.LibraryAssetType.id == item_id).first()
     if not item:
         raise HTTPException(status_code=404, detail="Asset type not found")
+    get_company_membership(db, current_user, item.company_id)
     try:
         from app.routers.delete_logs import log_deletion
         log_deletion(db, item.company_id, "asset_type", item.id, f"Asset Type: {item.name}")
@@ -252,7 +257,8 @@ def get_library_cost_codes(company_id: uuid.UUID, db: Session = Depends(get_db),
     return db.query(models.LibraryCostCode).filter(models.LibraryCostCode.company_id == company_id).all()
 
 @router.post("/cost-codes")
-def create_library_cost_code(payload: CostCodeCreate, db: Session = Depends(get_db)):
+def create_library_cost_code(payload: CostCodeCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    get_company_membership(db, current_user, payload.company_id)
     item = models.LibraryCostCode(
         company_id=payload.company_id,
         code=payload.code,
@@ -267,10 +273,11 @@ def create_library_cost_code(payload: CostCodeCreate, db: Session = Depends(get_
     return item
 
 @router.delete("/cost-codes/{item_id}")
-def delete_library_cost_code(item_id: uuid.UUID, db: Session = Depends(get_db)):
+def delete_library_cost_code(item_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     item = db.query(models.LibraryCostCode).filter(models.LibraryCostCode.id == item_id).first()
     if not item:
         raise HTTPException(status_code=404, detail="Cost code not found")
+    get_company_membership(db, current_user, item.company_id)
     try:
         from app.routers.delete_logs import log_deletion
         log_deletion(db, item.company_id, "cost_code", item.id, f"Cost Code: {item.name}")
@@ -287,7 +294,8 @@ def get_library_deductions(company_id: uuid.UUID, db: Session = Depends(get_db),
     return db.query(models.LibraryDeduction).filter(models.LibraryDeduction.company_id == company_id).all()
 
 @router.post("/deductions")
-def create_library_deduction(payload: DeductionCreate, db: Session = Depends(get_db)):
+def create_library_deduction(payload: DeductionCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    get_company_membership(db, current_user, payload.company_id)
     item = models.LibraryDeduction(company_id=payload.company_id, name=payload.name)
     db.add(item)
     db.commit()
@@ -295,10 +303,11 @@ def create_library_deduction(payload: DeductionCreate, db: Session = Depends(get
     return item
 
 @router.delete("/deductions/{item_id}")
-def delete_library_deduction(item_id: uuid.UUID, db: Session = Depends(get_db)):
+def delete_library_deduction(item_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     item = db.query(models.LibraryDeduction).filter(models.LibraryDeduction.id == item_id).first()
     if not item:
         raise HTTPException(status_code=404, detail="Deduction not found")
+    get_company_membership(db, current_user, item.company_id)
     try:
         from app.routers.delete_logs import log_deletion
         log_deletion(db, item.company_id, "deduction", item.id, f"Deduction: {item.name}")
@@ -315,7 +324,8 @@ def get_library_progresses(company_id: uuid.UUID, db: Session = Depends(get_db),
     return db.query(models.LibraryProgress).filter(models.LibraryProgress.company_id == company_id).all()
 
 @router.post("/progresses")
-def create_library_progress(payload: ProgressCreate, db: Session = Depends(get_db)):
+def create_library_progress(payload: ProgressCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    get_company_membership(db, current_user, payload.company_id)
     item = models.LibraryProgress(company_id=payload.company_id, name=payload.name)
     db.add(item)
     db.commit()
@@ -323,10 +333,11 @@ def create_library_progress(payload: ProgressCreate, db: Session = Depends(get_d
     return item
 
 @router.delete("/progresses/{item_id}")
-def delete_library_progress(item_id: uuid.UUID, db: Session = Depends(get_db)):
+def delete_library_progress(item_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     item = db.query(models.LibraryProgress).filter(models.LibraryProgress.id == item_id).first()
     if not item:
         raise HTTPException(status_code=404, detail="Progress not found")
+    get_company_membership(db, current_user, item.company_id)
     try:
         from app.routers.delete_logs import log_deletion
         log_deletion(db, item.company_id, "progress", item.id, f"Progress: {item.name}")
@@ -343,7 +354,8 @@ def get_library_workforces(company_id: uuid.UUID, db: Session = Depends(get_db),
     return db.query(models.LibraryWorkforce).filter(models.LibraryWorkforce.company_id == company_id).all()
 
 @router.post("/workforces")
-def create_library_workforce(payload: WorkforceCreate, db: Session = Depends(get_db)):
+def create_library_workforce(payload: WorkforceCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    get_company_membership(db, current_user, payload.company_id)
     item = models.LibraryWorkforce(company_id=payload.company_id, name=payload.name)
     db.add(item)
     db.commit()
@@ -351,10 +363,11 @@ def create_library_workforce(payload: WorkforceCreate, db: Session = Depends(get
     return item
 
 @router.delete("/workforces/{item_id}")
-def delete_library_workforce(item_id: uuid.UUID, db: Session = Depends(get_db)):
+def delete_library_workforce(item_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     item = db.query(models.LibraryWorkforce).filter(models.LibraryWorkforce.id == item_id).first()
     if not item:
         raise HTTPException(status_code=404, detail="Workforce not found")
+    get_company_membership(db, current_user, item.company_id)
     try:
         from app.routers.delete_logs import log_deletion
         log_deletion(db, item.company_id, "workforce", item.id, f"Workforce: {item.name}")
@@ -371,7 +384,8 @@ def get_library_materials(company_id: uuid.UUID, db: Session = Depends(get_db), 
     return db.query(models.LibraryMaterial).filter(models.LibraryMaterial.company_id == company_id).all()
 
 @router.post("/materials")
-def create_library_material(payload: MaterialCreate, db: Session = Depends(get_db)):
+def create_library_material(payload: MaterialCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    get_company_membership(db, current_user, payload.company_id)
     item = models.LibraryMaterial(
         company_id=payload.company_id,
         name=payload.name,
@@ -391,10 +405,11 @@ def create_library_material(payload: MaterialCreate, db: Session = Depends(get_d
     return item
 
 @router.delete("/materials/{item_id}")
-def delete_library_material(item_id: uuid.UUID, db: Session = Depends(get_db)):
+def delete_library_material(item_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     item = db.query(models.LibraryMaterial).filter(models.LibraryMaterial.id == item_id).first()
     if not item:
         raise HTTPException(status_code=404, detail="Material not found")
+    get_company_membership(db, current_user, item.company_id)
     try:
         from app.routers.delete_logs import log_deletion
         log_deletion(db, item.company_id, "material", item.id, f"Material: {item.name}")
@@ -411,7 +426,8 @@ def get_library_rates(company_id: uuid.UUID, db: Session = Depends(get_db), _: N
     return db.query(models.LibraryRate).filter(models.LibraryRate.company_id == company_id).all()
 
 @router.post("/rates")
-def create_library_rate(payload: RateCreate, db: Session = Depends(get_db)):
+def create_library_rate(payload: RateCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    get_company_membership(db, current_user, payload.company_id)
     item = models.LibraryRate(
         company_id=payload.company_id,
         name=payload.name,
@@ -433,10 +449,11 @@ def create_library_rate(payload: RateCreate, db: Session = Depends(get_db)):
     return item
 
 @router.delete("/rates/{item_id}")
-def delete_library_rate(item_id: uuid.UUID, db: Session = Depends(get_db)):
+def delete_library_rate(item_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     item = db.query(models.LibraryRate).filter(models.LibraryRate.id == item_id).first()
     if not item:
         raise HTTPException(status_code=404, detail="Rate item not found")
+    get_company_membership(db, current_user, item.company_id)
     try:
         from app.routers.delete_logs import log_deletion
         log_deletion(db, item.company_id, "rate", item.id, f"Rate: {item.name}")
@@ -460,7 +477,8 @@ def get_library_retentions(company_id: uuid.UUID, db: Session = Depends(get_db),
 
 
 @router.post("/retentions")
-def create_library_retention(payload: RetentionCreate, db: Session = Depends(get_db)):
+def create_library_retention(payload: RetentionCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    get_company_membership(db, current_user, payload.company_id)
     item = models.LibraryRetention(company_id=payload.company_id, name=payload.name)
     db.add(item)
     db.commit()
@@ -469,10 +487,11 @@ def create_library_retention(payload: RetentionCreate, db: Session = Depends(get
 
 
 @router.delete("/retentions/{item_id}")
-def delete_library_retention(item_id: uuid.UUID, db: Session = Depends(get_db)):
+def delete_library_retention(item_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     item = db.query(models.LibraryRetention).filter(models.LibraryRetention.id == item_id).first()
     if not item:
         raise HTTPException(status_code=404, detail="Retention not found")
+    get_company_membership(db, current_user, item.company_id)
     try:
         from app.routers.delete_logs import log_deletion
         log_deletion(db, item.company_id, "retention", item.id, f"Retention: {item.name}")
@@ -497,7 +516,8 @@ def get_material_categories(company_id: uuid.UUID, db: Session = Depends(get_db)
 
 
 @router.post("/material-categories")
-def create_material_category(payload: MaterialCategoryCreate, db: Session = Depends(get_db)):
+def create_material_category(payload: MaterialCategoryCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    get_company_membership(db, current_user, payload.company_id)
     item = models.MaterialCategory(
         company_id=payload.company_id,
         name=payload.name,
@@ -510,10 +530,11 @@ def create_material_category(payload: MaterialCategoryCreate, db: Session = Depe
 
 
 @router.delete("/material-categories/{item_id}")
-def delete_material_category(item_id: uuid.UUID, db: Session = Depends(get_db)):
+def delete_material_category(item_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     item = db.query(models.MaterialCategory).filter(models.MaterialCategory.id == item_id).first()
     if not item:
         raise HTTPException(status_code=404, detail="Material category not found")
+    get_company_membership(db, current_user, item.company_id)
     try:
         from app.routers.delete_logs import log_deletion
         log_deletion(db, item.company_id, "material_category", item.id, f"Material Category: {item.name}")
@@ -537,7 +558,8 @@ def get_library_todos(company_id: uuid.UUID, db: Session = Depends(get_db), _: N
 
 
 @router.post("/todos")
-def create_library_todo(payload: TodoCreate, db: Session = Depends(get_db)):
+def create_library_todo(payload: TodoCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    get_company_membership(db, current_user, payload.company_id)
     item = models.LibraryTodo(company_id=payload.company_id, name=payload.name)
     db.add(item)
     db.commit()
@@ -546,10 +568,11 @@ def create_library_todo(payload: TodoCreate, db: Session = Depends(get_db)):
 
 
 @router.delete("/todos/{item_id}")
-def delete_library_todo(item_id: uuid.UUID, db: Session = Depends(get_db)):
+def delete_library_todo(item_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     item = db.query(models.LibraryTodo).filter(models.LibraryTodo.id == item_id).first()
     if not item:
         raise HTTPException(status_code=404, detail="To Do not found")
+    get_company_membership(db, current_user, item.company_id)
     try:
         from app.routers.delete_logs import log_deletion
         log_deletion(db, item.company_id, "library_todo", item.id, f"Library Todo: {item.name}")

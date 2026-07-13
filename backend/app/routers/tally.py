@@ -4,7 +4,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.auth import get_current_user, verify_company_access
+from app.auth import get_current_user, verify_company_access, get_company_membership
 from app.models import TallyConnection, TallyAgent, TallyLedgerMapping, TallyPartyMapping, TallyCostCentreMapping, TallyBankMapping, Company, Bill, Payment, CompanyTeam, User
 from pydantic import BaseModel
 
@@ -82,8 +82,9 @@ class LedgerMappingResponse(BaseModel):
 # --- Endpoints ---
 
 @router.post("/connections", response_model=ConnectionResponse, status_code=status.HTTP_201_CREATED)
-def create_connection(req: ConnectionCreateRequest, db: Session = Depends(get_db)):
+def create_connection(req: ConnectionCreateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     comp_uuid = uuid.UUID(str(req.company_id))
+    get_company_membership(db, current_user, comp_uuid)
     company = db.query(Company).filter(Company.id == comp_uuid).first()
     if not company:
         raise HTTPException(status_code=404, detail="Company not found")
@@ -127,8 +128,9 @@ def get_connection(company_id: uuid.UUID, db: Session = Depends(get_db), _: None
 
 
 @router.post("/agents", response_model=AgentResponse, status_code=status.HTTP_201_CREATED)
-def register_agent(req: AgentCreateRequest, db: Session = Depends(get_db)):
+def register_agent(req: AgentCreateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     comp_uuid = uuid.UUID(str(req.company_id))
+    get_company_membership(db, current_user, comp_uuid)
     agent = TallyAgent(
         id=uuid.uuid4(),
         company_id=comp_uuid,
@@ -149,9 +151,10 @@ def get_agents(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = D
 
 
 @router.post("/mappings/ledger", response_model=LedgerMappingResponse, status_code=status.HTTP_201_CREATED)
-def create_ledger_mapping(req: LedgerMappingCreateRequest, db: Session = Depends(get_db)):
+def create_ledger_mapping(req: LedgerMappingCreateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     comp_uuid = uuid.UUID(str(req.company_id))
-    
+    get_company_membership(db, current_user, comp_uuid)
+
     mapping = db.query(TallyLedgerMapping).filter(
         TallyLedgerMapping.company_id == comp_uuid,
         TallyLedgerMapping.onsite_transaction_type == req.onsite_transaction_type
