@@ -271,7 +271,8 @@ def get_company_indents(company_id: UUID, db: Session = Depends(get_db), _: None
     return res
 
 @router.post("/indents", response_model=IndentResponse, status_code=201)
-def create_indent(req: IndentCreateRequest, db: Session = Depends(get_db)):
+def create_indent(req: IndentCreateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    get_company_membership(db, current_user, req.company_id)
     # Check if indent number already exists for the company
     existing = db.query(MaterialIndent).filter(
         MaterialIndent.company_id == req.company_id,
@@ -316,11 +317,12 @@ def create_indent(req: IndentCreateRequest, db: Session = Depends(get_db)):
     )
 
 @router.post("/indents/{indent_id}/approve", response_model=IndentResponse)
-def approve_indent(indent_id: UUID, db: Session = Depends(get_db)):
+def approve_indent(indent_id: UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     indent = db.query(MaterialIndent).filter(MaterialIndent.id == indent_id).first()
     if not indent:
         raise HTTPException(status_code=404, detail="Indent not found")
-    
+    get_company_membership(db, current_user, indent.company_id)
+
     indent.status = "approved"
     db.commit()
     db.refresh(indent)
@@ -393,7 +395,8 @@ def get_pos(project_id: UUID, db: Session = Depends(get_db), _: None = Depends(v
     return [_po_response(db, po) for po in pos]
 
 @router.post("/pos", response_model=POResponse, status_code=201)
-def create_po(req: POCreateRequest, db: Session = Depends(get_db)):
+def create_po(req: POCreateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    get_company_membership(db, current_user, req.company_id)
     # Check if PO number already exists
     existing = db.query(PurchaseOrder).filter(
         PurchaseOrder.company_id == req.company_id,
@@ -466,6 +469,7 @@ def approve_po(po_id: UUID, db: Session = Depends(get_db), current_user: User = 
     po = db.query(PurchaseOrder).filter(PurchaseOrder.id == po_id).first()
     if not po:
         raise HTTPException(status_code=404, detail="PO not found")
+    get_company_membership(db, current_user, po.company_id)
     if po.approval_flag == "approved":
         raise HTTPException(status_code=400, detail="Purchase order is already fully approved")
     if po.approval_flag == "rejected":
@@ -502,6 +506,7 @@ def reject_po(po_id: UUID, db: Session = Depends(get_db), current_user: User = D
     po = db.query(PurchaseOrder).filter(PurchaseOrder.id == po_id).first()
     if not po:
         raise HTTPException(status_code=404, detail="PO not found")
+    get_company_membership(db, current_user, po.company_id)
     if po.approval_flag == "approved":
         raise HTTPException(status_code=400, detail="Purchase order is already fully approved")
     if po.approval_flag == "rejected":
@@ -573,7 +578,8 @@ def get_grns(project_id: UUID, db: Session = Depends(get_db), _: None = Depends(
     return res
 
 @router.post("/grns", response_model=GRNResponse, status_code=201)
-def create_grn(req: GRNCreateRequest, db: Session = Depends(get_db)):
+def create_grn(req: GRNCreateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    get_company_membership(db, current_user, req.company_id)
     grn_number = req.grn_number.strip() if req.grn_number else None
     if not grn_number:
         grn_number = _generate_grn_number(db, req.company_id, req.project_id)
@@ -752,15 +758,17 @@ def get_stock(project_id: UUID, db: Session = Depends(get_db), _: None = Depends
 
 # 7. Record a manual material movement (receive / issue), syncs inventory
 @router.post("/transactions", response_model=TransactionResponse, status_code=status.HTTP_201_CREATED)
-def create_transaction(req: TransactionCreateRequest, db: Session = Depends(get_db)):
+def create_transaction(req: TransactionCreateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    project = db.query(Project).filter(Project.id == req.project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, project.company_id)
+
     if req.type not in RECEIVED_TYPES and req.type not in CONSUMED_TYPES:
         raise HTTPException(status_code=400, detail=f"Unsupported type '{req.type}'. Use one of {sorted(RECEIVED_TYPES | CONSUMED_TYPES)}")
 
     # Workflow Controls: Material Controls (insufficient-stock restrictions)
     if req.type in CONSUMED_TYPES:
-        project = db.query(Project).filter(Project.id == req.project_id).first()
-        if not project:
-            raise HTTPException(status_code=404, detail="Project not found")
         company = get_company(db, project.company_id)
         if company:
             if req.is_subcon_issue:
@@ -829,10 +837,14 @@ def create_transaction(req: TransactionCreateRequest, db: Session = Depends(get_
 
 # 8. Patch inventory master (set category / unit)
 @router.patch("/inventory/{inventory_id}", response_model=InventoryResponse)
-def patch_inventory(inventory_id: UUID, req: InventoryPatchRequest, db: Session = Depends(get_db)):
+def patch_inventory(inventory_id: UUID, req: InventoryPatchRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     inv = db.query(WarehouseInventory).filter(WarehouseInventory.id == inventory_id).first()
     if not inv:
         raise HTTPException(status_code=404, detail="Inventory not found")
+    project = db.query(Project).filter(Project.id == inv.project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, project.company_id)
     if req.category is not None:
         inv.category = req.category
     if req.unit is not None:

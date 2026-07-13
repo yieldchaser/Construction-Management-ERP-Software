@@ -266,7 +266,10 @@ def get_work_orders(project_id: UUID, db: Session = Depends(get_db), _: None = D
     return res
 
 @router.post("/work-orders", response_model=WOResponse, status_code=201)
-def create_work_order(req: WOCreateRequest, db: Session = Depends(get_db)):
+def create_work_order(req: WOCreateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    # Tenant check: the caller must be a member of the company this work order belongs to.
+    get_company_membership(db, current_user, req.company_id)
+
     # Check if WO number already exists for company
     existing = db.query(WorkOrder).filter(
         WorkOrder.company_id == req.company_id,
@@ -480,7 +483,10 @@ def get_bill_pdf(bill_id: UUID, db: Session = Depends(get_db), current_user=Depe
 
 
 @router.post("/bills", response_model=BillResponse, status_code=201)
-def create_bill(req: BillCreateRequest, db: Session = Depends(get_db)):
+def create_bill(req: BillCreateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    # Tenant check: the caller must be a member of the company this bill belongs to.
+    get_company_membership(db, current_user, req.company_id)
+
     # Workflow Controls: Entry Controls (creation date window)
     enforce_entry_creation_window(db, req.company_id, req.invoice_date)
 
@@ -618,7 +624,10 @@ def get_debit_notes(project_id: UUID, db: Session = Depends(get_db), _: None = D
     ]
 
 @router.post("/debit-notes", response_model=DebitNoteResponse, status_code=201)
-def create_debit_note(req: DebitNoteCreateRequest, db: Session = Depends(get_db)):
+def create_debit_note(req: DebitNoteCreateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    # Tenant check: the caller must be a member of the company this debit note belongs to.
+    get_company_membership(db, current_user, req.company_id)
+
     note = DebitNote(
         project_id=req.project_id,
         company_id=req.company_id,
@@ -670,7 +679,10 @@ def get_credit_notes(project_id: UUID, db: Session = Depends(get_db), _: None = 
     ]
 
 @router.post("/credit-notes", response_model=CreditNoteResponse, status_code=201)
-def create_credit_note(req: CreditNoteCreateRequest, db: Session = Depends(get_db)):
+def create_credit_note(req: CreditNoteCreateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    # Tenant check: the caller must be a member of the company this credit note belongs to.
+    get_company_membership(db, current_user, req.company_id)
+
     note = CreditNote(
         project_id=req.project_id,
         company_id=req.company_id,
