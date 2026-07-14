@@ -21,21 +21,21 @@ export default function DPRReportPage() {
     setTimeout(() => setToastMessage(""), 3000);
   };
 
+  const fetchReport = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/reports/data/dpr?company_id=${companyId}`, {
+        headers: { ...(authHeaders() || {}) }
+      });
+      const data = await res.json();
+      setRows(data.rows || []);
+    } catch {
+      setRows([]);
+    } finally {
+      setLoading(false);
+    }
+  };
   useEffect(() => {
-    const fetchReport = async () => {
-      setLoading(true);
-      try {
-        const res = await fetch(`${getApiHost()}/apis/v3/reports/data/dpr?company_id=${companyId}`, {
-          headers: { ...(authHeaders() || {}) }
-        });
-        const data = await res.json();
-        setRows(data.rows || []);
-      } catch {
-        setRows([]);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchReport();
   }, [companyId]);
 
@@ -116,10 +116,10 @@ export default function DPRReportPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <button onClick={() => showToast("DPR Refreshed!")} className="p-2 bg-card hover:bg-elevated border border-border-custom rounded-lg text-xs" title="Refresh">
+            <button onClick={() => fetchReport()} className="p-2 bg-card hover:bg-elevated border border-border-custom rounded-lg text-xs" title="Refresh">
               🔄
             </button>
-            <button onClick={() => showToast("DPR Exported successfully!")} className="px-3 py-1.5 bg-primary hover:bg-primary/95 text-white text-xs font-bold rounded-lg flex items-center gap-1.5">
+            <button disabled title="Share / Export not available yet" className="px-3 py-1.5 bg-primary text-white text-xs font-bold rounded-lg flex items-center gap-1.5 opacity-50 cursor-not-allowed">
               <span>📤</span> Share / Export
             </button>
           </div>

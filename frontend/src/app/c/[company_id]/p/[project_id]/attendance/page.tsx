@@ -864,7 +864,7 @@ export default function AttendancePage() {
                     <h2 className="text-xs font-bold text-foreground uppercase tracking-wider">Monthly Payroll Compilation — June 2026</h2>
                     <p className="text-[10px] text-muted mt-0.5">Salary + PF + ESI statutory deductions per IS code. Download payslip per employee.</p>
                   </div>
-                  <button className="px-3 py-1.5 bg-primary text-white text-[10px] font-bold rounded-lg hover:opacity-90">📤 Export All Payslips</button>
+                  <button disabled title="Payslip export not available yet" className="px-3 py-1.5 bg-primary text-white text-[10px] font-bold rounded-lg opacity-50 cursor-not-allowed">📤 Export All Payslips</button>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs text-left">

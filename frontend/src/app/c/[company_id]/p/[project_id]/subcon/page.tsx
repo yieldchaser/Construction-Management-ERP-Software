@@ -49,7 +49,8 @@ export default function SubconPage() {
   // Form states
   const [woForm, setWoForm] = useState({
     partyName: "",
-    title: "Subcon Workorder #WO--1"
+    title: "Subcon Workorder #WO--1",
+    date: new Date().toISOString().split("T")[0]
   });
 
   const [partyForm, setPartyForm] = useState({
@@ -206,7 +207,6 @@ export default function SubconPage() {
                   <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Sub-Con Workorder</h3>
                   <div className="flex items-center gap-1 mt-0.5">
                     <span className="text-[11px] text-muted font-mono">#WO--1</span>
-                    <span className="text-[10px] text-muted cursor-pointer hover:text-foreground">✏️</span>
                   </div>
                 </div>
                 <button onClick={() => setShowWOModal(false)} className="text-muted hover:text-foreground text-base">✕</button>
@@ -215,10 +215,7 @@ export default function SubconPage() {
               <div className="space-y-4 my-4 text-xs">
                 <div>
                   <label className="text-[9px] text-muted uppercase font-bold block mb-1">Date</label>
-                  <div className="bg-background border border-border-custom rounded-lg px-2.5 py-1.5 text-foreground flex justify-between items-center cursor-pointer">
-                    <span>2026-07-05</span>
-                    <span className="text-muted text-[10px]">▼</span>
-                  </div>
+                  <input type="date" value={woForm.date} onChange={e => setWoForm({ ...woForm, date: e.target.value })} className="w-full bg-background border border-border-custom rounded-lg px-2.5 py-1.5 text-foreground text-xs focus:outline-none focus:border-primary" />
                 </div>
 
                 <div>
@@ -247,13 +244,7 @@ export default function SubconPage() {
                   )}
                 </div>
 
-                <span className="text-[10px] text-primary hover:underline font-bold cursor-pointer block">+ Add Terms and Conditions</span>
 
-                {/* Upload zone */}
-                <div className="border border-dashed border-border-custom hover:border-primary/50 transition-all rounded-lg p-5 flex flex-col items-center justify-center bg-background cursor-pointer">
-                  <span className="text-xl mb-1 text-primary">📤</span>
-                  <strong className="text-[11px] text-foreground font-bold">Attach Media</strong>
-                </div>
               </div>
 
               <div className="mt-5 flex flex-col gap-2">

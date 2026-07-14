@@ -2747,11 +2747,7 @@ export default function FinancePage() {
                     />
                   </div>
 
-                  {/* Upload zone */}
-                  <div className="border border-dashed border-border-custom hover:border-primary/50 transition-all rounded-lg p-5 flex flex-col items-center justify-center bg-background cursor-pointer">
-                    <span className="text-base mb-1">📤</span>
-                    <span className="text-[11px] text-muted font-medium">Upload Files</span>
-                  </div>
+
                 </div>
               ) : ["Material Sales", "Sales Invoice", "Material Purchase", "Material Return"].includes(selectedTxnType) ? (
                 /* MATERIAL SALES / PURCHASES SCREEN (Screenshot 2) */
@@ -2851,11 +2847,7 @@ export default function FinancePage() {
                     <button type="button" className="text-primary hover:underline font-bold text-[10px]">View</button>
                   </div>
 
-                  {/* Upload zone */}
-                  <div className="border border-dashed border-border-custom hover:border-primary/50 transition-all rounded-lg p-5 flex flex-col items-center justify-center bg-background cursor-pointer">
-                    <span className="text-base mb-1">📤</span>
-                    <span className="text-[11px] text-muted font-medium">Upload Files</span>
-                  </div>
+
                 </div>
               ) : selectedTxnType === "Material Transfer" ? (
                 /* MATERIAL TRANSFER SCREEN (Screenshot 2) */
@@ -3092,22 +3084,17 @@ export default function FinancePage() {
                     />
                   </div>
 
-                  {/* Upload zone */}
-                  <div className="border border-dashed border-border-custom hover:border-primary/50 transition-all rounded-lg p-5 flex flex-col items-center justify-center bg-background cursor-pointer">
-                    <span className="text-base mb-1">📤</span>
-                    <span className="text-[11px] text-muted font-medium">Upload Files</span>
-                  </div>
+
                 </div>
               ) : ["Debit Note", "Credit Note"].includes(selectedTxnType) ? (
                 /* DEBIT / CREDIT NOTE (Screenshot 3) */
                 <div className="space-y-4 text-xs">
-                  <div className="flex justify-between items-center bg-background/50 border border-border-custom rounded-lg p-2.5">
-                    <div>
-                      <span className="text-muted text-[10px] font-bold uppercase block">Invoice No</span>
-                      <span className="text-foreground font-semibold font-mono">{selectedTxnType === "Credit Note" ? "CN-1" : "DN-1"}</span>
+                    <div className="flex justify-between items-center bg-background/50 border border-border-custom rounded-lg p-2.5">
+                      <div>
+                        <span className="text-muted text-[10px] font-bold uppercase block">Invoice No</span>
+                        <span className="text-foreground font-semibold font-mono">{selectedTxnType === "Credit Note" ? "CN-1" : "DN-1"}</span>
+                      </div>
                     </div>
-                    <span className="text-muted cursor-pointer hover:text-foreground">✏️</span>
-                  </div>
 
                   <div>
                     <label className="text-[10px] text-muted uppercase font-bold block mb-1">Party Name</label>
@@ -3147,11 +3134,7 @@ export default function FinancePage() {
                     <span className="text-[10px] text-primary hover:underline font-bold cursor-pointer">+ Notes</span>
                   </div>
 
-                  {/* Upload zone */}
-                  <div className="border border-dashed border-border-custom hover:border-primary/50 transition-all rounded-lg p-5 flex flex-col items-center justify-center bg-background cursor-pointer">
-                    <span className="text-base mb-1">📤</span>
-                    <span className="text-[11px] text-muted font-medium">Upload Files</span>
-                  </div>
+
                 </div>
               ) : selectedTxnType === "Party to Party" ? (
                 /* PARTY TO PARTY PAYMENT (Screenshot 4) */
@@ -3341,13 +3324,9 @@ export default function FinancePage() {
                     />
                   </div>
 
-                  <div>
-                    <label className="text-[10px] text-muted uppercase font-bold block mb-1">Attachments</label>
-                    <div className="border border-dashed border-border-custom hover:border-primary/50 transition-all rounded-lg p-5 flex flex-col items-center justify-center bg-background cursor-pointer">
-                      <span className="text-base mb-1">📤</span>
-                      <span className="text-[11px] text-muted font-medium">Upload Files</span>
+                    <div>
+                      <label className="text-[10px] text-muted uppercase font-bold block mb-1">Attachments</label>
                     </div>
-                  </div>
                 </form>
               )}
             </div>
@@ -3755,14 +3734,9 @@ export default function FinancePage() {
                     />
                   </div>
 
-                  <div>
-                    <label className="text-[10px] text-muted uppercase font-bold block mb-1">Attachments</label>
-                    <div className="border border-dashed border-border-custom hover:border-primary/50 transition-all rounded-lg p-5 flex flex-col items-center justify-center bg-background cursor-pointer">
-                      <span className="text-base mb-1">📤</span>
-                      <span className="text-[11px] text-muted font-medium">Upload Files</span>
-                      <span className="text-[8px] text-muted/60 mt-0.5">PDF, images or doc receipts</span>
+                    <div>
+                      <label className="text-[10px] text-muted uppercase font-bold block mb-1">Attachments</label>
                     </div>
-                  </div>
                 </form>
               )}
             </div>
