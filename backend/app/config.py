@@ -119,12 +119,6 @@ class Settings(BaseSettings):
     # google_login_client_id). Scope: drive.file (per-file, user-consented).
     GOOGLE_DRIVE_CLIENT_ID: str = ""
     GOOGLE_DRIVE_CLIENT_SECRET: str = ""
-    # Microsoft Graph OAuth (OneDrive integration). Optional; when empty the
-    # connect flow returns a clear error. "common" tenant allows any Microsoft
-    # personal/work account.
-    MS_GRAPH_CLIENT_ID: str = ""
-    MS_GRAPH_CLIENT_SECRET: str = ""
-    MS_GRAPH_TENANT: str = "common"
     # Public base URL of this backend, used to build the OAuth redirect URI.
     # Falls back to the request URL when empty.
     BACKEND_PUBLIC_URL: str = ""

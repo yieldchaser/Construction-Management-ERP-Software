@@ -646,41 +646,6 @@ export default function CompanySettingsPage() {
     finally { setGdBusy(false); }
   };
 
-  // ─── Integrations: Microsoft OneDrive (OAuth backup) ────────────────────────
-  const [odConnected, setOdConnected] = useState(false);
-  const [odBusy, setOdBusy] = useState(false);
-  const [odMsg, setOdMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
-  useEffect(() => {
-    if (!company_id) return;
-    const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : "";
-    fetch(`${apiHost}/apis/v3/integrations/onedrive/status/${company_id}`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-    })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => { if (data) setOdConnected(Boolean(data.connected)); })
-      .catch(() => {});
-  }, [company_id, apiHost]);
-  const connectOnedrive = async () => {
-    setOdBusy(true); setOdMsg(null);
-    try {
-      const res = await fetch(`${apiHost}/apis/v3/integrations/onedrive/authorize?company_id=${company_id}`, { headers: authHeaders() });
-      if (!res.ok) { setOdMsg({ type: "err", text: (await res.text()) || "Could not start OneDrive connect" }); return; }
-      const data = await res.json();
-      if (data.consent_url) { window.location.href = data.consent_url; return; }
-      setOdMsg({ type: "err", text: "Missing consent URL" });
-    } catch (e: any) { setOdMsg({ type: "err", text: e?.message || "error" }); }
-    finally { setOdBusy(false); }
-  };
-  const disconnectOnedrive = async () => {
-    setOdBusy(true); setOdMsg(null);
-    try {
-      const res = await fetch(`${apiHost}/apis/v3/integrations/onedrive/companies/${company_id}/connection`, { method: "DELETE", headers: authHeaders() });
-      if (res.ok) { setOdConnected(false); setOdMsg({ type: "ok", text: "OneDrive disconnected" }); }
-      else setOdMsg({ type: "err", text: "Failed to disconnect OneDrive" });
-    } catch { setOdMsg({ type: "err", text: "Failed to disconnect OneDrive" }); }
-    finally { setOdBusy(false); }
-  };
-
   // ─── Integrations: BI Data Export (API keys) ───────────────────────────────
   interface BiKey { id: string; label: string; masked_key: string; created_at: string | null; last_used_at: string | null; revoked: boolean; }
   const [biKeys, setBiKeys] = useState<BiKey[]>([]);
@@ -2270,32 +2235,6 @@ export default function CompanySettingsPage() {
                 </div>
                 {gdMsg && (
                   <div className={`p-4 text-xs rounded-lg ${gdMsg.type === "ok" ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400" : "bg-rose-500/10 border border-rose-500/20 text-rose-400"}`}>{gdMsg.text}</div>
-                )}
-              </div>
-
-              {/* Microsoft OneDrive */}
-              <div className="bg-card border border-border-custom rounded-lg bg-background p-6 space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="text-sm font-bold text-foreground">Microsoft OneDrive</div>
-                    <div className="text-[10px] text-muted">Archive project and company files to your connected OneDrive.</div>
-                  </div>
-                  {odConnected ? (
-                    <button onClick={disconnectOnedrive} disabled={odBusy} className="bg-rose-500/15 text-rose-400 border border-rose-500/20 text-xs font-bold px-4 py-2 rounded-md disabled:opacity-50">Disconnect</button>
-                  ) : (
-                    <button onClick={connectOnedrive} disabled={odBusy} className="bg-primary text-white text-xs font-bold px-4 py-2 rounded-md disabled:opacity-50">Connect</button>
-                  )}
-                </div>
-                <div className="rounded-lg border border-border-custom p-4 space-y-2">
-                  <div className="text-[10px] uppercase tracking-wider text-muted font-bold">Connection Status</div>
-                  {odConnected ? (
-                    <div className="flex items-center gap-2 text-xs text-emerald-400"><span className="h-2 w-2 rounded-full bg-emerald-400" /><span>Connected</span></div>
-                  ) : (
-                    <div className="flex items-center gap-2 text-xs text-muted"><span className="h-2 w-2 rounded-full bg-zinc-500" /><span>Not connected.</span></div>
-                  )}
-                </div>
-                {odMsg && (
-                  <div className={`p-4 text-xs rounded-lg ${odMsg.type === "ok" ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400" : "bg-rose-500/10 border border-rose-500/20 text-rose-400"}`}>{odMsg.text}</div>
                 )}
               </div>
 

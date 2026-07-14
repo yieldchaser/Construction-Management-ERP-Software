@@ -51,14 +51,6 @@ const INTEGRATIONS_LIST: Integration[] = [
     link: "/login",
   },
   {
-    name: "Microsoft OneDrive",
-    category: "Storage & Files",
-    desc: "Archive project and company files from SiteFlow to your connected OneDrive via Microsoft Graph, with OAuth and encrypted tokens.",
-    icon: "📁",
-    status: "active",
-    link: "/login",
-  },
-  {
     name: "PowerBI / Tableau",
     category: "Analytics",
     desc: "Pull your SiteFlow projects, budget variance, and labour productivity data into PowerBI or Tableau as CSV or JSON feeds using API keys.",
