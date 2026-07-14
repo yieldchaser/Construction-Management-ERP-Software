@@ -107,7 +107,7 @@ export default function SubcontractorBillingPage() {
   const { company_id } = useParams();
   const companyId = company_id || "demo-company";
   const { activeProjectId } = useProject();
-  const projectId = activeProjectId || "d0000000-0000-0000-0000-000000000001";
+  const projectId = activeProjectId;
 
   const [tab, setTab] = useState<"wo" | "ra-bills" | "notes">("ra-bills");
 
@@ -171,6 +171,7 @@ export default function SubcontractorBillingPage() {
   };
 
   const fetchPNL = async () => {
+    if (!projectId) return;
     try {
       const url = selectedTower === "all"
         ? `${getApiHost()}/apis/v3/towers/${projectId}/consolidated-pnl`

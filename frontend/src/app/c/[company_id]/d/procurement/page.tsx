@@ -214,7 +214,7 @@ export default function ProcurementPage() {
   const { company_id } = useParams();
   const companyId = company_id || "demo-company";
   const { activeProjectId } = useProject();
-  const projectId = activeProjectId || "d0000000-0000-0000-0000-000000000001";
+  const projectId = activeProjectId;
 
   const [tab, setTab] = useState<"po" | "indent" | "inventory" | "ledger" | "unbilled">("po");
 
@@ -237,6 +237,7 @@ export default function ProcurementPage() {
   const [isOffline, setIsOffline] = useState(false);
 
   const fetchProcurementData = async () => {
+    if (!projectId) return;
     try {
       const apiHost = getApiHost();
       const [indentsRes, posRes, grnsRes, invRes] = await Promise.all([

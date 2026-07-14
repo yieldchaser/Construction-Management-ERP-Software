@@ -33,7 +33,7 @@ export default function TowersPage() {
   const { company_id } = useParams();
   const companyId = company_id || "demo-company";
   const { activeProjectId } = useProject();
-  const projectId = activeProjectId || "d0000000-0000-0000-0000-000000000001";
+  const projectId = activeProjectId;
 
   const [towers, setTowers] = useState<Tower[]>([]);
   const [pnl, setPnl] = useState<TowerPNL[]>([]);

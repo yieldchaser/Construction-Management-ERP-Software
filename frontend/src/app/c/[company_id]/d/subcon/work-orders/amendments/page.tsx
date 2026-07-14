@@ -27,7 +27,7 @@ export default function WOAmendmentsPage({ params }: { params: { wo_id: string }
   const { company_id, wo_id } = useParams();
   const companyId = company_id || "demo-company";
   const { activeProjectId } = useProject();
-  const projectId = activeProjectId || "d0000000-0000-0000-0000-000000000001";
+  const projectId = activeProjectId;
   const woId = typeof wo_id === "string" ? wo_id : params.wo_id;
 
   const [amendments, setAmendments] = useState<Amendment[]>([]);
@@ -49,6 +49,7 @@ export default function WOAmendmentsPage({ params }: { params: { wo_id: string }
   };
 
   const fetchWO = async () => {
+    if (!projectId) return;
     try {
       const res = await fetch(`${getApiHost()}/apis/v3/billing/work-orders?project_id=${projectId}`, { headers: authHeaders() });
       if (res.ok) {

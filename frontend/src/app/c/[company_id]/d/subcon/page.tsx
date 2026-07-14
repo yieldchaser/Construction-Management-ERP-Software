@@ -29,7 +29,7 @@ export default function SubconPage() {
   const router = useRouter();
   const { activeProjectId } = useProject();
   const companyId = params?.company_id as string || "e0000000-0000-0000-0000-000000000000";
-  const projectId = activeProjectId || "d0000000-0000-0000-0000-000000000001";
+  const projectId = activeProjectId;
 
   // Mock datasets matching Onsite Teams screenshots
   const [parties, setParties] = useState<Party[]>([

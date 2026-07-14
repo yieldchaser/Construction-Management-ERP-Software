@@ -46,7 +46,7 @@ export default function MoMPage() {
   const params = useParams();
   const companyId = (params?.company_id as string) || "e0000000-0000-0000-0000-000000000000";
   const { activeProjectId } = useProject();
-  const projectId = activeProjectId || "d0000000-0000-0000-0000-000000000001";
+  const projectId = activeProjectId;
 
   const [moms, setMoms] = useState<MoM[]>([]);
   const [projects, setProjects] = useState<ProjectOption[]>([]);

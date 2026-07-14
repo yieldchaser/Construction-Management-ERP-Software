@@ -31,7 +31,7 @@ export default function BudgetPage() {
   const { company_id } = useParams();
   const companyId = company_id || "demo-company";
   const { activeProjectId } = useProject();
-  const projectId = activeProjectId || "d0000000-0000-0000-0000-000000000001";
+  const projectId = activeProjectId;
 
   const [budget, setBudget] = useState<BudgetCommitted | null>(null);
   const [loading, setLoading] = useState(true);

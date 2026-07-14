@@ -131,7 +131,7 @@ export default function DrawingsPage() {
   const { company_id } = useParams();
   const companyId = (company_id as string) || "demo";
   const { activeProjectId } = useProject();
-  const projectId = activeProjectId || "d0000000-0000-0000-0000-000000000001";
+  const projectId = activeProjectId;
 
   const [tab, setTab] = useState<"drawings" | "files">("drawings");
   const [drawings, setDrawings] = useState<Drawing[]>(DEMO);
@@ -157,6 +157,7 @@ export default function DrawingsPage() {
   const canvasRef = useRef<HTMLDivElement>(null);
 
   const fetchDrawings = async () => {
+    if (!projectId) return;
     try {
       const apiHost = getApiHost();
       const res = await fetch(`${apiHost}/apis/v3/drawings?project_id=${projectId}`, { headers: authHeaders() });
