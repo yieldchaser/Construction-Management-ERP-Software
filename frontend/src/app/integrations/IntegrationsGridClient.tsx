@@ -36,13 +36,6 @@ const INTEGRATIONS_LIST: Integration[] = [
     status: "planned",
   },
   {
-    name: "QuickBooks Online",
-    category: "Accounting",
-    desc: "Automate subcontractor work orders, invoices, and material receipts syncing directly into QuickBooks.",
-    icon: "📊",
-    status: "planned",
-  },
-  {
     name: "Google Drive",
     category: "Storage & Files",
     desc: "Back up project and company files from SiteFlow to your connected Google Drive on demand, with OAuth and encrypted tokens.",
