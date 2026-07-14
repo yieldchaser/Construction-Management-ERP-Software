@@ -74,20 +74,15 @@ export default function SubcontractorBillingPage() {
   const [bills, setBills] = useState<Bill[]>([]);
   const [notes, setNotes] = useState<DebitCreditNote[]>([]);
 
-  // Subcontractor mapping for UUIDs
-  const SUBCON_MAP: Record<string, string> = {
-    "Karan Masonry Works": "e0000000-0000-0000-0000-000000000201",
-    "Apex Bar-Bending Co": "e0000000-0000-0000-0000-000000000202",
-    "Metro Plumbing Services": "e0000000-0000-0000-0000-000000000203",
-  };
+  // Real subcontractors (no hardcoded demo vendors)
+  const [subcontractors, setSubcontractors] = useState<Array<{ company_team_id: string; name: string }>>([]);
+  const subconNameMap = React.useMemo(() => {
+    const m: Record<string, string> = {};
+    subcontractors.forEach((s) => (m[s.company_team_id] = s.name));
+    return m;
+  }, [subcontractors]);
 
-  const SUBCON_IDS: Record<string, string> = {
-    "e0000000-0000-0000-0000-000000000201": "Karan Masonry Works",
-    "e0000000-0000-0000-0000-000000000202": "Apex Bar-Bending Co",
-    "e0000000-0000-0000-0000-000000000203": "Metro Plumbing Services",
-  };
-
-  const fetchWorkOrders = async () => {
+  const fetchWorkOrders = async (nameMap: Record<string, string> = {}) => {
     try {
       const res = await fetch(`${getApiHost()}/apis/v3/billing/work-orders?project_id=${projectId}`, { headers: authHeaders() });
       if (res.ok) {
@@ -95,7 +90,7 @@ export default function SubcontractorBillingPage() {
         const mapped = data.map((wo: any) => ({
           id: wo.id,
           woNumber: wo.wo_number,
-          subcontractor: SUBCON_IDS[wo.subcontractor_id] || "Karan Masonry Works",
+          subcontractor: nameMap[wo.subcontractor_id] || "Unassigned",
           item: wo.items && wo.items.length > 0 ? wo.items[0].description || wo.terms : wo.terms || "Subcontractor Works",
           value: wo.estimated_work_amount,
           status: wo.status === "active" ? "Active" : wo.status,
@@ -129,7 +124,7 @@ export default function SubcontractorBillingPage() {
     } catch (e) { console.error(e); }
   };
 
-  const fetchBills = async () => {
+  const fetchBills = async (nameMap: Record<string, string> = {}) => {
     try {
       const res = await fetch(`${getApiHost()}/apis/v3/billing/bills?project_id=${projectId}&invoice_type=subcon`, { headers: authHeaders() });
       if (res.ok) {
@@ -141,7 +136,7 @@ export default function SubcontractorBillingPage() {
             id: bill.id,
             invoiceNumber: bill.invoice_number,
             invoiceDate: bill.invoice_date ? bill.invoice_date.split("T")[0] : "",
-            subcontractor: SUBCON_IDS[bill.party_company_user_id] || "Karan Masonry Works",
+            subcontractor: nameMap[bill.party_company_user_id] || "Unassigned",
             subtotal: parseFloat(bill.subtotal || 0),
             gstAmount: gstTotal,
             cgstAmount: halfGst,
@@ -165,7 +160,7 @@ export default function SubcontractorBillingPage() {
     }
   };
 
-  const fetchNotes = async () => {
+  const fetchNotes = async (nameMap: Record<string, string> = {}) => {
     try {
       const dnRes = await fetch(`${getApiHost()}/apis/v3/billing/debit-notes?project_id=${projectId}`, { headers: authHeaders() });
       const cnRes = await fetch(`${getApiHost()}/apis/v3/billing/credit-notes?project_id=${projectId}`, { headers: authHeaders() });
@@ -175,7 +170,7 @@ export default function SubcontractorBillingPage() {
         allNotes = allNotes.concat(dnData.map((n: any) => ({
           id: n.id,
           type: "debit",
-          subcontractor: SUBCON_IDS[n.party_company_user_id] || "Karan Masonry Works",
+          subcontractor: nameMap[n.party_company_user_id] || "Unassigned",
           amount: n.total_amount,
           notes: n.notes || "",
           date: n.created_at ? n.created_at.split("T")[0] : "",
@@ -187,7 +182,7 @@ export default function SubcontractorBillingPage() {
         allNotes = allNotes.concat(cnData.map((n: any) => ({
           id: n.id,
           type: "credit",
-          subcontractor: SUBCON_IDS[n.party_company_user_id] || "Karan Masonry Works",
+          subcontractor: nameMap[n.party_company_user_id] || "Unassigned",
           amount: n.total_amount,
           notes: n.notes || "",
           date: n.created_at ? n.created_at.split("T")[0] : "",
@@ -201,12 +196,26 @@ export default function SubcontractorBillingPage() {
   };
 
   useEffect(() => {
-    if (projectId) {
-      fetchWorkOrders();
-      fetchBills();
-      fetchNotes();
-      fetchTowers();
-    }
+    if (!projectId) return;
+    (async () => {
+      let nameMap: Record<string, string> = {};
+      try {
+        const res = await fetch(`${getApiHost()}/apis/v3/billing/subcontractors?company_id=${companyId}`, { headers: authHeaders() });
+        if (res.ok) {
+          const subs = await res.json();
+          setSubcontractors(subs);
+          subs.forEach((s: any) => (nameMap[s.company_team_id] = s.name));
+        }
+      } catch (e) {
+        console.error("Failed to fetch subcontractors", e);
+      }
+      await Promise.all([
+        fetchWorkOrders(nameMap),
+        fetchBills(nameMap),
+        fetchNotes(nameMap),
+        fetchTowers(),
+      ]);
+    })();
   }, [projectId]);
 
   const [towers, setTowers] = useState<Array<{ id: string; tower_name: string; tower_code: string }>>([]);
@@ -233,15 +242,15 @@ export default function SubcontractorBillingPage() {
 
   // New Work Order Modal & Forms
   const [showWOModal, setShowWOModal] = useState(false);
-  const [newWONum, setNewWONum] = useState("WO-2026-004");
-  const [newWOSub, setNewWOSub] = useState("Karan Masonry Works");
+  const [newWONum, setNewWONum] = useState("");
+  const [newWOSub, setNewWOSub] = useState("");
   const [newWOItem, setNewWOItem] = useState("");
   const [newWOValue, setNewWOValue] = useState(150000);
 
   // New Bill Modal & Forms
   const [showBillModal, setShowBillModal] = useState(false);
   const [newBillNum, setNewBillNum] = useState("RA-BILL-003");
-  const [newBillSub, setNewBillSub] = useState("Karan Masonry Works");
+  const [newBillSub, setNewBillSub] = useState("");
   const [newBillSubtotal, setNewBillSubtotal] = useState(100000);
   const [newBillGstPct, setNewBillGstPct] = useState(18);
   const [newBillTdsPct, setNewBillTdsPct] = useState(2);
@@ -304,7 +313,11 @@ export default function SubcontractorBillingPage() {
   );
 
   const handleCreateWO = async () => {
-    const subconId = SUBCON_MAP[newWOSub] || "e0000000-0000-0000-0000-000000000201";
+    if (!newWOSub) {
+      alert("Select a subcontractor before submitting the work order.");
+      return;
+    }
+    const subconId = newWOSub;
     try {
       const res = await fetch(`${getApiHost()}/apis/v3/billing/work-orders`, {
         method: "POST",
@@ -327,7 +340,7 @@ export default function SubcontractorBillingPage() {
         })
       });
       if (res.ok) {
-        fetchWorkOrders();
+        fetchWorkOrders(subconNameMap);
         setShowWOModal(false);
         setNewWOItem("");
         setNewWONum(`WO-2026-${Math.floor(1000 + Math.random() * 9000)}`);
@@ -338,7 +351,11 @@ export default function SubcontractorBillingPage() {
   };
 
   const handleCreateBill = async () => {
-    const subconId = SUBCON_MAP[newBillSub] || "e0000000-0000-0000-0000-000000000201";
+    if (!newBillSub) {
+      alert("Select a subcontractor before submitting the RA bill.");
+      return;
+    }
+    const subconId = newBillSub;
     const deductions: Array<{ deduction_type: string; amount: number; percentage: number | null; notes: string }> = [
       { deduction_type: "TDS", amount: preview.tdsAmt, percentage: newBillTdsPct, notes: `${newBillTdsPct}% TDS (Sec 194C)` },
       { deduction_type: "Retention", amount: preview.retentionAmt, percentage: newBillRetentionPct, notes: `${newBillRetentionPct}% ${newBillPreTax ? 'Pre' : 'Post'}-tax retention` }
@@ -367,7 +384,7 @@ export default function SubcontractorBillingPage() {
         })
       });
       if (res.ok) {
-        fetchBills();
+        fetchBills(subconNameMap);
         setShowBillModal(false);
         setNewBillNum(`RA-BILL-${Math.floor(1000 + Math.random() * 9000)}`);
       }
@@ -384,6 +401,36 @@ export default function SubcontractorBillingPage() {
       return b;
     }));
   };
+
+  // Computed KPI cards from the real bills already fetched
+  const fmtINR = (n: number): string => {
+    if (!n || n <= 0) return "₹0";
+    if (n >= 1e5) return `₹${(n / 1e5).toFixed(2)}L`;
+    if (n >= 1e3) return `₹${(n / 1e3).toFixed(1)}K`;
+    return `₹${Math.round(n)}`;
+  };
+  const now = new Date();
+  const isThisMonth = (d: string) => {
+    if (!d) return false;
+    const dt = new Date(d);
+    return dt.getFullYear() === now.getFullYear() && dt.getMonth() === now.getMonth();
+  };
+  const billedThisMonth = bills.filter((b) => isThisMonth(b.invoiceDate));
+  const totalBilledMTD = billedThisMonth.reduce((s, b) => s + (b.totalPayable || 0), 0);
+  const pendingBills = bills.filter((b) => b.status === "pending");
+  const pendingAmt = pendingBills.reduce((s, b) => s + (b.totalPayable || 0), 0);
+  const retentionHeld = bills.reduce(
+    (s, b) => s + (b.deductions || []).filter((d) => d.type === "Retention").reduce((x, d) => x + (d.amount || 0), 0),
+    0
+  );
+  const settledBills = bills.filter((b) => b.status === "approved");
+  const settledAmt = settledBills.reduce((s, b) => s + (b.totalPayable || 0), 0);
+  const kpiCards = [
+    { label: "Total RA Billing MTD", value: fmtINR(totalBilledMTD), sub: `${billedThisMonth.length} bill${billedThisMonth.length === 1 ? "" : "s"} this month`, color: "text-foreground" },
+    { label: "Pending Audit Approval", value: fmtINR(pendingAmt), sub: `${pendingBills.length} bill${pendingBills.length === 1 ? "" : "s"} pending`, color: "text-amber-400" },
+    { label: "Total Retentions Held", value: fmtINR(retentionHeld), sub: "Retention deductions", color: "text-blue-400" },
+    { label: "Net Payable Settled", value: fmtINR(settledAmt), sub: `${settledBills.length} bill${settledBills.length === 1 ? "" : "s"} paid`, color: "text-primary" }
+  ];
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden font-sans">            <div className="flex items-center gap-1 px-6 py-2 border-b border-border-custom bg-card shrink-0 overflow-x-auto">
@@ -441,12 +488,7 @@ export default function SubcontractorBillingPage() {
               
               {/* Quick stats row */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {[
-                  { label: "Total RA Billing MTD", value: "₹1.80L", sub: "Subtotal billed", color: "text-foreground" },
-                  { label: "Pending Audit Approval", value: "₹88.8K", sub: "1 Bill pending", color: "text-amber-400" },
-                  { label: "Total Retentions Held", value: "₹9.9K", sub: "Post-tax contract buffer", color: "text-blue-400" },
-                  { label: "Net Payable Settled", value: "₹1.00L", sub: "B-01 fully paid", color: "text-primary" }
-                ].map((s, idx) => (
+                {kpiCards.map((s, idx) => (
                   <div key={idx} className="bg-card border border-border-custom rounded-lg p-4 rounded-md border border-border-custom">
                     <span className="text-[10px] font-bold text-muted uppercase tracking-wider block">{s.label}</span>
                     <span className={`text-2xl font-extrabold mt-1 block ${s.color}`}>{s.value}</span>
@@ -703,9 +745,10 @@ export default function SubcontractorBillingPage() {
                     onChange={(e) => setNewWOSub(e.target.value)}
                     className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none focus:border-secondary font-semibold"
                   >
-                    <option value="Karan Masonry Works">Karan Masonry Works</option>
-                    <option value="Apex Bar-Bending Co">Apex Bar-Bending Co</option>
-                    <option value="Metro Plumbing Services">Metro Plumbing Services</option>
+                    <option value="">Select subcontractor</option>
+                    {subcontractors.map((s) => (
+                      <option key={s.company_team_id} value={s.company_team_id}>{s.name}</option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -770,9 +813,10 @@ export default function SubcontractorBillingPage() {
                       onChange={(e) => setNewBillSub(e.target.value)}
                       className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none font-semibold"
                     >
-                      <option value="Karan Masonry Works">Karan Masonry Works</option>
-                      <option value="Apex Bar-Bending Co">Apex Bar-Bending Co</option>
-                      <option value="Metro Plumbing Services">Metro Plumbing Services</option>
+                      <option value="">Select subcontractor</option>
+                      {subcontractors.map((s) => (
+                        <option key={s.company_team_id} value={s.company_team_id}>{s.name}</option>
+                      ))}
                     </select>
                   </div>
                 </div>

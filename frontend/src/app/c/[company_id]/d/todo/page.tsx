@@ -10,6 +10,11 @@ interface Project {
   name: string;
 }
 
+interface TeamMember {
+  id: string;
+  name: string;
+}
+
 interface ToDoItem {
   id: string;
   title: string;
@@ -20,36 +25,6 @@ interface ToDoItem {
   is_completed: boolean;
 }
 
-const DEFAULT_TODOS: ToDoItem[] = [
-  {
-    id: "todo-1",
-    title: "Collect client payment for Milestone 2",
-    due_date: "2026-07-15",
-    assigned_to: "Ramesh Kumar (Project Manager)",
-    project_name: "Skyline Towers",
-    type: "Payment",
-    is_completed: false
-  },
-  {
-    id: "todo-2",
-    title: "Approve concrete test results report",
-    due_date: "2026-07-10",
-    assigned_to: "Suresh Patil (QC Lead)",
-    project_name: "Skyline Towers",
-    type: "Quality Check",
-    is_completed: false
-  },
-  {
-    id: "todo-3",
-    title: "Verify labor attendance logs",
-    due_date: "2026-07-08",
-    assigned_to: "Vikas Sharma (Site Supervisor)",
-    project_name: "Metro Line Extension",
-    type: "Attendance",
-    is_completed: false
-  }
-];
-
 export default function ToDoPage() {
   const params = useParams();
   const companyId = params.company_id as string;
@@ -57,16 +32,18 @@ export default function ToDoPage() {
 
   const [todos, setTodos] = useState<ToDoItem[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [filterStatus, setFilterStatus] = useState<"pending" | "completed">("pending");
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState("All");
+  const [loadError, setLoadError] = useState(false);
 
   // New To Do drawer state
   const [isNewTodoOpen, setIsNewTodoOpen] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newDueDate, setNewDueDate] = useState(new Date().toISOString().split("T")[0]);
-  const [newAssigned, setNewAssigned] = useState("");
-  const [newProject, setNewProject] = useState("");
+  const [newAssignedId, setNewAssignedId] = useState("");
+  const [newProjectId, setNewProjectId] = useState("");
   const [newType, setNewType] = useState("General");
 
   // Repeat Settings Modal State
@@ -78,80 +55,137 @@ export default function ToDoPage() {
 
   const apiHost = getApiHost();
 
-  useEffect(() => {
-    // Read from localStorage or set defaults
-    const cached = localStorage.getItem(`todos_${companyId}`);
-    if (cached) {
-      setTodos(JSON.parse(cached));
-    } else {
-      setTodos(DEFAULT_TODOS);
-      localStorage.setItem(`todos_${companyId}`, JSON.stringify(DEFAULT_TODOS));
-    }
+  const projectMap = React.useMemo(() => {
+    const m: Record<string, string> = {};
+    projects.forEach((p) => (m[p.id] = p.name));
+    return m;
+  }, [projects]);
 
-    // Fetch projects for dropdown
+  const teamMap = React.useMemo(() => {
+    const m: Record<string, string> = {};
+    teamMembers.forEach((t) => (m[t.id] = t.name));
+    return m;
+  }, [teamMembers]);
+
+  const fetchTodos = async () => {
+    if (!companyId || !accessToken) return;
+    try {
+      const res = await fetch(`${apiHost}/apis/v3/todos/company/${companyId}`, {
+        headers: { ...(authHeaders() || {}) },
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      const mapped: ToDoItem[] = (data || []).map((t: any) => {
+        const assigneeIds: string[] = t.assignee_ids || [];
+        const assignedTo = assigneeIds
+          .map((id: string) => teamMap[id] || "Unassigned")
+          .filter((name: string, idx: number, arr: string[]) => name !== "Unassigned" || arr.length === 1)
+          .join(", ");
+        return {
+          id: t.id,
+          title: t.title,
+          due_date: t.due_date ? t.due_date.split("T")[0] : "",
+          assigned_to: assignedTo || "Unassigned",
+          project_name: t.project_id ? (projectMap[t.project_id] ?? "") : "",
+          type: t.type || "General",
+          is_completed: t.status === "done",
+        };
+      });
+      setTodos(mapped);
+      setLoadError(false);
+    } catch (err) {
+      console.error("Failed to fetch todos", err);
+      setLoadError(true);
+    }
+  };
+
+  useEffect(() => {
     const fetchProjects = async () => {
       if (!companyId || !accessToken) return;
       try {
         const res = await fetch(`${apiHost}/apis/v3/planning/projects?company_id=${companyId}`, {
-          headers: { ...(authHeaders() || {}) }
+          headers: { ...(authHeaders() || {}) },
         });
         if (res.ok) {
           const data = await res.json();
           setProjects(data);
-          if (data.length > 0) {
-            setNewProject(data[0].name);
+          if (data.length > 0 && !newProjectId) {
+            setNewProjectId(data[0].id);
           }
         }
       } catch (err) {
         console.error(err);
       }
     };
+
+    const fetchTeam = async () => {
+      if (!companyId || !accessToken) return;
+      try {
+        const res = await fetch(`${apiHost}/apis/v3/crm/team-members/${companyId}`, {
+          headers: { ...(authHeaders() || {}) },
+        });
+        if (res.ok) {
+          setTeamMembers(await res.json());
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
     fetchProjects();
+    fetchTeam();
   }, [companyId, accessToken]);
 
-  const updateTodosInStateAndCache = (updatedList: ToDoItem[]) => {
-    setTodos(updatedList);
-    localStorage.setItem(`todos_${companyId}`, JSON.stringify(updatedList));
-  };
+  useEffect(() => {
+    fetchTodos();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [companyId, accessToken, projectMap, teamMap]);
 
   const handleToggleTodo = (id: string) => {
-    const updated = todos.map((t) => {
-      if (t.id === id) {
-        return { ...t, is_completed: !t.is_completed };
-      }
-      return t;
-    });
-    updateTodosInStateAndCache(updated);
+    setTodos((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, is_completed: !t.is_completed } : t))
+    );
   };
 
   const handleDeleteTodo = (id: string) => {
-    const updated = todos.filter((t) => t.id !== id);
-    updateTodosInStateAndCache(updated);
+    setTodos((prev) => prev.filter((t) => t.id !== id));
   };
 
-  const handleCreateTodo = (e: React.FormEvent) => {
+  const handleCreateTodo = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTitle.trim()) return;
 
-    const newItem: ToDoItem = {
-      id: `todo-${Date.now()}`,
-      title: newTitle,
+    const payload: any = {
+      company_id: companyId,
+      title: newTitle.trim(),
       due_date: newDueDate,
-      assigned_to: newAssigned,
-      project_name: newProject,
       type: newType,
-      is_completed: false
+      assignee_ids: newAssignedId ? [newAssignedId] : [],
     };
+    if (newProjectId) payload.project_id = newProjectId;
 
-    updateTodosInStateAndCache([...todos, newItem]);
-    setIsNewTodoOpen(false);
-    setNewTitle("");
+    try {
+      const res = await fetch(`${apiHost}/apis/v3/todos/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      await fetchTodos();
+      setIsNewTodoOpen(false);
+      setNewTitle("");
+      setNewAssignedId("");
+    } catch (err) {
+      console.error("Failed to create todo", err);
+    }
   };
 
   const filteredTodos = todos.filter((t) => {
     const matchesStatus = filterStatus === "completed" ? t.is_completed : !t.is_completed;
     const matchesType = filterType === "All" || t.type === filterType;
-    const matchesSearch = t.title.toLowerCase().includes(searchQuery.toLowerCase()) || t.project_name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch =
+      t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (t.project_name || "").toLowerCase().includes(searchQuery.toLowerCase());
     return matchesStatus && matchesType && matchesSearch;
   });
 
@@ -171,6 +205,12 @@ export default function ToDoPage() {
           + New To Do
         </button>
       </div>
+
+      {loadError && (
+        <div className="rounded-md border border-amber-500/20 bg-amber-500/10 text-amber-400 text-xs px-4 py-2">
+          Could not load tasks from the server. Retry once the connection is restored.
+        </div>
+      )}
 
       {/* Filters */}
       <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4 mb-6">
@@ -238,7 +278,9 @@ export default function ToDoPage() {
             {filteredTodos.length === 0 ? (
               <tr>
                 <td colSpan={7} className="px-6 py-12 text-center text-muted font-semibold">
-                  No tasks found in list. Click "+ New To Do" to add one.
+                  {todos.length === 0
+                    ? "No tasks found. Click \"+ New To Do\" to add one."
+                    : "No tasks match the current filter."}
                 </td>
               </tr>
             ) : (
@@ -256,10 +298,10 @@ export default function ToDoPage() {
                     {t.title}
                   </td>
                   <td className="px-5 py-3 text-muted">
-                    {new Date(t.due_date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                    {t.due_date ? new Date(t.due_date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—"}
                   </td>
                   <td className="px-5 py-3 text-muted font-medium">{t.assigned_to}</td>
-                  <td className="px-5 py-3 text-muted font-semibold">{t.project_name}</td>
+                  <td className="px-5 py-3 text-muted font-semibold">{t.project_name || "—"}</td>
                   <td className="px-5 py-3">
                     <span className="bg-white/5 border border-border-custom text-xs font-semibold uppercase tracking-wider px-2 py-0.5 rounded text-foreground">
                       {t.type}
@@ -314,27 +356,30 @@ export default function ToDoPage() {
 
               <div className="space-y-1">
                 <label className="text-xs font-medium text-muted uppercase tracking-wider block mb-1.5">Assigned To</label>
-                <input
-                  type="text"
-                  value={newAssigned}
-                  onChange={(e) => setNewAssigned(e.target.value)}
-                  placeholder="e.g. Ramesh Kumar"
+                <select
+                  value={newAssignedId}
+                  onChange={(e) => setNewAssignedId(e.target.value)}
                   className="input-field w-full px-3 py-2 text-xs focus:outline-none"
-                />
+                >
+                  <option value="">Unassigned</option>
+                  {teamMembers.map((m) => (
+                    <option key={m.id} value={m.id}>{m.name}</option>
+                  ))}
+                </select>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-xs font-medium text-muted uppercase tracking-wider block mb-1.5">Project</label>
                   <select
-                    value={newProject}
-                    onChange={(e) => setNewProject(e.target.value)}
+                    value={newProjectId}
+                    onChange={(e) => setNewProjectId(e.target.value)}
                     className="input-field w-full px-3 py-2 text-xs focus:outline-none"
                   >
+                    <option value="">No project</option>
                     {projects.map((p) => (
-                      <option key={p.id} value={p.name}>{p.name}</option>
+                      <option key={p.id} value={p.id}>{p.name}</option>
                     ))}
-                    {projects.length === 0 && <option value="Skyline Towers">Skyline Towers</option>}
                   </select>
                 </div>
 

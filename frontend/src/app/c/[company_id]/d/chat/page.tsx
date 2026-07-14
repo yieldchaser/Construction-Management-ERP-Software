@@ -98,7 +98,7 @@ export default function ChatPage() {
         // Resolve mock names for presentation
         const resolved = rawMembers.map((m: ChatMember) => ({
           ...m,
-          user_name: m.user_id === "e0000000-0000-0000-0000-000000000000" ? "Yash Desai" : `User ${m.user_id.slice(0, 5)}`
+          user_name: m.user_id === "e0000000-0000-0000-0000-000000000000" ? "SiteFlow" : (m.user_name || `User ${m.user_id.slice(0, 5)}`)
         }));
         setMembers(resolved);
 

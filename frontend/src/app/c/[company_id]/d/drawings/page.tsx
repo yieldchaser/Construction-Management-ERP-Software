@@ -43,63 +43,6 @@ interface Drawing {
   revisions: Revision[];
 }
 
-const DEMO: Drawing[] = [
-  {
-    id: "D001", name: "Ground Floor Layout Plan", category: "Architectural", createdAt: "2026-05-01",
-    revisions: [
-      {
-        id: "R003", version: "V3", status: "current",
-        fileUrl: "https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=1200&auto=format",
-        comments: "Final IFC revision — lobby width updated per client CR-14.",
-        date: "2026-06-20", uploadedBy: "Ar. Priya Shah",
-        pins: [
-          { id: "p1", seq: 1, x: 28, y: 42, category: "RFI", comment: "Column C3 grid offset by 150mm from structural drawing. Clarification needed from structural engineer before casting.", photoAttached: true, user: "Suresh R (PM)", date: "2026-06-22", resolved: false },
-          { id: "p2", seq: 2, x: 65, y: 25, category: "Clash", comment: "MEP duct conflicts with beam B7 at elevation +3200mm. Coordinate with services consultant immediately.", photoAttached: false, user: "Ravi K (Site Eng)", date: "2026-06-23", resolved: false },
-          { id: "p3", seq: 3, x: 47, y: 68, category: "Observation", comment: "Staircase landing dimension confirmed matches approved drawing. OK to proceed.", photoAttached: false, user: "Suresh R (PM)", date: "2026-06-24", resolved: true },
-          { id: "p4", seq: 4, x: 80, y: 55, category: "Approval", comment: "Column grid lines approved by consulting architect. No change required.", photoAttached: false, user: "Director Apex", date: "2026-06-25", resolved: true },
-        ]
-      },
-      {
-        id: "R002", version: "V2", status: "superseded",
-        fileUrl: "https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=1200&auto=format",
-        comments: "Revised to incorporate RFI column grid correction and updated door schedule.",
-        date: "2026-06-01", uploadedBy: "Ar. Priya Shah", pins: [],
-      },
-      {
-        id: "R001", version: "V1", status: "locked",
-        fileUrl: "https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=1200&auto=format",
-        comments: "Initial schematic design release for consultant review.",
-        date: "2026-05-01", uploadedBy: "Ar. Priya Shah", pins: [], approvedBy: "Director Apex"
-      },
-    ]
-  },
-  {
-    id: "D002", name: "Foundation Raft Detail", category: "Structural", createdAt: "2026-05-10",
-    revisions: [
-      {
-        id: "R101", version: "V1", status: "current",
-        fileUrl: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=1200&auto=format",
-        comments: "Structural raft foundation drawing for IS 2950 review.",
-        date: "2026-05-10", uploadedBy: "Er. Anand T",
-        pins: [
-          { id: "p5", seq: 1, x: 50, y: 55, category: "Approval", comment: "Raft thickness 600mm confirmed per IS 2950. Approved.", photoAttached: false, user: "Suresh R (PM)", date: "2026-05-15", resolved: true },
-        ]
-      }
-    ]
-  },
-  {
-    id: "D003", name: "Plumbing & Drainage — Ground Floor", category: "MEP", createdAt: "2026-05-20",
-    revisions: [
-      {
-        id: "R201", version: "V1", status: "current",
-        fileUrl: "https://images.unsplash.com/photo-1416453072034-c8dbfa2856b2?w=1200&auto=format",
-        comments: "MEP plumbing risers and drainage lines. Coordinate with civil for chasing.",
-        date: "2026-05-20", uploadedBy: "MEP Consultants Ltd", pins: []
-      }
-    ]
-  },
-];
-
 const SITE_PHOTOS = [
   { id: "sp1", url: "https://images.unsplash.com/photo-1541888946425-d81bb19240f5?w=500", label: "Excavation Ground Lock" },
   { id: "sp2", url: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=500", label: "Column Casting Complete" },
@@ -134,9 +77,9 @@ export default function DrawingsPage() {
   const projectId = activeProjectId;
 
   const [tab, setTab] = useState<"drawings" | "files">("drawings");
-  const [drawings, setDrawings] = useState<Drawing[]>(DEMO);
-  const [activeDrawingId, setActiveDrawingId] = useState<string>(DEMO[0].id);
-  const [activeRevId, setActiveRevId] = useState<string>(DEMO[0].revisions[0].id);
+  const [drawings, setDrawings] = useState<Drawing[]>([]);
+  const [activeDrawingId, setActiveDrawingId] = useState<string>("");
+  const [activeRevId, setActiveRevId] = useState<string>("");
   const [selectedPinId, setSelectedPinId] = useState<string | null>(null);
   const [filterCat, setFilterCat] = useState<string>("All");
   const [imgLoaded, setImgLoaded] = useState(false);
@@ -207,13 +150,8 @@ export default function DrawingsPage() {
         throw new Error(`HTTP ${res.status}`);
       }
     } catch (err) {
-      console.error("Failed to fetch drawings, using demo data", err);
+      console.error("Failed to fetch drawings from server", err);
       setIsOffline(true);
-      setDrawings(DEMO);
-      if (!activeDrawingId) {
-        setActiveDrawingId(DEMO[0].id);
-        setActiveRevId(DEMO[0].revisions[0].id);
-      }
     }
   };
 
@@ -221,7 +159,7 @@ export default function DrawingsPage() {
     fetchDrawings();
   }, [projectId]);
 
-  const activeDrawing = drawings.find(d => d.id === activeDrawingId)!;
+  const activeDrawing = drawings.find(d => d.id === activeDrawingId);
   const activeRev = activeDrawing?.revisions.find(r => r.id === activeRevId);
   const currentRev = activeDrawing?.revisions.find(r => r.status === "current");
   const isEditable = activeRev?.status === "current";
@@ -388,7 +326,7 @@ export default function DrawingsPage() {
       </div>
       {isOffline && (
         <div className="fixed top-4 right-4 z-50 p-4 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-lg text-xs max-w-md">
-          Using demo drawings — backend connection unavailable
+          Could not load drawings from the server. Retry once the connection is restored.
         </div>
       )}
       {/* ── Sidebar ── */}
@@ -468,6 +406,7 @@ export default function DrawingsPage() {
                       </div>
                     </div>
                   )}
+
 
                   {/* Hint */}
                   {isEditable && visiblePins.length === 0 && (
@@ -593,6 +532,12 @@ export default function DrawingsPage() {
                   </div>
                 )}
               </div>
+            </div>
+          )}
+
+          {tab === "drawings" && !activeDrawing && (
+            <div className="flex-1 flex items-center justify-center p-8 text-center text-muted">
+              No drawings found for this project. Use &ldquo;Upload New Revision&rdquo; to add the first one.
             </div>
           )}
 

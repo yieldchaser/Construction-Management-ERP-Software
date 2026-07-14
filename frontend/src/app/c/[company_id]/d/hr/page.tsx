@@ -152,7 +152,7 @@ export default function HRPayrollPage() {
   const [leaves, setLeaves] = useState<any[]>([]);
   const [showApplyLeaveModal, setShowApplyLeaveModal] = useState(false);
   const [leaveForm, setLeaveForm] = useState({
-    employeeId: "E-01",
+    employeeId: "",
     leaveType: "Casual",
     startDate: "",
     endDate: "",
@@ -264,13 +264,6 @@ export default function HRPayrollPage() {
       }
     } catch (e) {
       console.error("Failed to fetch employees", e);
-      // Seed robust mock fallbacks when API is offline to prevent empty tables
-      setEmployees([
-        { id: "E-01", name: "Ramesh Kumar", code: "EMP-001", designation: "Project Manager", department: "Operations", mobile: "9876543210", basic: 30000, hra: 12000, allowances: 6000, grossMonthly: 48000, pfPct: 12.0, esiApplicable: false, tdsMonthly: 1500, status: "active", joined: "2024-01-15" },
-        { id: "E-02", name: "Priya Shah", code: "EMP-002", designation: "Billing Engineer", department: "Finance", mobile: "9876543211", basic: 20000, hra: 8000, allowances: 4000, grossMonthly: 32000, pfPct: 12.0, esiApplicable: false, tdsMonthly: 500, status: "active", joined: "2024-06-10" },
-        { id: "E-03", name: "Sanjay Yadav", code: "EMP-003", designation: "Site Supervisor", department: "Civil", mobile: "9876543212", basic: 15000, hra: 6000, allowances: 3000, grossMonthly: 24000, pfPct: 12.0, esiApplicable: true, tdsMonthly: 0, status: "active", joined: "2025-02-01" },
-        { id: "E-04", name: "Amit Patel", code: "EMP-004", designation: "Safety Officer", department: "HSE", mobile: "9876543213", basic: 18000, hra: 7200, allowances: 3600, grossMonthly: 28800, pfPct: 12.0, esiApplicable: false, tdsMonthly: 200, status: "active", joined: "2025-03-12" },
-      ]);
     }
   };
 
@@ -297,12 +290,6 @@ export default function HRPayrollPage() {
       }
     } catch (e) {
       console.error("Failed to fetch attendance", e);
-      setAttendance([
-        { id: "A-01", employeeId: "E-01", employeeName: "Ramesh Kumar", date: "2026-06-26", punchIn: "09:00", punchOut: "18:00", hoursWorked: 9, overtime: 1, withinGeofence: true, status: "Present", distanceFromSite: 12 },
-        { id: "A-02", employeeId: "E-02", employeeName: "Priya Shah", date: "2026-06-26", punchIn: "08:55", punchOut: "17:45", hoursWorked: 8.8, overtime: 0.8, withinGeofence: true, status: "Present", distanceFromSite: 5 },
-        { id: "A-03", employeeId: "E-03", employeeName: "Sanjay Yadav", date: "2026-06-26", punchIn: "09:15", punchOut: "18:30", hoursWorked: 9.25, overtime: 1.25, withinGeofence: false, status: "Present", distanceFromSite: 620 },
-        { id: "A-04", employeeId: "E-04", employeeName: "Amit Patel", date: "2026-06-26", punchIn: "", punchOut: "", hoursWorked: 0, overtime: 0, withinGeofence: true, status: "Absent", distanceFromSite: null },
-      ]);
     }
   };
 
@@ -314,7 +301,7 @@ export default function HRPayrollPage() {
         const data = await res.json();
         const mapped = data.map((l: any) => ({
           id: l.id,
-          employeeId: "E-01",
+          employeeId: l.employee_id || "",
           employeeName: l.employee_name,
           leaveType: l.leave_type,
           startDate: l.start_date.split("T")[0],
@@ -1291,30 +1278,20 @@ export default function HRPayrollPage() {
 
               {/* Leave Balances Grid */}
               <div className="grid grid-cols-4 gap-4">
-                {[
-                  { title: "Ramesh Kumar", casual: 8, sick: 4, earned: 12 },
-                  { title: "Priya Shah", casual: 10, sick: 5, earned: 14 },
-                  { title: "Sanjay Yadav", casual: 6, sick: 3, earned: 8 },
-                  { title: "Meera Nair", casual: 8, sick: 4, earned: 12 },
-                ].map((bal, idx) => (
-                  <div key={idx} className="bg-card border border-border-custom rounded-md p-4 space-y-2">
-                    <span className="text-xs font-bold text-foreground block">{bal.title}</span>
-                    <div className="grid grid-cols-3 gap-2 text-center text-[10px] font-mono">
-                      <div className="bg-elevated p-1.5 rounded">
-                        <span className="text-muted block">Casual</span>
-                        <strong className="text-primary font-bold">{bal.casual}</strong>
-                      </div>
-                      <div className="bg-elevated p-1.5 rounded">
-                        <span className="text-muted block">Sick</span>
-                        <strong className="text-amber-400 font-bold">{bal.sick}</strong>
-                      </div>
-                      <div className="bg-elevated p-1.5 rounded">
-                        <span className="text-muted block">Earned</span>
-                        <strong className="text-emerald-400 font-bold">{bal.earned}</strong>
-                      </div>
+                {employees.length > 0 ? (
+                  employees.map((emp) => (
+                    <div key={emp.id} className="bg-card border border-border-custom rounded-md p-4 space-y-2">
+                      <span className="text-xs font-bold text-foreground block">{emp.name}</span>
+                      <p className="text-[10px] text-muted leading-snug">
+                        Per-employee leave balances are not tracked yet. Use the leave log below to review approved and pending applications.
+                      </p>
                     </div>
+                  ))
+                ) : (
+                  <div className="col-span-4 bg-card border border-border-custom rounded-md p-8 text-center text-muted text-xs">
+                    No employees loaded. Per-employee leave balances are not tracked in this build; leave applications are listed below.
                   </div>
-                ))}
+                )}
               </div>
 
               {/* Leave Requests Listing */}
@@ -1550,10 +1527,10 @@ export default function HRPayrollPage() {
                   onChange={(e) => setLeaveForm({ ...leaveForm, employeeId: e.target.value })}
                   className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground text-xs focus:outline-none focus:border-primary"
                 >
-                  <option value="E-01">Ramesh Kumar (EMP-001)</option>
-                  <option value="E-02">Priya Shah (EMP-002)</option>
-                  <option value="E-03">Sanjay Yadav (EMP-003)</option>
-                  <option value="E-04">Meera Nair (EMP-004)</option>
+                  <option value="">Select employee</option>
+                  {employees.map((emp) => (
+                    <option key={emp.id} value={emp.id}>{emp.name} ({emp.code})</option>
+                  ))}
                 </select>
               </div>
 
@@ -1607,6 +1584,10 @@ export default function HRPayrollPage() {
               <button
                 onClick={async () => {
                   const emp = employees.find(e => e.id === leaveForm.employeeId) || { name: "Unknown" };
+                  if (!leaveForm.employeeId) {
+                    alert("Select an employee before applying for leave.");
+                    return;
+                  }
                   const d1 = new Date(leaveForm.startDate);
                   const d2 = new Date(leaveForm.endDate);
                   const diff = Math.ceil(Math.abs(d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24)) + 1;
@@ -1626,7 +1607,7 @@ export default function HRPayrollPage() {
                     if (res.ok) {
                       fetchLeaves();
                       setShowApplyLeaveModal(false);
-                      setLeaveForm({ employeeId: "E-01", leaveType: "Casual", startDate: "", endDate: "", reason: "" });
+                      setLeaveForm({ employeeId: "", leaveType: "Casual", startDate: "", endDate: "", reason: "" });
                     }
                   } catch (e) {
                     console.error("Failed to apply leave", e);

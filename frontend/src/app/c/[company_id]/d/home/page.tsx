@@ -227,32 +227,6 @@ export default function ProjectsHomePage() {
     }
   };
 
-  const handleCreateDemoLeave = async () => {
-    try {
-      const res = await fetch(`${apiHost}/apis/v3/hr/leaves/${companyId}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${accessToken}`
-        },
-        body: JSON.stringify({
-          employee_name: "Yash Desai",
-          leave_type: "Privilege Leave",
-          days_count: 3,
-          start_date: "2026-07-10",
-          end_date: "2026-07-13",
-          status: "Pending"
-        })
-      });
-      if (res.ok) {
-        fetchData();
-        showToast("Demo leave request generated!");
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
   const handleApproveLeave = async (leaveId: string, targetStatus: "Approved" | "Rejected") => {
     try {
       const res = await fetch(`${apiHost}/apis/v3/hr/leaves/approve/${leaveId}`, {
@@ -610,12 +584,6 @@ export default function ProjectsHomePage() {
               {leaves.length === 0 ? (
                 <div className="text-center py-12 space-y-4">
                   <p className="text-xs text-muted">No leave requests found in database.</p>
-                  <button
-                    onClick={handleCreateDemoLeave}
-                    className="px-4 py-2 bg-primary hover:bg-primary-hover text-white text-xs font-medium rounded-md shadow-sm transition-all cursor-pointer"
-                  >
-                    + Create Demo Leave Request
-                  </button>
                 </div>
               ) : (
                 leaves.map((l) => (
