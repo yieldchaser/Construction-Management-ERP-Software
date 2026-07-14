@@ -566,8 +566,15 @@ def push_bill(
             vendor_phone = user.mobile
     if team and team.library_party_id:
         party = db.query(models.LibraryParty).filter(models.LibraryParty.id == team.library_party_id).first()
-        if party and getattr(party, "tax_no", None):
-            gstin = str(party.tax_no)
+        if party:
+            if getattr(party, "tax_no", None):
+                gstin = str(party.tax_no)
+            # Userless subcontractor (no login): fall back to the linked party
+            # name so the bill pushes with the real vendor, not "Vendor".
+            if not team.user_id and party.name:
+                vendor_name = party.name
+                vendor_email = vendor_email or party.email
+                vendor_phone = vendor_phone or party.phone
 
     vendor_id = _find_or_create_vendor(
         access_token,

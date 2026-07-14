@@ -5,7 +5,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.auth import get_current_user, verify_project_access, get_company_membership, require_permission, require_module_view
+from app.auth import get_current_user, verify_project_access, verify_company_access, get_company_membership, require_permission, require_module_view
 from app.models import (
     WorkOrder, WorkOrderItem, Bill, TransactionDeduction,
     DebitNote, CreditNote, CompanyTeam, User, Company, LibraryParty, Project
@@ -247,8 +247,12 @@ def get_work_orders(project_id: UUID, db: Session = Depends(get_db), _: None = D
             ) for i in items
         ]
         team = db.query(CompanyTeam).filter(CompanyTeam.id == wo.subcontractor_id).first()
-        user = db.query(User).filter(User.id == team.user_id).first() if team else None
+        user = db.query(User).filter(User.id == team.user_id).first() if team and team.user_id else None
         subcontractor_name = user.name if user and user.name else "Unknown"
+        if subcontractor_name == "Unknown" and team and team.library_party_id:
+            party = db.query(models.LibraryParty).filter(models.LibraryParty.id == team.library_party_id).first()
+            if party and party.name:
+                subcontractor_name = party.name
         res.append(
             WOResponse(
                 id=wo.id,
@@ -725,3 +729,112 @@ def create_credit_note(req: CreditNoteCreateRequest, db: Session = Depends(get_d
         approval_flag=note.approval_flag,
         created_at=note.created_at
     )
+
+
+# 6. Subcontractors (userless CompanyTeam + linked LibraryParty, no login)
+class SubcontractorCreateRequest(BaseModel):
+    company_id: UUID
+    name: str
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    tax_no: Optional[str] = None  # also accepts "gstin"
+    gstin: Optional[str] = None
+    bank_name: Optional[str] = None
+    account_number: Optional[str] = None
+    ifsc_code: Optional[str] = None
+    address: Optional[str] = None
+
+
+class SubcontractorResponse(BaseModel):
+    company_team_id: UUID
+    library_party_id: UUID
+    name: str
+
+
+class SubcontractorListResponse(BaseModel):
+    company_team_id: UUID
+    name: str
+    gstin: Optional[str] = None
+    phone: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+@router.post("/subcontractors", response_model=SubcontractorResponse, status_code=201)
+def create_subcontractor(req: SubcontractorCreateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    # Tenant + RBAC: only team managers may register an external subcontractor.
+    get_company_membership(db, current_user, req.company_id)
+    require_permission(db, current_user, req.company_id, "team:manage")
+
+    if not req.name or not req.name.strip():
+        raise HTTPException(status_code=400, detail="Subcontractor name is required")
+
+    tax_no = req.tax_no or req.gstin
+    party = models.LibraryParty(
+        company_id=req.company_id,
+        name=req.name.strip(),
+        phone=req.phone,
+        email=req.email,
+        party_type="Subcontractor",
+        address=req.address,
+        bank_name=req.bank_name,
+        account_number=req.account_number,
+        ifsc_code=req.ifsc_code,
+        tax_no=tax_no,
+    )
+    db.add(party)
+    db.flush()
+
+    # External subcontractor = a CompanyTeam row with no login (user_id NULL),
+    # priority_type "subcontractor", linked to the vendor master via library_party_id.
+    team = models.CompanyTeam(
+        company_id=req.company_id,
+        user_id=None,
+        role_id=None,
+        priority_type="subcontractor",
+        library_party_id=party.id,
+    )
+    db.add(team)
+    db.commit()
+    db.refresh(team)
+
+    return SubcontractorResponse(
+        company_team_id=team.id,
+        library_party_id=party.id,
+        name=party.name,
+    )
+
+
+@router.get("/subcontractors", response_model=List[SubcontractorListResponse])
+def list_subcontractors(company_id: UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
+    rows = (
+        db.query(
+            models.CompanyTeam.id,
+            models.CompanyTeam.user_id,
+            models.CompanyTeam.library_party_id,
+            models.User.name.label("user_name"),
+            models.LibraryParty.name.label("party_name"),
+            models.LibraryParty.tax_no,
+            models.LibraryParty.phone,
+        )
+        .outerjoin(models.User, models.User.id == models.CompanyTeam.user_id)
+        .outerjoin(models.LibraryParty, models.LibraryParty.id == models.CompanyTeam.library_party_id)
+        .filter(
+            models.CompanyTeam.company_id == company_id,
+            models.CompanyTeam.priority_type == "subcontractor",
+        )
+        .all()
+    )
+    res = []
+    for r in rows:
+        display_name = r.user_name or r.party_name or "Unknown"
+        res.append(
+            SubcontractorListResponse(
+                company_team_id=r.id,
+                name=display_name,
+                gstin=r.tax_no,
+                phone=r.phone,
+            )
+        )
+    return res

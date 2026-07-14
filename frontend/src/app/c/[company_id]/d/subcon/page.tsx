@@ -16,14 +16,11 @@ interface WorkOrder {
   status: "Draft" | "Pending Approval" | "Approved" | "Rejected";
 }
 
-interface Party {
+interface Subcontractor {
   id: string;
   name: string;
-  phone: string;
-  email: string;
-  type: string;
-  partyId: string;
-  joinedDate: string;
+  gstin?: string | null;
+  phone?: string | null;
 }
 
 export default function SubconPage() {
@@ -34,9 +31,8 @@ export default function SubconPage() {
   const projectId = activeProjectId;
 
   // Real backend-backed data
-  const [parties, setParties] = useState<Party[]>([]);
   const [workOrders, setWorkOrders] = useState<WorkOrder[]>([]);
-  const [subcontractors, setSubcontractors] = useState<{ id: string; name: string }[]>([]);
+  const [subcontractors, setSubcontractors] = useState<Subcontractor[]>([]);
   const [loading, setLoading] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -56,19 +52,20 @@ export default function SubconPage() {
     name: "",
     phone: "",
     email: "",
-    type: "Contractor",
-    partyId: "PID-" + (parties.length + 1),
-    joinedDate: new Date().toISOString().split("T")[0]
+    gstin: "",
+    bank_name: "",
+    account_number: "",
+    ifsc_code: "",
+    address: ""
   });
 
   const fetchSubconData = async () => {
     if (!projectId) return;
     setLoading(true);
     try {
-      const [woRes, partyRes, teamRes] = await Promise.all([
+      const [woRes, subRes] = await Promise.all([
         fetch(`${getApiHost()}/apis/v3/billing/work-orders?project_id=${projectId}`, { headers: authHeaders() }),
-        fetch(`${getApiHost()}/apis/v3/projects/${projectId}/parties`, { headers: authHeaders() }),
-        fetch(`${getApiHost()}/apis/v3/crm/team-members/${companyId}`, { headers: authHeaders() }),
+        fetch(`${getApiHost()}/apis/v3/billing/subcontractors?company_id=${companyId}`, { headers: authHeaders() }),
       ]);
       if (woRes.ok) {
         const data = await woRes.json();
@@ -84,23 +81,16 @@ export default function SubconPage() {
           }))
         );
       }
-      if (partyRes.ok) {
-        const data = await partyRes.json();
-        setParties(
-          (data as any[]).map((p: any) => ({
-            id: p.party_id,
-            name: p.name,
-            phone: "",
-            email: "",
-            type: p.party_type || "",
-            partyId: p.party_id,
-            joinedDate: "",
+      if (subRes.ok) {
+        const data = await subRes.json();
+        setSubcontractors(
+          (data as any[]).map((t: any) => ({
+            id: String(t.company_team_id),
+            name: t.name,
+            gstin: t.gstin ?? null,
+            phone: t.phone ?? null,
           }))
         );
-      }
-      if (teamRes.ok) {
-        const data = await teamRes.json();
-        setSubcontractors((data as any[]).map((t: any) => ({ id: String(t.id), name: t.name })));
       }
     } catch (e) {
       console.error("Failed to load subcon data", e);
@@ -157,15 +147,11 @@ export default function SubconPage() {
 
   const handleSaveParty = async () => {
     if (!partyForm.name) {
-      alert("Please specify the party name!");
-      return;
-    }
-    if (!projectId) {
-      alert("No active project selected.");
+      alert("Please specify the subcontractor name!");
       return;
     }
     try {
-      const res = await fetch(`${getApiHost()}/apis/v3/library/parties`, {
+      const res = await fetch(`${getApiHost()}/apis/v3/billing/subcontractors`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify({
@@ -173,33 +159,32 @@ export default function SubconPage() {
           name: partyForm.name,
           phone: partyForm.phone || null,
           email: partyForm.email || null,
-          party_type: partyForm.type || null,
+          tax_no: partyForm.gstin || null,
+          bank_name: partyForm.bank_name || null,
+          account_number: partyForm.account_number || null,
+          ifsc_code: partyForm.ifsc_code || null,
+          address: partyForm.address || null,
         }),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.detail || "Failed to create party");
+        throw new Error(err.detail || "Failed to create subcontractor");
       }
-      const created = await res.json();
-      // Link the new party to the active project so it appears in the directory.
-      await fetch(`${getApiHost()}/apis/v3/projects/${projectId}/parties`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
-        body: JSON.stringify({ party_id: created.id }),
-      }).catch(() => null);
       await fetchSubconData();
       setShowAddPartyDrawer(false);
-      showToast(`Party ${partyForm.name} saved successfully!`);
+      showToast(`Subcontractor ${partyForm.name} created successfully!`);
       setPartyForm({
         name: "",
         phone: "",
         email: "",
-        type: "Contractor",
-        partyId: "PID-" + (parties.length + 2),
-        joinedDate: new Date().toISOString().split("T")[0]
+        gstin: "",
+        bank_name: "",
+        account_number: "",
+        ifsc_code: "",
+        address: ""
       });
     } catch (err: any) {
-      alert(err?.message || "Error creating party");
+      alert(err?.message || "Error creating subcontractor");
     }
   };
 
@@ -282,17 +267,17 @@ export default function SubconPage() {
             </table>
           </div>
 
-          {/* Subcontractor Directory — real, project-linked parties */}
+          {/* Subcontractor Directory — company subcontractors (userless team + party) */}
           <div className="mt-6 bg-card border border-border-custom rounded-xl overflow-hidden">
             <div className="px-4 py-3 border-b border-border-custom text-[10px] uppercase font-bold tracking-wider text-muted">Subcontractor Directory</div>
-            {parties.length === 0 ? (
-              <div className="px-4 py-8 text-center text-muted text-xs">No linked subcontractor parties yet.</div>
+            {subcontractors.length === 0 ? (
+              <div className="px-4 py-8 text-center text-muted text-xs">No subcontractors yet. Create one from the Work Order form.</div>
             ) : (
               <ul className="divide-y divide-border-custom/40">
-                {parties.map(p => (
+                {subcontractors.map(p => (
                   <li key={p.id} className="px-4 py-3 flex items-center justify-between text-xs">
                     <span className="font-semibold text-foreground">{p.name}</span>
-                    <span className="text-muted">{p.type}</span>
+                    <span className="text-muted">{p.gstin ? `GSTIN ${p.gstin}` : (p.phone || "Subcontractor")}</span>
                   </li>
                 ))}
               </ul>
@@ -338,7 +323,7 @@ export default function SubconPage() {
                     onClick={() => setShowAddPartyDrawer(true)}
                     className="w-full mt-2.5 py-3 border border-dashed border-primary/50 text-primary hover:bg-primary/5 font-bold rounded-lg text-xs flex items-center justify-center gap-1 transition-all"
                   >
-                    <span>+ Create Party</span>
+                    <span>+ Create Subcontractor</span>
                   </button>
                 </div>
 
@@ -363,16 +348,16 @@ export default function SubconPage() {
             <div className="bg-card w-full max-w-md h-full border-l border-border-custom shadow-2xl p-6 flex flex-col justify-between overflow-y-auto" onClick={e => e.stopPropagation()}>
               <div>
                 <div className="flex items-center justify-between pb-4 border-b border-border-custom mb-5">
-                  <h2 className="text-sm font-bold text-foreground uppercase tracking-wider">Add Party</h2>
+                  <h2 className="text-sm font-bold text-foreground uppercase tracking-wider">Create Subcontractor</h2>
                   <button onClick={() => setShowAddPartyDrawer(false)} className="text-muted hover:text-foreground text-lg">✕</button>
                 </div>
 
                 <div className="space-y-4 text-xs">
                   <div>
-                    <label className="text-[10px] text-muted uppercase font-bold block mb-1">Party Name*</label>
+                    <label className="text-[10px] text-muted uppercase font-bold block mb-1">Subcontractor Name*</label>
                     <input
                       type="text"
-                      placeholder="e.g. Yash"
+                      placeholder="e.g. Yash Earthworks"
                       value={partyForm.name}
                       onChange={e => setPartyForm({ ...partyForm, name: e.target.value })}
                       className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary"
@@ -381,20 +366,13 @@ export default function SubconPage() {
 
                   <div>
                     <label className="text-[10px] text-muted uppercase font-bold block mb-1">Phone Number</label>
-                    <div className="flex gap-2">
-                      <select className="bg-background border border-border-custom rounded-lg px-2 text-foreground focus:outline-none">
-                        <option>+91 (IN)</option>
-                        <option>+1 (US)</option>
-                        <option>+44 (UK)</option>
-                      </select>
-                      <input
-                        type="tel"
-                        placeholder="Phone number"
-                        value={partyForm.phone}
-                        onChange={e => setPartyForm({ ...partyForm, phone: e.target.value })}
-                        className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary"
-                      />
-                    </div>
+                    <input
+                      type="tel"
+                      placeholder="Phone number"
+                      value={partyForm.phone}
+                      onChange={e => setPartyForm({ ...partyForm, phone: e.target.value })}
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary"
+                    />
                   </div>
 
                   <div>
@@ -409,81 +387,59 @@ export default function SubconPage() {
                   </div>
 
                   <div>
-                    <label className="text-[10px] text-muted uppercase font-bold block mb-1">Select Party Type</label>
-                    <div className="border border-border-custom bg-background/50 rounded-lg p-3 space-y-2 max-h-48 overflow-y-auto">
-                      {[
-                        "Client",
-                        "Staff",
-                        "Investor",
-                        "Worker",
-                        "Vendor",
-                        "Labour Contractor",
-                        "Material Supplier",
-                        "Equipment Supplier",
-                        "Other Vendor",
-                        "Contractor"
-                      ].map((type) => (
-                        <label key={type} className="flex items-center justify-between py-1 cursor-pointer hover:bg-elevated/20 px-2 rounded transition-colors select-none text-[11px]">
-                          <span className={partyForm.type === type ? "text-primary font-semibold" : "text-foreground"}>{type}</span>
-                          <input
-                            type="radio"
-                            name="partyTypeRadio"
-                            checked={partyForm.type === type}
-                            onChange={() => setPartyForm({ ...partyForm, type })}
-                            className="accent-primary h-3.5 w-3.5"
-                          />
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="pt-2">
-                    <span className="text-[10px] text-primary hover:underline font-bold cursor-pointer">+ Tag Service Rate Category</span>
-                  </div>
-
-                  <div className="border border-border-custom rounded-lg divide-y divide-border-custom bg-background/50">
-                    <div className="p-3 flex justify-between items-center cursor-pointer hover:bg-elevated/20">
-                      <div>
-                        <span className="font-semibold text-foreground block">Opening Balance</span>
-                        <span className="text-[10px] text-muted">₹0.00 (Outstanding)</span>
-                      </div>
-                      <span className="text-muted">▶</span>
-                    </div>
-                    <div className="p-3 flex justify-between items-center cursor-pointer hover:bg-elevated/20">
-                      <div>
-                        <span className="font-semibold text-foreground block">Bank Account</span>
-                        <span className="text-[10px] text-muted">Add banking info</span>
-                      </div>
-                      <span className="text-muted">▶</span>
-                    </div>
-                    <div className="p-3 flex justify-between items-center cursor-pointer hover:bg-elevated/20">
-                      <div>
-                        <span className="font-semibold text-foreground block">Address details</span>
-                        <span className="text-[10px] text-muted">Add corporate address</span>
-                      </div>
-                      <span className="text-muted">▶</span>
-                    </div>
+                    <label className="text-[10px] text-muted uppercase font-bold block mb-1">GSTIN</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 27AAAAA0000A1Z5"
+                      value={partyForm.gstin}
+                      onChange={e => setPartyForm({ ...partyForm, gstin: e.target.value })}
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary"
+                    />
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="text-[10px] text-muted uppercase font-bold block mb-1">Party ID</label>
+                      <label className="text-[10px] text-muted uppercase font-bold block mb-1">Bank Name</label>
                       <input
                         type="text"
-                        value={partyForm.partyId}
-                        onChange={e => setPartyForm({ ...partyForm, partyId: e.target.value })}
+                        placeholder="e.g. SBI"
+                        value={partyForm.bank_name}
+                        onChange={e => setPartyForm({ ...partyForm, bank_name: e.target.value })}
                         className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary"
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] text-muted uppercase font-bold block mb-1">Date of Joining</label>
+                      <label className="text-[10px] text-muted uppercase font-bold block mb-1">IFSC Code</label>
                       <input
-                        type="date"
-                        value={partyForm.joinedDate}
-                        onChange={e => setPartyForm({ ...partyForm, joinedDate: e.target.value })}
+                        type="text"
+                        placeholder="e.g. SBIN0001234"
+                        value={partyForm.ifsc_code}
+                        onChange={e => setPartyForm({ ...partyForm, ifsc_code: e.target.value })}
                         className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary"
                       />
                     </div>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] text-muted uppercase font-bold block mb-1">Account Number</label>
+                    <input
+                      type="text"
+                      placeholder="Bank account number"
+                      value={partyForm.account_number}
+                      onChange={e => setPartyForm({ ...partyForm, account_number: e.target.value })}
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] text-muted uppercase font-bold block mb-1">Address</label>
+                    <textarea
+                      placeholder="Corporate address"
+                      value={partyForm.address}
+                      onChange={e => setPartyForm({ ...partyForm, address: e.target.value })}
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary"
+                      rows={2}
+                    />
                   </div>
 
                 </div>
@@ -494,7 +450,7 @@ export default function SubconPage() {
                   onClick={handleSaveParty}
                   className="flex-1 py-2.5 bg-primary text-white font-bold rounded-lg hover:bg-primary/95 text-xs transition-all"
                 >
-                  Save
+                  Create Subcontractor
                 </button>
                 <button onClick={() => setShowAddPartyDrawer(false)} className="px-4 py-2.5 rounded-lg border border-border-custom text-muted hover:text-foreground hover:border-white/20 text-xs">Cancel</button>
               </div>

@@ -9,7 +9,7 @@ from app.auth import get_current_user, verify_company_access, get_company_member
 from app.models import (
     TallyConnection, TallyAgent, TallyLedgerMapping, TallyPartyMapping,
     TallyCostCentreMapping, TallyBankMapping, TallySyncLog,
-    Company, Bill, Payment, CompanyTeam, User,
+    Company, Bill, Payment, CompanyTeam, User, LibraryParty,
 )
 from app.tally_xml import build_tally_envelope
 from pydantic import BaseModel
@@ -140,9 +140,17 @@ def _resolve_party_ledger(db: Session, company_id: uuid.UUID, party_company_user
             return pm.tally_ledger_name
         member = db.query(CompanyTeam).filter(CompanyTeam.id == party_company_user_id).first()
         if member:
-            user = db.query(User).filter(User.id == member.user_id).first()
-            if user and user.name:
-                return user.name
+            # User-backed rows resolve to the member's display name.
+            if member.user_id:
+                user = db.query(User).filter(User.id == member.user_id).first()
+                if user and user.name:
+                    return user.name
+            # Userless subcontractors (no login) fall back to the linked
+            # LibraryParty name so the ledger shows the real vendor, not "Vendor".
+            if member.library_party_id:
+                party = db.query(LibraryParty).filter(LibraryParty.id == member.library_party_id).first()
+                if party and party.name:
+                    return party.name
     return default
 
 
