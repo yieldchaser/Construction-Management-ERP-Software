@@ -646,6 +646,41 @@ export default function CompanySettingsPage() {
     finally { setGdBusy(false); }
   };
 
+  // ─── Integrations: Zoho Books (OAuth accounting) ──────────────────────────
+  const [zbConnected, setZbConnected] = useState(false);
+  const [zbBusy, setZbBusy] = useState(false);
+  const [zbMsg, setZbMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
+  useEffect(() => {
+    if (!company_id) return;
+    const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : "";
+    fetch(`${apiHost}/apis/v3/integrations/zoho-books/status/${company_id}`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => { if (data) setZbConnected(Boolean(data.connected)); })
+      .catch(() => {});
+  }, [company_id, apiHost]);
+  const connectZoho = async () => {
+    setZbBusy(true); setZbMsg(null);
+    try {
+      const res = await fetch(`${apiHost}/apis/v3/integrations/zoho-books/authorize?company_id=${company_id}`, { headers: authHeaders() });
+      if (!res.ok) { setZbMsg({ type: "err", text: (await res.text()) || "Could not start Zoho Books connect" }); return; }
+      const data = await res.json();
+      if (data.consent_url) { window.location.href = data.consent_url; return; }
+      setZbMsg({ type: "err", text: "Missing consent URL" });
+    } catch (e: any) { setZbMsg({ type: "err", text: e?.message || "error" }); }
+    finally { setZbBusy(false); }
+  };
+  const disconnectZoho = async () => {
+    setZbBusy(true); setZbMsg(null);
+    try {
+      const res = await fetch(`${apiHost}/apis/v3/integrations/zoho-books/companies/${company_id}/connection`, { method: "DELETE", headers: authHeaders() });
+      if (res.ok) { setZbConnected(false); setZbMsg({ type: "ok", text: "Zoho Books disconnected" }); }
+      else setZbMsg({ type: "err", text: "Failed to disconnect Zoho Books" });
+    } catch { setZbMsg({ type: "err", text: "Failed to disconnect Zoho Books" }); }
+    finally { setZbBusy(false); }
+  };
+
   // ─── Integrations: BI Data Export (API keys) ───────────────────────────────
   interface BiKey { id: string; label: string; masked_key: string; created_at: string | null; last_used_at: string | null; revoked: boolean; }
   const [biKeys, setBiKeys] = useState<BiKey[]>([]);
@@ -2235,6 +2270,32 @@ export default function CompanySettingsPage() {
                 </div>
                 {gdMsg && (
                   <div className={`p-4 text-xs rounded-lg ${gdMsg.type === "ok" ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400" : "bg-rose-500/10 border border-rose-500/20 text-rose-400"}`}>{gdMsg.text}</div>
+                )}
+              </div>
+
+              {/* Zoho Books */}
+              <div className="bg-card border border-border-custom rounded-lg bg-background p-6 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-sm font-bold text-foreground">Zoho Books</div>
+                    <div className="text-[10px] text-muted">Push vendor bills from SiteFlow into Zoho Books for accounting and GST reconciliation.</div>
+                  </div>
+                  {zbConnected ? (
+                    <button onClick={disconnectZoho} disabled={zbBusy} className="bg-rose-500/15 text-rose-400 border border-rose-500/20 text-xs font-bold px-4 py-2 rounded-md disabled:opacity-50">Disconnect</button>
+                  ) : (
+                    <button onClick={connectZoho} disabled={zbBusy} className="bg-primary text-white text-xs font-bold px-4 py-2 rounded-md disabled:opacity-50">Connect</button>
+                  )}
+                </div>
+                <div className="rounded-lg border border-border-custom p-4 space-y-2">
+                  <div className="text-[10px] uppercase tracking-wider text-muted font-bold">Connection Status</div>
+                  {zbConnected ? (
+                    <div className="flex items-center gap-2 text-xs text-emerald-400"><span className="h-2 w-2 rounded-full bg-emerald-400" /><span>Connected</span></div>
+                  ) : (
+                    <div className="flex items-center gap-2 text-xs text-muted"><span className="h-2 w-2 rounded-full bg-zinc-500" /><span>Not connected.</span></div>
+                  )}
+                </div>
+                {zbMsg && (
+                  <div className={`p-4 text-xs rounded-lg ${zbMsg.type === "ok" ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400" : "bg-rose-500/10 border border-rose-500/20 text-rose-400"}`}>{zbMsg.text}</div>
                 )}
               </div>
 

@@ -119,6 +119,14 @@ class Settings(BaseSettings):
     # google_login_client_id). Scope: drive.file (per-file, user-consented).
     GOOGLE_DRIVE_CLIENT_ID: str = ""
     GOOGLE_DRIVE_CLIENT_SECRET: str = ""
+    # Zoho Books OAuth (integrations). Zoho data centers are region-specific
+    # (accounts server + API host both use the region suffix, e.g. ".in"); the
+    # region drives both base URLs so ".com"/".eu" also work, with ".in" the
+    # target tier. Scope: ZohoBooks.fullaccess.all. Optional at boot: with the
+    # client id/secret unset the connect flow returns 503 and the app boots fine.
+    ZOHO_CLIENT_ID: str = ""
+    ZOHO_CLIENT_SECRET: str = ""
+    ZOHO_REGION: str = "in"
     # Public base URL of this backend, used to build the OAuth redirect URI.
     # Falls back to the request URL when empty.
     BACKEND_PUBLIC_URL: str = ""
@@ -178,6 +186,19 @@ class Settings(BaseSettings):
     @property
     def google_drive_client_secret(self) -> str:
         return (self.GOOGLE_DRIVE_CLIENT_SECRET or self.GOOGLE_SHEETS_CLIENT_SECRET or "").strip()
+
+    @property
+    def zoho_client_id(self) -> str:
+        return (self.ZOHO_CLIENT_ID or "").strip()
+
+    @property
+    def zoho_client_secret(self) -> str:
+        return (self.ZOHO_CLIENT_SECRET or "").strip()
+
+    @property
+    def zoho_region(self) -> str:
+        """Region suffix for Zoho data centers, defaulting to "in" (India)."""
+        return (self.ZOHO_REGION or "in").strip().lstrip(".").lower() or "in"
 
     @model_validator(mode="after")
     def _require_secret_key(self):

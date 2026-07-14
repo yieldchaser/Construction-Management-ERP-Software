@@ -31,9 +31,10 @@ const INTEGRATIONS_LIST: Integration[] = [
   {
     name: "Zoho Books",
     category: "Accounting",
-    desc: "Sync business expenses, vendor ledgers, GST tax breakups, and payment records automatically for month-end reconciliation.",
+    desc: "Push vendor bills from SiteFlow into Zoho Books for accounting and GST reconciliation, with OAuth and encrypted tokens.",
     icon: "💼",
-    status: "planned",
+    status: "active",
+    link: "/login",
   },
   {
     name: "Google Drive",

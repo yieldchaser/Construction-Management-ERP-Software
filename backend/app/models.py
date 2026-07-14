@@ -2123,6 +2123,26 @@ class GoogleDriveConnection(Base):
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 
 
+class ZohoBooksConnection(Base):
+    """OAuth connection linking one company to a Zoho Books organization.
+
+    One connection per company (company_id is unique). Access/refresh tokens are
+    encrypted at rest via app/crypto.py Fernet. Zoho refresh tokens are
+    long-lived but access tokens expire hourly, so the router implements the
+    refresh-token grant. The Zoho ``organization_id`` is fetched on connect and
+    stored so bill pushes target the right org. Never log token values.
+    """
+    __tablename__ = "zoho_books_connections"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), unique=True, nullable=False)
+    organization_id = Column(String(64), nullable=True)
+    access_token = Column(Text, nullable=True)
+    refresh_token = Column(Text, nullable=True)
+    token_expiry = Column(DateTime(timezone=True), nullable=True)
+    connected_by_user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
 class BiApiKey(Base):
     """Per-company API key for BI data export (PowerBI / Tableau feeds).
 
