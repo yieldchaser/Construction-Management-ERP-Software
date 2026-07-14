@@ -243,7 +243,7 @@ def _find_or_create_vendor(access_token: str, organization_id: str, *, name: str
     if resp.status_code not in (200, 201):
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
-            detail="Failed to create the Zoho Books vendor contact",
+            detail=f"Failed to create the Zoho Books vendor contact: {resp.text[:500]}",
         )
     contact = (resp.json() or {}).get("contact") or {}
     contact_id = contact.get("contact_id")
@@ -546,7 +546,7 @@ def push_bill(
     if resp.status_code not in (200, 201):
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
-            detail="Failed to create the Zoho Books bill",
+            detail=f"Failed to create the Zoho Books bill: {resp.text[:500]}",
         )
     zoho_bill = (resp.json() or {}).get("bill") or {}
     return {
