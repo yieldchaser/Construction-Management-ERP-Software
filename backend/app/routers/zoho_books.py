@@ -229,20 +229,31 @@ def _default_expense_account_id(access_token: str, organization_id: str) -> Opti
     return None
 
 
+def _search_vendor(access_token: str, organization_id: str, *, email: Optional[str] = None, name: Optional[str] = None) -> Optional[str]:
+    """Look up an existing vendor contact_id by email or by exact contact_name."""
+    params = {"contact_type": "vendor", "organization_id": organization_id}
+    if email:
+        params["email"] = email
+    elif name:
+        params["contact_name"] = name
+    else:
+        return None
+    resp = requests.get(f"{_api_base()}contacts", headers=_api_headers(access_token), params=params, timeout=30)
+    if resp.status_code == 200:
+        contacts = (resp.json() or {}).get("contacts") or []
+        if contacts:
+            return str(contacts[0].get("contact_id"))
+    return None
+
+
 def _find_or_create_vendor(access_token: str, organization_id: str, *, name: str, email: Optional[str], phone: Optional[str], gstin: Optional[str]) -> str:
     """Return the Zoho vendor contact_id, creating the vendor if it is missing."""
-    # 1) Try to find an existing vendor by email (most reliable key).
-    if email:
-        resp = requests.get(
-            f"{_api_base()}contacts",
-            headers=_api_headers(access_token),
-            params={"contact_type": "vendor", "email": email, "organization_id": organization_id},
-            timeout=30,
-        )
-        if resp.status_code == 200:
-            contacts = (resp.json() or {}).get("contacts") or []
-            if contacts:
-                return str(contacts[0].get("contact_id"))
+    # 1) Try to find an existing vendor by email, then by exact name.
+    existing = _search_vendor(access_token, organization_id, email=email) if email else None
+    if not existing:
+        existing = _search_vendor(access_token, organization_id, name=name)
+    if existing:
+        return existing
 
     # 2) Otherwise create the vendor contact.
     contact_payload: dict = {"contact_type": "vendor", "contact_name": name or "Vendor"}
@@ -267,6 +278,10 @@ def _find_or_create_vendor(access_token: str, organization_id: str, *, name: str
         timeout=30,
     )
     if resp.status_code not in (200, 201):
+        # Duplicate-name (code 3062) means it already exists — resolve by name.
+        dup = _search_vendor(access_token, organization_id, name=name)
+        if dup:
+            return dup
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail=f"Failed to create the Zoho Books vendor contact: {resp.text[:500]}",
