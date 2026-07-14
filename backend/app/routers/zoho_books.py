@@ -246,6 +246,23 @@ def _search_vendor(access_token: str, organization_id: str, *, email: Optional[s
     return None
 
 
+def _update_vendor_gst(access_token: str, organization_id: str, contact_id: str, gstin: str) -> None:
+    """Patch an existing Zoho vendor's GST fields (keeps it in sync when a GSTIN
+    becomes available after the vendor was first created without one)."""
+    resp = requests.put(
+        f"{_api_base()}contacts/{contact_id}",
+        headers={**_api_headers(access_token), "Content-Type": "application/json"},
+        params={"organization_id": organization_id},
+        json={"gst_no": gstin, "gst_treatment": "business_gst"},
+        timeout=30,
+    )
+    if resp.status_code not in (200, 201):
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"Failed to update the Zoho Books vendor GST info: {resp.text[:400]}",
+        )
+
+
 def _find_or_create_vendor(access_token: str, organization_id: str, *, name: str, email: Optional[str], phone: Optional[str], gstin: Optional[str]) -> str:
     """Return the Zoho vendor contact_id, creating the vendor if it is missing."""
     # 1) Try to find an existing vendor by email, then by exact name.
@@ -253,6 +270,9 @@ def _find_or_create_vendor(access_token: str, organization_id: str, *, name: str
     if not existing:
         existing = _search_vendor(access_token, organization_id, name=name)
     if existing:
+        # Sync GST info onto the existing vendor when we now have a GSTIN.
+        if gstin:
+            _update_vendor_gst(access_token, organization_id, existing, gstin)
         return existing
 
     # 2) Otherwise create the vendor contact.
