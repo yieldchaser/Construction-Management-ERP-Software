@@ -154,8 +154,8 @@ Derived from the backend routers and the frontend page tree, not from prior docs
 ### 🏗️ Project and execution
 - Projects, company/project dashboards (financial and operational views)
 - Task scheduler with hierarchical tasks, dependencies, and Critical Path Method floats
-- Gantt, list, and resources views; S-curve progress
-- BOQ import (Excel) and budgeting with cost-code allocation
+- Gantt, list, and resources views; S-curve progress; project milestones, baseline vs actual tracking, and rolling lookahead
+- BOQ import (Excel) and budgeting with cost-code allocation, plus BOQ budget-revision history
 - Drawings: versioned revisions, pin-based RFI/clash/observation markups, approval workflow
 - Daily Progress Report (DPR), team schedule, todos, towers, project files
 
@@ -170,13 +170,13 @@ Derived from the backend routers and the frontend page tree, not from prior docs
 - Debit and credit notes
 - Finance payments, cashbook, ledger, project P&L
 - Payment and voucher approval gate
-- Tally Prime sync (`/apis/v3/tally`) and ZATCA e-invoice generation (`/bills/{id}/zatca`)
+- Tally Prime integration (`/apis/v3/tally`): exports vendor bills, sales invoices, and payments as a Tally-importable voucher XML (double-entry, optional ledger auto-create and cost-centre allocation) for import into Tally Prime; and ZATCA e-invoice generation (`/bills/{id}/zatca`)
 - Statutory reports (PF, ESI, BOCW cess, TDS, professional tax) via the statutory router
 
 ### 🧑‍💼 Subcontractor and labour
-- Subcontractor attendance, performance, and scorecards
+- Subcontractor registration (no-login external parties), directory, work orders, attendance, performance, and scorecards
 - Staff employees, geofenced attendance (Haversine), face recognition, weekly timesheets
-- Payroll runs (PF/ESI/TDS), leave management
+- Payroll runs (PF/ESI/TDS) with payslip CSV export; leave management with per-employee leave balances (entitlement vs approved-used)
 
 ### ✅ Quality, safety, equipment, production
 - Quality checklists (IS-code library), site inspections, NCR, material/lab tests
@@ -189,14 +189,14 @@ Derived from the backend routers and the frontend page tree, not from prior docs
 - Library: parties, materials, cost codes
 - Company and project analytics (operational + financial S-curve, burn rate)
 - Reports directory (sales, payments, progress, purchase, party balances, tax, assets)
-- Client progress reports with PDF export
+- Client progress reports with PDF export; DPR CSV export
 - Minutes of meeting, site chat, custom fields
 
 ### 🔧 Cross-cutting
 - Multi-company switching (`CompanySwitcher`), branches, roles, approval rules, payroll settings, company terms, company file assets
 - Pure inline-SVG charts with a built-in chart-type switcher (bar, line, area, smooth, pie, donut, scatter, funnel, heatmap/grid, sunburst/rose, stacked, grouped, table) on the company dashboard
 - Installable PWA with a service worker (`public/sw.js`) and offline punch queue
-- Integrations (all backend routers under `/apis/v3/integrations/*`, plus Tally): **Tally Prime** (XML sync), **Google Sheets** (payroll export), **Google Drive** (file backup), **Zoho Books** (push vendor bills, `.in`/`.com`/`.eu` data tiers, GST-aware), and **BI Data Export** (per-company API keys serving CSV/JSON feeds for PowerBI/Tableau). All OAuth integrations store tokens Fernet-encrypted at rest and are env-gated (return 503 when unconfigured). GPS geofencing is a native PWA feature, not a third-party connector. WhatsApp is planned; OneDrive and QuickBooks were evaluated and dropped.
+- Integrations (all backend routers under `/apis/v3/integrations/*`, plus Tally): **Tally Prime** (voucher XML export for import into Tally Prime), **Google Sheets** (payroll export), **Google Drive** (file backup), **Zoho Books** (push vendor bills, `.in`/`.com`/`.eu` data tiers, GST-aware), and **BI Data Export** (per-company API keys serving CSV/JSON feeds for PowerBI/Tableau). All OAuth integrations store tokens Fernet-encrypted at rest and are env-gated (return 503 when unconfigured). GPS geofencing is a native PWA feature, not a third-party connector. WhatsApp is planned; OneDrive and QuickBooks were evaluated and dropped.
 
 ## ⚙️ Getting started
 
