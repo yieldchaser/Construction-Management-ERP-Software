@@ -231,7 +231,7 @@ def _find_or_create_vendor(access_token: str, organization_id: str, *, name: str
         # place_of_supply is the 2-char state code from the GSTIN.
         contact_payload["place_of_supply"] = gstin[:2]
     else:
-        contact_payload["gst_treatment"] = "unregistered"
+        contact_payload["gst_treatment"] = "business_none"
 
     resp = requests.post(
         f"{_api_base()}contacts",
@@ -546,7 +546,7 @@ def push_bill(
         bill_payload["gst_treatment"] = "business_gst"
         bill_payload["place_of_supply"] = gstin[:2]
     else:
-        bill_payload["gst_treatment"] = "unregistered"
+        bill_payload["gst_treatment"] = "business_none"
 
     resp = requests.post(
         f"{_api_base()}bills",
