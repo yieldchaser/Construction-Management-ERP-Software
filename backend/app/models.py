@@ -295,6 +295,24 @@ class BOQDocument(Base):
     terms = Column(Text, nullable=True)  # Terms & Conditions; pre-filled from CompanyTerms on create
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 
+
+class BOQRevision(Base):
+    """Immutable history row recording each time a BOQ document's budget/amount is
+    revised. ``revision_no`` is assigned incrementally per document by the API.
+    ``previous_amount`` captures the prior revision's amount so deltas are exact.
+    """
+    __tablename__ = "boq_revisions"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    boq_document_id = Column(UUID(as_uuid=True), ForeignKey("boq_documents.id", ondelete="CASCADE"), nullable=False, index=True)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False, index=True)
+    revision_no = Column(Integer, nullable=False)
+    revised_amount = Column(Numeric(18, 2), nullable=False)
+    previous_amount = Column(Numeric(18, 2), nullable=True)
+    reason = Column(Text, nullable=True)
+    revised_by_user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
 class ProjectBudget(Base):
     __tablename__ = "project_budgets"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)

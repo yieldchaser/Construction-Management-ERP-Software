@@ -1,4 +1,5 @@
 import io
+from datetime import datetime
 from uuid import UUID
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Response, status
@@ -7,7 +8,7 @@ from sqlalchemy import select
 from openpyxl import load_workbook
 from app.database import get_db
 from app.auth import get_current_user, verify_project_access, get_company_membership, require_permission, require_module_view
-from app.models import BOQItem, BOQDocument, ProjectBudget, Project, Bill, LibraryParty, Task, User
+from app.models import BOQItem, BOQDocument, ProjectBudget, Project, Bill, LibraryParty, Task, User, BOQRevision
 from app.workflow_controls import get_default_terms
 from app.utils.pdf_generator import generate_document_pdf
 from app.utils.document_pdf import resolve_pdf_branding
@@ -448,3 +449,135 @@ def get_boq_document_pdf(doc_id: UUID, db: Session = Depends(get_db), current_us
         media_type="application/pdf",
         headers={"Content-Disposition": f'inline; filename="{filename}"'},
     )
+
+
+# ---------------------------------------------------------------------------
+# BOQ Revisions (budget revision history per BOQ document)
+# ---------------------------------------------------------------------------
+
+
+class BOQRevisionResponse(BaseModel):
+    id: UUID
+    boq_document_id: UUID
+    project_id: UUID
+    revision_no: int
+    revised_amount: float
+    previous_amount: Optional[float] = None
+    delta: Optional[float] = None  # revised_amount - previous_amount
+    reason: Optional[str] = None
+    revised_by_user_id: Optional[UUID] = None
+    revised_by_name: Optional[str] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class BOQRevisionCreate(BaseModel):
+    revised_amount: float = Field(..., gt=0)
+    reason: Optional[str] = None
+
+
+def _build_revision_response(r: BOQRevision, db: Session) -> BOQRevisionResponse:
+    prev = float(r.previous_amount) if r.previous_amount is not None else None
+    delta = (float(r.revised_amount) - prev) if prev is not None else None
+    name = None
+    if r.revised_by_user_id:
+        u = db.query(User).filter(User.id == r.revised_by_user_id).first()
+        name = (u.name or u.email or str(u.id)) if u else None
+    return BOQRevisionResponse(
+        id=r.id,
+        boq_document_id=r.boq_document_id,
+        project_id=r.project_id,
+        revision_no=r.revision_no,
+        revised_amount=float(r.revised_amount),
+        previous_amount=prev,
+        delta=delta,
+        reason=r.reason,
+        revised_by_user_id=r.revised_by_user_id,
+        revised_by_name=name,
+        created_at=r.created_at,
+    )
+
+
+@router.get("/boq-documents/{doc_id}/revisions", response_model=List[BOQRevisionResponse])
+def list_boq_revisions(
+    doc_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    doc = db.query(BOQDocument).filter(BOQDocument.id == doc_id).first()
+    if not doc:
+        raise HTTPException(status_code=404, detail="BOQ document not found")
+    project = db.query(Project).filter(Project.id == doc.project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, project.company_id)
+    require_module_view(db, current_user, project.company_id, "budgeting")
+    revisions = (
+        db.query(BOQRevision)
+        .filter(BOQRevision.boq_document_id == doc_id)
+        .order_by(BOQRevision.revision_no.asc())
+        .all()
+    )
+    return [_build_revision_response(r, db) for r in revisions]
+
+
+@router.post("/boq-documents/{doc_id}/revisions", response_model=BOQRevisionResponse, status_code=201)
+def create_boq_revision(
+    doc_id: UUID,
+    req: BOQRevisionCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    doc = db.query(BOQDocument).filter(BOQDocument.id == doc_id).first()
+    if not doc:
+        raise HTTPException(status_code=404, detail="BOQ document not found")
+    project = db.query(Project).filter(Project.id == doc.project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, project.company_id)
+    require_permission(db, current_user, project.company_id, "budgeting:edit")
+
+    last = (
+        db.query(BOQRevision)
+        .filter(BOQRevision.boq_document_id == doc_id)
+        .order_by(BOQRevision.revision_no.desc())
+        .first()
+    )
+    next_no = (last.revision_no + 1) if last else 1
+    previous_amount = last.revised_amount if last else None
+
+    rev = BOQRevision(
+        boq_document_id=doc_id,
+        project_id=doc.project_id,
+        revision_no=next_no,
+        revised_amount=req.revised_amount,
+        previous_amount=previous_amount,
+        reason=req.reason,
+        revised_by_user_id=current_user.id,
+    )
+    db.add(rev)
+    db.commit()
+    db.refresh(rev)
+    return _build_revision_response(rev, db)
+
+
+@router.get("/boq-revisions", response_model=List[BOQRevisionResponse])
+def list_project_boq_revisions(
+    project_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    _: None = Depends(verify_project_access),
+):
+    project = db.query(Project).filter(Project.id == project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    require_module_view(db, current_user, project.company_id, "budgeting")
+    revisions = (
+        db.query(BOQRevision)
+        .filter(BOQRevision.project_id == project_id)
+        .order_by(BOQRevision.created_at.desc(), BOQRevision.revision_no.desc())
+        .all()
+    )
+    return [_build_revision_response(r, db) for r in revisions]

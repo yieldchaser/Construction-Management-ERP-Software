@@ -22,6 +22,26 @@ interface BOQItem {
   revised_rate?: number;
 }
 
+interface BOQDocumentLite {
+  id: string;
+  title: string;
+  project_id: string;
+}
+
+interface BOQRevision {
+  id: string;
+  boq_document_id: string;
+  project_id: string;
+  revision_no: number;
+  revised_amount: number;
+  previous_amount: number | null;
+  delta: number | null;
+  reason: string | null;
+  revised_by_user_id: string | null;
+  revised_by_name: string | null;
+  created_at: string;
+}
+
 // ─── Seed Data ────────────────────────────────────────────────────────────────
 const SEED_BOQ: BOQItem[] = [
   { id: "B01", section: "1 — Civil Works", costCode: "1.1", item_name: "Earthwork Excavation (Hard Rock)", unit: "Cum", quantity: 1800, rate: 280, amount: 504000, actual_spent: 498000 },
@@ -85,12 +105,15 @@ export default function BOQPage() {
   const [search, setSearch] = useState("");
   const [filterSection, setFilterSection] = useState("All");
 
-  // Revision history (mock)
-  const [revisions] = useState([
-    { id: "R1", version: "Original Contract BOQ", date: "2026-04-01", totalBudget: 21652000, note: "Approved by Director Apex. Signed contract." },
-    { id: "R2", version: "Rev 1 — Scope Addition", date: "2026-05-15", totalBudget: 23152000, note: "+₹15L for HVAC upgrade per client CR-07." },
-    { id: "R3", version: "Rev 2 — Current", date: "2026-06-10", totalBudget: 25552000, note: "+₹24L structural steel redesign + ₹10L provisional." },
-  ]);
+  // Budget revision history (real, fetched from the API per project)
+  const [revisions, setRevisions] = useState<BOQRevision[]>([]);
+  const [revisionLoading, setRevisionLoading] = useState(false);
+  const [documents, setDocuments] = useState<BOQDocumentLite[]>([]);
+  const [selectedDocId, setSelectedDocId] = useState<string>("");
+  const [revAmount, setRevAmount] = useState("");
+  const [revReason, setRevReason] = useState("");
+  const [savingRev, setSavingRev] = useState(false);
+  const [revMsg, setRevMsg] = useState("");
 
   const totalBudget = useMemo(() => boqItems.reduce((s, i) => s + i.amount, 0), [boqItems]);
   const totalActual = useMemo(() => boqItems.reduce((s, i) => s + i.actual_spent, 0), [boqItems]);
@@ -139,6 +162,66 @@ export default function BOQPage() {
       setImportMsg("Backend not reachable — using demo data.");
     } finally {
       setImporting(false);
+    }
+  };
+
+  // ── Budget revision history (real) ──
+  const fetchRevisions = async () => {
+    if (!projectId) return;
+    setRevisionLoading(true);
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/budgeting/boq-revisions?project_id=${projectId}`, { headers: authHeaders() });
+      const data = await res.json();
+      setRevisions(Array.isArray(data) ? data : []);
+    } catch {
+      setRevisions([]);
+    } finally {
+      setRevisionLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!projectId) return;
+    (async () => {
+      try {
+        const dres = await fetch(`${getApiHost()}/apis/v3/budgeting/boq-documents?project_id=${projectId}`, { headers: authHeaders() });
+        if (dres.ok) {
+          const docs = await dres.json();
+          const list: BOQDocumentLite[] = Array.isArray(docs) ? docs : [];
+          setDocuments(list);
+          if (list.length && !selectedDocId) setSelectedDocId(list[0].id);
+        }
+      } catch { /* ignore */ }
+      await fetchRevisions();
+    })();
+  }, [projectId]);
+
+  const handleRecordRevision = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedDocId) { setRevMsg("Select a BOQ document first."); return; }
+    const amt = parseFloat(revAmount);
+    if (!amt || amt <= 0) { setRevMsg("Enter a valid revised amount."); return; }
+    setSavingRev(true);
+    setRevMsg("");
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/budgeting/boq-documents/${selectedDocId}/revisions`, {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({ revised_amount: amt, reason: revReason || null }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setRevMsg("Revision recorded.");
+        setRevAmount("");
+        setRevReason("");
+        fetchRevisions();
+      } else {
+        setRevMsg(typeof data.detail === "string" ? data.detail : "Failed to record revision.");
+      }
+    } catch {
+      setRevMsg("Backend not reachable.");
+    } finally {
+      setSavingRev(false);
     }
   };
 
@@ -372,23 +455,69 @@ export default function BOQPage() {
           {/* ── REVISIONS TAB ── */}
           {tab === "revisions" && (
             <div className="h-full overflow-y-auto p-5 space-y-4">
+              {/* Record revision form */}
+              <div className="bg-input border border-border-custom rounded-md p-5 space-y-3">
+                <div className="text-xs font-bold text-foreground">Record Budget Revision</div>
+                <div className="text-[10px] text-muted">Capture a revised budget against a BOQ document. The revision number and previous amount are tracked automatically.</div>
+                <form onSubmit={handleRecordRevision} className="space-y-2">
+                  <div className="flex flex-wrap items-end gap-2">
+                    <div className="flex-1 min-w-[200px]">
+                      <label className="text-[10px] text-muted">BOQ Document</label>
+                      <select value={selectedDocId} onChange={e => setSelectedDocId(e.target.value)}
+                        className="w-full bg-elevated border border-border-custom rounded-lg px-3 py-1.5 text-xs text-foreground" disabled={documents.length === 0}>
+                        {documents.length === 0 && <option value="">No BOQ documents</option>}
+                        {documents.map(d => <option key={d.id} value={d.id}>{d.title || d.id}</option>)}
+                      </select>
+                    </div>
+                    <div className="w-44">
+                      <label className="text-[10px] text-muted">Revised Amount (₹)</label>
+                      <input type="number" min="0" step="0.01" value={revAmount} onChange={e => setRevAmount(e.target.value)} placeholder="0.00"
+                        className="w-full bg-elevated border border-border-custom rounded-lg px-3 py-1.5 text-xs text-foreground" />
+                    </div>
+                  </div>
+                  <input value={revReason} onChange={e => setRevReason(e.target.value)} placeholder="Reason (optional)"
+                    className="w-full bg-elevated border border-border-custom rounded-lg px-3 py-1.5 text-xs text-foreground" />
+                  <div className="flex items-center gap-2">
+                    <button type="submit" disabled={!selectedDocId || savingRev}
+                      className="px-4 py-2 bg-primary text-white text-xs font-bold rounded-lg disabled:opacity-40 hover:opacity-90">
+                      {savingRev ? "Saving..." : "Record Revision"}
+                    </button>
+                    {revMsg && <span className="text-[10px] text-emerald-400">{revMsg}</span>}
+                  </div>
+                </form>
+              </div>
+
+              {/* History */}
               <div className="grid gap-3">
+                {revisionLoading && <div className="text-[10px] text-muted">Loading revisions...</div>}
+                {!revisionLoading && revisions.length === 0 && (
+                  <div className="bg-input border border-dashed border-border-custom rounded-md p-6 text-center text-[10px] text-muted">No revisions yet.</div>
+                )}
                 {revisions.map((rev, idx) => (
-                  <div key={rev.id} className={`bg-input border rounded-md p-5 ${idx === revisions.length - 1 ? "border-border-custom ring-1 ring-primary/10" : "border-border-custom"}`}>
+                  <div key={rev.id} className={`bg-input border rounded-md p-5 ${idx === 0 ? "border-border-custom ring-1 ring-primary/10" : "border-border-custom"}`}>
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-3">
-                        <span className={`text-[9px] font-bold px-2 py-0.5 rounded border ${idx === revisions.length - 1 ? "bg-primary/10 border-primary/20 text-primary" : "bg-elevated border-border-custom text-muted"}`}>
-                          {idx === revisions.length - 1 ? "CURRENT" : `REV ${idx}`}
+                        <span className={`text-[9px] font-bold px-2 py-0.5 rounded border ${idx === 0 ? "bg-primary/10 border-primary/20 text-primary" : "bg-elevated border-border-custom text-muted"}`}>
+                          {idx === 0 ? "LATEST" : `REV ${rev.revision_no}`}
                         </span>
-                        <span className="text-sm font-bold text-foreground">{rev.version}</span>
+                        <span className="text-sm font-bold text-foreground">Revision {rev.revision_no}</span>
                       </div>
-                      <span className="text-[10px] text-muted">{rev.date}</span>
+                      <span className="text-[10px] text-muted">{rev.created_at ? new Date(rev.created_at).toLocaleDateString("en-IN") : ""}</span>
                     </div>
-                    <div className="text-xs text-muted">{rev.note}</div>
-                    <div className="mt-2 text-lg font-black text-primary">{fmt(rev.totalBudget)}</div>
+                    <div className="text-xs text-muted">{rev.reason || "No reason provided."}</div>
+                    <div className="mt-2 flex items-center justify-between">
+                      <div className="text-lg font-black text-primary">{fmt(rev.revised_amount)}</div>
+                      <div className="text-[10px] text-muted text-right">
+                        {rev.previous_amount != null && (
+                          <div>Prev: {fmt(rev.previous_amount)} · Δ {rev.delta != null ? (rev.delta >= 0 ? "+" : "") + fmt(rev.delta) : "—"}</div>
+                        )}
+                        {rev.revised_by_name ? <div>By {rev.revised_by_name}</div> : null}
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>
+
               {/* Import trigger for BOQ */}
               <div className="bg-input border border-dashed border-border-custom rounded-md p-5 text-center space-y-2">
                 <div className="text-xs font-bold text-muted">Import New BOQ / Revised Budget</div>
