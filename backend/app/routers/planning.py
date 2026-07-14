@@ -1,11 +1,11 @@
 from uuid import UUID
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.auth import get_current_user, verify_company_access, verify_project_access, get_company_membership, require_permission
-from app.models import Task, TaskPredecessor, Project, TaskTodo, TaskComment, CompanyTeam, User
+from app.models import Task, TaskPredecessor, ProjectMilestone, Project, TaskTodo, TaskComment, CompanyTeam, User
 from app.workflow_controls import (
     enforce_entry_creation_window,
     enforce_entry_editing_window,
@@ -33,6 +33,9 @@ class TaskResponse(BaseModel):
     assigned_to: Optional[UUID] = None
     boq_item_id: Optional[UUID] = None
     progress: float = 0.0  # actual physical progress %, 0-100
+    baseline_start: Optional[datetime] = None  # planned (baseline) start, snapshotted
+    baseline_end: Optional[datetime] = None  # planned (baseline) end, snapshotted
+    is_critical: bool = False  # derived via CPM critical-path (zero total float)
 
     class Config:
         from_attributes = True
@@ -65,6 +68,110 @@ class TaskUpdateRequest(BaseModel):
 class PredecessorCreateRequest(BaseModel):
     predecessor_id: UUID
     type: str = "finish_to_start"
+
+# ── Project Milestone schemas ────────────────────────────────────────────────
+class MilestoneResponse(BaseModel):
+    id: UUID
+    project_id: UUID
+    name: str
+    milestone_date: datetime
+    type: str
+    status: str
+    description: Optional[str] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class MilestoneCreateRequest(BaseModel):
+    project_id: UUID
+    name: str
+    milestone_date: datetime
+    type: str = "start"  # start | inspection | critical | payment | handover
+    status: str = "upcoming"  # upcoming | achieved
+    description: Optional[str] = None
+
+class MilestoneUpdateRequest(BaseModel):
+    name: Optional[str] = None
+    milestone_date: Optional[datetime] = None
+    type: Optional[str] = None
+    status: Optional[str] = None
+    description: Optional[str] = None
+
+# ── Lookahead task schema ────────────────────────────────────────────────────
+class LookaheadTaskResponse(BaseModel):
+    id: UUID
+    name: str
+    start_date: datetime
+    end_date: datetime
+    status: str
+    priority: str
+    progress: float = 0.0
+    is_critical: bool = False
+    assigned_to_name: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+def compute_critical_task_ids(tasks, db: Session) -> set:
+    """Derive the critical path (zero total float) for a project's task network.
+
+    Uses a CPM backward pass over the finish-to-start predecessor graph. Dates are
+    already scheduled by `propagate_schedule`, so ES/EF come from start/end_date and
+    LF is propagated from the project's maximum end_date. A task is critical when its
+    total float (LF - EF) is <= 0.
+    """
+    if not tasks:
+        return set()
+    task_ids = [t.id for t in tasks]
+    end_by_id = {t.id: t.end_date for t in tasks}
+    start_by_id = {t.id: t.start_date for t in tasks}
+    dur_by_id = {t.id: max(1, (t.end_date - t.start_date).days) for t in tasks}
+    project_end = max(end_by_id.values())
+
+    links = db.query(TaskPredecessor).filter(TaskPredecessor.task_id.in_(task_ids)).all()
+    succ: dict = {}
+    for l in links:
+        succ.setdefault(l.predecessor_id, []).append(l.task_id)
+
+    lf_cache: dict = {}
+    def latest_finish(tid):
+        if tid in lf_cache:
+            return lf_cache[tid]
+        sc = succ.get(tid)
+        if not sc:
+            lf_cache[tid] = project_end
+            return project_end
+        value = min(latest_finish(s) - dur_by_id.get(s, 1) for s in sc)
+        lf_cache[tid] = value
+        return value
+
+    critical = set()
+    for t in tasks:
+        if t.id not in succ and not any(l.predecessor_id == t.id for l in links):
+            # Isolated task: critical only if it ends at the project finish.
+            if (end_by_id[t.id] - project_end).days == 0:
+                critical.add(t.id)
+            continue
+        slack = (latest_finish(t.id) - end_by_id[t.id]).days
+        if slack <= 0:
+            critical.add(t.id)
+    return critical
+
+
+def annotate_critical(tasks, db: Session):
+    """Set the derived `is_critical` flag on each in-memory Task instance (grouped
+    by project, since the critical path is per-project) so it serialises via the
+    response schema. Does not persist anything."""
+    by_project: dict = {}
+    for t in tasks:
+        by_project.setdefault(t.project_id, []).append(t)
+    for proj_tasks in by_project.values():
+        critical = compute_critical_task_ids(proj_tasks, db)
+        for t in proj_tasks:
+            t.is_critical = t.id in critical
+
 
 # Helper function to check circular dependency
 def check_circular_dependency(task_id: UUID, predecessor_id: UUID, db: Session) -> bool:
@@ -124,6 +231,7 @@ def get_tasks(project_id: UUID, db: Session = Depends(get_db), _: None = Depends
         raise HTTPException(status_code=404, detail="Project not found")
 
     tasks = db.query(Task).filter(Task.project_id == project_id).all()
+    annotate_critical(tasks, db)
     return tasks
 
 @router.get("/tasks/company/{company_id}", response_model=List[CompanyTaskResponse])
@@ -142,6 +250,8 @@ def get_company_tasks(company_id: UUID, db: Session = Depends(get_db), _: None =
 
     projects = db.query(Project).filter(Project.company_id == company_id).all()
     proj_by_id = {p.id: p for p in projects}
+
+    annotate_critical(tasks, db)
 
     team_ids = [t.assigned_to for t in tasks if t.assigned_to]
     teams = db.query(CompanyTeam).filter(CompanyTeam.id.in_(team_ids)).all() if team_ids else []
@@ -169,6 +279,154 @@ def get_company_tasks(company_id: UUID, db: Session = Depends(get_db), _: None =
     return out
 
 
+@router.get("/tasks/lookahead", response_model=List[LookaheadTaskResponse])
+def get_lookahead(project_id: UUID, days: int = 14, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
+    """Rolling lookahead: tasks whose scheduled window overlaps the next `days` days.
+    Derived from real tasks only (no new table)."""
+    project = db.query(Project).filter(Project.id == project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    window_start = datetime.now(timezone.utc)
+    window_end = window_start + timedelta(days=days)
+
+    tasks = (
+        db.query(Task)
+        .filter(Task.project_id == project_id)
+        .filter(Task.start_date <= window_end)
+        .filter(Task.end_date >= window_start)
+        .order_by(Task.start_date.asc())
+        .all()
+    )
+
+    critical_ids = compute_critical_task_ids(tasks, db)
+
+    assigned_ids = [t.assigned_to for t in tasks if t.assigned_to]
+    teams = db.query(CompanyTeam).filter(CompanyTeam.id.in_(assigned_ids)).all() if assigned_ids else []
+    users = (
+        db.query(User).filter(User.id.in_([t.user_id for t in teams if t.user_id])).all()
+        if teams else []
+    )
+    users_by_id = {u.id: u for u in users}
+    team_by_id = {t.id: t for t in teams}
+
+    def resolve_name(tid):
+        team = team_by_id.get(tid)
+        if not team:
+            return None
+        if team.user_id and team.user_id in users_by_id and users_by_id[team.user_id].name:
+            return users_by_id[team.user_id].name
+        return None
+
+    out = []
+    for t in tasks:
+        d = LookaheadTaskResponse.from_orm(t).dict()
+        d["is_critical"] = t.id in critical_ids
+        d["assigned_to_name"] = resolve_name(t.assigned_to) if t.assigned_to else None
+        out.append(LookaheadTaskResponse(**d))
+    return out
+
+
+@router.post("/tasks/{task_id}/set-baseline", response_model=TaskResponse)
+def set_baseline(task_id: UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Snapshot the task's current planned start/end into the baseline fields."""
+    task = db.query(Task).filter(Task.id == task_id).first()
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    project = db.query(Project).filter(Project.id == task.project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, project.company_id)
+    require_permission(db, current_user, project.company_id, "planning:edit")
+
+    task.baseline_start = task.start_date
+    task.baseline_end = task.end_date
+    db.add(task)
+    db.commit()
+    db.refresh(task)
+    annotate_critical(
+        db.query(Task).filter(Task.project_id == task.project_id).all(), db
+    )
+    return task
+
+
+@router.get("/milestones", response_model=List[MilestoneResponse])
+def get_milestones(project_id: UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
+    project = db.query(Project).filter(Project.id == project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    return (
+        db.query(ProjectMilestone)
+        .filter(ProjectMilestone.project_id == project_id)
+        .order_by(ProjectMilestone.milestone_date.asc())
+        .all()
+    )
+
+
+@router.post("/milestones", response_model=MilestoneResponse, status_code=status.HTTP_201_CREATED)
+def create_milestone(request: MilestoneCreateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    project = db.query(Project).filter(Project.id == request.project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, project.company_id)
+    require_permission(db, current_user, project.company_id, "planning:edit")
+    milestone = ProjectMilestone(
+        project_id=request.project_id,
+        name=request.name,
+        milestone_date=request.milestone_date,
+        type=request.type,
+        status=request.status,
+        description=request.description,
+    )
+    db.add(milestone)
+    db.commit()
+    db.refresh(milestone)
+    return milestone
+
+
+@router.put("/milestones/{milestone_id}", response_model=MilestoneResponse)
+def update_milestone(milestone_id: UUID, request: MilestoneUpdateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    milestone = db.query(ProjectMilestone).filter(ProjectMilestone.id == milestone_id).first()
+    if not milestone:
+        raise HTTPException(status_code=404, detail="Milestone not found")
+    project = db.query(Project).filter(Project.id == milestone.project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, project.company_id)
+    require_permission(db, current_user, project.company_id, "planning:edit")
+
+    if request.name is not None:
+        milestone.name = request.name
+    if request.milestone_date is not None:
+        milestone.milestone_date = request.milestone_date
+    if request.type is not None:
+        milestone.type = request.type
+    if request.status is not None:
+        milestone.status = request.status
+    if request.description is not None:
+        milestone.description = request.description
+
+    db.add(milestone)
+    db.commit()
+    db.refresh(milestone)
+    return milestone
+
+
+@router.delete("/milestones/{milestone_id}")
+def delete_milestone(milestone_id: UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    milestone = db.query(ProjectMilestone).filter(ProjectMilestone.id == milestone_id).first()
+    if not milestone:
+        raise HTTPException(status_code=404, detail="Milestone not found")
+    project = db.query(Project).filter(Project.id == milestone.project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, project.company_id)
+    require_permission(db, current_user, project.company_id, "planning:edit")
+    db.delete(milestone)
+    db.commit()
+    return {"success": True, "message": "Milestone deleted successfully"}
+
+
 @router.post("/tasks", response_model=TaskResponse, status_code=status.HTTP_201_CREATED)
 def create_task(request: TaskCreateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     project = db.query(Project).filter(Project.id == request.project_id).first()
@@ -194,12 +452,17 @@ def create_task(request: TaskCreateRequest, db: Session = Depends(get_db), curre
         priority=request.priority,
         assigned_to=request.assigned_to,
         boq_item_id=request.boq_item_id,
-        progress=request.progress
+        progress=request.progress,
+        baseline_start=request.start_date,
+        baseline_end=end_date,
     )
 
     db.add(task)
     db.commit()
     db.refresh(task)
+    annotate_critical(
+        db.query(Task).filter(Task.project_id == task.project_id).all(), db
+    )
     return task
 
 @router.put("/tasks/{task_id}", response_model=TaskResponse)
@@ -248,6 +511,9 @@ def update_task(task_id: UUID, request: TaskUpdateRequest, db: Session = Depends
         db.commit()
 
     db.refresh(task)
+    annotate_critical(
+        db.query(Task).filter(Task.project_id == task.project_id).all(), db
+    )
     return task
 
 @router.post("/tasks/{task_id}/predecessors", status_code=status.HTTP_201_CREATED)

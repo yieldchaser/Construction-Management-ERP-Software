@@ -319,6 +319,21 @@ class Task(Base):
     assigned_to = Column(UUID(as_uuid=True), ForeignKey("company_team.id"), nullable=True)
     boq_item_id = Column(UUID(as_uuid=True), ForeignKey("boq_items.id", ondelete="SET NULL"), nullable=True)
     progress = Column(Numeric(5, 2), default=0.0, nullable=False)  # actual physical progress %, 0-100
+    # Baseline (planned) schedule: snapshotted from start_date/end_date on create,
+    # or explicitly via POST /planning/tasks/{id}/set-baseline. Null until captured.
+    baseline_start = Column(DateTime(timezone=True), nullable=True)
+    baseline_end = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+class ProjectMilestone(Base):
+    __tablename__ = "project_milestones"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
+    name = Column(String(255), nullable=False)
+    milestone_date = Column(DateTime(timezone=True), nullable=False)
+    type = Column(String(50), default="start", nullable=False)  # start | inspection | critical | payment | handover
+    status = Column(String(50), default="upcoming", nullable=False)  # upcoming | achieved
+    description = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 
 class TaskPredecessor(Base):

@@ -19,50 +19,29 @@ interface Task {
   is_critical?: boolean;
   baseline_start?: string;
   baseline_end?: string;
-  actual_pct?: number;
+  progress?: number;
 }
 
 interface Milestone {
   id: string;
   name: string;
-  date: string;
+  milestone_date: string;
   type: "start" | "handover" | "inspection" | "payment" | "critical";
   status: "upcoming" | "achieved" | "delayed";
   description: string;
 }
 
-const MILESTONES: Milestone[] = [
-  { id: "M1", name: "Project Kickoff", date: "2026-01-15", type: "start", status: "achieved", description: "Site mobilisation, drawing issue & subcontractor appointments confirmed." },
-  { id: "M2", name: "Foundation Complete", date: "2026-03-10", type: "inspection", status: "achieved", description: "Raft concreting done. Structural consultant inspection cleared." },
-  { id: "M3", name: "Slab L1 Casting", date: "2026-04-30", type: "inspection", status: "achieved", description: "G+1 slab concrete poured. IS 456 cube test: 35.2 MPa." },
-  { id: "M4", name: "Structural Frame Complete", date: "2026-07-15", type: "critical", status: "upcoming", description: "All columns, slabs & beams up to terrace level to be complete." },
-  { id: "M5", name: "Running Account Bill #3", date: "2026-08-01", type: "payment", status: "upcoming", description: "RA Bill for 65% completion stage. Expected ₹38L from client." },
-  { id: "M6", name: "External Plaster & Waterproofing", date: "2026-09-20", type: "inspection", status: "upcoming", description: "Waterproofing IS 3067 inspection by consultant." },
-  { id: "M7", name: "Handover to Client", date: "2026-12-31", type: "handover", status: "upcoming", description: "Full project handover with completion certificate & as-built drawings." },
-];
-
-const BASELINE_TASKS = [
-  { id: "T1", name: "Earthwork & Excavation", baseline_start: "2026-01-20", baseline_end: "2026-02-10", actual_start: "2026-01-22", actual_end: "2026-02-12", is_critical: true, pct: 100 },
-  { id: "T2", name: "PCC & Foundation Raft", baseline_start: "2026-02-11", baseline_end: "2026-03-05", actual_start: "2026-02-13", actual_end: "2026-03-10", is_critical: true, pct: 100 },
-  { id: "T3", name: "Ground Floor Columns", baseline_start: "2026-03-06", baseline_end: "2026-03-30", actual_start: "2026-03-11", actual_end: "2026-04-05", is_critical: true, pct: 100 },
-  { id: "T4", name: "G+1 Slab Casting", baseline_start: "2026-03-31", baseline_end: "2026-04-25", actual_start: "2026-04-06", actual_end: "2026-04-30", is_critical: true, pct: 100 },
-  { id: "T5", name: "First Floor Columns", baseline_start: "2026-05-01", baseline_end: "2026-05-28", actual_start: "2026-05-01", actual_end: "2026-06-05", is_critical: true, pct: 100 },
-  { id: "T6", name: "Terrace Slab (G+2)", baseline_start: "2026-05-29", baseline_end: "2026-07-01", actual_start: "2026-06-10", actual_end: null, is_critical: true, pct: 65 },
-  { id: "T7", name: "Brick Masonry (All Floors)", baseline_start: "2026-05-15", baseline_end: "2026-07-30", actual_start: "2026-05-20", actual_end: null, is_critical: false, pct: 55 },
-  { id: "T8", name: "External Plastering", baseline_start: "2026-08-01", baseline_end: "2026-09-15", actual_start: null, actual_end: null, is_critical: false, pct: 0 },
-  { id: "T9", name: "Internal Finishes & Tiles", baseline_start: "2026-09-01", baseline_end: "2026-11-30", actual_start: null, actual_end: null, is_critical: false, pct: 0 },
-  { id: "T10", name: "MEP Rough-in & Finishing", baseline_start: "2026-08-15", baseline_end: "2026-11-30", actual_start: null, actual_end: null, is_critical: false, pct: 0 },
-];
-
-const LOOKAHEAD_TASKS = [
-  { id: "L1", name: "Terrace slab curing (ongoing)", responsible: "Er. Suresh R", start: "2026-07-01", end: "2026-07-14", status: "in_progress", remarks: "28-day cure. DO NOT LOAD." },
-  { id: "L2", name: "Brick masonry — 2nd floor east wing", responsible: "Subcon: Ramesh & Co", start: "2026-07-02", end: "2026-07-08", status: "scheduled", remarks: "Material (4000 bricks) confirmed at yard." },
-  { id: "L3", name: "Plumbing rough-in — G+1 toilets", responsible: "MEP Consultant", start: "2026-07-03", end: "2026-07-07", status: "scheduled", remarks: "Coordinate with masonry team for wall chasing." },
-  { id: "L4", name: "Column shuttering — terrace parapet", responsible: "Er. Ravi K", start: "2026-07-05", end: "2026-07-08", status: "scheduled", remarks: "Wait for cube test report clearance." },
-  { id: "L5", name: "External scaffold inspection", responsible: "Safety Officer", start: "2026-07-07", end: "2026-07-07", status: "scheduled", remarks: "IS 3696 compliance check." },
-  { id: "L6", name: "Parapet wall concrete pour", responsible: "Er. Ravi K", start: "2026-07-09", end: "2026-07-10", status: "planned", remarks: "Subject to scaffold inspection clearance." },
-  { id: "L7", name: "Waterproofing application — terrace", responsible: "WP Subcon", start: "2026-07-12", end: "2026-07-14", status: "planned", remarks: "IS 3067 — Crystalline 2-coat system." },
-];
+interface LookaheadTask {
+  id: string;
+  name: string;
+  start_date: string;
+  end_date: string;
+  status: string;
+  priority: string;
+  progress: number;
+  is_critical: boolean;
+  assigned_to_name?: string;
+}
 
 interface TodoItem {
   id: string;
@@ -144,6 +123,18 @@ export default function GanttSchedulerPage() {
   const [mainTab, setMainTab] = useState<"wbs" | "milestones" | "baseline" | "lookahead">("wbs");
   const [isOffline, setIsOffline] = useState(false);
 
+  // Real data from the planning backend (no fabricated placeholders)
+  const [milestones, setMilestones] = useState<Milestone[]>([]);
+  const [lookahead, setLookahead] = useState<LookaheadTask[]>([]);
+  const [listLoading, setListLoading] = useState(false);
+
+  // Milestone create form state
+  const [msName, setMsName] = useState("");
+  const [msDate, setMsDate] = useState("");
+  const [msType, setMsType] = useState<Milestone["type"]>("start");
+  const [msStatus, setMsStatus] = useState<"upcoming" | "achieved">("upcoming");
+  const [msDesc, setMsDesc] = useState("");
+
   // Form states for creating task
   const [taskName, setTaskName] = useState("");
   const [duration, setDuration] = useState(5);
@@ -204,8 +195,78 @@ export default function GanttSchedulerPage() {
   useEffect(() => {
     if (projectId) {
       fetchTasks();
+      fetchMilestones();
+      fetchLookahead();
     }
   }, [projectId]);
+
+  const fetchMilestones = async () => {
+    if (!projectId) return;
+    try {
+      setListLoading(true);
+      const res = await fetch(`${getApiHost()}/apis/v3/planning/milestones?project_id=${projectId}`, { headers: authHeaders() });
+      if (res.ok) {
+        const data = await res.json();
+        setMilestones(Array.isArray(data) ? data : []);
+      } else {
+        setMilestones([]);
+      }
+    } catch {
+      setMilestones([]);
+    } finally {
+      setListLoading(false);
+    }
+  };
+
+  const fetchLookahead = async () => {
+    if (!projectId) return;
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/planning/tasks/lookahead?project_id=${projectId}&days=14`, { headers: authHeaders() });
+      if (res.ok) {
+        const data = await res.json();
+        setLookahead(Array.isArray(data) ? data : []);
+      } else {
+        setLookahead([]);
+      }
+    } catch {
+      setLookahead([]);
+    }
+  };
+
+  const handleCreateMilestone = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!msName.trim() || !msDate) {
+      setError("Milestone name and date are required.");
+      return;
+    }
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/planning/milestones`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
+        body: JSON.stringify({
+          project_id: projectId,
+          name: msName,
+          milestone_date: msDate,
+          type: msType,
+          status: msStatus,
+          description: msDesc,
+        }),
+      });
+      if (res.ok) {
+        setMsName("");
+        setMsDate("");
+        setMsDesc("");
+        setMsStatus("upcoming");
+        setMsType("start");
+        setSuccess("Milestone created successfully!");
+        fetchMilestones();
+      } else {
+        setError("Failed to create milestone.");
+      }
+    } catch {
+      setError("Connection error.");
+    }
+  };
 
   // Load Task Details (checklists, feed/comments)
   const handleOpenDrawer = async (task: Task) => {
@@ -443,7 +504,8 @@ export default function GanttSchedulerPage() {
           {mainTab === "milestones" && (
             <div className="space-y-3">
               <div className="text-xs text-muted mb-4">Project milestone tracker — key deliverables, inspections, and payment events.</div>
-              {MILESTONES.map(m => {
+
+              {milestones.map(m => {
                 const colors = {
                   start: "border-blue-500/30 bg-blue-500/5",
                   handover: "border-emerald-500/30 bg-emerald-500/5",
@@ -457,7 +519,7 @@ export default function GanttSchedulerPage() {
                   <div key={m.id} className={`flex items-start gap-4 p-4 rounded-md border ${colors[m.type]}`}>
                     <div className="flex flex-col items-center gap-1 shrink-0">
                       <div className="w-8 h-8 rounded-lg bg-elevated border border-border-custom flex items-center justify-center text-lg">{icon[m.type]}</div>
-                      <div className="text-[9px] font-mono text-muted">{m.date}</div>
+                      <div className="text-[9px] font-mono text-muted">{new Date(m.milestone_date).toLocaleDateString()}</div>
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
@@ -469,6 +531,77 @@ export default function GanttSchedulerPage() {
                   </div>
                 );
               })}
+
+              {!listLoading && milestones.length === 0 && (
+                <div className="text-center text-[11px] text-muted italic py-6">No milestones logged for this project yet. Add one below.</div>
+              )}
+
+              {/* Create Milestone */}
+              <form onSubmit={handleCreateMilestone} className="mt-4 bg-card border border-border-custom rounded-lg p-4 space-y-3">
+                <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Add Milestone</h3>
+                <div className="grid grid-cols-2 gap-3 text-xs">
+                  <div className="col-span-2 space-y-1">
+                    <label className="text-muted font-semibold">Milestone Name</label>
+                    <input
+                      type="text"
+                      value={msName}
+                      onChange={(e) => setMsName(e.target.value)}
+                      placeholder="Foundation complete, RA Bill #3..."
+                      className="w-full bg-elevated border border-border-custom rounded-lg p-2 text-foreground focus:outline-none focus:border-primary/50"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-muted font-semibold">Date</label>
+                    <input
+                      type="date"
+                      value={msDate}
+                      onChange={(e) => setMsDate(e.target.value)}
+                      className="w-full bg-elevated border border-border-custom rounded-lg p-2 text-foreground focus:outline-none"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-muted font-semibold">Type</label>
+                    <select
+                      value={msType}
+                      onChange={(e) => setMsType(e.target.value as Milestone["type"])}
+                      className="w-full bg-elevated border border-border-custom rounded-lg p-2 text-foreground"
+                    >
+                      <option value="start">🚀 Start</option>
+                      <option value="inspection">🔍 Inspection</option>
+                      <option value="critical">⚠️ Critical</option>
+                      <option value="payment">💰 Payment</option>
+                      <option value="handover">🏁 Handover</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-muted font-semibold">Status</label>
+                    <select
+                      value={msStatus}
+                      onChange={(e) => setMsStatus(e.target.value as "upcoming" | "achieved")}
+                      className="w-full bg-elevated border border-border-custom rounded-lg p-2 text-foreground"
+                    >
+                      <option value="upcoming">Upcoming</option>
+                      <option value="achieved">Achieved</option>
+                    </select>
+                  </div>
+                  <div className="col-span-2 space-y-1">
+                    <label className="text-muted font-semibold">Description</label>
+                    <textarea
+                      value={msDesc}
+                      onChange={(e) => setMsDesc(e.target.value)}
+                      rows={2}
+                      placeholder="Inspection scope, payment stage, remarks..."
+                      className="w-full bg-elevated border border-border-custom rounded-lg p-2 text-foreground focus:outline-none focus:border-primary/50"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    className="col-span-2 mt-1 bg-primary rounded-md py-2 font-bold text-white hover:opacity-90 transition-all text-xs"
+                  >
+                    Save Milestone
+                  </button>
+                </div>
+              </form>
             </div>
           )}
 
@@ -480,8 +613,12 @@ export default function GanttSchedulerPage() {
                 <div className="flex items-center gap-1.5"><div className="w-10 h-2 rounded bg-emerald-400" /> Actual Progress</div>
                 <div className="flex items-center gap-1.5"><div className="w-10 h-2 rounded bg-red-400" /> Critical Path</div>
               </div>
-              {BASELINE_TASKS.map(t => {
-                const delay = t.actual_start && t.actual_end ? Math.max(0, (new Date(t.actual_end).getTime() - new Date(t.baseline_end).getTime()) / 86400000) : 0;
+              {tasks.map(t => {
+                const hasBaseline = !!t.baseline_start && !!t.baseline_end;
+                const pct = t.progress ?? 0;
+                const delay = hasBaseline && t.end_date
+                  ? Math.max(0, (new Date(t.end_date).getTime() - new Date(t.baseline_end!).getTime()) / 86400000)
+                  : 0;
                 return (
                   <div key={t.id} className="bg-input border border-border-custom rounded-md p-4 space-y-2">
                     <div className="flex items-center justify-between">
@@ -490,24 +627,30 @@ export default function GanttSchedulerPage() {
                         <span className="text-xs font-semibold text-foreground">{t.name}</span>
                       </div>
                       <div className="text-right text-[10px]">
-                        {delay > 0 && <span className="text-red-400 font-bold">+{delay.toFixed(0)}d delay</span>}
-                        {delay === 0 && t.pct === 100 && <span className="text-emerald-400 font-bold">✓ On Time</span>}
-                        {t.pct < 100 && t.pct > 0 && <span className="text-amber-400 font-bold">{t.pct}% done</span>}
+                        {hasBaseline && delay > 0 && <span className="text-red-400 font-bold">+{delay.toFixed(0)}d delay</span>}
+                        {hasBaseline && delay === 0 && pct === 100 && <span className="text-emerald-400 font-bold">✓ On Time</span>}
+                        {pct < 100 && pct > 0 && <span className="text-amber-400 font-bold">{pct}% done</span>}
+                        {!hasBaseline && <span className="text-muted">No baseline</span>}
                       </div>
                     </div>
                     {/* Baseline bar */}
-                    <div className="text-[9px] text-muted">Baseline: {t.baseline_start} → {t.baseline_end}</div>
+                    <div className="text-[9px] text-muted">
+                      Baseline: {hasBaseline ? `${new Date(t.baseline_start!).toLocaleDateString()} → ${new Date(t.baseline_end!).toLocaleDateString()}` : "not captured"}
+                    </div>
                     <div className="h-2 bg-blue-400/20 rounded-full relative overflow-hidden">
-                      <div className={`h-full rounded-full ${t.is_critical ? "bg-red-400/50" : "bg-blue-400/50"}`} style={{ width: "100%" }} />
+                      <div className={`h-full rounded-full ${t.is_critical ? "bg-red-400/50" : "bg-blue-400/50"}`} style={{ width: hasBaseline ? "100%" : "0%" }} />
                     </div>
                     {/* Actual bar */}
-                    <div className="text-[9px] text-muted">Actual: {t.actual_start ?? "Not started"} → {t.actual_end ?? "Ongoing"}</div>
+                    <div className="text-[9px] text-muted">Actual: {new Date(t.start_date).toLocaleDateString()} → {t.end_date ? new Date(t.end_date).toLocaleDateString() : "Ongoing"}</div>
                     <div className="h-2 bg-elevated rounded-full overflow-hidden">
-                      <div className="h-full rounded-full bg-emerald-400" style={{ width: `${t.pct}%` }} />
+                      <div className="h-full rounded-full bg-emerald-400" style={{ width: `${pct}%` }} />
                     </div>
                   </div>
                 );
               })}
+              {tasks.length === 0 && (
+                <div className="text-center text-[11px] text-muted italic py-6">No WBS tasks yet. Create tasks in the WBS tab to see planned vs actual.</div>
+              )}
             </div>
           )}
 
@@ -517,26 +660,31 @@ export default function GanttSchedulerPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-xs font-bold text-foreground">14-Day Lookahead Schedule</h3>
-                  <p className="text-[10px] text-muted mt-0.5">Rolling 2-week plan for site supervisors · Updated every Monday</p>
+                  <p className="text-[10px] text-muted mt-0.5">Rolling 2-week plan derived from real scheduled tasks</p>
                 </div>
-                <div className="text-[10px] text-muted">Jul 01 – Jul 14, 2026</div>
+                <div className="text-[10px] text-muted">Next 14 days</div>
               </div>
-              {LOOKAHEAD_TASKS.map(t => {
-                const statusCls = t.status === "in_progress" ? "bg-blue-500/10 border-blue-500/20 text-blue-400" : t.status === "scheduled" ? "bg-amber-500/10 border-amber-500/20 text-amber-400" : "bg-zinc-700/20 border-zinc-600/20 text-muted";
+              {lookahead.map(t => {
+                const pct = t.progress ?? 0;
+                const statusCls = t.status === "in_progress" ? "bg-blue-500/10 border-blue-500/20 text-blue-400" : t.status === "completed" ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" : "bg-zinc-700/20 border-zinc-600/20 text-muted";
                 return (
                   <div key={t.id} className="bg-input border border-border-custom rounded-md p-4 flex items-start gap-4">
-                    <div className="shrink-0 text-[9px] font-mono text-muted w-20">{t.start}<br/>→ {t.end}</div>
+                    <div className="shrink-0 text-[9px] font-mono text-muted w-20">{new Date(t.start_date).toLocaleDateString()}<br/>→ {new Date(t.end_date).toLocaleDateString()}</div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-xs font-semibold text-foreground">{t.name}</span>
+                        {t.is_critical && <span className="text-[8px] bg-red-500/10 border border-red-500/20 text-red-400 px-1.5 py-0.5 rounded font-bold">CRITICAL</span>}
                         <span className={`text-[8px] px-1.5 py-0.5 rounded border font-bold ${statusCls}`}>{t.status.replace("_"," ").toUpperCase()}</span>
                       </div>
-                      <div className="text-[10px] text-muted">Responsible: {t.responsible}</div>
-                      {t.remarks && <div className="text-[10px] text-muted mt-0.5 italic">{t.remarks}</div>}
+                      {t.assigned_to_name && <div className="text-[10px] text-muted">Responsible: {t.assigned_to_name}</div>}
+                      {pct > 0 && <div className="text-[10px] text-muted mt-0.5">{pct}% complete</div>}
                     </div>
                   </div>
                 );
               })}
+              {!listLoading && lookahead.length === 0 && (
+                <div className="text-center text-[11px] text-muted italic py-6">No tasks scheduled in the next 14 days.</div>
+              )}
             </div>
           )}
 

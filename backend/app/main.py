@@ -211,11 +211,13 @@ def ensure_sqlite_bill_columns():
 
 
 def ensure_sqlite_task_columns():
-    """Add the actual-progress column to the tasks table for SQLite dev."""
+    """Add progress + baseline columns to the tasks table for SQLite dev."""
     if not engine.url.drivername.startswith("sqlite"):
         return
     required_columns = {
         "progress": Numeric(5, 2),
+        "baseline_start": DateTime(timezone=True),
+        "baseline_end": DateTime(timezone=True),
     }
     with engine.begin() as conn:
         existing = {row[1] for row in conn.exec_driver_sql("PRAGMA table_info(tasks)").fetchall()}
