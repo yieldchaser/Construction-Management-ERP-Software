@@ -204,6 +204,31 @@ def _resolve_organization_id(access_token: str) -> Optional[str]:
     return str(orgs[0].get("organization_id"))
 
 
+def _default_expense_account_id(access_token: str, organization_id: str) -> Optional[str]:
+    """Return an active expense account_id from the org's chart of accounts.
+
+    Zoho bill line items must book against an account. Prefer purchase/expense
+    account types; fall back to anything whose type contains 'expense'.
+    """
+    resp = requests.get(
+        f"{_api_base()}chartofaccounts",
+        headers=_api_headers(access_token),
+        params={"organization_id": organization_id},
+        timeout=30,
+    )
+    if resp.status_code != 200:
+        return None
+    accounts = (resp.json() or {}).get("chartofaccounts") or []
+    for wanted in ("cost_of_goods_sold", "expense", "other_expense"):
+        for a in accounts:
+            if a.get("account_type") == wanted and a.get("is_active", True):
+                return str(a.get("account_id"))
+    for a in accounts:
+        if "expense" in str(a.get("account_type", "")) and a.get("is_active", True):
+            return str(a.get("account_id"))
+    return None
+
+
 def _find_or_create_vendor(access_token: str, organization_id: str, *, name: str, email: Optional[str], phone: Optional[str], gstin: Optional[str]) -> str:
     """Return the Zoho vendor contact_id, creating the vendor if it is missing."""
     # 1) Try to find an existing vendor by email (most reliable key).
@@ -533,6 +558,17 @@ def push_bill(
             "quantity": 1,
             "amount": float(bill.total_payable or bill.subtotal or 0),
         })
+
+    # Zoho requires every bill line item to book against a chart-of-accounts
+    # expense account (else code 13009 "The account field cannot be empty").
+    account_id = _default_expense_account_id(access_token, organization_id)
+    if not account_id:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="No expense account found in Zoho Books to book the bill against",
+        )
+    for li in line_items:
+        li["account_id"] = account_id
 
     bill_payload: dict = {
         "vendor_id": vendor_id,
