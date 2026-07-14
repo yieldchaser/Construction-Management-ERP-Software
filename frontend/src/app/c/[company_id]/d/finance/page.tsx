@@ -292,9 +292,12 @@ export default function FinancePage() {
 
   const fetchData = async () => {
     try {
-      const plRes = await fetch(`${getApiHost()}/apis/v3/finance/pl?project_id=${projectId}`, { headers: authHeaders() });
-      if (plRes.ok) {
-        setPlData(await plRes.json());
+      // Project-scoped P&L only when a real project is active.
+      if (projectId) {
+        const plRes = await fetch(`${getApiHost()}/apis/v3/finance/pl?project_id=${projectId}`, { headers: authHeaders() });
+        if (plRes.ok) {
+          setPlData(await plRes.json());
+        }
       }
       const tallyRes = await fetch(`${getApiHost()}/apis/v3/tally/connections?company_id=${companyId}`, { headers: authHeaders() });
       if (tallyRes.ok) {

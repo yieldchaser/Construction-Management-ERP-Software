@@ -65,9 +65,17 @@ const FALLBACK_PROJECT_ID = "d0000000-0000-0000-0000-000000000001";
 export function ProjectProvider({ children }: { children: React.ReactNode }) {
   const params = useParams();
 
-  const [activeProjectId, setActiveProjectIdState] = useState<string>(() =>
-    typeof window !== "undefined" ? localStorage.getItem("last_project_id") || "" : ""
-  );
+  const [activeProjectId, setActiveProjectIdState] = useState<string>(() => {
+    if (typeof window === "undefined") return "";
+    const stored = localStorage.getItem("last_project_id") || "";
+    // Never seed from the legacy placeholder id — it 403s every project-scoped
+    // fetch and blocks the real project from ever being auto-selected.
+    if (stored === FALLBACK_PROJECT_ID) {
+      localStorage.removeItem("last_project_id");
+      return "";
+    }
+    return stored;
+  });
   const [projects, setProjects] = useState<ProjectRecord[]>([]);
   const [projectContext, setProjectContext] = useState<{ name: string; code: string }>({
     name: "Project Context",
@@ -81,8 +89,11 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     const companyId =
       (params.company_id as string) || "e0000000-0000-0000-0000-000000000000";
     const routeProjectId = (params.project_id as string) || "";
-    const storedProjectId =
+    const storedRaw =
       typeof window !== "undefined" ? localStorage.getItem("last_project_id") : null;
+    // Ignore the legacy placeholder so nextProjectId can be empty -> the real
+    // project gets auto-selected from the company project list below.
+    const storedProjectId = storedRaw && storedRaw !== FALLBACK_PROJECT_ID ? storedRaw : null;
     const nextProjectId = routeProjectId || storedProjectId || "";
 
     const token =
@@ -95,9 +106,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
       const resolvedName = project.name || project.project_name || "Active Project";
       const resolvedCode = project.code || project.project_code || "";
       setProjectContext({ name: resolvedName, code: resolvedCode });
-      setActiveProjectIdState(
-        project.id || nextProjectId || FALLBACK_PROJECT_ID
-      );
+      setActiveProjectIdState(project.id || nextProjectId || "");
     };
 
     const resolve = async () => {
