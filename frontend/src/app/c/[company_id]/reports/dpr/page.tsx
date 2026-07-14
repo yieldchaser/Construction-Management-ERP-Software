@@ -35,6 +35,50 @@ export default function DPRReportPage() {
       setLoading(false);
     }
   };
+  const handleExportDpr = async () => {
+    try {
+      const q = new URLSearchParams();
+      q.set("company_id", companyId);
+      const now = new Date();
+      const fmt = (d: Date) => d.toISOString().slice(0, 10);
+      if (selectedDateFilter === "Today") {
+        q.set("from_date", fmt(now));
+        q.set("to_date", fmt(now));
+      } else if (selectedDateFilter === "Yesterday") {
+        const y = new Date(now);
+        y.setDate(now.getDate() - 1);
+        q.set("from_date", fmt(y));
+        q.set("to_date", fmt(y));
+      } else if (selectedDateFilter === "This Week") {
+        const mon = new Date(now);
+        const day = (now.getDay() + 6) % 7; // Monday = 0
+        mon.setDate(now.getDate() - day);
+        q.set("from_date", fmt(mon));
+        q.set("to_date", fmt(now));
+      }
+      const res = await fetch(`${getApiHost()}/apis/v3/dpr/export?${q.toString()}`, {
+        headers: authHeaders() || {},
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        showToast(err.detail || "Export failed");
+        return;
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `dpr-company-${fmt(now)}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      showToast("DPR CSV downloaded");
+    } catch (e: any) {
+      showToast(e?.message || "Export failed");
+    }
+  };
+
   useEffect(() => {
     fetchReport();
   }, [companyId]);
@@ -119,8 +163,8 @@ export default function DPRReportPage() {
             <button onClick={() => fetchReport()} className="p-2 bg-card hover:bg-elevated border border-border-custom rounded-lg text-xs" title="Refresh">
               🔄
             </button>
-            <button disabled title="Share / Export not available yet" className="px-3 py-1.5 bg-primary text-white text-xs font-bold rounded-lg flex items-center gap-1.5 opacity-50 cursor-not-allowed">
-              <span>📤</span> Share / Export
+            <button onClick={handleExportDpr} className="px-3 py-1.5 bg-primary text-white text-xs font-bold rounded-lg flex items-center gap-1.5 hover:bg-primary/90 transition-all">
+              <span>📤</span> Export CSV
             </button>
           </div>
         </div>

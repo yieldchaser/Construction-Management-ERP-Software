@@ -13,12 +13,14 @@ Endpoints:
   GET    /hr/payroll/{run_id}/payslips — List payslips for a run
 """
 
+import csv
+import io
 import math
 import uuid
 from datetime import datetime, date, timedelta
 from decimal import Decimal
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, status, File, Form, UploadFile
+from fastapi import APIRouter, Depends, HTTPException, status, File, Form, UploadFile, Response
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
@@ -719,6 +721,80 @@ def get_payslips(run_id: uuid.UUID, db: Session = Depends(get_db), current_user:
             "net_payable": float(line.net_payable),
         })
     return result
+
+
+@router.get("/payroll/{run_id}/payslips/export")
+def export_payslips_csv(run_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Export one row per PayrollLineItem as a CSV attachment.
+
+    Payroll is sensitive finance data, so this is tenant-guarded and gated by the
+    payroll module view permission (same as GET /payroll/{run_id}/payslips). Read-only.
+    """
+    run = db.query(PayrollRun).filter(PayrollRun.id == run_id).first()
+    if not run:
+        raise HTTPException(status_code=404, detail="Payroll run not found")
+    get_company_membership(db, current_user, run.company_id)
+    require_module_view(db, current_user, run.company_id, "payroll")
+
+    lines = db.query(PayrollLineItem).filter(PayrollLineItem.payroll_run_id == run_id).all()
+
+    columns = [
+        "Employee Name", "Designation", "Days Present", "Days In Month",
+        "Gross", "PF Employee", "PF Employer", "ESI Employee", "ESI Employer",
+        "TDS", "Advance Recovery", "Other Deductions", "Total Deductions", "Net Pay",
+    ]
+
+    buf = io.StringIO()
+    writer = csv.writer(buf)
+    writer.writerow(columns)
+    for line in lines:
+        emp = db.query(StaffEmployee).filter(StaffEmployee.id == line.employee_id).first()
+        writer.writerow([
+            emp.name if emp else "Unknown",
+            emp.designation if (emp and emp.designation) else "",
+            float(line.days_present),
+            line.days_in_month,
+            float(line.gross_salary),
+            float(line.pf_employee),
+            float(line.pf_employer),
+            float(line.esi_employee),
+            float(line.esi_employer),
+            float(line.tds),
+            float(line.advance_recovery),
+            float(line.other_deductions),
+            float(line.total_deductions),
+            float(line.net_payable),
+        ])
+    csv_text = buf.getvalue()
+    filename = f"payslips-{run.payroll_month}-{datetime.utcnow().strftime('%Y%m%d')}.csv"
+    return Response(
+        content=csv_text,
+        media_type="text/csv",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Cache-Control": "no-store",
+        },
+    )
+
+
+@router.get("/payroll/latest/{company_id}")
+def latest_payroll_run(company_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Return the most recent PayrollRun for a company so the frontend can resolve a run to export.
+
+    Returns {run_id, payroll_month} or {run_id: null, payroll_month: null} when no run exists yet.
+    Tenant-guarded and gated by the payroll module view permission.
+    """
+    get_company_membership(db, current_user, company_id)
+    require_module_view(db, current_user, company_id, "payroll")
+    run = (
+        db.query(PayrollRun)
+        .filter(PayrollRun.company_id == company_id)
+        .order_by(PayrollRun.created_at.desc())
+        .first()
+    )
+    if not run:
+        return {"run_id": None, "payroll_month": None}
+    return {"run_id": str(run.id), "payroll_month": run.payroll_month}
 
 
 from pydantic import BaseModel

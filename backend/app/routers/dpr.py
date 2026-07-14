@@ -1,11 +1,13 @@
+import csv
+import io
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Response
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.auth import get_current_user, verify_project_access, get_company_membership, require_permission
+from app.auth import get_current_user, verify_project_access, get_company_membership, require_permission, require_module_view
 from app.models import DailyProgressReport, Task, WarehouseInventory, MaterialTransaction, Project, User
 from app.workflow_controls import enforce_entry_creation_window
 from pydantic import BaseModel, Field
@@ -165,3 +167,90 @@ def get_dpr_summary(project_id: uuid.UUID, db: Session = Depends(get_db), _: Non
         "issues_flagged": len(flagged_issues),
         "flagged_issues_list": flagged_issues
     }
+
+@router.get("/export")
+def export_dpr_csv(
+    project_id: Optional[uuid.UUID] = None,
+    company_id: Optional[uuid.UUID] = None,
+    from_date: Optional[str] = None,
+    to_date: Optional[str] = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Export DPR entries as a CSV attachment (company-wide or per-project, optional date range).
+
+    Tenant-guarded: resolves the owning company from project_id or company_id, then enforces
+    membership + the projects module view permission. Read-only.
+    """
+    if project_id:
+        project = db.query(Project).filter(Project.id == project_id).first()
+        if not project:
+            raise HTTPException(status_code=404, detail="Project not found")
+        cid = project.company_id
+    elif company_id:
+        cid = company_id
+    else:
+        raise HTTPException(status_code=400, detail="Provide project_id or company_id")
+
+    get_company_membership(db, current_user, cid)
+    require_module_view(db, current_user, cid, "projects")
+
+    query = db.query(DailyProgressReport)
+    if project_id:
+        query = query.filter(DailyProgressReport.project_id == project_id)
+    else:
+        proj_ids = db.query(Project.id).filter(Project.company_id == cid).subquery()
+        query = query.filter(DailyProgressReport.project_id.in_(proj_ids))
+
+    if from_date:
+        try:
+            fd = datetime.strptime(from_date, "%Y-%m-%d")
+            query = query.filter(DailyProgressReport.dpr_date >= fd)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="from_date must be YYYY-MM-DD")
+    if to_date:
+        try:
+            td = datetime.strptime(to_date, "%Y-%m-%d") + timedelta(days=1)
+            query = query.filter(DailyProgressReport.dpr_date < td)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="to_date must be YYYY-MM-DD")
+
+    reports = query.order_by(DailyProgressReport.dpr_date.desc()).all()
+
+    columns = [
+        "Date", "Project", "Author", "Executed Qty", "Work Done",
+        "Labour Count", "Materials", "Remarks", "Status",
+    ]
+
+    buf = io.StringIO()
+    writer = csv.writer(buf)
+    writer.writerow(columns)
+    for d in reports:
+        project = db.query(Project).filter(Project.id == d.project_id).first()
+        mats = d.materials_consumed or []
+        mat_str = "; ".join(
+            f"{m.get('material_name')} {m.get('quantity')} {m.get('unit') or ''}".strip()
+            for m in mats
+        )
+        writer.writerow([
+            d.dpr_date.strftime("%Y-%m-%d") if d.dpr_date else "",
+            project.name if project else "",
+            d.reported_by or "",
+            float(d.executed_qty or 0),
+            d.notes or "",
+            d.workers_deployed or 0,
+            mat_str,
+            d.issues or "",
+            d.status or "",
+        ])
+    csv_text = buf.getvalue()
+    scope = str(project_id) if project_id else f"company-{cid}"
+    filename = f"dpr-{scope}-{datetime.utcnow().strftime('%Y%m%d')}.csv"
+    return Response(
+        content=csv_text,
+        media_type="text/csv",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Cache-Control": "no-store",
+        },
+    )

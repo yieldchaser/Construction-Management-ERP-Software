@@ -88,7 +88,51 @@ const PUNCH_QUEUE_KEY = "siteflow-punch-queue";
 export default function AttendancePage() {
   const params = useParams();
   const projectId = (params?.project_id as string) || "d0000000-0000-0000-0000-000000000001";
-  
+  const companyId = params?.company_id as string;
+
+  const [exportMsg, setExportMsg] = useState<string | null>(null);
+  const showExportMsg = (msg: string) => {
+    setExportMsg(msg);
+    setTimeout(() => setExportMsg(null), 3500);
+  };
+
+  const handleExportPayslips = async () => {
+    try {
+      const latestRes = await fetch(`${getApiHost()}/apis/v3/hr/payroll/latest/${companyId}`, {
+        headers: authHeaders() || {},
+      });
+      if (!latestRes.ok) {
+        showExportMsg("Could not load payroll runs.");
+        return;
+      }
+      const latest = await latestRes.json();
+      if (!latest.run_id) {
+        showExportMsg("No payroll run to export yet");
+        return;
+      }
+      const res = await fetch(`${getApiHost()}/apis/v3/hr/payroll/${latest.run_id}/payslips/export`, {
+        headers: authHeaders() || {},
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        showExportMsg(err.detail || "Export failed");
+        return;
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `payslips-${latest.payroll_month || latest.run_id}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      showExportMsg("Payslips CSV downloaded");
+    } catch (e: any) {
+      showExportMsg(e?.message || "Export failed");
+    }
+  };
+
   const [tab, setTab] = useState<"today" | "payroll">("today");
   const [subTab, setSubTab] = useState<"staff" | "subcon">("staff");
   const [lang, setLang] = useState<string>("English");
@@ -387,6 +431,11 @@ export default function AttendancePage() {
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
+      {exportMsg && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 bg-card border border-border-custom text-foreground text-xs px-4 py-2 rounded-lg shadow-lg">
+          {exportMsg}
+        </div>
+      )}
       {/* ── Attendance sub-navigation (top tabs) ── */}
       <div className="flex items-center gap-1 px-6 py-2 border-b border-border-custom bg-card shrink-0 overflow-x-auto">
         {[
@@ -864,7 +913,7 @@ export default function AttendancePage() {
                     <h2 className="text-xs font-bold text-foreground uppercase tracking-wider">Monthly Payroll Compilation — June 2026</h2>
                     <p className="text-[10px] text-muted mt-0.5">Salary + PF + ESI statutory deductions per IS code. Download payslip per employee.</p>
                   </div>
-                  <button disabled title="Payslip export not available yet" className="px-3 py-1.5 bg-primary text-white text-[10px] font-bold rounded-lg opacity-50 cursor-not-allowed">📤 Export All Payslips</button>
+                  <button onClick={handleExportPayslips} className="px-3 py-1.5 bg-primary text-white text-[10px] font-bold rounded-lg hover:bg-primary/90 transition-all">📤 Export All Payslips</button>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs text-left">
