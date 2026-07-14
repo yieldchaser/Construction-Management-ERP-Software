@@ -51,58 +51,6 @@ interface DebitCreditNote {
   status: "approved" | "pending";
 }
 
-// Initial Mock Data
-const INITIAL_WORK_ORDERS: WorkOrder[] = [
-  { id: "WO-01", woNumber: "WO-2026-001", subcontractor: "Karan Masonry Works", item: "Brickwork & plastering Floor 3-6", value: 1240000, status: "Active", date: "2026-06-12" },
-  { id: "WO-02", woNumber: "WO-2026-002", subcontractor: "Apex Bar-Bending Co", item: "Foundation and columns steel reinforcement", value: 580000, status: "Completed", date: "2026-06-14" },
-  { id: "WO-03", woNumber: "WO-2026-003", subcontractor: "Metro Plumbing Services", item: "Internal plumbing & duct fit-outs Floor 1-4", value: 340000, status: "Active", date: "2026-06-18" }
-];
-
-const INITIAL_BILLS: Bill[] = [
-  {
-    id: "B-01",
-    invoiceNumber: "RA-BILL-001",
-    invoiceDate: "2026-06-20",
-    subcontractor: "Karan Masonry Works",
-    subtotal: 100000,
-    gstAmount: 18000,
-    cgstAmount: 9000,
-    sgstAmount: 9000,
-    igstAmount: 0,
-    totalPayable: 100100,
-    preTax: false,
-    status: "approved",
-    deductions: [
-      { type: "TDS", rate: 2, amount: 2000, notes: "Section 194C" },
-      { type: "Advance Recovery", amount: 10000, notes: "Advance return" },
-      { type: "Retention", rate: 5, amount: 5900, notes: "5% of gross (post-GST) retention" }
-    ]
-  },
-  {
-    id: "B-02",
-    invoiceNumber: "RA-BILL-002",
-    invoiceDate: "2026-06-25",
-    subcontractor: "Apex Bar-Bending Co",
-    subtotal: 80000,
-    gstAmount: 14400,
-    cgstAmount: 7200,
-    sgstAmount: 7200,
-    igstAmount: 0,
-    totalPayable: 88080,
-    preTax: false,
-    status: "pending",
-    deductions: [
-      { type: "TDS", rate: 2, amount: 1600, notes: "Section 194C" },
-      { type: "Retention", rate: 5, amount: 4720, notes: "5% of gross (post-GST) retention" }
-    ]
-  }
-];
-
-const INITIAL_NOTES: DebitCreditNote[] = [
-  { id: "DN-01", type: "debit", subcontractor: "Karan Masonry Works", amount: 15000, notes: "Material recovery for cement bags used from client stores", date: "2026-06-18", status: "approved" },
-  { id: "CN-01", type: "credit", subcontractor: "Apex Bar-Bending Co", amount: 8000, notes: "Additional cutting waste scrap adjustments approved", date: "2026-06-22", status: "pending" }
-];
-
 export default function SubcontractorBillingPage() {
   const { company_id } = useParams();
   const companyId = company_id || "demo-company";

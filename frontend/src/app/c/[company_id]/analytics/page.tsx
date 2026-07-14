@@ -260,57 +260,6 @@ function ChartCard({
   );
 }
 
-const MOCK_ANALYTICS_PAYLOAD: AnalyticsPayload = {
-  company_id: "demo-company",
-  company_name: "Apex Construction Group Ltd.",
-  project_count: 3,
-  total_tasks: 45,
-  completed_tasks: 29,
-  task_completion_pct: 64,
-  total_budget: 45000000,
-  total_spend: 38500000,
-  budget_variance: 6500000,
-  burn_rate_pct: 85,
-  s_curve: [
-    { label: "Jan", planned_pct: 10, actual_pct: 8 },
-    { label: "Feb", planned_pct: 25, actual_pct: 22 },
-    { label: "Mar", planned_pct: 45, actual_pct: 40 },
-    { label: "Apr", planned_pct: 60, actual_pct: 58 },
-    { label: "May", planned_pct: 75, actual_pct: 70 },
-    { label: "Jun", planned_pct: 90, actual_pct: 85 },
-  ],
-  budget_burn_series: [
-    { label: "Jan", burn_pct: 15, spend: 6750000 },
-    { label: "Feb", burn_pct: 30, spend: 13500000 },
-    { label: "Mar", burn_pct: 48, spend: 21600000 },
-    { label: "Apr", burn_pct: 62, spend: 27900000 },
-    { label: "May", burn_pct: 74, spend: 33300000 },
-    { label: "Jun", burn_pct: 85, spend: 38500000 },
-  ],
-  labour_productivity: {
-    total_hours: 14400,
-    labour_days: 1800,
-    completed_area_m2: 3200,
-    productivity_m2_per_labour_day: 1.78,
-  },
-  material_wastage: {
-    ordered_qty: 1500,
-    consumed_qty: 1440,
-    wastage_qty: 60,
-    wastage_pct: 4,
-  },
-  projects: [
-    { project_id: "p1", project_name: "Metro Terminal (Phase 2)", code: "MET-02", budget: 20000000, spend: 18500000, variance: 1500000, completion_pct: 92, task_count: 15, completed_tasks: 14 },
-    { project_id: "p2", project_name: "Bypass Highway Flyover", code: "HWY-FLY", budget: 15000000, spend: 13800000, variance: 1200000, completion_pct: 75, task_count: 18, completed_tasks: 11 },
-    { project_id: "p3", project_name: "Alpha Premium Residences", code: "ALF-RES", budget: 10000000, spend: 6200000, variance: 3800000, completion_pct: 45, task_count: 12, completed_tasks: 4 },
-  ],
-  subcontractor_scorecard: [
-    { subcontractor_id: "sub-1", subcontractor_name: "Shree Cement Traders", project_names: ["Metro Terminal", "Alpha Residences"], bill_count: 12, on_time_rate: 95, ncr_count: 0, late_bills: 0 },
-    { subcontractor_id: "sub-2", subcontractor_name: "National Steel Suppliers", project_names: ["Metro Terminal", "Bypass Flyover"], bill_count: 8, on_time_rate: 88, ncr_count: 1, late_bills: 1 },
-    { subcontractor_id: "sub-3", subcontractor_name: "Alpha Masonry Builders", project_names: ["Alpha Residences"], bill_count: 5, on_time_rate: 100, ncr_count: 0, late_bills: 0 },
-  ],
-};
-
 export default function CompanyAnalyticsPage() {
   const params = useParams();
   const companyId = params?.company_id as string;
@@ -332,10 +281,9 @@ export default function CompanyAnalyticsPage() {
         }
         const payload = (await response.json()) as AnalyticsPayload;
         setData(payload);
-      } catch (error) {
-        console.error("Failed to load analytics, using fallback", error);
-        setData(MOCK_ANALYTICS_PAYLOAD);
-      } finally {
+    } catch (error) {
+      console.error("Failed to load analytics", error);
+    } finally {
         setLoading(false);
       }
     };

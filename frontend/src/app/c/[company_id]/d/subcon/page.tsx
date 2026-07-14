@@ -1,8 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useProject } from "@/context/ProjectContext";
+import { getApiHost } from "@/lib/api";
+import { authHeaders } from "@/lib/siteflow";
 
 interface WorkOrder {
   id: string;
@@ -31,16 +33,11 @@ export default function SubconPage() {
   const companyId = params?.company_id as string || "e0000000-0000-0000-0000-000000000000";
   const projectId = activeProjectId;
 
-  // Mock datasets matching Onsite Teams screenshots
-  const [parties, setParties] = useState<Party[]>([
-    { id: "P-01", name: "Yash Desai", phone: "9876543210", email: "yash@siteflow.in", type: "Contractor", partyId: "PID-1", joinedDate: "2026-07-04" },
-    { id: "P-02", name: "Ramesh Sharma", phone: "8765432109", email: "ramesh@siteflow.in", type: "Sub Contractor", partyId: "PID-2", joinedDate: "2026-06-15" }
-  ]);
-
-  const [workOrders, setWorkOrders] = useState<WorkOrder[]>([
-    { id: "WO-01", sNo: 1, subContractor: "Ramesh Sharma", progress: "45%", woValue: 250000, billedValue: 112500, status: "Approved" },
-    { id: "WO-02", sNo: 2, subContractor: "Yash Desai", progress: "10%", woValue: 800000, billedValue: 80000, status: "Pending Approval" }
-  ]);
+  // Real backend-backed data
+  const [parties, setParties] = useState<Party[]>([]);
+  const [workOrders, setWorkOrders] = useState<WorkOrder[]>([]);
+  const [subcontractors, setSubcontractors] = useState<{ id: string; name: string }[]>([]);
+  const [loading, setLoading] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [toastMessage, setToastMessage] = useState("");
@@ -51,8 +48,7 @@ export default function SubconPage() {
 
   // Form states
   const [woForm, setWoForm] = useState({
-    partyName: "",
-    title: "Subcon Workorder #WO--1",
+    partyId: "",
     date: new Date().toISOString().split("T")[0]
   });
 
@@ -65,6 +61,58 @@ export default function SubconPage() {
     joinedDate: new Date().toISOString().split("T")[0]
   });
 
+  const fetchSubconData = async () => {
+    if (!projectId) return;
+    setLoading(true);
+    try {
+      const [woRes, partyRes, teamRes] = await Promise.all([
+        fetch(`${getApiHost()}/apis/v3/billing/work-orders?project_id=${projectId}`, { headers: authHeaders() }),
+        fetch(`${getApiHost()}/apis/v3/projects/${projectId}/parties`, { headers: authHeaders() }),
+        fetch(`${getApiHost()}/apis/v3/crm/team-members/${companyId}`, { headers: authHeaders() }),
+      ]);
+      if (woRes.ok) {
+        const data = await woRes.json();
+        setWorkOrders(
+          (data as any[]).map((wo: any, i: number) => ({
+            id: wo.wo_number || wo.id,
+            sNo: i + 1,
+            subContractor: wo.subcontractor_name || "Unknown",
+            progress: "0%",
+            woValue: Number(wo.estimated_work_amount) || 0,
+            billedValue: 0,
+            status: wo.status || "Draft",
+          }))
+        );
+      }
+      if (partyRes.ok) {
+        const data = await partyRes.json();
+        setParties(
+          (data as any[]).map((p: any) => ({
+            id: p.party_id,
+            name: p.name,
+            phone: "",
+            email: "",
+            type: p.party_type || "",
+            partyId: p.party_id,
+            joinedDate: "",
+          }))
+        );
+      }
+      if (teamRes.ok) {
+        const data = await teamRes.json();
+        setSubcontractors((data as any[]).map((t: any) => ({ id: String(t.id), name: t.name })));
+      }
+    } catch (e) {
+      console.error("Failed to load subcon data", e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchSubconData();
+  }, [projectId, companyId]);
+
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(""), 3000);
@@ -72,53 +120,87 @@ export default function SubconPage() {
 
   const fmt = (n: number) => "₹" + n.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-  const handleCreateWorkorder = () => {
-    if (!woForm.partyName) {
-      alert("Please select or add a subcontractor party!");
+  const handleCreateWorkorder = async () => {
+    if (!woForm.partyId) {
+      alert("Please select a subcontractor!");
       return;
     }
-    const newWO: WorkOrder = {
-      id: "WO-" + Date.now(),
-      sNo: workOrders.length + 1,
-      subContractor: woForm.partyName,
-      progress: "0%",
-      woValue: 150000,
-      billedValue: 0,
-      status: "Draft"
-    };
-    setWorkOrders([...workOrders, newWO]);
-    setShowWOModal(false);
-    showToast("Subcontractor Workorder created successfully!");
+    if (!projectId) {
+      alert("No active project selected.");
+      return;
+    }
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/billing/work-orders`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
+        body: JSON.stringify({
+          company_id: companyId,
+          project_id: projectId,
+          subcontractor_id: woForm.partyId,
+          wo_number: `WO-${Date.now().toString().slice(-6)}`,
+          wo_date: new Date(woForm.date).toISOString(),
+          terms: "",
+          items: [],
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.detail || "Failed to create work order");
+      }
+      await fetchSubconData();
+      setShowWOModal(false);
+      showToast("Subcontractor Workorder created successfully!");
+    } catch (err: any) {
+      alert(err?.message || "Error creating work order");
+    }
   };
 
-  const handleSaveParty = () => {
+  const handleSaveParty = async () => {
     if (!partyForm.name) {
       alert("Please specify the party name!");
       return;
     }
-    const newParty: Party = {
-      id: "P-" + Date.now(),
-      name: partyForm.name,
-      phone: partyForm.phone,
-      email: partyForm.email,
-      type: partyForm.type,
-      partyId: partyForm.partyId,
-      joinedDate: partyForm.joinedDate
-    };
-    setParties([...parties, newParty]);
-    setWoForm({ ...woForm, partyName: partyForm.name }); // Autofill selected party
-    setShowAddPartyDrawer(false);
-    showToast(`Party ${partyForm.name} saved successfully!`);
-    
-    // Reset form
-    setPartyForm({
-      name: "",
-      phone: "",
-      email: "",
-      type: "Contractor",
-      partyId: "PID-" + (parties.length + 2),
-      joinedDate: new Date().toISOString().split("T")[0]
-    });
+    if (!projectId) {
+      alert("No active project selected.");
+      return;
+    }
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/library/parties`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
+        body: JSON.stringify({
+          company_id: companyId,
+          name: partyForm.name,
+          phone: partyForm.phone || null,
+          email: partyForm.email || null,
+          party_type: partyForm.type || null,
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.detail || "Failed to create party");
+      }
+      const created = await res.json();
+      // Link the new party to the active project so it appears in the directory.
+      await fetch(`${getApiHost()}/apis/v3/projects/${projectId}/parties`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
+        body: JSON.stringify({ party_id: created.id }),
+      }).catch(() => null);
+      await fetchSubconData();
+      setShowAddPartyDrawer(false);
+      showToast(`Party ${partyForm.name} saved successfully!`);
+      setPartyForm({
+        name: "",
+        phone: "",
+        email: "",
+        type: "Contractor",
+        partyId: "PID-" + (parties.length + 2),
+        joinedDate: new Date().toISOString().split("T")[0]
+      });
+    } catch (err: any) {
+      alert(err?.message || "Error creating party");
+    }
   };
 
   const filteredWO = workOrders.filter(wo =>
@@ -199,6 +281,23 @@ export default function SubconPage() {
               </tbody>
             </table>
           </div>
+
+          {/* Subcontractor Directory — real, project-linked parties */}
+          <div className="mt-6 bg-card border border-border-custom rounded-xl overflow-hidden">
+            <div className="px-4 py-3 border-b border-border-custom text-[10px] uppercase font-bold tracking-wider text-muted">Subcontractor Directory</div>
+            {parties.length === 0 ? (
+              <div className="px-4 py-8 text-center text-muted text-xs">No linked subcontractor parties yet.</div>
+            ) : (
+              <ul className="divide-y divide-border-custom/40">
+                {parties.map(p => (
+                  <li key={p.id} className="px-4 py-3 flex items-center justify-between text-xs">
+                    <span className="font-semibold text-foreground">{p.name}</span>
+                    <span className="text-muted">{p.type}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
 
         {/* Sub-Con Workorder Modal (Screenshot 3) */}
@@ -209,7 +308,7 @@ export default function SubconPage() {
                 <div>
                   <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Sub-Con Workorder</h3>
                   <div className="flex items-center gap-1 mt-0.5">
-                    <span className="text-[11px] text-muted font-mono">#WO--1</span>
+                    <span className="text-[11px] text-muted font-mono">WO number: pending</span>
                   </div>
                 </div>
                 <button onClick={() => setShowWOModal(false)} className="text-muted hover:text-foreground text-base">✕</button>
@@ -222,29 +321,25 @@ export default function SubconPage() {
                 </div>
 
                 <div>
-                  <label className="text-[9px] text-muted uppercase font-bold block mb-1">Party Name</label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      placeholder="Search or select party..."
-                      value={woForm.partyName}
-                      onChange={e => setWoForm({ ...woForm, partyName: e.target.value })}
-                      className="w-full bg-background border border-border-custom rounded-lg pl-3 pr-8 py-2 text-foreground focus:outline-none focus:border-primary text-xs"
-                    />
-                    {woForm.partyName && (
-                      <button type="button" onClick={() => setWoForm({ ...woForm, partyName: "" })} className="absolute right-2.5 top-2.5 text-muted hover:text-foreground">✕</button>
-                    )}
-                  </div>
+                  <label className="text-[9px] text-muted uppercase font-bold block mb-1">Subcontractor</label>
+                  <select
+                    value={woForm.partyId}
+                    onChange={e => setWoForm({ ...woForm, partyId: e.target.value })}
+                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs"
+                  >
+                    <option value="">Select subcontractor…</option>
+                    {subcontractors.map(s => (
+                      <option key={s.id} value={s.id}>{s.name}</option>
+                    ))}
+                  </select>
 
-                  {!woForm.partyName && (
-                    <button
-                      type="button"
-                      onClick={() => setShowAddPartyDrawer(true)}
-                      className="w-full mt-2.5 py-3 border border-dashed border-primary/50 text-primary hover:bg-primary/5 font-bold rounded-lg text-xs flex items-center justify-center gap-1 transition-all"
-                    >
-                      <span>+ Create Party</span>
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    onClick={() => setShowAddPartyDrawer(true)}
+                    className="w-full mt-2.5 py-3 border border-dashed border-primary/50 text-primary hover:bg-primary/5 font-bold rounded-lg text-xs flex items-center justify-center gap-1 transition-all"
+                  >
+                    <span>+ Create Party</span>
+                  </button>
                 </div>
 
               </div>

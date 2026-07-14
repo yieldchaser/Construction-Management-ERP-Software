@@ -81,20 +81,6 @@ interface PayrollRun {
 
 // ─── Mock Data ────────────────────────────────────────────────────────────────
 
-const MOCK_EMPLOYEES: Employee[] = [
-  { id: "E-01", name: "Ramesh Kumar", code: "EMP-001", designation: "Site Engineer", department: "Civil", mobile: "9876543210", basic: 20000, hra: 4000, allowances: 2000, grossMonthly: 26000, pfPct: 12, esiApplicable: false, tdsMonthly: 0, status: "active", joined: "2025-01-15" },
-  { id: "E-02", name: "Priya Shah", code: "EMP-002", designation: "Project Manager", department: "Management", mobile: "9123456789", basic: 60000, hra: 15000, allowances: 10000, grossMonthly: 85000, pfPct: 12, esiApplicable: false, tdsMonthly: 2000, status: "active", joined: "2024-04-01" },
-  { id: "E-03", name: "Sanjay Yadav", code: "EMP-003", designation: "Foreman", department: "Labour", mobile: "9012345678", basic: 15000, hra: 3000, allowances: 1500, grossMonthly: 19500, pfPct: 12, esiApplicable: true, tdsMonthly: 0, status: "active", joined: "2025-06-01" },
-  { id: "E-04", name: "Meera Nair", code: "EMP-004", designation: "Safety Officer", department: "HSE", mobile: "9988776655", basic: 25000, hra: 6000, allowances: 3000, grossMonthly: 34000, pfPct: 12, esiApplicable: false, tdsMonthly: 500, status: "active", joined: "2025-03-10" },
-];
-
-const MOCK_ATTENDANCE: AttendanceRecord[] = [
-  { id: "A-01", employeeId: "E-01", employeeName: "Ramesh Kumar", date: "2026-06-26", punchIn: "08:02", punchOut: "17:15", hoursWorked: 9.22, overtime: 1.22, withinGeofence: true, status: "Present", distanceFromSite: 42 },
-  { id: "A-02", employeeId: "E-02", employeeName: "Priya Shah", date: "2026-06-26", punchIn: "09:00", punchOut: "18:30", hoursWorked: 9.5, overtime: 1.5, withinGeofence: true, status: "Present", distanceFromSite: 18 },
-  { id: "A-03", employeeId: "E-03", employeeName: "Sanjay Yadav", date: "2026-06-26", punchIn: "07:45", punchOut: "17:00", hoursWorked: 9.25, overtime: 1.25, withinGeofence: false, status: "Present (Off-Site)", distanceFromSite: 632 },
-  { id: "A-04", employeeId: "E-04", employeeName: "Meera Nair", date: "2026-06-26", punchIn: "08:30", punchOut: "", hoursWorked: 0, overtime: 0, withinGeofence: true, status: "Present", distanceFromSite: 5 },
-];
-
 const computePayslips = (employees: Employee[], daysPresent: Record<string, number>, daysInMonth: number): PayslipLine[] => {
   return employees.map(emp => {
     const days = daysPresent[emp.id] ?? daysInMonth;

@@ -82,114 +82,6 @@ interface Transaction {
   date: string;
 }
 
-const INITIAL_INDENTS: Indent[] = [
-  {
-    id: "IND-01",
-    indentNumber: "IND-2026-001",
-    items: [
-      { name: "UltraTech Cement", qty: 150, unit: "bags", specOverride: "Grade 53 OPC Cement", photoUrl: "https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=500" },
-      { name: "TMT Steel 16mm", qty: 5.5, unit: "tons", specOverride: "Fe 550D TMT Steel Rebar" }
-    ],
-    status: "approved",
-    requestedBy: "Suresh R (Project Manager)",
-    date: "2026-06-20"
-  },
-  {
-    id: "IND-02",
-    indentNumber: "IND-2026-002",
-    items: [
-      { name: "Traditional Clay Bricks", qty: 8000, unit: "nos" },
-      { name: "Fine River Sand", qty: 12, unit: "m³" }
-    ],
-    status: "pending",
-    requestedBy: "Amit K (Site Engineer)",
-    date: "2026-06-25"
-  }
-];
-
-const INITIAL_POS: PO[] = [
-  {
-    id: "PO-01",
-    poNumber: "PO-2026-041",
-    vendor: "National Steel Suppliers",
-    items: [
-      { name: "TMT Steel 16mm", qty: 4, unit: "tons", rate: 62000 }
-    ],
-    grossAmount: 248000,
-    taxAmount: 44640,
-    totalAmount: 292640,
-    status: "sent",
-    approvalFlag: "approved",
-    date: "2026-06-22"
-  },
-  {
-    id: "PO-02",
-    poNumber: "PO-2026-042",
-    vendor: "Shree Cement Traders",
-    items: [
-      { name: "UltraTech Cement", qty: 100, unit: "bags", rate: 410 }
-    ],
-    grossAmount: 41000,
-    taxAmount: 7380,
-    totalAmount: 48380,
-    status: "draft",
-    approvalFlag: "pending",
-    date: "2026-06-24"
-  }
-];
-
-const INITIAL_GRNS: GRN[] = [
-  {
-    id: "GRN-01",
-    grnNumber: "GRN-2026-004",
-    poNumber: "PO-2026-041",
-    vendor: "National Steel Suppliers",
-    receivedDate: "2026-06-18",
-    receivedBy: "Amit K (Site Engineer)",
-    items: [
-      { name: "TMT Steel 16mm", qty: 4.0, unit: "tons", rate: 62000 }
-    ],
-    isBilled: true
-  },
-  {
-    id: "GRN-02",
-    grnNumber: "GRN-2026-005",
-    poNumber: "PO-2026-041",
-    vendor: "National Steel Suppliers",
-    receivedDate: "2026-06-23",
-    receivedBy: "Amit K (Site Engineer)",
-    items: [
-      { name: "TMT Steel 16mm", qty: 1.5, unit: "tons", rate: 62000 }
-    ],
-    isBilled: false
-  },
-  {
-    id: "GRN-03",
-    grnNumber: "GRN-2026-006",
-    poNumber: "PO-2026-042",
-    vendor: "Shree Cement Traders",
-    receivedDate: "2026-06-26",
-    receivedBy: "Suresh R (Project PM)",
-    items: [
-      { name: "UltraTech Cement", qty: 80, unit: "bags", rate: 410 }
-    ],
-    isBilled: false
-  }
-];
-
-const INITIAL_INVENTORY: InventoryItem[] = [
-  { name: "TMT Steel 16mm", onHand: 12.5, reserved: 4.0, unit: "tons", minAlertThreshold: 5.0 },
-  { name: "UltraTech Cement", onHand: 85.0, reserved: 50.0, unit: "bags", minAlertThreshold: 100.0 }, 
-  { name: "Traditional Clay Bricks", onHand: 14000, reserved: 3000, unit: "nos", minAlertThreshold: 5000 },
-  { name: "Fine River Sand", onHand: 8.5, reserved: 0.0, unit: "m³", minAlertThreshold: 10.0 }
-];
-
-const INITIAL_TRANSACTIONS: Transaction[] = [
-  { id: "TXN-01", materialName: "UltraTech Cement", qty: 120, unit: "bags", type: "received", sourceRef: "GRN-2026-004", date: "2026-06-18" },
-  { id: "TXN-02", materialName: "UltraTech Cement", qty: 35, unit: "bags", type: "used", sourceRef: "DPR Floor 5 Slab", date: "2026-06-22" },
-  { id: "TXN-03", materialName: "TMT Steel 16mm", qty: 8.0, unit: "tons", type: "received", sourceRef: "GRN-2026-005", date: "2026-06-23" }
-];
-
 const VENDORS = [
   { id: "V001", name: "Shree Cement Traders", category: "Cement & Aggregate", rating: 4.8, city: "Delhi", status: "Active" },
   { id: "V002", name: "National Steel Suppliers", category: "TMT & Steel", rating: 4.5, city: "Mumbai", status: "Active" },
@@ -302,12 +194,8 @@ export default function ProcurementPage() {
       }
       setIsOffline(false);
     } catch (err) {
-      console.error("Procurement API unavailable, using demo data", err);
+      console.error("Procurement API unavailable", err);
       setIsOffline(true);
-      setIndents(INITIAL_INDENTS);
-      setPos(INITIAL_POS);
-      setGrns(INITIAL_GRNS);
-      setInventory(INITIAL_INVENTORY);
     }
   };
 

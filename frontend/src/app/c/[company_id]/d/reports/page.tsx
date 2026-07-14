@@ -18,29 +18,6 @@ interface ClientReport {
   created_at: string;
 }
 
-const MOCK_REPORTS: ClientReport[] = [
-  {
-    id: "rep-001",
-    project_id: "demo",
-    report_name: "Monthly Progress Report — June 2026",
-    report_date: "2026-06-30T18:00:00Z",
-    summary_markdown: "### Monthly Progress Report\nOverall project is at **65% completion**.\n\n#### Key Milestones:\n- **Foundation & Structure**: Completed up to Level 2 slab.\n- **Masonry**: Brickwork ongoing on Floor 2 east wing.\n- **MEP**: Rough-ins are progressing on G+1 floors.\n\n#### Concrete Strength:\nIS 456 slump testing and cube test parameters conform to specifications (35.2 MPa achieved).",
-    pdf_url: "#",
-    is_approved: true,
-    created_at: "2026-06-30T18:00:00Z"
-  },
-  {
-    id: "rep-002",
-    project_id: "demo",
-    report_name: "Weekly Site Status Update — Week 26",
-    report_date: "2026-06-25T18:00:00Z",
-    summary_markdown: "### Weekly Status Report\n- Plastering works started on ground floor.\n- Material audit confirmed sufficient sand and bricks for the next 14 days.\n- Daily labour strength averaged **22 workers**.",
-    pdf_url: "#",
-    is_approved: true,
-    created_at: "2026-06-25T18:00:00Z"
-  }
-];
-
 export default function ClientReportsPage() {
   const params = useParams();
   const companyId = params?.company_id as string;
@@ -80,12 +57,8 @@ export default function ClientReportsPage() {
         throw new Error(`HTTP ${res.status}`);
       }
     } catch (err) {
-      console.error("API unavailable, using demo data", err);
+      console.error("Reports API unavailable", err);
       setIsOffline(true);
-      setReports(MOCK_REPORTS);
-      if (!selectedReport) {
-        setSelectedReport(MOCK_REPORTS[0]);
-      }
     } finally {
       setLoading(false);
     }
@@ -247,13 +220,15 @@ export default function ClientReportsPage() {
                         ✓ Approve for Client Portal
                       </button>
                     )}
-                    <a
-                      href={`${getApiHost()}/apis/v3/reports/${selectedReport.id}/download`}
-                      download
-                      className="rounded-md bg-elevated hover:bg-sidebar text-foreground border border-border-custom px-4 py-2 text-xs font-bold transition-all text-center"
-                    >
-                      Download PDF
-                    </a>
+                    {selectedReport.pdf_url && selectedReport.pdf_url !== "#" && (
+                      <a
+                        href={`${getApiHost()}/apis/v3/reports/${selectedReport.id}/download`}
+                        download
+                        className="rounded-md bg-elevated hover:bg-sidebar text-foreground border border-border-custom px-4 py-2 text-xs font-bold transition-all text-center"
+                      >
+                        Download PDF
+                      </a>
+                    )}
                   </div>
                 </div>
 

@@ -81,100 +81,6 @@ interface TallySyncLog {
   created_at: string;
 }
 
-const INITIAL_TRANSACTIONS: Transaction[] = [
-  { 
-    id: "TXN-00", 
-    date: "2026-07-02", 
-    type: "Receipt", 
-    category: "Salary Advance", 
-    description: "Opening Balance Advance Paid", 
-    amount: 8000, 
-    party: "Yash Desai", 
-    ref: "OP-BAL-001", 
-    ledger: "Loans & Advances",
-    status: "Approved",
-    cost_code: "6.1 Staff Salary",
-    settled_amount: 8000,
-    balance_due: 8000
-  },
-  { 
-    id: "TXN-01", 
-    date: "2026-06-30", 
-    type: "Expense", 
-    category: "Site Expense", 
-    description: "Supervisor Site Travel Fuel Voucher", 
-    amount: 250, 
-    party: "Kanchan (Mason Lead)", 
-    ref: "ONS-V-2026-981", 
-    ledger: "Travelling Expenses",
-    status: "Pending",
-    cost_code: "1.2.1 Site Conveyance",
-    photo_url: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=500",
-    settled_amount: 0,
-    balance_due: 250
-  },
-  { 
-    id: "TXN-02", 
-    date: "2026-06-28", 
-    type: "Expense", 
-    category: "Material Payment", 
-    description: "Cement Bags Purchase Ledger", 
-    amount: 62000, 
-    party: "Shree Cement Traders", 
-    ref: "PO-2026-042", 
-    ledger: "Material Purchase",
-    status: "Approved",
-    cost_code: "2.1 Raw Materials",
-    settled_amount: 62000,
-    balance_due: 0
-  },
-  { 
-    id: "TXN-03", 
-    date: "2026-06-25", 
-    type: "Receipt", 
-    category: "Client Billing", 
-    description: "Client Milestone #1 Slab Payment", 
-    amount: 150000, 
-    party: "Mumbai Metro Rail Corp", 
-    ref: "REC-2026-104", 
-    ledger: "Client Billed Income",
-    status: "Approved",
-    settled_amount: 150000,
-    balance_due: 0
-  },
-  {
-    id: "TXN-04",
-    date: "2026-06-24",
-    type: "Debit Note",
-    category: "Material Return",
-    description: "Returned defective reinforcing steel bars",
-    amount: 12500,
-    party: "Apex Steel Industries",
-    ref: "DN-2026-004",
-    ref_invoice: "INV-2026-4412",
-    ledger: "Material Purchase Return",
-    status: "Approved",
-    cost_code: "2.1 Raw Materials",
-    settled_amount: 12500,
-    balance_due: 0
-  },
-  {
-    id: "TXN-05",
-    date: "2026-06-23",
-    type: "Credit Note",
-    category: "Client Discount",
-    description: "Credit note raised for plastering thickness variance correction",
-    amount: 4500,
-    party: "Mumbai Metro Rail Corp",
-    ref: "CN-2026-001",
-    ref_invoice: "REC-2026-104",
-    ledger: "Discount Allowed",
-    status: "Approved",
-    settled_amount: 4500,
-    balance_due: 0
-  }
-];
-
 function formatDmy(iso?: string): string {
   if (!iso) return "";
   const d = new Date(iso + "T00:00:00");
@@ -197,7 +103,7 @@ export default function FinancePage() {
 
   const [tab, setTab] = useState<"ledger" | "party" | "cashbook" | "pl" | "tally" | "costvar" | "payment_requests" | "accounts">("ledger");
   
-  const [transactions, setTransactions] = useState<Transaction[]>(INITIAL_TRANSACTIONS);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [plData, setPlData] = useState<PLItem[]>([]);
   const [tallyConn, setTallyConn] = useState<TallyConnection | null>(null);
 
