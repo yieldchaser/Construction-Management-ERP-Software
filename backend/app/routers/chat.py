@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from app.database import get_db
 from app.auth import get_current_user, verify_project_access, get_company_membership
-from app.models import ChatGroup, ChatMessage, ChatGroupMember, User
+from app.models import ChatGroup, ChatMessage, ChatGroupMember, User, CompanyTeam
 
 router = APIRouter(prefix="/chat", tags=["Chat & MOM"], dependencies=[Depends(get_current_user)])
 
@@ -102,6 +102,7 @@ class ChatGroupMemberResponse(BaseModel):
     user_id: uuid.UUID
     role: str
     joined_at: datetime
+    name: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -142,6 +143,15 @@ def send_message(payload: ChatMessageCreate, db: Session = Depends(get_db), curr
     get_company_membership(db, current_user, group.company_id)
     verify_group_membership(db, current_user, group.id)
     msg = ChatMessage(**payload.model_dump())
+    # Stamp the real sender so names resolve on read. The server owns the
+    # sender identity, not the client payload. user_id links to company_team.id.
+    ct = db.query(CompanyTeam).filter(
+        CompanyTeam.company_id == group.company_id,
+        CompanyTeam.user_id == current_user.id
+    ).first()
+    if ct is not None:
+        msg.user_id = ct.id
+    msg.user_name = current_user.name
     db.add(msg)
     db.commit()
     db.refresh(msg)
@@ -155,10 +165,31 @@ def list_messages(group_id: uuid.UUID, db: Session = Depends(get_db), current_us
         raise HTTPException(status_code=404, detail="Chat group not found")
     get_company_membership(db, current_user, group.company_id)
     verify_group_membership(db, current_user, group.id)
-    messages = db.query(ChatMessage).filter(
-        ChatMessage.group_id == group_id
-    ).order_by(ChatMessage.created_at.asc()).all()
-    return [ChatMessageResponse.from_attributes(m) for m in messages]
+    rows = (
+        db.query(ChatMessage, User.name)
+        .join(CompanyTeam, CompanyTeam.id == ChatMessage.user_id, isouter=True)
+        .join(User, User.id == CompanyTeam.user_id, isouter=True)
+        .filter(ChatMessage.group_id == group_id)
+        .order_by(ChatMessage.created_at.asc())
+        .all()
+    )
+    result = []
+    for msg, resolved_name in rows:
+        data = {
+            "id": msg.id,
+            "group_id": msg.group_id,
+            "user_id": msg.user_id,
+            "user_name": resolved_name or msg.user_name or "SiteFlow",
+            "message_text": msg.message_text,
+            "media_url": msg.media_url,
+            "voice_note_url": msg.voice_note_url,
+            "image_urls": msg.image_urls or [],
+            "is_mom": msg.is_mom,
+            "mom_date": msg.mom_date,
+            "created_at": msg.created_at,
+        }
+        result.append(ChatMessageResponse(**data))
+    return result
 
 
 @router.get("/groups/{group_id}/members", response_model=List[ChatGroupMemberResponse])
@@ -168,7 +199,24 @@ def list_members(group_id: uuid.UUID, db: Session = Depends(get_db), current_use
         raise HTTPException(status_code=404, detail="Chat group not found")
     get_company_membership(db, current_user, group.company_id)
     verify_group_membership(db, current_user, group.id)
-    return db.query(ChatGroupMember).filter(ChatGroupMember.group_id == group_id).all()
+    rows = (
+        db.query(ChatGroupMember, User.name)
+        .join(CompanyTeam, CompanyTeam.id == ChatGroupMember.user_id, isouter=True)
+        .join(User, User.id == CompanyTeam.user_id, isouter=True)
+        .filter(ChatGroupMember.group_id == group_id)
+        .all()
+    )
+    result = []
+    for member, name in rows:
+        result.append(ChatGroupMemberResponse(
+            id=member.id,
+            group_id=member.group_id,
+            user_id=member.user_id,
+            role=member.role,
+            joined_at=member.joined_at,
+            name=name,
+        ))
+    return result
 
 
 @router.post("/groups/{group_id}/members", response_model=ChatGroupMemberResponse, status_code=status.HTTP_201_CREATED)

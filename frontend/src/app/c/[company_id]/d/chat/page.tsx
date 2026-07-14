@@ -31,7 +31,7 @@ interface ChatMember {
   user_id: string;
   role: string;
   joined_at: string;
-  user_name?: string; // Optional resolved display name
+  name?: string; // Resolved real name returned by the backend
 }
 
 export default function ChatPage() {
@@ -95,10 +95,11 @@ export default function ChatPage() {
       const res = await fetch(`${getApiHost()}/apis/v3/chat/groups/${groupId}/members`, { headers: authHeaders() });
       if (res.ok) {
         const rawMembers = await res.json();
-        // Resolve mock names for presentation
+        // Use the real name resolved by the backend. Fall back to a neutral
+        // label (never a person's name) only if a name is somehow missing.
         const resolved = rawMembers.map((m: ChatMember) => ({
           ...m,
-          user_name: m.user_id === "e0000000-0000-0000-0000-000000000000" ? "SiteFlow" : (m.user_name || `User ${m.user_id.slice(0, 5)}`)
+          name: m.name || `User ${m.user_id.slice(0, 5)}`
         }));
         setMembers(resolved);
 
@@ -265,7 +266,7 @@ export default function ChatPage() {
   );
 
   const filteredMembers = members.filter((m) =>
-    (m.user_name || m.user_id).toLowerCase().includes(searchMemberQuery.toLowerCase())
+    (m.name || m.user_id).toLowerCase().includes(searchMemberQuery.toLowerCase())
   );
 
   // Helper avatar colors
@@ -382,7 +383,7 @@ export default function ChatPage() {
                           idx === 0 ? "bg-primary text-white" : idx === 1 ? "bg-purple-500 text-white" : "bg-emerald-500 text-white"
                         }`}
                       >
-                        {(m.user_name || m.user_id).charAt(0).toUpperCase()}
+                        {(m.name || m.user_id).charAt(0).toUpperCase()}
                       </div>
                     ))}
                     {members.length > 3 && (
@@ -477,8 +478,8 @@ export default function ChatPage() {
                           )}
 
                           {/* Sender details */}
-                          {!isSystemMom && msg.user_name && (
-                            <div className="text-[10px] font-bold text-primary mb-1">{msg.user_name}</div>
+                          {!isSystemMom && (msg.user_name || "SiteFlow") && (
+                            <div className="text-[10px] font-bold text-primary mb-1">{msg.user_name || "SiteFlow"}</div>
                           )}
 
                           {/* Message Body */}
@@ -762,10 +763,10 @@ export default function ChatPage() {
                       >
                         <div className="flex items-center gap-2.5 min-w-0">
                           <div className="h-7 w-7 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-[10px] shrink-0">
-                            {(m.user_name || m.user_id).charAt(0).toUpperCase()}
+                        {(m.name || m.user_id).charAt(0).toUpperCase()}
                           </div>
                           <div className="min-w-0">
-                            <div className="text-xs font-bold text-foreground truncate">{m.user_name || `User ${m.user_id.slice(0, 8)}`}</div>
+                            <div className="text-xs font-bold text-foreground truncate">{m.name || `User ${m.user_id.slice(0, 8)}`}</div>
                             <div className="text-[9px] text-muted capitalize font-medium">{m.role === "admin" ? "Group Admin" : "Member"}</div>
                           </div>
                         </div>
