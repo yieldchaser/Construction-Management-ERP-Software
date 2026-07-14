@@ -91,24 +91,7 @@ const CHECKLISTS: Checklist[] = [
   },
 ];
 
-const INSPECTIONS: Inspection[] = [
-  { id: "INS-01", zone: "Floor 3 — Grid C-D", checklist: "IS 456 Concrete Pre-Pour", date: "2026-06-26", status: "partial", passCount: 3, failCount: 1, naCount: 0, inspector: "Ramesh Kumar" },
-  { id: "INS-02", zone: "Foundation — Block A", checklist: "IS 1786 Rebar Acceptance", date: "2026-06-25", status: "pass", passCount: 3, failCount: 0, naCount: 0, inspector: "Meera Nair" },
-  { id: "INS-03", zone: "Basement — Retaining Wall", checklist: "IS 456 Concrete Pre-Pour", date: "2026-06-24", status: "fail", passCount: 2, failCount: 3, naCount: 0, inspector: "Ramesh Kumar" },
-];
 
-const NCRS: NCR[] = [
-  { id: "NCR-01", number: "NCR-2026-001", title: "Shuttering misalignment >10mm at Floor 3 Grid C-D", severity: "Critical", status: "open", zone: "Floor 3 Grid C-D", raisedBy: "Ramesh Kumar", date: "2026-06-26", dueDate: "2026-06-27" },
-  { id: "NCR-02", number: "NCR-2026-002", title: "Rebar cover <30mm found in basement wall", severity: "Major", status: "under_review", zone: "Basement Wall B2", raisedBy: "Meera Nair", date: "2026-06-24", dueDate: "2026-06-28" },
-  { id: "NCR-03", number: "NCR-2026-003", title: "Vibrator not available during pour", severity: "Minor", status: "closed", zone: "Floor 1 Slab", raisedBy: "Ramesh Kumar", date: "2026-06-20", dueDate: "2026-06-21", resolution: "Additional vibrator arranged from site stores." },
-];
-
-const LAB_TESTS: LabTest[] = [
-  { id: "T-01", type: "Cube Test", material: "Concrete M25", sampleRef: "CB-2026-001", date: "2026-06-26", value: 28.4, unit: "MPa", min: 25, max: 50, pass: true, zone: "Floor 3 Col C3" },
-  { id: "T-02", type: "Slump Test", material: "Concrete M25", sampleRef: "SL-2026-001", date: "2026-06-26", value: 145, unit: "mm", min: 25, max: 150, pass: true, zone: "Floor 3 Slab" },
-  { id: "T-03", type: "Cube Test", material: "Concrete M30", sampleRef: "CB-2026-002", date: "2026-06-24", value: 33.1, unit: "MPa", min: 30, max: 60, pass: true, zone: "Basement Slab" },
-  { id: "T-04", type: "Compaction Test", material: "Backfill Soil", sampleRef: "CP-2026-001", date: "2026-06-23", value: 97.2, unit: "%", min: 95, max: 100, pass: true, zone: "Perimeter Fill" },
-];
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 

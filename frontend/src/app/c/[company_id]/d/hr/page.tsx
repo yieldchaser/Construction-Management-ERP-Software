@@ -149,10 +149,7 @@ export default function HRPayrollPage() {
   };
 
   // Leave Management states
-  const [leaves, setLeaves] = useState<any[]>([
-    { id: "LV-01", employeeId: "E-01", employeeName: "Ramesh Kumar", leaveType: "Casual", startDate: "2026-07-02", endDate: "2026-07-03", days: 2, reason: "Personal work at hometown", status: "Pending" },
-    { id: "LV-02", employeeId: "E-03", employeeName: "Sanjay Yadav", leaveType: "Sick", startDate: "2026-06-20", endDate: "2026-06-21", days: 2, reason: "Viral Fever", status: "Approved" },
-  ]);
+  const [leaves, setLeaves] = useState<any[]>([]);
   const [showApplyLeaveModal, setShowApplyLeaveModal] = useState(false);
   const [leaveForm, setLeaveForm] = useState({
     employeeId: "E-01",
@@ -161,11 +158,7 @@ export default function HRPayrollPage() {
     endDate: "",
     reason: ""
   });
-  const [timesheets, setTimesheets] = useState<Timesheet[]>([
-    { id: "TS-01", employeeId: "E-01", employeeName: "Ramesh Kumar", weekStart: "2026-06-16", weekEnd: "2026-06-22", totalHours: 47.5, status: "approved" },
-    { id: "TS-02", employeeId: "E-02", employeeName: "Priya Shah", weekStart: "2026-06-16", weekEnd: "2026-06-22", totalHours: 44.0, status: "submitted" },
-    { id: "TS-03", employeeId: "E-03", employeeName: "Sanjay Yadav", weekStart: "2026-06-23", weekEnd: "2026-06-29", totalHours: 18.5, status: "draft" },
-  ]);
+  const [timesheets, setTimesheets] = useState<Timesheet[]>([]);
   const [timesheetLogs, setTimesheetLogs] = useState<any[]>([]);
   const [projectTasks, setProjectTasks] = useState<any[]>([]);
   const [showNewTimesheetDrawer, setShowNewTimesheetDrawer] = useState(false);
@@ -1613,7 +1606,7 @@ export default function HRPayrollPage() {
             <div className="flex gap-3 mt-6">
               <button
                 onClick={async () => {
-                  const emp = employees.find(e => e.id === leaveForm.employeeId) || { name: leaveForm.employeeId === "E-01" ? "Ramesh Kumar" : leaveForm.employeeId === "E-02" ? "Priya Shah" : leaveForm.employeeId === "E-03" ? "Sanjay Yadav" : "Meera Nair" };
+                  const emp = employees.find(e => e.id === leaveForm.employeeId) || { name: "Unknown" };
                   const d1 = new Date(leaveForm.startDate);
                   const d2 = new Date(leaveForm.endDate);
                   const diff = Math.ceil(Math.abs(d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24)) + 1;

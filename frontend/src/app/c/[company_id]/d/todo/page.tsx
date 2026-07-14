@@ -65,8 +65,8 @@ export default function ToDoPage() {
   const [isNewTodoOpen, setIsNewTodoOpen] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newDueDate, setNewDueDate] = useState(new Date().toISOString().split("T")[0]);
-  const [newAssigned, setNewAssigned] = useState("Ramesh Kumar");
-  const [newProject, setNewProject] = useState("Skyline Towers");
+  const [newAssigned, setNewAssigned] = useState("");
+  const [newProject, setNewProject] = useState("");
   const [newType, setNewType] = useState("General");
 
   // Repeat Settings Modal State
