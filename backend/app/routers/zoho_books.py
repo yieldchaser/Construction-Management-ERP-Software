@@ -267,8 +267,8 @@ def _find_or_create_vendor(access_token: str, organization_id: str, *, name: str
     if gstin:
         contact_payload["gst_no"] = gstin
         contact_payload["gst_treatment"] = "business_gst"
-        # place_of_supply is the 2-char state code from the GSTIN.
-        contact_payload["place_of_supply"] = gstin[:2]
+        # Zoho derives place_of_supply from gst_no; sending the numeric GSTIN
+        # prefix here is wrong (Zoho wants the alphabetic state code), so omit it.
 
     resp = requests.post(
         f"{_api_base()}contacts",
@@ -595,9 +595,9 @@ def push_bill(
     if bill.due_date:
         bill_payload["due_date"] = bill.due_date.date().isoformat()
     # GST fields only when a GSTIN exists; non-GST orgs reject the element.
+    # place_of_supply is derived by Zoho from the vendor's gst_no.
     if gstin:
         bill_payload["gst_treatment"] = "business_gst"
-        bill_payload["place_of_supply"] = gstin[:2]
 
     resp = requests.post(
         f"{_api_base()}bills",
