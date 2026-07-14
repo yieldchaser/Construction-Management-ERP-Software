@@ -92,6 +92,9 @@ graph TD
     RT --> BLOB
     RT -->|XML sync| TALLY["Tally Prime"]
     RT -->|OAuth| GS["Google Sheets"]
+    RT -->|OAuth| ZOHO["Zoho Books"]
+    RT -->|OAuth| GDRIVE["Google Drive"]
+    RT -->|API key feeds| BI["PowerBI / Tableau"]
 ```
 
 ### Multi-tenant model
@@ -193,7 +196,7 @@ Derived from the backend routers and the frontend page tree, not from prior docs
 - Multi-company switching (`CompanySwitcher`), branches, roles, approval rules, payroll settings, company terms, company file assets
 - Pure inline-SVG charts with a built-in chart-type switcher (bar, line, area, smooth, pie, donut, scatter, funnel, heatmap/grid, sunburst/rose, stacked, grouped, table) on the company dashboard
 - Installable PWA with a service worker (`public/sw.js`) and offline punch queue
-- Integrations: Tally Prime and Google Sheets are implemented as backend routers. Zoho Books is referenced in marketing copy but no corresponding backend router was found in this review (treat as not-yet-implemented or verify separately).
+- Integrations (all backend routers under `/apis/v3/integrations/*`, plus Tally): **Tally Prime** (XML sync), **Google Sheets** (payroll export), **Google Drive** (file backup), **Zoho Books** (push vendor bills, `.in`/`.com`/`.eu` data tiers, GST-aware), and **BI Data Export** (per-company API keys serving CSV/JSON feeds for PowerBI/Tableau). All OAuth integrations store tokens Fernet-encrypted at rest and are env-gated (return 503 when unconfigured). GPS geofencing is a native PWA feature, not a third-party connector. WhatsApp is planned; OneDrive and QuickBooks were evaluated and dropped.
 
 ## ⚙️ Getting started
 
@@ -259,6 +262,8 @@ Copy `.env.example` to `.env` for the backend. Frontend variables are build-time
 | `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` | Optional | File blobs move to Supabase Storage; otherwise stored in the DB `data` column. |
 | `SENTRY_DSN` | Optional | Backend error reporting; cleanly skipped when empty. |
 | `GOOGLE_SHEETS_CLIENT_ID` / `GOOGLE_SHEETS_CLIENT_SECRET` | Optional | Google Sheets integration OAuth. |
+| `GOOGLE_DRIVE_CLIENT_ID` / `GOOGLE_DRIVE_CLIENT_SECRET` | Optional | Google Drive integration OAuth; falls back to the Google Sheets client when unset. |
+| `ZOHO_CLIENT_ID` / `ZOHO_CLIENT_SECRET` / `ZOHO_REGION` | Optional | Zoho Books integration OAuth. `ZOHO_REGION` (default `in`) drives the accounts + API base URLs (`.in`/`.com`/`.eu`). |
 | `TOKEN_ENCRYPTION_KEY` | Optional | Fernet (base64) key that encrypts Google Sheets OAuth tokens at rest in `GoogleSheetsConnection`; connections created while it is unset store plaintext tokens. |
 | `BACKEND_PUBLIC_URL` / `FRONTEND_PUBLIC_URL` | Optional | OAuth redirect bases; fall back to request/frontend origins. |
 | `ADMIN_MIGRATION_SECRET` | Optional | One-off admin migrations (for example file backfill); routes reject with 403 when empty. |
