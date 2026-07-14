@@ -1212,6 +1212,19 @@ class TallyBankMapping(Base):
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 
 
+class TallySyncLog(Base):
+    """Audit log of Tally XML exports / mark-synced actions per company."""
+    __tablename__ = "tally_sync_logs"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    exported_at = Column(DateTime(timezone=True), nullable=True)
+    marked_synced_at = Column(DateTime(timezone=True), nullable=True)
+    voucher_count = Column(Integer, default=0, nullable=False)
+    bill_ids = Column(Text, nullable=True)  # JSON list of exported/marked bill UUIDs
+    payment_ids = Column(Text, nullable=True)  # JSON list of exported/marked payment UUIDs
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Competitor Parity Models
 # ─────────────────────────────────────────────────────────────────────────────

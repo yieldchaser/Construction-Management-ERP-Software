@@ -32,9 +32,53 @@ interface PLItem {
 }
 
 interface TallyConnection {
-  tally_company_name: string;
-  registered_mobile: string;
-  sync_window_start_date: string;
+  connected?: boolean;
+  tally_company_name?: string;
+  registered_mobile?: string;
+  sync_window_start_date?: string;
+  voucher_number_template?: string;
+  default_cash_ledger?: string;
+  auto_create_missing_ledgers?: boolean;
+}
+
+interface TallyPartyMapping {
+  id: string;
+  company_id: string;
+  onsite_party_id: string;
+  tally_ledger_name: string;
+}
+
+interface TallyLedgerMapping {
+  id: string;
+  company_id: string;
+  onsite_transaction_type: string;
+  posting_mode: string;
+  tally_voucher_type: string;
+  tally_ledger_name: string;
+}
+
+interface TallyCostCentreMapping {
+  id: string;
+  company_id: string;
+  project_id: string;
+  tally_cost_centre_name: string;
+}
+
+interface TallyPendingVoucher {
+  type: string;
+  number: string;
+  party: string;
+  amount: number;
+  date: string;
+}
+
+interface TallySyncLog {
+  id: string;
+  company_id: string;
+  exported_at: string | null;
+  marked_synced_at: string | null;
+  voucher_count: number;
+  created_at: string;
 }
 
 const INITIAL_TRANSACTIONS: Transaction[] = [
@@ -274,15 +318,31 @@ export default function FinancePage() {
   const [txnDateFilter, setTxnDateFilter] = useState("");
 
   // Tally Sync States
-  const [syncing, setSyncing] = useState(false);
-  const [lastSync, setLastSync] = useState("Not synced yet");
-  const [syncLogs, setSyncLogs] = useState<string[]>([]);
-  const [queuedVouchers, setQueuedVouchers] = useState(0);
+  const [tallyPending, setTallyPending] = useState<{ count: number; bill_ids: string[]; payment_ids: string[]; vouchers: TallyPendingVoucher[] }>({ count: 0, bill_ids: [], payment_ids: [], vouchers: [] });
+  const [tallyExporting, setTallyExporting] = useState(false);
+  const [tallyMarking, setTallyMarking] = useState(false);
+  const [tallyLastExport, setTallyLastExport] = useState<string | null>(null);
+  const [tallyLastMarked, setTallyLastMarked] = useState<string | null>(null);
+  const [tallyMsg, setTallyMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
 
   // Tally Setup Modal
   const [showTallySetup, setShowTallySetup] = useState(false);
   const [tallyCompany, setTallyCompany] = useState("");
   const [tallyMobile, setTallyMobile] = useState("");
+  const [tallyVoucherTemplate, setTallyVoucherTemplate] = useState("ONS-{year}-{number}");
+  const [tallyDefaultCash, setTallyDefaultCash] = useState("");
+  const [tallyAutoCreate, setTallyAutoCreate] = useState(false);
+  const [tallySaving, setTallySaving] = useState(false);
+
+  // Tally Mappings
+  const [tallyPartyMappings, setTallyPartyMappings] = useState<TallyPartyMapping[]>([]);
+  const [tallyLedgerMappings, setTallyLedgerMappings] = useState<TallyLedgerMapping[]>([]);
+  const [tallyCostCentreMappings, setTallyCostCentreMappings] = useState<TallyCostCentreMapping[]>([]);
+  const [partyLedgerInputs, setPartyLedgerInputs] = useState<Record<string, string>>({});
+  const [purchaseLedgerInput, setPurchaseLedgerInput] = useState("Purchase A/c");
+  const [salesLedgerInput, setSalesLedgerInput] = useState("Sales A/c");
+  const [costCentreInput, setCostCentreInput] = useState("");
+  const [tallySyncLogs, setTallySyncLogs] = useState<TallySyncLog[]>([]);
 
   // Search & Filters
   const [searchQuery, setSearchQuery] = useState("");
@@ -302,9 +362,16 @@ export default function FinancePage() {
       const tallyRes = await fetch(`${getApiHost()}/apis/v3/tally/connections?company_id=${companyId}`, { headers: authHeaders() });
       if (tallyRes.ok) {
         const data = await tallyRes.json();
-        setTallyConn(data);
-        setTallyCompany(data.tally_company_name);
-        setTallyMobile(data.registered_mobile);
+        if (data && data.connected === false) {
+          setTallyConn(null);
+        } else {
+          setTallyConn(data);
+          setTallyCompany(data.tally_company_name || "");
+          setTallyMobile(data.registered_mobile || "");
+          setTallyVoucherTemplate(data.voucher_number_template || "ONS-{year}-{number}");
+          setTallyDefaultCash(data.default_cash_ledger || "");
+          setTallyAutoCreate(Boolean(data.auto_create_missing_ledgers));
+        }
       }
       // Fetch Bank Accounts
       const bankRes = await fetch(`${getApiHost()}/apis/v3/finance/accounts/${companyId}`, { headers: authHeaders() });
@@ -664,33 +731,209 @@ export default function FinancePage() {
     }
   };
 
-  const handleTriggerSync = async () => {
-    setSyncing(true);
-    setSyncLogs([]);
+  const fetchTallyData = async () => {
     try {
-      const apiHost = getApiHost();
-      const res = await fetch(`${apiHost}/apis/v3/tally/sync?company_id=${companyId}`, {
+      const pendingRes = await fetch(`${getApiHost()}/apis/v3/tally/pending?company_id=${companyId}`, { headers: authHeaders() });
+      if (pendingRes.ok) setTallyPending(await pendingRes.json());
+
+      const pmRes = await fetch(`${getApiHost()}/apis/v3/tally/mappings/party?company_id=${companyId}`, { headers: authHeaders() });
+      if (pmRes.ok) {
+        const pm: TallyPartyMapping[] = await pmRes.json();
+        setTallyPartyMappings(pm);
+        const init: Record<string, string> = {};
+        pm.forEach(m => { init[m.onsite_party_id] = m.tally_ledger_name; });
+        setPartyLedgerInputs(init);
+      }
+
+      const lmRes = await fetch(`${getApiHost()}/apis/v3/tally/mappings/ledger?company_id=${companyId}`, { headers: authHeaders() });
+      if (lmRes.ok) {
+        const lm: TallyLedgerMapping[] = await lmRes.json();
+        setTallyLedgerMappings(lm);
+        const purchase = lm.find(m => m.onsite_transaction_type === "Material Purchase");
+        const sales = lm.find(m => m.onsite_transaction_type === "Sales Invoice");
+        if (purchase) setPurchaseLedgerInput(purchase.tally_ledger_name);
+        if (sales) setSalesLedgerInput(sales.tally_ledger_name);
+      }
+
+      const ccRes = await fetch(`${getApiHost()}/apis/v3/tally/mappings/cost-centre?company_id=${companyId}`, { headers: authHeaders() });
+      if (ccRes.ok) {
+        const cc: TallyCostCentreMapping[] = await ccRes.json();
+        setTallyCostCentreMappings(cc);
+        if (activeProjectId) {
+          const found = cc.find(m => m.project_id === activeProjectId);
+          if (found) setCostCentreInput(found.tally_cost_centre_name);
+        }
+      }
+
+      const logRes = await fetch(`${getApiHost()}/apis/v3/tally/sync-logs?company_id=${companyId}`, { headers: authHeaders() });
+      if (logRes.ok) setTallySyncLogs(await logRes.json());
+    } catch (e) {
+      console.error("Failed to load Tally data", e);
+    }
+  };
+
+  useEffect(() => {
+    if (companyId) {
+      fetchTallyData();
+    }
+  }, [companyId, activeProjectId]);
+
+  const openTallySetup = () => {
+    setTallyCompany(tallyConn?.tally_company_name || "");
+    setTallyMobile(tallyConn?.registered_mobile || "");
+    setTallyVoucherTemplate(tallyConn?.voucher_number_template || "ONS-{year}-{number}");
+    setTallyDefaultCash(tallyConn?.default_cash_ledger || "");
+    setTallyAutoCreate(Boolean(tallyConn?.auto_create_missing_ledgers));
+    setShowTallySetup(true);
+  };
+
+  const saveTallyConnection = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!tallyCompany.trim() || !tallyMobile.trim()) {
+      setTallyMsg({ type: "err", text: "Tally company name and registered mobile are required." });
+      return;
+    }
+    setTallySaving(true);
+    setTallyMsg(null);
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/tally/connections`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) }
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
+        body: JSON.stringify({
+          company_id: companyId,
+          tally_company_name: tallyCompany.trim(),
+          registered_mobile: tallyMobile.trim(),
+          sync_window_start_date: tallyConn?.sync_window_start_date || new Date().toISOString(),
+          voucher_number_template: tallyVoucherTemplate.trim() || "ONS-{year}-{number}",
+          auto_create_missing_ledgers: tallyAutoCreate,
+          default_cash_ledger: tallyDefaultCash.trim() || null,
+        }),
       });
       if (res.ok) {
         const data = await res.json();
-        setSyncLogs([
-          `[${new Date().toLocaleTimeString()}] Handshake successful with Tally Gateway.`,
-          `[${new Date().toLocaleTimeString()}] ${data.message || "Pushed approved vouchers successfully."}`,
-        ]);
+        setTallyConn(data);
+        setShowTallySetup(false);
+        setTallyMsg({ type: "ok", text: "Tally connection saved." });
       } else {
-        setSyncLogs([
-          `[${new Date().toLocaleTimeString()}] Sync failed: HTTP ${res.status}`,
-        ]);
+        const err = await res.json().catch(() => ({}));
+        setTallyMsg({ type: "err", text: err.detail || "Failed to save Tally connection." });
       }
-    } catch (err) {
-      setSyncLogs([
-        `[${new Date().toLocaleTimeString()}] Sync error: Network unavailable`,
-      ]);
+    } catch (e: any) {
+      setTallyMsg({ type: "err", text: e?.message || "Failed to save Tally connection." });
     } finally {
-      setLastSync(new Date().toLocaleString());
-      setSyncing(false);
+      setTallySaving(false);
+    }
+  };
+
+  const handleDownloadXml = async () => {
+    setTallyExporting(true);
+    setTallyMsg(null);
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/tally/export?company_id=${companyId}`, { headers: authHeaders() });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        setTallyMsg({ type: "err", text: err.detail || `Export failed (HTTP ${res.status}).` });
+        return;
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `siteflow-tally-${new Date().toISOString().slice(0, 10)}.xml`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      setTallyLastExport(new Date().toLocaleString());
+      setTallyMsg({ type: "ok", text: "Tally XML downloaded. Import it in Tally Prime, then mark as imported below." });
+    } catch (e: any) {
+      setTallyMsg({ type: "err", text: e?.message || "Export failed." });
+    } finally {
+      setTallyExporting(false);
+    }
+  };
+
+  const handleMarkSynced = async () => {
+    if (tallyPending.bill_ids.length === 0 && tallyPending.payment_ids.length === 0) {
+      setTallyMsg({ type: "err", text: "No pending vouchers to mark." });
+      return;
+    }
+    setTallyMarking(true);
+    setTallyMsg(null);
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/tally/mark-synced`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
+        body: JSON.stringify({
+          bill_ids: tallyPending.bill_ids,
+          payment_ids: tallyPending.payment_ids,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setTallyLastMarked(new Date(data.marked_synced_at || Date.now()).toLocaleString());
+        setTallyMsg({ type: "ok", text: `Marked ${data.marked_bills} bill(s) and ${data.marked_payments} payment(s) as synced.` });
+        await fetchTallyData();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        setTallyMsg({ type: "err", text: err.detail || "Failed to mark as synced." });
+      }
+    } catch (e: any) {
+      setTallyMsg({ type: "err", text: e?.message || "Failed to mark as synced." });
+    } finally {
+      setTallyMarking(false);
+    }
+  };
+
+  const savePartyMapping = async (partyId: string, ledgerName: string) => {
+    if (!ledgerName.trim()) return;
+    try {
+      await fetch(`${getApiHost()}/apis/v3/tally/mappings/party`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
+        body: JSON.stringify({ company_id: companyId, onsite_party_id: partyId, tally_ledger_name: ledgerName.trim() }),
+      });
+      await fetchTallyData();
+    } catch (e) {
+      console.error("Failed to save party mapping", e);
+    }
+  };
+
+  const saveLedgerMappings = async () => {
+    try {
+      await fetch(`${getApiHost()}/apis/v3/tally/mappings/ledger`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
+        body: JSON.stringify({ company_id: companyId, onsite_transaction_type: "Material Purchase", posting_mode: "lumpsum", tally_voucher_type: "Purchase", tally_ledger_name: purchaseLedgerInput.trim() || "Purchase A/c" }),
+      });
+      await fetch(`${getApiHost()}/apis/v3/tally/mappings/ledger`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
+        body: JSON.stringify({ company_id: companyId, onsite_transaction_type: "Sales Invoice", posting_mode: "lumpsum", tally_voucher_type: "Sales", tally_ledger_name: salesLedgerInput.trim() || "Sales A/c" }),
+      });
+      await fetchTallyData();
+      setTallyMsg({ type: "ok", text: "Ledger mappings saved." });
+    } catch (e) {
+      console.error("Failed to save ledger mappings", e);
+    }
+  };
+
+  const saveCostCentreMapping = async () => {
+    if (!activeProjectId) {
+      setTallyMsg({ type: "err", text: "Select a project first to map its cost centre." });
+      return;
+    }
+    if (!costCentreInput.trim()) return;
+    try {
+      await fetch(`${getApiHost()}/apis/v3/tally/mappings/cost-centre`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
+        body: JSON.stringify({ company_id: companyId, project_id: activeProjectId, tally_cost_centre_name: costCentreInput.trim() }),
+      });
+      await fetchTallyData();
+      setTallyMsg({ type: "ok", text: "Cost centre mapping saved." });
+    } catch (e) {
+      console.error("Failed to save cost centre mapping", e);
     }
   };
 
@@ -1660,20 +1903,171 @@ export default function FinancePage() {
           {/* ── TALLY SYNC TAB ── */}
           {tab === "tally" && (
             <div className="space-y-5">
-              <div className="bg-card border border-border-custom rounded-lg p-5 rounded-lg border border-border-custom bg-input space-y-4">
-                <h2 className="text-sm font-bold text-foreground">Tally ERP 9 Gateway Sync</h2>
-                <div className="text-xs text-muted">Push verified vouchers directly to Tally Desktop Agent via XML.</div>
-                <div className="flex gap-2">
-                  <button onClick={handleTriggerSync} disabled={syncing} className="px-4 py-2 bg-primary text-white text-xs font-bold rounded-md hover:opacity-90">
-                    {syncing ? "Pulsing Gateway Sync..." : "Sync Vouchers Now 🔄"}
-                  </button>
+              {tallyMsg && (
+                <div className={`p-3 text-xs rounded-lg ${tallyMsg.type === "ok" ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400" : "bg-rose-500/10 border border-rose-500/20 text-rose-400"}`}>
+                  {tallyMsg.text}
                 </div>
-                {syncLogs.length > 0 && (
-                  <div className="p-4 bg-elevated border border-border-custom rounded-md text-[10px] font-sans text-muted space-y-1 max-h-36 overflow-y-auto">
-                    {syncLogs.map((log, i) => <div key={i}>{log}</div>)}
+              )}
+
+              {/* Connection */}
+              <div className="bg-card border border-border-custom rounded-lg p-5 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-sm font-bold text-foreground">Tally Prime Connection</h2>
+                    <div className="text-xs text-muted">Configure the Tally company this SiteFlow data exports into.</div>
                   </div>
+                  {tallyConn ? (
+                    <button onClick={openTallySetup} className="text-xs font-bold px-3 py-1.5 rounded-md border border-border-custom hover:bg-elevated">Edit</button>
+                  ) : (
+                    <button onClick={openTallySetup} className="bg-primary text-white text-xs font-bold px-4 py-2 rounded-md hover:opacity-90">Connect Tally</button>
+                  )}
+                </div>
+                {tallyConn ? (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+                    <div className="rounded-lg border border-border-custom p-3">
+                      <div className="text-[10px] uppercase font-bold text-muted">Company</div>
+                      <div className="text-foreground font-semibold">{tallyConn.tally_company_name}</div>
+                    </div>
+                    <div className="rounded-lg border border-border-custom p-3">
+                      <div className="text-[10px] uppercase font-bold text-muted">Mobile</div>
+                      <div className="text-foreground font-semibold">{tallyConn.registered_mobile}</div>
+                    </div>
+                    <div className="rounded-lg border border-border-custom p-3">
+                      <div className="text-[10px] uppercase font-bold text-muted">Voucher No.</div>
+                      <div className="text-foreground font-semibold">{tallyConn.voucher_number_template}</div>
+                    </div>
+                    <div className="rounded-lg border border-border-custom p-3">
+                      <div className="text-[10px] uppercase font-bold text-muted">Auto-create ledgers</div>
+                      <div className="text-foreground font-semibold">{tallyConn.auto_create_missing_ledgers ? "On" : "Off"}</div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-xs text-muted">No Tally connection yet. Connect a Tally company to start exporting vouchers.</div>
                 )}
               </div>
+
+              {/* Mappings */}
+              {tallyConn && (
+                <div className="bg-card border border-border-custom rounded-lg p-5 space-y-6">
+                  <h2 className="text-sm font-bold text-foreground">Ledger Mappings</h2>
+
+                  {/* Transaction-type ledger mappings */}
+                  <div className="space-y-3">
+                    <div className="text-[10px] uppercase font-bold text-muted">Transaction Type Ledgers</div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-xs text-muted">Purchase ledger</label>
+                        <input value={purchaseLedgerInput} onChange={(e) => setPurchaseLedgerInput(e.target.value)} className="w-full mt-1 bg-input border border-border-custom rounded-md px-3 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary" />
+                      </div>
+                      <div>
+                        <label className="text-xs text-muted">Sales ledger</label>
+                        <input value={salesLedgerInput} onChange={(e) => setSalesLedgerInput(e.target.value)} className="w-full mt-1 bg-input border border-border-custom rounded-md px-3 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary" />
+                      </div>
+                    </div>
+                    <button onClick={saveLedgerMappings} className="text-xs font-bold px-3 py-1.5 rounded-md bg-primary/15 text-primary border border-primary/20 hover:bg-primary/25">Save Ledger Mappings</button>
+                  </div>
+
+                  {/* Party ledger mappings */}
+                  <div className="space-y-3">
+                    <div className="text-[10px] uppercase font-bold text-muted">Party Ledger Mappings</div>
+                    <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                      {companyParties.length === 0 && <div className="text-xs text-muted">No parties found.</div>}
+                      {companyParties.map((p: any) => (
+                        <div key={p.id} className="flex items-center gap-2">
+                          <div className="w-48 shrink-0 text-xs text-foreground truncate">{p.name}</div>
+                          <input
+                            value={partyLedgerInputs[p.id] || ""}
+                            placeholder="Tally ledger name"
+                            onChange={(e) => setPartyLedgerInputs((prev) => ({ ...prev, [p.id]: e.target.value }))}
+                            onBlur={(e) => savePartyMapping(p.id, e.target.value)}
+                            className="flex-1 bg-input border border-border-custom rounded-md px-3 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Cost centre mapping (optional) */}
+                  <div className="space-y-3">
+                    <div className="text-[10px] uppercase font-bold text-muted">Project Cost Centre {activeProjectId ? "" : "(select a project)"}</div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        value={costCentreInput}
+                        placeholder="Tally cost centre name"
+                        onChange={(e) => setCostCentreInput(e.target.value)}
+                        className="flex-1 bg-input border border-border-custom rounded-md px-3 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary"
+                      />
+                      <button onClick={saveCostCentreMapping} className="text-xs font-bold px-3 py-1.5 rounded-md bg-primary/15 text-primary border border-primary/20 hover:bg-primary/25">Save</button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Export flow */}
+              {tallyConn && (
+                <div className="bg-card border border-border-custom rounded-lg p-5 space-y-4">
+                  <h2 className="text-sm font-bold text-foreground">Export to Tally</h2>
+                  <div className="grid grid-cols-3 gap-3 text-xs">
+                    <div className="rounded-lg border border-border-custom p-3">
+                      <div className="text-[10px] uppercase font-bold text-muted">Pending vouchers</div>
+                      <div className="text-foreground font-semibold">{tallyPending.count}</div>
+                    </div>
+                    <div className="rounded-lg border border-border-custom p-3">
+                      <div className="text-[10px] uppercase font-bold text-muted">Last export</div>
+                      <div className="text-foreground font-semibold">{tallyLastExport || "Not yet"}</div>
+                    </div>
+                    <div className="rounded-lg border border-border-custom p-3">
+                      <div className="text-[10px] uppercase font-bold text-muted">Last marked synced</div>
+                      <div className="text-foreground font-semibold">{tallyLastMarked || "Not yet"}</div>
+                    </div>
+                  </div>
+
+                  {tallyPending.count > 0 && (
+                    <div className="rounded-lg border border-border-custom p-3 space-y-1 max-h-48 overflow-y-auto">
+                      {tallyPending.vouchers.map((v, i) => (
+                        <div key={i} className="flex items-center justify-between text-xs text-muted">
+                          <span className="font-semibold text-foreground">{v.type}</span>
+                          <span>{v.number}</span>
+                          <span>{v.party}</span>
+                          <span>₹{(v.amount || 0).toLocaleString("en-IN")}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="flex gap-2">
+                    <button onClick={handleDownloadXml} disabled={tallyExporting || tallyPending.count === 0} className="px-4 py-2 bg-primary text-white text-xs font-bold rounded-md hover:opacity-90 disabled:opacity-50">
+                      {tallyExporting ? "Generating…" : "Download Tally XML"}
+                    </button>
+                    <button onClick={handleMarkSynced} disabled={tallyMarking || tallyPending.count === 0} className="px-4 py-2 border border-border-custom text-foreground text-xs font-bold rounded-md hover:bg-elevated disabled:opacity-50">
+                      {tallyMarking ? "Marking…" : "Mark as imported into Tally"}
+                    </button>
+                  </div>
+
+                  <div className="rounded-lg border border-border-custom bg-input p-4 text-xs text-muted space-y-1">
+                    <div className="font-bold text-foreground">How to import</div>
+                    <div>1. Click "Download Tally XML" to get the voucher file.</div>
+                    <div>2. Open Tally Prime, go to Gateway of Tally, then Import Data, then Vouchers, and select the downloaded file.</div>
+                    <div>3. After the import succeeds in Tally, click "Mark as imported into Tally" so these vouchers are not exported again.</div>
+                    <div>4. Ensure the referenced ledgers exist in Tally, or enable auto-create missing ledgers in the connection.</div>
+                  </div>
+                </div>
+              )}
+
+              {/* Sync history */}
+              {tallyConn && tallySyncLogs.length > 0 && (
+                <div className="bg-card border border-border-custom rounded-lg p-5 space-y-2">
+                  <h2 className="text-sm font-bold text-foreground">Sync History</h2>
+                  <div className="space-y-1">
+                    {tallySyncLogs.map((log) => (
+                      <div key={log.id} className="flex items-center justify-between text-xs text-muted">
+                        <span>Marked {log.voucher_count} voucher(s) synced</span>
+                        <span>{log.marked_synced_at ? new Date(log.marked_synced_at).toLocaleString() : "—"}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -3568,6 +3962,43 @@ export default function FinancePage() {
                 <button onClick={() => setShowRecordPaymentModal(false)} className="px-4 py-2.5 rounded-lg border border-border-custom text-muted hover:text-foreground hover:border-border-custom text-xs">Cancel</button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Tally Setup Modal ── */}
+      {showTallySetup && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" onClick={() => setShowTallySetup(false)}>
+          <div className="w-full max-w-md bg-card border border-border-custom rounded-xl p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-sm font-bold text-foreground">Tally Prime Connection</h3>
+            <form onSubmit={saveTallyConnection} className="space-y-3">
+              <div>
+                <label className="text-[10px] text-muted uppercase font-bold block mb-1">Tally company name*</label>
+                <input value={tallyCompany} onChange={(e) => setTallyCompany(e.target.value)} required className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs" />
+              </div>
+              <div>
+                <label className="text-[10px] text-muted uppercase font-bold block mb-1">Registered mobile*</label>
+                <input value={tallyMobile} onChange={(e) => setTallyMobile(e.target.value)} required className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs" />
+              </div>
+              <div>
+                <label className="text-[10px] text-muted uppercase font-bold block mb-1">Voucher number template</label>
+                <input value={tallyVoucherTemplate} onChange={(e) => setTallyVoucherTemplate(e.target.value)} className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs" />
+              </div>
+              <div>
+                <label className="text-[10px] text-muted uppercase font-bold block mb-1">Default cash ledger</label>
+                <input value={tallyDefaultCash} onChange={(e) => setTallyDefaultCash(e.target.value)} placeholder="e.g. Cash Account" className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs" />
+              </div>
+              <label className="flex items-center gap-2 text-xs text-foreground">
+                <input type="checkbox" checked={tallyAutoCreate} onChange={(e) => setTallyAutoCreate(e.target.checked)} />
+                Auto-create missing ledgers on import
+              </label>
+              <div className="flex gap-3 pt-2">
+                <button type="submit" disabled={tallySaving} className="flex-1 py-2.5 bg-primary text-white font-bold rounded-lg hover:bg-primary/95 text-xs transition-all disabled:opacity-50">
+                  {tallySaving ? "Saving…" : "Save Connection"}
+                </button>
+                <button type="button" onClick={() => setShowTallySetup(false)} className="px-4 py-2.5 rounded-lg border border-border-custom text-muted hover:text-foreground text-xs">Cancel</button>
+              </div>
+            </form>
           </div>
         </div>
       )}

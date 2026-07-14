@@ -606,3 +606,14 @@ CREATE TABLE tally_bank_mappings (
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(company_id, onsite_bank_account_details)
 );
+
+CREATE TABLE tally_sync_logs (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    company_id UUID REFERENCES companies(id) ON DELETE CASCADE NOT NULL,
+    exported_at TIMESTAMP WITH TIME ZONE,
+    marked_synced_at TIMESTAMP WITH TIME ZONE,
+    voucher_count INTEGER NOT NULL DEFAULT 0,
+    bill_ids TEXT,
+    payment_ids TEXT,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);

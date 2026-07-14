@@ -2,10 +2,16 @@ import uuid
 from datetime import datetime
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import Response
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.auth import get_current_user, verify_company_access, get_company_membership, require_permission
-from app.models import TallyConnection, TallyAgent, TallyLedgerMapping, TallyPartyMapping, TallyCostCentreMapping, TallyBankMapping, Company, Bill, Payment, CompanyTeam, User
+from app.models import (
+    TallyConnection, TallyAgent, TallyLedgerMapping, TallyPartyMapping,
+    TallyCostCentreMapping, TallyBankMapping, TallySyncLog,
+    Company, Bill, Payment, CompanyTeam, User,
+)
+from app.tally_xml import build_tally_envelope
 from pydantic import BaseModel
 
 router = APIRouter(
@@ -78,8 +84,190 @@ class LedgerMappingResponse(BaseModel):
     class Config:
         from_attributes = True
 
+class PartyMappingCreateRequest(BaseModel):
+    company_id: uuid.UUID
+    onsite_party_id: uuid.UUID
+    tally_ledger_name: str
 
-# --- Endpoints ---
+class PartyMappingResponse(BaseModel):
+    id: uuid.UUID
+    company_id: uuid.UUID
+    onsite_party_id: uuid.UUID
+    tally_ledger_name: str
+
+    class Config:
+        from_attributes = True
+
+class CostCentreMappingCreateRequest(BaseModel):
+    company_id: uuid.UUID
+    project_id: uuid.UUID
+    tally_cost_centre_name: str
+
+class CostCentreMappingResponse(BaseModel):
+    id: uuid.UUID
+    company_id: uuid.UUID
+    project_id: uuid.UUID
+    tally_cost_centre_name: str
+
+    class Config:
+        from_attributes = True
+
+class MarkSyncedRequest(BaseModel):
+    bill_ids: List[uuid.UUID] = []
+    payment_ids: List[uuid.UUID] = []
+
+class SyncLogResponse(BaseModel):
+    id: uuid.UUID
+    company_id: uuid.UUID
+    exported_at: Optional[datetime]
+    marked_synced_at: Optional[datetime]
+    voucher_count: int
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+# --- Helpers ---
+
+def _resolve_party_ledger(db: Session, company_id: uuid.UUID, party_company_user_id, default: str) -> str:
+    if party_company_user_id:
+        pm = db.query(TallyPartyMapping).filter(
+            TallyPartyMapping.company_id == company_id,
+            TallyPartyMapping.onsite_party_id == party_company_user_id,
+        ).first()
+        if pm:
+            return pm.tally_ledger_name
+        member = db.query(CompanyTeam).filter(CompanyTeam.id == party_company_user_id).first()
+        if member:
+            user = db.query(User).filter(User.id == member.user_id).first()
+            if user and user.name:
+                return user.name
+    return default
+
+
+def _render_number(template: str, source, year: int, seq: int) -> str:
+    if source:
+        return str(source)
+    try:
+        return template.format(year=year, number=seq)
+    except Exception:
+        return f"{year}-{seq}"
+
+
+def _build_vouchers(db: Session, conn: TallyConnection, bills, payments):
+    """Resolve Bill + Payment rows into Tally voucher dicts (double entry)."""
+    vouchers = []
+    pending = []
+
+    ledger_map = {
+        m.onsite_transaction_type: m
+        for m in db.query(TallyLedgerMapping).filter(TallyLedgerMapping.company_id == conn.company_id).all()
+    }
+    cc_map = {
+        str(m.project_id): m.tally_cost_centre_name
+        for m in db.query(TallyCostCentreMapping).filter(TallyCostCentreMapping.company_id == conn.company_id).all()
+    }
+    bank_ledger = None
+    bank = db.query(TallyBankMapping).filter(TallyBankMapping.company_id == conn.company_id).first()
+    if bank:
+        bank_ledger = bank.tally_ledger_name
+
+    seq = 1
+
+    for b in bills:
+        total = float(b.total_payable or 0)
+        if b.invoice_type == "sale":
+            vchtype = "Sales"
+            ledger_key = "Sales Invoice"
+            fallback_ledger = "Sales A/c"
+            party_default = "Client Ledger"
+        else:
+            vchtype = "Purchase"
+            ledger_key = "Subcon Expense" if b.invoice_type == "subcon" else "Material Purchase"
+            fallback_ledger = "Purchase A/c"
+            party_default = "Vendor Ledger"
+
+        mapped = ledger_map.get(ledger_key)
+        expense_ledger = mapped.tally_ledger_name if mapped else fallback_ledger
+        party_ledger = _resolve_party_ledger(db, conn.company_id, b.party_company_user_id, party_default)
+        cost_centre = cc_map.get(str(b.project_id)) if b.project_id else None
+        year = b.invoice_date.year if b.invoice_date else datetime.utcnow().year
+        date_str = b.invoice_date.strftime("%Y%m%d") if b.invoice_date else ""
+        vnumber = _render_number(conn.voucher_number_template, b.invoice_number, year, seq)
+        narration = f"SiteFlow {b.invoice_type} invoice {b.invoice_number}."
+
+        # Expense/sales leg is a DEBIT; party leg is a CREDIT.
+        entries = [
+            {"ledger": expense_ledger, "amount": total, "debit": True, "cost_centre": cost_centre},
+            {"ledger": party_ledger, "amount": total, "debit": False},
+        ]
+        vouchers.append({
+            "vchtype": vchtype,
+            "voucher_type_name": vchtype,
+            "voucher_number": vnumber,
+            "date": date_str,
+            "party_ledger_name": party_ledger,
+            "narration": narration,
+            "entries": entries,
+        })
+        pending.append({
+            "type": vchtype,
+            "number": vnumber,
+            "party": party_ledger,
+            "amount": total,
+            "date": date_str,
+        })
+        seq += 1
+
+    for p in payments:
+        total = float(p.amount or 0)
+        if p.payment_type == "in":
+            vchtype = "Receipt"
+            # Money comes IN: debit bank/cash, credit party.
+            cash_ledger = bank_ledger or conn.default_cash_ledger or "Bank/Cash"
+            party_ledger = _resolve_party_ledger(db, conn.company_id, p.party_company_user_id, cash_ledger)
+            entries = [
+                {"ledger": cash_ledger, "amount": total, "debit": True},
+                {"ledger": party_ledger, "amount": total, "debit": False},
+            ]
+        else:
+            vchtype = "Payment"
+            # Money goes OUT: debit party, credit bank/cash.
+            cash_ledger = bank_ledger or conn.default_cash_ledger or "Bank/Cash"
+            party_ledger = _resolve_party_ledger(db, conn.company_id, p.party_company_user_id, cash_ledger)
+            entries = [
+                {"ledger": party_ledger, "amount": total, "debit": True},
+                {"ledger": cash_ledger, "amount": total, "debit": False},
+            ]
+
+        year = p.payment_date.year if p.payment_date else datetime.utcnow().year
+        date_str = p.payment_date.strftime("%Y%m%d") if p.payment_date else ""
+        vnumber = _render_number(conn.voucher_number_template, p.reference_number, year, seq)
+        narration = p.description or f"SiteFlow {p.payment_type} payment."
+
+        vouchers.append({
+            "vchtype": vchtype,
+            "voucher_type_name": vchtype,
+            "voucher_number": vnumber,
+            "date": date_str,
+            "party_ledger_name": party_ledger,
+            "narration": narration,
+            "entries": entries,
+        })
+        pending.append({
+            "type": vchtype,
+            "number": vnumber,
+            "party": party_ledger,
+            "amount": total,
+            "date": date_str,
+        })
+        seq += 1
+
+    return vouchers, pending
+
+
+# --- Connection ---
 
 @router.post("/connections", response_model=ConnectionResponse, status_code=status.HTTP_201_CREATED)
 def create_connection(req: ConnectionCreateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
@@ -90,7 +278,6 @@ def create_connection(req: ConnectionCreateRequest, db: Session = Depends(get_db
     if not company:
         raise HTTPException(status_code=404, detail="Company not found")
 
-    # Check if connection exists, update it if so
     conn = db.query(TallyConnection).filter(TallyConnection.company_id == comp_uuid).first()
     if conn:
         conn.tally_company_name = req.tally_company_name
@@ -110,7 +297,7 @@ def create_connection(req: ConnectionCreateRequest, db: Session = Depends(get_db
             voucher_number_template=req.voucher_number_template,
             auto_create_missing_ledgers=req.auto_create_missing_ledgers,
             round_off_ledger=req.round_off_ledger,
-            default_cash_ledger=req.default_cash_ledger
+            default_cash_ledger=req.default_cash_ledger,
         )
         db.add(conn)
 
@@ -119,14 +306,16 @@ def create_connection(req: ConnectionCreateRequest, db: Session = Depends(get_db
     return conn
 
 
-@router.get("/connections", response_model=ConnectionResponse)
+@router.get("/connections")
 def get_connection(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     comp_uuid = uuid.UUID(str(company_id))
     conn = db.query(TallyConnection).filter(TallyConnection.company_id == comp_uuid).first()
     if not conn:
-        raise HTTPException(status_code=404, detail="No Tally connection profile found for company")
+        return {"connected": False}
     return conn
 
+
+# --- Agents ---
 
 @router.post("/agents", response_model=AgentResponse, status_code=status.HTTP_201_CREATED)
 def register_agent(req: AgentCreateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
@@ -138,7 +327,7 @@ def register_agent(req: AgentCreateRequest, db: Session = Depends(get_db), curre
         company_id=comp_uuid,
         machine_label=req.machine_label,
         auth_key=req.auth_key,
-        status="active"
+        status="active",
     )
     db.add(agent)
     db.commit()
@@ -152,6 +341,8 @@ def get_agents(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = D
     return db.query(TallyAgent).filter(TallyAgent.company_id == comp_uuid).all()
 
 
+# --- Ledger mappings ---
+
 @router.post("/mappings/ledger", response_model=LedgerMappingResponse, status_code=status.HTTP_201_CREATED)
 def create_ledger_mapping(req: LedgerMappingCreateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     comp_uuid = uuid.UUID(str(req.company_id))
@@ -160,7 +351,7 @@ def create_ledger_mapping(req: LedgerMappingCreateRequest, db: Session = Depends
 
     mapping = db.query(TallyLedgerMapping).filter(
         TallyLedgerMapping.company_id == comp_uuid,
-        TallyLedgerMapping.onsite_transaction_type == req.onsite_transaction_type
+        TallyLedgerMapping.onsite_transaction_type == req.onsite_transaction_type,
     ).first()
 
     if mapping:
@@ -178,7 +369,7 @@ def create_ledger_mapping(req: LedgerMappingCreateRequest, db: Session = Depends
             tally_voucher_type=req.tally_voucher_type,
             tally_ledger_name=req.tally_ledger_name,
             freight_ledger=req.freight_ledger,
-            surcharge_ledger=req.surcharge_ledger
+            surcharge_ledger=req.surcharge_ledger,
         )
         db.add(mapping)
 
@@ -193,124 +384,203 @@ def get_ledger_mappings(company_id: uuid.UUID, db: Session = Depends(get_db), _:
     return db.query(TallyLedgerMapping).filter(TallyLedgerMapping.company_id == comp_uuid).all()
 
 
-@router.post("/sync")
-def sync_tally_vouchers(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
+# --- Party mappings ---
+
+@router.post("/mappings/party", response_model=PartyMappingResponse, status_code=status.HTTP_201_CREATED)
+def create_party_mapping(req: PartyMappingCreateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    comp_uuid = uuid.UUID(str(req.company_id))
+    get_company_membership(db, current_user, comp_uuid)
+    require_permission(db, current_user, comp_uuid, "settings:manage")
+
+    mapping = db.query(TallyPartyMapping).filter(
+        TallyPartyMapping.company_id == comp_uuid,
+        TallyPartyMapping.onsite_party_id == req.onsite_party_id,
+    ).first()
+
+    if mapping:
+        mapping.tally_ledger_name = req.tally_ledger_name
+    else:
+        mapping = TallyPartyMapping(
+            id=uuid.uuid4(),
+            company_id=comp_uuid,
+            onsite_party_id=req.onsite_party_id,
+            tally_ledger_name=req.tally_ledger_name,
+        )
+        db.add(mapping)
+
+    db.commit()
+    db.refresh(mapping)
+    return mapping
+
+
+@router.get("/mappings/party", response_model=List[PartyMappingResponse])
+def get_party_mappings(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     comp_uuid = uuid.UUID(str(company_id))
-    
-    # Verify tally connection exists
+    return db.query(TallyPartyMapping).filter(TallyPartyMapping.company_id == comp_uuid).all()
+
+
+# --- Cost centre mappings ---
+
+@router.post("/mappings/cost-centre", response_model=CostCentreMappingResponse, status_code=status.HTTP_201_CREATED)
+def create_cost_centre_mapping(req: CostCentreMappingCreateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    comp_uuid = uuid.UUID(str(req.company_id))
+    get_company_membership(db, current_user, comp_uuid)
+    require_permission(db, current_user, comp_uuid, "settings:manage")
+
+    mapping = db.query(TallyCostCentreMapping).filter(
+        TallyCostCentreMapping.company_id == comp_uuid,
+        TallyCostCentreMapping.project_id == req.project_id,
+    ).first()
+
+    if mapping:
+        mapping.tally_cost_centre_name = req.tally_cost_centre_name
+    else:
+        mapping = TallyCostCentreMapping(
+            id=uuid.uuid4(),
+            company_id=comp_uuid,
+            project_id=req.project_id,
+            tally_cost_centre_name=req.tally_cost_centre_name,
+        )
+        db.add(mapping)
+
+    db.commit()
+    db.refresh(mapping)
+    return mapping
+
+
+@router.get("/mappings/cost-centre", response_model=List[CostCentreMappingResponse])
+def get_cost_centre_mappings(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
+    comp_uuid = uuid.UUID(str(company_id))
+    return db.query(TallyCostCentreMapping).filter(TallyCostCentreMapping.company_id == comp_uuid).all()
+
+
+# --- Real export flow ---
+
+@router.get("/pending")
+def pending_vouchers(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
+    comp_uuid = uuid.UUID(str(company_id))
+    conn = db.query(TallyConnection).filter(TallyConnection.company_id == comp_uuid).first()
+
+    bill_ids: List[str] = []
+    payment_ids: List[str] = []
+    vouchers = []
+
+    if conn:
+        bills = db.query(Bill).filter(
+            Bill.company_id == comp_uuid,
+            Bill.status != "Cancelled",
+            Bill.tally_synced == False,
+            Bill.invoice_date >= conn.sync_window_start_date,
+        ).all()
+        payments = db.query(Payment).filter(
+            Payment.company_id == comp_uuid,
+            Payment.tally_synced == False,
+            Payment.payment_date >= conn.sync_window_start_date,
+        ).all()
+        if bills or payments:
+            _, vouchers = _build_vouchers(db, conn, bills, payments)
+            bill_ids = [str(b.id) for b in bills]
+            payment_ids = [str(p.id) for p in payments]
+
+    return {
+        "count": len(vouchers),
+        "bill_ids": bill_ids,
+        "payment_ids": payment_ids,
+        "vouchers": vouchers,
+    }
+
+
+@router.get("/export")
+def export_tally_xml(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
+    """Return a Tally-importable XML for all unsynced, in-window vouchers.
+
+    READ-ONLY and idempotent: this never marks anything as synced, so it can be
+    re-downloaded safely until the user confirms the import in Tally Prime.
+    """
+    comp_uuid = uuid.UUID(str(company_id))
     conn = db.query(TallyConnection).filter(TallyConnection.company_id == comp_uuid).first()
     if not conn:
-        raise HTTPException(
-            status_code=400,
-            detail="Tally connection must be configured before starting synchronization."
-        )
+        raise HTTPException(status_code=400, detail="Tally connection must be configured before exporting vouchers.")
 
-    # 1. Fetch unsynced transactions
     bills = db.query(Bill).filter(
         Bill.company_id == comp_uuid,
         Bill.status != "Cancelled",
-        Bill.tally_synced == False
+        Bill.tally_synced == False,
+        Bill.invoice_date >= conn.sync_window_start_date,
     ).all()
-    
     payments = db.query(Payment).filter(
         Payment.company_id == comp_uuid,
-        Payment.tally_synced == False
+        Payment.tally_synced == False,
+        Payment.payment_date >= conn.sync_window_start_date,
     ).all()
 
-    sync_payloads = []
-    
-    # 2. Format voucher XML envelope with dynamic mappings
-    for b in bills:
-        # Resolve party name
-        party_name = None
-        if b.party_company_user_id:
-            party_map = db.query(TallyPartyMapping).filter(
-                TallyPartyMapping.company_id == comp_uuid,
-                TallyPartyMapping.onsite_party_id == b.party_company_user_id
-            ).first()
-            if party_map:
-                party_name = party_map.tally_ledger_name
-            else:
-                team_member = db.query(CompanyTeam).filter(CompanyTeam.id == b.party_company_user_id).first()
-                if team_member:
-                    user = db.query(User).filter(User.id == team_member.user_id).first()
-                    if user:
-                        party_name = user.name
-        
-        if not party_name:
-            party_name = "Client Ledger" if b.invoice_type == "sale" else "Vendor Ledger"
+    vouchers, _ = _build_vouchers(db, conn, bills, payments)
+    xml = build_tally_envelope(conn.tally_company_name, vouchers)
+    filename = f"siteflow-tally-{datetime.utcnow().strftime('%Y%m%d')}.xml"
+    return Response(
+        content=xml,
+        media_type="application/xml",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
-        # Resolve cost center mapping if project is configured
-        cost_centre = None
-        cc_map = db.query(TallyCostCentreMapping).filter(
-            TallyCostCentreMapping.company_id == comp_uuid,
-            TallyCostCentreMapping.project_id == b.project_id
-        ).first()
-        if cc_map:
-            cost_centre = cc_map.tally_cost_centre_name
 
-        sync_payloads.append({
-            "voucher_type": "Sales" if b.invoice_type == "sale" else "Purchase",
-            "voucher_number": b.invoice_number,
-            "date": b.invoice_date.strftime("%Y%m%d") if b.invoice_date else "",
-            "amount": float(b.total_payable),
-            "party": party_name,
-            "cost_centre": cost_centre,
-            "narrations": f"SiteFlow Sync Invoice {b.invoice_number}."
-        })
-        b.tally_synced = True
-        db.add(b)
+@router.post("/mark-synced")
+def mark_synced(req: MarkSyncedRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Mark the given bills/payments as synced AFTER the user imports into Tally."""
+    bill_ids = [uuid.UUID(str(x)) for x in req.bill_ids]
+    payment_ids = [uuid.UUID(str(x)) for x in req.payment_ids]
 
-    for p in payments:
-        # Resolve party name
-        party_name = None
-        if p.party_company_user_id:
-            party_map = db.query(TallyPartyMapping).filter(
-                TallyPartyMapping.company_id == comp_uuid,
-                TallyPartyMapping.onsite_party_id == p.party_company_user_id
-            ).first()
-            if party_map:
-                party_name = party_map.tally_ledger_name
-            else:
-                team_member = db.query(CompanyTeam).filter(CompanyTeam.id == p.party_company_user_id).first()
-                if team_member:
-                    user = db.query(User).filter(User.id == team_member.user_id).first()
-                    if user:
-                        party_name = user.name
-        
-        if not party_name:
-            # Fallback to bank/cash mappings
-            bank_map = db.query(TallyBankMapping).filter(TallyBankMapping.company_id == comp_uuid).first()
-            if bank_map:
-                party_name = bank_map.tally_ledger_name
-            elif conn.default_cash_ledger:
-                party_name = conn.default_cash_ledger
-            else:
-                party_name = "Bank / Cash"
+    updated_bills = 0
+    updated_payments = 0
+    company_id = None
 
-        sync_payloads.append({
-            "voucher_type": "Receipt" if p.payment_type == "in" else "Payment",
-            "voucher_number": p.reference_number or f"REF-{p.id}",
-            "date": p.payment_date.strftime("%Y%m%d") if p.payment_date else "",
-            "amount": float(p.amount),
-            "party": party_name,
-            "narrations": p.description or f"SiteFlow Sync Payment."
-        })
-        p.tally_synced = True
-        db.add(p)
+    if bill_ids:
+        for b in db.query(Bill).filter(Bill.id.in_(bill_ids)).all():
+            get_company_membership(db, current_user, b.company_id)
+            if not b.tally_synced:
+                b.tally_synced = True
+                updated_bills += 1
+            company_id = b.company_id
+
+    if payment_ids:
+        for p in db.query(Payment).filter(Payment.id.in_(payment_ids)).all():
+            get_company_membership(db, current_user, p.company_id)
+            if not p.tally_synced:
+                p.tally_synced = True
+                updated_payments += 1
+            company_id = p.company_id
 
     db.commit()
 
-    # Output details of Tally sync execution
+    log = None
+    if company_id and (updated_bills or updated_payments):
+        log = TallySyncLog(
+            id=uuid.uuid4(),
+            company_id=company_id,
+            voucher_count=updated_bills + updated_payments,
+            marked_synced_at=datetime.utcnow(),
+            bill_ids=str(bill_ids),
+            payment_ids=str(payment_ids),
+        )
+        db.add(log)
+        db.commit()
+
     return {
-        "success": True,
-        "tally_company": conn.tally_company_name,
-        "vouchers_queued": len(sync_payloads),
-        "vouchers_synced": len(sync_payloads),
-        "xml_batch_size_bytes": len(str(sync_payloads)) * 1.5,
-        "status": "success",
-        "sync_logs": [
-            f"Voucher {v['voucher_number']} ({v['voucher_type']}) synced successfully to {conn.tally_company_name}"
-            for v in sync_payloads
-        ]
+        "marked_bills": updated_bills,
+        "marked_payments": updated_payments,
+        "marked_synced_at": (log.marked_synced_at.isoformat() if log else None),
     }
+
+
+@router.get("/sync-logs", response_model=List[SyncLogResponse])
+def get_sync_logs(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
+    comp_uuid = uuid.UUID(str(company_id))
+    return db.query(TallySyncLog).filter(TallySyncLog.company_id == comp_uuid).order_by(TallySyncLog.created_at.desc()).all()
+
+
+@router.delete("/sync")
+def sync_gone():
+    raise HTTPException(
+        status_code=status.HTTP_410_GONE,
+        detail="The automatic Tally sync endpoint has been removed. Use GET /tally/export to download a real Tally-importable XML, then POST /tally/mark-synced after importing it in Tally Prime.",
+    )
