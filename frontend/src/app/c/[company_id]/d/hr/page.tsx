@@ -79,6 +79,22 @@ interface PayrollRun {
   payslips: PayslipLine[];
 }
 
+interface LeaveTypeBalance {
+  entitled: number;
+  used: number;
+  balance: number;
+}
+
+interface LeaveBalanceRow {
+  employee_id: string;
+  employee_name: string;
+  designation: string;
+  template_source: "assigned" | "company_default" | "none";
+  casual: LeaveTypeBalance;
+  sick: LeaveTypeBalance;
+  earned: LeaveTypeBalance;
+}
+
 // ─── Mock Data ────────────────────────────────────────────────────────────────
 
 const computePayslips = (employees: Employee[], daysPresent: Record<string, number>, daysInMonth: number): PayslipLine[] => {
@@ -150,6 +166,9 @@ export default function HRPayrollPage() {
 
   // Leave Management states
   const [leaves, setLeaves] = useState<any[]>([]);
+  const [leaveBalances, setLeaveBalances] = useState<LeaveBalanceRow[]>([]);
+  const [leaveBalInfo, setLeaveBalInfo] = useState<{ as_of: string; leave_year: string; company_has_templates: boolean }>({ as_of: "", leave_year: "", company_has_templates: false });
+  const [leaveBalLoading, setLeaveBalLoading] = useState(false);
   const [showApplyLeaveModal, setShowApplyLeaveModal] = useState(false);
   const [leaveForm, setLeaveForm] = useState({
     employeeId: "",
@@ -317,6 +336,27 @@ export default function HRPayrollPage() {
     }
   };
 
+  const fetchLeaveBalances = async () => {
+    if (!companyId) return;
+    setLeaveBalLoading(true);
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/hr/leave-balances/${companyId}`, { headers: authHeaders() });
+      if (res.ok) {
+        const data = await res.json();
+        setLeaveBalances(data.employees || []);
+        setLeaveBalInfo({
+          as_of: data.as_of || "",
+          leave_year: data.leave_year || "",
+          company_has_templates: Boolean(data.company_has_templates),
+        });
+      }
+    } catch (e) {
+      console.error("Failed to fetch leave balances", e);
+    } finally {
+      setLeaveBalLoading(false);
+    }
+  };
+
   const handleUpdateLeaveStatus = async (leaveId: string, nextStatus: string) => {
     try {
       const res = await fetch(`${getApiHost()}/apis/v3/hr/leaves/approve/${leaveId}`, {
@@ -335,6 +375,7 @@ export default function HRPayrollPage() {
   useEffect(() => {
     if (companyId && tab === "leaves") {
       fetchLeaves();
+      fetchLeaveBalances();
     }
   }, [companyId, tab]);
 
@@ -1277,22 +1318,70 @@ export default function HRPayrollPage() {
               </div>
 
               {/* Leave Balances Grid */}
-              <div className="grid grid-cols-4 gap-4">
-                {employees.length > 0 ? (
-                  employees.map((emp) => (
-                    <div key={emp.id} className="bg-card border border-border-custom rounded-md p-4 space-y-2">
-                      <span className="text-xs font-bold text-foreground block">{emp.name}</span>
-                      <p className="text-[10px] text-muted leading-snug">
-                        Per-employee leave balances are not tracked yet. Use the leave log below to review approved and pending applications.
-                      </p>
-                    </div>
-                  ))
-                ) : (
-                  <div className="col-span-4 bg-card border border-border-custom rounded-md p-8 text-center text-muted text-xs">
-                    No employees loaded. Per-employee leave balances are not tracked in this build; leave applications are listed below.
+              {leaveBalLoading ? (
+                <div className="bg-card border border-border-custom rounded-md p-8 text-center text-muted text-xs">
+                  Loading leave balances...
+                </div>
+              ) : leaveBalances.length === 0 ? (
+                <div className="bg-card border border-border-custom rounded-md p-8 text-center text-muted text-xs">
+                  No active employees found for this company. Add staff from the Employees tab to see per-employee leave balances.
+                </div>
+              ) : !leaveBalInfo.company_has_templates ? (
+                <div className="bg-card border border-border-custom rounded-md p-8 text-center text-xs">
+                  <p className="text-muted">No leave templates are configured for this company, so entitlements cannot be computed yet.</p>
+                  <p className="text-primary font-bold mt-2">Set up a leave template (HR settings) to assign Casual / Sick / Earned entitlements per employee.</p>
+                </div>
+              ) : (
+                <div className="bg-card border border-border-custom rounded-md overflow-hidden">
+                  <div className="px-4 py-3 border-b border-border-custom flex items-center justify-between">
+                    <span className="text-xs font-bold text-foreground">Per-Employee Leave Balances</span>
+                    <span className="text-[10px] text-muted">Leave year {leaveBalInfo.leave_year} · as of {leaveBalInfo.as_of}</span>
                   </div>
-                )}
-              </div>
+                  <table className="w-full text-xs text-left">
+                    <thead className="bg-elevated border-b border-border-custom text-muted font-bold uppercase tracking-wider text-[10px]">
+                      <tr>
+                        <th className="px-4 py-3 font-semibold">Employee</th>
+                        <th className="px-4 py-3 font-semibold">Designation</th>
+                        <th className="px-4 py-3 font-semibold text-center">Casual (Ent / Used / Bal)</th>
+                        <th className="px-4 py-3 font-semibold text-center">Sick (Ent / Used / Bal)</th>
+                        <th className="px-4 py-3 font-semibold text-center">Earned (Ent / Used / Bal)</th>
+                        <th className="px-4 py-3 font-semibold text-center">Template</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border-custom text-zinc-300">
+                      {leaveBalances.map((row) => {
+                        const cell = (b: LeaveTypeBalance) => (
+                          <span className="font-mono">
+                            <span className="text-muted">{b.entitled}</span>
+                            <span className="text-muted"> / </span>
+                            <span className="text-amber-400">{b.used}</span>
+                            <span className="text-muted"> / </span>
+                            <span className={b.balance < 0 ? "text-red-400 font-bold" : "text-green-400 font-bold"}>{b.balance}</span>
+                          </span>
+                        );
+                        return (
+                          <tr key={row.employee_id} className="hover:bg-elevated transition-all">
+                            <td className="px-4 py-3 font-bold text-foreground">{row.employee_name}</td>
+                            <td className="px-4 py-3 text-muted">{row.designation || "—"}</td>
+                            <td className="px-4 py-3 text-center">{cell(row.casual)}</td>
+                            <td className="px-4 py-3 text-center">{cell(row.sick)}</td>
+                            <td className="px-4 py-3 text-center">{cell(row.earned)}</td>
+                            <td className="px-4 py-3 text-center">
+                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                                row.template_source === "assigned" ? "bg-green-500/10 border-green-500/20 text-green-400" :
+                                row.template_source === "company_default" ? "bg-blue-500/10 border-blue-500/20 text-blue-400" :
+                                "bg-zinc-500/10 border-zinc-500/20 text-muted"
+                              }`}>
+                                {row.template_source === "assigned" ? "Assigned" : row.template_source === "company_default" ? "Company default" : "None"}
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
 
               {/* Leave Requests Listing */}
               <div className="bg-card border border-border-custom rounded-md overflow-hidden mt-6">

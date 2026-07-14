@@ -1205,6 +1205,151 @@ def upsert_payroll_profile(employee_id: uuid.UUID, payload: PayrollProfileUpdate
     return prof
 
 
+# ─── Leave Balances (per-employee, per-assigned template) ───────────────────
+
+class LeaveTypeBalance(BaseModel):
+    entitled: float = 0.0
+    used: float = 0.0
+    balance: float = 0.0
+
+
+class EmployeeLeaveBalance(BaseModel):
+    employee_id: uuid.UUID
+    employee_name: str
+    designation: Optional[str] = None
+    template_source: str  # "assigned" | "company_default" | "none"
+    casual: LeaveTypeBalance = LeaveTypeBalance()
+    sick: LeaveTypeBalance = LeaveTypeBalance()
+    earned: LeaveTypeBalance = LeaveTypeBalance()
+
+
+class LeaveBalancesResponse(BaseModel):
+    company_id: uuid.UUID
+    as_of: str
+    leave_year: str
+    company_has_templates: bool
+    employees: List[EmployeeLeaveBalance] = []
+
+
+@router.get("/leave-balances/{company_id}", response_model=LeaveBalancesResponse)
+def get_leave_balances(
+    company_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    _: None = Depends(verify_company_access),
+    current_user: User = Depends(get_current_user),
+):
+    """Per-employee leave balances for a company.
+
+    Entitlement comes from the LeaveTemplate assigned to the employee via their
+    PayrollProfile.leave_template_id. If the employee has no profile or no
+    template assigned, the company's first LeaveTemplate is used as a fallback;
+    if the company has no templates at all, entitlement is 0 and the response
+    flags company_has_templates=False so the UI can prompt configuration.
+
+    Used days are the SUM of Approved LeaveRequest days matched to the employee
+    by name (case-insensitive) for the current leave year (calendar year).
+    Balance can go negative when an employee has over-taken their entitlement.
+    """
+    require_module_view(db, current_user, company_id, "payroll")
+
+    now = datetime.utcnow()
+    leave_year = str(now.year)
+    year_start = datetime(now.year, 1, 1)
+
+    employees = (
+        db.query(StaffEmployee)
+        .filter(StaffEmployee.company_id == company_id, StaffEmployee.status == "active")
+        .order_by(StaffEmployee.name)
+        .all()
+    )
+
+    templates = (
+        db.query(LeaveTemplate)
+        .filter(LeaveTemplate.company_id == company_id)
+        .order_by(LeaveTemplate.created_at)
+        .all()
+    )
+    company_default = templates[0] if templates else None
+    template_by_id = {t.id: t for t in templates}
+
+    profiles = (
+        db.query(PayrollProfile)
+        .filter(PayrollProfile.company_id == company_id)
+        .all()
+    )
+    profile_by_emp = {p.employee_id: p for p in profiles}
+
+    approved = (
+        db.query(
+            func.lower(LeaveRequest.employee_name).label("ename"),
+            func.lower(LeaveRequest.leave_type).label("ltype"),
+            func.sum(LeaveRequest.days_count),
+        )
+        .filter(
+            LeaveRequest.company_id == company_id,
+            LeaveRequest.status == "Approved",
+            LeaveRequest.start_date >= year_start,
+        )
+        .group_by(
+            func.lower(LeaveRequest.employee_name),
+            func.lower(LeaveRequest.leave_type),
+        )
+        .all()
+    )
+    used_map: dict = {}
+    for ename, ltype, total in approved:
+        used_map.setdefault(ename, {})[ltype] = float(total or 0.0)
+
+    result_employees = []
+    for emp in employees:
+        prof = profile_by_emp.get(emp.id)
+        template = None
+        template_source = "none"
+        if prof and prof.leave_template_id and prof.leave_template_id in template_by_id:
+            template = template_by_id[prof.leave_template_id]
+            template_source = "assigned"
+        elif company_default is not None:
+            template = company_default
+            template_source = "company_default"
+
+        entitled = {"casual": 0.0, "sick": 0.0, "earned": 0.0}
+        if template is not None:
+            entitled["casual"] = float(template.casual_leave_days or 0.0)
+            entitled["sick"] = float(template.sick_leave_days or 0.0)
+            entitled["earned"] = float(template.earned_leave_days or 0.0)
+
+        used = used_map.get(emp.name.lower(), {})
+
+        def balance_for(key: str) -> LeaveTypeBalance:
+            ent = entitled[key]
+            usd = float(used.get(key, 0.0))
+            return LeaveTypeBalance(
+                entitled=round(ent, 2),
+                used=round(usd, 2),
+                balance=round(ent - usd, 2),
+            )
+
+        result_employees.append(
+            EmployeeLeaveBalance(
+                employee_id=emp.id,
+                employee_name=emp.name,
+                designation=emp.designation,
+                template_source=template_source,
+                casual=balance_for("casual"),
+                sick=balance_for("sick"),
+                earned=balance_for("earned"),
+            )
+        )
+
+    return LeaveBalancesResponse(
+        company_id=company_id,
+        as_of=now.strftime("%Y-%m-%d"),
+        leave_year=leave_year,
+        company_has_templates=bool(templates),
+        employees=result_employees,
+    )
+
+
 # ─── Holidays (company-scoped calendar) ─────────────────────────────────────
 
 class HolidayResponse(BaseModel):
