@@ -1090,6 +1090,7 @@ export default function FinancePage() {
           { key: "ledger", label: "Transaction", icon: "📒" },
           { key: "payment_requests", label: "Payment Requests", icon: "✉️" },
           { key: "accounts", label: "Accounts", icon: "🏦" },
+          { key: "tally", label: "Tally Sync", icon: "🔄" },
         ].map(item => (
           <button key={item.key} onClick={() => setTab(item.key as any)}
             className={`whitespace-nowrap px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${tab === item.key ? "bg-primary/10 text-primary" : "text-muted hover:text-foreground hover:bg-elevated"}`}>
