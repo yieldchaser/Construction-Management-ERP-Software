@@ -459,14 +459,26 @@ def push_bill(
     organization_id = connection.organization_id
     access_token = _valid_access_token(connection)
     if not organization_id:
-        organization_id = _resolve_organization_id(access_token)
-        if organization_id:
-            connection.organization_id = organization_id
-    if not organization_id:
-        raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY,
-            detail="Could not determine the Zoho Books organization id",
+        # Fetch orgs directly here (not via the silent helper) so a failure is diagnostic.
+        org_resp = requests.get(
+            f"{_api_base()}organizations",
+            headers=_api_headers(access_token),
+            timeout=30,
         )
+        if org_resp.status_code == 200:
+            orgs = (org_resp.json() or {}).get("organizations") or []
+            if orgs:
+                organization_id = str(orgs[0].get("organization_id"))
+                connection.organization_id = organization_id
+        if not organization_id:
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail=(
+                    f"Could not determine the Zoho Books organization id "
+                    f"(region={_region()}, api={_api_base()}organizations, "
+                    f"status={org_resp.status_code}): {org_resp.text[:400]}"
+                ),
+            )
     db.commit()  # persist any refreshed token / resolved org id
 
     # Resolve the vendor from the bill's party (company_team -> user).
