@@ -213,3 +213,37 @@ def backfill_rbac(
         db.commit()
 
     return stats
+
+
+@router.post("/backfill-company-team-party-links")
+def backfill_company_team_party_links_endpoint(
+    db: Session = Depends(get_db),
+    _: None = Depends(_require_admin_secret),
+):
+    """Link company_team rows to their LibraryParty by matching name within the
+    same company (mirrors the boot-time backfill in main.py). Idempotent: only
+    company_team rows whose library_party_id is NULL are touched. Exposed so the
+    link (which carries a vendor's tax_no/GSTIN into bill pushes) can be refreshed
+    without a backend restart.
+    """
+    from sqlalchemy import func
+
+    linked = 0
+    for lp in db.query(models.LibraryParty).all():
+        if not lp.name:
+            continue
+        target = (
+            db.query(models.CompanyTeam)
+            .join(models.User, models.User.id == models.CompanyTeam.user_id)
+            .filter(
+                models.CompanyTeam.company_id == lp.company_id,
+                models.CompanyTeam.library_party_id.is_(None),
+                func.lower(func.trim(models.User.name)) == lp.name.strip().lower(),
+            )
+            .first()
+        )
+        if target:
+            target.library_party_id = lp.id
+            linked += 1
+    db.commit()
+    return {"company_team_party_links_created": linked}
