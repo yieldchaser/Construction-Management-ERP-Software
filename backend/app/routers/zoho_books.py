@@ -249,18 +249,16 @@ def _search_vendor(access_token: str, organization_id: str, *, email: Optional[s
 def _update_vendor_gst(access_token: str, organization_id: str, contact_id: str, gstin: str) -> None:
     """Patch an existing Zoho vendor's GST fields (keeps it in sync when a GSTIN
     becomes available after the vendor was first created without one)."""
-    resp = requests.put(
+    # Best-effort: if the Zoho org is not GST-registered it rejects the
+    # gst_treatment element (code 8). That must not break the bill push, so a
+    # failure here is swallowed and the push continues without GST on the vendor.
+    requests.put(
         f"{_api_base()}contacts/{contact_id}",
         headers={**_api_headers(access_token), "Content-Type": "application/json"},
         params={"organization_id": organization_id},
         json={"gst_no": gstin, "gst_treatment": "business_gst"},
         timeout=30,
     )
-    if resp.status_code not in (200, 201):
-        raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY,
-            detail=f"Failed to update the Zoho Books vendor GST info: {resp.text[:400]}",
-        )
 
 
 def _find_or_create_vendor(access_token: str, organization_id: str, *, name: str, email: Optional[str], phone: Optional[str], gstin: Optional[str]) -> str:
@@ -297,6 +295,18 @@ def _find_or_create_vendor(access_token: str, organization_id: str, *, name: str
         json=contact_payload,
         timeout=30,
     )
+    # If a non-GST org rejected the gst_treatment element (code 8), retry once
+    # without the GST fields so the vendor still gets created.
+    if resp.status_code not in (200, 201) and ("gst_no" in contact_payload or "gst_treatment" in contact_payload):
+        contact_payload.pop("gst_no", None)
+        contact_payload.pop("gst_treatment", None)
+        resp = requests.post(
+            f"{_api_base()}contacts",
+            headers={**_api_headers(access_token), "Content-Type": "application/json"},
+            params={"organization_id": organization_id},
+            json=contact_payload,
+            timeout=30,
+        )
     if resp.status_code not in (200, 201):
         # Duplicate-name (code 3062) means it already exists — resolve by name.
         dup = _search_vendor(access_token, organization_id, name=name)
