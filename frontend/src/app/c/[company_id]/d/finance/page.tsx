@@ -2245,11 +2245,11 @@ export default function FinancePage() {
               <div className="grid grid-cols-2 gap-4 bg-input p-4 rounded-md border border-border-custom text-xs font-mono">
                 <div>
                   <span className="text-muted block uppercase text-[9px] tracking-wider font-sans">Settled Amount</span>
-                  <strong className="text-emerald-400 mt-1 block text-sm">₹{selectedVoucher.settled_amount.toLocaleString("en-IN")}</strong>
+                  <strong className="text-emerald-400 mt-1 block text-sm">₹{(selectedVoucher.settled_amount ?? 0).toLocaleString("en-IN")}</strong>
                 </div>
                 <div>
                   <span className="text-muted block uppercase text-[9px] tracking-wider font-sans">Balance Due</span>
-                  <strong className="text-red-400 mt-1 block text-sm">₹{selectedVoucher.balance_due.toLocaleString("en-IN")}</strong>
+                  <strong className="text-red-400 mt-1 block text-sm">₹{(selectedVoucher.balance_due ?? 0).toLocaleString("en-IN")}</strong>
                 </div>
               </div>
 
