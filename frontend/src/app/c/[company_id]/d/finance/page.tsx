@@ -143,6 +143,32 @@ export default function FinancePage() {
   const [plData, setPlData] = useState<PLItem[]>([]);
   const [tallyConn, setTallyConn] = useState<TallyConnection | null>(null);
 
+  // Zoho Books push-to-ledger state
+  const [zohoConnected, setZohoConnected] = useState(false);
+  const [zohoPushingId, setZohoPushingId] = useState<string | null>(null);
+  const [zohoMsg, setZohoMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
+
+  const pushToZoho = async (billId: string) => {
+    setZohoPushingId(billId);
+    setZohoMsg(null);
+    try {
+      const res = await fetch(
+        `${getApiHost()}/apis/v3/integrations/zoho-books/companies/${companyId}/push-bill/${billId}`,
+        { method: "POST", headers: authHeaders() }
+      );
+      const body = await res.json().catch(() => ({} as any));
+      if (res.ok) {
+        setZohoMsg({ type: "ok", text: `Pushed to Zoho Books (bill ${body.zoho_bill_id || "created"}).` });
+      } else {
+        setZohoMsg({ type: "err", text: body.detail || "Zoho Books push failed." });
+      }
+    } catch (e: any) {
+      setZohoMsg({ type: "err", text: e?.message || "Zoho Books push failed." });
+    } finally {
+      setZohoPushingId(null);
+    }
+  };
+
   // Details drawer voucher state
   const [selectedVoucher, setSelectedVoucher] = useState<Transaction | null>(null);
 
@@ -304,10 +330,19 @@ export default function FinancePage() {
       if (txnRes.ok) {
         setTxnSummary(await txnRes.json());
       }
-      // Fetch Employees for party dropdown
-      const empRes = await fetch(`${getApiHost()}/apis/v3/hr/employees/${projectId}`, { headers: authHeaders() });
-      if (empRes.ok) {
-        setUsersList(await empRes.json());
+      // Zoho Books connection status (gates the per-bill push button)
+      const zohoRes = await fetch(`${getApiHost()}/apis/v3/integrations/zoho-books/status/${companyId}`, { headers: authHeaders() });
+      if (zohoRes.ok) {
+        const zs = await zohoRes.json();
+        setZohoConnected(Boolean(zs.connected));
+      }
+      // Fetch Employees for party dropdown (only when a real project is active;
+      // firing with an empty/placeholder project id just 403s).
+      if (projectId) {
+        const empRes = await fetch(`${getApiHost()}/apis/v3/hr/employees/${projectId}`, { headers: authHeaders() });
+        if (empRes.ok) {
+          setUsersList(await empRes.json());
+        }
       }
     } catch (e) {
       console.error("Failed to load finance data", e);
@@ -944,6 +979,12 @@ export default function FinancePage() {
                 <input type="text" placeholder="Search party, voucher#..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="bg-input border border-border-custom rounded-md px-3 py-1.5 text-xs text-foreground placeholder-muted focus:outline-none focus:border-primary" />
               </div>
 
+              {zohoMsg && (
+                <div className={`mb-3 p-3 text-xs rounded-lg ${zohoMsg.type === "ok" ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400" : "bg-rose-500/10 border border-rose-500/20 text-rose-400"}`}>
+                  {zohoMsg.text}
+                </div>
+              )}
+
               {/* Table: Party | Details | Status */}
               <div className="bg-card border border-border-custom rounded-lg overflow-hidden">
                 <table className="w-full text-xs text-left">
@@ -971,7 +1012,19 @@ export default function FinancePage() {
                         </td>
                         <td className="p-3 text-right font-bold text-foreground">₹{(t.amount || 0).toLocaleString("en-IN")}</td>
                         <td className="p-3">
-                          <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider ${statusClass(t.status)}`}>{t.status}</span>
+                          <div className="flex items-center gap-2">
+                            <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider ${statusClass(t.status)}`}>{t.status}</span>
+                            {zohoConnected && (t.type === "Material Purchase" || t.type === "Subcon Bill") && (
+                              <button
+                                onClick={(e) => { e.stopPropagation(); pushToZoho(t.id); }}
+                                disabled={zohoPushingId === t.id}
+                                title="Push this vendor bill to Zoho Books"
+                                className="text-[9px] font-bold px-2 py-0.5 rounded bg-primary/15 text-primary border border-primary/20 hover:bg-primary/25 transition-all disabled:opacity-50 cursor-pointer"
+                              >
+                                {zohoPushingId === t.id ? "Pushing…" : "→ Zoho"}
+                              </button>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))}
