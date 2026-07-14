@@ -38,7 +38,29 @@ def _signed_amount(amount, debit: bool) -> str:
     return amt if debit else f"-{amt}"
 
 
-def build_tally_envelope(company_name: str, vouchers: list) -> str:
+def _ledger_parent(ledger_type: str) -> str:
+    """Map a SiteFlow ledger role to a sensible Tally parent group."""
+    return {
+        "purchase": "Purchase Accounts",
+        "sales": "Sales Accounts",
+        "party_creditor": "Sundry Creditors",
+        "party_debtor": "Sundry Debtors",
+        "bank": "Bank Accounts",
+        "cash": "Cash-in-Hand",
+    }.get(ledger_type, "Indirect Expenses")
+
+
+def _emit_ledger_master(out, name, ledger_type):
+    out.append('        <TALLYMESSAGE xmlns:UDF="TallyUDF">')
+    out.append(f'          <LEDGER NAME="{_esc(name)}" ACTION="Create">')
+    out.append(f"            <NAME>{_esc(name)}</NAME>")
+    out.append(f"            <PARENT>{_esc(_ledger_parent(ledger_type))}</PARENT>")
+    out.append("            <OPENINGBALANCE>0</OPENINGBALANCE>")
+    out.append("          </LEDGER>")
+    out.append("        </TALLYMESSAGE>")
+
+
+def build_tally_envelope(company_name: str, vouchers: list, auto_create: bool = False) -> str:
     """Render an ENVELOPE for the given vouchers.
 
     Each voucher dict shape:
@@ -54,11 +76,17 @@ def build_tally_envelope(company_name: str, vouchers: list) -> str:
           "ledger": str,
           "amount": float,                 # positive magnitude
           "debit": bool,                   # True => debit (No), False => credit (Yes)
-          "cost_centre": str | None        # optional, allocated on this leg
+          "cost_centre": str | None,       # optional, allocated on this leg
+          "ledger_type": str | None        # optional: purchase/sales/party_creditor/
+                                           # party_debtor/bank/cash (drives auto-create parent)
         },
         ...
       ]
     }
+
+    When ``auto_create`` is True, LEDGER masters are emitted (de-duplicated) for every
+    distinct ledger the vouchers reference, so an import into Tally Prime succeeds even
+    when those ledgers do not yet exist. Masters are emitted before the vouchers.
     """
     out = []
     out.append('<?xml version="1.0" encoding="UTF-8"?>')
@@ -75,6 +103,16 @@ def build_tally_envelope(company_name: str, vouchers: list) -> str:
     out.append("        </STATICVARIABLES>")
     out.append("      </REQUESTDESC>")
     out.append("      <REQUESTDATA>")
+
+    if auto_create:
+        seen = {}
+        for v in vouchers:
+            for e in v.get("entries", []):
+                name = e.get("ledger")
+                if name:
+                    seen[name] = e.get("ledger_type") or "expense"
+        for name, ltype in seen.items():
+            _emit_ledger_master(out, name, ltype)
 
     for v in vouchers:
         vchtype = _esc(v.get("vchtype") or "")

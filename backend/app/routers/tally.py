@@ -155,6 +155,12 @@ def _render_number(template: str, source, year: int, seq: int) -> str:
         return f"{year}-{seq}"
 
 
+def _cash_bank_type(name: str, default_cash: Optional[str]) -> str:
+    if name == default_cash:
+        return "cash"
+    return "cash" if "cash" in (name or "").lower() else "bank"
+
+
 def _build_vouchers(db: Session, conn: TallyConnection, bills, payments):
     """Resolve Bill + Payment rows into Tally voucher dicts (double entry)."""
     vouchers = []
@@ -199,8 +205,10 @@ def _build_vouchers(db: Session, conn: TallyConnection, bills, payments):
 
         # Expense/sales leg is a DEBIT; party leg is a CREDIT.
         entries = [
-            {"ledger": expense_ledger, "amount": total, "debit": True, "cost_centre": cost_centre},
-            {"ledger": party_ledger, "amount": total, "debit": False},
+            {"ledger": expense_ledger, "amount": total, "debit": True, "cost_centre": cost_centre,
+             "ledger_type": "purchase" if vchtype == "Purchase" else "sales"},
+            {"ledger": party_ledger, "amount": total, "debit": False,
+             "ledger_type": "party_creditor" if vchtype == "Purchase" else "party_debtor"},
         ]
         vouchers.append({
             "vchtype": vchtype,
@@ -228,8 +236,8 @@ def _build_vouchers(db: Session, conn: TallyConnection, bills, payments):
             cash_ledger = bank_ledger or conn.default_cash_ledger or "Bank/Cash"
             party_ledger = _resolve_party_ledger(db, conn.company_id, p.party_company_user_id, cash_ledger)
             entries = [
-                {"ledger": cash_ledger, "amount": total, "debit": True},
-                {"ledger": party_ledger, "amount": total, "debit": False},
+                {"ledger": cash_ledger, "amount": total, "debit": True, "ledger_type": _cash_bank_type(cash_ledger, conn.default_cash_ledger)},
+                {"ledger": party_ledger, "amount": total, "debit": False, "ledger_type": "party_debtor"},
             ]
         else:
             vchtype = "Payment"
@@ -237,8 +245,8 @@ def _build_vouchers(db: Session, conn: TallyConnection, bills, payments):
             cash_ledger = bank_ledger or conn.default_cash_ledger or "Bank/Cash"
             party_ledger = _resolve_party_ledger(db, conn.company_id, p.party_company_user_id, cash_ledger)
             entries = [
-                {"ledger": party_ledger, "amount": total, "debit": True},
-                {"ledger": cash_ledger, "amount": total, "debit": False},
+                {"ledger": party_ledger, "amount": total, "debit": True, "ledger_type": "party_creditor"},
+                {"ledger": cash_ledger, "amount": total, "debit": False, "ledger_type": _cash_bank_type(cash_ledger, conn.default_cash_ledger)},
             ]
 
         year = p.payment_date.year if p.payment_date else datetime.utcnow().year
@@ -515,7 +523,7 @@ def export_tally_xml(company_id: uuid.UUID, db: Session = Depends(get_db), _: No
     ).all()
 
     vouchers, _ = _build_vouchers(db, conn, bills, payments)
-    xml = build_tally_envelope(conn.tally_company_name, vouchers)
+    xml = build_tally_envelope(conn.tally_company_name, vouchers, auto_create=conn.auto_create_missing_ledgers)
     filename = f"siteflow-tally-{datetime.utcnow().strftime('%Y%m%d')}.xml"
     return Response(
         content=xml,

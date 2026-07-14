@@ -175,6 +175,20 @@ const INITIAL_TRANSACTIONS: Transaction[] = [
   }
 ];
 
+function formatDmy(iso?: string): string {
+  if (!iso) return "";
+  const d = new Date(iso + "T00:00:00");
+  if (isNaN(d.getTime())) return iso;
+  const m = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  return `${String(d.getDate()).padStart(2, "0")} ${m[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+function fyStartIso(): string {
+  const d = new Date();
+  const y = d.getMonth() >= 3 ? d.getFullYear() : d.getFullYear() - 1;
+  return `${y}-04-01`;
+}
+
 export default function FinancePage() {
   const params = useParams();
   const companyId = params?.company_id as string;
@@ -225,6 +239,7 @@ export default function FinancePage() {
   const [refNum, setRefNum] = useState("");
   const [refInvoice, setRefInvoice] = useState("");
   const [desc, setDesc] = useState("");
+  const [txnDate, setTxnDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [costCode, setCostCode] = useState("1.2.1 Site Conveyance");
   const [submitting, setSubmitting] = useState(false);
   const [photoUrl, setPhotoUrl] = useState<string>("");
@@ -332,6 +347,7 @@ export default function FinancePage() {
   const [tallyVoucherTemplate, setTallyVoucherTemplate] = useState("ONS-{year}-{number}");
   const [tallyDefaultCash, setTallyDefaultCash] = useState("");
   const [tallyAutoCreate, setTallyAutoCreate] = useState(false);
+  const [tallySyncFrom, setTallySyncFrom] = useState(fyStartIso());
   const [tallySaving, setTallySaving] = useState(false);
 
   // Tally Mappings
@@ -510,7 +526,7 @@ export default function FinancePage() {
             sender_company_user_id: paymentFromParty,
             receiver_company_user_id: paymentToParty,
             amount: amtVal,
-            payment_date: new Date().toISOString(),
+            payment_date: new Date(txnDate + "T00:00:00").toISOString(),
             description: desc || "Party to Party Wallet Transfer"
           }),
         });
@@ -522,7 +538,7 @@ export default function FinancePage() {
           
           const newTxn1: Transaction = {
             id: data.sender_payment_id || `TXN-${Date.now()}-1`,
-            date: new Date().toISOString().split("T")[0],
+            date: txnDate,
             type: "Party to Party",
             category: "P2P Debit",
             description: desc || `Transfer to ${toName}`,
@@ -538,7 +554,7 @@ export default function FinancePage() {
           
           const newTxn2: Transaction = {
             id: data.receiver_payment_id || `TXN-${Date.now()}-2`,
-            date: new Date().toISOString().split("T")[0],
+            date: txnDate,
             type: "Party to Party",
             category: "P2P Credit",
             description: desc || `Transfer from ${fromName}`,
@@ -591,13 +607,13 @@ export default function FinancePage() {
           payment_method: "Cash",
           reference_number: refNum || `ONS-V-${Date.now().toString().slice(-4)}`,
           description: desc || `Recorded ${selectedTxnType} voucher`,
-          payment_date: new Date().toISOString()
+          payment_date: new Date(txnDate + "T00:00:00").toISOString()
         }),
       });
 
       const newTxn: Transaction = {
         id: res.ok ? `TXN-${Date.now()}` : `TXN-${Date.now()}-local`,
-        date: new Date().toISOString().split("T")[0],
+        date: txnDate,
         type: selectedTxnType,
         category: selectedTxnType,
         description: desc || `Recorded ${selectedTxnType} voucher`,
@@ -784,6 +800,7 @@ export default function FinancePage() {
     setTallyVoucherTemplate(tallyConn?.voucher_number_template || "ONS-{year}-{number}");
     setTallyDefaultCash(tallyConn?.default_cash_ledger || "");
     setTallyAutoCreate(Boolean(tallyConn?.auto_create_missing_ledgers));
+    setTallySyncFrom(tallyConn?.sync_window_start_date ? String(tallyConn.sync_window_start_date).slice(0, 10) : fyStartIso());
     setShowTallySetup(true);
   };
 
@@ -803,7 +820,7 @@ export default function FinancePage() {
           company_id: companyId,
           tally_company_name: tallyCompany.trim(),
           registered_mobile: tallyMobile.trim(),
-          sync_window_start_date: tallyConn?.sync_window_start_date || new Date().toISOString(),
+          sync_window_start_date: new Date(tallySyncFrom + "T00:00:00").toISOString(),
           voucher_number_template: tallyVoucherTemplate.trim() || "ONS-{year}-{number}",
           auto_create_missing_ledgers: tallyAutoCreate,
           default_cash_ledger: tallyDefaultCash.trim() || null,
@@ -2302,6 +2319,13 @@ export default function FinancePage() {
                   <p className="text-[10px] text-muted font-mono mt-0.5">PRESTIGE DEVELOPERS</p>
                 </div>
                 <div className="flex items-center gap-3">
+                  <input
+                    type="date"
+                    value={txnDate}
+                    onChange={e => setTxnDate(e.target.value)}
+                    title="Transaction date"
+                    className="bg-background border border-border-custom rounded-lg px-2 py-1.5 text-foreground text-xs font-mono focus:outline-none focus:border-primary"
+                  />
                   <button onClick={() => setShowAddModal(false)} className="text-xs text-muted hover:text-foreground transition-colors cursor-pointer">Cancel</button>
                   <button onClick={handleRecordPayment} className="bg-primary hover:bg-primary/90 text-white font-bold text-xs px-4 py-1.5 rounded-lg shadow transition-all cursor-pointer">Save</button>
                 </div>
@@ -2393,9 +2417,8 @@ export default function FinancePage() {
                   <div className="flex justify-between items-center bg-background/50 border border-border-custom rounded-lg p-2.5">
                     <div>
                       <span className="text-muted text-[10px] font-bold uppercase block">Other Expenses</span>
-                      <span className="text-foreground font-semibold font-mono">05 Jul 2026 #OE-1</span>
+                      <span className="text-foreground font-semibold font-mono">{formatDmy(txnDate)}{refNum ? " #" + refNum : ""}</span>
                     </div>
-                    <span className="text-muted cursor-pointer hover:text-foreground">✏️</span>
                   </div>
 
                   <div>
@@ -2535,9 +2558,8 @@ export default function FinancePage() {
                   <div className="flex justify-between items-center bg-background/50 border border-border-custom rounded-lg p-2.5">
                     <div>
                       <span className="text-muted text-[10px] font-bold uppercase block">Equipment Expense</span>
-                      <span className="text-foreground font-semibold font-mono">05 Jul 2026 #EE-1</span>
+                      <span className="text-foreground font-semibold font-mono">{formatDmy(txnDate)}{refNum ? " #" + refNum : ""}</span>
                     </div>
-                    <span className="text-muted cursor-pointer hover:text-foreground">✏️</span>
                   </div>
 
                   <div>
@@ -2557,7 +2579,7 @@ export default function FinancePage() {
                   <div>
                     <label className="text-[10px] text-muted uppercase font-bold block mb-1">Date Range</label>
                     <div className="bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground flex justify-between items-center cursor-pointer hover:bg-elevated/20">
-                      <span>05/07/2026 - 05/07/2026</span>
+                      <span>{formatDmy(txnDate)}</span>
                       <span className="text-muted text-[10px]">▼</span>
                     </div>
                   </div>
@@ -2739,9 +2761,8 @@ export default function FinancePage() {
                       <span className="text-muted text-[10px] font-bold uppercase block">
                         {["Material Sales", "Sales Invoice"].includes(selectedTxnType) ? "Client Party" : "Vendor Party"}
                       </span>
-                      <span className="text-foreground font-semibold font-mono">05 Jul 2026 #MS-0</span>
+                      <span className="text-foreground font-semibold font-mono">{formatDmy(txnDate)}{refNum ? " #" + refNum : ""}</span>
                     </div>
-                    <span className="text-muted cursor-pointer hover:text-foreground">✏️</span>
                   </div>
 
                   <div>
@@ -2850,10 +2871,10 @@ export default function FinancePage() {
                         }}>✏️</span>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <span className="text-muted text-[10px] font-bold uppercase block">Transfer Date</span>
-                      <span className="text-foreground font-semibold font-mono">05 Jul 2026</span>
-                    </div>
+                      <div className="text-right">
+                        <span className="text-muted text-[10px] font-bold uppercase block">Transfer Date</span>
+                        <span className="text-foreground font-semibold font-mono">{formatDmy(txnDate)}</span>
+                      </div>
                   </div>
 
                   <div>
@@ -2944,7 +2965,7 @@ export default function FinancePage() {
                 <div className="space-y-4 text-xs">
                   <div className="flex justify-between items-center bg-background/50 border border-border-custom rounded-lg p-2.5">
                     <span className="text-muted text-[10px] font-bold uppercase">Transfer Date</span>
-                    <span className="text-foreground font-semibold font-mono">2026-07-05</span>
+                    <span className="text-foreground font-semibold font-mono">{formatDmy(txnDate)}</span>
                   </div>
 
                   <div className="space-y-1">
@@ -3137,7 +3158,7 @@ export default function FinancePage() {
                 <div className="space-y-4 text-xs">
                   <div className="flex justify-between items-center bg-background/50 border border-border-custom rounded-lg p-2.5">
                     <span className="text-muted text-[10px] font-bold uppercase">Date</span>
-                    <span className="text-foreground font-semibold font-mono">2026-07-05</span>
+                    <span className="text-foreground font-semibold font-mono">{formatDmy(txnDate)}</span>
                   </div>
 
                   <div>
@@ -3223,7 +3244,7 @@ export default function FinancePage() {
                 <form onSubmit={handleRecordPayment} className="space-y-4 text-xs font-sans">
                   <div className="flex justify-between items-center bg-background/50 border border-border-custom rounded-lg p-2.5">
                     <span className="text-muted text-[10px] font-bold uppercase">Payment Date</span>
-                    <span className="text-foreground font-semibold font-mono">2026-07-05</span>
+                    <span className="text-foreground font-semibold font-mono">{formatDmy(txnDate)}</span>
                   </div>
 
                   <div>
@@ -3988,6 +4009,11 @@ export default function FinancePage() {
               <div>
                 <label className="text-[10px] text-muted uppercase font-bold block mb-1">Default cash ledger</label>
                 <input value={tallyDefaultCash} onChange={(e) => setTallyDefaultCash(e.target.value)} placeholder="e.g. Cash Account" className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs" />
+              </div>
+              <div>
+                <label className="text-[10px] text-muted uppercase font-bold block mb-1">Sync from date</label>
+                <input type="date" value={tallySyncFrom} onChange={(e) => setTallySyncFrom(e.target.value)} className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs font-mono" />
+                <p className="text-[10px] text-muted mt-1">Bills and payments on or after this date are included in the Tally export. Defaults to the start of the current financial year.</p>
               </div>
               <label className="flex items-center gap-2 text-xs text-foreground">
                 <input type="checkbox" checked={tallyAutoCreate} onChange={(e) => setTallyAutoCreate(e.target.checked)} />
