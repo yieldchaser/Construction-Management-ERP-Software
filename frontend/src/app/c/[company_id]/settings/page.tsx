@@ -611,6 +611,113 @@ export default function CompanySettingsPage() {
     setGsPhones(next); saveGs({ google_sheets_authorized_phones: next });
   };
 
+  // ─── Integrations: Google Drive (OAuth backup) ──────────────────────────────
+  const [gdConnected, setGdConnected] = useState(false);
+  const [gdBusy, setGdBusy] = useState(false);
+  const [gdMsg, setGdMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
+  useEffect(() => {
+    if (!company_id) return;
+    const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : "";
+    fetch(`${apiHost}/apis/v3/integrations/google-drive/status/${company_id}`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => { if (data) setGdConnected(Boolean(data.connected)); })
+      .catch(() => {});
+  }, [company_id, apiHost]);
+  const connectDrive = async () => {
+    setGdBusy(true); setGdMsg(null);
+    try {
+      const res = await fetch(`${apiHost}/apis/v3/integrations/google-drive/authorize?company_id=${company_id}`, { headers: authHeaders() });
+      if (!res.ok) { setGdMsg({ type: "err", text: (await res.text()) || "Could not start Google Drive connect" }); return; }
+      const data = await res.json();
+      if (data.consent_url) { window.location.href = data.consent_url; return; }
+      setGdMsg({ type: "err", text: "Missing consent URL" });
+    } catch (e: any) { setGdMsg({ type: "err", text: e?.message || "error" }); }
+    finally { setGdBusy(false); }
+  };
+  const disconnectDrive = async () => {
+    setGdBusy(true); setGdMsg(null);
+    try {
+      const res = await fetch(`${apiHost}/apis/v3/integrations/google-drive/companies/${company_id}/connection`, { method: "DELETE", headers: authHeaders() });
+      if (res.ok) { setGdConnected(false); setGdMsg({ type: "ok", text: "Google Drive disconnected" }); }
+      else setGdMsg({ type: "err", text: "Failed to disconnect Google Drive" });
+    } catch { setGdMsg({ type: "err", text: "Failed to disconnect Google Drive" }); }
+    finally { setGdBusy(false); }
+  };
+
+  // ─── Integrations: Microsoft OneDrive (OAuth backup) ────────────────────────
+  const [odConnected, setOdConnected] = useState(false);
+  const [odBusy, setOdBusy] = useState(false);
+  const [odMsg, setOdMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
+  useEffect(() => {
+    if (!company_id) return;
+    const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : "";
+    fetch(`${apiHost}/apis/v3/integrations/onedrive/status/${company_id}`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => { if (data) setOdConnected(Boolean(data.connected)); })
+      .catch(() => {});
+  }, [company_id, apiHost]);
+  const connectOnedrive = async () => {
+    setOdBusy(true); setOdMsg(null);
+    try {
+      const res = await fetch(`${apiHost}/apis/v3/integrations/onedrive/authorize?company_id=${company_id}`, { headers: authHeaders() });
+      if (!res.ok) { setOdMsg({ type: "err", text: (await res.text()) || "Could not start OneDrive connect" }); return; }
+      const data = await res.json();
+      if (data.consent_url) { window.location.href = data.consent_url; return; }
+      setOdMsg({ type: "err", text: "Missing consent URL" });
+    } catch (e: any) { setOdMsg({ type: "err", text: e?.message || "error" }); }
+    finally { setOdBusy(false); }
+  };
+  const disconnectOnedrive = async () => {
+    setOdBusy(true); setOdMsg(null);
+    try {
+      const res = await fetch(`${apiHost}/apis/v3/integrations/onedrive/companies/${company_id}/connection`, { method: "DELETE", headers: authHeaders() });
+      if (res.ok) { setOdConnected(false); setOdMsg({ type: "ok", text: "OneDrive disconnected" }); }
+      else setOdMsg({ type: "err", text: "Failed to disconnect OneDrive" });
+    } catch { setOdMsg({ type: "err", text: "Failed to disconnect OneDrive" }); }
+    finally { setOdBusy(false); }
+  };
+
+  // ─── Integrations: BI Data Export (API keys) ───────────────────────────────
+  interface BiKey { id: string; label: string; masked_key: string; created_at: string | null; last_used_at: string | null; revoked: boolean; }
+  const [biKeys, setBiKeys] = useState<BiKey[]>([]);
+  const [biLabel, setBiLabel] = useState("");
+  const [biNewKey, setBiNewKey] = useState<string | null>(null);
+  const [biBusy, setBiBusy] = useState(false);
+  const [biMsg, setBiMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
+  const loadBiKeys = async () => {
+    try {
+      const res = await fetch(`${apiHost}/apis/v3/integrations/bi/companies/${company_id}/keys`, { headers: authHeaders() });
+      if (res.ok) setBiKeys(await res.json());
+    } catch { /* leave as-is */ }
+  };
+  useEffect(() => { if (company_id) loadBiKeys(); }, [company_id, apiHost]);
+  const createBiKey = async () => {
+    setBiBusy(true); setBiMsg(null); setBiNewKey(null);
+    try {
+      const res = await fetch(`${apiHost}/apis/v3/integrations/bi/companies/${company_id}/keys`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
+        body: JSON.stringify({ label: biLabel || "BI export key" }),
+      });
+      if (!res.ok) { setBiMsg({ type: "err", text: "Failed to create API key" }); return; }
+      const data = await res.json();
+      setBiNewKey(data.key);
+      setBiLabel("");
+      await loadBiKeys();
+    } catch { setBiMsg({ type: "err", text: "Failed to create API key" }); }
+    finally { setBiBusy(false); }
+  };
+  const revokeBiKey = async (id: string) => {
+    try {
+      const res = await fetch(`${apiHost}/apis/v3/integrations/bi/companies/${company_id}/keys/${id}`, { method: "DELETE", headers: authHeaders() });
+      if (res.ok) await loadBiKeys();
+    } catch { /* leave as-is */ }
+  };
+
   // ─── Subscription (display-only; no billing UI) ──────────────────────────────
   const fmtDate = (d?: string | null) => (d ? new Date(d).toLocaleDateString("en-IN", { year: "numeric", month: "short", day: "numeric" }) : "—");
 
@@ -2139,6 +2246,108 @@ export default function CompanySettingsPage() {
                 {gsStatus === "saved" && (<div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-lg">Integration settings saved</div>)}
                 {gsStatus === "error" && (<div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs rounded-lg">Failed to save integration settings</div>)}
               </div>
+
+              {/* Google Drive */}
+              <div className="bg-card border border-border-custom rounded-lg bg-background p-6 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-sm font-bold text-foreground">Google Drive</div>
+                    <div className="text-[10px] text-muted">Backup project and company files to your connected Google Drive.</div>
+                  </div>
+                  {gdConnected ? (
+                    <button onClick={disconnectDrive} disabled={gdBusy} className="bg-rose-500/15 text-rose-400 border border-rose-500/20 text-xs font-bold px-4 py-2 rounded-md disabled:opacity-50">Disconnect</button>
+                  ) : (
+                    <button onClick={connectDrive} disabled={gdBusy} className="bg-primary text-white text-xs font-bold px-4 py-2 rounded-md disabled:opacity-50">Connect</button>
+                  )}
+                </div>
+                <div className="rounded-lg border border-border-custom p-4 space-y-2">
+                  <div className="text-[10px] uppercase tracking-wider text-muted font-bold">Connection Status</div>
+                  {gdConnected ? (
+                    <div className="flex items-center gap-2 text-xs text-emerald-400"><span className="h-2 w-2 rounded-full bg-emerald-400" /><span>Connected</span></div>
+                  ) : (
+                    <div className="flex items-center gap-2 text-xs text-muted"><span className="h-2 w-2 rounded-full bg-zinc-500" /><span>Not connected.</span></div>
+                  )}
+                </div>
+                {gdMsg && (
+                  <div className={`p-4 text-xs rounded-lg ${gdMsg.type === "ok" ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400" : "bg-rose-500/10 border border-rose-500/20 text-rose-400"}`}>{gdMsg.text}</div>
+                )}
+              </div>
+
+              {/* Microsoft OneDrive */}
+              <div className="bg-card border border-border-custom rounded-lg bg-background p-6 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-sm font-bold text-foreground">Microsoft OneDrive</div>
+                    <div className="text-[10px] text-muted">Archive project and company files to your connected OneDrive.</div>
+                  </div>
+                  {odConnected ? (
+                    <button onClick={disconnectOnedrive} disabled={odBusy} className="bg-rose-500/15 text-rose-400 border border-rose-500/20 text-xs font-bold px-4 py-2 rounded-md disabled:opacity-50">Disconnect</button>
+                  ) : (
+                    <button onClick={connectOnedrive} disabled={odBusy} className="bg-primary text-white text-xs font-bold px-4 py-2 rounded-md disabled:opacity-50">Connect</button>
+                  )}
+                </div>
+                <div className="rounded-lg border border-border-custom p-4 space-y-2">
+                  <div className="text-[10px] uppercase tracking-wider text-muted font-bold">Connection Status</div>
+                  {odConnected ? (
+                    <div className="flex items-center gap-2 text-xs text-emerald-400"><span className="h-2 w-2 rounded-full bg-emerald-400" /><span>Connected</span></div>
+                  ) : (
+                    <div className="flex items-center gap-2 text-xs text-muted"><span className="h-2 w-2 rounded-full bg-zinc-500" /><span>Not connected.</span></div>
+                  )}
+                </div>
+                {odMsg && (
+                  <div className={`p-4 text-xs rounded-lg ${odMsg.type === "ok" ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400" : "bg-rose-500/10 border border-rose-500/20 text-rose-400"}`}>{odMsg.text}</div>
+                )}
+              </div>
+
+              {/* BI Data Export */}
+              <div className="bg-card border border-border-custom rounded-lg bg-background p-6 space-y-4">
+                <div>
+                  <div className="text-sm font-bold text-foreground">BI Data Export (PowerBI / Tableau)</div>
+                  <div className="text-[10px] text-muted">Create API keys to pull projects, budget variance, and labour productivity feeds as CSV or JSON.</div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] uppercase tracking-wider text-muted font-bold">New key label</label>
+                  <div className="flex gap-2">
+                    <input type="text" placeholder="e.g. PowerBI Prod" value={biLabel} onChange={(e) => setBiLabel(e.target.value)} className="flex-1 bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-foreground outline-none" />
+                    <button onClick={createBiKey} disabled={biBusy} className="bg-primary text-white text-xs font-bold px-4 py-2 rounded-md disabled:opacity-50">Create</button>
+                  </div>
+                  {biNewKey && (
+                    <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 p-3 space-y-1">
+                      <div className="text-[10px] uppercase tracking-wider text-emerald-400 font-bold">Copy this key now (shown once)</div>
+                      <code className="block text-[11px] text-emerald-300 break-all select-all">{biNewKey}</code>
+                    </div>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <div className="text-[10px] uppercase tracking-wider text-muted font-bold">Keys</div>
+                  {biKeys.length === 0 ? (
+                    <span className="text-[10px] text-muted">No API keys created.</span>
+                  ) : (
+                    <div className="space-y-1.5">
+                      {biKeys.map((k) => (
+                        <div key={k.id} className="flex items-center justify-between text-xs bg-elevated border border-border-custom rounded-md px-3 py-2">
+                          <div className="flex flex-col">
+                            <span className="text-foreground">{k.label}</span>
+                            <span className="text-[10px] text-muted">{k.masked_key}{k.revoked ? " (revoked)" : ""}</span>
+                          </div>
+                          {!k.revoked && (
+                            <button onClick={() => revokeBiKey(k.id)} className="text-rose-400 hover:text-rose-300 text-[11px] font-bold">Revoke</button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div className="rounded-lg border border-border-custom p-4 space-y-1">
+                  <div className="text-[10px] uppercase tracking-wider text-muted font-bold">Connect your BI tool</div>
+                  <p className="text-[11px] text-muted">Point PowerBI or Tableau at your feed URL with the API key as a header (<code>X-API-Key</code>):</p>
+                  <code className="block text-[11px] text-muted break-all">{apiHost}/apis/v3/integrations/bi/feed/{company_id}/projects?format=csv</code>
+                </div>
+                {biMsg && (
+                  <div className={`p-4 text-xs rounded-lg ${biMsg.type === "ok" ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400" : "bg-rose-500/10 border border-rose-500/20 text-rose-400"}`}>{biMsg.text}</div>
+                )}
+              </div>
+
             </div>
           )}
 

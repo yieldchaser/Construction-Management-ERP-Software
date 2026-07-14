@@ -537,6 +537,12 @@ from app.routers import google_auth as google_auth_router
 app.include_router(google_auth_router.router, prefix="/apis/v3")
 from app.routers import admin_migrations as admin_migrations_router
 app.include_router(admin_migrations_router.router, prefix="/apis/v3")
+from app.routers import google_drive as google_drive_router
+app.include_router(google_drive_router.router, prefix="/apis/v3")
+from app.routers import onedrive as onedrive_router
+app.include_router(onedrive_router.router, prefix="/apis/v3")
+from app.routers import bi_export as bi_export_router
+app.include_router(bi_export_router.router, prefix="/apis/v3")
 
 @app.get("/")
 def read_root():

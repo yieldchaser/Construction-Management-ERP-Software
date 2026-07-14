@@ -114,6 +114,17 @@ class Settings(BaseSettings):
     # the backend callback URL as a redirect URI.
     GOOGLE_SHEETS_CLIENT_ID: str = ""
     GOOGLE_SHEETS_CLIENT_SECRET: str = ""
+    # Google Drive OAuth (integrations). Reuses the Google OAuth client when the
+    # dedicated Drive client id/secret are unset (same fallback pattern as
+    # google_login_client_id). Scope: drive.file (per-file, user-consented).
+    GOOGLE_DRIVE_CLIENT_ID: str = ""
+    GOOGLE_DRIVE_CLIENT_SECRET: str = ""
+    # Microsoft Graph OAuth (OneDrive integration). Optional; when empty the
+    # connect flow returns a clear error. "common" tenant allows any Microsoft
+    # personal/work account.
+    MS_GRAPH_CLIENT_ID: str = ""
+    MS_GRAPH_CLIENT_SECRET: str = ""
+    MS_GRAPH_TENANT: str = "common"
     # Public base URL of this backend, used to build the OAuth redirect URI.
     # Falls back to the request URL when empty.
     BACKEND_PUBLIC_URL: str = ""
@@ -164,6 +175,15 @@ class Settings(BaseSettings):
     @property
     def google_login_client_secret(self) -> str:
         return (self.GOOGLE_LOGIN_CLIENT_SECRET or self.GOOGLE_SHEETS_CLIENT_SECRET or "").strip()
+
+    @property
+    def google_drive_client_id(self) -> str:
+        """Dedicated Drive client id, falling back to the Sheets client when unset."""
+        return (self.GOOGLE_DRIVE_CLIENT_ID or self.GOOGLE_SHEETS_CLIENT_ID or "").strip()
+
+    @property
+    def google_drive_client_secret(self) -> str:
+        return (self.GOOGLE_DRIVE_CLIENT_SECRET or self.GOOGLE_SHEETS_CLIENT_SECRET or "").strip()
 
     @model_validator(mode="after")
     def _require_secret_key(self):

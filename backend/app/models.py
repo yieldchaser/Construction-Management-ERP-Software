@@ -2106,3 +2106,52 @@ class GoogleSheetsConnection(Base):
     connected_by_user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 
+
+class GoogleDriveConnection(Base):
+    """OAuth connection linking one company to a Google account for Drive backup.
+
+    One connection per company (company_id is unique). Access/refresh tokens are
+    encrypted at rest via app/crypto.py Fernet. Never log token values.
+    """
+    __tablename__ = "google_drive_connections"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), unique=True, nullable=False)
+    access_token = Column(Text, nullable=True)
+    refresh_token = Column(Text, nullable=True)
+    token_expiry = Column(DateTime(timezone=True), nullable=True)
+    connected_by_user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
+class OneDriveConnection(Base):
+    """OAuth connection linking one company to a Microsoft account for OneDrive backup.
+
+    One connection per company (company_id is unique). Access/refresh tokens are
+    encrypted at rest via app/crypto.py Fernet. Never log token values.
+    """
+    __tablename__ = "onedrive_connections"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), unique=True, nullable=False)
+    access_token = Column(Text, nullable=True)
+    refresh_token = Column(Text, nullable=True)
+    token_expiry = Column(DateTime(timezone=True), nullable=True)
+    connected_by_user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
+class BiApiKey(Base):
+    """Per-company API key for BI data export (PowerBI / Tableau feeds).
+
+    The raw key is shown ONCE on creation; only a hash is stored. Feeds resolve
+    the company from the key and only ever read that company's data.
+    """
+    __tablename__ = "bi_api_keys"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False, index=True)
+    label = Column(String(120), nullable=False)
+    key_hash = Column(String(128), nullable=False)
+    created_by_user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+    last_used_at = Column(DateTime(timezone=True), nullable=True)
+    revoked = Column(Boolean, default=False, nullable=False)
+
