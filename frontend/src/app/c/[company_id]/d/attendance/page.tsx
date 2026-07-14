@@ -2,7 +2,7 @@
 import { getApiHost } from "@/lib/api";
 import { authHeaders } from "@/lib/siteflow";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { useProject } from "@/context/ProjectContext";
 import PwaControls from "@/components/pwa/PwaControls";
@@ -17,11 +17,13 @@ const STATUS_MAP: Record<string, string> = {
   "half day": "bg-amber-500/10 text-amber-400 border-amber-500/20",
 };
 
-const SUBCONTRACTORS = [
-  { id: "subcon-1", name: "Krishna Sub Contractor", activeWorkers: 15, totalWage: "₹12,450" },
-  { id: "subcon-2", name: "Shivaji Earthworks", activeWorkers: 0, totalWage: "₹0" },
-  { id: "subcon-3", name: "Vardhaman Builders", activeWorkers: 8, totalWage: "₹6,800" },
-];
+const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+const formatPayrollMonth = (ym: string | null | undefined): string => {
+  if (!ym || !/^\d{4}-\d{2}$/.test(ym)) return "";
+  const [y, m] = ym.split("-").map(Number);
+  const month = MONTHS[m - 1] || "";
+  return month ? ` — ${month} ${y}` : "";
+};
 
 const LOCALIZATION: Record<string, any> = {
   English: {
@@ -214,6 +216,76 @@ export default function AttendancePage() {
   // Real database employees + attendance logs
   const [employees, setEmployees] = useState<any[]>([]);
   const [dbLogs, setDbLogs] = useState<any[]>([]);
+
+  // Real subcontractor + payroll + team-member data (no hardcoded demo rows)
+  const [subcontractors, setSubcontractors] = useState<any[]>([]);
+  const [payrollRun, setPayrollRun] = useState<{ run_id: string | null; payroll_month: string | null }>({ run_id: null, payroll_month: null });
+  const [payslips, setPayslips] = useState<any[]>([]);
+  const [payrollLoading, setPayrollLoading] = useState(false);
+  const [teamMembers, setTeamMembers] = useState<any[]>([]);
+
+  const fetchSubcontractors = useCallback(async () => {
+    if (!companyId) return;
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/billing/subcontractors?company_id=${companyId}`, { headers: authHeaders() });
+      if (res.ok) {
+        const data = await res.json();
+        setSubcontractors(Array.isArray(data) ? data : []);
+      } else {
+        setSubcontractors([]);
+      }
+    } catch (e) {
+      console.error("Failed to load subcontractors", e);
+      setSubcontractors([]);
+    }
+  }, [companyId]);
+
+  const fetchPayrollCompilation = useCallback(async () => {
+    if (!companyId) return;
+    setPayrollLoading(true);
+    try {
+      const latestRes = await fetch(`${getApiHost()}/apis/v3/hr/payroll/latest/${companyId}`, { headers: authHeaders() || {} });
+      if (!latestRes.ok) {
+        setPayslips([]);
+        setPayrollRun({ run_id: null, payroll_month: null });
+        return;
+      }
+      const latest = await latestRes.json();
+      setPayrollRun({ run_id: latest.run_id || null, payroll_month: latest.payroll_month || null });
+      if (!latest.run_id) {
+        setPayslips([]);
+        return;
+      }
+      const paysRes = await fetch(`${getApiHost()}/apis/v3/hr/payroll/${latest.run_id}/payslips`, { headers: authHeaders() || {} });
+      if (paysRes.ok) {
+        const data = await paysRes.json();
+        setPayslips(Array.isArray(data) ? data : []);
+      } else {
+        setPayslips([]);
+      }
+    } catch (e) {
+      console.error("Failed to load payroll compilation", e);
+      setPayslips([]);
+    } finally {
+      setPayrollLoading(false);
+    }
+  }, [companyId]);
+
+  const fetchTeamMembers = useCallback(async () => {
+    if (!companyId) return;
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/settings/team/${companyId}`, { headers: authHeaders() || {} });
+      if (res.ok) {
+        const data = await res.json();
+        setTeamMembers(Array.isArray(data) ? data : []);
+      } else {
+        setTeamMembers([]);
+      }
+    } catch (e) {
+      console.error("Failed to load team members", e);
+      setTeamMembers([]);
+    }
+  }, [companyId]);
   
   // Punch inputs
   const [selectedEmpId, setSelectedEmpId] = useState<string>("");
@@ -259,6 +331,19 @@ export default function AttendancePage() {
       fetchEmpsAndLogs();
     }
   }, [projectId, date]);
+
+  useEffect(() => {
+    if (companyId) {
+      fetchSubcontractors();
+      fetchPayrollCompilation();
+    }
+  }, [companyId, fetchSubcontractors, fetchPayrollCompilation]);
+
+  useEffect(() => {
+    if (isSettingsModalOpen && settingsTab === "members" && companyId) {
+      fetchTeamMembers();
+    }
+  }, [isSettingsModalOpen, settingsTab, companyId, fetchTeamMembers]);
 
   useEffect(() => {
     if (projectId) {
@@ -335,7 +420,7 @@ export default function AttendancePage() {
       return;
     }
     const finalEmpId = selectedEmpId || "e0000000-0000-0000-0000-000000000100";
-    const empName = employees.find(e => e.id === finalEmpId)?.name || "Ramesh Kumar";
+    const empName = employees.find(e => e.id === finalEmpId)?.name || "Unknown";
     const multiplier = punchMultiplier === 0 ? parseFloat(customMultiplierVal || "1.0") : punchMultiplier;
 
     const location = await captureLocation();
@@ -404,7 +489,7 @@ export default function AttendancePage() {
         if (row.count <= 0) continue;
         const body = {
           project_id: projectId,
-          subcontractor_id: selectedSubcon.id === "subcon-1" ? "e0000000-0000-0000-0000-000000000100" : "e0000000-0000-0000-0000-000000000101",
+          subcontractor_id: selectedSubcon.company_team_id,
           attendance_date: new Date().toISOString(),
           labor_role: row.role,
           worker_count: row.count,
@@ -619,7 +704,7 @@ export default function AttendancePage() {
                             </tr>
                           ) : (
                             dbLogs.map((log) => {
-                              const empName = employees.find(e => e.id === log.employee_id)?.name || "Ramesh Kumar";
+                              const empName = employees.find(e => e.id === log.employee_id)?.name || "Unknown";
                               return (
                                 <tr key={log.id} className="border-b border-border-custom hover:bg-elevated transition-all">
                                   <td className="px-5 py-3 font-semibold text-foreground">{empName}</td>
@@ -653,24 +738,26 @@ export default function AttendancePage() {
               {subTab === "subcon" && (
                 <div className="space-y-5">
                   <div className="grid gap-4 md:grid-cols-3">
-                    {SUBCONTRACTORS.map((sc) => (
-                      <div key={sc.id} className="bg-card border border-border-custom rounded-lg border border-border-custom rounded-lg p-5 flex flex-col justify-between hover:border-border-custom transition-all">
-                        <div>
-                          <h3 className="text-sm font-bold text-foreground">{sc.name}</h3>
-                          <p className="text-[10px] text-muted mt-1">Labour Provider Crew</p>
-                          <div className="mt-4 flex items-center justify-between text-xs">
-                            <span className="text-muted">Active Workers Today:</span>
-                            <strong className="text-emerald-400 font-bold">{sc.activeWorkers}</strong>
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => { setSelectedSubcon(sc); setSubconPhoto(""); }}
-                          className="mt-6 w-full text-center py-2 bg-primary/10 border border-primary/20 text-primary text-xs font-bold rounded-md hover:bg-primary/20 transition-all"
-                        >
-                          Log Daily Crew Size →
-                        </button>
+                    {subcontractors.length === 0 ? (
+                      <div className="md:col-span-3 bg-card border border-border-custom rounded-lg p-6 text-center text-muted text-xs">
+                        No subcontractors registered for this company yet.
                       </div>
-                    ))}
+                    ) : (
+                      subcontractors.map((sc) => (
+                        <div key={sc.company_team_id} className="bg-card border border-border-custom rounded-lg p-5 flex flex-col justify-between hover:border-border-custom transition-all">
+                          <div>
+                            <h3 className="text-sm font-bold text-foreground">{sc.name}</h3>
+                            <p className="text-[10px] text-muted mt-1">{sc.phone ? `Contact: ${sc.phone}` : "Labour Provider Crew"}</p>
+                          </div>
+                          <button
+                            onClick={() => { setSelectedSubcon(sc); setSubconPhoto(""); }}
+                            className="mt-6 w-full text-center py-2 bg-primary/10 border border-primary/20 text-primary text-xs font-bold rounded-md hover:bg-primary/20 transition-all"
+                          >
+                            Log Daily Crew Size →
+                          </button>
+                        </div>
+                      ))
+                    )}
                   </div>
 
                   {/* Subcontractor Entry Drawer Modal */}
@@ -914,7 +1001,7 @@ export default function AttendancePage() {
               <div className="bg-input border border-border-custom rounded-lg overflow-hidden">
                 <div className="px-5 py-3 border-b border-border-custom flex items-center justify-between">
                   <div>
-                    <h2 className="text-xs font-bold text-foreground uppercase tracking-wider">Monthly Payroll Compilation — June 2026</h2>
+                    <h2 className="text-xs font-bold text-foreground uppercase tracking-wider">Monthly Payroll Compilation{formatPayrollMonth(payrollRun.payroll_month)}</h2>
                     <p className="text-[10px] text-muted mt-0.5">Salary + PF + ESI statutory deductions per IS code. Download payslip per employee.</p>
                   </div>
                   <button onClick={handleExportPayslips} className="px-3 py-1.5 bg-primary text-white text-[10px] font-bold rounded-lg hover:bg-primary/90 transition-all">📤 Export All Payslips</button>
@@ -933,45 +1020,46 @@ export default function AttendancePage() {
                         <th className="py-2.5 pr-5 text-center">Payslip</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-border-custom">
-                      {[
-                        { name: "Suresh Ramamurthy", role: "Project Manager", gross: 85000, pf: 1800, esi: 0, tds: 4200 },
-                        { name: "Ravi Kumar", role: "Site Engineer", gross: 42000, pf: 1800, esi: 315, tds: 800 },
-                        { name: "Anita Desai", role: "Jr. Engineer", gross: 28000, pf: 1800, esi: 210, tds: 0 },
-                        { name: "Mahesh Patil", role: "Supervisor", gross: 22000, pf: 1800, esi: 165, tds: 0 },
-                        { name: "Deepak Yadav", role: "Storekeeper", gross: 18000, pf: 1800, esi: 135, tds: 0 },
-                      ].map((emp, i) => {
-                        const net = emp.gross - emp.pf - emp.esi - emp.tds;
-                        return (
-                          <tr key={i} className="hover:bg-elevated">
-                            <td className="py-3 pl-5 pr-3 font-semibold text-foreground">{emp.name}</td>
-                            <td className="py-3 px-3 text-muted">{emp.role}</td>
-                            <td className="py-3 px-3 text-right font-mono text-foreground">₹{emp.gross.toLocaleString("en-IN")}</td>
-                            <td className="py-3 px-3 text-right font-mono text-red-400">₹{emp.pf.toLocaleString("en-IN")}</td>
-                            <td className="py-3 px-3 text-right font-mono text-red-400">₹{emp.esi.toLocaleString("en-IN")}</td>
-                            <td className="py-3 px-3 text-right font-mono text-red-400">₹{emp.tds.toLocaleString("en-IN")}</td>
-                            <td className="py-3 px-3 text-right font-bold font-mono text-emerald-400">₹{net.toLocaleString("en-IN")}</td>
-                            <td className="py-3 pr-5 text-center">
-                              <button onClick={() => window.print()}
-                                className="px-2.5 py-1 text-[9px] font-bold bg-primary/10 border border-primary/20 text-primary rounded-lg hover:bg-primary/20 transition-all">
-                                📄 Download
-                              </button>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                    <tfoot>
-                      <tr className="border-t-2 border-border-custom bg-background">
-                        <td colSpan={2} className="py-3 pl-5 font-bold text-foreground">TOTAL PAYROLL</td>
-                        <td className="py-3 px-3 text-right font-bold font-mono text-foreground">₹1,95,000</td>
-                        <td className="py-3 px-3 text-right font-bold font-mono text-red-400">₹9,000</td>
-                        <td className="py-3 px-3 text-right font-bold font-mono text-red-400">₹825</td>
-                        <td className="py-3 px-3 text-right font-bold font-mono text-red-400">₹5,000</td>
-                        <td className="py-3 px-3 text-right font-black font-mono text-emerald-400 text-sm">₹1,80,175</td>
-                        <td />
-                      </tr>
-                    </tfoot>
+                     <tbody className="divide-y divide-border-custom">
+                       {payrollLoading ? (
+                         <tr>
+                           <td colSpan={8} className="py-6 text-center text-muted">Loading payroll compilation...</td>
+                         </tr>
+                       ) : payslips.length === 0 ? (
+                         <tr>
+                           <td colSpan={8} className="py-6 text-center text-muted">No payroll run yet for this company.</td>
+                         </tr>
+                       ) : (
+                         payslips.map((emp) => (
+                           <tr key={emp.id} className="hover:bg-elevated">
+                             <td className="py-3 pl-5 pr-3 font-semibold text-foreground">{emp.employee_name}</td>
+                             <td className="py-3 px-3 text-muted">{emp.employee_designation || "—"}</td>
+                             <td className="py-3 px-3 text-right font-mono text-foreground">₹{emp.gross_salary.toLocaleString("en-IN")}</td>
+                             <td className="py-3 px-3 text-right font-mono text-red-400">₹{emp.pf_employee.toLocaleString("en-IN")}</td>
+                             <td className="py-3 px-3 text-right font-mono text-red-400">₹{emp.esi_employee.toLocaleString("en-IN")}</td>
+                             <td className="py-3 px-3 text-right font-mono text-red-400">₹{emp.tds.toLocaleString("en-IN")}</td>
+                             <td className="py-3 px-3 text-right font-bold font-mono text-emerald-400">₹{emp.net_payable.toLocaleString("en-IN")}</td>
+                             <td className="py-3 pr-5 text-center">
+                               <button onClick={() => window.print()}
+                                 className="px-2.5 py-1 text-[9px] font-bold bg-primary/10 border border-primary/20 text-primary rounded-lg hover:bg-primary/20 transition-all">
+                                 📄 Download
+                               </button>
+                             </td>
+                           </tr>
+                         ))
+                       )}
+                     </tbody>
+                     <tfoot>
+                       <tr className="border-t-2 border-border-custom bg-background">
+                         <td colSpan={2} className="py-3 pl-5 font-bold text-foreground">TOTAL PAYROLL</td>
+                         <td className="py-3 px-3 text-right font-bold font-mono text-foreground">₹{payslips.reduce((s: number, e: any) => s + (e.gross_salary || 0), 0).toLocaleString("en-IN")}</td>
+                         <td className="py-3 px-3 text-right font-bold font-mono text-red-400">₹{payslips.reduce((s: number, e: any) => s + (e.pf_employee || 0), 0).toLocaleString("en-IN")}</td>
+                         <td className="py-3 px-3 text-right font-bold font-mono text-red-400">₹{payslips.reduce((s: number, e: any) => s + (e.esi_employee || 0), 0).toLocaleString("en-IN")}</td>
+                         <td className="py-3 px-3 text-right font-bold font-mono text-red-400">₹{payslips.reduce((s: number, e: any) => s + (e.tds || 0), 0).toLocaleString("en-IN")}</td>
+                         <td className="py-3 px-3 text-right font-black font-mono text-emerald-400 text-sm">₹{payslips.reduce((s: number, e: any) => s + (e.net_payable || 0), 0).toLocaleString("en-IN")}</td>
+                         <td />
+                       </tr>
+                     </tfoot>
                   </table>
                 </div>
               </div>
@@ -1206,16 +1294,18 @@ export default function AttendancePage() {
                     <span className="text-[10px] text-muted font-bold uppercase tracking-wider">Authorized Team Members</span>
                     <button className="bg-primary hover:bg-primary/95 text-white font-bold text-[10px] px-3 py-1.5 rounded-lg transition-all">+ Add Member</button>
                   </div>
-                  <div className="divide-y divide-border-custom/50 bg-elevated/20 border border-border-custom rounded-xl p-3 text-xs">
-                    <div className="py-2 flex justify-between">
-                      <span className="font-semibold text-foreground">Yash Desai</span>
-                      <span className="text-muted">Administrator</span>
-                    </div>
-                    <div className="py-2 flex justify-between">
-                      <span className="font-semibold text-foreground">Ramesh Sharma</span>
-                      <span className="text-muted">Site Engineer</span>
-                    </div>
-                  </div>
+                   <div className="divide-y divide-border-custom/50 bg-elevated/20 border border-border-custom rounded-xl p-3 text-xs">
+                     {teamMembers.length === 0 ? (
+                       <div className="py-2 text-center text-muted">No team members found for this company.</div>
+                     ) : (
+                       teamMembers.map((m) => (
+                         <div key={m.id} className="py-2 flex justify-between">
+                           <span className="font-semibold text-foreground">{m.name}</span>
+                           <span className="text-muted">{m.role_name || m.priority_type || "Member"}</span>
+                         </div>
+                       ))
+                     )}
+                   </div>
                 </div>
               )}
 

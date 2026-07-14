@@ -705,6 +705,7 @@ def get_payslips(run_id: uuid.UUID, db: Session = Depends(get_db), current_user:
             "id": str(line.id),
             "employee_id": str(line.employee_id),
             "employee_name": emp.name if emp else "Unknown",
+            "employee_designation": emp.designation if emp else "",
             "days_present": float(line.days_present),
             "days_in_month": line.days_in_month,
             "gross_salary": float(line.gross_salary),
