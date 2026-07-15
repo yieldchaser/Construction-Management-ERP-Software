@@ -211,13 +211,26 @@ def _build_vouchers(db: Session, conn: TallyConnection, bills, payments):
         vnumber = _render_number(conn.voucher_number_template, b.invoice_number, year, seq)
         narration = f"SiteFlow {b.invoice_type} invoice {b.invoice_number}."
 
-        # Expense/sales leg is a DEBIT; party leg is a CREDIT.
-        entries = [
-            {"ledger": expense_ledger, "amount": total, "debit": True, "cost_centre": cost_centre,
-             "ledger_type": "purchase" if vchtype == "Purchase" else "sales"},
-            {"ledger": party_ledger, "amount": total, "debit": False,
-             "ledger_type": "party_creditor" if vchtype == "Purchase" else "party_debtor"},
-        ]
+        if vchtype == "Sales":
+            # Sale: the customer now owes us, so DEBIT the party (Sundry
+            # Debtor, receivable up) and CREDIT the sales ledger (revenue up).
+            # The mirror image (Dr Sales / Cr Debtor) would understate both
+            # revenue and receivables, so the debit/credit flags are inverted
+            # relative to the purchase branch below.
+            entries = [
+                {"ledger": expense_ledger, "amount": total, "debit": False, "cost_centre": cost_centre,
+                 "ledger_type": "sales"},
+                {"ledger": party_ledger, "amount": total, "debit": True,
+                 "ledger_type": "party_debtor"},
+            ]
+        else:
+            # Purchase / subcon: debit the expense ledger, credit the party.
+            entries = [
+                {"ledger": expense_ledger, "amount": total, "debit": True, "cost_centre": cost_centre,
+                 "ledger_type": "purchase"},
+                {"ledger": party_ledger, "amount": total, "debit": False,
+                 "ledger_type": "party_creditor"},
+            ]
         vouchers.append({
             "vchtype": vchtype,
             "voucher_type_name": vchtype,

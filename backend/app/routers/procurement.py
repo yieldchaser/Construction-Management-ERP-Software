@@ -594,10 +594,15 @@ def create_grn(req: GRNCreateRequest, db: Session = Depends(get_db), current_use
     if existing:
         raise HTTPException(status_code=400, detail="GRN number already exists for this company")
 
-    # 1. Check PO exists
+    # 1. Check PO exists and belongs to this company/project
     po = db.query(PurchaseOrder).filter(PurchaseOrder.id == req.po_id).first()
     if not po:
         raise HTTPException(status_code=404, detail="Purchase Order not found")
+    if po.company_id != req.company_id or po.project_id != req.project_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Purchase Order does not belong to the supplied company/project",
+        )
 
     grn = GoodsReceiptNote(
         company_id=req.company_id,
@@ -612,10 +617,15 @@ def create_grn(req: GRNCreateRequest, db: Session = Depends(get_db), current_use
 
     item_responses = []
     for item in req.items:
-        # Check PO item exists
+        # Check PO item exists and belongs to this PO
         po_item = db.query(PurchaseOrderItem).filter(PurchaseOrderItem.id == item.po_item_id).first()
         if not po_item:
             raise HTTPException(status_code=400, detail=f"PO Item {item.po_item_id} not found")
+        if po_item.po_id != req.po_id:
+            raise HTTPException(
+                status_code=400,
+                detail=f"PO Item {item.po_item_id} does not belong to PO {req.po_id}",
+            )
 
         # 2. Create GRN item
         db_item = GRNItem(

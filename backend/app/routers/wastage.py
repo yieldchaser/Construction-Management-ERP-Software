@@ -5,8 +5,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
 from app.database import get_db
-from app.auth import get_current_user, verify_project_access
-from app.models import MaterialWastage
+from app.auth import get_current_user, verify_project_access, get_company_membership, require_permission
+from app.models import MaterialWastage, User
 from decimal import Decimal
 
 router = APIRouter(prefix="/wastage", tags=["Material Wastage & Scrap"], dependencies=[Depends(get_current_user)])
@@ -47,7 +47,9 @@ class MaterialWastageResponse(BaseModel):
 
 
 @router.post("", response_model=MaterialWastageResponse, status_code=status.HTTP_201_CREATED)
-def create_wastage(payload: MaterialWastageCreate, db: Session = Depends(get_db)):
+def create_wastage(payload: MaterialWastageCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    get_company_membership(db, current_user, payload.company_id)
+    require_permission(db, current_user, payload.company_id, "procurement:edit")
     data = payload.model_dump()
     data["estimated_value"] = Decimal(str(data["estimated_value"]))
     wastage = MaterialWastage(**data)
@@ -65,10 +67,12 @@ def list_wastage(project_id: uuid.UUID, db: Session = Depends(get_db), _: None =
 
 
 @router.patch("/{wastage_id}/status", response_model=MaterialWastageResponse)
-def update_wastage_status(wastage_id: uuid.UUID, status: str, db: Session = Depends(get_db)):
+def update_wastage_status(wastage_id: uuid.UUID, status: str, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     wastage = db.query(MaterialWastage).filter(MaterialWastage.id == wastage_id).first()
     if not wastage:
         raise HTTPException(status_code=404, detail="Wastage record not found")
+    get_company_membership(db, current_user, wastage.company_id)
+    require_permission(db, current_user, wastage.company_id, "procurement:edit")
     wastage.status = status
     db.commit()
     db.refresh(wastage)

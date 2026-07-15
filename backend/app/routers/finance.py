@@ -1268,7 +1268,12 @@ def perform_p2p_transfer(req: P2PTransferRequest, db: Session):
     )
 
 @cashbook_router.post("/p2p", response_model=P2PTransferResponse, status_code=status.HTTP_201_CREATED)
-def p2p_transfer_cashbook(req: P2PTransferRequest, db: Session = Depends(get_db)):
+def p2p_transfer_cashbook(req: P2PTransferRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    # The frontend calls this exact route for team-member P2P transfers. It moves
+    # money between two CompanyTeam members, so it must be tenant-scoped AND gated
+    # by the same finance:edit permission as its /finance/cashbook/p2p twin.
+    get_company_membership(db, current_user, req.company_id)
+    require_permission(db, current_user, req.company_id, "finance:edit")
     return perform_p2p_transfer(req, db)
 
 @router.post("/cashbook/p2p", response_model=P2PTransferResponse, status_code=status.HTTP_201_CREATED)
@@ -1286,8 +1291,9 @@ def upload_payments(
 ):
     # company_id here comes from multipart form data (not the URL path/query),
     # so it can't share a value with a plain Depends(verify_company_access)
-    # sub-dependency; verify membership inline instead.
+    # sub-dependency; verify membership + write permission inline instead.
     get_company_membership(db, current_user, company_id)
+    require_permission(db, current_user, company_id, "finance:edit")
     import csv
     import io
 

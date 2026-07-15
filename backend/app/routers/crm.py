@@ -358,7 +358,7 @@ def list_lead_sources(company_id: uuid.UUID, db: Session = Depends(get_db), _: N
 
 
 @router.post("/lead-sources/{company_id}", response_model=LookupResponse, status_code=status.HTTP_201_CREATED)
-def create_lead_source(company_id: uuid.UUID, payload: LookupCreate, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
+def create_lead_source(company_id: uuid.UUID, payload: LookupCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user), _: None = Depends(verify_company_access)):
     comp_uuid = uuid.UUID(str(company_id))
     require_permission(db, current_user, comp_uuid, "crm:edit")
     obj = CRMLeadSource(company_id=comp_uuid, name=payload.name)
@@ -374,7 +374,7 @@ def list_lead_categories(company_id: uuid.UUID, db: Session = Depends(get_db), _
 
 
 @router.post("/lead-categories/{company_id}", response_model=LookupResponse, status_code=status.HTTP_201_CREATED)
-def create_lead_category(company_id: uuid.UUID, payload: LookupCreate, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
+def create_lead_category(company_id: uuid.UUID, payload: LookupCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user), _: None = Depends(verify_company_access)):
     comp_uuid = uuid.UUID(str(company_id))
     require_permission(db, current_user, comp_uuid, "crm:edit")
     obj = CRMLeadCategory(company_id=comp_uuid, name=payload.name)
@@ -390,7 +390,7 @@ def list_lead_statuses(company_id: uuid.UUID, db: Session = Depends(get_db), _: 
 
 
 @router.post("/lead-statuses/{company_id}", response_model=LookupResponse, status_code=status.HTTP_201_CREATED)
-def create_lead_status(company_id: uuid.UUID, payload: LookupCreate, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
+def create_lead_status(company_id: uuid.UUID, payload: LookupCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user), _: None = Depends(verify_company_access)):
     comp_uuid = uuid.UUID(str(company_id))
     require_permission(db, current_user, comp_uuid, "crm:edit")
     obj = CRMLeadStatus(company_id=comp_uuid, name=payload.name)

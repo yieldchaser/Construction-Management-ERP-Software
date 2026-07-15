@@ -530,6 +530,13 @@ def add_predecessor(task_id: UUID, request: PredecessorCreateRequest, db: Sessio
     get_company_membership(db, current_user, project.company_id)
     require_permission(db, current_user, project.company_id, "planning:edit")
 
+    pred_project = db.query(Project).filter(Project.id == predecessor.project_id).first()
+    if not pred_project or pred_project.company_id != project.company_id:
+        raise HTTPException(
+            status_code=403,
+            detail="Predecessor task belongs to another company",
+        )
+
     if task_id == request.predecessor_id:
         raise HTTPException(status_code=400, detail="A task cannot be its own predecessor")
 

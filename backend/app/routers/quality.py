@@ -197,10 +197,11 @@ def list_checklists(company_id: uuid.UUID, db: Session = Depends(get_db), _: Non
 
 
 @router.post("/checklists/{cl_id}/items", response_model=ChecklistItemResponse, status_code=status.HTTP_201_CREATED)
-def add_checklist_item(cl_id: uuid.UUID, payload: ChecklistItemCreate, db: Session = Depends(get_db)):
+def add_checklist_item(cl_id: uuid.UUID, payload: ChecklistItemCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     cl = db.query(QualityChecklist).filter(QualityChecklist.id == cl_id).first()
     if not cl:
         raise HTTPException(status_code=404, detail="Checklist not found")
+    get_company_membership(db, current_user, cl.company_id)
     item = ChecklistItem(checklist_id=cl_id, **payload.model_dump())
     db.add(item)
     db.commit()
@@ -222,7 +223,11 @@ def get_checklist_items(cl_id: uuid.UUID, db: Session = Depends(get_db), current
 # ─── Inspections ──────────────────────────────────────────────────────────────
 
 @router.post("/inspections", response_model=InspectionResponse_, status_code=status.HTTP_201_CREATED)
-def create_inspection(payload: InspectionCreate, db: Session = Depends(get_db)):
+def create_inspection(payload: InspectionCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    project = db.query(Project).filter(Project.id == payload.project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, project.company_id)
     insp = SiteInspection(**payload.model_dump())
     db.add(insp)
     db.commit()
@@ -241,11 +246,16 @@ def list_inspections(project_id: uuid.UUID, db: Session = Depends(get_db), _: No
 def submit_inspection_responses(
     insp_id: uuid.UUID,
     payload: BulkRespondRequest,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     insp = db.query(SiteInspection).filter(SiteInspection.id == insp_id).first()
     if not insp:
         raise HTTPException(status_code=404, detail="Inspection not found")
+    project = db.query(Project).filter(Project.id == insp.project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, project.company_id)
 
     pass_count = fail_count = na_count = 0
 
@@ -297,7 +307,11 @@ def submit_inspection_responses(
 # ─── NCR ──────────────────────────────────────────────────────────────────────
 
 @router.post("/ncr", response_model=NCRResponse, status_code=status.HTTP_201_CREATED)
-def raise_ncr(payload: NCRCreate, db: Session = Depends(get_db)):
+def raise_ncr(payload: NCRCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    project = db.query(Project).filter(Project.id == payload.project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, project.company_id)
     ncr = NCR(**payload.model_dump())
     db.add(ncr)
     db.commit()
@@ -313,10 +327,14 @@ def list_ncrs(project_id: uuid.UUID, db: Session = Depends(get_db), _: None = De
 
 
 @router.patch("/ncr/{ncr_id}/review", response_model=NCRResponse)
-def ncr_under_review(ncr_id: uuid.UUID, db: Session = Depends(get_db)):
+def ncr_under_review(ncr_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     ncr = db.query(NCR).filter(NCR.id == ncr_id).first()
     if not ncr:
         raise HTTPException(status_code=404, detail="NCR not found")
+    project = db.query(Project).filter(Project.id == ncr.project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, project.company_id)
     if ncr.status != "open":
         raise HTTPException(status_code=400, detail="Only open NCRs can move to under_review")
     ncr.status = "under_review"
@@ -330,10 +348,14 @@ class NCRCloseRequest(BaseModel):
 
 
 @router.patch("/ncr/{ncr_id}/close", response_model=NCRResponse)
-def close_ncr(ncr_id: uuid.UUID, payload: NCRCloseRequest, db: Session = Depends(get_db)):
+def close_ncr(ncr_id: uuid.UUID, payload: NCRCloseRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     ncr = db.query(NCR).filter(NCR.id == ncr_id).first()
     if not ncr:
         raise HTTPException(status_code=404, detail="NCR not found")
+    project = db.query(Project).filter(Project.id == ncr.project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, project.company_id)
     if ncr.status == "closed":
         raise HTTPException(status_code=400, detail="NCR is already closed")
     ncr.status = "closed"
@@ -347,7 +369,11 @@ def close_ncr(ncr_id: uuid.UUID, payload: NCRCloseRequest, db: Session = Depends
 # ─── Material Tests ───────────────────────────────────────────────────────────
 
 @router.post("/material-tests", response_model=MaterialTestResponse, status_code=status.HTTP_201_CREATED)
-def log_material_test(payload: MaterialTestCreate, db: Session = Depends(get_db)):
+def log_material_test(payload: MaterialTestCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    project = db.query(Project).filter(Project.id == payload.project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, project.company_id)
     data = payload.model_dump()
 
     # Auto-compute pass/fail from min/max bounds if provided

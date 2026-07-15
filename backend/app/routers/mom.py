@@ -172,6 +172,7 @@ def delete_mom(
 ):
     """Delete a MOM record."""
     get_company_membership(db, current_user, uuid.UUID(company_id))
+    require_permission(db, current_user, uuid.UUID(company_id), "planning:edit")
     mom = (
         db.query(MoM)
         .filter(MoM.id == uuid.UUID(mom_id), MoM.company_id == uuid.UUID(company_id))

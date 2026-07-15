@@ -266,6 +266,15 @@ def punch(payload: PunchRequest, db: Session = Depends(get_db), current_user: Us
         raise HTTPException(status_code=404, detail="Project not found")
     get_company_membership(db, current_user, project.company_id)
 
+    employee = db.query(StaffEmployee).filter(StaffEmployee.id == payload.employee_id).first()
+    if not employee:
+        raise HTTPException(status_code=404, detail="Employee not found")
+    if employee.company_id != project.company_id:
+        # AttendanceLog carries no company_id and run_payroll counts attendance by
+        # employee_id alone, so a cross-company punch would inject attendance that
+        # later inflates the victim company's payroll days.
+        raise HTTPException(status_code=403, detail="Employee does not belong to this project's company")
+
     site_lat, site_lng = _parse_site_coords(project.location)
     radius = project.attendance_radius_meters or 500
 
@@ -855,6 +864,7 @@ def update_leave_status(leave_id: uuid.UUID, data: LeaveStatusUpdate, db: Sessio
     if not leave:
         raise HTTPException(status_code=404, detail="Leave request not found")
     get_company_membership(db, current_user, leave.company_id)
+    require_permission(db, current_user, leave.company_id, "payroll:edit")
 
     leave.status = data.status
     db.commit()

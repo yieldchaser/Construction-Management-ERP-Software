@@ -281,7 +281,7 @@ def get_company_analytics(company_id: uuid.UUID, db: Session = Depends(get_db), 
             for bill in bills
             if bill.invoice_date and bill.invoice_date <= month_end
         )
-        cumulative_spend = month_spend
+        cumulative_spend += month_spend
         s_curve.append(
             {
                 "label": _month_label(month),

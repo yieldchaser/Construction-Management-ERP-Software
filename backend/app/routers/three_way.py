@@ -78,6 +78,16 @@ def create_match(payload: ThreeWayMatchCreate, db: Session = Depends(get_db), cu
     grn = db.query(GoodsReceiptNote).filter(GoodsReceiptNote.id == grn_id).first()
     if not po or not grn:
         raise HTTPException(status_code=404, detail="PO or GRN not found")
+    if po.company_id != payload.company_id or po.project_id != payload.project_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="PO does not belong to the supplied company/project",
+        )
+    if grn.company_id != payload.company_id or grn.project_id != payload.project_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="GRN does not belong to the supplied company/project",
+        )
 
     po_amount = float(po.total_amount)
     grn_items = db.query(GRNItem).filter(GRNItem.grn_id == grn_id).all()

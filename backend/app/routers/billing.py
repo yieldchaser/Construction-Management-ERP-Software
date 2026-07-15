@@ -276,6 +276,10 @@ def create_work_order(req: WOCreateRequest, db: Session = Depends(get_db), curre
     # Tenant check: the caller must be a member of the company this work order belongs to.
     get_company_membership(db, current_user, req.company_id)
     require_permission(db, current_user, req.company_id, "billing:edit")
+    if req.subcontractor_id:
+        sub = db.query(models.CompanyTeam).filter(models.CompanyTeam.id == req.subcontractor_id).first()
+        if not sub or sub.company_id != req.company_id:
+            raise HTTPException(status_code=403, detail="Subcontractor does not belong to this company")
 
     # Check if WO number already exists for company
     existing = db.query(WorkOrder).filter(

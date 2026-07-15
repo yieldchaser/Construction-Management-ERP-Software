@@ -163,6 +163,9 @@ def auto_populate(company_id: uuid.UUID, report_type: str = Query(...), return_p
         "tds_deducted": Decimal(str(round(tds, 2))),
         "status": "draft",
     }
+    data["id"] = uuid.uuid4()
+    data["created_at"] = datetime.utcnow()
+    data["updated_at"] = datetime.utcnow()
     return StatutoryReportResponse(**data)
 
 

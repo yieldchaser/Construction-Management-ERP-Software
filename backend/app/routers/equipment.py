@@ -150,6 +150,8 @@ def deploy_equipment(
     proj = db.query(Project).filter(Project.id == payload.project_id).first()
     if not proj:
         raise HTTPException(status_code=404, detail="Project not found")
+    if proj.company_id != eq.company_id:
+        raise HTTPException(status_code=403, detail="Equipment does not belong to the project's company")
 
     # Set any current active deployments to finished
     active = db.query(EquipmentDeployment).filter(
@@ -211,6 +213,12 @@ def log_fuel(
         raise HTTPException(status_code=404, detail="Equipment not found")
     get_company_membership(db, current_user, eq.company_id)
     require_permission(db, current_user, eq.company_id, "equipment:edit")
+
+    proj = db.query(Project).filter(Project.id == payload.project_id).first()
+    if not proj:
+        raise HTTPException(status_code=404, detail="Project not found")
+    if proj.company_id != eq.company_id:
+        raise HTTPException(status_code=403, detail="Equipment does not belong to the project's company")
 
     data = payload.model_dump()
     total_cost = data["liters"] * data["cost_per_liter"]
