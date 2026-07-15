@@ -272,6 +272,7 @@ class BOQItem(Base):
     project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
     section_name = Column(String(100), nullable=True)
     item_name = Column(String(255), nullable=False)
+    cost_code = Column(String(50), nullable=True)
     unit = Column(String(50), nullable=False)
     quantity = Column(Numeric(18, 4), nullable=False)
     rate = Column(Numeric(18, 2), default=0.0, nullable=False)

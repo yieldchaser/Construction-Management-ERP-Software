@@ -42,25 +42,6 @@ interface BOQRevision {
   created_at: string;
 }
 
-// ─── Seed Data ────────────────────────────────────────────────────────────────
-const SEED_BOQ: BOQItem[] = [
-  { id: "B01", section: "1 — Civil Works", costCode: "1.1", item_name: "Earthwork Excavation (Hard Rock)", unit: "Cum", quantity: 1800, rate: 280, amount: 504000, actual_spent: 498000 },
-  { id: "B02", section: "1 — Civil Works", costCode: "1.2", item_name: "PCC Bed — M10 Grade (100mm thick)", unit: "Cum", quantity: 220, rate: 4500, amount: 990000, actual_spent: 1050000 },
-  { id: "B03", section: "1 — Civil Works", costCode: "1.3", item_name: "RCC Raft Foundation — M25 Grade", unit: "Cum", quantity: 580, rate: 7800, amount: 4524000, actual_spent: 4680000 },
-  { id: "B04", section: "2 — Structural", costCode: "2.1", item_name: "RCC Columns — M30 Grade (Fe550)", unit: "Cum", quantity: 145, rate: 9200, amount: 1334000, actual_spent: 890000 },
-  { id: "B05", section: "2 — Structural", costCode: "2.2", item_name: "RCC Slabs & Beams — M25 Grade", unit: "Cum", quantity: 320, rate: 8400, amount: 2688000, actual_spent: 1200000 },
-  { id: "B06", section: "2 — Structural", costCode: "2.3", item_name: "Structural Steel (ISMB/ISMC members)", unit: "MT", quantity: 28, rate: 72000, amount: 2016000, actual_spent: 1860000 },
-  { id: "B07", section: "3 — Masonry", costCode: "3.1", item_name: "Brick Masonry — 1:4 Cement Mortar (230mm)", unit: "Cum", quantity: 480, rate: 6200, amount: 2976000, actual_spent: 3180000 },
-  { id: "B08", section: "3 — Masonry", costCode: "3.2", item_name: "AAC Block Masonry — 200mm thick", unit: "Sqm", quantity: 1200, rate: 780, amount: 936000, actual_spent: 720000 },
-  { id: "B09", section: "4 — Finishes", costCode: "4.1", item_name: "Ceramic Floor Tiles — 600×600mm", unit: "Sqm", quantity: 2400, rate: 650, amount: 1560000, actual_spent: 480000 },
-  { id: "B10", section: "4 — Finishes", costCode: "4.2", item_name: "Plaster — 12mm thick (1:4)", unit: "Sqm", quantity: 4800, rate: 180, amount: 864000, actual_spent: 320000 },
-  { id: "B11", section: "4 — Finishes", costCode: "4.3", item_name: "Waterproofing — Crystalline coating (terraces)", unit: "Sqm", quantity: 600, rate: 450, amount: 270000, actual_spent: 90000 },
-  { id: "B12", section: "5 — MEP", costCode: "5.1", item_name: "Electrical Conduit & Wiring (LT side)", unit: "LS", quantity: 1, rate: 1850000, amount: 1850000, actual_spent: 620000 },
-  { id: "B13", section: "5 — MEP", costCode: "5.2", item_name: "Plumbing — CPVC/uPVC supply & drainage", unit: "LS", quantity: 1, rate: 1240000, amount: 1240000, actual_spent: 390000 },
-  { id: "B14", section: "5 — MEP", costCode: "5.3", item_name: "HVAC Ducting & FCU units", unit: "LS", quantity: 1, rate: 2800000, amount: 2800000, actual_spent: 320000 },
-  { id: "B15", section: "6 — Provisional / Contingency", costCode: "6.1", item_name: "Provisional Sum — unforeseen works", unit: "LS", quantity: 1, rate: 800000, amount: 800000, actual_spent: 285000 },
-];
-
 const SECTION_COLORS: Record<string, string> = {
   "1 — Civil Works": "bg-blue-500/10 text-blue-400 border-blue-500/20",
   "2 — Structural": "bg-purple-500/10 text-purple-400 border-purple-500/20",
@@ -98,7 +79,7 @@ export default function BOQPage() {
   const projectId = activeProjectId;
 
   const [tab, setTab] = useState<"boq" | "variance" | "revisions">("boq");
-  const [boqItems, setBoqItems] = useState<BOQItem[]>(SEED_BOQ);
+  const [boqItems, setBoqItems] = useState<BOQItem[]>([]);
   const [file, setFile] = useState<File | null>(null);
   const [importing, setImporting] = useState(false);
   const [importMsg, setImportMsg] = useState("");
@@ -154,12 +135,12 @@ export default function BOQPage() {
       if (res.ok && data.success) {
         setImportMsg("BOQ imported successfully!");
         setFile(null);
-        // In production, re-fetch from API
+        await loadBoq();
       } else {
         setImportMsg(data.detail || "Import failed.");
       }
     } catch {
-      setImportMsg("Backend not reachable — using demo data.");
+      setImportMsg("Backend not reachable. — using demo data.");
     } finally {
       setImporting(false);
     }
@@ -180,18 +161,54 @@ export default function BOQPage() {
     }
   };
 
+  const loadBoq = async () => {
+    if (!projectId) return;
+    try {
+      const dres = await fetch(`${getApiHost()}/apis/v3/budgeting/boq-documents?project_id=${projectId}`, { headers: authHeaders() });
+      if (dres.ok) {
+        const docs = await dres.json();
+        const list: BOQDocumentLite[] = Array.isArray(docs) ? docs : [];
+        setDocuments(list);
+        if (list.length && !selectedDocId) setSelectedDocId(list[0].id);
+      }
+    } catch { /* ignore */ }
+
+    // Real BOQ line items (replaces the old hardcoded SEED_BOQ array).
+    try {
+      const ires = await fetch(`${getApiHost()}/apis/v3/budgeting/boq?project_id=${projectId}`, { headers: authHeaders() });
+      if (ires.ok) {
+        const items: any[] = await ires.json();
+        // "Actual spent" is the project's real billed value (client billing),
+        // allocated across BOQ items by their budget-weight. The schema tracks
+        // no per-item actual cost, so this is the honest real signal available.
+        let totalBilled = 0;
+        try {
+          const bdres = await fetch(`${getApiHost()}/apis/v3/budgeting/boq-documents?project_id=${projectId}`, { headers: authHeaders() });
+          if (bdres.ok) {
+            const docs = await bdres.json();
+            totalBilled = (Array.isArray(docs) ? docs : []).reduce((s: number, d: any) => s + (Number(d.billed_value) || 0), 0);
+          }
+        } catch { /* ignore */ }
+        const totalBudget = items.reduce((s: number, i: any) => s + (Number(i.amount) || 0), 0);
+        setBoqItems(items.map((i: any) => ({
+          id: i.id,
+          section: i.section_name || "Uncategorized",
+          costCode: i.cost_code || "",
+          item_name: i.item_name,
+          unit: i.unit,
+          quantity: Number(i.quantity) || 0,
+          rate: Number(i.rate) || 0,
+          amount: Number(i.amount) || 0,
+          actual_spent: totalBudget > 0 ? (totalBilled * (Number(i.amount) || 0)) / totalBudget : 0,
+        })));
+      }
+    } catch { /* ignore */ }
+  };
+
   useEffect(() => {
     if (!projectId) return;
     (async () => {
-      try {
-        const dres = await fetch(`${getApiHost()}/apis/v3/budgeting/boq-documents?project_id=${projectId}`, { headers: authHeaders() });
-        if (dres.ok) {
-          const docs = await dres.json();
-          const list: BOQDocumentLite[] = Array.isArray(docs) ? docs : [];
-          setDocuments(list);
-          if (list.length && !selectedDocId) setSelectedDocId(list[0].id);
-        }
-      } catch { /* ignore */ }
+      await loadBoq();
       await fetchRevisions();
     })();
   }, [projectId]);
@@ -268,6 +285,12 @@ export default function BOQPage() {
           {/* ── BOQ TAB ── */}
           {tab === "boq" && (
             <div className="flex flex-col h-full overflow-hidden">
+              {!projectId && (
+                <div className="p-6 text-center text-muted text-xs">Select a project to view its BOQ.</div>
+              )}
+              {projectId && boqItems.length === 0 && (
+                <div className="p-6 text-center text-muted text-xs">No BOQ items yet. Import an Excel (.xlsx) with item_name, unit, qty, rate, cost_code to populate this view.</div>
+              )}
               {/* Filters */}
               <div className="flex items-center gap-3 px-5 py-3 border-b border-border-custom shrink-0">
                 <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search item, code, section..." className="flex-1 bg-input border border-border-custom rounded-lg px-3 py-1.5 text-xs text-foreground placeholder-muted" />

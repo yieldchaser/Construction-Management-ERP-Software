@@ -136,6 +136,36 @@ def update_todo(todo_id: uuid.UUID, payload: TodoUpdate, db: Session = Depends(g
     if not t:
         raise HTTPException(status_code=404, detail="Todo not found")
     get_company_membership(db, current_user, t.company_id)
+    require_permission(db, current_user, t.company_id, "planning:edit")
+    if payload.title is not None:
+        t.title = payload.title
+    if payload.due_date is not None:
+        t.due_date = _parse_dt(payload.due_date)
+    if payload.repeat_type is not None:
+        t.repeat_type = payload.repeat_type
+    if payload.type is not None:
+        t.type = payload.type
+    if payload.linked_task_id is not None:
+        t.linked_task_id = payload.linked_task_id
+    if payload.url is not None:
+        t.url = payload.url
+    if payload.status is not None:
+        t.status = payload.status
+    if payload.assignee_ids is not None:
+        db.query(models.TodoAssignee).filter(models.TodoAssignee.todo_id == t.id).delete()
+        for aid in payload.assignee_ids:
+            db.add(models.TodoAssignee(todo_id=t.id, assignee_id=aid))
+    db.commit()
+    db.refresh(t)
+    return _serialize(db, t)
+
+
+@router.delete("/{todo_id}")
+def delete_todo(todo_id: uuid.UUID, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    t = db.query(models.Todo).filter(models.Todo.id == todo_id).first()
+    if not t:
+        raise HTTPException(status_code=404, detail="Todo not found")
+    get_company_membership(db, current_user, t.company_id)
     require_permission(db, current_user, t.company_id, "data:delete")
     try:
         from app.routers.delete_logs import log_deletion

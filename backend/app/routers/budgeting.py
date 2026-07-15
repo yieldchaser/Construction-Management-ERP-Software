@@ -25,6 +25,7 @@ class BOQItemResponse(BaseModel):
     project_id: UUID
     section_name: Optional[str] = None
     item_name: str
+    cost_code: Optional[str] = None
     unit: str
     quantity: float
     rate: float
@@ -69,12 +70,13 @@ def get_boq_items(project_id: UUID, boq_document_id: Optional[UUID] = None, db: 
     # Cast Numeric types to floats for response model compatibility
     result = []
     for item in items:
-        result.append(BOQItemResponse(
-            id=item.id,
-            project_id=item.project_id,
-            section_name=item.section_name,
-            item_name=item.item_name,
-            unit=item.unit,
+            result.append(BOQItemResponse(
+                id=item.id,
+                project_id=item.project_id,
+                section_name=item.section_name,
+                item_name=item.item_name,
+                cost_code=item.cost_code,
+                unit=item.unit,
             quantity=float(item.quantity),
             rate=float(item.rate),
             supply_rate=float(item.supply_rate),
@@ -128,6 +130,7 @@ async def import_boq(
         supply_rate_col = headers.get("supply_rate")
         install_rate_col = next((headers[k] for k in ["installation_rate", "install_rate"] if k in headers), None)
         section_col = next((headers[k] for k in ["section", "section_name"] if k in headers), None)
+        cost_code_col = next((headers[k] for k in ["cost_code", "cost code"] if k in headers), None)
 
         if name_col is None or qty_col is None or unit_col is None or (rate_col is None and supply_rate_col is None):
             raise HTTPException(
@@ -164,6 +167,7 @@ async def import_boq(
                 continue # Skip rows with non-numeric qty/rates
 
             section_name = str(row[section_col]).strip() if (section_col is not None and row[section_col]) else None
+            cost_code_val = str(row[cost_code_col]).strip() if (cost_code_col is not None and row[cost_code_col]) else None
             unit = str(unit_val).strip() if unit_val else "Nos"
 
             # Enforce quantity float limit (rounding base)
@@ -181,6 +185,7 @@ async def import_boq(
                 project_id=project_id,
                 boq_document_id=boq_document_id,
                 section_name=section_name,
+                cost_code=cost_code_val,
                 item_name=str(item_name).strip(),
                 unit=unit,
                 quantity=quantity,

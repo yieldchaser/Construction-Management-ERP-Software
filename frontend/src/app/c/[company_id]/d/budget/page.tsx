@@ -37,6 +37,14 @@ export default function BudgetPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [showBudgetModal, setShowBudgetModal] = useState(false);
+  const [matBudget, setMatBudget] = useState(0);
+  const [labBudget, setLabBudget] = useState(0);
+  const [subBudget, setSubBudget] = useState(0);
+  const [equipBudget, setEquipBudget] = useState(0);
+  const [savingBudget, setSavingBudget] = useState(false);
+  const [budgetMsg, setBudgetMsg] = useState("");
+
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -50,6 +58,37 @@ export default function BudgetPage() {
   };
 
   useEffect(() => { if (projectId) fetchData(); }, [projectId]);
+
+  const handleSetBudget = async () => {
+    if (!projectId) return;
+    setSavingBudget(true);
+    setBudgetMsg("");
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/budgeting/allocation`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
+        body: JSON.stringify({
+          project_id: projectId,
+          material_budget: Number(matBudget) || 0,
+          labour_budget: Number(labBudget) || 0,
+          subcon_budget: Number(subBudget) || 0,
+          equipment_budget: Number(equipBudget) || 0,
+        }),
+      });
+      if (res.ok) {
+        setBudgetMsg("Budget allocated.");
+        setShowBudgetModal(false);
+        await fetchData();
+      } else {
+        const data = await res.json().catch(() => ({} as any));
+        setBudgetMsg(typeof data.detail === "string" ? data.detail : "Failed to allocate budget.");
+      }
+    } catch {
+      setBudgetMsg("Backend not reachable.");
+    } finally {
+      setSavingBudget(false);
+    }
+  };
 
   const fmt = (v: number) => Number(v || 0).toLocaleString();
   const pct = (used: number, total: number) => total > 0 ? ((used / total) * 100).toFixed(1) : "0.0";
@@ -66,6 +105,7 @@ export default function BudgetPage() {
             <h1 className="text-sm font-bold text-foreground uppercase tracking-wider">Budget & Committed Costs</h1>
             <p className="text-[10px] text-muted">Committed vs Actuals · POs and WOs vs Bills</p>
           </div>
+          <button onClick={() => setShowBudgetModal(true)} className="px-4 py-2 rounded-md bg-primary text-xs font-bold text-white hover:opacity-90 cursor-pointer">Set Budget</button>
           <button onClick={fetchData} className="px-4 py-2 rounded-md border border-border-custom text-xs font-bold hover:bg-elevated cursor-pointer">Refresh</button>
         </div>
 
@@ -139,6 +179,37 @@ export default function BudgetPage() {
           )}
         </div>
       </div>
+
+      {showBudgetModal && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-card border border-border-custom rounded-lg w-full max-w-md p-6 space-y-4">
+            <div><h3 className="text-sm font-extrabold text-foreground">Set Project Budget</h3></div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-[10px] uppercase font-bold text-muted block mb-1">Material</label>
+                <input type="number" min="0" value={matBudget} onChange={(e) => setMatBudget(parseFloat(e.target.value) || 0)} className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none" />
+              </div>
+              <div>
+                <label className="text-[10px] uppercase font-bold text-muted block mb-1">Labour</label>
+                <input type="number" min="0" value={labBudget} onChange={(e) => setLabBudget(parseFloat(e.target.value) || 0)} className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none" />
+              </div>
+              <div>
+                <label className="text-[10px] uppercase font-bold text-muted block mb-1">Subcontractor</label>
+                <input type="number" min="0" value={subBudget} onChange={(e) => setSubBudget(parseFloat(e.target.value) || 0)} className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none" />
+              </div>
+              <div>
+                <label className="text-[10px] uppercase font-bold text-muted block mb-1">Equipment</label>
+                <input type="number" min="0" value={equipBudget} onChange={(e) => setEquipBudget(parseFloat(e.target.value) || 0)} className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none" />
+              </div>
+            </div>
+            {budgetMsg && <div className="text-[10px] text-emerald-400">{budgetMsg}</div>}
+            <div className="flex gap-3 justify-end pt-2">
+              <button onClick={() => setShowBudgetModal(false)} className="px-4 py-2 rounded-md border border-border-custom text-xs font-bold hover:bg-elevated cursor-pointer">Cancel</button>
+              <button onClick={handleSetBudget} disabled={savingBudget} className="bg-primary hover:opacity-90 text-white px-5 py-2 rounded-md text-xs font-bold cursor-pointer">Save Budget</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

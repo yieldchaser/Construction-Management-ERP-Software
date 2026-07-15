@@ -45,9 +45,18 @@ export default function SubconScorecardsPage() {
   const [error, setError] = useState<string | null>(null);
 
   const fetchData = async () => {
+    if (!projectId) return;
     setLoading(true);
     setError(null);
     try {
+      // Auto-calculate scorecards from real billing + task data for the current month.
+      const now = new Date();
+      const periodStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+      const periodEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59).toISOString();
+      await fetch(`${getApiHost()}/apis/v3/subcon/scorecards/recompute?project_id=${projectId}&period_start=${encodeURIComponent(periodStart)}&period_end=${encodeURIComponent(periodEnd)}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
+      });
       const [scRes, compRes] = await Promise.all([
         fetch(`${getApiHost()}/apis/v3/subcon/scorecards/${projectId}`, { headers: authHeaders() }),
         fetch(`${getApiHost()}/apis/v3/subcon/scorecards/${projectId}/comparative`, { headers: authHeaders() }),

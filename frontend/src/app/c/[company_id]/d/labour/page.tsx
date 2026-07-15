@@ -65,6 +65,15 @@ export default function LabourPage() {
   const [musterOT, setMusterOT] = useState(0);
   const [musterNotes, setMusterNotes] = useState("");
 
+  const [showBocwModal, setShowBocwModal] = useState(false);
+  const [bocwContractor, setBocwContractor] = useState("");
+  const [bocwMonth, setBocwMonth] = useState(new Date().toISOString().slice(0, 7));
+  const [bocwWorkers, setBocwWorkers] = useState(0);
+  const [bocwWages, setBocwWages] = useState(0);
+  const [bocwContribution, setBocwContribution] = useState(0);
+  const [bocwAck, setBocwAck] = useState("");
+  const [savingBocw, setSavingBocw] = useState(false);
+
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -107,6 +116,26 @@ export default function LabourPage() {
     window.open(`${getApiHost()}/apis/v3/labour/bocw/${projectId}/export`, "_blank");
   };
 
+  const handleBocwSubmit = async () => {
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/labour/bocw`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
+        body: JSON.stringify({
+          company_id: companyId,
+          project_id: projectId,
+          contractor_name: bocwContractor,
+          month_year: bocwMonth,
+          workers_count: bocwWorkers,
+          wages_paid: bocwWages,
+          contribution_amount: bocwContribution,
+          acknowledgement_number: bocwAck || null,
+        }),
+      });
+      if (res.ok) { fetchData(); setShowBocwModal(false); }
+    } catch (e) { console.error(e); }
+  };
+
   return (
     <div className="flex-1 flex flex-col overflow-hidden font-sans">            <div className="flex items-center gap-1 px-6 py-2 border-b border-border-custom bg-card shrink-0 overflow-x-auto">
         {[
@@ -130,6 +159,7 @@ export default function LabourPage() {
             <p className="text-[10px] text-muted">Contractor reliability · BOCW compliance · Muster rolls</p>
           </div>
           {activeTab === "muster" && <button onClick={() => setShowMusterModal(true)} className="px-4 py-2 rounded-md bg-primary text-xs font-bold text-white hover:opacity-90 cursor-pointer">+ Add Muster</button>}
+          {activeTab === "bocw" && <button onClick={() => setShowBocwModal(true)} className="px-4 py-2 rounded-md bg-primary text-xs font-bold text-white hover:opacity-90 cursor-pointer">+ Add BOCW</button>}
           {activeTab === "bocw" && <button onClick={handleBOCWExport} className="px-4 py-2 rounded-md border border-border-custom text-xs font-bold hover:bg-elevated cursor-pointer">Export CSV</button>}
         </div>
 
@@ -276,6 +306,48 @@ export default function LabourPage() {
             <div className="flex gap-3 justify-end pt-2">
               <button onClick={() => setShowMusterModal(false)} className="px-4 py-2 rounded-md border border-border-custom text-xs font-bold hover:bg-elevated cursor-pointer">Cancel</button>
               <button onClick={handleMusterSubmit} className="bg-primary hover:opacity-90 text-white px-5 py-2 rounded-md text-xs font-bold cursor-pointer">Save</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showBocwModal && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-card border border-border-custom rounded-lg w-full max-w-md p-6 space-y-4">
+            <div><h3 className="text-sm font-extrabold text-foreground">Add BOCW Record</h3></div>
+            <div className="space-y-3">
+              <div>
+                <label className="text-[10px] uppercase font-bold text-muted block mb-1">Contractor Name</label>
+                <input type="text" value={bocwContractor} onChange={(e) => setBocwContractor(e.target.value)} placeholder="Contractor name" className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[10px] uppercase font-bold text-muted block mb-1">Month</label>
+                  <input type="month" value={bocwMonth} onChange={(e) => setBocwMonth(e.target.value)} className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none" />
+                </div>
+                <div>
+                  <label className="text-[10px] uppercase font-bold text-muted block mb-1">Workers Count</label>
+                  <input type="number" min="0" value={bocwWorkers} onChange={(e) => setBocwWorkers(parseInt(e.target.value) || 0)} className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[10px] uppercase font-bold text-muted block mb-1">Wages Paid</label>
+                  <input type="number" min="0" step="0.01" value={bocwWages} onChange={(e) => setBocwWages(parseFloat(e.target.value) || 0)} className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none" />
+                </div>
+                <div>
+                  <label className="text-[10px] uppercase font-bold text-muted block mb-1">Contribution (Cess)</label>
+                  <input type="number" min="0" step="0.01" value={bocwContribution} onChange={(e) => setBocwContribution(parseFloat(e.target.value) || 0)} className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none" />
+                </div>
+              </div>
+              <div>
+                <label className="text-[10px] uppercase font-bold text-muted block mb-1">Acknowledgement No.</label>
+                <input type="text" value={bocwAck} onChange={(e) => setBocwAck(e.target.value)} placeholder="Optional" className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none" />
+              </div>
+            </div>
+            <div className="flex gap-3 justify-end pt-2">
+              <button onClick={() => setShowBocwModal(false)} className="px-4 py-2 rounded-md border border-border-custom text-xs font-bold hover:bg-elevated cursor-pointer">Cancel</button>
+              <button onClick={handleBocwSubmit} disabled={savingBocw || !bocwContractor.trim()} className="bg-primary hover:opacity-90 text-white px-5 py-2 rounded-md text-xs font-bold cursor-pointer">Save</button>
             </div>
           </div>
         </div>

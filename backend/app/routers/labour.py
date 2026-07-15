@@ -69,6 +69,18 @@ class BOCWResponse(BaseModel):
         from_attributes = True
 
 
+class BOCWCreate(BaseModel):
+    company_id: UUID
+    project_id: UUID
+    contractor_id: Optional[UUID] = None
+    contractor_name: str
+    month_year: str  # YYYY-MM
+    workers_count: int = Field(0, ge=0)
+    wages_paid: float = Field(0.0, ge=0)
+    contribution_amount: float = Field(0.0, ge=0)
+    acknowledgement_number: Optional[str] = None
+
+
 class MusterRollResponse(BaseModel):
     id: UUID
     company_id: UUID
@@ -185,6 +197,40 @@ def export_bocw(project_id: UUID, month_year: Optional[str] = None, db: Session 
         io.BytesIO(output.getvalue().encode("utf-8")),
         media_type="text/csv",
         headers={"Content-Disposition": f"attachment; filename=bocw_export_{project_id}.csv"}
+    )
+
+
+@router.post("/bocw", response_model=BOCWResponse, status_code=201)
+def create_bocw(req: BOCWCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    get_company_membership(db, current_user, req.company_id)
+    verify_project_in_company(db, req.project_id, req.company_id)
+    require_permission(db, current_user, req.company_id, "attendance:edit")
+    record = BOCWRecord(
+        company_id=req.company_id,
+        project_id=req.project_id,
+        contractor_id=req.contractor_id,
+        contractor_name=req.contractor_name,
+        month_year=req.month_year,
+        workers_count=req.workers_count,
+        wages_paid=req.wages_paid,
+        contribution_amount=req.contribution_amount,
+        acknowledgement_number=req.acknowledgement_number,
+    )
+    db.add(record)
+    db.commit()
+    db.refresh(record)
+    return BOCWResponse(
+        id=record.id,
+        company_id=record.company_id,
+        project_id=record.project_id,
+        contractor_id=record.contractor_id,
+        contractor_name=record.contractor_name,
+        month_year=record.month_year,
+        workers_count=record.workers_count,
+        wages_paid=float(record.wages_paid),
+        contribution_amount=float(record.contribution_amount),
+        acknowledgement_number=record.acknowledgement_number,
+        created_at=record.created_at,
     )
 
 
