@@ -6,7 +6,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import Payment, PaymentSettlement, Bill, PayrollRun, PayrollLineItem, StaffEmployee, ProjectBudget, Project, CompanyTeam, User, Equipment, EquipmentDeployment, FuelLog, BankAccount, PaymentRequest, PaymentRequestPayment, CashAccount, LibraryParty, Company, ApprovalRule
-from app.auth import get_current_user, verify_company_access, verify_project_access, get_company_membership, require_permission, require_module_view
+from app.auth import get_current_user, verify_project_in_company, verify_company_access, verify_project_access, get_company_membership, require_permission, require_module_view
 from app.approvals import find_matching_rule, match_approver, levels_approved, user_already_acted, record_action
 from pydantic import BaseModel, Field
 
@@ -89,6 +89,8 @@ def create_payment(req: PaymentCreateRequest, db: Session = Depends(get_db), cur
         project = db.query(Project).filter(Project.id == proj_uuid).first()
         if not project:
             raise HTTPException(status_code=404, detail="Project not found")
+        if project.company_id != comp_uuid:
+            raise HTTPException(status_code=403, detail="Project does not belong to this company")
 
     payment = Payment(
         id=uuid.uuid4(),
@@ -1049,6 +1051,8 @@ def get_payment_requests(company_id: uuid.UUID, db: Session = Depends(get_db), _
 @router.post("/payment-requests/{company_id}", response_model=PaymentRequestResponse)
 def create_payment_request(company_id: uuid.UUID, data: PaymentRequestCreate, db: Session = Depends(get_db), _: None = Depends(verify_company_access), current_user: User = Depends(get_current_user)):
     require_permission(db, current_user, company_id, "finance:edit")
+    if data.project_id:
+        verify_project_in_company(db, data.project_id, company_id)
     user = db.query(User).filter(User.id == data.party_company_user_id).first()
     party_name = user.name if user else "Unknown Party"
     # Auto-generate sequential request no (PR-1, PR-2, ...) per company

@@ -4,7 +4,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.auth import get_current_user, verify_company_access, verify_project_access, get_company_membership, require_permission
+from app.auth import get_current_user, verify_project_in_company, verify_company_access, verify_project_access, get_company_membership, require_permission
 from app.models import (
     MaterialIndent, MaterialIndentItem,
     PurchaseOrder, PurchaseOrderItem,
@@ -273,6 +273,7 @@ def get_company_indents(company_id: UUID, db: Session = Depends(get_db), _: None
 @router.post("/indents", response_model=IndentResponse, status_code=201)
 def create_indent(req: IndentCreateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     get_company_membership(db, current_user, req.company_id)
+    verify_project_in_company(db, req.project_id, req.company_id)
     require_permission(db, current_user, req.company_id, "procurement:edit")
     # Check if indent number already exists for the company
     existing = db.query(MaterialIndent).filter(
@@ -399,6 +400,7 @@ def get_pos(project_id: UUID, db: Session = Depends(get_db), _: None = Depends(v
 @router.post("/pos", response_model=POResponse, status_code=201)
 def create_po(req: POCreateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     get_company_membership(db, current_user, req.company_id)
+    verify_project_in_company(db, req.project_id, req.company_id)
     require_permission(db, current_user, req.company_id, "procurement:edit")
     # Check if PO number already exists
     existing = db.query(PurchaseOrder).filter(

@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import cast
 from sqlalchemy import Date as SA_Date
 from app.database import get_db
-from app.auth import get_current_user, get_company_membership, require_permission
+from app.auth import get_current_user, verify_project_in_company, get_company_membership, require_permission
 from app.models import MoM, Project, User
 from pydantic import BaseModel
 from typing import Optional, List
@@ -96,6 +96,8 @@ def create_mom(
     """Create a new MOM record."""
     get_company_membership(db, current_user, uuid.UUID(company_id))
     require_permission(db, current_user, uuid.UUID(company_id), "planning:edit")
+    if payload.project_id:
+        verify_project_in_company(db, uuid.UUID(payload.project_id), uuid.UUID(company_id))
     mom = MoM(
         company_id=uuid.UUID(company_id),
         project_id=uuid.UUID(payload.project_id) if payload.project_id else None,

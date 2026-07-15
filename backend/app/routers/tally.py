@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import Response
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.auth import get_current_user, verify_company_access, get_company_membership, require_permission
+from app.auth import get_current_user, verify_project_in_company, verify_company_access, get_company_membership, require_permission
 from app.models import (
     TallyConnection, TallyAgent, TallyLedgerMapping, TallyPartyMapping,
     TallyCostCentreMapping, TallyBankMapping, TallySyncLog,
@@ -454,6 +454,7 @@ def get_party_mappings(company_id: uuid.UUID, db: Session = Depends(get_db), _: 
 def create_cost_centre_mapping(req: CostCentreMappingCreateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     comp_uuid = uuid.UUID(str(req.company_id))
     get_company_membership(db, current_user, comp_uuid)
+    verify_project_in_company(db, req.project_id, comp_uuid)
     require_permission(db, current_user, comp_uuid, "settings:manage")
 
     mapping = db.query(TallyCostCentreMapping).filter(

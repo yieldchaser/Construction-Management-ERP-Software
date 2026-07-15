@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
 from app.database import get_db
-from app.auth import get_current_user, verify_company_access, get_company_membership, require_permission
+from app.auth import get_current_user, verify_project_in_company, verify_company_access, get_company_membership, require_permission
 from app import models
 from app.models import User
 
@@ -118,6 +118,8 @@ def list_timesheets(
 @router.post("/timesheets", response_model=TimesheetResponse, status_code=status.HTTP_201_CREATED)
 def create_timesheet(payload: TimesheetCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     get_company_membership(db, current_user, payload.company_id)
+    if payload.project_id:
+        verify_project_in_company(db, payload.project_id, payload.company_id)
     require_permission(db, current_user, payload.company_id, "attendance:edit")
     party_name = None
     if payload.party_id:

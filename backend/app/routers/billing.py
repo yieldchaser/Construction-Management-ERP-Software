@@ -5,7 +5,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.auth import get_current_user, verify_project_access, verify_company_access, get_company_membership, require_permission, require_module_view
+from app.auth import get_current_user, verify_project_in_company, verify_project_access, verify_company_access, get_company_membership, require_permission, require_module_view
 from app.models import (
     WorkOrder, WorkOrderItem, Bill, TransactionDeduction,
     DebitNote, CreditNote, CompanyTeam, User, Company, LibraryParty, Project
@@ -275,6 +275,7 @@ def get_work_orders(project_id: UUID, db: Session = Depends(get_db), _: None = D
 def create_work_order(req: WOCreateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     # Tenant check: the caller must be a member of the company this work order belongs to.
     get_company_membership(db, current_user, req.company_id)
+    verify_project_in_company(db, req.project_id, req.company_id)
     require_permission(db, current_user, req.company_id, "billing:edit")
     if req.subcontractor_id:
         sub = db.query(models.CompanyTeam).filter(models.CompanyTeam.id == req.subcontractor_id).first()
@@ -503,6 +504,7 @@ def get_bill_pdf(bill_id: UUID, db: Session = Depends(get_db), current_user=Depe
 def create_bill(req: BillCreateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     # Tenant check: the caller must be a member of the company this bill belongs to.
     get_company_membership(db, current_user, req.company_id)
+    verify_project_in_company(db, req.project_id, req.company_id)
     require_permission(db, current_user, req.company_id, "billing:edit")
 
     # Workflow Controls: Entry Controls (creation date window)
@@ -647,6 +649,7 @@ def get_debit_notes(project_id: UUID, db: Session = Depends(get_db), _: None = D
 def create_debit_note(req: DebitNoteCreateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     # Tenant check: the caller must be a member of the company this debit note belongs to.
     get_company_membership(db, current_user, req.company_id)
+    verify_project_in_company(db, req.project_id, req.company_id)
     require_permission(db, current_user, req.company_id, "billing:edit")
 
     note = DebitNote(
@@ -705,6 +708,7 @@ def get_credit_notes(project_id: UUID, db: Session = Depends(get_db), _: None = 
 def create_credit_note(req: CreditNoteCreateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     # Tenant check: the caller must be a member of the company this credit note belongs to.
     get_company_membership(db, current_user, req.company_id)
+    verify_project_in_company(db, req.project_id, req.company_id)
     require_permission(db, current_user, req.company_id, "billing:edit")
 
     note = CreditNote(

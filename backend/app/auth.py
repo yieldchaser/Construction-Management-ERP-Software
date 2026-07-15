@@ -63,6 +63,19 @@ def get_company_membership(db: Session, user: models.User, company_id: uuid.UUID
     return membership
 
 
+def verify_project_in_company(db: Session, project_id: uuid.UUID, company_id: uuid.UUID) -> models.Project:
+    """Load project_id and assert it belongs to company_id. 404 if missing, 403 if it belongs to a different company."""
+    project = db.query(models.Project).filter(models.Project.id == project_id).first()
+    if not project:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
+    if project.company_id != company_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Project does not belong to this company",
+        )
+    return project
+
+
 def require_permission(db: Session, current_user: models.User, company_id: uuid.UUID, permission_key: str) -> None:
     """PHASE 2 RBAC enforcement.
 

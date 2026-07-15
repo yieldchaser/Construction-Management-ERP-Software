@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
 from app.database import get_db
-from app.auth import get_current_user, verify_company_access, require_permission, require_module_view
+from app.auth import get_current_user, verify_project_in_company, verify_company_access, require_permission, require_module_view
 from app.models import StatutoryReport, StaffEmployee, PayrollRun, PayrollLineItem, User
 from decimal import Decimal
 
@@ -120,6 +120,8 @@ def list_reports(company_id: uuid.UUID, report_type: Optional[str] = None, db: S
 @router.get("/{company_id}/auto-populate", response_model=StatutoryReportResponse)
 def auto_populate(company_id: uuid.UUID, report_type: str = Query(...), return_period: str = Query(...), project_id: Optional[uuid.UUID] = None, db: Session = Depends(get_db), _: None = Depends(verify_company_access), current_user: User = Depends(get_current_user)):
     require_module_view(db, current_user, company_id, "payroll")
+    if project_id:
+        verify_project_in_company(db, project_id, company_id)
     year, month = map(int, return_period.split("-"))
     start_date = datetime(year, month, 1)
     if month == 12:

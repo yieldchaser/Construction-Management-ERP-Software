@@ -25,7 +25,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
 from app.database import get_db
-from app.auth import get_current_user, verify_company_access, verify_project_access, get_company_membership, require_permission, require_module_view
+from app.auth import get_current_user, verify_project_in_company, verify_company_access, verify_project_access, get_company_membership, require_permission, require_module_view
 from app.models import (
     StaffEmployee, AttendanceLog, Timesheet,
     TimesheetEntry, PayrollRun, PayrollLineItem, Project, LeaveRequest,
@@ -843,6 +843,8 @@ def list_leaves(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = 
 
 @router.post("/leaves/{company_id}", response_model=LeaveRequestResponse)
 def create_leave_request(company_id: uuid.UUID, data: LeaveRequestCreate, db: Session = Depends(get_db),     _: None = Depends(verify_company_access), current_user: User = Depends(get_current_user)):
+    if data.project_id:
+        verify_project_in_company(db, data.project_id, company_id)
     new_leave = LeaveRequest(
         company_id=company_id,
         project_id=data.project_id,

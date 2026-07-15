@@ -268,6 +268,8 @@ def create_recipe(payload: RecipeCreate, db: Session = Depends(get_db), current_
     project = db.query(Project).filter(Project.id == payload.project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
+    if project.company_id != payload.company_id:
+        raise HTTPException(status_code=403, detail="Project does not belong to this company")
 
     existing = db.query(ProductionRecipe).filter(
         ProductionRecipe.company_id == payload.company_id,
