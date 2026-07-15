@@ -10,6 +10,11 @@ from app.auth import get_current_user, verify_project_in_company, verify_company
 from app.approvals import find_matching_rule, match_approver, levels_approved, user_already_acted, record_action
 from pydantic import BaseModel, Field
 
+# Tolerance for "fully paid" money comparisons (1 paisa/cent). Mirrors the 0.01
+# tolerance used in routers/three_way.py for variance matching, so float drift
+# across many partial payments can't leave a bill stuck at "Partially Paid".
+MONEY_EPSILON = 0.01
+
 router = APIRouter(
     prefix="/finance",
     tags=["Finance & P&L"],
@@ -49,6 +54,7 @@ class PaymentResponse(BaseModel):
     cost_code: Optional[str]
     sub_cost_code: Optional[str]
     category: Optional[str]
+    approval_flag: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -143,8 +149,8 @@ def create_payment(req: PaymentCreateRequest, db: Session = Depends(get_db), cur
 
             settled = min(float(payment.unsettled_amount), remaining)
             bill.paid_amount = float(bill.paid_amount) + settled
-            
-            if bill.paid_amount >= bill.total_payable:
+
+            if float(bill.paid_amount) >= float(bill.total_payable) - MONEY_EPSILON:
                 bill.status = "Paid"
             else:
                 bill.status = "Partially Paid"
@@ -180,6 +186,24 @@ def delete_payment(payment_id: uuid.UUID, db: Session = Depends(get_db), current
         log_deletion(db, payment.company_id, "payment", payment.id, f"Payment {payment.id}")
     except Exception:
         pass
+
+    # Reverse any FIFO settlements this payment recorded against bills. The DB
+    # cascade-deletes the PaymentSettlement rows at commit, so we read them first
+    # to know how much to unwind from each linked Bill's paid_amount/status.
+    settlements = db.query(PaymentSettlement).filter(PaymentSettlement.payment_id == payment.id).all()
+    for s in settlements:
+        bill = db.query(Bill).filter(Bill.id == s.bill_id).first()
+        if not bill:
+            continue
+        bill.paid_amount = max(0.0, float(bill.paid_amount) - float(s.settled_amount))
+        if float(bill.paid_amount) >= float(bill.total_payable) - MONEY_EPSILON:
+            bill.status = "Paid"
+        elif float(bill.paid_amount) > 0:
+            bill.status = "Partially Paid"
+        else:
+            bill.status = "Unpaid"
+        db.add(bill)
+
     db.delete(payment)
     db.commit()
 
@@ -197,6 +221,17 @@ def get_ledger(project_id: uuid.UUID, db: Session = Depends(get_db), _: None = D
     # 3. Fetch salary line items
     salaries = db.query(PayrollLineItem).join(PayrollRun).filter(PayrollRun.project_id == proj_uuid).all()
 
+    # Payments that settled one or more bills are already reflected in those
+    # bills' Receipt/Expense lines (accrual basis). Posting them again here would
+    # double-count the same economic event, so collect their ids to skip below.
+    # Standalone cash movements (no settlement) are still shown for the audit trail.
+    settled_payment_ids = set(
+        row[0]
+        for row in db.query(PaymentSettlement.payment_id)
+        .filter(PaymentSettlement.payment_id.in_([p.id for p in payments]))
+        .all()
+    )
+
     raw_entries = []
     for p in payments:
         raw_entries.append((p.payment_date, "payment", p))
@@ -213,6 +248,8 @@ def get_ledger(project_id: uuid.UUID, db: Session = Depends(get_db), _: None = D
 
     for dt, entry_type, obj in raw_entries:
         if entry_type == "payment":
+            if obj.id in settled_payment_ids:
+                continue
             party_name = "Walk-in Party"
             if obj.party_company_user_id:
                 team_member = db.query(CompanyTeam).filter(CompanyTeam.id == obj.party_company_user_id).first()
@@ -430,6 +467,8 @@ def approve_transaction(transaction_id: uuid.UUID, db: Session = Depends(get_db)
     if payment:
         get_company_membership(db, current_user, payment.company_id)
         require_permission(db, current_user, payment.company_id, "finance:approve")
+        payment.approval_flag = "approved"
+        db.commit()
         return {"status": "success", "message": "Payment confirmed", "type": "payment"}
         
     raise HTTPException(status_code=404, detail="Transaction not found")
@@ -1097,7 +1136,19 @@ def record_payment_request(request_id: uuid.UUID, data: PaymentRequestPaymentCre
     if req.approval_rule_id and req.approval_status != "Approved":
         raise HTTPException(status_code=400, detail="Payment request is pending approval; it cannot be recorded as paid until all required levels have signed off")
 
-    balance_due = max(0.0, req.amount - data.paid_amount - data.deduction - data.tds)
+    # Balance due is cumulative across ALL recorded payments against this request,
+    # not just the current call — otherwise each new payment resets the balance.
+    prior = db.query(PaymentRequestPayment).filter(
+        PaymentRequestPayment.payment_request_id == req.id
+    ).all()
+    prior_paid = sum(float(p.paid_amount) for p in prior)
+    prior_deduction = sum(float(p.deduction) for p in prior)
+    prior_tds = sum(float(p.tds) for p in prior)
+    total_paid = prior_paid + float(data.paid_amount)
+    total_deduction = prior_deduction + float(data.deduction)
+    total_tds = prior_tds + float(data.tds)
+    balance_due = max(0.0, req.amount - total_paid - total_deduction - total_tds)
+
     payment = PaymentRequestPayment(
         payment_request_id=req.id,
         company_id=req.company_id,
@@ -1112,8 +1163,11 @@ def record_payment_request(request_id: uuid.UUID, data: PaymentRequestPaymentCre
         attachment_name=data.attachment_name,
     )
     db.add(payment)
-    req.status = "Paid"
-    req.approval_status = "Approved"
+
+    # Status reflects the true cumulative balance: only "Paid" once fully settled.
+    # Approval is a separate workflow (update_payment_request_status) and is left
+    # untouched here.
+    req.status = "Paid" if balance_due <= 0 else "Partially Paid"
     db.commit()
     db.refresh(req)
     return _pr_response(db, req, payment_row=payment)

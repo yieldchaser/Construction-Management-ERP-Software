@@ -1161,6 +1161,7 @@ class Payment(Base):
     cost_code = Column(String(100), nullable=True)
     sub_cost_code = Column(String(100), nullable=True)
     category = Column(String(100), nullable=True)
+    approval_flag = Column(String(50), default="pending", nullable=False)  # pending, approved
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 
 
