@@ -217,6 +217,26 @@ body {
   font-style: italic;
 }
 
+/* In-app Help Centre links (collapsible Q&A answers) */
+.help-link {
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 600;
+  border-bottom: 1px solid color-mix(in srgb, var(--primary) 35%, transparent);
+  transition: border-color 0.15s ease;
+}
+.help-link:hover {
+  border-bottom-color: var(--primary);
+}
+.help-answer code {
+  background: var(--elevated);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 0.12em 0.4em;
+  font-size: 0.85em;
+  color: var(--foreground);
+}
+
 .help-article code {
   background: var(--elevated);
   border: 1px solid var(--border);

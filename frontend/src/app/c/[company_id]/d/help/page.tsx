@@ -1,45 +1,44 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useParams } from "next/navigation";
-
-interface TutorialCard {
-  title: string;
-  category: string;
-}
+import { HELP_CATEGORIES, FaqCategory } from "./helpContent";
 
 export default function HelpPage() {
   const params = useParams();
-  const companyId = params?.company_id as string || "e0000000-0000-0000-0000-000000000000";
+  const companyId =
+    (params?.company_id as string) ||
+    "e0000000-0000-0000-0000-000000000000";
 
-  const [activeCategory, setActiveCategory] = useState<string>("all");
+  const [query, setQuery] = useState("");
+  const [openCats, setOpenCats] = useState<Record<string, boolean>>({});
+  const [openItems, setOpenItems] = useState<Record<string, boolean>>({});
 
-  const categoriesList = [
-    { id: "all", label: "All Topics" },
-    { id: "procurement", label: "Procurement" },
-    { id: "warehouse", label: "Warehouse" },
-    { id: "finance", label: "Finance & Payroll" },
-    { id: "general", label: "General" },
-  ];
-
-  const tutorials: TutorialCard[] = [
-    { title: "RFQ Tutorial", category: "procurement" },
-    { title: "Procurement - PO Management", category: "procurement" },
-    { title: "Warehouse Management", category: "warehouse" },
-    { title: "Material Transfer", category: "warehouse" },
-    { title: "Material Return & Debit Note", category: "warehouse" },
-    { title: "Petty Cash Management to Supervisor", category: "finance" },
-    { title: "Company Dashboard", category: "general" },
-    { title: "ToDo Management", category: "general" },
-    { title: "BOQ/Budgeting and Invoicing", category: "finance" },
-    { title: "Payroll", category: "finance" },
-    { title: "Staff Payroll", category: "finance" },
-    { title: "Attendance & Salary Management", category: "finance" },
-  ];
-
-  const filtered = tutorials.filter(
-    (t) => activeCategory === "all" || t.category === activeCategory
+  const categories: FaqCategory[] = useMemo(
+    () => HELP_CATEGORIES(companyId),
+    [companyId]
   );
+
+  const q = query.trim().toLowerCase();
+
+  const matches = (text: string) => !q || text.toLowerCase().includes(q);
+
+  const filtered = categories
+    .map((cat) => ({
+      ...cat,
+      items: cat.items.filter(
+        (it) => matches(it.q) || matches(it.text)
+      ),
+    }))
+    .filter((cat) => cat.items.length > 0);
+
+  const toggleCat = (id: string) =>
+    setOpenCats((prev) => ({ ...prev, [id]: !prev[id] }));
+
+  const toggleItem = (key: string) =>
+    setOpenItems((prev) => ({ ...prev, [key]: !prev[key] }));
+
+  const resultCount = filtered.reduce((n, c) => n + c.items.length, 0);
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden bg-elevated/10">
@@ -47,65 +46,152 @@ export default function HelpPage() {
         {/* Banner Section */}
         <div className="relative rounded-2xl bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-border-custom p-8 overflow-hidden">
           <div className="max-w-2xl relative z-10 space-y-2">
-            <h1 className="text-2xl font-extrabold tracking-tight text-foreground">Video Tutorials</h1>
+            <h1 className="text-2xl font-extrabold tracking-tight text-foreground">
+              Help Centre
+            </h1>
             <p className="text-xs text-muted">
-              Welcome to the SiteFlow Help Center! Watch step-by-step video guides to streamline your construction ERP operations.
+              Answers to common questions about how SiteFlow actually works, grouped
+              by area. Every step below reflects a real module in your account.
             </p>
           </div>
-          <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-radial from-primary/5 to-transparent blur-3xl pointer-events-none"></div>
+          <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-radial from-primary/5 to-transparent blur-3xl pointer-events-none" />
         </div>
 
-        {/* Category Tabs */}
-        <div className="flex flex-wrap gap-2">
-          {categoriesList.map((cat) => (
+        {/* Search */}
+        <div className="max-w-2xl relative">
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search help, e.g. 'RA bill', 'attendance', 'Tally', 'PO'..."
+            className="w-full px-5 py-3.5 pl-12 rounded-lg bg-card border border-border-custom text-foreground placeholder:text-muted focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all text-sm shadow-sm"
+          />
+          <svg
+            className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            />
+          </svg>
+          {query && (
             <button
-              key={cat.id}
-              onClick={() => setActiveCategory(cat.id)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border cursor-pointer ${
-                activeCategory === cat.id
-                  ? "bg-primary border-primary text-white shadow-sm shadow-primary/20"
-                  : "bg-card border-border-custom text-muted hover:text-foreground hover:border-border-custom/80"
-              }`}
+              onClick={() => setQuery("")}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-muted hover:text-foreground transition-all cursor-pointer"
             >
-              {cat.label}
+              Clear
             </button>
-          ))}
+          )}
         </div>
 
-        {/* Tutorial Card Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filtered.map((t, idx) => (
-            <div
-              key={idx}
-              className="group bg-card border border-border-custom rounded-xl overflow-hidden cursor-pointer hover:border-primary/40 transition-all"
-            >
-              {/* Thumbnail */}
-              <div className="relative aspect-video bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 flex items-center justify-center overflow-hidden">
-                <span className="absolute inset-0 bg-radial from-primary/10 to-transparent opacity-60"></span>
-                <div className="h-12 w-12 rounded-full bg-white/90 shadow-lg flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-primary ml-0.5" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M8 5v14l11-7z" />
-                  </svg>
-                </div>
-              </div>
-              {/* Title */}
-              <div className="px-4 py-3">
-                <h3 className="text-xs font-bold text-foreground leading-snug">{t.title}</h3>
-                <p className="text-[10px] text-muted mt-1 uppercase tracking-wider">
-                  {categoriesList.find((c) => c.id === t.category)?.label}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {filtered.length === 0 && (
+        {filtered.length === 0 ? (
           <div className="text-center py-12 border border-dashed border-border-custom rounded-xl bg-card">
-            <span className="text-2xl">🎬</span>
-            <h3 className="text-sm font-bold text-foreground mt-2">No tutorials in this category</h3>
-            <p className="text-xs text-muted mt-1">Check back later or switch to another topic.</p>
+            <span className="text-2xl">🔍</span>
+            <h3 className="text-sm font-bold text-foreground mt-2">
+              No matching answers
+            </h3>
+            <p className="text-xs text-muted mt-1">
+              Try a different keyword, or contact support from the main site.
+            </p>
           </div>
+        ) : (
+          <p className="text-xs text-muted">
+            {resultCount} answer{resultCount === 1 ? "" : "s"} across {filtered.length}{" "}
+            area{filtered.length === 1 ? "" : "s"}
+            {q ? " for your search" : ""}.
+          </p>
         )}
+
+        {/* Q&A accordions grouped by area */}
+        <div className="space-y-4">
+          {filtered.map((cat) => {
+            const catOpen = q ? true : !!openCats[cat.id];
+            return (
+              <section
+                key={cat.id}
+                className="rounded-xl border border-border-custom bg-card overflow-hidden"
+              >
+                <button
+                  onClick={() => toggleCat(cat.id)}
+                  className="w-full flex items-center justify-between gap-3 px-5 py-4 text-left hover:bg-elevated/40 transition-all cursor-pointer"
+                >
+                  <span className="flex items-center gap-3">
+                    <span className="text-xl">{cat.icon}</span>
+                    <span className="text-sm font-bold text-foreground">
+                      {cat.title}
+                    </span>
+                    <span className="text-[11px] text-muted">
+                      {cat.items.length}
+                    </span>
+                  </span>
+                  <svg
+                    className={`h-4 w-4 text-muted transition-transform ${
+                      catOpen ? "rotate-180" : ""
+                    }`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </button>
+
+                {catOpen && (
+                  <div className="border-t border-border-custom divide-y divide-border-custom/60">
+                    {cat.items.map((it, idx) => {
+                      const key = `${cat.id}-${idx}`;
+                      const itemOpen = q ? true : !!openItems[key];
+                      return (
+                        <div key={key}>
+                          <button
+                            onClick={() => toggleItem(key)}
+                            className="w-full flex items-center justify-between gap-3 px-5 py-3.5 text-left hover:bg-elevated/30 transition-all cursor-pointer"
+                          >
+                            <span className="text-sm font-medium text-foreground">
+                              {it.q}
+                            </span>
+                            <svg
+                              className={`h-4 w-4 text-muted shrink-0 transition-transform ${
+                                itemOpen ? "rotate-180" : ""
+                              }`}
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M19 9l-7 7-7-7"
+                              />
+                            </svg>
+                          </button>
+                          {itemOpen && (
+                            <div className="px-5 pb-5 pt-0">
+                              <div className="text-xs leading-relaxed text-muted help-answer">
+                                {it.a}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </section>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

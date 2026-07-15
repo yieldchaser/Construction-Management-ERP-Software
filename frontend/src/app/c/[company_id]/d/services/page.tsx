@@ -82,7 +82,7 @@ export default function ServicesPage() {
 
   const contactHref = (title: string) =>
     `mailto:${SALES_EMAIL}?subject=${encodeURIComponent(`Service request: ${title}`)}`;
-  const referHref = `mailto:${SALES_EMAIL}?subject=${encodeURIComponent("Onsite Referral Program")}`;
+  const referHref = `mailto:${SALES_EMAIL}?subject=${encodeURIComponent("SiteFlow Referral Program")}`;
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden bg-elevated/10">
@@ -152,7 +152,7 @@ export default function ServicesPage() {
         {/* Referral Banner */}
         <div className="relative rounded-2xl bg-gradient-to-r from-primary/15 via-primary/10 to-transparent border border-border-custom p-8 overflow-hidden">
           <div className="max-w-2xl relative z-10 space-y-3">
-            <h3 className="text-lg font-extrabold tracking-tight text-foreground">Onsite Referral Program</h3>
+            <h3 className="text-lg font-extrabold tracking-tight text-foreground">SiteFlow Referral Program</h3>
             <p className="text-xs text-muted">
               Refer and earn cashback with each successful referral.
             </p>
