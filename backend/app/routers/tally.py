@@ -169,8 +169,15 @@ def _cash_bank_type(name: str, default_cash: Optional[str]) -> str:
     return "cash" if "cash" in (name or "").lower() else "bank"
 
 
-def _build_vouchers(db: Session, conn: TallyConnection, bills, payments):
-    """Resolve Bill + Payment rows into Tally voucher dicts (double entry)."""
+def _build_vouchers(db: Session, conn: TallyConnection, bills, payments, advance_sequence: bool = False):
+    """Resolve Bill + Payment rows into Tally voucher dicts (double entry).
+
+    Voucher numbers use a durable, per-company monotonic counter
+    (`conn.last_voucher_seq`) so numbers never repeat across partial syncs.
+    The counter is only advanced/committed when `advance_sequence=True` — i.e.
+    the real `/export` path. `/pending` (a read-only preview) renders the next
+    numbers but must NOT consume the sequence.
+    """
     vouchers = []
     pending = []
 
@@ -187,7 +194,7 @@ def _build_vouchers(db: Session, conn: TallyConnection, bills, payments):
     if bank:
         bank_ledger = bank.tally_ledger_name
 
-    seq = 1
+    seq = (conn.last_voucher_seq or 0) + 1
 
     for b in bills:
         total = float(b.total_payable or 0)
@@ -292,6 +299,11 @@ def _build_vouchers(db: Session, conn: TallyConnection, bills, payments):
             "date": date_str,
         })
         seq += 1
+
+    if advance_sequence and (bills or payments):
+        conn.last_voucher_seq = seq - 1
+        db.add(conn)
+        db.commit()
 
     return vouchers, pending
 
@@ -508,7 +520,7 @@ def pending_vouchers(company_id: uuid.UUID, db: Session = Depends(get_db), _: No
             Payment.payment_date >= conn.sync_window_start_date,
         ).all()
         if bills or payments:
-            _, vouchers = _build_vouchers(db, conn, bills, payments)
+            _, vouchers = _build_vouchers(db, conn, bills, payments, advance_sequence=False)
             bill_ids = [str(b.id) for b in bills]
             payment_ids = [str(p.id) for p in payments]
 
@@ -544,7 +556,7 @@ def export_tally_xml(company_id: uuid.UUID, db: Session = Depends(get_db), _: No
         Payment.payment_date >= conn.sync_window_start_date,
     ).all()
 
-    vouchers, _ = _build_vouchers(db, conn, bills, payments)
+    vouchers, _ = _build_vouchers(db, conn, bills, payments, advance_sequence=True)
     xml = build_tally_envelope(conn.tally_company_name, vouchers, auto_create=conn.auto_create_missing_ledgers)
     filename = f"siteflow-tally-{datetime.utcnow().strftime('%Y%m%d')}.xml"
     return Response(

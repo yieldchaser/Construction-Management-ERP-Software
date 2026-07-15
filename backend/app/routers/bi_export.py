@@ -253,17 +253,38 @@ def feed_budget_variance(
 
         material_actual = float(
             db.query(func.coalesce(func.sum(models.Bill.total_payable), 0))
-            .filter(models.Bill.project_id == p.id, models.Bill.category == "material")
+            .filter(models.Bill.project_id == p.id, models.Bill.invoice_type == "purchase")
             .scalar()
             or 0
         )
         subcon_actual = float(
             db.query(func.coalesce(func.sum(models.Bill.total_payable), 0))
-            .filter(models.Bill.project_id == p.id, models.Bill.category == "subcon")
+            .filter(models.Bill.project_id == p.id, models.Bill.invoice_type == "subcon")
             .scalar()
             or 0
         )
-        total_actual = material_actual + subcon_actual
+        # Labour actual: sum of payroll line-item net payables for this project's runs.
+        labour_actual = float(
+            db.query(func.coalesce(func.sum(models.PayrollLineItem.net_payable), 0))
+            .join(models.PayrollRun)
+            .filter(models.PayrollRun.project_id == p.id)
+            .scalar()
+            or 0
+        )
+        # Equipment actual: deployment hourly cost + fuel cost (mirrors finance.get_project_pl).
+        equipment_actual = 0.0
+        deployments = db.query(models.EquipmentDeployment).filter(models.EquipmentDeployment.project_id == p.id).all()
+        for dep in deployments:
+            eq = db.query(models.Equipment).filter(models.Equipment.id == dep.equipment_id).first()
+            if eq and eq.hourly_rate:
+                rate = float(eq.hourly_rate)
+                end = dep.end_date if dep.end_date else datetime.utcnow()
+                hours = (end - dep.start_date).total_seconds() / 3600.0
+                equipment_actual += max(0.0, hours * rate)
+        fuel_logs = db.query(models.FuelLog).filter(models.FuelLog.project_id == p.id).all()
+        equipment_actual += sum(float(log.total_cost or 0.0) for log in fuel_logs)
+
+        total_actual = material_actual + subcon_actual + labour_actual + equipment_actual
         rows.append(
             {
                 "project_id": str(p.id),
@@ -275,6 +296,8 @@ def feed_budget_variance(
                 "total_budget": total_budget,
                 "material_actual": material_actual,
                 "subcon_actual": subcon_actual,
+                "labour_actual": labour_actual,
+                "equipment_actual": equipment_actual,
                 "total_actual": total_actual,
                 "total_variance": total_budget - total_actual,
             }
@@ -282,7 +305,7 @@ def feed_budget_variance(
     columns = [
         "project_id", "name", "material_budget", "labour_budget", "subcon_budget",
         "equipment_budget", "total_budget", "material_actual", "subcon_actual",
-        "total_actual", "total_variance",
+        "labour_actual", "equipment_actual", "total_actual", "total_variance",
     ]
     return _feed_response(rows, columns, fmt)
 

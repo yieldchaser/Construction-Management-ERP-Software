@@ -523,13 +523,16 @@ def create_bill(req: BillCreateRequest, db: Session = Depends(get_db), current_u
         gst_amount = (req.subtotal - ded_amt) * (req.gst_pct / 100.0)
         total_payable = req.subtotal - ded_amt + gst_amount
     else:
-        # Post-Tax Calculations (GST calculated on subtotal first, deductions subtracted from the gross total)
+        # Post-Tax presentation (GST shown on the GST-exclusive subtotal), but
+        # TDS/Retention are now computed against the GST-EXCLUSIVE work value
+        # (Indian TDS under the Income Tax Act is on the value of work/services,
+        # not on the GST component). The `pre_tax_deductions` flag only controls
+        # invoice presentation/order from here on, not whether GST is included in
+        # the deduction base.
+        deduction_details, ded_amt = _sequential_deduction_calc(req.deductions, req.subtotal, pretax_order)
+
         gst_amount = req.subtotal * (req.gst_pct / 100.0)
-        gross_total = req.subtotal + gst_amount
-
-        deduction_details, ded_amt = _sequential_deduction_calc(req.deductions, gross_total, pretax_order)
-
-        total_payable = gross_total - ded_amt
+        total_payable = req.subtotal - ded_amt + gst_amount
 
     bill = Bill(
         company_id=req.company_id,

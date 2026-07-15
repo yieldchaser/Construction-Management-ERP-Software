@@ -311,12 +311,6 @@ def get_company_analytics(company_id: uuid.UUID, db: Session = Depends(get_db), 
             boq = boq_by_id.get(task.boq_item_id)
             if boq and (boq.unit or "").strip().lower() in AREA_UNITS:
                 completed_area += _to_float(boq.quantity)
-    if completed_area == 0.0:
-        completed_area = sum(
-            _to_float(boq.quantity)
-            for boq in boq_items
-            if (boq.unit or "").strip().lower() in AREA_UNITS
-        )
     labour_productivity = round(completed_area / labour_days, 2) if labour_days else 0.0
 
     ordered_qty = sum(_to_float(item.quantity) for item in purchase_order_items)
@@ -332,11 +326,19 @@ def get_company_analytics(company_id: uuid.UUID, db: Session = Depends(get_db), 
             for bill in bills
             if bill.invoice_type == "subcon" and bill.party_company_user_id == subcontractor_id
         ]
+        # On-time definition: only PAID bills WITH a real due_date count toward
+        # the metric. A bill is on-time when its last-modified (settled) time is
+        # on/before the due date. Unpaid/partially-paid bills and bills without a
+        # due_date are excluded from the denominator (can't judge on-time-ness).
+        in_scope_bills = [
+            bill
+            for bill in bills_for_subcontractor
+            if (bill.status or "").lower() == "paid" and bill.due_date is not None
+        ]
         on_time_bills = sum(
             1
-            for bill in bills_for_subcontractor
-            if bill.due_date is None
-            or (bill.updated_at is not None and bill.updated_at <= bill.due_date)
+            for bill in in_scope_bills
+            if bill.updated_at is not None and bill.updated_at <= bill.due_date
         )
         linked_projects = projects_by_subcontractor.get(subcontractor_id, set())
         ncr_count = sum(1 for ncr in ncrs if ncr.project_id in linked_projects)
@@ -350,9 +352,9 @@ def get_company_analytics(company_id: uuid.UUID, db: Session = Depends(get_db), 
                     if project.id in linked_projects
                 ],
                 "bill_count": len(bills_for_subcontractor),
-                "on_time_rate": round((on_time_bills / len(bills_for_subcontractor)) * 100, 1) if bills_for_subcontractor else 0.0,
+                "on_time_rate": round((on_time_bills / len(in_scope_bills)) * 100, 1) if in_scope_bills else 0.0,
                 "ncr_count": ncr_count,
-                "late_bills": max(len(bills_for_subcontractor) - on_time_bills, 0),
+                "late_bills": max(len(in_scope_bills) - on_time_bills, 0),
             }
         )
 

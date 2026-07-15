@@ -1184,6 +1184,7 @@ class TallyConnection(Base):
     registered_mobile = Column(String(20), nullable=False)
     sync_window_start_date = Column(DateTime(timezone=True), nullable=False)
     voucher_number_template = Column(String(100), default="ONS-{year}-{number}", nullable=False)
+    last_voucher_seq = Column(Integer, default=0, nullable=False)
     auto_create_missing_ledgers = Column(Boolean, default=False, nullable=False)
     round_off_ledger = Column(String(255), nullable=True)
     default_cash_ledger = Column(String(255), nullable=True)
@@ -1350,6 +1351,7 @@ class LeaveRequest(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
     project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="SET NULL"), nullable=True)
+    employee_id = Column(UUID(as_uuid=True), ForeignKey("staff_employees.id", ondelete="SET NULL"), nullable=True)
     employee_name = Column(String(255), nullable=False)
     leave_type = Column(String(100), nullable=False) # Sick, Casual, Earned, etc.
     start_date = Column(DateTime(timezone=True), nullable=False)

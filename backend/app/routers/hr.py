@@ -656,7 +656,25 @@ def run_payroll(payload: PayrollRunCreate, db: Session = Depends(get_db), curren
         else:
             default_days = float(payload.days_in_month)
 
-        days_present = float(att_count) if att_count > 0 else default_days
+        # Add approved, PAID leave days to attendance so leave isn't under-counted.
+        # Mirror the name-matching convention used by get_leave_balances; also
+        # match the new employee_id FK when populated. Only templated paid leave
+        # types (casual/sick/earned) count — any other leave_type value is left
+        # out pending a founder decision on paid-vs-unpaid handling.
+        PAID_LEAVE_TYPES = {"casual", "sick", "earned"}
+        approved_leaves = db.query(LeaveRequest).filter(
+            LeaveRequest.company_id == payload.company_id,
+            LeaveRequest.status == "Approved",
+            (LeaveRequest.employee_id == emp.id) | (func.lower(LeaveRequest.employee_name) == emp.name.lower()),
+            LeaveRequest.start_date < month_end,
+            LeaveRequest.end_date >= month_start,
+        ).all()
+        approved_leave_days = 0.0
+        for lr in approved_leaves:
+            if (lr.leave_type or "").strip().lower() in PAID_LEAVE_TYPES:
+                approved_leave_days += float(lr.days_count or 0.0)
+
+        days_present = float(att_count + approved_leave_days) if (att_count + approved_leave_days) > 0 else default_days
 
         calc = _compute_payslip(emp, days_present, payload.days_in_month, float(total_ot))
         line = PayrollLineItem(
@@ -811,6 +829,7 @@ from pydantic import BaseModel
 
 class LeaveRequestCreate(BaseModel):
     project_id: Optional[uuid.UUID] = None
+    employee_id: Optional[uuid.UUID] = None
     employee_name: str
     leave_type: str
     start_date: datetime
@@ -821,6 +840,7 @@ class LeaveRequestResponse(BaseModel):
     id: uuid.UUID
     company_id: uuid.UUID
     project_id: Optional[uuid.UUID]
+    employee_id: Optional[uuid.UUID] = None
     employee_name: str
     leave_type: str
     start_date: datetime
@@ -848,6 +868,7 @@ def create_leave_request(company_id: uuid.UUID, data: LeaveRequestCreate, db: Se
     new_leave = LeaveRequest(
         company_id=company_id,
         project_id=data.project_id,
+        employee_id=data.employee_id,
         employee_name=data.employee_name,
         leave_type=data.leave_type,
         start_date=data.start_date,
@@ -1293,6 +1314,7 @@ def get_leave_balances(
 
     approved = (
         db.query(
+            LeaveRequest.employee_id,
             func.lower(LeaveRequest.employee_name).label("ename"),
             func.lower(LeaveRequest.leave_type).label("ltype"),
             func.sum(LeaveRequest.days_count),
@@ -1303,14 +1325,19 @@ def get_leave_balances(
             LeaveRequest.start_date >= year_start,
         )
         .group_by(
+            LeaveRequest.employee_id,
             func.lower(LeaveRequest.employee_name),
             func.lower(LeaveRequest.leave_type),
         )
         .all()
     )
-    used_map: dict = {}
-    for ename, ltype, total in approved:
-        used_map.setdefault(ename, {})[ltype] = float(total or 0.0)
+    used_by_emp_id: dict = {}
+    used_by_name: dict = {}
+    for emp_id, ename, ltype, total in approved:
+        if emp_id is not None:
+            used_by_emp_id.setdefault(emp_id, {})[ltype] = float(total or 0.0)
+        else:
+            used_by_name.setdefault(ename, {})[ltype] = float(total or 0.0)
 
     result_employees = []
     for emp in employees:
@@ -1330,7 +1357,9 @@ def get_leave_balances(
             entitled["sick"] = float(template.sick_leave_days or 0.0)
             entitled["earned"] = float(template.earned_leave_days or 0.0)
 
-        used = used_map.get(emp.name.lower(), {})
+        used = used_by_emp_id.get(emp.id)
+        if used is None:
+            used = used_by_name.get(emp.name.lower(), {})
 
         def balance_for(key: str) -> LeaveTypeBalance:
             ent = entitled[key]
