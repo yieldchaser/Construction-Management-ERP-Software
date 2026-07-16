@@ -34,6 +34,7 @@ interface SafetyStats {
   ltif: number;
   type_breakdown: Record<string, number>;
   severity_breakdown: Record<string, number>;
+  manhours_source?: "attendance" | "fallback";
 }
 
 interface ToolboxTalk {
@@ -368,7 +369,7 @@ export default function SafetyPage() {
 
               {/* LTIF Formula */}
               <div style={{ marginTop: 20, padding: '14px 20px', borderRadius: 12, background: 'rgba(124,92,255,0.08)', border: '1px solid rgba(124,92,255,0.2)', fontSize: 13, color: 'rgba(255,255,255,0.6)' }}>
-                ℹ️ <strong style={{ color: '#7C5CFF' }}>LTIF Formula:</strong> (Number of LTIs × 200,000) ÷ Total Manhours Worked · Calculated on 50,000 manhours basis.
+                ℹ️ <strong style={{ color: '#7C5CFF' }}>LTIF Formula:</strong> (Number of LTIs × 200,000) ÷ Total Manhours Worked · Calculated on {stats.total_manhours_used?.toLocaleString() || '50,000'} manhours basis{stats.manhours_source === 'fallback' ? ' (estimated — no attendance data)' : ''}.
               </div>
             </>
           )}

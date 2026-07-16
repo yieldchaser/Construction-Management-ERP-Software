@@ -127,7 +127,7 @@ def compute_critical_task_ids(tasks, db: Session) -> set:
     task_ids = [t.id for t in tasks]
     end_by_id = {t.id: t.end_date for t in tasks}
     start_by_id = {t.id: t.start_date for t in tasks}
-    dur_by_id = {t.id: max(1, (t.end_date - t.start_date).days) for t in tasks}
+    dur_by_id = {t.id: max(1.0, (t.end_date - t.start_date).total_seconds() / 86400.0) for t in tasks}
     project_end = max(end_by_id.values())
 
     links = db.query(TaskPredecessor).filter(TaskPredecessor.task_id.in_(task_ids)).all()
@@ -151,10 +151,10 @@ def compute_critical_task_ids(tasks, db: Session) -> set:
     for t in tasks:
         if t.id not in succ and not any(l.predecessor_id == t.id for l in links):
             # Isolated task: critical only if it ends at the project finish.
-            if (end_by_id[t.id] - project_end).days == 0:
+            if abs((end_by_id[t.id] - project_end).total_seconds() / 86400.0) < 1e-9:
                 critical.add(t.id)
             continue
-        slack = (latest_finish(t.id) - end_by_id[t.id]).days
+        slack = (latest_finish(t.id) - end_by_id[t.id]).total_seconds() / 86400.0
         if slack <= 0:
             critical.add(t.id)
     return critical
@@ -435,6 +435,12 @@ def create_task(request: TaskCreateRequest, db: Session = Depends(get_db), curre
     get_company_membership(db, current_user, project.company_id)
     require_permission(db, current_user, project.company_id, "planning:edit")
 
+    # Data-integrity: a parent task must belong to the same project as the new task.
+    if request.parent_id is not None:
+        parent = db.query(Task).filter(Task.id == request.parent_id).first()
+        if parent and parent.project_id != request.project_id:
+            raise HTTPException(status_code=400, detail="Parent task does not belong to the same project")
+
     # Workflow Controls: Entry Controls (creation date window) & Progress Controls
     enforce_entry_creation_window(db, project.company_id, request.start_date)
     enforce_progress_over_estimate(db, project.company_id, request.progress)
@@ -473,11 +479,13 @@ def update_task(task_id: UUID, request: TaskUpdateRequest, db: Session = Depends
 
     # Workflow Controls: Entry Controls (editing date window) & Progress Controls
     project = db.query(Project).filter(Project.id == task.project_id).first()
-    if project:
-        get_company_membership(db, current_user, project.company_id)
-        require_permission(db, current_user, project.company_id, "planning:edit")
-        enforce_entry_editing_window(db, project.company_id, task.start_date)
-        enforce_progress_over_estimate(db, project.company_id, request.progress)
+    # Fail closed: a task whose project can't be resolved (dangling FK) must not
+    # silently bypass membership/permission/workflow checks.
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found for this task")
+    get_company_membership(db, current_user, project.company_id)
+    require_permission(db, current_user, project.company_id, "planning:edit")
+    enforce_progress_over_estimate(db, project.company_id, request.progress)
 
     dates_changed = False
 
@@ -501,6 +509,13 @@ def update_task(task_id: UUID, request: TaskUpdateRequest, db: Session = Depends
         task.duration_days = duration_days
         task.end_date = start_date + timedelta(days=duration_days)
         dates_changed = True
+
+    # Enforce the editing window against the EFFECTIVE start date that will be
+    # saved (after any date change above), not the stale pre-update value. This
+    # prevents a request that moves a task into an out-of-window date from
+    # sailing through because the old date happened to be in-window.
+    effective_start = task.start_date
+    enforce_entry_editing_window(db, project.company_id, effective_start)
 
     db.add(task)
     db.commit()

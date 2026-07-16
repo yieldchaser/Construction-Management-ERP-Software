@@ -202,6 +202,7 @@ def add_checklist_item(cl_id: uuid.UUID, payload: ChecklistItemCreate, db: Sessi
     if not cl:
         raise HTTPException(status_code=404, detail="Checklist not found")
     get_company_membership(db, current_user, cl.company_id)
+    require_permission(db, current_user, cl.company_id, "quality:edit")
     item = ChecklistItem(checklist_id=cl_id, **payload.model_dump())
     db.add(item)
     db.commit()
@@ -228,6 +229,7 @@ def create_inspection(payload: InspectionCreate, db: Session = Depends(get_db), 
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     get_company_membership(db, current_user, project.company_id)
+    require_permission(db, current_user, project.company_id, "quality:edit")
     insp = SiteInspection(**payload.model_dump())
     db.add(insp)
     db.commit()
@@ -256,6 +258,7 @@ def submit_inspection_responses(
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     get_company_membership(db, current_user, project.company_id)
+    require_permission(db, current_user, project.company_id, "quality:edit")
 
     pass_count = fail_count = na_count = 0
 
@@ -312,6 +315,7 @@ def raise_ncr(payload: NCRCreate, db: Session = Depends(get_db), current_user: U
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     get_company_membership(db, current_user, project.company_id)
+    require_permission(db, current_user, project.company_id, "quality:edit")
     ncr = NCR(**payload.model_dump())
     db.add(ncr)
     db.commit()
@@ -335,6 +339,7 @@ def ncr_under_review(ncr_id: uuid.UUID, db: Session = Depends(get_db), current_u
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     get_company_membership(db, current_user, project.company_id)
+    require_permission(db, current_user, project.company_id, "quality:edit")
     if ncr.status != "open":
         raise HTTPException(status_code=400, detail="Only open NCRs can move to under_review")
     ncr.status = "under_review"
@@ -356,6 +361,7 @@ def close_ncr(ncr_id: uuid.UUID, payload: NCRCloseRequest, db: Session = Depends
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     get_company_membership(db, current_user, project.company_id)
+    require_permission(db, current_user, project.company_id, "quality:edit")
     if ncr.status == "closed":
         raise HTTPException(status_code=400, detail="NCR is already closed")
     ncr.status = "closed"
@@ -374,6 +380,7 @@ def log_material_test(payload: MaterialTestCreate, db: Session = Depends(get_db)
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     get_company_membership(db, current_user, project.company_id)
+    require_permission(db, current_user, project.company_id, "quality:edit")
     data = payload.model_dump()
 
     # Auto-compute pass/fail from min/max bounds if provided

@@ -675,8 +675,33 @@ def create_grn(req: GRNCreateRequest, db: Session = Depends(get_db), current_use
         )
         db.add(txn)
 
-    # 5. Transition PO status to partial or closed (simplified to partial or received based on GRN creation)
-    po.status = "received"
+    # 5. Recompute PO status from received quantity vs ordered quantity across
+    #    ALL of the PO's line items (across every GRN). A PO is "received" only
+    #    once every ordered line item has been fully received; otherwise it's
+    #    "partially_received" if some (but not all) quantity is in.
+    po_items = db.query(PurchaseOrderItem).filter(PurchaseOrderItem.po_id == req.po_id).all()
+    if po_items:
+        received_by_po_item = {pi.id: 0.0 for pi in po_items}
+        grn_items = db.query(GRNItem).join(GoodsReceiptNote).filter(
+            GoodsReceiptNote.po_id == req.po_id
+        ).all()
+        for gi in grn_items:
+            if gi.po_item_id in received_by_po_item:
+                received_by_po_item[gi.po_item_id] += float(gi.received_qty)
+
+        fully_received = all(
+            received_by_po_item[pi.id] >= float(pi.quantity) for pi in po_items
+        )
+        some_received = any(
+            received_by_po_item[pi.id] > 0.0 for pi in po_items
+        )
+        if fully_received:
+            po.status = "received"
+        elif some_received:
+            po.status = "partial"
+        # else: nothing received yet -> leave PO status unchanged
+    else:
+        po.status = "received"
     
     db.commit()
     db.refresh(grn)

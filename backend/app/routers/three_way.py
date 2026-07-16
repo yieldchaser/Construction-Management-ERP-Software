@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 from decimal import Decimal
 from app.database import get_db
 from app.auth import get_current_user, verify_company_access, get_company_membership, require_permission
-from app.models import ThreeWayMatch, PurchaseOrder, GoodsReceiptNote, GRNItem, User
+from app.models import ThreeWayMatch, PurchaseOrder, PurchaseOrderItem, GoodsReceiptNote, GRNItem, User
 
 router = APIRouter(prefix="/three-way", tags=["3-Way Matching"], dependencies=[Depends(get_current_user)])
 
@@ -89,9 +89,25 @@ def create_match(payload: ThreeWayMatchCreate, db: Session = Depends(get_db), cu
             detail="GRN does not belong to the supplied company/project",
         )
 
-    po_amount = float(po.total_amount)
     grn_items = db.query(GRNItem).filter(GRNItem.grn_id == grn_id).all()
     total_received_qty = sum(float(item.received_qty) for item in grn_items)
+
+    # Fairer variance baseline: compare the invoice against the VALUE of the
+    # goods actually received in this GRN (its item quantities x the matching
+    # PO item rates), not the PO's entire grand total. A PO can legitimately
+    # receive/ invoice in multiple phases; comparing one invoice against the
+    # whole PO total would always over-report "mismatch". Falls back to the
+    # whole-PO total only if a GRN item can't be resolved to its PO item.
+    po_items_by_id = {pi.id: pi for pi in db.query(PurchaseOrderItem).filter(PurchaseOrderItem.po_id == po_id).all()}
+    grn_received_value = 0.0
+    grn_value_resolved = True
+    for item in grn_items:
+        pi = po_items_by_id.get(item.po_item_id)
+        if pi is None or pi.rate is None:
+            grn_value_resolved = False
+            break
+        grn_received_value += float(item.received_qty) * float(pi.rate)
+    po_amount = grn_received_value if grn_value_resolved and grn_items else float(po.total_amount)
 
     invoiced_amount = float(payload.invoiced_amount)
     variance = round(invoiced_amount - po_amount, 2)

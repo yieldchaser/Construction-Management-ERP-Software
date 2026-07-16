@@ -362,21 +362,15 @@ def create_batch(payload: BatchCreate, db: Session = Depends(get_db), current_us
     planned_material_qty = 0.0
     actual_material_qty = 0.0
 
-    is_concrete = any(x in (recipe.mix_type or "").lower() for x in ["concrete", "rmc", "batch"])
-
     for recipe_material in recipe_materials:
         override = override_map.pop(recipe_material.material_name, None)
         
         if override and override.actual_qty is not None:
             actual_qty = override.actual_qty
         else:
-            is_dry_material = any(x in recipe_material.material_name.lower() for x in ["cement", "sand", "aggregate"])
-            if is_concrete and is_dry_material:
-                # Scale planned material qty to actual output; recipe qty is already the dry-material amount, so no 1.54 wet->dry factor
-                actual_qty = (float(recipe_material.planned_qty) / float(recipe.target_output_qty)) * actual_output_qty
-            else:
-                actual_qty = (float(recipe_material.planned_qty) / float(recipe.target_output_qty)) * actual_output_qty
-                
+            # Recipe qty is the dry-material amount; scale planned material qty to
+            # the actual batch output (no wet->dry 1.54 factor needed here).
+            actual_qty = (float(recipe_material.planned_qty) / float(recipe.target_output_qty)) * actual_output_qty
         unit = override.unit if override else recipe_material.unit
         variance_qty = actual_qty - float(recipe_material.planned_qty)
 

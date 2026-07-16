@@ -180,7 +180,11 @@ def get_safety_stats(
         AttendanceLog.project_id == proj_uuid
     ).scalar()
     
-    manhours = float(actual_hours) if actual_hours and float(actual_hours) > 0 else total_manhours
+    # Honest manhours source: flag whether the LTIF denominator came from real
+    # AttendanceLog data or the caller-supplied fallback (so the UI can show
+    # "(estimated)" instead of presenting a fallback number as precise).
+    manhours_from_attendance = bool(actual_hours and float(actual_hours) > 0)
+    manhours = float(actual_hours) if manhours_from_attendance else total_manhours
 
     total_incidents = len(incidents)
     lti_incidents = [i for i in incidents if i.incident_type in ("LTI", "Fatal")]
@@ -209,6 +213,7 @@ def get_safety_stats(
         "type_breakdown": type_breakdown,
         "severity_breakdown": severity_breakdown,
         "total_manhours_used": manhours,
+        "manhours_source": "attendance" if manhours_from_attendance else "fallback",
     }
 
 

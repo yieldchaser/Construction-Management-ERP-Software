@@ -13,6 +13,10 @@ from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from app.database import get_db
+
+# Anchor the PDF store to the repo's backend/static/reports directory so writes
+# and reads stay consistent regardless of the process's current working dir.
+REPORTS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "static", "reports")
 from app.auth import get_current_user, verify_project_access, get_company_membership, require_permission
 from app.models import (
     ClientReport, Project, Task, Bill, WorkOrder,
@@ -151,8 +155,8 @@ def generate_report(
         custom_banner=custom_banner,
     )
 
-    # 7. Save PDF to static files directory
-    reports_dir = os.path.join("static", "reports")
+    # 7. Save PDF to static files directory (absolute, CWD-independent)
+    reports_dir = REPORTS_DIR
     os.makedirs(reports_dir, exist_ok=True)
     pdf_filename = f"{report_id}.pdf"
     pdf_path = os.path.join(reports_dir, pdf_filename)
@@ -213,7 +217,7 @@ def download_report(report_id: uuid.UUID, db: Session = Depends(get_db), current
     get_company_membership(db, current_user, project.company_id)
 
     pdf_filename = f"{report.id}.pdf"
-    pdf_path = os.path.join("static", "reports", pdf_filename)
+    pdf_path = os.path.join(REPORTS_DIR, pdf_filename)
 
     if not os.path.exists(pdf_path):
         raise HTTPException(status_code=404, detail="PDF file not found on server disk")

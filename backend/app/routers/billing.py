@@ -217,14 +217,21 @@ def _sequential_deduction_calc(deductions: List[DeductionItemSchema], base: floa
         first_total += amt
         details.append((d, amt))
 
-    remaining = base - first_total
+    # Clamp `remaining` so over-aggressive fixed-amount deductions in the first
+    # group can never push the second group's base negative (which would produce
+    # a nonsensical negative payable).
+    remaining = max(0.0, base - first_total)
     second_total = 0.0
     for d in second_list:
         amt = _calc(d, remaining)
         second_total += amt
         details.append((d, amt))
 
-    return details, first_total + second_total
+    total_deducted = first_total + second_total
+    # Deductions must never exceed `base`, otherwise a bill's payable amount
+    # could go negative due to overlapping fixed-amount deductions.
+    total_deducted = min(total_deducted, base)
+    return details, total_deducted
 
 
 # 1. Work Orders
@@ -507,6 +514,14 @@ def create_bill(req: BillCreateRequest, db: Session = Depends(get_db), current_u
     verify_project_in_company(db, req.project_id, req.company_id)
     require_permission(db, current_user, req.company_id, "billing:edit")
 
+    # Check if invoice number already exists for company
+    existing = db.query(Bill).filter(
+        Bill.company_id == req.company_id,
+        Bill.invoice_number == req.invoice_number
+    ).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Invoice number already exists for this company")
+
     # Workflow Controls: Entry Controls (creation date window)
     enforce_entry_creation_window(db, req.company_id, req.invoice_date)
 
@@ -665,7 +680,7 @@ def create_debit_note(req: DebitNoteCreateRequest, db: Session = Depends(get_db)
         gst_amount=req.gst_amount,
         bill_id=req.bill_id,
         reference_number=req.reference_number,
-        approval_flag="auto_approved"
+        approval_flag="pending"
     )
     db.add(note)
     db.commit()
