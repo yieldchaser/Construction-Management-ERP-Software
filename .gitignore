@@ -229,3 +229,19 @@ __marimo__/
 # captures, minified JS) used to drive the marketing-site build — not
 # product source, kept locally for reference only.
 onsiteteams-recon/
+
+# Repo hygiene (PROMPT_4): recon/scratch/archive artifacts kept locally only
+test.db
+*.db
+context/
+outputs/
+scratch/
+static/reports/
+backend/test_phase*.db
+To Fix/*.html
+To Fix/*_files/
+To Fix/_prompt_archive/
+
+To Fix/*.png
+temp-stitch/
+backend/1

@@ -29,6 +29,7 @@ interface Bill {
   deductions: Deduction[];
   preTax: boolean;
   status: "approved" | "pending" | "rejected";
+  invoiceType: string | null;
   // Theme B (soft flag): link to an approved ThreeWayMatch.
   matchId: string | null;
   matchStatus: string | null;
@@ -159,6 +160,7 @@ export default function SubcontractorBillingPage() {
             totalPayable: parseFloat(bill.total_payable || 0),
             preTax: bill.is_milestone_fixed_amount,
             status: bill.status === "Unpaid" ? "pending" : (bill.status === "Paid" ? "approved" : "rejected"),
+            invoiceType: bill.invoice_type || null,
             matchId: bill.match_id || null,
             matchStatus: bill.match_status || "unmatched",
             deductions: (bill.deductions || []).map((d: any) => ({
