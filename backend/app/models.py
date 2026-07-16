@@ -1046,6 +1046,7 @@ class CRMLead(Base):
     phone_no = Column(String(20), nullable=False)
     email = Column(String(255), nullable=True)
     client_company_name = Column(String(255), nullable=True)
+    party_id = Column(UUID(as_uuid=True), ForeignKey("library_parties.id", ondelete="SET NULL"), nullable=True)
     address = Column(String, nullable=True)
     source = Column(String(100), nullable=True)
     category = Column(String(100), nullable=True)

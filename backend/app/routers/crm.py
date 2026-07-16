@@ -8,6 +8,7 @@ from app.auth import get_current_user, verify_company_access, get_company_member
 from app.models import (
     CRMLead, CRMQuotation, CRMQuotationItem, Company,
     CRMLeadSource, CRMLeadCategory, CRMLeadStatus, CompanyTeam, User,
+    LibraryParty,
 )
 from app.workflow_controls import get_default_terms
 from pydantic import BaseModel, Field
@@ -17,6 +18,53 @@ router = APIRouter(
     tags=["CRM & Lead Management"],
     dependencies=[Depends(get_current_user)]
 )
+
+WON_STATUSES = {"Won", "Converted"}
+
+
+def _verify_party_in_company(db: Session, party_id: uuid.UUID, comp_uuid: uuid.UUID) -> LibraryParty:
+    party = db.query(LibraryParty).filter(LibraryParty.id == party_id).first()
+    if not party:
+        raise HTTPException(status_code=404, detail="Library party not found")
+    if party.company_id != comp_uuid:
+        raise HTTPException(status_code=400, detail="Library party does not belong to this company")
+    return party
+
+
+def ensure_lead_party(db: Session, lead: CRMLead) -> None:
+    """Idempotently ensure a won lead has a LibraryParty.
+
+    If the lead is Won/Converted and ``party_id`` is still null, create a
+    LibraryParty (name = client_company_name) in the lead's company when one
+    does not already exist for that (company_id, name), then link the lead.
+    """
+    if lead.party_id is not None:
+        return
+    if lead.status not in WON_STATUSES:
+        return
+    if not lead.client_company_name:
+        return
+    existing = (
+        db.query(LibraryParty)
+        .filter(
+            LibraryParty.company_id == lead.company_id,
+            LibraryParty.name == lead.client_company_name,
+        )
+        .first()
+    )
+    party = existing or LibraryParty(
+        id=uuid.uuid4(),
+        company_id=lead.company_id,
+        name=lead.client_company_name,
+        party_type="Client",
+        phone=lead.phone_no,
+        email=lead.email,
+        address=lead.address,
+    )
+    if existing is None:
+        db.add(party)
+        db.flush()
+    lead.party_id = party.id
 
 # Lead Schemas
 class LeadCreateRequest(BaseModel):
@@ -28,6 +76,7 @@ class LeadCreateRequest(BaseModel):
     country_code: Optional[str] = None
     email: Optional[str] = None
     client_company_name: Optional[str] = None
+    party_id: Optional[uuid.UUID] = None
     address: Optional[str] = None
     source: Optional[str] = None
     category: Optional[str] = None
@@ -48,6 +97,7 @@ class LeadUpdateRequest(BaseModel):
     country_code: Optional[str] = None
     email: Optional[str] = None
     client_company_name: Optional[str] = None
+    party_id: Optional[uuid.UUID] = None
     address: Optional[str] = None
     source: Optional[str] = None
     category: Optional[str] = None
@@ -71,6 +121,7 @@ class LeadResponse(BaseModel):
     country_code: Optional[str] = None
     email: Optional[str] = None
     client_company_name: Optional[str] = None
+    party_id: Optional[uuid.UUID] = None
     address: Optional[str] = None
     source: Optional[str] = None
     category: Optional[str] = None
@@ -199,6 +250,7 @@ def create_lead(req: LeadCreateRequest, db: Session = Depends(get_db), current_u
         country_code=req.country_code or "+91",
         email=req.email,
         client_company_name=req.client_company_name,
+        party_id=req.party_id,
         address=req.address,
         source=req.source,
         category=req.category,
@@ -211,6 +263,8 @@ def create_lead(req: LeadCreateRequest, db: Session = Depends(get_db), current_u
         next_follow_up=req.next_follow_up,
         expected_closure=req.expected_closure
     )
+    if req.party_id is not None:
+        _verify_party_in_company(db, req.party_id, comp_uuid)
     db.add(lead)
     db.commit()
     db.refresh(lead)
@@ -254,6 +308,9 @@ def update_lead(lead_id: uuid.UUID, req: LeadUpdateRequest, db: Session = Depend
         lead.email = req.email
     if req.client_company_name is not None:
         lead.client_company_name = req.client_company_name
+    if req.party_id is not None:
+        _verify_party_in_company(db, req.party_id, lead.company_id)
+        lead.party_id = req.party_id
     if req.address is not None:
         lead.address = req.address
     if req.source is not None:
@@ -264,6 +321,8 @@ def update_lead(lead_id: uuid.UUID, req: LeadUpdateRequest, db: Session = Depend
         lead.lead_name = req.lead_name
     if req.last_contacted is not None:
         lead.last_contacted = req.last_contacted
+
+    ensure_lead_party(db, lead)
 
     db.add(lead)
     db.commit()
