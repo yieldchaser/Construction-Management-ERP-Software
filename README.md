@@ -52,13 +52,16 @@ The repo is a monorepo with two independent packages (no workspace linker at the
 ```
 siteflow/
 ├── frontend/                 # Next.js 16 app: console + marketing site + PWA shell
-├── backend/                  # FastAPI app (app/) + tests + scripts + requirements.txt
+├── backend/                  # FastAPI app (app/) + tests (tests/coverage) + requirements.txt
 ├── supabase/
 │   └── migrations/           # Hand-authored, additive SQL migrations (no ORM tool)
-├── onsiteteams-recon/        # Competitor research artifacts (NOT product code)
-├── context/                  # Audit notes, verification scripts, engineering history
-└── static/                   # Generated report artifacts
+├── docs/                     # Reference docs: ROADMAP, parity tasks, security/RBAC design
+└── To Fix/                   # Working specs + archived PROMPT_*.md (local, gitignored)
 ```
+
+Recon/reference material such as `onsiteteams-recon/` (competitor research) and
+generated artifacts under `static/`/`context/` are kept on disk only and excluded
+from version control (see `.gitignore`).
 
 The deployment topology and request flow:
 
@@ -213,11 +216,9 @@ cp ../.env.example .env           # then edit (see Environment variables below)
 uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-The OpenAPI docs are at `http://localhost:8000/docs`. On first run, SQLAlchemy `create_all` builds the SQLite schema (`test.db`). To load demo data (this deletes any existing `test.db`):
+The OpenAPI docs are at `http://localhost:8000/docs`. On first run, SQLAlchemy `create_all` builds the SQLite schema (`test.db`, which is gitignored and generated locally).
 
-```bash
-python scripts/seed_demo_data.py
-```
+Optional demo/seed data: if a `backend/seed_demo_data.py` (or `scripts/seed_demo_data.py`) script is present in your local checkout, run it to populate sample data. The main repo does not ship one by default; create your own fixtures as needed.
 
 ### Frontend
 
