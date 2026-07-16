@@ -29,6 +29,16 @@ interface Bill {
   deductions: Deduction[];
   preTax: boolean;
   status: "approved" | "pending" | "rejected";
+  // Theme B (soft flag): link to an approved ThreeWayMatch.
+  matchId: string | null;
+  matchStatus: string | null;
+}
+
+interface ThreeWayMatchOption {
+  id: string;
+  po_number: string | null;
+  grn_number: string | null;
+  match_status: string;
 }
 
 interface WorkOrder {
@@ -73,6 +83,10 @@ export default function SubcontractorBillingPage() {
   const [workOrders, setWorkOrders] = useState<WorkOrder[]>([]);
   const [bills, setBills] = useState<Bill[]>([]);
   const [notes, setNotes] = useState<DebitCreditNote[]>([]);
+
+  // Theme B (soft flag): per-row match linker state.
+  const [matchOptions, setMatchOptions] = useState<ThreeWayMatchOption[]>([]);
+  const [linkingBillId, setLinkingBillId] = useState<string | null>(null);
 
   // Real subcontractors (no hardcoded demo vendors)
   const [subcontractors, setSubcontractors] = useState<Array<{ company_team_id: string; name: string }>>([]);
@@ -145,6 +159,8 @@ export default function SubcontractorBillingPage() {
             totalPayable: parseFloat(bill.total_payable || 0),
             preTax: bill.is_milestone_fixed_amount,
             status: bill.status === "Unpaid" ? "pending" : (bill.status === "Paid" ? "approved" : "rejected"),
+            matchId: bill.match_id || null,
+            matchStatus: bill.match_status || "unmatched",
             deductions: (bill.deductions || []).map((d: any) => ({
               type: d.deduction_type,
               amount: parseFloat(d.amount || 0),
@@ -402,6 +418,53 @@ export default function SubcontractorBillingPage() {
     }));
   };
 
+  // Theme B (soft flag): open the match picker for a bill — list only APPROVED
+  // ThreeWayMatches for this company/project.
+  const openMatchPicker = async (billId: string) => {
+    setLinkingBillId(billId);
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/three-way/${companyId}?project_id=${projectId}`, { headers: authHeaders() });
+      if (res.ok) {
+        const data = await res.json();
+        const approved = (data || [])
+          .filter((m: any) => m.match_status === "approved")
+          .map((m: any) => ({
+            id: m.id,
+            po_number: m.po_number || null,
+            grn_number: m.grn_number || null,
+            match_status: m.match_status,
+          }));
+        setMatchOptions(approved);
+      }
+    } catch (e) {
+      console.error("Failed to fetch matches", e);
+    }
+  };
+
+  const linkBillMatch = async (billId: string, matchId: string | null) => {
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/billing/bills/${billId}/match`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
+        body: JSON.stringify({ match_id: matchId }),
+      });
+      if (res.ok) {
+        const bill = await res.json();
+        setBills(prev => prev.map(b => b.id === billId
+          ? { ...b, matchId: bill.match_id || null, matchStatus: bill.match_status || "unmatched" }
+          : b));
+      } else {
+        const err = await res.json().catch(() => ({}));
+        alert(err.detail || "Failed to link match");
+      }
+    } catch (e) {
+      console.error("Failed to link match", e);
+    } finally {
+      setLinkingBillId(null);
+      setMatchOptions([]);
+    }
+  };
+
   // Computed KPI cards from the real bills already fetched
   const fmtINR = (n: number): string => {
     if (!n || n <= 0) return "₹0";
@@ -583,13 +646,20 @@ export default function SubcontractorBillingPage() {
                           </td>
                           <td className="px-5 py-3.5 font-extrabold text-foreground">₹{bill.totalPayable.toLocaleString()}</td>
                           <td className="px-5 py-3.5">
-                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                              bill.status === "approved"
-                                ? "bg-green-500/10 text-green-400 border border-green-500/20"
-                                : "bg-amber-500/10 text-amber-400 border border-amber-500/20"
-                            }`}>
-                              {bill.status}
-                            </span>
+                            <div className="flex flex-col gap-1">
+                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                                bill.status === "approved"
+                                  ? "bg-green-500/10 text-green-400 border border-green-500/20"
+                                  : "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                              }`}>
+                                {bill.status}
+                              </span>
+                              {bill.invoiceType !== "sale" && bill.matchStatus !== "approved" && (
+                                <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase bg-red-500/10 text-red-400 border border-red-500/20 w-fit">
+                                  Unmatched
+                                </span>
+                              )}
+                            </div>
                           </td>
                           <td className="px-5 py-3.5 text-right">
                             <div className="flex items-center justify-end gap-2">
@@ -608,6 +678,34 @@ export default function SubcontractorBillingPage() {
                                 >
                                   ✓ Auditor Approve
                                 </button>
+                              )}
+                              <button
+                                onClick={() => openMatchPicker(bill.id)}
+                                className="bg-secondary/10 border border-secondary/20 text-secondary rounded-lg px-2.5 py-1 text-[10px] font-bold hover:bg-secondary/20 transition-all cursor-pointer"
+                              >
+                                {bill.matchStatus === "approved" ? "Re-link Match" : "Link Match"}
+                              </button>
+                              {linkingBillId === bill.id && (
+                                <div className="mt-2 flex items-center gap-2">
+                                  <select
+                                    value={bill.matchId || ""}
+                                    onChange={(e) => linkBillMatch(bill.id, e.target.value || null)}
+                                    className="bg-card border border-border-custom rounded-md px-2 py-1 text-[10px] text-foreground outline-none"
+                                  >
+                                    <option value="">Select approved match…</option>
+                                    {matchOptions.map((m) => (
+                                      <option key={m.id} value={m.id}>
+                                        {m.po_number ? `PO ${m.po_number}` : "PO ?"} · {m.grn_number ? `GRN ${m.grn_number}` : "GRN ?"}
+                                      </option>
+                                    ))}
+                                  </select>
+                                  <button
+                                    onClick={() => { setLinkingBillId(null); setMatchOptions([]); }}
+                                    className="text-muted hover:text-foreground text-[10px] px-1.5 cursor-pointer"
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
                               )}
                             </div>
                           </td>

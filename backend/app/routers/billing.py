@@ -8,7 +8,7 @@ from app.database import get_db
 from app.auth import get_current_user, verify_project_in_company, verify_project_access, verify_company_access, get_company_membership, require_permission, require_module_view
 from app.models import (
     WorkOrder, WorkOrderItem, Bill, TransactionDeduction,
-    DebitNote, CreditNote, CompanyTeam, User, Company, LibraryParty, Project
+    DebitNote, CreditNote, CompanyTeam, User, Company, LibraryParty, Project, ThreeWayMatch
 )
 from app.routers.custom_fields import CustomFieldValueInput, upsert_values_for_entity
 from app.zatca import build_zatca_payload
@@ -90,6 +90,10 @@ class BillCreateRequest(BaseModel):
     ship_to: Optional[str] = None
     boq_document_id: Optional[UUID] = None  # link this bill to a BOQ document (for Billed Value)
     terms: Optional[str] = None  # Terms & Conditions; defaults to company Invoice Terms on create
+    # Theme B (soft flag): optional link to an APPROVED ThreeWayMatch. Ignored for
+    # sale invoices; required to be approved + same company/project when supplied on
+    # purchase/subcon bills (validated in create_bill / PATCH .../match).
+    match_id: Optional[UUID] = None
     # Custom Fields (Settings → Custom Fields, entity_type="invoice"). Populated by the
     # Sales Invoice transaction type on the project Transaction tab; harmless no-op for
     # other invoice_type values that don't render a Custom Fields section.
@@ -126,6 +130,11 @@ class BillResponse(BaseModel):
     payment_ref: Optional[str] = None
     ship_to: Optional[str] = None
     terms: Optional[str] = None
+    # Theme B (soft flag): the linked ThreeWayMatch id, and its status.
+    # match_status is "unmatched" when no approved match is linked, else the
+    # linked match's match_status (e.g. "approved").
+    match_id: Optional[UUID] = None
+    match_status: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -402,6 +411,8 @@ def get_bills(project_id: UUID, invoice_type: Optional[str] = None, db: Session 
                 payment_ref=b.payment_ref,
                 ship_to=b.ship_to,
                 terms=b.terms,
+                match_id=b.match_id,
+                match_status=_derive_bill_match_status(db, b),
             )
         )
     return res
@@ -507,6 +518,39 @@ def get_bill_pdf(bill_id: UUID, db: Session = Depends(get_db), current_user=Depe
     )
 
 
+# --- Theme B (soft flag) helpers: link a Bill to an approved ThreeWayMatch ---
+def _resolve_bill_match_id(db: Session, invoice_type: str, match_id, company_id: UUID, project_id: UUID):
+    """Validate an optional ThreeWayMatch link for a bill.
+
+    - Sale bills are exempt: a supplied match_id is ignored (returns None).
+    - purchase/subcon bills are NOT required to have a match (soft flag).
+    - When match_id IS supplied on purchase/subcon, it must point to an
+      approved match in the same company/project, else 400.
+    Returns the match_id to attach (or None).
+    """
+    if not match_id:
+        return None
+    if invoice_type == "sale":
+        # 3-way matching is a purchase-side control; ignore for sale invoices.
+        return None
+    match = db.query(ThreeWayMatch).filter(ThreeWayMatch.id == match_id).first()
+    if not match:
+        raise HTTPException(status_code=400, detail="Three-way match not found")
+    if match.company_id != company_id or match.project_id != project_id:
+        raise HTTPException(status_code=400, detail="Three-way match does not belong to this company/project")
+    if match.match_status != "approved":
+        raise HTTPException(status_code=400, detail=f"Three-way match is not approved (status: {match.match_status})")
+    return match.id
+
+
+def _derive_bill_match_status(db: Session, bill: Bill) -> Optional[str]:
+    """Return the linked match's match_status, or 'unmatched' when none linked."""
+    if bill.match_id is None:
+        return "unmatched"
+    match = db.query(ThreeWayMatch).filter(ThreeWayMatch.id == bill.match_id).first()
+    return match.match_status if match else "unmatched"
+
+
 @router.post("/bills", response_model=BillResponse, status_code=201)
 def create_bill(req: BillCreateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     # Tenant check: the caller must be a member of the company this bill belongs to.
@@ -521,6 +565,13 @@ def create_bill(req: BillCreateRequest, db: Session = Depends(get_db), current_u
     ).first()
     if existing:
         raise HTTPException(status_code=400, detail="Invoice number already exists for this company")
+
+    # Theme B (soft flag): resolve and validate the optional ThreeWayMatch link.
+    # Returns the (possibly None) match_id to attach, or raises 400. Sale bills are
+    # exempt: a supplied match_id is silently ignored for them. purchase/subcon bills
+    # are NOT blocked when no match is supplied; only an invalid/non-approved/wrong-scope
+    # match_id is rejected.
+    match_id = _resolve_bill_match_id(db, req.invoice_type, req.match_id, req.company_id, req.project_id)
 
     # Workflow Controls: Entry Controls (creation date window)
     enforce_entry_creation_window(db, req.company_id, req.invoice_date)
@@ -570,6 +621,7 @@ def create_bill(req: BillCreateRequest, db: Session = Depends(get_db), current_u
         payment_ref=req.payment_ref,
         ship_to=req.ship_to,
         boq_document_id=req.boq_document_id,
+        match_id=match_id,
         # Settings -> Terms & Conditions -> Invoice Terms (or Subcon Terms for
         # subcon invoices): pre-fill the company default when the caller doesn't
         # supply their own terms. Mirrors the subcon Work Order wiring.
@@ -583,6 +635,14 @@ def create_bill(req: BillCreateRequest, db: Session = Depends(get_db), current_u
     )
     db.add(bill)
     db.flush()
+
+    # Theme B (soft flag): reverse-link the match to this bill (uses the existing
+    # ThreeWayMatch.invoice_id column). Only when a match was actually linked.
+    if match_id is not None:
+        linked_match = db.query(ThreeWayMatch).filter(ThreeWayMatch.id == match_id).first()
+        if linked_match:
+            linked_match.invoice_id = bill.id
+            db.add(linked_match)
 
     upsert_values_for_entity(
         db, req.company_id, "invoice", bill.id,
@@ -638,7 +698,78 @@ def create_bill(req: BillCreateRequest, db: Session = Depends(get_db), current_u
         payment_ref=bill.payment_ref,
         ship_to=bill.ship_to,
         terms=bill.terms,
+        match_id=bill.match_id,
+        match_status=_derive_bill_match_status(db, bill),
     )
+
+
+# Theme B (soft flag): link an existing purchase/subcon bill to an approved ThreeWayMatch.
+class BillMatchLinkRequest(BaseModel):
+    match_id: Optional[UUID] = None
+
+
+@router.patch("/bills/{bill_id}/match", response_model=BillResponse)
+def link_bill_match(bill_id: UUID, req: BillMatchLinkRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    bill = db.query(Bill).filter(Bill.id == bill_id).first()
+    if not bill:
+        raise HTTPException(status_code=404, detail="Bill not found")
+    get_company_membership(db, current_user, bill.company_id)
+    verify_project_in_company(db, bill.project_id, bill.company_id)
+    require_permission(db, current_user, bill.company_id, "billing:edit")
+
+    if bill.invoice_type == "sale":
+        # Sale invoices are exempt from 3-way matching; ignore any supplied match.
+        bill.match_id = None
+    else:
+        match_id = _resolve_bill_match_id(db, bill.invoice_type, req.match_id, bill.company_id, bill.project_id)
+        bill.match_id = match_id
+        if match_id is not None:
+            linked_match = db.query(ThreeWayMatch).filter(ThreeWayMatch.id == match_id).first()
+            if linked_match:
+                linked_match.invoice_id = bill.id
+                db.add(linked_match)
+
+    db.commit()
+    db.refresh(bill)
+
+    deductions = db.query(TransactionDeduction).filter(TransactionDeduction.bill_id == bill.id).all()
+    ded_schemas = [
+        DeductionResponseSchema(
+            id=d.id,
+            deduction_type=d.deduction_type,
+            amount=float(d.amount),
+            percentage=float(d.percentage) if d.percentage else None,
+            notes=d.notes,
+        ) for d in deductions
+    ]
+    return BillResponse(
+        id=bill.id,
+        company_id=bill.company_id,
+        project_id=bill.project_id,
+        party_company_user_id=bill.party_company_user_id,
+        invoice_number=bill.invoice_number,
+        invoice_date=bill.invoice_date,
+        due_date=bill.due_date,
+        invoice_type=bill.invoice_type,
+        status=bill.status,
+        subtotal=float(bill.subtotal),
+        gst_amount=float(bill.gst_amount),
+        total_payable=float(bill.total_payable),
+        paid_amount=float(bill.paid_amount),
+        approval_flag=bill.approval_flag,
+        is_milestone_fixed_amount=bill.is_milestone_fixed_amount,
+        created_at=bill.created_at,
+        deductions=ded_schemas,
+        items_json=bill.items_json,
+        payment_mode=bill.payment_mode,
+        payment_bank_name=bill.payment_bank_name,
+        payment_ref=bill.payment_ref,
+        ship_to=bill.ship_to,
+        terms=bill.terms,
+        match_id=bill.match_id,
+        match_status=_derive_bill_match_status(db, bill),
+    )
+
 
 # 3. Debit Notes
 @router.get("/debit-notes", response_model=List[DebitNoteResponse])
