@@ -43,34 +43,34 @@ export default function BeforeAfterTestimonial({
       </div>
 
       {headlineStat && (
-        <div className="text-2xl font-extrabold text-white leading-tight">{headlineStat}</div>
+        <div className="text-2xl font-extrabold text-foreground leading-tight">{headlineStat}</div>
       )}
 
       <div className="space-y-0.5">
-        <div className="font-semibold text-white">{name}</div>
+        <div className="font-semibold text-foreground">{name}</div>
         <div className="text-xs text-muted">
           {role} &middot; {company} &middot; {city}
         </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="rounded-md border border-border-custom bg-white/[0.01] p-4 space-y-2">
+        <div className="rounded-md bg-elevated p-4 space-y-2">
           <div className="text-xs font-bold uppercase tracking-wider text-muted">Before</div>
           <ul className="space-y-1.5">
             {before.map((b, i) => (
-              <li key={i} className="flex items-start gap-2 text-xs text-zinc-300">
-                <span className="mt-0.5 text-rose-400 font-bold flex-shrink-0">✕</span>
+              <li key={i} className="flex items-start gap-2 text-xs text-muted">
+                <span className="mt-0.5 text-danger font-bold flex-shrink-0">✕</span>
                 <span>{b}</span>
               </li>
             ))}
           </ul>
         </div>
-        <div className="rounded-md border border-primary/30 bg-primary/5 p-4 space-y-2">
+        <div className="rounded-md bg-primary/5 p-4 space-y-2">
           <div className="text-xs font-bold uppercase tracking-wider text-primary">After</div>
           <ul className="space-y-1.5">
             {after.map((a, i) => (
-              <li key={i} className="flex items-start gap-2 text-xs text-zinc-100">
-                <span className="mt-0.5 text-emerald-400 font-bold flex-shrink-0">✓</span>
+              <li key={i} className="flex items-start gap-2 text-xs text-foreground">
+                <span className="mt-0.5 text-success font-bold flex-shrink-0">✓</span>
                 <span>{a}</span>
               </li>
             ))}

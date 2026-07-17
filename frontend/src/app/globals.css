@@ -3228,3 +3228,136 @@ body {
   border-radius: 999px;
   background: var(--primary);
 }
+
+/* ============ Alexandria — marketing editorial theme (scoped) ============ */
+.alexandria {
+  --background: #faf9fa;
+  --foreground: #1b1c1d;
+  --card: #ffffff;
+  --elevated: #f5f3f4;
+  --border: rgba(115, 119, 132, 0.15); /* ghost border, no hard lines */
+  --input: #ffffff;
+  --muted: #434653;
+
+  --primary: #094cb2;
+  --primary-hover: #00419d;
+  --secondary: #5a5f63;
+
+  /* Alexandria-only extensions */
+  --alx-primary-container: #3366cc;
+  --alx-tertiary: #6d5e00;          /* archival gold */
+  --alx-tertiary-container: #f9e37a;
+  --alx-surface-low: #f5f3f4;
+  --alx-surface-dim: #dbdadb;
+  --alx-surface-high: #e9e8e9;
+
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+/* Serif headlines inside marketing */
+.alexandria h1, .alexandria h2, .alexandria h3 {
+  font-family: var(--font-serif), Georgia, serif;
+  letter-spacing: -0.01em;
+}
+
+/* Public Sans metadata labels */
+.alx-label {
+  font-family: var(--font-label), var(--font-sans), sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+}
+
+/* Glassmorphism floating nav (80% opacity + backdrop blur) */
+.alx-glass {
+  background: rgba(250, 249, 250, 0.8);
+  backdrop-filter: blur(20px) saturate(1.1);
+  -webkit-backdrop-filter: blur(20px) saturate(1.1);
+}
+
+/* Gradient primary CTA: primary -> primary-container */
+.alx-cta {
+  background-image: linear-gradient(135deg, var(--primary) 0%, var(--alx-primary-container) 100%);
+  color: #ffffff;
+}
+.alx-cta:hover { filter: brightness(1.06); }
+
+/* Gold badge */
+.alx-badge-gold {
+  color: var(--alx-tertiary);
+  background: rgba(109, 94, 0, 0.10);
+}
+
+/* Archival gold text accent */
+.alx-gold { color: var(--alx-tertiary); }
+
+/* Blue -> gold gradient text, for light-surface rotating headline words */
+.alexandria .alx-text-gradient {
+  background-image: linear-gradient(120deg, var(--primary) 0%, var(--alx-tertiary) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@theme {
+  /* Alexandria (marketing) — static light palette, namespaced so it never
+     collides with the dark console app tokens. */
+  --color-alx-primary: #094cb2;
+  --color-alx-primary-container: #3366cc;
+  --color-alx-on-primary: #ffffff;
+  --color-alx-primary-fixed: #d9e2ff;
+  --color-alx-primary-fixed-dim: #b1c5ff;
+  --color-alx-on-primary-fixed: #001946;
+  --color-alx-on-primary-container: #e7ebff;
+  --color-alx-secondary: #5a5f63;
+  --color-alx-secondary-container: #dfe3e8;
+  --color-alx-on-secondary-container: #606569;
+  --color-alx-tertiary: #6d5e00;
+  --color-alx-tertiary-fixed: #f9e37a;
+  --color-alx-on-tertiary-fixed: #211b00;
+  --color-alx-error-container: #ffdad6;
+  --color-alx-on-error-container: #93000a;
+  --color-alx-surface: #faf9fa;
+  --color-alx-surface-dim: #dbdadb;
+  --color-alx-surface-container-lowest: #ffffff;
+  --color-alx-surface-container-low: #f5f3f4;
+  --color-alx-surface-container: #efedee;
+  --color-alx-surface-container-high: #e9e8e9;
+  --color-alx-surface-container-highest: #e3e2e3;
+  --color-alx-on-surface: #1b1c1d;
+  --color-alx-on-surface-variant: #434653;
+  --color-alx-outline: #737784;
+  --color-alx-outline-variant: #c3c6d5;
+
+  --font-headline: var(--font-serif), Georgia, serif;
+  --font-body: var(--font-sans), system-ui, sans-serif;
+  --font-uilabel: var(--font-label), var(--font-sans), sans-serif;
+}
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+.alx-text-gradient-blue {
+  background: linear-gradient(135deg, #094cb2 0%, #3366cc 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+.alx-bg-gradient-primary { background: linear-gradient(135deg, #094cb2 0%, #3366cc 100%); }
+@keyframes alxfloat { 0%{transform:translateY(0)} 50%{transform:translateY(-12px)} 100%{transform:translateY(0)} }
+.alx-float { animation: alxfloat 6s ease-in-out infinite; }
+.alx-float-delayed { animation: alxfloat 6s ease-in-out 3s infinite; }
+@keyframes alxshimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+.alx-shimmer {
+  background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0) 100%);
+  background-size: 200% 100%; animation: alxshimmer 3s infinite;
+}
+.alx-scroll-fade { opacity: 0; transform: translateY(30px); transition: opacity .8s cubic-bezier(.16,1,.3,1), transform .8s cubic-bezier(.16,1,.3,1); }
+.alx-scroll-fade.is-visible { opacity: 1; transform: translateY(0); }
+.alx-hover-lift { transition: transform .4s cubic-bezier(.16,1,.3,1), box-shadow .4s cubic-bezier(.16,1,.3,1); }
+.alx-hover-lift:hover { transform: translateY(-8px) scale(1.02); box-shadow: 0 25px 50px -12px rgba(9,76,178,.15); }
+@media (prefers-reduced-motion: reduce) {
+  .alx-float, .alx-float-delayed, .alx-shimmer { animation: none; }
+  .alx-scroll-fade { opacity: 1; transform: none; transition: none; }
+}
