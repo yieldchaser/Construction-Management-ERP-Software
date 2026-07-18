@@ -32,17 +32,30 @@ export default async function IntegrationsIndexPage() {
 
   return (
     <MarketingShell>
-      <div className="max-w-5xl mx-auto px-6 pt-4 pb-24">
-        {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-xs text-alx-on-surface-variant pt-4 pb-6">
-          <Link href="/" className="hover:text-alx-primary transition-all">
-            Home
-          </Link>
-          <span>/</span>
-          <span className="text-alx-on-surface-variant">Integrations</span>
-        </div>
+      {/* Hero */}
+      <section className="relative px-6 pt-8 pb-4 overflow-hidden alx-scroll-fade is-visible">
+        <div className="absolute inset-0 z-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-alx-primary-fixed/30 via-alx-surface-container-lowest to-alx-surface-container-lowest pointer-events-none" />
+        <div className="max-w-5xl mx-auto relative z-10">
+          {/* Breadcrumb */}
+          <div className="flex items-center gap-2 text-xs text-alx-on-surface-variant pt-4 pb-6">
+            <Link href="/" className="hover:text-alx-primary transition-all">
+              Home
+            </Link>
+            <span>/</span>
+            <span className="text-alx-on-surface-variant">Integrations</span>
+          </div>
 
-        <main className="bg-alx-surface-container-lowest border border-alx-outline-variant rounded-lg shadow-sm p-8 md:p-12">
+          <span className="alx-label alx-badge-gold inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs mb-4">
+            Connected Systems
+          </span>
+          <h1 className="font-headline text-4xl md:text-5xl font-extrabold tracking-tight text-alx-on-surface leading-tight">
+            Integrations
+          </h1>
+        </div>
+      </section>
+
+      <div className="max-w-5xl mx-auto px-6 pt-4 pb-24">
+        <main className="alx-scroll-fade bg-alx-surface-container-lowest border border-alx-outline-variant rounded-lg shadow-sm p-8 md:p-12">
           {parts.length > 1 ? (
             <>
               <div

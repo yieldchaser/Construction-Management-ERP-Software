@@ -55,15 +55,18 @@ export default function PrivacyPage() {
   return (
     <MarketingShell>
       {/* Page header */}
-      <section className="px-6 pt-8 pb-12 max-w-5xl mx-auto">
-        <div className="max-w-2xl space-y-3">
-          <span className="alx-label alx-badge-gold inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs">
-            Legal
-          </span>
-          <h1 className="font-headline text-4xl md:text-5xl font-extrabold tracking-tight text-alx-on-surface leading-tight">
-            Privacy Policy
-          </h1>
-          <p className="font-body text-sm text-alx-on-surface-variant">Last updated: 01-01-2026</p>
+      <section className="relative px-6 pt-8 pb-12 overflow-hidden alx-scroll-fade is-visible">
+        <div className="absolute inset-0 z-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-alx-primary-fixed/30 via-alx-surface-container-lowest to-alx-surface-container-lowest pointer-events-none" />
+        <div className="max-w-5xl mx-auto relative z-10">
+          <div className="max-w-2xl space-y-3">
+            <span className="alx-label alx-badge-gold inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs">
+              Legal
+            </span>
+            <h1 className="font-headline text-4xl md:text-5xl font-extrabold tracking-tight text-alx-on-surface leading-tight">
+              Privacy Policy
+            </h1>
+            <p className="font-body text-sm text-alx-on-surface-variant">Last updated: 01-01-2026</p>
+          </div>
         </div>
       </section>
 
@@ -71,7 +74,7 @@ export default function PrivacyPage() {
       <section className="px-6 pb-24 max-w-5xl mx-auto">
         <div className="md:grid md:grid-cols-[220px_1fr] md:gap-12">
           <nav className="hidden md:block">
-            <div className="sticky top-32 space-y-1 border-l border-alx-outline-variant/30 pl-4">
+            <div className="sticky top-32 space-y-1 rounded-2xl border-l border-alx-outline-variant/30 bg-alx-surface-container-lowest pl-4 py-4 shadow-md shadow-alx-on-surface/5">
               <p className="font-uilabel text-xs font-semibold uppercase tracking-widest text-alx-on-surface-variant mb-3">
                 On this page
               </p>
@@ -89,7 +92,11 @@ export default function PrivacyPage() {
 
           <div className="max-w-2xl space-y-10">
             {SECTIONS.map((s, i) => (
-              <section key={i} id={slugify(s.title)} className="space-y-3 scroll-mt-32">
+              <section
+                key={i}
+                id={slugify(s.title)}
+                className="space-y-3 scroll-mt-32 alx-scroll-fade"
+              >
                 <h2 className="font-headline text-xl font-bold text-alx-on-surface">{s.title}</h2>
                 <p className="font-body text-sm text-alx-on-surface-variant leading-relaxed">{s.body}</p>
               </section>
