@@ -56,12 +56,15 @@ siteflow/
 ├── supabase/
 │   └── migrations/           # Hand-authored, additive SQL migrations (no ORM tool)
 ├── docs/                     # Reference docs: ROADMAP, parity tasks, security/RBAC design
-└── To Fix/                   # Working specs + archived PROMPT_*.md (local, gitignored)
+└── To Fix/                   # Local working specs; PROMPT_*.md archived under To Fix/_prompt_archive/ (both gitignored)
 ```
 
-Recon/reference material such as `onsiteteams-recon/` (competitor research) and
-generated artifacts under `static/`/`context/` are kept on disk only and excluded
-from version control (see `.gitignore`).
+Recon/reference material such as `onsiteteams-recon/` (competitor research),
+generated artifacts under `static/`/`context/`/`outputs/`/`scratch/`, and the HTML
+captures + screenshots inside `To Fix/` are kept on disk only and excluded from
+version control (see `.gitignore`). The `PROMPT_*.md` working specs are moved into
+`To Fix/_prompt_archive/` (also gitignored) so they stay on disk for reference without
+being committed.
 
 The deployment topology and request flow:
 
