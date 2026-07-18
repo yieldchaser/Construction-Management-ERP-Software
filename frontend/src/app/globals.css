@@ -3371,6 +3371,93 @@ body {
   background-repeat: repeat;
 }
 
+/* ============ Aurora: soft drifting gradient wash for the light marketing
+   surfaces. Three heavily-blurred, low-opacity radial orbs in the
+   Alexandria blue/gold palette, each on its own slow drift keyframe so the
+   composition never feels synchronized or mechanical. Compositor-only
+   (transform), so it stays smooth even on lower-power devices.
+
+   The container intentionally does NOT set `position`; callers position it
+   with Tailwind utilities (`absolute inset-0`, `fixed inset-0 z-0`, etc) via
+   the `className` prop on <Aurora />, exactly like `.alx-grain` above. This
+   keeps positioning free of any custom-CSS-vs-utility cascade fights, since
+   this stylesheet's hand-written rules are unlayered and would otherwise
+   always beat Tailwind's own (layered) utility classes. */
+.alx-aurora {
+  overflow: hidden;
+  pointer-events: none;
+}
+.alx-aurora-orb {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(110px);
+  will-change: transform;
+}
+.alx-aurora-orb-a {
+  top: -12%;
+  left: -10%;
+  width: 46vw;
+  height: 46vw;
+  max-width: 640px;
+  max-height: 640px;
+  background: radial-gradient(circle at 35% 35%, #3366cc, transparent 70%);
+  animation: alx-aurora-drift-a 26s ease-in-out infinite alternate;
+}
+.alx-aurora-orb-b {
+  bottom: -16%;
+  right: -8%;
+  width: 42vw;
+  height: 42vw;
+  max-width: 580px;
+  max-height: 580px;
+  background: radial-gradient(circle at 60% 40%, #094cb2, transparent 70%);
+  animation: alx-aurora-drift-b 30s ease-in-out infinite alternate;
+  animation-delay: -6s;
+}
+.alx-aurora-orb-c {
+  top: 28%;
+  left: 54%;
+  width: 34vw;
+  height: 34vw;
+  max-width: 460px;
+  max-height: 460px;
+  background: radial-gradient(circle at 50% 50%, #bfab49, transparent 72%);
+  animation: alx-aurora-drift-c 22s ease-in-out infinite alternate;
+  animation-delay: -11s;
+}
+
+/* Ambient variant: the whole-site wash behind every marketing page, kept
+   very faint so it reads as gentle color temperature, not decoration. */
+.alx-aurora-ambient .alx-aurora-orb-a,
+.alx-aurora-ambient .alx-aurora-orb-b { opacity: 0.14; }
+.alx-aurora-ambient .alx-aurora-orb-c { opacity: 0.09; }
+
+/* Hero variant: reserved for hero sections, a touch richer since it has
+   more room to breathe behind large headline type and imagery. */
+.alx-aurora-hero .alx-aurora-orb-a,
+.alx-aurora-hero .alx-aurora-orb-b { opacity: 0.3; }
+.alx-aurora-hero .alx-aurora-orb-c { opacity: 0.2; }
+
+@keyframes alx-aurora-drift-a {
+  0%   { transform: translate3d(0, 0, 0) scale(1) rotate(0deg); }
+  50%  { transform: translate3d(4%, 5%, 0) scale(1.08) rotate(6deg); }
+  100% { transform: translate3d(-3%, 3%, 0) scale(1.02) rotate(-4deg); }
+}
+@keyframes alx-aurora-drift-b {
+  0%   { transform: translate3d(0, 0, 0) scale(1) rotate(0deg); }
+  50%  { transform: translate3d(-5%, -4%, 0) scale(1.1) rotate(-5deg); }
+  100% { transform: translate3d(3%, -2%, 0) scale(1.03) rotate(4deg); }
+}
+@keyframes alx-aurora-drift-c {
+  0%   { transform: translate3d(0, 0, 0) scale(1) rotate(0deg); }
+  50%  { transform: translate3d(-4%, 5%, 0) scale(1.06) rotate(5deg); }
+  100% { transform: translate3d(4%, -3%, 0) scale(0.97) rotate(-3deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .alx-aurora-orb { animation: none !important; }
+}
+
 /* ============ Alexandria — light overrides for injected content CSS ============
    .help-article / .product-body / .pw-* / .comparison-article / .calc-prose /
    .ovc-* / owc-/osit- rules below all key off the BASE dark tokens

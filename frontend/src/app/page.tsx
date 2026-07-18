@@ -7,6 +7,7 @@ import MockupFrame from "@/components/marketing/MockupFrame";
 import Icon from "@/components/marketing/Icon";
 import TypewriterText from "@/components/marketing/TypewriterText";
 import CountUp from "@/components/marketing/CountUp";
+import Aurora from "@/components/marketing/Aurora";
 
 export default function LandingPage() {
   useEffect(() => {
@@ -36,6 +37,7 @@ export default function LandingPage() {
         <div className="absolute inset-0 z-0 pointer-events-none">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-alx-primary-fixed/30 via-alx-surface-container-lowest to-alx-surface-container-lowest" />
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,_var(--tw-gradient-stops))] from-alx-tertiary-fixed/15 via-transparent to-transparent" />
+          <Aurora variant="hero" className="absolute inset-0" />
         </div>
         <div className="alx-grain absolute inset-0 z-0" aria-hidden="true" />
         <div className="max-w-5xl mx-auto text-center relative z-10">
