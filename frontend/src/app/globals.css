@@ -3361,3 +3361,44 @@ body {
   .alx-float, .alx-float-delayed, .alx-shimmer { animation: none; }
   .alx-scroll-fade { opacity: 1; transform: none; transition: none; }
 }
+
+/* ============ Alexandria — light overrides for injected content CSS ============
+   .help-article / .product-body / .pw-* / .comparison-article / .calc-prose /
+   .ovc-* / owc-/osit- rules below all key off the BASE dark tokens
+   (var(--foreground), --muted, --card, --border, --background, --input,
+   --elevated, --me/--me-soft/--me-line, --them/--them-soft, --primary,
+   --primary-hover). Re-pin those tokens to the Alexandria light palette here,
+   scoped to `.alexandria`, so any dangerouslySetInnerHTML content rendered
+   inside a MarketingShell page reads light instead of inheriting the dark
+   console :root values. This block must come after the `.alexandria` block
+   above so it wins the cascade. Additive only — does not touch the console
+   app, which never carries the `.alexandria` class. */
+.alexandria {
+  --background: #faf9fa;
+  --foreground: #1b1c1d;
+  --muted: #4a4455;
+  --card: #ffffff;
+  --elevated: #f5f3f4;
+  --input: #ffffff;
+  --border: #d8d6d9;
+  --primary: #094cb2;
+  --primary-hover: #063a8a;
+  --me: #094cb2;
+  --me-soft: #e7edfb;
+  --me-line: #c9d8f5;
+  --them: #4a4455;
+  --them-soft: #ececef;
+}
+
+/* CTA buttons inside light-shell articles must be real primary buttons,
+   not the light-neutralized surface the dark-era palette override forces. */
+.alexandria .help-article a.wp-block-button__link,
+.alexandria .help-article .wp-block-button__link {
+  background-color: var(--primary) !important;
+  color: #ffffff !important;
+  border-color: var(--primary) !important;
+}
+.alexandria .help-article a.wp-block-button__link:hover,
+.alexandria .help-article .wp-block-button__link:hover {
+  background-color: var(--primary-hover) !important;
+}

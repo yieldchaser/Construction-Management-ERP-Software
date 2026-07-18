@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getContentItemBySlug, getContentItems } from "@/lib/content";
 import { Metadata } from "next";
+import MarketingShell from "@/components/marketing/MarketingShell";
 
 interface RouteParams {
   params: Promise<{
@@ -37,51 +38,17 @@ export default async function ProductFeaturePage({ params }: RouteParams) {
   const otherProducts = allProducts.filter((p) => p.slug !== slug);
 
   return (
-      <div className="min-h-screen bg-background text-foreground pb-12 relative">
-      {/* Background Glow */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute top-[-10%] right-[-10%] h-[40vw] w-[40vw] rounded-full bg-primary opacity-5 blur-[120px]" />
-        <div className="absolute bottom-[-10%] left-[-10%] h-[40vw] w-[40vw] rounded-full bg-primary opacity-5 blur-[120px]" />
-      </div>
-
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-card border border-border-custom rounded-lg border-b border-border-custom px-6 py-4 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary font-sans font-bold text-white shadow-md">
-            S
-          </div>
-          <span className="text-lg font-bold tracking-tight text-foreground">
-            Site<span className="text-primary">Flow</span> Platform
-          </span>
-        </Link>
-        <div className="flex shrink-0 items-center gap-4 whitespace-nowrap">
-          <Link
-            href="/help"
-            className="text-sm font-semibold text-muted hover:text-foreground transition-all"
-          >
-            Help Center
-          </Link>
-          <span className="text-border-custom">|</span>
-          <Link
-            href="/blog"
-            className="text-sm font-semibold text-muted hover:text-foreground transition-all"
-          >
-            Blog
-          </Link>
-        </div>
-      </header>
-
-      {/* Content Area */}
-      <div className="max-w-6xl mx-auto px-6 pt-12 pb-8">
+    <MarketingShell>
+      <div className="max-w-6xl mx-auto px-6 pt-4 pb-24">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Main Body */}
           <main className="lg:col-span-3 space-y-8">
-            <div className="bg-card border border-border-custom rounded-lg shadow-sm rounded-md p-8 md:p-12 border border-border-custom space-y-6">
-              <div className="space-y-4 border-b border-border-custom pb-6">
-                <span className="inline-block text-xs font-semibold text-primary px-2.5 py-1 rounded bg-primary/10 uppercase tracking-wider">
+            <div className="bg-alx-surface-container-lowest border border-alx-outline-variant rounded-lg shadow-sm p-8 md:p-12 space-y-6">
+              <div className="space-y-4 border-b border-alx-outline-variant pb-6">
+                <span className="alx-label inline-block text-xs font-semibold text-alx-primary px-2.5 py-1 rounded bg-alx-primary-fixed/40">
                   Product Modules
                 </span>
-                <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-foreground leading-tight">
+                <h1 className="font-headline text-3xl md:text-4xl font-extrabold tracking-tight text-alx-on-surface leading-tight">
                   {article.title}
                 </h1>
               </div>
@@ -101,8 +68,8 @@ export default async function ProductFeaturePage({ params }: RouteParams) {
 
           {/* Sidebar */}
           <aside className="lg:col-span-1 space-y-6">
-            <div className="bg-card border border-border-custom rounded-lg rounded-lg p-5 border border-border-custom space-y-4">
-              <h3 className="text-xs font-bold text-muted uppercase tracking-widest border-b border-border-custom pb-2">
+            <div className="bg-alx-surface-container-lowest border border-alx-outline-variant rounded-lg p-5 space-y-4">
+              <h3 className="alx-label text-xs font-bold text-alx-on-surface-variant border-b border-alx-outline-variant pb-2">
                 Other Modules
               </h3>
               <div className="space-y-3">
@@ -110,7 +77,7 @@ export default async function ProductFeaturePage({ params }: RouteParams) {
                   <Link
                     key={idx}
                     href={`/products/${p.slug}`}
-                    className="block text-xs text-muted hover:text-primary transition-all truncate cursor-pointer"
+                    className="block text-xs text-alx-on-surface-variant hover:text-alx-primary transition-all truncate cursor-pointer"
                   >
                     🏗️ {p.title}
                   </Link>
@@ -120,6 +87,6 @@ export default async function ProductFeaturePage({ params }: RouteParams) {
           </aside>
         </div>
       </div>
-    </div>
+    </MarketingShell>
   );
 }
