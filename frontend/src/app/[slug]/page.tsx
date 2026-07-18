@@ -17,7 +17,7 @@ interface RouteParams {
 // Pages that have dedicated routes — skip generic rendering
 const SKIP_SLUGS = new Set([
   "blog", "help", "products", "resources", "login",
-  "terms", "privacy", "career",
+  "terms", "privacy", "career", "who-we-serve",
   "index", "webapp-home", "webapp-login",
 ]);
 
