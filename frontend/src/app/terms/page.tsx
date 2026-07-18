@@ -3,7 +3,7 @@
    jurisdiction New Delhi, India, effective date 01-01-2026. A formal
    registered legal entity name and address can be substituted for
    "SiteFlow" here once incorporated. */
-import Link from "next/link";
+import MarketingShell from "@/components/marketing/MarketingShell";
 
 const SECTIONS = [
   {
@@ -56,88 +56,56 @@ const SECTIONS = [
   },
 ];
 
+function slugify(title: string) {
+  return title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+}
+
 export default function TermsPage() {
   return (
-    <div className="min-h-screen bg-background text-foreground overflow-x-hidden relative">
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute top-[-10%] right-[-10%] h-[50vw] w-[50vw] rounded-full bg-primary opacity-5 blur-[120px]" />
-        <div className="absolute bottom-[-10%] left-[-10%] h-[50vw] w-[50vw] rounded-full bg-primary opacity-5 blur-[120px]" />
-      </div>
-
-      {/* Navigation Header */}
-      <header className="sticky top-0 z-50 bg-card border border-border-custom rounded-lg border-b border-border-custom px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-md bg-gradient-to-tr bg-primary font-sans font-bold text-white shadow-md">
-            S
-          </div>
-          <span className="text-lg font-bold tracking-tight text-white">
-            Site<span className="text-primary">Flow</span>
+    <MarketingShell>
+      {/* Page header */}
+      <section className="px-6 pt-8 pb-12 max-w-5xl mx-auto">
+        <div className="max-w-2xl space-y-3">
+          <span className="alx-label alx-badge-gold inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs">
+            Legal
           </span>
+          <h1 className="font-headline text-4xl md:text-5xl font-extrabold tracking-tight text-alx-on-surface leading-tight">
+            Terms of Service
+          </h1>
+          <p className="font-body text-sm text-alx-on-surface-variant">Last updated: 01-01-2026</p>
         </div>
-
-        <nav className="hidden lg:flex items-center gap-6">
-          <Link href="/products" className="text-sm text-muted hover:text-foreground transition-all">Products</Link>
-          <Link href="/about" className="text-sm text-muted hover:text-foreground transition-all">About</Link>
-          <Link href="/resources" className="text-sm text-muted hover:text-foreground transition-all">Resources</Link>
-          <Link href="/blog" className="text-sm text-muted hover:text-foreground transition-all">Blog</Link>
-          <Link href="/SiteFlow-pricing" className="text-sm text-muted hover:text-foreground transition-all">Pricing</Link>
-          <Link href="/contact" className="text-sm text-muted hover:text-foreground transition-all">Contact</Link>
-        </nav>
-
-        <div className="flex items-center gap-3">
-          <Link
-            href="/help"
-            className="hidden md:flex items-center justify-center rounded-md bg-white/[0.03] border border-border-custom px-4 py-2 text-sm font-semibold hover:bg-primary/10 hover:border-white/20 transition-all cursor-pointer"
-          >
-            Help
-          </Link>
-          <Link
-            href="/login"
-            className="flex items-center justify-center rounded-md bg-white/[0.03] border border-border-custom px-4 py-2 text-sm font-semibold hover:bg-primary/10 hover:border-white/20 transition-all cursor-pointer"
-          >
-            Log In
-          </Link>
-          <Link
-            href="/login"
-            className="flex items-center justify-center rounded-md bg-primary px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-primary/10 hover:opacity-90 active:scale-[0.98] transition-all cursor-pointer"
-          >
-            Free Trial
-          </Link>
-        </div>
-      </header>
-
-      {/* Content */}
-      <section className="relative px-6 py-16 max-w-3xl mx-auto space-y-10">
-        <div className="space-y-2">
-          <h1 className="text-4xl md:text-5xl font-extrabold text-white">Terms of Service</h1>
-          <p className="text-xs text-muted">Last updated: 01-01-2026</p>
-        </div>
-
-        {SECTIONS.map((s, i) => (
-          <section key={i} className="space-y-3">
-            <h2 className="text-xl font-bold text-white">{s.title}</h2>
-            <p className="text-sm text-muted leading-relaxed">{s.body}</p>
-          </section>
-        ))}
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-border-custom py-8 text-muted">
-        <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-xs">
-            SiteFlow is a site operations platform. All product logos are property of their respective owners.
-          </p>
-          <div className="flex items-center flex-wrap gap-x-6 gap-y-2 text-xs">
-            <Link href="/blog" className="hover:text-muted transition-all whitespace-nowrap">Blog</Link>
-            <Link href="/help" className="hover:text-muted transition-all whitespace-nowrap">Help Center</Link>
-            <Link href="/resources/construction-terms-meanings" className="hover:text-muted transition-all whitespace-nowrap">Glossary</Link>
-            <Link href="/resources/construction-calculators" className="hover:text-muted transition-all whitespace-nowrap">Calculators</Link>
-            <Link href="/who-we-serve" className="hover:text-muted transition-all whitespace-nowrap">Who We Serve</Link>
-            <Link href="/terms" className="hover:text-muted transition-all whitespace-nowrap">Terms</Link>
-            <Link href="/privacy" className="hover:text-muted transition-all whitespace-nowrap">Privacy</Link>
+      {/* Content with table of contents */}
+      <section className="px-6 pb-24 max-w-5xl mx-auto">
+        <div className="md:grid md:grid-cols-[220px_1fr] md:gap-12">
+          <nav className="hidden md:block">
+            <div className="sticky top-32 space-y-1 border-l border-alx-outline-variant/30 pl-4">
+              <p className="font-uilabel text-xs font-semibold uppercase tracking-widest text-alx-on-surface-variant mb-3">
+                On this page
+              </p>
+              {SECTIONS.map((s, i) => (
+                <a
+                  key={i}
+                  href={`#${slugify(s.title)}`}
+                  className="block text-sm text-alx-on-surface-variant hover:text-alx-primary transition-colors py-1"
+                >
+                  {s.title}
+                </a>
+              ))}
+            </div>
+          </nav>
+
+          <div className="max-w-2xl space-y-10">
+            {SECTIONS.map((s, i) => (
+              <section key={i} id={slugify(s.title)} className="space-y-3 scroll-mt-32">
+                <h2 className="font-headline text-xl font-bold text-alx-on-surface">{s.title}</h2>
+                <p className="font-body text-sm text-alx-on-surface-variant leading-relaxed">{s.body}</p>
+              </section>
+            ))}
           </div>
         </div>
-      </footer>
-    </div>
+      </section>
+    </MarketingShell>
   );
 }
