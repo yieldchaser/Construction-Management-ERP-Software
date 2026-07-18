@@ -1,4 +1,4 @@
-type MockupVariant = "procurement" | "mobile" | "finance" | "planning";
+type MockupVariant = "procurement" | "mobile" | "finance" | "planning" | "hero";
 
 function NavItem({ label, active }: { label: string; active?: boolean }) {
   return (
@@ -386,6 +386,116 @@ function MobileBody() {
   );
 }
 
+function HeroBody() {
+  const kpis: { label: string; value: string; tone: "primary" | "gold" | "neutral" }[] = [
+    { label: "Budget", value: "₹4.2Cr", tone: "primary" },
+    { label: "% Complete", value: "68%", tone: "gold" },
+    { label: "Open RFIs", value: "12", tone: "neutral" },
+    { label: "Cash Position", value: "₹1.9Cr", tone: "primary" },
+  ];
+  const rows = [
+    { project: "Riverside Tower — Site A", stage: "RCC Frame", tone: "primary" as const, pct: "68%" },
+    { project: "Orchid Business Park", stage: "Finishing", tone: "gold" as const, pct: "84%" },
+    { project: "Konkan Coastal Villas", stage: "Foundation", tone: "primary" as const, pct: "22%" },
+    { project: "Metro Link Phase 2", stage: "On Hold", tone: "error" as const, pct: "41%" },
+  ];
+  // Burn-down: planned vs actual, plotted across a 320x96 chart area.
+  const planned = [92, 78, 66, 52, 40, 26, 12];
+  const actual = [92, 84, 70, 58, 48, 34, 22];
+  const toPoints = (series: number[]) =>
+    series
+      .map((v, i) => `${(i / (series.length - 1)) * 320},${96 - (v / 100) * 96}`)
+      .join(" ");
+  return (
+    <div className="flex h-full bg-alx-surface-container-lowest">
+      <div className="flex w-[17%] flex-col gap-1 border-r border-alx-outline-variant/20 bg-alx-surface-container-low p-2.5">
+        <div className="mb-1 flex items-center gap-1.5">
+          <span className="h-3.5 w-3.5 rounded-md bg-alx-primary" />
+          <span className="text-[8px] font-bold text-alx-on-surface">SiteFlow</span>
+        </div>
+        <NavItem label="Dashboard" active />
+        <NavItem label="Planning" />
+        <NavItem label="Procurement" />
+        <NavItem label="BOQ" />
+        <NavItem label="Finance" />
+        <NavItem label="DPR" />
+        <NavItem label="Labour" />
+      </div>
+      <div className="flex flex-1 flex-col">
+        <div className="flex items-center justify-between border-b border-alx-outline-variant/20 px-3 py-2">
+          <div>
+            <p className="text-[6px] font-medium uppercase tracking-wide text-alx-on-surface-variant">Project</p>
+            <p className="text-[8.5px] font-semibold text-alx-on-surface">Riverside Tower — Site A</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 rounded-full bg-alx-surface-container-high px-2 py-1 text-[6.5px] text-alx-on-surface-variant">
+              <span className="h-1.5 w-1.5 rounded-full bg-alx-outline-variant" />
+              Search
+            </div>
+            <span className="h-4.5 w-4.5 rounded-full bg-alx-primary-fixed" />
+          </div>
+        </div>
+        <div className="grid grid-cols-4 gap-1.5 px-3 pt-2.5">
+          {kpis.map((kpi) => (
+            <KpiTile key={kpi.label} label={kpi.label} value={kpi.value} tone={kpi.tone} />
+          ))}
+        </div>
+        <div className="mx-3 mt-2.5 flex flex-1 flex-col gap-1 rounded-lg bg-alx-surface-container-low p-2">
+          <div className="flex items-center justify-between">
+            <p className="text-[6.5px] font-semibold uppercase tracking-wide text-alx-on-surface-variant">
+              Burn-down
+            </p>
+            <div className="flex gap-1.5">
+              <span className="flex items-center gap-1 text-[6px] text-alx-on-surface-variant">
+                <span className="h-1.5 w-1.5 rounded-full bg-alx-outline-variant" /> Planned
+              </span>
+              <span className="flex items-center gap-1 text-[6px] text-alx-on-surface-variant">
+                <span className="h-1.5 w-1.5 rounded-full bg-alx-primary" /> Actual
+              </span>
+            </div>
+          </div>
+          <svg viewBox="0 0 320 96" preserveAspectRatio="none" className="h-16 w-full">
+            <line x1="0" y1="0" x2="0" y2="96" className="stroke-alx-outline-variant/40" strokeWidth="1" />
+            <line x1="0" y1="96" x2="320" y2="96" className="stroke-alx-outline-variant/40" strokeWidth="1" />
+            <polyline
+              points={toPoints(planned)}
+              fill="none"
+              className="stroke-alx-outline-variant"
+              strokeWidth="2"
+              strokeDasharray="4 3"
+            />
+            <polyline points={toPoints(actual)} fill="none" className="stroke-alx-primary" strokeWidth="2.5" />
+            {actual.map((v, i) => (
+              <circle
+                key={i}
+                cx={(i / (actual.length - 1)) * 320}
+                cy={96 - (v / 100) * 96}
+                r="2.6"
+                className="fill-alx-primary"
+              />
+            ))}
+          </svg>
+        </div>
+        <div className="mx-3 my-2.5 flex flex-1 flex-col gap-1 overflow-hidden rounded-lg bg-alx-surface-container-low p-1.5">
+          {rows.map((row) => (
+            <div
+              key={row.project}
+              className="flex items-center justify-between rounded-md bg-alx-surface-container-lowest px-1.5 py-1"
+            >
+              <span className="truncate text-[7px] font-medium text-alx-on-surface">{row.project}</span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[6.5px] text-alx-on-surface-variant">{row.stage}</span>
+                <span className="text-[6.5px] font-semibold text-alx-on-surface">{row.pct}</span>
+                <StatusChip label={row.stage === "On Hold" ? "On Hold" : "Active"} tone={row.tone} />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function MockupFrame({ variant = "procurement" }: { variant?: MockupVariant }) {
   return (
     <div className="rounded-xl bg-alx-surface-container-lowest shadow-xl shadow-alx-on-surface/5 overflow-hidden aspect-[16/10]">
@@ -399,6 +509,7 @@ export default function MockupFrame({ variant = "procurement" }: { variant?: Moc
         {variant === "mobile" && <MobileBody />}
         {variant === "finance" && <FinanceBody />}
         {variant === "planning" && <PlanningBody />}
+        {variant === "hero" && <HeroBody />}
       </div>
     </div>
   );

@@ -5,6 +5,7 @@ import Link from "next/link";
 import MarketingShell from "@/components/marketing/MarketingShell";
 import MockupFrame from "@/components/marketing/MockupFrame";
 import Icon from "@/components/marketing/Icon";
+import TypewriterText from "@/components/marketing/TypewriterText";
 
 export default function LandingPage() {
   useEffect(() => {
@@ -31,11 +32,18 @@ export default function LandingPage() {
     <MarketingShell>
       {/* 1. Symmetrical Hero */}
       <section className="relative pt-20 pb-32 px-6 overflow-hidden alx-scroll-fade is-visible">
-        <div className="absolute inset-0 z-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-alx-primary-fixed/30 via-alx-surface-container-lowest to-alx-surface-container-lowest pointer-events-none" />
+        <div className="absolute inset-0 z-0 pointer-events-none">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-alx-primary-fixed/30 via-alx-surface-container-lowest to-alx-surface-container-lowest" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,_var(--tw-gradient-stops))] from-alx-tertiary-fixed/15 via-transparent to-transparent" />
+        </div>
+        <div className="alx-grain absolute inset-0 z-0" aria-hidden="true" />
         <div className="max-w-5xl mx-auto text-center relative z-10">
           <h1 className="font-headline text-5xl md:text-7xl font-extrabold text-alx-on-surface leading-tight tracking-tight mb-8">
             Run every project from <br />
-            <span className="alx-text-gradient-blue">one ledger.</span>
+            <TypewriterText
+              phrases={["one ledger.", "one dashboard.", "one record.", "one workspace."]}
+              className="alx-text-gradient-blue"
+            />
           </h1>
           <p className="font-body text-xl text-alx-on-surface-variant max-w-2xl mx-auto mb-12 leading-relaxed">
             SiteFlow brings planning, daily progress, procurement, and project finance into one
@@ -44,10 +52,13 @@ export default function LandingPage() {
           <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-20">
             <Link
               href="/login"
-              className="alx-bg-gradient-primary text-alx-on-primary px-8 py-4 rounded-full font-uilabel text-base font-bold tracking-wide hover:shadow-xl hover:shadow-alx-primary/30 transition-all active:scale-95 w-full sm:w-auto relative overflow-hidden group"
+              className="relative w-full sm:w-auto group"
             >
-              <span className="relative z-10">Start Free Trial</span>
-              <div className="absolute inset-0 alx-shimmer opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <span className="absolute -inset-3 rounded-full bg-alx-primary/30 blur-2xl opacity-70 group-hover:opacity-100 transition-opacity duration-300 -z-10" />
+              <span className="alx-bg-gradient-primary text-alx-on-primary px-8 py-4 rounded-full font-uilabel text-base font-bold tracking-wide hover:shadow-xl hover:shadow-alx-primary/30 transition-all active:scale-95 w-full sm:w-auto relative overflow-hidden flex items-center justify-center">
+                <span className="relative z-10">Start Free Trial</span>
+                <div className="absolute inset-0 alx-shimmer opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              </span>
             </Link>
             <Link
               href="/products"
@@ -59,11 +70,9 @@ export default function LandingPage() {
           </div>
           <div className="relative max-w-6xl mx-auto transform hover:-translate-y-2 transition-transform duration-700 ease-out alx-hover-lift">
             <div className="absolute inset-0 bg-alx-primary/5 blur-3xl rounded-[3rem] -z-10 transform scale-95 translate-y-8" />
-            <img
-              className="w-full h-auto rounded-xl shadow-2xl shadow-alx-on-surface/5 alx-float"
-              alt="SiteFlow project dashboard"
-              src="/marketing/landing/hero-dashboard.jpg"
-            />
+            <div className="alx-float rounded-xl shadow-2xl shadow-alx-on-surface/10 [box-shadow:0_25px_60px_-15px_rgba(9,76,178,0.25),0_10px_20px_-8px_rgba(27,28,29,0.12)]">
+              <MockupFrame variant="hero" />
+            </div>
           </div>
         </div>
       </section>
