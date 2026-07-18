@@ -99,10 +99,10 @@ export function IntegrationsGridClient() {
             placeholder="Search integrations (Tally, WhatsApp, Zoho...)"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full px-5 py-4 pl-12 rounded-lg bg-elevated border border-border-custom text-white placeholder-zinc-500 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all text-base shadow-lg"
+            className="w-full px-5 py-4 pl-12 rounded-lg bg-alx-surface-container-lowest border border-alx-outline-variant/40 text-alx-on-surface placeholder-alx-on-surface-variant/60 focus:outline-none focus:border-alx-primary focus:ring-1 focus:ring-alx-primary/20 transition-all text-base shadow-sm"
           />
           <svg
-            className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted"
+            className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-alx-on-surface-variant"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -117,7 +117,7 @@ export function IntegrationsGridClient() {
           {search && (
             <button
               onClick={() => setSearch("")}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-muted hover:text-foreground transition-all cursor-pointer"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-alx-on-surface-variant hover:text-alx-primary transition-all cursor-pointer"
             >
               Clear
             </button>
@@ -132,8 +132,8 @@ export function IntegrationsGridClient() {
               onClick={() => setActiveCategory(cat)}
               className={`px-4 py-2 rounded-md text-xs font-bold transition-all border cursor-pointer ${
                 activeCategory === cat
-                  ? "bg-primary border-primary text-white shadow-lg shadow-primary/25"
-                  : "bg-elevated border-border-custom text-muted hover:text-foreground hover:border-border-custom"
+                  ? "bg-alx-primary border-alx-primary text-alx-on-primary shadow-sm"
+                  : "bg-alx-surface-container border-alx-outline-variant/40 text-alx-on-surface-variant hover:text-alx-on-surface hover:border-alx-outline-variant"
               }`}
             >
               {cat}
@@ -147,41 +147,41 @@ export function IntegrationsGridClient() {
         {filtered.map((item, idx) => (
           <div
             key={idx}
-            className="rounded-lg bg-card border border-border-custom rounded-lg p-6 border border-border-custom flex flex-col justify-between hover:border-border-custom hover:shadow-lg transition-all group"
+            className="alx-hover-lift rounded-lg bg-alx-surface-container-lowest border border-alx-outline-variant/40 shadow-sm p-6 flex flex-col justify-between group"
           >
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-3xl p-2.5 rounded-md bg-white/[0.03] border border-border-custom">
+                <span className="text-3xl p-2.5 rounded-md bg-alx-surface-container border border-alx-outline-variant/40">
                   {item.icon}
                 </span>
                 <span
                   className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${
                     item.status === "active"
-                      ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                      : "bg-primary/10 text-primary border border-primary/10"
+                      ? "bg-emerald-100 text-emerald-700 border border-emerald-200"
+                      : "bg-alx-tertiary-fixed/50 text-alx-tertiary border border-alx-tertiary/20"
                   }`}
                 >
                   {item.status === "active" ? "Active" : "Planned"}
                 </span>
               </div>
               <div>
-                <h3 className="text-lg font-bold text-white group-hover:text-primary transition-all">
+                <h3 className="font-headline text-lg font-semibold text-alx-on-surface group-hover:text-alx-primary transition-all">
                   {item.name}
                 </h3>
-                <span className="text-[10px] text-muted uppercase tracking-widest block mt-0.5">
+                <span className="text-[10px] text-alx-on-surface-variant uppercase tracking-widest block mt-0.5">
                   {item.category}
                 </span>
               </div>
-              <p className="text-muted text-xs leading-relaxed line-clamp-3">
+              <p className="text-alx-on-surface-variant text-xs leading-relaxed line-clamp-3">
                 {item.desc}
               </p>
             </div>
 
-            <div className="mt-6 pt-4 border-t border-border-custom flex items-center justify-end">
+            <div className="mt-6 pt-4 border-t border-alx-outline-variant/40 flex items-center justify-end">
               {item.status === "active" && item.link ? (
                 <Link
                   href={item.link}
-                  className="text-xs font-bold text-primary hover:text-foreground transition-all cursor-pointer"
+                  className="text-xs font-bold text-alx-primary hover:text-alx-on-surface transition-all cursor-pointer"
                 >
                   Configure Integration &rarr;
                 </Link>
@@ -191,8 +191,8 @@ export function IntegrationsGridClient() {
                   disabled={requested.has(item.name)}
                   className={`text-xs font-bold transition-all cursor-pointer ${
                     requested.has(item.name)
-                      ? "text-emerald-400"
-                      : "text-muted hover:text-foreground"
+                      ? "text-emerald-600"
+                      : "text-alx-on-surface-variant hover:text-alx-primary"
                   }`}
                 >
                   {requested.has(item.name) ? "Requested ✓" : "Request early access →"}
@@ -203,10 +203,10 @@ export function IntegrationsGridClient() {
         ))}
 
         {filtered.length === 0 && (
-          <div className="col-span-full text-center py-12 bg-card border border-border-custom rounded-lg rounded-lg border border-border-custom">
+          <div className="col-span-full text-center py-12 bg-alx-surface-container-lowest border border-alx-outline-variant/40 rounded-lg shadow-sm">
             <span className="text-3xl">🔌</span>
-            <h3 className="text-lg font-bold text-white mt-3">No integrations found</h3>
-            <p className="text-muted text-sm mt-1">
+            <h3 className="font-headline text-lg font-semibold text-alx-on-surface mt-3">No integrations found</h3>
+            <p className="text-alx-on-surface-variant text-sm mt-1">
               Try choosing another category or clearing your search query.
             </p>
           </div>
