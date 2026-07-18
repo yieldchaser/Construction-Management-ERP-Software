@@ -1,4 +1,4 @@
-type MockupVariant = "procurement" | "mobile" | "finance";
+type MockupVariant = "procurement" | "mobile" | "finance" | "planning";
 
 function NavItem({ label, active }: { label: string; active?: boolean }) {
   return (
@@ -181,6 +181,98 @@ function FinanceBody() {
   );
 }
 
+function PlanningBody() {
+  const months = ["Feb", "Mar", "Apr", "May", "Jun", "Jul"];
+  const rows = [
+    { task: "Excavation", left: 2, width: 12, tone: "primary" as const, pct: "100%" },
+    { task: "Foundation", left: 10, width: 16, tone: "primary" as const, pct: "100%" },
+    { task: "RCC Frame", left: 22, width: 30, tone: "critical" as const, pct: "68%" },
+    { task: "Brickwork", left: 40, width: 22, tone: "tertiary" as const, pct: "34%" },
+    { task: "MEP Rough-in", left: 52, width: 24, tone: "tertiary" as const, pct: "12%" },
+    { task: "Finishing", left: 70, width: 26, tone: "neutral" as const, pct: "0%" },
+  ];
+  const barTone: Record<string, string> = {
+    primary: "bg-alx-primary",
+    critical: "bg-alx-on-error-container",
+    tertiary: "bg-alx-tertiary-fixed",
+    neutral: "bg-alx-outline-variant",
+  };
+  return (
+    <div className="flex h-full bg-alx-surface-container-lowest">
+      <div className="flex w-[26%] flex-col border-r border-alx-outline-variant/20 bg-alx-surface-container-low">
+        <div className="flex items-center justify-between border-b border-alx-outline-variant/20 px-2.5 py-2">
+          <span className="text-[8px] font-semibold text-alx-on-surface">WBS Schedule</span>
+          <span className="rounded-full bg-alx-error-container px-1.5 py-0.5 text-[6px] font-semibold text-alx-on-error-container">
+            Critical
+          </span>
+        </div>
+        <div className="flex flex-1 flex-col">
+          {rows.map((row) => (
+            <div
+              key={row.task}
+              className="flex flex-1 items-center justify-between border-b border-alx-outline-variant/10 px-2.5"
+            >
+              <span className="truncate text-[6.5px] font-medium text-alx-on-surface">{row.task}</span>
+              <span className="text-[6px] text-alx-on-surface-variant">{row.pct}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="relative flex flex-1 flex-col">
+        <div className="flex items-center border-b border-alx-outline-variant/20 bg-alx-surface-container-lowest px-2 py-2">
+          {months.map((month) => (
+            <span
+              key={month}
+              className="flex-1 text-center text-[6.5px] font-medium uppercase tracking-wide text-alx-on-surface-variant"
+            >
+              {month}
+            </span>
+          ))}
+        </div>
+        <div className="relative flex flex-1 flex-col">
+          {rows.map((row, i) => (
+            <div key={row.task} className="relative flex flex-1 items-center border-b border-alx-outline-variant/10">
+              {i === 2 && (
+                <div
+                  className="absolute top-1 h-1 rounded-full bg-alx-outline-variant/60"
+                  style={{ left: `${row.left}%`, width: `${row.width}%` }}
+                />
+              )}
+              <div
+                className={`absolute h-3 rounded-md shadow-sm shadow-alx-on-surface/10 ${barTone[row.tone]}`}
+                style={{ left: `${row.left}%`, width: `${row.width}%` }}
+              />
+              {i === 1 && (
+                <span
+                  className="absolute h-2.5 w-2.5 rotate-45 rounded-[2px] bg-alx-tertiary-fixed shadow-sm shadow-alx-on-surface/10"
+                  style={{ left: `calc(${row.left + row.width}% - 5px)` }}
+                />
+              )}
+              {i === 4 && (
+                <span
+                  className="absolute h-2.5 w-2.5 rotate-45 rounded-[2px] bg-alx-primary shadow-sm shadow-alx-on-surface/10"
+                  style={{ left: `calc(${row.left + row.width}% - 5px)` }}
+                />
+              )}
+            </div>
+          ))}
+        </div>
+        <div className="flex items-center gap-3 border-t border-alx-outline-variant/20 bg-alx-surface-container-low px-2.5 py-1.5">
+          <span className="flex items-center gap-1 text-[6px] text-alx-on-surface-variant">
+            <span className="h-1.5 w-1.5 rounded-sm bg-alx-primary" /> On track
+          </span>
+          <span className="flex items-center gap-1 text-[6px] text-alx-on-surface-variant">
+            <span className="h-1.5 w-1.5 rounded-sm bg-alx-on-error-container" /> Critical path
+          </span>
+          <span className="flex items-center gap-1 text-[6px] text-alx-on-surface-variant">
+            <span className="h-1.5 w-1.5 rounded-sm bg-alx-outline-variant/60" /> Baseline
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ProgressRing({ pct }: { pct: number }) {
   const radius = 15.5;
   const circumference = 2 * Math.PI * radius;
@@ -306,6 +398,7 @@ export default function MockupFrame({ variant = "procurement" }: { variant?: Moc
         {variant === "procurement" && <ProcurementBody />}
         {variant === "mobile" && <MobileBody />}
         {variant === "finance" && <FinanceBody />}
+        {variant === "planning" && <PlanningBody />}
       </div>
     </div>
   );

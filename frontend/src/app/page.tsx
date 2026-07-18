@@ -114,11 +114,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center alx-scroll-fade">
           <div className="order-2 lg:order-1 relative group alx-hover-lift">
             <div className="absolute inset-0 bg-alx-primary-fixed/20 blur-3xl rounded-[3rem] -z-10 group-hover:bg-alx-primary-fixed/30 transition-colors duration-500" />
-            <img
-              className="w-full h-auto rounded-xl shadow-xl shadow-alx-on-surface/5 alx-float-delayed"
-              alt="SiteFlow Gantt chart and task scheduling interface"
-              src="/marketing/landing/hero-dashboard.jpg"
-            />
+            <MockupFrame variant="planning" />
           </div>
           <div className="order-1 lg:order-2 space-y-6">
             <div className="inline-flex items-center justify-center p-3 bg-alx-primary-fixed rounded-xl mb-4 text-alx-primary">
