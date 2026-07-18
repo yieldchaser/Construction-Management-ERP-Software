@@ -2,6 +2,7 @@ import React from "react";
 import Link from "next/link";
 import { getContentItems } from "@/lib/content";
 import { Metadata } from "next";
+import MarketingShell from "@/components/marketing/MarketingShell";
 
 export const metadata: Metadata = {
   title: "SiteFlow Platform - Construction ERP Modules",
@@ -160,81 +161,52 @@ export default async function ProductsIndexPage() {
   const products = await getContentItems("products");
 
   return (
-    <div className="min-h-screen bg-background text-foreground pb-20 relative">
-      {/* Background glow */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute top-[-10%] right-[-10%] h-[50vw] w-[50vw] rounded-full bg-primary opacity-5 blur-[120px]" />
-        <div className="absolute bottom-[-10%] left-[-10%] h-[50vw] w-[50vw] rounded-full bg-primary opacity-5 blur-[120px]" />
-      </div>
-
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-card border border-border-custom rounded-lg border-b border-border-custom px-6 py-4 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-md bg-gradient-to-tr bg-primary font-sans font-bold text-white shadow-md">
-            S
-          </div>
-          <span className="text-lg font-bold tracking-tight text-white">
-            Site<span className="text-primary">Flow</span> Platform
-          </span>
-        </Link>
-        <div className="flex shrink-0 items-center gap-4 whitespace-nowrap">
-          <Link
-            href="/blog"
-            className="text-sm font-semibold text-muted hover:text-foreground transition-all"
-          >
-            Blog
-          </Link>
-          <span className="text-zinc-700">|</span>
-          <Link
-            href="/help"
-            className="text-sm font-semibold text-muted hover:text-foreground transition-all"
-          >
-            Help Center
-          </Link>
-        </div>
-      </header>
-
+    <MarketingShell>
       {/* Hero */}
-      <section className="relative px-6 py-16 text-center max-w-4xl mx-auto space-y-6">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-4 py-1.5 text-xs font-semibold text-primary border border-primary/20">
-          <ProductIcon name="layers" className="h-3.5 w-3.5" />
-          Full-Suite Platform
-        </span>
-        <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-white leading-tight">
-          SiteFlow ERP Modules
-        </h1>
-        <p className="text-muted text-sm max-w-xl mx-auto">
-          Every module in the SiteFlow platform is designed for real-world
-          construction operations, not adapted from a generic enterprise
-          template.
-        </p>
+      <section className="relative px-6 pt-16 pb-20 text-center overflow-hidden">
+        <div className="absolute inset-0 z-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-alx-primary-fixed/30 via-alx-surface-container-lowest to-alx-surface-container-lowest pointer-events-none" />
+        <div className="max-w-4xl mx-auto relative z-10 space-y-6">
+          <span className="alx-label alx-badge-gold inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs">
+            <ProductIcon name="layers" className="h-3.5 w-3.5" />
+            Full-Suite Platform
+          </span>
+          <h1 className="font-headline text-4xl md:text-5xl font-extrabold tracking-tight text-alx-on-surface leading-tight">
+            SiteFlow ERP Modules
+          </h1>
+          <p className="font-body text-alx-on-surface-variant text-base md:text-lg max-w-xl mx-auto leading-relaxed">
+            Every module in the SiteFlow platform is designed for real-world
+            construction operations, not adapted from a generic enterprise
+            template. All 16 modules share one workspace, from planning to
+            final invoice.
+          </p>
+        </div>
       </section>
 
       {/* Product Cards Grid */}
-      <section className="max-w-6xl mx-auto px-6">
+      <section className="max-w-6xl mx-auto px-6 pb-24">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {products.map((product, idx) => (
             <article
               key={idx}
-              className="rounded-lg bg-card border border-border-custom rounded-lg p-6 flex flex-col justify-between hover:border-border-custom hover:shadow-lg transition-all group border border-border-custom"
+              className="rounded-2xl bg-alx-surface-container-lowest p-6 flex flex-col justify-between shadow-xl shadow-alx-on-surface/5 alx-hover-lift transition-all group"
             >
               <div className="space-y-3">
-                <div className="inline-flex h-11 w-11 items-center justify-center rounded-lg bg-primary/10 border border-primary/20 text-primary">
+                <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-alx-primary-fixed text-alx-primary">
                   <ProductIcon name={pickProductIcon(product.slug)} className="h-[22px] w-[22px]" />
                 </div>
-                <h2 className="text-base font-extrabold text-white group-hover:text-primary transition-all line-clamp-2 leading-snug">
+                <h2 className="font-headline text-base font-extrabold text-alx-on-surface group-hover:text-alx-primary transition-all line-clamp-2 leading-snug">
                   <Link href={`/products/${product.slug}`} className="cursor-pointer">
                     {product.title}
                   </Link>
                 </h2>
-                <p className="text-muted text-xs leading-relaxed line-clamp-3">
+                <p className="font-body text-alx-on-surface-variant text-xs leading-relaxed line-clamp-3">
                   {product.metaDescription}
                 </p>
               </div>
-              <div className="pt-4 mt-6 border-t border-border-custom flex items-center justify-end">
+              <div className="pt-4 mt-6 border-t border-alx-outline-variant/15 flex items-center justify-end">
                 <Link
                   href={`/products/${product.slug}`}
-                  className="text-xs font-bold text-primary hover:text-foreground transition-all cursor-pointer"
+                  className="font-uilabel text-xs font-bold text-alx-primary hover:text-alx-on-surface transition-all cursor-pointer"
                 >
                   Explore Module →
                 </Link>
@@ -243,6 +215,6 @@ export default async function ProductsIndexPage() {
           ))}
         </div>
       </section>
-    </div>
+    </MarketingShell>
   );
 }
