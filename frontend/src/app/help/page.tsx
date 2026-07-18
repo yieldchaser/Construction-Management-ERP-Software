@@ -1,7 +1,8 @@
 import React from "react";
-import Link from "next/link";
 import { getContentItems, ContentItem } from "@/lib/content";
 import { HelpSearchClient } from "./HelpSearchClient";
+import MarketingShell from "@/components/marketing/MarketingShell";
+import Aurora from "@/components/marketing/Aurora";
 
 const CATEGORY_META: Record<string, { title: string; desc: string; icon: string }> = {
   "getting-started": {
@@ -110,46 +111,26 @@ export default async function HelpCenterPage() {
   );
 
   return (
-    <div className="min-h-screen bg-background text-foreground pb-20 relative">
-      {/* Background glow elements */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute top-[-10%] right-[-10%] h-[50vw] w-[50vw] rounded-full bg-primary opacity-5 blur-[120px]" />
-        <div className="absolute bottom-[-10%] left-[-10%] h-[50vw] w-[50vw] rounded-full bg-primary opacity-5 blur-[120px]" />
-      </div>
-
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-card border-b border-border-custom px-6 py-4 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary font-sans font-bold text-white shadow-md">
-            S
-          </div>
-          <span className="text-lg font-bold tracking-tight text-foreground">
-            Site<span className="text-primary">Flow</span> Help
-          </span>
-        </Link>
-        <Link
-          href="/"
-          className="text-sm font-semibold text-muted hover:text-foreground transition-all"
-        >
-          Back to Main Site
-        </Link>
-      </header>
-
+    <MarketingShell>
       {/* Hero Header */}
-      <section className="relative px-6 py-16 text-center max-w-4xl mx-auto space-y-6">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-4 py-1.5 text-xs font-semibold text-primary border border-primary/20">
-          📖 SiteFlow Knowledge Base
-        </span>
-        <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-foreground leading-tight">
-          How can we help you today?
-        </h1>
-        <p className="text-muted text-sm max-w-xl mx-auto">
-          Search detailed guides, tutorials, and operational workflows for SiteFlow modules.
-        </p>
+      <section className="relative px-6 pt-16 pb-16 text-center overflow-hidden alx-scroll-fade">
+        <div className="absolute inset-0 z-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-alx-primary-fixed/30 via-alx-surface-container-lowest to-alx-surface-container-lowest pointer-events-none" />
+        <Aurora variant="hero" className="absolute inset-0" />
+        <div className="max-w-4xl mx-auto relative z-10 space-y-6">
+          <span className="alx-label alx-badge-gold inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs">
+            📖 SiteFlow Knowledge Base
+          </span>
+          <h1 className="font-headline text-4xl md:text-5xl font-extrabold tracking-tight text-alx-on-surface leading-tight">
+            How can we help you today?
+          </h1>
+          <p className="font-body text-alx-on-surface-variant text-sm md:text-base max-w-xl mx-auto leading-relaxed">
+            Search detailed guides, tutorials, and operational workflows for SiteFlow modules.
+          </p>
+        </div>
       </section>
 
       {/* Interactive Search Area */}
-      <section className="max-w-5xl mx-auto px-6">
+      <section className="max-w-5xl mx-auto px-6 pb-24 alx-scroll-fade">
         <HelpSearchClient
           helpItems={helpItems}
           categories={categories}
@@ -157,6 +138,6 @@ export default async function HelpCenterPage() {
           activeCategories={activeCategories}
         />
       </section>
-    </div>
+    </MarketingShell>
   );
 }

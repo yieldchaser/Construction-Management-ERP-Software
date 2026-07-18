@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import Icon from "./Icon";
 
 const NAV_LINKS = [
@@ -13,19 +14,37 @@ const NAV_LINKS = [
 
 export default function SiteHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const pathname = usePathname();
 
   const closeMenu = () => setMenuOpen(false);
 
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 10);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  const isActive = (href: string) => pathname === href || pathname?.startsWith(`${href}/`);
+
   return (
-    <header className="fixed top-0 w-full z-50 bg-alx-surface-container-lowest/80 backdrop-blur-xl shadow-sm transition-all duration-300">
+    <header
+      className={`fixed top-0 w-full z-50 backdrop-blur-md border-b transition-all duration-300 ${
+        scrolled
+          ? "bg-alx-surface-container-lowest/95 border-alx-outline-variant/40 shadow-lg shadow-alx-on-surface/5"
+          : "bg-alx-surface-container-lowest/80 border-alx-outline-variant/40 shadow-none"
+      }`}
+    >
       <div className="flex justify-between items-center px-8 py-4 max-w-7xl mx-auto">
         <Link className="flex items-center gap-2 group" href="/" onClick={closeMenu}>
           <Icon
             name="architecture"
             className="w-8 h-8 text-alx-primary group-hover:scale-110 transition-transform"
           />
-          <span className="font-headline text-2xl font-bold text-alx-primary tracking-tight">
-            SiteFlow
+          <span className="font-headline text-2xl font-bold tracking-tight">
+            <span className="text-alx-on-surface">Site</span>
+            <span className="text-alx-primary">Flow</span>
           </span>
         </Link>
 
@@ -34,9 +53,19 @@ export default function SiteHeader() {
             <Link
               key={link.href}
               href={link.href}
-              className="font-uilabel text-sm tracking-wide uppercase text-alx-on-surface-variant hover:text-alx-primary transition-colors"
+              aria-current={isActive(link.href) ? "page" : undefined}
+              className={`group relative py-1 font-uilabel text-sm tracking-wide uppercase transition-colors ${
+                isActive(link.href)
+                  ? "text-alx-primary"
+                  : "text-alx-on-surface-variant hover:text-alx-primary"
+              }`}
             >
               {link.label}
+              <span
+                className={`absolute -bottom-1 left-0 h-px bg-alx-primary transition-all duration-300 ${
+                  isActive(link.href) ? "w-full" : "w-0 group-hover:w-full"
+                }`}
+              />
             </Link>
           ))}
         </nav>
@@ -61,7 +90,7 @@ export default function SiteHeader() {
             aria-label="Toggle navigation menu"
             aria-expanded={menuOpen}
             onClick={() => setMenuOpen((open) => !open)}
-            className="md:hidden flex h-10 w-10 items-center justify-center rounded-lg bg-alx-surface-container-high text-alx-on-surface"
+            className="md:hidden flex h-10 w-10 items-center justify-center rounded-lg bg-alx-surface-container-high text-alx-on-surface hover:text-alx-primary transition-colors"
           >
             <Icon name={menuOpen ? "close" : "menu"} className="w-6 h-6" />
           </button>
@@ -69,14 +98,19 @@ export default function SiteHeader() {
       </div>
 
       {menuOpen && (
-        <div className="md:hidden bg-alx-surface-container-lowest/95 backdrop-blur-xl px-8 pb-6">
-          <nav className="flex flex-col gap-1">
+        <div className="md:hidden bg-alx-surface-container-lowest/95 backdrop-blur-xl border-t border-alx-outline-variant/40 shadow-lg shadow-alx-on-surface/5 px-8 pb-6">
+          <nav className="flex flex-col gap-1 pt-2">
             {NAV_LINKS.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
                 onClick={closeMenu}
-                className="rounded-lg px-3 py-2.5 font-uilabel text-sm tracking-wide uppercase text-alx-on-surface-variant hover:text-alx-primary hover:bg-alx-surface-container-high transition-colors"
+                aria-current={isActive(link.href) ? "page" : undefined}
+                className={`rounded-lg px-3 py-2.5 font-uilabel text-sm tracking-wide uppercase transition-colors ${
+                  isActive(link.href)
+                    ? "text-alx-primary bg-alx-surface-container-high"
+                    : "text-alx-on-surface-variant hover:text-alx-primary hover:bg-alx-surface-container-high"
+                }`}
               >
                 {link.label}
               </Link>

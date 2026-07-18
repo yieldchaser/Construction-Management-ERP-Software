@@ -1,160 +1,261 @@
 import React from "react";
 import Link from "next/link";
-import { getContentItems } from "@/lib/content";
+import { getContentItems, ContentItem } from "@/lib/content";
+import { Metadata } from "next";
+import MarketingShell from "@/components/marketing/MarketingShell";
+import BlogIndexClient, { BlogCategory, BlogPostView } from "./BlogIndexClient";
+import Aurora from "@/components/marketing/Aurora";
 
-export const metadata = {
-  title: "Blog - SiteFlow Construction Insights",
-  description: "Read the latest tips, guides, and trends in construction management, project scheduling, and site budget control.",
+export const metadata: Metadata = {
+  title: "SiteFlow Insights - Construction Management Blog",
+  description:
+    "Deep-dive analysis, technical briefings, and operational guides for the modern construction enterprise, written by the SiteFlow team.",
 };
+
+// Deterministic topic classifier. SiteFlow's raw blog content has no
+// `category` field (all null), so instead of fabricating one we derive an
+// honest editorial tag from each post's real title/slug text, the same
+// pattern already used on /resources and /products.
+const CATEGORY_RULES: { label: BlogCategory; keywords: string[] }[] = [
+  {
+    label: "Financial Ledger",
+    keywords: [
+      "budget", "cost", "invoic", "cashflow", "cash-flow", "accounting", "financ",
+      "tax", "gst", "payment", "billing", "profit", "expense", "boq", "estimat",
+    ],
+  },
+  {
+    label: "Procurement & Materials",
+    keywords: [
+      "material", "inventory", "procurement", "warehouse", "supply", "equipment",
+      "vendor", "wastage", "rfq", "purchase",
+    ],
+  },
+  {
+    label: "Compliance & Workforce",
+    keywords: [
+      "labour", "labor", "worker", "compliance", "insolvency", "contract",
+      "subcontractor", "hr ", "payroll", "attendance", "safety", "legal",
+    ],
+  },
+  {
+    label: "Technology",
+    keywords: [
+      "software", "app ", "app-", "digital", "automation", "robot", "ai ",
+      "erp", "tech", "tool", "whatsapp", "excel", "mobile",
+    ],
+  },
+  {
+    label: "Site Execution",
+    keywords: [
+      "site", "dpr", "field", "construction-project", "schedule", "planning",
+      "quality", "execution", "progress", "gantt", "timeline", "soil",
+    ],
+  },
+];
+
+function classifyPost(title: string, slug: string): BlogCategory {
+  const haystack = `${title} ${slug}`.toLowerCase();
+  for (const rule of CATEGORY_RULES) {
+    if (rule.keywords.some((kw) => haystack.includes(kw))) {
+      return rule.label;
+    }
+  }
+  return "Insights";
+}
+
+// Rough, honest reading-time estimate from the real post body (HTML tags
+// stripped, ~200 words/min). No invented numbers.
+function estimateMinRead(body: string): number | null {
+  if (!body) return null;
+  const text = body.replace(/<[^>]*>/g, " ").replace(/&[a-z]+;/gi, " ");
+  const words = text.split(/\s+/).filter(Boolean).length;
+  if (words === 0) return null;
+  return Math.max(1, Math.round(words / 200));
+}
+
+function toPostView(item: ContentItem): BlogPostView {
+  return {
+    slug: item.slug,
+    title: item.title.replace(/\s*\|\s*SiteFlow.*$/i, "").trim() || item.title,
+    excerpt: item.metaDescription,
+    author: item.author,
+    publishDate: item.publishDate,
+    category: classifyPost(item.title, item.slug),
+    minRead: estimateMinRead(item.body),
+  };
+}
 
 export default async function BlogIndexPage() {
   const posts = await getContentItems("blog");
-  const featuredPost = posts[0];
-  const remainingPosts = posts.slice(1);
+  const postViews = posts.map(toPostView);
+
+  const featuredPost = postViews[0];
+  const latestBriefing = postViews[1];
+  const industryPulse = postViews[2];
+  const gridPosts = postViews.slice(3);
+
+  const categories = Array.from(new Set(postViews.map((p) => p.category)));
+  const totalArticles = postViews.length;
 
   return (
-    <div className="min-h-screen bg-background text-foreground pb-20 relative">
-      {/* Background glow elements */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute top-[-10%] right-[-10%] h-[50vw] w-[50vw] rounded-full bg-primary opacity-5 blur-[120px]" />
-        <div className="absolute bottom-[-10%] left-[-10%] h-[50vw] w-[50vw] rounded-full bg-primary opacity-5 blur-[120px]" />
-      </div>
-
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-card border border-border-custom rounded-lg border-b border-border-custom px-6 py-4 flex items-center justify-between">
-        <Link href="/blog" className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-md bg-gradient-to-tr bg-primary font-sans font-bold text-white shadow-md">
-            S
-          </div>
-          <span className="text-lg font-bold tracking-tight text-white">
-            Site<span className="text-primary">Flow</span> Blog
-          </span>
-        </Link>
-        <div className="flex shrink-0 items-center gap-4 whitespace-nowrap">
-          <Link
-            href="/help"
-            className="text-sm font-semibold text-muted hover:text-foreground transition-all"
-          >
-            Help Center
-          </Link>
-          <span className="text-zinc-700">|</span>
-          <Link
-            href="/"
-            className="text-sm font-semibold text-muted hover:text-foreground transition-all"
-          >
-            Launch Console
-          </Link>
+    <MarketingShell>
+      {/* 1. Master hero + digest panel */}
+      <section className="relative overflow-hidden max-w-6xl mx-auto px-6 pt-10 pb-12 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start alx-scroll-fade">
+        <Aurora variant="hero" className="absolute inset-0" />
+        <div className="lg:col-span-7 space-y-5 relative z-10">
+          <nav className="flex items-center gap-1.5 font-uilabel text-[11px] uppercase tracking-widest text-alx-outline">
+            <span>Resources</span>
+            <span className="text-alx-outline-variant">/</span>
+            <span className="text-alx-primary font-bold">SiteFlow Insights</span>
+          </nav>
+          <h1 className="font-headline text-4xl md:text-6xl font-extrabold tracking-tight text-alx-on-surface leading-tight">
+            SiteFlow <span className="italic text-alx-primary">Insights</span>
+          </h1>
+          <p className="font-body text-alx-on-surface-variant text-base md:text-lg max-w-xl leading-relaxed">
+            Deep-dive analysis, technical briefings, and operational guides for
+            the modern construction enterprise. We translate real site
+            workflows into actionable strategy for project leads.
+          </p>
         </div>
-      </header>
-
-      {/* Hero Header */}
-      <section className="relative px-6 py-16 text-center max-w-4xl mx-auto space-y-6">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary/10 px-4 py-1.5 text-xs font-semibold text-secondary border border-secondary/20">
-          📰 Industry Insights & Operations
-        </span>
-        <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-white leading-tight">
-          SiteFlow Construction Blog
-        </h1>
-        <p className="text-muted text-sm max-w-xl mx-auto">
-          Operational blueprints, field management strategies, and building calculators compiled by civil engineering leaders.
-        </p>
+        <div className="lg:col-span-5 relative z-10">
+          <div className="rounded-2xl bg-alx-surface-container-lowest border border-alx-outline-variant/15 p-6 shadow-xl shadow-alx-on-surface/5">
+            <div className="flex items-center justify-between mb-4">
+              <span className="font-uilabel text-[11px] font-bold uppercase tracking-widest text-alx-primary">
+                Insights Archive
+              </span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} className="h-5 w-5 text-alx-primary" aria-hidden="true">
+                <path d="M3 3v18h18" />
+                <path d="M8 18v-6M13 18V8M18 18v-9" />
+              </svg>
+            </div>
+            <div className="rounded-xl bg-alx-primary-fixed px-6 py-8 mb-4 flex flex-col items-center justify-center gap-1 text-center">
+              <span className="font-headline text-4xl font-extrabold text-alx-primary">{totalArticles}</span>
+              <span className="font-uilabel text-[11px] uppercase tracking-widest text-alx-on-primary-fixed/70">
+                Articles Published
+              </span>
+            </div>
+            <p className="font-body text-xs text-alx-on-surface-variant text-center leading-relaxed">
+              Written by the SiteFlow operations and editorial teams across{" "}
+              {categories.length} coverage areas, from financial controls to
+              site execution.
+            </p>
+          </div>
+        </div>
       </section>
 
-      {/* Featured Post Card */}
-      {featuredPost && (
-        <section className="max-w-6xl mx-auto px-6 mb-12">
-          <div className="border border-border-custom rounded-md overflow-hidden bg-card border border-border-custom rounded-lg shadow-sm grid grid-cols-1 lg:grid-cols-2 group hover:border-border-custom transition-all">
-            <div className="p-8 md:p-12 flex flex-col justify-between space-y-6 lg:border-r lg:border-border-custom">
-              <div className="space-y-4">
-                <div className="flex items-center gap-3 text-xs text-muted">
-                  <span className="text-xs font-semibold text-primary px-2 py-0.5 rounded bg-primary/10">
-                    Featured
-                  </span>
-                  <span>•</span>
-                  <span>
-                    {new Date(featuredPost.publishDate).toLocaleDateString("en-US", {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                    })}
-                  </span>
-                </div>
-                <h2 className="text-2xl md:text-3xl font-extrabold text-white group-hover:text-primary transition-all leading-snug">
-                  <Link href={`/blog/${featuredPost.slug}`} className="cursor-pointer">
-                    {featuredPost.title}
-                  </Link>
-                </h2>
-                <p className="text-sm text-muted leading-relaxed line-clamp-3">
-                  {featuredPost.metaDescription}
-                </p>
-              </div>
-              <div className="flex items-center justify-between pt-4 border-t border-border-custom">
-                <span className="text-xs text-muted">By {featuredPost.author}</span>
-                <Link
-                  href={`/blog/${featuredPost.slug}`}
-                  className="text-xs font-bold text-secondary hover:text-foreground transition-all flex items-center gap-1 group-link cursor-pointer"
-                >
-                  Read Article
-                  <span className="group-hover:translate-x-0.5 transition-transform">
-                    →
-                  </span>
-                </Link>
-              </div>
-            </div>
-            {/* Visual Block */}
-            <div className="h-64 lg:h-auto bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center p-12 relative">
-              <div className="absolute inset-0 bg-background/40 backdrop-blur-[2px]" />
-              <div className="relative text-center space-y-2">
-                <span className="text-5xl">🏗️</span>
-                <h3 className="font-extrabold text-white text-lg tracking-tight">SiteFlow Operations</h3>
-                <p className="text-[10px] text-muted uppercase tracking-widest">Enterprise Builders Toolkit</p>
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* Grid List of Remaining Posts */}
-      <section className="max-w-6xl mx-auto px-6">
-        <h3 className="text-lg font-extrabold text-white mb-6 pb-2 border-b border-border-custom">
-          All Articles
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {remainingPosts.map((post, idx) => (
-            <article
-              key={idx}
-              className="rounded-lg bg-card border border-border-custom rounded-lg p-6 flex flex-col justify-between hover:border-border-custom hover:shadow-lg transition-all group"
+      {/* 2. Featured spotlight + latest / pulse */}
+      <section className="max-w-6xl mx-auto px-6 pb-12 grid grid-cols-1 lg:grid-cols-12 gap-6 alx-scroll-fade">
+        {featuredPost && (
+          <div className="lg:col-span-8">
+            <Link
+              href={`/blog/${featuredPost.slug}`}
+              className="group relative rounded-2xl overflow-hidden bg-alx-surface-container-lowest shadow-xl shadow-alx-on-surface/5 alx-hover-lift transition-all h-full flex flex-col justify-end min-h-[22rem] p-8 md:p-10 cursor-pointer"
+              style={{
+                backgroundImage:
+                  "linear-gradient(135deg, var(--color-alx-primary) 0%, var(--color-alx-primary-container) 55%, var(--color-alx-tertiary) 130%)",
+              }}
             >
-              <div className="space-y-4">
-                <div className="text-[10px] text-muted font-semibold uppercase tracking-wider">
-                  {new Date(post.publishDate).toLocaleDateString("en-US", {
-                    year: "numeric",
-                    month: "short",
-                    day: "numeric",
-                  })}
-                </div>
-                <h4 className="text-base font-extrabold text-white group-hover:text-primary transition-all line-clamp-2 leading-snug">
-                  <Link href={`/blog/${post.slug}`} className="cursor-pointer">
-                    {post.title}
-                  </Link>
-                </h4>
-                <p className="text-muted text-xs leading-relaxed line-clamp-3">
-                  {post.metaDescription}
+              <span className="alx-label inline-flex w-fit items-center rounded-full bg-white/15 text-white px-3 py-1 text-[11px] mb-4">
+                Featured Report
+              </span>
+              <h2 className="font-headline text-2xl md:text-3xl font-extrabold text-white leading-tight mb-3 max-w-xl">
+                {featuredPost.title}
+              </h2>
+              <p className="font-body text-white/85 text-sm md:text-base max-w-lg mb-5 line-clamp-2">
+                {featuredPost.excerpt}
+              </p>
+              <span className="font-uilabel text-sm font-bold text-white inline-flex items-center gap-1.5">
+                Read Full Briefing
+                <span className="group-hover:translate-x-0.5 transition-transform">→</span>
+              </span>
+            </Link>
+          </div>
+        )}
+        <div className="lg:col-span-4 flex flex-col gap-6">
+          {latestBriefing && (
+            <Link
+              href={`/blog/${latestBriefing.slug}`}
+              className="group rounded-2xl bg-alx-surface-container-lowest p-6 flex-1 flex flex-col justify-between shadow-xl shadow-alx-on-surface/5 alx-hover-lift transition-all cursor-pointer"
+            >
+              <div>
+                <span className="font-uilabel text-[11px] font-bold uppercase tracking-widest text-alx-primary block mb-2">
+                  Latest Briefing
+                </span>
+                <h3 className="font-headline text-base font-extrabold text-alx-on-surface group-hover:text-alx-primary transition-all leading-snug mb-2 line-clamp-2">
+                  {latestBriefing.title}
+                </h3>
+                <p className="font-body text-xs text-alx-on-surface-variant leading-relaxed line-clamp-3">
+                  {latestBriefing.excerpt}
                 </p>
               </div>
-              <div className="pt-4 mt-6 border-t border-border-custom flex items-center justify-between">
-                <span className="text-[10px] text-muted">By {post.author}</span>
-                <Link
-                  href={`/blog/${post.slug}`}
-                  className="text-xs font-bold text-secondary hover:text-foreground transition-all cursor-pointer"
-                >
-                  Read →
-                </Link>
+              <div className="pt-4 mt-4 border-t border-alx-outline-variant/15 flex items-center justify-between">
+                <span className="font-uilabel text-[11px] text-alx-outline">
+                  {latestBriefing.minRead ? `${latestBriefing.minRead} min read` : "Quick read"}
+                </span>
+                <span className="text-alx-primary group-hover:translate-x-0.5 transition-transform">→</span>
               </div>
-            </article>
-          ))}
+            </Link>
+          )}
+          {industryPulse && (
+            <Link
+              href={`/blog/${industryPulse.slug}`}
+              className="group rounded-2xl bg-alx-surface-container-lowest p-6 flex-1 flex flex-col justify-between shadow-xl shadow-alx-on-surface/5 alx-hover-lift transition-all cursor-pointer"
+            >
+              <div>
+                <span className="font-uilabel text-[11px] font-bold uppercase tracking-widest text-alx-primary block mb-2">
+                  Industry Pulse
+                </span>
+                <h3 className="font-headline text-base font-extrabold text-alx-on-surface group-hover:text-alx-primary transition-all leading-snug mb-2 line-clamp-2">
+                  {industryPulse.title}
+                </h3>
+                <p className="font-body text-xs text-alx-on-surface-variant leading-relaxed line-clamp-3">
+                  {industryPulse.excerpt}
+                </p>
+              </div>
+              <div className="pt-4 mt-4 border-t border-alx-outline-variant/15 flex items-center justify-between">
+                <span className="font-uilabel text-[11px] text-alx-outline">
+                  {industryPulse.minRead ? `${industryPulse.minRead} min read` : "Quick read"}
+                </span>
+                <span className="text-alx-primary group-hover:translate-x-0.5 transition-transform">→</span>
+              </div>
+            </Link>
+          )}
         </div>
       </section>
-    </div>
+
+      {/* 3, 4. Filter row + uniform article grid (client for tab + search state) */}
+      <section className="max-w-6xl mx-auto px-6 pb-16 alx-scroll-fade">
+        <BlogIndexClient posts={gridPosts} categories={categories} />
+      </section>
+
+      {/* 5. Newsletter band */}
+      <section className="max-w-6xl mx-auto px-6 pb-24 alx-scroll-fade">
+        <div className="rounded-2xl bg-alx-surface-container-low border border-alx-outline-variant/15 p-8 md:p-10 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="max-w-xl text-center md:text-left">
+            <h2 className="font-headline text-xl md:text-2xl font-extrabold text-alx-on-surface mb-2">
+              Join our Insights Newsletter
+            </h2>
+            <p className="font-body text-sm text-alx-on-surface-variant leading-relaxed">
+              Stay ahead of the curve with a periodic breakdown of construction
+              technology trends and project management best practices.
+            </p>
+          </div>
+          <form className="w-full md:w-auto flex flex-col sm:flex-row gap-3">
+            <input
+              type="email"
+              placeholder="Enter your business email"
+              className="w-full sm:w-72 px-5 py-3 rounded-lg bg-alx-surface-container-lowest border border-alx-outline-variant/40 text-alx-on-surface placeholder-alx-on-surface-variant/60 focus:outline-none focus:border-alx-primary focus:ring-1 focus:ring-alx-primary/20 transition-all text-sm"
+            />
+            <button
+              type="submit"
+              className="alx-cta font-uilabel text-sm font-bold px-6 py-3 rounded-lg transition-all cursor-pointer whitespace-nowrap"
+            >
+              Subscribe Now
+            </button>
+          </form>
+        </div>
+      </section>
+    </MarketingShell>
   );
 }

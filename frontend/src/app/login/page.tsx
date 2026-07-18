@@ -421,7 +421,10 @@ export default function LoginPage() {
   };
 
   const SUBMIT_CLASS =
-    "w-full flex justify-center items-center py-2.5 px-6 rounded-md text-white font-medium bg-primary hover:bg-primary-hover shadow-sm transition-colors motion-reduce:transition-none cursor-pointer disabled:opacity-50 disabled:pointer-events-none";
+    "group relative overflow-hidden w-full flex justify-center items-center py-3 px-6 rounded-md text-alx-on-primary font-semibold alx-bg-gradient-primary hover:shadow-xl hover:shadow-alx-primary/30 hover:-translate-y-0.5 shadow-md transition-all motion-reduce:transition-none cursor-pointer disabled:opacity-50 disabled:pointer-events-none disabled:hover:translate-y-0";
+  const SUBMIT_SHIMMER = (
+    <span className="absolute inset-0 alx-shimmer opacity-0 group-hover:opacity-100 transition-opacity duration-300" aria-hidden="true" />
+  );
 
   const startGoogle = () => {
     // Public GET: the backend 307-redirects to Google. No token in any URL.
@@ -433,10 +436,10 @@ export default function LoginPage() {
     <button
       type="button"
       onClick={() => reset(m)}
-      className={`flex-1 py-2 text-xs font-semibold rounded-md transition-colors motion-reduce:transition-none ${
+      className={`flex-1 py-2.5 text-xs font-semibold rounded-md transition-all motion-reduce:transition-none ${
         method === m
-          ? "bg-primary text-white"
-          : "bg-input text-muted hover:text-foreground border border-border-custom"
+          ? "alx-bg-gradient-primary text-alx-on-primary shadow-sm shadow-alx-primary/30"
+          : "bg-alx-surface-container-low text-alx-on-surface-variant hover:text-alx-on-surface hover:bg-alx-surface-container border border-alx-outline-variant/40"
       }`}
     >
       {label}
@@ -453,22 +456,25 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen w-full bg-background text-foreground">
+    <div className="flex min-h-screen w-full bg-alx-surface-container-lowest text-alx-on-surface">
       {/* Brand panel */}
-      <div className="relative hidden w-2/5 flex-col justify-between overflow-hidden bg-primary p-12 lg:flex border-r border-border-custom">
+      <div className="relative hidden w-2/5 flex-col justify-between overflow-hidden alx-bg-gradient-primary p-12 lg:flex border-r border-alx-outline-variant/40">
         {/* Soft light glows — white so they read against the primary fill
-            (a bg-primary blob on a bg-primary panel is invisible). */}
+            (a bg-primary blob on a bg-primary panel is invisible). Layered
+            radial mesh for premium depth. */}
         <div className="absolute bottom-[-20%] right-[-20%] h-[70%] w-[70%] rounded-full bg-white opacity-10 blur-[120px]" />
         <div className="absolute top-[-15%] left-[-10%] h-[45%] w-[45%] rounded-full bg-white opacity-[0.07] blur-[110px]" />
+        <div className="absolute top-[35%] right-[5%] h-[30%] w-[30%] rounded-full bg-white opacity-[0.05] blur-[100px]" />
+        <div className="alx-grain absolute inset-0 z-0" />
 
         <div className="flex items-center gap-3 z-10">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white font-bold text-primary shadow-md ring-1 ring-white/70">S</div>
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white font-bold text-alx-primary shadow-md ring-1 ring-white/70">S</div>
           <span className="text-xl font-bold tracking-tight text-white">SiteFlow</span>
         </div>
 
         <div className="z-10 max-w-md space-y-8">
           <div className="space-y-4">
-            <h2 className="text-3xl font-extrabold leading-tight text-white">
+            <h2 className="font-headline text-3xl font-extrabold leading-tight text-white">
               Your whole construction business in one workspace.
             </h2>
             <p className="text-sm leading-relaxed text-white/80">
@@ -478,7 +484,7 @@ export default function LoginPage() {
 
           {/* Compact live-project mock, echoing the homepage hero card
               (same honest demo strings), adapted for this fixed half-width panel. */}
-          <div className="rounded-xl border border-white/20 bg-white/10 p-4 shadow-lg backdrop-blur-sm space-y-3">
+          <div className="rounded-xl border border-white/20 bg-white/10 p-4 shadow-2xl shadow-black/20 backdrop-blur-md space-y-3">
             <div className="flex items-center justify-between gap-3">
               <span className="text-sm font-semibold text-white">Greenline Residency</span>
               <span className="rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white">
@@ -506,19 +512,21 @@ export default function LoginPage() {
               "Tally & Zoho accounting integrations",
               "GPS-geofenced attendance, IS-code compliant math",
             ].map((point) => (
-              <li key={point} className="flex items-center gap-2.5 text-sm text-white/85">
-                <svg
-                  className="h-4 w-4 flex-shrink-0 text-white"
-                  viewBox="0 0 20 20"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={2.5}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                >
-                  <path d="m5 10.5 3.5 3.5 7-8" />
-                </svg>
+              <li key={point} className="flex items-center gap-3 text-sm text-white/85">
+                <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-white/15 ring-1 ring-white/25">
+                  <svg
+                    className="h-3 w-3 text-white"
+                    viewBox="0 0 20 20"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={3}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="m5 10.5 3.5 3.5 7-8" />
+                  </svg>
+                </span>
                 {point}
               </li>
             ))}
@@ -527,11 +535,12 @@ export default function LoginPage() {
       </div>
 
       {/* Form panel */}
-      <div className="flex w-full flex-col justify-center items-center p-8 lg:w-3/5 bg-background relative">
-        <div className="w-full max-w-md space-y-6 z-10">
-          <div className="space-y-2 text-center">
-            <h2 className="text-3xl font-bold tracking-tight text-foreground">{heading()}</h2>
-            <p className="text-muted text-sm">
+      <div className="flex w-full flex-col justify-center items-center p-8 lg:w-3/5 bg-alx-surface-container-lowest relative overflow-hidden">
+        <div className="absolute top-[-10%] right-[-10%] h-[40%] w-[40%] rounded-full bg-alx-primary/5 blur-[100px]" />
+        <div className="w-full max-w-md space-y-7 z-10">
+          <div className="space-y-2.5 text-center">
+            <h2 className="font-headline text-4xl font-bold tracking-tight text-alx-on-surface">{heading()}</h2>
+            <p className="text-alx-on-surface-variant text-sm leading-relaxed">
               {stage === "input" && method === "phone" && "Enter your mobile number to receive a code."}
               {stage === "input" && method === "email_otp" && "Enter your email to receive a code."}
               {stage === "input" && method === "password" && "Log in with your email and password."}
@@ -544,7 +553,7 @@ export default function LoginPage() {
           </div>
 
           {error && (
-            <div className="rounded-lg border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-400 text-center">
+            <div className="rounded-lg border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-600 text-center">
               {error}
             </div>
           )}
@@ -560,7 +569,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={startGoogle}
-                className="w-full flex justify-center items-center gap-2 py-2.5 px-6 rounded-md font-semibold border border-border-custom bg-input hover:bg-elevated hover:text-foreground text-foreground transition-colors motion-reduce:transition-none cursor-pointer"
+                className="w-full flex justify-center items-center gap-2 py-3 px-6 rounded-md font-semibold border border-alx-outline-variant/40 bg-alx-surface-container-lowest hover:bg-alx-surface-container-low hover:border-alx-outline hover:-translate-y-0.5 hover:shadow-md text-alx-on-surface transition-all motion-reduce:transition-none cursor-pointer"
               >
                 <svg className="h-4 w-4 flex-shrink-0" viewBox="0 0 24 24" aria-hidden="true">
                   <path fill="#4285F4" d="M23.52 12.27c0-.85-.08-1.66-.22-2.45H12v4.64h6.47c-.28 1.5-1.13 2.77-2.4 3.62v3h3.88c2.27-2.09 3.57-5.17 3.57-8.81z" />
@@ -571,9 +580,9 @@ export default function LoginPage() {
                 Continue with Google
               </button>
               <div className="relative flex py-1 items-center">
-                <div className="flex-grow border-t border-border-custom" />
-                <span className="flex-shrink mx-4 text-xs font-bold text-muted uppercase tracking-widest">Or</span>
-                <div className="flex-grow border-t border-border-custom" />
+                <div className="flex-grow border-t border-alx-outline-variant/40" />
+                <span className="flex-shrink mx-4 text-xs font-bold text-alx-on-surface-variant uppercase tracking-widest">Or</span>
+                <div className="flex-grow border-t border-alx-outline-variant/40" />
               </div>
               <div className="flex gap-2">
                 {tabBtn("phone", "Phone OTP")}
@@ -586,18 +595,18 @@ export default function LoginPage() {
           {/* Phone input */}
           {stage === "input" && method === "phone" && (
             <form onSubmit={handlePhoneSend} className="space-y-5">
-              <div className="relative flex rounded-md bg-input border border-border-custom focus-within:border-primary transition-colors motion-reduce:transition-none items-center p-1.5">
+              <div className="relative flex rounded-md bg-alx-surface-container-lowest border border-alx-outline-variant/40 focus-within:border-alx-primary transition-colors motion-reduce:transition-none items-center p-1.5">
                 <div className="relative">
                   <button
                     type="button"
                     onClick={() => setIsCountryOpen(!isCountryOpen)}
-                    className="flex items-center gap-1.5 px-3 py-2 bg-elevated rounded-lg border border-border-custom text-sm font-semibold hover:bg-elevated/80 transition-colors motion-reduce:transition-none cursor-pointer text-foreground"
+                    className="flex items-center gap-1.5 px-3 py-2 bg-alx-surface-container-low rounded-lg border border-alx-outline-variant/40 text-sm font-semibold hover:bg-alx-surface-container-low/80 transition-colors motion-reduce:transition-none cursor-pointer text-alx-on-surface"
                   >
                     <span>{countryCode}</span>
                     <span className="text-[10px] opacity-60">v</span>
                   </button>
                   {isCountryOpen && (
-                    <div className="absolute top-[120%] left-0 w-32 bg-card border border-border-custom rounded-lg shadow-2xl z-50 overflow-hidden">
+                    <div className="absolute top-[120%] left-0 w-32 bg-alx-surface-container-lowest border border-alx-outline-variant/40 rounded-lg shadow-2xl z-50 overflow-hidden">
                       {COUNTRY_CODES.map((c) => (
                         <button
                           key={c.code}
@@ -606,7 +615,7 @@ export default function LoginPage() {
                             setCountryCode(c.code);
                             setIsCountryOpen(false);
                           }}
-                          className="w-full px-3 py-2 text-left text-xs font-semibold hover:bg-primary/20 hover:text-foreground transition-colors motion-reduce:transition-none cursor-pointer text-foreground"
+                          className="w-full px-3 py-2 text-left text-xs font-semibold hover:bg-alx-primary/10 hover:text-alx-on-surface transition-colors motion-reduce:transition-none cursor-pointer text-alx-on-surface"
                         >
                           {c.code} {c.label}
                         </button>
@@ -621,11 +630,12 @@ export default function LoginPage() {
                   placeholder="Mobile number"
                   required
                   disabled={loading}
-                  className="w-full bg-transparent px-4 py-2 text-base font-semibold tracking-wide placeholder-muted focus:outline-none text-foreground"
+                  className="w-full bg-transparent px-4 py-2 text-base font-semibold tracking-wide placeholder-alx-on-surface-variant/60 focus:outline-none text-alx-on-surface"
                 />
               </div>
               <button type="submit" disabled={loading} className={SUBMIT_CLASS}>
-                {loading ? "Sending..." : "Send code"}
+                {SUBMIT_SHIMMER}
+                <span className="relative z-10">{loading ? "Sending..." : "Send code"}</span>
               </button>
             </form>
           )}
@@ -640,10 +650,11 @@ export default function LoginPage() {
                 placeholder="you@company.com"
                 required
                 disabled={loading}
-                className="input-field w-full px-4 py-3 text-sm focus:outline-none"
+                className="w-full px-4 py-3 text-sm rounded-md bg-alx-surface-container-lowest border border-alx-outline-variant/40 text-alx-on-surface placeholder-alx-on-surface-variant/60 focus:outline-none focus:border-alx-primary"
               />
               <button type="submit" disabled={loading} className={SUBMIT_CLASS}>
-                {loading ? "Sending..." : "Send code"}
+                {SUBMIT_SHIMMER}
+                <span className="relative z-10">{loading ? "Sending..." : "Send code"}</span>
               </button>
             </form>
           )}
@@ -658,7 +669,7 @@ export default function LoginPage() {
                 placeholder="you@company.com"
                 required
                 disabled={loading}
-                className="input-field w-full px-4 py-3 text-sm focus:outline-none"
+                className="w-full px-4 py-3 text-sm rounded-md bg-alx-surface-container-lowest border border-alx-outline-variant/40 text-alx-on-surface placeholder-alx-on-surface-variant/60 focus:outline-none focus:border-alx-primary"
               />
               <input
                 type="password"
@@ -667,16 +678,17 @@ export default function LoginPage() {
                 placeholder="Password"
                 required
                 disabled={loading}
-                className="input-field w-full px-4 py-3 text-sm focus:outline-none"
+                className="w-full px-4 py-3 text-sm rounded-md bg-alx-surface-container-lowest border border-alx-outline-variant/40 text-alx-on-surface placeholder-alx-on-surface-variant/60 focus:outline-none focus:border-alx-primary"
               />
               <button type="submit" disabled={loading} className={SUBMIT_CLASS}>
-                {loading ? "Signing in..." : "Log in"}
+                {SUBMIT_SHIMMER}
+                <span className="relative z-10">{loading ? "Signing in..." : "Log in"}</span>
               </button>
-              <div className="flex justify-between text-xs text-muted pt-1">
-                <button type="button" onClick={() => { setStage("register"); setError(""); setMessage(""); }} className="font-medium text-primary hover:text-foreground">
+              <div className="flex justify-between text-xs text-alx-on-surface-variant pt-1">
+                <button type="button" onClick={() => { setStage("register"); setError(""); setMessage(""); }} className="font-medium text-alx-primary hover:text-alx-on-surface">
                   Create account
                 </button>
-                <button type="button" onClick={() => { setStage("forgot"); setError(""); setMessage(""); }} className="font-medium text-secondary hover:text-foreground">
+                <button type="button" onClick={() => { setStage("forgot"); setError(""); setMessage(""); }} className="font-medium text-alx-secondary hover:text-alx-on-surface">
                   Forgot password?
                 </button>
               </div>
@@ -686,13 +698,14 @@ export default function LoginPage() {
           {/* Register */}
           {stage === "register" && (
             <form onSubmit={handleRegister} className="space-y-4">
-              <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Full name" required disabled={loading} className="input-field w-full px-4 py-3 text-sm focus:outline-none" />
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@company.com" required disabled={loading} className="input-field w-full px-4 py-3 text-sm focus:outline-none" />
-              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password (min 8 characters)" required disabled={loading} className="input-field w-full px-4 py-3 text-sm focus:outline-none" />
+              <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Full name" required disabled={loading} className="w-full px-4 py-3 text-sm rounded-md bg-alx-surface-container-lowest border border-alx-outline-variant/40 text-alx-on-surface placeholder-alx-on-surface-variant/60 focus:outline-none focus:border-alx-primary" />
+              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@company.com" required disabled={loading} className="w-full px-4 py-3 text-sm rounded-md bg-alx-surface-container-lowest border border-alx-outline-variant/40 text-alx-on-surface placeholder-alx-on-surface-variant/60 focus:outline-none focus:border-alx-primary" />
+              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password (min 8 characters)" required disabled={loading} className="w-full px-4 py-3 text-sm rounded-md bg-alx-surface-container-lowest border border-alx-outline-variant/40 text-alx-on-surface placeholder-alx-on-surface-variant/60 focus:outline-none focus:border-alx-primary" />
               <button type="submit" disabled={loading} className={SUBMIT_CLASS}>
-                {loading ? "Creating..." : "Create account"}
+                {SUBMIT_SHIMMER}
+                <span className="relative z-10">{loading ? "Creating..." : "Create account"}</span>
               </button>
-              <button type="button" onClick={() => { setStage("input"); setError(""); setMessage(""); }} className="w-full text-xs font-medium text-muted hover:text-foreground pt-1">
+              <button type="button" onClick={() => { setStage("input"); setError(""); setMessage(""); }} className="w-full text-xs font-medium text-alx-on-surface-variant hover:text-alx-on-surface pt-1">
                 Back to login
               </button>
             </form>
@@ -710,13 +723,14 @@ export default function LoginPage() {
                 placeholder="123456"
                 required
                 disabled={loading}
-                className="input-field w-full px-4 py-3.5 text-center text-2xl font-bold tracking-widest placeholder-muted"
+                className="w-full px-4 py-3.5 text-center text-2xl font-bold tracking-widest rounded-md bg-alx-surface-container-lowest border border-alx-outline-variant/40 text-alx-on-surface placeholder-alx-on-surface-variant/60 focus:outline-none focus:border-alx-primary"
               />
               <button type="submit" disabled={loading} className={SUBMIT_CLASS}>
-                {loading ? "Verifying..." : "Verify"}
+                {SUBMIT_SHIMMER}
+                <span className="relative z-10">{loading ? "Verifying..." : "Verify"}</span>
               </button>
-              <div className="flex justify-between items-center text-xs text-muted">
-                <button type="button" onClick={() => { setStage("input"); setOtp(""); setError(""); }} className="font-medium text-secondary hover:text-foreground">
+              <div className="flex justify-between items-center text-xs text-alx-on-surface-variant">
+                <button type="button" onClick={() => { setStage("input"); setOtp(""); setError(""); }} className="font-medium text-alx-secondary hover:text-alx-on-surface">
                   Back
                 </button>
                 {timer > 0 ? (
@@ -726,7 +740,7 @@ export default function LoginPage() {
                     type="button"
                     onClick={stage === "otp" ? (method === "phone" ? handlePhoneSend : handleEmailOtpSend) as any : handleResendVerify}
                     disabled={loading}
-                    className="font-medium text-primary hover:text-foreground"
+                    className="font-medium text-alx-primary hover:text-alx-on-surface"
                   >
                     Resend code
                   </button>
@@ -738,11 +752,12 @@ export default function LoginPage() {
           {/* Forgot */}
           {stage === "forgot" && (
             <form onSubmit={handleForgotSend} className="space-y-5">
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@company.com" required disabled={loading} className="input-field w-full px-4 py-3 text-sm focus:outline-none" />
+              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@company.com" required disabled={loading} className="w-full px-4 py-3 text-sm rounded-md bg-alx-surface-container-lowest border border-alx-outline-variant/40 text-alx-on-surface placeholder-alx-on-surface-variant/60 focus:outline-none focus:border-alx-primary" />
               <button type="submit" disabled={loading} className={SUBMIT_CLASS}>
-                {loading ? "Sending..." : "Send reset code"}
+                {SUBMIT_SHIMMER}
+                <span className="relative z-10">{loading ? "Sending..." : "Send reset code"}</span>
               </button>
-              <button type="button" onClick={() => { setStage("input"); setError(""); setMessage(""); }} className="w-full text-xs font-medium text-muted hover:text-foreground">
+              <button type="button" onClick={() => { setStage("input"); setError(""); setMessage(""); }} className="w-full text-xs font-medium text-alx-on-surface-variant hover:text-alx-on-surface">
                 Back to login
               </button>
             </form>
@@ -751,12 +766,13 @@ export default function LoginPage() {
           {/* Reset */}
           {stage === "reset" && (
             <form onSubmit={handleReset} className="space-y-4">
-              <input type="text" inputMode="numeric" maxLength={6} value={otp} onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="Reset code" required disabled={loading} className="input-field w-full px-4 py-3 text-center text-xl font-bold tracking-widest" />
-              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="New password (min 8 characters)" required disabled={loading} className="input-field w-full px-4 py-3 text-sm focus:outline-none" />
+              <input type="text" inputMode="numeric" maxLength={6} value={otp} onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="Reset code" required disabled={loading} className="w-full px-4 py-3 text-center text-xl font-bold tracking-widest rounded-md bg-alx-surface-container-lowest border border-alx-outline-variant/40 text-alx-on-surface placeholder-alx-on-surface-variant/60 focus:outline-none focus:border-alx-primary" />
+              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="New password (min 8 characters)" required disabled={loading} className="w-full px-4 py-3 text-sm rounded-md bg-alx-surface-container-lowest border border-alx-outline-variant/40 text-alx-on-surface placeholder-alx-on-surface-variant/60 focus:outline-none focus:border-alx-primary" />
               <button type="submit" disabled={loading} className={SUBMIT_CLASS}>
-                {loading ? "Updating..." : "Update password"}
+                {SUBMIT_SHIMMER}
+                <span className="relative z-10">{loading ? "Updating..." : "Update password"}</span>
               </button>
-              <button type="button" onClick={() => { setStage("input"); setError(""); setMessage(""); }} className="w-full text-xs font-medium text-muted hover:text-foreground">
+              <button type="button" onClick={() => { setStage("input"); setError(""); setMessage(""); }} className="w-full text-xs font-medium text-alx-on-surface-variant hover:text-alx-on-surface">
                 Back to login
               </button>
             </form>
@@ -770,7 +786,7 @@ export default function LoginPage() {
                   key={c.id}
                   type="button"
                   onClick={() => pickCompany(c.id)}
-                  className="w-full text-left px-4 py-3 rounded-md border border-border-custom bg-input hover:border-primary hover:bg-elevated transition-colors motion-reduce:transition-none text-foreground font-semibold"
+                  className="w-full text-left px-4 py-3 rounded-md border border-alx-outline-variant/40 bg-alx-surface-container-lowest hover:border-alx-primary hover:bg-alx-surface-container-low transition-colors motion-reduce:transition-none text-alx-on-surface font-semibold"
                 >
                   {c.name}
                 </button>
@@ -781,6 +797,14 @@ export default function LoginPage() {
           {/* Invisible reCAPTCHA host for Firebase Phone Auth (no-op when the
               MSG91 fallback is active). */}
           <div id="firebase-recaptcha" />
+
+          <p className="flex items-center justify-center gap-1.5 pt-1 text-center text-xs text-alx-on-surface-variant/70">
+            <svg className="h-3.5 w-3.5 flex-shrink-0" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <rect x="4" y="9" width="12" height="8" rx="1.5" />
+              <path d="M6.5 9V6a3.5 3.5 0 0 1 7 0v3" />
+            </svg>
+            Secure ERP workspace terminal with end-to-end encryption.
+          </p>
         </div>
       </div>
     </div>
