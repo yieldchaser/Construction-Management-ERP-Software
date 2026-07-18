@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import MarketingShell from "@/components/marketing/MarketingShell";
 
 const PLANS = [
   {
@@ -11,7 +12,7 @@ const PLANS = [
     period: "/ year",
     billing: "Billed annually",
     highlight: false,
-    color: "border-border-custom",
+    color: "border-alx-outline-variant/30",
     badge: null,
     features: [
       "Up to 3 active projects",
@@ -34,7 +35,7 @@ const PLANS = [
     period: "/ year",
     billing: "Billed annually",
     highlight: true,
-    color: "border-primary/40",
+    color: "border-alx-primary/20",
     badge: "Most Popular",
     features: [
       "Up to 15 active projects",
@@ -59,7 +60,7 @@ const PLANS = [
     period: "",
     billing: "Contact sales for pricing",
     highlight: false,
-    color: "border-border-custom",
+    color: "border-alx-outline-variant/30",
     badge: null,
     features: [
       "Unlimited projects & sites",
@@ -100,183 +101,236 @@ const FAQ = [
   },
 ];
 
+const TRUST_BADGES = ["14-day free trial", "No credit card needed", "Cancel anytime"];
+
 const PROOF_POINTS = [
-  { value: "16", label: "operational modules, one workspace" },
-  { value: "2", label: "native accounting integrations (Tally, Zoho)" },
-  { value: "IS", label: "456 · 1786 · 516 & CPWD compliant math" },
-  { value: "PWA", label: "with GPS-geofenced attendance" },
+  { value: "16", label: "Operational Modules" },
+  { value: "2", label: "Accounting Integrations" },
+  { value: "IS", label: "CPWD Compliant" },
+  { value: "PWA", label: "Geofenced Attendance" },
 ];
+
+function CheckIcon({ className = "w-5 h-5" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+      />
+    </svg>
+  );
+}
+
+function ChevronIcon({ className = "w-5 h-5" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <polyline points="6 9 12 15 18 9" />
+    </svg>
+  );
+}
 
 export default function PricingPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries, obs) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-visible");
+            obs.unobserve(entry.target);
+          }
+        });
+      },
+      { root: null, rootMargin: "0px", threshold: 0.15 }
+    );
+
+    document.querySelectorAll(".alx-scroll-fade").forEach((section) => {
+      observer.observe(section);
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <div className="min-h-screen bg-background text-foreground relative">
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute top-[-10%] right-[-10%] h-[50vw] w-[50vw] rounded-full bg-primary opacity-5 blur-[120px]" />
-        <div className="absolute bottom-[-10%] left-[-10%] h-[50vw] w-[50vw] rounded-full bg-primary opacity-5 blur-[120px]" />
-      </div>
-
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-card border border-border-custom rounded-lg border-b border-border-custom px-6 py-4 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-md bg-gradient-to-tr bg-primary font-sans font-bold text-white shadow-md">S</div>
-          <span className="text-lg font-bold tracking-tight text-white">Site<span className="text-primary">Flow</span></span>
-        </Link>
-        <div className="flex items-center gap-5">
-          <Link href="/products" className="hidden md:block text-sm text-muted hover:text-foreground transition-all">Products</Link>
-          <Link href="/about" className="hidden md:block text-sm text-muted hover:text-foreground transition-all">About</Link>
-          <Link href="/who-we-serve" className="hidden md:block text-sm text-muted hover:text-foreground transition-all">Who We Serve</Link>
-          <Link href="/contact" className="hidden md:block text-sm text-muted hover:text-foreground transition-all">Contact</Link>
-          <Link href="/login" className="rounded-md bg-primary px-5 py-2 text-sm font-bold text-white hover:opacity-90 transition-all">
-            Start Free Trial
-          </Link>
-        </div>
-      </header>
-
+    <MarketingShell>
       {/* Hero */}
-      <section className="relative px-6 py-16 text-center max-w-3xl mx-auto space-y-5">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-4 py-1.5 text-xs font-semibold text-primary border border-primary/20">
-          💰 Transparent Pricing
-        </span>
-        <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-white leading-tight">
-          Simple, honest pricing.<br />
-          <span className="text-gradient-accent">No surprises.</span>
-        </h1>
-        <p className="text-muted text-base max-w-xl mx-auto">
-          Every plan includes onboarding, training, WhatsApp support, and the full platform. No hidden charges, no locked modules.
-        </p>
-        <div className="flex items-center justify-center gap-4 text-xs text-muted pt-2">
-          <span className="flex items-center gap-1.5">✓ 14-day free trial</span>
-          <span className="flex items-center gap-1.5">✓ No credit card needed</span>
-          <span className="flex items-center gap-1.5">✓ Cancel anytime</span>
+      <section className="relative px-6 pt-16 pb-16 text-center overflow-hidden alx-scroll-fade is-visible">
+        <div className="absolute inset-0 z-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-alx-primary-fixed/30 via-alx-surface-container-lowest to-alx-surface-container-lowest pointer-events-none" />
+        <div className="max-w-3xl mx-auto relative z-10 space-y-6">
+          <span className="alx-label alx-badge-gold inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs">
+            Transparent Pricing
+          </span>
+
+          <h1 className="font-headline text-4xl md:text-6xl font-extrabold tracking-tight text-alx-on-surface leading-tight">
+            Simple, honest pricing.
+            <br />
+            <span className="alx-text-gradient-blue">No surprises.</span>
+          </h1>
+
+          <p className="font-body text-alx-on-surface-variant text-base md:text-lg max-w-xl mx-auto leading-relaxed">
+            Every plan includes onboarding, training, WhatsApp support, and the full platform. No hidden charges,
+            no locked modules.
+          </p>
+
+          <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 pt-2 text-alx-on-surface-variant font-uilabel text-sm font-medium">
+            {TRUST_BADGES.map((badge, i) => (
+              <span key={i} className="flex items-center gap-2">
+                <CheckIcon className="w-4 h-4 text-alx-primary" />
+                {badge}
+              </span>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* Proof strip, qualitative claim set only (no invented scale numbers) */}
-      <section className="max-w-6xl mx-auto px-6 pb-6">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-px rounded-lg border border-border-custom bg-border-custom overflow-hidden">
+      {/* Value Metrics Bar */}
+      <section className="max-w-6xl mx-auto px-6 pb-16 alx-scroll-fade">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
           {PROOF_POINTS.map((t, i) => (
-            <div key={i} className="bg-card px-4 py-6 text-center space-y-1">
-              <div className="text-2xl font-extrabold text-white">{t.value}</div>
-              <div className="text-xs text-muted">{t.label}</div>
+            <div
+              key={i}
+              className="bg-alx-surface-container-low rounded-full py-6 px-6 text-center flex flex-col justify-center items-center shadow-sm shadow-alx-on-surface/5"
+            >
+              <div className="font-headline text-3xl font-bold text-alx-primary mb-1">{t.value}</div>
+              <div className="font-uilabel text-[10px] font-bold uppercase tracking-widest text-alx-on-surface-variant">
+                {t.label}
+              </div>
             </div>
           ))}
         </div>
       </section>
 
       {/* Pricing Cards */}
-      <section className="max-w-6xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-6">
-        {PLANS.map((plan, i) => (
-          <div
-            key={i}
-            className={`relative rounded-md border p-8 flex flex-col justify-between space-y-6 transition-all ${
-              plan.highlight
-                ? "bg-gradient-to-b from-primary/10 to-transparent border-primary/40 shadow-xl shadow-primary/10"
-                : "bg-card border border-border-custom rounded-lg border-border-custom"
-            }`}
-          >
-            {plan.badge && (
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                <span className="bg-primary text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
-                  {plan.badge}
-                </span>
-              </div>
-            )}
-
-            <div className="space-y-4">
-              <div>
-                <h2 className="text-xl font-extrabold text-white">{plan.name}</h2>
-                <p className="text-xs text-muted mt-1">{plan.tagline}</p>
-              </div>
-
-              <div className="flex items-end gap-1 pt-2">
-                <span className="text-4xl font-extrabold text-white">{plan.price}</span>
-                <span className="text-sm text-muted mb-1">{plan.period}</span>
-              </div>
-              <p className="text-[10px] text-muted uppercase tracking-wider">{plan.billing}</p>
-
-              <div className="border-t border-border-custom pt-4 space-y-2.5">
-                {plan.features.map((f, j) => (
-                  <div key={j} className="flex items-start gap-2.5 text-xs text-zinc-300">
-                    <span className="mt-0.5 text-primary font-bold flex-shrink-0">✓</span>
-                    <span>{f}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <Link
-              href={plan.ctaLink}
-              className={`w-full text-center block rounded-md py-3 text-sm font-bold transition-all ${
+      <section className="max-w-6xl mx-auto px-6 pb-20 alx-scroll-fade">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 items-center">
+          {PLANS.map((plan, i) => (
+            <div
+              key={i}
+              className={`relative rounded-2xl flex flex-col h-full ${
                 plan.highlight
-                  ? "bg-primary text-white hover:opacity-90 shadow-lg shadow-primary/20"
-                  : "bg-white/[0.05] border border-border-custom text-white hover:bg-white/10"
+                  ? "bg-alx-surface-container-lowest p-8 md:p-10 py-14 md:py-16 shadow-2xl shadow-alx-primary/15 border border-alx-primary/10 lg:-translate-y-4 z-10"
+                  : `bg-alx-surface-container-lowest p-8 md:p-10 border ${plan.color} shadow-md shadow-alx-on-surface/5`
               }`}
             >
-              {plan.cta}
-            </Link>
-          </div>
-        ))}
+              {plan.badge && (
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 alx-bg-gradient-primary text-alx-on-primary px-5 py-2 rounded-full text-[10px] font-bold uppercase tracking-[0.2em] shadow-lg shadow-alx-primary/25">
+                  {plan.badge}
+                </div>
+              )}
+
+              <div className="flex-grow space-y-6">
+                <div>
+                  <h2 className={`font-headline font-bold text-alx-on-surface ${plan.highlight ? "text-3xl" : "text-2xl"}`}>
+                    {plan.name}
+                  </h2>
+                  <p className="font-body text-alx-on-surface-variant text-sm mt-2">{plan.tagline}</p>
+                </div>
+
+                <div>
+                  <div
+                    className={`font-headline font-bold text-alx-on-surface tracking-tight ${
+                      plan.highlight ? "text-5xl md:text-6xl" : "text-4xl md:text-5xl"
+                    }`}
+                  >
+                    {plan.price}
+                    {plan.period && (
+                      <span className="text-[0.4em] text-alx-on-surface-variant/70 font-body align-baseline ml-1">
+                        {plan.period}
+                      </span>
+                    )}
+                  </div>
+                  <div className="font-uilabel text-[10px] uppercase tracking-[0.2em] text-alx-primary font-bold mt-2">
+                    {plan.billing}
+                  </div>
+                </div>
+
+                <div className="space-y-4 pt-2">
+                  {plan.features.map((f, j) => (
+                    <div key={j} className="flex items-start gap-3 font-body text-sm text-alx-on-surface-variant">
+                      <CheckIcon className="w-5 h-5 text-alx-primary mt-0.5 flex-shrink-0" />
+                      <span>{f}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <Link
+                href={plan.ctaLink}
+                className={`w-full text-center block mt-10 rounded-xl font-uilabel font-bold transition-all active:scale-[0.98] ${
+                  plan.highlight
+                    ? "alx-bg-gradient-primary text-alx-on-primary py-4 text-base shadow-lg shadow-alx-primary/20 hover:shadow-xl hover:shadow-alx-primary/30"
+                    : "border-2 border-alx-primary text-alx-primary py-3.5 text-sm hover:bg-alx-primary-fixed/40"
+                }`}
+              >
+                {plan.cta}
+              </Link>
+            </div>
+          ))}
+        </div>
       </section>
 
       {/* FAQ */}
-      <section className="max-w-3xl mx-auto px-6 pb-10 space-y-4 pt-16">
-        <h2 className="text-2xl font-extrabold text-white text-center mb-6">Pricing FAQs</h2>
-        {FAQ.map((item, i) => (
-          <div
-            key={i}
-            className="bg-card border border-border-custom rounded-lg rounded-lg border border-border-custom overflow-hidden"
-          >
-            <button
-              className="w-full flex items-center justify-between p-5 text-left"
-              onClick={() => setOpenFaq(openFaq === i ? null : i)}
+      <section className="max-w-3xl mx-auto px-6 pb-20 alx-scroll-fade">
+        <h2 className="font-headline text-3xl md:text-4xl font-extrabold text-alx-on-surface text-center mb-10">
+          Pricing FAQs
+        </h2>
+        <div className="space-y-3">
+          {FAQ.map((item, i) => (
+            <div
+              key={i}
+              className="bg-alx-surface-container-low rounded-xl overflow-hidden shadow-sm shadow-alx-on-surface/5"
             >
-              <span className="text-sm font-semibold text-white">{item.q}</span>
-              <span className={`text-primary transition-transform text-lg ${openFaq === i ? "rotate-45" : ""}`}>+</span>
-            </button>
-            {openFaq === i && (
-              <div className="px-5 pb-5 text-sm text-muted leading-relaxed border-t border-border-custom pt-4">
-                {item.a}
-              </div>
-            )}
-          </div>
-        ))}
+              <button
+                className="w-full flex items-center justify-between gap-4 p-6 text-left"
+                onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                aria-expanded={openFaq === i}
+              >
+                <span className="font-headline text-base md:text-lg font-bold text-alx-on-surface">{item.q}</span>
+                <ChevronIcon
+                  className={`w-5 h-5 text-alx-primary flex-shrink-0 transition-transform duration-300 ${
+                    openFaq === i ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+              {openFaq === i && (
+                <div className="px-6 pb-6 font-body text-sm text-alx-on-surface-variant leading-relaxed">
+                  {item.a}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
       </section>
 
-      {/* CTA Banner */}
-      <section className="max-w-4xl mx-auto px-6">
-        <div className="rounded-md bg-gradient-to-r from-primary/20 to-secondary/20 border border-border-custom p-12 text-center space-y-5">
-          <h2 className="text-3xl font-extrabold text-white">Start your 14-day free trial today</h2>
-          <p className="text-white/70 text-sm max-w-md mx-auto">
+      {/* Final CTA */}
+      <section className="py-8 px-6 pb-28 alx-scroll-fade">
+        <div className="max-w-4xl mx-auto bg-gradient-to-br from-alx-primary-fixed via-alx-surface-container-lowest to-alx-surface-container rounded-[3rem] p-12 md:p-16 text-center relative overflow-hidden border border-alx-outline-variant/20 shadow-2xl shadow-alx-primary/5">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-alx-primary/10 via-transparent to-transparent opacity-50" />
+          <h2 className="font-headline text-3xl md:text-4xl font-extrabold text-alx-on-surface leading-tight mb-6 relative z-10">
+            Start your 14-day free trial today
+          </h2>
+          <p className="font-body text-alx-on-surface-variant text-sm max-w-md mx-auto mb-8 relative z-10">
             Your dedicated onboarding manager loads your data and gets your team started.
           </p>
-          <div className="flex items-center justify-center gap-4 pt-2">
-            <Link href="/login" className="rounded-md bg-primary px-8 py-3 text-sm font-bold text-white hover:opacity-90 transition-all shadow-lg shadow-primary/20">
-              Start Free Trial →
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 relative z-10">
+            <Link
+              href="/login"
+              className="alx-bg-gradient-primary text-alx-on-primary px-8 py-3.5 rounded-full font-uilabel text-sm font-bold tracking-wide hover:shadow-xl hover:shadow-alx-primary/30 transition-all active:scale-95 inline-flex items-center justify-center relative overflow-hidden group"
+            >
+              <span className="relative z-10">Start Free Trial</span>
+              <div className="absolute inset-0 alx-shimmer opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             </Link>
-            <Link href="/contact" className="rounded-md border border-white/20 px-8 py-3 text-sm font-bold text-white hover:bg-white/5 transition-all">
+            <Link
+              href="/contact"
+              className="border border-alx-outline-variant text-alx-on-surface px-8 py-3.5 rounded-full font-uilabel text-sm font-bold tracking-wide hover:bg-alx-surface-container transition-all active:scale-95 inline-flex items-center justify-center"
+            >
               Talk to Sales
             </Link>
           </div>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="border-t border-border-custom py-8 text-muted">
-        <div className="max-w-4xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-xs">
-            SiteFlow is a site operations platform. All logos are property of their owners.
-          </p>
-          <div className="flex items-center flex-wrap gap-x-4 gap-y-1 text-xs">
-            <Link href="/blog" className="hover:text-muted transition-all whitespace-nowrap">Blog</Link>
-            <Link href="/help" className="hover:text-muted transition-all whitespace-nowrap">Help Center</Link>
-            <Link href="/terms" className="hover:text-muted transition-all whitespace-nowrap">Terms</Link>
-            <Link href="/privacy" className="hover:text-muted transition-all whitespace-nowrap">Privacy</Link>
-            <Link href="/who-we-serve" className="hover:text-muted transition-all whitespace-nowrap">Who We Serve</Link>
-          </div>
-        </div>
-      </footer>
-    </div>
+    </MarketingShell>
   );
 }
