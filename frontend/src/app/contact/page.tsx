@@ -1,12 +1,65 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import MarketingShell from "@/components/marketing/MarketingShell";
 
 const OFFICES = [
-  { city: "Delhi (HQ)", address: "SiteFlow Offices, New Delhi, India", flag: "🇮🇳" },
-  { city: "Dubai", address: "Serving UAE, Qatar & Saudi Arabia clients", flag: "🇦🇪" },
+  { city: "Delhi (HQ)", address: "SiteFlow Offices, New Delhi, India" },
+  { city: "Dubai", address: "Serving UAE, Qatar & Saudi Arabia clients" },
 ];
+
+type ContactIconName = "chat" | "mail" | "call" | "location" | "rocket";
+
+function ContactIcon({ name, className = "w-6 h-6" }: { name: ContactIconName; className?: string }) {
+  const paths: Record<ContactIconName, React.ReactNode> = {
+    chat: (
+      <>
+        <path d="M21 12a8.5 8.5 0 0 1-8.5 8.5 8.4 8.4 0 0 1-3.8-.9L3 21l1.4-5.7A8.4 8.4 0 0 1 3.5 12 8.5 8.5 0 0 1 12 3.5 8.5 8.5 0 0 1 21 12Z" />
+      </>
+    ),
+    mail: (
+      <>
+        <rect x="3" y="5" width="18" height="14" rx="2" />
+        <path d="m3.5 6 8.5 7 8.5-7" />
+      </>
+    ),
+    call: (
+      <>
+        <path d="M6.6 10.8a15 15 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 10 10 0 0 0 3.1.5 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1 10 10 0 0 0 .5 3.1 1 1 0 0 1-.25 1Z" />
+      </>
+    ),
+    location: (
+      <>
+        <path d="M12 21s7-6.1 7-11.5a7 7 0 0 0-14 0C5 14.9 12 21 12 21Z" />
+        <circle cx="12" cy="9.5" r="2.5" />
+      </>
+    ),
+    rocket: (
+      <>
+        <path d="M12 2c2.5 2 4 5.3 4 8.5 0 2-1 4-2 5.5l-2-1-2 1c-1-1.5-2-3.5-2-5.5C8 7.3 9.5 4 12 2Z" />
+        <path d="m8.5 15.5-2 2 .5 2.5 2.5.5 2-2" />
+        <path d="M15.5 15.5c1.5-.5 3 0 3.5 1s0 3-1 3.5" />
+        <circle cx="12" cy="9" r="1.5" />
+      </>
+    ),
+  };
+
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      {paths[name]}
+    </svg>
+  );
+}
 
 export default function ContactPage() {
   const [form, setForm] = useState({ name: "", company: "", phone: "", email: "", role: "", sites: "", message: "" });
@@ -17,111 +70,134 @@ export default function ContactPage() {
     setSubmitted(true);
   };
 
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries, obs) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-visible");
+            obs.unobserve(entry.target);
+          }
+        });
+      },
+      { root: null, rootMargin: "0px", threshold: 0.15 }
+    );
+
+    document.querySelectorAll(".alx-scroll-fade").forEach((section) => {
+      observer.observe(section);
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
+  const fieldClass =
+    "w-full bg-alx-surface-container-lowest border border-alx-outline-variant/40 rounded-lg px-4 py-3 text-sm text-alx-on-surface placeholder:text-alx-on-surface-variant/60 focus:outline-none focus:border-alx-primary focus:ring-1 focus:ring-alx-primary transition-colors";
+  const labelClass = "font-uilabel text-xs font-semibold text-alx-on-surface-variant uppercase tracking-wider";
+
   return (
-    <div className="min-h-screen bg-background text-foreground pb-20 relative">
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute top-[-10%] right-[-10%] h-[50vw] w-[50vw] rounded-full bg-primary opacity-5 blur-[120px]" />
-        <div className="absolute bottom-[-10%] left-[-10%] h-[50vw] w-[50vw] rounded-full bg-primary opacity-5 blur-[120px]" />
-      </div>
-
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-card border border-border-custom rounded-lg border-b border-border-custom px-6 py-4 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-md bg-gradient-to-tr bg-primary font-sans font-bold text-white shadow-md">S</div>
-          <span className="text-lg font-bold tracking-tight text-white">Site<span className="text-primary">Flow</span></span>
-        </Link>
-        <div className="flex items-center gap-5">
-          <Link href="/SiteFlow-pricing" className="hidden md:block text-sm text-muted hover:text-foreground transition-all">Pricing</Link>
-          <Link href="/about" className="hidden md:block text-sm text-muted hover:text-foreground transition-all">About</Link>
-          <Link href="/login" className="rounded-md bg-primary px-5 py-2 text-sm font-bold text-white hover:opacity-90 transition-all">
-            Get Demo
-          </Link>
-        </div>
-      </header>
-
+    <MarketingShell>
       {/* Hero */}
-      <section className="relative px-6 py-16 text-center max-w-2xl mx-auto space-y-4">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary/10 px-4 py-1.5 text-xs font-semibold text-secondary border border-secondary/20">
-          💬 Talk to Us
-        </span>
-        <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-white leading-tight">
-          Get in touch with SiteFlow
-        </h1>
-        <p className="text-muted text-sm">
-          Whether you want a product demo, have a sales question, or need support, we're reachable on WhatsApp and respond same day.
-        </p>
+      <section className="relative px-6 pt-16 pb-20 text-center overflow-hidden alx-scroll-fade is-visible">
+        <div className="absolute inset-0 z-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-alx-primary-fixed/30 via-alx-surface-container-lowest to-alx-surface-container-lowest pointer-events-none" />
+        <div className="max-w-2xl mx-auto relative z-10 space-y-6">
+          <span className="alx-label alx-badge-gold inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs">
+            Talk to Us
+          </span>
+
+          <h1 className="font-headline text-4xl md:text-5xl font-extrabold tracking-tight text-alx-on-surface leading-tight">
+            Get in touch with SiteFlow
+          </h1>
+
+          <p className="font-body text-alx-on-surface-variant text-base md:text-lg leading-relaxed">
+            Whether you want a product demo, have a sales question, or need support, we&apos;re reachable on WhatsApp and respond same day.
+          </p>
+        </div>
       </section>
 
       {/* Main Grid */}
-      <div className="max-w-5xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-5 gap-8">
-
-        {/* Contact Info Panel */}
-        <aside className="lg:col-span-2 space-y-5">
-          {/* Quick channels */}
-          <div className="bg-card border border-border-custom rounded-lg rounded-lg p-6 border border-border-custom space-y-5">
-            <h2 className="text-sm font-bold text-muted uppercase tracking-widest">Fastest ways to reach us</h2>
-            {[
-              { icon: "💬", label: "WhatsApp (Fastest)", value: "+91 76673 59544", sub: "Usually responds in < 2 hours" },
-              { icon: "📧", label: "Email", value: "puwork09@gmail.com", sub: "Response within 1 business day" },
-              { icon: "📞", label: "Phone", value: "+91 76673 59544", sub: "Mon-Sat, 9 AM to 7 PM IST" },
-            ].map((c, i) => (
-              <div key={i} className="flex items-start gap-3">
-                <span className="text-xl mt-0.5">{c.icon}</span>
-                <div>
-                  <div className="text-xs font-semibold text-muted">{c.label}</div>
-                  <div className="text-sm font-bold text-white">{c.value}</div>
-                  <div className="text-[10px] text-muted mt-0.5">{c.sub}</div>
+      <section className="max-w-6xl mx-auto px-6 pb-20 alx-scroll-fade">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start">
+          {/* Contact Info Panel */}
+          <div className="flex flex-col gap-6 lg:gap-8">
+            {/* Quick channels */}
+            <div className="rounded-2xl bg-alx-surface-container-lowest p-7 md:p-9 space-y-6 shadow-xl shadow-alx-on-surface/5">
+              <h2 className="font-headline text-lg font-bold text-alx-on-surface">Fastest ways to reach us</h2>
+              {[
+                { icon: "chat" as const, label: "WhatsApp (Fastest)", value: "+91 76673 59544", sub: "Usually responds in < 2 hours" },
+                { icon: "mail" as const, label: "Email", value: "puwork09@gmail.com", sub: "Response within 1 business day" },
+                { icon: "call" as const, label: "Phone", value: "+91 76673 59544", sub: "Mon-Sat, 9 AM to 7 PM IST" },
+              ].map((c, i) => (
+                <div key={i} className="flex items-start gap-4">
+                  <div className="inline-flex items-center justify-center w-11 h-11 rounded-lg bg-alx-primary-fixed text-alx-primary shrink-0">
+                    <ContactIcon name={c.icon} className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="font-uilabel text-xs font-semibold text-alx-on-surface-variant uppercase tracking-wider">{c.label}</div>
+                    <div className="text-sm font-bold text-alx-on-surface mt-0.5">{c.value}</div>
+                    <div className="text-xs text-alx-on-surface-variant mt-0.5">{c.sub}</div>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Offices */}
-          <div className="bg-card border border-border-custom rounded-lg rounded-lg p-6 border border-border-custom space-y-4">
-            <h2 className="text-sm font-bold text-muted uppercase tracking-widest">Offices</h2>
-            {OFFICES.map((o, i) => (
-              <div key={i} className="flex items-start gap-3">
-                <span className="text-xl">{o.flag}</span>
-                <div>
-                  <div className="text-sm font-bold text-white">{o.city}</div>
-                  <div className="text-xs text-muted leading-relaxed">{o.address}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Response promise */}
-          <div className="bg-card border border-border-custom rounded-lg rounded-lg p-5 border border-primary/20 bg-primary/5 space-y-2">
-            <div className="text-sm font-bold text-primary">🚀 Our promise</div>
-            <p className="text-xs text-muted leading-relaxed">
-              Every inquiry gets a real response, not an auto-reply. If you fill the form, your dedicated rep will call or WhatsApp you within 4 business hours.
-            </p>
-          </div>
-        </aside>
-
-        {/* Contact Form */}
-        <main className="lg:col-span-3 h-full flex flex-col">
-          {submitted ? (
-            <div className="bg-card border border-border-custom rounded-lg shadow-sm rounded-md p-12 border border-border-custom text-center space-y-5 h-full flex flex-col items-center justify-center flex-grow">
-              <div className="text-5xl">🎉</div>
-              <h2 className="text-2xl font-extrabold text-white">Message received!</h2>
-              <p className="text-muted text-sm max-w-xs">
-                Your dedicated onboarding rep will reach out within 4 hours. Check your WhatsApp.
-              </p>
-              <Link href="/" className="text-sm text-primary hover:underline">← Back to Home</Link>
+              ))}
             </div>
-          ) : (
-            <div className="bg-card border border-border-custom rounded-lg shadow-sm rounded-md p-8 border border-border-custom flex-grow flex flex-col justify-between h-full">
-              <h2 className="text-lg font-extrabold text-white mb-5">Send us a message</h2>
-              <form onSubmit={handleSubmit} className="space-y-4 flex-grow flex flex-col justify-between">
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+            {/* Offices */}
+            <div className="rounded-2xl bg-alx-surface-container-lowest p-7 md:p-9 space-y-6 shadow-xl shadow-alx-on-surface/5">
+              <h2 className="font-headline text-lg font-bold text-alx-on-surface">Offices</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                {OFFICES.map((o, i) => (
+                  <div key={i}>
+                    <div className="flex items-center gap-2 mb-2 text-alx-primary">
+                      <ContactIcon name="location" className="w-5 h-5" />
+                      <div className="text-sm font-bold text-alx-on-surface">{o.city}</div>
+                    </div>
+                    <div className="text-xs text-alx-on-surface-variant leading-relaxed">{o.address}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Response promise */}
+            <div className="rounded-2xl bg-gradient-to-br from-alx-primary-fixed via-alx-surface-container-lowest to-alx-surface-container p-6 md:p-7 space-y-3 shadow-xl shadow-alx-primary/5 border border-alx-outline-variant/20">
+              <div className="flex items-center gap-2">
+                <ContactIcon name="rocket" className="w-5 h-5 text-alx-primary" />
+                <div className="font-headline text-sm font-bold text-alx-on-surface">Our promise</div>
+              </div>
+              <p className="text-xs text-alx-on-surface-variant leading-relaxed">
+                Every inquiry gets a real response, not an auto-reply. If you fill the form, your dedicated rep will call or WhatsApp you within 4 business hours.
+              </p>
+            </div>
+          </div>
+
+          {/* Contact Form */}
+          <div className="h-full flex flex-col">
+            {submitted ? (
+              <div className="rounded-2xl bg-alx-surface-container-lowest shadow-xl shadow-alx-on-surface/5 p-12 text-center space-y-5 h-full flex flex-col items-center justify-center flex-grow">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-alx-primary-fixed text-alx-primary">
+                  <ContactIcon name="chat" className="w-8 h-8" />
+                </div>
+                <h2 className="font-headline text-2xl font-extrabold text-alx-on-surface">Message received!</h2>
+                <p className="font-body text-alx-on-surface-variant text-sm max-w-xs">
+                  Your dedicated onboarding rep will reach out within 4 hours. Check your WhatsApp.
+                </p>
+                <Link href="/" className="text-sm text-alx-primary hover:underline">
+                  &larr; Back to Home
+                </Link>
+              </div>
+            ) : (
+              <div className="relative overflow-hidden rounded-2xl bg-alx-surface-container-lowest shadow-xl shadow-alx-on-surface/5 p-8 md:p-10 flex-grow flex flex-col justify-between h-full">
+                <div className="absolute -top-24 -right-24 w-48 h-48 bg-alx-primary-fixed rounded-full blur-3xl opacity-50 pointer-events-none" />
+                <h2 className="font-headline text-xl font-extrabold text-alx-on-surface mb-6 relative z-10">Send us a message</h2>
+                <form onSubmit={handleSubmit} className="space-y-6 flex-grow flex flex-col justify-between relative z-10">
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                       {[
                         { id: "name", label: "Your Name *", placeholder: "Rajesh Kumar", type: "text", required: true },
                         { id: "company", label: "Company Name *", placeholder: "ABC Contractors Pvt Ltd", type: "text", required: true },
                       ].map((f) => (
-                        <div key={f.id} className="space-y-1.5">
-                          <label htmlFor={f.id} className="text-xs font-semibold text-muted">{f.label}</label>
+                        <div key={f.id} className="space-y-2">
+                          <label htmlFor={f.id} className={labelClass}>
+                            {f.label}
+                          </label>
                           <input
                             id={f.id}
                             type={f.type}
@@ -129,18 +205,20 @@ export default function ContactPage() {
                             placeholder={f.placeholder}
                             value={form[f.id as keyof typeof form]}
                             onChange={(e) => setForm({ ...form, [f.id]: e.target.value })}
-                            className="w-full bg-white/[0.03] border border-border-custom rounded-md px-4 py-3 text-sm text-white placeholder:text-muted focus:outline-none focus:border-primary/50 transition-all"
+                            className={fieldClass}
                           />
                         </div>
                       ))}
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                       {[
                         { id: "phone", label: "Phone / WhatsApp *", placeholder: "+91 98765 00000", type: "tel", required: true },
                         { id: "email", label: "Email Address", placeholder: "you@company.com", type: "email", required: false },
                       ].map((f) => (
-                        <div key={f.id} className="space-y-1.5">
-                          <label htmlFor={f.id} className="text-xs font-semibold text-muted">{f.label}</label>
+                        <div key={f.id} className="space-y-2">
+                          <label htmlFor={f.id} className={labelClass}>
+                            {f.label}
+                          </label>
                           <input
                             id={f.id}
                             type={f.type}
@@ -148,18 +226,20 @@ export default function ContactPage() {
                             placeholder={f.placeholder}
                             value={form[f.id as keyof typeof form]}
                             onChange={(e) => setForm({ ...form, [f.id]: e.target.value })}
-                            className="w-full bg-white/[0.03] border border-border-custom rounded-md px-4 py-3 text-sm text-white placeholder:text-muted focus:outline-none focus:border-primary/50 transition-all"
+                            className={fieldClass}
                           />
                         </div>
                       ))}
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                       {[
                         { id: "role", label: "Your Role / Designation", placeholder: "e.g. Owner, PM, Accountant", type: "text", required: false },
                         { id: "sites", label: "Number of Active Sites", placeholder: "e.g. 3", type: "text", required: false },
                       ].map((f) => (
-                        <div key={f.id} className="space-y-1.5">
-                          <label htmlFor={f.id} className="text-xs font-semibold text-muted">{f.label}</label>
+                        <div key={f.id} className="space-y-2">
+                          <label htmlFor={f.id} className={labelClass}>
+                            {f.label}
+                          </label>
                           <input
                             id={f.id}
                             type={f.type}
@@ -167,39 +247,43 @@ export default function ContactPage() {
                             placeholder={f.placeholder}
                             value={form[f.id as keyof typeof form]}
                             onChange={(e) => setForm({ ...form, [f.id]: e.target.value })}
-                            className="w-full bg-white/[0.03] border border-border-custom rounded-md px-4 py-3 text-sm text-white placeholder:text-muted focus:outline-none focus:border-primary/50 transition-all"
+                            className={fieldClass}
                           />
                         </div>
                       ))}
                     </div>
-                    <div className="space-y-1.5">
-                      <label htmlFor="message" className="text-xs font-semibold text-muted">What do you need help with?</label>
+                    <div className="space-y-2">
+                      <label htmlFor="message" className={labelClass}>
+                        What do you need help with?
+                      </label>
                       <textarea
                         id="message"
                         rows={4}
                         placeholder="E.g. I want to see a demo of the BOQ + Procurement module for a 3-site civil project..."
                         value={form.message}
                         onChange={(e) => setForm({ ...form, message: e.target.value })}
-                        className="w-full bg-white/[0.03] border border-border-custom rounded-md px-4 py-3 text-sm text-white placeholder:text-muted focus:outline-none focus:border-primary/50 transition-all resize-none"
+                        className={`${fieldClass} resize-none`}
                       />
                     </div>
                   </div>
                   <div className="space-y-4 pt-4">
                     <button
                       type="submit"
-                      className="w-full rounded-md bg-primary py-4 text-sm font-bold text-white hover:opacity-90 active:scale-[0.99] transition-all shadow-lg shadow-primary/20"
+                      className="alx-bg-gradient-primary text-alx-on-primary w-full rounded-full font-uilabel py-4 text-sm font-bold tracking-wide hover:shadow-xl hover:shadow-alx-primary/30 transition-all active:scale-[0.99] inline-flex items-center justify-center relative overflow-hidden group"
                     >
-                      Send Message, Get Demo →
+                      <span className="relative z-10">Send Message, Get Demo &rarr;</span>
+                      <div className="absolute inset-0 alx-shimmer opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     </button>
-                    <p className="text-[10px] text-muted text-center">
+                    <p className="text-[11px] text-alx-on-surface-variant text-center">
                       No spam. Your details are only used to set up your demo.
                     </p>
                   </div>
                 </form>
-            </div>
-          )}
-        </main>
-      </div>
-    </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+    </MarketingShell>
   );
 }
