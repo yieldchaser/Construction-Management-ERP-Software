@@ -4,6 +4,7 @@ import { getContentItems, ContentItem } from "@/lib/content";
 import { Metadata } from "next";
 import MarketingShell from "@/components/marketing/MarketingShell";
 import BlogIndexClient, { BlogCategory, BlogPostView } from "./BlogIndexClient";
+import Aurora from "@/components/marketing/Aurora";
 
 export const metadata: Metadata = {
   title: "SiteFlow Insights - Construction Management Blog",
@@ -100,8 +101,9 @@ export default async function BlogIndexPage() {
   return (
     <MarketingShell>
       {/* 1. Master hero + digest panel */}
-      <section className="max-w-6xl mx-auto px-6 pt-10 pb-12 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start alx-scroll-fade">
-        <div className="lg:col-span-7 space-y-5">
+      <section className="relative overflow-hidden max-w-6xl mx-auto px-6 pt-10 pb-12 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start alx-scroll-fade">
+        <Aurora variant="hero" className="absolute inset-0" />
+        <div className="lg:col-span-7 space-y-5 relative z-10">
           <nav className="flex items-center gap-1.5 font-uilabel text-[11px] uppercase tracking-widest text-alx-outline">
             <span>Resources</span>
             <span className="text-alx-outline-variant">/</span>
@@ -116,7 +118,7 @@ export default async function BlogIndexPage() {
             workflows into actionable strategy for project leads.
           </p>
         </div>
-        <div className="lg:col-span-5">
+        <div className="lg:col-span-5 relative z-10">
           <div className="rounded-2xl bg-alx-surface-container-lowest border border-alx-outline-variant/15 p-6 shadow-xl shadow-alx-on-surface/5">
             <div className="flex items-center justify-between mb-4">
               <span className="font-uilabel text-[11px] font-bold uppercase tracking-widest text-alx-primary">

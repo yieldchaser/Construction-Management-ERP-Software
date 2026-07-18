@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import MarketingShell from "@/components/marketing/MarketingShell";
 import CountUp from "@/components/marketing/CountUp";
+import Aurora from "@/components/marketing/Aurora";
 
 const PLANS = [
   {
@@ -159,6 +160,7 @@ export default function PricingPage() {
       {/* Hero */}
       <section className="relative px-6 pt-16 pb-16 text-center overflow-hidden alx-scroll-fade is-visible">
         <div className="absolute inset-0 z-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-alx-primary-fixed/30 via-alx-surface-container-lowest to-alx-surface-container-lowest pointer-events-none" />
+        <Aurora variant="hero" className="absolute inset-0" />
         <div className="max-w-3xl mx-auto relative z-10 space-y-6">
           <span className="alx-label alx-badge-gold inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs">
             Transparent Pricing
