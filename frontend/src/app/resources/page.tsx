@@ -114,7 +114,7 @@ export default async function ResourcesIndexPage() {
   return (
     <MarketingShell>
       {/* Hero */}
-      <section className="relative px-6 pt-16 pb-16 text-center overflow-hidden">
+      <section className="relative px-6 pt-16 pb-16 text-center overflow-hidden alx-scroll-fade">
         <div className="absolute inset-0 z-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-alx-primary-fixed/30 via-alx-surface-container-lowest to-alx-surface-container-lowest pointer-events-none" />
         <div className="max-w-4xl mx-auto relative z-10 space-y-6">
           <span className="alx-label alx-badge-gold inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs">
@@ -132,13 +132,13 @@ export default async function ResourcesIndexPage() {
       </section>
 
       {/* Grouped Sections */}
-      <div className="max-w-6xl mx-auto px-6 pb-24 space-y-16">
+      <div className="pb-24 space-y-16">
         {Object.entries(RESOURCE_GROUPS).map(([key, meta]) => {
           const items = grouped[key] ?? [];
           if (items.length === 0) return null;
 
-          return (
-            <section key={key}>
+          const sectionBody = (
+            <section className="alx-scroll-fade">
               <div className="flex items-center gap-3 mb-6 pb-3 border-b border-alx-outline-variant/15">
                 <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-alx-primary-fixed text-alx-primary shrink-0">
                   <GroupIcon name={meta.icon} className="h-[22px] w-[22px]" />
@@ -177,50 +177,97 @@ export default async function ResourcesIndexPage() {
               </div>
             </section>
           );
+
+          // Give the Software Comparisons section a full-bleed tonal band so
+          // it reads as a distinct beat in the Stitch layout, while every
+          // other group stays on the base surface within the shared column.
+          if (key === "comparisons") {
+            return (
+              <div key={key} className="bg-alx-surface-container py-16 border-y border-alx-outline-variant/15">
+                <div className="max-w-6xl mx-auto px-6">{sectionBody}</div>
+              </div>
+            );
+          }
+
+          return (
+            <div key={key} className="max-w-6xl mx-auto px-6">
+              {sectionBody}
+            </div>
+          );
         })}
 
         {/* Other resources */}
         {grouped.other.length > 0 && (
-          <section>
-            <div className="flex items-center gap-3 mb-6 pb-3 border-b border-alx-outline-variant/15">
-              <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-alx-primary-fixed text-alx-primary shrink-0">
-                <GroupIcon name="other" className="h-[22px] w-[22px]" />
+          <div className="max-w-6xl mx-auto px-6">
+            <section className="alx-scroll-fade">
+              <div className="flex items-center gap-3 mb-6 pb-3 border-b border-alx-outline-variant/15">
+                <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-alx-primary-fixed text-alx-primary shrink-0">
+                  <GroupIcon name="other" className="h-[22px] w-[22px]" />
+                </div>
+                <div>
+                  <h2 className="font-headline text-lg font-extrabold text-alx-on-surface">More Resources</h2>
+                  <p className="font-body text-xs text-alx-on-surface-variant">Additional tools and content from SiteFlow.</p>
+                </div>
               </div>
-              <div>
-                <h2 className="font-headline text-lg font-extrabold text-alx-on-surface">More Resources</h2>
-                <p className="font-body text-xs text-alx-on-surface-variant">Additional tools and content from SiteFlow.</p>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {grouped.other.map((r, idx) => (
-                <article
-                  key={idx}
-                  className="rounded-2xl bg-alx-surface-container-lowest p-5 flex flex-col justify-between shadow-xl shadow-alx-on-surface/5 alx-hover-lift transition-all group"
-                >
-                  <div className="space-y-2">
-                    <h3 className="font-headline text-sm font-extrabold text-alx-on-surface group-hover:text-alx-primary transition-all line-clamp-2 leading-snug">
-                      <Link href={`/resources/${r.slug}`} className="cursor-pointer">
-                        {r.title}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                {grouped.other.map((r, idx) => (
+                  <article
+                    key={idx}
+                    className="rounded-2xl bg-alx-surface-container-lowest p-5 flex flex-col justify-between shadow-xl shadow-alx-on-surface/5 alx-hover-lift transition-all group"
+                  >
+                    <div className="space-y-2">
+                      <h3 className="font-headline text-sm font-extrabold text-alx-on-surface group-hover:text-alx-primary transition-all line-clamp-2 leading-snug">
+                        <Link href={`/resources/${r.slug}`} className="cursor-pointer">
+                          {r.title}
+                        </Link>
+                      </h3>
+                      <p className="font-body text-alx-on-surface-variant text-xs leading-relaxed line-clamp-2">
+                        {r.metaDescription}
+                      </p>
+                    </div>
+                    <div className="pt-3 mt-4 border-t border-alx-outline-variant/15 flex items-center justify-end">
+                      <Link
+                        href={`/resources/${r.slug}`}
+                        className="font-uilabel text-xs font-bold text-alx-primary hover:text-alx-on-surface transition-all cursor-pointer"
+                      >
+                        View →
                       </Link>
-                    </h3>
-                    <p className="font-body text-alx-on-surface-variant text-xs leading-relaxed line-clamp-2">
-                      {r.metaDescription}
-                    </p>
-                  </div>
-                  <div className="pt-3 mt-4 border-t border-alx-outline-variant/15 flex items-center justify-end">
-                    <Link
-                      href={`/resources/${r.slug}`}
-                      className="font-uilabel text-xs font-bold text-alx-primary hover:text-alx-on-surface transition-all cursor-pointer"
-                    >
-                      View →
-                    </Link>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </section>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </section>
+          </div>
         )}
       </div>
+
+      {/* Closing CTA band */}
+      <section className="py-28 px-6 bg-alx-surface-container-lowest alx-scroll-fade">
+        <div className="max-w-4xl mx-auto bg-gradient-to-br from-alx-primary-fixed via-alx-surface-container-lowest to-alx-surface-container rounded-[3rem] p-12 md:p-16 text-center relative overflow-hidden border border-alx-outline-variant/20 shadow-2xl shadow-alx-primary/5">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-alx-primary/10 via-transparent to-transparent opacity-50" />
+          <h2 className="font-headline text-3xl md:text-4xl font-extrabold text-alx-on-surface leading-tight mb-6 relative z-10">
+            Ready to unify your entire construction lifecycle?
+          </h2>
+          <p className="font-body text-alx-on-surface-variant text-sm max-w-md mx-auto mb-8 relative z-10">
+            Take these tools further with one connected workspace for planning, progress, procurement, and project finance.
+          </p>
+          <div className="relative z-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link
+              href="/login"
+              className="alx-bg-gradient-primary text-alx-on-primary px-8 py-3.5 rounded-full font-uilabel text-sm font-bold tracking-wide hover:shadow-xl hover:shadow-alx-primary/30 transition-all active:scale-95 inline-flex items-center justify-center relative overflow-hidden group"
+            >
+              <span className="relative z-10">Get Started Free</span>
+              <div className="absolute inset-0 alx-shimmer opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            </Link>
+            <Link
+              href="/contact"
+              className="border border-alx-outline-variant/40 text-alx-on-surface px-8 py-3.5 rounded-full font-uilabel text-sm font-bold tracking-wide hover:border-alx-primary hover:text-alx-primary transition-all active:scale-95 inline-flex items-center justify-center bg-alx-surface-container-lowest"
+            >
+              Request a Demo
+            </Link>
+          </div>
+        </div>
+      </section>
     </MarketingShell>
   );
 }
