@@ -3,11 +3,12 @@ import Link from "next/link";
 import { getContentItemBySlug } from "@/lib/content";
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
+import MarketingShell from "@/components/marketing/MarketingShell";
 
 export async function generateMetadata(): Promise<Metadata> {
   const page = await getContentItemBySlug("pages", "tally");
   return {
-    title: page?.metaTitle || "Tally Integration — SiteFlow",
+    title: page?.metaTitle || "Tally Integration - SiteFlow",
     description: page?.metaDescription,
   };
 }
@@ -17,40 +18,38 @@ export default async function TallyIntegrationPage() {
   if (!page) notFound();
 
   return (
-    <div className="min-h-screen bg-background text-foreground relative">
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute top-[-10%] right-[-10%] h-[50vw] w-[50vw] rounded-full bg-primary opacity-5 blur-[120px]" />
-        <div className="absolute bottom-[-10%] left-[-10%] h-[50vw] w-[50vw] rounded-full bg-primary opacity-5 blur-[120px]" />
-      </div>
+    <MarketingShell>
+      {/* Hero */}
+      <section className="relative px-6 pt-6 pb-12 overflow-hidden alx-scroll-fade is-visible">
+        <div className="absolute inset-0 z-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-alx-primary-fixed/30 via-alx-surface-container-lowest to-alx-surface-container-lowest pointer-events-none" />
+        <div className="max-w-5xl mx-auto relative z-10">
+          {/* Breadcrumb */}
+          <div className="flex items-center gap-2 text-xs text-alx-on-surface-variant mb-8">
+            <Link href="/" className="hover:text-alx-primary transition-all">
+              Home
+            </Link>
+            <span>/</span>
+            <Link href="/integrations" className="hover:text-alx-primary transition-all">
+              Integrations
+            </Link>
+            <span>/</span>
+            <span className="text-alx-on-surface-variant">Tally ERP</span>
+          </div>
 
-      <header className="sticky top-0 z-50 bg-card border border-border-custom rounded-lg border-b border-border-custom px-6 py-4 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary font-sans font-bold text-white shadow-md">S</div>
-          <span className="text-lg font-bold tracking-tight text-foreground">Site<span className="text-primary">Flow</span></span>
-        </Link>
-        <div className="flex items-center gap-5">
-          <Link href="/integrations" className="text-sm text-muted hover:text-foreground transition-all">All Integrations</Link>
-          <Link href="/login" className="rounded-md bg-primary px-5 py-2 text-sm font-bold text-white hover:opacity-90 transition-all">Get Started</Link>
+          <h1 className="font-headline text-4xl md:text-5xl font-extrabold tracking-tight text-alx-on-surface leading-tight">
+            {page.title}
+          </h1>
         </div>
-      </header>
+      </section>
 
-      {/* Breadcrumb */}
-      <div className="max-w-5xl mx-auto px-6 pt-8 flex items-center gap-2 text-xs text-muted">
-        <Link href="/" className="hover:text-foreground transition-all">Home</Link>
-        <span>/</span>
-        <Link href="/integrations" className="hover:text-foreground transition-all">Integrations</Link>
-        <span>/</span>
-          <span className="text-muted">Tally ERP</span>
-      </div>
-
-      <main className="max-w-5xl mx-auto px-6 py-8">
-        <div className="bg-card border border-border-custom rounded-lg shadow-sm rounded-md p-8 md:p-12 border border-border-custom">
+      <main className="max-w-5xl mx-auto px-6 pb-24 alx-scroll-fade">
+        <div className="bg-alx-surface-container-lowest border border-alx-outline-variant rounded-lg shadow-sm p-8 md:p-12">
           <div
             className="help-article"
             dangerouslySetInnerHTML={{ __html: page.body }}
           />
         </div>
       </main>
-    </div>
+    </MarketingShell>
   );
 }

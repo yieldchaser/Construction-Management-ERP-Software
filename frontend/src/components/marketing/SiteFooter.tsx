@@ -38,23 +38,31 @@ const FOOTER_COLUMNS = [
 
 export default function SiteFooter() {
   return (
-    <footer className="w-full bg-alx-surface-container border-t border-alx-outline-variant/20 py-16">
+    <footer className="relative w-full bg-alx-surface-container-low border-t border-alx-outline-variant/30 pt-20 pb-10 overflow-hidden">
+      <div className="absolute top-0 left-0 h-px w-full alx-bg-gradient-primary opacity-70" />
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 px-12 max-w-7xl mx-auto">
         <div className="lg:col-span-1">
-          <Link className="flex items-center gap-2 mb-6" href="/">
-            <Icon name="architecture" className="w-6 h-6 text-alx-secondary" />
-            <span className="font-headline text-xl text-alx-secondary font-bold tracking-tight">
-              SiteFlow
+          <Link className="flex items-center gap-2 mb-4 group" href="/">
+            <Icon
+              name="architecture"
+              className="w-6 h-6 text-alx-primary group-hover:scale-110 transition-transform"
+            />
+            <span className="font-headline text-xl font-bold tracking-tight">
+              <span className="text-alx-on-surface">Site</span>
+              <span className="text-alx-primary">Flow</span>
             </span>
           </Link>
+          <p className="font-body text-sm text-alx-on-surface-variant opacity-80 leading-relaxed">
+            Construction management, built for how Indian sites actually work.
+          </p>
         </div>
 
         {FOOTER_COLUMNS.map((column) => (
-          <div key={column.heading} className="space-y-4">
-            <h4 className="font-uilabel font-bold text-alx-on-surface text-sm uppercase tracking-widest">
+          <div key={column.heading} className="space-y-5">
+            <h4 className="font-uilabel font-bold text-alx-on-surface text-xs uppercase tracking-[0.16em]">
               {column.heading}
             </h4>
-            <ul className="space-y-3">
+            <ul className="space-y-3.5">
               {column.links.map((link) => (
                 <li key={link.href}>
                   <Link
@@ -69,13 +77,27 @@ export default function SiteFooter() {
           </div>
         ))}
       </div>
-      <div className="max-w-7xl mx-auto px-12 mt-16 pt-8 border-t border-alx-outline-variant/20 flex flex-col md:flex-row justify-between items-center gap-4">
-        <p className="font-body text-sm text-alx-on-surface-variant opacity-80">
+      <div className="max-w-7xl mx-auto px-12 mt-16 pt-8 border-t border-alx-outline-variant/30 flex flex-col md:flex-row justify-between items-center gap-4">
+        <p className="font-body text-sm text-alx-on-surface-variant opacity-70">
           &copy; {new Date().getFullYear()} SiteFlow. All rights reserved.
         </p>
-        <p className="font-body text-sm text-alx-on-surface-variant opacity-80">
-          Built for Indian construction
-        </p>
+        <div className="flex items-center gap-6">
+          <Link
+            href="/privacy"
+            className="font-uilabel text-xs uppercase tracking-wide text-alx-on-surface-variant hover:text-alx-primary transition-colors opacity-80 hover:opacity-100"
+          >
+            Privacy
+          </Link>
+          <Link
+            href="/terms"
+            className="font-uilabel text-xs uppercase tracking-wide text-alx-on-surface-variant hover:text-alx-primary transition-colors opacity-80 hover:opacity-100"
+          >
+            Terms
+          </Link>
+          <p className="font-body text-sm text-alx-on-surface-variant opacity-70">
+            Built for Indian construction
+          </p>
+        </div>
       </div>
     </footer>
   );
