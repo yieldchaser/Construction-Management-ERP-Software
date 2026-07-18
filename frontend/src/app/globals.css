@@ -3411,3 +3411,28 @@ body {
 .alexandria .help-article .wp-block-button__link:hover {
   background-color: var(--primary-hover) !important;
 }
+
+/* ===== Premium finishing touches (scoped to the marketing shell only;
+   the dark console app is not inside .alexandria and is unaffected). ===== */
+/* Smooth anchor scrolling for in-article table-of-contents jumps. */
+html:has(.alexandria) { scroll-behavior: smooth; }
+/* Crisper text rendering on the light editorial surfaces. */
+.alexandria {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+/* Brand-tinted text selection. */
+.alexandria ::selection { background: rgba(9, 76, 178, 0.16); color: #1b1c1d; }
+.alexandria ::-moz-selection { background: rgba(9, 76, 178, 0.16); color: #1b1c1d; }
+/* Accessible, on-brand focus rings for keyboard users. */
+.alexandria a:focus-visible,
+.alexandria button:focus-visible,
+.alexandria input:focus-visible,
+.alexandria textarea:focus-visible,
+.alexandria select:focus-visible,
+.alexandria [tabindex]:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}

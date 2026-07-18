@@ -6,6 +6,7 @@ import MarketingShell from "@/components/marketing/MarketingShell";
 import MockupFrame from "@/components/marketing/MockupFrame";
 import Icon from "@/components/marketing/Icon";
 import TypewriterText from "@/components/marketing/TypewriterText";
+import CountUp from "@/components/marketing/CountUp";
 
 export default function LandingPage() {
   useEffect(() => {
@@ -83,7 +84,7 @@ export default function LandingPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12 divide-x divide-alx-outline-variant/20">
             <div className="text-center px-4 group">
               <div className="font-headline text-4xl font-bold text-alx-primary mb-2 group-hover:scale-110 transition-transform">
-                16
+                <CountUp value="16" />
               </div>
               <div className="font-uilabel text-sm text-alx-on-surface-variant uppercase tracking-widest font-semibold">
                 Modules
@@ -91,7 +92,7 @@ export default function LandingPage() {
             </div>
             <div className="text-center px-4 group">
               <div className="font-headline text-4xl font-bold text-alx-primary mb-2 group-hover:scale-110 transition-transform">
-                1
+                <CountUp value="1" />
               </div>
               <div className="font-uilabel text-sm text-alx-on-surface-variant uppercase tracking-widest font-semibold">
                 Record
@@ -99,7 +100,7 @@ export default function LandingPage() {
             </div>
             <div className="text-center px-4 group">
               <div className="font-headline text-4xl font-bold text-alx-primary mb-2 group-hover:scale-110 transition-transform">
-                IS-Code
+                <CountUp value="IS-Code" />
               </div>
               <div className="font-uilabel text-sm text-alx-on-surface-variant uppercase tracking-widest font-semibold">
                 Grade Math
@@ -107,7 +108,7 @@ export default function LandingPage() {
             </div>
             <div className="text-center px-4 group">
               <div className="font-headline text-4xl font-bold text-alx-primary mb-2 group-hover:scale-110 transition-transform">
-                PWA
+                <CountUp value="PWA" />
               </div>
               <div className="font-uilabel text-sm text-alx-on-surface-variant uppercase tracking-widest font-semibold">
                 Offline Mode

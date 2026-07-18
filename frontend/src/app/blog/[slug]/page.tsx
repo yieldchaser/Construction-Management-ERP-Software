@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { getContentItemBySlug, getContentItems } from "@/lib/content";
 import { Metadata } from "next";
 import MarketingShell from "@/components/marketing/MarketingShell";
+import ReadingProgress from "@/components/marketing/ReadingProgress";
 
 interface RouteParams {
   params: Promise<{
@@ -267,6 +268,7 @@ export default async function BlogPostPage({ params }: RouteParams) {
 
   return (
     <MarketingShell>
+      <ReadingProgress />
       <div className="max-w-6xl mx-auto px-6 pt-4 pb-24">
         {/* Breadcrumb */}
         <nav className="alx-scroll-fade flex items-center gap-1.5 font-uilabel text-[11px] uppercase tracking-widest text-alx-outline mb-6">

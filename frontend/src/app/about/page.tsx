@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import Link from "next/link";
 import MarketingShell from "@/components/marketing/MarketingShell";
 import Icon from "@/components/marketing/Icon";
+import CountUp from "@/components/marketing/CountUp";
 
 const IS_CHIPS = [
   { label: "IS 456", term: "Concrete" },
@@ -233,7 +234,9 @@ export default function AboutPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12 divide-x divide-alx-outline-variant/20">
             {PROOF_POINTS.map((t, i) => (
               <div key={i} className="text-center px-4">
-                <div className="font-headline text-3xl font-bold text-alx-primary mb-2">{t.value}</div>
+                <div className="font-headline text-3xl font-bold text-alx-primary mb-2">
+                  <CountUp value={t.value} />
+                </div>
                 <div className="font-uilabel text-xs text-alx-on-surface-variant uppercase tracking-widest font-semibold">
                   {t.label}
                 </div>

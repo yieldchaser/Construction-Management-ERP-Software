@@ -5,6 +5,7 @@ import { getContentItemBySlug, getContentItems } from "@/lib/content";
 import { Metadata } from "next";
 import MarketingShell from "@/components/marketing/MarketingShell";
 import MockupFrame from "@/components/marketing/MockupFrame";
+import ReadingProgress from "@/components/marketing/ReadingProgress";
 
 interface RouteParams {
   params: Promise<{
@@ -40,6 +41,7 @@ export default async function ProductFeaturePage({ params }: RouteParams) {
 
   return (
     <MarketingShell>
+      <ReadingProgress />
       {/* Hero */}
       <section className="relative px-6 pt-6 pb-20 overflow-hidden alx-scroll-fade is-visible">
         <div className="absolute inset-0 z-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-alx-primary-fixed/30 via-alx-surface-container-lowest to-alx-surface-container-lowest pointer-events-none" />

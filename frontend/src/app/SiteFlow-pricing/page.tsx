@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import MarketingShell from "@/components/marketing/MarketingShell";
+import CountUp from "@/components/marketing/CountUp";
 
 const PLANS = [
   {
@@ -193,7 +194,9 @@ export default function PricingPage() {
               key={i}
               className="bg-alx-surface-container-low rounded-full py-6 px-6 text-center flex flex-col justify-center items-center shadow-sm shadow-alx-on-surface/5"
             >
-              <div className="font-headline text-3xl font-bold text-alx-primary mb-1">{t.value}</div>
+              <div className="font-headline text-3xl font-bold text-alx-primary mb-1">
+                <CountUp value={t.value} />
+              </div>
               <div className="font-uilabel text-[10px] font-bold uppercase tracking-widest text-alx-on-surface-variant">
                 {t.label}
               </div>

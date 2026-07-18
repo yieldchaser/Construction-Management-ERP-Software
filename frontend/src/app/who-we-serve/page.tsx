@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import Link from "next/link";
 import MarketingShell from "@/components/marketing/MarketingShell";
 import MockupFrame from "@/components/marketing/MockupFrame";
+import CountUp from "@/components/marketing/CountUp";
 
 const STATS = [
   { value: "16", label: "Operational Modules" },
@@ -251,7 +252,7 @@ export default function WhoWeServePage() {
             {STATS.map((stat) => (
               <div key={stat.label} className="flex flex-col items-center px-2">
                 <span className="font-headline text-3xl md:text-4xl font-bold text-alx-primary mb-2">
-                  {stat.value}
+                  <CountUp value={stat.value} />
                 </span>
                 <span className="font-uilabel text-xs text-alx-on-surface-variant uppercase tracking-wider font-semibold">
                   {stat.label}
