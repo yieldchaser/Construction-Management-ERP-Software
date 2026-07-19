@@ -117,7 +117,17 @@ FIXED this pass (commit 55b2d0c + glossary redirect):
 - /resources/construction-terms-meanings served the legacy scraped glossary -> now redirects to /resources/glossary.
 STILL UNAUDITED VISUALLY: every other page. Need a real screenshot pass, not curl.
 
-## OPEN QUEUE from founder screenshots 7585-7589 (diagnosed, NOT yet fixed)
+## QUEUE from founder screenshots 7585-7589 — ALL FIXED (commits 803efb6, 6ed0e75)
+ROOT CAUSE of both the header gap and every section seam was ONE thing: each hero painted an OPAQUE
+`absolute inset-0` gradient ending in a solid colour, which hid the global Aurora wash inside the hero and
+produced a hard edge at its top and bottom. All 20 hero overlays now end in `via-transparent to-transparent`
+so the page surface flows through. Fix the pattern, not the page, if this recurs.
+Also fixed: blog index hero grid was col-span-7/5 gap-8 vs content col-span-8/4 gap-6 (Insights Archive
+could never align with Latest Briefing) -> unified; blog TOC card and its list were both scroll containers
+-> scrolling now only on the list so the label stays pinned, label given matching pl-3; "Back to all posts"
+moved from a dangling block under the article body into the end of the sidebar.
+
+## (historical) OPEN QUEUE from founder screenshots 7585-7589
 DONE already: 7589 TOC clipping -> list now max-h-[45vh] overflow-y-auto (commit 803efb6).
 1. **Top gap under the header (7585, 7586).** A bare strip sits between the fixed header's bottom edge and
    the top of each hero's gradient. Cause: MarketingShell renders `<main className="flex-1 pt-24">` (96px)
