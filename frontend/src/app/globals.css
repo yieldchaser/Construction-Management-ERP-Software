@@ -3365,8 +3365,11 @@ body {
 /* Subtle noise texture for premium depth on flat light surfaces. */
 .alx-grain {
   pointer-events: none;
-  opacity: 0.045;
-  mix-blend-mode: multiply;
+  /* No mix-blend-mode: a full-viewport fixed blend layer forces the browser
+     to re-composite against everything beneath it on every scroll frame.
+     At this opacity a plain overlay is visually equivalent on the light
+     Alexandria surfaces and costs nothing to scroll past. */
+  opacity: 0.04;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   background-repeat: repeat;
 }
@@ -3438,20 +3441,25 @@ body {
 .alx-aurora-hero .alx-aurora-orb-b { opacity: 0.3; }
 .alx-aurora-hero .alx-aurora-orb-c { opacity: 0.2; }
 
+/* Translate-only drift. Scaling or rotating a blur(110px) layer forces the
+   browser to re-rasterize a very large blurred surface every frame, which
+   was the main source of scroll jank. Pure translate3d stays on the
+   compositor: the orb is rasterized once and only moved. Travel distances
+   are widened slightly so the motion still reads the same. */
 @keyframes alx-aurora-drift-a {
-  0%   { transform: translate3d(0, 0, 0) scale(1) rotate(0deg); }
-  50%  { transform: translate3d(4%, 5%, 0) scale(1.08) rotate(6deg); }
-  100% { transform: translate3d(-3%, 3%, 0) scale(1.02) rotate(-4deg); }
+  0%   { transform: translate3d(0, 0, 0); }
+  50%  { transform: translate3d(6%, 7%, 0); }
+  100% { transform: translate3d(-4%, 4%, 0); }
 }
 @keyframes alx-aurora-drift-b {
-  0%   { transform: translate3d(0, 0, 0) scale(1) rotate(0deg); }
-  50%  { transform: translate3d(-5%, -4%, 0) scale(1.1) rotate(-5deg); }
-  100% { transform: translate3d(3%, -2%, 0) scale(1.03) rotate(4deg); }
+  0%   { transform: translate3d(0, 0, 0); }
+  50%  { transform: translate3d(-7%, -6%, 0); }
+  100% { transform: translate3d(4%, -3%, 0); }
 }
 @keyframes alx-aurora-drift-c {
-  0%   { transform: translate3d(0, 0, 0) scale(1) rotate(0deg); }
-  50%  { transform: translate3d(-4%, 5%, 0) scale(1.06) rotate(5deg); }
-  100% { transform: translate3d(4%, -3%, 0) scale(0.97) rotate(-3deg); }
+  0%   { transform: translate3d(0, 0, 0); }
+  50%  { transform: translate3d(-6%, 7%, 0); }
+  100% { transform: translate3d(5%, -4%, 0); }
 }
 
 @media (prefers-reduced-motion: reduce) {
