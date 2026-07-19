@@ -3343,6 +3343,11 @@ body {
   background: linear-gradient(135deg, #094cb2 0%, #3366cc 100%);
   -webkit-background-clip: text; background-clip: text;
   -webkit-text-fill-color: transparent; color: transparent;
+  /* background-clip:text paints only inside the element's box, so at large
+     serif sizes with tight leading the descenders (g, y, p, j) get clipped.
+     Padding extends the paint box; inline-block makes the extra room stick. */
+  display: inline-block;
+  padding-bottom: 0.14em;
 }
 .alx-bg-gradient-primary { background: linear-gradient(135deg, #094cb2 0%, #3366cc 100%); }
 @keyframes alxfloat { 0%{transform:translateY(0)} 50%{transform:translateY(-12px)} 100%{transform:translateY(0)} }

@@ -41,7 +41,7 @@ export default function LandingPage() {
         </div>
         <div className="alx-grain absolute inset-0 z-0" aria-hidden="true" />
         <div className="max-w-5xl mx-auto text-center relative z-10">
-          <h1 className="font-headline text-5xl md:text-7xl font-extrabold text-alx-on-surface leading-tight tracking-tight mb-8">
+          <h1 className="font-headline text-5xl md:text-7xl font-extrabold text-alx-on-surface leading-[1.18] tracking-tight mb-8">
             Run every project from <br />
             <TypewriterText
               phrases={["one ledger.", "one dashboard.", "one record.", "one workspace."]}
