@@ -92,9 +92,12 @@ export default function ProductIcon({
   name,
   className = "h-5 w-5",
 }: {
-  name: ProductIconName;
+  // Accepts any string (content JSON may carry an unmapped name); an unknown
+  // name falls back to a neutral glyph instead of rendering an empty icon.
+  name: string;
   className?: string;
 }) {
+  const node = PATHS[name as ProductIconName] ?? PATHS.checkCircle;
   return (
     <svg
       className={className}
@@ -106,7 +109,7 @@ export default function ProductIcon({
       strokeLinejoin="round"
       aria-hidden="true"
     >
-      {PATHS[name]}
+      {node}
     </svg>
   );
 }
