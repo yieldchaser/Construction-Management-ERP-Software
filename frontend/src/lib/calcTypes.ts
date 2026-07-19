@@ -26,7 +26,15 @@ export interface CalcGuideStep {
   imageSlot: string | null;
 }
 
+export interface CalcHero {
+  /** Accurate page subhead. Must describe what the tool actually does (not scraped marketing copy). */
+  subhead?: string;
+  /** Short check-list points that fill the hero's left column beside the tall console. */
+  points?: string[];
+}
+
 export interface StructuredCalculator {
+  hero?: CalcHero;
   formulaStrip: CalcFormulaStat[];
   guide: CalcGuideStep[];
   referenceTable: ProductDataTable;
