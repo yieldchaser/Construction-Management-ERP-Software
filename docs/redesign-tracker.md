@@ -99,9 +99,11 @@ DONE + live on Vercel (branch preview):
 All validated: 0 fabricated metrics, 0 numeric comparison scores, 0 em-dash regressions, 0 export glitches.
 
 LEFT:
-1. **Emoji -> monochrome stroke icons** (help category grid + 📖 eyebrow; sweep whole site). Founder directive.
-2. **Index pages polish** — VERIFY/rebuild the card grids for /resources hub, /resources/construction-calculators,
-   /resources/feature-comparisons (may still render legacy body-blob via ResourceIndexProse, not stitch card grid).
+1. ~~Emoji -> stroke icons~~ DONE (a329146). Icon set +27 glyphs; emoji purged site-wide (marketing scope).
+   Note: console `app/c/*` (496) + content JSON (974 editorial) emoji documented as out-of-scope follow-up.
+2. ~~Index card grids~~ DONE (a329146). calc-index + comparison-index rebuilt as card grids (ResourceIndexGrid);
+   /resources hub emoji-purged by HY-3. CROSS-AGENT LESSON: HY-3 must STAGE to docs/hy3-output, never edit
+   frontend/src while main agent works — direct co-editing caused revert collisions.
 3. **Per-page-TYPE polish pass** — one design QA per template (product/calc/comparison/glossary/help/blog/legal/indexes),
    fixes propagate to all instances. No per-instance passes (templates give uniform quality). No beauty compromise.
 4. **Real images** (LAST) — product hero screenshots, calc illustration diagrams, blog hero photos, glossary
