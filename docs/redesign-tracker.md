@@ -117,6 +117,29 @@ FIXED this pass (commit 55b2d0c + glossary redirect):
 - /resources/construction-terms-meanings served the legacy scraped glossary -> now redirects to /resources/glossary.
 STILL UNAUDITED VISUALLY: every other page. Need a real screenshot pass, not curl.
 
+## OPEN QUEUE from founder screenshots 7585-7589 (diagnosed, NOT yet fixed)
+DONE already: 7589 TOC clipping -> list now max-h-[45vh] overflow-y-auto (commit 803efb6).
+1. **Top gap under the header (7585, 7586).** A bare strip sits between the fixed header's bottom edge and
+   the top of each hero's gradient. Cause: MarketingShell renders `<main className="flex-1 pt-24">` (96px)
+   while SiteHeader is shorter, and each hero paints its gradient with `absolute inset-0` INSIDE the section,
+   so the pt-24 band above it shows raw page background. Fix: either set main's top padding to the real
+   header height, or pull heroes up (`-mt-24 pt-24`) so their background starts beneath the header.
+   MEASURE SiteHeader's actual height first.
+2. **Hard section seams (7585, 7586, 7587).** Hero gradient ends in a straight horizontal line against the
+   next section's different background. Founder wants a seamless blend. The "Construction Calculators" icon,
+   the "Fastest ways to reach us" card and the "LATEST BRIEFING" card all sit ON that seam. Fix: end the hero
+   gradient in EXACTLY the next section's colour, or drop the competing background on the following section,
+   or fade the hero's bottom to transparent. Do it once in a shared pattern, not per page.
+3. **Blog index alignment (7587).** "INSIGHTS ARCHIVE" card must line up with the content below it; the
+   "SiteFlow Insights" hero panel and the blue featured card have mismatched left/right edges. Almost
+   certainly another container mismatch (panel with its own padding vs the grid below) - same bug class as
+   privacy/terms/help/integrations, which has now hit 4 pages.
+4. **"Back to all posts" placement (7588).** Currently dangling after the article body. Founder: find a
+   properly aligned home for it, do NOT just move it somewhere arbitrary. Candidates: the sticky sidebar
+   under the TOC/newsletter, or next to the breadcrumb at the top. Pick by alignment.
+5. **TOC card internal alignment (7589).** The "In this article" label and the list under it do not line up;
+   check the label's padding vs the `ul` (which now carries `pr-2`).
+
 LEFT:
 1. ~~Emoji -> stroke icons~~ DONE (a329146). Icon set +27 glyphs; emoji purged site-wide (marketing scope).
    Note: console `app/c/*` (496) + content JSON (974 editorial) emoji documented as out-of-scope follow-up.
