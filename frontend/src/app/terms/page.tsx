@@ -64,9 +64,9 @@ export default function TermsPage() {
   return (
     <MarketingShell>
       {/* Page header */}
-      <section className="relative px-6 pt-8 pb-12 overflow-hidden alx-scroll-fade is-visible">
+      <section className="relative pt-8 pb-12 overflow-hidden alx-scroll-fade is-visible">
         <div className="absolute inset-0 z-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-alx-primary-fixed/30 via-alx-surface-container-lowest to-alx-surface-container-lowest pointer-events-none" />
-        <div className="max-w-5xl mx-auto relative z-10">
+        <div className="max-w-5xl mx-auto px-6 relative z-10">
           <div className="md:grid md:grid-cols-[220px_1fr] md:gap-12">
             <div className="hidden md:block" aria-hidden="true" />
             <div className="max-w-2xl space-y-3">
