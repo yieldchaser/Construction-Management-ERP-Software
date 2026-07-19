@@ -19,9 +19,9 @@ Every page must **match or exceed** its stitch reference in `temp-stitch/` (main
 - [ ] **Shared component library** — StatStrip, FAQAccordion, DataTable, FeatureBlock (text↔mini-UI),
       mini-UI cards (ticket, checklist, statusList, progressBars, lineChart, ganttBars, dependencyGraph,
       ledgerRow), light CalculatorConsole, ComparisonMatrix, EditorialReadingShell, CTABand, HeroWithImage.
-- [~] **Product `[slug]`** (×20) — PILOT DONE + verified (construction-erp-software live via structured schema;
-      component library built under components/marketing/product/). Hardening TODO on rollout: hero `<img>` alt
-      when real image lands; guard FeatureBlock icon type assertion. Remaining 19 = HY-3 content fill.
+- [x] **Product `[slug]`** (×20) — DONE + pushed (df73c13). ALL 20 structured + live. HY-3 batch validated
+      (0 fabricated metrics / em dashes / glitches), Material icon names remapped, ProductIcon hardened,
+      MockupFrame em dashes stripped. Only remaining: real hero images (heroImageSlot null → MockupFrame now).
       full structured port. hero+image / 3 qualitative stats / 2-3 feature
       blocks / optional persona cards / data table / FAQ / CTA. NEW structured JSON schema (below).
 - [~] **Calculator `[slug]`** (×7) — PILOT DONE + verified. CalculatorTools console restyled LIGHT (shared,
