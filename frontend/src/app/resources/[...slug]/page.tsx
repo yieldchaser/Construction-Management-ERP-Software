@@ -93,7 +93,7 @@ function resourceSectionMeta(topSlug: string): { label: string; href: string } {
     return { label: "Comparisons", href: "/resources/feature-comparisons" };
   }
   if (topSlug === "construction-terms-meanings") {
-    return { label: "Glossary", href: "/resources/construction-terms-meanings" };
+    return { label: "Glossary", href: "/resources/glossary" };
   }
   return { label: "Resources", href: "/resources" };
 }

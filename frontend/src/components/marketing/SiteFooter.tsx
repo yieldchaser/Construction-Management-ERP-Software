@@ -14,7 +14,7 @@ const FOOTER_COLUMNS = [
     heading: "Resources",
     links: [
       { label: "Blog", href: "/blog" },
-      { label: "Glossary", href: "/resources/construction-terms-meanings" },
+      { label: "Glossary", href: "/resources/glossary" },
       { label: "Calculators", href: "/resources/construction-calculators" },
       { label: "Help Center", href: "/help" },
     ],
