@@ -9,6 +9,7 @@ interface HelpSearchClientProps {
   categories: Record<string, ContentItem[]>;
   categoryMeta: Record<string, { title: string; desc: string; icon: string }>;
   activeCategories: string[];
+  totalGuides: number;
 }
 
 export function HelpSearchClient({
@@ -16,6 +17,7 @@ export function HelpSearchClient({
   categories,
   categoryMeta,
   activeCategories,
+  totalGuides,
 }: HelpSearchClientProps) {
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -121,9 +123,18 @@ export function HelpSearchClient({
             </div>
           )}
         </div>
-      ) : (
+       ) : (
         /* Category Grid */
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 alx-scroll-fade">
+        <div className="space-y-8">
+          <div className="flex items-end justify-between">
+            <h2 className="font-headline text-2xl font-bold text-alx-on-surface tracking-tight">
+              Browse by Category
+            </h2>
+            <span className="text-xs font-uilabel font-semibold uppercase tracking-wider text-alx-on-surface-variant">
+              {activeCategories.length} categories
+            </span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 alx-scroll-fade">
           {activeCategories.map((catKey) => {
             const meta = categoryMeta[catKey];
             const articles = categories[catKey];
@@ -135,13 +146,18 @@ export function HelpSearchClient({
                 className="rounded-2xl bg-alx-surface-container-lowest p-6 flex flex-col justify-between shadow-xl shadow-alx-on-surface/5 alx-hover-lift transition-all"
               >
                 <div className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <span className="text-3xl p-2 rounded-xl bg-alx-primary-fixed">
-                      {meta.icon}
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <span className="text-3xl p-2 rounded-xl bg-alx-primary-fixed">
+                        {meta.icon}
+                      </span>
+                      <h2 className="font-headline text-lg font-extrabold text-alx-on-surface tracking-tight">
+                        {meta.title}
+                      </h2>
+                    </div>
+                    <span className="shrink-0 text-xs font-uilabel font-semibold text-alx-primary bg-alx-primary-fixed px-2.5 py-1 rounded-full">
+                      {articles.length} {articles.length === 1 ? "guide" : "guides"}
                     </span>
-                    <h2 className="font-headline text-lg font-extrabold text-alx-on-surface tracking-tight">
-                      {meta.title}
-                    </h2>
                   </div>
                   <p className="font-body text-alx-on-surface-variant text-xs leading-relaxed">
                     {meta.desc}
@@ -180,6 +196,7 @@ export function HelpSearchClient({
               </div>
             );
           })}
+          </div>
         </div>
       )}
     </div>

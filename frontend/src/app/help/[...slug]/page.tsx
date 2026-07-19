@@ -183,6 +183,22 @@ export default async function HelpArticlePage({ params }: RouteParams) {
               className="help-article max-w-none"
               dangerouslySetInnerHTML={{ __html: bodyHtml }}
             />
+
+            {/* Closing CTA */}
+            <div className="mt-12 rounded-2xl alx-bg-gradient-primary p-6 md:p-8 text-alx-on-primary shadow-lg shadow-alx-primary/25 alx-hover-lift flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
+              <div className="space-y-1.5">
+                <h3 className="font-headline text-lg font-bold">Was this guide helpful?</h3>
+                <p className="text-sm text-alx-on-primary/85 leading-relaxed">
+                  Couldn&apos;t find what you needed? Our team can walk you through it in a live demo.
+                </p>
+              </div>
+              <Link
+                href="/contact"
+                className="inline-flex items-center justify-center shrink-0 bg-alx-surface-container-lowest text-alx-primary font-bold text-sm px-5 py-3 rounded-lg hover:opacity-90 transition"
+              >
+                Contact Support
+              </Link>
+            </div>
           </main>
 
           <aside className="space-y-6 lg:sticky lg:top-28 lg:self-start">
