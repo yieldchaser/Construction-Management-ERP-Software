@@ -57,7 +57,7 @@ export default function ProductHero({ hero }: { hero: ProductHeroData }) {
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={hero.heroImageSlot}
-            alt=""
+            alt={hero.headline}
             className="w-full h-auto rounded-xl border border-alx-outline-variant/40 shadow-lg object-cover"
           />
         ) : (

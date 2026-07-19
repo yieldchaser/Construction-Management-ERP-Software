@@ -58,14 +58,17 @@ export default function PrivacyPage() {
       <section className="relative px-6 pt-8 pb-12 overflow-hidden alx-scroll-fade is-visible">
         <div className="absolute inset-0 z-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-alx-primary-fixed/30 via-alx-surface-container-lowest to-alx-surface-container-lowest pointer-events-none" />
         <div className="max-w-5xl mx-auto relative z-10">
-          <div className="max-w-2xl space-y-3">
-            <span className="alx-label alx-badge-gold inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs">
-              Legal
-            </span>
-            <h1 className="font-headline text-4xl md:text-5xl font-extrabold tracking-tight text-alx-on-surface leading-tight">
-              Privacy Policy
-            </h1>
-            <p className="font-body text-sm text-alx-on-surface-variant">Last updated: 01-01-2026</p>
+          <div className="md:grid md:grid-cols-[220px_1fr] md:gap-12">
+            <div className="hidden md:block" aria-hidden="true" />
+            <div className="max-w-2xl space-y-3">
+              <span className="alx-label alx-badge-gold inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs">
+                Legal
+              </span>
+              <h1 className="font-headline text-4xl md:text-5xl font-extrabold tracking-tight text-alx-on-surface leading-tight">
+                Privacy Policy
+              </h1>
+              <p className="font-body text-sm text-alx-on-surface-variant">Last updated: 01-01-2026</p>
+            </div>
           </div>
         </div>
       </section>

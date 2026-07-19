@@ -318,7 +318,7 @@ function MobileBody() {
         <div className="flex items-center justify-between px-3 pt-1.5">
           <div>
             <p className="text-[6px] font-medium uppercase tracking-wide text-alx-on-surface-variant">SiteFlow</p>
-            <p className="text-[8px] font-semibold text-alx-on-surface">Riverside Tower — Site A</p>
+            <p className="text-[8px] font-semibold text-alx-on-surface">Riverside Tower, Site A</p>
           </div>
           <span className="h-4 w-4 rounded-full bg-alx-primary-fixed" />
         </div>
@@ -394,7 +394,7 @@ function HeroBody() {
     { label: "Cash Position", value: "₹1.9Cr", tone: "primary" },
   ];
   const rows = [
-    { project: "Riverside Tower — Site A", stage: "RCC Frame", tone: "primary" as const, pct: "68%" },
+    { project: "Riverside Tower, Site A", stage: "RCC Frame", tone: "primary" as const, pct: "68%" },
     { project: "Orchid Business Park", stage: "Finishing", tone: "gold" as const, pct: "84%" },
     { project: "Konkan Coastal Villas", stage: "Foundation", tone: "primary" as const, pct: "22%" },
     { project: "Metro Link Phase 2", stage: "On Hold", tone: "error" as const, pct: "41%" },
@@ -425,7 +425,7 @@ function HeroBody() {
         <div className="flex items-center justify-between border-b border-alx-outline-variant/20 px-3 py-2">
           <div>
             <p className="text-[6px] font-medium uppercase tracking-wide text-alx-on-surface-variant">Project</p>
-            <p className="text-[8.5px] font-semibold text-alx-on-surface">Riverside Tower — Site A</p>
+            <p className="text-[8.5px] font-semibold text-alx-on-surface">Riverside Tower, Site A</p>
           </div>
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1 rounded-full bg-alx-surface-container-high px-2 py-1 text-[6.5px] text-alx-on-surface-variant">

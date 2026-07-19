@@ -2,6 +2,7 @@ import fs from "fs/promises";
 import path from "path";
 import type { StructuredProduct } from "./productTypes";
 import type { StructuredCalculator } from "./calcTypes";
+import type { StructuredComparison } from "./comparisonTypes";
 
 export interface ContentItem {
   title: string;
@@ -27,6 +28,13 @@ export interface ContentItem {
    * See src/lib/calcTypes.ts.
    */
   calcStructured?: StructuredCalculator;
+  /**
+   * Optional component-driven feature-comparison template data. When present
+   * on a `resources/feature-comparisons` content item, the route renders
+   * <ComparisonArticle> instead of the legacy `body` HTML blob via
+   * ComparisonProse. See src/lib/comparisonTypes.ts.
+   */
+  comparisonStructured?: StructuredComparison;
 }
 
 const CONTENT_DIR = path.join(process.cwd(), "src/content");

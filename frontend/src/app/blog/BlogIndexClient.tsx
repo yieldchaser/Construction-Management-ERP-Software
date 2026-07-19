@@ -1,7 +1,8 @@
-"use client";
+﻿"use client";
 
 import React, { useMemo, useState } from "react";
 import Link from "next/link";
+import Icon from "@/components/marketing/Icon";
 
 export type BlogCategory =
   | "Financial Ledger"
@@ -239,7 +240,9 @@ export default function BlogIndexClient({
                     className="font-uilabel text-xs font-bold text-alx-primary hover:text-alx-on-surface transition-all flex items-center gap-1 cursor-pointer"
                   >
                     Read Article
-                    <span className="group-hover:translate-x-0.5 transition-transform">→</span>
+                    <span className="group-hover:translate-x-0.5 transition-transform inline-flex">
+                      <Icon name="arrow_right" className="w-4 h-4" />
+                    </span>
                   </Link>
                 </div>
               </article>
@@ -257,3 +260,4 @@ export default function BlogIndexClient({
     </div>
   );
 }
+

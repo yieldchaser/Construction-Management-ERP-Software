@@ -86,6 +86,13 @@ function NumberInput({
   );
 }
 
+/**
+ * When true, Shell omits its own eyebrow/title/subtitle. Set by CalcArticle,
+ * which renders the page-level serif H1 above a full-width console and would
+ * otherwise duplicate the heading.
+ */
+const HideConsoleHeaderContext = React.createContext(false);
+
 function Shell({
   eyebrow,
   title,
@@ -99,6 +106,7 @@ function Shell({
   form: React.ReactNode;
   result: React.ReactNode;
 }) {
+  const hideHeader = React.useContext(HideConsoleHeaderContext);
   // Every calculator here is already live: results recompute on every
   // keystroke, so "Calculate" isn't gating any math. It's a real, honest
   // affordance that scrolls the (sticky, off-screen-on-mobile) result panel
@@ -115,17 +123,19 @@ function Shell({
 
   return (
     <section className="not-prose rounded-2xl border border-alx-outline-variant/50 bg-alx-surface-container-lowest p-5 md:p-7 shadow-lg shadow-alx-on-surface/5">
-      <div className="mb-5">
-        <span className="alx-label inline-block text-xs font-bold text-alx-primary bg-alx-primary-fixed/40 px-2.5 py-1 rounded-md">
-          {eyebrow}
-        </span>
-        <h1 className="font-headline mt-3 text-2xl font-extrabold tracking-tight text-alx-on-surface">
-          {title}
-        </h1>
-        <p className="font-body mt-1.5 text-sm text-alx-on-surface-variant leading-relaxed max-w-2xl">
-          {subtitle}
-        </p>
-      </div>
+      {!hideHeader && (
+        <div className="mb-5">
+          <span className="alx-label inline-block text-xs font-bold text-alx-primary bg-alx-primary-fixed/40 px-2.5 py-1 rounded-md">
+            {eyebrow}
+          </span>
+          <h1 className="font-headline mt-3 text-2xl font-extrabold tracking-tight text-alx-on-surface">
+            {title}
+          </h1>
+          <p className="font-body mt-1.5 text-sm text-alx-on-surface-variant leading-relaxed max-w-2xl">
+            {subtitle}
+          </p>
+        </div>
+      )}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
         <div className="lg:col-span-3 space-y-5">
           {form}
@@ -438,8 +448,8 @@ function BrickCalculator() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Wall thickness">
               <select value={thickness} onChange={(e) => setThickness(Number(e.target.value))} className={inputCls}>
-                <option value={115}>115 mm — 4.5&quot; half brick (single leaf)</option>
-                <option value={230}>230 mm — 9&quot; full brick (double leaf)</option>
+                <option value={115}>115 mm, 4.5&quot; half brick (single leaf)</option>
+                <option value={230}>230 mm, 9&quot; full brick (double leaf)</option>
               </select>
             </Field>
             <Field label="Brick size">
@@ -759,7 +769,7 @@ function HouseCostCalculator() {
     <Shell
       eyebrow="Free Construction Tool"
       title="House Construction Cost Calculator"
-      subtitle="Get an illustrative build cost from built-up area, number of floors and specification tier. Rates are market averages — treat the output as a planning estimate, not a quotation."
+      subtitle="Get an illustrative build cost from built-up area, number of floors and specification tier. Rates are market averages, so treat the output as a planning estimate, not a quotation."
       form={
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -830,9 +840,19 @@ const CALCULATORS: Record<string, React.ComponentType> = {
   "house-construction-cost-calculator": HouseCostCalculator,
 };
 
-export default function CalculatorTools({ slug }: { slug: string }) {
+export default function CalculatorTools({
+  slug,
+  hideHeader = false,
+}: {
+  slug: string;
+  hideHeader?: boolean;
+}) {
   const key = slug.split("/").pop() || "";
   const Cmp = CALCULATORS[key];
   if (!Cmp) return null;
-  return <Cmp />;
+  return (
+    <HideConsoleHeaderContext.Provider value={hideHeader}>
+      <Cmp />
+    </HideConsoleHeaderContext.Provider>
+  );
 }

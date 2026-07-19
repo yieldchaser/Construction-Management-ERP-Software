@@ -1,9 +1,10 @@
-import React from "react";
+﻿import React from "react";
 import Link from "next/link";
 import { getContentItems } from "@/lib/content";
 import { Metadata } from "next";
 import MarketingShell from "@/components/marketing/MarketingShell";
 import Aurora from "@/components/marketing/Aurora";
+import Icon from "@/components/marketing/Icon";
 
 export const metadata: Metadata = {
   title: "SiteFlow Platform - Construction ERP Modules",
@@ -276,7 +277,7 @@ export default async function ProductsIndexPage() {
                       href={`/products/${product.slug}`}
                       className="font-uilabel text-xs font-bold text-alx-primary hover:text-alx-on-surface transition-all cursor-pointer"
                     >
-                      Explore Module →
+                      Explore Module <Icon name="arrow_right" className="w-4 h-4" />
                     </Link>
                   </div>
                 </article>
@@ -307,3 +308,4 @@ export default async function ProductsIndexPage() {
     </MarketingShell>
   );
 }
+

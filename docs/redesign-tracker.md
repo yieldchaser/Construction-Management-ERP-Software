@@ -16,12 +16,16 @@ Every page must **match or exceed** its stitch reference in `temp-stitch/` (main
 - No em dashes in body copy (founder pref).
 
 ## Templates to build (I design/spec; coder implements; verifier checks)
+> ✅ ALL TEMPLATES BELOW ARE BUILT + LIVE (products, calculators, comparisons, glossary, blog shell+index,
+> help, legal, index card grids, shared component library, stroke-icon system). The checkboxes below are
+> historical build-order notes; the authoritative done/left list is the **CURRENT STATUS** section at the bottom.
+> Only remaining work: the per-page-type POLISH PASS (in progress), real images (last), and legacy-body cleanup.
 - [ ] **Shared component library** — StatStrip, FAQAccordion, DataTable, FeatureBlock (text↔mini-UI),
       mini-UI cards (ticket, checklist, statusList, progressBars, lineChart, ganttBars, dependencyGraph,
       ledgerRow), light CalculatorConsole, ComparisonMatrix, EditorialReadingShell, CTABand, HeroWithImage.
-- [~] **Product `[slug]`** (×20) — PILOT DONE + verified (construction-erp-software live via structured schema;
-      component library built under components/marketing/product/). Hardening TODO on rollout: hero `<img>` alt
-      when real image lands; guard FeatureBlock icon type assertion. Remaining 19 = HY-3 content fill.
+- [x] **Product `[slug]`** (×20) — DONE + pushed (df73c13). ALL 20 structured + live. HY-3 batch validated
+      (0 fabricated metrics / em dashes / glitches), Material icon names remapped, ProductIcon hardened,
+      MockupFrame em dashes stripped. Only remaining: real hero images (heroImageSlot null → MockupFrame now).
       full structured port. hero+image / 3 qualitative stats / 2-3 feature
       blocks / optional persona cards / data table / FAQ / CTA. NEW structured JSON schema (below).
 - [~] **Calculator `[slug]`** (×7) — PILOT DONE + verified. CalculatorTools console restyled LIGHT (shared,
@@ -31,12 +35,17 @@ Every page must **match or exceed** its stitch reference in `temp-stitch/` (main
       restyle `CalculatorTools` to LIGHT console; formula/factor strip;
       how-to steps (numbered, image slots); reference table; FAQ; CTA. Rip out the black console + the
       bloated India/GCC rate panels that aren't in stitch. Keep real compute logic.
-- [ ] **Comparison `[slug]`** (×6) — hero / dual verdict cards (NO numeric scores) / "Two Approaches"
+- [~] **Comparison `[slug]`** (×6) — PILOT DONE + verified + pushed (8841ed1). SiteFlow-vs-buildern: scores
+      dropped, matrix (check/en-dash/chip), verdict cards, blue CTA; dead body stripped; metaDescription fixed.
+      Remaining 5 = HY-3 fill. Original spec:
+      hero / dual verdict cards (NO numeric scores) / "Two Approaches"
       mock consoles / "What is X/Y" / module comparison matrix / FAQ / CTA (blue, not purple).
 - [ ] **Index pages** — products, construction-calculators, feature-comparisons, resources hub. Light card grids.
 - [ ] **Glossary** — A-Z searchable (preview built). ADD: hero image slot + "Featured terms" band
       (4 ERP-linked accordions) above the full 200-term A-Z, to match stitch's featured treatment.
-- [ ] **Blog article shell** (×130) — editorial reading template: hero image, byline, sticky TOC sidebar,
+- [x] **Blog article shell** (×130) — DONE + pushed (f083120). BlogArticle: byline, hero band, auto-TOC
+      (dedup-safe), blue newsletter card, CTA; applies to all posts. Blog INDEX already done (pre-existing).
+      Original spec: editorial reading template: hero image, byline, sticky TOC sidebar,
       newsletter capture card, section headings, pull-quotes, formula/callout blocks, mid-article CTA.
 - [ ] **Blog index** — featured-report card, digest panel, category filter pills, image article cards, newsletter band.
 - [ ] **Help center** — search hero + category grid; + help-article reading shell (reuse blog shell).
@@ -80,4 +89,39 @@ Indexes (4): /products · /resources · /resources/construction-calculators · /
 Legal (2): /privacy · /terms
 Glossary (1) · Blog index (1) · Blog articles (~130) · Help center + articles (~40)
 
-_Status: recon COMPLETE (every stitch screen reviewed). Pilot = product template + component library._
+## CURRENT STATUS (2026-07-19) — DONE vs LEFT
+
+DONE + live on Vercel (branch preview):
+- Products ×20 (structured, HY-3 content) — commit df73c13
+- Calculators ×7 (light console + structured) — concrete-mix + 6 integrated
+- Comparisons ×8 (buildern + buildertrend/fieldwire/raken/powerplay/procore/rdash/nway) — scores dropped
+- Glossary /resources/glossary (A-Z, 200 terms, search, featured band, hero-photo slot)
+- Blog article shell (all ~130) + Blog index (pre-existing)
+- Help center + help article shell (honest counts, no fabricated card)
+- Legal alignment fix (privacy + terms)
+- Shared component library (product/*, calc, comparison, blog)
+All validated: 0 fabricated metrics, 0 numeric comparison scores, 0 em-dash regressions, 0 export glitches.
+
+LEFT:
+1. ~~Emoji -> stroke icons~~ DONE (a329146). Icon set +27 glyphs; emoji purged site-wide (marketing scope).
+   Note: console `app/c/*` (496) + content JSON (974 editorial) emoji documented as out-of-scope follow-up.
+2. ~~Index card grids~~ DONE (a329146). calc-index + comparison-index rebuilt as card grids (ResourceIndexGrid);
+   /resources hub emoji-purged by HY-3. CROSS-AGENT LESSON: HY-3 must STAGE to docs/hy3-output, never edit
+   frontend/src while main agent works — direct co-editing caused revert collisions.
+3. **Per-page-TYPE polish pass** (main agent, BATCH-WISE 2-3 types/batch, STOP after each, update memory+tracker):
+   - [x] Batch 1: PRODUCT (hero img alt=headline, StatStrip centered band, FeatureBlock robust icon) +
+         CALCULATOR (CalcGuide img alt). Build green.
+   - [x] Batch 2: COMPARISON (whatIs callout no longer uppercased via alx-label) + GLOSSARY (sticky search
+         toolbar top-24 so it docks below the fixed header instead of hiding behind it; retention formula
+         rendered with real <sub> subscripts). Build green.
+   - [ ] Batch 3: help + blog (article + index) + PURGE empty blog JSONs
+   - [ ] Batch 4: legal + resources hub + product/resources indexes
+   ORIGINAL note: — one design QA per template (product/calc/comparison/glossary/help/blog/legal/indexes),
+   fixes propagate to all instances. No per-instance passes (templates give uniform quality). No beauty compromise.
+4. **Real images** (LAST) — product hero screenshots, calc illustration diagrams, blog hero photos, glossary
+   construction photo (public/resources/glossary/construction-hero.jpg), house render.
+5. Cleanup: strip orphaned legacy `body` blobs on migrated product/calc files (search-indexed, carry scraped
+   fabricated copy); gitignore the "Long Screenshots…" folder.
+
+BLOG/HELP ARTICLES: already at stitch parity via the shells (uniform editorial treatment). Do NOT need per-article
+passes. Optional elevation later: real hero images + pull-quote/callout enrichment on FEATURED articles only.

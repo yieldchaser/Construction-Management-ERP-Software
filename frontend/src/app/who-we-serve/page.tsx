@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect } from "react";
 import Link from "next/link";
@@ -6,6 +6,7 @@ import MarketingShell from "@/components/marketing/MarketingShell";
 import MockupFrame from "@/components/marketing/MockupFrame";
 import CountUp from "@/components/marketing/CountUp";
 import Aurora from "@/components/marketing/Aurora";
+import Icon from "@/components/marketing/Icon";
 
 const STATS = [
   { value: "16", label: "Operational Modules" },
@@ -16,7 +17,7 @@ const STATS = [
 
 type Segment = {
   id: string;
-  icon: string;
+  icon: import("@/components/marketing/Icon").IconName;
   tag: string;
   h3: string;
   desc: string;
@@ -30,7 +31,7 @@ type Segment = {
 const SEGMENTS: Segment[] = [
   {
     id: "builders",
-    icon: "🏘",
+    icon: "home",
     tag: "Builders & Developers",
     h3: "ERP Software for Builders & Developers",
     desc: "From BOQ to client handover, SiteFlow connects every stage of your building project, budget control, procurement, subcontractor billing, and live P&L in one place.",
@@ -54,7 +55,7 @@ const SEGMENTS: Segment[] = [
   },
   {
     id: "civil",
-    icon: "🏗",
+    icon: "construction",
     tag: "Civil Contractors",
     h3: "ERP Software for Civil Contractors",
     desc: "GPS attendance, material tracking, quality checklists, and real-time cost control, everything a civil contractor needs to run multi-site projects from a phone.",
@@ -78,7 +79,7 @@ const SEGMENTS: Segment[] = [
   },
   {
     id: "interior",
-    icon: "🏠",
+    icon: "house",
     tag: "Interior Companies",
     h3: "ERP Software for Interior & Fit-Out Firms",
     desc: "Manage scope, vendor billing, client approvals, and project P&L across multiple interior projects, with the speed that fast-moving fit-out work demands.",
@@ -102,7 +103,7 @@ const SEGMENTS: Segment[] = [
   },
   {
     id: "infra",
-    icon: "🏭",
+    icon: "factory",
     tag: "Infrastructure Companies",
     h3: "ERP Software for Infrastructure & EPC Firms",
     desc: "Multi-site BOQ execution, subcontractor billing linked to progress, production tracking, and consolidated reporting, one source of truth across the entire contract.",
@@ -240,7 +241,7 @@ export default function WhoWeServePage() {
               href="/login"
               className="alx-bg-gradient-primary text-alx-on-primary px-8 py-3.5 rounded-full font-uilabel text-sm font-bold tracking-wide hover:shadow-xl hover:shadow-alx-primary/30 transition-all active:scale-95 inline-flex items-center justify-center gap-2 relative overflow-hidden group"
             >
-              <span className="relative z-10">Book a Free Demo →</span>
+              <span className="relative z-10">Book a Free Demo <Icon name="arrow_right" className="w-4 h-4" /></span>
               <div className="absolute inset-0 alx-shimmer opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             </Link>
           </div>
@@ -302,7 +303,7 @@ export default function WhoWeServePage() {
               <div className="p-8 flex-grow flex flex-col">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 rounded-xl bg-alx-primary-fixed text-alx-primary flex items-center justify-center text-lg">
-                    {segment.icon}
+                    <Icon name={segment.icon} className="w-5 h-5" />
                   </div>
                   <span className="font-uilabel text-xs font-bold text-alx-primary uppercase tracking-wider">
                     {segment.tag}
@@ -345,7 +346,7 @@ export default function WhoWeServePage() {
                     className="group/link font-uilabel text-sm font-bold text-alx-primary inline-flex items-center gap-1"
                   >
                     Learn More
-                    <span className="transition-transform group-hover/link:translate-x-1">→</span>
+                    <span className="transition-transform group-hover/link:translate-x-1 inline-flex"><Icon name="arrow_right" className="w-4 h-4" /></span>
                   </Link>
                   <Link
                     href="/login"
@@ -398,7 +399,7 @@ export default function WhoWeServePage() {
                   key={segment.id}
                   className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-alx-surface-container-lowest text-alx-on-surface text-xs font-semibold border border-alx-outline-variant/20"
                 >
-                  {segment.icon} {segment.tag}
+                  <Icon name={segment.icon} className="w-3.5 h-3.5" /> {segment.tag}
                 </span>
               ))}
             </div>
@@ -413,7 +414,7 @@ export default function WhoWeServePage() {
               href="/login"
               className="alx-bg-gradient-primary text-alx-on-primary px-10 py-4 rounded-full font-uilabel text-sm font-bold tracking-wide hover:shadow-xl hover:shadow-alx-primary/30 transition-all active:scale-95 inline-flex items-center justify-center gap-2 relative overflow-hidden group"
             >
-              <span className="relative z-10">Book a Free Demo →</span>
+              <span className="relative z-10">Book a Free Demo <Icon name="arrow_right" className="w-4 h-4" /></span>
               <div className="absolute inset-0 alx-shimmer opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             </Link>
             <p className="font-body text-sm text-alx-on-surface-variant mt-6 font-medium">
@@ -425,3 +426,4 @@ export default function WhoWeServePage() {
     </MarketingShell>
   );
 }
+

@@ -1,9 +1,10 @@
-import React from "react";
+﻿import React from "react";
 import Link from "next/link";
 import { getContentItems } from "@/lib/content";
 import { Metadata } from "next";
 import MarketingShell from "@/components/marketing/MarketingShell";
 import Aurora from "@/components/marketing/Aurora";
+import Icon from "@/components/marketing/Icon";
 
 export const metadata: Metadata = {
   title: "SiteFlow Resources - Calculators, Comparisons & Glossaries",
@@ -171,7 +172,7 @@ export default async function ResourcesIndexPage() {
                         href={`/resources/${r.slug}`}
                         className="font-uilabel text-xs font-bold text-alx-primary hover:text-alx-on-surface transition-all cursor-pointer"
                       >
-                        View Resource →
+                        View Resource <Icon name="arrow_right" className="w-4 h-4" />
                       </Link>
                     </div>
                   </article>
@@ -232,7 +233,7 @@ export default async function ResourcesIndexPage() {
                         href={`/resources/${r.slug}`}
                         className="font-uilabel text-xs font-bold text-alx-primary hover:text-alx-on-surface transition-all cursor-pointer"
                       >
-                        View →
+                        View <Icon name="arrow_right" className="w-4 h-4" />
                       </Link>
                     </div>
                   </article>
@@ -273,3 +274,4 @@ export default async function ResourcesIndexPage() {
     </MarketingShell>
   );
 }
+

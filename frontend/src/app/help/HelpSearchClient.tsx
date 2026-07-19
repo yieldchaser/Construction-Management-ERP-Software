@@ -3,12 +3,14 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { ContentItem } from "@/lib/content";
+import Icon from "@/components/marketing/Icon";
 
 interface HelpSearchClientProps {
   helpItems: ContentItem[];
   categories: Record<string, ContentItem[]>;
   categoryMeta: Record<string, { title: string; desc: string; icon: string }>;
   activeCategories: string[];
+  totalGuides: number;
 }
 
 export function HelpSearchClient({
@@ -16,6 +18,7 @@ export function HelpSearchClient({
   categories,
   categoryMeta,
   activeCategories,
+  totalGuides,
 }: HelpSearchClientProps) {
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -113,7 +116,9 @@ export function HelpSearchClient({
             </div>
           ) : (
             <div className="text-center py-12 rounded-2xl bg-alx-surface-container-lowest shadow-xl shadow-alx-on-surface/5">
-              <span className="text-3xl">🔍</span>
+              <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-alx-primary-fixed text-alx-primary">
+                <Icon name="search" className="w-5 h-5" />
+              </span>
               <h3 className="font-headline text-lg font-bold text-alx-on-surface mt-3">No articles found</h3>
               <p className="font-body text-alx-on-surface-variant text-sm mt-1">
                 Try checking spelling or search for general keywords.
@@ -121,9 +126,18 @@ export function HelpSearchClient({
             </div>
           )}
         </div>
-      ) : (
+       ) : (
         /* Category Grid */
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 alx-scroll-fade">
+        <div className="space-y-8">
+          <div className="flex items-end justify-between">
+            <h2 className="font-headline text-2xl font-bold text-alx-on-surface tracking-tight">
+              Browse by Category
+            </h2>
+            <span className="text-xs font-uilabel font-semibold uppercase tracking-wider text-alx-on-surface-variant">
+              {activeCategories.length} categories
+            </span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 alx-scroll-fade">
           {activeCategories.map((catKey) => {
             const meta = categoryMeta[catKey];
             const articles = categories[catKey];
@@ -135,13 +149,18 @@ export function HelpSearchClient({
                 className="rounded-2xl bg-alx-surface-container-lowest p-6 flex flex-col justify-between shadow-xl shadow-alx-on-surface/5 alx-hover-lift transition-all"
               >
                 <div className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <span className="text-3xl p-2 rounded-xl bg-alx-primary-fixed">
-                      {meta.icon}
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-alx-primary-fixed/40 text-alx-primary">
+                        <Icon name={meta.icon as any} className="w-5 h-5" />
+                      </span>
+                      <h2 className="font-headline text-lg font-extrabold text-alx-on-surface tracking-tight">
+                        {meta.title}
+                      </h2>
+                    </div>
+                    <span className="shrink-0 text-xs font-uilabel font-semibold text-alx-primary bg-alx-primary-fixed px-2.5 py-1 rounded-full">
+                      {articles.length} {articles.length === 1 ? "guide" : "guides"}
                     </span>
-                    <h2 className="font-headline text-lg font-extrabold text-alx-on-surface tracking-tight">
-                      {meta.title}
-                    </h2>
                   </div>
                   <p className="font-body text-alx-on-surface-variant text-xs leading-relaxed">
                     {meta.desc}
@@ -155,7 +174,10 @@ export function HelpSearchClient({
                         href={`/help/${art.slug}`}
                         className="block text-xs font-medium text-alx-on-surface-variant hover:text-alx-primary transition-all truncate cursor-pointer"
                       >
-                        📄 {art.title}
+                        <span className="inline-flex items-center gap-1.5">
+                          <Icon name="receipt" className="w-3.5 h-3.5 flex-shrink-0" />
+                          {art.title}
+                        </span>
                       </Link>
                     ))}
                     {articles.length > 4 && (
@@ -172,14 +194,15 @@ export function HelpSearchClient({
                     className="text-xs font-uilabel font-bold text-alx-primary hover:text-alx-on-surface transition-all flex items-center gap-1 group cursor-pointer"
                   >
                     Explore Category
-                    <span className="group-hover:translate-x-0.5 transition-transform">
-                      →
+                    <span className="group-hover:translate-x-0.5 transition-transform inline-flex">
+                      <Icon name="arrow_right" className="w-4 h-4" />
                     </span>
                   </Link>
                 </div>
               </div>
             );
           })}
+          </div>
         </div>
       )}
     </div>
