@@ -31,12 +31,17 @@ Every page must **match or exceed** its stitch reference in `temp-stitch/` (main
       restyle `CalculatorTools` to LIGHT console; formula/factor strip;
       how-to steps (numbered, image slots); reference table; FAQ; CTA. Rip out the black console + the
       bloated India/GCC rate panels that aren't in stitch. Keep real compute logic.
-- [ ] **Comparison `[slug]`** (×6) — hero / dual verdict cards (NO numeric scores) / "Two Approaches"
+- [~] **Comparison `[slug]`** (×6) — PILOT DONE + verified + pushed (8841ed1). SiteFlow-vs-buildern: scores
+      dropped, matrix (check/en-dash/chip), verdict cards, blue CTA; dead body stripped; metaDescription fixed.
+      Remaining 5 = HY-3 fill. Original spec:
+      hero / dual verdict cards (NO numeric scores) / "Two Approaches"
       mock consoles / "What is X/Y" / module comparison matrix / FAQ / CTA (blue, not purple).
 - [ ] **Index pages** — products, construction-calculators, feature-comparisons, resources hub. Light card grids.
 - [ ] **Glossary** — A-Z searchable (preview built). ADD: hero image slot + "Featured terms" band
       (4 ERP-linked accordions) above the full 200-term A-Z, to match stitch's featured treatment.
-- [ ] **Blog article shell** (×130) — editorial reading template: hero image, byline, sticky TOC sidebar,
+- [~] **Blog article shell** (×130) — IN PROGRESS (coder building BlogArticle: byline, hero band, auto TOC,
+      blue newsletter card, closing CTA; applies to all posts, no per-file migration). Original spec:
+      editorial reading template: hero image, byline, sticky TOC sidebar,
       newsletter capture card, section headings, pull-quotes, formula/callout blocks, mid-article CTA.
 - [ ] **Blog index** — featured-report card, digest panel, category filter pills, image article cards, newsletter band.
 - [ ] **Help center** — search hero + category grid; + help-article reading shell (reuse blog shell).
