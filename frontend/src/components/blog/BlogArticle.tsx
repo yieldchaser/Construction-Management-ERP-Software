@@ -357,7 +357,10 @@ export default function BlogArticle({ article, relatedPosts, heroImage }: BlogAr
                   <span className="mb-4 block font-uilabel text-[11px] font-bold uppercase tracking-widest text-alx-outline">
                     In this article
                   </span>
-                  <ul className="space-y-3">
+                  {/* Long articles produced a TOC taller than the card, which
+                      clipped the last entries with no way to reach them. Cap
+                      the height and let it scroll on its own. */}
+                  <ul className="space-y-3 max-h-[45vh] overflow-y-auto overscroll-contain pr-2">
                     {toc.map((item) => (
                       <li key={item.id} className={item.level === 3 ? "pl-4" : ""}>
                         <a
