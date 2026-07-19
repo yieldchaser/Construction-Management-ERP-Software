@@ -102,6 +102,21 @@ DONE + live on Vercel (branch preview):
 - Shared component library (product/*, calc, comparison, blog)
 All validated: 0 fabricated metrics, 0 numeric comparison scores, 0 em-dash regressions, 0 export glitches.
 
+## VISUAL AUDIT (founder screenshots, "WTF" folder) — 2026-07-19
+**LESSON: curl 200 + grep + green build CANNOT catch visual bugs.** Literal icon names rendered as giant
+text and a 100px header offset both pass every automated check I was running. Any "verified" claim must be
+backed by an actual rendered view (founder screenshot or a real browser), not HTTP status + string greps.
+FIXED this pass (commit 55b2d0c + glossary redirect):
+- Integrations grid shipped the words "plug", "chat_bubble", "briefcase", "cloud_drive", "trending_up",
+  "construction" as giant literal text (emoji purge changed data to icon KEYS, card still rendered {item.icon}
+  in a text-3xl span). Now renders <Icon> in an icon chip. Verified: 0 names-as-text, 6 SVGs.
+- Header/body misalignment from mismatched containers: privacy + terms (24px), help articles (~104px,
+  max-w-4xl header vs max-w-6xl body). All now share the body container.
+- Blog: PURGED 12 empty posts (body 0-11 chars); stripped raw authoring scaffolding ("HEAD", "TRUST STRIP",
+  "ROW N ... (Image L, Text R)", "/wrap", "/outer") from 3 articles. 118 posts remain.
+- /resources/construction-terms-meanings served the legacy scraped glossary -> now redirects to /resources/glossary.
+STILL UNAUDITED VISUALLY: every other page. Need a real screenshot pass, not curl.
+
 LEFT:
 1. ~~Emoji -> stroke icons~~ DONE (a329146). Icon set +27 glyphs; emoji purged site-wide (marketing scope).
    Note: console `app/c/*` (496) + content JSON (974 editorial) emoji documented as out-of-scope follow-up.
