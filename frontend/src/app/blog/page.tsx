@@ -1,10 +1,11 @@
-import React from "react";
+﻿import React from "react";
 import Link from "next/link";
 import { getContentItems, ContentItem } from "@/lib/content";
 import { Metadata } from "next";
 import MarketingShell from "@/components/marketing/MarketingShell";
 import BlogIndexClient, { BlogCategory, BlogPostView } from "./BlogIndexClient";
 import Aurora from "@/components/marketing/Aurora";
+import Icon from "@/components/marketing/Icon";
 
 export const metadata: Metadata = {
   title: "SiteFlow Insights - Construction Management Blog",
@@ -167,7 +168,9 @@ export default async function BlogIndexPage() {
               </p>
               <span className="font-uilabel text-sm font-bold text-white inline-flex items-center gap-1.5">
                 Read Full Briefing
-                <span className="group-hover:translate-x-0.5 transition-transform">→</span>
+                <span className="group-hover:translate-x-0.5 transition-transform inline-flex">
+                  <Icon name="arrow_right" className="w-4 h-4" />
+                </span>
               </span>
             </Link>
           </div>
@@ -193,7 +196,9 @@ export default async function BlogIndexPage() {
                 <span className="font-uilabel text-[11px] text-alx-outline">
                   {latestBriefing.minRead ? `${latestBriefing.minRead} min read` : "Quick read"}
                 </span>
-                <span className="text-alx-primary group-hover:translate-x-0.5 transition-transform">→</span>
+                <span className="text-alx-primary group-hover:translate-x-0.5 transition-transform inline-flex">
+                  <Icon name="arrow_right" className="w-4 h-4" />
+                </span>
               </div>
             </Link>
           )}
@@ -217,7 +222,9 @@ export default async function BlogIndexPage() {
                 <span className="font-uilabel text-[11px] text-alx-outline">
                   {industryPulse.minRead ? `${industryPulse.minRead} min read` : "Quick read"}
                 </span>
-                <span className="text-alx-primary group-hover:translate-x-0.5 transition-transform">→</span>
+                <span className="text-alx-primary group-hover:translate-x-0.5 transition-transform inline-flex">
+                  <Icon name="arrow_right" className="w-4 h-4" />
+                </span>
               </div>
             </Link>
           )}
@@ -259,3 +266,4 @@ export default async function BlogIndexPage() {
     </MarketingShell>
   );
 }
+

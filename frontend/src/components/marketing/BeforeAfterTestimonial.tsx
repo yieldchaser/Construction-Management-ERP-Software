@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 
 export interface BeforeAfterTestimonialProps {
   name: string;
@@ -32,7 +32,16 @@ export default function BeforeAfterTestimonial({
           aria-label={`${stars} out of 5 stars`}
         >
           {Array.from({ length: stars }).map((_, i) => (
-            <span key={i}>★</span>
+            <svg
+              key={i}
+              className="w-3.5 h-3.5"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              stroke="none"
+              aria-hidden="true"
+            >
+              <polygon points="12 3 14.9 9.2 21.5 10.1 16.8 14.8 17.9 21.4 12 18.2 6.1 21.4 7.2 14.8 2.5 10.1 9.1 9.2 12 3" />
+            </svg>
           ))}
         </div>
         {illustrative && (
@@ -59,7 +68,10 @@ export default function BeforeAfterTestimonial({
           <ul className="space-y-1.5">
             {before.map((b, i) => (
               <li key={i} className="flex items-start gap-2 text-xs text-muted">
-                <span className="mt-0.5 text-danger font-bold flex-shrink-0">✕</span>
+                <svg className="mt-0.5 w-3.5 h-3.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
                 <span>{b}</span>
               </li>
             ))}
@@ -70,7 +82,9 @@ export default function BeforeAfterTestimonial({
           <ul className="space-y-1.5">
             {after.map((a, i) => (
               <li key={i} className="flex items-start gap-2 text-xs text-foreground">
-                <span className="mt-0.5 text-success font-bold flex-shrink-0">✓</span>
+                <svg className="mt-0.5 w-3.5 h-3.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
                 <span>{a}</span>
               </li>
             ))}
@@ -80,3 +94,4 @@ export default function BeforeAfterTestimonial({
     </div>
   );
 }
+

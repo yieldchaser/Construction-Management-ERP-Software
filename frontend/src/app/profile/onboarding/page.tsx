@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect } from "react";
 import { getApiHost } from "@/lib/api";
@@ -162,7 +162,11 @@ export default function OnboardingPage() {
           {/* Steps Progress */}
           <div className="flex gap-4">
             <div className="flex items-center gap-2 bg-elevated rounded-lg px-4 py-2 border border-border-custom text-xs text-muted">
-              <span className="h-5 w-5 bg-success/20 text-success rounded-full flex items-center justify-center font-bold text-[10px]">✓</span>
+              <span className="h-5 w-5 bg-success/20 text-success rounded-full flex items-center justify-center font-bold text-[10px]">
+                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </span>
               <span>User Details</span>
               <span className="bg-success/20 text-success rounded px-1.5 py-0.5 text-[10px] font-semibold">Completed</span>
             </div>
@@ -226,7 +230,11 @@ export default function OnboardingPage() {
                       <span className={`h-4 w-4 rounded flex items-center justify-center text-[10px] border ${
                         isChecked ? "bg-primary border-primary text-white font-bold" : "border-white/20"
                       }`}>
-                        {isChecked && "✓"}
+                        {isChecked && (
+                          <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                            <polyline points="20 6 9 17 4 12" />
+                          </svg>
+                        )}
                       </span>
                       <span>{seg}</span>
                     </button>
@@ -246,7 +254,9 @@ export default function OnboardingPage() {
                     className="w-full flex justify-between items-center bg-input border border-border-custom rounded-md px-4 py-3.5 text-xs text-foreground font-semibold hover:border-border-custom transition-all cursor-pointer"
                   >
                     <span>Select category...</span>
-                    <span>▼</span>
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <polyline points="6 9 12 15 18 9" />
+                    </svg>
                   </button>
                   {isCategoryDropdownOpen && (
                     <div className="absolute top-[105%] left-0 w-full bg-card border border-border-custom rounded-md shadow-2xl z-50 py-1 overflow-hidden">
@@ -303,3 +313,4 @@ export default function OnboardingPage() {
     </div>
   );
 }
+

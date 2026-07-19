@@ -1,13 +1,14 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from "react";
 import Link from "next/link";
+import Icon from "@/components/marketing/Icon";
 
 interface Integration {
   name: string;
   category: string;
   desc: string;
-  icon: string;
+  icon: import("@/components/marketing/Icon").IconName;
   status: "active" | "planned";
   link?: string;
 }
@@ -17,7 +18,7 @@ const INTEGRATIONS_LIST: Integration[] = [
     name: "Tally ERP",
     category: "Accounting",
     desc: "Sync purchase orders, goods receipts (GRN), and vendor bills directly from SiteFlow to Tally without manual re-entry.",
-    icon: "🔌",
+    icon: "plug",
     status: "active",
     link: "/integrations/tally",
   },
@@ -25,14 +26,14 @@ const INTEGRATIONS_LIST: Integration[] = [
     name: "WhatsApp Business",
     category: "Communication",
     desc: "Automate daily progress report summaries, payment alerts, and site updates directly to client and supervisor WhatsApp groups.",
-    icon: "💬",
+    icon: "chat_bubble",
     status: "planned",
   },
   {
     name: "Zoho Books",
     category: "Accounting",
     desc: "Push vendor bills from SiteFlow into Zoho Books for accounting and GST reconciliation, with OAuth and encrypted tokens.",
-    icon: "💼",
+    icon: "briefcase",
     status: "active",
     link: "/login",
   },
@@ -40,7 +41,7 @@ const INTEGRATIONS_LIST: Integration[] = [
     name: "Google Drive",
     category: "Storage & Files",
     desc: "Back up project and company files from SiteFlow to your connected Google Drive on demand, with OAuth and encrypted tokens.",
-    icon: "💾",
+    icon: "cloud_drive",
     status: "active",
     link: "/login",
   },
@@ -48,7 +49,7 @@ const INTEGRATIONS_LIST: Integration[] = [
     name: "PowerBI / Tableau",
     category: "Analytics",
     desc: "Pull your SiteFlow projects, budget variance, and labour productivity data into PowerBI or Tableau as CSV or JSON feeds using API keys.",
-    icon: "📈",
+    icon: "trending_up",
     status: "active",
     link: "/login",
   },
@@ -56,7 +57,7 @@ const INTEGRATIONS_LIST: Integration[] = [
     name: "GPS Geofencing (Built-in)",
     category: "Field & Site",
     desc: "Native PWA geofenced attendance and site-location capture built into SiteFlow. Workers punch in within project boundaries and attendance is GPS verified, no third-party connector required.",
-    icon: "🏗️",
+    icon: "construction",
     status: "active",
     link: "/products",
   },
@@ -195,7 +196,17 @@ export function IntegrationsGridClient() {
                       : "text-alx-on-surface-variant hover:text-alx-primary"
                   }`}
                 >
-                  {requested.has(item.name) ? "Requested ✓" : "Request early access →"}
+                  {requested.has(item.name) ? (
+                    <span className="inline-flex items-center gap-1.5">
+                      <Icon name="check" className="w-3.5 h-3.5" />
+                      Requested
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5">
+                      Request early access
+                      <Icon name="arrow_right" className="w-3.5 h-3.5" />
+                    </span>
+                  )}
                 </button>
               )}
             </div>
@@ -204,7 +215,9 @@ export function IntegrationsGridClient() {
 
         {filtered.length === 0 && (
           <div className="col-span-full text-center py-12 bg-alx-surface-container-lowest border border-alx-outline-variant/40 rounded-lg shadow-sm">
-            <span className="text-3xl">🔌</span>
+            <span className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-alx-primary-fixed text-alx-primary">
+              <Icon name="search" className="w-6 h-6" />
+              </span>
             <h3 className="font-headline text-lg font-semibold text-alx-on-surface mt-3">No integrations found</h3>
             <p className="text-alx-on-surface-variant text-sm mt-1">
               Try choosing another category or clearing your search query.
@@ -215,3 +228,4 @@ export function IntegrationsGridClient() {
     </div>
   );
 }
+

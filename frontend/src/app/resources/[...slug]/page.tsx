@@ -11,6 +11,7 @@ import ComparisonArticle from "@/components/resources/comparison/ComparisonArtic
 import ResourceIndexProse from "@/components/resources/ResourceIndexProse";
 import { isCalculatorSlug } from "@/components/resources/calculatorSlugs";
 import MarketingShell from "@/components/marketing/MarketingShell";
+import ResourceIndexGrid from "@/components/resources/ResourceIndexGrid";
 
 interface RouteParams {
   params: Promise<{
@@ -197,6 +198,50 @@ export default async function ResourcePage({ params }: RouteParams) {
             </div>
           )}
         </main>
+      </MarketingShell>
+    );
+  }
+
+  // Structured card-grid index pages (replace the legacy body-blob prose).
+  const buildIndexCards = (prefix: string) =>
+    allResources
+      .filter((r) => r.slug.startsWith(`${prefix}/`))
+      .map((r) => ({ title: r.title, desc: r.metaDescription || "", href: `/resources/${r.slug}` }));
+
+  if (slugPath === "construction-calculators") {
+    return (
+      <MarketingShell>
+        <ResourceIndexGrid
+          trail={[{ label: "Home", href: "/" }, { label: "Resources", href: "/resources" }, { label: "Calculators" }]}
+          eyebrow="Free construction tools"
+          title="Construction Calculators"
+          subtitle="IS-code-based calculators for concrete, steel, brick, paint and more. Estimate quantities and costs in seconds, then bring the numbers into your projects."
+          cards={buildIndexCards("construction-calculators")}
+          icon="chart"
+          cta={{
+            heading: "Bring these numbers into one workspace",
+            body: "SiteFlow links material estimates to BOQs, budgets and procurement so your quantities flow straight into execution.",
+          }}
+        />
+      </MarketingShell>
+    );
+  }
+
+  if (slugPath === "feature-comparisons") {
+    return (
+      <MarketingShell>
+        <ResourceIndexGrid
+          trail={[{ label: "Home", href: "/" }, { label: "Resources", href: "/resources" }, { label: "Comparisons" }]}
+          eyebrow="Platform comparisons"
+          title="SiteFlow vs the alternatives"
+          subtitle="Honest, module-by-module comparisons of SiteFlow against other construction and ERP platforms, so you can choose the right fit for how your team actually works."
+          cards={buildIndexCards("feature-comparisons")}
+          icon="nodes"
+          cta={{
+            heading: "See SiteFlow on your own projects",
+            body: "Book a live demo and compare it against your current tools using your real site data.",
+          }}
+        />
       </MarketingShell>
     );
   }

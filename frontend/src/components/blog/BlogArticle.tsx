@@ -1,10 +1,11 @@
-import React from "react";
+﻿import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import type { ContentItem } from "@/lib/content";
 import ReadingProgress from "@/components/marketing/ReadingProgress";
 import CtaBand from "@/components/marketing/product/CtaBand";
 import type { ProductCta } from "@/lib/productTypes";
+import Icon from "@/components/marketing/Icon";
 
 // ---------------------------------------------------------------------------
 // Category classification. SiteFlow's raw blog content has no `category`
@@ -340,7 +341,9 @@ export default function BlogArticle({ article, relatedPosts, heroImage }: BlogAr
                 href="/blog"
                 className="group inline-flex items-center gap-2 font-uilabel text-xs font-bold text-alx-on-surface-variant hover:text-alx-primary transition-all"
               >
-                <span className="transition-transform group-hover:-translate-x-1">←</span>
+                <span className="transition-transform group-hover:-translate-x-1 inline-flex">
+                  <Icon name="arrow_left" className="w-4 h-4" />
+                </span>
                 Back to all posts
               </Link>
             </div>
@@ -460,3 +463,4 @@ export default function BlogArticle({ article, relatedPosts, heroImage }: BlogAr
     </>
   );
 }
+

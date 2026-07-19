@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { ContentItem } from "@/lib/content";
+import Icon from "@/components/marketing/Icon";
 
 interface HelpSearchClientProps {
   helpItems: ContentItem[];
@@ -115,7 +116,9 @@ export function HelpSearchClient({
             </div>
           ) : (
             <div className="text-center py-12 rounded-2xl bg-alx-surface-container-lowest shadow-xl shadow-alx-on-surface/5">
-              <span className="text-3xl">🔍</span>
+              <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-alx-primary-fixed text-alx-primary">
+                <Icon name="search" className="w-5 h-5" />
+              </span>
               <h3 className="font-headline text-lg font-bold text-alx-on-surface mt-3">No articles found</h3>
               <p className="font-body text-alx-on-surface-variant text-sm mt-1">
                 Try checking spelling or search for general keywords.
@@ -148,8 +151,8 @@ export function HelpSearchClient({
                 <div className="space-y-4">
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
-                      <span className="text-3xl p-2 rounded-xl bg-alx-primary-fixed">
-                        {meta.icon}
+                      <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-alx-primary-fixed/40 text-alx-primary">
+                        <Icon name={meta.icon as any} className="w-5 h-5" />
                       </span>
                       <h2 className="font-headline text-lg font-extrabold text-alx-on-surface tracking-tight">
                         {meta.title}
@@ -171,7 +174,10 @@ export function HelpSearchClient({
                         href={`/help/${art.slug}`}
                         className="block text-xs font-medium text-alx-on-surface-variant hover:text-alx-primary transition-all truncate cursor-pointer"
                       >
-                        📄 {art.title}
+                        <span className="inline-flex items-center gap-1.5">
+                          <Icon name="receipt" className="w-3.5 h-3.5 flex-shrink-0" />
+                          {art.title}
+                        </span>
                       </Link>
                     ))}
                     {articles.length > 4 && (
@@ -188,8 +194,8 @@ export function HelpSearchClient({
                     className="text-xs font-uilabel font-bold text-alx-primary hover:text-alx-on-surface transition-all flex items-center gap-1 group cursor-pointer"
                   >
                     Explore Category
-                    <span className="group-hover:translate-x-0.5 transition-transform">
-                      →
+                    <span className="group-hover:translate-x-0.5 transition-transform inline-flex">
+                      <Icon name="arrow_right" className="w-4 h-4" />
                     </span>
                   </Link>
                 </div>
