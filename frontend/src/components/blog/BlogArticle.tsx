@@ -336,28 +336,23 @@ export default function BlogArticle({ article, relatedPosts, heroImage }: BlogAr
           <main className="alx-scroll-fade lg:col-span-8">
             <div className="help-article" dangerouslySetInnerHTML={{ __html: articleHtml }} />
 
-            <div className="mt-12 border-t border-alx-outline-variant/20 pt-8">
-              <Link
-                href="/blog"
-                className="group inline-flex items-center gap-2 font-uilabel text-xs font-bold text-alx-on-surface-variant hover:text-alx-primary transition-all"
-              >
-                <span className="transition-transform group-hover:-translate-x-1 inline-flex">
-                  <Icon name="arrow_left" className="w-4 h-4" />
-                </span>
-                Back to all posts
-              </Link>
-            </div>
           </main>
 
           {/* Sidebar */}
           <aside className="lg:col-span-4">
             <div className="alx-scroll-fade lg:sticky lg:top-28 space-y-6">
+              {/* Scrolling lives on the list, not this card, so the label stays
+                  pinned while entries scroll; the label carries the same pl-3 as
+                  the links so they share a left edge. */}
               {toc.length > 0 ? (
-                <div className="alx-hover-lift max-h-[60vh] overflow-y-auto rounded-2xl border border-alx-outline-variant/15 bg-alx-surface-container-lowest p-6 shadow-lg shadow-alx-on-surface/5 transition-all">
-                  <span className="mb-4 block font-uilabel text-[11px] font-bold uppercase tracking-widest text-alx-outline">
+                <div className="alx-hover-lift rounded-2xl border border-alx-outline-variant/15 bg-alx-surface-container-lowest p-6 shadow-lg shadow-alx-on-surface/5 transition-all">
+                  <span className="mb-4 block pl-3 font-uilabel text-[11px] font-bold uppercase tracking-widest text-alx-outline">
                     In this article
                   </span>
-                  <ul className="space-y-3">
+                  {/* Long articles produced a TOC taller than the card, which
+                      clipped the last entries with no way to reach them. Cap
+                      the height and let it scroll on its own. */}
+                  <ul className="space-y-3 max-h-[45vh] overflow-y-auto overscroll-contain pr-2">
                     {toc.map((item) => (
                       <li key={item.id} className={item.level === 3 ? "pl-4" : ""}>
                         <a
@@ -449,6 +444,19 @@ export default function BlogArticle({ article, relatedPosts, heroImage }: BlogAr
                   </div>
                 </div>
               )}
+
+              {/* Lives at the end of the sidebar rather than dangling under the
+                  article body, so it shares the sidebar's left edge and sits
+                  with the other navigation cards. */}
+              <Link
+                href="/blog"
+                className="group inline-flex items-center gap-2 font-uilabel text-xs font-bold text-alx-on-surface-variant transition-all hover:text-alx-primary"
+              >
+                <span className="inline-flex transition-transform group-hover:-translate-x-1">
+                  <Icon name="arrow_left" className="w-4 h-4" />
+                </span>
+                Back to all posts
+              </Link>
             </div>
           </aside>
         </div>

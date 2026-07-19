@@ -36,7 +36,7 @@ export default function GlossaryPage() {
     <MarketingShell>
       {/* Header */}
       <section className="relative px-6 pt-8 pb-10 md:pb-14 overflow-hidden alx-scroll-fade is-visible">
-        <div className="absolute inset-0 z-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-alx-primary-fixed/25 via-alx-surface-container-lowest to-alx-surface-container-lowest pointer-events-none" />
+        <div className="absolute inset-0 z-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-alx-primary-fixed/25 via-transparent to-transparent pointer-events-none" />
         <div className="max-w-6xl mx-auto relative z-10">
           <Breadcrumb />
 
