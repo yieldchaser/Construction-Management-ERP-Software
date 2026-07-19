@@ -85,4 +85,29 @@ Indexes (4): /products · /resources · /resources/construction-calculators · /
 Legal (2): /privacy · /terms
 Glossary (1) · Blog index (1) · Blog articles (~130) · Help center + articles (~40)
 
-_Status: recon COMPLETE (every stitch screen reviewed). Pilot = product template + component library._
+## CURRENT STATUS (2026-07-19) — DONE vs LEFT
+
+DONE + live on Vercel (branch preview):
+- Products ×20 (structured, HY-3 content) — commit df73c13
+- Calculators ×7 (light console + structured) — concrete-mix + 6 integrated
+- Comparisons ×8 (buildern + buildertrend/fieldwire/raken/powerplay/procore/rdash/nway) — scores dropped
+- Glossary /resources/glossary (A-Z, 200 terms, search, featured band, hero-photo slot)
+- Blog article shell (all ~130) + Blog index (pre-existing)
+- Help center + help article shell (honest counts, no fabricated card)
+- Legal alignment fix (privacy + terms)
+- Shared component library (product/*, calc, comparison, blog)
+All validated: 0 fabricated metrics, 0 numeric comparison scores, 0 em-dash regressions, 0 export glitches.
+
+LEFT:
+1. **Emoji -> monochrome stroke icons** (help category grid + 📖 eyebrow; sweep whole site). Founder directive.
+2. **Index pages polish** — VERIFY/rebuild the card grids for /resources hub, /resources/construction-calculators,
+   /resources/feature-comparisons (may still render legacy body-blob via ResourceIndexProse, not stitch card grid).
+3. **Per-page-TYPE polish pass** — one design QA per template (product/calc/comparison/glossary/help/blog/legal/indexes),
+   fixes propagate to all instances. No per-instance passes (templates give uniform quality). No beauty compromise.
+4. **Real images** (LAST) — product hero screenshots, calc illustration diagrams, blog hero photos, glossary
+   construction photo (public/resources/glossary/construction-hero.jpg), house render.
+5. Cleanup: strip orphaned legacy `body` blobs on migrated product/calc files (search-indexed, carry scraped
+   fabricated copy); gitignore the "Long Screenshots…" folder.
+
+BLOG/HELP ARTICLES: already at stitch parity via the shells (uniform editorial treatment). Do NOT need per-article
+passes. Optional elevation later: real hero images + pull-quote/callout enrichment on FEATURED articles only.
