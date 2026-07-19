@@ -31,8 +31,8 @@ const fmt = (n: number, d = 2): string => {
 };
 
 const inputCls =
-  "w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary transition-colors";
-const labelCls = "text-xs font-medium text-muted";
+  "w-full bg-alx-surface-container-lowest border border-alx-outline-variant rounded-lg px-3 py-2.5 text-sm text-alx-on-surface focus:outline-none focus:ring-2 focus:ring-alx-primary/25 focus:border-alx-primary transition-colors";
+const labelCls = "text-xs font-semibold text-alx-on-surface-variant";
 const fieldCls = "space-y-1.5";
 
 function Field({
@@ -48,7 +48,7 @@ function Field({
     <div className={fieldCls}>
       <label className={labelCls}>{label}</label>
       {children}
-      {hint ? <p className="text-[11px] text-muted/80">{hint}</p> : null}
+      {hint ? <p className="text-[11px] text-alx-on-surface-variant/80">{hint}</p> : null}
     </div>
   );
 }
@@ -78,7 +78,7 @@ function NumberInput({
         className={inputCls + (suffix ? " pr-14" : "")}
       />
       {suffix ? (
-        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-muted">
+        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-alx-on-surface-variant">
           {suffix}
         </span>
       ) : null}
@@ -99,31 +99,69 @@ function Shell({
   form: React.ReactNode;
   result: React.ReactNode;
 }) {
+  // Every calculator here is already live: results recompute on every
+  // keystroke, so "Calculate" isn't gating any math. It's a real, honest
+  // affordance that scrolls the (sticky, off-screen-on-mobile) result panel
+  // into view and gives a brief highlight pulse for tactile confirmation,
+  // matching the stitch console's primary CTA without faking a submit step.
+  const resultRef = React.useRef<HTMLDivElement>(null);
+  const [pulsing, setPulsing] = React.useState(false);
+
+  const handleCalculate = () => {
+    resultRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    setPulsing(true);
+    window.setTimeout(() => setPulsing(false), 700);
+  };
+
   return (
-    <section className="not-prose rounded-2xl border border-border-custom bg-card p-5 md:p-7 shadow-sm">
+    <section className="not-prose rounded-2xl border border-alx-outline-variant/50 bg-alx-surface-container-lowest p-5 md:p-7 shadow-lg shadow-alx-on-surface/5">
       <div className="mb-5">
-        <span className="inline-block text-[11px] font-semibold uppercase tracking-wider text-primary bg-primary/10 px-2.5 py-1 rounded">
+        <span className="alx-label inline-block text-xs font-bold text-alx-primary bg-alx-primary-fixed/40 px-2.5 py-1 rounded-md">
           {eyebrow}
         </span>
-        <h1 className="mt-3 text-2xl font-extrabold tracking-tight text-foreground">
+        <h1 className="font-headline mt-3 text-2xl font-extrabold tracking-tight text-alx-on-surface">
           {title}
         </h1>
-        <p className="mt-1.5 text-sm text-muted leading-relaxed max-w-2xl">
+        <p className="font-body mt-1.5 text-sm text-alx-on-surface-variant leading-relaxed max-w-2xl">
           {subtitle}
         </p>
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
-        <div className="lg:col-span-3 space-y-5">{form}</div>
+        <div className="lg:col-span-3 space-y-5">
+          {form}
+          <button
+            type="button"
+            onClick={handleCalculate}
+            className="w-full lg:hidden bg-alx-primary text-alx-on-primary font-uilabel text-sm font-bold py-3 rounded-lg hover:opacity-90 transition-all active:scale-[0.98]"
+          >
+            Calculate
+          </button>
+        </div>
         <div className="lg:col-span-2">
-          <div className="sticky top-24 rounded-xl border border-border-custom bg-input/60 p-5 space-y-4">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-foreground border-b border-border-custom pb-2.5">
-              Your Estimate
-            </h3>
+          <div
+            ref={resultRef}
+            className={
+              "sticky top-24 rounded-xl border p-5 space-y-4 bg-alx-surface-container-low transition-shadow duration-300 " +
+              (pulsing
+                ? "border-alx-primary shadow-lg shadow-alx-primary/20"
+                : "border-alx-outline-variant/40")
+            }
+          >
+            <div className="flex items-center justify-between gap-3 border-b border-alx-outline-variant/30 pb-2.5">
+              <h3 className="alx-label text-[11px] text-alx-on-surface-variant">Your Estimate</h3>
+              <button
+                type="button"
+                onClick={handleCalculate}
+                className="hidden lg:inline-flex shrink-0 items-center bg-alx-primary text-alx-on-primary font-uilabel text-[11px] font-bold px-3.5 py-1.5 rounded-full hover:opacity-90 transition-all active:scale-[0.98]"
+              >
+                Calculate
+              </button>
+            </div>
             {result}
           </div>
         </div>
       </div>
-      <p className="mt-5 text-[11px] text-muted/80 leading-relaxed">
+      <p className="mt-5 text-[11px] text-alx-on-surface-variant/80 leading-relaxed">
         Estimates are indicative and follow standard Indian construction
         practice (IS 456, IS 1786, CPWD). Always verify against your site
         conditions, drawings and supplier data sheets before purchasing.
@@ -146,21 +184,21 @@ function Stat({
   note?: string;
 }) {
   return (
-    <div className="rounded-lg border border-border-custom bg-card p-3.5">
-      <span className="block text-[10px] font-bold uppercase tracking-wider text-muted">
+    <div className="rounded-lg border border-alx-outline-variant/40 bg-alx-surface-container-lowest p-3.5">
+      <span className="alx-label block text-[10px] text-alx-on-surface-variant">
         {label}
       </span>
       <strong
         className={
-          (big ? "text-2xl text-success" : "text-lg text-foreground") +
-          " mt-1 block font-black"
+          (big ? "text-2xl text-alx-primary" : "text-lg text-alx-on-surface") +
+          " font-headline mt-1 block font-black"
         }
       >
         {value}
         {unit ? <span className="text-sm font-bold"> {unit}</span> : null}
       </strong>
       {note ? (
-        <span className="mt-0.5 block text-[10px] italic text-muted">
+        <span className="mt-0.5 block text-[10px] italic text-alx-on-surface-variant">
           {note}
         </span>
       ) : null}
@@ -187,8 +225,8 @@ function Segmented<T extends string>({
           className={
             "px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors " +
             (value === o.value
-              ? "bg-primary/10 border-primary text-primary"
-              : "border-border-custom text-muted hover:text-foreground")
+              ? "bg-alx-primary-fixed/50 border-alx-primary text-alx-primary"
+              : "border-alx-outline-variant text-alx-on-surface-variant hover:text-alx-on-surface hover:border-alx-outline")
           }
         >
           {o.label}
@@ -273,7 +311,7 @@ function PaintCalculator() {
                     aria-label="Remove room"
                     disabled={rooms.length === 1}
                     onClick={() => setRooms((rr) => rr.filter((_, idx) => idx !== i))}
-                    className="h-[38px] px-3 rounded-lg border border-border-custom text-muted hover:text-foreground disabled:opacity-40"
+                    className="h-[38px] px-3 rounded-lg border border-alx-outline-variant text-alx-on-surface-variant hover:text-alx-on-surface disabled:opacity-40"
                   >
                     −
                   </button>
@@ -282,7 +320,7 @@ function PaintCalculator() {
               <button
                 type="button"
                 onClick={() => setRooms((r) => [...r, { l: 12, w: 10, h: 10 }])}
-                className="text-xs font-semibold text-primary hover:underline"
+                className="text-xs font-semibold text-alx-primary hover:underline"
               >
                 + Add another room
               </button>
@@ -292,13 +330,13 @@ function PaintCalculator() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Number of doors">
               <div className="flex items-center gap-2">
-                <input type="checkbox" checked={deductDoors} onChange={(e) => setDeductDoors(e.target.checked)} className="h-4 w-4 accent-[var(--primary)]" />
+                <input type="checkbox" checked={deductDoors} onChange={(e) => setDeductDoors(e.target.checked)} className="h-4 w-4 accent-[var(--color-alx-primary)]" />
                 <NumberInput value={doors} onChange={setDoors} suffix="× 21 sqft" />
               </div>
             </Field>
             <Field label="Number of windows">
               <div className="flex items-center gap-2">
-                <input type="checkbox" checked={deductWindows} onChange={(e) => setDeductWindows(e.target.checked)} className="h-4 w-4 accent-[var(--primary)]" />
+                <input type="checkbox" checked={deductWindows} onChange={(e) => setDeductWindows(e.target.checked)} className="h-4 w-4 accent-[var(--color-alx-primary)]" />
                 <NumberInput value={windows} onChange={setWindows} suffix="× 12 sqft" />
               </div>
             </Field>
@@ -327,17 +365,17 @@ function PaintCalculator() {
           </div>
 
           <Field label="Extras">
-            <div className="flex flex-wrap gap-4 text-xs text-muted">
+            <div className="flex flex-wrap gap-4 text-xs text-alx-on-surface-variant">
               <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" checked={includeCeiling} onChange={(e) => setIncludeCeiling(e.target.checked)} className="h-4 w-4 accent-[var(--primary)]" />
+                <input type="checkbox" checked={includeCeiling} onChange={(e) => setIncludeCeiling(e.target.checked)} className="h-4 w-4 accent-[var(--color-alx-primary)]" />
                 Include ceiling
               </label>
               <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" checked={primer} onChange={(e) => setPrimer(e.target.checked)} className="h-4 w-4 accent-[var(--primary)]" />
+                <input type="checkbox" checked={primer} onChange={(e) => setPrimer(e.target.checked)} className="h-4 w-4 accent-[var(--color-alx-primary)]" />
                 Wall primer
               </label>
               <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" checked={putty} onChange={(e) => setPutty(e.target.checked)} className="h-4 w-4 accent-[var(--primary)]" />
+                <input type="checkbox" checked={putty} onChange={(e) => setPutty(e.target.checked)} className="h-4 w-4 accent-[var(--color-alx-primary)]" />
                 Wall putty
               </label>
             </div>
@@ -588,7 +626,7 @@ function SteelCalculator() {
         <>
           <Field label="Reinforcement bars">
             <div className="space-y-2">
-              <div className="grid grid-cols-[1fr_1fr_1fr_auto] gap-2 text-[10px] font-semibold uppercase tracking-wide text-muted px-1">
+              <div className="grid grid-cols-[1fr_1fr_1fr_auto] gap-2 text-[10px] font-semibold uppercase tracking-wide text-alx-on-surface-variant px-1">
                 <span>Dia (mm)</span><span>Length (m)</span><span>Qty (nos)</span><span></span>
               </div>
               {bars.map((b, i) => (
@@ -603,11 +641,11 @@ function SteelCalculator() {
                     aria-label="Remove bar"
                     disabled={bars.length === 1}
                     onClick={() => setBars((bb) => bb.filter((_, idx) => idx !== i))}
-                    className="h-[38px] px-3 rounded-lg border border-border-custom text-muted hover:text-foreground disabled:opacity-40"
+                    className="h-[38px] px-3 rounded-lg border border-alx-outline-variant text-alx-on-surface-variant hover:text-alx-on-surface disabled:opacity-40"
                   >−</button>
                 </div>
               ))}
-              <button type="button" onClick={() => setBars((b) => [...b, { dia: 16, length: 12, qty: 4 }])} className="text-xs font-semibold text-primary hover:underline">
+              <button type="button" onClick={() => setBars((b) => [...b, { dia: 16, length: 12, qty: 4 }])} className="text-xs font-semibold text-alx-primary hover:underline">
                 + Add bar size
               </button>
             </div>
@@ -618,9 +656,9 @@ function SteelCalculator() {
       result={
         <div className="space-y-3">
           {rows.map((r, i) => (
-            <div key={i} className="flex justify-between text-xs text-muted">
+            <div key={i} className="flex justify-between text-xs text-alx-on-surface-variant">
               <span>{r.dia} mm × {fmt(r.length, 1)} m × {r.qty}</span>
-              <span className="font-semibold text-foreground">{fmt(r.weight, 1)} kg</span>
+              <span className="font-semibold text-alx-on-surface">{fmt(r.weight, 1)} kg</span>
             </div>
           ))}
           <Stat label="Total steel weight" value={fmt(total, 1)} unit="kg" big />
@@ -764,12 +802,12 @@ function HouseCostCalculator() {
           <div className="space-y-2 pt-1">
             {splits.map((s) => (
               <div key={s.name} className="space-y-1">
-                <div className="flex justify-between text-[11px] text-muted">
+                <div className="flex justify-between text-[11px] text-alx-on-surface-variant">
                   <span>{s.name} ({Math.round(s.pct * 100)}%)</span>
-                  <span className="font-semibold text-foreground">{sym}{fmt(totalCost * s.pct, 0)}</span>
+                  <span className="font-semibold text-alx-on-surface">{sym}{fmt(totalCost * s.pct, 0)}</span>
                 </div>
-                <div className="w-full h-1.5 rounded-full bg-border-custom overflow-hidden">
-                  <div className="h-full bg-primary" style={{ width: `${s.pct * 100}%` }} />
+                <div className="w-full h-1.5 rounded-full bg-alx-surface-container-high overflow-hidden">
+                  <div className="h-full bg-alx-primary" style={{ width: `${s.pct * 100}%` }} />
                 </div>
               </div>
             ))}

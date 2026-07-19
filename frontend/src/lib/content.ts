@@ -1,6 +1,7 @@
 import fs from "fs/promises";
 import path from "path";
 import type { StructuredProduct } from "./productTypes";
+import type { StructuredCalculator } from "./calcTypes";
 
 export interface ContentItem {
   title: string;
@@ -19,6 +20,13 @@ export interface ContentItem {
    * the legacy `body` HTML blob. See src/lib/productTypes.ts.
    */
   structured?: StructuredProduct;
+  /**
+   * Optional component-driven calculator template data. When present on a
+   * `resources/construction-calculators` content item, the route renders
+   * <CalcArticle> instead of the legacy `body` HTML blob via CalcProse.
+   * See src/lib/calcTypes.ts.
+   */
+  calcStructured?: StructuredCalculator;
 }
 
 const CONTENT_DIR = path.join(process.cwd(), "src/content");
