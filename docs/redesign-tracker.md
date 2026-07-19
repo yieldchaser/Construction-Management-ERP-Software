@@ -129,8 +129,21 @@ LEFT:
    - [x] Batch 2: COMPARISON (whatIs callout no longer uppercased via alx-label) + GLOSSARY (sticky search
          toolbar top-24 so it docks below the fixed header instead of hiding behind it; retention formula
          rendered with real <sub> subscripts). Build green.
-   - [ ] Batch 3: help + blog (article + index) + PURGE empty blog JSONs
-   - [ ] Batch 4: legal + resources hub + product/resources indexes
+   - [x] Batch 3: HELP + BLOG — delivered via the visual-audit pass: help article header realigned to the
+         body container, 12 empty blog posts PURGED, authoring scaffolding stripped from 3 articles.
+   - [x] Batch 4: LEGAL + INDEXES — privacy/terms header realigned; calc + comparison indexes rebuilt as
+         card grids; legacy terms page redirected to /resources/glossary.
+
+### Bug-class sweep (2026-07-19, after the WTF findings) — marketing scope CLEAN
+Swept for the four classes found by the founder's screenshots:
+- icon key rendered as raw text: none left in marketing. (`{item.icon}` hits are all `app/c/*` console pages
+  where icons are still emoji by design; HY-3 logged 496 console emoji as a separate follow-up job.)
+- content scaffolding junk: none in products/resources/help.
+- empty page bodies: none in products/resources/help (blog's 12 purged).
+- header/body container mismatch: contained to privacy, terms, help-article (all fixed). Other marketing
+  heroes use CENTERED narrow containers, which cannot produce the left-edge offset.
+NEXT HIGHEST-VALUE STEP: founder screenshot pass over every page -> fix what it shows. Blind polish has
+hit diminishing returns; the screenshot loop found 4 real bugs in one round.
    ORIGINAL note: — one design QA per template (product/calc/comparison/glossary/help/blog/legal/indexes),
    fixes propagate to all instances. No per-instance passes (templates give uniform quality). No beauty compromise.
 4. **Real images** (LAST) — product hero screenshots, calc illustration diagrams, blog hero photos, glossary
