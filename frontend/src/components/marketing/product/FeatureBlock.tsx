@@ -17,7 +17,9 @@ export default function FeatureBlock({
   feature: ProductFeature;
   reverse?: boolean;
 }) {
-  const iconName = (feature.icon as ProductIconName) ?? DEFAULT_ICON;
+  // ProductIcon falls back to a neutral glyph for any unmapped name, so pass
+  // the raw icon key through and only default when it is missing entirely.
+  const iconName = feature.icon || DEFAULT_ICON;
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
       <div className={`space-y-4 ${reverse ? "lg:order-2" : ""}`}>

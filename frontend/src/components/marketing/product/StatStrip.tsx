@@ -10,7 +10,7 @@ export default function StatStrip({ stats }: { stats: ProductStat[] }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-alx-outline-variant/25 border-y border-alx-outline-variant/25">
       {stats.map((stat, idx) => (
-        <div key={idx} className="px-2 md:px-8 py-8 space-y-2 text-center md:text-left">
+        <div key={idx} className="px-2 md:px-8 py-8 space-y-2 text-center">
           <p className="font-headline text-xl md:text-2xl font-extrabold text-alx-primary leading-snug">
             {stat.value}
           </p>

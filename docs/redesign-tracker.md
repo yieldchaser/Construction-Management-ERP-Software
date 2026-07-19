@@ -104,7 +104,13 @@ LEFT:
 2. ~~Index card grids~~ DONE (a329146). calc-index + comparison-index rebuilt as card grids (ResourceIndexGrid);
    /resources hub emoji-purged by HY-3. CROSS-AGENT LESSON: HY-3 must STAGE to docs/hy3-output, never edit
    frontend/src while main agent works — direct co-editing caused revert collisions.
-3. **Per-page-TYPE polish pass** — one design QA per template (product/calc/comparison/glossary/help/blog/legal/indexes),
+3. **Per-page-TYPE polish pass** (main agent, BATCH-WISE 2-3 types/batch, STOP after each, update memory+tracker):
+   - [x] Batch 1: PRODUCT (hero img alt=headline, StatStrip centered band, FeatureBlock robust icon) +
+         CALCULATOR (CalcGuide img alt). Build green.
+   - [ ] Batch 2: comparison + glossary
+   - [ ] Batch 3: help + blog (article + index) + PURGE empty blog JSONs
+   - [ ] Batch 4: legal + resources hub + product/resources indexes
+   ORIGINAL note: — one design QA per template (product/calc/comparison/glossary/help/blog/legal/indexes),
    fixes propagate to all instances. No per-instance passes (templates give uniform quality). No beauty compromise.
 4. **Real images** (LAST) — product hero screenshots, calc illustration diagrams, blog hero photos, glossary
    construction photo (public/resources/glossary/construction-hero.jpg), house render.

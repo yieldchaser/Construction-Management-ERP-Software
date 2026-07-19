@@ -50,7 +50,7 @@ export default function CalcGuide({ steps }: { steps: CalcGuideStep[] }) {
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={step.imageSlot}
-                alt=""
+                alt={step.title}
                 className="w-full h-auto rounded-xl border border-alx-outline-variant/40 shadow-sm object-cover"
               />
             ) : (
