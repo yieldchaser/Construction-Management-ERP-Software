@@ -5,6 +5,7 @@ import { getContentItemBySlug, getContentItems } from "@/lib/content";
 import { Metadata } from "next";
 import CalculatorTools from "@/components/resources/CalculatorTools";
 import CalcProse from "@/components/resources/CalcProse";
+import CalcArticle from "@/components/resources/CalcArticle";
 import ComparisonProse from "@/components/resources/ComparisonProse";
 import ResourceIndexProse from "@/components/resources/ResourceIndexProse";
 import { isCalculatorSlug } from "@/components/resources/calculatorSlugs";
@@ -194,6 +195,24 @@ export default async function ResourcePage({ params }: RouteParams) {
     { label: sectionMeta.label, href: sectionMeta.href },
     { label: article.title },
   ];
+
+  // Component-driven template: takes over the whole page when the loaded
+  // calculator resource carries a `calcStructured` block. Falls back to the
+  // legacy CalcProse body-blob rendering below for every calculator that
+  // hasn't been migrated yet.
+  if (isCalc && article.calcStructured) {
+    return (
+      <MarketingShell>
+        <CalcArticle
+          structured={article.calcStructured}
+          title={article.title}
+          subtitle={article.metaDescription}
+          slug={slugPath}
+          trail={trail}
+        />
+      </MarketingShell>
+    );
+  }
 
   return (
     <MarketingShell>

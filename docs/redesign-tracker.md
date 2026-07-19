@@ -24,7 +24,11 @@ Every page must **match or exceed** its stitch reference in `temp-stitch/` (main
       when real image lands; guard FeatureBlock icon type assertion. Remaining 19 = HY-3 content fill.
       full structured port. hero+image / 3 qualitative stats / 2-3 feature
       blocks / optional persona cards / data table / FAQ / CTA. NEW structured JSON schema (below).
-- [ ] **Calculator `[slug]`** (×7) — restyle `CalculatorTools` to LIGHT console; formula/factor strip;
+- [~] **Calculator `[slug]`** (×7) — PILOT DONE + verified. CalculatorTools console restyled LIGHT (shared,
+      compute math untouched); structured calc template (CalcArticle/CalcGuide) w/ formula strip, guide,
+      reference table, FAQ, CTA; concrete-mix migrated, India/GCC bloat dropped. Remaining 6 = HY-3 fill.
+      Cleanup TODO: orphaned legacy `body` in migrated calc JSON. Original:
+      restyle `CalculatorTools` to LIGHT console; formula/factor strip;
       how-to steps (numbered, image slots); reference table; FAQ; CTA. Rip out the black console + the
       bloated India/GCC rate panels that aren't in stitch. Keep real compute logic.
 - [ ] **Comparison `[slug]`** (×6) — hero / dual verdict cards (NO numeric scores) / "Two Approaches"
