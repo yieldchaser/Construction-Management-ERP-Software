@@ -35,12 +35,16 @@ export default function CalcGuide({ steps }: { steps: CalcGuideStep[] }) {
       {steps.map((step, idx) => (
         <div key={idx} className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
           <div className={`space-y-3 ${idx % 2 === 1 ? "md:order-2" : ""}`}>
-            <span className="font-headline inline-flex h-9 w-9 items-center justify-center rounded-full bg-alx-primary text-sm font-bold text-alx-on-primary">
-              {idx + 1}
-            </span>
-            <h3 className="font-headline text-xl md:text-2xl font-extrabold text-alx-on-surface leading-tight">
-              {step.title}
-            </h3>
+            {/* Number badge sits inline with the heading it labels, rather
+                than floating as its own block above it. */}
+            <div className="flex items-center gap-3">
+              <span className="font-headline inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-alx-primary text-sm font-bold text-alx-on-primary">
+                {idx + 1}
+              </span>
+              <h3 className="font-headline text-xl md:text-2xl font-extrabold text-alx-on-surface leading-tight">
+                {step.title}
+              </h3>
+            </div>
             <p className="font-body text-sm md:text-base text-alx-on-surface-variant leading-relaxed">
               {step.body}
             </p>
