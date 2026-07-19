@@ -16,6 +16,10 @@ Every page must **match or exceed** its stitch reference in `temp-stitch/` (main
 - No em dashes in body copy (founder pref).
 
 ## Templates to build (I design/spec; coder implements; verifier checks)
+> ✅ ALL TEMPLATES BELOW ARE BUILT + LIVE (products, calculators, comparisons, glossary, blog shell+index,
+> help, legal, index card grids, shared component library, stroke-icon system). The checkboxes below are
+> historical build-order notes; the authoritative done/left list is the **CURRENT STATUS** section at the bottom.
+> Only remaining work: the per-page-type POLISH PASS (in progress), real images (last), and legacy-body cleanup.
 - [ ] **Shared component library** — StatStrip, FAQAccordion, DataTable, FeatureBlock (text↔mini-UI),
       mini-UI cards (ticket, checklist, statusList, progressBars, lineChart, ganttBars, dependencyGraph,
       ledgerRow), light CalculatorConsole, ComparisonMatrix, EditorialReadingShell, CTABand, HeroWithImage.
@@ -107,7 +111,9 @@ LEFT:
 3. **Per-page-TYPE polish pass** (main agent, BATCH-WISE 2-3 types/batch, STOP after each, update memory+tracker):
    - [x] Batch 1: PRODUCT (hero img alt=headline, StatStrip centered band, FeatureBlock robust icon) +
          CALCULATOR (CalcGuide img alt). Build green.
-   - [ ] Batch 2: comparison + glossary
+   - [x] Batch 2: COMPARISON (whatIs callout no longer uppercased via alx-label) + GLOSSARY (sticky search
+         toolbar top-24 so it docks below the fixed header instead of hiding behind it; retention formula
+         rendered with real <sub> subscripts). Build green.
    - [ ] Batch 3: help + blog (article + index) + PURGE empty blog JSONs
    - [ ] Batch 4: legal + resources hub + product/resources indexes
    ORIGINAL note: — one design QA per template (product/calc/comparison/glossary/help/blog/legal/indexes),

@@ -114,12 +114,12 @@ export default function GlossaryClient({ heroImage }: { heroImage?: string }) {
             <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="rounded-2xl bg-alx-surface-container-lowest/90 border border-alx-outline-variant/15 p-4">
                 <p className="alx-label text-[10px] font-bold text-alx-on-surface-variant">Retention held</p>
-                <p className="font-headline text-lg font-extrabold text-alx-on-surface mt-1">R_held = P_certified × R_rate</p>
+                <p className="font-headline text-lg font-extrabold text-alx-on-surface mt-1">R<sub>held</sub> = P<sub>certified</sub> × R<sub>rate</sub></p>
                 <p className="font-body text-xs text-alx-on-surface-variant mt-1">P_certified is the certified bill value; R_rate is the agreed retention percentage.</p>
               </div>
               <div className="rounded-2xl bg-alx-surface-container-lowest/90 border border-alx-outline-variant/15 p-4">
                 <p className="alx-label text-[10px] font-bold text-alx-on-surface-variant">Net released</p>
-                <p className="font-headline text-lg font-extrabold text-alx-on-surface mt-1">R_net = R_held − D_deductions</p>
+                <p className="font-headline text-lg font-extrabold text-alx-on-surface mt-1">R<sub>net</sub> = R<sub>held</sub> − D<sub>deductions</sub></p>
                 <p className="font-body text-xs text-alx-on-surface-variant mt-1">D_deductions covers any other amounts withheld at the time of release.</p>
               </div>
             </div>
@@ -128,7 +128,7 @@ export default function GlossaryClient({ heroImage }: { heroImage?: string }) {
       </section>
 
       {/* Sticky toolbar: search + A-Z rail */}
-      <div className="sticky top-4 z-30 -mx-6 px-6 pt-3 pb-3 bg-alx-surface-container-lowest/85 backdrop-blur-md border-b border-alx-outline-variant/15">
+      <div className="sticky top-24 z-30 -mx-6 px-6 pt-3 pb-3 bg-alx-surface-container-lowest/85 backdrop-blur-md border-b border-alx-outline-variant/15">
         <div className="flex flex-col gap-4">
           <div className="relative">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-alx-on-surface-variant" aria-hidden="true">
