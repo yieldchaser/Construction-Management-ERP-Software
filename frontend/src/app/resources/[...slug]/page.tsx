@@ -7,6 +7,7 @@ import CalculatorTools from "@/components/resources/CalculatorTools";
 import CalcProse from "@/components/resources/CalcProse";
 import CalcArticle from "@/components/resources/CalcArticle";
 import ComparisonProse from "@/components/resources/ComparisonProse";
+import ComparisonArticle from "@/components/resources/comparison/ComparisonArticle";
 import ResourceIndexProse from "@/components/resources/ResourceIndexProse";
 import { isCalculatorSlug } from "@/components/resources/calculatorSlugs";
 import MarketingShell from "@/components/marketing/MarketingShell";
@@ -147,6 +148,18 @@ export default async function ResourcePage({ params }: RouteParams) {
       { label: "Comparisons", href: "/resources/feature-comparisons" },
       { label: article.title },
     ];
+
+    // Component-driven template: takes over the whole page when the loaded
+    // comparison resource carries a `comparisonStructured` block. Falls back
+    // to the legacy ComparisonProse body-blob rendering below for every
+    // comparison that hasn't been migrated yet.
+    if (article.comparisonStructured) {
+      return (
+        <MarketingShell>
+          <ComparisonArticle structured={article.comparisonStructured} trail={trail} />
+        </MarketingShell>
+      );
+    }
 
     return (
       <MarketingShell>
