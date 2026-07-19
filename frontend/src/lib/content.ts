@@ -1,5 +1,6 @@
 import fs from "fs/promises";
 import path from "path";
+import type { StructuredProduct } from "./productTypes";
 
 export interface ContentItem {
   title: string;
@@ -12,6 +13,12 @@ export interface ContentItem {
   author: string;
   publishDate: string;
   body: string;
+  /**
+   * Optional component-driven product template data. When present on a
+   * `products` content item, the route renders <ProductArticle> instead of
+   * the legacy `body` HTML blob. See src/lib/productTypes.ts.
+   */
+  structured?: StructuredProduct;
 }
 
 const CONTENT_DIR = path.join(process.cwd(), "src/content");

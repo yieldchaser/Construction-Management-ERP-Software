@@ -6,6 +6,7 @@ import { Metadata } from "next";
 import MarketingShell from "@/components/marketing/MarketingShell";
 import MockupFrame from "@/components/marketing/MockupFrame";
 import ReadingProgress from "@/components/marketing/ReadingProgress";
+import ProductArticle from "@/components/marketing/product/ProductArticle";
 
 interface RouteParams {
   params: Promise<{
@@ -38,6 +39,18 @@ export default async function ProductFeaturePage({ params }: RouteParams) {
 
   const allProducts = await getContentItems("products");
   const otherProducts = allProducts.filter((p) => p.slug !== slug);
+
+  // Component-driven template: takes over the whole page when the content
+  // item carries a `structured` block. Falls back to the legacy body-blob
+  // rendering below for every product that hasn't been migrated yet.
+  if (article.structured) {
+    return (
+      <MarketingShell>
+        <ReadingProgress />
+        <ProductArticle structured={article.structured} title={article.title} />
+      </MarketingShell>
+    );
+  }
 
   return (
     <MarketingShell>
