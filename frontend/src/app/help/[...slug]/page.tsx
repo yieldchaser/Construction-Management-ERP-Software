@@ -137,9 +137,13 @@ export default async function HelpArticlePage({ params }: RouteParams) {
     <MarketingShell>
       <ReadingProgress />
       {/* Reading header */}
-      <section className="relative px-6 pt-6 pb-10 md:pb-14 overflow-hidden alx-scroll-fade is-visible">
+      <section className="relative pt-6 pb-10 md:pb-14 overflow-hidden alx-scroll-fade is-visible">
         <div className="absolute inset-0 z-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-alx-primary-fixed/25 via-alx-surface-container-lowest to-alx-surface-container-lowest pointer-events-none" />
-        <div className="max-w-4xl mx-auto relative z-10 space-y-4">
+        {/* Same max-w-6xl + px-6 container as the body section below, so the
+            header's left edge lines up with the article column instead of
+            sitting in a narrower centered box. */}
+        <div className="max-w-6xl mx-auto px-6 relative z-10">
+          <div className="max-w-3xl space-y-4">
           <div className="flex flex-wrap items-center gap-2 text-xs text-alx-on-surface-variant">
             <Link href="/" className="hover:text-alx-primary transition-all">
               Home
@@ -171,6 +175,7 @@ export default async function HelpArticlePage({ params }: RouteParams) {
             <span>Written by {article.author}</span>
             <span>•</span>
             <span>Updated {updatedLabel}</span>
+          </div>
           </div>
         </div>
       </section>

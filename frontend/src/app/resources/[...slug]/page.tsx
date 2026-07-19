@@ -1,6 +1,6 @@
 import React from "react";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getContentItemBySlug, getContentItems } from "@/lib/content";
 import { Metadata } from "next";
 import CalculatorTools from "@/components/resources/CalculatorTools";
@@ -93,7 +93,7 @@ function resourceSectionMeta(topSlug: string): { label: string; href: string } {
     return { label: "Comparisons", href: "/resources/feature-comparisons" };
   }
   if (topSlug === "construction-terms-meanings") {
-    return { label: "Glossary", href: "/resources/construction-terms-meanings" };
+    return { label: "Glossary", href: "/resources/glossary" };
   }
   return { label: "Resources", href: "/resources" };
 }
@@ -200,6 +200,13 @@ export default async function ResourcePage({ params }: RouteParams) {
         </main>
       </MarketingShell>
     );
+  }
+
+  // The legacy terms page is superseded by the built /resources/glossary
+  // (A-Z, searchable, 200 terms). Send it there instead of serving the old
+  // scraped body blob.
+  if (slugPath === "construction-terms-meanings") {
+    redirect("/resources/glossary");
   }
 
   // Structured card-grid index pages (replace the legacy body-blob prose).

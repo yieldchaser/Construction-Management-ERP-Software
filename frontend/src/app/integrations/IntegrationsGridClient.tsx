@@ -152,8 +152,8 @@ export function IntegrationsGridClient() {
           >
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-3xl p-2.5 rounded-md bg-alx-surface-container border border-alx-outline-variant/40">
-                  {item.icon}
+                <span className="inline-flex h-11 w-11 items-center justify-center rounded-md bg-alx-primary-fixed/40 text-alx-primary border border-alx-outline-variant/40">
+                  <Icon name={item.icon} className="h-6 w-6" />
                 </span>
                 <span
                   className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${
