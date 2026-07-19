@@ -213,7 +213,7 @@ export default async function ProductsIndexPage() {
     <MarketingShell>
       {/* Hero */}
       <section className="relative px-6 pt-16 pb-20 text-center overflow-hidden">
-        <div className="absolute inset-0 z-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-alx-primary-fixed/30 via-alx-surface-container-lowest to-alx-surface-container-lowest pointer-events-none" />
+        <div className="absolute inset-0 z-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-alx-primary-fixed/30 via-transparent to-transparent pointer-events-none" />
         <Aurora variant="hero" className="absolute inset-0" />
         <div className="max-w-4xl mx-auto relative z-10 space-y-6">
           <span className="alx-label alx-badge-gold inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs">
