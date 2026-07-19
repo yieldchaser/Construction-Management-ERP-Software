@@ -61,17 +61,41 @@ export default function CalcArticle({
         <div className="max-w-6xl mx-auto relative z-10 space-y-8">
           <Breadcrumb trail={trail} />
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
-            <div className="space-y-4 lg:pt-4">
+            <div className="space-y-5 lg:pt-4">
               <span className="alx-label inline-block text-xs font-bold text-alx-primary px-2.5 py-1 rounded-md bg-alx-primary-fixed/40">
                 Free construction tool
               </span>
               <h1 className="font-headline text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-tight text-alx-on-surface leading-tight">
                 {title}
               </h1>
-              {subtitle && (
+              {(structured.hero?.subhead ?? subtitle) && (
                 <p className="font-body text-alx-on-surface-variant text-base md:text-lg max-w-xl leading-relaxed">
-                  {subtitle}
+                  {structured.hero?.subhead ?? subtitle}
                 </p>
+              )}
+              {structured.hero?.points && structured.hero.points.length > 0 && (
+                <ul className="space-y-2.5 pt-1">
+                  {structured.hero.points.map((point, idx) => (
+                    <li
+                      key={idx}
+                      className="flex items-start gap-2.5 font-body text-sm md:text-base text-alx-on-surface-variant"
+                    >
+                      <svg
+                        className="mt-0.5 shrink-0 text-alx-primary"
+                        width="18"
+                        height="18"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                        aria-hidden="true"
+                      >
+                        <path d="M20 6 9 17l-5-5" />
+                      </svg>
+                      <span>{point}</span>
+                    </li>
+                  ))}
+                </ul>
               )}
             </div>
             <div className="alx-hover-lift">
