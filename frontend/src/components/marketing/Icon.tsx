@@ -1,4 +1,4 @@
-﻿export type IconName =
+export type IconName =
   | "architecture"
   | "menu"
   | "close"
@@ -42,7 +42,9 @@
   | "chevron_down"
   | "note"
   | "dashboard"
-  | "receipt";
+  | "receipt"
+  | "schedule"
+  | "lock";
 
 interface IconProps {
   name: IconName;
@@ -390,6 +392,18 @@ const ICON_PATHS: Record<IconName, React.ReactNode> = {
       <path d="M5 3v18l2-1.5L9 21l2-1.5L13 21l2-1.5L17 21l2-1.5V3l-2 1.5L15 3l-2 1.5L11 3 9 4.5 7 3Z" />
       <line x1="8" y1="8" x2="16" y2="8" />
       <line x1="8" y1="12" x2="16" y2="12" />
+    </>
+  ),
+  schedule: (
+    <>
+      <circle cx="12" cy="12" r="10" />
+      <polyline points="12 6 12 12 16 14" />
+    </>
+  ),
+  lock: (
+    <>
+      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
     </>
   ),
 };

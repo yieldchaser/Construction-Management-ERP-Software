@@ -113,8 +113,11 @@ export default function LandingPage() {
             <MockupFrame variant="planning" />
           </div>
           <div className="order-1 lg:order-2 space-y-6">
-            <div className="inline-flex items-center justify-center p-3 bg-sky-100 rounded-xl mb-4 text-sky-700 border border-sky-200">
+            <div className="inline-flex items-center justify-center p-3 bg-sky-100 rounded-xl mb-4 text-sky-700 border border-sky-200 relative">
               <Icon name="edit_calendar" className="w-8 h-8" />
+              <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-sky-600 ring-2 ring-white text-white">
+                <Icon name="schedule" className="w-2.5 h-2.5 text-white" />
+              </span>
             </div>
             <h2 className="font-headline text-4xl font-bold text-alx-on-surface leading-tight">
               Planning &amp; Execution Engine
@@ -150,8 +153,11 @@ export default function LandingPage() {
         {/* Section B: Procurement & 3-Way Match */}
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center alx-scroll-fade">
           <div className="space-y-6">
-            <div className="inline-flex items-center justify-center p-3 bg-emerald-100 rounded-xl mb-4 text-emerald-700 border border-emerald-200">
+            <div className="inline-flex items-center justify-center p-3 bg-emerald-100 rounded-xl mb-4 text-emerald-700 border border-emerald-200 relative">
               <Icon name="inventory_2" className="w-8 h-8" />
+              <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-emerald-600 ring-2 ring-white text-white">
+                <Icon name="check" className="w-2.5 h-2.5 text-white" />
+              </span>
             </div>
             <h2 className="font-headline text-4xl font-bold text-alx-on-surface leading-tight">
               Procurement &amp; 3-Way Match
@@ -229,8 +235,11 @@ export default function LandingPage() {
         {/* Section D: Finance & Compliance Hub */}
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center alx-scroll-fade">
           <div className="space-y-6">
-            <div className="inline-flex items-center justify-center p-3 bg-amber-100 rounded-xl mb-4 text-amber-700 border border-amber-200">
+            <div className="inline-flex items-center justify-center p-3 bg-amber-100 rounded-xl mb-4 text-amber-700 border border-amber-200 relative">
               <Icon name="account_balance" className="w-8 h-8" />
+              <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-amber-600 ring-2 ring-white text-white">
+                <Icon name="lock" className="w-2.5 h-2.5 text-white" />
+              </span>
             </div>
             <h2 className="font-headline text-4xl font-bold text-alx-on-surface leading-tight">
               Finance &amp; Compliance Hub
