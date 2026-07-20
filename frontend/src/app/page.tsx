@@ -10,34 +10,14 @@ import CountUp from "@/components/marketing/CountUp";
 import Aurora from "@/components/marketing/Aurora";
 
 export default function LandingPage() {
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries, obs) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("is-visible");
-            obs.unobserve(entry.target);
-          }
-        });
-      },
-      { root: null, rootMargin: "0px", threshold: 0.15 }
-    );
-
-    document.querySelectorAll(".alx-scroll-fade").forEach((section) => {
-      observer.observe(section);
-    });
-
-    return () => observer.disconnect();
-  }, []);
-
   return (
     <MarketingShell>
       {/* 1. Symmetrical Hero */}
       <section className="relative pt-20 pb-32 px-6 overflow-hidden alx-scroll-fade is-visible">
         {/* Living Drifting Aurora */}
         <Aurora variant="hero" className="absolute inset-0 z-0" />
-        {/* Custom layered baby blue pulsing glow backplates */}
-        <div className="absolute top-[-10%] left-[-10%] h-[50%] w-[50%] rounded-full bg-sky-200/40 blur-[120px] mix-blend-multiply pointer-events-none z-0 animate-pulse" style={{ animationDuration: "8s" }} />
+        {/* Custom layered baby blue static glow backplates (static for GPU performance) */}
+        <div className="absolute top-[-10%] left-[-10%] h-[50%] w-[50%] rounded-full bg-sky-200/30 blur-[120px] mix-blend-multiply pointer-events-none z-0" />
         <div className="absolute bottom-[10%] right-[-10%] h-[40%] w-[40%] rounded-full bg-sky-100/30 blur-[130px] mix-blend-multiply pointer-events-none z-0" />
         <div className="alx-grain absolute inset-0 z-0 pointer-events-none" aria-hidden="true" />
         
@@ -219,8 +199,11 @@ export default function LandingPage() {
             </div>
           </div>
           <div className="order-1 lg:order-2 space-y-6">
-            <div className="inline-flex items-center justify-center p-3 bg-violet-100 rounded-xl mb-4 text-violet-700 border border-violet-200">
-              <Icon name="mobile_friendly" className="w-8 h-8" />
+            <div className="inline-flex items-center justify-center p-3 bg-violet-100 rounded-xl mb-4 text-violet-700 border border-violet-200 relative">
+              <Icon name="smartphone" className="w-8 h-8" />
+              <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-violet-600 ring-2 ring-white text-white">
+                <Icon name="check" className="w-2.5 h-2.5 text-white" />
+              </span>
             </div>
             <h2 className="font-headline text-4xl font-bold text-alx-on-surface leading-tight">
               Daily Progress Automation

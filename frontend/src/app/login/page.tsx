@@ -9,6 +9,7 @@ import {
   signInWithPhoneNumber,
   type ConfirmationResult,
 } from "firebase/auth";
+import Icon from "@/components/marketing/Icon";
 
 type Method = "phone" | "email_otp" | "password";
 type Stage =
@@ -461,9 +462,12 @@ export default function LoginPage() {
       <div className="relative hidden w-2/5 flex-col justify-between overflow-hidden alx-baby-blue-wash p-12 lg:flex border-r border-sky-200">
         <div className="alx-grain absolute inset-0 z-0 opacity-40" />
 
-        <div className="flex items-center gap-3 z-10">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-sky-600 font-bold text-white shadow-md">S</div>
-          <span className="text-xl font-bold tracking-tight text-sky-950">SiteFlow</span>
+        <div className="flex items-center gap-2 z-10">
+          <Icon name="architecture" className="w-8 h-8 text-sky-600" />
+          <span className="text-xl font-bold tracking-tight">
+            <span className="text-sky-950">Site</span>
+            <span className="text-sky-500">Flow</span>
+          </span>
         </div>
 
         <div className="z-10 max-w-md space-y-8">
