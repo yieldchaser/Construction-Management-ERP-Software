@@ -4,7 +4,6 @@ import { getContentItems, ContentItem } from "@/lib/content";
 import { Metadata } from "next";
 import MarketingShell from "@/components/marketing/MarketingShell";
 import BlogIndexClient, { BlogCategory, BlogPostView } from "./BlogIndexClient";
-import Aurora from "@/components/marketing/Aurora";
 import Icon from "@/components/marketing/Icon";
 
 export const metadata: Metadata = {
@@ -103,7 +102,9 @@ export default async function BlogIndexPage() {
     <MarketingShell>
       {/* 1. Master hero + digest panel */}
       <section className="relative overflow-hidden max-w-6xl mx-auto px-6 pt-10 pb-12 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start alx-scroll-fade">
-        <Aurora variant="hero" className="absolute inset-0" />
+        {/* No Aurora here: this section is max-w-6xl with overflow-hidden, so
+            the wash was clipped into a tinted panel narrower than the page and
+            24px wider than the content, showing hard edges down both sides. */}
         <div className="lg:col-span-8 space-y-5 relative z-10">
           <nav className="flex items-center gap-1.5 font-uilabel text-[11px] uppercase tracking-widest text-alx-outline">
             <span>Resources</span>
