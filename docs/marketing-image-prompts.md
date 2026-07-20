@@ -15,6 +15,34 @@ Every prompt below is written to be copy-pasted as-is into the generator. It alr
 > Use realistic Indian-construction domain data throughout: rupee amounts written like `Rs 4.2Cr` or `Rs 1.9Cr`, Indian project names such as "Riverside Tower" or "Greenfield Phase 2", IS-code style engineering terminology (RCC, WBS, RFI, GRN, BOQ, MEP), dates written in DD MMM format such as "14 Mar". All text must be spelled correctly and fully legible, no lorem ipsum, no garbled or invented glyphs. If the generator produces gibberish or broken text, regenerate the same prompt but add the line "use numbers, bars and shapes only, no word labels" to sidestep the text-rendering failure.
 >
 > Forbid: any competitor name or logo, any real company name, stock-photo watermarks, human faces inside UI screenshots (editorial photography images are the only place faces are acceptable), cartoon or 3D-render style, glossy plastic reflections, and dark mode. These are all marketing-site images and the marketing site is light theme; only the logged-in console is dark, and none of these prompts depict the console.
+>
+> Typeface: a clean geometric or neutral sans-serif for all interface text, consistent across every mockup, no serif faces inside UI, no condensed or display faces.
+>
+> Corner radius: consistently rounded corners on cards, tiles, chips and buttons, roughly 8 to 12 px at the stated output size, never sharp 90 degree corners and never fully pill-shaped cards.
+>
+> Lighting for UI mockups: flat, even, front-lit, as if a real screenshot. No dramatic side lighting, no light bloom, no vignette, no simulated screen glare or reflection.
+>
+> Shadows: soft and diffuse, low opacity, cast straight down and slightly back, used only to separate cards from the background, never a hard dark drop shadow.
+>
+> Chart styling: consistent stroke weight on lines, flat solid fills on bars, no 3D extrusion, no glossy gradients on data series.
+>
+> Empty space: real interfaces breathe, keep generous padding inside cards rather than cramming the frame with data.
+
+## About the pixel sizes
+
+The aspect ratio is the part the generator actually honours, not the pixel figure. Gemini and Imagen generate at their own fixed internal resolutions and accept an aspect ratio, they do not accept an arbitrary output size. Always set or state the aspect ratio explicitly, that instruction gets followed. The pixel figure listed per image is the delivery target, the size the image needs to be to look sharp on the site, it is not a literal instruction the model will obey.
+
+Ask for the highest resolution the tool offers, and if the tool exposes a resolution or quality setting, max it. If the delivered file comes back materially smaller than the target, it will look soft on a high-DPI screen. Options at that point: regenerate, use the tool's own upscale feature if it has one, or accept the smaller file for the lower-priority images. The landing hero and the three product heroes are the ones actually worth insisting on, since they render largest on the page and softness shows up first there.
+
+The genuinely acceptable minimum is roughly 1600 px on the long edge for full-width images. Below that it will visibly soften on a modern screen.
+
+## Keeping the set consistent
+
+Twenty-seven images generated in twenty-seven separate prompts will drift: a different UI typeface, different chart styling, a slightly different blue, a different shadow weight, a different corner rounding. The set will not read as one product unless the workflow accounts for this.
+
+Generate `hero-dashboard.png` first and iterate on it until it is genuinely right. It becomes the reference image for everything after it. For every subsequent UI mockup, attach that finished hero image to the prompt as a style reference and add a line such as "match the visual style, UI typeface, chart styling, corner radius, shadow weight and exact blue tones of the attached reference image." Gemini 2.5 Flash Image accepts an input image for exactly this purpose.
+
+Apply the same idea within each family: the four `segment-*` images should reference each other, the six `cat-*` blog photos should share one reference so the photographic treatment matches across all six, and the seven calculator diagrams must share one reference so the line weight and dimension-label style are identical across all seven. The calculator diagrams are the most sensitive to drift, since they sit side by side in the same section of the site and any difference in line weight is immediately obvious.
 
 ---
 
@@ -225,12 +253,13 @@ Calculator and comparison pages use in-code visuals; optional hero.
 - If Gemini adds gibberish text on UI mockups or diagrams, regenerate the same prompt with the extra line "use numbers, bars and shapes only, no word labels".
 - Prioritize **1 to 5 (landing)** and **6 to 8 (product heroes)**, highest visibility. **21 to 27 (calculator diagrams)** are next since they currently show a bare placeholder. The rest are polish.
 - After you drop a batch, tell Claude which files are filled; it swaps the in-code mockup for the `<img>` and keeps the mockup as a fallback.
+- **Stale orphan file**: `frontend/public/marketing/landing/hero-dashboard.jpg` is currently tracked in the repo, 33 KB, referenced nowhere in the codebase. It is a leftover from an earlier attempt and its name collides conceptually with the real `hero-dashboard.png` planned above. It is far too small to serve as the real hero. Delete it once the real `hero-dashboard.png` is generated and wired in, so the two do not get confused.
 
 ## Where to save the finished images
 
 All 27 filenames listed in this document are globally unique, so the simplest workflow is to save every generated image into ONE folder outside the repo, for example `C:\Users\Dell\Desktop\siteflow-images\`, then tell Claude that folder path. Claude will move each file to its correct destination, wire it into the templates and commit. The filename is the only thing that has to be exactly right, because the name alone determines where the file belongs.
 
-The alternative is to drop files straight into the destination folders listed below, six of which already exist in the repo. Only `frontend/public/marketing/calculators/` does not exist yet and will be created when the first calculator diagram arrives.
+The alternative is to drop files straight into the destination folders listed below. All seven folders already exist in the repo, `frontend/public/marketing/calculators/` was the last one created and currently holds a `.gitkeep`.
 
 | # | Filename | Destination folder |
 | - | -------- | ------------------- |
