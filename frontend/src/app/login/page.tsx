@@ -458,52 +458,43 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen w-full bg-alx-surface-container-lowest text-alx-on-surface">
       {/* Brand panel */}
-      <div className="relative hidden w-2/5 flex-col justify-between overflow-hidden bg-alx-surface-container-lowest p-12 lg:flex border-r border-alx-outline-variant/40">
-        {/* Light wash matching the marketing heroes: the same blue tint from
-            the top plus a warm note low left, so signing in reads as the same
-            surface family as the landing and resources pages. Gradients rather
-            than blurred blobs, which would be clipped flat by overflow-hidden. */}
-        <div className="absolute inset-0 alx-hero-wash" aria-hidden="true" />
-        <div
-          className="absolute inset-0 opacity-45 bg-[radial-gradient(ellipse_85%_60%_at_15%_100%,var(--color-alx-tertiary-fixed),transparent_70%)]"
-          aria-hidden="true"
-        />
-        <div className="alx-grain absolute inset-0 z-0" />
+      <div className="relative hidden w-2/5 flex-col justify-between overflow-hidden alx-baby-blue-wash p-12 lg:flex border-r border-sky-200">
+        <div className="alx-grain absolute inset-0 z-0 opacity-40" />
 
         <div className="flex items-center gap-3 z-10">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg alx-bg-gradient-primary font-bold text-alx-on-primary shadow-md">S</div>
-          <span className="text-xl font-bold tracking-tight text-alx-on-surface">SiteFlow</span>
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-sky-600 font-bold text-white shadow-md">S</div>
+          <span className="text-xl font-bold tracking-tight text-sky-950">SiteFlow</span>
         </div>
 
         <div className="z-10 max-w-md space-y-8">
           <div className="space-y-4">
-            <h2 className="font-headline text-3xl font-extrabold leading-tight text-alx-on-surface">
+            <h2 className="font-headline text-3xl font-extrabold leading-tight text-sky-950">
               Your whole construction business in one workspace.
             </h2>
-            <p className="text-sm leading-relaxed text-alx-on-surface-variant">
+            <p className="text-sm leading-relaxed text-sky-900/80">
               Projects, billing, procurement, payroll and CRM stay connected, so your office and your site work from the same numbers.
             </p>
           </div>
 
           {/* Compact live-project mock, echoing the homepage hero card
               (same honest demo strings), adapted for this fixed half-width panel. */}
-          <div className="rounded-xl border border-alx-outline-variant/25 bg-alx-surface-container-lowest p-4 shadow-xl shadow-alx-on-surface/5 space-y-3">
+          <div className="rounded-xl border border-white bg-white/75 p-4 shadow-xl shadow-sky-900/5 space-y-3 backdrop-blur-sm">
             <div className="flex items-center justify-between gap-3">
-              <span className="text-sm font-semibold text-alx-on-surface">Greenline Residency</span>
-              <span className="rounded-full bg-alx-primary-fixed px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-alx-primary">
+              <span className="text-sm font-semibold text-sky-950">Greenline Residency</span>
+              <span className="rounded-full bg-sky-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-sky-700">
                 Phase 2
               </span>
             </div>
             <div className="space-y-1.5">
-              <div className="flex items-center justify-between text-[11px] text-alx-on-surface-variant">
+              <div className="flex items-center justify-between text-[11px] text-sky-900/70">
                 <span>Weighted progress</span>
-                <span className="font-semibold text-alx-on-surface">62%</span>
+                <span className="font-semibold text-sky-950">62%</span>
               </div>
-              <div className="h-2 w-full overflow-hidden rounded-full bg-alx-primary-fixed">
-                <div className="h-full w-[62%] rounded-full alx-bg-gradient-primary" />
+              <div className="h-2 w-full overflow-hidden rounded-full bg-sky-100">
+                <div className="h-full w-[62%] rounded-full bg-sky-600" />
               </div>
             </div>
-            <div className="rounded-md border border-alx-outline-variant/20 bg-alx-surface-container-low px-3 py-2 text-[11px] text-alx-on-surface-variant">
+            <div className="rounded-md border border-sky-100/50 bg-white/50 px-3 py-2 text-[11px] text-sky-900">
               Project P&amp;L: revenue Rs 61L, cost Rs 44L, margin 28%
             </div>
           </div>
@@ -515,10 +506,10 @@ export default function LoginPage() {
               "Tally & Zoho accounting integrations",
               "GPS-geofenced attendance, IS-code compliant math",
             ].map((point) => (
-              <li key={point} className="flex items-center gap-3 text-sm text-alx-on-surface-variant">
-                <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-alx-primary-fixed">
+              <li key={point} className="flex items-center gap-3 text-sm text-sky-900/90">
+                <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-sky-100 ring-1 ring-sky-200">
                   <svg
-                    className="h-3 w-3 text-alx-primary"
+                    className="h-3 w-3 text-sky-600"
                     viewBox="0 0 20 20"
                     fill="none"
                     stroke="currentColor"
