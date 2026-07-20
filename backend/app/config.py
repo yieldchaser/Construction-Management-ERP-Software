@@ -64,6 +64,13 @@ class Settings(BaseSettings):
     # is not configured (dev/demo only; never bypasses real delivery once set).
     EMAIL_OTP_DEMO_ALLOWLIST: str = "demo@siteflow.co"
 
+    # --- Marketing lead notifications ---
+    # Where the public contact-form / demo-request submissions (app/routers/
+    # public_leads.py) are emailed to. Falls back to SMTP_FROM when empty. If
+    # BOTH are empty, leads are still persisted to marketing_leads but no
+    # notification email is sent (email_sent stays False on the row).
+    LEAD_NOTIFY_EMAIL: str = ""
+
     # --- Password policy (email + password auth) ---
     PASSWORD_MIN_LENGTH: int = 8
 

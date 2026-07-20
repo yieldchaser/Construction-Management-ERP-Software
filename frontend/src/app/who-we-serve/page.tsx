@@ -236,7 +236,7 @@ export default function WhoWeServePage() {
 
           <div className="flex justify-center">
             <Link
-              href="/login"
+              href="/contact"
               className="alx-bg-gradient-primary text-alx-on-primary px-8 py-3.5 rounded-full font-uilabel text-sm font-bold tracking-wide hover:shadow-xl hover:shadow-alx-primary/30 transition-all active:scale-95 inline-flex items-center justify-center gap-2 relative overflow-hidden group"
             >
               <span className="relative z-10 inline-flex items-center gap-2 whitespace-nowrap">Book a Free Demo <Icon name="arrow_right" className="w-4 h-4" /></span>
@@ -347,7 +347,7 @@ export default function WhoWeServePage() {
                     <span className="transition-transform group-hover/link:translate-x-1 inline-flex"><Icon name="arrow_right" className="w-4 h-4" /></span>
                   </Link>
                   <Link
-                    href="/login"
+                    href="/contact"
                     className="font-uilabel text-sm font-semibold text-alx-on-surface bg-alx-surface-container hover:bg-alx-surface-container-high px-5 py-2.5 rounded-full transition-colors"
                   >
                     Book Demo
@@ -409,7 +409,7 @@ export default function WhoWeServePage() {
               solves the problems your business type faces every day.
             </p>
             <Link
-              href="/login"
+              href="/contact"
               className="alx-bg-gradient-primary text-alx-on-primary px-10 py-4 rounded-full font-uilabel text-sm font-bold tracking-wide hover:shadow-xl hover:shadow-alx-primary/30 transition-all active:scale-95 inline-flex items-center justify-center gap-2 relative overflow-hidden group"
             >
               <span className="relative z-10 inline-flex items-center gap-2 whitespace-nowrap">Book a Free Demo <Icon name="arrow_right" className="w-4 h-4" /></span>

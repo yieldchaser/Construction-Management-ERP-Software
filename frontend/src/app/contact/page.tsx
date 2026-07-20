@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import MarketingShell from "@/components/marketing/MarketingShell";
+import { getApiHost } from "@/lib/api";
 
 const OFFICES = [
   { city: "Delhi (HQ)", address: "SiteFlow Offices, New Delhi, India" },
@@ -63,11 +64,42 @@ function ContactIcon({ name, className = "w-6 h-6" }: { name: ContactIconName; c
 
 export default function ContactPage() {
   const [form, setForm] = useState({ name: "", company: "", phone: "", email: "", role: "", sites: "", message: "" });
+  const [website, setWebsite] = useState(""); // honeypot: always left empty by real users
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
+    setError("");
+    setSubmitting(true);
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/public/leads`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...form,
+          website,
+          source: "contact_form",
+          page_url: typeof window !== "undefined" ? window.location.href : undefined,
+        }),
+      });
+      if (!res.ok) {
+        if (res.status === 422) {
+          throw new Error("validation");
+        }
+        throw new Error("request_failed");
+      }
+      setSubmitted(true);
+    } catch (err) {
+      if (err instanceof Error && err.message === "validation") {
+        setError("Please check the required fields above (name, company, phone, and email) and try again.");
+      } else {
+        setError("We could not send your message. Please try again, or reach us directly on WhatsApp or email.");
+      }
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   useEffect(() => {
@@ -163,7 +195,7 @@ export default function ContactPage() {
                 <div className="font-headline text-sm font-bold text-alx-on-surface">Our promise</div>
               </div>
               <p className="text-xs text-alx-on-surface-variant leading-relaxed">
-                Every inquiry gets a real response, not an auto-reply. If you fill the form, your dedicated rep will call or WhatsApp you within 4 business hours.
+                Every inquiry gets a real response, not an auto-reply. If you fill the form, our team will follow up by email.
               </p>
             </div>
           </div>
@@ -177,7 +209,7 @@ export default function ContactPage() {
                 </div>
                 <h2 className="font-headline text-2xl font-extrabold text-alx-on-surface">Message received!</h2>
                 <p className="font-body text-alx-on-surface-variant text-sm max-w-xs">
-                  Your dedicated onboarding rep will reach out within 4 hours. Check your WhatsApp.
+                  Thanks for reaching out. Our team will review your message and get back to you by email soon.
                 </p>
                 <Link href="/" className="text-sm text-alx-primary hover:underline">
                   &larr; Back to Home
@@ -188,6 +220,18 @@ export default function ContactPage() {
                 <div className="absolute -top-24 -right-24 w-48 h-48 bg-alx-primary-fixed rounded-full blur-3xl opacity-50 pointer-events-none" />
                 <h2 className="font-headline text-xl font-extrabold text-alx-on-surface mb-6 relative z-10">Send us a message</h2>
                 <form onSubmit={handleSubmit} className="space-y-6 flex-grow flex flex-col justify-between relative z-10">
+                  {/* Honeypot: hidden from real visitors, left blank by them. Bots that
+                      fill every field trip this and their submission is silently dropped. */}
+                  <input
+                    type="text"
+                    name="website"
+                    value={website}
+                    onChange={(e) => setWebsite(e.target.value)}
+                    tabIndex={-1}
+                    autoComplete="off"
+                    aria-hidden="true"
+                    className="absolute -left-[9999px] w-px h-px opacity-0 pointer-events-none"
+                  />
                   <div className="space-y-6">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                       {[
@@ -213,7 +257,7 @@ export default function ContactPage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                       {[
                         { id: "phone", label: "Phone / WhatsApp *", placeholder: "+91 98765 00000", type: "tel", required: true },
-                        { id: "email", label: "Email Address", placeholder: "you@company.com", type: "email", required: false },
+                        { id: "email", label: "Email Address *", placeholder: "you@company.com", type: "email", required: true },
                       ].map((f) => (
                         <div key={f.id} className="space-y-2">
                           <label htmlFor={f.id} className={labelClass}>
@@ -267,11 +311,19 @@ export default function ContactPage() {
                     </div>
                   </div>
                   <div className="space-y-4 pt-4">
+                    {error && (
+                      <p role="alert" className="text-xs font-semibold text-red-600 text-center">
+                        {error}
+                      </p>
+                    )}
                     <button
                       type="submit"
-                      className="alx-bg-gradient-primary text-alx-on-primary w-full rounded-full font-uilabel py-4 text-sm font-bold tracking-wide hover:shadow-xl hover:shadow-alx-primary/30 transition-all active:scale-[0.99] inline-flex items-center justify-center relative overflow-hidden group"
+                      disabled={submitting}
+                      className="alx-bg-gradient-primary text-alx-on-primary w-full rounded-full font-uilabel py-4 text-sm font-bold tracking-wide hover:shadow-xl hover:shadow-alx-primary/30 transition-all active:scale-[0.99] inline-flex items-center justify-center relative overflow-hidden group disabled:opacity-60 disabled:cursor-not-allowed"
                     >
-                      <span className="relative z-10">Send Message, Get Demo &rarr;</span>
+                      <span className="relative z-10">
+                        {submitting ? "Sending..." : "Send Message, Get Demo →"}
+                      </span>
                       <div className="absolute inset-0 alx-shimmer opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     </button>
                     <p className="text-[11px] text-alx-on-surface-variant text-center">

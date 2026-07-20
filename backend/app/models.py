@@ -2211,3 +2211,32 @@ class BiApiKey(Base):
     last_used_at = Column(DateTime(timezone=True), nullable=True)
     revoked = Column(Boolean, default=False, nullable=False)
 
+
+class MarketingLead(Base):
+    """A prospect submission from the public marketing site (contact form,
+    demo requests, etc). PUBLIC, tenant-less table: these are prospects, not
+    customers, so there is no company_id FK.
+
+    Mirrors OTPCode/OAuthHandoff's care around PII: ip_hash stores only an
+    HMAC-SHA256 hash of the submitter's IP (keyed by SECRET_KEY, same approach
+    as OTP code hashing), never the raw IP, so abuse investigation is possible
+    without retaining PII. email_sent records whether the founder notification
+    went out, so a mail-provider hiccup never silently loses a lead: the row
+    is always written first, the email attempt happens after.
+    """
+    __tablename__ = "marketing_leads"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name = Column(String(120), nullable=False)
+    company = Column(String(200), nullable=True)
+    email = Column(String(255), nullable=False, index=True)
+    phone = Column(String(32), nullable=True)
+    role = Column(String(120), nullable=True)
+    sites = Column(String(120), nullable=True)
+    message = Column(Text, nullable=True)
+    source = Column(String(60), default="contact_form", server_default="contact_form", nullable=False)
+    page_url = Column(String(500), nullable=True)
+    user_agent = Column(String(400), nullable=True)
+    ip_hash = Column(String(128), nullable=True)
+    email_sent = Column(Boolean, default=False, server_default="0", nullable=False)
+    created_at = Column(DateTime(timezone=True), default=func.now(), server_default=func.now(), nullable=False)
+

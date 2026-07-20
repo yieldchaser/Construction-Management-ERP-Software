@@ -545,6 +545,8 @@ from app.routers import bi_export as bi_export_router
 app.include_router(bi_export_router.router, prefix="/apis/v3")
 from app.routers import zoho_books as zoho_books_router
 app.include_router(zoho_books_router.router, prefix="/apis/v3")
+from app.routers import public_leads as public_leads_router
+app.include_router(public_leads_router.router, prefix="/apis/v3")
 
 @app.get("/")
 def read_root():
