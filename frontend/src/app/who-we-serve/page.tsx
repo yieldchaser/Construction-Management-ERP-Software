@@ -239,7 +239,7 @@ export default function WhoWeServePage() {
               href="/login"
               className="alx-bg-gradient-primary text-alx-on-primary px-8 py-3.5 rounded-full font-uilabel text-sm font-bold tracking-wide hover:shadow-xl hover:shadow-alx-primary/30 transition-all active:scale-95 inline-flex items-center justify-center gap-2 relative overflow-hidden group"
             >
-              <span className="relative z-10">Book a Free Demo <Icon name="arrow_right" className="w-4 h-4" /></span>
+              <span className="relative z-10 inline-flex items-center gap-2 whitespace-nowrap">Book a Free Demo <Icon name="arrow_right" className="w-4 h-4" /></span>
               <div className="absolute inset-0 alx-shimmer opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             </Link>
           </div>
@@ -412,7 +412,7 @@ export default function WhoWeServePage() {
               href="/login"
               className="alx-bg-gradient-primary text-alx-on-primary px-10 py-4 rounded-full font-uilabel text-sm font-bold tracking-wide hover:shadow-xl hover:shadow-alx-primary/30 transition-all active:scale-95 inline-flex items-center justify-center gap-2 relative overflow-hidden group"
             >
-              <span className="relative z-10">Book a Free Demo <Icon name="arrow_right" className="w-4 h-4" /></span>
+              <span className="relative z-10 inline-flex items-center gap-2 whitespace-nowrap">Book a Free Demo <Icon name="arrow_right" className="w-4 h-4" /></span>
               <div className="absolute inset-0 alx-shimmer opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             </Link>
             <p className="font-body text-sm text-alx-on-surface-variant mt-6 font-medium">
