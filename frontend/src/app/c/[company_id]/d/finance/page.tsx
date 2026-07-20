@@ -5,6 +5,7 @@ import { authHeaders } from "@/lib/siteflow";
 import React, { useState, useEffect, useMemo } from "react";
 import { useParams } from "next/navigation";
 import { useProject } from "@/context/ProjectContext";
+import Icon, { type IconName } from "@/components/marketing/Icon";
 
 interface Transaction {
   id: string;
@@ -206,16 +207,16 @@ export default function FinancePage() {
   const [prPayment, setPrPayment] = useState({ date: "", mode: "Cash", paidAmount: "", deduction: "0", tds: "0", remarks: "", referenceNo: "", attachmentName: "" });
   const [usersList, setUsersList] = useState<any[]>([]);
 
-  const PR_TYPES = [
-    { key: "Advance against PO", icon: "📄", label: "Advance against PO", extraLabel: "PO Reference", extraPlaceholder: "PO-204" },
-    { key: "Advance against Subcon Work Order", icon: "📑", label: "Advance against Subcon Work Order", extraLabel: "Work Order Ref", extraPlaceholder: "WO-1001" },
-    { key: "Advance against BOQ", icon: "📐", label: "Advance against BOQ", extraLabel: "BOQ Document Ref", extraPlaceholder: "BOQ-..." },
-    { key: "Advance against Material Purchase", icon: "📦", label: "Advance against Material Purchase", extraLabel: "Material Purchase Ref", extraPlaceholder: "MP-..." },
-    { key: "Advance against Subcon Expense", icon: "🧱", label: "Advance against Subcon Expense", extraLabel: "Subcon Expense Ref", extraPlaceholder: "SE-..." },
-    { key: "Advance against Other Expense", icon: "🧾", label: "Advance against Other Expense", extraLabel: "Other Expense Ref", extraPlaceholder: "OE-..." },
-    { key: "Advance for Labour", icon: "👷", label: "Advance for Labour", extraLabel: "Labour Ref", extraPlaceholder: "Labour / Workforce" },
-    { key: "Petty Cash", icon: "💵", label: "Petty Cash", extraLabel: "", extraPlaceholder: "" },
-    { key: "Other", icon: "📝", label: "Other", extraLabel: "", extraPlaceholder: "" },
+  const PR_TYPES: { key: string; icon: IconName; label: string; extraLabel: string; extraPlaceholder: string }[] = [
+    { key: "Advance against PO", icon: "description", label: "Advance against PO", extraLabel: "PO Reference", extraPlaceholder: "PO-204" },
+    { key: "Advance against Subcon Work Order", icon: "ledger", label: "Advance against Subcon Work Order", extraLabel: "Work Order Ref", extraPlaceholder: "WO-1001" },
+    { key: "Advance against BOQ", icon: "ruler", label: "Advance against BOQ", extraLabel: "BOQ Document Ref", extraPlaceholder: "BOQ-..." },
+    { key: "Advance against Material Purchase", icon: "package", label: "Advance against Material Purchase", extraLabel: "Material Purchase Ref", extraPlaceholder: "MP-..." },
+    { key: "Advance against Subcon Expense", icon: "brick", label: "Advance against Subcon Expense", extraLabel: "Subcon Expense Ref", extraPlaceholder: "SE-..." },
+    { key: "Advance against Other Expense", icon: "receipt", label: "Advance against Other Expense", extraLabel: "Other Expense Ref", extraPlaceholder: "OE-..." },
+    { key: "Advance for Labour", icon: "worker", label: "Advance for Labour", extraLabel: "Labour Ref", extraPlaceholder: "Labour / Workforce" },
+    { key: "Petty Cash", icon: "banknote", label: "Petty Cash", extraLabel: "", extraPlaceholder: "" },
+    { key: "Other", icon: "memo", label: "Other", extraLabel: "", extraPlaceholder: "" },
   ];
 
   // Company-level Party sub-tab states
@@ -1008,16 +1009,16 @@ export default function FinancePage() {
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* ── Finance sub-navigation (top tabs) ── */}
       <div className="flex items-center gap-1 px-6 py-2 border-b border-border-custom bg-card shrink-0 overflow-x-auto">
-        {[
-          { key: "party", label: "Party", icon: "👥" },
-          { key: "ledger", label: "Transaction", icon: "📒" },
-          { key: "payment_requests", label: "Payment Requests", icon: "✉️" },
-          { key: "accounts", label: "Accounts", icon: "🏦" },
-          { key: "tally", label: "Tally Sync", icon: "🔄" },
-        ].map(item => (
+        {([
+          { key: "party", label: "Party", icon: "group" },
+          { key: "ledger", label: "Transaction", icon: "ledger" },
+          { key: "payment_requests", label: "Payment Requests", icon: "envelope" },
+          { key: "accounts", label: "Accounts", icon: "bank" },
+          { key: "tally", label: "Tally Sync", icon: "refresh" },
+        ] as { key: string; label: string; icon: IconName }[]).map(item => (
           <button key={item.key} onClick={() => setTab(item.key as any)}
-            className={`whitespace-nowrap px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${tab === item.key ? "bg-primary/10 text-primary" : "text-muted hover:text-foreground hover:bg-elevated"}`}>
-            <span className="mr-1.5">{item.icon}</span>{item.label}
+            className={`whitespace-nowrap px-3 py-1.5 rounded-md text-xs font-semibold transition-all inline-flex items-center gap-1.5 ${tab === item.key ? "bg-primary/10 text-primary" : "text-muted hover:text-foreground hover:bg-elevated"}`}>
+            <Icon name={item.icon} className="w-3.5 h-3.5" />{item.label}
           </button>
         ))}
       </div>
@@ -1034,14 +1035,14 @@ export default function FinancePage() {
           <div className="flex items-center gap-4 relative">
             {/* Unbilled Materials Badge */}
             <div className="hidden sm:flex items-center gap-1.5 cursor-pointer hover:bg-elevated/40 px-2.5 py-1.5 rounded-lg border border-border-custom/50">
-              <span className="text-xs">🛒</span>
+              <Icon name="trolley" className="w-3.5 h-3.5" />
               <span className="text-[10px] text-muted uppercase font-bold tracking-wider">Unbilled Materials</span>
               <span className="bg-primary/20 text-primary border border-primary/30 text-[9px] font-bold px-1.5 py-0.5 rounded-full">0</span>
             </div>
 
             {/* Pending Entries Badge */}
             <div className="hidden sm:flex items-center gap-1.5 cursor-pointer hover:bg-elevated/40 px-2.5 py-1.5 rounded-lg border border-border-custom/50">
-              <span className="text-xs">🕒</span>
+              <Icon name="schedule" className="w-3.5 h-3.5" />
               <span className="text-[10px] text-muted uppercase font-bold tracking-wider">Pending Entries</span>
               <span className="bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[9px] font-bold px-1.5 py-0.5 rounded-full">0</span>
             </div>
@@ -1137,13 +1138,13 @@ export default function FinancePage() {
 
               {/* Toolbar */}
               <div className="flex flex-wrap items-center gap-2">
-                <button className="py-1 px-3 border border-border-custom hover:bg-elevated rounded text-[11px] font-medium text-foreground transition-all">⏳ Filter</button>
+                <button className="py-1 px-3 border border-border-custom hover:bg-elevated rounded text-[11px] font-medium text-foreground transition-all inline-flex items-center gap-1"><Icon name="schedule" className="w-3.5 h-3.5" /> Filter</button>
                 <input type="date" value={txnDateFilter} onChange={(e) => setTxnDateFilter(e.target.value)} className="py-1 px-2 border border-border-custom bg-card hover:bg-elevated rounded text-[11px] text-foreground focus:outline-none" />
                 <button className="py-1 px-3 border border-border-custom hover:bg-elevated rounded text-[11px] font-medium text-foreground transition-all flex items-center gap-1">
-                  🛒 Unbilled Materials <span className="bg-primary/20 text-primary text-[9px] font-bold px-1.5 py-0.5 rounded-full">New {unbilledCount}</span>
+                  <Icon name="trolley" className="w-3.5 h-3.5" /> Unbilled Materials <span className="bg-primary/20 text-primary text-[9px] font-bold px-1.5 py-0.5 rounded-full">New {unbilledCount}</span>
                 </button>
                 <button className="py-1 px-3 border border-border-custom hover:bg-elevated rounded text-[11px] font-medium text-foreground transition-all flex items-center gap-1">
-                  🕒 Pending Entries <span className="bg-amber-500/20 text-amber-400 text-[9px] font-bold px-1.5 py-0.5 rounded-full">{pendingCount}</span>
+                  <Icon name="schedule" className="w-3.5 h-3.5" /> Pending Entries <span className="bg-amber-500/20 text-amber-400 text-[9px] font-bold px-1.5 py-0.5 rounded-full">{pendingCount}</span>
                 </button>
                 <div className="flex-1" />
                 <input type="text" placeholder="Search party, voucher#..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="bg-input border border-border-custom rounded-md px-3 py-1.5 text-xs text-foreground placeholder-muted focus:outline-none focus:border-primary" />
@@ -1286,10 +1287,10 @@ export default function FinancePage() {
                     onChange={(e) => setPartySearchQuery(e.target.value)}
                     className="w-full bg-input border border-border-custom rounded-md py-1.5 pl-8 pr-3 text-xs text-foreground placeholder-muted focus:outline-none focus:border-primary transition-all"
                   />
-                  <span className="absolute left-2.5 top-2 text-muted text-xs">🔍</span>
+                  <Icon name="search" className="absolute left-2.5 top-2 w-3.5 h-3.5 text-muted" />
                 </div>
                 <button className="py-1 px-3 border border-border-custom hover:bg-elevated rounded text-[11px] font-medium text-foreground transition-all flex items-center justify-center gap-1">
-                  <span>⏳</span> Filter
+                  <Icon name="schedule" className="w-3.5 h-3.5" /> Filter
                 </button>
                 <select
                   value={partyTabStatus}
@@ -1300,8 +1301,8 @@ export default function FinancePage() {
                   <option>All</option>
                   <option>Inactive</option>
                 </select>
-                <button onClick={exportCsv} className="py-1 px-3 border border-border-custom hover:bg-elevated rounded text-[11px] font-medium text-foreground transition-all">
-                  ⬇ Export
+                <button onClick={exportCsv} className="py-1 px-3 border border-border-custom hover:bg-elevated rounded text-[11px] font-medium text-foreground transition-all inline-flex items-center gap-1">
+                  <Icon name="arrow_down" className="w-3.5 h-3.5" /> Export
                 </button>
                 <button
                   onClick={() => { setShowAddPartyModal(true); }}
@@ -1419,8 +1420,8 @@ export default function FinancePage() {
                     <label className="text-[10px] font-bold text-muted uppercase tracking-wider">Aadhaar Number</label>
                     <div className="flex gap-2">
                       <input value={newParty.aadhaar_number} onChange={(e) => setNewParty({ ...newParty, aadhaar_number: e.target.value })} className="flex-1 bg-input border border-border-custom rounded-md p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
-                      <button type="button" className="px-3 py-2 border border-border-custom rounded-md text-[10px] text-muted hover:bg-elevated">⬆ Aadhaar</button>
-                      <button type="button" className="px-3 py-2 border border-border-custom rounded-md text-[10px] text-muted hover:bg-elevated">⬆ PAN</button>
+                      <button type="button" className="px-3 py-2 border border-border-custom rounded-md text-[10px] text-muted hover:bg-elevated inline-flex items-center gap-1"><Icon name="arrow_up" className="w-3 h-3" /> Aadhaar</button>
+                      <button type="button" className="px-3 py-2 border border-border-custom rounded-md text-[10px] text-muted hover:bg-elevated inline-flex items-center gap-1"><Icon name="arrow_up" className="w-3 h-3" /> PAN</button>
                     </div>
                   </div>
 
@@ -1516,7 +1517,7 @@ export default function FinancePage() {
                         </div>
                         <div>
                           <label className="text-[10px] font-bold text-muted uppercase tracking-wider">Attach Media</label>
-                          <button type="button" className="w-full py-3 border border-dashed border-border-custom rounded-md text-[10px] text-muted hover:bg-elevated">⬆ Drop files or click to upload</button>
+                          <button type="button" className="w-full py-3 border border-dashed border-border-custom rounded-md text-[10px] text-muted hover:bg-elevated inline-flex items-center justify-center gap-1"><Icon name="arrow_up" className="w-3 h-3" /> Drop files or click to upload</button>
                         </div>
                       </>
                     )}
@@ -1714,7 +1715,7 @@ export default function FinancePage() {
                   <div className="bg-card border border-border-custom rounded-xl p-4 flex items-center justify-between hover:shadow-md transition-all">
                     <div className="flex items-center gap-3">
                       <div className="h-10 w-10 rounded-lg bg-green-500/10 flex items-center justify-center text-green-400 text-lg border border-green-500/20">
-                        💵
+                        <Icon name="banknote" className="w-5 h-5" />
                       </div>
                       <div>
                         <h4 className="text-xs font-bold text-foreground">{cashAccount.name}</h4>
@@ -1752,7 +1753,7 @@ export default function FinancePage() {
                         <div className="flex justify-between items-start">
                           <div className="flex items-center gap-2">
                             <div className="h-8 w-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary text-sm font-bold">
-                              🏦
+                              <Icon name="bank" className="w-4 h-4" />
                             </div>
                             <div>
                               <div className="text-xs font-bold text-foreground flex items-center gap-1.5">
@@ -2109,8 +2110,8 @@ export default function FinancePage() {
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-end">
           <div className="bg-background border-l border-border-custom w-full max-w-md h-full shadow-2xl flex flex-col overflow-hidden text-xs">
             {selectedVoucher.status === "Pending" ? (
-              <div className="bg-gradient-to-r from-amber-500 to-orange-600 px-6 py-2.5 text-center font-bold text-black uppercase tracking-wider text-[10px]">
-                ⚠️ Pending Voucher Approval (Accrued Expense)
+              <div className="bg-gradient-to-r from-amber-500 to-orange-600 px-6 py-2.5 text-center font-bold text-black uppercase tracking-wider text-[10px] inline-flex items-center justify-center gap-1.5 w-full">
+                <Icon name="warning" className="w-3.5 h-3.5" /> Pending Voucher Approval (Accrued Expense)
               </div>
             ) : (
               <div className="bg-emerald-500 px-6 py-2.5 text-center font-bold text-black uppercase tracking-wider text-[10px]">
@@ -2155,7 +2156,7 @@ export default function FinancePage() {
                   </div>
                   <div className="flex items-center gap-3">
                     <div className={`h-5 w-5 rounded-full flex items-center justify-center font-bold text-[10px] ${selectedVoucher.status === "Approved" ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" : "bg-amber-500/10 border-amber-500/30 text-amber-400"}`}>
-                      {selectedVoucher.status === "Approved" ? "✓" : "🕒"}
+                      {selectedVoucher.status === "Approved" ? "✓" : <Icon name="schedule" className="w-3 h-3" />}
                     </div>
                     <div>
                       <div className="text-[11px] font-bold text-foreground">2. Project Manager</div>
@@ -2190,8 +2191,8 @@ export default function FinancePage() {
             {selectedVoucher.status === "Pending" && (
               <div className="px-6 py-4 border-t border-border-custom bg-background flex items-center justify-end gap-2">
                 <button onClick={() => setSelectedVoucher(null)} className="px-4 py-2 text-xs font-bold text-muted hover:text-foreground">Cancel</button>
-                <button onClick={() => handleApproveVoucher(selectedVoucher.id)} className="px-5 py-2.5 bg-emerald-500 text-black font-extrabold rounded-md hover:opacity-90">
-                  Approve Voucher 👍
+                <button onClick={() => handleApproveVoucher(selectedVoucher.id)} className="px-5 py-2.5 bg-emerald-500 text-black font-extrabold rounded-md hover:opacity-90 inline-flex items-center gap-1.5">
+                  Approve Voucher <Icon name="thumbs_up" className="w-3.5 h-3.5" />
                 </button>
               </div>
             )}
@@ -2243,7 +2244,7 @@ export default function FinancePage() {
                 <div className="space-y-6 text-xs">
                   <div className="bg-elevated/45 border border-border-custom p-4 rounded-xl space-y-3">
                     <div className="flex items-start gap-2.5">
-                      <span className="text-sm">ℹ️</span>
+                      <Icon name="note" className="w-4 h-4 text-muted" />
                       <div className="space-y-1">
                         <strong className="text-foreground block">How to import Excel/CSV in SiteFlow:</strong>
                         <ol className="list-decimal pl-4 space-y-1 text-muted leading-relaxed">
@@ -2257,8 +2258,8 @@ export default function FinancePage() {
                               const a = document.createElement("a");
                               a.href = url; a.download = "siteflow_payment_template.csv"; a.click();
                               URL.revokeObjectURL(url);
-                            }} className="text-primary hover:underline font-bold cursor-pointer inline-flex items-center gap-0.5">
-                              SiteFlow Payment Request template 📥
+                            }} className="text-primary hover:underline font-bold cursor-pointer inline-flex items-center gap-1">
+                              SiteFlow Payment Request template <Icon name="inbox" className="w-3.5 h-3.5" />
                             </span>{" "}
                             (column names and order of columns need to match exactly with the sample file).
                           </li>
@@ -2279,7 +2280,7 @@ export default function FinancePage() {
                       className="hidden" 
                       onChange={handleCsvSelect}
                     />
-                    <span className="text-2xl text-primary">📤</span>
+                    <Icon name="outbox" className="w-8 h-8 text-primary" />
                     <strong className="text-foreground font-bold text-xs">Upload Csv</strong>
                     <span className="text-[9px] text-muted">Supports .csv formats up to 10MB</span>
                   </div>
@@ -2337,7 +2338,7 @@ export default function FinancePage() {
                         placeholder="Search or select party..."
                         className="w-full bg-background border border-border-custom rounded-lg pl-9 pr-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs"
                       />
-                      <span className="absolute left-3 top-2.5 text-muted text-xs">🔍</span>
+                      <Icon name="search" className="absolute left-3 top-2.5 w-3.5 h-3.5 text-muted" />
                     </div>
                   </div>
 
@@ -2478,7 +2479,7 @@ export default function FinancePage() {
                         placeholder="Search or select party..."
                         className="w-full bg-background border border-border-custom rounded-lg pl-9 pr-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs"
                       />
-                      <span className="absolute left-3 top-2.5 text-muted text-xs">🔍</span>
+                      <Icon name="search" className="absolute left-3 top-2.5 w-3.5 h-3.5 text-muted" />
                     </div>
                   </div>
 
@@ -2766,7 +2767,7 @@ export default function FinancePage() {
                         <span className="text-muted cursor-pointer hover:text-foreground" onClick={() => {
                           const val = prompt("Enter Transfer Out No:", transferOutNo);
                           if (val !== null) setTransferOutNo(val);
-                        }}>✏️</span>
+                        }}><Icon name="pencil" className="w-3 h-3" /></span>
                       </div>
                     </div>
                       <div className="text-right">
@@ -3012,7 +3013,7 @@ export default function FinancePage() {
                         placeholder="Search or select party..."
                         className="w-full bg-background border border-border-custom rounded-lg pl-9 pr-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs"
                       />
-                      <span className="absolute left-3 top-2.5 text-muted text-xs">🔍</span>
+                      <Icon name="search" className="absolute left-3 top-2.5 w-3.5 h-3.5 text-muted" />
                     </div>
                   </div>
 
@@ -3147,7 +3148,7 @@ export default function FinancePage() {
                         placeholder="Search or specify vendor party..."
                         className="w-full bg-background border border-border-custom rounded-lg pl-9 pr-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs"
                       />
-                      <span className="absolute left-3 top-2.5 text-muted text-xs">🔍</span>
+                      <Icon name="search" className="absolute left-3 top-2.5 w-3.5 h-3.5 text-muted" />
                     </div>
                   </div>
 
@@ -3542,7 +3543,7 @@ export default function FinancePage() {
                         onClick={() => { setPrType(t); setNewRequest({ ...newRequest, requestType: t.key }); setPrStep("form"); }}
                         className="flex items-center gap-3 w-full text-left bg-background border border-border-custom hover:border-primary/60 hover:bg-primary/5 rounded-lg px-4 py-3 transition-all"
                       >
-                        <span className="text-lg">{t.icon}</span>
+                        <Icon name={t.icon} className="w-5 h-5 text-foreground" />
                         <span className="text-xs font-semibold text-foreground">{t.label}</span>
                       </button>
                     ))}
@@ -3552,7 +3553,7 @@ export default function FinancePage() {
                 <form onSubmit={handleCreatePaymentRequest} className="space-y-4 text-xs font-sans">
                   <button type="button" onClick={() => { setPrStep("type"); setPrType(null); }} className="text-[10px] text-primary hover:underline font-bold cursor-pointer">← Change type</button>
                   <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-3 py-1 text-[10px] font-bold text-primary">
-                    <span>{prType?.icon}</span>{prType?.label}
+                    {prType?.icon && <Icon name={prType.icon} className="w-3.5 h-3.5" />}{prType?.label}
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
@@ -3831,7 +3832,7 @@ export default function FinancePage() {
                 <label className="text-[10px] text-muted uppercase font-bold block mb-1">Attach File(s)</label>
                 <input type="file" onChange={e => setPrPayment({ ...prPayment, attachmentName: e.target.files?.[0]?.name || "" })}
                   className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs file:mr-3 file:rounded file:border-0 file:bg-primary/20 file:px-3 file:py-1 file:text-primary" />
-                {prPayment.attachmentName && <p className="text-[9px] text-muted mt-1">📎 {prPayment.attachmentName}</p>}
+                {prPayment.attachmentName && <p className="text-[9px] text-muted mt-1 inline-flex items-center gap-1"><Icon name="paperclip" className="w-3 h-3" /> {prPayment.attachmentName}</p>}
               </div>
 
               <div className="flex gap-3 pt-2">
