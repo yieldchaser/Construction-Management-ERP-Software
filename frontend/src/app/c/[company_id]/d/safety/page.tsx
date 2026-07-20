@@ -5,6 +5,7 @@ import { authHeaders } from '@/lib/siteflow';
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
+import Icon, { type IconName } from '@/components/marketing/Icon';
 
 const API = `${getApiHost()}/apis/v3`;
 
@@ -231,7 +232,12 @@ export default function SafetyPage() {
     : 0;
 
   // ─── Tabs ──────────────────────────────────────────────────────────────────
-  const tabs = ['🚨 Incident Board', '📊 LTIF & Stats', '🗣️ Toolbox Talks', '🦺 PPE Compliance'];
+  const tabs: { label: string; icon: IconName }[] = [
+    { label: 'Incident Board', icon: 'siren' },
+    { label: 'LTIF & Stats', icon: 'bar_chart' },
+    { label: 'Toolbox Talks', icon: 'toolbox_talk' },
+    { label: 'PPE Compliance', icon: 'safety_vest' },
+  ];
 
   const inputStyle: React.CSSProperties = {
     width: '100%', padding: '10px 14px', borderRadius: 8,
@@ -246,7 +252,7 @@ export default function SafetyPage() {
       {/* Header */}
       <div style={{ marginBottom: 28 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-          <div style={{ width: 42, height: 42, borderRadius: 10, background: 'rgba(232,24,76,0.15)', border: '1px solid rgba(232,24,76,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>🦺</div>
+          <div style={{ width: 42, height: 42, borderRadius: 10, background: 'rgba(232,24,76,0.15)', border: '1px solid rgba(232,24,76,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="safety_vest" className="w-5 h-5" /></div>
           <div>
             <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700 }}>HSE / Safety Management</h1>
             <p style={{ margin: 0, fontSize: 13, color: 'rgba(255,255,255,0.45)' }}>OSHA-aligned incident tracking, toolbox talks & PPE compliance</p>
@@ -268,7 +274,8 @@ export default function SafetyPage() {
             color: tab === i ? '#E8184C' : 'rgba(255,255,255,0.5)',
             borderBottom: tab === i ? '2px solid #E8184C' : '2px solid transparent',
             transition: 'all 0.2s',
-          }}>{t}</button>
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+          }}><Icon name={t.icon} className="w-4 h-4" />{t.label}</button>
         ))}
       </div>
 
@@ -282,7 +289,7 @@ export default function SafetyPage() {
 
           {loading ? <p style={{ color: 'rgba(255,255,255,0.4)' }}>Loading…</p> : incidents.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '60px 0', color: 'rgba(255,255,255,0.3)' }}>
-              <div style={{ fontSize: 40, marginBottom: 12 }}>🛡️</div>
+              <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'center' }}><Icon name="shield" className="w-10 h-10" /></div>
               <p>No incidents logged. Stay safe!</p>
             </div>
           ) : (
@@ -302,10 +309,10 @@ export default function SafetyPage() {
                   </div>
                   <p style={{ margin: '0 0 8px', fontSize: 14, lineHeight: 1.5, color: 'rgba(255,255,255,0.85)' }}>{inc.description}</p>
                   <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', lineHeight: 1.7 }}>
-                    {inc.location && <div>📍 {inc.location}</div>}
-                    {inc.injured_person && <div>🤕 {inc.injured_person}</div>}
-                    {inc.lost_time_days > 0 && <div>⏱️ {inc.lost_time_days} lost day{inc.lost_time_days > 1 ? 's' : ''}</div>}
-                    <div>👤 {inc.reported_by} · {fmtDate(inc.reported_at)}</div>
+                    {inc.location && <div className="inline-flex items-center gap-1.5"><Icon name="location_pin" className="w-3.5 h-3.5" />{inc.location}</div>}
+                    {inc.injured_person && <div className="inline-flex items-center gap-1.5"><Icon name="hospital" className="w-3.5 h-3.5" />{inc.injured_person}</div>}
+                    {inc.lost_time_days > 0 && <div className="inline-flex items-center gap-1.5"><Icon name="schedule" className="w-3.5 h-3.5" />{inc.lost_time_days} lost day{inc.lost_time_days > 1 ? 's' : ''}</div>}
+                    <div className="inline-flex items-center gap-1.5"><Icon name="person" className="w-3.5 h-3.5" />{inc.reported_by} · {fmtDate(inc.reported_at)}</div>
                   </div>
                   {inc.root_cause && (
                     <div style={{ marginTop: 10, padding: '8px 12px', borderRadius: 8, background: 'rgba(255,255,255,0.05)', fontSize: 12, color: 'rgba(255,255,255,0.6)' }}>
@@ -333,16 +340,16 @@ export default function SafetyPage() {
             <>
               {/* KPI Cards */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 14, marginBottom: 28 }}>
-                {[
-                  { label: 'Total Incidents', value: stats.total_incidents, icon: '🚨', color: '#E8184C' },
-                  { label: 'Open', value: stats.open_incidents, icon: '🔴', color: '#ea580c' },
-                  { label: 'Closed', value: stats.closed_incidents, icon: '✅', color: '#16a34a' },
-                  { label: 'LTI Count', value: stats.lti_count, icon: '🏥', color: '#f59e0b' },
-                  { label: 'Lost Days', value: stats.total_lost_days, icon: '📅', color: '#7C5CFF' },
-                  { label: 'LTIF Rate', value: stats.ltif, icon: '📈', color: '#0ea5e9' },
-                ].map((k, i) => (
+                {([
+                  { label: 'Total Incidents', value: stats.total_incidents, icon: 'siren', color: '#E8184C' },
+                  { label: 'Open', value: stats.open_incidents, icon: 'warning', color: '#ea580c' },
+                  { label: 'Closed', value: stats.closed_incidents, icon: 'check_circle', color: '#16a34a' },
+                  { label: 'LTI Count', value: stats.lti_count, icon: 'hospital', color: '#f59e0b' },
+                  { label: 'Lost Days', value: stats.total_lost_days, icon: 'calendar', color: '#7C5CFF' },
+                  { label: 'LTIF Rate', value: stats.ltif, icon: 'trending_up', color: '#0ea5e9' },
+                ] as { label: string; value: number; icon: IconName; color: string }[]).map((k, i) => (
                   <div key={i} style={{ padding: '18px 20px', borderRadius: 14, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                    <div style={{ fontSize: 22, marginBottom: 6 }}>{k.icon}</div>
+                    <div style={{ marginBottom: 6, color: k.color }}><Icon name={k.icon} className="w-5 h-5" /></div>
                     <div style={{ fontSize: 28, fontWeight: 800, color: k.color }}>{k.value}</div>
                     <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', marginTop: 4 }}>{k.label}</div>
                   </div>
@@ -368,8 +375,8 @@ export default function SafetyPage() {
               </div>
 
               {/* LTIF Formula */}
-              <div style={{ marginTop: 20, padding: '14px 20px', borderRadius: 12, background: 'rgba(124,92,255,0.08)', border: '1px solid rgba(124,92,255,0.2)', fontSize: 13, color: 'rgba(255,255,255,0.6)' }}>
-                ℹ️ <strong style={{ color: '#7C5CFF' }}>LTIF Formula:</strong> (Number of LTIs × 200,000) ÷ Total Manhours Worked · Calculated on 50,000 manhours basis{stats.manhours_source === 'fallback' ? ' (estimated — no attendance data)' : ''}.
+              <div style={{ marginTop: 20, padding: '14px 20px', borderRadius: 12, background: 'rgba(124,92,255,0.08)', border: '1px solid rgba(124,92,255,0.2)', fontSize: 13, color: 'rgba(255,255,255,0.6)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Icon name="clipboard" className="w-4 h-4" /> <span><strong style={{ color: '#7C5CFF' }}>LTIF Formula:</strong> (Number of LTIs × 200,000) ÷ Total Manhours Worked · Calculated on 50,000 manhours basis{stats.manhours_source === 'fallback' ? ' (estimated — no attendance data)' : ''}.</span>
               </div>
             </>
           )}
@@ -388,14 +395,14 @@ export default function SafetyPage() {
           </div>
           {talks.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '60px 0', color: 'rgba(255,255,255,0.3)' }}>
-              <div style={{ fontSize: 40, marginBottom: 12 }}>🗣️</div>
+              <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'center' }}><Icon name="toolbox_talk" className="w-10 h-10" /></div>
               <p>No toolbox talks logged yet.</p>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {talks.map(t => (
                 <div key={t.id} style={{ padding: '16px 20px', borderRadius: 12, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', gap: 20 }}>
-                  <div style={{ width: 48, height: 48, borderRadius: 12, background: 'rgba(124,92,255,0.15)', border: '1px solid rgba(124,92,255,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>🗣️</div>
+                  <div style={{ width: 48, height: 48, borderRadius: 12, background: 'rgba(124,92,255,0.15)', border: '1px solid rgba(124,92,255,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Icon name="toolbox_talk" className="w-5 h-5" /></div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 4 }}>{t.topic}</div>
                     <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)' }}>Conducted by {t.conducted_by} · {fmtDate(t.conducted_at)}</div>
@@ -429,7 +436,7 @@ export default function SafetyPage() {
             <div>
               {ppeChecks.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '60px 0', color: 'rgba(255,255,255,0.3)' }}>
-                  <div style={{ fontSize: 40, marginBottom: 12 }}>🦺</div>
+                  <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'center' }}><Icon name="safety_vest" className="w-10 h-10" /></div>
                   <p>No PPE checks recorded yet.</p>
                 </div>
               ) : (

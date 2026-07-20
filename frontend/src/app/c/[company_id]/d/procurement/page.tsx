@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import { useProject } from "@/context/ProjectContext";
 import { getApiHost } from "@/lib/api";
 import { authHeaders } from "@/lib/siteflow";
+import Icon, { type IconName } from "@/components/marketing/Icon";
 
 // Types
 interface IndentItem {
@@ -565,20 +566,20 @@ export default function ProcurementPage() {
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* ── Procurement sub-navigation (top tabs) ── */}
       <div className="flex items-center gap-1 px-6 py-2 border-b border-border-custom bg-card shrink-0 overflow-x-auto">
-        {[
-          { key: "po", label: "PO", icon: "📄" },
-          { key: "indent", label: "Indent", icon: "📥" },
-          { key: "inventory", label: "Inventory", icon: "📦" },
-          { key: "ledger", label: "Ledger", icon: "🧾" },
-          { key: "unbilled", label: "Unbilled", icon: "⚠️" },
-        ].map(item => (
+        {([
+          { key: "po", label: "PO", icon: "description" },
+          { key: "indent", label: "Indent", icon: "inbox" },
+          { key: "inventory", label: "Inventory", icon: "package" },
+          { key: "ledger", label: "Ledger", icon: "receipt" },
+          { key: "unbilled", label: "Unbilled", icon: "warning" },
+        ] as { key: string; label: string; icon: IconName }[]).map(item => (
           <button key={item.key} onClick={() => setTab(item.key as any)}
-            className={`whitespace-nowrap px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${tab === item.key ? "bg-primary/10 text-primary" : "text-muted hover:text-foreground hover:bg-elevated"}`}>
-            <span className="mr-1.5">{item.icon}</span>{item.label}
+            className={`whitespace-nowrap px-3 py-1.5 rounded-md text-xs font-semibold transition-all inline-flex items-center gap-1.5 ${tab === item.key ? "bg-primary/10 text-primary" : "text-muted hover:text-foreground hover:bg-elevated"}`}>
+            <Icon name={item.icon} className="w-3.5 h-3.5" />{item.label}
           </button>
         ))}
-        <Link href={`/c/${companyId}/d/procurement/vendor-performance`} className="whitespace-nowrap px-3 py-1.5 rounded-md text-xs font-semibold transition-all text-muted hover:text-foreground hover:bg-elevated">
-          <span className="mr-1.5">📊</span>Vendor Performance
+        <Link href={`/c/${companyId}/d/procurement/vendor-performance`} className="whitespace-nowrap px-3 py-1.5 rounded-md text-xs font-semibold transition-all text-muted hover:text-foreground hover:bg-elevated inline-flex items-center gap-1.5">
+          <Icon name="bar_chart" className="w-3.5 h-3.5" />Vendor Performance
         </Link>
       </div>
 
@@ -596,8 +597,8 @@ export default function ProcurementPage() {
             <span className="text-xs font-medium text-muted">SiteFlow workflows</span>
           </div>
           <div className="flex gap-2">
-            <button onClick={() => { setSelectedRFQItem("UltraTech Cement"); setShowRFQDrawer(true); }} className="px-4 py-2 border border-primary/20 hover:bg-primary/10 rounded-md text-xs font-bold text-primary transition-all">
-              ⚡ Compare RFQs
+            <button onClick={() => { setSelectedRFQItem("UltraTech Cement"); setShowRFQDrawer(true); }} className="px-4 py-2 border border-primary/20 hover:bg-primary/10 rounded-md text-xs font-bold text-primary transition-all inline-flex items-center gap-1.5">
+              <Icon name="bolt" className="w-3.5 h-3.5" />Compare RFQs
             </button>
             <button onClick={() => setShowIndentModal(true)} className="px-4 py-2 border border-border-custom hover:bg-elevated rounded-md text-xs font-bold text-foreground transition-all">
               + Material Indent
@@ -641,9 +642,9 @@ export default function ProcurementPage() {
                                 <div className="flex items-center gap-2">
                                   <button
                                     onClick={() => setPreviewUrl(item.photoUrl!)}
-                                    className="text-[9px] text-primary underline mt-1 block"
+                                    className="text-[9px] text-primary underline mt-1 inline-flex items-center gap-1"
                                   >
-                                    🖼️ View item photo proof
+                                    <Icon name="image" className="w-3 h-3" />View item photo proof
                                   </button>
                                   <input
                                     type="file"
@@ -670,8 +671,8 @@ export default function ProcurementPage() {
 
                     {ind.status === "pending" && (
                       <div className="flex gap-2 justify-end border-t border-border-custom pt-3">
-                        <button onClick={() => handleApproveIndent(ind.id)} className="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 rounded-lg text-[10px] font-bold">
-                          👍 Approve Indent
+                        <button onClick={() => handleApproveIndent(ind.id)} className="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 rounded-lg text-[10px] font-bold inline-flex items-center gap-1.5">
+                          <Icon name="thumbs_up" className="w-3 h-3" />Approve Indent
                         </button>
                       </div>
                     )}
@@ -746,8 +747,8 @@ export default function ProcurementPage() {
                                   </button>
                                 )}
                                 {po.status === "sent" && po.approvalFlag === "approved" && (
-                                  <button onClick={() => handleOpenGRNModal(po)} className="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 rounded-lg text-[10px] font-bold">
-                                    🚚 Record GRN
+                                  <button onClick={() => handleOpenGRNModal(po)} className="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 rounded-lg text-[10px] font-bold inline-flex items-center gap-1.5">
+                                    <Icon name="truck" className="w-3 h-3" />Record GRN
                                   </button>
                                 )}
                               </div>
@@ -878,7 +879,7 @@ export default function ProcurementPage() {
                     {/* Vendor header */}
                     <div className="flex items-center justify-between px-5 py-3 bg-amber-500/5 border-b border-amber-500/10">
                       <div className="flex items-center gap-3">
-                        <span className="text-[9px] font-extrabold uppercase tracking-widest text-amber-500">⚠ Unbilled</span>
+                        <span className="text-[9px] font-extrabold uppercase tracking-widest text-amber-500 inline-flex items-center gap-1"><Icon name="warning" className="w-3 h-3" />Unbilled</span>
                         <span className="text-xs font-bold text-foreground">{group.vendor}</span>
                         <span className="text-[9px] text-muted">{group.grns.length} GRN{group.grns.length > 1 ? "s" : ""} pending</span>
                       </div>
@@ -920,7 +921,7 @@ export default function ProcurementPage() {
                               </td>
                               <td className="px-5 py-3 text-center">
                                 <span className={`inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded-full border ${threeWay.match ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" : "bg-red-500/10 border-red-500/20 text-red-400"}`}>
-                                  {threeWay.match ? "✓" : "⚠️"} {threeWay.text}
+                                  {threeWay.match ? "✓" : <Icon name="warning" className="w-3 h-3" />} {threeWay.text}
                                 </span>
                               </td>
                               <td className="px-5 py-3 text-right font-mono font-bold text-amber-400">₹{grnValue.toLocaleString("en-IN")}</td>
@@ -1013,8 +1014,8 @@ export default function ProcurementPage() {
               <div className="space-y-2 border-t border-border-custom pt-3">
                 <span className="text-muted font-bold block">Attach Item Photo proof</span>
                 <div className="flex items-center gap-3">
-                  <button type="button" onClick={() => setNewIndentPhoto("https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=500")} className="px-3 py-1.5 bg-elevated border border-border-custom rounded-lg text-muted hover:text-foreground">
-                    📷 Take Item Photo
+                  <button type="button" onClick={() => setNewIndentPhoto("https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=500")} className="px-3 py-1.5 bg-elevated border border-border-custom rounded-lg text-muted hover:text-foreground inline-flex items-center gap-1.5">
+                    <Icon name="camera" className="w-3.5 h-3.5" />Take Item Photo
                   </button>
                   {newIndentPhoto && <span className="text-emerald-400 font-bold">✓ Captured</span>}
                 </div>
