@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import { getApiHost } from "@/lib/api";
 import { UNITS } from "@/lib/units";
+import Icon, { type IconName } from "@/components/marketing/Icon";
 
 type LibraryType =
   | "party"
@@ -422,28 +423,28 @@ export default function LibraryHubPage() {
       <div className="flex-1 flex flex-col overflow-y-auto p-8 relative bg-background">
         {/* Library sub-tab bar */}
         <div className="-mx-8 px-8 pt-4 pb-2 mb-6 flex items-center gap-1 border-b border-border-custom bg-card overflow-x-auto shrink-0">
-          {[
-            { id: "party", label: "Party Library", icon: "👥" },
-            { id: "asset-type", label: "Asset Type Library", icon: "🚜" },
-            { id: "cost-code", label: "Cost Code Library", icon: "🏷️" },
-            { id: "deduction", label: "Deduction Library", icon: "➖" },
-            { id: "progress", label: "Progress Library", icon: "📈" },
-            { id: "workforce", label: "Workforce Library", icon: "👷" },
-             { id: "material", label: "Material Library", icon: "🪵" },
-             { id: "rate", label: "Rate Library", icon: "💸" },
-             { id: "retention", label: "Retention Library", icon: "🔒" },
-             { id: "material-category", label: "Material Category Library", icon: "🗂️" },
-             { id: "todo", label: "To Do Library", icon: "✅" }
-          ].map((tab) => (
+          {([
+            { id: "party", label: "Party Library", icon: "group" },
+            { id: "asset-type", label: "Asset Type Library", icon: "tractor" },
+            { id: "cost-code", label: "Cost Code Library", icon: "tag" },
+            { id: "deduction", label: "Deduction Library", icon: "minus" },
+            { id: "progress", label: "Progress Library", icon: "trending_up" },
+            { id: "workforce", label: "Workforce Library", icon: "worker" },
+            { id: "material", label: "Material Library", icon: "brick" },
+            { id: "rate", label: "Rate Library", icon: "money_wings" },
+            { id: "retention", label: "Retention Library", icon: "lock" },
+            { id: "material-category", label: "Material Category Library", icon: "folder" },
+            { id: "todo", label: "To Do Library", icon: "check_circle" }
+          ] as { id: LibraryType; label: string; icon: IconName }[]).map((tab) => (
             <button
               key={tab.id}
               onClick={() => {
                 setActiveTab(tab.id as LibraryType);
                 setSearchQuery("");
               }}
-              className={`whitespace-nowrap px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${activeTab === tab.id ? "bg-primary/10 text-primary" : "text-muted hover:text-foreground hover:bg-elevated"}`}
+              className={`whitespace-nowrap px-3 py-1.5 rounded-md text-xs font-semibold inline-flex items-center gap-1.5 transition-all ${activeTab === tab.id ? "bg-primary/10 text-primary" : "text-muted hover:text-foreground hover:bg-elevated"}`}
             >
-              <span className="mr-1.5">{tab.icon}</span>{tab.label}
+              <Icon name={tab.icon} className="w-4 h-4" />{tab.label}
             </button>
           ))}
         </div>
@@ -1380,8 +1381,8 @@ export default function LibraryHubPage() {
 
       {/* Toast Alert */}
       {toastMessage && (
-        <div className="absolute bottom-6 right-6 bg-card border border-success/30 rounded-md px-4 py-3 text-xs text-success shadow-2xl z-50">
-          <span>⚡ </span>
+        <div className="absolute bottom-6 right-6 bg-card border border-success/30 rounded-md px-4 py-3 text-xs text-success shadow-2xl z-50 inline-flex items-center gap-1.5">
+          <Icon name="bolt" className="w-3.5 h-3.5" />
           <span className="font-semibold">{toastMessage}</span>
         </div>
       )}

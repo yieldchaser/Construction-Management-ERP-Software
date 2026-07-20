@@ -4,6 +4,7 @@ import { authHeaders } from "@/lib/siteflow";
 
 import React, { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
+import Icon, { type IconName } from "@/components/marketing/Icon";
 const STATUS_MAP: Record<string, string> = {
   Present: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
   present: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
@@ -31,7 +32,7 @@ const LOCALIZATION: Record<string, any> = {
     staffSubTab: "Site Staff",
     contractorSubTab: "Labour Contractor",
     queueTitle: "Mobile Punch Queue",
-    gpsActive: "📍 Geofence: Active",
+    gpsActive: "Geofence: Active",
     workerLog: "Worker Attendance Log",
     syncStatus: "Backup (5:40 AM, 29 Aug)",
   },
@@ -43,7 +44,7 @@ const LOCALIZATION: Record<string, any> = {
     staffSubTab: "Site Staff",
     contractorSubTab: "Labour Contractor",
     queueTitle: "Mobile Punch Queue",
-    gpsActive: "📍 Geofence: Chalu Hai",
+    gpsActive: "Geofence: Chalu Hai",
     workerLog: "Worker Attendance Register",
     syncStatus: "Backup (5:40 AM, 29 Aug)",
   },
@@ -55,7 +56,7 @@ const LOCALIZATION: Record<string, any> = {
     staffSubTab: "साइट स्टाफ",
     contractorSubTab: "श्रम ठेकेदार",
     queueTitle: "मोबाइल पंच कतार",
-    gpsActive: "📍 जियोफेंस: सक्रिय",
+    gpsActive: "जियोफेंस: सक्रिय",
     workerLog: "कर्मचारी उपस्थिति रजिस्टर",
     syncStatus: "बैकअप (5:40 पूर्वाह्न, 29 अगस्त)",
   },
@@ -67,7 +68,7 @@ const LOCALIZATION: Record<string, any> = {
     staffSubTab: "தள ஊழியர்கள்",
     contractorSubTab: "தொழிலாளர் ஒப்பந்தக்காரர்",
     queueTitle: "மொபைல் பஞ்ச் வரிசை",
-    gpsActive: "📍 ஜியோஃபென்ஸ்: செயலில் உள்ளது",
+    gpsActive: "ஜியோஃபென்ஸ்: செயலில் உள்ளது",
     workerLog: "தொழிலாளர் வருகை பதிவு",
     syncStatus: "காப்புப்பிரதி (5:40 AM, 29 ஆகஸ்ட்)",
   }
@@ -523,13 +524,13 @@ export default function AttendancePage() {
       )}
       {/* ── Attendance sub-navigation (top tabs) ── */}
       <div className="flex items-center gap-1 px-6 py-2 border-b border-border-custom bg-card shrink-0 overflow-x-auto">
-        {[
-          { key: "today", label: strings.todayTab, icon: "📅" },
-          { key: "payroll", label: strings.payrollTab, icon: "💵" },
-        ].map(item => (
+        {([
+          { key: "today", label: strings.todayTab, icon: "calendar" },
+          { key: "payroll", label: strings.payrollTab, icon: "banknote" },
+        ] as { key: string; label: string; icon: IconName }[]).map(item => (
           <button key={item.key} onClick={() => setTab(item.key as typeof tab)}
-            className={`whitespace-nowrap px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${tab === item.key ? "bg-primary/10 text-primary" : "text-muted hover:text-foreground hover:bg-elevated"}`}>
-            <span className="mr-1.5">{item.icon}</span>{item.label}
+            className={`whitespace-nowrap px-3 py-1.5 rounded-md text-xs font-semibold transition-all inline-flex items-center gap-1.5 ${tab === item.key ? "bg-primary/10 text-primary" : "text-muted hover:text-foreground hover:bg-elevated"}`}>
+            <Icon name={item.icon} className="w-3.5 h-3.5" />{item.label}
           </button>
         ))}
       </div>
@@ -542,18 +543,18 @@ export default function AttendancePage() {
             <p className="text-[10px] text-muted">{strings.subtitle}</p>
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-xs text-muted bg-elevated border border-border-custom px-3 py-1.5 rounded-lg">{strings.gpsActive}</span>
+            <span className="inline-flex items-center gap-1.5 text-xs text-muted bg-elevated border border-border-custom px-3 py-1.5 rounded-lg"><Icon name="location_pin" className="w-4 h-4" />{strings.gpsActive}</span>
             <button
               onClick={() => {
                 fetchProjectSettings();
                 setIsSettingsModalOpen(true);
               }}
-              className="px-3 py-1.5 rounded-lg bg-primary/20 hover:bg-primary/30 border border-border-custom text-primary font-bold text-xs transition-all cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/20 hover:bg-primary/30 border border-border-custom text-primary font-bold text-xs transition-all cursor-pointer"
             >
-              ⚙️ Project Settings
+              <Icon name="settings" className="w-4 h-4" />Project Settings
             </button>
-            <button onClick={() => setShowLanguageDrawer(true)} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-input border border-border-custom text-muted hover:text-foreground text-xs font-bold transition-all cursor-pointer">
-              🌐 Language: <strong className="text-primary">{lang}</strong>
+            <button onClick={() => setShowLanguageDrawer(true)} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-input border border-border-custom text-muted hover:text-foreground text-xs font-bold transition-all cursor-pointer">
+              <Icon name="globe" className="w-4 h-4" />Language: <strong className="text-primary">{lang}</strong>
             </button>
           </div>
         </div>
@@ -561,7 +562,7 @@ export default function AttendancePage() {
         <div className="flex-1 overflow-y-auto p-6 space-y-5">
           {!isOnline && (
             <div className="p-3 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-md text-xs flex items-center gap-2">
-              <span>⚠️</span> You are offline. Showing cached data. Some actions may be delayed.
+              <Icon name="warning" className="w-4 h-4 shrink-0" /> You are offline. Showing cached data. Some actions may be delayed.
             </div>
           )}
           {tab === "today" && (
@@ -890,7 +891,7 @@ export default function AttendancePage() {
                                 onClick={() => setSubconPhoto("https://images.unsplash.com/photo-1541888946425-d81bb19240f5?w=500")}
                                 className="flex items-center gap-2 px-4 py-2 bg-input hover:bg-elevated border border-border-custom rounded-md text-xs font-bold text-muted transition-all"
                               >
-                                📷 Camera / Capture Crew Photo
+                                <Icon name="camera" className="w-4 h-4" /> Camera / Capture Crew Photo
                               </button>
                               {subconPhoto && (
                                 <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-3 py-1 rounded-md text-[10px] font-bold">
@@ -919,7 +920,7 @@ export default function AttendancePage() {
               <div className="bg-input border border-primary/20 rounded-lg p-5 space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h2 className="text-xs font-bold text-primary uppercase tracking-wider">📊 Live Wage Estimator</h2>
+                    <h2 className="inline-flex items-center gap-1.5 text-xs font-bold text-primary uppercase tracking-wider"><Icon name="bar_chart" className="w-4 h-4" />Live Wage Estimator</h2>
                     <p className="text-[10px] text-muted mt-0.5">Real-time payroll estimate: Workers × Rate × Shift + OT + Allowances − Deductions</p>
                   </div>
                   <div className="text-right">
@@ -1000,7 +1001,7 @@ export default function AttendancePage() {
                     <h2 className="text-xs font-bold text-foreground uppercase tracking-wider">Monthly Payroll Compilation{formatPayrollMonth(payrollRun.payroll_month)}</h2>
                     <p className="text-[10px] text-muted mt-0.5">Salary + PF + ESI statutory deductions per IS code. Download payslip per employee.</p>
                   </div>
-                  <button onClick={handleExportPayslips} className="px-3 py-1.5 bg-primary text-white text-[10px] font-bold rounded-lg hover:bg-primary/90 transition-all">📤 Export All Payslips</button>
+                  <button onClick={handleExportPayslips} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white text-[10px] font-bold rounded-lg hover:bg-primary/90 transition-all"><Icon name="outbox" className="w-3.5 h-3.5" />Export All Payslips</button>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs text-left">
@@ -1037,8 +1038,8 @@ export default function AttendancePage() {
                              <td className="py-3 px-3 text-right font-bold font-mono text-emerald-400">₹{emp.net_payable.toLocaleString("en-IN")}</td>
                              <td className="py-3 pr-5 text-center">
                                <button onClick={() => window.print()}
-                                 className="px-2.5 py-1 text-[9px] font-bold bg-primary/10 border border-primary/20 text-primary rounded-lg hover:bg-primary/20 transition-all">
-                                 📄 Download
+                                 className="inline-flex items-center gap-1 px-2.5 py-1 text-[9px] font-bold bg-primary/10 border border-primary/20 text-primary rounded-lg hover:bg-primary/20 transition-all">
+                                 <Icon name="description" className="w-3.5 h-3.5" />Download
                                </button>
                              </td>
                            </tr>
@@ -1079,9 +1080,9 @@ export default function AttendancePage() {
                 <button
                   key={langName}
                   onClick={() => { setLang(langName); setShowLanguageDrawer(false); }}
-                  className={`py-3 px-4 border rounded-md text-xs font-bold text-left transition-all ${lang === langName ? "bg-primary/10 border-primary text-primary" : "bg-input border-border-custom text-muted hover:bg-elevated hover:text-foreground"}`}
+                  className={`inline-flex items-center gap-2 py-3 px-4 border rounded-md text-xs font-bold text-left transition-all ${lang === langName ? "bg-primary/10 border-primary text-primary" : "bg-input border-border-custom text-muted hover:bg-elevated hover:text-foreground"}`}
                 >
-                  🌐 {langName}
+                  <Icon name="globe" className="w-4 h-4" />{langName}
                 </button>
               ))}
             </div>
@@ -1307,7 +1308,7 @@ export default function AttendancePage() {
 
               {settingsTab === "location" && (
                 <div className="space-y-4 text-center py-6">
-                  <span className="text-3xl">📍</span>
+                  <Icon name="location_pin" className="w-8 h-8 mx-auto text-primary" />
                   <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">Geofence Boundary Map</h4>
                   <p className="text-[10px] text-muted max-w-xs mx-auto leading-relaxed">
                     Geofencing matches GPS punch coordinates to project boundaries within a {projectSettings.attendance_radius_meters}m radius limit.

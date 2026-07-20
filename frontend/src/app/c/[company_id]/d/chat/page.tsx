@@ -5,6 +5,7 @@ import { authHeaders } from "@/lib/siteflow";
 import React, { useState, useEffect, useRef } from "react";
 import { useProject } from "@/context/ProjectContext";
 import { useParams } from "next/navigation";
+import Icon from "@/components/marketing/Icon";
 
 interface ChatGroup {
   id: string;
@@ -310,7 +311,7 @@ export default function ChatPage() {
                 onChange={(e) => setSearchGroupQuery(e.target.value)}
                 className="w-full bg-elevated/40 border border-border-custom rounded-lg pl-8 pr-3 py-1.5 text-xs text-foreground placeholder:text-muted focus:outline-none focus:border-primary transition-all"
               />
-              <span className="absolute left-2.5 top-2 text-xs text-muted pointer-events-none select-none">🔍</span>
+              <Icon name="search" className="absolute left-2.5 top-2 w-3.5 h-3.5 text-muted pointer-events-none select-none" />
             </div>
           </div>
 
@@ -452,7 +453,7 @@ export default function ChatPage() {
               <div className="flex-1 overflow-y-auto p-6 space-y-4">
                 {messages.length === 0 ? (
                   <div className="h-full flex flex-col items-center justify-center text-center space-y-3">
-                    <span className="text-4xl text-muted/30">💬</span>
+                    <Icon name="chat_bubble" className="w-10 h-10 text-muted/30" />
                     <h3 className="text-xs font-bold text-muted">No messages yet</h3>
                     <p className="text-[10px] text-muted max-w-xs leading-relaxed">
                       This is the beginning of the chat group. Send a text, an attachment, or log a Minutes of Meeting (MOM).
@@ -473,7 +474,7 @@ export default function ChatPage() {
                           {/* MOM Badge */}
                           {isSystemMom && (
                             <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 text-primary text-[9px] font-extrabold uppercase tracking-wider mb-2.5">
-                              ⚡ Minutes of Meeting
+                              <Icon name="bolt" className="w-3 h-3" /> Minutes of Meeting
                             </div>
                           )}
 
@@ -506,7 +507,7 @@ export default function ChatPage() {
                           {/* MOM Date details */}
                           {msg.mom_date && (
                             <div className="text-[10px] text-muted mt-2 font-medium flex items-center justify-center gap-1">
-                              <span>📅</span> MOM Date: {new Date(msg.mom_date).toLocaleDateString()}
+                              <Icon name="calendar" className="w-3 h-3" /> MOM Date: {new Date(msg.mom_date).toLocaleDateString()}
                             </div>
                           )}
 
@@ -527,7 +528,7 @@ export default function ChatPage() {
                 {currentUserRole === "viewer" ? (
                   <div className="flex items-center justify-center p-3.5 bg-elevated/20 border border-dashed border-border-custom rounded-xl">
                     <span className="text-[11px] text-muted font-bold flex items-center gap-1.5 select-none">
-                      🔒 Read-Only Access (You are a group viewer and cannot send messages)
+                      <Icon name="lock" className="w-3.5 h-3.5" /> Read-Only Access (You are a group viewer and cannot send messages)
                     </span>
                   </div>
                 ) : (
@@ -583,7 +584,7 @@ export default function ChatPage() {
                           className="px-5 py-2 bg-primary hover:bg-primary-hover text-white rounded-lg text-xs font-bold transition-all shadow-md shadow-primary/20 flex items-center gap-1.5 cursor-pointer"
                         >
                           <span>Send</span>
-                          <span>✉️</span>
+                          <Icon name="envelope" className="w-3.5 h-3.5" />
                         </button>
                       </div>
 
@@ -594,7 +595,7 @@ export default function ChatPage() {
             </>
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center text-center p-8 space-y-4">
-              <div className="text-6xl text-muted/30">💬</div>
+              <Icon name="chat_bubble" className="w-16 h-16 text-muted/30" />
               <div className="space-y-1">
                 <h3 className="text-sm font-bold text-foreground">Chat Group (Beta Version)</h3>
                 <p className="text-xs text-muted max-w-sm">
@@ -624,8 +625,8 @@ export default function ChatPage() {
             <form onSubmit={handleCreateGroupSubmit} className="space-y-4">
               {/* Group icon placeholder */}
               <div className="flex flex-col items-center justify-center gap-2 mb-4">
-                <div className="h-16 w-16 rounded-full bg-elevated/40 border border-border-custom flex items-center justify-center text-muted text-xl select-none">
-                  👥
+                <div className="h-16 w-16 rounded-full bg-elevated/40 border border-border-custom flex items-center justify-center text-muted select-none">
+                  <Icon name="group" className="w-7 h-7" />
                 </div>
                 <span className="text-[10px] text-muted">Select Group Image</span>
               </div>
@@ -750,7 +751,7 @@ export default function ChatPage() {
                     onChange={(e) => setSearchMemberQuery(e.target.value)}
                     className="w-full bg-elevated/40 border border-border-custom rounded-lg pl-8 pr-3 py-1.5 text-xs text-foreground placeholder:text-muted focus:outline-none focus:border-primary"
                   />
-                  <span className="absolute left-2.5 top-2 text-xs text-muted pointer-events-none">🔍</span>
+                  <Icon name="search" className="absolute left-2.5 top-2 w-3.5 h-3.5 text-muted pointer-events-none" />
                 </div>
 
                 {/* Scrollable list */}
@@ -776,7 +777,7 @@ export default function ChatPage() {
                             className="p-1 text-muted hover:text-red-500 transition-colors cursor-pointer"
                             title="Remove Member"
                           >
-                            🗑️
+                            <Icon name="trash" className="w-3.5 h-3.5" />
                           </button>
                         )}
                       </div>

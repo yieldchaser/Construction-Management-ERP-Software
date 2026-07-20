@@ -2,9 +2,10 @@
 
 import React from "react";
 import { useParams, useRouter } from "next/navigation";
+import Icon, { type IconName } from "@/components/marketing/Icon";
 
 interface ServiceItem {
-  icon: string;
+  icon: IconName;
   title: string;
   price?: string;
   sub?: string;
@@ -20,61 +21,61 @@ export default function ServicesPage() {
 
   const services: ServiceItem[] = [
     {
-      icon: "🔧",
+      icon: "wrench",
       title: "Customisation Request",
       desc: "Use this form to request onsite customizations. Our team will review your needs and schedule the service accordingly.",
     },
     {
-      icon: "🎧",
+      icon: "headphone",
       title: "Offline Support (3 days)",
       price: "Rs 25000 + Travel + Accommodation + Taxes",
     },
     {
-      icon: "📄",
+      icon: "description",
       title: "Tally Integration",
       price: "Rs 20000 One Time + Taxes",
       sub: "Rs 5000 Annual Maintenance + Taxes",
     },
     {
-      icon: "📘",
+      icon: "book",
       title: "Zoho Books Integration",
       price: "Rs 30000 One Time + Taxes",
       sub: "Rs 5000 Annual Maintenance + Taxes",
     },
     {
-      icon: "👥",
+      icon: "group",
       title: "Zoho CRM Integration",
       price: "Rs 30000 One Time + Taxes",
       sub: "Rs 5000 Annual Maintenance + Taxes",
     },
     {
-      icon: "📣",
+      icon: "megaphone",
       title: "Facebook Lead Integration",
       price: "Rs 20000 One Time + Taxes",
       sub: "Rs 5000 Annual Maintenance + Taxes",
     },
     {
-      icon: "👤",
+      icon: "person",
       title: "User Add On",
       price: "As per subscription plan",
     },
     {
-      icon: "📍",
+      icon: "location_pin",
       title: "GPS Attendance Addon (50 users)",
       price: "Rs 20000 Yearly + Taxes",
     },
     {
-      icon: "🖥️",
+      icon: "computer",
       title: "Website Development (15 pages)",
       price: "Rs 20000 + Taxes",
     },
     {
-      icon: "📸",
+      icon: "camera",
       title: "Social Media Package [15 post + 4 Reels]",
       price: "Rs 10000 + Taxes",
     },
     {
-      icon: "💬",
+      icon: "chat_bubble",
       title: "Whatsapp Alerts (10000 msgs per year)",
       price: "Rs 5000 + Taxes",
     },
@@ -117,8 +118,8 @@ export default function ServicesPage() {
               className="flex flex-col bg-card border border-border-custom rounded-xl p-5 hover:border-primary/40 transition-all"
             >
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-xl shrink-0">
-                  <span>{s.icon}</span>
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
+                  <Icon name={s.icon} className="w-5 h-5" />
                 </div>
                 <h3 className="text-sm font-bold text-foreground leading-snug">{s.title}</h3>
               </div>
