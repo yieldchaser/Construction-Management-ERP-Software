@@ -335,6 +335,42 @@ body {
   color: var(--primary) !important;
 }
 
+/* Style WordPress buttons to match our premium design system */
+.help-article .wp-block-button {
+  margin: 1.5em 0;
+}
+.help-article .wp-block-button__link,
+.help-article .wp-element-button {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-alx-primary, #094cb2) !important;
+  color: #ffffff !important;
+  font-family: var(--font-sans), sans-serif;
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 0.75rem 1.75rem !important;
+  border-radius: 9999px !important;
+  border: none !important;
+  text-decoration: none !important;
+  box-shadow: 0 4px 12px rgba(9, 76, 178, 0.15);
+  transition: all 0.2s ease-in-out;
+}
+.help-article .wp-block-button__link:hover,
+.help-article .wp-element-button:hover {
+  background-color: var(--color-alx-primary-container, #3366cc) !important;
+  color: #ffffff !important;
+  box-shadow: 0 6px 16px rgba(9, 76, 178, 0.25);
+  transform: translateY(-1px);
+  text-decoration: none !important;
+}
+.help-article .wp-block-button__link:active,
+.help-article .wp-element-button:active {
+  transform: translateY(0);
+}
+
+
 /* ------------------------------------------------------------
    Help category-overview intro (.help-cat): the 15 category
    landing pages originally embedded a scraped client-side search
