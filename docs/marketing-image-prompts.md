@@ -253,7 +253,6 @@ Calculator and comparison pages use in-code visuals; optional hero.
 - If Gemini adds gibberish text on UI mockups or diagrams, regenerate the same prompt with the extra line "use numbers, bars and shapes only, no word labels".
 - Prioritize **1 to 5 (landing)** and **6 to 8 (product heroes)**, highest visibility. **21 to 27 (calculator diagrams)** are next since they currently show a bare placeholder. The rest are polish.
 - After you drop a batch, tell Claude which files are filled; it swaps the in-code mockup for the `<img>` and keeps the mockup as a fallback.
-- **Stale orphan file**: `frontend/public/marketing/landing/hero-dashboard.jpg` is currently tracked in the repo, 33 KB, referenced nowhere in the codebase. It is a leftover from an earlier attempt and its name collides conceptually with the real `hero-dashboard.png` planned above. It is far too small to serve as the real hero. Delete it once the real `hero-dashboard.png` is generated and wired in, so the two do not get confused.
 
 ## Where to save the finished images
 
