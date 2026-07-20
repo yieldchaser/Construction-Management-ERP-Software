@@ -225,3 +225,44 @@ Calculator and comparison pages use in-code visuals; optional hero.
 - If Gemini adds gibberish text on UI mockups or diagrams, regenerate the same prompt with the extra line "use numbers, bars and shapes only, no word labels".
 - Prioritize **1 to 5 (landing)** and **6 to 8 (product heroes)**, highest visibility. **21 to 27 (calculator diagrams)** are next since they currently show a bare placeholder. The rest are polish.
 - After you drop a batch, tell Claude which files are filled; it swaps the in-code mockup for the `<img>` and keeps the mockup as a fallback.
+
+## Where to save the finished images
+
+All 27 filenames listed in this document are globally unique, so the simplest workflow is to save every generated image into ONE folder outside the repo, for example `C:\Users\Dell\Desktop\siteflow-images\`, then tell Claude that folder path. Claude will move each file to its correct destination, wire it into the templates and commit. The filename is the only thing that has to be exactly right, because the name alone determines where the file belongs.
+
+The alternative is to drop files straight into the destination folders listed below, six of which already exist in the repo. Only `frontend/public/marketing/calculators/` does not exist yet and will be created when the first calculator diagram arrives.
+
+| # | Filename | Destination folder |
+| - | -------- | ------------------- |
+| 1 | `hero-dashboard.png` | `frontend/public/marketing/landing/` |
+| 2 | `feature-planning.png` | `frontend/public/marketing/landing/` |
+| 3 | `feature-procurement.png` | `frontend/public/marketing/landing/` |
+| 4 | `feature-finance.png` | `frontend/public/marketing/landing/` |
+| 5 | `feature-dpr-phones.png` | `frontend/public/marketing/landing/` |
+| 6 | `hero-field-ops.png` | `frontend/public/marketing/products/` |
+| 7 | `hero-supply-chain.png` | `frontend/public/marketing/products/` |
+| 8 | `hero-financial.png` | `frontend/public/marketing/products/` |
+| 9 | `segment-builders.png` | `frontend/public/marketing/who-we-serve/` |
+| 10 | `segment-civil.png` | `frontend/public/marketing/who-we-serve/` |
+| 11 | `segment-interior.png` | `frontend/public/marketing/who-we-serve/` |
+| 12 | `segment-infrastructure.png` | `frontend/public/marketing/who-we-serve/` |
+| 13 | `cat-financial-ledger.png` | `frontend/public/marketing/blog/` |
+| 14 | `cat-procurement.png` | `frontend/public/marketing/blog/` |
+| 15 | `cat-compliance.png` | `frontend/public/marketing/blog/` |
+| 16 | `cat-technology.png` | `frontend/public/marketing/blog/` |
+| 17 | `cat-site-execution.png` | `frontend/public/marketing/blog/` |
+| 18 | `cat-insights.png` | `frontend/public/marketing/blog/` |
+| 19 | `help-hero.png` | `frontend/public/marketing/help/` |
+| 20 | `resources-hero.png` | `frontend/public/marketing/resources/` |
+| 21 | `bar-bending-schedule-calculator.png` | `frontend/public/marketing/calculators/` |
+| 22 | `brick-calculator-for-wall.png` | `frontend/public/marketing/calculators/` |
+| 23 | `concrete-mix-calculator.png` | `frontend/public/marketing/calculators/` |
+| 24 | `concrete-volume-calculator.png` | `frontend/public/marketing/calculators/` |
+| 25 | `house-construction-cost-calculator.png` | `frontend/public/marketing/calculators/` |
+| 26 | `paint-quantity-calculator.png` | `frontend/public/marketing/calculators/` |
+| 27 | `steel-calculator-for-construction.png` | `frontend/public/marketing/calculators/` |
+
+Practical notes:
+- Do not wait for all 27. Generate a batch, say which files are filled, and they get wired and shipped. Priority order is entries 1 to 5 (landing) first, then 6 to 8 (product heroes), then 21 to 27 (calculator diagrams), because the calculator pages currently render a visible "Illustration coming soon" placeholder and are the most obvious gap.
+- If a filename comes out wrong, do not rename it to a guess. Gemini downloads files with names like `Gemini_Generated_Image_xyz.png`. Just say which entry number the image was generated for and Claude will place it correctly. A wrong but plausible-looking rename is harder to catch than an obviously wrong one.
+- Both a batch drop and a single file are fine. There is no need to keep the drop folder tidy or to delete files after they are wired.
