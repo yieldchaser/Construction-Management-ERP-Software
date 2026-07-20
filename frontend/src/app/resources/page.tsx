@@ -168,9 +168,9 @@ export default async function ResourcesIndexPage() {
                     <div className="pt-3 mt-4 border-t border-alx-outline-variant/15 flex items-center justify-end">
                       <Link
                         href={`/resources/${r.slug}`}
-                        className="font-uilabel text-xs font-bold text-alx-primary hover:text-alx-on-surface transition-all cursor-pointer"
+                        className="font-uilabel inline-flex items-center gap-1.5 whitespace-nowrap text-xs font-bold text-alx-primary hover:text-alx-on-surface transition-all cursor-pointer"
                       >
-                        View Resource <Icon name="arrow_right" className="w-4 h-4" />
+                        View Resource <Icon name="arrow_right" className="w-4 h-4 shrink-0" />
                       </Link>
                     </div>
                   </article>
