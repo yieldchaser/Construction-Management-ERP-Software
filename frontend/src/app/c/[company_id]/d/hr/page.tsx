@@ -5,6 +5,7 @@ import { getApi, authHeaders, resolveCompanyId } from "@/lib/siteflow";
 import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { useProject } from "@/context/ProjectContext";
+import Icon, { type IconName } from "@/components/marketing/Icon";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -725,17 +726,17 @@ export default function HRPayrollPage() {
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* ── HR sub-navigation (top tabs) ── */}
       <div className="flex items-center gap-1 px-6 py-2 border-b border-border-custom bg-card shrink-0 overflow-x-auto">
-        {[
-          { key: "employees", label: "Employees", icon: "👷" },
-          { key: "attendance", label: "Attendance", icon: "📍" },
-          { key: "timesheets", label: "Timesheets", icon: "📋" },
-          { key: "payroll", label: "Payroll Runs", icon: "💰" },
-          { key: "leaves", label: "Leaves", icon: "📅" },
-          { key: "holidays", label: "Holidays", icon: "🏖️" },
-        ].map(item => (
+        {([
+          { key: "employees", label: "Employees", icon: "worker" },
+          { key: "attendance", label: "Attendance", icon: "location_pin" },
+          { key: "timesheets", label: "Timesheets", icon: "clipboard" },
+          { key: "payroll", label: "Payroll Runs", icon: "money_bag" },
+          { key: "leaves", label: "Leaves", icon: "calendar" },
+          { key: "holidays", label: "Holidays", icon: "sun" },
+        ] as { key: string; label: string; icon: IconName }[]).map(item => (
           <button key={item.key} onClick={() => setTab(item.key as any)}
-            className={`whitespace-nowrap px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${tab === item.key ? "bg-primary/10 text-primary" : "text-muted hover:text-foreground hover:bg-elevated"}`}>
-            <span className="mr-1.5">{item.icon}</span>{item.label}
+            className={`whitespace-nowrap inline-flex items-center px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${tab === item.key ? "bg-primary/10 text-primary" : "text-muted hover:text-foreground hover:bg-elevated"}`}>
+            <Icon name={item.icon} className="w-4 h-4 mr-1.5" />{item.label}
           </button>
         ))}
       </div>
@@ -761,7 +762,7 @@ export default function HRPayrollPage() {
               className="flex items-center justify-center h-8 w-8 rounded-lg bg-elevated border border-border-custom text-muted hover:text-foreground transition-all cursor-pointer"
               title="Toggle Theme"
             >
-              {isLightTheme ? "🌙" : "☀️"}
+              <Icon name={isLightTheme ? "moon" : "sun"} className="w-4 h-4" />
             </button>
 
             {tab === "employees" && (
@@ -943,9 +944,9 @@ export default function HRPayrollPage() {
                       }
                       setShowNewTimesheetDrawer(true);
                     }}
-                    className="px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-bold border border-primary/20 hover:bg-primary/20 transition-all"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-bold border border-primary/20 hover:bg-primary/20 transition-all"
                   >
-                    ⚡ Log Daily Activity
+                    <Icon name="bolt" className="w-3.5 h-3.5" /> Log Daily Activity
                   </button>
                 </div>
                 <table className="w-full text-xs">
@@ -993,7 +994,7 @@ export default function HRPayrollPage() {
               {/* Daily Log Entries */}
               <div className="bg-card border border-border-custom rounded-md overflow-hidden">
                 <div className="px-4 py-3 border-b border-border-custom">
-                  <span className="text-xs font-bold text-foreground uppercase tracking-wider">👷 Daily Activity & Timesheet Logs</span>
+                  <span className="inline-flex items-center gap-1.5 text-xs font-bold text-foreground uppercase tracking-wider"><Icon name="worker" className="w-4 h-4" /> Daily Activity & Timesheet Logs</span>
                 </div>
                 {timesheetLogs.length === 0 ? (
                   <div className="p-8 text-center text-muted text-xs">
@@ -1158,7 +1159,7 @@ export default function HRPayrollPage() {
                         <div className="space-y-1.5">
                           <label className="text-[10px] text-muted font-bold uppercase block">Attachments</label>
                           <div className="border border-dashed border-border-custom rounded-lg p-4 text-center cursor-pointer hover:bg-elevated transition-all">
-                            <span className="text-xl">📎</span>
+                            <Icon name="paperclip" className="w-5 h-5 mx-auto" />
                             <span className="text-[10px] text-muted block mt-1">Upload files, logs or PDF proof</span>
                           </div>
                         </div>
@@ -1190,7 +1191,7 @@ export default function HRPayrollPage() {
             <div className="space-y-6">
               {/* Controls */}
               <div className="bg-card border border-border-custom rounded-md p-5">
-                <h2 className="text-sm font-bold text-foreground mb-4">🚀 Run Monthly Payroll</h2>
+                <h2 className="inline-flex items-center gap-2 text-sm font-bold text-foreground mb-4"><Icon name="rocket" className="w-5 h-5" /> Run Monthly Payroll</h2>
                 <div className="flex items-end gap-4">
                   <div>
                     <label className="text-[10px] text-muted font-bold uppercase block mb-1.5">Payroll Month</label>
@@ -1206,18 +1207,18 @@ export default function HRPayrollPage() {
                     className="px-5 py-2 bg-primary rounded-lg text-white text-sm font-bold hover:bg-primary/90 transition-all">
                     Compute Payroll
                   </button>
-                  <button 
+                  <button
                     onClick={() => document.getElementById("payroll-csv-file-input")?.click()}
-                    className="px-5 py-2 bg-elevated border border-border-custom hover:bg-elevated/80 rounded-lg text-foreground text-sm font-bold transition-all"
+                    className="inline-flex items-center gap-1.5 px-5 py-2 bg-elevated border border-border-custom hover:bg-elevated/80 rounded-lg text-foreground text-sm font-bold transition-all"
                   >
-                    <input 
-                      type="file" 
-                      id="payroll-csv-file-input" 
-                      accept=".csv" 
-                      className="hidden" 
+                    <input
+                      type="file"
+                      id="payroll-csv-file-input"
+                      accept=".csv"
+                      className="hidden"
                       onChange={handleUploadPayrollCSV}
                     />
-                    📥 Import Payroll CSV
+                    <Icon name="inbox" className="w-4 h-4" /> Import Payroll CSV
                   </button>
                 </div>
               </div>
@@ -1299,7 +1300,7 @@ export default function HRPayrollPage() {
 
               {!payrollRun && (
                 <div className="bg-card border border-border-custom rounded-md p-16 text-center">
-                  <p className="text-4xl mb-3">💰</p>
+                  <Icon name="money_bag" className="w-10 h-10 mx-auto mb-3 text-muted" />
                   <p className="text-sm text-muted font-semibold">No payroll run yet</p>
                   <p className="text-xs text-muted mt-1">Select a month and click "Compute Payroll" to generate payslips</p>
                 </div>
@@ -1494,8 +1495,8 @@ export default function HRPayrollPage() {
                 <p className="text-xs text-muted">{selectedPayslip.designation} · {payrollMonth}</p>
               </div>
               <div className="flex items-center gap-3">
-                <button onClick={() => window.print()} className="px-3 py-1 bg-primary/20 hover:bg-primary/35 text-primary border border-border-custom rounded text-[10px] font-bold transition-all">
-                  🖨️ Download PDF
+                <button onClick={() => window.print()} className="inline-flex items-center gap-1 px-3 py-1 bg-primary/20 hover:bg-primary/35 text-primary border border-border-custom rounded text-[10px] font-bold transition-all">
+                  <Icon name="printer" className="w-3.5 h-3.5" /> Download PDF
                 </button>
                 <button onClick={() => setSelectedPayslip(null)} className="text-muted hover:text-foreground text-xl">✕</button>
               </div>
@@ -2023,7 +2024,7 @@ export default function HRPayrollPage() {
       {/* Local Toast popup */}
       {toastMsg && (
         <div className="fixed bottom-6 right-6 bg-card border border-success/30 rounded-lg px-4 py-3 text-xs text-success shadow-lg flex items-center gap-2 z-50 transition-all">
-          <span>⚡</span>
+          <Icon name="bolt" className="w-3.5 h-3.5" />
           <span className="font-semibold">{toastMsg}</span>
         </div>
       )}

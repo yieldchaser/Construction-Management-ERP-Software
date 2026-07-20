@@ -5,6 +5,7 @@ import { authHeaders } from "@/lib/siteflow";
 import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { useProject } from "@/context/ProjectContext";
+import Icon, { type IconName } from "@/components/marketing/Icon";
 
 interface Task {
   id: string;
@@ -483,14 +484,14 @@ export default function GanttSchedulerPage() {
 
         <div className="flex items-center gap-1 px-6 py-2 border-b border-border-custom bg-card shrink-0 overflow-x-auto">
           {([
-            { key: "wbs", label: "📋 WBS Tasks" },
-            { key: "milestones", label: "🔷 Milestones" },
-            { key: "baseline", label: "📊 Baseline" },
-            { key: "lookahead", label: "📅 14-Day Lookahead" },
-          ] as const).map(t => (
+            { key: "wbs", label: "WBS Tasks", icon: "clipboard" },
+            { key: "milestones", label: "Milestones", icon: "flag_checkered" },
+            { key: "baseline", label: "Baseline", icon: "bar_chart" },
+            { key: "lookahead", label: "14-Day Lookahead", icon: "calendar" },
+          ] as { key: "wbs" | "milestones" | "baseline" | "lookahead"; label: string; icon: IconName }[]).map(t => (
             <button key={t.key} onClick={() => setMainTab(t.key)}
-              className={`whitespace-nowrap px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${mainTab === t.key ? "bg-primary/10 text-primary" : "text-muted hover:text-foreground hover:bg-elevated"}`}>
-              {t.label}
+              className={`whitespace-nowrap px-3 py-1.5 rounded-md text-xs font-semibold transition-all inline-flex items-center gap-1.5 ${mainTab === t.key ? "bg-primary/10 text-primary" : "text-muted hover:text-foreground hover:bg-elevated"}`}>
+              <Icon name={t.icon} className="w-3.5 h-3.5" />{t.label}
             </button>
           ))}
         </div>
@@ -514,11 +515,11 @@ export default function GanttSchedulerPage() {
                   critical: "border-red-500/30 bg-red-500/5",
                 };
                 const statusCls = m.status === "achieved" ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" : m.status === "delayed" ? "bg-red-500/10 border-red-500/20 text-red-400" : "bg-zinc-700/30 border-zinc-600/20 text-muted";
-                const icon = { start: "🚀", handover: "🏁", inspection: "🔍", payment: "💰", critical: "⚠️" };
+                const icon: Record<Milestone["type"], IconName> = { start: "rocket", handover: "flag_checkered", inspection: "search", payment: "money_bag", critical: "warning" };
                 return (
                   <div key={m.id} className={`flex items-start gap-4 p-4 rounded-md border ${colors[m.type]}`}>
                     <div className="flex flex-col items-center gap-1 shrink-0">
-                      <div className="w-8 h-8 rounded-lg bg-elevated border border-border-custom flex items-center justify-center text-lg">{icon[m.type]}</div>
+                      <div className="w-8 h-8 rounded-lg bg-elevated border border-border-custom flex items-center justify-center"><Icon name={icon[m.type]} className="w-4 h-4" /></div>
                       <div className="text-[9px] font-mono text-muted">{new Date(m.milestone_date).toLocaleDateString()}</div>
                     </div>
                     <div className="flex-1">
@@ -566,11 +567,11 @@ export default function GanttSchedulerPage() {
                       onChange={(e) => setMsType(e.target.value as Milestone["type"])}
                       className="w-full bg-elevated border border-border-custom rounded-lg p-2 text-foreground"
                     >
-                      <option value="start">🚀 Start</option>
-                      <option value="inspection">🔍 Inspection</option>
-                      <option value="critical">⚠️ Critical</option>
-                      <option value="payment">💰 Payment</option>
-                      <option value="handover">🏁 Handover</option>
+                      <option value="start">Start</option>
+                      <option value="inspection">Inspection</option>
+                      <option value="critical">Critical</option>
+                      <option value="payment">Payment</option>
+                      <option value="handover">Handover</option>
                     </select>
                   </div>
                   <div className="space-y-1">
@@ -733,9 +734,9 @@ export default function GanttSchedulerPage() {
                     onChange={(e) => setPriority(e.target.value)}
                     className="w-full bg-elevated border border-border-custom rounded-lg p-2 text-foreground"
                   >
-                    <option value="high">🔴 High Priority</option>
-                    <option value="medium">🟡 Medium Priority</option>
-                    <option value="low">🟢 Low Priority</option>
+                    <option value="high">High Priority</option>
+                    <option value="medium">Medium Priority</option>
+                    <option value="low">Low Priority</option>
                   </select>
                 </div>
                 <button
@@ -784,9 +785,9 @@ export default function GanttSchedulerPage() {
                 </div>
                 <button
                   type="submit"
-                  className="w-full bg-elevated hover:bg-elevated border border-border-custom rounded-md py-2.5 font-bold text-foreground transition-all text-xs"
+                  className="w-full bg-elevated hover:bg-elevated border border-border-custom rounded-md py-2.5 font-bold text-foreground transition-all text-xs inline-flex items-center justify-center gap-1.5"
                 >
-                  🔗 Establish Link Dependency
+                  <Icon name="link" className="w-3.5 h-3.5" /> Establish Link Dependency
                 </button>
               </form>
             </div>
@@ -970,7 +971,7 @@ export default function GanttSchedulerPage() {
                         : "bg-elevated border-border-custom text-zinc-300 hover:text-foreground"
                     }`}
                   >
-                    <span>🎙️</span> {isRecording ? `Recording (${4 - recordingSeconds}s)...` : "Audio Memo"}
+                    <Icon name="microphone" className="w-3.5 h-3.5" /> {isRecording ? `Recording (${4 - recordingSeconds}s)...` : "Audio Memo"}
                   </button>
                 </div>
 
@@ -985,7 +986,7 @@ export default function GanttSchedulerPage() {
                       
                       {comm.voice_note_url && (
                         <div className="flex items-center gap-2 p-1.5 rounded bg-elevated border border-border-custom text-[9px] text-muted font-mono">
-                          <span>🔊 Audio Note:</span>
+                          <span className="inline-flex items-center gap-1"><Icon name="speaker" className="w-3 h-3" /> Audio Note:</span>
                           <span className="text-primary underline cursor-pointer truncate max-w-[150px]">{comm.voice_note_url}</span>
                         </div>
                       )}

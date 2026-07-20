@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { getApiHost } from "@/lib/api";
 import { authHeaders } from "@/lib/siteflow";
+import Icon, { type IconName } from "@/components/marketing/Icon";
 
 interface ReportItem {
   name: string;
@@ -15,7 +16,7 @@ interface ReportItem {
 
 interface ReportCategory {
   title: string;
-  icon: string;
+  icon: IconName;
   reports: ReportItem[];
 }
 
@@ -54,7 +55,7 @@ export default function ReportsDashboard() {
   const categories: ReportCategory[] = [
     {
       title: "Sales",
-      icon: "📈",
+      icon: "trending_up",
       reports: [
         { name: "Company Sales Report", hasView: true, hasDownload: true, viewSlug: "company-sales" },
         { name: "Item Wise Sales Report", hasView: true, hasDownload: false, viewSlug: "item-wise-sales" },
@@ -66,7 +67,7 @@ export default function ReportsDashboard() {
     },
     {
       title: "Payments",
-      icon: "💳",
+      icon: "credit_card",
       reports: [
         { name: "Company Payments", hasView: true, hasDownload: true, viewSlug: "company-payments" },
         { name: "Bank Statement", hasView: true, hasDownload: false, viewSlug: "bank-statement" },
@@ -77,7 +78,7 @@ export default function ReportsDashboard() {
     },
     {
       title: "Progress & task",
-      icon: "📋",
+      icon: "clipboard",
       reports: [
         { name: "Daily Progress Report", hasView: true, hasDownload: false, viewSlug: "dpr" },
         { name: "Task Report", hasView: true, hasDownload: false, viewSlug: "task-report" },
@@ -93,7 +94,7 @@ export default function ReportsDashboard() {
     },
     {
       title: "Purchase & Expense",
-      icon: "💸",
+      icon: "money_wings",
       reports: [
         { name: "Company Expense Report", hasView: true, hasDownload: true, viewSlug: "company-expense" },
         { name: "Cost Code Expense Analysis", hasView: true, hasDownload: false, viewSlug: "cost-code-expense-analysis" },
@@ -103,7 +104,7 @@ export default function ReportsDashboard() {
     },
     {
       title: "Party Balances",
-      icon: "👥",
+      icon: "group",
       reports: [
         { name: "Party Ledger", hasView: true, hasDownload: false, viewSlug: "party-ledger" },
         { name: "All Party Balances", hasView: true, hasDownload: false, viewSlug: "all-party-balances" },
@@ -112,7 +113,7 @@ export default function ReportsDashboard() {
     },
     {
       title: "Materials & Inventory",
-      icon: "📦",
+      icon: "package",
       reports: [
         { name: "Material Request Item Report", hasView: true, hasDownload: false, viewSlug: "material-request-item" },
         { name: "Material Received & Used Report", hasView: true, hasDownload: false, viewSlug: "material-received-used" },
@@ -128,7 +129,7 @@ export default function ReportsDashboard() {
     },
     {
       title: "Attendance & Salary",
-      icon: "🧑‍💻",
+      icon: "computer",
       reports: [
         { name: "Attendance & Salary Report", hasView: true, hasDownload: false, viewSlug: "attendance-salary" },
         { name: "OT & Shift Report", hasView: true, hasDownload: false, viewSlug: "ot-shift" },
@@ -141,7 +142,7 @@ export default function ReportsDashboard() {
     },
     {
       title: "Equipments",
-      icon: "🚜",
+      icon: "tractor",
       reports: [
         { name: "Equipment Usage Detail Report", hasView: true, hasDownload: false, viewSlug: "equipment-usage-detail" },
         { name: "Fuel Efficiency Report", hasView: true, hasDownload: false, viewSlug: "fuel-efficiency" },
@@ -152,7 +153,7 @@ export default function ReportsDashboard() {
     },
     {
       title: "Tax",
-      icon: "🧾",
+      icon: "receipt",
       reports: [
         { name: "Sales (GSTR-1)", hasView: true, hasDownload: true, viewSlug: "gstr1-sales" },
         { name: "Purchase (GSTR-2)", hasView: true, hasDownload: false, viewSlug: "gstr2-purchase" }
@@ -160,7 +161,7 @@ export default function ReportsDashboard() {
     },
     {
       title: "Warehouse",
-      icon: "🏪",
+      icon: "store",
       reports: [
         { name: "Warehouse Stock Movement Report", hasView: true, hasDownload: false, viewSlug: "warehouse-stock-movement" },
         { name: "Warehouse Transaction Report", hasView: true, hasDownload: false, viewSlug: "warehouse-transaction" },
@@ -169,7 +170,7 @@ export default function ReportsDashboard() {
     },
     {
       title: "Sub Con.",
-      icon: "🏗️",
+      icon: "construction",
       reports: [
         { name: "Subcon Workorder Summary Report", hasView: true, hasDownload: false, viewSlug: "subcon-workorder-summary" },
         { name: "Subcon Measurement Book", hasView: true, hasDownload: false, viewSlug: "subcon-measurement-book" },
@@ -179,7 +180,7 @@ export default function ReportsDashboard() {
     },
     {
       title: "Misc.",
-      icon: "🔮",
+      icon: "sparkles",
       reports: [
         { name: "Project Financial Summary", hasView: true, hasDownload: true, viewSlug: "project-financial-summary" },
         { name: "Project Operational Summary", hasView: true, hasDownload: false, viewSlug: "project-operational-summary" },
@@ -191,7 +192,7 @@ export default function ReportsDashboard() {
     },
     {
       title: "Library",
-      icon: "📚",
+      icon: "library",
       reports: [
         { name: "Party Library", hasView: true, hasDownload: false, viewSlug: "party-library" },
         { name: "Cost Code Library", hasView: true, hasDownload: false, viewSlug: "cost-code-library" },
@@ -203,7 +204,7 @@ export default function ReportsDashboard() {
     },
     {
       title: "BOQ",
-      icon: "📐",
+      icon: "ruler",
       reports: [
         { name: "BOQ Workorder Summary Report", hasView: true, hasDownload: false, viewSlug: "boq-workorder-summary" },
         { name: "BOQ Item Report", hasView: true, hasDownload: false, viewSlug: "boq-item" },
@@ -214,7 +215,7 @@ export default function ReportsDashboard() {
     },
     {
       title: "Budget",
-      icon: "📊",
+      icon: "bar_chart",
       reports: [
         { name: "BOQ BOM Report", hasView: true, hasDownload: false, viewSlug: "boq-bom" },
         { name: "Budget vs Actual (Material Cost)", hasView: true, hasDownload: false, viewSlug: "budget-vs-actual-material-cost" },
@@ -224,7 +225,7 @@ export default function ReportsDashboard() {
     },
     {
       title: "Asset",
-      icon: "🏠",
+      icon: "home",
       reports: [
         { name: "Asset Allocation Report", hasView: true, hasDownload: false, viewSlug: "asset-allocation" },
         { name: "Asset Status Report", hasView: true, hasDownload: false, viewSlug: "asset-status" }
@@ -382,7 +383,7 @@ export default function ReportsDashboard() {
                 onChange={e => setSearchQuery(e.target.value)}
                 className="w-full bg-sidebar border border-border-custom rounded-lg pl-9 pr-4 py-2 text-xs text-foreground placeholder:text-muted focus:outline-none focus:border-primary transition-all"
               />
-              <span className="absolute left-3 top-2.5 text-muted text-sm">🔍</span>
+              <Icon name="search" className="absolute left-3 top-2.5 w-4 h-4 text-muted" />
             </div>
           </div>
 
@@ -399,7 +400,7 @@ export default function ReportsDashboard() {
                 <div key={category.title} className="bg-card border border-border-custom rounded-xl p-5 flex flex-col justify-between transition-all hover:border-border-custom/80 hover:shadow-md">
                   <div>
                     <div className="flex items-center gap-2 mb-4">
-                      <span className="text-base">{category.icon}</span>
+                      <Icon name={category.icon} className="w-4 h-4 text-muted" />
                       <h3 className="text-sm font-bold text-foreground">{category.title}</h3>
                     </div>
 
@@ -428,20 +429,20 @@ export default function ReportsDashboard() {
                               {report.hasDownload && (
                                 <button
                                   onClick={() => { setSelectedReport(report); setShowModal(true); }}
-                                  className="text-muted hover:text-[#FF8A00] transition-colors text-sm"
+                                  className="inline-flex items-center text-muted hover:text-[#FF8A00] transition-colors"
                                   title="Download Report"
                                 >
-                                  ⬇️
+                                  <Icon name="arrow_down" className="w-4 h-4" />
                                 </button>
                               )}
                               {/* Eye/View icon — only if hasView */}
                               {report.hasView && report.viewSlug && (
                                 <Link
                                   href={`/c/${companyId}/reports/${report.viewSlug}`}
-                                  className="text-muted hover:text-primary transition-colors text-sm"
+                                  className="inline-flex items-center text-muted hover:text-primary transition-colors"
                                   title="View Report"
                                 >
-                                  👁️
+                                  <Icon name="eye" className="w-4 h-4" />
                                 </Link>
                               )}
                             </div>
@@ -482,7 +483,7 @@ export default function ReportsDashboard() {
                         onChange={e => setPartyNameFilter(e.target.value)}
                         className="w-full bg-background border border-border-custom rounded-lg pl-9 pr-3 py-2 text-xs text-white focus:outline-none focus:border-primary"
                       />
-                      <span className="absolute left-3 top-2.5 text-muted text-xs">🔍</span>
+                      <Icon name="search" className="absolute left-3 top-2.5 w-4 h-4 text-muted" />
                     </div>
                   </div>
                 ) : null}
@@ -523,12 +524,12 @@ export default function ReportsDashboard() {
                 >
                   {isExporting ? (
                     <>
-                      <span className="animate-spin text-sm">⏳</span> Exporting file...
+                      <Icon name="schedule" className="w-4 h-4 animate-spin" /> Exporting file...
                     </>
                   ) : selectedReport.name === "Staff Monthly Salary Slip" || selectedReport.name === "Staff Salary Report" ? (
-                    "Download PDF 📄"
+                    <><Icon name="description" className="w-4 h-4" /> Download PDF</>
                   ) : (
-                    "Download Excel 📥"
+                    <><Icon name="arrow_down" className="w-4 h-4" /> Download Excel</>
                   )}
                 </button>
                 <button onClick={() => setShowModal(false)} className="w-full py-2 text-xs text-muted hover:text-foreground transition-all">Cancel</button>
@@ -543,7 +544,7 @@ export default function ReportsDashboard() {
         {/* Global Toast */}
         {toastMessage && (
           <div className="fixed bottom-6 right-6 bg-card border border-success/30 rounded-lg px-4 py-3 text-xs text-success shadow-lg flex items-center gap-2 z-50 transition-all">
-            <span>⚡</span>
+            <Icon name="bolt" className="w-4 h-4" />
             <span className="font-semibold">{toastMessage}</span>
           </div>
         )}
