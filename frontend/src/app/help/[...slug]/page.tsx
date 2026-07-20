@@ -138,7 +138,7 @@ export default async function HelpArticlePage({ params }: RouteParams) {
       <ReadingProgress />
       {/* Reading header */}
       <section className="relative pt-6 pb-10 md:pb-14 overflow-hidden alx-scroll-fade is-visible">
-        <div className="absolute inset-0 z-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-alx-primary-fixed/25 via-transparent to-transparent pointer-events-none" />
+        <div className="absolute inset-0 z-0 alx-hero-wash pointer-events-none" />
         {/* Same max-w-6xl + px-6 container as the body section below, so the
             header's left edge lines up with the article column instead of
             sitting in a narrower centered box. */}

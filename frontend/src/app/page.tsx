@@ -35,7 +35,7 @@ export default function LandingPage() {
       {/* 1. Symmetrical Hero */}
       <section className="relative pt-20 pb-32 px-6 overflow-hidden alx-scroll-fade is-visible">
         <div className="absolute inset-0 z-0 pointer-events-none">
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-alx-primary-fixed/30 via-transparent to-transparent" />
+          <div className="absolute inset-0 alx-hero-wash" />
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,_var(--tw-gradient-stops))] from-alx-tertiary-fixed/15 via-transparent to-transparent" />
           <Aurora variant="hero" className="absolute inset-0" />
         </div>
