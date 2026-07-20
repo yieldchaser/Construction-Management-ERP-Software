@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import MarketingShell from "@/components/marketing/MarketingShell";
-import Aurora from "@/components/marketing/Aurora";
 
 const OFFICES = [
   { city: "Delhi (HQ)", address: "SiteFlow Offices, New Delhi, India" },
@@ -100,7 +99,6 @@ export default function ContactPage() {
       {/* Hero */}
       <section className="relative px-6 pt-16 pb-20 text-center overflow-hidden alx-scroll-fade is-visible">
         <div className="absolute inset-0 z-0 alx-hero-wash pointer-events-none" />
-        <Aurora variant="hero" className="absolute inset-0" />
         <div className="max-w-2xl mx-auto relative z-10 space-y-6">
           <span className="alx-label alx-badge-gold inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs">
             Talk to Us

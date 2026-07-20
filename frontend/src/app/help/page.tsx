@@ -2,7 +2,6 @@ import React from "react";
 import { getContentItems, ContentItem } from "@/lib/content";
 import { HelpSearchClient } from "./HelpSearchClient";
 import MarketingShell from "@/components/marketing/MarketingShell";
-import Aurora from "@/components/marketing/Aurora";
 import Icon from "@/components/marketing/Icon";
 import Link from "next/link";
 
@@ -117,7 +116,6 @@ export default async function HelpCenterPage() {
       {/* Hero Header */}
       <section className="relative px-6 pt-16 pb-16 text-center overflow-hidden alx-scroll-fade">
         <div className="absolute inset-0 z-0 alx-hero-wash pointer-events-none" />
-        <Aurora variant="hero" className="absolute inset-0" />
         <div className="max-w-4xl mx-auto relative z-10 space-y-6">
           <span className="alx-label alx-badge-gold inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs">
             <Icon name="book" className="w-3.5 h-3.5" />

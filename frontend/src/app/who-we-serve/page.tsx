@@ -5,7 +5,6 @@ import Link from "next/link";
 import MarketingShell from "@/components/marketing/MarketingShell";
 import MockupFrame from "@/components/marketing/MockupFrame";
 import CountUp from "@/components/marketing/CountUp";
-import Aurora from "@/components/marketing/Aurora";
 import Icon from "@/components/marketing/Icon";
 
 const STATS = [
@@ -219,7 +218,6 @@ export default function WhoWeServePage() {
       {/* Hero */}
       <section className="relative px-6 pt-16 pb-20 text-center overflow-hidden alx-scroll-fade is-visible">
         <div className="absolute inset-0 z-0 alx-hero-wash pointer-events-none" />
-        <Aurora variant="hero" className="absolute inset-0" />
         <div className="max-w-4xl mx-auto relative z-10 space-y-8">
           <span className="alx-label alx-badge-gold inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs">
             Who We Serve

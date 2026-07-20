@@ -458,49 +458,52 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen w-full bg-alx-surface-container-lowest text-alx-on-surface">
       {/* Brand panel */}
-      <div className="relative hidden w-2/5 flex-col justify-between overflow-hidden alx-bg-gradient-primary p-12 lg:flex border-r border-alx-outline-variant/40">
-        {/* Soft light glows — white so they read against the primary fill
-            (a bg-primary blob on a bg-primary panel is invisible). Layered
-            radial mesh for premium depth. */}
-        <div className="absolute bottom-[-20%] right-[-20%] h-[70%] w-[70%] rounded-full bg-white opacity-10 blur-[120px]" />
-        <div className="absolute top-[-15%] left-[-10%] h-[45%] w-[45%] rounded-full bg-white opacity-[0.07] blur-[110px]" />
-        <div className="absolute top-[35%] right-[5%] h-[30%] w-[30%] rounded-full bg-white opacity-[0.05] blur-[100px]" />
+      <div className="relative hidden w-2/5 flex-col justify-between overflow-hidden bg-alx-surface-container-lowest p-12 lg:flex border-r border-alx-outline-variant/40">
+        {/* Light wash matching the marketing heroes: the same blue tint from
+            the top plus a warm note low left, so signing in reads as the same
+            surface family as the landing and resources pages. Gradients rather
+            than blurred blobs, which would be clipped flat by overflow-hidden. */}
+        <div className="absolute inset-0 alx-hero-wash" aria-hidden="true" />
+        <div
+          className="absolute inset-0 opacity-45 bg-[radial-gradient(ellipse_85%_60%_at_15%_100%,var(--color-alx-tertiary-fixed),transparent_70%)]"
+          aria-hidden="true"
+        />
         <div className="alx-grain absolute inset-0 z-0" />
 
         <div className="flex items-center gap-3 z-10">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white font-bold text-alx-primary shadow-md ring-1 ring-white/70">S</div>
-          <span className="text-xl font-bold tracking-tight text-white">SiteFlow</span>
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg alx-bg-gradient-primary font-bold text-alx-on-primary shadow-md">S</div>
+          <span className="text-xl font-bold tracking-tight text-alx-on-surface">SiteFlow</span>
         </div>
 
         <div className="z-10 max-w-md space-y-8">
           <div className="space-y-4">
-            <h2 className="font-headline text-3xl font-extrabold leading-tight text-white">
+            <h2 className="font-headline text-3xl font-extrabold leading-tight text-alx-on-surface">
               Your whole construction business in one workspace.
             </h2>
-            <p className="text-sm leading-relaxed text-white/80">
+            <p className="text-sm leading-relaxed text-alx-on-surface-variant">
               Projects, billing, procurement, payroll and CRM stay connected, so your office and your site work from the same numbers.
             </p>
           </div>
 
           {/* Compact live-project mock, echoing the homepage hero card
               (same honest demo strings), adapted for this fixed half-width panel. */}
-          <div className="rounded-xl border border-white/20 bg-white/10 p-4 shadow-2xl shadow-black/20 backdrop-blur-md space-y-3">
+          <div className="rounded-xl border border-alx-outline-variant/25 bg-alx-surface-container-lowest p-4 shadow-xl shadow-alx-on-surface/5 space-y-3">
             <div className="flex items-center justify-between gap-3">
-              <span className="text-sm font-semibold text-white">Greenline Residency</span>
-              <span className="rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white">
+              <span className="text-sm font-semibold text-alx-on-surface">Greenline Residency</span>
+              <span className="rounded-full bg-alx-primary-fixed px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-alx-primary">
                 Phase 2
               </span>
             </div>
             <div className="space-y-1.5">
-              <div className="flex items-center justify-between text-[11px] text-white/70">
+              <div className="flex items-center justify-between text-[11px] text-alx-on-surface-variant">
                 <span>Weighted progress</span>
-                <span className="font-semibold text-white">62%</span>
+                <span className="font-semibold text-alx-on-surface">62%</span>
               </div>
-              <div className="h-2 w-full overflow-hidden rounded-full bg-white/20">
-                <div className="h-full w-[62%] rounded-full bg-white" />
+              <div className="h-2 w-full overflow-hidden rounded-full bg-alx-primary-fixed">
+                <div className="h-full w-[62%] rounded-full alx-bg-gradient-primary" />
               </div>
             </div>
-            <div className="rounded-md border border-white/20 bg-white/10 px-3 py-2 text-[11px] text-white/90">
+            <div className="rounded-md border border-alx-outline-variant/20 bg-alx-surface-container-low px-3 py-2 text-[11px] text-alx-on-surface-variant">
               Project P&amp;L: revenue Rs 61L, cost Rs 44L, margin 28%
             </div>
           </div>
@@ -512,10 +515,10 @@ export default function LoginPage() {
               "Tally & Zoho accounting integrations",
               "GPS-geofenced attendance, IS-code compliant math",
             ].map((point) => (
-              <li key={point} className="flex items-center gap-3 text-sm text-white/85">
-                <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-white/15 ring-1 ring-white/25">
+              <li key={point} className="flex items-center gap-3 text-sm text-alx-on-surface-variant">
+                <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-alx-primary-fixed">
                   <svg
-                    className="h-3 w-3 text-white"
+                    className="h-3 w-3 text-alx-primary"
                     viewBox="0 0 20 20"
                     fill="none"
                     stroke="currentColor"

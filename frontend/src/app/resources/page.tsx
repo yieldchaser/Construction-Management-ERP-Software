@@ -3,7 +3,6 @@ import Link from "next/link";
 import { getContentItems } from "@/lib/content";
 import { Metadata } from "next";
 import MarketingShell from "@/components/marketing/MarketingShell";
-import Aurora from "@/components/marketing/Aurora";
 import Icon from "@/components/marketing/Icon";
 
 export const metadata: Metadata = {
@@ -118,7 +117,6 @@ export default async function ResourcesIndexPage() {
       {/* Hero */}
       <section className="relative px-6 pt-16 pb-16 text-center overflow-hidden alx-scroll-fade">
         <div className="absolute inset-0 z-0 alx-hero-wash pointer-events-none" />
-        <Aurora variant="hero" className="absolute inset-0" />
         <div className="max-w-4xl mx-auto relative z-10 space-y-6">
           <span className="alx-label alx-badge-gold inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs">
             <GroupIcon name="calculators" className="h-3.5 w-3.5" />
@@ -170,9 +168,9 @@ export default async function ResourcesIndexPage() {
                     <div className="pt-3 mt-4 border-t border-alx-outline-variant/15 flex items-center justify-end">
                       <Link
                         href={`/resources/${r.slug}`}
-                        className="font-uilabel text-xs font-bold text-alx-primary hover:text-alx-on-surface transition-all cursor-pointer"
+                        className="font-uilabel inline-flex items-center gap-1.5 whitespace-nowrap text-xs font-bold text-alx-primary hover:text-alx-on-surface transition-all cursor-pointer"
                       >
-                        View Resource <Icon name="arrow_right" className="w-4 h-4" />
+                        View Resource <Icon name="arrow_right" className="w-4 h-4 shrink-0" />
                       </Link>
                     </div>
                   </article>

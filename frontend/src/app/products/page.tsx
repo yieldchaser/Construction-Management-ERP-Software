@@ -3,7 +3,6 @@ import Link from "next/link";
 import { getContentItems } from "@/lib/content";
 import { Metadata } from "next";
 import MarketingShell from "@/components/marketing/MarketingShell";
-import Aurora from "@/components/marketing/Aurora";
 import Icon from "@/components/marketing/Icon";
 
 export const metadata: Metadata = {
@@ -214,7 +213,6 @@ export default async function ProductsIndexPage() {
       {/* Hero */}
       <section className="relative px-6 pt-16 pb-20 text-center overflow-hidden">
         <div className="absolute inset-0 z-0 alx-hero-wash pointer-events-none" />
-        <Aurora variant="hero" className="absolute inset-0" />
         <div className="max-w-4xl mx-auto relative z-10 space-y-6">
           <span className="alx-label alx-badge-gold inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs">
             <ProductIcon name="layers" className="h-3.5 w-3.5" />
