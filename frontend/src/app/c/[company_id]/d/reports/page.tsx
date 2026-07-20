@@ -6,6 +6,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useProject } from "@/context/ProjectContext";
 import { useParams } from "next/navigation";
+import Icon from "@/components/marketing/Icon";
 
 interface ClientReport {
   id: string;
@@ -255,7 +256,7 @@ export default function ClientReportsPage() {
               </>
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center text-center p-10 bg-elevated rounded-lg border border-border-custom">
-                <span className="text-3xl mb-3">📊</span>
+                <Icon name="bar_chart" className="w-8 h-8 mb-3 text-muted" />
                 <h2 className="text-sm font-bold text-foreground">No Report Selected</h2>
                 <p className="text-xs text-muted max-w-xs mt-1">
                   Choose an existing progress report from the side log panel or click the generate button to compile a new one.

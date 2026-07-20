@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { getApi, authHeaders } from "@/lib/siteflow";
+import Icon from "@/components/marketing/Icon";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -941,8 +942,8 @@ ${tasksXml}
                       <td className="px-5 py-3 text-muted whitespace-nowrap">
                         {fmtTime(ts.start_time)} – {fmtTime(ts.end_time)}
                         {ts.file_url && (
-                          <a href={ts.file_url} target="_blank" rel="noreferrer" className="block text-[10px] text-primary hover:underline">
-                            📎 {ts.file_name || "file"}
+                          <a href={ts.file_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-[10px] text-primary hover:underline">
+                            <Icon name="paperclip" className="w-3 h-3" /> {ts.file_name || "file"}
                           </a>
                         )}
                       </td>

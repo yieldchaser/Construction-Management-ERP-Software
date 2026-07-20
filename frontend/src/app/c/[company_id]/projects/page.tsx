@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { getApiHost } from "@/lib/api";
 import { CustomFieldsSection, useCustomFields } from "@/components/CustomFieldsSection";
+import Icon from "@/components/marketing/Icon";
 
 type Project = {
   id: string;
@@ -356,7 +357,7 @@ export default function ProjectsPage() {
                         onClick={() => setSettingsProject(p)}
                         className="text-muted hover:text-foreground"
                       >
-                        ⚙
+                        <Icon name="settings" className="w-4 h-4" />
                       </button>
                       {!isViewer && (
                         <button
@@ -364,7 +365,7 @@ export default function ProjectsPage() {
                           onClick={() => setDeleteTarget(p)}
                           className="text-muted hover:text-rose-500"
                         >
-                          🗑
+                          <Icon name="trash" className="w-4 h-4" />
                         </button>
                       )}
                     </div>

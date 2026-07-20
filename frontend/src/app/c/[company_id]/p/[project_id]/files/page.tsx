@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { getApi, authHeaders } from "@/lib/siteflow";
+import Icon from "@/components/marketing/Icon";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type Folder = { id: string; project_id: string; parent_id: string | null; name: string };
@@ -195,7 +196,7 @@ export default function FilesTab() {
                 onClick={() => navigate(f)}
                 className="group rounded-lg border border-border-custom bg-card p-3 text-left hover:border-primary/50 transition-colors"
               >
-                <div className="text-2xl mb-2">📁</div>
+                <div className="text-2xl mb-2 inline-flex"><Icon name="folder" className="w-6 h-6" /></div>
                 <div className="text-xs text-foreground font-medium truncate">{f.name}</div>
                 <div className="text-[9px] text-muted mt-0.5">Folder</div>
               </button>
@@ -207,7 +208,7 @@ export default function FilesTab() {
                 className="group rounded-lg border border-border-custom bg-card p-3 text-left hover:border-primary/50 transition-colors"
               >
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-2xl">📄</span>
+                  <span className="text-2xl inline-flex"><Icon name="description" className="w-6 h-6" /></span>
                   <span className="text-[8px] uppercase px-1 py-0.5 rounded bg-elevated text-muted">
                     {ext(f.name)}
                   </span>
@@ -287,7 +288,7 @@ export default function FilesTab() {
                 <iframe src={previewSrc} title={preview.name} className="w-full h-full border-0" />
               ) : (
                 <div className="h-full flex flex-col items-center justify-center gap-3 text-center p-6">
-                  <div className="text-5xl">📄</div>
+                  <div className="text-5xl inline-flex"><Icon name="description" className="w-12 h-12" /></div>
                   <div className="text-sm text-muted">Preview not available for this file type.</div>
                   <a
                     href={downloadSrc}

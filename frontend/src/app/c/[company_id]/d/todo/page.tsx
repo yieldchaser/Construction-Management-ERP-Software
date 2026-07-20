@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { getApiHost } from "@/lib/api";
 import { authHeaders } from "@/lib/siteflow";
+import Icon from "@/components/marketing/Icon";
 
 interface Project {
   id: string;
@@ -409,9 +410,9 @@ export default function ToDoPage() {
                 <button
                   type="button"
                   onClick={() => setIsRepeatModalOpen(true)}
-                  className="px-3 py-1 bg-elevated border border-border-custom hover:bg-elevated/80 text-foreground text-xs font-semibold rounded-lg transition-all"
+                  className="px-3 py-1 bg-elevated border border-border-custom hover:bg-elevated/80 text-foreground text-xs font-semibold rounded-lg transition-all inline-flex items-center gap-1.5"
                 >
-                  ⚙️ Repeat Settings
+                  <Icon name="settings" className="w-3.5 h-3.5" /> Repeat Settings
                 </button>
               </div>
 

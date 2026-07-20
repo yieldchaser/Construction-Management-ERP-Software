@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { getApiHost } from "@/lib/api";
 import { authHeaders } from "@/lib/siteflow";
+import Icon from "@/components/marketing/Icon";
 
 export default function DPRReportPage() {
   const params = useParams();
@@ -161,10 +162,10 @@ export default function DPRReportPage() {
 
           <div className="flex items-center gap-2">
             <button onClick={() => fetchReport()} className="p-2 bg-card hover:bg-elevated border border-border-custom rounded-lg text-xs" title="Refresh">
-              🔄
+              <Icon name="refresh" className="w-3.5 h-3.5" />
             </button>
             <button onClick={handleExportDpr} className="px-3 py-1.5 bg-primary text-white text-xs font-bold rounded-lg flex items-center gap-1.5 hover:bg-primary/90 transition-all">
-              <span>📤</span> Export CSV
+              <Icon name="outbox" className="w-3.5 h-3.5" /> Export CSV
             </button>
           </div>
         </div>
@@ -404,7 +405,7 @@ export default function DPRReportPage() {
         {/* Global Toast */}
         {toastMessage && (
           <div className="fixed bottom-6 right-6 bg-card border border-success/30 rounded-lg px-4 py-3 text-xs text-success shadow-lg flex items-center gap-2 z-50 transition-all">
-            <span>⚡</span>
+            <Icon name="bolt" className="w-4 h-4" />
             <span className="font-semibold">{toastMessage}</span>
           </div>
         )}

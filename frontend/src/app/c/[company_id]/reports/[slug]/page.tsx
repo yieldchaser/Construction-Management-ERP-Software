@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { getApiHost } from "@/lib/api";
 import { authHeaders } from "@/lib/siteflow";
+import Icon from "@/components/marketing/Icon";
 
 // Comprehensive metadata configurations for all 70+ reports
 interface FilterConfig {
@@ -745,7 +746,7 @@ export default function DynamicReportViewPage() {
 
             {/* Actions Toolbar & Search Bar */}
             <div className="flex flex-wrap items-center gap-2">
-              <button onClick={handleRefresh} className="text-muted hover:text-foreground text-xs border border-border-custom bg-card/20 rounded-lg px-3 py-1.5 transition-all">🔄 Refresh</button>
+              <button onClick={handleRefresh} className="text-muted hover:text-foreground text-xs border border-border-custom bg-card/20 rounded-lg px-3 py-1.5 transition-all inline-flex items-center gap-1.5"><Icon name="refresh" className="w-3.5 h-3.5" /> Refresh</button>
               <button onClick={handleResetFilters} className="text-muted hover:text-foreground text-xs border border-border-custom bg-card/20 rounded-lg px-3 py-1.5 transition-all">Filter</button>
               <button onClick={handleSort} className="text-muted hover:text-foreground text-xs border border-border-custom bg-card/20 rounded-lg px-3 py-1.5 transition-all">Sort</button>
               
@@ -776,7 +777,7 @@ export default function DynamicReportViewPage() {
                   onChange={e => setSearchQuery(e.target.value)}
                   className="bg-card border border-border-custom rounded-lg pl-7 pr-3 py-1.5 text-xs text-white focus:outline-none focus:border-primary w-40 transition-all focus:w-48"
                 />
-                <span className="absolute left-2.5 top-2 text-muted text-xs">🔍</span>
+                <Icon name="search" className="absolute left-2.5 top-2 w-3.5 h-3.5 text-muted" />
               </div>
             </div>
           </div>
@@ -833,7 +834,7 @@ export default function DynamicReportViewPage() {
             /* SLEEK CONVERSION FUNNEL VISUALIZATION */
             <div className="max-w-4xl mx-auto bg-card border border-border-custom rounded-xl p-8 space-y-8">
               <div className="border-b border-border-custom pb-4">
-                <h3 className="text-base font-bold text-white uppercase tracking-wider">📊 Lead Status Funnel Analysis</h3>
+                <h3 className="text-base font-bold text-white uppercase tracking-wider inline-flex items-center gap-2"><Icon name="bar_chart" className="w-5 h-5" /> Lead Status Funnel Analysis</h3>
                 <p className="text-xs text-muted mt-1">Real-time conversion metrics from raw enquiry to closed won contracts.</p>
               </div>
 
@@ -914,7 +915,7 @@ export default function DynamicReportViewPage() {
             /* SLEEK PIE / DONUT BREAKDOWN ANALYSIS */
             <div className="max-w-4xl mx-auto bg-card border border-border-custom rounded-xl p-8 space-y-8">
               <div className="border-b border-border-custom pb-4">
-                <h3 className="text-base font-bold text-white uppercase tracking-wider">🍕 Cost Code Expense Breakdown</h3>
+                <h3 className="text-base font-bold text-white uppercase tracking-wider inline-flex items-center gap-2"><Icon name="bar_chart" className="w-5 h-5" /> Cost Code Expense Breakdown</h3>
                 <p className="text-xs text-muted mt-1">Detailed analysis of project expenditures grouped by primary accounting cost codes.</p>
               </div>
 
@@ -1059,7 +1060,7 @@ export default function DynamicReportViewPage() {
         {/* Toast */}
         {toastMessage && (
           <div className="fixed bottom-6 right-6 bg-card border border-success/30 rounded-lg px-4 py-3 text-xs text-success shadow-lg flex items-center gap-2 z-50">
-            <span>⚡</span>
+            <Icon name="bolt" className="w-4 h-4" />
             <span className="font-semibold">{toastMessage}</span>
           </div>
         )}

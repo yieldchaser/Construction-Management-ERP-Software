@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { getApiHost } from "@/lib/api";
 import { authHeaders } from "@/lib/siteflow";
+import Icon from "@/components/marketing/Icon";
 
 interface WorkOrder {
   id: string;
@@ -204,7 +205,7 @@ export default function SubconPage() {
               onChange={e => setSearchQuery(e.target.value)}
               className="w-full bg-card border border-border-custom rounded-lg pl-9 pr-4 py-2 text-xs text-foreground placeholder:text-muted focus:outline-none focus:border-primary"
             />
-            <span className="absolute left-3 top-2.5 text-muted text-sm">🔍</span>
+            <span className="absolute left-3 top-2.5 text-muted text-sm inline-flex"><Icon name="search" className="w-3.5 h-3.5" /></span>
           </div>
 
           <button
@@ -460,7 +461,7 @@ export default function SubconPage() {
         {/* Global Toast */}
         {toastMessage && (
           <div className="fixed bottom-6 right-6 bg-card border border-success/30 rounded-lg px-4 py-3 text-xs text-success shadow-lg flex items-center gap-2 z-50 transition-all">
-            <span>⚡</span>
+            <span className="inline-flex"><Icon name="bolt" className="w-3.5 h-3.5" /></span>
             <span className="font-semibold">{toastMessage}</span>
           </div>
         )}

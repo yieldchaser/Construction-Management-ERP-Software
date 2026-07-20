@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { getApiHost } from "@/lib/api";
+import Icon from "@/components/marketing/Icon";
 
 interface Project {
   id: string;
@@ -236,7 +237,7 @@ export default function PaymentApprovalPage() {
       <div className="space-y-4">
         {filteredRequests.length === 0 ? (
           <div className="rounded-lg border border-border-custom bg-card p-12 flex flex-col items-center justify-center text-center space-y-4">
-            <span className="text-4xl">🏷️</span>
+            <span className="text-4xl inline-flex"><Icon name="tag" className="w-10 h-10" /></span>
             <div>
               <h3 className="text-foreground font-semibold text-sm">No Approvals Found</h3>
               <p className="text-muted text-xs mt-1">No requests match the selected status or project filter. Click "+ Create Demo Request" to try the flow.</p>
@@ -266,9 +267,9 @@ export default function PaymentApprovalPage() {
                 <p className="text-muted text-xs max-w-xl">{r.details || "No details provided"}</p>
                 
                 <div className="flex gap-4 text-[10px] text-muted">
-                  <span>📅 Submitted: {new Date(r.created_at).toLocaleDateString()}</span>
+                  <span className="inline-flex items-center gap-1"><Icon name="calendar" className="w-3 h-3" /> Submitted: {new Date(r.created_at).toLocaleDateString()}</span>
                   {r.due_date && (
-                    <span>⏳ Due: {new Date(r.due_date).toLocaleDateString()}</span>
+                    <span className="inline-flex items-center gap-1"><Icon name="schedule" className="w-3 h-3" /> Due: {new Date(r.due_date).toLocaleDateString()}</span>
                   )}
                 </div>
               </div>
@@ -304,7 +305,7 @@ export default function PaymentApprovalPage() {
       {/* Local Toast Alert */}
       {toastMessage && (
         <div className="absolute bottom-6 right-6 bg-card border border-success/30 rounded-md px-4 py-3 text-xs text-success shadow-2xl z-50">
-          <span>⚡ </span>
+          <span className="inline-flex"><Icon name="bolt" className="w-3.5 h-3.5" /></span>
           <span className="font-semibold">{toastMessage}</span>
         </div>
       )}

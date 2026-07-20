@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { getApiHost } from "@/lib/api";
 import { authHeaders } from "@/lib/siteflow";
+import Icon from "@/components/marketing/Icon";
 
 export default function ItemWiseSalesReportPage() {
   const params = useParams();
@@ -143,11 +144,11 @@ export default function ItemWiseSalesReportPage() {
                 onChange={e => setSearchQuery(e.target.value)}
                 className="w-full bg-card border border-border-custom rounded-lg pl-9 pr-3 py-1.5 text-xs text-foreground placeholder:text-muted focus:outline-none focus:border-primary"
               />
-              <span className="absolute left-3 top-2 text-muted text-xs">🔍</span>
+              <Icon name="search" className="absolute left-3 top-2 w-3.5 h-3.5 text-muted" />
             </div>
             <div className="flex items-center gap-2">
-              <button onClick={() => showToast("Exporting Item Wise Sales Report...")} className="px-3 py-1.5 bg-[#FF8A00] hover:bg-[#E07A00] text-white text-xs font-bold rounded-lg">
-                Download Excel 📥
+              <button onClick={() => showToast("Exporting Item Wise Sales Report...")} className="px-3 py-1.5 bg-[#FF8A00] hover:bg-[#E07A00] text-white text-xs font-bold rounded-lg inline-flex items-center gap-1.5">
+                Download Excel <Icon name="arrow_down" className="w-3.5 h-3.5" />
               </button>
             </div>
           </div>
@@ -216,7 +217,7 @@ export default function ItemWiseSalesReportPage() {
         {/* Global Toast */}
         {toastMessage && (
           <div className="fixed bottom-6 right-6 bg-card border border-success/30 rounded-lg px-4 py-3 text-xs text-success shadow-lg flex items-center gap-2 z-50 transition-all">
-            <span>⚡</span>
+            <Icon name="bolt" className="w-4 h-4" />
             <span className="font-semibold">{toastMessage}</span>
           </div>
         )}

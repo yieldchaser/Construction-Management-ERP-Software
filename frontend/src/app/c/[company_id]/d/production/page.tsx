@@ -1,6 +1,7 @@
 "use client";
 import { getApiHost } from "@/lib/api";
 import { authHeaders } from "@/lib/siteflow";
+import Icon from "@/components/marketing/Icon";
 
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
@@ -407,7 +408,7 @@ export default function ProductionPage() {
                             <span className="text-sm font-bold text-foreground">{batch.batch_number}</span>
                             {getLowStockMaterialsForBatch(batch).length > 0 && (
                               <span className="inline-flex items-center gap-1 rounded bg-amber-500/10 px-2 py-0.5 text-[9px] font-medium text-amber-400 border border-amber-500/25 shadow-sm animate-pulse">
-                                ⚠️ Low Stock
+                                <Icon name="warning" className="w-3 h-3" /> Low Stock
                               </span>
                             )}
                           </div>
@@ -519,7 +520,7 @@ export default function ProductionPage() {
                             <span className="font-semibold">{batch.batch_number}</span>
                             {getLowStockMaterialsForBatch(batch).length > 0 && (
                               <span className="inline-flex items-center gap-1 rounded bg-amber-500/10 px-2 py-0.5 text-[9px] font-medium text-amber-400 border border-amber-500/25 shadow-sm animate-pulse">
-                                ⚠️ Low Stock
+                                <Icon name="warning" className="w-3 h-3" /> Low Stock
                               </span>
                             )}
                           </div>

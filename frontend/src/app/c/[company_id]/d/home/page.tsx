@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { getApiHost } from "@/lib/api";
 import { useProject } from "@/context/ProjectContext";
+import Icon from "@/components/marketing/Icon";
 
 interface Project {
   id: string;
@@ -343,7 +344,7 @@ export default function ProjectsHomePage() {
         >
           <div className="flex justify-between items-start">
             <div className="text-muted text-xs font-medium uppercase tracking-wider">Approval (Pending)</div>
-            <span className="text-lg shrink-0">💵</span>
+            <Icon name="banknote" className="w-5 h-5 shrink-0" />
           </div>
           <div className="flex items-baseline gap-2 mt-4">
             <span className="text-2xl font-semibold text-foreground">{pendingApprovalsCount}</span>
@@ -358,7 +359,7 @@ export default function ProjectsHomePage() {
         >
           <div className="flex justify-between items-start">
             <div className="text-muted text-xs font-medium uppercase tracking-wider">Material (Pending)</div>
-            <span className="text-lg shrink-0">📦</span>
+            <Icon name="package" className="w-5 h-5 shrink-0" />
           </div>
           <div className="flex items-baseline gap-2 mt-4">
             <span className="text-2xl font-semibold text-foreground">{pendingMaterialsCount}</span>
@@ -373,7 +374,7 @@ export default function ProjectsHomePage() {
         >
           <div className="flex justify-between items-start">
             <div className="text-muted text-xs font-medium uppercase tracking-wider">To Do (Pending)</div>
-            <span className="text-lg shrink-0">✅</span>
+            <Icon name="check_circle" className="w-5 h-5 shrink-0" />
           </div>
           <div className="flex items-baseline gap-2 mt-4">
             <span className="text-2xl font-semibold text-foreground">{todoCount}</span>
@@ -836,8 +837,8 @@ export default function ProjectsHomePage() {
 
       {/* Global Toast Message in layout - but local backup in case layout not wrapped */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 bg-card border border-success/30 rounded-lg px-4 py-3 text-xs text-success shadow-lg z-50 animate-bounce">
-          <span>⚡ </span>
+        <div className="fixed bottom-6 right-6 bg-card border border-success/30 rounded-lg px-4 py-3 text-xs text-success shadow-lg z-50 animate-bounce flex items-center gap-2">
+          <Icon name="bolt" className="w-4 h-4" />
           <span className="font-semibold">{toastMessage}</span>
         </div>
       )}
