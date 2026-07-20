@@ -59,6 +59,10 @@
       {
         "title": "No Live Project P&L Across Chainages",
         "body": "Project cost is visible only after every bill is in, usually after handover. An overrun that builds up over six months shows up as one number at the end, with no point in the timeline where action was possible."
+      },
+      {
+        "title": "No Production Tracking for Concrete or Asphalt Batches",
+        "body": "Batching plant output is logged on paper or not at all, so there is no way to check actual production against the plan until a shortfall shows up as a missed pour or a delayed lay."
       }
     ],
     "features": [

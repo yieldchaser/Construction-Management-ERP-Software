@@ -59,6 +59,10 @@
       {
         "title": "BOQ Revisions Never Reflected in the Working Budget",
         "body": "Scope changes get agreed verbally on site and the BOQ is revised on paper, but the budget that finance is tracking against never gets updated, so cost control runs on stale numbers."
+      },
+      {
+        "title": "Daily Progress Reports Delayed or Skipped Entirely",
+        "body": "DPRs get filed a week late from memory, or not filed at all when a site is busy. By the time the office sees a delay or quality flag, the window to act on it has already closed."
       }
     ],
     "features": [

@@ -36,7 +36,7 @@
       }
     ],
     "intro": {
-      "heading": "The Same Five Problems Cost Builders Money on Every Project",
+      "heading": "The Same Six Problems Cost Builders Money on Every Project",
       "body": "Budgets are prepared once and never updated. Subcontractors bill for more than they built. Clients call every day because they have no visibility. These are not isolated mistakes, they are what happens when a builder runs a multi-crore project on spreadsheets and WhatsApp."
     },
     "personas": [
@@ -59,6 +59,10 @@
       {
         "title": "No Live Cost View Across Phases and Towers",
         "body": "Project cost is visible only after every bill is in, usually after handover. An overrun that builds up over six months shows up as one number at the end, with no point where action was possible."
+      },
+      {
+        "title": "Material Over-Ordering Eats Into Every Tower's Margin",
+        "body": "Material is ordered per tower with no link back to the BOQ quantities, so over-ordering and wastage go unnoticed until the final reconciliation, by which point the cost is already sunk into the project."
       }
     ],
     "features": [

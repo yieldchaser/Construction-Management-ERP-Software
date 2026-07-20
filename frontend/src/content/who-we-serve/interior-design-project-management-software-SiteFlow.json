@@ -59,6 +59,10 @@
       {
         "title": "Retention and Warranty Papers Go Missing at Handover",
         "body": "By the time a project reaches handover, retention amounts and warranty documents are scattered across emails and physical files, making the final close-out slower than it needs to be."
+      },
+      {
+        "title": "Subcontractor Billing Not Linked to Site Progress",
+        "body": "Carpentry, electrical, and finishing subcontractors invoice on their own schedule, with no check against what has actually been completed on site, so bills get paid ahead of the work they claim to cover."
       }
     ],
     "features": [
