@@ -53,7 +53,13 @@ export default function DataTable({ table }: { table: ProductDataTable }) {
           </p>
         )}
       </div>
-      <div className="w-full overflow-x-auto rounded-xl border border-alx-outline-variant/40 bg-alx-surface-container-lowest">
+      {/* A three column table stretched to the full page leaves a large gap
+          between a label and its value, so cap the narrow ones. */}
+      <div
+        className={`w-full overflow-x-auto rounded-xl border border-alx-outline-variant/40 bg-alx-surface-container-lowest ${
+          table.columns.length <= 3 ? "max-w-3xl" : ""
+        }`}
+      >
         {/* The first column absorbs the slack so the remaining columns hug
             their content instead of floating in a third of the page each. */}
         <table className="w-full border-collapse min-w-[720px]">
