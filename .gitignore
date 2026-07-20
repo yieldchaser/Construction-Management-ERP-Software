@@ -238,10 +238,12 @@ outputs/
 scratch/
 static/reports/
 backend/test_phase*.db
-To Fix/*.html
-To Fix/*_files/
-To Fix/_prompt_archive/
-
-To Fix/*.png
+# "To Fix" working material (Save Page As HTML dumps of the site, long
+# screenshots, prompt archives) — not product source, kept locally only.
+To Fix/
 temp-stitch/
+
+# Cross-agent staging output (hy3): content already merged into
+# frontend/src/content, plus stale duplicate components — kept locally only.
+docs/hy3-output/
 backend/1
