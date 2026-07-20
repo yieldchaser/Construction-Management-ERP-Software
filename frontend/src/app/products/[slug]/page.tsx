@@ -52,6 +52,16 @@ export default async function ProductFeaturePage({ params }: RouteParams) {
     );
   }
 
+  // Legacy body-blob rendering below only applies to products that never got
+  // a `structured` template. All 20 shipped products have `structured` now,
+  // and their `body` fields were intentionally emptied (the structured
+  // template supersedes the scraped competitor HTML) — do not restore them.
+  // If a product somehow has neither, bail out instead of rendering an
+  // empty article shell.
+  if (!article.body) {
+    notFound();
+  }
+
   return (
     <MarketingShell>
       <ReadingProgress />

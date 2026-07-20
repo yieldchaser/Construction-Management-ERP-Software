@@ -108,7 +108,7 @@ export async function searchContentItems(query: string, type?: string): Promise<
   return allItems.filter(
     (item) =>
       item.title.toLowerCase().includes(lowQuery) ||
-      item.body.toLowerCase().includes(lowQuery) ||
+      (item.body || "").toLowerCase().includes(lowQuery) ||
       (item.metaDescription && item.metaDescription.toLowerCase().includes(lowQuery))
   );
 }
