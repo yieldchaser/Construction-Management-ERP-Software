@@ -7,6 +7,7 @@ import MockupFrame from "@/components/marketing/MockupFrame";
 import Icon from "@/components/marketing/Icon";
 import TypewriterText from "@/components/marketing/TypewriterText";
 import CountUp from "@/components/marketing/CountUp";
+import Aurora from "@/components/marketing/Aurora";
 
 export default function LandingPage() {
   useEffect(() => {
@@ -33,11 +34,13 @@ export default function LandingPage() {
     <MarketingShell>
       {/* 1. Symmetrical Hero */}
       <section className="relative pt-20 pb-32 px-6 overflow-hidden alx-scroll-fade is-visible">
-        <div className="absolute inset-0 z-0 pointer-events-none">
-          <div className="absolute inset-0 alx-hero-wash" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,_var(--tw-gradient-stops))] from-alx-tertiary-fixed/15 via-transparent to-transparent" />
-        </div>
-        <div className="alx-grain absolute inset-0 z-0" aria-hidden="true" />
+        {/* Living Drifting Aurora */}
+        <Aurora variant="hero" className="absolute inset-0 z-0" />
+        {/* Custom layered baby blue pulsing glow backplates */}
+        <div className="absolute top-[-10%] left-[-10%] h-[50%] w-[50%] rounded-full bg-sky-200/40 blur-[120px] mix-blend-multiply pointer-events-none z-0 animate-pulse" style={{ animationDuration: "8s" }} />
+        <div className="absolute bottom-[10%] right-[-10%] h-[40%] w-[40%] rounded-full bg-sky-100/30 blur-[130px] mix-blend-multiply pointer-events-none z-0" />
+        <div className="alx-grain absolute inset-0 z-0 pointer-events-none" aria-hidden="true" />
+        
         <div className="max-w-5xl mx-auto text-center relative z-10">
           <h1 className="font-headline text-5xl md:text-7xl font-extrabold text-alx-on-surface leading-[1.18] tracking-tight mb-8">
             Run every project from <br />
@@ -63,13 +66,16 @@ export default function LandingPage() {
             </Link>
             <Link
               href="/products"
-              className="bg-alx-surface-container-high text-alx-primary px-8 py-4 rounded-full font-uilabel text-base font-bold tracking-wide hover:bg-alx-surface-dim transition-all active:scale-95 w-full sm:w-auto flex items-center justify-center gap-2"
+              className="bg-sky-500/10 text-sky-700 hover:bg-sky-500/20 border border-sky-200/50 px-8 py-4 rounded-full font-uilabel text-base font-bold tracking-wide transition-all active:scale-95 w-full sm:w-auto flex items-center justify-center gap-2"
             >
               Explore 16 Modules
               <Icon name="arrow_forward" className="w-4 h-4" />
             </Link>
           </div>
-          <div className="relative max-w-6xl mx-auto transform hover:-translate-y-2 transition-transform duration-700 ease-out alx-hover-lift">
+          
+          <div className="relative max-w-6xl mx-auto transform hover:-translate-y-2 transition-transform duration-700 ease-out alx-hover-lift group">
+            {/* Interactive glow underneath laptop mockup on hover */}
+            <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-sky-400 to-blue-500 opacity-20 blur-xl group-hover:opacity-40 transition-opacity duration-500 -z-10" />
             <div className="absolute inset-0 bg-alx-primary/5 blur-3xl rounded-[3rem] -z-10 transform scale-95 translate-y-8" />
             <div className="alx-float rounded-xl shadow-2xl shadow-alx-on-surface/10 [box-shadow:0_25px_60px_-15px_rgba(9,76,178,0.25),0_10px_20px_-8px_rgba(27,28,29,0.12)]">
               <MockupFrame variant="hero" />
@@ -78,9 +84,9 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 2. Value Metrics Bar */}
-      <section className="bg-gradient-to-r from-sky-50/40 via-white to-sky-50/40 py-16 border-y border-sky-100/50 alx-scroll-fade">
-        <div className="max-w-7xl mx-auto px-6">
+      {/* 2. Value Metrics Bar - Redesigned Floating Glass Deck */}
+      <section className="py-12 px-6 alx-scroll-fade">
+        <div className="max-w-7xl mx-auto bg-gradient-to-r from-white/80 via-sky-50/50 to-white/80 backdrop-blur-md rounded-3xl border border-sky-100/50 py-12 px-8 shadow-xl shadow-sky-900/5">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12 divide-x divide-sky-100/50">
             <div className="text-center px-4 group">
               <div className="font-headline text-4xl font-bold text-alx-primary mb-2 group-hover:scale-110 transition-transform">
@@ -123,11 +129,11 @@ export default function LandingPage() {
         {/* Section A: Planning & Execution Engine */}
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center alx-scroll-fade">
           <div className="order-2 lg:order-1 relative group alx-hover-lift">
-            <div className="absolute inset-0 bg-alx-primary-fixed/20 blur-3xl rounded-[3rem] -z-10 group-hover:bg-alx-primary-fixed/30 transition-colors duration-500" />
+            <div className="absolute inset-0 bg-sky-400/20 blur-3xl rounded-[3rem] -z-10 group-hover:bg-sky-400/30 transition-colors duration-500" />
             <MockupFrame variant="planning" />
           </div>
           <div className="order-1 lg:order-2 space-y-6">
-            <div className="inline-flex items-center justify-center p-3 bg-alx-primary-fixed rounded-xl mb-4 text-alx-primary">
+            <div className="inline-flex items-center justify-center p-3 bg-sky-100 rounded-xl mb-4 text-sky-700 border border-sky-200">
               <Icon name="edit_calendar" className="w-8 h-8" />
             </div>
             <h2 className="font-headline text-4xl font-bold text-alx-on-surface leading-tight">
@@ -139,16 +145,22 @@ export default function LandingPage() {
               and office ledgers are always synchronized perfectly.
             </p>
             <ul className="space-y-4 pt-4 font-body text-alx-on-surface">
-              <li className="flex items-start gap-3">
-                <Icon name="check_circle" className="w-6 h-6 text-alx-primary mt-1" />
+              <li className="flex items-center gap-3">
+                <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-sky-100 ring-1 ring-sky-200">
+                  <Icon name="check" className="w-3 h-3 text-sky-600" />
+                </span>
                 <span className="font-semibold text-alx-on-surface">Critical-path float tracking</span>
               </li>
-              <li className="flex items-start gap-3">
-                <Icon name="check_circle" className="w-6 h-6 text-alx-primary mt-1" />
+              <li className="flex items-center gap-3">
+                <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-sky-100 ring-1 ring-sky-200">
+                  <Icon name="check" className="w-3 h-3 text-sky-600" />
+                </span>
                 <span className="font-semibold text-alx-on-surface">Structural BOQ variance detection</span>
               </li>
-              <li className="flex items-start gap-3">
-                <Icon name="check_circle" className="w-6 h-6 text-alx-primary mt-1" />
+              <li className="flex items-center gap-3">
+                <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-sky-100 ring-1 ring-sky-200">
+                  <Icon name="check" className="w-3 h-3 text-sky-600" />
+                </span>
                 <span className="font-semibold text-alx-on-surface">WBS Level 4 scheduling</span>
               </li>
             </ul>
@@ -158,7 +170,7 @@ export default function LandingPage() {
         {/* Section B: Procurement & 3-Way Match */}
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center alx-scroll-fade">
           <div className="space-y-6">
-            <div className="inline-flex items-center justify-center p-3 bg-alx-secondary-container rounded-xl mb-4 text-alx-on-secondary-container">
+            <div className="inline-flex items-center justify-center p-3 bg-emerald-100 rounded-xl mb-4 text-emerald-700 border border-emerald-200">
               <Icon name="inventory_2" className="w-8 h-8" />
             </div>
             <h2 className="font-headline text-4xl font-bold text-alx-on-surface leading-tight">
@@ -170,22 +182,28 @@ export default function LandingPage() {
               scoring and automated reorder alerts.
             </p>
             <ul className="space-y-4 pt-4 font-body text-alx-on-surface">
-              <li className="flex items-start gap-3">
-                <Icon name="check_circle" className="w-6 h-6 text-alx-primary mt-1" />
+              <li className="flex items-center gap-3">
+                <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-sky-100 ring-1 ring-sky-200">
+                  <Icon name="check" className="w-3 h-3 text-sky-600" />
+                </span>
                 <span className="font-semibold text-alx-on-surface">Vendor compliance scoring</span>
               </li>
-              <li className="flex items-start gap-3">
-                <Icon name="check_circle" className="w-6 h-6 text-alx-primary mt-1" />
+              <li className="flex items-center gap-3">
+                <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-sky-100 ring-1 ring-sky-200">
+                  <Icon name="check" className="w-3 h-3 text-sky-600" />
+                </span>
                 <span className="font-semibold text-alx-on-surface">PO reconciliation auto-match</span>
               </li>
-              <li className="flex items-start gap-3">
-                <Icon name="check_circle" className="w-6 h-6 text-alx-primary mt-1" />
+              <li className="flex items-center gap-3">
+                <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-sky-100 ring-1 ring-sky-200">
+                  <Icon name="check" className="w-3 h-3 text-sky-600" />
+                </span>
                 <span className="font-semibold text-alx-on-surface">Material indent lead-time tracking</span>
               </li>
             </ul>
           </div>
           <div className="relative group alx-hover-lift">
-            <div className="absolute inset-0 bg-alx-primary-fixed/20 blur-3xl rounded-[3rem] -z-10 group-hover:bg-alx-primary-fixed/30 transition-colors duration-500" />
+            <div className="absolute inset-0 bg-emerald-400/20 blur-3xl rounded-[3rem] -z-10 group-hover:bg-emerald-400/30 transition-colors duration-500" />
             <div className="alx-float">
               <MockupFrame variant="procurement" />
             </div>
@@ -195,13 +213,13 @@ export default function LandingPage() {
         {/* Section C: Daily Progress Automation */}
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center alx-scroll-fade">
           <div className="order-2 lg:order-1 relative group alx-hover-lift">
-            <div className="absolute inset-0 bg-alx-primary-fixed/20 blur-3xl rounded-[3rem] -z-10 group-hover:bg-alx-primary-fixed/30 transition-colors duration-500" />
+            <div className="absolute inset-0 bg-violet-400/20 blur-3xl rounded-[3rem] -z-10 group-hover:bg-violet-400/30 transition-colors duration-500" />
             <div className="scale-95 alx-float-delayed">
               <MockupFrame variant="mobile" />
             </div>
           </div>
           <div className="order-1 lg:order-2 space-y-6">
-            <div className="inline-flex items-center justify-center p-3 bg-alx-tertiary-fixed rounded-xl mb-4 text-alx-on-tertiary-fixed">
+            <div className="inline-flex items-center justify-center p-3 bg-violet-100 rounded-xl mb-4 text-violet-700 border border-violet-200">
               <Icon name="mobile_friendly" className="w-8 h-8" />
             </div>
             <h2 className="font-headline text-4xl font-bold text-alx-on-surface leading-tight">
@@ -214,7 +232,7 @@ export default function LandingPage() {
             </p>
             <Link
               href="/products"
-              className="inline-flex items-center gap-2 text-alx-primary font-uilabel font-bold uppercase tracking-wide hover:underline underline-offset-4 pt-4 group"
+              className="inline-flex items-center gap-2 text-sky-600 font-uilabel font-bold uppercase tracking-wide hover:underline underline-offset-4 pt-4 group"
             >
               <span>Explore mobile features</span>
               <Icon
@@ -228,7 +246,7 @@ export default function LandingPage() {
         {/* Section D: Finance & Compliance Hub */}
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center alx-scroll-fade">
           <div className="space-y-6">
-            <div className="inline-flex items-center justify-center p-3 bg-alx-error-container rounded-xl mb-4 text-alx-on-error-container">
+            <div className="inline-flex items-center justify-center p-3 bg-amber-100 rounded-xl mb-4 text-amber-700 border border-amber-200">
               <Icon name="account_balance" className="w-8 h-8" />
             </div>
             <h2 className="font-headline text-4xl font-bold text-alx-on-surface leading-tight">
@@ -240,22 +258,28 @@ export default function LandingPage() {
               Tally and Zoho Books to keep your central ledger impeccable.
             </p>
             <ul className="space-y-4 pt-4 font-body text-alx-on-surface">
-              <li className="flex items-start gap-3">
-                <Icon name="check_circle" className="w-6 h-6 text-alx-primary mt-1" />
+              <li className="flex items-center gap-3">
+                <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-sky-100 ring-1 ring-sky-200">
+                  <Icon name="check" className="w-3 h-3 text-sky-600" />
+                </span>
                 <span className="font-semibold text-alx-on-surface">RA-Bill ledger integration</span>
               </li>
-              <li className="flex items-start gap-3">
-                <Icon name="check_circle" className="w-6 h-6 text-alx-primary mt-1" />
+              <li className="flex items-center gap-3">
+                <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-sky-100 ring-1 ring-sky-200">
+                  <Icon name="check" className="w-3 h-3 text-sky-600" />
+                </span>
                 <span className="font-semibold text-alx-on-surface">TDS and GST compliance engine</span>
               </li>
-              <li className="flex items-start gap-3">
-                <Icon name="check_circle" className="w-6 h-6 text-alx-primary mt-1" />
+              <li className="flex items-center gap-3">
+                <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-sky-100 ring-1 ring-sky-200">
+                  <Icon name="check" className="w-3 h-3 text-sky-600" />
+                </span>
                 <span className="font-semibold text-alx-on-surface">Project P&amp;L margin analysis</span>
               </li>
             </ul>
           </div>
           <div className="relative group alx-hover-lift">
-            <div className="absolute inset-0 bg-alx-primary-fixed/20 blur-3xl rounded-[3rem] -z-10 group-hover:bg-alx-primary-fixed/30 transition-colors duration-500" />
+            <div className="absolute inset-0 bg-amber-400/20 blur-3xl rounded-[3rem] -z-10 group-hover:bg-amber-400/30 transition-colors duration-500" />
             <div className="alx-float">
               <MockupFrame variant="finance" />
             </div>
@@ -303,11 +327,11 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 5. Conversion CTA */}
+      {/* 5. Conversion CTA - Redesigned Editorial Showcase */}
       <section className="py-32 px-6 bg-alx-surface-container-lowest alx-scroll-fade">
-        <div className="max-w-5xl mx-auto bg-gradient-to-br from-alx-primary-fixed via-alx-surface-container-lowest to-alx-surface-container rounded-[3rem] p-16 md:p-24 text-center relative overflow-hidden border border-alx-outline-variant/20 shadow-2xl shadow-alx-primary/5">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-alx-primary/10 via-transparent to-transparent opacity-50" />
-          <h2 className="font-headline text-4xl md:text-5xl font-extrabold text-alx-on-surface leading-tight mb-8 relative z-10">
+        <div className="max-w-5xl mx-auto bg-gradient-to-br from-sky-50 via-white to-sky-100 rounded-[3rem] p-16 md:p-24 text-center relative overflow-hidden border border-sky-100 shadow-2xl shadow-sky-900/5">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-sky-400/10 via-transparent to-transparent opacity-50" />
+          <h2 className="font-headline text-4xl md:text-5xl font-extrabold text-sky-950 leading-tight mb-8 relative z-10">
             See your entire site <br />
             in one workspace
           </h2>
@@ -321,7 +345,7 @@ export default function LandingPage() {
             </Link>
             <Link
               href="/contact"
-              className="bg-alx-surface-container-lowest text-alx-primary border border-alx-outline-variant/30 px-10 py-4 rounded-full font-uilabel text-base font-bold tracking-wide hover:bg-alx-surface-dim transition-all active:scale-95 w-full sm:w-auto"
+              className="bg-white text-sky-700 border border-sky-200 px-10 py-4 rounded-full font-uilabel text-base font-bold tracking-wide hover:bg-sky-50 transition-all active:scale-95 w-full sm:w-auto flex items-center justify-center"
             >
               Talk to Sales
             </Link>
