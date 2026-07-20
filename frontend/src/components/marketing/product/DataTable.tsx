@@ -25,8 +25,21 @@ function toneForStatus(status: string): MiniUITone {
  * "+" or "-" get a positive/negative tint so the sample data reads like a
  * real cost ledger, matching the stitch design's "Unified Control Ledger".
  */
+/** A column counts as numeric when every filled cell starts like a number:
+ *  "0 days", "+2 days", "-1 day", "₹1,45,000", "98%". Numeric columns are
+ *  right-aligned so digits line up and can be compared down the column. */
+function isNumericColumn(rows: string[][], colIdx: number): boolean {
+  const cells = rows.map((r) => (r[colIdx] ?? "").trim()).filter(Boolean);
+  if (cells.length === 0) return false;
+  return cells.every((c) => /^[+-]?\s*[₹$€]?\s*[\d.,]/.test(c));
+}
+
 export default function DataTable({ table }: { table: ProductDataTable }) {
   const statusColIdx = table.columns.findIndex((c) => c.trim().toLowerCase() === "status");
+  const numericCols = table.columns.map((_, idx) =>
+    idx === statusColIdx ? false : isNumericColumn(table.rows, idx)
+  );
+  const alignFor = (idx: number) => (numericCols[idx] ? "text-right" : "text-left");
 
   return (
     <div className="space-y-5">
@@ -41,13 +54,17 @@ export default function DataTable({ table }: { table: ProductDataTable }) {
         )}
       </div>
       <div className="w-full overflow-x-auto rounded-xl border border-alx-outline-variant/40 bg-alx-surface-container-lowest">
-        <table className="w-full text-left border-collapse min-w-[720px]">
+        {/* The first column absorbs the slack so the remaining columns hug
+            their content instead of floating in a third of the page each. */}
+        <table className="w-full border-collapse min-w-[720px]">
           <thead>
             <tr className="border-b border-alx-outline-variant/40">
               {table.columns.map((col, idx) => (
                 <th
                   key={idx}
-                  className="alx-label p-4 text-[11px] text-alx-on-surface-variant font-semibold whitespace-nowrap"
+                  className={`alx-label p-4 text-[11px] text-alx-on-surface-variant font-semibold whitespace-nowrap ${alignFor(
+                    idx
+                  )} ${idx === 0 ? "w-full" : ""}`}
                 >
                   {col}
                 </th>
@@ -75,7 +92,7 @@ export default function DataTable({ table }: { table: ProductDataTable }) {
                   return (
                     <td
                       key={cellIdx}
-                      className={`p-4 tabular-nums whitespace-nowrap ${
+                      className={`p-4 tabular-nums whitespace-nowrap ${alignFor(cellIdx)} ${
                         cellIdx === 0 ? "font-semibold text-alx-primary" : ""
                       } ${isVariance ? (isPositive ? "text-emerald-700" : "text-alx-on-error-container") : ""}`}
                     >
