@@ -79,9 +79,9 @@ export default function LandingPage() {
       </section>
 
       {/* 2. Value Metrics Bar */}
-      <section className="bg-alx-surface-container py-16 border-y border-alx-outline-variant/15 alx-scroll-fade">
+      <section className="bg-gradient-to-r from-sky-50/40 via-white to-sky-50/40 py-16 border-y border-sky-100/50 alx-scroll-fade">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12 divide-x divide-alx-outline-variant/20">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12 divide-x divide-sky-100/50">
             <div className="text-center px-4 group">
               <div className="font-headline text-4xl font-bold text-alx-primary mb-2 group-hover:scale-110 transition-transform">
                 <CountUp value="16" />
@@ -264,7 +264,7 @@ export default function LandingPage() {
       </section>
 
       {/* 4. Spreadsheet Chaos vs SiteFlow Matrix */}
-      <section className="bg-alx-surface-container py-24 alx-scroll-fade">
+      <section className="bg-gradient-to-b from-white via-sky-50/25 to-white py-24 alx-scroll-fade">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="font-headline text-4xl font-bold text-alx-on-surface">
@@ -273,28 +273,28 @@ export default function LandingPage() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Legacy Card */}
-            <div className="bg-alx-surface-container-lowest p-10 rounded-2xl border border-alx-outline-variant/30 flex flex-col items-center text-center opacity-80 hover:opacity-100 transition-opacity">
-              <div className="w-16 h-16 bg-alx-surface-dim rounded-full flex items-center justify-center mb-6">
-                <Icon name="table_chart" className="w-8 h-8 text-alx-on-surface-variant" />
+            <div className="bg-white p-10 rounded-2xl border border-sky-100/50 flex flex-col items-center text-center opacity-80 hover:opacity-100 transition-opacity shadow-sm shadow-sky-900/5">
+              <div className="w-16 h-16 bg-sky-50 rounded-full flex items-center justify-center mb-6">
+                <Icon name="table_chart" className="w-8 h-8 text-sky-600" />
               </div>
-              <h3 className="font-headline text-2xl font-bold text-alx-on-surface mb-4">
+              <h3 className="font-headline text-2xl font-bold text-sky-950 mb-4">
                 Manual Spreadsheet Delays
               </h3>
-              <p className="font-body text-alx-on-surface-variant leading-relaxed">
+              <p className="font-body text-sky-900/80 leading-relaxed">
                 Fragmented data across hundreds of files leads to reconciliation nightmares,
                 delayed payments, and hidden margin erosion. The old way costs time.
               </p>
             </div>
             {/* SiteFlow Card */}
-            <div className="bg-alx-primary-fixed/10 p-10 rounded-2xl border border-alx-primary/20 flex flex-col items-center text-center relative overflow-hidden group alx-hover-lift">
-              <div className="absolute inset-0 bg-gradient-to-br from-alx-primary/5 to-transparent pointer-events-none" />
-              <div className="w-16 h-16 bg-alx-primary rounded-full flex items-center justify-center mb-6 shadow-lg shadow-alx-primary/30 z-10 group-hover:scale-110 transition-transform">
-                <Icon name="domain_verification" className="w-8 h-8 text-alx-on-primary" />
+            <div className="bg-sky-500/10 p-10 rounded-2xl border border-sky-200/50 flex flex-col items-center text-center relative overflow-hidden group alx-hover-lift shadow-md shadow-sky-500/5">
+              <div className="absolute inset-0 bg-gradient-to-br from-sky-500/5 to-transparent pointer-events-none" />
+              <div className="w-16 h-16 bg-sky-600 rounded-full flex items-center justify-center mb-6 shadow-lg shadow-sky-600/30 z-10 group-hover:scale-110 transition-transform">
+                <Icon name="domain_verification" className="w-8 h-8 text-white" />
               </div>
-              <h3 className="font-headline text-2xl font-bold text-alx-primary mb-4 z-10">
+              <h3 className="font-headline text-2xl font-bold text-sky-950 mb-4 z-10">
                 Automated ERP Efficiency
               </h3>
-              <p className="font-body text-alx-on-surface-variant leading-relaxed z-10">
+              <p className="font-body text-sky-900/80 leading-relaxed z-10">
                 A singular, unified ledger where every field update instantly reflects in
                 financial projections. Precision engineering for your business operations.
               </p>
