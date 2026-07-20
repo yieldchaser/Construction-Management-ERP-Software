@@ -57,7 +57,7 @@ export default function CalcArticle({
     <>
       {/* Breadcrumb + Hero: title/subhead left, calculator console right */}
       <section className="relative px-6 pt-6 pb-16 overflow-hidden alx-scroll-fade is-visible">
-        <div className="absolute inset-0 z-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-alx-primary-fixed/25 via-transparent to-transparent pointer-events-none" />
+        <div className="absolute inset-0 z-0 alx-hero-wash pointer-events-none" />
         <div className="max-w-6xl mx-auto relative z-10 space-y-8">
           <Breadcrumb trail={trail} />
           {/* Intro header on top, full-width console below: gives the live

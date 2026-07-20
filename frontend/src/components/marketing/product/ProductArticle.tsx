@@ -28,7 +28,7 @@ export default function ProductArticle({
     <>
       {/* Breadcrumb + Hero */}
       <section className="relative px-6 pt-6 pb-16 overflow-hidden alx-scroll-fade is-visible">
-        <div className="absolute inset-0 z-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-alx-primary-fixed/30 via-transparent to-transparent pointer-events-none" />
+        <div className="absolute inset-0 z-0 alx-hero-wash pointer-events-none" />
         <div className="max-w-6xl mx-auto relative z-10">
           <div className="flex items-center gap-2 text-xs text-alx-on-surface-variant mb-8">
             <Link href="/" className="hover:text-alx-primary transition-all">
