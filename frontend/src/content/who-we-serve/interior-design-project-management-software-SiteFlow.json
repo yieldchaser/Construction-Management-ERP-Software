@@ -1,0 +1,172 @@
+{
+  "title": "Interior Design Project Management Software | SiteFlow",
+  "metaTitle": "Interior Design Project Management Software | SiteFlow",
+  "metaDescription": "SiteFlow is interior design project management software for fit-out firms. Track scope, vendor billing, client approvals, and project P&L in one platform.",
+  "canonical": "https://siteflow.com/who-we-serve/interior-design-project-management-software-SiteFlow/",
+  "slug": "interior-design-project-management-software-SiteFlow",
+  "category": "Who We Serve",
+  "type": "who-we-serve",
+  "author": "SiteFlow Editorial Team",
+  "publishDate": "2026-07-20T09:00:00+00:00",
+  "body": "<p>SiteFlow is interior design project management software that keeps design, procurement, budgets, and client approvals moving in one platform.</p>",
+  "structured": {
+    "hero": {
+      "eyebrow": "ERP for Interior & Fit-Out Firms",
+      "headline": "Interior Design Project Management Software",
+      "subhead": "Manage scope, vendor billing, client approvals, and project P&L across multiple interior projects, with the speed that fast-moving fit-out work demands.",
+      "checklist": [
+        "Scope changes logged and priced before they erode the margin",
+        "Vendor bills matched to delivery before they are paid",
+        "Client approvals tracked in one place, not across five chats"
+      ],
+      "heroImageSlot": null
+    },
+    "stats": [
+      {
+        "value": "Design to handover, one system",
+        "caption": "Quotations, scope, procurement, and billing in one place"
+      },
+      {
+        "value": "Approvals with a paper trail",
+        "caption": "Every client sign-off logged, not buried in a chat thread"
+      },
+      {
+        "value": "Margin visible mid-project",
+        "caption": "Budget vs actual by category, not only at project close"
+      }
+    ],
+    "intro": {
+      "heading": "Fit-Out Work Moves Fast. Untracked Scope Changes Move Faster.",
+      "body": "Interior work is not just bricks and cement, it is finishes, fixtures, and constant client change requests. Without a system that logs scope changes, matches vendor bills to delivery, and keeps approvals in one place, a healthy quote turns into a thin margin by handover."
+    },
+    "personas": [
+      {
+        "title": "Scope Creep Eroding Margins With No Change-Order Tracking",
+        "body": "Clients ask for one more finish change, one more fixture swap. Without a logged, priced change order for each request, the extra cost is absorbed silently and the margin shrinks with every approval."
+      },
+      {
+        "title": "Vendor Bills Paid Without Matching Delivery or Progress",
+        "body": "Furniture, fixtures, and fabric vendors invoice against a purchase order, but without checking what was actually delivered against what was ordered, short deliveries and price mismatches go through unnoticed."
+      },
+      {
+        "title": "Client Approval Cycles Scattered Across WhatsApp Threads",
+        "body": "Design sign-offs, finish selections, and change requests get approved in chat messages that are impossible to search later. When a dispute comes up, there is no single record of what the client actually agreed to."
+      },
+      {
+        "title": "Materials Ordered Without a Delivery Timeline Tied to the Schedule",
+        "body": "Furniture and fixtures get ordered on a call with no tracked delivery date. When the item arrives late, the carpentry team is already idle waiting for it, and the handover date slips."
+      },
+      {
+        "title": "Retention and Warranty Papers Go Missing at Handover",
+        "body": "By the time a project reaches handover, retention amounts and warranty documents are scattered across emails and physical files, making the final close-out slower than it needs to be."
+      }
+    ],
+    "features": [
+      {
+        "icon": "checklist",
+        "title": "Plan and Schedule Every Stage Clearly",
+        "body": "Design, procurement, execution, and handover are laid out as a single schedule. Tasks are assigned to the team and tracked as they are completed, not reported after the fact.",
+        "bullets": [
+          "Design, purchase, and execution stages tracked as one timeline",
+          "Task assignment and completion visible in real time"
+        ],
+        "mock": {
+          "type": "progressBars",
+          "title": "Project Stages",
+          "progressRows": [
+            { "label": "Design Finalization", "progress": 100 },
+            { "label": "Procurement", "progress": 72 },
+            { "label": "Site Execution", "progress": 48 }
+          ]
+        }
+      },
+      {
+        "icon": "resources",
+        "title": "Track Materials From Order to Site",
+        "body": "Furniture, fixtures, and fabrics are tracked from purchase request through delivery, so the team always knows what has been ordered, what has arrived, and what is still pending before the next task can start.",
+        "bullets": [
+          "Purchase requests and vendor delivery tracked in one view",
+          "Site execution never stalls waiting on an unclear order status"
+        ],
+        "mock": {
+          "type": "statusList",
+          "title": "Procurement Status",
+          "rows": [
+            { "label": "Modular Kitchen Units", "meta": "Vendor: Woodline Interiors", "status": "Delivered", "tone": "primary" },
+            { "label": "Living Room Fabric", "meta": "Awaiting dispatch", "status": "Pending", "tone": "gold" },
+            { "label": "Lighting Fixtures", "meta": "In transit", "status": "In Transit", "tone": "neutral" }
+          ]
+        }
+      },
+      {
+        "icon": "receiptLong",
+        "title": "Match Vendor Bills to Delivery Before Payment",
+        "body": "Vendor invoices are checked against what was actually delivered and installed, so a short delivery or a price mismatch is caught before the bill is approved, not after.",
+        "bullets": [
+          "Vendor bills verified against delivered quantity, not the PO alone",
+          "Every billable change order tracked against the client budget"
+        ],
+        "mock": {
+          "type": "ledgerRow",
+          "title": "Vendor Bill Verification",
+          "rows": [
+            { "label": "Woodline Interiors", "meta": "Invoice matches delivery", "status": "Approved", "tone": "primary" },
+            { "label": "LuxFab Textiles", "meta": "Quantity mismatch flagged", "status": "Hold", "tone": "error" },
+            { "label": "BrightLite Fixtures", "meta": "Awaiting site confirmation", "status": "Pending", "tone": "gold" }
+          ]
+        }
+      },
+      {
+        "icon": "checkCircle",
+        "title": "Keep Client Approvals in One Place",
+        "body": "Design changes, finish selections, and client sign-offs are logged in SiteFlow instead of scattered across chat threads and email, so everyone works from the same approved record.",
+        "bullets": [
+          "Every approval logged with date, item, and requester",
+          "Retention and warranty documents stored and searchable at handover"
+        ],
+        "mock": {
+          "type": "checklist",
+          "title": "Client Approvals - This Week",
+          "items": [
+            "Flooring finish selection approved and logged",
+            "Change order for extra wardrobe unit priced and confirmed",
+            "Final snag list shared and acknowledged by client"
+          ]
+        }
+      }
+    ],
+    "dataTable": {
+      "title": "Project Budget vs Actual by Category",
+      "subtitle": "Sample cost view for one interior fit-out project (illustrative figures).",
+      "columns": ["Category", "Budget", "Actual", "Status"],
+      "rows": [
+        ["Furniture & Fixtures", "Rs.18.4L", "Rs.19.1L", "Over - review"],
+        ["Vendor Billing", "Rs.9.2L", "Rs.8.6L", "Under"],
+        ["Site Labour", "Rs.6.5L", "Rs.6.3L", "Under"],
+        ["Change Orders", "Rs.2.1L", "Rs.3.4L", "Over - review"]
+      ]
+    },
+    "faqs": [
+      {
+        "q": "How does SiteFlow stop scope creep from eroding project margins?",
+        "a": "Every client change request is logged as a priced change order before it is actioned, so the cost of a finish swap or an added fixture is visible against the budget immediately instead of being absorbed silently."
+      },
+      {
+        "q": "Can SiteFlow help manage client approvals instead of WhatsApp threads?",
+        "a": "Yes. Design sign-offs, finish selections, and change requests are logged in one record with date and requester, so there is a single searchable trail instead of scattered chat messages."
+      },
+      {
+        "q": "Does SiteFlow check vendor bills against what was actually delivered?",
+        "a": "Yes. Vendor invoices are matched against delivered and installed quantities before approval, so short deliveries or price mismatches are caught before payment, not after."
+      },
+      {
+        "q": "Is SiteFlow practical for a small interior firm with just a few active projects?",
+        "a": "Yes. Interior firms typically start with quotations, scope tracking, vendor billing, and client invoicing, and expand into more modules as the number of active projects grows."
+      }
+    ],
+    "cta": {
+      "heading": "Ready to run every fit-out project on one platform?",
+      "body": "See how SiteFlow keeps scope, vendor billing, and client approvals connected from design to handover."
+    }
+  }
+}

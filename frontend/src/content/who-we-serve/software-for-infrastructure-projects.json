@@ -1,0 +1,173 @@
+{
+  "title": "ERP Software for Infrastructure Projects | SiteFlow",
+  "metaTitle": "ERP Software for Infrastructure Projects | SiteFlow",
+  "metaDescription": "SiteFlow is infrastructure ERP software connecting field teams and back offices in one platform. Monitor chainage-wise progress, track equipment, control costs, and keep projects on schedule.",
+  "canonical": "https://siteflow.com/who-we-serve/software-for-infrastructure-projects/",
+  "slug": "software-for-infrastructure-projects",
+  "category": "Who We Serve",
+  "type": "who-we-serve",
+  "author": "SiteFlow Editorial Team",
+  "publishDate": "2026-07-20T09:00:00+00:00",
+  "body": "<p>SiteFlow is infrastructure ERP software connecting field teams and back offices for chainage-wise progress, equipment tracking, and cost control.</p>",
+  "structured": {
+    "hero": {
+      "eyebrow": "ERP for Infrastructure Projects",
+      "headline": "Infrastructure ERP Software",
+      "subhead": "SiteFlow connects field teams and back offices in one infrastructure ERP platform. Monitor chainage-wise progress, track equipment, control costs, and keep projects on schedule from any device on site.",
+      "checklist": [
+        "Chainage-wise progress tracked across every package",
+        "Equipment utilization visible instead of sitting idle unnoticed",
+        "Vendor bills verified against measured work before payment"
+      ],
+      "heroImageSlot": null
+    },
+    "stats": [
+      {
+        "value": "Chainage-wise visibility",
+        "caption": "Progress tracked by kilometre stretch, not one project-level number"
+      },
+      {
+        "value": "Equipment tracked, not guessed",
+        "caption": "Utilization visible across every site and camp"
+      },
+      {
+        "value": "Finance connected to site data",
+        "caption": "Tally and Zoho Books sync without double entry"
+      }
+    ],
+    "intro": {
+      "heading": "Why Infrastructure Projects Go Over Budget",
+      "body": "Every infrastructure contractor faces the same problems, fake attendance, material wastage, delayed daily reports, subcontractor overbilling, and a project cost that is only visible after every bill is in. Most teams accept these as normal. They are not."
+    },
+    "personas": [
+      {
+        "title": "Fake Attendance Across Chainages and Camps",
+        "body": "Supervisors mark registers manually across multiple chainages and camps. Workers who were never on site get counted, payroll calculations come out wrong every month, and disputes follow."
+      },
+      {
+        "title": "Material Wastage With No Delivery Verification",
+        "body": "Materials are ordered over a phone call and no one checks the delivery against the purchase order. Over-ordering and losses are discovered only after handover, when nothing can be recovered."
+      },
+      {
+        "title": "Delayed Daily Progress Reports",
+        "body": "Site engineers send DPR updates over WhatsApp days after the work happens. By the time the office learns about a delay or a cost issue, the damage is already done."
+      },
+      {
+        "title": "Subcontractor Overbilling Across Work Packages",
+        "body": "Subcontractors bill for more work than was actually executed. Without measured quantities linked to bills, there is no way to catch it before the payment goes out."
+      },
+      {
+        "title": "No Live Project P&L Across Chainages",
+        "body": "Project cost is visible only after every bill is in, usually after handover. An overrun that builds up over six months shows up as one number at the end, with no point in the timeline where action was possible."
+      }
+    ],
+    "features": [
+      {
+        "icon": "gantt",
+        "title": "End-to-End Project Planning and Scheduling",
+        "body": "Manage every stage from DPR creation and BOQ management through to chainage-wise scheduling and task dependencies. Site engineers get their tasks on the app, the office sees what is moving and what is not without calling anyone.",
+        "bullets": [
+          "Chainage-wise activity scheduling across the full alignment",
+          "DPR creation and submission from mobile, the same day"
+        ],
+        "mock": {
+          "type": "progressBars",
+          "title": "Chainage Progress - NH-48 Package",
+          "progressRows": [
+            { "label": "Km 0+000 - 4+200", "progress": 92 },
+            { "label": "Km 4+200 - 8+800", "progress": 74 },
+            { "label": "Km 8+800 - 11+500", "progress": 45 }
+          ]
+        }
+      },
+      {
+        "icon": "receiptLong",
+        "title": "Integrated Financial and Contract Management",
+        "body": "Multi-crore infra budgets are hard to track when data lives across spreadsheets and accounting software separately. SiteFlow pulls it together, budget vs actual, vendor bill verification, and milestone-based payments visible in one place, updated as work happens on site.",
+        "bullets": [
+          "Budget vs actual tracked at chainage and package level",
+          "Vendor bills verified against measured work before payment",
+          "Tally and Zoho Books sync without double entry"
+        ],
+        "mock": {
+          "type": "ledgerRow",
+          "title": "Vendor Bill Verification",
+          "rows": [
+            { "label": "Earthwork Package - Contractor A", "meta": "Claimed vs measured checked", "status": "Verified", "tone": "primary" },
+            { "label": "GSB Layer - Contractor B", "meta": "Work order #12", "status": "Pending", "tone": "gold" }
+          ]
+        }
+      },
+      {
+        "icon": "resources",
+        "title": "Centralized Resource and Material Control",
+        "body": "Track material procurement, deliveries, and stock levels across every site and camp in one place. When a delivery arrives short or a batch gets diverted, SiteFlow flags it the same day, not at handover.",
+        "bullets": [
+          "Delivery matched to purchase order before acceptance",
+          "Equipment utilization tracked per chainage, not left idle unnoticed"
+        ],
+        "mock": {
+          "type": "statusList",
+          "title": "Material vs Purchase Order",
+          "rows": [
+            { "label": "TMT Bars 12mm", "meta": "In stock, matched", "status": "Matched", "tone": "primary" },
+            { "label": "Cement Bags", "meta": "Short vs PO", "status": "Flagged", "tone": "gold" },
+            { "label": "River Sand", "meta": "Loads received", "status": "Verified", "tone": "primary" }
+          ]
+        }
+      },
+      {
+        "icon": "checklist",
+        "title": "GPS Attendance, Payroll, and Field Connectivity",
+        "body": "Infrastructure sites spread across multiple chainages make manual attendance genuinely difficult to get right. GPS punch-in and face recognition fix this. Wages calculate automatically from verified data, and site engineers submit daily reports from their phones, not from memory two days later.",
+        "bullets": [
+          "GPS and face recognition attendance across all sites",
+          "Payroll auto-calculated from verified punch-in data",
+          "Web and mobile access for office and field teams"
+        ],
+        "mock": {
+          "type": "checklist",
+          "title": "Field Connectivity",
+          "items": [
+            "GPS check-in verified at every chainage camp",
+            "Daily progress report submitted from site, same day",
+            "Wages calculated automatically from verified attendance"
+          ]
+        }
+      }
+    ],
+    "dataTable": {
+      "title": "Chainage-Wise Progress and Cost Snapshot",
+      "subtitle": "Sample dashboard view for one road package (illustrative figures).",
+      "columns": ["Chainage", "Progress", "Status", "Budget vs Actual"],
+      "rows": [
+        ["Km 0+000 - 4+200", "92%", "On track", "On budget"],
+        ["Km 4+200 - 8+800", "74%", "On track", "On budget"],
+        ["Km 8+800 - 11+500", "45%", "Delayed", "Over - review"],
+        ["Km 11+500 - 14+200", "18%", "Not started", "-"]
+      ]
+    },
+    "faqs": [
+      {
+        "q": "How does SiteFlow track progress across a long infrastructure alignment?",
+        "a": "Progress is tracked chainage by chainage rather than as a single project-level percentage, so the office can see exactly which stretch is on track, delayed, or not yet started."
+      },
+      {
+        "q": "Can SiteFlow catch subcontractor overbilling on large work packages?",
+        "a": "Yes. Every bill is checked against site-measured quantities before payment is approved, so a subcontractor claiming more than was executed is caught before the money goes out."
+      },
+      {
+        "q": "Does SiteFlow work with Tally or Zoho Books for infrastructure accounting?",
+        "a": "Yes. Purchase orders, vendor invoices, and payments sync both ways automatically, so finance stays on your existing accounting software while site execution runs on SiteFlow, with no double entry."
+      },
+      {
+        "q": "Can SiteFlow handle attendance across multiple chainages and camps?",
+        "a": "Yes. GPS and face-verified check-ins are captured at every chainage and camp, giving a consolidated, verified attendance and payroll record across the entire alignment."
+      }
+    ],
+    "cta": {
+      "heading": "Ready to run your infrastructure project on one platform?",
+      "body": "See how SiteFlow connects chainage-wise progress, equipment tracking, and cost control from field to back office."
+    }
+  }
+}

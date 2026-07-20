@@ -18,9 +18,15 @@ import CtaBand from "./CtaBand";
 export default function ProductArticle({
   structured,
   title,
+  breadcrumbLabel = "Products",
+  breadcrumbHref = "/products",
 }: {
   structured: StructuredProduct;
   title: string;
+  /** Breadcrumb ancestor label. Defaults to "Products" for the /products route. */
+  breadcrumbLabel?: string;
+  /** Breadcrumb ancestor href. Defaults to "/products" for the /products route. */
+  breadcrumbHref?: string;
 }) {
   const { hero, stats, intro, personas, features, dataTable, faqs, cta } = structured;
 
@@ -35,8 +41,8 @@ export default function ProductArticle({
               Home
             </Link>
             <span>/</span>
-            <Link href="/products" className="hover:text-alx-primary transition-all">
-              Products
+            <Link href={breadcrumbHref} className="hover:text-alx-primary transition-all">
+              {breadcrumbLabel}
             </Link>
             <span>/</span>
             <span className="text-alx-on-surface-variant truncate max-w-[300px]">{title}</span>

@@ -1,0 +1,170 @@
+{
+  "title": "Civil Contracting Software | SiteFlow for Smarter Project Delivery",
+  "metaTitle": "Civil Contracting Software | SiteFlow for Smarter Project Delivery",
+  "metaDescription": "Civil contracting workflow problems begin at three points: BOQ revisions, subcontractor reconciliation, and attendance verification. See how SiteFlow fixes each one.",
+  "canonical": "https://siteflow.com/who-we-serve/civil-contracting-software-why-contractors-are-choosing-SiteFlow-for-smarter-project-delivery/",
+  "slug": "civil-contracting-software-why-contractors-are-choosing-SiteFlow-for-smarter-project-delivery",
+  "category": "Who We Serve",
+  "type": "who-we-serve",
+  "author": "SiteFlow Editorial Team",
+  "publishDate": "2026-07-20T09:00:00+00:00",
+  "body": "<p>SiteFlow is civil contracting software that brings planning, budgets, resources, and documentation into one system so civil contractors can work faster, safer, and smarter.</p>",
+  "structured": {
+    "hero": {
+      "eyebrow": "ERP for Civil Contractors",
+      "headline": "Civil Contracting Software Built for Multi-Site Execution",
+      "subhead": "GPS attendance, material tracking, quality checklists, and real-time cost control, everything a civil contractor needs to run multi-site projects from a phone.",
+      "checklist": [
+        "Attendance verified by GPS and face recognition, not a paper register",
+        "Material issues tracked against the BOQ, not against memory",
+        "RA bills certified against measured work before payment"
+      ],
+      "heroImageSlot": null
+    },
+    "stats": [
+      {
+        "value": "One dashboard, every site",
+        "caption": "Progress, material, and attendance visible across all active sites"
+      },
+      {
+        "value": "Cost control at the source",
+        "caption": "Material issues and RA bills post directly against budget lines"
+      },
+      {
+        "value": "Documentation that holds up",
+        "caption": "DPRs and quality checklists timestamped and stored automatically"
+      }
+    ],
+    "intro": {
+      "heading": "Civil Contracting Workflow Problems Begin at Three Points",
+      "body": "BOQ revisions that never make it back into the budget. Subcontractor bills reconciled from memory. RA bill certification without a measured record to check against. Handled by hand, these three points are where civil contracting margins quietly disappear."
+    },
+    "personas": [
+      {
+        "title": "Attendance Tracked in Registers That Get Lost or Faked",
+        "body": "Manual registers are filled in by supervisors, sometimes from memory. Workers who left early or never showed up still get marked present, and payroll disputes follow every month."
+      },
+      {
+        "title": "Equipment Idle Time and Asset Losses Across Sites",
+        "body": "Without a live view of where equipment is deployed, machines sit idle on one site while another site rents the same category at cost. Losses and idle time are only noticed at month-end reconciliation."
+      },
+      {
+        "title": "Quality Issues Discovered Late, Causing Expensive Rework",
+        "body": "Quality checks that live in a supervisor's notebook do not get escalated until the defect is already built over. Rework at that stage costs far more than catching the issue during execution."
+      },
+      {
+        "title": "RA Bills Certified Without a Measured Record",
+        "body": "Running account bills get certified against a subcontractor's claim because there is no independent measurement to check it against. Overbilling passes through and is rarely recovered."
+      },
+      {
+        "title": "BOQ Revisions Never Reflected in the Working Budget",
+        "body": "Scope changes get agreed verbally on site and the BOQ is revised on paper, but the budget that finance is tracking against never gets updated, so cost control runs on stale numbers."
+      }
+    ],
+    "features": [
+      {
+        "icon": "checklist",
+        "title": "GPS and Face-Verified Attendance Across Every Site",
+        "body": "Workers check in from the SiteFlow mobile app with GPS location and face recognition confirming they are physically on site. Management sees live headcounts per site and per contractor as attendance is recorded.",
+        "bullets": [
+          "Geo-tagged, face-verified check-ins replace manual registers",
+          "Live headcount per site, contractor, and trade category"
+        ],
+        "mock": {
+          "type": "statusList",
+          "title": "Site Attendance - Today",
+          "rows": [
+            { "label": "Site 1 - Block A", "meta": "18 workers punched in", "status": "GPS Verified", "tone": "primary" },
+            { "label": "Site 2 - Road Package", "meta": "24 workers punched in", "status": "GPS Verified", "tone": "primary" },
+            { "label": "Site 3 - Bridge Works", "meta": "2 absent, flagged", "status": "Review", "tone": "gold" }
+          ]
+        }
+      },
+      {
+        "icon": "resources",
+        "title": "Track Material Against the BOQ, Not Against Memory",
+        "body": "Every material issue is recorded against the BOQ line it belongs to, so procurement, wastage, and consumption are visible in real time instead of surfacing as one number at project close.",
+        "bullets": [
+          "Material issues linked to BOQ lines and site activities",
+          "Over-ordering and wastage visible while it can still be corrected"
+        ],
+        "mock": {
+          "type": "ledgerRow",
+          "title": "Material vs BOQ - Site 1",
+          "rows": [
+            { "label": "TMT Bars 12mm", "meta": "Matched to PO", "status": "Verified", "tone": "primary" },
+            { "label": "Cement Bags", "meta": "40 bags short vs PO", "status": "Flagged", "tone": "gold" },
+            { "label": "River Sand", "meta": "18 loads received", "status": "Verified", "tone": "primary" }
+          ]
+        }
+      },
+      {
+        "icon": "gantt",
+        "title": "Daily Progress Reports Without the WhatsApp Chase",
+        "body": "Site engineers submit DPRs from the mobile app the same day work happens, with photos and quantities attached. The office sees delays and cost issues as they happen, not days later.",
+        "bullets": [
+          "DPR submission from site, timestamped and photo-backed",
+          "Delay and quality flags visible to the office same-day"
+        ],
+        "mock": {
+          "type": "checklist",
+          "title": "DPR Status - Today",
+          "items": [
+            "Earthwork DPR submitted with progress photos",
+            "RCC pour logged against planned quantity",
+            "Quality checklist completed before next stage sign-off"
+          ]
+        }
+      },
+      {
+        "icon": "receiptLong",
+        "title": "Certify RA Bills Against Measured Work",
+        "body": "Running account bills are checked against site-measured quantities before certification, so a subcontractor's claim and the actual completed work are reconciled before any payment moves.",
+        "bullets": [
+          "RA bill certification tied to measured, not claimed, quantities",
+          "Retention tracked automatically across billing cycles"
+        ],
+        "mock": {
+          "type": "progressBars",
+          "title": "RA Bill Certification - Site 2",
+          "progressRows": [
+            { "label": "Claimed by contractor", "progress": 100 },
+            { "label": "Measured and certified", "progress": 78 }
+          ]
+        }
+      }
+    ],
+    "dataTable": {
+      "title": "Multi-Site Cost and Progress Snapshot",
+      "subtitle": "Sample dashboard view across active sites (illustrative figures).",
+      "columns": ["Site", "Progress", "Budget vs Actual", "Attendance Today"],
+      "rows": [
+        ["Site 1 - Residential Block", "74%", "On budget", "18 verified"],
+        ["Site 2 - Road Package", "58%", "Over - review", "24 verified"],
+        ["Site 3 - Bridge Works", "32%", "On budget", "12 verified, 2 flagged"]
+      ]
+    },
+    "faqs": [
+      {
+        "q": "What is civil contracting software and how is SiteFlow different from a spreadsheet?",
+        "a": "Civil contracting software brings planning, budgets, resource tracking, and documentation into one system. Unlike a spreadsheet, SiteFlow updates automatically from real site records, GPS attendance, material issues, and RA bills post directly against the budget instead of being re-entered by hand."
+      },
+      {
+        "q": "How does SiteFlow keep BOQ revisions in sync with the working budget?",
+        "a": "Each budget line maps to a BOQ item. When a revision is approved, it updates the working budget directly, so the numbers finance is tracking against always reflect the current scope."
+      },
+      {
+        "q": "Can SiteFlow certify RA bills against actual measured work?",
+        "a": "Yes. Subcontractor claims are checked against site-measured quantities before an RA bill is certified, so overbilling is caught before payment rather than disputed after."
+      },
+      {
+        "q": "Does SiteFlow work across multiple civil sites at the same time?",
+        "a": "Yes. Contractors managing several sites see progress, material usage, attendance, and cost from one consolidated dashboard, with drill-down to any individual site."
+      }
+    ],
+    "cta": {
+      "heading": "Ready to run every civil site on one platform?",
+      "body": "See how SiteFlow verifies attendance, tracks material against the BOQ, and certifies RA bills against measured work."
+    }
+  }
+}

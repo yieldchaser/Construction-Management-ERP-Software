@@ -1,0 +1,172 @@
+{
+  "title": "ERP Software for Builders and Developers | SiteFlow",
+  "metaTitle": "ERP Software for Builders and Developers | SiteFlow",
+  "metaDescription": "SiteFlow is building project management software for builders and developers. Track tower-wise progress, control budgets before overruns happen, and keep clients updated from one platform.",
+  "canonical": "https://siteflow.com/who-we-serve/erp-software-for-builders-and-developers/",
+  "slug": "erp-software-for-builders-and-developers",
+  "category": "Who We Serve",
+  "type": "who-we-serve",
+  "author": "SiteFlow Editorial Team",
+  "publishDate": "2026-07-20T09:00:00+00:00",
+  "body": "<p>SiteFlow is building project management software for builders and developers, connecting budgets, site progress, client updates, and subcontractor billing in one platform.</p>",
+  "structured": {
+    "hero": {
+      "eyebrow": "ERP for Builders & Developers",
+      "headline": "Building Project Management Software",
+      "subhead": "Track progress across every tower, control budgets before overruns happen, and give clients real updates, all from one platform built for builders.",
+      "checklist": [
+        "Budgets tracked against actual spend, not set once and forgotten",
+        "Subcontractor bills matched to measured work before payment",
+        "Client-ready progress updates without a single phone call"
+      ],
+      "heroImageSlot": null
+    },
+    "stats": [
+      {
+        "value": "BOQ as the budget baseline",
+        "caption": "Every tower, block, and phase tracked against actuals"
+      },
+      {
+        "value": "Bills matched to measured work",
+        "caption": "Subcontractor payments verified before they go out"
+      },
+      {
+        "value": "Client updates, automated",
+        "caption": "Milestones and progress photos shared without a call"
+      }
+    ],
+    "intro": {
+      "heading": "The Same Five Problems Cost Builders Money on Every Project",
+      "body": "Budgets are prepared once and never updated. Subcontractors bill for more than they built. Clients call every day because they have no visibility. These are not isolated mistakes, they are what happens when a builder runs a multi-crore project on spreadsheets and WhatsApp."
+    },
+    "personas": [
+      {
+        "title": "Budget Overruns Found After Handover",
+        "body": "Budgets are prepared once and never updated. By the time an overrun surfaces, the project is already done and there is nothing left to fix, only money already lost."
+      },
+      {
+        "title": "Clients Calling for Updates Every Day",
+        "body": "Property buyers and investors have no visibility into what is happening on site. Every update requires a call, a photo search, and a manual summary, pulling the project manager away from actual work."
+      },
+      {
+        "title": "Subcontractor Billing Exceeds Actual Work",
+        "body": "Subcontractors bill for more work than was executed. Without quantities linked to bills, overbilling passes undetected, and disputes happen only after the payment has already gone out."
+      },
+      {
+        "title": "Labour Attendance Unverified Across Towers",
+        "body": "Supervisors mark registers by hand. Workers who were never on site still get counted, and payroll disputes follow every month, discovered only after wages are already paid."
+      },
+      {
+        "title": "No Live Cost View Across Phases and Towers",
+        "body": "Project cost is visible only after every bill is in, usually after handover. An overrun that builds up over six months shows up as one number at the end, with no point where action was possible."
+      }
+    ],
+    "features": [
+      {
+        "icon": "gantt",
+        "title": "Deliver Projects On Time and Within Budget",
+        "body": "Project scheduling, dependency tracking, and cost control give builders one live view of every tower. Set deadlines, monitor progress against plan, and catch budget overruns while there is still time to act.",
+        "bullets": [
+          "Task allocation and dependency tracking across towers and phases",
+          "Delay alerts before they compound into missed handover dates"
+        ],
+        "mock": {
+          "type": "progressBars",
+          "title": "Tower Progress",
+          "progressRows": [
+            { "label": "Tower A - G+12", "progress": 78 },
+            { "label": "Tower B - G+10", "progress": 62 },
+            { "label": "Clubhouse Block", "progress": 44 }
+          ]
+        }
+      },
+      {
+        "icon": "chart",
+        "title": "Give Clients Real Updates Without the Phone Calls",
+        "body": "Property buyers and investors see milestone progress, geo-tagged photos, and handover timelines without calling the site office. Every update that goes out is logged, so nothing gets promised twice.",
+        "bullets": [
+          "Milestone tracking visible to every authorized stakeholder",
+          "Progress photos shared automatically as work completes"
+        ],
+        "mock": {
+          "type": "statusList",
+          "title": "Project Milestones",
+          "rows": [
+            { "label": "Foundation Complete", "meta": "8 photos attached", "status": "Done", "tone": "primary" },
+            { "label": "Structure - G+9", "meta": "In progress", "progress": 78 },
+            { "label": "Electrical & Plumbing", "status": "Upcoming", "tone": "neutral" }
+          ]
+        }
+      },
+      {
+        "icon": "receiptLong",
+        "title": "Match Every Subcontractor Bill to Measured Work",
+        "body": "Work orders carry quantities and rates. Bills are raised against completed and measured work only, so a subcontractor claiming more than was built gets caught before payment goes out, not after.",
+        "bullets": [
+          "Multi-level approval before any bill is paid",
+          "Retention tracked automatically and released at milestones"
+        ],
+        "mock": {
+          "type": "ledgerRow",
+          "title": "Bill Verification",
+          "rows": [
+            { "label": "Claimed by contractor", "meta": "4,200 sq ft", "status": "Unverified", "tone": "error" },
+            { "label": "Measured on site", "meta": "3,140 sq ft", "status": "Verified", "tone": "primary" },
+            { "label": "Approved for payment", "meta": "Matched to measurement", "status": "Cleared", "tone": "gold" }
+          ]
+        }
+      },
+      {
+        "icon": "checklist",
+        "title": "Verify Labour Attendance Across Every Tower",
+        "body": "GPS and face-verified check-ins replace manual registers, so wages are calculated from attendance that actually happened on site, not from what a supervisor wrote down at the end of the day.",
+        "bullets": [
+          "Geo-tagged, face-verified check-ins on every site",
+          "Wages calculated automatically from verified attendance"
+        ],
+        "mock": {
+          "type": "checklist",
+          "title": "Attendance Verification",
+          "items": [
+            "GPS location captured at every check-in",
+            "Face recognition confirms on-site presence",
+            "Wages auto-calculated from verified records only"
+          ]
+        }
+      }
+    ],
+    "dataTable": {
+      "title": "Budget vs Actual Across Towers",
+      "subtitle": "Sample cost control view for one project (illustrative figures).",
+      "columns": ["Cost Category", "Budget", "Actual", "Status"],
+      "rows": [
+        ["Civil Work", "Rs.80L", "Rs.1.04Cr", "Over - review"],
+        ["Finishing", "Rs.42L", "Rs.48L", "Over - review"],
+        ["Labour", "Rs.36L", "Rs.34L", "Under"],
+        ["Subcontractor Bills", "Rs.28L", "Rs.24L", "Under"]
+      ]
+    },
+    "faqs": [
+      {
+        "q": "How does SiteFlow prevent budget overruns from surfacing only at handover?",
+        "a": "Budgets are built from the BOQ and mapped to cost categories. As procurement, site issues, and subcontractor bills are recorded, actuals post against the same lines automatically, so variance is visible by category throughout the project, not only at the end."
+      },
+      {
+        "q": "Can clients see project updates without calling the site team?",
+        "a": "Yes. Milestone completion, geo-tagged progress photos, and timeline updates are shared automatically as they happen, so investors and buyers get real visibility without pulling a project manager away from site work."
+      },
+      {
+        "q": "How does SiteFlow stop subcontractor overbilling?",
+        "a": "Every work order carries agreed quantities and rates. Bills are checked against measured, completed work before approval, and multi-level sign-off ensures no payment goes out without the right verification."
+      },
+      {
+        "q": "Does this work across multiple towers and phases at once?",
+        "a": "Yes. SiteFlow is built for multi-tower, multi-phase projects, with a consolidated view of budget, progress, attendance, and billing across every tower from one dashboard."
+      }
+    ],
+    "cta": {
+      "heading": "Ready to run every tower on one platform?",
+      "body": "See how SiteFlow keeps budgets, subcontractor billing, and client updates connected, from foundation to handover."
+    }
+  }
+}
