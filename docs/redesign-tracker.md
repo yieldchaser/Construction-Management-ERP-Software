@@ -127,6 +127,22 @@ could never align with Latest Briefing) -> unified; blog TOC card and its list w
 -> scrolling now only on the list so the label stays pinned, label given matching pl-3; "Back to all posts"
 moved from a dangling block under the article body into the end of the sidebar.
 
+LEGACY CHECK-LISTS ("weird ticks") — FIXED (commit d55f636). 3 blog bodies ship their own class names with
+NO stylesheet at all (zero `ouae2` rules existed). Two shipped variants, both now styled in globals.css
+scoped to `.help-article`: `.ouae2-chip-check` is a block <div> so the tick stacked ABOVE its label (now a
+flex row with a soft blue circular check badge), and `.oif-c2-chip` carries the tick inside the label text
+(now a pill). Affected files: 1-construction-management-software-in-uae,
+why-SiteFlow-is-1-construction-project-management-software-in-uae, software-for-infrastructure-projects.
+
+CONTENT JUNK: bare `/outer` and `/wrap` sit as text AFTER a closing tag (`</div></div> /outer`), so the
+first regex (which required a `<` immediately after) missed them. Zero junk remains across all blog files.
+
+TWO PROCESS LESSONS:
+1. A build failed and was never committed, so the founder re-checked a STALE deploy and saw "unfixed" bugs.
+   ALWAYS confirm the build passed AND the commit landed before asking them to look again.
+2. Turbopack emits CSS to `.next/static/chunks/*.css`, NOT `.next/static/css/`. Grepping the wrong path
+   made a shipped rule look missing. Verify built CSS at the chunks path.
+
 ## (historical) OPEN QUEUE from founder screenshots 7585-7589
 DONE already: 7589 TOC clipping -> list now max-h-[45vh] overflow-y-auto (commit 803efb6).
 1. **Top gap under the header (7585, 7586).** A bare strip sits between the fixed header's bottom edge and
