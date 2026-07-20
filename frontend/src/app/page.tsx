@@ -53,7 +53,7 @@ export default function LandingPage() {
             </Link>
           </div>
           
-          <div className="relative max-w-6xl mx-auto transform hover:-translate-y-2 transition-transform duration-700 ease-out alx-hover-lift group">
+          <div className="relative max-w-6xl mx-auto alx-hover-lift group">
             {/* Interactive glow underneath laptop mockup on hover */}
             <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-sky-400 to-blue-500 opacity-20 blur-xl group-hover:opacity-40 transition-opacity duration-500 -z-10" />
             <div className="absolute inset-0 bg-alx-primary/5 blur-3xl rounded-[3rem] -z-10 transform scale-95 translate-y-8" />

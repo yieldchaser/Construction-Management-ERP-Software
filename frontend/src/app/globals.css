@@ -60,8 +60,11 @@
 }
 
 html, body {
-  margin: 0;
-  padding: 0;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+header {
+  top: 0 !important;
 }
 body {
   background-color: var(--background);
@@ -3391,8 +3394,14 @@ body {
 }
 .alx-bg-gradient-primary { background: linear-gradient(135deg, #094cb2 0%, #3366cc 100%); }
 @keyframes alxfloat { 0%{transform:translateY(0)} 50%{transform:translateY(-12px)} 100%{transform:translateY(0)} }
-.alx-float { animation: alxfloat 6s ease-in-out infinite; }
-.alx-float-delayed { animation: alxfloat 6s ease-in-out 3s infinite; }
+.alx-float {
+  animation: alxfloat 6s ease-in-out infinite;
+  will-change: transform;
+}
+.alx-float-delayed {
+  animation: alxfloat 6s ease-in-out 3s infinite;
+  will-change: transform;
+}
 @keyframes alxshimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
 .alx-shimmer {
   background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0) 100%);
