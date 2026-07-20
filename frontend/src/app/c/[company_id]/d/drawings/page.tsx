@@ -6,6 +6,7 @@ import { useProject } from "@/context/ProjectContext";
 import { useParams } from "next/navigation";
 import { getApiHost } from "@/lib/api";
 import { authHeaders } from "@/lib/siteflow";
+import Icon, { type IconName } from "@/components/marketing/Icon";
 
 type PinCategory = "RFI" | "Clash" | "Observation" | "Approval";
 type RevStatus = "current" | "superseded" | "locked";
@@ -64,10 +65,10 @@ const PIN_META: Record<PinCategory, { bg: string; text: string; ring: string; la
   Approval:    { bg: "bg-emerald-500", text: "text-white",  ring: "ring-emerald-400/40", label: "Appr" },
 };
 
-const REV_META: Record<RevStatus, { label: string; badge: string; dot: string; icon: string }> = {
+const REV_META: Record<RevStatus, { label: string; badge: string; dot: string; icon?: string; iconName?: IconName }> = {
   current:    { label: "Current",    badge: "bg-emerald-500/10 border-emerald-500/30 text-emerald-400", dot: "bg-emerald-500", icon: "●" },
   superseded: { label: "Superseded", badge: "bg-zinc-700/30 border-zinc-600/20 text-muted",         dot: "bg-zinc-600",   icon: "◌" },
-  locked:     { label: "Locked",     badge: "bg-amber-500/10 border-amber-500/30 text-amber-400",       dot: "bg-amber-500",  icon: "🔒" },
+  locked:     { label: "Locked",     badge: "bg-amber-500/10 border-amber-500/30 text-amber-400",       dot: "bg-amber-500",  iconName: "lock" },
 };
 
 export default function DrawingsPage() {
@@ -447,7 +448,7 @@ export default function DrawingsPage() {
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${m.bg} ${m.text}`}>{pin.category} #{pin.seq}</span>
                           {pin.resolved && <span className="text-[9px] text-emerald-400 font-bold bg-emerald-500/10 px-1.5 py-0.5 rounded">✓ Resolved</span>}
-                          {pin.photoAttached && <span className="text-[9px] text-blue-400 bg-blue-500/10 px-1.5 py-0.5 rounded">📷 Photo</span>}
+                          {pin.photoAttached && <span className="text-[9px] text-blue-400 bg-blue-500/10 px-1.5 py-0.5 rounded inline-flex items-center gap-1"><Icon name="camera" className="w-3 h-3" /> Photo</span>}
                         </div>
                         <div className="flex items-center gap-2">
                           <button onClick={() => handleToggleResolved(pin.id)}
@@ -486,7 +487,9 @@ export default function DrawingsPage() {
                           <button onClick={() => { setActiveRevId(rev.id); setSelectedPinId(null); setImgLoaded(false); }} className="w-full text-left">
                             <div className="flex items-center justify-between mb-1">
                               <span className="text-xs font-extrabold text-foreground">{rev.version}</span>
-                              <span className={`text-[8px] px-1.5 py-0.5 rounded border font-bold ${m.badge}`}>{m.icon} {m.label}</span>
+                              <span className={`text-[8px] px-1.5 py-0.5 rounded border font-bold inline-flex items-center gap-1 ${m.badge}`}>
+                                {m.iconName ? <Icon name={m.iconName} className="w-2.5 h-2.5" /> : m.icon} {m.label}
+                              </span>
                             </div>
                             <div className="text-[10px] text-muted line-clamp-2">{rev.comments}</div>
                             <div className="text-[9px] text-muted mt-1">{rev.date} · {rev.uploadedBy}</div>
@@ -502,7 +505,11 @@ export default function DrawingsPage() {
                           {rev.status !== "current" && (
                             <button onClick={() => handleToggleLock(rev.id)}
                               className={`mt-2 w-full text-[9px] font-bold px-2 py-1 rounded border text-left transition-all ${rev.status === "locked" ? "bg-amber-500/10 border-amber-500/20 text-amber-400 hover:bg-amber-500/20" : "bg-zinc-700/20 border-zinc-600/20 text-muted hover:text-amber-400 hover:border-amber-500/30"}`}>
-                              {rev.status === "locked" ? "🔓 Unlock Revision" : "🔒 Lock Revision"}
+                              {rev.status === "locked" ? (
+                                <span className="inline-flex items-center gap-1"><Icon name="unlock" className="w-3 h-3" /> Unlock Revision</span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1"><Icon name="lock" className="w-3 h-3" /> Lock Revision</span>
+                              )}
                             </button>
                           )}
                         </div>
@@ -549,7 +556,7 @@ export default function DrawingsPage() {
                 <div className="text-xs font-bold text-muted uppercase tracking-wider mb-3">Site Photos Reel</div>
                 <div className="flex gap-3 overflow-x-auto pb-1">
                   <div className="shrink-0 h-32 w-40 border border-dashed border-border-custom rounded-md flex items-center justify-center cursor-pointer hover:bg-elevated transition-all">
-                    <span className="text-xs text-muted font-bold">📷 Snap Photo</span>
+                    <span className="text-xs text-muted font-bold inline-flex items-center gap-1"><Icon name="camera" className="w-4 h-4" /> Snap Photo</span>
                   </div>
                   {SITE_PHOTOS.map(p => (
                     <div key={p.id} className="shrink-0 relative h-32 w-44 rounded-md overflow-hidden border border-border-custom bg-black group">
@@ -566,7 +573,7 @@ export default function DrawingsPage() {
                   {FOLDERS.map(f => (
                     <div key={f.id} className="flex items-center justify-between p-4 bg-input border border-border-custom rounded-md hover:border-primary/20 cursor-pointer transition-all">
                       <div className="flex items-center gap-3">
-                        <span className="text-2xl">📁</span>
+                        <Icon name="folder" className="w-6 h-6 text-muted" />
                         <div>
                           <div className="text-xs font-semibold text-foreground">{f.name}</div>
                           <div className="text-[10px] text-muted">{f.count} files</div>

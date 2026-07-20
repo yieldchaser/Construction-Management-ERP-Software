@@ -5,6 +5,7 @@ import { authHeaders } from "@/lib/siteflow";
 import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { useProject } from "@/context/ProjectContext";
+import Icon, { type IconName } from "@/components/marketing/Icon";
 
 interface Equipment {
   id: string;
@@ -336,14 +337,14 @@ export default function EquipmentTrackingPage() {
 
         {/* Tab Controls */}
         <div className="flex items-center gap-1 px-6 py-2 border-b border-border-custom bg-card shrink-0 overflow-x-auto">
-          {[
-            { key: "fleet", label: "🚜 Fleet Inventory" },
-            { key: "timeline", label: "⛽ Usage & Refuel Timeline" },
-            { key: "odologs", label: "📊 Odometer Run Logs" },
-            { key: "maintenance", label: "🔧 Maintenance Schedule" },
-          ].map((t) => (
-            <button key={t.key} onClick={() => { setActiveTab(t.key as any); }} className={`whitespace-nowrap px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${activeTab === t.key ? "bg-primary/10 text-primary" : "text-muted hover:text-foreground hover:bg-elevated"}`}>
-              {t.label}
+          {([
+            { key: "fleet", icon: "tractor", label: "Fleet Inventory" },
+            { key: "timeline", icon: "fuel_pump", label: "Usage & Refuel Timeline" },
+            { key: "odologs", icon: "bar_chart", label: "Odometer Run Logs" },
+            { key: "maintenance", icon: "wrench", label: "Maintenance Schedule" },
+          ] as { key: string; icon: IconName; label: string }[]).map((t) => (
+            <button key={t.key} onClick={() => { setActiveTab(t.key as any); }} className={`whitespace-nowrap px-3 py-1.5 rounded-md text-xs font-semibold transition-all inline-flex items-center gap-1.5 ${activeTab === t.key ? "bg-primary/10 text-primary" : "text-muted hover:text-foreground hover:bg-elevated"}`}>
+              <Icon name={t.icon} className="w-3.5 h-3.5" />{t.label}
             </button>
           ))}
         </div>
@@ -364,7 +365,7 @@ export default function EquipmentTrackingPage() {
                   {/* Overdue Maintenance Banner Alert */}
                   {maintenanceLogs.filter(m => m.completed_date === null && new Date(m.scheduled_date) < new Date()).length > 0 && (
                     <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-lg flex items-start gap-3 text-xs">
-                      <span className="text-lg">⚠️</span>
+                      <Icon name="warning" className="w-5 h-5 shrink-0" />
                       <div>
                         <strong className="font-extrabold block text-foreground">Overdue Maintenance Alert!</strong>
                         <p className="text-muted mt-0.5">The following machinery requires immediate servicing to prevent site safety incidents:</p>
@@ -393,8 +394,8 @@ export default function EquipmentTrackingPage() {
                               <span className="text-xs font-bold text-foreground line-clamp-1">{eq.name}</span>
                               <div className="flex gap-1 items-center">
                                 {isOverdue && (
-                                  <span className="text-[9px] font-bold px-2 py-0.5 rounded-full uppercase bg-red-500/15 border border-red-500/30 text-red-400">
-                                    ⚠️ SERVICING OVERDUE
+                                  <span className="text-[9px] font-bold px-2 py-0.5 rounded-full uppercase bg-red-500/15 border border-red-500/30 text-red-400 inline-flex items-center gap-1">
+                                    <Icon name="warning" className="w-3 h-3" />SERVICING OVERDUE
                                   </span>
                                 )}
                                 <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase border ${activeDep ? "bg-primary/10 text-primary border-primary/20" : "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"}`}>
@@ -415,14 +416,14 @@ export default function EquipmentTrackingPage() {
                             {activeDep ? (
                               <button
                                 onClick={() => { setActiveStoppingEq(eq); setStopMeterVal(""); setIsStopPhotoCaptured(false); }}
-                                className="text-[10px] bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 px-3 py-1.5 rounded-md transition-all font-bold"
+                                className="text-[10px] bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 px-3 py-1.5 rounded-md transition-all font-bold inline-flex items-center gap-1"
                               >
                                 ⏹ Stop Wizard
                               </button>
                             ) : (
                               <button
                                 onClick={() => { setActiveDeployingEq(eq); setStartMeterVal(""); setIsStartPhotoCaptured(false); }}
-                                className="text-[10px] bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 px-3 py-1.5 rounded-md transition-all font-bold"
+                                className="text-[10px] bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 px-3 py-1.5 rounded-md transition-all font-bold inline-flex items-center gap-1"
                               >
                                 ▶ Start Wizard
                               </button>
@@ -430,9 +431,9 @@ export default function EquipmentTrackingPage() {
 
                             <button
                               onClick={() => { setActiveFuelingEq(eq); setFuelLiters(""); setFuelRate(""); }}
-                              className="text-[10px] bg-elevated border border-border-custom text-zinc-300 hover:text-foreground px-2.5 py-1.5 rounded-md transition-all"
+                              className="text-[10px] bg-elevated border border-border-custom text-zinc-300 hover:text-foreground px-2.5 py-1.5 rounded-md transition-all inline-flex items-center gap-1"
                             >
-                              ⛽ Refuel
+                              <Icon name="fuel_pump" className="w-3 h-3" />Refuel
                             </button>
                           </div>
                         </div>
@@ -683,7 +684,7 @@ export default function EquipmentTrackingPage() {
                     onClick={() => setIsStartPhotoCaptured(true)}
                     className="flex items-center gap-2 px-3 py-1.5 bg-elevated border border-border-custom rounded-lg text-muted hover:text-foreground"
                   >
-                    📷 Take Photo
+                    <Icon name="camera" className="w-4 h-4" />Take Photo
                   </button>
                   {isStartPhotoCaptured && <span className="text-emerald-400 font-bold">✓ Captured (GPS Locked)</span>}
                 </div>
@@ -727,7 +728,7 @@ export default function EquipmentTrackingPage() {
                     onClick={() => setIsStopPhotoCaptured(true)}
                     className="flex items-center gap-2 px-3 py-1.5 bg-elevated border border-border-custom rounded-lg text-muted hover:text-foreground"
                   >
-                    📷 Take Photo
+                    <Icon name="camera" className="w-4 h-4" />Take Photo
                   </button>
                   {isStopPhotoCaptured && <span className="text-emerald-400 font-bold">✓ Captured (GPS verification active)</span>}
                 </div>

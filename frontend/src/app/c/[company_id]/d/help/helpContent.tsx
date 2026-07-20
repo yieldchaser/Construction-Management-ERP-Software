@@ -1,5 +1,6 @@
 import React from "react";
 import Link from "next/link";
+import { type IconName } from "@/components/marketing/Icon";
 
 export interface FaqItem {
   q: string;
@@ -11,7 +12,7 @@ export interface FaqItem {
 export interface FaqCategory {
   id: string;
   title: string;
-  icon: string;
+  icon: IconName;
   items: FaqItem[];
 }
 
@@ -24,7 +25,7 @@ export const HELP_CATEGORIES: (companyId: string) => FaqCategory[] = (
   {
     id: "getting-started",
     title: "Getting Started",
-    icon: "🚀",
+    icon: "rocket",
     items: [
       {
         q: "How do I create a company?",
@@ -112,7 +113,7 @@ export const HELP_CATEGORIES: (companyId: string) => FaqCategory[] = (
   {
     id: "projects",
     title: "Projects",
-    icon: "🏗️",
+    icon: "site",
     items: [
       {
         q: "How do I import a BOQ?",
@@ -220,7 +221,7 @@ export const HELP_CATEGORIES: (companyId: string) => FaqCategory[] = (
   {
     id: "procurement",
     title: "Procurement & Inventory",
-    icon: "📦",
+    icon: "package",
     items: [
       {
         q: "How does indent to PO to GRN to three-way match work?",
@@ -310,7 +311,7 @@ export const HELP_CATEGORIES: (companyId: string) => FaqCategory[] = (
   {
     id: "billing-finance",
     title: "Billing & Finance",
-    icon: "📈",
+    icon: "trending_up",
     items: [
       {
         q: "How do I record a vendor bill?",
@@ -440,7 +441,7 @@ export const HELP_CATEGORIES: (companyId: string) => FaqCategory[] = (
   {
     id: "hr-payroll",
     title: "HR & Payroll",
-    icon: "📅",
+    icon: "calendar",
     items: [
       {
         q: "How do I add employees?",
@@ -548,7 +549,7 @@ export const HELP_CATEGORIES: (companyId: string) => FaqCategory[] = (
   {
     id: "subcontractors",
     title: "Subcontractors",
-    icon: "👷",
+    icon: "worker",
     items: [
       {
         q: "How do I register a subcontractor?",
@@ -616,7 +617,7 @@ export const HELP_CATEGORIES: (companyId: string) => FaqCategory[] = (
   {
     id: "integrations",
     title: "Integrations",
-    icon: "🔌",
+    icon: "plug",
     items: [
       {
         q: "How do I connect Tally?",
@@ -693,7 +694,7 @@ export const HELP_CATEGORIES: (companyId: string) => FaqCategory[] = (
   {
     id: "operations",
     title: "Quality, Safety, Equipment & Production",
-    icon: "🛠️",
+    icon: "hammer_wrench",
     items: [
       {
         q: "How do I log quality checks?",

@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from "react";
 import { useParams } from "next/navigation";
 import { HELP_CATEGORIES, FaqCategory } from "./helpContent";
+import Icon from "@/components/marketing/Icon";
 
 export default function HelpPage() {
   const params = useParams();
@@ -91,7 +92,7 @@ export default function HelpPage() {
 
         {filtered.length === 0 ? (
           <div className="text-center py-12 border border-dashed border-border-custom rounded-xl bg-card">
-            <span className="text-2xl">🔍</span>
+            <Icon name="search" className="w-8 h-8 mx-auto text-muted" />
             <h3 className="text-sm font-bold text-foreground mt-2">
               No matching answers
             </h3>
@@ -121,7 +122,7 @@ export default function HelpPage() {
                   className="w-full flex items-center justify-between gap-3 px-5 py-4 text-left hover:bg-elevated/40 transition-all cursor-pointer"
                 >
                   <span className="flex items-center gap-3">
-                    <span className="text-xl">{cat.icon}</span>
+                    <Icon name={cat.icon} className="w-5 h-5 text-primary" />
                     <span className="text-sm font-bold text-foreground">
                       {cat.title}
                     </span>

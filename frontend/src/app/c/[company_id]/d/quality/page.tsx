@@ -4,6 +4,7 @@ import { authHeaders } from "@/lib/siteflow";
 import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { useProject } from "@/context/ProjectContext";
+import Icon, { type IconName } from "@/components/marketing/Icon";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -491,14 +492,14 @@ export default function QualityPage() {
 
         <div className="flex items-center gap-1 px-6 py-2 border-b border-border-custom bg-card shrink-0 overflow-x-auto">
           {([
-            { key: "inspections", label: "🔍 Inspections" },
-            { key: "checklists", label: "📋 Checklists" },
-            { key: "ncr", label: "🚨 NCR Tracker" },
-            { key: "labtests", label: "🧪 Lab Tests" },
-          ] as const).map(({ key, label }) => (
+            { key: "inspections", icon: "search", label: "Inspections" },
+            { key: "checklists", icon: "clipboard", label: "Checklists" },
+            { key: "ncr", icon: "siren", label: "NCR Tracker" },
+            { key: "labtests", icon: "test_tube", label: "Lab Tests" },
+          ] as { key: "inspections" | "checklists" | "ncr" | "labtests"; icon: IconName; label: string }[]).map(({ key, icon, label }) => (
             <button key={key} onClick={() => setTab(key)}
-              className={`whitespace-nowrap px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${tab === key ? "bg-primary/10 text-primary" : "text-muted hover:text-foreground hover:bg-elevated"}`}>
-              {label}
+              className={`whitespace-nowrap px-3 py-1.5 rounded-md text-xs font-semibold transition-all inline-flex items-center gap-1.5 ${tab === key ? "bg-primary/10 text-primary" : "text-muted hover:text-foreground hover:bg-elevated"}`}>
+              <Icon name={icon} className="w-3.5 h-3.5" />{label}
             </button>
           ))}
         </div>

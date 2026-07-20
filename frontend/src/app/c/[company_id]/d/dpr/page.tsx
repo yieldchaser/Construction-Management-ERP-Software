@@ -5,6 +5,7 @@ import { authHeaders } from "@/lib/siteflow";
 import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { useProject } from "@/context/ProjectContext";
+import Icon, { type IconName } from "@/components/marketing/Icon";
 
 interface Task {
   id: string;
@@ -31,11 +32,11 @@ interface DPRLog {
   issues: string;
 }
 
-const PHOTO_SLOTS = [
-  { label: "Site Progress", emoji: "🏗️", color: "from-primary/20 to-primary/5" },
-  { label: "Material Delivery", emoji: "🚛", color: "from-secondary/20 to-secondary/5" },
-  { label: "Quality Check", emoji: "✅", color: "from-emerald-500/20 to-emerald-500/5" },
-  { label: "Safety Observation", emoji: "⚠️", color: "from-amber-500/20 to-amber-500/5" },
+const PHOTO_SLOTS: { label: string; icon: IconName; color: string }[] = [
+  { label: "Site Progress", icon: "site", color: "from-primary/20 to-primary/5" },
+  { label: "Material Delivery", icon: "truck", color: "from-secondary/20 to-secondary/5" },
+  { label: "Quality Check", icon: "check_circle", color: "from-emerald-500/20 to-emerald-500/5" },
+  { label: "Safety Observation", icon: "warning", color: "from-amber-500/20 to-amber-500/5" },
 ];
 
 export default function DPRPage() {
@@ -224,8 +225,8 @@ export default function DPRPage() {
                       {log.notes && <p className="text-muted mt-1">{log.notes}</p>}
                     </div>
                     {log.issues && (
-                      <div className="p-2 rounded bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px]">
-                        ⚠️ <strong>Issue Flagged:</strong> {log.issues}
+                      <div className="p-2 rounded bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] inline-flex items-center gap-1">
+                        <Icon name="warning" className="w-3 h-3 shrink-0" /> <strong>Issue Flagged:</strong> {log.issues}
                       </div>
                     )}
                   </div>
@@ -280,9 +281,9 @@ export default function DPRPage() {
                     <button
                       type="button"
                       onClick={() => setShowMBModal(true)}
-                      className="text-[10px] font-bold text-primary hover:underline cursor-pointer"
+                      className="text-[10px] font-bold text-primary hover:underline cursor-pointer inline-flex items-center gap-1"
                     >
-                      📐 Open M.B. Sheet
+                      <Icon name="ruler" className="w-3 h-3" /> Open M.B. Sheet
                     </button>
                   </div>
                   <input type="number" step="0.01" value={executedQty} onChange={(e) => setExecutedQty(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground" placeholder="e.g. 45" />
@@ -324,7 +325,7 @@ export default function DPRPage() {
                 <div className="grid grid-cols-4 gap-2 text-center text-[10px]">
                   {PHOTO_SLOTS.map((slot, i) => (
                     <div key={i} className={`p-2.5 rounded-md border border-border-custom bg-gradient-to-tr ${slot.color} flex flex-col items-center justify-center cursor-pointer hover:border-border-custom`}>
-                      <span className="text-lg">{slot.emoji}</span>
+                      <Icon name={slot.icon} className="w-5 h-5" />
                       <span className="mt-1 text-muted font-bold">{slot.label}</span>
                     </div>
                   ))}
@@ -348,7 +349,9 @@ export default function DPRPage() {
           <div className="bg-background border border-border-custom rounded-lg w-full max-w-3xl shadow-2xl overflow-hidden flex flex-col">
             <div className="px-6 py-4 border-b border-border-custom flex items-center justify-between">
               <div>
-                <h3 className="text-sm font-extrabold text-foreground">📐 Measurement Book (M.B.) Takeoff Sheet</h3>
+                <h3 className="text-sm font-extrabold text-foreground inline-flex items-center gap-2">
+                  <Icon name="ruler" className="w-5 h-5" /> Measurement Book (M.B.) Takeoff Sheet
+                </h3>
                 <p className="text-[10px] text-muted">Calculate quantities by structural dimensions (N × L × W × H)</p>
               </div>
               <button onClick={() => setShowMBModal(false)} className="text-muted hover:text-foreground">✕</button>

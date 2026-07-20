@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { getApiHost } from "@/lib/api";
 import { authHeaders } from "@/lib/siteflow";
+import Icon from "@/components/marketing/Icon";
 
 export default function DashboardPage() {
   const params = useParams();
@@ -511,7 +512,7 @@ export default function DashboardPage() {
               className="flex items-center justify-center h-8 w-8 rounded-lg bg-elevated border border-border-custom text-muted hover:text-foreground transition-all cursor-pointer"
               title="Toggle Theme"
             >
-              {isLightTheme ? "🌙" : "☀️"}
+              <Icon name={isLightTheme ? "moon" : "sun"} className="w-4 h-4" />
             </button>
 
             {/* Tally Connection status dot */}
@@ -1135,7 +1136,7 @@ export default function DashboardPage() {
                       <div className="space-y-1">
                         <label className="text-[9px] text-muted uppercase tracking-wider font-bold block">Txn Date</label>
                         <div className="flex items-center gap-2 bg-input border border-border-custom rounded-lg px-3 py-1.5 text-xs text-muted transition-all">
-                          <span>📅</span>
+                          <Icon name="calendar" className="w-3.5 h-3.5" />
                           <span>01 Jan 2026 to 31 Jul 2026</span>
                         </div>
                       </div>
@@ -1669,7 +1670,7 @@ export default function DashboardPage() {
           {activeTab === "scheduler" && (
             <div className="rounded-lg bg-card border border-border-custom rounded-lg p-6 space-y-6">
               <div className="flex justify-between items-center border-b border-border-custom pb-4">
-                <h3 className="font-bold text-sm uppercase tracking-wider text-foreground">✨ Interactive Gantt Timeline Scheduler</h3>
+                <h3 className="font-bold text-sm uppercase tracking-wider text-foreground inline-flex items-center gap-1.5"><Icon name="sparkles" className="w-4 h-4" /> Interactive Gantt Timeline Scheduler</h3>
                 <span className="text-xs text-muted">Module 1: Planning</span>
               </div>
 
@@ -1728,7 +1729,7 @@ export default function DashboardPage() {
           {activeTab === "finance" && (
             <div className="rounded-lg bg-card border border-border-custom rounded-lg p-6 space-y-6">
               <div className="flex justify-between items-center border-b border-border-custom pb-4">
-                <h3 className="font-bold text-sm uppercase tracking-wider text-foreground">📊 Waterfall Cashflow Chart</h3>
+                <h3 className="font-bold text-sm uppercase tracking-wider text-foreground inline-flex items-center gap-1.5"><Icon name="bar_chart" className="w-4 h-4" /> Waterfall Cashflow Chart</h3>
                 <span className="text-xs text-muted">Module 13: Project P&L</span>
               </div>
 
@@ -1797,7 +1798,7 @@ export default function DashboardPage() {
           {activeTab === "tally" && (
             <div className="rounded-lg bg-card border border-border-custom rounded-lg p-6 space-y-6">
               <div className="flex justify-between items-center border-b border-border-custom pb-4">
-                <h3 className="font-bold text-sm uppercase tracking-wider text-foreground">🔌 SiteFlow Tally Integration Control</h3>
+                <h3 className="font-bold text-sm uppercase tracking-wider text-foreground inline-flex items-center gap-1.5"><Icon name="plug" className="w-4 h-4" /> SiteFlow Tally Integration Control</h3>
                 <span className="text-xs text-muted">Module 16: Ledgers Synchronization</span>
               </div>
 
