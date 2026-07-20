@@ -44,7 +44,68 @@ export type IconName =
   | "dashboard"
   | "receipt"
   | "schedule"
-  | "lock";
+  | "lock"
+  // --- extended: console emoji purge prep (HY-4) ---
+  | "warning"
+  | "location_pin"
+  | "bolt"
+  | "camera"
+  | "money_bag"
+  | "siren"
+  | "flag_checkered"
+  | "toolbox_talk"
+  | "safety_vest"
+  | "banknote"
+  | "package"
+  | "worker"
+  | "inbox"
+  | "clipboard"
+  | "globe"
+  | "outbox"
+  | "ruler"
+  | "tractor"
+  | "fuel_pump"
+  | "arrow_up"
+  | "arrow_down"
+  | "sun"
+  | "moon"
+  | "site"
+  | "wrench"
+  | "refresh"
+  | "paperclip"
+  | "envelope"
+  | "trash"
+  | "unlock"
+  | "folder"
+  | "bank"
+  | "trolley"
+  | "thumbs_up"
+  | "tag"
+  | "money_wings"
+  | "test_tube"
+  | "person"
+  | "computer"
+  | "truck"
+  | "brick"
+  | "memo"
+  | "ledger"
+  | "pencil"
+  | "hammer_wrench"
+  | "printer"
+  | "minus"
+  | "link"
+  | "microphone"
+  | "speaker"
+  | "image"
+  | "shield"
+  | "hospital"
+  | "headphone"
+  | "megaphone"
+  | "sparkles"
+  | "credit_card"
+  | "store"
+  | "library"
+  | "eye";
 
 interface IconProps {
   name: IconName;
@@ -338,8 +399,9 @@ const ICON_PATHS: Record<IconName, React.ReactNode> = {
   // close/remove (replaces emoji)
   close_circle: (
     <>
-      <line x1="18" y1="6" x2="6" y2="18" />
-      <line x1="6" y1="6" x2="18" y2="18" />
+      <circle cx="12" cy="12" r="9" />
+      <line x1="15.5" y1="8.5" x2="8.5" y2="15.5" />
+      <line x1="8.5" y1="8.5" x2="15.5" y2="15.5" />
     </>
   ),
   // star rating (replaces emoji)
@@ -406,9 +468,512 @@ const ICON_PATHS: Record<IconName, React.ReactNode> = {
       <path d="M7 11V7a5 5 0 0 1 10 0v4" />
     </>
   ),
+
+  // --- extended: console emoji purge prep (HY-4) ---
+
+  // alerts/validation (replaces )
+  warning: (
+    <>
+      <path d="M12 2 1 21h22Z" />
+      <line x1="12" y1="9" x2="12" y2="14" />
+      <path d="M12 17.5h.01" />
+    </>
+  ),
+  // site geofence (replaces )
+  location_pin: (
+    <>
+      <path d="M12 21s7-6.1 7-11.5A7 7 0 0 0 5 9.5C5 14.9 12 21 12 21Z" />
+      <circle cx="12" cy="9.5" r="2.5" />
+    </>
+  ),
+  // quick action / high voltage (replaces )
+  bolt: (
+    <>
+      <polygon points="13 2 3 14 11 14 10 22 21 10 13 10 13 2" />
+    </>
+  ),
+  // photo capture (replaces )
+  camera: (
+    <>
+      <path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z" />
+      <circle cx="12" cy="13" r="3.5" />
+    </>
+  ),
+  // cash / cost total (replaces )
+  money_bag: (
+    <>
+      <path d="M9 5a3 3 0 0 1 6 0c0 1.5-1 2-1 2H10s-1-.5-1-2Z" />
+      <path d="M8.5 7c-3 3-4.5 6-4.5 9a6 6 0 0 0 12 0c0-3-1.5-6-4.5-9Z" />
+      <path d="M12 12v5" />
+    </>
+  ),
+  // incident alert (replaces )
+  siren: (
+    <>
+      <path d="M12 2v3" />
+      <path d="M5 21v-7a7 7 0 0 1 14 0v7Z" />
+      <line x1="3" y1="21" x2="21" y2="21" />
+      <line x1="12" y1="9" x2="12" y2="12" />
+    </>
+  ),
+  // milestone (replaces )
+  flag_checkered: (
+    <>
+      <path d="M5 21V4" />
+      <path d="M5 4h6l1 2h7l-2 4 2 4h-7l-1-2H5" />
+    </>
+  ),
+  // toolbox talk (replaces )
+  toolbox_talk: (
+    <>
+      <circle cx="12" cy="6" r="3" />
+      <path d="M6 21v-3a6 6 0 0 1 12 0v3" />
+      <path d="M9 12h6" />
+    </>
+  ),
+  // PPE / safety vest (replaces )
+  safety_vest: (
+    <>
+      <path d="M8 3 5 6v14h4v-8h6v8h4V6l-3-3-3 2-2-2Z" />
+      <line x1="10" y1="10" x2="10" y2="16" />
+      <line x1="14" y1="10" x2="14" y2="16" />
+    </>
+  ),
+  // payment / banknote (replaces )
+  banknote: (
+    <>
+      <rect x="2" y="6" width="20" height="12" rx="1" />
+      <circle cx="12" cy="12" r="3" />
+      <line x1="6" y1="9" x2="6" y2="9.01" />
+      <line x1="18" y1="15" x2="18" y2="15.01" />
+    </>
+  ),
+  // package/box (replaces )
+  package: (
+    <>
+      <path d="M21 8 12 3 3 8v8l9 5 9-5Z" />
+      <path d="m3 8 9 5 9-5" />
+      <path d="M12 13v8" />
+      <path d="m7 5.5 9 5" />
+    </>
+  ),
+  // construction worker / labour (replaces )
+  worker: (
+    <>
+      <circle cx="12" cy="6" r="3" />
+      <path d="M5 21v-4a7 7 0 0 1 14 0v4" />
+      <path d="M2 12h4" />
+      <path d="M18 12h4" />
+    </>
+  ),
+  // inbox / receive (replaces )
+  inbox: (
+    <>
+      <polyline points="4 12 9 12 11 15 13 15 15 12 20 12" />
+      <path d="M5.5 5h13l1.5 7v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-6Z" />
+    </>
+  ),
+  // clipboard / checklist (replaces )
+  clipboard: (
+    <>
+      <rect x="6" y="4" width="12" height="17" rx="1.5" />
+      <path d="M9 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1" />
+      <line x1="9" y1="11" x2="15" y2="11" />
+      <line x1="9" y1="15" x2="15" y2="15" />
+    </>
+  ),
+  // language / globe (replaces )
+  globe: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <line x1="3" y1="12" x2="21" y2="12" />
+      <path d="M12 3a15 15 0 0 1 0 18 15 15 0 0 1 0-18Z" />
+    </>
+  ),
+  // outbox / send (replaces )
+  outbox: (
+    <>
+      <polyline points="4 12 9 12 11 9 13 9 15 12 20 12" />
+      <path d="M5.5 19h13l1.5-7v-6a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v6Z" />
+    </>
+  ),
+  // drawings / triangular ruler (replaces )
+  ruler: (
+    <>
+      <path d="M3 21 21 3" />
+      <path d="M15 3h6v6" />
+      <path d="M8 16l2 2" />
+      <path d="M11 13l2 2" />
+      <path d="M14 10l2 2" />
+    </>
+  ),
+  // heavy equipment / tractor (replaces )
+  tractor: (
+    <>
+      <circle cx="7" cy="18" r="3" />
+      <circle cx="18" cy="18" r="2" />
+      <path d="M7 15V7h4l3 5h4v3" />
+      <path d="M11 15h5" />
+    </>
+  ),
+  // fuel pump (replaces )
+  fuel_pump: (
+    <>
+      <path d="M4 21V7a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v14" />
+      <line x1="3" y1="21" x2="13" y2="21" />
+      <path d="M12 10h2l3 3v5a1.5 1.5 0 0 0 3 0v-6l-3-3" />
+      <line x1="6" y1="6" x2="10" y2="6" />
+    </>
+  ),
+  // arrow up (replaces )
+  arrow_up: (
+    <>
+      <line x1="12" y1="19" x2="12" y2="5" />
+      <polyline points="5 12 12 5 19 12" />
+    </>
+  ),
+  // arrow down (replaces )
+  arrow_down: (
+    <>
+      <line x1="12" y1="5" x2="12" y2="19" />
+      <polyline points="19 12 12 19 5 12" />
+    </>
+  ),
+  // day shift / sun (replaces )
+  sun: (
+    <>
+      <circle cx="12" cy="12" r="4" />
+      <line x1="12" y1="2" x2="12" y2="4" />
+      <line x1="12" y1="20" x2="12" y2="22" />
+      <line x1="4.2" y1="4.2" x2="5.6" y2="5.6" />
+      <line x1="18.4" y1="18.4" x2="19.8" y2="19.8" />
+      <line x1="2" y1="12" x2="4" y2="12" />
+      <line x1="20" y1="12" x2="22" y2="12" />
+      <line x1="4.2" y1="19.8" x2="5.6" y2="18.4" />
+      <line x1="18.4" y1="5.6" x2="19.8" y2="4.2" />
+    </>
+  ),
+  // night shift / moon (replaces )
+  moon: (
+    <>
+      <path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z" />
+    </>
+  ),
+  // building construction / site (replaces )
+  site: (
+    <>
+      <path d="M3 21h18" />
+      <path d="M5 21V11l4-3v13" />
+      <path d="M13 21V7l6-3v17" />
+      <line x1="9" y1="14" x2="9" y2="14.01" />
+      <line x1="17" y1="11" x2="17" y2="11.01" />
+    </>
+  ),
+  // maintenance / wrench (replaces )
+  wrench: (
+    <>
+      <path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.83 2.83-2.83-.83-.83-2.83Z" />
+    </>
+  ),
+  // sync / refresh (replaces )
+  refresh: (
+    <>
+      <path d="M21 12a9 9 0 0 1-15.3 6.4L3 16" />
+      <path d="M3 12a9 9 0 0 1 15.3-6.4L21 8" />
+      <polyline points="3 21 3 16 8 16" />
+      <polyline points="21 3 21 8 16 8" />
+    </>
+  ),
+  // attachment / paperclip (replaces )
+  paperclip: (
+    <>
+      <path d="M20.5 12.2 12 20.7a4.5 4.5 0 0 1-6.4-6.4L14.1 5.8a3 3 0 0 1 4.2 4.2l-8.4 8.4a1.5 1.5 0 0 1-2.1-2.1l7.4-7.4" />
+    </>
+  ),
+  // mail / envelope (replaces )
+  envelope: (
+    <>
+      <rect x="2" y="4" width="20" height="16" rx="2" />
+      <polyline points="2 6 12 13 22 6" />
+    </>
+  ),
+  // delete / trash (replaces )
+  trash: (
+    <>
+      <polyline points="3 6 5 6 21 6" />
+      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+      <line x1="10" y1="11" x2="10" y2="17" />
+      <line x1="14" y1="11" x2="14" y2="17" />
+    </>
+  ),
+  // unlock (replaces )
+  unlock: (
+    <>
+      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+      <path d="M7 11V7a5 5 0 0 1 9.9-1" />
+    </>
+  ),
+  // folder (replaces )
+  folder: (
+    <>
+      <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" />
+    </>
+  ),
+  // bank (replaces )
+  bank: (
+    <>
+      <line x1="4" y1="21" x2="20" y2="21" />
+      <line x1="6" y1="10" x2="6" y2="18" />
+      <line x1="10" y1="10" x2="10" y2="18" />
+      <line x1="14" y1="10" x2="14" y2="18" />
+      <line x1="18" y1="10" x2="18" y2="18" />
+      <polygon points="12 3 21 8 3 8" />
+    </>
+  ),
+  // procurement / shopping trolley (replaces )
+  trolley: (
+    <>
+      <circle cx="9" cy="20" r="1.5" />
+      <circle cx="17" cy="20" r="1.5" />
+      <path d="M2 4h2l2.4 12.2a2 2 0 0 0 2 1.8h8.4a2 2 0 0 0 2-1.6L21 8H6" />
+    </>
+  ),
+  // approve / thumbs up (replaces )
+  thumbs_up: (
+    <>
+      <path d="M7 22V11" />
+      <path d="M7 11l3-8a2 2 0 0 1 2 2v5h6a2 2 0 0 1 2 2.3l-1.3 7A2 2 0 0 1 17 21H7Z" />
+    </>
+  ),
+  // tag/label (replaces )
+  tag: (
+    <>
+      <path d="M20.6 12.6 12.6 20.6a2 2 0 0 1-2.83 0l-6.4-6.4a2 2 0 0 1 0-2.83l8-8A2 2 0 0 1 12.8 3H19a2 2 0 0 1 2 2v6.2a2 2 0 0 1-.4 1.4Z" />
+      <line x1="15.5" y1="8.5" x2="15.51" y2="8.5" />
+    </>
+  ),
+  // expense / money with wings (replaces )
+  money_wings: (
+    <>
+      <circle cx="10" cy="12" r="6" />
+      <path d="M10 9.5v5" />
+      <path d="M8.2 10.5h3.6" />
+      <path d="M8.2 13.5h3.6" />
+      <path d="M17 6c1.5.5 2.5 2 2.5 2S18 9.5 16.5 9" />
+      <path d="M19 12c1.5.3 2.5 1.6 2.5 1.6S20 15 18.5 14.7" />
+    </>
+  ),
+  // quality lab / test tube (replaces )
+  test_tube: (
+    <>
+      <path d="M9 2v13.5a3 3 0 0 0 6 0V2" />
+      <line x1="7" y1="2" x2="17" y2="2" />
+      <path d="M9 12h6" />
+    </>
+  ),
+  // single user (replaces )
+  person: (
+    <>
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 21a8 8 0 0 1 16 0" />
+    </>
+  ),
+  // computer/desktop (replaces )
+  computer: (
+    <>
+      <rect x="3" y="4" width="18" height="12" rx="1" />
+      <line x1="8" y1="20" x2="16" y2="20" />
+      <line x1="12" y1="16" x2="12" y2="20" />
+    </>
+  ),
+  // delivery / truck (replaces )
+  truck: (
+    <>
+      <rect x="1" y="7" width="13" height="10" rx="1" />
+      <path d="M14 10h4l3 3v4h-7" />
+      <circle cx="6" cy="19" r="1.5" />
+      <circle cx="16.5" cy="19" r="1.5" />
+    </>
+  ),
+  // material / brick (replaces )
+  brick: (
+    <>
+      <rect x="2" y="8" width="9" height="7" rx="0.5" />
+      <rect x="13" y="8" width="9" height="7" rx="0.5" />
+      <line x1="6.5" y1="8" x2="6.5" y2="15" />
+      <line x1="17.5" y1="8" x2="17.5" y2="15" />
+    </>
+  ),
+  // memo/note (replaces )
+  memo: (
+    <>
+      <path d="M4 4h16v16H4Z" />
+      <line x1="8" y1="9" x2="16" y2="9" />
+      <line x1="8" y1="13" x2="16" y2="13" />
+      <line x1="8" y1="17" x2="12" y2="17" />
+    </>
+  ),
+  // ledger/book (replaces )
+  ledger: (
+    <>
+      <path d="M12 4a4 4 0 0 0-4-1H4v16h4a4 4 0 0 1 4 1" />
+      <path d="M12 4a4 4 0 0 1 4-1h4v16h-4a4 4 0 0 0-4 1" />
+      <line x1="12" y1="4" x2="12" y2="20" />
+    </>
+  ),
+  // pencil/edit (replaces )
+  pencil: (
+    <>
+      <path d="M12 20h9" />
+      <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+    </>
+  ),
+  // tools / hammer and wrench (replaces )
+  hammer_wrench: (
+    <>
+      <path d="m14.5 2.5 2 2-3 3 2 2 3-3 2 2a3 3 0 0 1-4 4l-8 8-3-3 8-8a3 3 0 0 1 4-4Z" />
+      <path d="m4 10 3 3-4 4-3-3Z" />
+    </>
+  ),
+  // printer (replaces )
+  printer: (
+    <>
+      <path d="M6 9V3h12v6" />
+      <rect x="4" y="9" width="16" height="8" rx="1" />
+      <path d="M6 17v4h12v-4" />
+    </>
+  ),
+  // minus (replaces )
+  minus: (
+    <>
+      <line x1="5" y1="12" x2="19" y2="12" />
+    </>
+  ),
+  // link (replaces )
+  link: (
+    <>
+      <path d="M9 17H7a5 5 0 0 1 0-10h2" />
+      <path d="M15 7h2a5 5 0 0 1 0 10h-2" />
+      <line x1="8" y1="12" x2="16" y2="12" />
+    </>
+  ),
+  // microphone (replaces )
+  microphone: (
+    <>
+      <rect x="9" y="2" width="6" height="12" rx="3" />
+      <path d="M5 10v1a7 7 0 0 0 14 0v-1" />
+      <line x1="12" y1="18" x2="12" y2="22" />
+      <line x1="9" y1="22" x2="15" y2="22" />
+    </>
+  ),
+  // speaker/volume (replaces )
+  speaker: (
+    <>
+      <polygon points="4 9 8 9 12 5 12 19 8 15 4 15 4 9" />
+      <path d="M16 8a5 5 0 0 1 0 8" />
+    </>
+  ),
+  // image/picture (replaces )
+  image: (
+    <>
+      <rect x="3" y="3" width="18" height="18" rx="2" />
+      <circle cx="9" cy="9" r="2" />
+      <path d="m21 15-5-5-9 9" />
+    </>
+  ),
+  // safety / shield (replaces )
+  shield: (
+    <>
+      <path d="M12 2 4 5v6c0 5 3.4 8.9 8 11 4.6-2.1 8-6 8-11V5l-8-3Z" />
+    </>
+  ),
+  // medical / hospital (replaces )
+  hospital: (
+    <>
+      <rect x="3" y="3" width="18" height="18" rx="2" />
+      <line x1="12" y1="8" x2="12" y2="16" />
+      <line x1="8" y1="12" x2="16" y2="12" />
+    </>
+  ),
+  // support / headphone (replaces )
+  headphone: (
+    <>
+      <path d="M4 14v-2a8 8 0 0 1 16 0v2" />
+      <rect x="2" y="14" width="4" height="6" rx="1" />
+      <rect x="18" y="14" width="4" height="6" rx="1" />
+    </>
+  ),
+  // announcement / megaphone (replaces )
+  megaphone: (
+    <>
+      <path d="M3 11v2a1 1 0 0 0 1 1h2l9 5V5l-9 5H4a1 1 0 0 0-1 1Z" />
+      <path d="M15 9a4 4 0 0 1 0 6" />
+    </>
+  ),
+  // new / sparkles (replaces )
+  sparkles: (
+    <>
+      <path d="m12 3 1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5Z" />
+      <path d="M19 15v4" />
+      <path d="M17 17h4" />
+    </>
+  ),
+  // credit card (replaces )
+  credit_card: (
+    <>
+      <rect x="2" y="5" width="20" height="14" rx="2" />
+      <line x1="2" y1="10" x2="22" y2="10" />
+    </>
+  ),
+  // store (replaces )
+  store: (
+    <>
+      <path d="M3 9 4 3h16l1 6" />
+      <path d="M3 9a2 2 0 0 0 4 0 2 2 0 0 0 4 0 2 2 0 0 0 4 0 2 2 0 0 0 4 0" />
+      <path d="M5 9v10h14V9" />
+    </>
+  ),
+  // library/books (replaces )
+  library: (
+    <>
+      <path d="M4 20V4h4v16" />
+      <path d="M10 20V4h4v16" />
+      <path d="m16.5 4 3 15.5-4 .5L12.5 4.5Z" />
+    </>
+  ),
+  // view / eye (replaces )
+  eye: (
+    <>
+      <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z" />
+      <circle cx="12" cy="12" r="3" />
+    </>
+  ),
 };
 
+// Fallback glyph for unrecognised icon names.
+// INCIDENT: a data source once held icon KEYS (e.g. "plug", "chat_bubble")
+// while the render site did `{item.icon}` as raw text -- when the mapping
+// drifted, users saw literal strings like "plug" rendered on the integrations
+// page in production. This fallback makes that class of bug structurally
+// impossible: an unknown `name` always renders a neutral glyph, never text.
+const FALLBACK_ICON: React.ReactNode = (
+  <>
+    <rect x="5" y="5" width="14" height="14" rx="2" />
+    <circle cx="12" cy="12" r="1.5" />
+  </>
+);
+
+const warnedUnknownNames = new Set<string>();
+
 export default function Icon({ name, className = "w-6 h-6" }: IconProps) {
+  const path = ICON_PATHS[name];
+
+  if (!path && process.env.NODE_ENV !== "production" && !warnedUnknownNames.has(name)) {
+    warnedUnknownNames.add(name);
+    // eslint-disable-next-line no-console
+    console.warn(`[Icon] unknown icon name: "${name}"`);
+  }
+
   return (
     <svg
       className={className}
@@ -420,7 +985,7 @@ export default function Icon({ name, className = "w-6 h-6" }: IconProps) {
       strokeLinejoin="round"
       aria-hidden="true"
     >
-      {ICON_PATHS[name]}
+      {path ?? FALLBACK_ICON}
     </svg>
   );
 }
