@@ -99,10 +99,17 @@ export default function DashboardPage() {
         .then((data) => setFinancialData(data))
         .catch((err) => console.error("Failed to fetch financial stats", err));
 
-      fetch(`${apiHost}/apis/v3/hr/employees/${activeProject}`, { headers: authHeaders() })
-        .then((res) => res.json())
-        .then((data) => setWorkforceEmployees(toList(data)))
-        .catch((err) => console.error("Failed to fetch workforce employees", err));
+      if (activeProject && activeProject !== "d0000000-0000-0000-0000-000000000000") {
+        fetch(`${apiHost}/apis/v3/hr/employees/${activeProject}`, { headers: authHeaders() })
+          .then((res) => res.json())
+          .then((data) => setWorkforceEmployees(toList(data)))
+          .catch((err) => console.error("Failed to fetch workforce employees", err));
+      } else {
+        fetch(`${apiHost}/apis/v3/hr/employees/company/${companyId}`, { headers: authHeaders() })
+          .then((res) => res.json())
+          .then((data) => setWorkforceEmployees(toList(data)))
+          .catch((err) => console.error("Failed to fetch workforce employees", err));
+      }
 
       fetch(`${apiHost}/apis/v3/library/workforces/${companyId}`, { headers: authHeaders() })
         .then((res) => res.json())

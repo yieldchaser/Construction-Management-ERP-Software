@@ -392,7 +392,7 @@ export default function CRMPage() {
         jget(`/crm/lead-sources/${companyId}`).catch(() => []),
         jget(`/crm/lead-categories/${companyId}`).catch(() => []),
         jget(`/crm/lead-statuses/${companyId}`).catch(() => []),
-        jget(`/accounts/${companyId}`).catch(() => []),
+        jget(`/finance/accounts/${companyId}`).catch(() => []),
       ]);
       setLeads(ld);
       setTeam(tm);

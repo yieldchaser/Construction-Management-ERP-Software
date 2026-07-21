@@ -8,7 +8,7 @@ labour, and quality modules for a company-wide dashboard.
 import calendar
 import uuid
 from collections import defaultdict
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from typing import Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -59,6 +59,16 @@ def _to_float(value) -> float:
     if value is None:
         return 0.0
     return float(value)
+
+
+def _to_date(value) -> Optional[date]:
+    if value is None:
+        return None
+    if isinstance(value, datetime):
+        return value.date()
+    if isinstance(value, date):
+        return value
+    return None
 
 
 def _month_start(dt: datetime) -> datetime:
@@ -252,12 +262,13 @@ def get_company_analytics(company_id: uuid.UUID, db: Session = Depends(get_db), 
         for item in collection:
             for attr in ("start_date", "end_date", "invoice_date", "due_date", "attendance_date", "po_date", "created_at"):
                 value = getattr(item, attr, None)
-                if isinstance(value, datetime):
-                    date_candidates.append(value)
+                d = _to_date(value)
+                if d:
+                    date_candidates.append(d)
 
     if date_candidates:
-        start_date = min(date_candidates)
-        end_date = max(date_candidates)
+        start_date = datetime.combine(min(date_candidates), datetime.min.time())
+        end_date = datetime.combine(max(date_candidates), datetime.max.time())
     else:
         start_date = datetime.utcnow()
         end_date = start_date
@@ -268,18 +279,20 @@ def get_company_analytics(company_id: uuid.UUID, db: Session = Depends(get_db), 
     cumulative_spend = 0.0
     for month in month_starts:
         month_end = _next_month(month) - timedelta(seconds=1)
-        planned = sum(1 for task in tasks if task.end_date and task.end_date <= month_end)
+        month_end_d = month_end.date()
+        planned = sum(1 for task in tasks if task.end_date and _to_date(task.end_date) and _to_date(task.end_date) <= month_end_d)
         actual = sum(
             1
             for task in tasks
             if task.end_date
-            and task.end_date <= month_end
+            and _to_date(task.end_date)
+            and _to_date(task.end_date) <= month_end_d
             and (task.status or "").lower() in COMPLETED_TASK_STATUSES
         )
         month_spend = sum(
             _to_float(bill.total_payable)
             for bill in bills
-            if bill.invoice_date and bill.invoice_date <= month_end
+            if bill.invoice_date and _to_date(bill.invoice_date) and _to_date(bill.invoice_date) <= month_end_d
         )
         cumulative_spend += month_spend
         s_curve.append(
