@@ -99,7 +99,7 @@ export default function DashboardPage() {
         .then((data) => setFinancialData(data))
         .catch((err) => console.error("Failed to fetch financial stats", err));
 
-      if (activeProject && activeProject !== "d0000000-0000-0000-0000-000000000000") {
+      if (activeProject && !activeProject.startsWith("d0000000-")) {
         fetch(`${apiHost}/apis/v3/hr/employees/${activeProject}`, { headers: authHeaders() })
           .then((res) => res.json())
           .then((data) => setWorkforceEmployees(toList(data)))

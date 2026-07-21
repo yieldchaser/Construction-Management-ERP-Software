@@ -351,7 +351,7 @@ def get_company_analytics(company_id: uuid.UUID, db: Session = Depends(get_db), 
         on_time_bills = sum(
             1
             for bill in in_scope_bills
-            if bill.updated_at is not None and bill.updated_at <= bill.due_date
+            if bill.updated_at is not None and _to_date(bill.updated_at) and _to_date(bill.due_date) and _to_date(bill.updated_at) <= _to_date(bill.due_date)
         )
         linked_projects = projects_by_subcontractor.get(subcontractor_id, set())
         ncr_count = sum(1 for ncr in ncrs if ncr.project_id in linked_projects)
