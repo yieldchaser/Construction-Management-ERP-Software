@@ -846,7 +846,7 @@ export default function DynamicReportViewPage() {
                     <span className="text-white">150 Leads (100% baseline)</span>
                   </div>
                   <div className="h-9 w-full bg-gradient-to-r from-sky-600 to-sky-500 rounded-lg flex items-center px-4 shadow-lg shadow-sky-500/10 hover:opacity-95 transition-opacity min-w-[75px]">
-                    <span className="text-xs font-black text-white font-mono whitespace-nowrap">150 / 150</span>
+                    <span className="text-[11px] font-bold text-white font-sans tracking-wide whitespace-nowrap">150 / 150</span>
                   </div>
                 </div>
 
@@ -857,7 +857,7 @@ export default function DynamicReportViewPage() {
                     <span className="text-white">102 Leads (68% conversion)</span>
                   </div>
                   <div className="h-9 bg-gradient-to-r from-sky-500 to-cyan-500 rounded-lg flex items-center px-4 shadow-lg shadow-sky-500/10 hover:opacity-95 transition-opacity min-w-[75px]" style={{ width: "68%" }}>
-                    <span className="text-xs font-black text-white font-mono whitespace-nowrap">102 / 150</span>
+                    <span className="text-[11px] font-bold text-white font-sans tracking-wide whitespace-nowrap">102 / 150</span>
                   </div>
                 </div>
 
@@ -868,7 +868,7 @@ export default function DynamicReportViewPage() {
                     <span className="text-white">57 Leads (38% conversion)</span>
                   </div>
                   <div className="h-9 bg-gradient-to-r from-cyan-500 to-teal-500 rounded-lg flex items-center px-4 shadow-lg shadow-cyan-500/10 hover:opacity-95 transition-opacity min-w-[75px]" style={{ width: "38%" }}>
-                    <span className="text-xs font-black text-white font-mono whitespace-nowrap">57 / 150</span>
+                    <span className="text-[11px] font-bold text-white font-sans tracking-wide whitespace-nowrap">57 / 150</span>
                   </div>
                 </div>
 
@@ -879,7 +879,7 @@ export default function DynamicReportViewPage() {
                     <span className="text-white">24 Leads (16% conversion)</span>
                   </div>
                   <div className="h-9 bg-gradient-to-r from-teal-500 to-sky-600 rounded-lg flex items-center px-4 shadow-lg shadow-teal-500/10 hover:opacity-95 transition-opacity min-w-[75px]" style={{ width: "16%" }}>
-                    <span className="text-xs font-black text-white font-mono whitespace-nowrap">24 / 150</span>
+                    <span className="text-[11px] font-bold text-white font-sans tracking-wide whitespace-nowrap">24 / 150</span>
                   </div>
                 </div>
 
@@ -890,7 +890,7 @@ export default function DynamicReportViewPage() {
                     <span className="text-white">12 Leads (8% conversion)</span>
                   </div>
                   <div className="h-9 bg-gradient-to-r from-emerald-500 to-sky-500 rounded-lg flex items-center px-4 shadow-lg shadow-emerald-500/10 hover:opacity-95 transition-opacity min-w-[75px]" style={{ width: "8%" }}>
-                    <span className="text-xs font-black text-white font-mono whitespace-nowrap">12 / 150</span>
+                    <span className="text-[11px] font-bold text-white font-sans tracking-wide whitespace-nowrap">12 / 150</span>
                   </div>
                 </div>
               </div>
