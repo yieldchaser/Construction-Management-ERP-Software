@@ -49,7 +49,7 @@ const SEGMENTS: Segment[] = [
     learnMore: "/who-we-serve/erp-software-for-builders-and-developers",
     dashboardTitle: "Project Budget Dashboard",
     variant: "finance",
-    image: "/marketing/who-we-serve/segment-builders.png",
+    image: "/marketing/who-we-serve/segment-builders.webp",
   },
   {
     id: "civil",
@@ -74,7 +74,7 @@ const SEGMENTS: Segment[] = [
     learnMore: "/who-we-serve/civil-contracting-software-why-contractors-are-choosing-SiteFlow-for-smarter-project-delivery",
     dashboardTitle: "Site Attendance & Materials",
     variant: "mobile",
-    image: "/marketing/who-we-serve/segment-civil.png",
+    image: "/marketing/who-we-serve/segment-civil.webp",
   },
   {
     id: "interior",
@@ -99,7 +99,7 @@ const SEGMENTS: Segment[] = [
     learnMore: "/who-we-serve/interior-design-project-management-software-SiteFlow",
     dashboardTitle: "Project Scope & Billing",
     variant: "procurement",
-    image: "/marketing/who-we-serve/segment-interior.png",
+    image: "/marketing/who-we-serve/segment-interior.webp",
   },
   {
     id: "infra",
@@ -124,7 +124,7 @@ const SEGMENTS: Segment[] = [
     learnMore: "/who-we-serve/software-for-infrastructure-projects",
     dashboardTitle: "Multi-Site Progress Tracker",
     variant: "planning",
-    image: "/marketing/who-we-serve/segment-infrastructure.png",
+    image: "/marketing/who-we-serve/segment-infrastructure.webp",
   },
 ];
 

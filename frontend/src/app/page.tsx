@@ -14,8 +14,8 @@ export default function LandingPage() {
         {/* Living Drifting Aurora */}
         <Aurora variant="hero" className="absolute inset-0 z-0" />
         {/* Custom layered baby blue static glow backplates (static for GPU performance) */}
-        <div className="absolute top-[-10%] left-[-10%] h-[50%] w-[50%] rounded-full bg-sky-200/30 blur-[120px] mix-blend-multiply pointer-events-none z-0" />
-        <div className="absolute bottom-[10%] right-[-10%] h-[40%] w-[40%] rounded-full bg-sky-100/30 blur-[130px] mix-blend-multiply pointer-events-none z-0" />
+        <div className="absolute top-[-10%] left-[-10%] h-[50%] w-[50%] rounded-full bg-sky-200/30 blur-[120px] pointer-events-none z-0" />
+        <div className="absolute bottom-[10%] right-[-10%] h-[40%] w-[40%] rounded-full bg-sky-100/30 blur-[130px] pointer-events-none z-0" />
         <div className="alx-grain absolute inset-0 z-0 pointer-events-none" aria-hidden="true" />
         
         <div className="max-w-5xl mx-auto text-center relative z-10">
@@ -55,7 +55,7 @@ export default function LandingPage() {
             <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-sky-400 to-blue-500 opacity-20 blur-xl group-hover:opacity-40 transition-opacity duration-500 -z-10" />
             <div className="absolute inset-0 bg-alx-primary/5 blur-3xl rounded-[3rem] -z-10 transform scale-95 translate-y-8" />
             <div className="alx-float rounded-xl shadow-2xl shadow-alx-on-surface/10 [box-shadow:0_25px_60px_-15px_rgba(9,76,178,0.25),0_10px_20px_-8px_rgba(27,28,29,0.12)]">
-              <MockupFrame variant="hero" src="/marketing/landing/hero-dashboard.png" alt="SiteFlow project dashboard showing budget, progress, and site status" />
+              <MockupFrame variant="hero" src="/marketing/landing/hero-dashboard.webp" alt="SiteFlow project dashboard showing budget, progress, and site status" />
             </div>
           </div>
         </div>
@@ -107,7 +107,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center alx-scroll-fade">
           <div className="order-2 lg:order-1 relative group alx-hover-lift">
             <div className="absolute inset-0 bg-sky-400/20 blur-3xl rounded-[3rem] -z-10 group-hover:bg-sky-400/30 transition-colors duration-500" />
-            <MockupFrame variant="planning" src="/marketing/landing/feature-planning.png" alt="SiteFlow planning and Gantt scheduling screen" />
+            <MockupFrame variant="planning" src="/marketing/landing/feature-planning.webp" alt="SiteFlow planning and Gantt scheduling screen" />
           </div>
           <div className="order-1 lg:order-2 space-y-6">
             <div className="inline-flex items-center justify-center p-3 bg-sky-100 rounded-xl mb-4 text-sky-700 border border-sky-200 relative">
@@ -188,7 +188,7 @@ export default function LandingPage() {
           <div className="relative group alx-hover-lift">
             <div className="absolute inset-0 bg-emerald-400/20 blur-3xl rounded-[3rem] -z-10 group-hover:bg-emerald-400/30 transition-colors duration-500" />
             <div className="alx-float">
-              <MockupFrame variant="procurement" src="/marketing/landing/feature-procurement.png" alt="SiteFlow procurement and purchase order matching screen" />
+              <MockupFrame variant="procurement" src="/marketing/landing/feature-procurement.webp" alt="SiteFlow procurement and purchase order matching screen" />
             </div>
           </div>
         </div>
@@ -198,7 +198,7 @@ export default function LandingPage() {
           <div className="order-2 lg:order-1 relative group alx-hover-lift">
             <div className="absolute inset-0 bg-violet-400/20 blur-3xl rounded-[3rem] -z-10 group-hover:bg-violet-400/30 transition-colors duration-500" />
             <div className="scale-95 alx-float-delayed">
-              <MockupFrame variant="mobile" src="/marketing/landing/feature-dpr-phones.png" alt="SiteFlow mobile app on three phones showing daily progress report capture" />
+              <MockupFrame variant="mobile" src="/marketing/landing/feature-dpr-phones.webp" alt="SiteFlow mobile app on three phones showing daily progress report capture" />
             </div>
           </div>
           <div className="order-1 lg:order-2 space-y-6">
@@ -270,7 +270,7 @@ export default function LandingPage() {
           <div className="relative group alx-hover-lift">
             <div className="absolute inset-0 bg-amber-400/20 blur-3xl rounded-[3rem] -z-10 group-hover:bg-amber-400/30 transition-colors duration-500" />
             <div className="alx-float">
-              <MockupFrame variant="finance" src="/marketing/landing/feature-finance.png" alt="SiteFlow finance and compliance dashboard showing cash position and budget utilisation" />
+              <MockupFrame variant="finance" src="/marketing/landing/feature-finance.webp" alt="SiteFlow finance and compliance dashboard showing cash position and budget utilisation" />
             </div>
           </div>
         </div>
