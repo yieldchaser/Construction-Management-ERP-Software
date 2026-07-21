@@ -548,6 +548,7 @@ export default function DynamicReportViewPage() {
 
   const [rows, setRows] = useState<Record<string, any>[]>([]);
   const [loading, setLoading] = useState(false);
+  const [crmLeads, setCrmLeads] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchReport = async () => {
@@ -565,6 +566,15 @@ export default function DynamicReportViewPage() {
       }
     };
     fetchReport();
+
+    if (slug === "lead-status-funnel") {
+      fetch(`${getApiHost()}/apis/v3/crm/leads?company_id=${companyId}`, {
+        headers: { ...(authHeaders() || {}) }
+      })
+      .then(res => res.ok ? res.json() : [])
+      .then(data => setCrmLeads(Array.isArray(data) ? data : []))
+      .catch(() => setCrmLeads([]));
+    }
   }, [slug, companyId, refreshTrigger]);
 
   // Filter rows based on search and filters
@@ -830,88 +840,100 @@ export default function DynamicReportViewPage() {
 
         {/* Dynamic Data Table or Visual Dashboard Charts */}
         <div className="flex-1 overflow-auto p-6">
-          {slug === "lead-status-funnel" ? (
-            /* SLEEK CONVERSION FUNNEL VISUALIZATION */
-            <div className="max-w-4xl mx-auto bg-card border border-border-custom rounded-xl p-8 space-y-8">
-              <div className="border-b border-border-custom pb-4">
-                <h3 className="text-base font-bold text-white uppercase tracking-wider inline-flex items-center gap-2"><Icon name="bar_chart" className="w-5 h-5" /> Lead Status Funnel Analysis</h3>
-                <p className="text-xs text-muted mt-1">Real-time conversion metrics from raw enquiry to closed won contracts.</p>
+          {slug === "lead-status-funnel" ? (() => {
+            const totalLeadsCount = crmLeads.length;
+            const contactedLeads = crmLeads.filter(l => ["Contacted", "Qualified", "Proposal Sent", "Negotiation", "Won"].includes(l.status)).length;
+            const siteVisitLeads = crmLeads.filter(l => ["Site Visit", "Qualified", "Proposal Sent", "Negotiation", "Won"].includes(l.status)).length;
+            const quotationLeads = crmLeads.filter(l => ["Proposal Sent", "Negotiation", "Won"].includes(l.status)).length;
+            const wonLeads = crmLeads.filter(l => l.status === "Won").length;
+
+            const contactedPct = totalLeadsCount > 0 ? Math.round((contactedLeads / totalLeadsCount) * 100) : 0;
+            const siteVisitPct = totalLeadsCount > 0 ? Math.round((siteVisitLeads / totalLeadsCount) * 100) : 0;
+            const quotationPct = totalLeadsCount > 0 ? Math.round((quotationLeads / totalLeadsCount) * 100) : 0;
+            const wonPct = totalLeadsCount > 0 ? Math.round((wonLeads / totalLeadsCount) * 100) : 0;
+
+            return (
+              <div className="max-w-4xl mx-auto bg-card border border-border-custom rounded-xl p-8 space-y-8">
+                <div className="border-b border-border-custom pb-4">
+                  <h3 className="text-base font-bold text-white uppercase tracking-wider inline-flex items-center gap-2"><Icon name="bar_chart" className="w-5 h-5" /> Lead Status Funnel Analysis</h3>
+                  <p className="text-xs text-muted mt-1">Real-time conversion metrics calculated from active CRM pipeline leads.</p>
+                </div>
+
+                <div className="space-y-5">
+                  {/* Segment 1 */}
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between text-xs font-semibold">
+                      <span className="text-sky-400">1. New Enquiries</span>
+                      <span className="text-white">{totalLeadsCount} Leads (100% baseline)</span>
+                    </div>
+                    <div className="h-9 w-full bg-gradient-to-r from-sky-600 to-sky-500 rounded-lg flex items-center px-4 shadow-lg shadow-sky-500/10 hover:opacity-95 transition-opacity min-w-[75px]">
+                      <span className="text-[11px] font-bold text-white font-sans tracking-wide whitespace-nowrap">{totalLeadsCount} / {totalLeadsCount}</span>
+                    </div>
+                  </div>
+
+                  {/* Segment 2 */}
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between text-xs font-semibold">
+                      <span className="text-sky-400">2. Contacted / Qualified</span>
+                      <span className="text-white">{contactedLeads} Leads ({contactedPct}% conversion)</span>
+                    </div>
+                    <div className="h-9 bg-gradient-to-r from-sky-500 to-cyan-500 rounded-lg flex items-center px-4 shadow-lg shadow-sky-500/10 hover:opacity-95 transition-opacity min-w-[75px]" style={{ width: `${Math.max(contactedPct, 8)}%` }}>
+                      <span className="text-[11px] font-bold text-white font-sans tracking-wide whitespace-nowrap">{contactedLeads} / {totalLeadsCount}</span>
+                    </div>
+                  </div>
+
+                  {/* Segment 3 */}
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between text-xs font-semibold">
+                      <span className="text-cyan-400">3. Site Visit Scheduled</span>
+                      <span className="text-white">{siteVisitLeads} Leads ({siteVisitPct}% conversion)</span>
+                    </div>
+                    <div className="h-9 bg-gradient-to-r from-cyan-500 to-teal-500 rounded-lg flex items-center px-4 shadow-lg shadow-cyan-500/10 hover:opacity-95 transition-opacity min-w-[75px]" style={{ width: `${Math.max(siteVisitPct, 8)}%` }}>
+                      <span className="text-[11px] font-bold text-white font-sans tracking-wide whitespace-nowrap">{siteVisitLeads} / {totalLeadsCount}</span>
+                    </div>
+                  </div>
+
+                  {/* Segment 4 */}
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between text-xs font-semibold">
+                      <span className="text-teal-400">4. Quotation Shared</span>
+                      <span className="text-white">{quotationLeads} Leads ({quotationPct}% conversion)</span>
+                    </div>
+                    <div className="h-9 bg-gradient-to-r from-teal-500 to-sky-600 rounded-lg flex items-center px-4 shadow-lg shadow-teal-500/10 hover:opacity-95 transition-opacity min-w-[75px]" style={{ width: `${Math.max(quotationPct, 8)}%` }}>
+                      <span className="text-[11px] font-bold text-white font-sans tracking-wide whitespace-nowrap">{quotationLeads} / {totalLeadsCount}</span>
+                    </div>
+                  </div>
+
+                  {/* Segment 5 */}
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between text-xs font-semibold">
+                      <span className="text-emerald-400">5. Client Confirmed / Won</span>
+                      <span className="text-white">{wonLeads} Leads ({wonPct}% conversion)</span>
+                    </div>
+                    <div className="h-9 bg-gradient-to-r from-emerald-500 to-sky-500 rounded-lg flex items-center px-4 shadow-lg shadow-emerald-500/10 hover:opacity-95 transition-opacity min-w-[75px]" style={{ width: `${Math.max(wonPct, 8)}%` }}>
+                      <span className="text-[11px] font-bold text-white font-sans tracking-wide whitespace-nowrap">{wonLeads} / {totalLeadsCount}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Conversion Summary Stats */}
+                <div className="grid grid-cols-3 gap-4 pt-4 border-t border-border-custom text-center">
+                  <div className="p-3 bg-white/[0.01] border border-border-custom rounded-lg">
+                    <div className="text-[10px] text-muted uppercase font-bold">Total Enquiries</div>
+                    <div className="text-lg font-black text-white mt-1">{totalLeadsCount}</div>
+                  </div>
+                  <div className="p-3 bg-white/[0.01] border border-border-custom rounded-lg">
+                    <div className="text-[10px] text-muted uppercase font-bold">Proposal Rate</div>
+                    <div className="text-lg font-black text-white mt-1">{quotationPct}%</div>
+                  </div>
+                  <div className="p-3 bg-white/[0.01] border border-border-custom rounded-lg">
+                    <div className="text-[10px] text-muted uppercase font-bold">Win Rate</div>
+                    <div className="text-lg font-black text-white mt-1">{wonPct}%</div>
+                  </div>
+                </div>
               </div>
-
-              <div className="space-y-5">
-                {/* Segment 1 */}
-                <div className="space-y-1.5">
-                  <div className="flex justify-between text-xs font-semibold">
-                    <span className="text-sky-400">1. New Enquiries</span>
-                    <span className="text-white">150 Leads (100% baseline)</span>
-                  </div>
-                  <div className="h-9 w-full bg-gradient-to-r from-sky-600 to-sky-500 rounded-lg flex items-center px-4 shadow-lg shadow-sky-500/10 hover:opacity-95 transition-opacity min-w-[75px]">
-                    <span className="text-[11px] font-bold text-white font-sans tracking-wide whitespace-nowrap">150 / 150</span>
-                  </div>
-                </div>
-
-                {/* Segment 2 */}
-                <div className="space-y-1.5">
-                  <div className="flex justify-between text-xs font-semibold">
-                    <span className="text-sky-400">2. Contacted / Qualified</span>
-                    <span className="text-white">102 Leads (68% conversion)</span>
-                  </div>
-                  <div className="h-9 bg-gradient-to-r from-sky-500 to-cyan-500 rounded-lg flex items-center px-4 shadow-lg shadow-sky-500/10 hover:opacity-95 transition-opacity min-w-[75px]" style={{ width: "68%" }}>
-                    <span className="text-[11px] font-bold text-white font-sans tracking-wide whitespace-nowrap">102 / 150</span>
-                  </div>
-                </div>
-
-                {/* Segment 3 */}
-                <div className="space-y-1.5">
-                  <div className="flex justify-between text-xs font-semibold">
-                    <span className="text-cyan-400">3. Site Visit Scheduled</span>
-                    <span className="text-white">57 Leads (38% conversion)</span>
-                  </div>
-                  <div className="h-9 bg-gradient-to-r from-cyan-500 to-teal-500 rounded-lg flex items-center px-4 shadow-lg shadow-cyan-500/10 hover:opacity-95 transition-opacity min-w-[75px]" style={{ width: "38%" }}>
-                    <span className="text-[11px] font-bold text-white font-sans tracking-wide whitespace-nowrap">57 / 150</span>
-                  </div>
-                </div>
-
-                {/* Segment 4 */}
-                <div className="space-y-1.5">
-                  <div className="flex justify-between text-xs font-semibold">
-                    <span className="text-teal-400">4. Quotation Shared</span>
-                    <span className="text-white">24 Leads (16% conversion)</span>
-                  </div>
-                  <div className="h-9 bg-gradient-to-r from-teal-500 to-sky-600 rounded-lg flex items-center px-4 shadow-lg shadow-teal-500/10 hover:opacity-95 transition-opacity min-w-[75px]" style={{ width: "16%" }}>
-                    <span className="text-[11px] font-bold text-white font-sans tracking-wide whitespace-nowrap">24 / 150</span>
-                  </div>
-                </div>
-
-                {/* Segment 5 */}
-                <div className="space-y-1.5">
-                  <div className="flex justify-between text-xs font-semibold">
-                    <span className="text-emerald-400">5. Client Confirmed / Won</span>
-                    <span className="text-white">12 Leads (8% conversion)</span>
-                  </div>
-                  <div className="h-9 bg-gradient-to-r from-emerald-500 to-sky-500 rounded-lg flex items-center px-4 shadow-lg shadow-emerald-500/10 hover:opacity-95 transition-opacity min-w-[75px]" style={{ width: "8%" }}>
-                    <span className="text-[11px] font-bold text-white font-sans tracking-wide whitespace-nowrap">12 / 150</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Conversion Summary Stats */}
-              <div className="grid grid-cols-3 gap-4 pt-4 border-t border-border-custom text-center">
-                <div className="p-3 bg-white/[0.01] border border-border-custom rounded-lg">
-                  <div className="text-[10px] text-muted uppercase font-bold">Total Enquiries</div>
-                  <div className="text-lg font-black text-white mt-1">150</div>
-                </div>
-                <div className="p-3 bg-white/[0.01] border border-border-custom rounded-lg">
-                  <div className="text-[10px] text-muted uppercase font-bold">Proposal Rate</div>
-                  <div className="text-lg font-black text-white mt-1">16%</div>
-                </div>
-                <div className="p-3 bg-white/[0.01] border border-border-custom rounded-lg">
-                  <div className="text-[10px] text-muted uppercase font-bold">Win Rate</div>
-                  <div className="text-lg font-black text-white mt-1">8.0%</div>
-                </div>
-              </div>
-            </div>
-          ) : slug === "cost-code-expense-analysis" ? (
+            );
+          })() : slug === "cost-code-expense-analysis" ? (
             /* SLEEK PIE / DONUT BREAKDOWN ANALYSIS */
             <div className="max-w-4xl mx-auto bg-card border border-border-custom rounded-xl p-8 space-y-8">
               <div className="border-b border-border-custom pb-4">
