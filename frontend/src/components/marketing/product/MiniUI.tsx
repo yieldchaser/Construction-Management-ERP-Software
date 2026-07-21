@@ -137,36 +137,33 @@ const PLACEHOLDER_META: Record<string, { icon: ProductIconName; label: string }>
 
 /** Tasteful generic placeholder for mock types not yet given a bespoke widget. */
 function PlaceholderCard({ mock }: { mock: MiniUIData }) {
-  const meta = PLACEHOLDER_META[mock.type] ?? { icon: "resources" as ProductIconName, label: mock.type };
-  const [imgFailed, setImgFailed] = React.useState(false);
+  const meta = PLACEHOLDER_META[mock.type];
+  if (!meta) {
+    return (
+      <MiniUICardShell title={mock.title}>
+        <div className="flex flex-col items-center justify-center gap-3 rounded-lg bg-alx-surface-container-low py-10 text-center">
+          <span className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-alx-primary-fixed text-alx-primary">
+            <ProductIcon name="resources" className="h-5 w-5" />
+          </span>
+          <p className="alx-label text-[11px] text-alx-on-surface-variant">{mock.type}</p>
+        </div>
+      </MiniUICardShell>
+    );
+  }
+
   const imageSrc = `/marketing/mocks/mock-${mock.type}.png`;
 
   return (
     <MiniUICardShell title={mock.title}>
-      {!imgFailed ? (
-        <div className="relative aspect-[4/3] rounded-lg overflow-hidden border border-alx-outline-variant/20 bg-alx-surface-container-low/40 shadow-sm flex items-center justify-center p-2">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={imageSrc}
-            alt={meta.label}
-            className="h-full w-full object-contain"
-            onError={() => setImgFailed(true)}
-            loading="lazy"
-          />
-        </div>
-      ) : (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-lg bg-alx-surface-container-low py-10 text-center">
-          <span className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-alx-primary-fixed text-alx-primary">
-            <ProductIcon name={meta.icon} className="h-5 w-5" />
-          </span>
-          <p className="alx-label text-[11px] text-alx-on-surface-variant">{meta.label}</p>
-          <div className="flex gap-1.5">
-            <span className="h-1.5 w-8 rounded-full bg-alx-outline-variant/50" />
-            <span className="h-1.5 w-5 rounded-full bg-alx-outline-variant/50" />
-            <span className="h-1.5 w-8 rounded-full bg-alx-outline-variant/50" />
-          </div>
-        </div>
-      )}
+      <div className="relative aspect-[4/3] rounded-lg overflow-hidden border border-alx-outline-variant/20 bg-alx-surface-container-low/40 shadow-sm flex items-center justify-center p-2">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={imageSrc}
+          alt={meta.label}
+          className="h-full w-full object-contain"
+          loading="lazy"
+        />
+      </div>
     </MiniUICardShell>
   );
 }
