@@ -3629,30 +3629,29 @@ html:has(.alexandria) { scroll-behavior: smooth; }
 /* ============ WordPress palette-colour → SiteFlow brand token mappings ============
    Blog bodies imported from WordPress ship `has-palette-color-N-background-color` and
    `has-palette-color-N-color` classes that have no CSS definitions in this app.
-   Button: white background, brand-blue text + border. */
+   Without mappings the "Get Free Demo" button falls back to the browser default (black
+   text on transparent), looking broken.  Map palette-1 → primary brand blue. */
 .help-article .has-palette-color-1-background-color,
 .help-article .wp-element-button.has-palette-color-1-background-color {
-  background-color: #ffffff !important;
+  background-color: var(--color-alx-primary, #094cb2) !important;
 }
 .help-article .has-palette-color-5-color {
-  color: var(--color-alx-primary, #094cb2) !important;
+  color: #ffffff !important;
 }
 /* Ensure the CTA link itself looks like a proper button regardless of palette class */
 .help-article .wp-element-button,
 .help-article .wp-block-button__link {
   display: inline-block;
-  background-color: #ffffff;
-  color: var(--color-alx-primary, #094cb2);
+  background-color: var(--color-alx-primary, #094cb2);
+  color: #ffffff !important;
   font-weight: 700;
   text-decoration: none;
   border-radius: 8px;
-  border: 1.5px solid var(--color-alx-primary, #094cb2);
-  transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease;
 }
 .help-article .wp-element-button:hover,
 .help-article .wp-block-button__link:hover {
-  background-color: var(--color-alx-primary, #094cb2);
-  color: #ffffff;
+  background-color: var(--color-alx-primary-dark, #073fa0);
   box-shadow: 0 4px 16px rgba(9, 76, 178, 0.25);
 }
 
