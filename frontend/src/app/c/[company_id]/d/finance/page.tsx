@@ -175,6 +175,18 @@ export default function FinancePage() {
   const [showTagSalesInput, setShowTagSalesInput] = useState(false);
   const [taggedSalesInvoice, setTaggedSalesInvoice] = useState("");
 
+  // Additional 12-button interactive state toggles
+  const [showHsnInput, setShowHsnInput] = useState(false);
+  const [newItemHsn, setNewItemHsn] = useState("");
+  const [showItemDescInput, setShowItemDescInput] = useState(false);
+  const [newItemDesc, setNewItemDesc] = useState("");
+  const [showTagTaskSelect, setShowTagTaskSelect] = useState(false);
+  const [taggedTaskId, setTaggedTaskId] = useState("");
+  const [showTagEquipmentSelect, setShowTagEquipmentSelect] = useState(false);
+  const [taggedEquipmentId, setTaggedEquipmentId] = useState("");
+  const [showDiscountInput, setShowDiscountInput] = useState(false);
+  const [showAddChargesInput, setShowAddChargesInput] = useState(false);
+
   // Transfer & Sub-form state variables
   const [transferType, setTransferType] = useState<"Bank To Bank" | "Cash Deposit" | "Cash Withdraw">("Bank To Bank");
   const [fromBank, setFromBank] = useState("Main Savings Account");
@@ -2395,9 +2407,47 @@ export default function FinancePage() {
                   )}
 
                   <div className="flex gap-4">
-                    <span className="text-[10px] text-primary hover:underline font-bold cursor-pointer">+ Tag Task</span>
-                    <span className="text-[10px] text-primary hover:underline font-bold cursor-pointer">+ Tag Equipment</span>
+                    <button
+                      type="button"
+                      onClick={() => setShowTagTaskSelect(!showTagTaskSelect)}
+                      className="text-[10px] text-primary hover:underline font-bold cursor-pointer"
+                    >
+                      {showTagTaskSelect ? "- Hide Task Tag" : "+ Tag Task"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowTagEquipmentSelect(!showTagEquipmentSelect)}
+                      className="text-[10px] text-primary hover:underline font-bold cursor-pointer"
+                    >
+                      {showTagEquipmentSelect ? "- Hide Equipment Tag" : "+ Tag Equipment"}
+                    </button>
                   </div>
+
+                  {showTagTaskSelect && (
+                    <div className="space-y-1 animate-fade-in">
+                      <label className="text-[10px] text-muted uppercase font-bold block mb-1">Tag Project Task / WBS</label>
+                      <input
+                        type="text"
+                        value={taggedTaskId}
+                        onChange={e => setTaggedTaskId(e.target.value)}
+                        placeholder="Search or enter Task Code (e.g. T-104 Excavation)..."
+                        className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground text-xs"
+                      />
+                    </div>
+                  )}
+
+                  {showTagEquipmentSelect && (
+                    <div className="space-y-1 animate-fade-in">
+                      <label className="text-[10px] text-muted uppercase font-bold block mb-1">Tag Equipment / Machinery</label>
+                      <input
+                        type="text"
+                        value={taggedEquipmentId}
+                        onChange={e => setTaggedEquipmentId(e.target.value)}
+                        placeholder="Search or enter Equipment Reg (e.g. EQ-JCB-02)..."
+                        className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground text-xs"
+                      />
+                    </div>
+                  )}
 
                   <div>
                     <label className="text-[10px] text-muted uppercase font-bold block mb-1">Sub Total</label>
@@ -2410,9 +2460,47 @@ export default function FinancePage() {
                   </div>
 
                   <div className="flex gap-4">
-                    <span className="text-[10px] text-primary hover:underline font-bold cursor-pointer">+ Add Discount</span>
-                    <span className="text-[10px] text-primary hover:underline font-bold cursor-pointer">+ Add Additional Charges</span>
+                    <button
+                      type="button"
+                      onClick={() => setShowDiscountInput(!showDiscountInput)}
+                      className="text-[10px] text-primary hover:underline font-bold cursor-pointer"
+                    >
+                      {showDiscountInput ? "- Hide Discount" : "+ Add Discount"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowAddChargesInput(!showAddChargesInput)}
+                      className="text-[10px] text-primary hover:underline font-bold cursor-pointer"
+                    >
+                      {showAddChargesInput ? "- Hide Charges" : "+ Add Additional Charges"}
+                    </button>
                   </div>
+
+                  {showDiscountInput && (
+                    <div className="space-y-1 animate-fade-in">
+                      <label className="text-[10px] text-muted uppercase font-bold block mb-1">Discount Amount (₹)</label>
+                      <input
+                        type="number"
+                        value={discount || ""}
+                        onChange={e => setDiscount(Number(e.target.value))}
+                        placeholder="0"
+                        className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground font-mono text-xs"
+                      />
+                    </div>
+                  )}
+
+                  {showAddChargesInput && (
+                    <div className="space-y-1 animate-fade-in">
+                      <label className="text-[10px] text-muted uppercase font-bold block mb-1">Additional Charges (Freight / Extra ₹)</label>
+                      <input
+                        type="number"
+                        value={addCharges || ""}
+                        onChange={e => setAddCharges(Number(e.target.value))}
+                        placeholder="0"
+                        className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground font-mono text-xs"
+                      />
+                    </div>
+                  )}
 
                   <div className="space-y-2 border-t border-border-custom/50 pt-3">
                     <div className="flex items-center justify-between">
@@ -2734,9 +2822,47 @@ export default function FinancePage() {
                   </div>
 
                   <div className="flex gap-4">
-                    <span className="text-[10px] text-primary hover:underline font-bold cursor-pointer">+ Discount</span>
-                    <span className="text-[10px] text-primary hover:underline font-bold cursor-pointer">+ Additional Charges</span>
+                    <button
+                      type="button"
+                      onClick={() => setShowDiscountInput(!showDiscountInput)}
+                      className="text-[10px] text-primary hover:underline font-bold cursor-pointer"
+                    >
+                      {showDiscountInput ? "- Hide Discount" : "+ Discount"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowAddChargesInput(!showAddChargesInput)}
+                      className="text-[10px] text-primary hover:underline font-bold cursor-pointer"
+                    >
+                      {showAddChargesInput ? "- Hide Charges" : "+ Additional Charges"}
+                    </button>
                   </div>
+
+                  {showDiscountInput && (
+                    <div className="space-y-1 animate-fade-in">
+                      <label className="text-[10px] text-muted uppercase font-bold block mb-1">Discount Amount (₹)</label>
+                      <input
+                        type="number"
+                        value={discount || ""}
+                        onChange={e => setDiscount(Number(e.target.value))}
+                        placeholder="0"
+                        className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground font-mono text-xs"
+                      />
+                    </div>
+                  )}
+
+                  {showAddChargesInput && (
+                    <div className="space-y-1 animate-fade-in">
+                      <label className="text-[10px] text-muted uppercase font-bold block mb-1">Additional Charges (Freight / Extra ₹)</label>
+                      <input
+                        type="number"
+                        value={addCharges || ""}
+                        onChange={e => setAddCharges(Number(e.target.value))}
+                        placeholder="0"
+                        className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground font-mono text-xs"
+                      />
+                    </div>
+                  )}
 
                   <div className="flex items-center justify-between border-t border-border-custom/40 pt-2">
                     <span className="text-xs font-bold text-foreground uppercase">Total Amount</span>
@@ -2810,9 +2936,37 @@ export default function FinancePage() {
                   </div>
 
                   <div className="flex gap-4">
-                    <span className="text-[10px] text-primary hover:underline font-bold cursor-pointer">+ Add Material</span>
-                    <span className="text-[10px] text-primary hover:underline font-bold cursor-pointer">+ Additional Charges</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setNewItemName("");
+                        setShowAddItemForm(true);
+                      }}
+                      className="text-[10px] text-primary hover:underline font-bold cursor-pointer"
+                    >
+                      + Add Material
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowAddChargesInput(!showAddChargesInput)}
+                      className="text-[10px] text-primary hover:underline font-bold cursor-pointer"
+                    >
+                      {showAddChargesInput ? "- Hide Charges" : "+ Additional Charges"}
+                    </button>
                   </div>
+
+                  {showAddChargesInput && (
+                    <div className="space-y-1 animate-fade-in">
+                      <label className="text-[10px] text-muted uppercase font-bold block mb-1">Additional Charges (Freight / Extra ₹)</label>
+                      <input
+                        type="number"
+                        value={addCharges || ""}
+                        onChange={e => setAddCharges(Number(e.target.value))}
+                        placeholder="0"
+                        className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground font-mono text-xs"
+                      />
+                    </div>
+                  )}
 
                   <div>
                     <label className="text-[10px] text-muted uppercase font-bold block mb-1">Total Amount</label>
@@ -3027,7 +3181,16 @@ export default function FinancePage() {
                     </div>
                   </div>
 
-                  <span className="text-[10px] text-primary hover:underline font-bold cursor-pointer block">+ New Item</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNewItemName("");
+                      setShowAddItemForm(true);
+                    }}
+                    className="text-[10px] text-primary hover:underline font-bold cursor-pointer block text-left"
+                  >
+                    + New Item
+                  </button>
 
                   <div>
                     <label className="text-[10px] text-muted uppercase font-bold block mb-1">Amount</label>
@@ -3383,9 +3546,47 @@ export default function FinancePage() {
                     </div>
 
                     <div className="flex gap-4 pt-1">
-                      <span className="text-[10px] text-primary hover:underline font-bold cursor-pointer">+ HSN/SAC</span>
-                      <span className="text-[10px] text-primary hover:underline font-bold cursor-pointer">+ Description</span>
+                      <button
+                        type="button"
+                        onClick={() => setShowHsnInput(!showHsnInput)}
+                        className="text-[10px] text-primary hover:underline font-bold cursor-pointer"
+                      >
+                        {showHsnInput ? "- Hide HSN/SAC" : "+ HSN/SAC"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setShowItemDescInput(!showItemDescInput)}
+                        className="text-[10px] text-primary hover:underline font-bold cursor-pointer"
+                      >
+                        {showItemDescInput ? "- Hide Description" : "+ Description"}
+                      </button>
                     </div>
+
+                    {showHsnInput && (
+                      <div className="space-y-1 animate-fade-in">
+                        <label className="text-[10px] text-muted uppercase font-bold block mb-1">HSN / SAC Tax Code</label>
+                        <input
+                          type="text"
+                          value={newItemHsn}
+                          onChange={e => setNewItemHsn(e.target.value)}
+                          placeholder="e.g. 6810 / 9954"
+                          className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground text-xs"
+                        />
+                      </div>
+                    )}
+
+                    {showItemDescInput && (
+                      <div className="space-y-1 animate-fade-in">
+                        <label className="text-[10px] text-muted uppercase font-bold block mb-1">Item Specification / Notes</label>
+                        <textarea
+                          value={newItemDesc}
+                          onChange={e => setNewItemDesc(e.target.value)}
+                          rows={2}
+                          placeholder="Item specifications, grade, or notes..."
+                          className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground text-xs resize-none"
+                        />
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex gap-2 justify-end pt-3 border-t border-border-custom">
