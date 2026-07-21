@@ -169,6 +169,12 @@ export default function FinancePage() {
   const [csvPreview, setCsvPreview] = useState<any[] | null>(null);
   const [csvFile, setCsvFile] = useState<File | null>(null);
 
+  // Interactive Tag Sales, Reference No, Notes toggles
+  const [showRefInput, setShowRefInput] = useState(false);
+  const [showNotesInput, setShowNotesInput] = useState(false);
+  const [showTagSalesInput, setShowTagSalesInput] = useState(false);
+  const [taggedSalesInvoice, setTaggedSalesInvoice] = useState("");
+
   // Transfer & Sub-form state variables
   const [transferType, setTransferType] = useState<"Bank To Bank" | "Cash Deposit" | "Cash Withdraw">("Bank To Bank");
   const [fromBank, setFromBank] = useState("Main Savings Account");
@@ -3036,10 +3042,67 @@ export default function FinancePage() {
                   </div>
 
                   <div className="flex gap-4">
-                    <span className="text-[10px] text-primary hover:underline font-bold cursor-pointer">+ Tag Sales</span>
-                    <span className="text-[10px] text-primary hover:underline font-bold cursor-pointer">+ Reference No</span>
-                    <span className="text-[10px] text-primary hover:underline font-bold cursor-pointer">+ Notes</span>
+                    <button
+                      type="button"
+                      onClick={() => setShowTagSalesInput(!showTagSalesInput)}
+                      className="text-[10px] text-primary hover:underline font-bold cursor-pointer"
+                    >
+                      {showTagSalesInput ? "- Hide Tag Sales" : "+ Tag Sales"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowRefInput(!showRefInput)}
+                      className="text-[10px] text-primary hover:underline font-bold cursor-pointer"
+                    >
+                      {showRefInput ? "- Hide Reference No" : "+ Reference No"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowNotesInput(!showNotesInput)}
+                      className="text-[10px] text-primary hover:underline font-bold cursor-pointer"
+                    >
+                      {showNotesInput ? "- Hide Notes" : "+ Notes"}
+                    </button>
                   </div>
+
+                  {showTagSalesInput && (
+                    <div className="space-y-1 animate-fade-in">
+                      <label className="text-[10px] text-muted uppercase font-bold block mb-1">Tag Sales Invoice / Order</label>
+                      <input
+                        type="text"
+                        value={taggedSalesInvoice}
+                        onChange={e => setTaggedSalesInvoice(e.target.value)}
+                        placeholder="Search or enter Sales Invoice No (e.g. INV-2026-08)..."
+                        className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground text-xs"
+                      />
+                    </div>
+                  )}
+
+                  {showRefInput && (
+                    <div className="space-y-1 animate-fade-in">
+                      <label className="text-[10px] text-muted uppercase font-bold block mb-1">Reference No.</label>
+                      <input
+                        type="text"
+                        value={refNum}
+                        onChange={e => setRefNum(e.target.value)}
+                        placeholder="e.g. REF-DN-001 / UTR No"
+                        className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground text-xs"
+                      />
+                    </div>
+                  )}
+
+                  {showNotesInput && (
+                    <div className="space-y-1 animate-fade-in">
+                      <label className="text-[10px] text-muted uppercase font-bold block mb-1">Notes / Narration</label>
+                      <textarea
+                        value={desc}
+                        onChange={e => setDesc(e.target.value)}
+                        rows={3}
+                        placeholder="Add voucher narration or notes..."
+                        className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground text-xs resize-none"
+                      />
+                    </div>
+                  )}
 
 
                 </div>
