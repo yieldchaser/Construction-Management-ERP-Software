@@ -522,7 +522,7 @@ export default function MockupFrame({
         </div>
         <div className="h-[calc(100%-2.75rem)]">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={src} alt={alt ?? "SiteFlow dashboard screenshot"} className="h-full w-full object-cover" loading="lazy" />
+          <img src={src} alt={alt ?? "SiteFlow dashboard screenshot"} className="h-full w-full object-contain" loading="lazy" />
         </div>
       </div>
     );
