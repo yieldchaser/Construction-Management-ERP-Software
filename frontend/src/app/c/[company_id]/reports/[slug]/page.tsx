@@ -549,6 +549,7 @@ export default function DynamicReportViewPage() {
   const [rows, setRows] = useState<Record<string, any>[]>([]);
   const [loading, setLoading] = useState(false);
   const [crmLeads, setCrmLeads] = useState<any[]>([]);
+  const [financePayments, setFinancePayments] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchReport = async () => {
@@ -574,6 +575,15 @@ export default function DynamicReportViewPage() {
       .then(res => res.ok ? res.json() : [])
       .then(data => setCrmLeads(Array.isArray(data) ? data : []))
       .catch(() => setCrmLeads([]));
+    }
+
+    if (slug === "cost-code-expense-analysis") {
+      fetch(`${getApiHost()}/apis/v3/finance/payments?company_id=${companyId}`, {
+        headers: { ...(authHeaders() || {}) }
+      })
+      .then(res => res.ok ? res.json() : [])
+      .then(data => setFinancePayments(Array.isArray(data) ? data : []))
+      .catch(() => setFinancePayments([]));
     }
   }, [slug, companyId, refreshTrigger]);
 
@@ -933,80 +943,66 @@ export default function DynamicReportViewPage() {
                 </div>
               </div>
             );
-          })() : slug === "cost-code-expense-analysis" ? (
-            /* SLEEK PIE / DONUT BREAKDOWN ANALYSIS */
-            <div className="max-w-4xl mx-auto bg-card border border-border-custom rounded-xl p-8 space-y-8">
-              <div className="border-b border-border-custom pb-4">
-                <h3 className="text-base font-bold text-white uppercase tracking-wider inline-flex items-center gap-2"><Icon name="bar_chart" className="w-5 h-5" /> Cost Code Expense Breakdown</h3>
-                <p className="text-xs text-muted mt-1">Detailed analysis of project expenditures grouped by primary accounting cost codes.</p>
-              </div>
+          })() : slug === "cost-code-expense-analysis" ? (() => {
+            const totalSpent = financePayments.reduce((acc, p) => acc + (Number(p.amount) || 0), 0);
+            const groups: Record<string, number> = {};
+            financePayments.forEach(p => {
+              const cc = p.cost_code || p.category || "General Expenses";
+              groups[cc] = (groups[cc] || 0) + (Number(p.amount) || 0);
+            });
+            const entries = Object.entries(groups).sort((a, b) => b[1] - a[1]);
+            const colors = ["bg-sky-500", "bg-cyan-500", "bg-teal-500", "bg-emerald-500", "bg-blue-500"];
+            const textColors = ["text-sky-400", "text-cyan-400", "text-teal-400", "text-emerald-400", "text-blue-400"];
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-                {/* Donut graphic */}
-                <div className="flex justify-center relative py-6">
-                  {/* Outer circle decoration */}
-                  <div className="w-48 h-48 rounded-full border-8 border-emerald-500 flex items-center justify-center relative">
-                    <div className="absolute inset-0 w-full h-full rounded-full border-8 border-transparent border-t-indigo-500 border-r-indigo-500 transform rotate-45" />
-                    <div className="absolute inset-0 w-full h-full rounded-full border-8 border-transparent border-b-amber-500 transform rotate-12" />
-                    
-                    {/* Inner cutout */}
-                    <div className="w-32 h-32 rounded-full bg-card flex flex-col items-center justify-center text-center border border-border-custom">
-                      <span className="text-[10px] text-muted uppercase font-bold">Total Spent</span>
-                      <span className="text-base font-black text-white mt-1">Rs 8,50,000</span>
-                    </div>
-                  </div>
+            return (
+              <div className="max-w-4xl mx-auto bg-card border border-border-custom rounded-xl p-8 space-y-8">
+                <div className="border-b border-border-custom pb-4">
+                  <h3 className="text-base font-bold text-white uppercase tracking-wider inline-flex items-center gap-2"><Icon name="bar_chart" className="w-5 h-5" /> Cost Code Expense Breakdown</h3>
+                  <p className="text-xs text-muted mt-1">Detailed analysis of project expenditures calculated from active accounting payments.</p>
                 </div>
 
-                {/* Legend list */}
-                <div className="space-y-4">
-                  {/* Legend item 1 */}
-                  <div className="p-3 bg-white/[0.01] border border-border-custom rounded-lg flex items-center justify-between hover:bg-white/[0.02] transition-colors">
-                    <div className="flex items-center gap-3">
-                      <span className="h-3 w-3 rounded-full bg-emerald-500 shrink-0" />
-                      <div className="flex flex-col">
-                        <span className="text-xs font-bold text-white">Concrete & Steel (C-102)</span>
-                        <span className="text-[10px] text-muted">Material Procurement</span>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                  {/* Donut graphic */}
+                  <div className="flex justify-center relative py-6">
+                    <div className="w-48 h-48 rounded-full border-8 border-sky-500 flex items-center justify-center relative shadow-lg shadow-sky-500/10">
+                      <div className="w-32 h-32 rounded-full bg-card flex flex-col items-center justify-center text-center border border-border-custom">
+                        <span className="text-[10px] text-muted uppercase font-bold">Total Spent</span>
+                        <span className="text-base font-extrabold text-white mt-1">₹{totalSpent.toLocaleString("en-IN")}</span>
                       </div>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-xs font-black text-white block">Rs 4,50,000</span>
-                      <span className="text-[10px] text-emerald-400 font-bold">53.0%</span>
                     </div>
                   </div>
 
-                  {/* Legend item 2 */}
-                  <div className="p-3 bg-white/[0.01] border border-border-custom rounded-lg flex items-center justify-between hover:bg-white/[0.02] transition-colors">
-                    <div className="flex items-center gap-3">
-                      <span className="h-3 w-3 rounded-full bg-indigo-500 shrink-0" />
-                      <div className="flex flex-col">
-                        <span className="text-xs font-bold text-white">Labour Payroll (C-405)</span>
-                        <span className="text-[10px] text-muted">Site Wages & Salaries</span>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-xs font-black text-white block">Rs 2,80,000</span>
-                      <span className="text-[10px] text-indigo-400 font-bold">33.0%</span>
-                    </div>
-                  </div>
-
-                  {/* Legend item 3 */}
-                  <div className="p-3 bg-white/[0.01] border border-border-custom rounded-lg flex items-center justify-between hover:bg-white/[0.02] transition-colors">
-                    <div className="flex items-center gap-3">
-                      <span className="h-3 w-3 rounded-full bg-amber-500 shrink-0" />
-                      <div className="flex flex-col">
-                        <span className="text-xs font-bold text-white">Equipment Rental & Fuel</span>
-                        <span className="text-[10px] text-muted">Operations & Logistics</span>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-xs font-black text-white block">Rs 1,20,000</span>
-                      <span className="text-[10px] text-amber-400 font-bold">14.0%</span>
-                    </div>
+                  {/* Legend list */}
+                  <div className="space-y-4">
+                    {entries.length === 0 ? (
+                      <div className="text-xs text-muted py-6 text-center">No expense transactions recorded yet for this company.</div>
+                    ) : (
+                      entries.map(([ccName, ccAmt], idx) => {
+                        const pct = totalSpent > 0 ? ((ccAmt / totalSpent) * 100).toFixed(1) : "0.0";
+                        const dotColor = colors[idx % colors.length];
+                        const txtColor = textColors[idx % textColors.length];
+                        return (
+                          <div key={ccName} className="p-3 bg-white/[0.01] border border-border-custom rounded-lg flex items-center justify-between hover:bg-white/[0.02] transition-colors">
+                            <div className="flex items-center gap-3">
+                              <span className={`h-3 w-3 rounded-full ${dotColor} shrink-0`} />
+                              <div className="flex flex-col">
+                                <span className="text-xs font-bold text-white">{ccName}</span>
+                                <span className="text-[10px] text-muted">Cost Code Ledger</span>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <span className="text-xs font-extrabold text-white block">₹{ccAmt.toLocaleString("en-IN")}</span>
+                              <span className={`text-[10px] ${txtColor} font-bold`}>{pct}%</span>
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
                   </div>
                 </div>
               </div>
-            </div>
-          ) : (
+            );
+          })() : (
             /* STANDARD DATA TABLE */
             loading ? (
               <div className="min-w-full overflow-x-auto rounded-xl border border-border-custom bg-card p-10 text-center text-muted text-sm">
