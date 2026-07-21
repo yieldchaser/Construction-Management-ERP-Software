@@ -511,7 +511,7 @@ export default function GanttSchedulerPage() {
                   start: "border-blue-500/30 bg-blue-500/5",
                   handover: "border-emerald-500/30 bg-emerald-500/5",
                   inspection: "border-amber-500/30 bg-amber-500/5",
-                  payment: "border-purple-500/30 bg-purple-500/5",
+                  payment: "border-sky-500/30 bg-sky-500/5",
                   critical: "border-red-500/30 bg-red-500/5",
                 };
                 const statusCls = m.status === "achieved" ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" : m.status === "delayed" ? "bg-red-500/10 border-red-500/20 text-red-400" : "bg-zinc-700/30 border-zinc-600/20 text-muted";

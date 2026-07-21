@@ -853,10 +853,10 @@ export default function DynamicReportViewPage() {
                 {/* Segment 2 */}
                 <div className="space-y-1.5">
                   <div className="flex justify-between text-xs font-semibold">
-                    <span className="text-purple-400">2. Contacted / Qualified</span>
+                    <span className="text-sky-400">2. Contacted / Qualified</span>
                     <span className="text-white">102 Leads (68% conversion)</span>
                   </div>
-                  <div className="h-9 bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg flex items-center px-4 shadow-lg shadow-purple-500/10 hover:opacity-95 transition-opacity" style={{ width: "68%" }}>
+                  <div className="h-9 bg-gradient-to-r from-sky-500 to-sky-600 rounded-lg flex items-center px-4 shadow-lg shadow-sky-500/10 hover:opacity-95 transition-opacity" style={{ width: "68%" }}>
                     <span className="text-xs font-black text-white font-mono">102 / 150</span>
                   </div>
                 </div>

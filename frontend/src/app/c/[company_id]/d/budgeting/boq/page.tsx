@@ -44,7 +44,7 @@ interface BOQRevision {
 
 const SECTION_COLORS: Record<string, string> = {
   "1 — Civil Works": "bg-blue-500/10 text-blue-400 border-blue-500/20",
-  "2 — Structural": "bg-purple-500/10 text-purple-400 border-purple-500/20",
+  "2 — Structural": "bg-sky-500/10 text-sky-400 border-sky-500/20",
   "3 — Masonry": "bg-amber-500/10 text-amber-400 border-amber-500/20",
   "4 — Finishes": "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
   "5 — MEP": "bg-cyan-500/10 text-cyan-400 border-cyan-500/20",

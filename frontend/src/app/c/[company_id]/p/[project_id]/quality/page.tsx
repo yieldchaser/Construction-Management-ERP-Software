@@ -649,7 +649,7 @@ export default function QualityPage() {
                       <p className="font-bold text-foreground">{cl.title}</p>
                       <div className="flex items-center gap-2 mt-1">
                         <span className="text-[10px] bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded-full font-bold">{cl.category}</span>
-                        <span className="text-[10px] bg-purple-500/10 text-purple-400 border border-purple-500/20 px-2 py-0.5 rounded-full font-bold">{cl.isCode}</span>
+                        <span className="text-[10px] bg-sky-500/10 text-sky-400 border border-sky-500/20 px-2 py-0.5 rounded-full font-bold">{cl.isCode}</span>
                         <span className="text-[10px] text-muted">{cl.items.length} items</span>
                       </div>
                     </div>

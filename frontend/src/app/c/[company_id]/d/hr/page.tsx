@@ -716,7 +716,7 @@ export default function HRPayrollPage() {
       submitted: "bg-blue-500/15 text-blue-400 border-blue-500/20",
       approved: "bg-green-500/15 text-green-400 border-green-500/20",
       rejected: "bg-red-500/15 text-red-400 border-red-500/20",
-      finalized: "bg-purple-500/15 text-purple-400 border-purple-500/20",
+      finalized: "bg-sky-500/15 text-sky-400 border-sky-500/20",
       paid: "bg-green-500/15 text-green-400 border-green-500/20",
     };
     return `inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${map[s] ?? "bg-zinc-700/30 text-muted border-zinc-700"}`;

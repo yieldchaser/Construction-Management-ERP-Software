@@ -195,7 +195,7 @@ export default function DPRPage() {
               { label: "Equipment Used", value: logs.length > 0 ? `${logs.length} Reports` : "0 Active", desc: "DPR reports logged", color: "border-secondary/20 bg-secondary/5 text-secondary" },
               { label: "Subcon Updates", value: logs.filter((l: any) => l.subcon_name).length > 0 ? `${logs.filter((l: any) => l.subcon_name).length} Updates` : "0 Tasks updated", desc: "Logged by subcontractors", color: "border-emerald-500/20 bg-emerald-500/5 text-emerald-400" },
               { label: "Material Received", value: logs.reduce((sum: number, l: any) => sum + (l.material_received || 0), 0) > 0 ? `${logs.reduce((sum: number, l: any) => sum + (l.material_received || 0), 0)} Units` : "No GRNs today", desc: "Material inward logged", color: "border-amber-500/20 bg-amber-500/5 text-amber-400" },
-              { label: "Material Used Today", value: logs.reduce((sum: number, l: any) => sum + (l.material_used || 0), 0) > 0 ? `${logs.reduce((sum: number, l: any) => sum + (l.material_used || 0), 0)} Units` : "No consumption logged", desc: "On-site consumption", color: "border-purple-500/20 bg-purple-500/5 text-purple-400" }
+              { label: "Material Used Today", value: logs.reduce((sum: number, l: any) => sum + (l.material_used || 0), 0) > 0 ? `${logs.reduce((sum: number, l: any) => sum + (l.material_used || 0), 0)} Units` : "No consumption logged", desc: "On-site consumption", color: "border-sky-500/20 bg-sky-500/5 text-sky-400" }
             ].map((card, idx) => (
               <div key={idx} className={`p-4 rounded-lg border ${card.color} flex flex-col justify-between h-28 shadow-sm`}>
                 <span className="text-[10px] uppercase font-bold tracking-wider opacity-70">{card.label}</span>

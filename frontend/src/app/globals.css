@@ -10,8 +10,8 @@
   --input: #1E1E21;
   --muted: #71717A;
   
-  --primary: #7C3AED;
-  --primary-hover: #6D28D9;
+  --primary: #0284C7;
+  --primary-hover: #0369A1;
   --secondary: #14B8A6;
   --success: #10B981;
   --warning: #F59E0B;
@@ -29,8 +29,8 @@
   --input: #F3F4F6;
   --muted: #4B5563;      /* WCAG compliant medium gray (gray-600) for excellent legibility */
   
-  --primary: #6D28D9;
-  --primary-hover: #5B21B6;
+  --primary: #0284C7;
+  --primary-hover: #0369A1;
   --secondary: #0D9488;
   --success: #10B981;
   --warning: #F59E0B;
