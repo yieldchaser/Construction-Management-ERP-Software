@@ -3392,7 +3392,7 @@ export default function FinancePage() {
                     <button
                       type="button"
                       onClick={() => setShowAddItemForm(false)}
-                      className="px-3 py-1.5 bg-zinc-800 text-muted hover:text-foreground rounded-lg text-xs"
+                      className="px-3 py-1.5 border border-border-custom bg-background hover:bg-elevated/40 text-foreground font-semibold rounded-lg text-xs transition-colors"
                     >
                       Cancel
                     </button>
