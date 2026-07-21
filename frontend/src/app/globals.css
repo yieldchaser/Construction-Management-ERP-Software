@@ -3444,11 +3444,18 @@ body {
   overflow: hidden;
   pointer-events: none;
 }
+/* Offscreen DOM rendering skip optimization */
+.alx-lazy-section {
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 600px;
+}
 .alx-aurora-orb {
   position: absolute;
   border-radius: 9999px;
   filter: blur(110px);
   will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 .alx-aurora-orb-a {
   top: -12%;

@@ -35,13 +35,9 @@ export default function PremiumFX() {
     const viewportHeight = () =>
       window.innerHeight || document.documentElement.clientHeight;
 
-    /** Observe a section, revealing immediately if it is already in view. */
+    /** Observe a section with IntersectionObserver without layout-thrashing getBoundingClientRect calls. */
     const track = (el: Element) => {
       if (el.classList.contains("is-visible")) return;
-      if (el.getBoundingClientRect().top < viewportHeight()) {
-        reveal(el);
-        return;
-      }
       observer.observe(el);
     };
 
@@ -68,9 +64,7 @@ export default function PremiumFX() {
     const backstop = window.setTimeout(() => {
       document
         .querySelectorAll(".alx-scroll-fade:not(.is-visible)")
-        .forEach((el) => {
-          if (el.getBoundingClientRect().top < viewportHeight() * 1.5) reveal(el);
-        });
+        .forEach(reveal);
     }, 1200);
 
     return () => {

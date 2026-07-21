@@ -1,6 +1,3 @@
-"use client";
-
-import { useEffect } from "react";
 import Link from "next/link";
 import MarketingShell from "@/components/marketing/MarketingShell";
 import Icon from "@/components/marketing/Icon";
@@ -73,26 +70,6 @@ function IntegrationIcon({ icon }: { icon: "account_balance" | "hub" | "ledger" 
 }
 
 export default function AboutPage() {
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries, obs) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("is-visible");
-            obs.unobserve(entry.target);
-          }
-        });
-      },
-      { root: null, rootMargin: "0px", threshold: 0.15 }
-    );
-
-    document.querySelectorAll(".alx-scroll-fade").forEach((section) => {
-      observer.observe(section);
-    });
-
-    return () => observer.disconnect();
-  }, []);
-
   return (
     <MarketingShell>
       {/* Hero */}

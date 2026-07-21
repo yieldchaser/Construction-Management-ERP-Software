@@ -1,4 +1,5 @@
 import React from "react";
+import Image from "next/image";
 import type { CalcGuideStep } from "@/lib/calcTypes";
 import ProductIcon from "@/components/marketing/product/icons";
 
@@ -51,10 +52,12 @@ export default function CalcGuide({ steps }: { steps: CalcGuideStep[] }) {
           </div>
           <div className={idx % 2 === 1 ? "md:order-1" : ""}>
             {step.imageSlot ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={step.imageSlot}
+              <Image
+                src={step.imageSlot.endsWith(".png") ? step.imageSlot.replace(/\.png$/, ".webp") : step.imageSlot}
                 alt={step.title}
+                width={800}
+                height={500}
+                sizes="(min-width: 768px) 50vw, 100vw"
                 className="w-full h-auto rounded-xl border border-alx-outline-variant/40 shadow-sm object-cover"
               />
             ) : (

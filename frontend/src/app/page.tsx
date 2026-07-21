@@ -1,6 +1,3 @@
-"use client";
-
-import { useEffect } from "react";
 import Link from "next/link";
 import MarketingShell from "@/components/marketing/MarketingShell";
 import MockupFrame from "@/components/marketing/MockupFrame";
@@ -105,7 +102,7 @@ export default function LandingPage() {
       </section>
 
       {/* 3. Module Deep Dives */}
-      <section className="py-32 space-y-40 bg-alx-surface-container-lowest">
+      <section className="py-32 space-y-40 bg-alx-surface-container-lowest alx-lazy-section">
         {/* Section A: Planning & Execution Engine */}
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center alx-scroll-fade">
           <div className="order-2 lg:order-1 relative group alx-hover-lift">
@@ -280,7 +277,7 @@ export default function LandingPage() {
       </section>
 
       {/* 4. Spreadsheet Chaos vs SiteFlow Matrix */}
-      <section className="bg-gradient-to-b from-white via-sky-50/25 to-white py-24 alx-scroll-fade">
+      <section className="bg-gradient-to-b from-white via-sky-50/25 to-white py-24 alx-scroll-fade alx-lazy-section">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="font-headline text-4xl font-bold text-alx-on-surface">
@@ -320,7 +317,7 @@ export default function LandingPage() {
       </section>
 
       {/* 5. Conversion CTA - Redesigned Editorial Showcase */}
-      <section className="py-32 px-6 bg-alx-surface-container-lowest alx-scroll-fade">
+      <section className="py-32 px-6 bg-alx-surface-container-lowest alx-scroll-fade alx-lazy-section">
         <div className="max-w-5xl mx-auto bg-gradient-to-br from-sky-50 via-white to-sky-100 rounded-[3rem] p-16 md:p-24 text-center relative overflow-hidden border border-sky-100 shadow-2xl shadow-sky-900/5">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-sky-400/10 via-transparent to-transparent opacity-50" />
           <h2 className="font-headline text-4xl md:text-5xl font-extrabold text-sky-950 leading-tight mb-8 relative z-10">

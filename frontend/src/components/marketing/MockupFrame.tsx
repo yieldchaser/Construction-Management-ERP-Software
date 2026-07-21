@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 type MockupVariant = "procurement" | "mobile" | "finance" | "planning" | "hero";
 
 function NavItem({ label, active }: { label: string; active?: boolean }) {
@@ -506,11 +508,19 @@ export default function MockupFrame({
   alt?: string;
 }) {
   if (src) {
+    const webpSrc = src.endsWith(".png") ? src.replace(/\.png$/, ".webp") : src;
+
     // Transparent device art (phones) renders bare, without the browser-frame chrome.
     if (variant === "mobile") {
       return (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={src} alt={alt ?? "SiteFlow mobile app screens"} className="w-full h-auto max-w-full" loading="lazy" />
+        <Image
+          src={webpSrc}
+          alt={alt ?? "SiteFlow mobile app screens"}
+          width={1200}
+          height={800}
+          sizes="(min-width: 1024px) 600px, 100vw"
+          className="w-full h-auto max-w-full"
+        />
       );
     }
     return (
@@ -520,9 +530,15 @@ export default function MockupFrame({
           <span className="h-2.5 w-2.5 rounded-full bg-alx-surface-dim" />
           <span className="h-2.5 w-2.5 rounded-full bg-alx-surface-dim" />
         </div>
-        <div className="h-[calc(100%-2.75rem)]">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={src} alt={alt ?? "SiteFlow dashboard screenshot"} className="h-full w-full object-contain" loading="lazy" />
+        <div className="h-[calc(100%-2.75rem)] relative">
+          <Image
+            src={webpSrc}
+            alt={alt ?? "SiteFlow dashboard screenshot"}
+            fill
+            sizes="(min-width: 1024px) 1000px, 100vw"
+            className="h-full w-full object-contain"
+            priority={variant === "hero"}
+          />
         </div>
       </div>
     );

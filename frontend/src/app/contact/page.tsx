@@ -102,26 +102,6 @@ export default function ContactPage() {
     }
   };
 
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries, obs) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("is-visible");
-            obs.unobserve(entry.target);
-          }
-        });
-      },
-      { root: null, rootMargin: "0px", threshold: 0.15 }
-    );
-
-    document.querySelectorAll(".alx-scroll-fade").forEach((section) => {
-      observer.observe(section);
-    });
-
-    return () => observer.disconnect();
-  }, []);
-
   const fieldClass =
     "w-full bg-alx-surface-container-lowest border border-alx-outline-variant/40 rounded-lg px-4 py-3 text-sm text-alx-on-surface placeholder:text-alx-on-surface-variant/60 focus:outline-none focus:border-alx-primary focus:ring-1 focus:ring-alx-primary transition-colors";
   const labelClass = "font-uilabel text-xs font-semibold text-alx-on-surface-variant uppercase tracking-wider";

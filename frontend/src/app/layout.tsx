@@ -6,18 +6,21 @@ import PwaBootstrap from "@/components/pwa/PwaBootstrap";
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-sans",
+  display: "swap",
 });
 
 const notoSerif = Noto_Serif({
   subsets: ["latin"],
   weight: ["400", "700", "800"],
   variable: "--font-serif",
+  display: "swap",
 });
 
 const publicSans = Public_Sans({
   subsets: ["latin"],
   weight: ["500", "600", "700"],
   variable: "--font-label",
+  display: "swap",
 });
 
 export const metadata: Metadata = {

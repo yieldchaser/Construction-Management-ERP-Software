@@ -1,5 +1,6 @@
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import type { ProductHeroData } from "@/lib/productTypes";
 import ProductIcon from "./icons";
 import MockupFrame from "../MockupFrame";
@@ -11,6 +12,12 @@ import MockupFrame from "../MockupFrame";
  * in-code MockupFrame dashboard rather than a broken <img>.
  */
 export default function ProductHero({ hero }: { hero: ProductHeroData }) {
+  const imageSrc = hero.heroImageSlot
+    ? hero.heroImageSlot.endsWith(".png")
+      ? hero.heroImageSlot.replace(/\.png$/, ".webp")
+      : hero.heroImageSlot
+    : null;
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
       <div className="space-y-6">
@@ -53,12 +60,15 @@ export default function ProductHero({ hero }: { hero: ProductHeroData }) {
         )}
       </div>
       <div className="alx-hover-lift">
-        {hero.heroImageSlot ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={hero.heroImageSlot}
+        {imageSrc ? (
+          <Image
+            src={imageSrc}
             alt={hero.headline}
+            width={1200}
+            height={800}
+            sizes="(min-width: 1024px) 600px, 100vw"
             className="w-full h-auto rounded-xl border border-alx-outline-variant/40 shadow-lg object-cover"
+            priority
           />
         ) : (
           <MockupFrame variant="hero" />
