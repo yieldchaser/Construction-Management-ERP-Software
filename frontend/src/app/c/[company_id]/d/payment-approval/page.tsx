@@ -240,7 +240,17 @@ export default function PaymentApprovalPage() {
             <span className="text-4xl inline-flex"><Icon name="tag" className="w-10 h-10" /></span>
             <div>
               <h3 className="text-foreground font-semibold text-sm">No Approvals Found</h3>
-              <p className="text-muted text-xs mt-1">No requests match the selected status or project filter. Click "+ Create Demo Request" to try the flow.</p>
+              <p className="text-muted text-xs mt-1">
+                No requests match the selected status or project filter.{" "}
+                <button
+                  type="button"
+                  onClick={() => setShowAddModal(true)}
+                  className="text-primary hover:underline font-bold cursor-pointer"
+                >
+                  Click "+ Create Demo Request"
+                </button>{" "}
+                to try the flow.
+              </p>
             </div>
           </div>
         ) : (

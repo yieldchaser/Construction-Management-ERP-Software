@@ -1293,7 +1293,18 @@ export default function AttendancePage() {
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
                     <span className="text-[10px] text-muted font-bold uppercase tracking-wider">Authorized Team Members</span>
-                    <button className="bg-primary hover:bg-primary/95 text-white font-bold text-[10px] px-3 py-1.5 rounded-lg transition-all">+ Add Member</button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const name = prompt("Enter new team member name:");
+                        if (name && name.trim()) {
+                          setTeamMembers(prev => [...prev, { id: `m-${Date.now()}`, name: name.trim(), role_name: "Authorized Supervisor" }]);
+                        }
+                      }}
+                      className="bg-primary hover:bg-primary/95 text-white font-bold text-[10px] px-3 py-1.5 rounded-lg transition-all cursor-pointer"
+                    >
+                      + Add Member
+                    </button>
                   </div>
                    <div className="divide-y divide-border-custom/50 bg-elevated/20 border border-border-custom rounded-xl p-3 text-xs">
                      {teamMembers.length === 0 ? (

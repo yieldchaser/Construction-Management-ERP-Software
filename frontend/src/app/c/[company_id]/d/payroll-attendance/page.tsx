@@ -523,7 +523,7 @@ function PartyPickerDrawer({
   return (
     <Drawer title="Select Party" onClose={onClose} width="max-w-md">
       <input className={inputCls + " mb-3"} placeholder="Search party…" value={q} onChange={(e) => setQ(e.target.value)} />
-      <div className="mb-1 text-xs font-medium uppercase tracking-wide text-muted">+ New Party</div>
+      <div className="mb-1 text-xs font-bold uppercase tracking-wide text-muted">Add New Party</div>
       <div className="mb-3 flex gap-2">
         <input className={inputCls} placeholder="Party name" value={newName} onChange={(e) => setNewName(e.target.value)} />
         <select className={inputCls} value={newType} onChange={(e) => setNewType(e.target.value)}>
