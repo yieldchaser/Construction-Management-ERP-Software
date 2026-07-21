@@ -41,17 +41,17 @@
       {
         "title": "Select specification tier and currency",
         "body": "Pick the specification tier (Budget, Standard, Premium) and the currency (INR or USD) to localize rates.",
-        "imageSlot": null
+        "imageSlot": "/marketing/calculators/house-construction-cost-calculator-2.png"
       },
       {
         "title": "Calculate estimated cost",
         "body": "The tool computes the estimated total cost from area, floors, and tier, then displays it in the chosen currency.",
-        "imageSlot": null
+        "imageSlot": "/marketing/calculators/house-construction-cost-calculator-3.png"
       },
       {
         "title": "Review the phase split",
         "body": "Read the Civil, Finishes, and MEP breakdown shown as a percentage bar beneath the total cost.",
-        "imageSlot": null
+        "imageSlot": "/marketing/calculators/house-construction-cost-calculator-4.png"
       }
     ],
     "referenceTable": {

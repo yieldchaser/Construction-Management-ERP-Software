@@ -41,17 +41,17 @@
       {
         "title": "Enter the dimensions and quantity",
         "body": "Key in the three relevant dimensions in metres plus the Quantity (number of identical elements). All inputs are length-based; there are no slab, column or beam sub-tabs beyond the element selector.",
-        "imageSlot": null
+        "imageSlot": "/marketing/calculators/concrete-volume-calculator-2.png"
       },
       {
         "title": "Pick the concrete grade",
         "body": "Choose M20 (1:1.5:3) standard residential, M25 (1:1:2) structural RCC, or M15 (1:2:4) plain concrete. The ratio drives how the dry volume is split between cement, sand and aggregate.",
-        "imageSlot": null
+        "imageSlot": "/marketing/calculators/concrete-volume-calculator-3.png"
       },
       {
         "title": "Read the outputs",
         "body": "Total Volume (Wet) is the formwork void. Dry Material is the wet volume multiplied by 1.54 and is the loose cement, sand and aggregate you must order and mix.",
-        "imageSlot": null
+        "imageSlot": "/marketing/calculators/concrete-volume-calculator-4.png"
       }
     ],
     "referenceTable": {

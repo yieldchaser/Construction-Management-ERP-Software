@@ -41,17 +41,17 @@
       {
         "title": "Enter room dimensions",
         "body": "Enter room length, width, and height in feet. Add more rooms as needed; each room's area is summed.",
-        "imageSlot": null
+        "imageSlot": "/marketing/calculators/paint-quantity-calculator-2.png"
       },
       {
         "title": "Deduct doors and windows",
         "body": "Enable deductions and enter counts. Each door subtracts 21 sqft and each window 12 sqft from the total wall area.",
-        "imageSlot": null
+        "imageSlot": "/marketing/calculators/paint-quantity-calculator-3.png"
       },
       {
         "title": "Calculate and read output",
         "body": "The tool divides paintable area by the coverage rate, multiplies by coats, adds 10% wastage, and shows paint litres plus primer litres.",
-        "imageSlot": null
+        "imageSlot": "/marketing/calculators/paint-quantity-calculator-4.png"
       }
     ],
     "referenceTable": {

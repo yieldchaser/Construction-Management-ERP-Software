@@ -8,7 +8,7 @@ import HeroPhoto from "./HeroPhoto";
 // Optional hero photo. Drop a real construction image at this public path and
 // it will render; until then the page shows a clean in-code placeholder band
 // (never a broken image). Pass the prop through from a CMS/config if needed.
-const GLOSSARY_HERO_IMAGE = "/resources/glossary/construction-hero.jpg";
+const GLOSSARY_HERO_IMAGE = "/resources/glossary/construction-hero.png";
 
 export const metadata: Metadata = {
   title: "Construction & ERP Glossary - SiteFlow Resources",

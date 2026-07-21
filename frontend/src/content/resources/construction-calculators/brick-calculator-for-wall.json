@@ -41,17 +41,17 @@
       {
         "title": "Pick brick size and mortar mix",
         "body": "Select the brick specification (Modular 190 x 90 x 90 mm or Traditional 230 x 110 x 75 mm) and the cement to sand mortar mix (1:6 internal, 1:4 external).",
-        "imageSlot": null
+        "imageSlot": "/marketing/calculators/brick-calculator-for-wall-2.png"
       },
       {
         "title": "Apply wastage buffer",
         "body": "Choose a wastage buffer of 5%, 10%, or 15% to cover breakage, cutting, and handling, then calculate material yield.",
-        "imageSlot": null
+        "imageSlot": "/marketing/calculators/brick-calculator-for-wall-3.png"
       },
       {
         "title": "Read the output",
         "body": "The tool returns bricks required (nos), cement in 50 kg bags, and sand in cubic metres derived from the selected mortar ratio.",
-        "imageSlot": null
+        "imageSlot": "/marketing/calculators/brick-calculator-for-wall-4.png"
       }
     ],
     "referenceTable": {
