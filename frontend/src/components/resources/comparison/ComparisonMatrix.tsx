@@ -96,7 +96,7 @@ export default function ComparisonMatrix({
                   key={rIdx}
                   className="border-b border-alx-outline-variant/20 last:border-0 hover:bg-alx-surface-container-low/60 transition-colors"
                 >
-                  <td className="p-4 px-6 font-medium text-alx-on-surface border-r border-alx-outline-variant/20 whitespace-nowrap">
+                  <td className="p-4 px-6 font-medium text-alx-on-surface border-r border-alx-outline-variant/20">
                     {row.capability}
                   </td>
                   <td className="p-4 px-6 text-center border-r border-alx-outline-variant/20">
