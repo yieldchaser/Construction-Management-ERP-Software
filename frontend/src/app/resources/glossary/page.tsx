@@ -40,7 +40,7 @@ export default function GlossaryPage() {
         <div className="max-w-6xl mx-auto relative z-10">
           <Breadcrumb />
 
-          <div className="mt-6 grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_300px] gap-8 items-start">
+          <div className="mt-6 grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_480px] gap-8 items-start">
             {/* Eyebrow + H1 + subhead */}
             <div className="space-y-4">
               <span className="alx-label inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold text-alx-primary bg-alx-primary-fixed/40">
