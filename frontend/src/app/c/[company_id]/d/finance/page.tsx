@@ -533,7 +533,7 @@ export default function FinancePage() {
         amount: amtVal,
         party: partyName,
         ref: refNum || `ONS-V-${Date.now().toString().slice(-4)}`,
-        ref_invoice: ["Debit Note", "Credit Note"].includes(selectedTxnType) ? refInvoice : undefined,
+        ref_invoice: ["Debit Note", "Credit Note"].includes(selectedTxnType) ? (taggedSalesInvoice || refInvoice) : undefined,
         ledger: selectedTxnType,
         status: "Pending",
         cost_code: costCode,
@@ -550,6 +550,10 @@ export default function FinancePage() {
       setRefInvoice("");
       setDesc("");
       setPhotoUrl("");
+      setTaggedSalesInvoice("");
+      setShowRefInput(false);
+      setShowNotesInput(false);
+      setShowTagSalesInput(false);
     } catch (err) {
       console.error("Failed to record payment", err);
     } finally {
