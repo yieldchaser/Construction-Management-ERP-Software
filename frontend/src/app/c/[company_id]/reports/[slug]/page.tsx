@@ -842,11 +842,11 @@ export default function DynamicReportViewPage() {
                 {/* Segment 1 */}
                 <div className="space-y-1.5">
                   <div className="flex justify-between text-xs font-semibold">
-                    <span className="text-indigo-400">1. New Enquiries</span>
+                    <span className="text-sky-400">1. New Enquiries</span>
                     <span className="text-white">150 Leads (100% baseline)</span>
                   </div>
-                  <div className="h-9 w-full bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-lg flex items-center px-4 shadow-lg shadow-indigo-500/10 hover:opacity-95 transition-opacity">
-                    <span className="text-xs font-black text-white font-mono">150 / 150</span>
+                  <div className="h-9 w-full bg-gradient-to-r from-sky-600 to-sky-500 rounded-lg flex items-center px-4 shadow-lg shadow-sky-500/10 hover:opacity-95 transition-opacity min-w-[75px]">
+                    <span className="text-xs font-black text-white font-mono whitespace-nowrap">150 / 150</span>
                   </div>
                 </div>
 
@@ -856,41 +856,41 @@ export default function DynamicReportViewPage() {
                     <span className="text-sky-400">2. Contacted / Qualified</span>
                     <span className="text-white">102 Leads (68% conversion)</span>
                   </div>
-                  <div className="h-9 bg-gradient-to-r from-sky-500 to-sky-600 rounded-lg flex items-center px-4 shadow-lg shadow-sky-500/10 hover:opacity-95 transition-opacity" style={{ width: "68%" }}>
-                    <span className="text-xs font-black text-white font-mono">102 / 150</span>
+                  <div className="h-9 bg-gradient-to-r from-sky-500 to-cyan-500 rounded-lg flex items-center px-4 shadow-lg shadow-sky-500/10 hover:opacity-95 transition-opacity min-w-[75px]" style={{ width: "68%" }}>
+                    <span className="text-xs font-black text-white font-mono whitespace-nowrap">102 / 150</span>
                   </div>
                 </div>
 
                 {/* Segment 3 */}
                 <div className="space-y-1.5">
                   <div className="flex justify-between text-xs font-semibold">
-                    <span className="text-violet-400">3. Site Visit Scheduled</span>
+                    <span className="text-cyan-400">3. Site Visit Scheduled</span>
                     <span className="text-white">57 Leads (38% conversion)</span>
                   </div>
-                  <div className="h-9 bg-gradient-to-r from-violet-500 to-violet-600 rounded-lg flex items-center px-4 shadow-lg shadow-violet-500/10 hover:opacity-95 transition-opacity" style={{ width: "38%" }}>
-                    <span className="text-xs font-black text-white font-mono">57 / 150</span>
+                  <div className="h-9 bg-gradient-to-r from-cyan-500 to-teal-500 rounded-lg flex items-center px-4 shadow-lg shadow-cyan-500/10 hover:opacity-95 transition-opacity min-w-[75px]" style={{ width: "38%" }}>
+                    <span className="text-xs font-black text-white font-mono whitespace-nowrap">57 / 150</span>
                   </div>
                 </div>
 
                 {/* Segment 4 */}
                 <div className="space-y-1.5">
                   <div className="flex justify-between text-xs font-semibold">
-                    <span className="text-fuchsia-400">4. Quotation Shared</span>
+                    <span className="text-teal-400">4. Quotation Shared</span>
                     <span className="text-white">24 Leads (16% conversion)</span>
                   </div>
-                  <div className="h-9 bg-gradient-to-r from-fuchsia-500 to-fuchsia-600 rounded-lg flex items-center px-4 shadow-lg shadow-fuchsia-500/10 hover:opacity-95 transition-opacity" style={{ width: "16%" }}>
-                    <span className="text-xs font-black text-white font-mono">24 / 150</span>
+                  <div className="h-9 bg-gradient-to-r from-teal-500 to-sky-600 rounded-lg flex items-center px-4 shadow-lg shadow-teal-500/10 hover:opacity-95 transition-opacity min-w-[75px]" style={{ width: "16%" }}>
+                    <span className="text-xs font-black text-white font-mono whitespace-nowrap">24 / 150</span>
                   </div>
                 </div>
 
                 {/* Segment 5 */}
                 <div className="space-y-1.5">
                   <div className="flex justify-between text-xs font-semibold">
-                    <span className="text-pink-400">5. Client Confirmed / Won</span>
+                    <span className="text-emerald-400">5. Client Confirmed / Won</span>
                     <span className="text-white">12 Leads (8% conversion)</span>
                   </div>
-                  <div className="h-9 bg-gradient-to-r from-pink-500 to-pink-600 rounded-lg flex items-center px-4 shadow-lg shadow-pink-500/10 hover:opacity-95 transition-opacity" style={{ width: "8%" }}>
-                    <span className="text-xs font-black text-white font-mono">12 / 150</span>
+                  <div className="h-9 bg-gradient-to-r from-emerald-500 to-sky-500 rounded-lg flex items-center px-4 shadow-lg shadow-emerald-500/10 hover:opacity-95 transition-opacity min-w-[75px]" style={{ width: "8%" }}>
+                    <span className="text-xs font-black text-white font-mono whitespace-nowrap">12 / 150</span>
                   </div>
                 </div>
               </div>
