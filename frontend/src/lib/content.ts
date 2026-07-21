@@ -76,21 +76,16 @@ export async function getContentItems(type: string): Promise<ContentItem[]> {
 }
 
 export async function getContentItemBySlug(type: string, slug: string): Promise<ContentItem | null> {
-  const normalizedSlug = slug.replace(/_/g, "-");
-  const targetPath = path.join(CONTENT_DIR, type, `${normalizedSlug}.json`);
-  try {
-    const content = await fs.readFile(targetPath, "utf-8");
-    return JSON.parse(content);
-  } catch (error) {
-    // If not found, try index in subdirectory if slug has no file extension
-    try {
-      const subpath = path.join(CONTENT_DIR, type, normalizedSlug, "index.json");
-      const content = await fs.readFile(subpath, "utf-8");
-      return JSON.parse(content);
-    } catch (subError) {
-      return null;
-    }
-  }
+  const decodedSlug = decodeURIComponent(slug);
+  const targetSlug = decodedSlug.replace(/[_ ]/g, "-").toLowerCase();
+
+  const items = await getContentItems(type);
+  const match = items.find((item) => {
+    const itemSlug = item.slug.toLowerCase().replace(/[_ ]/g, "-");
+    return itemSlug === targetSlug || itemSlug === `${targetSlug}/${targetSlug}`;
+  });
+
+  return match || null;
 }
 
 export async function searchContentItems(query: string, type?: string): Promise<ContentItem[]> {
