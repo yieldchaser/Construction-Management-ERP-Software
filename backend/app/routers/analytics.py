@@ -458,16 +458,21 @@ def get_company_operational_analytics(company_id: uuid.UUID, db: Session = Depen
         completed_tasks = sum(1 for t in tasks if (t.status or "").lower() in COMPLETED_TASK_STATUSES)
         progress_pct = round((completed_tasks / total_tasks) * 100, 1) if total_tasks else 0.0
 
+        s_val = getattr(p, "actual_start_date", None) or getattr(p, "planned_start_date", None) or getattr(p, "created_at", None)
+        e_val = getattr(p, "actual_end_date", None) or getattr(p, "planned_end_date", None)
+        s_dt = _to_date(s_val)
+        e_dt = _to_date(e_val)
+
         project_summary.append({
             "project_id": str(p.id),
             "project_name": p.name,
             "code": p.code or "—",
             "status": p_status,
             "health": health,
-            "start_date": p.start_date.split("T")[0] if isinstance(p.start_date, str) else p.start_date.strftime("%Y-%m-%d") if p.start_date else "—",
-            "end_date": p.end_date.split("T")[0] if isinstance(p.end_date, str) else p.end_date.strftime("%Y-%m-%d") if p.end_date else "—",
+            "start_date": s_dt.strftime("%Y-%m-%d") if s_dt else "—",
+            "end_date": e_dt.strftime("%Y-%m-%d") if e_dt else "—",
             "progress": progress_pct,
-            "customer_name": p.customer_name or "—",
+            "customer_name": getattr(p, "customer_name", None) or getattr(p, "category", None) or "—",
             "key_personnel": "Supervisor"
         })
 
