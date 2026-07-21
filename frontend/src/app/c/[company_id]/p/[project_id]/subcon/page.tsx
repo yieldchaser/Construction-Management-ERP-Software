@@ -240,7 +240,7 @@ export default function SubconPage() {
                   filteredWO.map(wo => (
                     <tr key={wo.id} className="hover:bg-elevated/40 transition-colors">
                       <td className="px-4 py-3 text-muted">{wo.sNo}</td>
-                      <td className="px-4 py-3 font-mono text-muted">{wo.id}</td>
+                      <td className="px-4 py-3 font-sans text-muted">{wo.id}</td>
                       <td className="px-4 py-3 font-semibold text-foreground">{wo.subContractor}</td>
                       <td className="px-4 py-3 text-muted">
                         <div className="flex items-center gap-2">
@@ -292,7 +292,7 @@ export default function SubconPage() {
                 <div>
                   <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Sub-Con Workorder</h3>
                   <div className="flex items-center gap-1 mt-0.5">
-                    <span className="text-[11px] text-muted font-mono">WO number: pending</span>
+                    <span className="text-[11px] text-muted font-sans">WO number: pending</span>
                   </div>
                 </div>
                 <button onClick={() => setShowWOModal(false)} className="text-muted hover:text-foreground text-base">✕</button>

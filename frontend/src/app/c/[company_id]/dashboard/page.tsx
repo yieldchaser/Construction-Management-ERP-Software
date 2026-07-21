@@ -1087,7 +1087,7 @@ export default function DashboardPage() {
                             ) : (
                               filteredProjList.map((p, idx) => (
                                 <tr key={p.id} className="hover:bg-elevated transition-colors">
-                                  <td className="px-4 py-3 text-center border-r border-border-custom text-muted font-mono">{idx + 1}</td>
+                                  <td className="px-4 py-3 text-center border-r border-border-custom text-muted font-sans">{idx + 1}</td>
                                   <td className="px-4 py-3 border-r border-border-custom font-bold text-foreground">{p.name}</td>
                                   <td className="px-4 py-3 border-r border-border-custom text-muted font-semibold">{p.category || "-"}</td>
                                   <td className="px-4 py-3 border-r border-border-custom text-muted font-semibold">{p.keyPersonnel || "-"}</td>
@@ -1110,8 +1110,8 @@ export default function DashboardPage() {
                                       {p.health}
                                     </span>
                                   </td>
-                                  <td className="px-4 py-3 text-center border-r border-border-custom text-muted font-semibold font-mono">{p.startDate || "-"}</td>
-                                  <td className="px-4 py-3 text-center border-r border-border-custom text-muted font-semibold font-mono">{p.endDate || "-"}</td>
+                                  <td className="px-4 py-3 text-center border-r border-border-custom text-muted font-semibold font-sans">{p.startDate || "-"}</td>
+                                  <td className="px-4 py-3 text-center border-r border-border-custom text-muted font-semibold font-sans">{p.endDate || "-"}</td>
                                   <td className="px-4 py-3 text-right border-r border-border-custom font-bold text-foreground font-sans">{p.progress.toFixed(2)}%</td>
                                   <td className="px-4 py-3 border-r border-border-custom text-muted font-medium">{p.customerName || "-"}</td>
                                   <td className="px-4 py-3 text-muted font-medium">{p.projectStage || "-"}</td>
@@ -1317,12 +1317,12 @@ export default function DashboardPage() {
                           ) : (
                             financialData.project_summaries.map((p: any, idx: number) => (
                               <tr key={idx} className="border-t border-border-custom hover:bg-elevated transition-all text-foreground">
-                                <td className="px-3 py-3 text-center border-r border-border-custom text-muted font-mono font-bold">{idx + 1}</td>
+                                <td className="px-3 py-3 text-center border-r border-border-custom text-muted font-sans font-bold">{idx + 1}</td>
                                 <td className="px-4 py-3 border-r border-border-custom font-bold text-foreground">{p.project_name}</td>
                                 <td className="px-4 py-3 border-r border-border-custom text-muted">{p.project_status}</td>
                                 <td className="px-4 py-3 text-center border-r border-border-custom">
                                   {p.project_health === "-" ? (
-                                    <span className="text-muted font-bold font-mono">-</span>
+                                    <span className="text-muted font-bold font-sans">-</span>
                                   ) : (
                                     <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold border ${
                                       p.project_health === "Healthy"
@@ -1813,7 +1813,7 @@ export default function DashboardPage() {
                 <div className="p-5 rounded-md border border-border-custom bg-elevated space-y-3">
                   <div className="text-xs font-bold text-muted uppercase tracking-wider">XML Agent Authentication</div>
                   <div className="p-3 bg-input rounded-lg border border-border-custom flex items-center justify-between text-xs">
-                    <code className="text-secondary font-mono font-bold">SF-TALLY-1082-MUM</code>
+                    <code className="text-secondary font-sans font-bold">SF-TALLY-1082-MUM</code>
                     <button className="text-[10px] text-muted hover:text-foreground uppercase font-bold">Copy Key</button>
                   </div>
                   <p className="text-[10px] text-muted">Enter this key into your desktop Tally.ERP agent configuration panel.</p>

@@ -161,9 +161,9 @@ export default function TowersPage() {
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-2 text-[10px]">
-                      <div><span className="text-muted block">Budget</span><span className="text-foreground font-mono font-bold">₹{fmt(t.budget)}</span></div>
-                      <div><span className="text-muted block">Start</span><span className="text-foreground font-mono">{t.start_date ? t.start_date.split("T")[0] : "-"}</span></div>
-                      <div><span className="text-muted block">End</span><span className="text-foreground font-mono">{t.end_date ? t.end_date.split("T")[0] : "-"}</span></div>
+                      <div><span className="text-muted block">Budget</span><span className="text-foreground font-sans font-bold">₹{fmt(t.budget)}</span></div>
+                      <div><span className="text-muted block">Start</span><span className="text-foreground font-sans">{t.start_date ? t.start_date.split("T")[0] : "-"}</span></div>
+                      <div><span className="text-muted block">End</span><span className="text-foreground font-sans">{t.end_date ? t.end_date.split("T")[0] : "-"}</span></div>
                     </div>
                   </div>
                 ))}
@@ -192,11 +192,11 @@ export default function TowersPage() {
                       {pnl.map((p) => (
                         <tr key={p.tower_id} className="border-b border-white/[0.02] hover:bg-white/[0.015] transition-all">
                           <td className="px-5 py-3.5 text-foreground font-semibold">{p.tower_name} <span className="text-muted">({p.tower_code})</span></td>
-                          <td className="px-5 py-3.5 text-right font-mono text-zinc-300">₹{fmt(p.total_po_value)}</td>
-                          <td className="px-5 py-3.5 text-right font-mono text-zinc-300">₹{fmt(p.total_wo_value)}</td>
-                          <td className="px-5 py-3.5 text-right font-mono text-primary">₹{fmt(p.total_billed)}</td>
-                          <td className="px-5 py-3.5 text-right font-mono text-zinc-300">₹{fmt(p.budget)}</td>
-                          <td className="px-5 py-3.5 text-right font-mono text-muted">₹{fmt(p.variance)}</td>
+                          <td className="px-5 py-3.5 text-right font-sans text-zinc-300">₹{fmt(p.total_po_value)}</td>
+                          <td className="px-5 py-3.5 text-right font-sans text-zinc-300">₹{fmt(p.total_wo_value)}</td>
+                          <td className="px-5 py-3.5 text-right font-sans text-primary">₹{fmt(p.total_billed)}</td>
+                          <td className="px-5 py-3.5 text-right font-sans text-zinc-300">₹{fmt(p.budget)}</td>
+                          <td className="px-5 py-3.5 text-right font-sans text-muted">₹{fmt(p.variance)}</td>
                         </tr>
                       ))}
                       {pnl.length === 0 && (
@@ -238,7 +238,7 @@ export default function TowersPage() {
               </div>
               <div className="space-y-1">
                 <label className="text-muted font-bold">Tower Budget (INR)</label>
-                <input type="number" value={formBudget} onChange={(e) => setFormBudget(parseFloat(e.target.value) || 0)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground font-mono" />
+                <input type="number" value={formBudget} onChange={(e) => setFormBudget(parseFloat(e.target.value) || 0)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground font-sans" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">

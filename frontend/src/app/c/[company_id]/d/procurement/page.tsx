@@ -660,7 +660,7 @@ export default function ProcurementPage() {
                             </div>
                             <div className="text-right">
                               <span className="text-[9px] uppercase text-muted block">Warehouse Stock</span>
-                              <strong className={`font-mono font-bold ${stock && stock.onHand < stock.minAlertThreshold ? "text-red-400" : "text-emerald-400"}`}>
+                              <strong className={`font-sans font-bold ${stock && stock.onHand < stock.minAlertThreshold ? "text-red-400" : "text-emerald-400"}`}>
                                 {stock ? `${stock.onHand} ${stock.unit}` : "No stock logs"}
                               </strong>
                             </div>
@@ -708,7 +708,7 @@ export default function ProcurementPage() {
                       ) : (
                         pos.map((po) => (
                           <tr key={po.id} className="border-b border-border-custom hover:bg-elevated transition-all align-top">
-                            <td className="px-5 py-3 font-mono font-bold text-foreground whitespace-nowrap">{po.poNumber}</td>
+                            <td className="px-5 py-3 font-sans font-bold text-foreground whitespace-nowrap">{po.poNumber}</td>
                             <td className="px-5 py-3 text-zinc-200 whitespace-nowrap">{po.vendor}</td>
                             <td className="px-5 py-3 space-y-1">
                               {po.items.map((item, i) => (
@@ -730,7 +730,7 @@ export default function ProcurementPage() {
                                 po.status === "received" || po.status === "closed" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "bg-primary/10 text-primary border border-primary/20"
                               }`}>{po.status}</span>
                             </td>
-                            <td className="px-5 py-3 text-right font-mono font-bold text-foreground whitespace-nowrap">₹{po.totalAmount.toLocaleString("en-IN")}</td>
+                            <td className="px-5 py-3 text-right font-sans font-bold text-foreground whitespace-nowrap">₹{po.totalAmount.toLocaleString("en-IN")}</td>
                             <td className="px-5 py-3 text-right whitespace-nowrap">
                               <div className="flex gap-2 justify-end">
                                 <a
@@ -783,12 +783,12 @@ export default function ProcurementPage() {
                     {inventory.map((inv, idx) => (
                       <tr key={idx} className="border-b border-border-custom hover:bg-elevated transition-all">
                         <td className="px-5 py-3 font-bold text-foreground">{inv.name}</td>
-                        <td className="px-5 py-3 text-muted font-mono uppercase">{inv.unit}</td>
-                        <td className={`px-5 py-3 font-mono font-bold ${inv.onHand < 0 ? "text-red-400 font-extrabold" : "text-zinc-200"}`}>
+                        <td className="px-5 py-3 text-muted font-sans uppercase">{inv.unit}</td>
+                        <td className={`px-5 py-3 font-sans font-bold ${inv.onHand < 0 ? "text-red-400 font-extrabold" : "text-zinc-200"}`}>
                           {inv.onHand} {inv.unit}
                         </td>
-                        <td className="px-5 py-3 text-muted font-mono">{inv.reserved} {inv.unit}</td>
-                        <td className="px-5 py-3 text-muted font-mono">{inv.minAlertThreshold} {inv.unit}</td>
+                        <td className="px-5 py-3 text-muted font-sans">{inv.reserved} {inv.unit}</td>
+                        <td className="px-5 py-3 text-muted font-sans">{inv.minAlertThreshold} {inv.unit}</td>
                         <td className="px-5 py-3">
                           {inv.onHand < 0 ? (
                             <span className="px-2 py-0.5 rounded bg-red-500/10 border border-red-500/20 text-red-400 font-bold uppercase text-[9px]">Negative stock context</span>
@@ -825,11 +825,11 @@ export default function ProcurementPage() {
                     {transactions.map((txn, idx) => (
                       <tr key={idx} className="border-b border-border-custom hover:bg-elevated transition-all">
                         <td className="px-5 py-3 font-bold text-foreground">{txn.materialName}</td>
-                        <td className={`px-5 py-3 font-mono font-bold ${txn.type === "used" ? "text-amber-400" : "text-emerald-400"}`}>
+                        <td className={`px-5 py-3 font-sans font-bold ${txn.type === "used" ? "text-amber-400" : "text-emerald-400"}`}>
                           {txn.type === "used" ? "-" : "+"}{txn.qty} {txn.unit}
                         </td>
                         <td className="px-5 py-3 capitalize">{txn.type}</td>
-                        <td className="px-5 py-3 text-muted font-mono">{txn.sourceRef}</td>
+                        <td className="px-5 py-3 text-muted font-sans">{txn.sourceRef}</td>
                         <td className="px-5 py-3 text-muted">{txn.date}</td>
                       </tr>
                     ))}
@@ -860,7 +860,7 @@ export default function ProcurementPage() {
                 </div>
                 <div className="bg-input border border-border-custom rounded-md p-4">
                   <span className="text-[9px] uppercase text-muted tracking-wider block">Unbilled Value (est.)</span>
-                  <strong className={`text-xl font-extrabold mt-1 block font-mono ${unbilledGRNs.length > 0 ? "text-amber-400" : "text-emerald-400"}`}>
+                  <strong className={`text-xl font-extrabold mt-1 block font-sans ${unbilledGRNs.length > 0 ? "text-amber-400" : "text-emerald-400"}`}>
                     ₹{unbilledGRNs.reduce((s, g) => s + g.items.reduce((a, i) => a + i.qty * i.rate, 0), 0).toLocaleString()}
                   </strong>
                 </div>
@@ -885,7 +885,7 @@ export default function ProcurementPage() {
                       </div>
                       <div className="text-right">
                         <span className="text-[9px] text-muted block">Est. Unbilled Value</span>
-                        <strong className="text-sm font-extrabold text-amber-400 font-mono">₹{group.totalValue.toLocaleString()}</strong>
+                        <strong className="text-sm font-extrabold text-amber-400 font-sans">₹{group.totalValue.toLocaleString()}</strong>
                       </div>
                     </div>
 
@@ -908,14 +908,14 @@ export default function ProcurementPage() {
                           return (
                             <tr key={grn.id} className="border-b border-border-custom hover:bg-elevated transition-all">
                               <td className="px-5 py-3">
-                                <span className="font-mono font-bold text-foreground">{grn.grnNumber}</span>
+                                <span className="font-sans font-bold text-foreground">{grn.grnNumber}</span>
                                 <span className="block text-[9px] text-muted mt-0.5">PO: {grn.poNumber}</span>
                               </td>
                               <td className="px-5 py-3 text-muted">{grn.receivedDate}</td>
                               <td className="px-5 py-3">
                                 {grn.items.map((item, i) => (
                                   <div key={i} className="text-zinc-300">
-                                    {item.name}: <span className="font-mono font-bold">{item.qty} {item.unit}</span> @ ₹{item.rate.toLocaleString()}
+                                    {item.name}: <span className="font-sans font-bold">{item.qty} {item.unit}</span> @ ₹{item.rate.toLocaleString()}
                                   </div>
                                 ))}
                               </td>
@@ -924,7 +924,7 @@ export default function ProcurementPage() {
                                   {threeWay.match ? "✓" : <Icon name="warning" className="w-3 h-3" />} {threeWay.text}
                                 </span>
                               </td>
-                              <td className="px-5 py-3 text-right font-mono font-bold text-amber-400">₹{grnValue.toLocaleString("en-IN")}</td>
+                              <td className="px-5 py-3 text-right font-sans font-bold text-amber-400">₹{grnValue.toLocaleString("en-IN")}</td>
                               <td className="px-5 py-3 text-right">
                                 <button
                                   onClick={() => handleMarkAsBilled(grn.id)}
@@ -951,7 +951,7 @@ export default function ProcurementPage() {
                       <tbody>
                         {grns.filter(g => g.isBilled).map(grn => (
                           <tr key={grn.id} className="border-b border-border-custom">
-                            <td className="px-5 py-3 font-mono font-bold text-muted">{grn.grnNumber}</td>
+                            <td className="px-5 py-3 font-sans font-bold text-muted">{grn.grnNumber}</td>
                             <td className="px-5 py-3 text-muted">{grn.vendor}</td>
                             <td className="px-5 py-3 text-muted">{grn.receivedDate}</td>
                             <td className="px-5 py-3 text-right">
@@ -1257,7 +1257,7 @@ export default function ProcurementPage() {
                       <span className="text-[9px] text-muted">Commercial terms</span>
                     </div>
 
-                    <div className="space-y-2 font-mono text-[10px]">
+                    <div className="space-y-2 font-sans text-[10px]">
                       <div className="flex justify-between border-b border-border-custom pb-1">
                         <span className="text-muted">Rate:</span>
                         <strong className={quote.isL1 ? "text-emerald-400" : "text-foreground"}>₹{quote.rate.toLocaleString()}/unit</strong>

@@ -156,11 +156,11 @@ export default function BudgetPage() {
                       ].map((row) => (
                         <tr key={row.label} className="border-b border-border-custom hover:bg-elevated transition-all">
                           <td className="px-5 py-3.5 text-foreground font-semibold">{row.label}</td>
-                          <td className="px-5 py-3.5 text-right font-mono text-muted">₹{fmt(row.b)}</td>
-                          <td className="px-5 py-3.5 text-right font-mono text-amber-400">₹{fmt(row.c)}</td>
-                          <td className="px-5 py-3.5 text-right font-mono text-primary">₹{fmt(row.a)}</td>
-                          <td className="px-5 py-3.5 text-right font-mono text-muted">₹{fmt(row.b - row.c)}</td>
-                          <td className="px-5 py-3.5 text-right font-mono text-muted">₹{fmt(row.b - row.a)}</td>
+                          <td className="px-5 py-3.5 text-right font-sans text-muted">₹{fmt(row.b)}</td>
+                          <td className="px-5 py-3.5 text-right font-sans text-amber-400">₹{fmt(row.c)}</td>
+                          <td className="px-5 py-3.5 text-right font-sans text-primary">₹{fmt(row.a)}</td>
+                          <td className="px-5 py-3.5 text-right font-sans text-muted">₹{fmt(row.b - row.c)}</td>
+                          <td className="px-5 py-3.5 text-right font-sans text-muted">₹{fmt(row.b - row.a)}</td>
                           <td className="px-5 py-3.5 text-center">
                             <div className="flex items-center justify-center gap-2">
                               <div className="w-24 bg-elevated rounded-full h-1.5 overflow-hidden">

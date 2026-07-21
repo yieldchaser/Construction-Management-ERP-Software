@@ -525,16 +525,16 @@ export default function LibraryHubPage() {
                       </td>
                       <td className="px-6 py-4 text-muted whitespace-nowrap">{formatLibraryCell(item.bank_name)}</td>
                       <td className="px-6 py-4 text-muted whitespace-nowrap">{formatLibraryCell(item.account_name)}</td>
-                      <td className="px-6 py-4 text-muted font-mono whitespace-nowrap">{formatLibraryCell(item.account_number)}</td>
-                      <td className="px-6 py-4 text-muted font-mono whitespace-nowrap">{formatLibraryCell(item.ifsc_code)}</td>
+                      <td className="px-6 py-4 text-muted font-sans whitespace-nowrap">{formatLibraryCell(item.account_number)}</td>
+                      <td className="px-6 py-4 text-muted font-sans whitespace-nowrap">{formatLibraryCell(item.ifsc_code)}</td>
                       <td className="px-6 py-4 text-muted whitespace-nowrap">{formatLibraryCell(item.tax_no)}</td>
                       <td className="px-6 py-4 text-muted whitespace-nowrap">{formatLibraryCell(item.address)}</td>
-                      <td className="px-6 py-4 text-muted font-mono whitespace-nowrap">{formatLibraryCell(item.aadhaar_number)}</td>
-                      <td className="px-6 py-4 text-muted font-mono whitespace-nowrap">{formatLibraryCell(item.pan_number)}</td>
-                      <td className="px-6 py-4 text-muted font-mono whitespace-nowrap">{formatLibraryCell(item.esi_number)}</td>
-                      <td className="px-6 py-4 text-muted font-mono whitespace-nowrap">{formatLibraryCell(item.pf_number)}</td>
+                      <td className="px-6 py-4 text-muted font-sans whitespace-nowrap">{formatLibraryCell(item.aadhaar_number)}</td>
+                      <td className="px-6 py-4 text-muted font-sans whitespace-nowrap">{formatLibraryCell(item.pan_number)}</td>
+                      <td className="px-6 py-4 text-muted font-sans whitespace-nowrap">{formatLibraryCell(item.esi_number)}</td>
+                      <td className="px-6 py-4 text-muted font-sans whitespace-nowrap">{formatLibraryCell(item.pf_number)}</td>
                       <td className="px-6 py-4 text-muted whitespace-nowrap">{formatLibraryCell(item.father_name)}</td>
-                      <td className="px-6 py-4 text-muted font-mono whitespace-nowrap">{formatLibraryCell(item.passport_no)}</td>
+                      <td className="px-6 py-4 text-muted font-sans whitespace-nowrap">{formatLibraryCell(item.passport_no)}</td>
                       <td className="px-6 py-4 text-muted whitespace-nowrap">{formatDateCell(item.passport_expiry_date)}</td>
                       <td className="px-6 py-4 text-muted whitespace-nowrap">{formatDateCell(item.date_of_joining)}</td>
                       <td className="px-6 py-4 text-muted whitespace-nowrap">{formatDateCell(item.created_at)}</td>
@@ -640,8 +640,8 @@ export default function LibraryHubPage() {
                 ) : (
                   filteredData.map((item) => (
                     <tr key={item.id} className="hover:bg-elevated/20 transition-colors border-b border-border-custom last:border-b-0">
-                      <td className="px-6 py-4 text-primary font-semibold font-mono">{formatLibraryCell(item.code)}</td>
-                      <td className="px-6 py-4 text-muted font-mono">{formatLibraryCell(item.sub_cost_code)}</td>
+                      <td className="px-6 py-4 text-primary font-semibold font-sans">{formatLibraryCell(item.code)}</td>
+                      <td className="px-6 py-4 text-muted font-sans">{formatLibraryCell(item.sub_cost_code)}</td>
                       <td className="px-6 py-4 font-semibold text-foreground">{formatLibraryCell(item.name)}</td>
                       <td className="px-6 py-4 text-muted">{formatDateCell(item.created_at)}</td>
                       <td className="px-6 py-4 text-center">
@@ -682,7 +682,7 @@ export default function LibraryHubPage() {
                 ) : (
                   filteredData.map((item) => (
                     <tr key={item.id} className="hover:bg-elevated/20 transition-colors border-b border-border-custom last:border-b-0">
-                      <td className="px-6 py-4 text-muted font-mono">{formatLibraryCell(item.item_code)}</td>
+                      <td className="px-6 py-4 text-muted font-sans">{formatLibraryCell(item.item_code)}</td>
                       <td className="px-6 py-4 font-semibold text-foreground">{formatLibraryCell(item.name)}</td>
                       <td className="px-6 py-4 text-muted">{formatLibraryCell(item.specifications)}</td>
                       <td className="px-6 py-4 text-muted">{formatLibraryCell(item.unit)}</td>
@@ -739,7 +739,7 @@ export default function LibraryHubPage() {
                     return (
                       <tr key={item.id} className="hover:bg-elevated/20 transition-colors border-b border-border-custom last:border-b-0">
                         <td className="px-6 py-4 font-semibold text-foreground">{formatLibraryCell(item.name)}</td>
-                        <td className="px-6 py-4 text-muted font-mono">{formatLibraryCell(item.item_code)}</td>
+                        <td className="px-6 py-4 text-muted font-sans">{formatLibraryCell(item.item_code)}</td>
                         <td className="px-6 py-4 text-muted">{formatLibraryCell(item.cost_code)}</td>
                         <td className="px-6 py-4 text-muted">{formatLibraryCell(item.unit)}</td>
                         <td className="px-6 py-4 text-muted">{formatLibraryCell(item.components)}</td>
@@ -791,7 +791,7 @@ export default function LibraryHubPage() {
                     value={simpleCode}
                     onChange={(e) => setSimpleCode(e.target.value)}
                     placeholder="e.g. CC-101"
-                    className="input-field w-full px-3 py-2 text-xs focus:outline-none font-mono"
+                    className="input-field w-full px-3 py-2 text-xs focus:outline-none font-sans"
                   />
                 </div>
               )}
@@ -804,7 +804,7 @@ export default function LibraryHubPage() {
                     value={simpleSubCode}
                     onChange={(e) => setSimpleSubCode(e.target.value)}
                     placeholder="e.g. SCC-101"
-                    className="input-field w-full px-3 py-2 text-xs focus:outline-none font-mono"
+                    className="input-field w-full px-3 py-2 text-xs focus:outline-none font-sans"
                   />
                 </div>
               )}

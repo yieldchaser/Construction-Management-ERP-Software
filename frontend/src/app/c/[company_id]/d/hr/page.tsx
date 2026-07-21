@@ -829,7 +829,7 @@ export default function HRPayrollPage() {
                   <tbody className="divide-y divide-border-custom">
                     {employees.map(emp => (
                       <tr key={emp.id} className="hover:bg-elevated transition-colors cursor-pointer" onClick={() => { setSelectedEmpDetail(emp); setShowDetailsDrawer(true); }}>
-                        <td className="px-3 py-2.5 font-mono text-muted">{emp.code}</td>
+                        <td className="px-3 py-2.5 font-sans text-muted">{emp.code}</td>
                         <td className="px-3 py-2.5 font-semibold text-foreground">{emp.name}</td>
                         <td className="px-3 py-2.5 text-zinc-300">{emp.designation}</td>
                         <td className="px-3 py-2.5 text-muted">{emp.department}</td>
@@ -890,8 +890,8 @@ export default function HRPayrollPage() {
                       return (
                         <tr key={rec.id} className="hover:bg-elevated transition-colors">
                           <td className="px-3 py-3 font-semibold text-foreground">{empName}</td>
-                          <td className="px-3 py-3 font-mono text-green-400">{rec.punchIn || "—"}</td>
-                          <td className="px-3 py-3 font-mono text-muted">{rec.punchOut || <span className="text-yellow-500 animate-pulse">Active</span>}</td>
+                          <td className="px-3 py-3 font-sans text-green-400">{rec.punchIn || "—"}</td>
+                          <td className="px-3 py-3 font-sans text-muted">{rec.punchOut || <span className="text-yellow-500 animate-pulse">Active</span>}</td>
                           <td className="px-3 py-3 text-foreground font-bold">{rec.hoursWorked > 0 ? `${rec.hoursWorked}h` : "—"}</td>
                           <td className="px-3 py-3 text-orange-400">{rec.overtime > 0 ? `+${rec.overtime.toFixed(2)}h` : "—"}</td>
                           <td className="px-3 py-3 text-muted">
@@ -1028,12 +1028,12 @@ export default function HRPayrollPage() {
 
                         return (
                           <tr key={log.id} className="hover:bg-elevated transition-colors">
-                            <td className="px-4 py-3 font-mono text-muted">{formattedDate}</td>
+                            <td className="px-4 py-3 font-sans text-muted">{formattedDate}</td>
                             <td className="px-4 py-3 font-semibold text-foreground">{log.employee_name || "Staff"}</td>
-                            <td className="px-4 py-3 font-mono text-green-400">{fmtTime(log.start_time)}</td>
-                            <td className="px-4 py-3 font-mono text-muted">{fmtTime(log.end_time)}</td>
-                            <td className="px-4 py-3 text-foreground font-semibold font-mono">{durationStr}</td>
-                            <td className="px-4 py-3 font-bold text-blue-400 font-mono">{log.hours}h</td>
+                            <td className="px-4 py-3 font-sans text-green-400">{fmtTime(log.start_time)}</td>
+                            <td className="px-4 py-3 font-sans text-muted">{fmtTime(log.end_time)}</td>
+                            <td className="px-4 py-3 text-foreground font-semibold font-sans">{durationStr}</td>
+                            <td className="px-4 py-3 font-bold text-blue-400 font-sans">{log.hours}h</td>
                             <td className="px-4 py-3">
                               <span className="px-2 py-0.5 rounded bg-elevated border border-border-custom text-[10px] text-zinc-300">
                                 {taskName}
@@ -1118,13 +1118,13 @@ export default function HRPayrollPage() {
                         <div className="p-3.5 rounded-lg bg-elevated border border-border-custom flex justify-between items-center text-xs">
                           <div>
                             <span className="text-[10px] text-muted uppercase block font-bold">Calculated Duration</span>
-                            <span className="text-foreground font-extrabold font-mono text-sm">
+                            <span className="text-foreground font-extrabold font-sans text-sm">
                               {calculateHoursAndDuration(timesheetForm.startTime, timesheetForm.endTime).durationStr}
                             </span>
                           </div>
                           <div>
                             <span className="text-[10px] text-muted uppercase block font-bold text-right">Hours Logged</span>
-                            <span className="text-primary font-black font-mono text-sm block text-right">
+                            <span className="text-primary font-black font-sans text-sm block text-right">
                               {calculateHoursAndDuration(timesheetForm.startTime, timesheetForm.endTime).hours}h
                             </span>
                           </div>
@@ -1352,7 +1352,7 @@ export default function HRPayrollPage() {
                     <tbody className="divide-y divide-border-custom text-zinc-300">
                       {leaveBalances.map((row) => {
                         const cell = (b: LeaveTypeBalance) => (
-                          <span className="font-mono">
+                          <span className="font-sans">
                             <span className="text-muted">{b.entitled}</span>
                             <span className="text-muted"> / </span>
                             <span className="text-amber-400">{b.used}</span>
@@ -1924,7 +1924,7 @@ export default function HRPayrollPage() {
               <div className="flex items-center justify-between pb-4 border-b border-border-custom mb-5">
                 <div>
                   <h2 className="text-sm font-bold text-foreground uppercase tracking-wider">{selectedEmpDetail.name}</h2>
-                  <p className="text-[10px] text-muted font-mono">{selectedEmpDetail.code}</p>
+                  <p className="text-[10px] text-muted font-sans">{selectedEmpDetail.code}</p>
                 </div>
                 <button onClick={() => setShowDetailsDrawer(false)} className="text-muted hover:text-foreground text-lg">✕</button>
               </div>

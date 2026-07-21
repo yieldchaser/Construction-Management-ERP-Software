@@ -332,13 +332,13 @@ export default function BoqTab() {
                       className="border-b border-border-custom hover:bg-elevated transition-colors cursor-pointer"
                       onClick={() => toggleExpand(d.id)}
                     >
-                      <td className="py-3 pl-5 pr-2 font-mono text-muted">{idx + 1}</td>
+                      <td className="py-3 pl-5 pr-2 font-sans text-muted">{idx + 1}</td>
                       <td className="py-3 px-2 text-foreground font-medium">
                         {d.client_name || <span className="text-muted">—</span>}
                       </td>
                       <td className="py-3 px-2 text-muted">{d.title}</td>
                       <td className="py-3 px-2 text-center">
-                        <span className="font-mono text-muted">
+                        <span className="font-sans text-muted">
                           {d.milestone_done}/{d.milestone_total}
                         </span>
                         <div className="mt-1 h-1 w-16 bg-elevated rounded-full overflow-hidden mx-auto">
@@ -349,7 +349,7 @@ export default function BoqTab() {
                         </div>
                       </td>
                       <td className="py-3 px-2 text-right">
-                        <span className="font-mono text-muted font-semibold">
+                        <span className="font-sans text-muted font-semibold">
                           {pct.toFixed(1)}%
                         </span>
                         <div className="mt-1 h-1 w-20 bg-elevated rounded-full overflow-hidden ml-auto">
@@ -361,10 +361,10 @@ export default function BoqTab() {
                           />
                         </div>
                       </td>
-                      <td className="py-3 px-2 text-right font-mono text-muted">
+                      <td className="py-3 px-2 text-right font-sans text-muted">
                         {fmtINR(d.boq_value, currencyDecimalPlaces)}
                       </td>
-                      <td className="py-3 px-2 text-right font-mono font-semibold text-emerald-400">
+                      <td className="py-3 px-2 text-right font-sans font-semibold text-emerald-400">
                         {fmtINR(d.billed_value, currencyDecimalPlaces)}
                       </td>
                       <td className="py-3 pr-5 text-center text-muted">
@@ -470,19 +470,19 @@ export default function BoqTab() {
                                       )}
                                     </td>
                                     <td className="py-1.5 px-2 text-center text-muted">{i.unit}</td>
-                                    <td className="py-1.5 px-2 text-right font-mono text-muted">
+                                    <td className="py-1.5 px-2 text-right font-sans text-muted">
                                       {Number(i.quantity).toLocaleString("en-IN", { maximumFractionDigits: 4 })}
                                     </td>
-                                    <td className="py-1.5 px-2 text-right font-mono text-muted">
+                                    <td className="py-1.5 px-2 text-right font-sans text-muted">
                                       {fmtINR(i.rate, currencyDecimalPlaces)}
                                     </td>
-                                    <td className="py-1.5 px-2 text-right font-mono text-muted">
+                                    <td className="py-1.5 px-2 text-right font-sans text-muted">
                                       {fmtINR(i.supply_rate, currencyDecimalPlaces)}
                                     </td>
-                                    <td className="py-1.5 px-2 text-right font-mono text-muted">
+                                    <td className="py-1.5 px-2 text-right font-sans text-muted">
                                       {fmtINR(i.installation_rate, currencyDecimalPlaces)}
                                     </td>
-                                    <td className="py-1.5 px-2 text-right font-mono font-semibold text-muted">
+                                    <td className="py-1.5 px-2 text-right font-sans font-semibold text-muted">
                                       {fmtINR(amountOf(i), currencyDecimalPlaces)}
                                     </td>
                                   </tr>
@@ -493,7 +493,7 @@ export default function BoqTab() {
                                   <td colSpan={6} className="py-2 pl-1 font-bold text-foreground">
                                     Subtotal
                                   </td>
-                                  <td className="py-2 px-2 text-right font-bold text-foreground font-mono">
+                                  <td className="py-2 px-2 text-right font-bold text-foreground font-sans">
                                     {fmtINR(docItems.reduce((s, i) => s + amountOf(i), 0), currencyDecimalPlaces)}
                                   </td>
                                 </tr>

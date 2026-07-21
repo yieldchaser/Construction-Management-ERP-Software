@@ -119,13 +119,13 @@ export default function SubconScorecardsPage() {
                     <tr key={row.subcontractor_id} className="border-b border-white/[0.02] hover:bg-white/[0.015] transition-all">
                       <td className="px-5 py-3.5 text-white font-semibold">{row.subcontractor_name}</td>
                       <td className="px-5 py-3.5 text-muted">{row.scorecard_count}</td>
-                      <td className="px-5 py-3.5 text-right font-mono font-bold text-green-400">{fmt(row.avg_on_time_pct)}</td>
-                      <td className="px-5 py-3.5 text-right font-mono font-bold text-blue-400">{fmt(row.avg_billing_accuracy_pct)}</td>
-                      <td className="px-5 py-3.5 text-right font-mono font-bold text-secondary">{fmt(row.avg_quality_score)}</td>
-                      <td className="px-5 py-3.5 text-right font-mono">{row.total_tasks_completed}</td>
-                      <td className="px-5 py-3.5 text-right font-mono text-red-400">{row.total_tasks_delayed}</td>
-                      <td className="px-5 py-3.5 text-right font-mono">{fmtMoney(row.total_billed)}</td>
-                      <td className="px-5 py-3.5 text-right font-mono text-amber-400">{row.total_disputes}</td>
+                      <td className="px-5 py-3.5 text-right font-sans font-bold text-green-400">{fmt(row.avg_on_time_pct)}</td>
+                      <td className="px-5 py-3.5 text-right font-sans font-bold text-blue-400">{fmt(row.avg_billing_accuracy_pct)}</td>
+                      <td className="px-5 py-3.5 text-right font-sans font-bold text-secondary">{fmt(row.avg_quality_score)}</td>
+                      <td className="px-5 py-3.5 text-right font-sans">{row.total_tasks_completed}</td>
+                      <td className="px-5 py-3.5 text-right font-sans text-red-400">{row.total_tasks_delayed}</td>
+                      <td className="px-5 py-3.5 text-right font-sans">{fmtMoney(row.total_billed)}</td>
+                      <td className="px-5 py-3.5 text-right font-sans text-amber-400">{row.total_disputes}</td>
                     </tr>
                   ))}
                   {comparative.length === 0 && (
@@ -160,11 +160,11 @@ export default function SubconScorecardsPage() {
                       <tr key={sc.id} className="border-b border-white/[0.02] hover:bg-white/[0.015] transition-all">
                         <td className="px-5 py-3.5 text-white font-semibold">{sc.subcontractor_name}</td>
                         <td className="px-5 py-3.5 text-muted">{sc.period_start?.split("T")[0]} – {sc.period_end?.split("T")[0]}</td>
-                        <td className="px-5 py-3.5 text-right font-mono font-bold text-green-400">{fmt(sc.on_time_pct)}</td>
-                        <td className="px-5 py-3.5 text-right font-mono font-bold text-blue-400">{fmt(sc.billing_accuracy_pct)}</td>
-                        <td className="px-5 py-3.5 text-right font-mono font-bold text-secondary">{fmt(sc.quality_score)}</td>
-                        <td className="px-5 py-3.5 text-right font-mono">{fmtMoney(sc.total_billed)}</td>
-                        <td className="px-5 py-3.5 text-right font-mono text-amber-400">{sc.disputes_count}</td>
+                        <td className="px-5 py-3.5 text-right font-sans font-bold text-green-400">{fmt(sc.on_time_pct)}</td>
+                        <td className="px-5 py-3.5 text-right font-sans font-bold text-blue-400">{fmt(sc.billing_accuracy_pct)}</td>
+                        <td className="px-5 py-3.5 text-right font-sans font-bold text-secondary">{fmt(sc.quality_score)}</td>
+                        <td className="px-5 py-3.5 text-right font-sans">{fmtMoney(sc.total_billed)}</td>
+                        <td className="px-5 py-3.5 text-right font-sans text-amber-400">{sc.disputes_count}</td>
                       </tr>
                     );
                   })}

@@ -520,7 +520,7 @@ export default function GanttSchedulerPage() {
                   <div key={m.id} className={`flex items-start gap-4 p-4 rounded-md border ${colors[m.type]}`}>
                     <div className="flex flex-col items-center gap-1 shrink-0">
                       <div className="w-8 h-8 rounded-lg bg-elevated border border-border-custom flex items-center justify-center"><Icon name={icon[m.type]} className="w-4 h-4" /></div>
-                      <div className="text-[9px] font-mono text-muted">{new Date(m.milestone_date).toLocaleDateString()}</div>
+                      <div className="text-[9px] font-sans text-muted">{new Date(m.milestone_date).toLocaleDateString()}</div>
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
@@ -670,7 +670,7 @@ export default function GanttSchedulerPage() {
                 const statusCls = t.status === "in_progress" ? "bg-blue-500/10 border-blue-500/20 text-blue-400" : t.status === "completed" ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" : "bg-zinc-700/20 border-zinc-600/20 text-muted";
                 return (
                   <div key={t.id} className="bg-input border border-border-custom rounded-md p-4 flex items-start gap-4">
-                    <div className="shrink-0 text-[9px] font-mono text-muted w-20">{new Date(t.start_date).toLocaleDateString()}<br/>→ {new Date(t.end_date).toLocaleDateString()}</div>
+                    <div className="shrink-0 text-[9px] font-sans text-muted w-20">{new Date(t.start_date).toLocaleDateString()}<br/>→ {new Date(t.end_date).toLocaleDateString()}</div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-xs font-semibold text-foreground">{t.name}</span>
@@ -950,7 +950,7 @@ export default function GanttSchedulerPage() {
                   {/* Expression evaluation preview (Screen 5794) */}
                   {!useTakeoff && progressQty && isNaN(Number(progressQty)) && (
                     <div className="text-[10px] text-muted mt-1 pl-1">
-                      Evaluated Output: <strong className="text-foreground font-mono">{evaluateFormula(progressQty)}</strong>
+                      Evaluated Output: <strong className="text-foreground font-sans">{evaluateFormula(progressQty)}</strong>
                     </div>
                   )}
                 </div>
@@ -985,7 +985,7 @@ export default function GanttSchedulerPage() {
                       <p className="text-zinc-300 text-xs">{comm.message_text}</p>
                       
                       {comm.voice_note_url && (
-                        <div className="flex items-center gap-2 p-1.5 rounded bg-elevated border border-border-custom text-[9px] text-muted font-mono">
+                        <div className="flex items-center gap-2 p-1.5 rounded bg-elevated border border-border-custom text-[9px] text-muted font-sans">
                           <span className="inline-flex items-center gap-1"><Icon name="speaker" className="w-3 h-3" /> Audio Note:</span>
                           <span className="text-primary underline cursor-pointer truncate max-w-[150px]">{comm.voice_note_url}</span>
                         </div>

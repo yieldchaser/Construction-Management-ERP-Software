@@ -732,7 +732,7 @@ export default function ChatPage() {
                 </div>
                 <div>
                   <h4 className="text-[9px] font-extrabold text-muted uppercase tracking-wider">Group ID</h4>
-                  <p className="text-[10px] text-muted font-mono bg-elevated/40 border border-border-custom rounded-lg p-2 mt-1 select-all">
+                  <p className="text-[10px] text-muted font-sans bg-elevated/40 border border-border-custom rounded-lg p-2 mt-1 select-all">
                     {activeGroup.id}
                   </p>
                 </div>

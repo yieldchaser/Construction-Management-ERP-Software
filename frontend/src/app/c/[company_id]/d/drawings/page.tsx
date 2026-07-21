@@ -670,7 +670,7 @@ export default function DrawingsPage() {
             <div>
               <div className="text-muted mb-1">Version Code</div>
               <input type="text" value={newRevCode} onChange={e => setNewRevCode(e.target.value)}
-                className="w-full bg-input border border-border-custom rounded-lg p-2.5 text-foreground font-mono font-bold" />
+                className="w-full bg-input border border-border-custom rounded-lg p-2.5 text-foreground font-sans font-bold" />
             </div>
             <div>
               <div className="text-muted mb-1">Release Notes</div>

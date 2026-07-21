@@ -1681,8 +1681,8 @@ export default function FinancePage() {
                     ) : (
                       paymentRequests.map((req) => (
                         <tr key={req.id} onClick={() => setSelectedPR(req)} className="border-t border-border-custom hover:bg-elevated cursor-pointer transition-colors">
-                          <td className="px-5 py-3 text-foreground font-mono font-bold">{req.request_no || "—"}</td>
-                          <td className="px-5 py-3 text-muted font-mono">
+                          <td className="px-5 py-3 text-foreground font-sans font-bold">{req.request_no || "—"}</td>
+                          <td className="px-5 py-3 text-muted font-sans">
                             {new Date(req.created_at).toLocaleDateString("en-IN")}
                           </td>
                           <td className="px-5 py-3 font-semibold text-foreground">{req.party_name}</td>
@@ -1700,7 +1700,7 @@ export default function FinancePage() {
                               {req.status.toUpperCase()}
                             </span>
                           </td>
-                          <td className="px-5 py-3 text-muted font-mono">
+                          <td className="px-5 py-3 text-muted font-sans">
                             {req.due_date ? new Date(req.due_date).toLocaleDateString("en-IN") : "Immediate"}
                           </td>
                         </tr>
@@ -1802,7 +1802,7 @@ export default function FinancePage() {
                           </div>
                           <div>
                             <span className="text-muted block uppercase font-medium text-[8px] tracking-wider">IFSC Code</span>
-                            <span className="text-foreground font-semibold mt-0.5 block font-mono">{acc.ifsc_code || "—"}</span>
+                            <span className="text-foreground font-semibold mt-0.5 block font-sans">{acc.ifsc_code || "—"}</span>
                           </div>
                           <div>
                             <span className="text-muted block uppercase font-medium text-[8px] tracking-wider">UPI</span>
@@ -1810,7 +1810,7 @@ export default function FinancePage() {
                           </div>
                           <div>
                             <span className="text-muted block uppercase font-medium text-[8px] tracking-wider">IBAN No</span>
-                            <span className="text-foreground font-semibold mt-0.5 block font-mono">Not provided</span>
+                            <span className="text-foreground font-semibold mt-0.5 block font-sans">Not provided</span>
                           </div>
                           <div className="col-span-2">
                             <span className="text-muted block uppercase font-medium text-[8px] tracking-wider">Running Balance</span>
@@ -2072,7 +2072,7 @@ export default function FinancePage() {
                   ].map(kpi => (
                     <div key={kpi.label} className="bg-input border border-border-custom rounded-md p-4">
                       <span className="text-[9px] uppercase text-muted tracking-wider block">{kpi.label}</span>
-                      <strong className={`text-lg font-extrabold mt-1 block font-mono ${kpi.color}`}>{kpi.value}</strong>
+                      <strong className={`text-lg font-extrabold mt-1 block font-sans ${kpi.color}`}>{kpi.value}</strong>
                     </div>
                   ))}
                 </div>
@@ -2102,14 +2102,14 @@ export default function FinancePage() {
                             <td className="px-5 py-3 font-sans text-muted">{row.code}</td>
                             <td className="px-5 py-3 font-semibold text-foreground">{row.head}</td>
                             <td className="px-5 py-3 text-right font-sans text-zinc-300">₹{row.budget.toLocaleString()}</td>
-                            <td className="px-5 py-3 text-right font-mono font-bold text-foreground">₹{row.actual.toLocaleString()}</td>
-                            <td className={`px-5 py-3 text-right font-mono font-bold ${isOver ? "text-red-400" : "text-emerald-400"}`}>
+                            <td className="px-5 py-3 text-right font-sans font-bold text-foreground">₹{row.actual.toLocaleString()}</td>
+                            <td className={`px-5 py-3 text-right font-sans font-bold ${isOver ? "text-red-400" : "text-emerald-400"}`}>
                               {row.variance >= 0 ? "+" : ""}₹{row.variance.toLocaleString()}
                             </td>
-                            <td className={`px-5 py-3 text-right font-mono ${isOver ? "text-red-400" : isWarn ? "text-amber-400" : "text-emerald-400"}`}>
+                            <td className={`px-5 py-3 text-right font-sans ${isOver ? "text-red-400" : isWarn ? "text-amber-400" : "text-emerald-400"}`}>
                               {row.variancePct.toFixed(1)}%
                             </td>
-                            <td className={`px-5 py-3 text-right font-mono ${row.eac > row.budget ? "text-red-400" : "text-zinc-300"}`}>
+                            <td className={`px-5 py-3 text-right font-sans ${row.eac > row.budget ? "text-red-400" : "text-zinc-300"}`}>
                               ₹{Math.round(row.eac).toLocaleString()}
                             </td>
                             <td className="px-5 py-3 text-center">
@@ -2188,7 +2188,7 @@ export default function FinancePage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 bg-input p-4 rounded-md border border-border-custom text-xs font-mono">
+              <div className="grid grid-cols-2 gap-4 bg-input p-4 rounded-md border border-border-custom text-xs font-sans">
                 <div>
                   <span className="text-muted block uppercase text-[9px] tracking-wider font-sans">Settled Amount</span>
                   <strong className="text-emerald-400 mt-1 block text-sm">₹{(selectedVoucher.settled_amount ?? 0).toLocaleString("en-IN")}</strong>
@@ -2245,7 +2245,7 @@ export default function FinancePage() {
                       ? "MATERIAL SALES"
                       : selectedTxnType}
                   </h3>
-                  <p className="text-[10px] text-muted font-mono mt-0.5">PRESTIGE DEVELOPERS</p>
+                  <p className="text-[10px] text-muted font-sans mt-0.5">PRESTIGE DEVELOPERS</p>
                 </div>
                 <div className="flex items-center gap-3">
                   <input
@@ -2253,7 +2253,7 @@ export default function FinancePage() {
                     value={txnDate}
                     onChange={e => setTxnDate(e.target.value)}
                     title="Transaction date"
-                    className="bg-background border border-border-custom rounded-lg px-2 py-1.5 text-foreground text-xs font-mono focus:outline-none focus:border-primary"
+                    className="bg-background border border-border-custom rounded-lg px-2 py-1.5 text-foreground text-xs font-sans focus:outline-none focus:border-primary"
                   />
                   <button onClick={() => setShowAddModal(false)} className="text-xs text-muted hover:text-foreground transition-colors cursor-pointer">Cancel</button>
                   <button onClick={handleRecordPayment} className="bg-primary hover:bg-primary/90 text-white font-bold text-xs px-4 py-1.5 rounded-lg shadow transition-all cursor-pointer">Save</button>
@@ -2346,7 +2346,7 @@ export default function FinancePage() {
                   <div className="flex justify-between items-center bg-background/50 border border-border-custom rounded-lg p-2.5">
                     <div>
                       <span className="text-muted text-[10px] font-bold uppercase block">Other Expenses</span>
-                      <span className="text-foreground font-semibold font-mono">{formatDmy(txnDate)}{refNum ? " #" + refNum : ""}</span>
+                      <span className="text-foreground font-semibold font-sans">{formatDmy(txnDate)}{refNum ? " #" + refNum : ""}</span>
                     </div>
                   </div>
 
@@ -2387,7 +2387,7 @@ export default function FinancePage() {
                             setQty(val);
                             setAmount((val * rate).toString());
                           }}
-                          className="w-full bg-background border border-border-custom rounded-lg px-2.5 py-1.5 text-foreground text-xs font-mono"
+                          className="w-full bg-background border border-border-custom rounded-lg px-2.5 py-1.5 text-foreground text-xs font-sans"
                         />
                       </div>
                       <div>
@@ -2400,7 +2400,7 @@ export default function FinancePage() {
                             setRate(val);
                             setAmount((qty * val).toString());
                           }}
-                          className="w-full bg-background border border-border-custom rounded-lg px-2.5 py-1.5 text-foreground text-xs font-mono"
+                          className="w-full bg-background border border-border-custom rounded-lg px-2.5 py-1.5 text-foreground text-xs font-sans"
                         />
                       </div>
                     </div>
@@ -2455,7 +2455,7 @@ export default function FinancePage() {
                       type="number"
                       value={amount || "0"}
                       onChange={e => setAmount(e.target.value)}
-                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground font-mono text-sm focus:outline-none focus:border-primary"
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground font-sans text-sm focus:outline-none focus:border-primary"
                     />
                   </div>
 
@@ -2484,7 +2484,7 @@ export default function FinancePage() {
                         value={discount || ""}
                         onChange={e => setDiscount(Number(e.target.value))}
                         placeholder="0"
-                        className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground font-mono text-xs"
+                        className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground font-sans text-xs"
                       />
                     </div>
                   )}
@@ -2497,7 +2497,7 @@ export default function FinancePage() {
                         value={addCharges || ""}
                         onChange={e => setAddCharges(Number(e.target.value))}
                         placeholder="0"
-                        className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground font-mono text-xs"
+                        className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground font-sans text-xs"
                       />
                     </div>
                   )}
@@ -2532,7 +2532,7 @@ export default function FinancePage() {
                     {enableGst && (
                       <div className="flex justify-between items-center bg-background/30 px-3 py-2 rounded-lg border border-border-custom/50">
                         <span className="text-[10px] text-muted uppercase font-bold">GST Amount (₹)</span>
-                        <span className="font-mono text-foreground font-bold">
+                        <span className="font-sans text-foreground font-bold">
                           {(Number(amount || 0) * (Number(gstPercent) / 100)).toFixed(2)}
                         </span>
                       </div>
@@ -2550,7 +2550,7 @@ export default function FinancePage() {
                   <div className="bg-elevated/20 border border-border-custom p-4 rounded-xl flex justify-between items-center">
                     <div>
                       <span className="text-[10px] text-muted uppercase font-bold block">Total Amount</span>
-                      <strong className="text-foreground text-base font-mono block mt-0.5">
+                      <strong className="text-foreground text-base font-sans block mt-0.5">
                         ₹{(Number(amount || 0) + (enableGst ? Number(amount || 0) * (Number(gstPercent) / 100) : 0)).toLocaleString("en-IN")}
                       </strong>
                     </div>
@@ -2563,7 +2563,7 @@ export default function FinancePage() {
                   <div className="flex justify-between items-center bg-background/50 border border-border-custom rounded-lg p-2.5">
                     <div>
                       <span className="text-muted text-[10px] font-bold uppercase block">Equipment Expense</span>
-                      <span className="text-foreground font-semibold font-mono">{formatDmy(txnDate)}{refNum ? " #" + refNum : ""}</span>
+                      <span className="text-foreground font-semibold font-sans">{formatDmy(txnDate)}{refNum ? " #" + refNum : ""}</span>
                     </div>
                   </div>
 
@@ -2603,7 +2603,7 @@ export default function FinancePage() {
                         type="number"
                         value={amount || "0"}
                         onChange={e => setAmount(e.target.value)}
-                        className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground font-mono"
+                        className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground font-sans"
                       />
                     </div>
                     <div>
@@ -2612,7 +2612,7 @@ export default function FinancePage() {
                         type="number"
                         value={discount || "0"}
                         onChange={e => setDiscount(Number(e.target.value))}
-                        className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground font-mono"
+                        className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground font-sans"
                       />
                     </div>
                   </div>
@@ -2647,7 +2647,7 @@ export default function FinancePage() {
                     {enableGst && (
                       <div className="flex justify-between items-center bg-background/30 px-3 py-2 rounded-lg border border-border-custom/50">
                         <span className="text-[10px] text-muted uppercase font-bold">GST Amount (₹)</span>
-                        <span className="font-mono text-foreground font-bold">
+                        <span className="font-sans text-foreground font-bold">
                           {(Number(amount || 0) * (Number(gstPercent) / 100)).toFixed(2)}
                         </span>
                       </div>
@@ -2661,7 +2661,7 @@ export default function FinancePage() {
                         type="number"
                         readOnly
                         value={(Number(amount || 0) - discount + (enableGst ? Number(amount || 0) * (Number(gstPercent) / 100) : 0)).toFixed(0)}
-                        className="w-full bg-background/50 border border-border-custom rounded-lg px-3 py-2 text-foreground font-mono"
+                        className="w-full bg-background/50 border border-border-custom rounded-lg px-3 py-2 text-foreground font-sans"
                       />
                     </div>
                     <div>
@@ -2670,7 +2670,7 @@ export default function FinancePage() {
                         type="number"
                         value={deduction}
                         onChange={e => setDeduction(e.target.value)}
-                        className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground font-mono"
+                        className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground font-sans"
                       />
                     </div>
                   </div>
@@ -2683,7 +2683,7 @@ export default function FinancePage() {
                           type="number"
                           readOnly
                           value={(Number(amount || 0) - discount + (enableGst ? Number(amount || 0) * (Number(gstPercent) / 100) : 0) - Number(deduction)).toFixed(0)}
-                          className="w-full bg-background/50 border border-border-custom rounded-lg px-3 py-2 text-foreground font-mono"
+                          className="w-full bg-background/50 border border-border-custom rounded-lg px-3 py-2 text-foreground font-sans"
                         />
                         <div className="absolute right-2 top-2 flex items-center gap-1">
                           <input type="checkbox" id="roundOffCheck" checked={roundOff} onChange={e => setRoundOff(e.target.checked)} className="accent-primary" />
@@ -2697,7 +2697,7 @@ export default function FinancePage() {
                         type="number"
                         value={paidAmount}
                         onChange={e => setPaidAmount(e.target.value)}
-                        className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground font-mono"
+                        className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground font-sans"
                       />
                     </div>
                   </div>
@@ -2708,7 +2708,7 @@ export default function FinancePage() {
                       type="number"
                       readOnly
                       value={Math.max(0, Number(amount || 0) - discount + (enableGst ? Number(amount || 0) * (Number(gstPercent) / 100) : 0) - Number(deduction) - Number(paidAmount)).toFixed(0)}
-                      className="w-full bg-background/30 border border-border-custom rounded-lg px-3 py-2 text-foreground font-mono font-bold"
+                      className="w-full bg-background/30 border border-border-custom rounded-lg px-3 py-2 text-foreground font-sans font-bold"
                     />
                   </div>
 
@@ -2762,7 +2762,7 @@ export default function FinancePage() {
                       <span className="text-muted text-[10px] font-bold uppercase block">
                         {["Material Sales", "Sales Invoice"].includes(selectedTxnType) ? "Client Party" : "Vendor Party"}
                       </span>
-                      <span className="text-foreground font-semibold font-mono">{formatDmy(txnDate)}{refNum ? " #" + refNum : ""}</span>
+                      <span className="text-foreground font-semibold font-sans">{formatDmy(txnDate)}{refNum ? " #" + refNum : ""}</span>
                     </div>
                   </div>
 
@@ -2803,7 +2803,7 @@ export default function FinancePage() {
                               <span className="font-semibold text-foreground block">{item.name}</span>
                               <span className="text-[10px] text-muted">{item.qty} {item.unit} × ₹{item.rate}</span>
                             </div>
-                            <span className="font-mono text-foreground font-bold">₹{(item.qty * item.rate).toLocaleString()}</span>
+                            <span className="font-sans text-foreground font-bold">₹{(item.qty * item.rate).toLocaleString()}</span>
                           </div>
                         ))}
                       </div>
@@ -2813,11 +2813,11 @@ export default function FinancePage() {
                   <div className="space-y-2 border-t border-border-custom/50 pt-3 font-sans">
                     <div className="flex justify-between">
                       <span className="text-muted">Item Subtotal</span>
-                      <span className="font-mono text-foreground">₹{Number(amount || 0).toLocaleString()}</span>
+                      <span className="font-sans text-foreground">₹{Number(amount || 0).toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted">Tax (GST {gstPercent}%)</span>
-                      <span className="font-mono text-foreground">₹{(Number(amount || 0) * (Number(gstPercent) / 100)).toLocaleString()}</span>
+                      <span className="font-sans text-foreground">₹{(Number(amount || 0) * (Number(gstPercent) / 100)).toLocaleString()}</span>
                     </div>
                   </div>
 
@@ -2846,7 +2846,7 @@ export default function FinancePage() {
                         value={discount || ""}
                         onChange={e => setDiscount(Number(e.target.value))}
                         placeholder="0"
-                        className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground font-mono text-xs"
+                        className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground font-sans text-xs"
                       />
                     </div>
                   )}
@@ -2859,7 +2859,7 @@ export default function FinancePage() {
                         value={addCharges || ""}
                         onChange={e => setAddCharges(Number(e.target.value))}
                         placeholder="0"
-                        className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground font-mono text-xs"
+                        className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground font-sans text-xs"
                       />
                     </div>
                   )}
@@ -2876,7 +2876,7 @@ export default function FinancePage() {
                         />
                         <span className="text-[10px]">Round Off</span>
                       </label>
-                      <strong className="text-foreground text-base font-mono">
+                      <strong className="text-foreground text-base font-sans">
                         ₹{(Number(amount || 0) * (1 + Number(gstPercent) / 100)).toLocaleString(undefined, { maximumFractionDigits: 0 })}
                       </strong>
                     </div>
@@ -2899,7 +2899,7 @@ export default function FinancePage() {
                     <div>
                       <span className="text-muted text-[10px] font-bold uppercase block">Transfer Out No</span>
                       <div className="flex items-center gap-1.5 mt-0.5">
-                        <span className="text-foreground font-semibold font-mono">{transferOutNo}</span>
+                        <span className="text-foreground font-semibold font-sans">{transferOutNo}</span>
                         <span className="text-muted cursor-pointer hover:text-foreground" onClick={() => {
                           const val = prompt("Enter Transfer Out No:", transferOutNo);
                           if (val !== null) setTransferOutNo(val);
@@ -2908,7 +2908,7 @@ export default function FinancePage() {
                     </div>
                       <div className="text-right">
                         <span className="text-muted text-[10px] font-bold uppercase block">Transfer Date</span>
-                        <span className="text-foreground font-semibold font-mono">{formatDmy(txnDate)}</span>
+                        <span className="text-foreground font-semibold font-sans">{formatDmy(txnDate)}</span>
                       </div>
                   </div>
 
@@ -2963,7 +2963,7 @@ export default function FinancePage() {
                         value={addCharges || ""}
                         onChange={e => setAddCharges(Number(e.target.value))}
                         placeholder="0"
-                        className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground font-mono text-xs"
+                        className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground font-sans text-xs"
                       />
                     </div>
                   )}
@@ -2975,7 +2975,7 @@ export default function FinancePage() {
                       value={amount}
                       onChange={e => setAmount(e.target.value)}
                       placeholder="0"
-                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground font-mono"
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground font-sans"
                     />
                   </div>
 
@@ -3028,7 +3028,7 @@ export default function FinancePage() {
                 <div className="space-y-4 text-xs">
                   <div className="flex justify-between items-center bg-background/50 border border-border-custom rounded-lg p-2.5">
                     <span className="text-muted text-[10px] font-bold uppercase">Transfer Date</span>
-                    <span className="text-foreground font-semibold font-mono">{formatDmy(txnDate)}</span>
+                    <span className="text-foreground font-semibold font-sans">{formatDmy(txnDate)}</span>
                   </div>
 
                   <div className="space-y-1">
@@ -3082,7 +3082,7 @@ export default function FinancePage() {
                         <label className="text-[10px] text-muted uppercase font-bold block mb-1">From</label>
                         <div className="flex justify-between items-center bg-background/50 border border-border-custom rounded-lg px-3 py-2.5">
                           <span className="text-foreground font-medium text-xs">Cash Account (Company Wallet)</span>
-                          <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[9px] font-bold px-2 py-0.5 rounded-full font-mono">₹ 0</span>
+                          <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[9px] font-bold px-2 py-0.5 rounded-full font-sans">₹ 0</span>
                         </div>
                       </div>
                       <div>
@@ -3116,7 +3116,7 @@ export default function FinancePage() {
                         <label className="text-[10px] text-muted uppercase font-bold block mb-1">To</label>
                         <div className="flex justify-between items-center bg-background/50 border border-border-custom rounded-lg px-3 py-2.5">
                           <span className="text-foreground font-medium text-xs">Cash Account (Company Wallet)</span>
-                          <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[9px] font-bold px-2 py-0.5 rounded-full font-mono">₹ 0</span>
+                          <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[9px] font-bold px-2 py-0.5 rounded-full font-sans">₹ 0</span>
                         </div>
                       </div>
                     </>
@@ -3129,7 +3129,7 @@ export default function FinancePage() {
                       value={amount}
                       onChange={e => setAmount(e.target.value)}
                       placeholder="0"
-                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground text-xs font-mono font-bold"
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground text-xs font-sans font-bold"
                     />
                   </div>
 
@@ -3163,7 +3163,7 @@ export default function FinancePage() {
                     <div className="flex justify-between items-center bg-background/50 border border-border-custom rounded-lg p-2.5">
                       <div>
                         <span className="text-muted text-[10px] font-bold uppercase block">Invoice No</span>
-                        <span className="text-foreground font-semibold font-mono">{selectedTxnType === "Credit Note" ? "CN-1" : "DN-1"}</span>
+                        <span className="text-foreground font-semibold font-sans">{selectedTxnType === "Credit Note" ? "CN-1" : "DN-1"}</span>
                       </div>
                     </div>
 
@@ -3199,13 +3199,13 @@ export default function FinancePage() {
                       value={amount}
                       onChange={e => setAmount(e.target.value)}
                       placeholder="0"
-                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground text-xs font-mono font-bold"
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground text-xs font-sans font-bold"
                     />
                   </div>
 
                   <div className="bg-elevated/20 border border-border-custom p-4 rounded-xl flex justify-between items-center">
                     <span className="text-[10px] text-muted uppercase font-bold">Total Amount</span>
-                    <strong className="text-foreground text-base font-mono">₹{Number(amount || 0).toLocaleString()}</strong>
+                    <strong className="text-foreground text-base font-sans">₹{Number(amount || 0).toLocaleString()}</strong>
                   </div>
 
                   <div className="flex gap-4">
@@ -3278,7 +3278,7 @@ export default function FinancePage() {
                 <div className="space-y-4 text-xs">
                   <div className="flex justify-between items-center bg-background/50 border border-border-custom rounded-lg p-2.5">
                     <span className="text-muted text-[10px] font-bold uppercase">Date</span>
-                    <span className="text-foreground font-semibold font-mono">{formatDmy(txnDate)}</span>
+                    <span className="text-foreground font-semibold font-sans">{formatDmy(txnDate)}</span>
                   </div>
 
                   <div>
@@ -3318,7 +3318,7 @@ export default function FinancePage() {
                       value={amount}
                       onChange={e => setAmount(e.target.value)}
                       placeholder="0"
-                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground text-xs font-mono font-bold"
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground text-xs font-sans font-bold"
                     />
                   </div>
 
@@ -3364,7 +3364,7 @@ export default function FinancePage() {
                 <form onSubmit={handleRecordPayment} className="space-y-4 text-xs font-sans">
                   <div className="flex justify-between items-center bg-background/50 border border-border-custom rounded-lg p-2.5">
                     <span className="text-muted text-[10px] font-bold uppercase">Payment Date</span>
-                    <span className="text-foreground font-semibold font-mono">{formatDmy(txnDate)}</span>
+                    <span className="text-foreground font-semibold font-sans">{formatDmy(txnDate)}</span>
                   </div>
 
                   <div>
@@ -3390,7 +3390,7 @@ export default function FinancePage() {
                       onChange={e => setAmount(e.target.value)}
                       required
                       placeholder="0"
-                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs font-mono text-lg font-bold"
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs font-sans text-lg font-bold"
                     />
                   </div>
 
@@ -3496,7 +3496,7 @@ export default function FinancePage() {
                           type="number"
                           value={newItemQty}
                           onChange={e => setNewItemQty(e.target.value)}
-                          className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground font-mono focus:outline-none"
+                          className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground font-sans focus:outline-none"
                         />
                       </div>
                       <div>
@@ -3521,7 +3521,7 @@ export default function FinancePage() {
                           type="number"
                           value={newItemRate}
                           onChange={e => setNewItemRate(e.target.value)}
-                          className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground font-mono focus:outline-none"
+                          className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground font-sans focus:outline-none"
                         />
                       </div>
                       <div>
@@ -3665,7 +3665,7 @@ export default function FinancePage() {
                     onChange={e => setNewBank({ ...newBank, ifsc: e.target.value })}
                     required
                     placeholder="e.g. ICIC000"
-                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs font-mono"
+                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs font-sans"
                   />
                 </div>
 
@@ -3770,7 +3770,7 @@ export default function FinancePage() {
                   onChange={e => setNewCash({ ...newCash, opening: e.target.value })}
                   required
                   placeholder="e.g. 50000"
-                  className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs font-mono"
+                  className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs font-sans"
                 />
               </div>
               <div className="flex gap-3 pt-2">
@@ -3795,7 +3795,7 @@ export default function FinancePage() {
               <div className="flex justify-between items-center border-b border-border-custom pb-4 mb-5">
                 <div>
                   <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">New Payment Request</h3>
-                  <p className="text-[10px] text-muted font-mono mt-0.5">Voucher: PR-{paymentRequests.length + 1}</p>
+                  <p className="text-[10px] text-muted font-sans mt-0.5">Voucher: PR-{paymentRequests.length + 1}</p>
                 </div>
                 <button onClick={() => setShowAddRequestModal(false)} className="text-muted hover:text-foreground text-lg cursor-pointer">✕</button>
               </div>
@@ -3831,7 +3831,7 @@ export default function FinancePage() {
                         type="text"
                         value={`PR-${paymentRequests.length + 1}`}
                         disabled
-                        className="w-full bg-background/50 border border-border-custom rounded-lg px-3 py-2 text-muted focus:outline-none text-xs font-mono"
+                        className="w-full bg-background/50 border border-border-custom rounded-lg px-3 py-2 text-muted focus:outline-none text-xs font-sans"
                       />
                     </div>
                     <div>
@@ -3884,7 +3884,7 @@ export default function FinancePage() {
                       onChange={e => setNewRequest({ ...newRequest, amount: e.target.value })}
                       required
                       placeholder="e.g. 15000"
-                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs font-mono"
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs font-sans"
                     />
                   </div>
 
@@ -3937,7 +3937,7 @@ export default function FinancePage() {
           <div className="bg-card w-full max-w-md h-full border-l border-border-custom shadow-2xl p-6 flex flex-col overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="flex justify-between items-start border-b border-border-custom pb-4 mb-5">
               <div>
-                <p className="text-[10px] text-muted font-mono">Voucher: {selectedPR.request_no || "—"}</p>
+                <p className="text-[10px] text-muted font-sans">Voucher: {selectedPR.request_no || "—"}</p>
                 <h3 className="text-sm font-bold text-foreground uppercase tracking-wider mt-0.5">{selectedPR.request_type || "Payment Request"}</h3>
                 <p className="text-xs text-foreground mt-1">{selectedPR.party_name}</p>
               </div>
@@ -4024,7 +4024,7 @@ export default function FinancePage() {
             <div className="flex justify-between items-center border-b border-border-custom pb-4 mb-5">
               <div>
                 <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">Record Payment</h3>
-                <p className="text-[10px] text-muted font-mono mt-0.5">{selectedPR.request_no} · {selectedPR.party_name}</p>
+                <p className="text-[10px] text-muted font-sans mt-0.5">{selectedPR.request_no} · {selectedPR.party_name}</p>
               </div>
               <button onClick={() => setShowRecordPaymentModal(false)} className="text-muted hover:text-foreground text-lg cursor-pointer">✕</button>
             </div>
@@ -4055,13 +4055,13 @@ export default function FinancePage() {
                   <label className="text-[10px] text-muted uppercase font-bold block mb-1">Paid Amount (₹)*</label>
                   <input type="number" value={prPayment.paidAmount}
                     onChange={e => setPrPayment({ ...prPayment, paidAmount: e.target.value })}
-                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs font-mono" />
+                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs font-sans" />
                 </div>
                 <div>
                   <label className="text-[10px] text-muted uppercase font-bold block mb-1">Deduction (₹)</label>
                   <input type="number" value={prPayment.deduction}
                     onChange={e => setPrPayment({ ...prPayment, deduction: e.target.value })}
-                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs font-mono" />
+                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs font-sans" />
                 </div>
               </div>
 
@@ -4070,13 +4070,13 @@ export default function FinancePage() {
                   <label className="text-[10px] text-muted uppercase font-bold block mb-1">TDS (₹)</label>
                   <input type="number" value={prPayment.tds}
                     onChange={e => setPrPayment({ ...prPayment, tds: e.target.value })}
-                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs font-mono" />
+                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs font-sans" />
                 </div>
                 <div>
                   <label className="text-[10px] text-muted uppercase font-bold block mb-1">Balance Due (₹)</label>
                   <input type="text" readOnly
                     value={Math.max(0, (selectedPR.amount || 0) - (parseFloat(prPayment.paidAmount) || 0) - (parseFloat(prPayment.deduction) || 0) - (parseFloat(prPayment.tds) || 0)).toLocaleString("en-IN")}
-                    className="w-full bg-background/50 border border-border-custom rounded-lg px-3 py-2 text-muted focus:outline-none text-xs font-mono" />
+                    className="w-full bg-background/50 border border-border-custom rounded-lg px-3 py-2 text-muted focus:outline-none text-xs font-sans" />
                 </div>
               </div>
 
@@ -4161,7 +4161,7 @@ export default function FinancePage() {
               </div>
               <div>
                 <label className="text-[10px] text-muted uppercase font-bold block mb-1">Sync from date</label>
-                <input type="date" value={tallySyncFrom} onChange={(e) => setTallySyncFrom(e.target.value)} className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs font-mono" />
+                <input type="date" value={tallySyncFrom} onChange={(e) => setTallySyncFrom(e.target.value)} className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs font-sans" />
                 <p className="text-[10px] text-muted mt-1">Bills and payments on or after this date are included in the Tally export. Defaults to the start of the current financial year.</p>
               </div>
               <label className="flex items-center gap-2 text-xs text-foreground">

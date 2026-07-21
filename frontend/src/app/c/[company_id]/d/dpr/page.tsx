@@ -436,7 +436,7 @@ export default function DPRPage() {
                             className="bg-input border border-border-custom rounded px-2 py-1 text-foreground w-16"
                           />
                         </td>
-                        <td className="px-4 py-2 text-right font-mono text-zinc-300">
+                        <td className="px-4 py-2 text-right font-sans text-zinc-300">
                           {rowQty.toFixed(3)}
                         </td>
                         <td className="px-4 py-2 text-center">
@@ -466,7 +466,7 @@ export default function DPRPage() {
                 </button>
                 <div className="text-right text-xs">
                   <span className="text-muted block uppercase text-[9px] tracking-wider">Total Takeoff Sum</span>
-                  <strong className="text-lg font-black text-success font-mono">
+                  <strong className="text-lg font-black text-success font-sans">
                     {mbRows.reduce((acc, r) => acc + (r.nos * r.l * r.w * r.h), 0).toFixed(3)} m³
                   </strong>
                 </div>

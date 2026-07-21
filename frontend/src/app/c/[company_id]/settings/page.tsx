@@ -1194,7 +1194,7 @@ export default function CompanySettingsPage() {
                           {b.is_primary && <span className="text-[10px] bg-emerald-500/15 text-emerald-400 px-2 py-0.5 rounded-full font-bold">Primary</span>}
                         </div>
                         <div className="text-xs space-y-1">
-                          <div className="text-muted">GSTIN: <span className="font-mono text-muted">{b.gstin}</span></div>
+                          <div className="text-muted">GSTIN: <span className="font-sans text-muted">{b.gstin}</span></div>
                           <div className="text-muted line-clamp-2">Address: <span className="text-muted">{b.billing_address}</span></div>
                           {b.is_primary && <span className="inline-block mt-1 text-[10px] bg-elevated text-muted px-2 py-0.5 rounded-full">Primary Address</span>}
                         </div>
@@ -1956,7 +1956,7 @@ export default function CompanySettingsPage() {
                         <div key={f.key} className="bg-card border border-border-custom rounded-lg bg-background p-5 space-y-2">
                           <label className="text-[10px] uppercase tracking-wider text-muted font-bold">{f.label}</label>
                           <textarea value={terms[f.key]} onChange={(e) => setTerms((t) => ({ ...t, [f.key]: e.target.value }))} rows={5}
-                            className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-4 py-2.5 text-xs text-foreground outline-none resize-y font-mono" />
+                            className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-4 py-2.5 text-xs text-foreground outline-none resize-y font-sans" />
                         </div>
                       ))}
                     </div>

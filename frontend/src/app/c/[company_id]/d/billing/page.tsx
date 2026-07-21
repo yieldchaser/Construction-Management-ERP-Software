@@ -585,7 +585,7 @@ export default function SubcontractorBillingPage() {
                     <tbody>
                       {bills.map((bill) => (
                         <tr key={bill.id} className="border-b border-border-custom hover:bg-elevated transition-all">
-                          <td className="px-5 py-3.5 font-mono text-primary font-bold">{bill.invoiceNumber}</td>
+                          <td className="px-5 py-3.5 font-sans text-primary font-bold">{bill.invoiceNumber}</td>
                           <td className="px-5 py-3.5 text-foreground font-semibold">{bill.subcontractor}</td>
                           <td className="px-5 py-3.5 font-bold text-muted">₹{bill.subtotal.toLocaleString()}</td>
                           <td className="px-5 py-3.5 text-muted">
@@ -629,11 +629,11 @@ export default function SubcontractorBillingPage() {
                         {pnlData.map((p) => (
                           <tr key={p.tower_id} className="border-b border-border-custom hover:bg-elevated transition-all">
                             <td className="px-5 py-3.5 text-foreground font-semibold">{p.tower_name}</td>
-                            <td className="px-5 py-3.5 text-right font-mono text-muted">₹{(p.budget || 0).toLocaleString()}</td>
-                            <td className="px-5 py-3.5 text-right font-mono text-amber-400">₹{(p.total_po_value || 0).toLocaleString()}</td>
-                            <td className="px-5 py-3.5 text-right font-mono">₹{(p.total_wo_value || 0).toLocaleString()}</td>
-                            <td className="px-5 py-3.5 text-right font-mono text-primary">₹{(p.total_billed || 0).toLocaleString()}</td>
-                            <td className="px-5 py-3.5 text-right font-mono text-muted">₹{((p.budget || 0) - (p.total_billed || 0)).toLocaleString()}</td>
+                            <td className="px-5 py-3.5 text-right font-sans text-muted">₹{(p.budget || 0).toLocaleString()}</td>
+                            <td className="px-5 py-3.5 text-right font-sans text-amber-400">₹{(p.total_po_value || 0).toLocaleString()}</td>
+                            <td className="px-5 py-3.5 text-right font-sans">₹{(p.total_wo_value || 0).toLocaleString()}</td>
+                            <td className="px-5 py-3.5 text-right font-sans text-primary">₹{(p.total_billed || 0).toLocaleString()}</td>
+                            <td className="px-5 py-3.5 text-right font-sans text-muted">₹{((p.budget || 0) - (p.total_billed || 0)).toLocaleString()}</td>
                           </tr>
                         ))}
                         {pnlData.length === 0 && <tr><td colSpan={6} className="px-5 py-6 text-center text-muted">No tower data yet.</td></tr>}
@@ -743,7 +743,7 @@ export default function SubcontractorBillingPage() {
                     <tbody>
                       {workOrders.map((wo) => (
                         <tr key={wo.id} className="border-b border-border-custom hover:bg-elevated transition-all">
-                          <td className="px-5 py-3.5 font-mono text-secondary font-bold">{wo.woNumber}</td>
+                          <td className="px-5 py-3.5 font-sans text-secondary font-bold">{wo.woNumber}</td>
                           <td className="px-5 py-3.5 text-foreground font-semibold">{wo.subcontractor}</td>
                           <td className="px-5 py-3.5 text-muted">{wo.item}</td>
                           <td className="px-5 py-3.5 font-bold text-foreground">₹{wo.value.toLocaleString()}</td>
@@ -789,9 +789,9 @@ export default function SubcontractorBillingPage() {
                     <tbody>
                       {notes.map((note) => (
                         <tr key={note.id} className="border-b border-border-custom hover:bg-elevated transition-all">
-                          <td className="px-5 py-3.5 font-mono text-muted">{note.id}</td>
+                          <td className="px-5 py-3.5 font-sans text-muted">{note.id}</td>
                           <td className="px-5 py-3.5 text-foreground font-semibold">{note.subcontractor}</td>
-                          <td className={`px-5 py-3.5 font-mono font-bold ${note.type === "credit" ? "text-green-400" : "text-red-400"}`}>
+                          <td className={`px-5 py-3.5 font-sans font-bold ${note.type === "credit" ? "text-green-400" : "text-red-400"}`}>
                             {note.type === "credit" ? "+" : "-"}${(note.amount).toLocaleString()}
                           </td>
                           <td className="px-5 py-3.5 text-muted">{note.notes}</td>
@@ -835,7 +835,7 @@ export default function SubcontractorBillingPage() {
                     type="text"
                     value={newWONum}
                     onChange={(e) => setNewWONum(e.target.value)}
-                    className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none focus:border-secondary font-mono"
+                    className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none focus:border-secondary font-sans"
                   />
                 </div>
                 <div>
@@ -903,7 +903,7 @@ export default function SubcontractorBillingPage() {
                       type="text"
                       value={newBillNum}
                       onChange={(e) => setNewBillNum(e.target.value)}
-                      className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none font-mono"
+                      className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none font-sans"
                     />
                   </div>
                   <div>
@@ -928,7 +928,7 @@ export default function SubcontractorBillingPage() {
                       type="number"
                       value={newBillSubtotal}
                       onChange={(e) => setNewBillSubtotal(parseInt(e.target.value))}
-                      className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none focus:border-secondary font-mono font-bold"
+                      className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none focus:border-secondary font-sans font-bold"
                     />
                   </div>
                   <div>
@@ -986,7 +986,7 @@ export default function SubcontractorBillingPage() {
                         step="0.1"
                         value={newBillTdsPct}
                         onChange={(e) => setNewBillTdsPct(parseFloat(e.target.value) || 0)}
-                        className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none focus:border-secondary font-mono"
+                        className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none focus:border-secondary font-sans"
                       />
                       <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted text-[10px]">%</span>
                     </div>
@@ -1034,7 +1034,7 @@ export default function SubcontractorBillingPage() {
                         type="number"
                         value={newBillGstPct}
                         onChange={(e) => setNewBillGstPct(parseInt(e.target.value) || 0)}
-                        className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none focus:border-secondary font-mono"
+                        className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none focus:border-secondary font-sans"
                       />
                       <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted text-[10px]">%</span>
                     </div>
@@ -1048,7 +1048,7 @@ export default function SubcontractorBillingPage() {
                       type="number"
                       value={newBillRetentionPct}
                       onChange={(e) => setNewBillRetentionPct(parseInt(e.target.value) || 0)}
-                      className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none font-mono"
+                      className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none font-sans"
                     />
                   </div>
                   <div>
@@ -1057,7 +1057,7 @@ export default function SubcontractorBillingPage() {
                       type="number"
                       value={newBillAdvanceRecovery}
                       onChange={(e) => setNewBillAdvanceRecovery(parseInt(e.target.value) || 0)}
-                      className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none font-mono"
+                      className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none font-sans"
                     />
                   </div>
                 </div>
@@ -1104,34 +1104,34 @@ export default function SubcontractorBillingPage() {
               <div className="space-y-2.5 text-xs">
                 <div className="flex justify-between text-muted">
                   <span>Gross Subtotal:</span>
-                  <span className="font-mono font-bold text-foreground">₹{newBillSubtotal.toLocaleString()}</span>
+                  <span className="font-sans font-bold text-foreground">₹{newBillSubtotal.toLocaleString()}</span>
                 </div>
                 
                 <div className="flex justify-between text-muted">
                   <span>TDS ({newBillTdsPct}%):</span>
-                  <span className="font-mono text-red-400">-₹{preview.tdsAmt.toLocaleString()}</span>
+                  <span className="font-sans text-red-400">-₹{preview.tdsAmt.toLocaleString()}</span>
                 </div>
 
                 <div className="flex justify-between text-muted">
                   <span>Retention ({newBillRetentionPct}%):</span>
-                  <span className="font-mono text-red-400">-₹{preview.retentionAmt.toLocaleString()}</span>
+                  <span className="font-sans text-red-400">-₹{preview.retentionAmt.toLocaleString()}</span>
                 </div>
 
                 {newBillAdvanceRecovery > 0 && (
                   <div className="flex justify-between text-muted">
                     <span>Advance Recovery:</span>
-                    <span className="font-mono text-red-400">-₹{newBillAdvanceRecovery.toLocaleString()}</span>
+                    <span className="font-sans text-red-400">-₹{newBillAdvanceRecovery.toLocaleString()}</span>
                   </div>
                 )}
 
                 <div className="flex justify-between text-muted border-t border-border-custom pt-2">
                   <span>GST ({newBillGstPct}%):</span>
-                  <span className="font-mono text-green-400">+₹{preview.gstAmt.toLocaleString()}</span>
+                  <span className="font-sans text-green-400">+₹{preview.gstAmt.toLocaleString()}</span>
                 </div>
 
                 <div className="flex justify-between items-center text-foreground border-t border-border-custom pt-3 mt-1 font-extrabold text-sm">
                   <span>Net Payable:</span>
-                  <span className="font-mono text-primary bg-primary/10 border border-primary/20 px-2 py-1 rounded-lg">
+                  <span className="font-sans text-primary bg-primary/10 border border-primary/20 px-2 py-1 rounded-lg">
                     ₹{preview.totalPayable.toLocaleString()}
                   </span>
                 </div>

@@ -500,7 +500,7 @@ export default function ToDoPage() {
                             onChange={() => setEndsOption("6months")}
                             className="accent-primary"
                           />
-                          <span>End In 6 Months <span className="text-muted/65 font-mono ml-2">(05 Dec 2026)</span></span>
+                          <span>End In 6 Months <span className="text-muted/65 font-sans ml-2">(05 Dec 2026)</span></span>
                         </label>
 
                         <div className="flex items-center gap-2">
@@ -516,7 +516,7 @@ export default function ToDoPage() {
                             type="date"
                             value={endsDate}
                             onChange={(e) => setEndsDate(e.target.value)}
-                            className="bg-background border border-border-custom rounded px-2 py-1 text-xs text-foreground focus:outline-none focus:border-primary font-mono"
+                            className="bg-background border border-border-custom rounded px-2 py-1 text-xs text-foreground focus:outline-none focus:border-primary font-sans"
                           />
                         </div>
                       </div>

@@ -268,7 +268,7 @@ export default function CalculatorsPage() {
             <p className="text-[10px] text-muted">IS 456 & CPWD standard quantity takeoff engine</p>
           </div>
           {calculating && (
-            <span className="text-[10px] font-mono text-primary animate-pulse">Calculating...</span>
+            <span className="text-[10px] font-sans text-primary animate-pulse">Calculating...</span>
           )}
         </header>
 
@@ -1415,7 +1415,7 @@ export default function CalculatorsPage() {
             <h4 className="text-xs font-bold text-muted uppercase tracking-widest border-b border-border-custom pb-2">
               Engineering & Takeoff Reference Notes
             </h4>
-            <div className="text-[11px] text-muted space-y-1.5 leading-relaxed font-mono">
+            <div className="text-[11px] text-muted space-y-1.5 leading-relaxed font-sans">
               {activeCategory === "steel" && (
                 <>
                   <div>• IS 456:2000 compliant unit weight formula: Weight (kg/m) = D² ÷ 162.</div>

@@ -672,7 +672,7 @@ export default function AttendancePage() {
                         Sync Offline Queue ({queuedPunches.length})
                       </button>
                     </div>
-                    {syncMessage && <div className="text-[10px] text-muted font-mono">{syncMessage}</div>}
+                    {syncMessage && <div className="text-[10px] text-muted font-sans">{syncMessage}</div>}
                   </div>
 
                   {/* Log list */}
@@ -705,8 +705,8 @@ export default function AttendancePage() {
                               return (
                                 <tr key={log.id} className="border-b border-border-custom hover:bg-elevated transition-all">
                                   <td className="px-5 py-3 font-semibold text-foreground">{empName}</td>
-                                  <td className="px-5 py-3 text-muted font-mono">{log.punch_in ? new Date(log.punch_in).toLocaleTimeString() : "—"}</td>
-                                  <td className="px-5 py-3 text-muted font-mono">{log.punch_out ? new Date(log.punch_out).toLocaleTimeString() : "—"}</td>
+                                  <td className="px-5 py-3 text-muted font-sans">{log.punch_in ? new Date(log.punch_in).toLocaleTimeString() : "—"}</td>
+                                  <td className="px-5 py-3 text-muted font-sans">{log.punch_out ? new Date(log.punch_out).toLocaleTimeString() : "—"}</td>
                                   <td className="px-5 py-3 text-muted font-bold">{log.shift_multiplier || 1.0}x</td>
                                   <td className="px-5 py-3">
                                     {log.location_verified ? (
@@ -717,7 +717,7 @@ export default function AttendancePage() {
                                       </span>
                                     )}
                                   </td>
-                                  <td className="px-5 py-3 text-muted font-mono">{log.distance_from_site_m ? `${log.distance_from_site_m}m` : "0m (Inside)"}</td>
+                                  <td className="px-5 py-3 text-muted font-sans">{log.distance_from_site_m ? `${log.distance_from_site_m}m` : "0m (Inside)"}</td>
                                   <td className="px-5 py-3">
                                     <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${STATUS_MAP[log.status] || STATUS_MAP.Present}`}>{log.status}</span>
                                   </td>
@@ -962,8 +962,8 @@ export default function AttendancePage() {
                         return (
                           <tr key={idx} className="border-b border-border-custom">
                             <td className="py-2.5 pl-4 pr-3 text-muted font-semibold">{row.role || `Role ${idx + 1}`}</td>
-                            <td className="py-2.5 px-3 text-center font-mono text-foreground font-bold">{row.count}</td>
-                            <td className="py-2.5 px-3 text-center font-mono text-muted">₹{row.rate}</td>
+                            <td className="py-2.5 px-3 text-center font-sans text-foreground font-bold">{row.count}</td>
+                            <td className="py-2.5 px-3 text-center font-sans text-muted">₹{row.rate}</td>
                             <td className="py-2.5 px-3 text-center">
                               <select value={row.shift || 1}
                                 onChange={(e) => { const next = [...subconRows]; (next[idx] as any).shift = parseFloat(e.target.value); setSubconRows(next); }}
@@ -976,8 +976,8 @@ export default function AttendancePage() {
                                 onChange={(e) => { const next = [...subconRows]; (next[idx] as any).ot = parseFloat(e.target.value) || 0; setSubconRows(next); }}
                                 className="bg-elevated border border-border-custom rounded px-1.5 py-0.5 text-[10px] text-foreground w-12 text-center" placeholder="0" />
                             </td>
-                            <td className="py-2.5 px-3 text-center font-mono text-muted">₹{row.allowance || 0}</td>
-                            <td className="py-2.5 pr-4 text-right font-mono font-bold text-emerald-400">₹{daily.toLocaleString("en-IN")}</td>
+                            <td className="py-2.5 px-3 text-center font-sans text-muted">₹{row.allowance || 0}</td>
+                            <td className="py-2.5 pr-4 text-right font-sans font-bold text-emerald-400">₹{daily.toLocaleString("en-IN")}</td>
                           </tr>
                         );
                       })}
@@ -985,7 +985,7 @@ export default function AttendancePage() {
                     <tfoot>
                       <tr className="border-t border-border-custom bg-background">
                         <td colSpan={6} className="py-2.5 pl-4 text-xs font-bold text-muted">Subcontractor Daily Total</td>
-                        <td className="py-2.5 pr-4 text-right font-bold text-primary font-mono text-sm">
+                        <td className="py-2.5 pr-4 text-right font-bold text-primary font-sans text-sm">
                           ₹{subconRows.reduce((s: any, r: any) => s + r.count * r.rate * (r.shift || 1) + r.count * (r.ot || 0) * (r.rate / 8) + (r.allowance || 0) - (r.deduction || 0), 0).toLocaleString("en-IN")}
                         </td>
                       </tr>
@@ -1031,11 +1031,11 @@ export default function AttendancePage() {
                            <tr key={emp.id} className="hover:bg-elevated">
                              <td className="py-3 pl-5 pr-3 font-semibold text-foreground">{emp.employee_name}</td>
                              <td className="py-3 px-3 text-muted">{emp.employee_designation || "—"}</td>
-                             <td className="py-3 px-3 text-right font-mono text-foreground">₹{emp.gross_salary.toLocaleString("en-IN")}</td>
-                             <td className="py-3 px-3 text-right font-mono text-red-400">₹{emp.pf_employee.toLocaleString("en-IN")}</td>
-                             <td className="py-3 px-3 text-right font-mono text-red-400">₹{emp.esi_employee.toLocaleString("en-IN")}</td>
-                             <td className="py-3 px-3 text-right font-mono text-red-400">₹{emp.tds.toLocaleString("en-IN")}</td>
-                             <td className="py-3 px-3 text-right font-bold font-mono text-emerald-400">₹{emp.net_payable.toLocaleString("en-IN")}</td>
+                             <td className="py-3 px-3 text-right font-sans text-foreground">₹{emp.gross_salary.toLocaleString("en-IN")}</td>
+                             <td className="py-3 px-3 text-right font-sans text-red-400">₹{emp.pf_employee.toLocaleString("en-IN")}</td>
+                             <td className="py-3 px-3 text-right font-sans text-red-400">₹{emp.esi_employee.toLocaleString("en-IN")}</td>
+                             <td className="py-3 px-3 text-right font-sans text-red-400">₹{emp.tds.toLocaleString("en-IN")}</td>
+                             <td className="py-3 px-3 text-right font-bold font-sans text-emerald-400">₹{emp.net_payable.toLocaleString("en-IN")}</td>
                              <td className="py-3 pr-5 text-center">
                                <button onClick={() => window.print()}
                                  className="inline-flex items-center gap-1 px-2.5 py-1 text-[9px] font-bold bg-primary/10 border border-primary/20 text-primary rounded-lg hover:bg-primary/20 transition-all">
@@ -1049,11 +1049,11 @@ export default function AttendancePage() {
                      <tfoot>
                        <tr className="border-t-2 border-border-custom bg-background">
                          <td colSpan={2} className="py-3 pl-5 font-bold text-foreground">TOTAL PAYROLL</td>
-                         <td className="py-3 px-3 text-right font-bold font-mono text-foreground">₹{payslips.reduce((s: number, e: any) => s + (e.gross_salary || 0), 0).toLocaleString("en-IN")}</td>
-                         <td className="py-3 px-3 text-right font-bold font-mono text-red-400">₹{payslips.reduce((s: number, e: any) => s + (e.pf_employee || 0), 0).toLocaleString("en-IN")}</td>
-                         <td className="py-3 px-3 text-right font-bold font-mono text-red-400">₹{payslips.reduce((s: number, e: any) => s + (e.esi_employee || 0), 0).toLocaleString("en-IN")}</td>
-                         <td className="py-3 px-3 text-right font-bold font-mono text-red-400">₹{payslips.reduce((s: number, e: any) => s + (e.tds || 0), 0).toLocaleString("en-IN")}</td>
-                         <td className="py-3 px-3 text-right font-black font-mono text-emerald-400 text-sm">₹{payslips.reduce((s: number, e: any) => s + (e.net_payable || 0), 0).toLocaleString("en-IN")}</td>
+                         <td className="py-3 px-3 text-right font-bold font-sans text-foreground">₹{payslips.reduce((s: number, e: any) => s + (e.gross_salary || 0), 0).toLocaleString("en-IN")}</td>
+                         <td className="py-3 px-3 text-right font-bold font-sans text-red-400">₹{payslips.reduce((s: number, e: any) => s + (e.pf_employee || 0), 0).toLocaleString("en-IN")}</td>
+                         <td className="py-3 px-3 text-right font-bold font-sans text-red-400">₹{payslips.reduce((s: number, e: any) => s + (e.esi_employee || 0), 0).toLocaleString("en-IN")}</td>
+                         <td className="py-3 px-3 text-right font-bold font-sans text-red-400">₹{payslips.reduce((s: number, e: any) => s + (e.tds || 0), 0).toLocaleString("en-IN")}</td>
+                         <td className="py-3 px-3 text-right font-black font-sans text-emerald-400 text-sm">₹{payslips.reduce((s: number, e: any) => s + (e.net_payable || 0), 0).toLocaleString("en-IN")}</td>
                          <td />
                        </tr>
                      </tfoot>
@@ -1201,7 +1201,7 @@ export default function AttendancePage() {
                           type="date"
                           value={projectSettings.start_date}
                           onChange={(e) => setProjectSettings({ ...projectSettings, start_date: e.target.value })}
-                          className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs font-mono"
+                          className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs font-sans"
                         />
                       </div>
                       <div className="space-y-1">
@@ -1210,7 +1210,7 @@ export default function AttendancePage() {
                           type="date"
                           value={projectSettings.end_date}
                           onChange={(e) => setProjectSettings({ ...projectSettings, end_date: e.target.value })}
-                          className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs font-mono"
+                          className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs font-sans"
                         />
                       </div>
                     </div>
@@ -1254,7 +1254,7 @@ export default function AttendancePage() {
                           type="number"
                           value={projectSettings.value}
                           onChange={(e) => setProjectSettings({ ...projectSettings, value: Number(e.target.value) })}
-                          className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs font-mono"
+                          className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs font-sans"
                         />
                       </div>
                     </div>

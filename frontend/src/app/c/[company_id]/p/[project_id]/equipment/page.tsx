@@ -367,7 +367,7 @@ export default function EquipmentTrackingPage() {
                       <div>
                         <strong className="font-extrabold block text-foreground">Overdue Maintenance Alert!</strong>
                         <p className="text-muted mt-0.5">The following machinery requires immediate servicing to prevent site safety incidents:</p>
-                        <ul className="list-disc pl-5 mt-1.5 space-y-1 font-mono text-[10px]">
+                        <ul className="list-disc pl-5 mt-1.5 space-y-1 font-sans text-[10px]">
                           {maintenanceLogs.filter(m => m.completed_date === null && new Date(m.scheduled_date) < new Date()).map(m => {
                             const eq = fleet.find(e => e.id === m.equipment_id);
                             return (
@@ -558,22 +558,22 @@ export default function EquipmentTrackingPage() {
                                   {new Date(run.d.start_date).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})} → {new Date(run.d.end_date!).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}
                                 </span>
                               </td>
-                              <td className="px-5 py-3 text-center font-mono">{run.startReading ?? <span className="text-muted">—</span>}</td>
-                              <td className="px-5 py-3 text-center font-mono">{run.stopReading ?? <span className="text-muted">—</span>}</td>
+                              <td className="px-5 py-3 text-center font-sans">{run.startReading ?? <span className="text-muted">—</span>}</td>
+                              <td className="px-5 py-3 text-center font-sans">{run.stopReading ?? <span className="text-muted">—</span>}</td>
                               <td className="px-5 py-3 text-center">
                                 {run.delta != null
                                   ? <span className="font-bold text-primary">+{run.delta.toFixed(1)}</span>
                                   : <span className="text-muted">{run.durationHrs.toFixed(2)} hr</span>}
                               </td>
-                              <td className="px-5 py-3 text-center text-amber-400 font-mono">
+                              <td className="px-5 py-3 text-center text-amber-400 font-sans">
                                 {run.fuelForRun > 0 ? `${run.fuelForRun.toFixed(1)} L` : <span className="text-muted">—</span>}
                               </td>
                               <td className="px-5 py-3 text-center">
                                 {run.efficiency
-                                  ? <span className="text-emerald-400 font-mono">{run.efficiency} km/L</span>
+                                  ? <span className="text-emerald-400 font-sans">{run.efficiency} km/L</span>
                                   : <span className="text-muted">—</span>}
                               </td>
-                              <td className="px-5 py-3 text-right font-mono font-bold text-foreground">
+                              <td className="px-5 py-3 text-right font-sans font-bold text-foreground">
                                 {run.costForRun != null ? `₹${run.costForRun.toLocaleString()}` : <span className="text-muted">—</span>}
                               </td>
                             </tr>
@@ -622,7 +622,7 @@ export default function EquipmentTrackingPage() {
                               <td className="px-5 py-3 text-muted">
                                 {log.completed_date ? new Date(log.completed_date).toLocaleDateString() : <span className="text-muted">—</span>}
                               </td>
-                              <td className="px-5 py-3 text-right font-mono font-bold text-foreground">
+                              <td className="px-5 py-3 text-right font-sans font-bold text-foreground">
                                 {log.cost > 0 ? `₹${log.cost.toLocaleString()}` : <span className="text-muted">—</span>}
                               </td>
                               <td className="px-5 py-3 text-center">

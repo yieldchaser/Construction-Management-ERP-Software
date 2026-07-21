@@ -113,7 +113,7 @@ export default function WOAmendmentsPage({ params }: { params: { wo_id: string }
                   <div className="mt-2 flex flex-wrap gap-2">
                     {Object.entries(am.amended_fields).map(([key, val]) => (
                       <span key={key} className="bg-white/5 border border-border-custom text-[10px] px-2 py-1 rounded-lg text-zinc-300">
-                        {key}: <span className="font-mono font-bold text-foreground">{String(val)}</span>
+                        {key}: <span className="font-sans font-bold text-foreground">{String(val)}</span>
                       </span>
                     ))}
                   </div>
@@ -141,7 +141,7 @@ export default function WOAmendmentsPage({ params }: { params: { wo_id: string }
               </div>
               <div>
                 <label className="text-[10px] uppercase font-bold text-muted block mb-1">Amended Fields (JSON)</label>
-                <textarea value={fieldsJson} onChange={(e) => setFieldsJson(e.target.value)} rows={3} className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none font-mono" />
+                <textarea value={fieldsJson} onChange={(e) => setFieldsJson(e.target.value)} rows={3} className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none font-sans" />
               </div>
               <div>
                 <label className="text-[10px] uppercase font-bold text-muted block mb-1">Reason</label>

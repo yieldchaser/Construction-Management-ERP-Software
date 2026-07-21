@@ -237,18 +237,18 @@ function ChartCard({
             <div className="font-extrabold text-foreground border-b border-border-custom pb-1">{labels[hoveredIndex]}</div>
             <div className="flex items-center justify-between gap-4">
               <span className="text-muted">{plannedLabel}:</span>
-              <span className="font-bold font-mono" style={{ color: chartColors.planned }}>{plannedValues[hoveredIndex]}%</span>
+              <span className="font-bold font-sans" style={{ color: chartColors.planned }}>{plannedValues[hoveredIndex]}%</span>
             </div>
             {actualValues[hoveredIndex] !== undefined && (
               <div className="flex items-center justify-between gap-4">
                 <span className="text-muted">{actualLabel}:</span>
-                <span className="font-bold font-mono" style={{ color: chartColors.actual }}>{actualValues[hoveredIndex]}%</span>
+                <span className="font-bold font-sans" style={{ color: chartColors.actual }}>{actualValues[hoveredIndex]}%</span>
               </div>
             )}
             {actualValues[hoveredIndex] !== undefined && (
               <div className="flex items-center justify-between gap-4 border-t border-border-custom pt-1 mt-1">
                 <span className="text-muted">Variance:</span>
-                <span className={`font-bold font-mono ${actualValues[hoveredIndex] >= plannedValues[hoveredIndex] ? "text-success" : "text-primary"}`}>
+                <span className={`font-bold font-sans ${actualValues[hoveredIndex] >= plannedValues[hoveredIndex] ? "text-success" : "text-primary"}`}>
                   {(actualValues[hoveredIndex] - plannedValues[hoveredIndex]).toFixed(1)}%
                 </span>
               </div>
@@ -438,13 +438,13 @@ export default function CompanyAnalyticsPage() {
                     </div>
                     <div className="flex items-center justify-between gap-4">
                       <span className="text-muted">Burn Share:</span>
-                      <span className="font-bold font-mono" style={{ color: chartColors.burn }}>
+                      <span className="font-bold font-sans" style={{ color: chartColors.burn }}>
                         {data.budget_burn_series[hoveredBurnIndex].burn_pct}%
                       </span>
                     </div>
                     <div className="flex items-center justify-between gap-4">
                       <span className="text-muted">Cumulative:</span>
-                      <span className="font-bold font-mono text-foreground">
+                      <span className="font-bold font-sans text-foreground">
                         Rs {formatCurrency(data.budget_burn_series[hoveredBurnIndex].spend)}
                       </span>
                     </div>

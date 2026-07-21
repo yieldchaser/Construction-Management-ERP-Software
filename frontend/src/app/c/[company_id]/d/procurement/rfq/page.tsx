@@ -115,7 +115,7 @@ export default function RFQPage() {
               {rfqs.map((rfq) => (
                 <div key={rfq.id} className="px-5 py-3 flex items-center justify-between hover:bg-white/[0.015] transition-all">
                   <div>
-                    <span className="text-xs font-bold text-secondary font-mono">{rfq.rfq_number}</span>
+                    <span className="text-xs font-bold text-secondary font-sans">{rfq.rfq_number}</span>
                     <span className="text-[10px] text-muted ml-2">{rfq.items?.length || 0} items</span>
                   </div>
                   <div className="flex items-center gap-3">
@@ -156,7 +156,7 @@ export default function RFQPage() {
                           if (!quote) return <td key={vendorName} className="px-4 py-3 text-right text-muted">—</td>;
                           return (
                             <td key={vendorName} className="px-4 py-3 text-right">
-                              <span className="font-mono font-bold text-white block">₹{quote.quoted_rate.toLocaleString()}</span>
+                              <span className="font-sans font-bold text-white block">₹{quote.quoted_rate.toLocaleString()}</span>
                               {quote.delivery_days && <span className="text-[9px] text-muted">{quote.delivery_days} days</span>}
                             </td>
                           );
@@ -181,7 +181,7 @@ export default function RFQPage() {
             <div className="space-y-3">
               <div>
                 <label className="text-[10px] uppercase font-bold text-muted block mb-1">RFQ Number</label>
-                <input type="text" value={newRfqNum} onChange={(e) => setNewRfqNum(e.target.value)} className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none font-mono" />
+                <input type="text" value={newRfqNum} onChange={(e) => setNewRfqNum(e.target.value)} className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none font-sans" />
               </div>
               <p className="text-[10px] text-muted">Default items: Portland Cement OPC 43 × 500 bags (IS 8112 compliant)</p>
             </div>

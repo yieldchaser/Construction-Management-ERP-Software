@@ -343,14 +343,14 @@ export default function BOQPage() {
                             const sb = statusBadge(vPct);
                             return (
                               <tr key={item.id} className="border-b border-border-custom hover:bg-elevated transition-colors">
-                                <td className="py-3 pl-5 pr-3 font-mono text-muted">{item.costCode}</td>
+                                <td className="py-3 pl-5 pr-3 font-sans text-muted">{item.costCode}</td>
                                 <td className="py-3 pr-4 text-foreground font-medium">{item.item_name}</td>
                                 <td className="py-3 px-3 text-center text-muted">{item.unit}</td>
-                                <td className="py-3 px-3 text-right font-mono text-muted">{fmtN(item.quantity)}</td>
-                                <td className="py-3 px-3 text-right font-mono text-muted">{fmtN(item.rate)}</td>
-                                <td className="py-3 px-3 text-right font-mono font-semibold text-foreground">{fmt(item.amount)}</td>
-                                <td className="py-3 px-3 text-right font-mono font-semibold text-foreground">{fmt(item.actual_spent)}</td>
-                                <td className={`py-3 px-3 text-right font-mono font-bold ${varColor(vPct)}`}>
+                                <td className="py-3 px-3 text-right font-sans text-muted">{fmtN(item.quantity)}</td>
+                                <td className="py-3 px-3 text-right font-sans text-muted">{fmtN(item.rate)}</td>
+                                <td className="py-3 px-3 text-right font-sans font-semibold text-foreground">{fmt(item.amount)}</td>
+                                <td className="py-3 px-3 text-right font-sans font-semibold text-foreground">{fmt(item.actual_spent)}</td>
+                                <td className={`py-3 px-3 text-right font-sans font-bold ${varColor(vPct)}`}>
                                   {vAmt >= 0 ? "+" : ""}{fmt(vAmt)}
                                   <span className="text-[9px] ml-1 opacity-70">({vPct > 0 ? "+" : ""}{vPct.toFixed(1)}%)</span>
                                 </td>
@@ -367,9 +367,9 @@ export default function BOQPage() {
                   <tfoot className="border-t-2 border-border-custom">
                     <tr className="bg-input">
                       <td colSpan={5} className="py-3 pl-5 font-bold text-foreground text-xs">PROJECT TOTAL</td>
-                      <td className="py-3 px-3 text-right font-bold text-foreground font-mono">{fmt(totalBudget)}</td>
-                      <td className="py-3 px-3 text-right font-bold text-foreground font-mono">{fmt(totalActual)}</td>
-                      <td className={`py-3 px-3 text-right font-bold font-mono ${varColor(overallPct)}`}>
+                      <td className="py-3 px-3 text-right font-bold text-foreground font-sans">{fmt(totalBudget)}</td>
+                      <td className="py-3 px-3 text-right font-bold text-foreground font-sans">{fmt(totalActual)}</td>
+                      <td className={`py-3 px-3 text-right font-bold font-sans ${varColor(overallPct)}`}>
                         {totalVariance >= 0 ? "+" : ""}{fmt(totalVariance)}
                         <span className="text-[9px] ml-1 opacity-70">({overallPct > 0 ? "+" : ""}{overallPct.toFixed(1)}%)</span>
                       </td>
@@ -417,9 +417,9 @@ export default function BOQPage() {
                       <div className="flex items-center justify-between text-xs">
                         <span className={`text-[9px] font-bold px-2 py-0.5 rounded border ${sColor}`}>{section}</span>
                         <div className="text-right">
-                          <span className="text-muted font-mono">{fmt(sActual)}</span>
+                          <span className="text-muted font-sans">{fmt(sActual)}</span>
                           <span className="text-muted mx-1">/</span>
-                          <span className="text-muted font-mono">{fmt(sBudget)}</span>
+                          <span className="text-muted font-sans">{fmt(sBudget)}</span>
                           <span className={`ml-2 text-[10px] font-bold ${varColor(vp)}`}>({vp > 0 ? "+" : ""}{vp.toFixed(1)}%)</span>
                         </div>
                       </div>
@@ -455,14 +455,14 @@ export default function BOQPage() {
                       const eac = pctComplete > 0 ? item.actual_spent / pctComplete : item.amount;
                       return (
                         <tr key={item.id} className="hover:bg-elevated">
-                          <td className="py-2.5 pl-5 pr-3 font-mono text-muted">{item.costCode}</td>
+                          <td className="py-2.5 pl-5 pr-3 font-sans text-muted">{item.costCode}</td>
                           <td className="py-2.5 pr-4 text-muted line-clamp-1">{item.item_name}</td>
-                          <td className="py-2.5 px-3 text-right font-mono text-muted">{fmt(item.amount)}</td>
-                          <td className="py-2.5 px-3 text-right font-mono text-muted">{fmt(item.actual_spent)}</td>
-                          <td className={`py-2.5 px-3 text-right font-mono font-bold ${varColor(vPct)}`}>
+                          <td className="py-2.5 px-3 text-right font-sans text-muted">{fmt(item.amount)}</td>
+                          <td className="py-2.5 px-3 text-right font-sans text-muted">{fmt(item.actual_spent)}</td>
+                          <td className={`py-2.5 px-3 text-right font-sans font-bold ${varColor(vPct)}`}>
                             {vAmt >= 0 ? "+" : ""}{fmt(vAmt)}
                           </td>
-                          <td className={`py-2.5 pr-5 text-right font-mono text-[10px] ${eac > item.amount ? "text-red-400" : "text-muted"}`}>
+                          <td className={`py-2.5 pr-5 text-right font-sans text-[10px] ${eac > item.amount ? "text-red-400" : "text-muted"}`}>
                             {fmt(Math.round(eac))}
                           </td>
                         </tr>

@@ -171,19 +171,19 @@ export default function MaterialTab() {
       <div className="px-5 py-3 border-b border-border-custom shrink-0 flex flex-wrap gap-3">
         <div className="px-3 py-1.5 rounded-lg bg-elevated border border-border-custom text-[11px]">
           <span className="text-muted">Materials</span>{" "}
-          <span className="text-foreground font-bold font-mono">{rows.length}</span>
+          <span className="text-foreground font-bold font-sans">{rows.length}</span>
         </div>
         <div className="px-3 py-1.5 rounded-lg bg-elevated border border-border-custom text-[11px]">
           <span className="text-muted">Received</span>{" "}
-          <span className="text-emerald-400 font-bold font-mono">{num(totRecv)}</span>
+          <span className="text-emerald-400 font-bold font-sans">{num(totRecv)}</span>
         </div>
         <div className="px-3 py-1.5 rounded-lg bg-elevated border border-border-custom text-[11px]">
           <span className="text-muted">Consumed</span>{" "}
-          <span className="text-amber-400 font-bold font-mono">{num(totCons)}</span>
+          <span className="text-amber-400 font-bold font-sans">{num(totCons)}</span>
         </div>
         <div className="px-3 py-1.5 rounded-lg bg-elevated border border-border-custom text-[11px]">
           <span className="text-muted">Over-consumed</span>{" "}
-          <span className={negCount > 0 ? "text-rose-400 font-bold font-mono" : "text-muted font-mono"}>
+          <span className={negCount > 0 ? "text-rose-400 font-bold font-sans" : "text-muted font-sans"}>
             {negCount}
           </span>
         </div>
@@ -233,16 +233,16 @@ export default function MaterialTab() {
                           key={(r.inventory_id || r.material_name) + i}
                           className="hover:bg-elevated transition-colors"
                         >
-                          <td className="py-2.5 pl-4 pr-2 font-mono text-muted">{i + 1}</td>
+                          <td className="py-2.5 pl-4 pr-2 font-sans text-muted">{i + 1}</td>
                           <td className="py-2.5 px-2 text-foreground font-medium">{r.material_name}</td>
                           <td className="py-2.5 px-2 text-center text-muted">{r.unit || "—"}</td>
-                          <td className="py-2.5 px-2 text-right font-mono text-emerald-400">
+                          <td className="py-2.5 px-2 text-right font-sans text-emerald-400">
                             {num(r.received)}
                           </td>
-                          <td className="py-2.5 px-2 text-right font-mono text-amber-400">
+                          <td className="py-2.5 px-2 text-right font-sans text-amber-400">
                             {num(r.consumed)}
                           </td>
-                          <td className="py-2.5 px-2 text-right font-mono font-semibold">
+                          <td className="py-2.5 px-2 text-right font-sans font-semibold">
                             <span className={neg ? "text-rose-400" : zero ? "text-muted" : "text-foreground"}>
                               {num(r.current_stock)}
                             </span>

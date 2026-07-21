@@ -83,11 +83,11 @@ export default function VendorPerformancePage() {
                       return (
                         <tr key={v.id} className="border-b border-border-custom hover:bg-elevated transition-all">
                           <td className="px-5 py-3.5 text-foreground font-semibold">{v.vendor_name}</td>
-                          <td className="px-5 py-3.5 text-right font-mono text-zinc-300">{v.total_pos}</td>
-                          <td className="px-5 py-3.5 text-right font-mono text-zinc-300">{v.total_grns}</td>
-                          <td className="px-5 py-3.5 text-right font-mono text-primary">{otp}%</td>
-                          <td className="px-5 py-3.5 text-right font-mono text-muted">{v.avg_delay_days.toFixed(1)}</td>
-                          <td className="px-5 py-3.5 text-right font-mono text-red-400">{v.quality_issues}</td>
+                          <td className="px-5 py-3.5 text-right font-sans text-zinc-300">{v.total_pos}</td>
+                          <td className="px-5 py-3.5 text-right font-sans text-zinc-300">{v.total_grns}</td>
+                          <td className="px-5 py-3.5 text-right font-sans text-primary">{otp}%</td>
+                          <td className="px-5 py-3.5 text-right font-sans text-muted">{v.avg_delay_days.toFixed(1)}</td>
+                          <td className="px-5 py-3.5 text-right font-sans text-red-400">{v.quality_issues}</td>
                           <td className="px-5 py-3.5 text-center">
                             <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${rating} border-current/20`}>
                               {otp >= 90 ? "A" : otp >= 70 ? "B" : "C"}

@@ -221,9 +221,9 @@ export default function LabourPage() {
                       <tr key={r.id} className="border-b border-border-custom hover:bg-elevated transition-all">
                         <td className="px-5 py-3.5 text-foreground font-semibold">{r.contractor_name}</td>
                         <td className="px-5 py-3.5 text-muted">{r.month_year}</td>
-                        <td className="px-5 py-3.5 text-right font-mono">{r.workers_count}</td>
-                        <td className="px-5 py-3.5 text-right font-mono">₹{r.wages_paid.toLocaleString()}</td>
-                        <td className="px-5 py-3.5 text-right font-mono">₹{r.contribution_amount.toLocaleString()}</td>
+                        <td className="px-5 py-3.5 text-right font-sans">{r.workers_count}</td>
+                        <td className="px-5 py-3.5 text-right font-sans">₹{r.wages_paid.toLocaleString()}</td>
+                        <td className="px-5 py-3.5 text-right font-sans">₹{r.contribution_amount.toLocaleString()}</td>
                         <td className="px-5 py-3.5 text-muted">{r.acknowledgement_number || "—"}</td>
                       </tr>
                     ))}
@@ -247,10 +247,10 @@ export default function LabourPage() {
                       <tr key={m.id} className="border-b border-border-custom hover:bg-elevated transition-all">
                         <td className="px-5 py-3.5 text-zinc-300">{m.date}</td>
                         <td className="px-5 py-3.5 text-foreground font-semibold">{m.labor_role}</td>
-                        <td className="px-5 py-3.5 text-right font-mono text-green-400">{m.workers_present}</td>
-                        <td className="px-5 py-3.5 text-right font-mono text-red-400">{m.workers_absent}</td>
-                        <td className="px-5 py-3.5 text-right font-mono">{m.hours_worked}h</td>
-                        <td className="px-5 py-3.5 text-right font-mono text-amber-400">{m.overtime_hours}h</td>
+                        <td className="px-5 py-3.5 text-right font-sans text-green-400">{m.workers_present}</td>
+                        <td className="px-5 py-3.5 text-right font-sans text-red-400">{m.workers_absent}</td>
+                        <td className="px-5 py-3.5 text-right font-sans">{m.hours_worked}h</td>
+                        <td className="px-5 py-3.5 text-right font-sans text-amber-400">{m.overtime_hours}h</td>
                         <td className="px-5 py-3.5 text-muted">{m.notes || "—"}</td>
                       </tr>
                     ))}

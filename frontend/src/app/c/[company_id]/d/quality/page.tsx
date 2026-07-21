@@ -676,7 +676,7 @@ export default function QualityPage() {
                     <tbody className="divide-y divide-border-custom">
                       {cl.items.map(item => (
                         <tr key={item.id} className="hover:bg-elevated">
-                          <td className="px-4 py-2.5 text-muted font-mono">{item.sequence}</td>
+                          <td className="px-4 py-2.5 text-muted font-sans">{item.sequence}</td>
                           <td className="px-4 py-2.5 text-zinc-200">{item.description}</td>
                           <td className="px-4 py-2.5 text-muted">{item.criteria}</td>
                           <td className="px-4 py-2.5">
@@ -707,7 +707,7 @@ export default function QualityPage() {
                   <div key={ncr.id} className="bg-card border border-red-500/10 rounded-md p-4 space-y-2">
                     <div className="flex items-center justify-between">
                       {badge(ncr.severity, severityColors[ncr.severity])}
-                      <span className="text-[10px] text-muted font-mono">{ncr.number}</span>
+                      <span className="text-[10px] text-muted font-sans">{ncr.number}</span>
                     </div>
                     <p className="text-xs font-semibold text-foreground leading-snug">{ncr.title}</p>
                     <p className="text-[10px] text-muted">{ncr.zone} · Due {ncr.dueDate}</p>
@@ -730,7 +730,7 @@ export default function QualityPage() {
                   <div key={ncr.id} className="bg-card border border-blue-500/10 rounded-md p-4 space-y-2">
                     <div className="flex items-center justify-between">
                       {badge(ncr.severity, severityColors[ncr.severity])}
-                      <span className="text-[10px] text-muted font-mono">{ncr.number}</span>
+                      <span className="text-[10px] text-muted font-sans">{ncr.number}</span>
                     </div>
                     <p className="text-xs font-semibold text-foreground leading-snug">{ncr.title}</p>
                     <p className="text-[10px] text-muted">{ncr.zone} · Due {ncr.dueDate}</p>
@@ -753,7 +753,7 @@ export default function QualityPage() {
                   <div key={ncr.id} className="bg-card border border-green-500/10 rounded-md p-4 space-y-2 opacity-70">
                     <div className="flex items-center justify-between">
                       {badge(ncr.severity, severityColors[ncr.severity])}
-                      <span className="text-[10px] text-muted font-mono">{ncr.number}</span>
+                      <span className="text-[10px] text-muted font-sans">{ncr.number}</span>
                     </div>
                     <p className="text-xs font-semibold text-foreground leading-snug">{ncr.title}</p>
                     <p className="text-[10px] text-muted italic">{ncr.resolution}</p>
@@ -800,7 +800,7 @@ export default function QualityPage() {
                       <tr key={t.id} className="hover:bg-elevated transition-colors">
                         <td className="px-4 py-3 font-semibold text-foreground">{t.type}</td>
                         <td className="px-4 py-3 text-zinc-300">{t.material}</td>
-                        <td className="px-4 py-3 font-mono text-muted text-[10px]">{t.sampleRef}</td>
+                        <td className="px-4 py-3 font-sans text-muted text-[10px]">{t.sampleRef}</td>
                         <td className="px-4 py-3 text-muted">{t.date}</td>
                         <td className="px-4 py-3">
                           <span className={`font-bold text-sm ${t.pass ? "text-green-400" : "text-red-400"}`}>
