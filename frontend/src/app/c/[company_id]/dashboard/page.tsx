@@ -105,7 +105,7 @@ export default function DashboardPage() {
           .then((data) => setWorkforceEmployees(toList(data)))
           .catch((err) => console.error("Failed to fetch workforce employees", err));
       } else {
-        fetch(`${apiHost}/apis/v3/hr/employees/company/${companyId}`, { headers: authHeaders() })
+        fetch(`${apiHost}/apis/v3/hr/company/employees/${companyId}`, { headers: authHeaders() })
           .then((res) => res.json())
           .then((data) => setWorkforceEmployees(toList(data)))
           .catch((err) => console.error("Failed to fetch workforce employees", err));

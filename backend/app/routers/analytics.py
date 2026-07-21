@@ -480,11 +480,14 @@ def get_company_operational_analytics(company_id: uuid.UUID, db: Session = Depen
     for i in range(6, -1, -1):
         target_date = today - timedelta(days=i)
         date_str = target_date.strftime("%Y-%m-%d")
+        t_start = datetime.combine(target_date, datetime.min.time())
+        t_end = t_start + timedelta(days=1)
         
         # Attendance counts
         att_logs = db.query(AttendanceLog).filter(
             AttendanceLog.project_id.in_(project_ids),
-            cast(AttendanceLog.attendance_date, Date) == target_date
+            AttendanceLog.attendance_date >= t_start,
+            AttendanceLog.attendance_date < t_end
         ).all() if project_ids else []
         
         present = sum(1 for log in att_logs if log.status in ("Present", "Present (Off-Site)"))
@@ -499,7 +502,8 @@ def get_company_operational_analytics(company_id: uuid.UUID, db: Session = Depen
         # Material receipt logs count
         mat_txs = db.query(MaterialTransaction).filter(
             MaterialTransaction.project_id.in_(project_ids),
-            cast(MaterialTransaction.created_at, Date) == target_date,
+            MaterialTransaction.created_at >= t_start,
+            MaterialTransaction.created_at < t_end,
             MaterialTransaction.type == "received"
         ).count() if project_ids else 0
         
