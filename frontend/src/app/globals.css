@@ -3640,7 +3640,9 @@ html:has(.alexandria) { scroll-behavior: smooth; }
 }
 /* Ensure the CTA link itself looks like a proper button regardless of palette class */
 .help-article .wp-element-button,
-.help-article .wp-block-button__link {
+.help-article .wp-block-button__link,
+.help-article .wp-element-button *,
+.help-article .wp-block-button__link * {
   display: inline-block;
   background-color: var(--color-alx-primary, #094cb2);
   color: #ffffff !important;
