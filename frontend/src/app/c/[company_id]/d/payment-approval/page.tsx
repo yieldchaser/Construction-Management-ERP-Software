@@ -233,6 +233,13 @@ export default function PaymentApprovalPage() {
         </div>
       </div>
 
+      {/* Requests List */}
+      <div className="space-y-4">
+        {filteredRequests.length === 0 ? (
+          <div className="rounded-lg border border-border-custom bg-card p-12 flex flex-col items-center justify-center text-center space-y-4">
+            <span className="text-4xl inline-flex"><Icon name="tag" className="w-10 h-10" /></span>
+            <div>
+              <h3 className="text-foreground font-semibold text-sm">No Approvals Found</h3>
               <p className="text-muted text-xs mt-1">
                 No requests match the selected status or project filter.{" "}
                 <button
@@ -240,7 +247,7 @@ export default function PaymentApprovalPage() {
                   onClick={handleCreateDemoRequest}
                   className="text-primary hover:underline font-bold cursor-pointer"
                 >
-                  Click &quot;+ Create Demo Request&quot;
+                  Click + Create Demo Request
                 </button>{" "}
                 to try the flow.
               </p>
