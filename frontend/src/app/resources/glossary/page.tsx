@@ -62,7 +62,7 @@ export default function GlossaryPage() {
                 fallback layer beneath it. */}
             <div className="lg:pt-2">
               <div className="relative h-44 md:h-52 rounded-3xl overflow-hidden border border-alx-outline-variant/20 bg-gradient-to-br from-alx-primary-fixed/40 via-alx-surface-container to-alx-surface-container-high">
-                <HeroPhoto src={GLOSSARY_HERO_IMAGE} alt="Construction site with crew and equipment" />
+                {/* Fallback placeholder rendered first (underneath) */}
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-center px-6">
                   <svg viewBox="0 0 24 24" fill="none" stroke="var(--color-alx-primary)" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" className="h-9 w-9" aria-hidden="true">
                     <rect x="3" y="4" width="18" height="16" rx="2" />
@@ -72,6 +72,8 @@ export default function GlossaryPage() {
                   <p className="font-uilabel text-xs font-bold text-alx-on-surface-variant">Construction photo slot</p>
                   <p className="font-body text-[11px] text-alx-on-surface-variant/80">Add an image at {GLOSSARY_HERO_IMAGE}</p>
                 </div>
+                {/* Real photo rendered second (on top) */}
+                <HeroPhoto src={GLOSSARY_HERO_IMAGE} alt="Construction site with crew and equipment" />
               </div>
             </div>
           </div>
