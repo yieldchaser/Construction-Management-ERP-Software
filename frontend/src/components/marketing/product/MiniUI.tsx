@@ -214,6 +214,11 @@ export default function MiniUI({ mock }: { mock: MiniUIData }) {
     };
   }
 
+  // Handle checklist mapping when it contains rows instead of items (like in progress-tracking)
+  if (type === "checklist" && normalizedMock.rows && !normalizedMock.items) {
+    type = "statusList";
+  }
+
   switch (type) {
     case "statusList":
       return <StatusListCard mock={normalizedMock} />;
