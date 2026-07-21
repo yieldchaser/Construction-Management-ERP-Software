@@ -61,7 +61,7 @@ export default function GlossaryPage() {
                 component with an onError guard; the placeholder stays as the
                 fallback layer beneath it. */}
             <div className="lg:pt-2">
-              <div className="relative w-full aspect-[1915/821] rounded-3xl overflow-hidden border border-alx-outline-variant/20 bg-gradient-to-br from-alx-primary-fixed/40 via-alx-surface-container to-alx-surface-container-high">
+              <div className="relative w-full h-52 md:h-64 lg:h-full lg:min-h-[240px] rounded-3xl overflow-hidden border border-alx-outline-variant/20 bg-gradient-to-br from-alx-primary-fixed/40 via-alx-surface-container to-alx-surface-container-high">
                 {/* Fallback placeholder rendered first (underneath) */}
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-center px-6">
                   <svg viewBox="0 0 24 24" fill="none" stroke="var(--color-alx-primary)" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" className="h-9 w-9" aria-hidden="true">
