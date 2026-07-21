@@ -59,6 +59,17 @@ const CATEGORY_RULES: { label: BlogCategory; keywords: string[] }[] = [
   },
 ];
 
+// Real category header photos, one per editorial category. Falls back to the
+// in-code gradient band + glyph below when a category has no matching file.
+const CATEGORY_IMAGES: Record<BlogCategory, string> = {
+  "Financial Ledger": "/marketing/blog/cat-financial-ledger.png",
+  "Procurement & Materials": "/marketing/blog/cat-procurement.png",
+  "Compliance & Workforce": "/marketing/blog/cat-compliance.png",
+  Technology: "/marketing/blog/cat-technology.png",
+  "Site Execution": "/marketing/blog/cat-site-execution.png",
+  Insights: "/marketing/blog/cat-insights.png",
+};
+
 function classifyPost(title: string, slug: string): BlogCategory {
   const haystack = `${title} ${slug}`.toLowerCase();
   for (const rule of CATEGORY_RULES) {
@@ -256,6 +267,7 @@ export default function BlogArticle({ article, relatedPosts, heroImage }: BlogAr
 
   const { html: articleHtml, toc } = buildTocAndInjectIds(article.body);
   const showRecentInSidebar = toc.length > 0 && relatedPosts.length > 0;
+  const resolvedHeroImage = heroImage ?? CATEGORY_IMAGES[category];
 
   return (
     <>
@@ -308,15 +320,20 @@ export default function BlogArticle({ article, relatedPosts, heroImage }: BlogAr
         {/* Hero band: a real photo when one is supplied, otherwise a tasteful
             in-code gradient band with the post's category glyph - never a
             broken <img>. */}
-        {heroImage ? (
+        {resolvedHeroImage ? (
           <div className="alx-scroll-fade relative mb-12 h-56 md:h-96 overflow-hidden rounded-2xl">
             <Image
-              src={heroImage}
+              src={resolvedHeroImage}
               alt={displayTitle}
               fill
               sizes="(min-width: 1024px) 1152px, 100vw"
               className="object-cover"
               priority
+            />
+            <div
+              className="absolute inset-0"
+              style={{ backgroundImage: "linear-gradient(to top, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0) 45%)" }}
+              aria-hidden="true"
             />
           </div>
         ) : (

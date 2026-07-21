@@ -36,7 +36,7 @@
       {
         "title": "Choose structure type",
         "body": "Select Column, One-Way Slab or Two-Way Slab from the Structure Type dropdown. This sets which dimensions the calculator expects.",
-        "imageSlot": null
+        "imageSlot": "/marketing/calculators/steel-calculator-for-construction.png"
       },
       {
         "title": "Enter bar diameter and total length",

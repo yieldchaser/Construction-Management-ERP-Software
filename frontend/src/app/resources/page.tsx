@@ -1,4 +1,5 @@
 ﻿import React from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { getContentItems } from "@/lib/content";
 import { Metadata } from "next";
@@ -117,6 +118,16 @@ export default async function ResourcesIndexPage() {
       {/* Hero */}
       <section className="relative px-6 pt-16 pb-16 text-center overflow-hidden alx-scroll-fade">
         <div className="absolute inset-0 z-0 alx-hero-wash pointer-events-none" />
+        <div className="absolute inset-0 z-0 opacity-40 pointer-events-none">
+          <Image
+            src="/marketing/resources/resources-hero.png"
+            alt=""
+            fill
+            sizes="100vw"
+            className="object-cover object-center"
+            priority
+          />
+        </div>
         <div className="max-w-4xl mx-auto relative z-10 space-y-6">
           <span className="alx-label alx-badge-gold inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs">
             <GroupIcon name="calculators" className="h-3.5 w-3.5" />

@@ -496,7 +496,37 @@ function HeroBody() {
   );
 }
 
-export default function MockupFrame({ variant = "procurement" }: { variant?: MockupVariant }) {
+export default function MockupFrame({
+  variant = "procurement",
+  src,
+  alt,
+}: {
+  variant?: MockupVariant;
+  src?: string;
+  alt?: string;
+}) {
+  if (src) {
+    // Transparent device art (phones) renders bare, without the browser-frame chrome.
+    if (variant === "mobile") {
+      return (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={src} alt={alt ?? "SiteFlow mobile app screens"} className="w-full h-auto max-w-full" loading="lazy" />
+      );
+    }
+    return (
+      <div className="rounded-xl bg-alx-surface-container-lowest shadow-xl shadow-alx-on-surface/5 overflow-hidden aspect-[16/10]">
+        <div className="flex items-center gap-1.5 border-b border-alx-outline-variant/20 px-4 py-3">
+          <span className="h-2.5 w-2.5 rounded-full bg-alx-surface-dim" />
+          <span className="h-2.5 w-2.5 rounded-full bg-alx-surface-dim" />
+          <span className="h-2.5 w-2.5 rounded-full bg-alx-surface-dim" />
+        </div>
+        <div className="h-[calc(100%-2.75rem)]">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={src} alt={alt ?? "SiteFlow dashboard screenshot"} className="h-full w-full object-cover" loading="lazy" />
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="rounded-xl bg-alx-surface-container-lowest shadow-xl shadow-alx-on-surface/5 overflow-hidden aspect-[16/10]">
       <div className="flex items-center gap-1.5 border-b border-alx-outline-variant/20 px-4 py-3">

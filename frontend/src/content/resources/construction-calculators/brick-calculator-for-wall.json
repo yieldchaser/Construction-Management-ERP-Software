@@ -36,7 +36,7 @@
       {
         "title": "Enter wall dimensions and thickness",
         "body": "Provide wall length and height in metres, then choose wall thickness: 230 mm (9-inch full brick) or 115 mm (4.5-inch half brick).",
-        "imageSlot": null
+        "imageSlot": "/marketing/calculators/brick-calculator-for-wall.png"
       },
       {
         "title": "Pick brick size and mortar mix",

@@ -28,7 +28,7 @@
       {
         "title": "Select your concrete grade",
         "body": "Choose the nominal mix grade specified in your BOQ or structural drawing, from M5 up to M25. Each grade maps to a fixed cement, sand and aggregate ratio. M20, for example, uses 1:1.5:3.",
-        "imageSlot": null
+        "imageSlot": "/marketing/calculators/concrete-mix-calculator.png"
       },
       {
         "title": "Enter the wet concrete volume",

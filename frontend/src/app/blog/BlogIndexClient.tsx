@@ -2,6 +2,7 @@
 
 import React, { useMemo, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import Icon from "@/components/marketing/Icon";
 
 export type BlogCategory =
@@ -59,6 +60,17 @@ const CATEGORY_STYLES: Record<BlogCategory, CategoryStyle> = {
     band: "from-alx-surface-container-high to-alx-surface-container",
     iconColor: "text-alx-on-surface-variant",
   },
+};
+
+// Real category header photos, one per editorial category. Falls back to the
+// in-code gradient band + glyph when a category has no matching file.
+const CATEGORY_IMAGES: Record<BlogCategory, string> = {
+  "Financial Ledger": "/marketing/blog/cat-financial-ledger.png",
+  "Procurement & Materials": "/marketing/blog/cat-procurement.png",
+  "Compliance & Workforce": "/marketing/blog/cat-compliance.png",
+  Technology: "/marketing/blog/cat-technology.png",
+  "Site Execution": "/marketing/blog/cat-site-execution.png",
+  Insights: "/marketing/blog/cat-insights.png",
 };
 
 function CategoryMotif({ category, className }: { category: BlogCategory; className?: string }) {
@@ -208,15 +220,32 @@ export default function BlogIndexClient({
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filtered.map((post) => {
             const style = CATEGORY_STYLES[post.category];
+            const image = CATEGORY_IMAGES[post.category];
             return (
               <article
                 key={post.slug}
                 className="rounded-2xl bg-alx-surface-container-lowest overflow-hidden flex flex-col shadow-xl shadow-alx-on-surface/5 alx-hover-lift transition-all group"
               >
                 <Link href={`/blog/${post.slug}`} className="cursor-pointer">
-                  <div className={`relative h-36 bg-gradient-to-br ${style.band} flex items-center justify-center`}>
-                    <CategoryMotif category={post.category} className={`h-12 w-12 ${style.iconColor} opacity-70`} />
-                  </div>
+                  {image ? (
+                    <div className="relative h-36 overflow-hidden">
+                      <Image
+                        src={image}
+                        alt={`${post.category} article`}
+                        fill
+                        sizes="(min-width: 1024px) 384px, (min-width: 768px) 50vw, 100vw"
+                        className="object-cover"
+                      />
+                      <div
+                        className="absolute inset-0 bg-gradient-to-t from-black/35 to-transparent"
+                        aria-hidden="true"
+                      />
+                    </div>
+                  ) : (
+                    <div className={`relative h-36 bg-gradient-to-br ${style.band} flex items-center justify-center`}>
+                      <CategoryMotif category={post.category} className={`h-12 w-12 ${style.iconColor} opacity-70`} />
+                    </div>
+                  )}
                 </Link>
                 <div className="flex-1 flex flex-col p-6">
                   <span className={`font-uilabel text-[11px] font-bold px-3 py-1 rounded-full w-fit mb-4 ${style.chip}`}>

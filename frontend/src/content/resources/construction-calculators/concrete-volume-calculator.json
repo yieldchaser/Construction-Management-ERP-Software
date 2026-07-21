@@ -36,7 +36,7 @@
       {
         "title": "Select the element type",
         "body": "Pick Slab, Column, Beam, Footing, Stairs or Custom Volume. The input labels update to match that element (for example Length / Width / Thickness for a slab, or Width / Depth / Column Height for a column).",
-        "imageSlot": null
+        "imageSlot": "/marketing/calculators/concrete-volume-calculator.png"
       },
       {
         "title": "Enter the dimensions and quantity",

@@ -25,6 +25,7 @@ type Segment = {
   learnMore: string;
   dashboardTitle: string;
   variant: "finance" | "mobile" | "procurement" | "planning";
+  image: string;
 };
 
 const SEGMENTS: Segment[] = [
@@ -51,6 +52,7 @@ const SEGMENTS: Segment[] = [
     learnMore: "/who-we-serve/erp-software-for-builders-and-developers",
     dashboardTitle: "Project Budget Dashboard",
     variant: "finance",
+    image: "/marketing/who-we-serve/segment-builders.png",
   },
   {
     id: "civil",
@@ -75,6 +77,7 @@ const SEGMENTS: Segment[] = [
     learnMore: "/who-we-serve/civil-contracting-software-why-contractors-are-choosing-SiteFlow-for-smarter-project-delivery",
     dashboardTitle: "Site Attendance & Materials",
     variant: "mobile",
+    image: "/marketing/who-we-serve/segment-civil.png",
   },
   {
     id: "interior",
@@ -99,6 +102,7 @@ const SEGMENTS: Segment[] = [
     learnMore: "/who-we-serve/interior-design-project-management-software-SiteFlow",
     dashboardTitle: "Project Scope & Billing",
     variant: "procurement",
+    image: "/marketing/who-we-serve/segment-interior.png",
   },
   {
     id: "infra",
@@ -123,6 +127,7 @@ const SEGMENTS: Segment[] = [
     learnMore: "/who-we-serve/software-for-infrastructure-projects",
     dashboardTitle: "Multi-Site Progress Tracker",
     variant: "planning",
+    image: "/marketing/who-we-serve/segment-infrastructure.png",
   },
 ];
 
@@ -295,7 +300,7 @@ export default function WhoWeServePage() {
                     LIVE
                   </span>
                 </div>
-                <MockupFrame variant={segment.variant} />
+                <MockupFrame variant={segment.variant} src={segment.image} alt={`${segment.h3} dashboard preview`} />
               </div>
 
               <div className="p-8 flex-grow flex flex-col">
