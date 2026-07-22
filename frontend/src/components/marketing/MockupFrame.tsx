@@ -525,10 +525,10 @@ export default function MockupFrame({
     }
     return (
       <div className="rounded-xl bg-alx-surface-container-lowest shadow-xl shadow-alx-on-surface/5 overflow-hidden aspect-[16/10]">
-        <div className="flex items-center gap-1.5 border-b border-alx-outline-variant/20 px-4 py-3">
-          <span className="h-2.5 w-2.5 rounded-full bg-alx-surface-dim" />
-          <span className="h-2.5 w-2.5 rounded-full bg-alx-surface-dim" />
-          <span className="h-2.5 w-2.5 rounded-full bg-alx-surface-dim" />
+        <div className="flex items-center gap-1.5 border-b border-alx-outline-variant/20 bg-slate-50/80 px-4 py-3">
+          <span className="h-3 w-3 rounded-full bg-[#ff5f56] border border-[#e0443e]/40 shadow-xs inline-block" />
+          <span className="h-3 w-3 rounded-full bg-[#ffbd2e] border border-[#dea123]/40 shadow-xs inline-block" />
+          <span className="h-3 w-3 rounded-full bg-[#27c93f] border border-[#1aab29]/40 shadow-xs inline-block" />
         </div>
         <div className="h-[calc(100%-2.75rem)] relative">
           <Image
@@ -545,10 +545,10 @@ export default function MockupFrame({
   }
   return (
     <div className="rounded-xl bg-alx-surface-container-lowest shadow-xl shadow-alx-on-surface/5 overflow-hidden aspect-[16/10]">
-      <div className="flex items-center gap-1.5 border-b border-alx-outline-variant/20 px-4 py-3">
-        <span className="h-2.5 w-2.5 rounded-full bg-alx-surface-dim" />
-        <span className="h-2.5 w-2.5 rounded-full bg-alx-surface-dim" />
-        <span className="h-2.5 w-2.5 rounded-full bg-alx-surface-dim" />
+      <div className="flex items-center gap-1.5 border-b border-alx-outline-variant/20 bg-slate-50/80 px-4 py-3">
+        <span className="h-3 w-3 rounded-full bg-[#ff5f56] border border-[#e0443e]/40 shadow-xs inline-block" />
+        <span className="h-3 w-3 rounded-full bg-[#ffbd2e] border border-[#dea123]/40 shadow-xs inline-block" />
+        <span className="h-3 w-3 rounded-full bg-[#27c93f] border border-[#1aab29]/40 shadow-xs inline-block" />
       </div>
       <div className="h-[calc(100%-2.75rem)]">
         {variant === "procurement" && <ProcurementBody />}
