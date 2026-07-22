@@ -50,11 +50,10 @@ export default function LandingPage() {
             </Link>
           </div>
           
-          <div className="relative max-w-6xl mx-auto alx-hover-lift group">
-            {/* Interactive glow underneath laptop mockup on hover */}
-            <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-sky-400 to-blue-500 opacity-20 blur-xl group-hover:opacity-40 transition-opacity duration-500 -z-10" />
-            <div className="absolute inset-0 bg-alx-primary/5 blur-3xl rounded-[3rem] -z-10 transform scale-95 translate-y-8" />
-            <div className="alx-float rounded-xl shadow-2xl shadow-alx-on-surface/10 [box-shadow:0_25px_60px_-15px_rgba(9,76,178,0.25),0_10px_20px_-8px_rgba(27,28,29,0.12)]">
+          <div className="relative max-w-6xl mx-auto alx-hover-lift group gpu-accelerated">
+            {/* GPU-accelerated radial glow backplate (0 software Gaussian blur overhead on scroll) */}
+            <div className="absolute -inset-4 rounded-3xl bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-sky-400/25 via-blue-500/10 to-transparent opacity-80 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none -z-10" />
+            <div className="alx-float rounded-xl shadow-2xl shadow-alx-on-surface/10 [box-shadow:0_25px_60px_-15px_rgba(9,76,178,0.25),0_10px_20px_-8px_rgba(27,28,29,0.12)] gpu-accelerated">
               <MockupFrame variant="hero" src="/marketing/landing/hero-dashboard.webp" alt="SiteFlow project dashboard showing budget, progress, and site status" />
             </div>
           </div>
