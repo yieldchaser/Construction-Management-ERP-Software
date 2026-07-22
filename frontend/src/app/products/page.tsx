@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import Link from "next/link";
 import { getContentItems } from "@/lib/content";
 import { Metadata } from "next";
@@ -273,9 +273,11 @@ export default async function ProductsIndexPage() {
                   <div className="pt-4 mt-6 border-t border-alx-outline-variant/15 flex items-center justify-end">
                     <Link
                       href={`/products/${product.slug}`}
-                      className="font-uilabel text-xs font-bold text-alx-primary hover:text-alx-on-surface transition-all cursor-pointer"
+                      prefetch={true}
+                      className="inline-flex items-center gap-1.5 font-uilabel text-xs font-bold text-alx-primary hover:text-alx-on-surface transition-all cursor-pointer whitespace-nowrap"
                     >
-                      Explore Module <Icon name="arrow_right" className="w-4 h-4" />
+                      <span>Explore Module</span>
+                      <Icon name="arrow_right" className="w-4 h-4 shrink-0" />
                     </Link>
                   </div>
                 </article>

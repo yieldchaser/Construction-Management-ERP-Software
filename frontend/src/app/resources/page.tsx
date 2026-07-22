@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { getContentItems } from "@/lib/content";
@@ -240,9 +240,10 @@ export default async function ResourcesIndexPage() {
                     <div className="pt-3 mt-4 border-t border-alx-outline-variant/15 flex items-center justify-end">
                       <Link
                         href={`/resources/${r.slug}`}
-                        className="font-uilabel text-xs font-bold text-alx-primary hover:text-alx-on-surface transition-all cursor-pointer"
+                        prefetch={true}
+                        className="font-uilabel inline-flex items-center gap-1.5 whitespace-nowrap text-xs font-bold text-alx-primary hover:text-alx-on-surface transition-all cursor-pointer"
                       >
-                        View <Icon name="arrow_right" className="w-4 h-4" />
+                        <span>View</span> <Icon name="arrow_right" className="w-4 h-4 shrink-0" />
                       </Link>
                     </div>
                   </article>
