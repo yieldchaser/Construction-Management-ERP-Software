@@ -41,9 +41,11 @@ export default function DataTable({ table }: { table: ProductDataTable }) {
   );
   const alignFor = (idx: number) => (numericCols[idx] ? "text-right" : "text-left");
 
+  const isSmallTable = table.columns.length <= 3;
+
   return (
-    <div className="space-y-5">
-      <div className="space-y-2 max-w-2xl">
+    <div className={`space-y-6 ${isSmallTable ? "flex flex-col items-center text-center" : ""}`}>
+      <div className={`space-y-2 ${isSmallTable ? "max-w-xl text-center" : "max-w-2xl"}`}>
         <h2 className="font-headline text-2xl md:text-3xl font-extrabold text-alx-on-surface leading-tight">
           {table.title}
         </h2>
@@ -53,11 +55,10 @@ export default function DataTable({ table }: { table: ProductDataTable }) {
           </p>
         )}
       </div>
-      {/* A three column table stretched to the full page leaves a large gap
-          between a label and its value, so cap the narrow ones. */}
+      {/* A three column or smaller table is center-aligned and capped at max-w-3xl */}
       <div
-        className={`w-full overflow-x-auto rounded-xl border border-alx-outline-variant/40 bg-alx-surface-container-lowest ${
-          table.columns.length <= 3 ? "max-w-3xl" : ""
+        className={`w-full overflow-x-auto rounded-2xl border border-alx-outline-variant/40 bg-alx-surface-container-lowest shadow-xl shadow-alx-on-surface/5 ${
+          isSmallTable ? "max-w-3xl mx-auto" : ""
         }`}
       >
         {/* The first column absorbs the slack so the remaining columns hug
