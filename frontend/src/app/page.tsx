@@ -47,9 +47,9 @@ export default function LandingPage() {
             </Link>
           </div>
           
-          <div className="relative max-w-6xl mx-auto group gpu-accelerated alx-hero-card-wrapper">
+          <div className="relative max-w-6xl mx-auto group gpu-accelerated alx-hero-card-wrapper alx-hover-lift">
             {/* GPU-accelerated radial glow backplate (0 software Gaussian blur overhead on scroll) */}
-            <div className="absolute -inset-4 rounded-3xl bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-sky-400/25 via-blue-500/10 to-transparent opacity-80 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none -z-10" />
+            <div className="absolute -inset-6 rounded-3xl bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-sky-400/30 via-blue-500/15 to-transparent opacity-80 group-hover:opacity-100 group-hover:from-sky-400/50 group-hover:via-blue-500/30 transition-all duration-500 pointer-events-none -z-10" />
             <div className="alx-float rounded-xl shadow-2xl shadow-alx-on-surface/10 [box-shadow:0_25px_60px_-15px_rgba(9,76,178,0.25),0_10px_20px_-8px_rgba(27,28,29,0.12)] gpu-accelerated">
               <MockupFrame variant="hero" src="/marketing/landing/hero-dashboard.webp" alt="SiteFlow project dashboard showing budget, progress, and site status" />
             </div>
