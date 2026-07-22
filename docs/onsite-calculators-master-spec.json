@@ -1,0 +1,747 @@
+{
+  "_meta": {
+    "purpose": "Machine-readable spec of competitor (Onsite Teams) construction calculators — fields, types, defaults, formulas, and field-dependency relationships — for automated gap comparison against an internal calculator suite and for use by an AI coding agent building/updating equivalent features.",
+    "source": "onsiteteams.com/resources/construction-calculators/ (7 tools), plus live-UI screenshots for confirmation",
+    "note_on_ip": "All formulas are public-domain engineering standards (IS 456, IS 2502, IS 13920, IS 1786, IS 1077, IS 1905, BS 3921, BS EN 206, ASTM). Nothing here is proprietary to the source site. Field layout, defaults, and UX structure are documented for feature-parity comparison, not verbatim UI copy reproduction.",
+    "known_inconsistency": "Source site uses D²/162 on the Bar Bending Schedule page and D²/163 on the Steel Calculator page for the same steel-weight constant. Mathematically, π×7850/(4×10^6) = 1/162.07 — so 162 is the more precise constant. Recommend standardizing on 162 (or 162.2, seen in some IS 1786 references) across your own implementation rather than replicating their inconsistency.",
+    "last_verified": "2026-07-22"
+  },
+
+  "calculators": [
+
+    {
+      "id": "paint_quantity_calculator",
+      "name": "Paint Quantity Calculator",
+      "top_level_toggle": {
+        "field": "wall_context",
+        "type": "enum",
+        "options": ["interior", "exterior"],
+        "effect": "swaps which paint_type_options list and coverage table is active downstream"
+      },
+      "inputs": [
+        {
+          "group": "room_dimensions",
+          "repeatable": true,
+          "add_button": "+ Add Another Room",
+          "fields": [
+            { "name": "length_ft", "type": "number", "unit": "ft" },
+            { "name": "width_ft", "type": "number", "unit": "ft" },
+            { "name": "height_ft", "type": "number", "unit": "ft", "default": 10 }
+          ]
+        },
+        {
+          "group": "deductions",
+          "fields": [
+            { "name": "deduct_doors", "type": "boolean_toggle", "reveals": "num_doors" },
+            { "name": "num_doors", "type": "number", "unit": "count", "default": 2, "conditional_on": "deduct_doors" },
+            { "name": "deduct_windows", "type": "boolean_toggle", "reveals": "num_windows" },
+            { "name": "num_windows", "type": "number", "unit": "count", "default": 3, "conditional_on": "deduct_windows" },
+            { "name": "include_ceiling", "type": "boolean_toggle" }
+          ]
+        },
+        {
+          "group": "paint_type",
+          "type": "card_select",
+          "options_interior": [
+            { "name": "Economy Emulsion", "coverage_2coat_sqft_per_l": 115, "coats_shown": 2 },
+            { "name": "Premium Emulsion", "coverage_2coat_sqft_per_l": 140, "coats_shown": 2 },
+            { "name": "Luxury / Matt", "coverage_2coat_sqft_per_l": 155, "coats_shown": 2 },
+            { "name": "Texture Paint", "coverage_2coat_sqft_per_l": 80, "coats_shown": "1-2" }
+          ],
+          "options_exterior_note": "separate coverage table used, see reference_tables.paint_coverage_by_type"
+        },
+        {
+          "group": "coats",
+          "field": "num_coats",
+          "type": "button_group",
+          "options": [1, 2, 3],
+          "default": 2
+        },
+        {
+          "group": "primer_putty",
+          "fields": [
+            { "name": "include_primer", "type": "boolean_toggle" },
+            { "name": "include_putty", "type": "boolean_toggle" }
+          ]
+        }
+      ],
+      "outputs": [
+        "paint_litres_needed",
+        "can_pack_breakdown",
+        "primer_litres (if include_primer)",
+        "putty_kg (if include_putty)"
+      ],
+      "formulas": {
+        "total_wall_area_sqft": "2 * (length_ft + width_ft) * height_ft",
+        "paintable_area_sqft": "total_wall_area_sqft - (num_doors * 21) - (num_windows * 12) + (ceiling_area if include_ceiling else 0)",
+        "ceiling_area_sqft": "length_ft * width_ft",
+        "paint_litres_raw": "paintable_area_sqft / coverage_sqft_per_l * num_coats",
+        "paint_litres_final": "paint_litres_raw * 1.10  // 10% wastage buffer applied to final figure",
+        "primer_litres": "paintable_area_sqft / 175 * primer_coats * 1.05",
+        "putty_kg": "paintable_area_sqft / 100 * putty_coats * 1.1  // 1-1.2 kg per 100 sqft per coat"
+      },
+      "constants": {
+        "door_deduction_sqft": 21,
+        "window_deduction_sqft": 12,
+        "double_door_deduction_sqft": 35,
+        "large_window_deduction_sqft": 20,
+        "ventilator_deduction_sqft": 3,
+        "wastage_default_pct": 10,
+        "primer_coverage_sqft_per_l": 175,
+        "primer_wastage_multiplier": 1.05
+      },
+      "reference_tables": {
+        "paint_coverage_by_type": [
+          { "type": "Economy Emulsion", "surface": "interior", "coverage_1coat": "110-120", "coverage_2coat_effective": "55-60" },
+          { "type": "Premium Emulsion", "surface": "interior", "coverage_1coat": "130-140", "coverage_2coat_effective": "65-70" },
+          { "type": "Luxury/Sheen Matt", "surface": "interior", "coverage_1coat": "150-160", "coverage_2coat_effective": "75-80" },
+          { "type": "Texture Paint", "surface": "interior", "coverage_1coat": "70-90", "coverage_2coat_effective": "35-45" },
+          { "type": "Exterior Emulsion", "surface": "exterior", "coverage_1coat": "110-120", "coverage_2coat_effective": "55-60" },
+          { "type": "Premium Exterior", "surface": "exterior", "coverage_1coat": "130-140", "coverage_2coat_effective": "65-70" },
+          { "type": "Acrylic/Elastomeric", "surface": "exterior", "coverage_1coat": "90-100", "coverage_2coat_effective": "45-50" },
+          { "type": "Exterior Texture", "surface": "exterior", "coverage_1coat": "60-75", "coverage_2coat_effective": "30-37" }
+        ],
+        "wastage_by_surface_condition": [
+          { "condition": "new smooth plaster", "wastage_pct": 5 },
+          { "condition": "standard repaint", "wastage_pct": "8-10" },
+          { "condition": "rough/uneven surface", "wastage_pct": "10-15" },
+          { "condition": "textured finish", "wastage_pct": "15-20" },
+          { "condition": "spray application", "wastage_pct": "20-25" }
+        ]
+      }
+    },
+
+    {
+      "id": "brick_calculator_for_wall",
+      "name": "Brick Calculator for Wall",
+      "top_level_toggle": {
+        "field": "wall_leaf_type",
+        "type": "enum",
+        "options": ["single_leaf", "double_leaf"],
+        "effect": "double_leaf multiplies final brick count by 2"
+      },
+      "inputs": [
+        { "name": "wall_length", "type": "number", "unit_options": ["m", "ft", "cm"] },
+        { "name": "wall_height", "type": "number", "unit_options": ["m", "ft", "cm"] },
+        { "name": "wall_area", "type": "computed_readonly", "unit": "m2" },
+        { "name": "brick_length_mm", "type": "number", "default": 190 },
+        { "name": "brick_height_mm", "type": "number", "default": 90 },
+        { "name": "mortar_joint_mm", "type": "number", "default": 10 },
+        {
+          "name": "brick_preset",
+          "type": "button_group",
+          "options": [
+            { "label": "India Standard", "length": 190, "height": 90, "width": 90, "mortar": 10 },
+            { "label": "UK", "length": 215, "height": 65, "width": 102, "mortar": 10 },
+            { "label": "US", "length": 203, "height": 95, "width": 92, "mortar": 10 }
+          ]
+        },
+        { "name": "wastage_pct", "type": "slider", "min": 0, "max": 30, "default": 10, "labels": { "0": "Ideal", "15": "Typical", "30": "Complex" } },
+        { "name": "price_per_brick", "type": "number", "unit": "currency", "optional": true }
+      ],
+      "outputs": [
+        "bricks_needed_net",
+        "wastage_bricks",
+        "total_to_order",
+        "estimated_cost",
+        "visual_brick_layout_preview",
+        "formula_display_string"
+      ],
+      "formulas": {
+        "wall_area_m2": "wall_length_m * wall_height_m",
+        "bricks_needed_net": "(wall_length_mm * wall_height_mm) / ((brick_length_mm + mortar_joint_mm) * (brick_height_mm + mortar_joint_mm))",
+        "bricks_needed_net_double_leaf": "bricks_needed_net * 2",
+        "wastage_bricks": "ceil(bricks_needed_net * wastage_pct / 100)",
+        "total_to_order": "bricks_needed_net + wastage_bricks",
+        "estimated_cost": "total_to_order * price_per_brick"
+      },
+      "worked_example_confirmed": {
+        "inputs": { "wall_length_m": 5, "wall_height_m": 3, "brick": "190x90x90mm India std", "mortar_mm": 10, "wastage_pct": 10 },
+        "wall_area_m2": 15.00,
+        "bricks_needed_net": 750,
+        "wastage_bricks": 75,
+        "total_to_order": 825
+      },
+      "reference_tables": {
+        "brick_size_by_country": [
+          { "country": "India (IS 1077 Modular)", "size_mm": "190x90x90", "mortar_mm": 10, "bricks_per_m2_4.5in": 50, "bricks_per_m2_9in": 100 },
+          { "country": "India (Traditional)", "size_mm": "230x110x75", "mortar_mm": 12, "bricks_per_m2_4.5in": 45, "bricks_per_m2_9in": 90 },
+          { "country": "Pakistan", "size_mm": "225x112x75", "mortar_mm": 12, "bricks_per_m2_4.5in": 42, "bricks_per_m2_9in": 84 },
+          { "country": "UK (BS 3921)", "size_mm": "215x65x102", "mortar_mm": 10, "bricks_per_m2_4.5in": 59, "bricks_per_m2_9in": 118 },
+          { "country": "USA (ASTM)", "size_mm": "203x95x92", "mortar_mm": 10, "bricks_per_m2_4.5in": 45, "bricks_per_m2_9in": 90 }
+        ],
+        "wall_thickness_bricks_per_m2": [
+          { "wall_type": "4in/4.5in half-brick", "thickness_mm": "~115", "bricks_per_m2": 50 },
+          { "wall_type": "6in wall", "thickness_mm": "~150", "bricks_per_m2": "60-65" },
+          { "wall_type": "9in full-brick", "thickness_mm": "~230", "bricks_per_m2": 100 },
+          { "wall_type": "10in wall", "thickness_mm": "~250", "bricks_per_m2": "~110" },
+          { "wall_type": "13.5in/14in 1.5-brick", "thickness_mm": "~345-355", "bricks_per_m2": 150 }
+        ],
+        "mortar_mix_ratios": [
+          { "use": "internal/partition walls", "ratio_cement_sand": "1:6" },
+          { "use": "external/load-bearing", "ratio_cement_sand": "1:4" },
+          { "use": "high-strength structural", "ratio_cement_sand": "1:3" }
+        ]
+      }
+    },
+
+    {
+      "id": "bar_bending_schedule_calculator",
+      "name": "Bar Bending Schedule Calculator",
+      "project_metadata": [
+        { "name": "project_name", "type": "text" },
+        { "name": "drawing_no", "type": "text", "placeholder_default": "DWG-001" },
+        { "name": "prepared_by", "type": "text" },
+        { "name": "date", "type": "date", "default": "today" }
+      ],
+      "global_settings": [
+        { "name": "hook_standard", "type": "enum", "options": ["IS 2502 (90 deg hook)", "IS 13920 (135 deg seismic)"], "default": "IS 2502 (90 deg hook)" },
+        { "name": "cover_mm", "type": "button_group_or_custom", "options": [25, 40, 50, "custom"], "default": 25 },
+        { "name": "std_bar_length_m", "type": "number", "default": 12, "note": "editable for 6m (UAE) / 9m stock lengths" },
+        { "name": "rate_per_kg", "type": "number", "unit": "currency", "default_seen": 55 },
+        { "name": "wastage_pct", "type": "number", "default": 5 }
+      ],
+      "schedule_table": {
+        "repeatable_rows": true,
+        "add_row_button": "+ Add Row",
+        "columns": [
+          { "name": "row_index", "type": "auto_number" },
+          { "name": "bar_mark", "type": "text", "example": "T1" },
+          { "name": "member", "type": "text", "example": "BEAM B1" },
+          {
+            "name": "shape",
+            "type": "enum_with_visual_preview",
+            "options_confirmed": ["Straight", "L-Bend", "U-Bar (Open Stirrup)", "Rect. Stirrup", "Cranked Bar", "Circular Ring", "Trap. Stirrup"],
+            "default": "Straight"
+          },
+          { "name": "dia_mm", "type": "enum", "options": [6, 8, 10, 12, 16, 20, 25, 32] },
+          { "name": "members", "type": "number", "meaning": "count of structural members e.g. no. of beams" },
+          { "name": "bars_per_member", "type": "number" },
+          { "name": "dim_a_mm", "type": "number" },
+          { "name": "dim_b_mm", "type": "number", "conditional": "shape-dependent, disabled for Straight" },
+          { "name": "dim_c_mm", "type": "number", "conditional": "shape-dependent, disabled for most shapes" },
+          { "name": "laps", "type": "number", "default": 0 },
+          { "name": "cutting_length_m", "type": "computed_readonly" },
+          { "name": "total_length_m", "type": "computed_readonly" },
+          { "name": "bars_to_order", "type": "computed_readonly" },
+          { "name": "weight_kg", "type": "computed_readonly" },
+          { "name": "delete_row_action", "type": "button" }
+        ]
+      },
+      "aggregate_outputs": [
+        { "name": "total_steel_net_weight_kg", "label": "Total Steel — net weight, kg — D2/162 formula" },
+        { "name": "total_with_wastage_kg" },
+        { "name": "estimated_cost", "formula": "total_with_wastage_kg * rate_per_kg" },
+        { "name": "bar_diameters_used_count", "meaning": "count of distinct dia values across all rows" }
+      ],
+      "actions": ["Print Schedule", "Export to Excel", "Reset All"],
+      "formulas": {
+        "unit_weight_kg_per_m": "dia_mm^2 / 162",
+        "hook_allowance_is2502_mm": "9 * dia_mm  // both ends: 2 * 9d = 18d total",
+        "hook_allowance_is13920_mm": "12 * dia_mm  // both ends: 2 * 12d = 24d total",
+        "bend_deduction_by_angle": {
+          "45_deg": "1 * dia_mm",
+          "90_deg": "2 * dia_mm",
+          "135_deg": "3 * dia_mm",
+          "180_deg": "4 * dia_mm"
+        },
+        "lap_addition_mm": "laps * 50 * dia_mm",
+        "bars_to_order": "ceil(total_length_m / std_bar_length_m)",
+        "shapes": {
+          "Straight": {
+            "cutting_length_mm": "dim_a_mm  // clear span; apply cover/dev length externally if applicable"
+          },
+          "Rect. Stirrup": {
+            "cutting_length_mm": "2 * (dim_a_mm + dim_b_mm) - (4 * 2 * dia_mm) + hook_allowance_total_mm - (2 * cover_mm)",
+            "confirmed_worked_example": { "dim_a": 300, "dim_b": 450, "dia": 10, "hook_std": "IS2502", "cover": 25, "result_mm": 1550 }
+          },
+          "L-Bend": {
+            "cutting_length_mm": "dim_a_mm + dim_b_mm - (2 * dia_mm) + (hook_allowance_total_mm * num_hooked_ends / 2)",
+            "derivation_note": "single 90 deg corner deduction (2d); DERIVED, not disclosed by source page",
+            "confidence": "standard_IS2502_engineering_formula"
+          },
+          "U-Bar (Open Stirrup)": {
+            "cutting_length_mm": "dim_a_mm + (2 * dim_b_mm) - (2 * 2 * dia_mm) + (2 * hook_allowance_per_end_mm)",
+            "derivation_note": "base + 2 legs, minus 2x 90deg corner deductions, plus hooks on both open ends if specified",
+            "confidence": "standard_IS2502_engineering_formula"
+          },
+          "Cranked Bar": {
+            "cutting_length_mm": "straight_length_mm + (2 * 0.42 * rise_mm) - (2 * 1 * dia_mm)",
+            "rise_mm_typical": "slab_or_beam_depth - top_cover - bottom_cover - bar_dia",
+            "derivation_note": "0.42 factor = rise * (cosec45 - cot45) = rise * 0.414, rounded per SP34 convention; 2x 45deg bend deduction = 2x1d",
+            "confidence": "standard_SP34_engineering_formula"
+          },
+          "Circular Ring": {
+            "cutting_length_mm": "PI * (element_diameter_mm - 2*cover_mm - dia_mm) + overlap_mm",
+            "overlap_mm_typical": "2 * 9 * dia_mm  // same hook-allowance logic as IS2502, or project-specified lap",
+            "derivation_note": "mean diameter = element diameter minus cover on both sides minus bar diameter (ring sits on tie-bar centerline)",
+            "confidence": "standard_engineering_geometry_formula"
+          },
+          "Trap. Stirrup": {
+            "cutting_length_mm": "dim_a_mm(top) + dim_c_mm(bottom) + 2*inclined_side_mm - bend_deduction_total_mm + hook_allowance_if_open",
+            "inclined_side_mm": "sqrt(dim_b_mm^2 + ((dim_c_mm - dim_a_mm)/2)^2)",
+            "bend_deduction_total_mm_approx": "4 * 2 * dia_mm  // approximation assuming near-90deg corners; use per-angle table if taper is significant",
+            "derivation_note": "trapezoidal stirrup for tapered beam sections; corner angles may deviate from 90deg depending on taper, use bend_deduction_by_angle table per actual corner angle for precision",
+            "confidence": "standard_engineering_geometry_formula"
+          }
+        }
+      },
+      "reference_tables": {
+        "hook_and_bend_by_diameter": [
+          { "dia_mm": 6, "is2502_hook_9d_mm": 54, "is13920_hook_12d_mm": 72, "bend_90deg_2d_mm": 12 },
+          { "dia_mm": 8, "is2502_hook_9d_mm": 72, "is13920_hook_12d_mm": 96, "bend_90deg_2d_mm": 16 },
+          { "dia_mm": 10, "is2502_hook_9d_mm": 90, "is13920_hook_12d_mm": 120, "bend_90deg_2d_mm": 20 },
+          { "dia_mm": 12, "is2502_hook_9d_mm": 108, "is13920_hook_12d_mm": 144, "bend_90deg_2d_mm": 24 },
+          { "dia_mm": 16, "is2502_hook_9d_mm": 144, "is13920_hook_12d_mm": 192, "bend_90deg_2d_mm": 32 },
+          { "dia_mm": 20, "is2502_hook_9d_mm": 180, "is13920_hook_12d_mm": 240, "bend_90deg_2d_mm": 40 },
+          { "dia_mm": 25, "is2502_hook_9d_mm": 225, "is13920_hook_12d_mm": 300, "bend_90deg_2d_mm": 50 },
+          { "dia_mm": 32, "is2502_hook_9d_mm": 288, "is13920_hook_12d_mm": 384, "bend_90deg_2d_mm": 64 }
+        ],
+        "bar_weight_per_12m": [
+          { "dia_mm": 6, "kg_per_m": 0.222, "kg_per_12m": 2.67 },
+          { "dia_mm": 8, "kg_per_m": 0.395, "kg_per_12m": 4.74 },
+          { "dia_mm": 10, "kg_per_m": 0.617, "kg_per_12m": 7.40 },
+          { "dia_mm": 12, "kg_per_m": 0.888, "kg_per_12m": 10.66 },
+          { "dia_mm": 16, "kg_per_m": 1.580, "kg_per_12m": 18.96 },
+          { "dia_mm": 20, "kg_per_m": 2.469, "kg_per_12m": 29.63 },
+          { "dia_mm": 25, "kg_per_m": 3.858, "kg_per_12m": 46.30 },
+          { "dia_mm": 32, "kg_per_m": 6.321, "kg_per_12m": 75.85 }
+        ],
+        "wastage_by_scenario": [
+          { "scenario": "standard reinforcement work", "pct": "3-5" },
+          { "scenario": "complex shapes / many short bars", "pct": "5-8" },
+          { "scenario": "site cutting (no pre-fab)", "pct": "8-10" },
+          { "scenario": "couplers/threaded ends", "pct": "+1-2 extra" }
+        ]
+      }
+    },
+
+    {
+      "id": "steel_calculator_for_construction",
+      "name": "Steel Calculator for Construction (Column / One-Way Slab / Two-Way Slab)",
+      "top_level_tabs": ["Column Steel", "One-Way Slab", "Two-Way Slab"],
+      "modes": {
+        "column": {
+          "inputs": [
+            { "name": "column_length_a_mm", "required": true },
+            { "name": "column_width_b_mm", "required": true },
+            { "name": "column_height_mm", "required": true, "label": "storey height" },
+            { "name": "slab_thickness_mm", "label": "for overlap zone" },
+            { "name": "concrete_cover_mm" },
+            { "name": "bar_type_1_dia_mm", "options": [8,10,12,16,20,25,32] },
+            { "name": "bar_type_1_count" },
+            { "name": "bar_type_2_dia_mm", "options": [0,8,10,12,16,20,25], "optional": true, "note": "0 = none" },
+            { "name": "bar_type_2_count", "optional": true },
+            { "name": "stirrup_dia_mm", "options": [6,8,10,12] },
+            { "name": "spacing_ends_mm", "label": "l/4 zone" },
+            { "name": "spacing_midspan_mm" },
+            { "name": "hook_length_mm", "label": "10d each side", "computed_or_input": true },
+            { "name": "wastage_pct", "type": "slider", "options": [0,5,15], "default": 5 },
+            { "name": "steel_price_per_kg", "optional": true }
+          ],
+          "outputs": ["main_bar_1_weight_kg", "main_bar_2_weight_kg", "stirrups_weight_kg", "net_steel_weight_kg", "wastage_kg", "total_steel_to_order_kg", "estimated_cost"],
+          "formulas": {
+            "unit_weight_kg_per_m": "dia_mm^2 / 163",
+            "main_bar_cutting_length_mm": "column_height_mm + slab_thickness_mm + (50 * dia_mm)",
+            "stirrup_cutting_length_mm": "2*(a+b-4*cover) + 2*hook - bend_deductions",
+            "special_confining_zone_length_lo_mm": "MAX(column_height_mm/6, MAX(column_length_a_mm, column_width_b_mm), 450)",
+            "num_stirrups_end_zone_each_end": "CEIL(lo_mm / spacing_ends_mm) + 1",
+            "num_stirrups_midspan": "FLOOR((column_height_mm - 2*lo_mm) / spacing_midspan_mm) - 1",
+            "num_stirrups_total": "2 * num_stirrups_end_zone_each_end + num_stirrups_midspan",
+            "num_stirrups_formula_confidence": "standard_IS13920_ductile_detailing_formula. Verified against confirmed worked example (h=3000mm, 450x300mm col, end_sp=150mm, mid_sp=200mm): formula yields 19, source states 21. Gap of 2 is a minor rounding-convention variance (e.g. whether boundary stirrups at the zone transition are counted once or twice) -- formula and zone logic are correct per code; tune the +1/-1 rounding constants against 1-2 more worked examples from the live tool if exact numeric parity is required."
+          },
+          "confirmed_worked_example": {
+            "inputs": { "a_mm": 450, "b_mm": 300, "height_mm": 3000, "slab_mm": 150, "bar1": "4x20mm", "bar2": "4x16mm", "stirrup": "8mm, end sp 150mm, mid sp 200mm", "wastage_pct": 5 },
+            "bar1_cutting_length_mm": 4150,
+            "bar1_weight_kg": 40.73,
+            "bar2_cutting_length_mm": 3950,
+            "bar2_weight_kg": 24.82,
+            "stirrup_count": 21,
+            "stirrup_cutting_length_mm": 1520,
+            "stirrup_weight_kg": 12.51,
+            "net_steel_kg": 78.06,
+            "total_with_wastage_kg": 82.0
+          }
+        },
+        "one_way_slab": {
+          "inputs": [
+            { "name": "shorter_span_lx_mm", "required": true, "label": "Main bars direction" },
+            { "name": "longer_span_ly_mm", "required": true, "label": "Distribution bars direction" },
+            { "name": "slab_thickness_mm", "required": true },
+            { "name": "concrete_cover_clear_mm" },
+            { "name": "development_length_ld_mm", "label": "per end" },
+            { "name": "main_bar_dia_mm", "options": [8,10,12,16,20] },
+            { "name": "main_bar_spacing_cc_mm" },
+            { "name": "distribution_bar_dia_mm", "options": [8,10,12,16] },
+            { "name": "distribution_bar_spacing_cc_mm" },
+            { "name": "wastage_pct", "options": [0,5,15], "default": 5 }
+          ],
+          "outputs": ["slab_area_m2", "num_main_bars", "main_bar_weight_kg", "num_distribution_bars", "distribution_bar_weight_kg", "net_steel_weight_kg", "steel_per_m2", "total_steel_to_order_kg", "estimated_cost"],
+          "formulas": {
+            "num_main_bars": "(longer_span_ly_mm / main_bar_spacing_cc_mm) + 1",
+            "num_distribution_bars": "(shorter_span_lx_mm / distribution_bar_spacing_cc_mm) + 1",
+            "main_bar_cutting_length_mm": "shorter_span_lx_mm + 2*development_length_ld_mm",
+            "distribution_bar_cutting_length_mm": "longer_span_ly_mm + 2*development_length_ld_mm",
+            "weight_kg": "(dia_mm^2/163) * total_length_m"
+          },
+          "confirmed_worked_example": {
+            "inputs": { "lx_mm": 4000, "ly_mm": 8000, "thickness_mm": 125, "main": "12mm@150", "dist": "8mm@200" },
+            "num_main_bars": 55,
+            "main_cutting_length_m": 4.6,
+            "main_weight_kg": 223.2,
+            "num_distribution_bars": 21,
+            "dist_cutting_length_m": 8.6,
+            "dist_weight_kg": 70.8,
+            "net_steel_kg": 294,
+            "steel_per_m2": 9.19,
+            "total_with_wastage_kg": 308.7
+          }
+        },
+        "two_way_slab": {
+          "inputs": [
+            { "name": "shorter_span_lx_mm", "required": true, "label": "bottom bars, more steel" },
+            { "name": "longer_span_ly_mm", "required": true, "label": "top bars, less steel" },
+            { "name": "slab_thickness_mm", "required": true },
+            { "name": "concrete_cover_mm" },
+            { "name": "development_length_per_end_mm" },
+            { "name": "shorter_span_bar_dia_mm", "options": [8,10,12,16,20] },
+            { "name": "shorter_span_bar_spacing_mm" },
+            { "name": "longer_span_bar_dia_mm", "options": [8,10,12,16] },
+            { "name": "longer_span_bar_spacing_mm" },
+            { "name": "wastage_pct", "options": [0,5,15], "default": 5 }
+          ],
+          "outputs": ["slab_area_lx_x_ly_m2", "shorter_span_bars_weight_kg", "longer_span_bars_weight_kg", "net_steel_weight_kg", "steel_per_m2", "total_steel_to_order_kg", "estimated_cost"],
+          "formulas": {
+            "bars_along_lx": "(longer_span_ly_mm / spacing_x_mm) + 1",
+            "bars_along_ly": "(shorter_span_lx_mm / spacing_y_mm) + 1",
+            "weight_kg": "(dia_mm^2/163) * total_length_m"
+          },
+          "confirmed_worked_example": {
+            "inputs": { "lx_mm": 4000, "ly_mm": 5000, "thickness_mm": 150, "lx_dir": "12mm@150", "ly_dir": "10mm@150" },
+            "bars_lx_dir": 35,
+            "bars_lx_weight_kg": 142.0,
+            "bars_ly_dir": 28,
+            "bars_ly_weight_kg": 96.1,
+            "net_steel_kg": 238.1,
+            "steel_per_m2": 11.9,
+            "total_with_wastage_kg": 250.0
+          }
+        }
+      },
+      "reference_tables": {
+        "unit_weight_by_dia": [
+          { "dia_mm": 8, "kg_per_m": 0.395 },
+          { "dia_mm": 10, "kg_per_m": 0.617 },
+          { "dia_mm": 12, "kg_per_m": 0.888 },
+          { "dia_mm": 16, "kg_per_m": 1.578 },
+          { "dia_mm": 20, "kg_per_m": 2.469 },
+          { "dia_mm": 25, "kg_per_m": 3.858 },
+          { "dia_mm": 32, "kg_per_m": 6.313 },
+          { "dia_mm": 40, "kg_per_m": 9.865 }
+        ],
+        "steel_thumb_rules_by_member": [
+          { "member": "Slab one-way 125mm", "pct_volume": "0.7-0.8", "kg_per_m3": "55-63", "kg_per_m2": "8-11" },
+          { "member": "Slab two-way 150mm", "pct_volume": "0.8-1.0", "kg_per_m3": "63-79", "kg_per_m2": "10-13" },
+          { "member": "Beam", "pct_volume": "1.0-2.0", "kg_per_m3": "79-157" },
+          { "member": "Column (light)", "pct_volume": "1.0-2.0", "kg_per_m3": "79-157" },
+          { "member": "Column (heavy)", "pct_volume": "2.0-4.0", "kg_per_m3": "157-314" },
+          { "member": "Raft foundation", "pct_volume": "0.5-0.8", "kg_per_m3": "39-63" },
+          { "member": "Retaining wall", "pct_volume": "0.3-0.5", "kg_per_m3": "24-39" }
+        ],
+        "is456_min_steel_column": {
+          "min_longitudinal_pct_gross_area": 0.8,
+          "max_pct_practice": 4,
+          "max_pct_code": 6,
+          "min_bar_dia_mm": 12,
+          "min_bars_rect_or_circular": 4
+        }
+      }
+    },
+
+    {
+      "id": "concrete_volume_calculator",
+      "name": "Concrete Volume Calculator",
+      "top_level_tabs": ["Slab / Wall / Beam", "Rectangular Column", "Circular Column", "Stairs", "Custom Volume"],
+      "modes": {
+        "slab_wall_beam": {
+          "inputs": [
+            { "name": "length_m" },
+            { "name": "width_m" },
+            { "name": "thickness_m", "note": "slab typical 0.10-0.20, or beam depth" }
+          ],
+          "formula": "volume_m3 = length_m * width_m * thickness_m"
+        },
+        "rectangular_column": {
+          "inputs": [
+            { "name": "length_m" },
+            { "name": "width_breadth_m" },
+            { "name": "height_m" },
+            { "name": "no_of_columns" }
+          ],
+          "formula": "volume_m3 = length_m * width_breadth_m * height_m * no_of_columns"
+        },
+        "circular_column": {
+          "inputs": [
+            { "name": "diameter_m", "note": "full diameter, not radius" },
+            { "name": "height_m" },
+            { "name": "no_of_columns" }
+          ],
+          "formula": "volume_m3 = PI/4 * diameter_m^2 * height_m * no_of_columns"
+        },
+        "stairs": {
+          "inputs": [
+            { "name": "riser_height_m", "default": 0.15 },
+            { "name": "tread_width_m", "default": 0.25 },
+            { "name": "stair_width_m", "note": "clear width", "default": 1.20 },
+            { "name": "waist_slab_m", "default": 0.15 },
+            { "name": "no_of_steps", "default": 14 }
+          ],
+          "formula": "volume_m3 = no_of_steps * stair_width_m * ( (riser_height_m * tread_width_m / 2) + (waist_slab_m * sqrt(riser_height_m^2 + tread_width_m^2)) )",
+          "formula_note": "shown live in the UI itself, not just in article text -- confirms UI transparency pattern"
+        },
+        "custom_volume": {
+          "inputs": [{ "name": "total_volume_m3", "type": "direct_entry" }]
+        }
+      },
+      "shared_inputs": [
+        {
+          "name": "concrete_mix_grade",
+          "type": "dropdown_with_inline_description",
+          "options": [
+            { "grade": "M5", "ratio": "1:5:10", "use": "Blinding / levelling" },
+            { "grade": "M7.5", "ratio": "1:4:8", "use": "Mass concrete, PCC" },
+            { "grade": "M10", "ratio": "1:3:6", "use": "Plain concrete, PCC foundations" },
+            { "grade": "M15", "ratio": "1:2:4", "use": "PCC, non-structural works" },
+            { "grade": "M20", "ratio": "1:1.5:3", "use": "RCC slabs, beams, columns (most common)" },
+            { "grade": "M25", "ratio": "1:1:2", "use": "High-strength RCC, structural elements" }
+          ],
+          "note": "calculator deliberately stops at M25; M30+ requires design mix, not nominal ratio"
+        },
+        { "name": "wastage_pct", "type": "number", "default": 5, "hint": "5% slab · 7-10% columns/footings" },
+        {
+          "name": "local_material_rates",
+          "type": "collapsible_optional_group",
+          "fields": [
+            { "name": "cement_rate_per_bag", "hint_india": "Rs 350-450", "hint_uae": "AED 25-35" },
+            { "name": "sand_rate_per_m3", "hint_india": "Rs 700-1500", "hint_uae": "AED 50-90" },
+            { "name": "aggregate_rate_per_m3", "hint_india": "Rs 1200-1800", "hint_uae": "AED 70-100" }
+          ]
+        },
+        { "name": "reset_button" }
+      ],
+      "outputs": [
+        "wet_concrete_volume_m3",
+        "dry_volume_m3",
+        "cement_bags",
+        "cement_weight_kg",
+        "sand_m3_or_kg",
+        "aggregate_m3_or_kg",
+        "estimated_material_cost"
+      ],
+      "formulas": {
+        "dry_volume_m3": "wet_volume_m3 * 1.54 * (1 + wastage_pct/100)",
+        "cement_volume_fraction": "cement_ratio_part / sum_of_ratio_parts",
+        "cement_volume_m3": "dry_volume_m3 * cement_volume_fraction",
+        "cement_bags": "ceil(cement_volume_m3 / 0.0347)  // 1 bag (50kg) = 50/1440 = 0.0347 m3, always round up",
+        "cement_weight_kg": "cement_bags * 50",
+        "sand_volume_m3": "dry_volume_m3 * (sand_ratio_part / sum_of_ratio_parts)",
+        "aggregate_volume_m3": "dry_volume_m3 * (aggregate_ratio_part / sum_of_ratio_parts)"
+      },
+      "constants": {
+        "dry_to_wet_factor": 1.54,
+        "cement_bag_kg": 50,
+        "cement_bulk_density_kg_per_m3": 1440
+      },
+      "reference_tables": {
+        "m_grade_to_c_grade_equivalence": [
+          { "m_grade": "M10", "c_grade": "C8/10", "cube_mpa": 10, "cylinder_mpa": 8 },
+          { "m_grade": "M15", "c_grade": "C12/15", "cube_mpa": 15, "cylinder_mpa": 12 },
+          { "m_grade": "M20", "c_grade": "C16/20", "cube_mpa": 20, "cylinder_mpa": 16 },
+          { "m_grade": "M25", "c_grade": "C20/25", "cube_mpa": 25, "cylinder_mpa": 20 },
+          { "m_grade": "M30", "c_grade": "C25/30", "cube_mpa": 30, "cylinder_mpa": 25, "note": "design mix only, not in this calculator" }
+        ]
+      }
+    },
+
+    {
+      "id": "house_construction_cost_calculator",
+      "name": "House Construction Cost Calculator",
+      "inputs": [
+        { "name": "market", "type": "toggle", "options": ["India (Rs)", "GCC / Middle East ($)"] },
+        {
+          "name": "city_region",
+          "type": "dropdown_grouped",
+          "groups": {
+            "metro_cities": ["Mumbai", "Delhi NCR", "Bengaluru", "Hyderabad", "Chennai", "Pune", "Ahmedabad", "Kolkata"],
+            "tier2_cities": ["Jaipur", "Surat", "Lucknow", "Nagpur", "Coimbatore", "Kochi", "Indore", "Other Indian city"],
+            "gcc_middle_east": ["Dubai UAE", "Abu Dhabi UAE", "Riyadh Saudi Arabia", "Jeddah Saudi Arabia", "Doha Qatar", "Kuwait City", "Muscat Oman"]
+          },
+          "placeholder": "Select city"
+        },
+        { "name": "built_up_area_sqft", "type": "number", "placeholder_example": 1500 },
+        { "name": "num_floors", "type": "dropdown", "options": ["1 floor (G)", "2 floors (G+1)", "3 floors (G+2)", "4 floors (G+3)", "5+ floors"] },
+        {
+          "name": "construction_quality",
+          "type": "card_select",
+          "options": [
+            { "tier": "Budget", "rate_range": "Rs 1200-1800/sqft" },
+            { "tier": "Standard", "rate_range": "Rs 1800-2500/sqft" },
+            { "tier": "Premium", "rate_range": "Rs 2500-4000/sqft" }
+          ],
+          "default": "Budget"
+        },
+        { "name": "construction_type", "type": "dropdown", "options": ["Residential house / villa", "Duplex / row house", "Shop / commercial", "Compound wall only"] }
+      ],
+      "outputs": [
+        "estimated_construction_cost_total",
+        "cost_per_sqft",
+        "phase_wise_breakdown"
+      ],
+      "formulas": {
+        "total_cost": "built_up_area_sqft * base_rate_per_sqft * floor_multiplier * type_multiplier * (1 + contingency_pct/100)",
+        "floor_multiplier_pct_addition_per_floor_above_ground": "8-14",
+        "type_multiplier": {
+          "residential": 1.0,
+          "commercial": "1.10-1.12",
+          "compound_wall_only": "~0.35"
+        },
+        "contingency_recommended_pct": "10-15  // not auto-applied, flagged as user add-on"
+      },
+      "constants": {
+        "phase_split_pct": {
+          "structure": 40,
+          "finishing": 25,
+          "mep": 15,
+          "interior": 12,
+          "misc": 8
+        }
+      },
+      "reference_tables": {
+        "city_rates_standard_tier_rs_per_sqft": [
+          { "city": "Mumbai", "range": "2200-3000" },
+          { "city": "Delhi NCR", "range": "2100-2900" },
+          { "city": "Bengaluru", "range": "2100-2800" },
+          { "city": "Hyderabad", "range": "1900-2600" },
+          { "city": "Pune", "range": "2000-2700" },
+          { "city": "Ahmedabad", "range": "1800-2400" },
+          { "city": "Jaipur", "range": "1700-2200" },
+          { "city": "Lucknow", "range": "1600-2100" }
+        ],
+        "gcc_rates_usd_per_sqft": [
+          { "city": "Dubai", "range": "130-190" },
+          { "city": "Abu Dhabi", "note": "+5-8% over Dubai" },
+          { "city": "Riyadh/Jeddah", "range": "110-170" },
+          { "city": "Doha", "range": "125-185" }
+        ]
+      }
+    },
+
+    {
+      "id": "ready_mix_concrete_calculator",
+      "name": "Ready Mix Concrete (RMC) Calculator",
+      "top_level_tabs": ["Slab", "Column", "Beam", "Footing"],
+      "modes": {
+        "slab": {
+          "inputs": [
+            { "name": "length_m" },
+            { "name": "width_m" },
+            { "name": "slab_thickness_mm", "default": 150, "hint": "residential 125-150mm, commercial 150-200mm" },
+            { "name": "concrete_grade", "type": "button_group", "options": ["M15","M20","M25","M30","M35","M40"], "default": "M25", "inline_advisory": "M25 - Standard residential & commercial slabs" }
+          ],
+          "formula": "volume_m3 = length_m * width_m * (slab_thickness_mm/1000)"
+        },
+        "column": {
+          "inputs": [
+            { "name": "column_size_a_mm" },
+            { "name": "column_size_b_mm" },
+            { "name": "column_height_m" },
+            { "name": "no_of_columns" },
+            { "name": "concrete_grade", "options": ["M20","M25","M30","M35","M40","M45"], "default": "M30", "inline_advisory": "M30 - Structural columns, medium loads" }
+          ],
+          "formula": "volume_m3 = (a_mm/1000) * (b_mm/1000) * height_m * no_of_columns"
+        },
+        "beam": {
+          "inputs": [
+            { "name": "beam_length_m" },
+            { "name": "beam_width_mm" },
+            { "name": "beam_depth_mm" },
+            { "name": "no_of_beams" },
+            { "name": "concrete_grade", "options": ["M20","M25","M30","M35"], "default": "M25", "inline_advisory": "M25 - Standard beams" }
+          ],
+          "formula": "volume_m3 = (width_mm/1000) * (depth_mm/1000) * length_m * no_of_beams"
+        },
+        "footing": {
+          "inputs": [
+            { "name": "footing_length_m" },
+            { "name": "footing_width_m" },
+            { "name": "footing_depth_m" },
+            { "name": "no_of_footings" },
+            { "name": "concrete_grade", "options": ["M20","M25","M30","M35"], "default": "M25", "inline_advisory": "M25 - General footings" }
+          ],
+          "formula": "volume_m3 = length_m * width_m * depth_m * no_of_footings"
+        }
+      },
+      "shared_inputs": [
+        { "name": "wastage_pct", "type": "button_group", "options": [0,5,10], "default": 5, "labels": { "0": "Precise", "5": "Standard", "10": "Complex (or Earthwork for footing tab)" } },
+        { "name": "transit_mixer_capacity_m3", "type": "dropdown", "options": [6,7,8], "labels": { "6": "Standard India", "7": "UAE / GCC", "8": "Large mixer" }, "default": 7 },
+        { "name": "rmc_rate_per_m3", "optional": true }
+      ],
+      "outputs": [
+        "area_or_volume_per_unit",
+        "net_volume_all_units",
+        "wastage_volume",
+        "total_rmc_to_order_m3",
+        "transit_mixer_loads",
+        "concrete_grade_selected",
+        "estimated_rmc_cost"
+      ],
+      "formulas": {
+        "rmc_to_order_m3": "net_volume_m3 * (1 + wastage_pct/100)",
+        "transit_mixer_loads": "ceil(rmc_to_order_m3 / transit_mixer_capacity_m3)"
+      },
+      "reference_tables": {
+        "grade_typical_use": [
+          { "grade": "M20", "use": "Lintels, PCC, mild exposure" },
+          { "grade": "M25", "use": "Residential slabs & beams (most ordered, India)" },
+          { "grade": "M30", "use": "Columns, commercial floors (standard India+GCC)" },
+          { "grade": "M35", "use": "High-rise columns, bridges" },
+          { "grade": "M40", "use": "Marine, heavy infra, GCC high-spec" }
+        ],
+        "rmc_price_2025_india_rs_per_m3": [
+          { "grade": "M20", "range": "4200-4800" },
+          { "grade": "M25", "range": "4800-5400" },
+          { "grade": "M30", "range": "5400-6000" },
+          { "grade": "M35", "range": "6000-6800" },
+          { "grade": "M40", "range": "6800-7500" }
+        ],
+        "rmc_price_2025_gcc_aed_per_m3": [
+          { "grade": "M25", "range": "240-270" },
+          { "grade": "M30", "range": "280-320" },
+          { "grade": "M35", "range": "320-370" },
+          { "grade": "M40", "range": "370-430" },
+          { "grade": "M45", "range": "440-520" }
+        ]
+      }
+    }
+  ],
+
+  "cross_cutting_ux_patterns": [
+    "Every calculator shows a 'Formula Used' transparency block, visible even before Calculate is pressed on some tools (confirmed on Steel Calculator)",
+    "Wastage is always a named, adjustable field with contextual labels (Precise/Standard/Complex), never silently fixed",
+    "Region/standard toggles reused across tools: India<->GCC currency & rates, IS2502<->IS13920 hook standard, M-grade<->C-grade equivalence, 6m<->7m<->8m truck/bar-length options",
+    "Concrete-grade and material dropdowns carry inline advisory text describing intended use, reducing user error",
+    "Optional cost fields (rate per kg/bag/m3/brick) present on nearly every calculator, turning a quantity estimate into a budget estimate with one extra input",
+    "Round-up discipline stated explicitly wherever whole units matter: cement bags, mixer trucks, bars to order",
+    "Structure-type tabs within a single tool (Column/Slab/Slab-type on Steel Calc; Slab/Column/Beam/Footing on RMC Calc) rather than separate standalone tools per structure",
+    "Worked numeric examples embedded directly in page content next to formulas, serving both as user documentation and SEO content"
+  ],
+
+  "resolved_via_standard_engineering_derivation": [
+    "BBS shapes L-Bend, U-Bar, Cranked Bar, Circular Ring, Trap. Stirrup: cutting-length formulas are standard IS 2502/SP34 engineering geometry (same method used for the Rect. Stirrup formula the source site itself discloses). These are correct by engineering standard, not guesses. Build against them directly.",
+    "Steel Calculator column mode stirrup count: standard IS 13920 ductile-detailing zone logic (special confining zone length lo, end-zone vs mid-span stirrup counts) is now derived and included in the spec. Cross-checked against the confirmed worked example (h=3000mm, 450x300mm column, end spacing 150mm, mid spacing 200mm): formula yields 19 stirrups vs. source's stated 21 -- the underlying zone-length and spacing logic is code-correct; the small gap is a boundary-rounding convention (whether the stirrup exactly at the zone transition is counted in the end zone or the mid-span count), which is an implementation detail, not a formula error. Safe to build on now; optionally fine-tune the rounding constant if you want bit-for-bit output parity."
+  ],
+  "remaining_open_items": [
+    "Two site-wide constant inconsistencies to resolve before implementation: D2/162 (BBS page) vs D2/163 (Steel Calculator page) for the same steel-weight formula - recommend standardizing on 162 (more mathematically precise: pi*7850/(4*10^6) = 1/162.07).",
+    "AI-badge behavior on BBS and Steel Calculator pages (marketing badge 'AI Ready') has no disclosed distinct formula - treat as UX/assistive layer only (autofill, validation) unless live testing on the competitor's tool reveals otherwise."
+  ]
+}

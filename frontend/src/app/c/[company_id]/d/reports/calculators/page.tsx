@@ -9,6 +9,7 @@ type CalcCategory = "steel" | "concrete" | "masonry" | "finishes" | "finance";
 type CalcType =
   | "steel_column"
   | "steel_slab"
+  | "steel_twoway"
   | "concrete"
   | "rmc"
   | "bricks"
@@ -50,8 +51,24 @@ export default function CalculatorsPage() {
   const [slabDistDia, setSlabDistDia] = useState(8); // mm
   const [slabDistSpacing, setSlabDistSpacing] = useState(200); // mm
 
+  // 2b. Two-Way Slab Steel
+  const [tw2Lx, setTw2Lx] = useState(4000); // mm
+  const [tw2Ly, setTw2Ly] = useState(5000); // mm
+  const [tw2XDia, setTw2XDia] = useState(12);
+  const [tw2XSp, setTw2XSp] = useState(150);
+  const [tw2YDia, setTw2YDia] = useState(10);
+  const [tw2YSp, setTw2YSp] = useState(150);
+  const [tw2DevLen, setTw2DevLen] = useState(300);
+
+  // Steel Column dual-zone & secondary bar
+  const [colBar2Dia, setColBar2Dia] = useState(0);
+  const [colBar2Count, setColBar2Count] = useState(0);
+  const [colSpEnd, setColSpEnd] = useState(150);
+  const [colSpMid, setColSpMid] = useState(200);
+  const [slabDevLen, setSlabDevLen] = useState(300);
+
   // 3. Concrete Volume & Mix
-  const [concreteForm, setConcreteForm] = useState<"slab" | "column" | "footing" | "stair">("slab");
+  const [concreteForm, setConcreteForm] = useState<"slab" | "column" | "circular" | "footing" | "stair">("slab");
   const [concreteL, setConcreteL] = useState(5.0); // m
   const [concreteW, setConcreteW] = useState(3.0); // m
   const [concreteD, setConcreteD] = useState(0.15); // m
@@ -62,20 +79,46 @@ export default function CalculatorsPage() {
   const [stairRiser, setStairRiser] = useState(0.15); // m
   const [stairTread, setStairTread] = useState(0.25); // m
   const [stairWaist, setStairWaist] = useState(0.15); // m
+  const [circDia, setCircDia] = useState(0.45); // m
+  const [circHeight, setCircHeight] = useState(3.0); // m
+  const [circCount, setCircCount] = useState(1);
+  const [cementRate, setCementRate] = useState(0);
+  const [sandRate, setSandRate] = useState(0);
+  const [aggRate, setAggRate] = useState(0);
 
   // 4. RMC Transit Mixer
   const [rmcVolume, setRmcVolume] = useState(15.0); // m3
   const [rmcMixerSize, setRmcMixerSize] = useState(6.0); // m3
   const [rmcWastage, setRmcWastage] = useState(5); // %
+  const [rmcTab, setRmcTab] = useState<"direct" | "slab" | "column" | "beam" | "footing">("direct");
+  const [rmcGrade, setRmcGrade] = useState("M25");
+  const [rmcSlabL, setRmcSlabL] = useState(10);
+  const [rmcSlabW, setRmcSlabW] = useState(6);
+  const [rmcSlabT, setRmcSlabT] = useState(150);
+  const [rmcColA, setRmcColA] = useState(450);
+  const [rmcColB, setRmcColB] = useState(300);
+  const [rmcColH, setRmcColH] = useState(3);
+  const [rmcColCount, setRmcColCount] = useState(4);
+  const [rmcBeamL, setRmcBeamL] = useState(6);
+  const [rmcBeamW, setRmcBeamW] = useState(230);
+  const [rmcBeamD, setRmcBeamD] = useState(450);
+  const [rmcBeamCount, setRmcBeamCount] = useState(2);
+  const [rmcFootL, setRmcFootL] = useState(1.5);
+  const [rmcFootW, setRmcFootW] = useState(1.5);
+  const [rmcFootD, setRmcFootD] = useState(0.4);
+  const [rmcFootCount, setRmcFootCount] = useState(6);
+  const [rmcRate, setRmcRate] = useState(0);
 
   // 5. Bricks & Mortar
   const [brickWallL, setBrickWallL] = useState(5.0); // m
   const [brickWallH, setBrickWallH] = useState(3.0); // m
   const [brickThickness, setBrickThickness] = useState(230); // mm
-  const [brickSizePreset, setBrickSizePreset] = useState("modular"); // modular / traditional
+  const [brickSizePreset, setBrickSizePreset] = useState("modular"); // modular / traditional / uk / us
   const [brickMortarRatio, setBrickMortarRatio] = useState("1:6");
   const [brickLeaves, setBrickLeaves] = useState(2); // 1 = 4.5", 2 = 9"
   const [brickWastage, setBrickWastage] = useState(10); // %
+  const [brickMortarJoint, setBrickMortarJoint] = useState(10); // mm
+  const [brickPrice, setBrickPrice] = useState(0); // price per brick
 
   // 6. Paint Quantity
   const [roomL, setRoomL] = useState(15.0); // ft
@@ -85,7 +128,8 @@ export default function CalculatorsPage() {
   const [doorsCount, setDoorsCount] = useState(2);
   const [windowsCount, setWindowsCount] = useState(3);
   const [paintCoats, setPaintCoats] = useState(2);
-  const [paintQuality, setPaintQuality] = useState("premium"); // economy / premium / luxury
+  const [paintQuality, setPaintQuality] = useState("premium"); // economy / premium / luxury / texture
+  const [paintMode, setPaintMode] = useState<"interior" | "exterior">("interior");
 
   // 7. Tile Flooring
   const [tileRoomL, setTileRoomL] = useState(12.0); // ft
@@ -114,6 +158,20 @@ export default function CalculatorsPage() {
   const [houseCurrency, setHouseCurrency] = useState<"INR" | "USD" | "AED">("INR");
   const [houseCompoundWall, setHouseCompoundWall] = useState(120); // ft
   const [houseContingency, setHouseContingency] = useState(10); // %
+  const [houseCity, setHouseCity] = useState("default");
+
+  const CITY_MULT: Record<string, { label: string; mult: number; cur: "INR" | "AED" | "USD" }> = {
+    default: { label: "Other Indian city", mult: 1.0, cur: "INR" },
+    mumbai: { label: "Mumbai", mult: 1.25, cur: "INR" },
+    delhi: { label: "Delhi NCR", mult: 1.20, cur: "INR" },
+    bengaluru: { label: "Bengaluru", mult: 1.18, cur: "INR" },
+    hyderabad: { label: "Hyderabad", mult: 1.10, cur: "INR" },
+    pune: { label: "Pune", mult: 1.15, cur: "INR" },
+    jaipur: { label: "Jaipur", mult: 0.95, cur: "INR" },
+    lucknow: { label: "Lucknow", mult: 0.90, cur: "INR" },
+    dubai: { label: "Dubai, UAE", mult: 1.0, cur: "AED" },
+    riyadh: { label: "Riyadh, KSA", mult: 0.90, cur: "USD" },
+  };
 
   // --- CALCULATION LOGIC ---
 
@@ -122,31 +180,58 @@ export default function CalculatorsPage() {
   const colHeightM = colHeight / 1000;
   const colSlabM = slabThick / 1000;
   const colLapM = (50 * mainBarDia) / 1000;
-  const colTotalMainLen = (colHeightM + colSlabM + colLapM) * mainBarCount;
-  const colMainWeight = colTotalMainLen * columnMainUnitW * (1 + steelWastage / 100);
+  const colBar1TotalLen = (colHeightM + colSlabM + colLapM) * mainBarCount;
+  const colBar1Weight = colBar1TotalLen * columnMainUnitW;
+
+  const colBar2UnitW = colBar2Dia > 0 ? (colBar2Dia * colBar2Dia) / 162.0 : 0;
+  const colBar2TotalLen = colBar2Dia > 0 ? (colHeightM + colSlabM + (50 * colBar2Dia) / 1000) * colBar2Count : 0;
+  const colBar2Weight = colBar2TotalLen * colBar2UnitW;
 
   const colStirrupUnitW = (stirrupDia * stirrupDia) / 162.0;
-  const colStirrupLen = (2 * ((sizeA - 80) + (sizeB - 80)) + 14 * stirrupDia) / 1000; // 40mm cover; 2*hook(9d) - 2*bend(2d) = 14d
-  const colStirrupCount = Math.ceil(colHeight / stirrupSpacing) + 1;
-  const colStirrupWeight = colStirrupLen * colStirrupCount * colStirrupUnitW * (1 + steelWastage / 100);
-  const colTotalWeight = colMainWeight + colStirrupWeight;
+  const colStirrupLen = (2 * ((sizeA - 80) + (sizeB - 80)) + 14 * stirrupDia) / 1000; // 40mm cover
+  const colLo = Math.max(colHeight / 6, Math.max(sizeA, sizeB), 450);
+  const colStirEnd = Math.ceil(colLo / (colSpEnd || stirrupSpacing)) + 1;
+  const colStirMid = Math.max(0, Math.floor((colHeight - 2 * colLo) / (colSpMid || stirrupSpacing)) - 1);
+  const colStirrupCount = 2 * colStirEnd + colStirMid;
+  const colStirrupWeight = colStirrupLen * colStirrupCount * colStirrupUnitW;
+
+  const colNetWeight = colBar1Weight + colBar2Weight + colStirrupWeight;
+  const colTotalWeight = colNetWeight * (1 + steelWastage / 100);
   const colCost = colTotalWeight * steelPrice;
 
   // 2. Slab Steel Calculations
   const slabMainUnitW = (slabMainDia * slabMainDia) / 162.0;
   const slabMainCount = Math.ceil(slabLength / slabMainSpacing) + 1;
-  const slabMainWeight = (slabWidth / 1000) * slabMainCount * slabMainUnitW * 1.05; // 5% waste default
+  const slabMainCutLen = (slabWidth + 2 * slabDevLen) / 1000;
+  const slabMainWeight = slabMainCutLen * slabMainCount * slabMainUnitW;
 
   const slabDistUnitW = (slabDistDia * slabDistDia) / 162.0;
   const slabDistCount = Math.ceil(slabWidth / slabDistSpacing) + 1;
-  const slabDistWeight = (slabLength / 1000) * slabDistCount * slabDistUnitW * 1.05;
-  const slabTotalWeight = slabMainWeight + slabDistWeight;
+  const slabDistCutLen = (slabLength + 2 * slabDevLen) / 1000;
+  const slabDistWeight = slabDistCutLen * slabDistCount * slabDistUnitW;
+  const slabNetWeight = slabMainWeight + slabDistWeight;
+  const slabTotalWeight = slabNetWeight * (1 + steelWastage / 100);
   const slabCost = slabTotalWeight * steelPrice;
+
+  // 2b. Two-Way Slab Steel
+  const tw2XUnitW = (tw2XDia * tw2XDia) / 162.0;
+  const tw2XCount = Math.ceil(tw2Ly / tw2XSp) + 1;
+  const tw2XCutLen = (tw2Lx + 2 * tw2DevLen) / 1000;
+  const tw2XWeight = tw2XUnitW * tw2XCutLen * tw2XCount;
+  const tw2YUnitW = (tw2YDia * tw2YDia) / 162.0;
+  const tw2YCount = Math.ceil(tw2Lx / tw2YSp) + 1;
+  const tw2YCutLen = (tw2Ly + 2 * tw2DevLen) / 1000;
+  const tw2YWeight = tw2YUnitW * tw2YCutLen * tw2YCount;
+  const tw2NetWeight = tw2XWeight + tw2YWeight;
+  const tw2TotalWeight = tw2NetWeight * (1 + steelWastage / 100);
+  const tw2Cost = tw2TotalWeight * steelPrice;
 
   // 3. Concrete Volume & Mix
   let concVolume = concreteL * concreteW * concreteD;
   if (concreteForm === "column") {
     concVolume = (sizeA / 1000) * (sizeB / 1000) * (colHeight / 1000);
+  } else if (concreteForm === "circular") {
+    concVolume = (Math.PI / 4) * circDia * circDia * circHeight * circCount;
   } else if (concreteForm === "stair") {
     const stepsVol = stairSteps * stairWidth * ((stairRiser * stairTread) / 2.0);
     const waistLen = Math.sqrt(stairRiser ** 2 + stairTread ** 2);
@@ -156,6 +241,8 @@ export default function CalculatorsPage() {
   const concDryVol = concVolume * 1.54 * (1 + concreteWastage / 100);
 
   const mixLibrary: Record<string, [number, number, number]> = {
+    M5: [3.2, 0.48, 0.96],
+    M7_5: [4.0, 0.47, 0.94],
     M10: [4.4, 0.46, 0.92],
     M15: [6.3, 0.44, 0.88],
     M20: [8.2, 0.42, 0.84],
@@ -165,16 +252,28 @@ export default function CalculatorsPage() {
   const concCementBags = concVolume * cementFactor * (1 + concreteWastage / 100);
   const concSandM3 = concVolume * sandFactor * (1 + concreteWastage / 100);
   const concAggM3 = concVolume * aggFactor * (1 + concreteWastage / 100);
+  const concMaterialCost = (cementRate > 0 ? Math.ceil(concCementBags) * cementRate : 0) + (sandRate > 0 ? concSandM3 * sandRate : 0) + (aggRate > 0 ? concAggM3 * aggRate : 0);
 
   // 4. RMC Transit Mixer
-  const rmcTotalVol = rmcVolume * (1 + rmcWastage / 100);
+  let rmcNetVol = rmcVolume;
+  if (rmcTab === "slab") rmcNetVol = rmcSlabL * rmcSlabW * (rmcSlabT / 1000);
+  else if (rmcTab === "column") rmcNetVol = (rmcColA / 1000) * (rmcColB / 1000) * rmcColH * rmcColCount;
+  else if (rmcTab === "beam") rmcNetVol = rmcBeamL * (rmcBeamW / 1000) * (rmcBeamD / 1000) * rmcBeamCount;
+  else if (rmcTab === "footing") rmcNetVol = rmcFootL * rmcFootW * rmcFootD * rmcFootCount;
+
+  const rmcTotalVol = rmcNetVol * (1 + rmcWastage / 100);
   const rmcTrucks = Math.ceil(rmcTotalVol / rmcMixerSize);
+  const rmcTotalCost = rmcRate > 0 ? rmcTotalVol * rmcRate : 0;
 
   // 5. Bricks & Mortar
-  const bPresetLen = brickSizePreset === "modular" ? 190 : 230;
-  const bPresetW = brickSizePreset === "modular" ? 90 : 110;
-  const bPresetH = brickSizePreset === "modular" ? 90 : 75;
-  const bJoint = 10;
+  const BRICK_PRESETS: Record<string, [number, number, number]> = {
+    modular: [190, 90, 90],
+    traditional: [230, 110, 75],
+    uk: [215, 102, 65],
+    us: [203, 92, 95],
+  };
+  const [bPresetLen, bPresetW, bPresetH] = BRICK_PRESETS[brickSizePreset] || BRICK_PRESETS.modular;
+  const bJoint = brickMortarJoint;
   const bFaceArea = ((bPresetLen + bJoint) / 1000.0) * ((bPresetH + bJoint) / 1000.0);
   const brickWallArea = brickWallL * brickWallH;
   const bricksNeeded = Math.ceil((brickWallArea / bFaceArea) * brickLeaves * (1 + brickWastage / 100));
@@ -191,11 +290,18 @@ export default function CalculatorsPage() {
   const totalParts = cParts + sParts;
   const brickCementBags = ((brickDryMortarVol * (cParts / totalParts)) * 1440.0) / 50.0;
   const brickSandM3 = brickDryMortarVol * (sParts / totalParts);
+  const brickTotalCost = brickPrice > 0 ? bricksNeeded * brickPrice : 0;
 
   // 6. Paint Quantity
   const paintWallArea = 2 * (roomL + roomW) * ceilingH + (paintCeiling ? roomL * roomW : 0);
   const paintableArea = Math.max(0, paintWallArea - doorsCount * 21.0 - windowsCount * 12.0);
-  const paintCoverage = paintQuality === "economy" ? 115.0 : paintQuality === "luxury" ? 155.0 : 135.0;
+  const paintCoverageMap: Record<string, number> = {
+    economy: 115.0,
+    premium: 140.0,
+    luxury: 155.0,
+    texture: 80.0,
+  };
+  const paintCoverage = paintCoverageMap[paintQuality] || 135.0;
   const paintLitres = (paintableArea / paintCoverage) * paintCoats * 1.10;
   const paintPuttyKg = (paintableArea / 100.0) * 2.25 * 1.10;
   const paintPrimerL = (paintableArea / 175.0) * 1.05;
@@ -220,13 +326,15 @@ export default function CalculatorsPage() {
   const wpLitres = (wpArea / wpCoverage) * wpCoats * (1 + wpWastage / 100);
 
   // 10. House Construction Cost
-  const currencySymbol = houseCurrency === "INR" ? "₹" : houseCurrency === "AED" ? "AED " : "$";
+  const cityData = CITY_MULT[houseCity] || CITY_MULT["default"];
+  const effCurrency = cityData.cur || houseCurrency;
+  const currencySymbol = effCurrency === "INR" ? "₹" : effCurrency === "AED" ? "AED " : "$";
   const baseRates = {
-    budget: houseCurrency === "INR" ? 1600 : houseCurrency === "AED" ? 180 : 50,
-    standard: houseCurrency === "INR" ? 2200 : houseCurrency === "AED" ? 240 : 65,
-    premium: houseCurrency === "INR" ? 3400 : houseCurrency === "AED" ? 380 : 100,
+    budget: effCurrency === "INR" ? 1600 : effCurrency === "AED" ? 180 : 50,
+    standard: effCurrency === "INR" ? 2200 : effCurrency === "AED" ? 240 : 65,
+    premium: effCurrency === "INR" ? 3400 : effCurrency === "AED" ? 380 : 100,
   };
-  const houseBaseRate = baseRates[houseQuality];
+  const houseBaseRate = baseRates[houseQuality] * cityData.mult;
   let houseConstructionCost = 0.0;
   for (let f = 0; f < houseFloors; f++) {
     const multiplier = 1.0 + 0.12 * f;
@@ -289,6 +397,7 @@ export default function CalculatorsPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5 text-xs">
                 {/* 1. Steel Column Inputs */}
+                {/* 1. Steel Column Inputs */}
                 {activeCalc === "steel_column" && (
                   <>
                     <div className="space-y-1">
@@ -340,7 +449,7 @@ export default function CalculatorsPage() {
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-muted">Main Bar Diameter (mm)</label>
+                      <label className="text-muted">Main Bar 1 Dia (mm)</label>
                       <select
                         value={mainBarDia}
                         onChange={(e) => {
@@ -357,7 +466,7 @@ export default function CalculatorsPage() {
                       </select>
                     </div>
                     <div className="space-y-1">
-                      <label className="text-muted">Main Bars Count (nos)</label>
+                      <label className="text-muted">Main Bar 1 Count (nos)</label>
                       <input
                         type="number"
                         value={mainBarCount}
@@ -369,18 +478,60 @@ export default function CalculatorsPage() {
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-muted">Stirrup Spacing (mm)</label>
+                      <label className="text-muted">Main Bar 2 Dia (optional)</label>
+                      <select
+                        value={colBar2Dia}
+                        onChange={(e) => {
+                          setColBar2Dia(Number(e.target.value));
+                          handleTriggerCalc();
+                        }}
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary"
+                      >
+                        <option value={0}>None</option>
+                        {[8, 10, 12, 16, 20, 25].map((d) => (
+                          <option key={d} value={d}>
+                            {d} mm
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-muted">Main Bar 2 Count (nos)</label>
                       <input
                         type="number"
-                        value={stirrupSpacing}
+                        value={colBar2Count}
                         onChange={(e) => {
-                          setStirrupSpacing(Number(e.target.value));
+                          setColBar2Count(Number(e.target.value));
                           handleTriggerCalc();
                         }}
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary"
                       />
                     </div>
                     <div className="space-y-1">
+                      <label className="text-muted">Stirrup End-Zone Spacing (l/4)</label>
+                      <input
+                        type="number"
+                        value={colSpEnd}
+                        onChange={(e) => {
+                          setColSpEnd(Number(e.target.value));
+                          handleTriggerCalc();
+                        }}
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-muted">Stirrup Mid-Span Spacing</label>
+                      <input
+                        type="number"
+                        value={colSpMid}
+                        onChange={(e) => {
+                          setColSpMid(Number(e.target.value));
+                          handleTriggerCalc();
+                        }}
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary"
+                      />
+                    </div>
+                    <div className="space-y-1 col-span-2">
                       <label className="text-muted">Wastage Buffer (%)</label>
                       <input
                         type="number"
@@ -395,7 +546,7 @@ export default function CalculatorsPage() {
                   </>
                 )}
 
-                {/* 2. Slab Steel Inputs */}
+                {/* 2. One-Way Slab Steel Inputs */}
                 {activeCalc === "steel_slab" && (
                   <>
                     <div className="space-y-1">
@@ -480,6 +631,118 @@ export default function CalculatorsPage() {
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       />
                     </div>
+                    <div className="space-y-1 col-span-2">
+                      <label className="text-muted">Development Length Ld per end (mm)</label>
+                      <input
+                        type="number"
+                        value={slabDevLen}
+                        onChange={(e) => {
+                          setSlabDevLen(Number(e.target.value));
+                          handleTriggerCalc();
+                        }}
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
+                      />
+                    </div>
+                  </>
+                )}
+
+                {/* 2b. Two-Way Slab Steel Inputs */}
+                {activeCalc === "steel_twoway" && (
+                  <>
+                    <div className="space-y-1">
+                      <label className="text-muted">Shorter Span Lx (mm)</label>
+                      <input
+                        type="number"
+                        value={tw2Lx}
+                        onChange={(e) => {
+                          setTw2Lx(Number(e.target.value));
+                          handleTriggerCalc();
+                        }}
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-muted">Longer Span Ly (mm)</label>
+                      <input
+                        type="number"
+                        value={tw2Ly}
+                        onChange={(e) => {
+                          setTw2Ly(Number(e.target.value));
+                          handleTriggerCalc();
+                        }}
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-muted">Shorter Span Bar Dia (mm)</label>
+                      <select
+                        value={tw2XDia}
+                        onChange={(e) => {
+                          setTw2XDia(Number(e.target.value));
+                          handleTriggerCalc();
+                        }}
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
+                      >
+                        {[8, 10, 12, 16, 20].map((d) => (
+                          <option key={d} value={d}>
+                            {d} mm
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-muted">Shorter Span Spacing (mm)</label>
+                      <input
+                        type="number"
+                        value={tw2XSp}
+                        onChange={(e) => {
+                          setTw2XSp(Number(e.target.value));
+                          handleTriggerCalc();
+                        }}
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-muted">Longer Span Bar Dia (mm)</label>
+                      <select
+                        value={tw2YDia}
+                        onChange={(e) => {
+                          setTw2YDia(Number(e.target.value));
+                          handleTriggerCalc();
+                        }}
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
+                      >
+                        {[8, 10, 12, 16].map((d) => (
+                          <option key={d} value={d}>
+                            {d} mm
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-muted">Longer Span Spacing (mm)</label>
+                      <input
+                        type="number"
+                        value={tw2YSp}
+                        onChange={(e) => {
+                          setTw2YSp(Number(e.target.value));
+                          handleTriggerCalc();
+                        }}
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
+                      />
+                    </div>
+                    <div className="space-y-1 col-span-2">
+                      <label className="text-muted">Development Length Ld per end (mm)</label>
+                      <input
+                        type="number"
+                        value={tw2DevLen}
+                        onChange={(e) => {
+                          setTw2DevLen(Number(e.target.value));
+                          handleTriggerCalc();
+                        }}
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
+                      />
+                    </div>
                   </>
                 )}
 
@@ -497,7 +760,8 @@ export default function CalculatorsPage() {
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       >
                         <option value="slab">Flat Slab / Beam</option>
-                        <option value="column">Column / Pedestal</option>
+                        <option value="column">Rectangular Column</option>
+                        <option value="circular">Circular Column</option>
                         <option value="stair">Staircase Flight</option>
                       </select>
                     </div>
@@ -511,6 +775,8 @@ export default function CalculatorsPage() {
                         }}
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       >
+                        <option value="M5">M5 (1:5:10 - Blinding/Levelling)</option>
+                        <option value="M7_5">M7.5 (1:4:8 - Mass Concrete PCC)</option>
                         <option value="M10">M10 (Nominal PCC 1:3:6)</option>
                         <option value="M15">M15 (Nominal PCC 1:2:4)</option>
                         <option value="M20">M20 (Standard RCC 1:1.5:3)</option>
@@ -600,6 +866,47 @@ export default function CalculatorsPage() {
                       </>
                     )}
 
+                    {concreteForm === "circular" && (
+                      <>
+                        <div className="space-y-1">
+                          <label className="text-muted">Column Diameter (m)</label>
+                          <input
+                            type="number"
+                            value={circDia}
+                            onChange={(e) => {
+                              setCircDia(Number(e.target.value));
+                              handleTriggerCalc();
+                            }}
+                            className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-muted">Column Height (m)</label>
+                          <input
+                            type="number"
+                            value={circHeight}
+                            onChange={(e) => {
+                              setCircHeight(Number(e.target.value));
+                              handleTriggerCalc();
+                            }}
+                            className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
+                          />
+                        </div>
+                        <div className="space-y-1 col-span-2">
+                          <label className="text-muted">No. of Columns</label>
+                          <input
+                            type="number"
+                            value={circCount}
+                            onChange={(e) => {
+                              setCircCount(Number(e.target.value));
+                              handleTriggerCalc();
+                            }}
+                            className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
+                          />
+                        </div>
+                      </>
+                    )}
+
                     {concreteForm === "stair" && (
                       <>
                         <div className="space-y-1">
@@ -664,24 +971,164 @@ export default function CalculatorsPage() {
                         </div>
                       </>
                     )}
+
+                    <div className="space-y-1">
+                      <label className="text-muted">Cement Rate / Bag (₹)</label>
+                      <input
+                        type="number"
+                        value={cementRate}
+                        onChange={(e) => {
+                          setCementRate(Number(e.target.value));
+                          handleTriggerCalc();
+                        }}
+                        placeholder="Optional"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-muted">Sand Rate / m³ (₹)</label>
+                      <input
+                        type="number"
+                        value={sandRate}
+                        onChange={(e) => {
+                          setSandRate(Number(e.target.value));
+                          handleTriggerCalc();
+                        }}
+                        placeholder="Optional"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
+                      />
+                    </div>
                   </>
                 )}
 
                 {/* 4. RMC Transit Mixer */}
                 {activeCalc === "rmc" && (
                   <>
-                    <div className="space-y-1">
-                      <label className="text-muted">Pour Volume (m³)</label>
-                      <input
-                        type="number"
-                        value={rmcVolume}
+                    <div className="space-y-1 col-span-2">
+                      <label className="text-muted">Calculation Target Structure</label>
+                      <select
+                        value={rmcTab}
                         onChange={(e) => {
-                          setRmcVolume(Number(e.target.value));
+                          setRmcTab(e.target.value as any);
                           handleTriggerCalc();
                         }}
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
-                      />
+                      >
+                        <option value="direct">Direct Volume Input</option>
+                        <option value="slab">Slab Element</option>
+                        <option value="column">Rectangular Columns</option>
+                        <option value="beam">Beams Element</option>
+                        <option value="footing">Footings Element</option>
+                      </select>
                     </div>
+
+                    {rmcTab === "direct" && (
+                      <div className="space-y-1">
+                        <label className="text-muted">Pour Volume (m³)</label>
+                        <input
+                          type="number"
+                          value={rmcVolume}
+                          onChange={(e) => {
+                            setRmcVolume(Number(e.target.value));
+                            handleTriggerCalc();
+                          }}
+                          className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
+                        />
+                      </div>
+                    )}
+                    {rmcTab === "slab" && (
+                      <>
+                        <div className="space-y-1">
+                          <label className="text-muted">Slab Length (m)</label>
+                          <input
+                            type="number"
+                            value={rmcSlabL}
+                            onChange={(e) => {
+                              setRmcSlabL(Number(e.target.value));
+                              handleTriggerCalc();
+                            }}
+                            className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-muted">Slab Width (m)</label>
+                          <input
+                            type="number"
+                            value={rmcSlabW}
+                            onChange={(e) => {
+                              setRmcSlabW(Number(e.target.value));
+                              handleTriggerCalc();
+                            }}
+                            className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-muted">Thickness (mm)</label>
+                          <input
+                            type="number"
+                            value={rmcSlabT}
+                            onChange={(e) => {
+                              setRmcSlabT(Number(e.target.value));
+                              handleTriggerCalc();
+                            }}
+                            className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
+                          />
+                        </div>
+                      </>
+                    )}
+                    {rmcTab === "column" && (
+                      <>
+                        <div className="space-y-1">
+                          <label className="text-muted">Column A (mm)</label>
+                          <input
+                            type="number"
+                            value={rmcColA}
+                            onChange={(e) => {
+                              setRmcColA(Number(e.target.value));
+                              handleTriggerCalc();
+                            }}
+                            className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-muted">Column B (mm)</label>
+                          <input
+                            type="number"
+                            value={rmcColB}
+                            onChange={(e) => {
+                              setRmcColB(Number(e.target.value));
+                              handleTriggerCalc();
+                            }}
+                            className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-muted">Height (m)</label>
+                          <input
+                            type="number"
+                            value={rmcColH}
+                            onChange={(e) => {
+                              setRmcColH(Number(e.target.value));
+                              handleTriggerCalc();
+                            }}
+                            className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-muted">No. of Columns</label>
+                          <input
+                            type="number"
+                            value={rmcColCount}
+                            onChange={(e) => {
+                              setRmcColCount(Number(e.target.value));
+                              handleTriggerCalc();
+                            }}
+                            className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
+                          />
+                        </div>
+                      </>
+                    )}
+
                     <div className="space-y-1">
                       <label className="text-muted">Mixer Truck Size (m³)</label>
                       <select
@@ -696,6 +1143,19 @@ export default function CalculatorsPage() {
                         <option value={7}>7 m³ (Standard GCC)</option>
                         <option value={8}>8 m³ (Heavy Infra)</option>
                       </select>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-muted">RMC Rate / m³ (₹)</label>
+                      <input
+                        type="number"
+                        value={rmcRate}
+                        onChange={(e) => {
+                          setRmcRate(Number(e.target.value));
+                          handleTriggerCalc();
+                        }}
+                        placeholder="Optional"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
+                      />
                     </div>
                   </>
                 )}
@@ -737,9 +1197,23 @@ export default function CalculatorsPage() {
                         }}
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       >
-                        <option value="modular"> modular (190 x 90 x 90 mm)</option>
-                        <option value="traditional">traditional (230 x 110 x 75 mm)</option>
+                        <option value="modular">India Modular (190 x 90 x 90 mm)</option>
+                        <option value="traditional">India Traditional (230 x 110 x 75 mm)</option>
+                        <option value="uk">UK BS 3921 (215 x 102 x 65 mm)</option>
+                        <option value="us">US ASTM (203 x 92 x 95 mm)</option>
                       </select>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-muted">Mortar Joint (mm)</label>
+                      <input
+                        type="number"
+                        value={brickMortarJoint}
+                        onChange={(e) => {
+                          setBrickMortarJoint(Number(e.target.value));
+                          handleTriggerCalc();
+                        }}
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
+                      />
                     </div>
                     <div className="space-y-1">
                       <label className="text-muted">Wall Thickness (mm)</label>
@@ -771,12 +1245,55 @@ export default function CalculatorsPage() {
                         <option value="1:6">1:6 (Internal Walls)</option>
                       </select>
                     </div>
+                    <div className="space-y-1 col-span-2">
+                      <label className="text-muted">Price per Brick (₹)</label>
+                      <input
+                        type="number"
+                        value={brickPrice}
+                        onChange={(e) => {
+                          setBrickPrice(Number(e.target.value));
+                          handleTriggerCalc();
+                        }}
+                        placeholder="Optional"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
+                      />
+                    </div>
                   </>
                 )}
 
                 {/* 6. Paint & Putty */}
                 {activeCalc === "paint" && (
                   <>
+                    <div className="space-y-1">
+                      <label className="text-muted">Paint Context</label>
+                      <select
+                        value={paintMode}
+                        onChange={(e) => {
+                          setPaintMode(e.target.value as any);
+                          handleTriggerCalc();
+                        }}
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
+                      >
+                        <option value="interior">Interior Walls</option>
+                        <option value="exterior">Exterior Walls</option>
+                      </select>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-muted">Paint Type / Quality</label>
+                      <select
+                        value={paintQuality}
+                        onChange={(e) => {
+                          setPaintQuality(e.target.value);
+                          handleTriggerCalc();
+                        }}
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
+                      >
+                        <option value="economy">Economy Emulsion (120 sqft/L)</option>
+                        <option value="premium">Premium Emulsion (140 sqft/L)</option>
+                        <option value="luxury">Luxury / Sheen (155 sqft/L)</option>
+                        <option value="texture">Texture Paint (80 sqft/L)</option>
+                      </select>
+                    </div>
                     <div className="space-y-1">
                       <label className="text-muted">Room Length (ft)</label>
                       <input
@@ -814,22 +1331,19 @@ export default function CalculatorsPage() {
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-muted">Paint Quality</label>
-                      <select
-                        value={paintQuality}
+                      <label className="text-muted">Coats Count</label>
+                      <input
+                        type="number"
+                        value={paintCoats}
                         onChange={(e) => {
-                          setPaintQuality(e.target.value);
+                          setPaintCoats(Number(e.target.value));
                           handleTriggerCalc();
                         }}
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
-                      >
-                        <option value="economy">Economy Emulsion</option>
-                        <option value="premium">Premium Emulsion</option>
-                        <option value="luxury">Luxury Emulsion</option>
-                      </select>
+                      />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-muted">Doors Count (Standard Deductions)</label>
+                      <label className="text-muted">Doors Count (21 sqft each)</label>
                       <input
                         type="number"
                         value={doorsCount}
@@ -841,7 +1355,7 @@ export default function CalculatorsPage() {
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-muted">Windows Count (Deductions)</label>
+                      <label className="text-muted">Windows Count (12 sqft each)</label>
                       <input
                         type="number"
                         value={windowsCount}
@@ -1081,24 +1595,24 @@ export default function CalculatorsPage() {
                   <div className="space-y-4">
                     <div className="bg-input p-4 rounded-md border border-border-custom">
                       <span className="text-muted text-[10px] uppercase font-bold block">
-                        Main Vertical Steel
+                        Main Vertical Steel (Bar 1 & 2)
                       </span>
                       <strong className="text-lg font-black text-foreground mt-1 block">
-                        {colMainWeight.toFixed(2)} kg
+                        {(colBar1Weight + colBar2Weight).toFixed(2)} kg
                       </strong>
                       <span className="text-[10px] text-muted italic block mt-0.5">
-                        Includes {mainBarCount} nos main bars with overlaps and {steelWastage}% wastage
+                        Bar 1: {mainBarCount} × {mainBarDia}mm ({colBar1Weight.toFixed(1)}kg) {colBar2Dia > 0 ? `| Bar 2: ${colBar2Count} × ${colBar2Dia}mm (${colBar2Weight.toFixed(1)}kg)` : ""}
                       </span>
                     </div>
                     <div className="bg-input p-4 rounded-md border border-border-custom">
                       <span className="text-muted text-[10px] uppercase font-bold block">
-                        Stirrups / Ties Steel
+                        Dual-Zone Stirrups / Ties
                       </span>
                       <strong className="text-lg font-black text-foreground mt-1 block">
                         {colStirrupWeight.toFixed(2)} kg
                       </strong>
                       <span className="text-[10px] text-muted italic block mt-0.5">
-                        Includes {colStirrupCount} stirrups (8D hook deductions as per SP-34)
+                        {colStirrupCount} stirrups (End zone {colStirEnd}×2 + Mid span {colStirMid})
                       </span>
                     </div>
                     <div className="bg-input p-4 rounded-md border border-border-custom">
@@ -1108,21 +1622,26 @@ export default function CalculatorsPage() {
                       <strong className="text-2xl font-black text-success mt-1 block">
                         {colTotalWeight.toFixed(2)} kg
                       </strong>
+                      <span className="text-[10px] text-muted italic block mt-0.5">
+                        Includes {steelWastage}% wastage
+                      </span>
                     </div>
-                    <div className="pt-4 border-t border-border-custom bg-input p-4 rounded-md flex items-center justify-between">
-                      <div>
-                        <span className="text-muted text-[10px] uppercase font-bold block">
-                          Est. Material Cost
-                        </span>
-                        <strong className="text-xl font-black text-primary mt-1 block">
-                          ₹{colCost.toLocaleString("en-IN", { maximumFractionDigits: 0 })}
-                        </strong>
+                    {steelPrice > 0 && (
+                      <div className="pt-4 border-t border-border-custom bg-input p-4 rounded-md flex items-center justify-between">
+                        <div>
+                          <span className="text-muted text-[10px] uppercase font-bold block">
+                            Est. Material Cost
+                          </span>
+                          <strong className="text-xl font-black text-primary mt-1 block">
+                            ₹{colCost.toLocaleString("en-IN", { maximumFractionDigits: 0 })}
+                          </strong>
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 )}
 
-                {/* 2. Slab Steel Results */}
+                {/* 2. One-Way Slab Steel Results */}
                 {activeCalc === "steel_slab" && (
                   <div className="space-y-4">
                     <div className="bg-input p-4 rounded-md border border-border-custom">
@@ -1133,7 +1652,7 @@ export default function CalculatorsPage() {
                         {slabMainWeight.toFixed(2)} kg
                       </strong>
                       <span className="text-[10px] text-muted italic block mt-0.5">
-                        {slabMainCount} main bars of {slabMainDia}mm diameter
+                        {slabMainCount} main bars of {slabMainDia}mm diameter (Ld={slabDevLen}mm)
                       </span>
                     </div>
                     <div className="bg-input p-4 rounded-md border border-border-custom">
@@ -1155,6 +1674,48 @@ export default function CalculatorsPage() {
                         {slabTotalWeight.toFixed(2)} kg
                       </strong>
                     </div>
+                  </div>
+                )}
+
+                {/* 2b. Two-Way Slab Steel Results */}
+                {activeCalc === "steel_twoway" && (
+                  <div className="space-y-4">
+                    <div className="bg-input p-4 rounded-md border border-border-custom">
+                      <span className="text-muted text-[10px] uppercase font-bold block">
+                        Shorter Span Bars (Lx - Bottom)
+                      </span>
+                      <strong className="text-lg font-black text-foreground mt-1 block">
+                        {tw2XWeight.toFixed(2)} kg
+                      </strong>
+                      <span className="text-[10px] text-muted italic block mt-0.5">
+                        {tw2XCount} bars of {tw2XDia}mm diameter
+                      </span>
+                    </div>
+                    <div className="bg-input p-4 rounded-md border border-border-custom">
+                      <span className="text-muted text-[10px] uppercase font-bold block">
+                        Longer Span Bars (Ly - Top)
+                      </span>
+                      <strong className="text-lg font-black text-foreground mt-1 block">
+                        {tw2YWeight.toFixed(2)} kg
+                      </strong>
+                      <span className="text-[10px] text-muted italic block mt-0.5">
+                        {tw2YCount} bars of {tw2YDia}mm diameter
+                      </span>
+                    </div>
+                    <div className="bg-input p-4 rounded-md border border-border-custom">
+                      <span className="text-muted text-[10px] uppercase font-bold block">
+                        Total Two-Way Slab Steel Weight
+                      </span>
+                      <strong className="text-2xl font-black text-success mt-1 block">
+                        {tw2TotalWeight.toFixed(2)} kg
+                      </strong>
+                    </div>
+                    {steelPrice > 0 && (
+                      <div className="bg-input p-4 rounded-md border border-border-custom">
+                        <span className="text-muted text-[10px] uppercase font-bold block">Est. Cost</span>
+                        <strong className="text-xl font-black text-primary mt-1 block">₹{tw2Cost.toLocaleString(undefined, { maximumFractionDigits: 0 })}</strong>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -1194,6 +1755,12 @@ export default function CalculatorsPage() {
                         </div>
                       </div>
                     </div>
+                    {concMaterialCost > 0 && (
+                      <div className="bg-input p-4 rounded-md border border-border-custom">
+                        <span className="text-muted text-[10px] uppercase font-bold block">Est. Material Cost</span>
+                        <strong className="text-xl font-black text-primary mt-1 block">₹{concMaterialCost.toLocaleString(undefined, { maximumFractionDigits: 0 })}</strong>
+                      </div>
+                    )}
                     <span className="text-[10px] text-muted italic block">
                       * Cement bags rounded up to nearest whole bag. Nominal Mix proportions: {concreteGrade}.
                     </span>
@@ -1214,6 +1781,12 @@ export default function CalculatorsPage() {
                         For a total wet pour of {rmcTotalVol.toFixed(2)} m³ (including {rmcWastage}% waste)
                       </span>
                     </div>
+                    {rmcTotalCost > 0 && (
+                      <div className="bg-input p-4 rounded-md border border-border-custom text-center">
+                        <span className="text-muted text-[10px] uppercase font-bold block">Estimated RMC Cost</span>
+                        <strong className="text-2xl font-black text-primary mt-1 block">₹{rmcTotalCost.toLocaleString(undefined, { maximumFractionDigits: 0 })}</strong>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -1250,6 +1823,12 @@ export default function CalculatorsPage() {
                         </div>
                       </div>
                     </div>
+                    {brickTotalCost > 0 && (
+                      <div className="bg-input p-4 rounded-md border border-border-custom text-center">
+                        <span className="text-muted text-[10px] uppercase font-bold block">Est. Brick Cost</span>
+                        <strong className="text-2xl font-black text-primary mt-1 block">₹{brickTotalCost.toLocaleString(undefined, { maximumFractionDigits: 0 })}</strong>
+                      </div>
+                    )}
                   </div>
                 )}
 
