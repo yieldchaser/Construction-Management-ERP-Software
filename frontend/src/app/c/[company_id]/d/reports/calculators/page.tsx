@@ -324,7 +324,7 @@ export default function CalculatorsPage() {
   }, [tileRoomL, tileRoomW, tileGrout, tileLInch, tileWInch, tileWastage]);
 
   // 8. Plastering
-  const { plasterCementBags, plasterSandM3 } = React.useMemo(() => {
+  const { plasterWetVol, plasterCementBags, plasterSandM3 } = React.useMemo(() => {
     const wetVol = plasterArea * (plasterThick / 1000.0);
     const dryVol = wetVol * 1.33 * (1 + plasterWastage / 100);
     const pParts = plasterRatio.split(":");
@@ -332,7 +332,7 @@ export default function CalculatorsPage() {
     const pS = parseFloat(pParts[1]) || 4.0;
     const cBags = ((dryVol * (pC / (pC + pS))) * 1440.0) / 50.0;
     const sM3 = dryVol * (pS / (pC + pS));
-    return { plasterCementBags: cBags, plasterSandM3: sM3 };
+    return { plasterWetVol: wetVol, plasterCementBags: cBags, plasterSandM3: sM3 };
   }, [plasterArea, plasterThick, plasterWastage, plasterRatio]);
 
   // 9. Waterproofing
@@ -458,7 +458,6 @@ export default function CalculatorsPage() {
                         value={colHeight}
                         onChange={(e) => {
                           setColHeight(Number(e.target.value));
-                          handleTriggerCalc();
                         }}
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary"
                       />
@@ -470,7 +469,6 @@ export default function CalculatorsPage() {
                         value={slabThick}
                         onChange={(e) => {
                           setSlabThick(Number(e.target.value));
-                          handleTriggerCalc();
                         }}
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary"
                       />
@@ -482,7 +480,6 @@ export default function CalculatorsPage() {
                         value={sizeA}
                         onChange={(e) => {
                           setSizeA(Number(e.target.value));
-                          handleTriggerCalc();
                         }}
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary"
                       />
@@ -494,7 +491,6 @@ export default function CalculatorsPage() {
                         value={sizeB}
                         onChange={(e) => {
                           setSizeB(Number(e.target.value));
-                          handleTriggerCalc();
                         }}
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary"
                       />
@@ -505,7 +501,6 @@ export default function CalculatorsPage() {
                         value={mainBarDia}
                         onChange={(e) => {
                           setMainBarDia(Number(e.target.value));
-                          handleTriggerCalc();
                         }}
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary"
                       >
@@ -523,7 +518,6 @@ export default function CalculatorsPage() {
                         value={mainBarCount}
                         onChange={(e) => {
                           setMainBarCount(Number(e.target.value));
-                          handleTriggerCalc();
                         }}
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary"
                       />
@@ -534,7 +528,6 @@ export default function CalculatorsPage() {
                         value={colBar2Dia}
                         onChange={(e) => {
                           setColBar2Dia(Number(e.target.value));
-                          handleTriggerCalc();
                         }}
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary"
                       >
@@ -553,7 +546,6 @@ export default function CalculatorsPage() {
                         value={colBar2Count}
                         onChange={(e) => {
                           setColBar2Count(Number(e.target.value));
-                          handleTriggerCalc();
                         }}
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary"
                       />
@@ -565,7 +557,6 @@ export default function CalculatorsPage() {
                         value={colSpEnd}
                         onChange={(e) => {
                           setColSpEnd(Number(e.target.value));
-                          handleTriggerCalc();
                         }}
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary"
                       />
@@ -577,7 +568,6 @@ export default function CalculatorsPage() {
                         value={colSpMid}
                         onChange={(e) => {
                           setColSpMid(Number(e.target.value));
-                          handleTriggerCalc();
                         }}
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary"
                       />
@@ -589,7 +579,6 @@ export default function CalculatorsPage() {
                         value={steelWastage}
                         onChange={(e) => {
                           setSteelWastage(Number(e.target.value));
-                          handleTriggerCalc();
                         }}
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary"
                       />
@@ -607,7 +596,6 @@ export default function CalculatorsPage() {
                         value={slabLength}
                         onChange={(e) => {
                           setSlabLength(Number(e.target.value));
-                          handleTriggerCalc();
                         }}
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       />
@@ -619,7 +607,6 @@ export default function CalculatorsPage() {
                         value={slabWidth}
                         onChange={(e) => {
                           setSlabWidth(Number(e.target.value));
-                          handleTriggerCalc();
                         }}
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       />
@@ -630,7 +617,6 @@ export default function CalculatorsPage() {
                         value={slabMainDia}
                         onChange={(e) => {
                           setSlabMainDia(Number(e.target.value));
-                          handleTriggerCalc();
                         }}
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       >
@@ -648,7 +634,6 @@ export default function CalculatorsPage() {
                         value={slabMainSpacing}
                         onChange={(e) => {
                           setSlabMainSpacing(Number(e.target.value));
-                          handleTriggerCalc();
                         }}
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       />
@@ -659,7 +644,6 @@ export default function CalculatorsPage() {
                         value={slabDistDia}
                         onChange={(e) => {
                           setSlabDistDia(Number(e.target.value));
-                          handleTriggerCalc();
                         }}
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       >
@@ -677,7 +661,6 @@ export default function CalculatorsPage() {
                         value={slabDistSpacing}
                         onChange={(e) => {
                           setSlabDistSpacing(Number(e.target.value));
-                          handleTriggerCalc();
                         }}
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       />
@@ -689,7 +672,6 @@ export default function CalculatorsPage() {
                         value={slabDevLen}
                         onChange={(e) => {
                           setSlabDevLen(Number(e.target.value));
-                          handleTriggerCalc();
                         }}
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       />
@@ -707,7 +689,6 @@ export default function CalculatorsPage() {
                         value={tw2Lx}
                         onChange={(e) => {
                           setTw2Lx(Number(e.target.value));
-                          handleTriggerCalc();
                         }}
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       />
@@ -719,7 +700,6 @@ export default function CalculatorsPage() {
                         value={tw2Ly}
                         onChange={(e) => {
                           setTw2Ly(Number(e.target.value));
-                          handleTriggerCalc();
                         }}
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       />
@@ -730,7 +710,6 @@ export default function CalculatorsPage() {
                         value={tw2XDia}
                         onChange={(e) => {
                           setTw2XDia(Number(e.target.value));
-                          handleTriggerCalc();
                         }}
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       >
@@ -748,7 +727,6 @@ export default function CalculatorsPage() {
                         value={tw2XSp}
                         onChange={(e) => {
                           setTw2XSp(Number(e.target.value));
-                          handleTriggerCalc();
                         }}
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       />
@@ -759,7 +737,6 @@ export default function CalculatorsPage() {
                         value={tw2YDia}
                         onChange={(e) => {
                           setTw2YDia(Number(e.target.value));
-                          handleTriggerCalc();
                         }}
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       >
@@ -777,7 +754,6 @@ export default function CalculatorsPage() {
                         value={tw2YSp}
                         onChange={(e) => {
                           setTw2YSp(Number(e.target.value));
-                          handleTriggerCalc();
                         }}
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       />
@@ -789,7 +765,6 @@ export default function CalculatorsPage() {
                         value={tw2DevLen}
                         onChange={(e) => {
                           setTw2DevLen(Number(e.target.value));
-                          handleTriggerCalc();
                         }}
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       />
@@ -806,7 +781,6 @@ export default function CalculatorsPage() {
                         value={concreteForm}
                         onChange={(e) => {
                           setConcreteForm(e.target.value as any);
-                          handleTriggerCalc();
                         }}
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       >
@@ -822,7 +796,6 @@ export default function CalculatorsPage() {
                         value={concreteGrade}
                         onChange={(e) => {
                           setConcreteGrade(e.target.value);
-                          handleTriggerCalc();
                         }}
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       >
@@ -844,7 +817,6 @@ export default function CalculatorsPage() {
                             value={concreteL}
                             onChange={(e) => {
                               setConcreteL(Number(e.target.value));
-                              handleTriggerCalc();
                             }}
                             className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                           />
@@ -856,7 +828,6 @@ export default function CalculatorsPage() {
                             value={concreteW}
                             onChange={(e) => {
                               setConcreteW(Number(e.target.value));
-                              handleTriggerCalc();
                             }}
                             className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                           />
@@ -868,7 +839,6 @@ export default function CalculatorsPage() {
                             value={concreteD}
                             onChange={(e) => {
                               setConcreteD(Number(e.target.value));
-                              handleTriggerCalc();
                             }}
                             className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                           />
@@ -885,7 +855,6 @@ export default function CalculatorsPage() {
                             value={sizeA}
                             onChange={(e) => {
                               setSizeA(Number(e.target.value));
-                              handleTriggerCalc();
                             }}
                             className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                           />
@@ -897,7 +866,6 @@ export default function CalculatorsPage() {
                             value={sizeB}
                             onChange={(e) => {
                               setSizeB(Number(e.target.value));
-                              handleTriggerCalc();
                             }}
                             className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                           />
@@ -909,7 +877,6 @@ export default function CalculatorsPage() {
                             value={colHeight}
                             onChange={(e) => {
                               setColHeight(Number(e.target.value));
-                              handleTriggerCalc();
                             }}
                             className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                           />
@@ -926,7 +893,6 @@ export default function CalculatorsPage() {
                             value={circDia}
                             onChange={(e) => {
                               setCircDia(Number(e.target.value));
-                              handleTriggerCalc();
                             }}
                             className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                           />
@@ -938,7 +904,6 @@ export default function CalculatorsPage() {
                             value={circHeight}
                             onChange={(e) => {
                               setCircHeight(Number(e.target.value));
-                              handleTriggerCalc();
                             }}
                             className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                           />
@@ -950,7 +915,6 @@ export default function CalculatorsPage() {
                             value={circCount}
                             onChange={(e) => {
                               setCircCount(Number(e.target.value));
-                              handleTriggerCalc();
                             }}
                             className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                           />
@@ -967,7 +931,6 @@ export default function CalculatorsPage() {
                             value={stairSteps}
                             onChange={(e) => {
                               setStairSteps(Number(e.target.value));
-                              handleTriggerCalc();
                             }}
                             className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                           />
@@ -979,7 +942,6 @@ export default function CalculatorsPage() {
                             value={stairWidth}
                             onChange={(e) => {
                               setStairWidth(Number(e.target.value));
-                              handleTriggerCalc();
                             }}
                             className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                           />
@@ -991,7 +953,6 @@ export default function CalculatorsPage() {
                             value={stairRiser}
                             onChange={(e) => {
                               setStairRiser(Number(e.target.value));
-                              handleTriggerCalc();
                             }}
                             className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                           />
@@ -1003,7 +964,6 @@ export default function CalculatorsPage() {
                             value={stairTread}
                             onChange={(e) => {
                               setStairTread(Number(e.target.value));
-                              handleTriggerCalc();
                             }}
                             className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                           />
@@ -1015,7 +975,6 @@ export default function CalculatorsPage() {
                             value={stairWaist}
                             onChange={(e) => {
                               setStairWaist(Number(e.target.value));
-                              handleTriggerCalc();
                             }}
                             className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                           />
@@ -1030,7 +989,6 @@ export default function CalculatorsPage() {
                         value={cementRate}
                         onChange={(e) => {
                           setCementRate(Number(e.target.value));
-                          handleTriggerCalc();
                         }}
                         placeholder="Optional"
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
@@ -1043,7 +1001,6 @@ export default function CalculatorsPage() {
                         value={sandRate}
                         onChange={(e) => {
                           setSandRate(Number(e.target.value));
-                          handleTriggerCalc();
                         }}
                         placeholder="Optional"
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
@@ -1061,7 +1018,6 @@ export default function CalculatorsPage() {
                         value={rmcTab}
                         onChange={(e) => {
                           setRmcTab(e.target.value as any);
-                          handleTriggerCalc();
                         }}
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       >
@@ -1081,7 +1037,6 @@ export default function CalculatorsPage() {
                           value={rmcVolume}
                           onChange={(e) => {
                             setRmcVolume(Number(e.target.value));
-                            handleTriggerCalc();
                           }}
                           className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                         />
@@ -1096,7 +1051,6 @@ export default function CalculatorsPage() {
                             value={rmcSlabL}
                             onChange={(e) => {
                               setRmcSlabL(Number(e.target.value));
-                              handleTriggerCalc();
                             }}
                             className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                           />
@@ -1108,7 +1062,6 @@ export default function CalculatorsPage() {
                             value={rmcSlabW}
                             onChange={(e) => {
                               setRmcSlabW(Number(e.target.value));
-                              handleTriggerCalc();
                             }}
                             className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                           />
@@ -1120,7 +1073,6 @@ export default function CalculatorsPage() {
                             value={rmcSlabT}
                             onChange={(e) => {
                               setRmcSlabT(Number(e.target.value));
-                              handleTriggerCalc();
                             }}
                             className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                           />
@@ -1136,7 +1088,6 @@ export default function CalculatorsPage() {
                             value={rmcColA}
                             onChange={(e) => {
                               setRmcColA(Number(e.target.value));
-                              handleTriggerCalc();
                             }}
                             className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                           />
@@ -1148,7 +1099,6 @@ export default function CalculatorsPage() {
                             value={rmcColB}
                             onChange={(e) => {
                               setRmcColB(Number(e.target.value));
-                              handleTriggerCalc();
                             }}
                             className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                           />
@@ -1160,7 +1110,6 @@ export default function CalculatorsPage() {
                             value={rmcColH}
                             onChange={(e) => {
                               setRmcColH(Number(e.target.value));
-                              handleTriggerCalc();
                             }}
                             className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                           />
@@ -1172,7 +1121,6 @@ export default function CalculatorsPage() {
                             value={rmcColCount}
                             onChange={(e) => {
                               setRmcColCount(Number(e.target.value));
-                              handleTriggerCalc();
                             }}
                             className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                           />
@@ -1186,7 +1134,6 @@ export default function CalculatorsPage() {
                         value={rmcMixerSize}
                         onChange={(e) => {
                           setRmcMixerSize(Number(e.target.value));
-                          handleTriggerCalc();
                         }}
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       >
@@ -1202,7 +1149,6 @@ export default function CalculatorsPage() {
                         value={rmcRate}
                         onChange={(e) => {
                           setRmcRate(Number(e.target.value));
-                          handleTriggerCalc();
                         }}
                         placeholder="Optional"
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
@@ -1221,7 +1167,6 @@ export default function CalculatorsPage() {
                         value={brickWallL}
                         onChange={(e) => {
                           setBrickWallL(Number(e.target.value));
-                          handleTriggerCalc();
                         }}
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       />
@@ -1233,7 +1178,6 @@ export default function CalculatorsPage() {
                         value={brickWallH}
                         onChange={(e) => {
                           setBrickWallH(Number(e.target.value));
-                          handleTriggerCalc();
                         }}
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       />
@@ -1244,7 +1188,6 @@ export default function CalculatorsPage() {
                         value={brickSizePreset}
                         onChange={(e) => {
                           setBrickSizePreset(e.target.value);
-                          handleTriggerCalc();
                         }}
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       >
@@ -1261,7 +1204,6 @@ export default function CalculatorsPage() {
                         value={brickMortarJoint}
                         onChange={(e) => {
                           setBrickMortarJoint(Number(e.target.value));
-                          handleTriggerCalc();
                         }}
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       />
@@ -1273,7 +1215,6 @@ export default function CalculatorsPage() {
                         onChange={(e) => {
                           setBrickThickness(Number(e.target.value));
                           setBrickLeaves(Number(e.target.value) > 115 ? 2 : 1);
-                          handleTriggerCalc();
                         }}
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       >
@@ -1287,7 +1228,6 @@ export default function CalculatorsPage() {
                         value={brickMortarRatio}
                         onChange={(e) => {
                           setBrickMortarRatio(e.target.value);
-                          handleTriggerCalc();
                         }}
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       >
@@ -1303,7 +1243,6 @@ export default function CalculatorsPage() {
                         value={brickPrice}
                         onChange={(e) => {
                           setBrickPrice(Number(e.target.value));
-                          handleTriggerCalc();
                         }}
                         placeholder="Optional"
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
@@ -1321,7 +1260,6 @@ export default function CalculatorsPage() {
                         value={paintMode}
                         onChange={(e) => {
                           setPaintMode(e.target.value as any);
-                          handleTriggerCalc();
                         }}
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       >
@@ -1335,7 +1273,6 @@ export default function CalculatorsPage() {
                         value={paintQuality}
                         onChange={(e) => {
                           setPaintQuality(e.target.value);
-                          handleTriggerCalc();
                         }}
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       >
@@ -1352,7 +1289,6 @@ export default function CalculatorsPage() {
                         value={roomL}
                         onChange={(e) => {
                           setRoomL(Number(e.target.value));
-                          handleTriggerCalc();
                         }}
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       />
@@ -1364,7 +1300,6 @@ export default function CalculatorsPage() {
                         value={roomW}
                         onChange={(e) => {
                           setRoomW(Number(e.target.value));
-                          handleTriggerCalc();
                         }}
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       />
@@ -1376,7 +1311,6 @@ export default function CalculatorsPage() {
                         value={ceilingH}
                         onChange={(e) => {
                           setCeilingH(Number(e.target.value));
-                          handleTriggerCalc();
                         }}
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       />
@@ -1388,7 +1322,6 @@ export default function CalculatorsPage() {
                         value={paintCoats}
                         onChange={(e) => {
                           setPaintCoats(Number(e.target.value));
-                          handleTriggerCalc();
                         }}
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       />
@@ -1400,7 +1333,6 @@ export default function CalculatorsPage() {
                         value={doorsCount}
                         onChange={(e) => {
                           setDoorsCount(Number(e.target.value));
-                          handleTriggerCalc();
                         }}
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       />
@@ -1412,7 +1344,6 @@ export default function CalculatorsPage() {
                         value={windowsCount}
                         onChange={(e) => {
                           setWindowsCount(Number(e.target.value));
-                          handleTriggerCalc();
                         }}
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       />
@@ -1423,7 +1354,6 @@ export default function CalculatorsPage() {
                         checked={paintCeiling}
                         onChange={(e) => {
                           setPaintCeiling(e.target.checked);
-                          handleTriggerCalc();
                         }}
                         className="h-4 w-4 bg-input rounded"
                       />
@@ -1442,7 +1372,6 @@ export default function CalculatorsPage() {
                         value={tileRoomL}
                         onChange={(e) => {
                           setTileRoomL(Number(e.target.value));
-                          handleTriggerCalc();
                         }}
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       />
@@ -1454,7 +1383,6 @@ export default function CalculatorsPage() {
                         value={tileRoomW}
                         onChange={(e) => {
                           setTileRoomW(Number(e.target.value));
-                          handleTriggerCalc();
                         }}
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       />
@@ -1466,7 +1394,6 @@ export default function CalculatorsPage() {
                         value={tileLInch}
                         onChange={(e) => {
                           setTileLInch(Number(e.target.value));
-                          handleTriggerCalc();
                         }}
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       />
@@ -1478,7 +1405,6 @@ export default function CalculatorsPage() {
                         value={tileWInch}
                         onChange={(e) => {
                           setTileWInch(Number(e.target.value));
-                          handleTriggerCalc();
                         }}
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       />
@@ -1496,7 +1422,6 @@ export default function CalculatorsPage() {
                         value={plasterArea}
                         onChange={(e) => {
                           setPlasterArea(Number(e.target.value));
-                          handleTriggerCalc();
                         }}
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       />
@@ -1508,7 +1433,6 @@ export default function CalculatorsPage() {
                         value={plasterThick}
                         onChange={(e) => {
                           setPlasterThick(Number(e.target.value));
-                          handleTriggerCalc();
                         }}
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       />
@@ -1519,7 +1443,6 @@ export default function CalculatorsPage() {
                         value={plasterRatio}
                         onChange={(e) => {
                           setPlasterRatio(e.target.value);
-                          handleTriggerCalc();
                         }}
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       >
@@ -1541,7 +1464,6 @@ export default function CalculatorsPage() {
                         value={wpArea}
                         onChange={(e) => {
                           setWpArea(Number(e.target.value));
-                          handleTriggerCalc();
                         }}
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       />
@@ -1553,7 +1475,6 @@ export default function CalculatorsPage() {
                         value={wpCoverage}
                         onChange={(e) => {
                           setWpCoverage(Number(e.target.value));
-                          handleTriggerCalc();
                         }}
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       />
@@ -1571,7 +1492,6 @@ export default function CalculatorsPage() {
                         value={houseArea}
                         onChange={(e) => {
                           setHouseArea(Number(e.target.value));
-                          handleTriggerCalc();
                         }}
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       />
@@ -1582,7 +1502,6 @@ export default function CalculatorsPage() {
                         value={houseFloors}
                         onChange={(e) => {
                           setHouseFloors(Number(e.target.value));
-                          handleTriggerCalc();
                         }}
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       >
@@ -1599,7 +1518,6 @@ export default function CalculatorsPage() {
                             key={q}
                             onClick={() => {
                               setHouseQuality(q);
-                              handleTriggerCalc();
                             }}
                             className={`py-1.5 border rounded-lg uppercase text-[10px] font-bold transition-all ${
                               houseQuality === q
@@ -1618,7 +1536,6 @@ export default function CalculatorsPage() {
                         value={houseCurrency}
                         onChange={(e) => {
                           setHouseCurrency(e.target.value as any);
-                          handleTriggerCalc();
                         }}
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       >
