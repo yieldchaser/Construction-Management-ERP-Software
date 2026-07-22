@@ -3562,15 +3562,19 @@ body {
 /* ==========================================================================
    ALEXANDRIA BUTTON HOVER LIFT & GLOW (GPU COMPOSITOR ACCELERATED)
    ========================================================================== */
-.alx-btn-lift-glow {
+.alx-btn-lift-glow,
+a.alx-bg-gradient-primary,
+button.alx-bg-gradient-primary {
   transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   transform: translateZ(0);
   will-change: transform, box-shadow;
 }
 
-.alx-btn-lift-glow:hover {
+.alx-btn-lift-glow:hover,
+a.alx-bg-gradient-primary:hover,
+button.alx-bg-gradient-primary:hover {
   transform: translateY(-4px) scale(1.02) translateZ(0);
-  box-shadow: 0 16px 36px -8px rgba(9, 76, 178, 0.4);
+  box-shadow: 0 16px 36px -8px rgba(9, 76, 178, 0.4) !important;
 }
 
 .alx-btn-secondary-lift {
