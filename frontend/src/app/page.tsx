@@ -31,13 +31,9 @@ export default function LandingPage() {
             <Link
               href="/login"
               prefetch={true}
-              className="relative w-full sm:w-auto group"
+              className="alx-bg-gradient-primary text-alx-on-primary px-8 py-4 rounded-full font-uilabel text-base font-bold tracking-wide hover:shadow-lg hover:shadow-alx-primary/25 transition-all active:scale-95 w-full sm:w-auto relative overflow-hidden flex items-center justify-center group"
             >
-              <span className="absolute -inset-3 rounded-full bg-alx-primary/30 blur-2xl opacity-70 group-hover:opacity-100 transition-opacity duration-300 -z-10" />
-              <span className="alx-bg-gradient-primary text-alx-on-primary px-8 py-4 rounded-full font-uilabel text-base font-bold tracking-wide hover:shadow-xl hover:shadow-alx-primary/30 transition-all active:scale-95 w-full sm:w-auto relative overflow-hidden flex items-center justify-center">
-                <span className="relative z-10">Start Free Trial</span>
-                <div className="absolute inset-0 alx-shimmer opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              </span>
+              <span className="relative z-10">Start Free Trial</span>
             </Link>
             <Link
               href="/products"
