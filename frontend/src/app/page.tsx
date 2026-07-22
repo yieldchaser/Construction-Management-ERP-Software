@@ -31,17 +31,17 @@ export default function LandingPage() {
             <Link
               href="/login"
               prefetch={true}
-              className="alx-bg-gradient-primary text-alx-on-primary px-8 py-4 rounded-full font-uilabel text-base font-bold tracking-wide hover:shadow-lg hover:shadow-alx-primary/25 transition-all active:scale-95 w-full sm:w-auto relative overflow-hidden flex items-center justify-center group"
+              className="alx-bg-gradient-primary text-alx-on-primary px-8 py-4 rounded-full font-uilabel text-base font-bold tracking-wide alx-btn-lift-glow active:scale-95 w-full sm:w-auto relative overflow-hidden flex items-center justify-center group"
             >
               <span className="relative z-10">Start Free Trial</span>
             </Link>
             <Link
               href="/products"
               prefetch={true}
-              className="bg-sky-500/10 text-sky-700 hover:bg-sky-500/20 border border-sky-200/50 px-8 py-4 rounded-full font-uilabel text-base font-bold tracking-wide transition-all active:scale-95 w-full sm:w-auto flex items-center justify-center gap-2"
+              className="alx-btn-secondary-lift bg-sky-500/10 text-sky-700 hover:bg-sky-500/20 border border-sky-200/50 px-8 py-4 rounded-full font-uilabel text-base font-bold tracking-wide active:scale-95 w-full sm:w-auto flex items-center justify-center gap-2 group"
             >
-              Explore 16 Modules
-              <Icon name="arrow_forward" className="w-4 h-4" />
+              <span>Explore 16 Modules</span>
+              <Icon name="arrow_forward" className="w-4 h-4 transition-transform group-hover:translate-x-1" />
             </Link>
           </div>
           
@@ -321,16 +321,17 @@ export default function LandingPage() {
           <div className="flex flex-col sm:flex-row justify-center items-center gap-6 relative z-10">
             <Link
               href="/login"
-              className="alx-bg-gradient-primary text-alx-on-primary px-10 py-4 rounded-full font-uilabel text-base font-bold tracking-wide hover:shadow-xl hover:shadow-alx-primary/40 transition-all active:scale-95 w-full sm:w-auto relative overflow-hidden group"
+              prefetch={true}
+              className="alx-bg-gradient-primary text-alx-on-primary px-10 py-4 rounded-full font-uilabel text-base font-bold tracking-wide alx-btn-lift-glow active:scale-95 w-full sm:w-auto relative overflow-hidden flex items-center justify-center group"
             >
               <span className="relative z-10">Start Free Trial</span>
-              <div className="absolute inset-0 alx-shimmer opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             </Link>
             <Link
               href="/contact"
-              className="bg-white text-sky-700 border border-sky-200 px-10 py-4 rounded-full font-uilabel text-base font-bold tracking-wide hover:bg-sky-50 transition-all active:scale-95 w-full sm:w-auto flex items-center justify-center"
+              prefetch={true}
+              className="alx-btn-secondary-lift bg-white text-sky-700 border border-sky-200 px-10 py-4 rounded-full font-uilabel text-base font-bold tracking-wide hover:bg-sky-50 active:scale-95 w-full sm:w-auto flex items-center justify-center group"
             >
-              Talk to Sales
+              <span className="relative z-10">Talk to Sales</span>
             </Link>
           </div>
         </div>

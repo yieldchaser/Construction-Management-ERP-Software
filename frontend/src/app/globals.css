@@ -3559,6 +3559,32 @@ body {
   .alx-aurora-orb { animation: none !important; }
 }
 
+/* ==========================================================================
+   ALEXANDRIA BUTTON HOVER LIFT & GLOW (GPU COMPOSITOR ACCELERATED)
+   ========================================================================== */
+.alx-btn-lift-glow {
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: translateZ(0);
+  will-change: transform, box-shadow;
+}
+
+.alx-btn-lift-glow:hover {
+  transform: translateY(-4px) scale(1.02) translateZ(0);
+  box-shadow: 0 16px 36px -8px rgba(9, 76, 178, 0.4);
+}
+
+.alx-btn-secondary-lift {
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.35s ease, border-color 0.35s ease;
+  transform: translateZ(0);
+  will-change: transform, box-shadow;
+}
+
+.alx-btn-secondary-lift:hover {
+  transform: translateY(-4px) scale(1.02) translateZ(0);
+  box-shadow: 0 12px 28px -6px rgba(14, 165, 233, 0.22);
+  border-color: rgba(56, 189, 248, 0.6);
+}
+
 /* ============ Alexandria — light overrides for injected content CSS ============
    .help-article / .product-body / .pw-* / .comparison-article / .calc-prose /
    .ovc-* / owc-/osit- rules below all key off the BASE dark tokens
