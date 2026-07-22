@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import MarketingShell from "@/components/marketing/MarketingShell";
 import CountUp from "@/components/marketing/CountUp";
+import FaqAccordion from "@/components/marketing/product/FaqAccordion";
 
 const PLANS = [
   {
@@ -259,32 +260,7 @@ export default function PricingPage() {
         <h2 className="font-headline text-3xl md:text-4xl font-extrabold text-alx-on-surface text-center mb-10">
           Pricing FAQs
         </h2>
-        <div className="space-y-3">
-          {FAQ.map((item, i) => (
-            <div
-              key={i}
-              className="bg-alx-surface-container-low rounded-xl overflow-hidden shadow-sm shadow-alx-on-surface/5"
-            >
-              <button
-                className="w-full flex items-center justify-between gap-4 p-6 text-left"
-                onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                aria-expanded={openFaq === i}
-              >
-                <span className="font-headline text-base md:text-lg font-bold text-alx-on-surface">{item.q}</span>
-                <ChevronIcon
-                  className={`w-5 h-5 text-alx-primary flex-shrink-0 transition-transform duration-300 ${
-                    openFaq === i ? "rotate-180" : ""
-                  }`}
-                />
-              </button>
-              {openFaq === i && (
-                <div className="px-6 pb-6 font-body text-sm text-alx-on-surface-variant leading-relaxed">
-                  {item.a}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
+        <FaqAccordion faqs={FAQ} />
       </section>
 
       {/* Final CTA */}
