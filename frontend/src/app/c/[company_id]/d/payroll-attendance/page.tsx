@@ -314,11 +314,14 @@ function SalaryBreakupModal({
     setDeductions(b.deductions ?? []);
   };
 
-  const basic = Math.round(ctc * (basicPct / 100) * 100) / 100;
-  const fixedAllowance = Math.round(allowances.reduce((s, a) => s + (a.amount || 0), 0) * 100) / 100;
-  const gross = Math.round((basic + fixedAllowance) * 100) / 100;
-  const totalDed = Math.round(deductions.reduce((s, d) => s + (d.amount || 0), 0) * 100) / 100;
-  const net = Math.round((gross - totalDed) * 100) / 100;
+  const { basic, fixedAllowance, gross, totalDed, net } = React.useMemo(() => {
+    const b = Math.round(ctc * (basicPct / 100) * 100) / 100;
+    const fa = Math.round(allowances.reduce((s, a) => s + (a.amount || 0), 0) * 100) / 100;
+    const g = Math.round((b + fa) * 100) / 100;
+    const td = Math.round(deductions.reduce((s, d) => s + (d.amount || 0), 0) * 100) / 100;
+    const n = Math.round((g - td) * 100) / 100;
+    return { basic: b, fixedAllowance: fa, gross: g, totalDed: td, net: n };
+  }, [ctc, basicPct, allowances, deductions]);
 
   const editLine = (
     list: { name: string; amount: number }[],

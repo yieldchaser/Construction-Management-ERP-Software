@@ -524,14 +524,17 @@ export default function CRMPage() {
     const unit = it.selling_price + it.supply_rate + it.installation_rate;
     return it.qty * dimFactor(it) * unit;
   };
-  const qSubtotal = qForm.items.reduce((s, it) => s + itemBase(it), 0);
-  const qDiscounted = Math.max(qSubtotal - (Number(qForm.discount) || 0), 0);
-  const qTax = qForm.tax_type === "bill_level" ? qDiscounted * ((Number(qForm.gst_pct) || 0) / 100) : 0;
-  const qTotalGst = (Number(qForm.cgst_pct) || 0) + (Number(qForm.sgst_pct) || 0) || 1;
-  const qCgst = qTax * ((Number(qForm.cgst_pct) || 0) / qTotalGst);
-  const qSgst = qTax * ((Number(qForm.sgst_pct) || 0) / qTotalGst);
-  const qGrand =
-    qDiscounted + qTax + (Number(qForm.additional_charges) || 0) + (Number(qForm.round_off) || 0);
+
+  const { qSubtotal, qDiscounted, qTax, qCgst, qSgst, qGrand } = React.useMemo(() => {
+    const subtotal = qForm.items.reduce((s, it) => s + itemBase(it), 0);
+    const discounted = Math.max(subtotal - (Number(qForm.discount) || 0), 0);
+    const tax = qForm.tax_type === "bill_level" ? discounted * ((Number(qForm.gst_pct) || 0) / 100) : 0;
+    const totalGst = (Number(qForm.cgst_pct) || 0) + (Number(qForm.sgst_pct) || 0) || 1;
+    const cgst = tax * ((Number(qForm.cgst_pct) || 0) / totalGst);
+    const sgst = tax * ((Number(qForm.sgst_pct) || 0) / totalGst);
+    const grand = discounted + tax + (Number(qForm.additional_charges) || 0) + (Number(qForm.round_off) || 0);
+    return { qSubtotal: subtotal, qDiscounted: discounted, qTax: tax, qCgst: cgst, qSgst: sgst, qGrand: grand };
+  }, [qForm.items, qForm.discount, qForm.tax_type, qForm.gst_pct, qForm.cgst_pct, qForm.sgst_pct, qForm.additional_charges, qForm.round_off]);
 
   const submitQuotation = async () => {
     setQError("");
