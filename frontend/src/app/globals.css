@@ -3491,34 +3491,34 @@ body {
   pointer-events: none;
 }
 .alx-aurora-orb-a {
-  top: -12%;
-  left: -10%;
-  width: 46vw;
-  height: 46vw;
-  max-width: 640px;
-  max-height: 640px;
-  background: radial-gradient(circle at 50% 50%, rgba(51, 102, 204, 0.28) 0%, rgba(51, 102, 204, 0.12) 40%, rgba(51, 102, 204, 0.03) 70%, transparent 100%);
+  top: -15%;
+  left: -15%;
+  width: 58vw;
+  height: 58vw;
+  max-width: 850px;
+  max-height: 850px;
+  background: radial-gradient(circle at 40% 40%, rgba(186, 230, 253, 0.8) 0%, rgba(125, 211, 252, 0.45) 32%, rgba(2, 132, 199, 0.15) 65%, transparent 88%);
   animation: alx-aurora-drift-a 26s ease-in-out infinite alternate;
 }
 .alx-aurora-orb-b {
-  bottom: -16%;
-  right: -8%;
-  width: 42vw;
-  height: 42vw;
-  max-width: 580px;
-  max-height: 580px;
-  background: radial-gradient(circle at 50% 50%, rgba(9, 76, 178, 0.25) 0%, rgba(9, 76, 178, 0.1) 45%, rgba(9, 76, 178, 0.02) 75%, transparent 100%);
+  bottom: -15%;
+  right: -10%;
+  width: 52vw;
+  height: 52vw;
+  max-width: 750px;
+  max-height: 750px;
+  background: radial-gradient(circle at 50% 50%, rgba(224, 242, 254, 0.75) 0%, rgba(186, 230, 253, 0.4) 38%, rgba(14, 165, 233, 0.12) 68%, transparent 88%);
   animation: alx-aurora-drift-b 30s ease-in-out infinite alternate;
   animation-delay: -6s;
 }
 .alx-aurora-orb-c {
-  top: 28%;
-  left: 54%;
-  width: 34vw;
-  height: 34vw;
-  max-width: 460px;
-  max-height: 460px;
-  background: radial-gradient(circle at 50% 50%, rgba(191, 171, 73, 0.18) 0%, rgba(191, 171, 73, 0.08) 45%, transparent 75%);
+  top: 25%;
+  left: 50%;
+  width: 38vw;
+  height: 38vw;
+  max-width: 520px;
+  max-height: 520px;
+  background: radial-gradient(circle at 50% 50%, rgba(254, 243, 199, 0.4) 0%, rgba(253, 230, 138, 0.18) 45%, transparent 78%);
   animation: alx-aurora-drift-c 22s ease-in-out infinite alternate;
   animation-delay: -11s;
 }
@@ -3526,14 +3526,13 @@ body {
 /* Ambient variant: the whole-site wash behind every marketing page, kept
    very faint so it reads as gentle color temperature, not decoration. */
 .alx-aurora-ambient .alx-aurora-orb-a,
-.alx-aurora-ambient .alx-aurora-orb-b { opacity: 0.14; }
-.alx-aurora-ambient .alx-aurora-orb-c { opacity: 0.09; }
+.alx-aurora-ambient .alx-aurora-orb-b { opacity: 0.3; }
+.alx-aurora-ambient .alx-aurora-orb-c { opacity: 0.15; }
 
-/* Hero variant: reserved for hero sections, a touch richer since it has
-   more room to breathe behind large headline type and imagery. */
-.alx-aurora-hero .alx-aurora-orb-a,
-.alx-aurora-hero .alx-aurora-orb-b { opacity: 0.3; }
-.alx-aurora-hero .alx-aurora-orb-c { opacity: 0.2; }
+/* Hero variant: reserved for hero sections, rich baby-blue glowing atmospheric wash matching Screenshot 1. */
+.alx-aurora-hero .alx-aurora-orb-a { opacity: 0.9; }
+.alx-aurora-hero .alx-aurora-orb-b { opacity: 0.8; }
+.alx-aurora-hero .alx-aurora-orb-c { opacity: 0.35; }
 
 /* Translate-only drift. Scaling or rotating a blur(110px) layer forces the
    browser to re-rasterize a very large blurred surface every frame, which
