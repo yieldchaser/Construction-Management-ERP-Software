@@ -5,14 +5,16 @@ import Icon from "@/components/marketing/Icon";
 import TypewriterText from "@/components/marketing/TypewriterText";
 import CountUp from "@/components/marketing/CountUp";
 import Aurora from "@/components/marketing/Aurora";
+import EmberSparks from "@/components/marketing/EmberSparks";
 
 export default function LandingPage() {
   return (
     <MarketingShell>
       {/* 1. Symmetrical Hero */}
       <section className="relative pt-20 pb-32 px-6 overflow-hidden alx-scroll-fade is-visible alx-hero-card-wrapper">
-        {/* Living Drifting Aurora (Pure CSS Radial Gradients, 0 Filter Blur Overhead) */}
+        {/* Living Drifting Aurora & Valhalla Ember Sparks (0 Filter Blur Overhead) */}
         <Aurora variant="hero" className="absolute inset-0 z-0" />
+        <EmberSparks className="absolute inset-0 z-0 pointer-events-none" />
         <div className="alx-grain absolute inset-0 z-0 pointer-events-none" aria-hidden="true" />
         
         <div className="max-w-5xl mx-auto text-center relative z-10">

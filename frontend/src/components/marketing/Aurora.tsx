@@ -1,14 +1,8 @@
 /**
- * Aurora: a pure-CSS, slow-drifting gradient wash for the light
- * Alexandria marketing surfaces. Three heavily blurred, low-opacity orbs
- * (blue/blue/gold) each animate on their own drift keyframe (see
- * `.alx-aurora*` rules in globals.css), so the composition never feels
- * synchronized or mechanical. No JS, no images, SSR-safe.
- *
- * The container does not carry its own `position` so callers can place it
- * with plain Tailwind utilities via `className` (e.g. `absolute inset-0`
- * inside a hero section, or `fixed inset-0 z-0` for a whole-page ambient
- * layer), mirroring how `.alx-grain` is positioned throughout the shell.
+ * Aurora: a pure-CSS slow-drifting gradient wash and Nordic ribbon curtain layer.
+ * Inspired by AC: Valhalla's ethereal sky visuals. Includes zero-blur radial orbs
+ * and swaying vertical light ribbons (`alx-aurora-curtain`).
+ * No JS, no images, 100% GPU compositor accelerated, SSR-safe.
  */
 type AuroraVariant = "ambient" | "hero";
 
@@ -21,9 +15,14 @@ export default function Aurora({
 }) {
   return (
     <div className={`alx-aurora alx-aurora-${variant} ${className}`} aria-hidden="true">
+      {/* Zero-blur ambient wash orbs */}
       <div className="alx-aurora-orb alx-aurora-orb-a" />
       <div className="alx-aurora-orb alx-aurora-orb-b" />
       <div className="alx-aurora-orb alx-aurora-orb-c" />
+      
+      {/* AC Valhalla Nordic Swaying Curtain Ribbons */}
+      <div className="alx-aurora-curtain alx-aurora-curtain-a" />
+      <div className="alx-aurora-curtain alx-aurora-curtain-b" />
     </div>
   );
 }
