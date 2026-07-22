@@ -356,7 +356,7 @@ export default function WhoWeServePage() {
           {FAQS.map((faq) => (
             <details key={faq.q} className="group py-6 cursor-pointer">
               <summary className="flex items-center justify-between gap-4 font-headline font-semibold text-lg text-alx-on-surface list-none [&::-webkit-details-marker]:hidden">
-                {faq.q}
+                <span className="text-center flex-1">{faq.q}</span>
                 <ChevronIcon />
               </summary>
               <div

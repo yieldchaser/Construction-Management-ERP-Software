@@ -15,7 +15,7 @@ export default function FaqAccordion({ faqs }: { faqs: ProductFaq[] }) {
           className="group rounded-xl border border-alx-outline-variant/35 bg-alx-surface-container-lowest overflow-hidden"
         >
           <summary className="flex items-center justify-between gap-4 p-5 cursor-pointer list-none hover:bg-alx-surface-container-low transition-colors">
-            <span className="font-headline text-base md:text-lg font-bold text-alx-on-surface">{faq.q}</span>
+            <span className="font-headline text-base md:text-lg font-bold text-alx-on-surface text-center flex-1">{faq.q}</span>
             <svg
               className="h-5 w-5 shrink-0 text-alx-on-surface-variant transition-transform duration-300 group-open:rotate-180"
               viewBox="0 0 24 24"
