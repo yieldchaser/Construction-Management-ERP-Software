@@ -368,16 +368,45 @@ export default function CalculatorsPage() {
       {/* Main Container */}
       <main className="flex-1 flex flex-col overflow-hidden h-full">
         {/* Header */}
-        <header className="h-16 border-b border-border-custom px-8 flex items-center justify-between bg-card shrink-0">
+        <header className="border-b border-border-custom px-8 py-3 flex flex-col md:flex-row md:items-center justify-between bg-card shrink-0 gap-3">
           <div>
             <h1 className="text-sm font-bold text-foreground uppercase tracking-wider">
-              {activeCalc.replace("_", " ")} Quantity Estimator
+              {activeCalc.replace(/_/g, " ")} Quantity Estimator
             </h1>
             <p className="text-[10px] text-muted">IS 456 & CPWD standard quantity takeoff engine</p>
           </div>
-          {calculating && (
-            <span className="text-[10px] font-sans text-primary animate-pulse">Calculating...</span>
-          )}
+          {/* Calculator Selector Tabs */}
+          <div className="flex flex-wrap items-center gap-1.5 text-xs">
+            {[
+              { id: "steel_column", label: "Col Steel", cat: "steel" },
+              { id: "steel_slab", label: "1-Way Slab", cat: "steel" },
+              { id: "steel_twoway", label: "2-Way Slab", cat: "steel" },
+              { id: "concrete", label: "Concrete Vol", cat: "concrete" },
+              { id: "rmc", label: "RMC Mixer", cat: "concrete" },
+              { id: "bricks", label: "Bricks", cat: "masonry" },
+              { id: "plaster", label: "Plaster", cat: "masonry" },
+              { id: "paint", label: "Paint", cat: "finishes" },
+              { id: "tile", label: "Tile", cat: "finishes" },
+              { id: "waterproofing", label: "Waterproofing", cat: "finishes" },
+              { id: "house_cost", label: "House Cost", cat: "finance" },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => {
+                  setActiveCalc(tab.id as any);
+                  setActiveCategory(tab.cat as any);
+                  handleTriggerCalc();
+                }}
+                className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all ${
+                  activeCalc === tab.id
+                    ? "bg-primary text-primary-foreground font-bold shadow-sm"
+                    : "bg-input text-muted hover:text-foreground hover:bg-elevated border border-border-custom"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
         </header>
 
         {/* Content Panel */}
