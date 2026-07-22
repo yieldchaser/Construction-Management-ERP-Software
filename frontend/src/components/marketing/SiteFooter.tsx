@@ -42,7 +42,7 @@ export default function SiteFooter() {
       <div className="absolute top-0 left-0 h-px w-full alx-bg-gradient-primary opacity-70" />
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 px-12 max-w-7xl mx-auto">
         <div className="lg:col-span-1">
-          <Link className="flex items-center gap-2 mb-4 group" href="/">
+          <Link className="flex items-center gap-2 mb-4 group" href="/" prefetch={true}>
             <Icon
               name="architecture"
               className="w-6 h-6 text-alx-primary group-hover:scale-110 transition-transform"
@@ -68,6 +68,7 @@ export default function SiteFooter() {
                   <Link
                     className="font-body text-alx-on-surface-variant hover:text-alx-primary transition-colors opacity-80 hover:opacity-100 text-sm"
                     href={link.href}
+                    prefetch={true}
                   >
                     {link.label}
                   </Link>
@@ -84,12 +85,14 @@ export default function SiteFooter() {
         <div className="flex items-center gap-6">
           <Link
             href="/privacy"
+            prefetch={true}
             className="font-uilabel text-xs uppercase tracking-wide text-alx-on-surface-variant hover:text-alx-primary transition-colors opacity-80 hover:opacity-100"
           >
             Privacy
           </Link>
           <Link
             href="/terms"
+            prefetch={true}
             className="font-uilabel text-xs uppercase tracking-wide text-alx-on-surface-variant hover:text-alx-primary transition-colors opacity-80 hover:opacity-100"
           >
             Terms

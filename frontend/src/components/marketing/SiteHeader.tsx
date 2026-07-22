@@ -37,7 +37,7 @@ export default function SiteHeader() {
       }`}
     >
       <div className="flex justify-between items-center px-8 py-4 max-w-7xl mx-auto">
-        <Link className="flex items-center gap-2 group" href="/" onClick={closeMenu}>
+        <Link className="flex items-center gap-2 group" href="/" prefetch={true} onClick={closeMenu}>
           <Icon
             name="architecture"
             className="w-8 h-8 text-alx-primary group-hover:scale-110 transition-transform"
@@ -53,6 +53,7 @@ export default function SiteHeader() {
             <Link
               key={link.href}
               href={link.href}
+              prefetch={true}
               aria-current={isActive(link.href) ? "page" : undefined}
               className={`group relative py-1 font-uilabel text-sm tracking-wide uppercase transition-colors ${
                 isActive(link.href)
@@ -73,12 +74,14 @@ export default function SiteHeader() {
         <div className="flex items-center gap-4">
           <Link
             href="/login"
+            prefetch={true}
             className="hidden md:flex font-uilabel text-sm tracking-wide uppercase text-alx-on-surface-variant hover:text-alx-primary transition-colors"
           >
             Log In
           </Link>
           <Link
             href="/login"
+            prefetch={true}
             className="alx-bg-gradient-primary text-alx-on-primary px-6 py-2.5 rounded-full font-uilabel text-sm font-bold tracking-wide hover:shadow-lg hover:shadow-alx-primary/30 transition-all active:scale-95 relative overflow-hidden group"
           >
             <span className="relative z-10">Start Free Trial</span>
