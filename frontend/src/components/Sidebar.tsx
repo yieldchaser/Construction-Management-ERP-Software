@@ -256,7 +256,7 @@ export default function Sidebar() {
             const element = item.action ? (
               <div key={idx}>{content}</div>
             ) : (
-              <Link href={item.href} key={idx} className="block">
+              <Link href={item.href} prefetch={true} key={idx} className="block">
                 {content}
               </Link>
             );
@@ -305,6 +305,7 @@ export default function Sidebar() {
         <div className="grid grid-cols-3 gap-1">
           <Link
             href={`/c/${companyId}/d/mom`}
+            prefetch={true}
             className={`flex flex-col items-center justify-center py-2 border rounded-md text-[11px] font-medium transition-all ${
               pathname.includes("/d/mom")
                 ? "bg-primary/15 border-primary text-primary"
@@ -316,6 +317,7 @@ export default function Sidebar() {
           </Link>
           <Link
             href={`/c/${companyId}/d/todo`}
+            prefetch={true}
             className={`flex flex-col items-center justify-center py-2 border rounded-md text-[11px] font-medium transition-all ${
               pathname.includes("/d/todo")
                 ? "bg-primary/15 border-primary text-primary"
@@ -327,6 +329,7 @@ export default function Sidebar() {
           </Link>
           <Link
             href={`/c/${companyId}/d/chat`}
+            prefetch={true}
             className={`flex flex-col items-center justify-center py-2 border rounded-md text-[11px] font-medium transition-all ${
               pathname.includes("/d/chat")
                 ? "bg-primary/15 border-primary text-primary"
