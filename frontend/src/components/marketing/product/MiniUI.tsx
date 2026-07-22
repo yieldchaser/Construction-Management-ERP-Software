@@ -128,11 +128,11 @@ function ProgressBarsCard({ mock }: { mock: MiniUIData }) {
   );
 }
 
-const PLACEHOLDER_META: Record<string, { icon: ProductIconName; label: string }> = {
-  ticket: { icon: "ticket", label: "Approval ticket" },
-  lineChart: { icon: "chart", label: "Trend chart" },
-  ganttBars: { icon: "gantt", label: "Schedule bars" },
-  dependencyGraph: { icon: "nodes", label: "Dependency map" },
+const PLACEHOLDER_META: Record<string, { icon: ProductIconName; label: string; file: string }> = {
+  ticket: { icon: "ticket", label: "Approval ticket", file: "mock-ticket.webp" },
+  lineChart: { icon: "chart", label: "Trend chart", file: "mock-line-chart.webp" },
+  ganttBars: { icon: "gantt", label: "Schedule bars", file: "mock-gantt-bars.webp" },
+  dependencyGraph: { icon: "nodes", label: "Dependency map", file: "mock-dependency-graph.webp" },
 };
 
 /** Tasteful generic placeholder for mock types not yet given a bespoke widget. */
@@ -151,7 +151,7 @@ function PlaceholderCard({ mock }: { mock: MiniUIData }) {
     );
   }
 
-  const imageSrc = `/marketing/mocks/mock-${mock.type}.png`;
+  const imageSrc = `/marketing/mocks/${meta.file}`;
 
   return (
     <MiniUICardShell title={mock.title}>
