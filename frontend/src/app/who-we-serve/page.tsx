@@ -3,6 +3,7 @@ import MarketingShell from "@/components/marketing/MarketingShell";
 import MockupFrame from "@/components/marketing/MockupFrame";
 import CountUp from "@/components/marketing/CountUp";
 import Icon from "@/components/marketing/Icon";
+import FaqAccordion from "@/components/marketing/product/FaqAccordion";
 
 const STATS = [
   { value: "16", label: "Operational Modules" },
@@ -352,20 +353,7 @@ export default function WhoWeServePage() {
           </h2>
         </div>
 
-        <div className="divide-y divide-alx-outline-variant/20 border-t border-b border-alx-outline-variant/20">
-          {FAQS.map((faq) => (
-            <details key={faq.q} className="group py-6 cursor-pointer">
-              <summary className="flex items-center justify-between gap-4 font-headline font-semibold text-lg text-alx-on-surface list-none [&::-webkit-details-marker]:hidden">
-                <span className="text-center flex-1">{faq.q}</span>
-                <ChevronIcon />
-              </summary>
-              <div
-                className="pt-4 font-body text-alx-on-surface-variant leading-relaxed [&>strong]:text-alx-on-surface [&>strong]:font-semibold"
-                dangerouslySetInnerHTML={{ __html: faq.a }}
-              />
-            </details>
-          ))}
-        </div>
+        <FaqAccordion faqs={FAQS} />
       </section>
 
       {/* Final CTA */}

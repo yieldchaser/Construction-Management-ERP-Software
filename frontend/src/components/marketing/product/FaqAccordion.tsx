@@ -30,9 +30,10 @@ export default function FaqAccordion({ faqs }: { faqs: ProductFaq[] }) {
             </svg>
           </summary>
           <div className="px-5 pb-5 pt-0 border-t border-alx-outline-variant/20">
-            <p className="font-body text-sm md:text-base text-alx-on-surface-variant leading-relaxed pt-4">
-              {faq.a}
-            </p>
+            <div
+              className="font-body text-sm md:text-base text-alx-on-surface-variant leading-relaxed pt-4 [&>strong]:text-alx-on-surface [&>strong]:font-semibold"
+              dangerouslySetInnerHTML={{ __html: faq.a }}
+            />
           </div>
         </details>
       ))}
