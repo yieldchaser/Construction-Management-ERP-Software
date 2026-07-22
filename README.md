@@ -195,6 +195,14 @@ Derived from the backend routers and the frontend page tree, not from prior docs
 - Library: parties, materials, cost codes
 - Company and project analytics (operational + financial S-curve, burn rate)
 - Reports directory (sales, payments, progress, purchase, party balances, tax, assets)
+- Civil Engineering Calculators: IS 456 / SP 34 compliant quantity takeoff tools available across public tools (`/resources/...`) and internal ERP (`/c/[company_id]/d/reports/calculators`):
+  - **Paint Quantity**: Interior & exterior wall area deductions, 2-coat coverage (economy, premium, luxury, texture), putty, and primer requirements.
+  - **Brick Calculator**: Modular, traditional, UK (BS 3921), and US (ASTM) brick presets with editable mortar joints, leaf thickness, and price per brick.
+  - **Concrete Volume & Mix**: Wet/dry volume conversions (1.54 factor), flat slab/beam, rectangular & circular columns, stair flight wedges, M5–M25 grades, and material rates.
+  - **Steel Calculator**: Quick weight table, column main bars (primary & secondary) with IS 13920 dual-zone stirrups, one-way & two-way slab steel with $L_d$ development length.
+  - **Bar Bending Schedule (BBS)**: Straight, stirrups, L-bend, U-bar, cranked, and circular rings with IS 2502 ($9d$) vs. IS 13920 ($12d$) seismic hook toggles and drawing metadata export.
+  - **Ready Mix Concrete (RMC)**: Structure-specific pour estimation (slabs, columns, beams, footings), $M15$–$M45$ grade advisories, transit mixer dispatch loads ($6/7/8 \text{ m}^3$), and RMC rate estimates.
+  - **House Construction Cost**: Built-up area tier rates with Metro, Tier-2, and GCC city regional multipliers and phase-wise cost breakdowns.
 - Client progress reports with PDF export; DPR CSV export
 - Minutes of meeting, site chat, custom fields
 
