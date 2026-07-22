@@ -3466,6 +3466,13 @@ body {
    keeps positioning free of any custom-CSS-vs-utility cascade fights, since
    this stylesheet's hand-written rules are unlayered and would otherwise
    always beat Tailwind's own (layered) utility classes. */
+.alx-hero-card-wrapper {
+  isolation: isolate;
+  contain: layout style;
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+}
 .alx-aurora {
   overflow: hidden;
   pointer-events: none;
@@ -3478,10 +3485,10 @@ body {
 .alx-aurora-orb {
   position: absolute;
   border-radius: 9999px;
-  filter: blur(110px);
   will-change: transform;
-  transform: translateZ(0);
+  transform: translate3d(0, 0, 0);
   backface-visibility: hidden;
+  pointer-events: none;
 }
 .alx-aurora-orb-a {
   top: -12%;
@@ -3490,7 +3497,7 @@ body {
   height: 46vw;
   max-width: 640px;
   max-height: 640px;
-  background: radial-gradient(circle at 35% 35%, #3366cc, transparent 70%);
+  background: radial-gradient(circle at 50% 50%, rgba(51, 102, 204, 0.28) 0%, rgba(51, 102, 204, 0.12) 40%, rgba(51, 102, 204, 0.03) 70%, transparent 100%);
   animation: alx-aurora-drift-a 26s ease-in-out infinite alternate;
 }
 .alx-aurora-orb-b {
@@ -3500,7 +3507,7 @@ body {
   height: 42vw;
   max-width: 580px;
   max-height: 580px;
-  background: radial-gradient(circle at 60% 40%, #094cb2, transparent 70%);
+  background: radial-gradient(circle at 50% 50%, rgba(9, 76, 178, 0.25) 0%, rgba(9, 76, 178, 0.1) 45%, rgba(9, 76, 178, 0.02) 75%, transparent 100%);
   animation: alx-aurora-drift-b 30s ease-in-out infinite alternate;
   animation-delay: -6s;
 }
@@ -3511,7 +3518,7 @@ body {
   height: 34vw;
   max-width: 460px;
   max-height: 460px;
-  background: radial-gradient(circle at 50% 50%, #bfab49, transparent 72%);
+  background: radial-gradient(circle at 50% 50%, rgba(191, 171, 73, 0.18) 0%, rgba(191, 171, 73, 0.08) 45%, transparent 75%);
   animation: alx-aurora-drift-c 22s ease-in-out infinite alternate;
   animation-delay: -11s;
 }

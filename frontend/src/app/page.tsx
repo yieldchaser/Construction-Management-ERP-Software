@@ -10,12 +10,9 @@ export default function LandingPage() {
   return (
     <MarketingShell>
       {/* 1. Symmetrical Hero */}
-      <section className="relative pt-20 pb-32 px-6 overflow-hidden alx-scroll-fade is-visible">
-        {/* Living Drifting Aurora */}
+      <section className="relative pt-20 pb-32 px-6 overflow-hidden alx-scroll-fade is-visible alx-hero-card-wrapper">
+        {/* Living Drifting Aurora (Pure CSS Radial Gradients, 0 Filter Blur Overhead) */}
         <Aurora variant="hero" className="absolute inset-0 z-0" />
-        {/* Custom layered baby blue static glow backplates (static for GPU performance) */}
-        <div className="absolute top-[-10%] left-[-10%] h-[50%] w-[50%] rounded-full bg-sky-200/30 blur-[120px] pointer-events-none z-0" />
-        <div className="absolute bottom-[10%] right-[-10%] h-[40%] w-[40%] rounded-full bg-sky-100/30 blur-[130px] pointer-events-none z-0" />
         <div className="alx-grain absolute inset-0 z-0 pointer-events-none" aria-hidden="true" />
         
         <div className="max-w-5xl mx-auto text-center relative z-10">
@@ -33,6 +30,7 @@ export default function LandingPage() {
           <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-20">
             <Link
               href="/login"
+              prefetch={true}
               className="relative w-full sm:w-auto group"
             >
               <span className="absolute -inset-3 rounded-full bg-alx-primary/30 blur-2xl opacity-70 group-hover:opacity-100 transition-opacity duration-300 -z-10" />
@@ -43,6 +41,7 @@ export default function LandingPage() {
             </Link>
             <Link
               href="/products"
+              prefetch={true}
               className="bg-sky-500/10 text-sky-700 hover:bg-sky-500/20 border border-sky-200/50 px-8 py-4 rounded-full font-uilabel text-base font-bold tracking-wide transition-all active:scale-95 w-full sm:w-auto flex items-center justify-center gap-2"
             >
               Explore 16 Modules
@@ -50,7 +49,7 @@ export default function LandingPage() {
             </Link>
           </div>
           
-          <div className="relative max-w-6xl mx-auto alx-hover-lift group gpu-accelerated">
+          <div className="relative max-w-6xl mx-auto group gpu-accelerated alx-hero-card-wrapper">
             {/* GPU-accelerated radial glow backplate (0 software Gaussian blur overhead on scroll) */}
             <div className="absolute -inset-4 rounded-3xl bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-sky-400/25 via-blue-500/10 to-transparent opacity-80 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none -z-10" />
             <div className="alx-float rounded-xl shadow-2xl shadow-alx-on-surface/10 [box-shadow:0_25px_60px_-15px_rgba(9,76,178,0.25),0_10px_20px_-8px_rgba(27,28,29,0.12)] gpu-accelerated">
