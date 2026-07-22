@@ -28,24 +28,25 @@ export default function LandingPage() {
             integrated workspace. See the full picture and align your team.
           </p>
           <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-20">
-            <Link
-              href="/login"
-              prefetch={true}
-              className="relative w-full sm:w-auto group"
-            >
-              <span className="absolute -inset-3 rounded-full bg-alx-primary/30 blur-2xl opacity-70 group-hover:opacity-100 transition-opacity duration-300 -z-10" />
-              <span className="alx-bg-gradient-primary text-alx-on-primary px-8 py-4 rounded-full font-uilabel text-base font-bold tracking-wide hover:shadow-xl hover:shadow-alx-primary/30 transition-all active:scale-95 w-full sm:w-auto relative overflow-hidden flex items-center justify-center">
+            <div className="alx-btn-glow-wrapper w-full sm:w-auto">
+              <div className="alx-btn-glow" />
+              <Link
+                href="/login"
+                prefetch={true}
+                className="alx-bg-gradient-primary text-alx-on-primary px-8 py-4 rounded-full font-uilabel text-base font-bold tracking-wide hover:shadow-xl hover:shadow-alx-primary/40 transition-all active:scale-95 w-full sm:w-auto relative overflow-hidden flex items-center justify-center group"
+              >
                 <span className="relative z-10">Start Free Trial</span>
-                <div className="absolute inset-0 alx-shimmer opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              </span>
-            </Link>
+                <div className="alx-btn-ripple" />
+              </Link>
+            </div>
             <Link
               href="/products"
               prefetch={true}
-              className="bg-sky-500/10 text-sky-700 hover:bg-sky-500/20 border border-sky-200/50 px-8 py-4 rounded-full font-uilabel text-base font-bold tracking-wide transition-all active:scale-95 w-full sm:w-auto flex items-center justify-center gap-2"
+              className="alx-btn-outline-glow bg-sky-500/10 text-sky-700 hover:bg-sky-500/20 border border-sky-200/50 px-8 py-4 rounded-full font-uilabel text-base font-bold tracking-wide transition-all active:scale-95 w-full sm:w-auto flex items-center justify-center gap-2 group relative overflow-hidden"
             >
-              Explore 16 Modules
-              <Icon name="arrow_forward" className="w-4 h-4" />
+              <span className="relative z-10">Explore 16 Modules</span>
+              <Icon name="arrow_forward" className="w-4 h-4 relative z-10 transition-transform group-hover:translate-x-1" />
+              <div className="alx-btn-ripple" />
             </Link>
           </div>
           
@@ -323,18 +324,24 @@ export default function LandingPage() {
             in one workspace
           </h2>
           <div className="flex flex-col sm:flex-row justify-center items-center gap-6 relative z-10">
-            <Link
-              href="/login"
-              className="alx-bg-gradient-primary text-alx-on-primary px-10 py-4 rounded-full font-uilabel text-base font-bold tracking-wide hover:shadow-xl hover:shadow-alx-primary/40 transition-all active:scale-95 w-full sm:w-auto relative overflow-hidden group"
-            >
-              <span className="relative z-10">Start Free Trial</span>
-              <div className="absolute inset-0 alx-shimmer opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-            </Link>
+            <div className="alx-btn-glow-wrapper w-full sm:w-auto">
+              <div className="alx-btn-glow" />
+              <Link
+                href="/login"
+                prefetch={true}
+                className="alx-bg-gradient-primary text-alx-on-primary px-10 py-4 rounded-full font-uilabel text-base font-bold tracking-wide hover:shadow-xl hover:shadow-alx-primary/40 transition-all active:scale-95 w-full sm:w-auto relative overflow-hidden flex items-center justify-center group"
+              >
+                <span className="relative z-10">Start Free Trial</span>
+                <div className="alx-btn-ripple" />
+              </Link>
+            </div>
             <Link
               href="/contact"
-              className="bg-white text-sky-700 border border-sky-200 px-10 py-4 rounded-full font-uilabel text-base font-bold tracking-wide hover:bg-sky-50 transition-all active:scale-95 w-full sm:w-auto flex items-center justify-center"
+              prefetch={true}
+              className="alx-btn-outline-glow bg-white text-sky-700 border border-sky-200 px-10 py-4 rounded-full font-uilabel text-base font-bold tracking-wide hover:bg-sky-50 transition-all active:scale-95 w-full sm:w-auto flex items-center justify-center group relative overflow-hidden"
             >
-              Talk to Sales
+              <span className="relative z-10">Talk to Sales</span>
+              <div className="alx-btn-ripple" />
             </Link>
           </div>
         </div>
