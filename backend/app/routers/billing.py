@@ -967,19 +967,19 @@ def create_subcontractor(req: SubcontractorCreateRequest, db: Session = Depends(
 def list_subcontractors(company_id: UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     rows = (
         db.query(
-            models.CompanyTeam.id,
-            models.CompanyTeam.user_id,
-            models.CompanyTeam.library_party_id,
-            models.User.name.label("user_name"),
-            models.LibraryParty.name.label("party_name"),
-            models.LibraryParty.tax_no,
-            models.LibraryParty.phone,
+            CompanyTeam.id,
+            CompanyTeam.user_id,
+            CompanyTeam.library_party_id,
+            User.name.label("user_name"),
+            LibraryParty.name.label("party_name"),
+            LibraryParty.tax_no,
+            LibraryParty.phone,
         )
-        .outerjoin(models.User, models.User.id == models.CompanyTeam.user_id)
-        .outerjoin(models.LibraryParty, models.LibraryParty.id == models.CompanyTeam.library_party_id)
+        .outerjoin(User, User.id == CompanyTeam.user_id)
+        .outerjoin(LibraryParty, LibraryParty.id == CompanyTeam.library_party_id)
         .filter(
-            models.CompanyTeam.company_id == company_id,
-            models.CompanyTeam.priority_type == "subcontractor",
+            CompanyTeam.company_id == company_id,
+            CompanyTeam.priority_type == "subcontractor",
         )
         .all()
     )

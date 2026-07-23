@@ -33,6 +33,59 @@ def _require_admin_secret(x_admin_secret: str | None = Header(default=None)) -> 
         )
 
 
+def _backfill_company_files(db: Session) -> int:
+    """Upload CompanyFile BLOBs that have no storage_path yet to Supabase."""
+    try:
+        rows = (
+            db.query(models.CompanyFile)
+            .filter(models.CompanyFile.data.isnot(None), models.CompanyFile.storage_path.is_(None))
+            .all()
+        )
+    except Exception as exc:
+        # storage_path column may not exist yet in an unmitigated DB — skip gracefully.
+        return -1
+    count = 0
+    for cf in rows:
+        path = f"{cf.company_id}/{cf.asset_type}"
+        supabase_storage.upload_bytes(
+            supabase_storage.BUCKET_COMPANY_FILES,
+            path,
+            bytes(cf.data),
+            cf.content_type,
+        )
+        cf.storage_path = path
+        cf.data = None
+        count += 1
+    db.commit()
+    return count
+
+
+def _backfill_project_files(db: Session) -> int:
+    """Upload ProjectFile BLOBs that have no storage_path yet to Supabase."""
+    try:
+        rows = (
+            db.query(models.ProjectFile)
+            .filter(models.ProjectFile.data.isnot(None), models.ProjectFile.storage_path.is_(None))
+            .all()
+        )
+    except Exception:
+        return -1
+    count = 0
+    for pf in rows:
+        path = f"{pf.project_id}/{pf.id}"
+        supabase_storage.upload_bytes(
+            supabase_storage.BUCKET_PROJECT_FILES,
+            path,
+            bytes(pf.data),
+            pf.content_type,
+        )
+        pf.storage_path = path
+        pf.data = None
+        count += 1
+    db.commit()
+    return count
+
+
 @router.post("/backfill-files-to-storage")
 def backfill_files_to_storage(
     db: Session = Depends(get_db),
@@ -51,9 +104,11 @@ def backfill_files_to_storage(
         )
     supabase_storage.ensure_buckets()
 
-    company_n = backfill_company_files(db)
-    project_n = backfill_project_files(db)
+    company_n = _backfill_company_files(db)
+    project_n = _backfill_project_files(db)
     return {"company_files_migrated": company_n, "project_files_migrated": project_n}
+
+
 
 
 @router.post("/backfill-rbac")

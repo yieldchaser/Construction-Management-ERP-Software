@@ -261,6 +261,55 @@ def ensure_sqlite_schema_sync():
     # (call runs in lifespan)
 
 
+def ensure_postgres_schema_sync():
+    """PostgreSQL-compatible schema migration: safely add any column that is
+    present in SQLAlchemy models but missing from the live production DB.
+
+    Uses `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` which is a no-op when the
+    column already exists, making this fully idempotent and safe to run on every
+    boot. Only nullable columns or columns with a server/Python default are
+    eligible (non-nullable without a default would break existing rows).
+
+    This avoids Alembic complexity while keeping the production Postgres schema
+    in sync with models.py across deploys.
+    """
+    if not engine.url.drivername.startswith("postgresql"):
+        return
+    from app import models as _models
+    from sqlalchemy import text, inspect as sa_inspect
+
+    insp = sa_inspect(engine)
+    with engine.begin() as conn:
+        for tname, tmeta in _models.Base.metadata.tables.items():
+            try:
+                existing_cols = {c["name"] for c in insp.get_columns(tname)}
+            except Exception:
+                # Table may not exist yet (create_all handles that separately).
+                continue
+            for col in tmeta.columns:
+                if col.name in existing_cols:
+                    continue
+                # Only add nullable columns or those with a default value.
+                if not (col.nullable or col.default is not None or col.server_default is not None):
+                    print(f"postgres_schema_sync: skipping non-nullable no-default column {tname}.{col.name}")
+                    continue
+                try:
+                    col_type = col.type.compile(dialect=engine.dialect)
+                    # Build DEFAULT clause when a server_default exists.
+                    default_clause = ""
+                    if col.server_default is not None:
+                        default_clause = f" DEFAULT {col.server_default.arg}"
+                    stmt = f'ALTER TABLE "{tname}" ADD COLUMN IF NOT EXISTS "{col.name}" {col_type}{default_clause}'
+                    conn.execute(text(stmt))
+                    print(f"postgres_schema_sync: added {tname}.{col.name} ({col_type})")
+                except Exception as e:
+                    print(f"postgres_schema_sync: skipped {tname}.{col.name}: {e}")
+
+    # (call runs in lifespan)
+
+
+
+
 import uuid
 from app.database import SessionLocal
 
@@ -427,6 +476,7 @@ async def lifespan(app: FastAPI):
     ensure_sqlite_bill_columns()
     ensure_sqlite_task_columns()
     ensure_sqlite_schema_sync()
+    ensure_postgres_schema_sync()  # Production PostgreSQL: add missing model columns
     auto_seed_database()
     os.makedirs("static/reports", exist_ok=True)
     yield
