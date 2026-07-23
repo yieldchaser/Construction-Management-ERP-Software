@@ -71,21 +71,21 @@ export default function AuthCallbackPage() {
   }, []);
 
   return (
-    <div className="flex min-h-screen w-full items-center justify-center bg-background text-foreground p-8">
+    <div className="flex min-h-screen w-full items-center justify-center bg-alx-surface-container-lowest text-alx-on-surface p-8">
       <div className="w-full max-w-md text-center space-y-4">
         {error ? (
           <>
-            <div className="rounded-lg border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-400">
+            <div className="rounded-lg border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-600">
               {error}
             </div>
-            <a href="/login" className="inline-block text-sm font-medium text-primary hover:text-foreground">
+            <a href="/login" className="inline-block text-sm font-semibold text-alx-primary hover:underline">
               Back to login
             </a>
           </>
         ) : (
-          <div className="space-y-3">
-            <div className="mx-auto h-10 w-10 rounded-full border-2 border-border-custom border-t-primary animate-spin motion-reduce:animate-none" />
-            <p className="text-muted text-sm">Signing you in...</p>
+          <div className="space-y-4">
+            <div className="mx-auto h-10 w-10 rounded-full border-2 border-alx-outline-variant/30 border-t-alx-primary animate-spin motion-reduce:animate-none" />
+            <p className="text-alx-on-surface-variant text-sm font-medium">Signing you in to SiteFlow...</p>
           </div>
         )}
       </div>

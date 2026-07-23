@@ -1,8 +1,9 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect } from "react";
 import { getApiHost } from "@/lib/api";
 import { authHeaders } from "@/lib/siteflow";
+import Icon from "@/components/marketing/Icon";
 
 const SEGMENTS = [
   "Building Construction",
@@ -11,7 +12,7 @@ const SEGMENTS = [
   "Infrastructure / Heavy Civil Construction",
   "Interiors and Fit-Out",
   "PWD",
-  "Specialized / MEP Trades"
+  "Specialized / MEP Trades",
 ];
 
 const DEVELOPER_CATEGORIES = [
@@ -19,29 +20,33 @@ const DEVELOPER_CATEGORIES = [
   "Commercial Real Estate",
   "Industrial Real Estate",
   "Mixed-Use Development",
-  "Land Development"
+  "Land Development",
 ];
 
 export default function OnboardingPage() {
   const [companyName, setCompanyName] = useState("");
   const [city, setCity] = useState("Bangalore");
   const [selectedSegments, setSelectedSegments] = useState<string[]>(["Developer"]);
-  const [developerCategories, setDeveloperCategories] = useState<string[]>(["Residential Real Estate"]);
+  const [developerCategories, setDeveloperCategories] = useState<string[]>([
+    "Residential Real Estate",
+  ]);
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const companyId = typeof window !== "undefined" ? localStorage.getItem("company_id") || "e0000000-0000-0000-0000-000000000000" : "e0000000-0000-0000-0000-000000000000";
+  const companyId =
+    typeof window !== "undefined"
+      ? localStorage.getItem("company_id") || "e0000000-0000-0000-0000-000000000000"
+      : "e0000000-0000-0000-0000-000000000000";
   const accessToken = typeof window !== "undefined" ? localStorage.getItem("access_token") : "";
 
-  // Prefill company name if possible
   useEffect(() => {
     const fetchCompany = async () => {
       if (!accessToken || !companyId) return;
       try {
         const apiHost = getApiHost();
         const res = await fetch(`${apiHost}/apis/v3/settings/company/${companyId}`, {
-          headers: { ...(authHeaders() || {}) }
+          headers: { ...(authHeaders() || {}) },
         });
         if (res.ok) {
           const data = await res.json();
@@ -49,8 +54,8 @@ export default function OnboardingPage() {
             setCompanyName(data.name);
           }
         }
-      } catch (err) {
-        // ignore
+      } catch {
+        /* ignore */
       }
     };
     fetchCompany();
@@ -91,129 +96,184 @@ export default function OnboardingPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          ...(authHeaders() || {})
+          ...(authHeaders() || {}),
         },
         body: JSON.stringify({
           company_id: companyId,
           company_name: companyName,
           city: city,
           segment: selectedSegments.join(", "),
-          categories: selectedSegments.includes("Developer") ? developerCategories.join(", ") : ""
-        })
+          categories: selectedSegments.includes("Developer")
+            ? developerCategories.join(", ")
+            : "",
+        }),
       });
 
       const data = await response.json();
       if (response.ok && data.success) {
-        // Redirect to the shared company hub after onboarding
         window.location.href = `/c/${companyId}/reports`;
       } else {
         setError(data.detail || "Onboarding failed. Please try again.");
       }
-    } catch (err) {
+    } catch {
       setError("Verification failed. Could not connect to API server.");
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <div className="flex min-h-screen w-full bg-background text-foreground">
-      {/* Testimonial Brand Left Panel (Desktop only) */}
-      <div className="relative hidden w-1/3 flex-col justify-between overflow-hidden bg-primary p-16 lg:flex border-r border-border-custom">
-        
-        
+  const inputClass =
+    "w-full px-4 py-3 text-sm rounded-md bg-alx-surface-container-lowest border border-alx-outline-variant/40 text-alx-on-surface placeholder-alx-on-surface-variant/60 focus:outline-none focus:border-alx-primary transition-colors motion-reduce:transition-none";
 
-        {/* Logo */}
-        <div className="flex items-center gap-3 z-10">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary font-bold text-white shadow-sm">
-            S
-          </div>
-          <span className="text-xl font-bold tracking-tight text-white">
-            Site<span className="text-white">Flow</span>
+  const labelClass =
+    "text-xs font-semibold text-alx-on-surface-variant uppercase tracking-wider block mb-1.5";
+
+  const SUBMIT_CLASS =
+    "w-full alx-bg-gradient-primary text-alx-on-primary py-3.5 px-6 rounded-md font-semibold text-sm shadow-md shadow-alx-primary/25 hover:shadow-lg hover:shadow-alx-primary/40 hover:-translate-y-0.5 transition-all motion-reduce:transition-none cursor-pointer disabled:opacity-50 inline-flex items-center justify-center relative overflow-hidden group";
+
+  const SUBMIT_SHIMMER = (
+    <div className="absolute inset-0 alx-shimmer opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+  );
+
+  return (
+    <div className="flex min-h-screen w-full bg-alx-surface-container-lowest text-alx-on-surface">
+      {/* Brand panel */}
+      <div className="relative hidden w-2/5 flex-col justify-between overflow-hidden alx-baby-blue-wash p-12 lg:flex border-r border-sky-200">
+        <div className="alx-grain absolute inset-0 z-0 opacity-40" />
+
+        <div className="flex items-center gap-2 z-10">
+          <Icon name="architecture" className="w-8 h-8 text-sky-600" />
+          <span className="text-xl font-bold tracking-tight">
+            <span className="text-sky-950">Site</span>
+            <span className="text-sky-500">Flow</span>
           </span>
         </div>
 
-        {/* Dynamic center layout graphic */}
-        <div className="flex flex-1 flex-col justify-center items-start gap-6 z-10">
-          <h1 className="text-4xl font-extrabold tracking-tight leading-tight text-white max-w-sm">
-            #1 Construction Application For <span className="text-white font-semibold">Client invoicing.</span>
-          </h1>
-          
-          <div className="space-y-2 border-l-2 border-primary/50 pl-4 py-1">
-            <p className="text-white/80 text-sm italic">
-              "Material tracking and department-wise roles assignment have become easy for us. There is no more material wastage and easy PO generation. Love this software."
+        <div className="z-10 max-w-md space-y-8">
+          <div className="space-y-4">
+            <h1 className="font-headline text-3xl font-extrabold leading-tight text-sky-950">
+              Personalize your SiteFlow workspace.
+            </h1>
+            <p className="text-sm leading-relaxed text-sky-900/80">
+              Tell us about your construction segment to tailor BOQ templates, cost codes, and operational reports for your team.
             </p>
           </div>
+
+          {/* Testimonial preview card */}
+          <div className="rounded-xl border border-white bg-white/75 p-5 shadow-xl shadow-sky-900/5 space-y-3 backdrop-blur-sm">
+            <div className="flex items-center gap-2 text-amber-500">
+              {[...Array(5)].map((_, i) => (
+                <svg key={i} className="h-4 w-4 fill-current" viewBox="0 0 20 20" aria-hidden="true">
+                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                </svg>
+              ))}
+            </div>
+            <p className="text-xs italic leading-relaxed text-sky-950/90 font-medium">
+              "Material tracking and department-wise roles assignment have become effortless. No more material wastage and instant PO approvals."
+            </p>
+            <div className="text-[11px] font-semibold text-sky-700">
+              — Director of Projects, Apex Infra & Buildtech
+            </div>
+          </div>
+
+          <ul className="space-y-2.5">
+            {[
+              "Pre-loaded Indian & Gulf construction BOQs",
+              "Automated RA billing & contractor retention",
+              "Real-time site DPRs with photo & GPS verification",
+            ].map((point) => (
+              <li key={point} className="flex items-center gap-3 text-sm text-sky-900/90">
+                <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-sky-100 ring-1 ring-sky-200">
+                  <svg
+                    className="h-3 w-3 text-sky-600"
+                    viewBox="0 0 20 20"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={3}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="m5 10.5 3.5 3.5 7-8" />
+                  </svg>
+                </span>
+                {point}
+              </li>
+            ))}
+          </ul>
         </div>
 
-        <div className="text-xs text-white/40 z-10">
-          © {new Date().getFullYear()} SiteFlow Inc. Onboarding Assistant.
+        <div className="text-xs text-sky-900/60 z-10 font-medium">
+          © {new Date().getFullYear()} SiteFlow Inc.
         </div>
       </div>
 
-      {/* Onboarding Form Panel */}
-      <div className="flex w-full flex-col justify-start items-center p-12 lg:w-2/3 bg-background overflow-y-auto">
-        <div className="w-full max-w-2xl space-y-8 mt-8">
-          <div className="space-y-2">
-            <h2 className="text-2xl font-bold tracking-tight text-white">Let's know a little more about you...</h2>
-            <p className="text-muted text-xs">Configure your workspace context for personalized construction calculators and templates.</p>
+      {/* Form panel */}
+      <div className="flex w-full flex-col justify-center items-center p-8 lg:w-3/5 bg-alx-surface-container-lowest relative overflow-hidden overflow-y-auto">
+        <div className="absolute top-[-10%] right-[-10%] h-[40%] w-[40%] rounded-full bg-alx-primary/5 blur-[100px]" />
+        <div className="w-full max-w-xl space-y-7 z-10 py-6">
+          <div className="space-y-2 text-center">
+            <h2 className="font-headline text-4xl font-bold tracking-tight text-alx-on-surface">Company Profile</h2>
+            <p className="text-alx-on-surface-variant text-sm leading-relaxed">
+              Configure your workspace context for personalized construction calculators and reports.
+            </p>
           </div>
 
           {/* Steps Progress */}
-          <div className="flex gap-4">
-            <div className="flex items-center gap-2 bg-elevated rounded-lg px-4 py-2 border border-border-custom text-xs text-muted">
-              <span className="h-5 w-5 bg-success/20 text-success rounded-full flex items-center justify-center font-bold text-[10px]">
-                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
+          <div className="flex justify-center gap-3 text-xs">
+            <div className="flex items-center gap-2 bg-alx-surface-container-low px-3.5 py-1.5 rounded-full border border-alx-outline-variant/30 text-alx-on-surface-variant">
+              <span className="h-4 w-4 bg-emerald-500/20 text-emerald-600 rounded-full flex items-center justify-center font-bold text-[10px]">
+                ✓
               </span>
-              <span>User Details</span>
-              <span className="bg-success/20 text-success rounded px-1.5 py-0.5 text-[10px] font-semibold">Completed</span>
+              <span className="font-medium">User Profile</span>
             </div>
-            <div className="flex items-center gap-2 bg-primary/10 rounded-lg px-4 py-2 border border-primary/20 text-xs text-white font-semibold">
-              <span className="h-5 w-5 bg-primary/20 text-primary rounded-full flex items-center justify-center font-bold text-[10px]">2</span>
-              <span>Company Details</span>
-              <span className="bg-primary/20 text-primary rounded px-1.5 py-0.5 text-[10px] font-semibold">In Progress</span>
+            <div className="flex items-center gap-2 bg-sky-500/10 px-3.5 py-1.5 rounded-full border border-sky-300/60 text-sky-950 font-semibold">
+              <span className="h-4 w-4 bg-sky-600 text-white rounded-full flex items-center justify-center font-bold text-[10px]">
+                2
+              </span>
+              <span>Segment Details</span>
             </div>
           </div>
 
           {error && (
-            <div className="rounded-lg border border-red-500/20 bg-red-500/10 p-4 text-xs text-red-400">
+            <div className="rounded-lg border border-red-500/20 bg-red-500/10 p-3.5 text-sm text-red-600 text-center">
               {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-5">
             {/* Company Name */}
             <div className="space-y-2">
-              <label className="text-xs font-medium text-muted uppercase tracking-wider block mb-1.5">Company Name *</label>
+              <label className={labelClass}>Company Name *</label>
               <input
                 type="text"
                 value={companyName}
                 onChange={(e) => setCompanyName(e.target.value)}
                 placeholder="Enter Company Name"
                 required
-                className="input-field w-full px-4 py-3 text-sm focus:outline-none"
+                disabled={loading}
+                className={inputClass}
               />
             </div>
 
             {/* Company City */}
             <div className="space-y-2">
-              <label className="text-xs font-medium text-muted uppercase tracking-wider block mb-1.5">Company City *</label>
+              <label className={labelClass}>Company City *</label>
               <input
                 type="text"
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
-                placeholder="Enter City"
+                placeholder="Enter City (e.g. Bangalore, Dubai)"
                 required
-                className="input-field w-full px-4 py-3 text-sm focus:outline-none"
+                disabled={loading}
+                className={inputClass}
               />
             </div>
 
-            {/* Segment Checkboxes */}
-            <div className="space-y-3">
-              <label className="text-xs font-medium text-muted uppercase tracking-wider block mb-1.5">Company Segment</label>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {/* Segment Selector */}
+            <div className="space-y-2">
+              <label className={labelClass}>Construction Segment(s)</label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 {SEGMENTS.map((seg) => {
                   const isChecked = selectedSegments.includes(seg);
                   return (
@@ -221,20 +281,20 @@ export default function OnboardingPage() {
                       key={seg}
                       type="button"
                       onClick={() => handleToggleSegment(seg)}
-                      className={`flex items-center gap-3 px-4 py-2.5 rounded-md border text-left text-xs transition-all cursor-pointer ${
+                      className={`flex items-center gap-3 px-3.5 py-2.5 rounded-md border text-left text-xs font-semibold transition-all motion-reduce:transition-none cursor-pointer ${
                         isChecked
-                          ? "bg-primary/10 border-primary text-white shadow-lg"
-                          : "bg-input border-border-custom text-muted hover:border-border-custom hover:text-foreground"
+                          ? "alx-bg-gradient-primary text-alx-on-primary border-transparent shadow-sm shadow-alx-primary/30"
+                          : "bg-alx-surface-container-low text-alx-on-surface-variant hover:text-alx-on-surface hover:bg-alx-surface-container border-alx-outline-variant/40"
                       }`}
                     >
-                      <span className={`h-4 w-4 rounded flex items-center justify-center text-[10px] border ${
-                        isChecked ? "bg-primary border-primary text-white font-bold" : "border-white/20"
-                      }`}>
-                        {isChecked && (
-                          <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                            <polyline points="20 6 9 17 4 12" />
-                          </svg>
-                        )}
+                      <span
+                        className={`h-4 w-4 rounded flex items-center justify-center text-[10px] border ${
+                          isChecked
+                            ? "bg-white/30 border-white/50 text-white font-bold"
+                            : "border-alx-outline-variant/60"
+                        }`}
+                      >
+                        {isChecked && "✓"}
                       </span>
                       <span>{seg}</span>
                     </button>
@@ -245,27 +305,25 @@ export default function OnboardingPage() {
 
             {/* Developer Categories Select Dropdown */}
             {selectedSegments.includes("Developer") && (
-              <div className="space-y-2 border-t border-border-custom pt-4">
-                <label className="text-xs font-medium text-muted uppercase tracking-wider block mb-1.5">Categories</label>
+              <div className="space-y-3 border-t border-alx-outline-variant/30 pt-4">
+                <label className={labelClass}>Developer Categories</label>
                 <div className="relative">
                   <button
                     type="button"
                     onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
-                    className="w-full flex justify-between items-center bg-input border border-border-custom rounded-md px-4 py-3.5 text-xs text-foreground font-semibold hover:border-border-custom transition-all cursor-pointer"
+                    className="w-full flex justify-between items-center bg-alx-surface-container-lowest border border-alx-outline-variant/40 rounded-md px-4 py-3 text-xs text-alx-on-surface font-semibold hover:border-alx-primary transition-colors cursor-pointer"
                   >
-                    <span>Select category...</span>
-                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                      <polyline points="6 9 12 15 18 9" />
-                    </svg>
+                    <span>Select developer category...</span>
+                    <span className="text-[10px] opacity-60">v</span>
                   </button>
                   {isCategoryDropdownOpen && (
-                    <div className="absolute top-[105%] left-0 w-full bg-card border border-border-custom rounded-md shadow-2xl z-50 py-1 overflow-hidden">
+                    <div className="absolute top-[110%] left-0 w-full bg-alx-surface-container-lowest border border-alx-outline-variant/40 rounded-md shadow-2xl z-50 py-1 overflow-hidden">
                       {DEVELOPER_CATEGORIES.map((cat) => (
                         <button
                           key={cat}
                           type="button"
                           onClick={() => handleAddCategory(cat)}
-                          className="w-full text-left px-4 py-2.5 text-xs hover:bg-primary/20 hover:text-foreground font-semibold transition-all cursor-pointer text-muted"
+                          className="w-full text-left px-4 py-2.5 text-xs hover:bg-alx-primary/10 hover:text-alx-on-surface font-semibold transition-colors cursor-pointer text-alx-on-surface-variant"
                         >
                           {cat}
                         </button>
@@ -276,17 +334,17 @@ export default function OnboardingPage() {
 
                 {/* Categories Chips */}
                 {developerCategories.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mt-2">
+                  <div className="flex flex-wrap gap-2 pt-1">
                     {developerCategories.map((cat) => (
                       <span
                         key={cat}
-                        className="flex items-center gap-1.5 bg-primary/10 border border-primary/20 rounded-full px-3 py-1 text-[11px] font-semibold text-primary"
+                        className="flex items-center gap-1.5 bg-alx-primary/10 border border-alx-primary/20 rounded-full px-3 py-1 text-[11px] font-semibold text-alx-primary"
                       >
                         <span>{cat}</span>
                         <button
                           type="button"
                           onClick={() => handleRemoveCategory(cat)}
-                          className="hover:text-foreground transition-colors ml-1 font-bold text-xs"
+                          className="hover:text-alx-on-surface transition-colors ml-1 font-bold text-xs cursor-pointer"
                         >
                           ×
                         </button>
@@ -297,20 +355,25 @@ export default function OnboardingPage() {
               </div>
             )}
 
-            {/* Submit Button */}
-            <div className="pt-4 border-t border-border-custom">
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full flex justify-center items-center py-2.5 px-6 rounded-md text-white font-medium bg-primary hover:bg-primary-hover shadow-sm transition-all cursor-pointer disabled:opacity-50"
-              >
-                {loading ? "Completing Onboarding..." : "Continue"}
-              </button>
-            </div>
+            <button type="submit" disabled={loading} className={SUBMIT_CLASS}>
+              {SUBMIT_SHIMMER}
+              <span className="relative z-10">
+                {loading ? "Completing Profile..." : "Complete Setup & Launch ERP →"}
+              </span>
+            </button>
           </form>
+
+          <p className="flex items-center justify-center gap-1.5 pt-2 text-center text-xs text-alx-on-surface-variant/70">
+            <svg className="h-3.5 w-3.5 flex-shrink-0" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <rect x="4" y="9" width="12" height="8" rx="1.5" />
+              <path d="M6.5 9V6a3.5 3.5 0 0 1 7 0v3" />
+            </svg>
+            Secure ERP workspace terminal with end-to-end encryption.
+          </p>
         </div>
       </div>
     </div>
   );
 }
+
 
