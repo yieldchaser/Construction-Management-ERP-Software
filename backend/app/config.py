@@ -96,7 +96,14 @@ class Settings(BaseSettings):
     FIREBASE_SERVICE_ACCOUNT_JSON: str = ""
     FIREBASE_SERVICE_ACCOUNT_PATH: str = ""
 
-    # --- CORS preview origins ---
+    # --- CORS Allowed Origins ---
+    # Comma-separated list of allowed origins (e.g. "https://app.siteflow.co,https://site-flow-omega.vercel.app").
+    ALLOWED_ORIGINS: str = ""
+    FRONTEND_URL: str = ""
+
+    # JWT_SECRET alias for SECRET_KEY
+    JWT_SECRET: str = ""
+
     # Regex for THIS project's own Vercel preview deployments only (not all of
     # *.vercel.app). Override via env if the Vercel project slug/scope changes.
     FRONTEND_ORIGIN_REGEX: str = (
@@ -105,9 +112,7 @@ class Settings(BaseSettings):
 
     # Supabase Storage (file blobs moved out of the DB bytea columns).
     # Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in the prod env (e.g. Render)
-    # for uploads/downloads to use object storage instead of the DB. When these
-    # are unset, the file routers fall back to storing bytes in the `data`
-    # column so local dev (SQLite) keeps working unchanged.
+    # for uploads/downloads to use object storage instead of the DB.
     SUPABASE_URL: str = ""
     SUPABASE_SERVICE_ROLE_KEY: str = ""
 
@@ -151,11 +156,6 @@ class Settings(BaseSettings):
     # GoogleSheetsConnection.access_token / refresh_token; see app/crypto.py).
     # Must be 32 url-safe base64-encoded bytes, e.g.:
     #   python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
-    # Optional at boot (Sheets is an optional integration) so the app does not
-    # fail to start without it, but app/crypto.py fails closed on writes: it
-    # refuses to encrypt/store a token when this is empty. Reads fall back to
-    # treating stored values as legacy plaintext when this is unset or when a
-    # value does not decrypt (see app/crypto.py decrypt_token).
     TOKEN_ENCRYPTION_KEY: str = ""
 
     model_config = SettingsConfigDict(
@@ -167,6 +167,38 @@ class Settings(BaseSettings):
     @property
     def is_local_env(self) -> bool:
         return (self.ENVIRONMENT or "").strip().lower() in _LOCAL_ENVS
+
+    @property
+    def allowed_origins_list(self) -> list[str]:
+        """Parsed list of allowed CORS origins, combined from ALLOWED_ORIGINS and FRONTEND_URL env vars,
+        with required production and dev fallback origins."""
+        raw_env = f"{self.ALLOWED_ORIGINS},{self.FRONTEND_URL}".strip()
+        custom_origins = [o.strip() for o in raw_env.split(",") if o.strip()]
+
+        default_fallbacks = [
+            "https://site-flow-omega.vercel.app",
+            "https://site-flow-git-main-killer-biller1.vercel.app",
+            "http://localhost:3000",
+            "http://localhost:5173",
+            "http://127.0.0.1:3000",
+            "http://127.0.0.1:5173",
+            "http://localhost:3001",
+            "http://127.0.0.1:3001",
+            "https://construction-management-erp-softwar-ten.vercel.app",
+            "https://construction-management-erp-software.vercel.app",
+            "https://siteflow.vercel.app",
+            "https://siteflow.co",
+            "https://app.siteflow.co",
+        ]
+
+        seen = set()
+        result = []
+        for origin in custom_origins + default_fallbacks:
+            normalized = origin.rstrip("/")
+            if normalized and normalized not in seen:
+                seen.add(normalized)
+                result.append(normalized)
+        return result
 
     @property
     def demo_allowlist(self) -> set[str]:
@@ -208,7 +240,11 @@ class Settings(BaseSettings):
         return (self.ZOHO_REGION or "in").strip().lstrip(".").lower() or "in"
 
     @model_validator(mode="after")
-    def _require_secret_key(self):
+    def _validate_critical_secrets(self):
+        # Support JWT_SECRET as fallback for SECRET_KEY if SECRET_KEY is not set
+        if not (self.SECRET_KEY or "").strip() and (self.JWT_SECRET or "").strip():
+            self.SECRET_KEY = self.JWT_SECRET.strip()
+
         key = (self.SECRET_KEY or "").strip()
         if self.is_local_env:
             # Local/dev/test only: fall back to a clearly-marked throwaway key so
@@ -217,17 +253,28 @@ class Settings(BaseSettings):
             if not key or key == _KNOWN_INSECURE_SECRET:
                 self.SECRET_KEY = "dev-only-insecure-key-not-for-production"
             return self
-        # Non-local: SECRET_KEY is mandatory and must not be the leaked default.
+
+        # Non-local / production environment checks: fail-fast on missing critical keys
         if not key:
             raise RuntimeError(
-                "SECRET_KEY must be set in a non-local environment. "
-                "Generate one with `openssl rand -hex 32` and set it as an env var."
+                "CRITICAL SECURITY CONFIGURATION ERROR: SECRET_KEY (or JWT_SECRET) must be set in production/non-local environments. "
+                "Generate one with `openssl rand -hex 32` and set it as an environment variable."
             )
         if key == _KNOWN_INSECURE_SECRET:
             raise RuntimeError(
-                "SECRET_KEY is the committed development value, which is public. "
+                "CRITICAL SECURITY RISK: SECRET_KEY is set to the committed public development key. "
                 "Generate a fresh secret with `openssl rand -hex 32` for production."
             )
+
+        if not (self.SUPABASE_URL or "").strip():
+            raise RuntimeError(
+                "CRITICAL SECURITY CONFIGURATION ERROR: SUPABASE_URL must be set in production/non-local environments."
+            )
+        if not (self.SUPABASE_SERVICE_ROLE_KEY or "").strip():
+            raise RuntimeError(
+                "CRITICAL SECURITY CONFIGURATION ERROR: SUPABASE_SERVICE_ROLE_KEY must be set in production/non-local environments."
+            )
+
         return self
 
 settings = Settings()

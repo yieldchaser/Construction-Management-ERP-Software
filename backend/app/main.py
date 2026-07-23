@@ -497,40 +497,17 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Configure CORS for Next.js frontend communication.
-# Origins are restricted to an explicit allowlist. The production frontend origin is
-# supplied via FRONTEND_URL (comma-separated list permitted), falling back to the local
-# dev origins. A wildcard origin is intentionally NOT used because it is incompatible with
-# allow_credentials=True and is rejected by browsers.
-def get_allowed_origins() -> list[str]:
-    env_origins = os.getenv("FRONTEND_URL", "")
-    origins = [o.strip() for o in env_origins.split(",") if o.strip()]
-    
-    default_origins = [
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-        "http://localhost:3001",
-        "http://127.0.0.1:3001",
-        "https://construction-management-erp-softwar-ten.vercel.app",
-        "https://construction-management-erp-software.vercel.app",
-        "https://siteflow.vercel.app",
-        "https://siteflow.co",
-        "https://app.siteflow.co"
-    ]
-    
-    if origins:
-        return origins + default_origins
-    return default_origins
+# Allowed origins are parsed dynamically from ALLOWED_ORIGINS and FRONTEND_URL env vars.
+# Explicit whitelist prevents wildcard (*) access and rejects unauthorized origins.
+ALLOWED_ORIGINS = _app_settings.allowed_origins_list
 
-ALLOWED_ORIGINS = get_allowed_origins()
+# In production, disable loose origin regexes so only explicit whitelist origins are permitted.
+cors_origin_regex = _app_settings.FRONTEND_ORIGIN_REGEX if _app_settings.is_local_env else None
 
-# Preview deployments: restrict to THIS project's own Vercel pattern rather than
-# every *.vercel.app origin. Configurable via FRONTEND_ORIGIN_REGEX if the Vercel
-# project slug/scope changes. Credentialed CORS with an over-broad regex would let
-# any Vercel-hosted site call the API, so the pattern is scoped and anchored.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
-    allow_origin_regex=_app_settings.FRONTEND_ORIGIN_REGEX,
+    allow_origin_regex=cors_origin_regex,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["Authorization", "Content-Type", "X-Admin-Secret"],
