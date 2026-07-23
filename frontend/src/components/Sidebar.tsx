@@ -6,6 +6,7 @@ import { useParams, usePathname } from "next/navigation";
 import { getApiHost } from "@/lib/api";
 import { useProject } from "@/context/ProjectContext";
 import { usePermissions } from "@/context/PermissionsContext";
+import { useSidebar } from "@/context/SidebarContext";
 import CompanySwitcher from "@/components/CompanySwitcher";
 
 export default function Sidebar() {
@@ -16,6 +17,7 @@ export default function Sidebar() {
 
   const { activeProjectId, setActiveProjectId, projects, projectContext } = useProject();
   const { can } = usePermissions();
+  const { mobileOpen, closeMobile } = useSidebar();
 
   const [companyName, setCompanyName] = useState("Loading Company...");
 
@@ -217,7 +219,22 @@ export default function Sidebar() {
   ];
 
   return (
-    <aside className="w-64 border-r border-border-custom bg-sidebar flex flex-col justify-between h-full shrink-0">
+    <>
+      {/* Mobile Backdrop */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs lg:hidden"
+          onClick={closeMobile}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Responsive Sidebar Container */}
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 w-64 border-r border-border-custom bg-sidebar flex flex-col justify-between h-full shrink-0 transition-transform duration-300 ${
+          mobileOpen ? "translate-x-0" : "-translate-x-full"
+        } lg:static lg:translate-x-0 lg:flex`}
+      >
       <div className="flex flex-col overflow-y-auto flex-1">
         {/* Header */}
         <div className="p-5 flex items-center gap-3 border-b border-border-custom">
@@ -342,5 +359,6 @@ export default function Sidebar() {
         </div>
       </div>
     </aside>
+    </>
   );
 }

@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
 import ThemeToggle from "./ThemeToggle";
 
+import { useSidebar } from "@/context/SidebarContext";
+
 interface PageHeaderProps {
   title: string;
   children?: React.ReactNode;
@@ -33,6 +35,7 @@ const seedNotifications = (): Notification[] => [
 export default function PageHeader({ title, children }: PageHeaderProps) {
   const router = useRouter();
   const params = useParams();
+  const { toggleMobile } = useSidebar();
   const rawCompanyId = params?.company_id as string;
   const companyId = rawCompanyId === "e0000000-0000-0000-0000-000000000000"
     ? "demo-construction"
@@ -105,9 +108,19 @@ export default function PageHeader({ title, children }: PageHeaderProps) {
   };
 
   return (
-    <header className="px-6 py-4 border-b border-border-custom bg-card flex justify-between items-center shrink-0">
-      <div className="flex items-center gap-4">
-        <h1 className="text-lg font-semibold text-foreground">{title}</h1>
+    <header className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-border-custom bg-card flex justify-between items-center shrink-0">
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={toggleMobile}
+          className="lg:hidden p-1.5 rounded-md bg-elevated text-foreground hover:text-primary transition-colors cursor-pointer"
+          aria-label="Toggle navigation drawer"
+        >
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+        <h1 className="text-base sm:text-lg font-semibold text-foreground truncate">{title}</h1>
       </div>
 
       <div className="flex items-center gap-4">

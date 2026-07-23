@@ -8,6 +8,7 @@ import { CompanySettingsProvider } from "@/context/CompanySettingsContext";
 import { PermissionsProvider } from "@/context/PermissionsContext";
 import Sidebar from "@/components/Sidebar";
 import PageHeader from "@/components/PageHeader";
+import { SidebarProvider } from "@/context/SidebarContext";
 
 export default function CompanyLayout({ children }: { children: React.ReactNode }) {
   const params = useParams();
@@ -104,21 +105,23 @@ export default function CompanyLayout({ children }: { children: React.ReactNode 
     <ProjectProvider>
       <CompanySettingsProvider>
         <PermissionsProvider>
-        <div className="flex h-screen bg-background text-foreground overflow-hidden font-sans">
-        {/* Single persistent global Sidebar */}
-        <Sidebar />
+          <SidebarProvider>
+            <div className="flex h-screen bg-background text-foreground overflow-hidden font-sans">
+              {/* Single persistent global Sidebar */}
+              <Sidebar />
 
-        {/* Main Workspace Area */}
-        <main className="flex-1 flex flex-col h-full overflow-hidden relative">
-          {/* Reusable PageHeader with dynamic page title */}
-          <PageHeader title={getPageTitle()} />
+              {/* Main Workspace Area */}
+              <main className="flex-1 flex flex-col h-full overflow-hidden relative">
+                {/* Reusable PageHeader with dynamic page title */}
+                <PageHeader title={getPageTitle()} />
 
-          {/* Page Content */}
-          <div className="flex-1 overflow-hidden relative flex flex-col">
-            {children}
-          </div>
-        </main>
-      </div>
+                {/* Page Content */}
+                <div className="flex-1 overflow-hidden relative flex flex-col">
+                  {children}
+                </div>
+              </main>
+            </div>
+          </SidebarProvider>
         </PermissionsProvider>
       </CompanySettingsProvider>
     </ProjectProvider>
