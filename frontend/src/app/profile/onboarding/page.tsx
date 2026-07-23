@@ -205,11 +205,11 @@ export default function OnboardingPage() {
       </div>
 
       {/* Form panel */}
-      <div className="flex w-full flex-col justify-center items-center p-8 lg:w-3/5 bg-alx-surface-container-lowest relative overflow-hidden overflow-y-auto">
+      <div className="flex w-full flex-col justify-center items-center p-5 sm:p-8 lg:w-3/5 bg-alx-surface-container-lowest relative overflow-hidden overflow-y-auto">
         <div className="absolute top-[-10%] right-[-10%] h-[40%] w-[40%] rounded-full bg-alx-primary/5 blur-[100px]" />
-        <div className="w-full max-w-xl space-y-7 z-10 py-6">
+        <div className="w-full max-w-xl space-y-6 sm:space-y-7 z-10 py-4 sm:py-6">
           <div className="space-y-2 text-center">
-            <h2 className="font-headline text-4xl font-bold tracking-tight text-alx-on-surface">Company Profile</h2>
+            <h2 className="font-headline text-3xl sm:text-4xl font-bold tracking-tight text-alx-on-surface">Company Profile</h2>
             <p className="text-alx-on-surface-variant text-sm leading-relaxed">
               Configure your workspace context for personalized construction calculators and reports.
             </p>

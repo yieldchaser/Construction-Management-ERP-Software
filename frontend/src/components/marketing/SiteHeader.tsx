@@ -36,13 +36,13 @@ export default function SiteHeader() {
           : "bg-alx-surface-container-lowest/80 border-alx-outline-variant/40 shadow-none"
       }`}
     >
-      <div className="flex justify-between items-center px-8 py-4 max-w-7xl mx-auto">
+      <div className="flex justify-between items-center px-4 sm:px-6 md:px-8 py-3.5 sm:py-4 max-w-7xl mx-auto">
         <Link className="flex items-center gap-2 group" href="/" prefetch={true} onClick={closeMenu}>
           <Icon
             name="architecture"
-            className="w-8 h-8 text-alx-primary group-hover:scale-110 transition-transform"
+            className="w-7 h-7 sm:w-8 sm:h-8 text-alx-primary group-hover:scale-110 transition-transform"
           />
-          <span className="font-headline text-2xl font-bold tracking-tight">
+          <span className="font-headline text-xl sm:text-2xl font-bold tracking-tight">
             <span className="text-alx-on-surface">Site</span>
             <span className="text-alx-primary">Flow</span>
           </span>
@@ -71,7 +71,7 @@ export default function SiteHeader() {
           ))}
         </nav>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4">
           <Link
             href="/login"
             prefetch={true}
@@ -82,7 +82,7 @@ export default function SiteHeader() {
           <Link
             href="/login"
             prefetch={true}
-            className="alx-bg-gradient-primary text-alx-on-primary px-6 py-2.5 rounded-full font-uilabel text-sm font-bold tracking-wide hover:shadow-lg hover:shadow-alx-primary/30 transition-all active:scale-95 relative overflow-hidden group"
+            className="alx-bg-gradient-primary text-alx-on-primary px-3.5 sm:px-6 py-2 sm:py-2.5 rounded-full font-uilabel text-xs sm:text-sm font-bold tracking-wide hover:shadow-lg hover:shadow-alx-primary/30 transition-all active:scale-95 relative overflow-hidden group"
           >
             <span className="relative z-10">Start Free Trial</span>
             <div className="absolute inset-0 alx-shimmer opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -93,15 +93,15 @@ export default function SiteHeader() {
             aria-label="Toggle navigation menu"
             aria-expanded={menuOpen}
             onClick={() => setMenuOpen((open) => !open)}
-            className="md:hidden flex h-10 w-10 items-center justify-center rounded-lg bg-alx-surface-container-high text-alx-on-surface hover:text-alx-primary transition-colors"
+            className="md:hidden flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-lg bg-alx-surface-container-high text-alx-on-surface hover:text-alx-primary transition-colors"
           >
-            <Icon name={menuOpen ? "close" : "menu"} className="w-6 h-6" />
+            <Icon name={menuOpen ? "close" : "menu"} className="w-5 h-5 sm:w-6 sm:h-6" />
           </button>
         </div>
       </div>
 
       {menuOpen && (
-        <div className="md:hidden bg-alx-surface-container-lowest/95 backdrop-blur-xl border-t border-alx-outline-variant/40 shadow-lg shadow-alx-on-surface/5 px-8 pb-6">
+        <div className="md:hidden bg-alx-surface-container-lowest/95 backdrop-blur-xl border-t border-alx-outline-variant/40 shadow-lg shadow-alx-on-surface/5 px-4 sm:px-6 pb-6">
           <nav className="flex flex-col gap-1 pt-2">
             {NAV_LINKS.map((link) => (
               <Link

@@ -145,7 +145,7 @@ export default function PricingPage() {
             Transparent Pricing
           </span>
 
-          <h1 className="font-headline text-4xl md:text-6xl font-extrabold tracking-tight text-alx-on-surface leading-tight">
+          <h1 className="font-headline text-3xl sm:text-4xl md:text-6xl font-extrabold tracking-tight text-alx-on-surface leading-tight">
             Simple, honest pricing.
             <br />
             <span className="alx-text-gradient-blue">No surprises.</span>
@@ -168,17 +168,17 @@ export default function PricingPage() {
       </section>
 
       {/* Value Metrics Bar */}
-      <section className="max-w-6xl mx-auto px-6 pb-16 alx-scroll-fade">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 pb-16 alx-scroll-fade">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
           {PROOF_POINTS.map((t, i) => (
             <div
               key={i}
-              className="bg-alx-surface-container-low rounded-full py-6 px-6 text-center flex flex-col justify-center items-center shadow-sm shadow-alx-on-surface/5"
+              className="bg-alx-surface-container-low rounded-2xl sm:rounded-full py-4 sm:py-6 px-3 sm:px-6 text-center flex flex-col justify-center items-center shadow-sm shadow-alx-on-surface/5"
             >
-              <div className="font-headline text-3xl font-bold text-alx-primary mb-1">
+              <div className="font-headline text-2xl sm:text-3xl font-bold text-alx-primary mb-1">
                 <CountUp value={t.value} />
               </div>
-              <div className="font-uilabel text-[10px] font-bold uppercase tracking-widest text-alx-on-surface-variant">
+              <div className="font-uilabel text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-alx-on-surface-variant">
                 {t.label}
               </div>
             </div>

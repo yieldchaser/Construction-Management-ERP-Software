@@ -18,18 +18,18 @@ export default function LandingPage() {
         <div className="alx-grain absolute inset-0 z-0 pointer-events-none" aria-hidden="true" />
         
         <div className="max-w-5xl mx-auto text-center relative z-10">
-          <h1 className="font-headline text-5xl md:text-7xl font-extrabold text-alx-on-surface leading-[1.18] tracking-tight mb-8">
+          <h1 className="font-headline text-3xl sm:text-5xl md:text-7xl font-extrabold text-alx-on-surface leading-[1.18] tracking-tight mb-6 sm:mb-8">
             Run every project from <br />
             <TypewriterText
               phrases={["one ledger.", "one dashboard.", "one record.", "one workspace."]}
               className="alx-text-gradient-blue"
             />
           </h1>
-          <p className="font-body text-xl text-alx-on-surface-variant max-w-2xl mx-auto mb-12 leading-relaxed">
+          <p className="font-body text-base sm:text-xl text-alx-on-surface-variant max-w-2xl mx-auto mb-8 sm:mb-12 leading-relaxed">
             SiteFlow brings planning, daily progress, procurement, and project finance into one
             integrated workspace. See the full picture and align your team.
           </p>
-          <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-20">
+          <div className="flex flex-col sm:flex-row justify-center items-center gap-3.5 sm:gap-4 mb-12 sm:mb-20">
             <Link
               href="/login"
               prefetch={true}
@@ -58,38 +58,38 @@ export default function LandingPage() {
       </section>
 
       {/* 2. Value Metrics Bar - Redesigned Floating Glass Deck */}
-      <section className="py-12 px-6 alx-scroll-fade">
-        <div className="max-w-7xl mx-auto bg-gradient-to-r from-white/80 via-sky-50/50 to-white/80 backdrop-blur-md rounded-3xl border border-sky-100/50 py-12 px-8 shadow-xl shadow-sky-900/5">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12 divide-x divide-sky-100/50">
-            <div className="text-center px-4 group">
-              <div className="font-headline text-4xl font-bold text-alx-primary mb-2 group-hover:scale-110 transition-transform">
+      <section className="py-8 sm:py-12 px-4 sm:px-6 alx-scroll-fade">
+        <div className="max-w-7xl mx-auto bg-gradient-to-r from-white/80 via-sky-50/50 to-white/80 backdrop-blur-md rounded-3xl border border-sky-100/50 py-8 sm:py-12 px-4 sm:px-8 shadow-xl shadow-sky-900/5">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 md:gap-12 divide-y sm:divide-y-0 sm:divide-x divide-sky-100/50">
+            <div className="text-center px-2 sm:px-4 group">
+              <div className="font-headline text-3xl sm:text-4xl font-bold text-alx-primary mb-2 group-hover:scale-110 transition-transform">
                 <CountUp value="16" />
               </div>
-              <div className="font-uilabel text-sm text-alx-on-surface-variant uppercase tracking-widest font-semibold">
+              <div className="font-uilabel text-xs sm:text-sm text-alx-on-surface-variant uppercase tracking-widest font-semibold">
                 Modules
               </div>
             </div>
-            <div className="text-center px-4 group">
-              <div className="font-headline text-4xl font-bold text-alx-primary mb-2 group-hover:scale-110 transition-transform">
+            <div className="text-center px-2 sm:px-4 group pt-4 sm:pt-0">
+              <div className="font-headline text-3xl sm:text-4xl font-bold text-alx-primary mb-2 group-hover:scale-110 transition-transform">
                 <CountUp value="1" />
               </div>
-              <div className="font-uilabel text-sm text-alx-on-surface-variant uppercase tracking-widest font-semibold">
+              <div className="font-uilabel text-xs sm:text-sm text-alx-on-surface-variant uppercase tracking-widest font-semibold">
                 Record
               </div>
             </div>
-            <div className="text-center px-4 group">
-              <div className="font-headline text-4xl font-bold text-alx-primary mb-2 group-hover:scale-110 transition-transform">
+            <div className="text-center px-2 sm:px-4 group pt-4 sm:pt-0">
+              <div className="font-headline text-3xl sm:text-4xl font-bold text-alx-primary mb-2 group-hover:scale-110 transition-transform">
                 <CountUp value="IS-Code" />
               </div>
-              <div className="font-uilabel text-sm text-alx-on-surface-variant uppercase tracking-widest font-semibold">
+              <div className="font-uilabel text-xs sm:text-sm text-alx-on-surface-variant uppercase tracking-widest font-semibold">
                 Grade Math
               </div>
             </div>
-            <div className="text-center px-4 group">
-              <div className="font-headline text-4xl font-bold text-alx-primary mb-2 group-hover:scale-110 transition-transform">
+            <div className="text-center px-2 sm:px-4 group pt-4 sm:pt-0">
+              <div className="font-headline text-3xl sm:text-4xl font-bold text-alx-primary mb-2 group-hover:scale-110 transition-transform">
                 <CountUp value="PWA" />
               </div>
-              <div className="font-uilabel text-sm text-alx-on-surface-variant uppercase tracking-widest font-semibold">
+              <div className="font-uilabel text-xs sm:text-sm text-alx-on-surface-variant uppercase tracking-widest font-semibold">
                 Offline Mode
               </div>
             </div>

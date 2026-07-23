@@ -40,8 +40,8 @@ export default function SiteFooter() {
   return (
     <footer className="relative w-full bg-alx-surface-container-low border-t border-alx-outline-variant/30 pt-20 pb-10 overflow-hidden">
       <div className="absolute top-0 left-0 h-px w-full alx-bg-gradient-primary opacity-70" />
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 px-12 max-w-7xl mx-auto">
-        <div className="lg:col-span-1">
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-5 gap-8 sm:gap-12 px-6 sm:px-8 md:px-12 max-w-7xl mx-auto">
+        <div className="col-span-2 sm:col-span-2 lg:col-span-1">
           <Link className="flex items-center gap-2 mb-4 group" href="/" prefetch={true}>
             <Icon
               name="architecture"
@@ -58,11 +58,11 @@ export default function SiteFooter() {
         </div>
 
         {FOOTER_COLUMNS.map((column) => (
-          <div key={column.heading} className="space-y-5">
+          <div key={column.heading} className="space-y-4 sm:space-y-5">
             <h4 className="font-uilabel font-bold text-alx-on-surface text-xs uppercase tracking-[0.16em]">
               {column.heading}
             </h4>
-            <ul className="space-y-3.5">
+            <ul className="space-y-2.5 sm:space-y-3.5">
               {column.links.map((link) => (
                 <li key={link.href}>
                   <Link
@@ -78,11 +78,11 @@ export default function SiteFooter() {
           </div>
         ))}
       </div>
-      <div className="max-w-7xl mx-auto px-12 mt-16 pt-8 border-t border-alx-outline-variant/30 flex flex-col md:flex-row justify-between items-center gap-4">
+      <div className="max-w-7xl mx-auto px-6 sm:px-8 md:px-12 mt-12 sm:mt-16 pt-8 border-t border-alx-outline-variant/30 flex flex-col md:flex-row justify-between items-center gap-4 text-center md:text-left">
         <p className="font-body text-sm text-alx-on-surface-variant opacity-70">
           &copy; {new Date().getFullYear()} SiteFlow. All rights reserved.
         </p>
-        <div className="flex items-center gap-6">
+        <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
           <Link
             href="/privacy"
             prefetch={true}

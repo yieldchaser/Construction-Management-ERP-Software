@@ -116,7 +116,7 @@ export default function ContactPage() {
             Talk to Us
           </span>
 
-          <h1 className="font-headline text-4xl md:text-5xl font-extrabold tracking-tight text-alx-on-surface leading-tight">
+          <h1 className="font-headline text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-alx-on-surface leading-tight">
             Get in touch with SiteFlow
           </h1>
 
@@ -127,12 +127,12 @@ export default function ContactPage() {
       </section>
 
       {/* Main Grid */}
-      <section className="max-w-6xl mx-auto px-6 pb-20 alx-scroll-fade">
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 pb-20 alx-scroll-fade">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start">
           {/* Contact Info Panel */}
           <div className="flex flex-col gap-6 lg:gap-8">
             {/* Quick channels */}
-            <div className="rounded-2xl bg-alx-surface-container-lowest p-7 md:p-9 space-y-6 shadow-xl shadow-alx-on-surface/5">
+            <div className="rounded-2xl bg-alx-surface-container-lowest p-5 sm:p-7 md:p-9 space-y-6 shadow-xl shadow-alx-on-surface/5">
               <h2 className="font-headline text-lg font-bold text-alx-on-surface">Fastest ways to reach us</h2>
               {[
                 { icon: "chat" as const, label: "WhatsApp (Fastest)", value: "+91 76673 59544", sub: "Usually responds in < 2 hours" },
@@ -153,7 +153,7 @@ export default function ContactPage() {
             </div>
 
             {/* Offices */}
-            <div className="rounded-2xl bg-alx-surface-container-lowest p-7 md:p-9 space-y-6 shadow-xl shadow-alx-on-surface/5">
+            <div className="rounded-2xl bg-alx-surface-container-lowest p-5 sm:p-7 md:p-9 space-y-6 shadow-xl shadow-alx-on-surface/5">
               <h2 className="font-headline text-lg font-bold text-alx-on-surface">Offices</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 {OFFICES.map((o, i) => (
@@ -169,7 +169,7 @@ export default function ContactPage() {
             </div>
 
             {/* Response promise */}
-            <div className="rounded-2xl bg-gradient-to-br from-alx-primary-fixed via-alx-surface-container-lowest to-alx-surface-container p-6 md:p-7 space-y-3 shadow-xl shadow-alx-primary/5 border border-alx-outline-variant/20">
+            <div className="rounded-2xl bg-gradient-to-br from-alx-primary-fixed via-alx-surface-container-lowest to-alx-surface-container p-5 sm:p-6 md:p-7 space-y-3 shadow-xl shadow-alx-primary/5 border border-alx-outline-variant/20">
               <div className="flex items-center gap-2">
                 <ContactIcon name="rocket" className="w-5 h-5 text-alx-primary" />
                 <div className="font-headline text-sm font-bold text-alx-on-surface">Our promise</div>
@@ -183,7 +183,7 @@ export default function ContactPage() {
           {/* Contact Form */}
           <div className="h-full flex flex-col">
             {submitted ? (
-              <div className="rounded-2xl bg-alx-surface-container-lowest shadow-xl shadow-alx-on-surface/5 p-12 text-center space-y-5 h-full flex flex-col items-center justify-center flex-grow">
+              <div className="rounded-2xl bg-alx-surface-container-lowest shadow-xl shadow-alx-on-surface/5 p-8 sm:p-12 text-center space-y-5 h-full flex flex-col items-center justify-center flex-grow">
                 <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-alx-primary-fixed text-alx-primary">
                   <ContactIcon name="chat" className="w-8 h-8" />
                 </div>
@@ -196,7 +196,7 @@ export default function ContactPage() {
                 </Link>
               </div>
             ) : (
-              <div className="relative overflow-hidden rounded-2xl bg-alx-surface-container-lowest shadow-xl shadow-alx-on-surface/5 p-8 md:p-10 flex-grow flex flex-col justify-between h-full">
+              <div className="relative overflow-hidden rounded-2xl bg-alx-surface-container-lowest shadow-xl shadow-alx-on-surface/5 p-5 sm:p-8 md:p-10 flex-grow flex flex-col justify-between h-full">
                 <div className="absolute -top-24 -right-24 w-48 h-48 bg-alx-primary-fixed rounded-full blur-3xl opacity-50 pointer-events-none" />
                 <h2 className="font-headline text-xl font-extrabold text-alx-on-surface mb-6 relative z-10">Send us a message</h2>
                 <form onSubmit={handleSubmit} className="space-y-6 flex-grow flex flex-col justify-between relative z-10">

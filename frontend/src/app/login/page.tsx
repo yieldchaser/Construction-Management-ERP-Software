@@ -533,11 +533,11 @@ export default function LoginPage() {
       </div>
 
       {/* Form panel */}
-      <div className="flex w-full flex-col justify-center items-center p-8 lg:w-3/5 bg-alx-surface-container-lowest relative overflow-hidden">
+      <div className="flex w-full flex-col justify-center items-center p-5 sm:p-8 lg:w-3/5 bg-alx-surface-container-lowest relative overflow-hidden">
         <div className="absolute top-[-10%] right-[-10%] h-[40%] w-[40%] rounded-full bg-alx-primary/5 blur-[100px]" />
-        <div className="w-full max-w-md space-y-7 z-10">
+        <div className="w-full max-w-md space-y-6 sm:space-y-7 z-10 py-4 sm:py-0">
           <div className="space-y-2.5 text-center">
-            <h2 className="font-headline text-4xl font-bold tracking-tight text-alx-on-surface">{heading()}</h2>
+            <h2 className="font-headline text-3xl sm:text-4xl font-bold tracking-tight text-alx-on-surface">{heading()}</h2>
             <p className="text-alx-on-surface-variant text-sm leading-relaxed">
               {stage === "input" && method === "phone" && "Enter your mobile number to receive a code."}
               {stage === "input" && method === "email_otp" && "Enter your email to receive a code."}
