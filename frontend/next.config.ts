@@ -66,6 +66,28 @@ const nextConfig: NextConfig = {
     formats: ["image/avif", "image/webp"],
     minimumCacheTTL: 31536000,
   },
+  experimental: {
+    // Consolidate CSS chunks to prevent Next.js from emitting separate <link rel="preload" as="style">
+    // tags for unused component CSS chunks on initial page load, resolving Chrome DevTools preload warnings.
+    cssChunking: "strict",
+  },
+  webpack(config, { isServer }) {
+    if (!isServer) {
+      // Merge client CSS chunks into primary stylesheets rather than loose fragments
+      config.optimization = config.optimization || {};
+      config.optimization.splitChunks = config.optimization.splitChunks || {};
+      config.optimization.splitChunks.cacheGroups = {
+        ...config.optimization.splitChunks.cacheGroups,
+        styles: {
+          name: "styles",
+          type: "css/mini-extract",
+          chunks: "all",
+          enforce: true,
+        },
+      };
+    }
+    return config;
+  },
   async headers() {
     return [
       {
