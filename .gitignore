@@ -233,7 +233,7 @@ onsiteteams-recon/
 # Repo hygiene (PROMPT_4): recon/scratch/archive artifacts kept locally only
 test.db
 *.db
-context/
+/context/
 outputs/
 scratch/
 static/reports/
