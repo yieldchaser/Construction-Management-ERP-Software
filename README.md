@@ -291,11 +291,22 @@ Copy `.env.example` to `.env` for the backend. Frontend variables are build-time
 
 `supabase/migrations/` holds hand-authored, additive SQL migrations. There is no ORM migration tool (no Alembic). In local dev the schema is created from the models via `Base.metadata.create_all`. In production, apply the migration SQL to the Supabase database (via the Supabase SQL editor or your migration workflow). New migrations should be additive and backward-compatible; do not drop or rename columns in place without a backfill plan.
 
-## ☁️ Deployment
+## ☁️ Deployment & Infrastructure Scaling
 
-- Frontend: Vercel (Next.js 16). Backend: Render (Uvicorn/FastAPI). Database and file storage: Supabase (Postgres + Storage).
-- Vercel and Render are configured to deploy on pushes to `main` (provider dashboards). No infrastructure-as-code manifests are committed in this repo.
-- A GitHub Actions workflow (`.github/workflows/keep_alive.yml`) pings the Render backend every 10 minutes. This exists because the Render free/starter tier spins the service down after inactivity; the ping keeps it warm and avoids cold-start delays.
+- **Frontend**: Vercel (Next.js 16 App Router).
+- **Backend**: Render (Uvicorn/FastAPI).
+- **Database & Storage**: Supabase (PostgreSQL + Object Storage).
+- **Automated Deployments**: Vercel and Render deploy automatically on pushes to `main`.
+- **Keep-Alive Worker**: A GitHub Actions workflow (`.github/workflows/keep_alive.yml`) pings the Render backend every 10 minutes to mitigate free-tier cold starts.
+
+### 📊 Free-Tier Capacity & Infrastructure Scaling Roadmap
+
+| Tier Stage | Stack Allocation | Active Capacity | Operational Notes & Upgrade Drivers |
+| --- | --- | --- | --- |
+| **All-Free Mode** *(Current)* | **Vercel**: Hobby (100GB/mo)<br>**Render**: Free (512MB RAM, shared CPU, 15m sleep)<br>**Supabase**: Free (500MB DB, 1GB Storage) | **3–5** Active Companies<br>**15–30** DAUs<br>**~100** MAUs | Render 15-min sleep causes 30–50s cold-start delays on idle. 512MB RAM cap limits heavy concurrent PDF/BOQ imports. |
+| **Stage 1: Launch** *($7/mo)* | **Render**: Starter ($7/mo)<br>**Vercel / Supabase**: Free | **10–15** Active Companies<br>**~50** DAUs | **Eliminates 15-min cold starts completely.** Keeps FastAPI server awake 24/7. |
+| **Stage 2: Growth** *($32/mo)* | **Render**: Starter ($7/mo)<br>**Supabase**: Pro ($25/mo) | **30–50** Active Companies<br>**~300** DAUs | Unlocks 8GB DB, 100GB Storage for site photos & CAD drawings, removes 7-day DB auto-pause, and enables PITR backups. |
+| **Stage 3: Scale** *($75+/mo)* | **Render**: Standard ($25/mo)<br>**Supabase**: Pro + Compute ($50/mo) | **150+** Active Companies<br>**3,000+** DAUs | 2GB RAM / Dedicated vCPU backend handles high-concurrency multi-site ERP operations without latency. |
 
 ## 🛡️ Security posture
 
