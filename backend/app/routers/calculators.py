@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator, model_validator
 from typing import Optional, List, Dict
 import math
 
@@ -9,9 +9,14 @@ router = APIRouter(prefix="/calculators", tags=["Calculators"], dependencies=[De
 
 # 1. Steel Calculator
 class SteelCalcRequest(BaseModel):
-    diameter: float = Field(..., description="Diameter of bar in mm", example=12.0)
-    count: int = Field(..., description="Count of bars or stirrups", example=10)
-    length_or_height: float = Field(..., description="Length of bar or height of column in meters", example=3.0)
+    # Primary field names (code-canonical)
+    diameter: float = Field(0.0, description="Diameter of bar in mm", example=12.0)
+    count: int = Field(0, description="Count of bars or stirrups", example=10)
+    length_or_height: float = Field(0.0, description="Length of bar or height of column in meters", example=3.0)
+    # Spec-alias field names accepted as alternatives
+    diameter_mm: Optional[float] = Field(None, description="Alias for diameter (spec compat)", example=12.0)
+    num_bars: Optional[int] = Field(None, description="Alias for count (spec compat)", example=10)
+    length_m: Optional[float] = Field(None, description="Alias for length_or_height (spec compat)", example=3.0)
     slab_thickness: float = Field(0.0, description="Slab thickness in meters (for columns)", example=0.15)
     is_column: bool = Field(False, description="True if column calculation (adds lap length)", example=True)
     spacing: float = Field(0.0, description="Spacing in meters (for slabs)", example=0.0)
@@ -22,6 +27,23 @@ class SteelCalcRequest(BaseModel):
     main_width: float = Field(0.3, description="Stirrup box width in meters", example=0.3)
     main_height: float = Field(0.4, description="Stirrup box height in meters", example=0.4)
     wastage_pct: float = Field(5.0, description="Wastage percentage", example=5.0)
+
+    @model_validator(mode="after")
+    def resolve_aliases(self):
+        """Accept spec-named aliases (diameter_mm, num_bars, length_m) as alternatives."""
+        if self.diameter_mm is not None and self.diameter == 0.0:
+            self.diameter = self.diameter_mm
+        if self.num_bars is not None and self.count == 0:
+            self.count = self.num_bars
+        if self.length_m is not None and self.length_or_height == 0.0:
+            self.length_or_height = self.length_m
+        if self.diameter <= 0:
+            raise ValueError("diameter must be greater than 0")
+        if self.count <= 0:
+            raise ValueError("count must be greater than 0")
+        if self.length_or_height <= 0:
+            raise ValueError("length_or_height must be greater than 0")
+        return self
 
 @router.post("/steel")
 def calc_steel(req: SteelCalcRequest):
@@ -61,7 +83,7 @@ def calc_steel(req: SteelCalcRequest):
 
 # 2. Concrete Volume & Mix
 class ConcreteCalcRequest(BaseModel):
-    wet_volume: float = Field(0.0, description="Wet volume in m3", example=2.0)
+    wet_volume: float = Field(0.0, description="Wet volume in m3 (must be > 0 unless using staircase inputs)", example=2.0)
     wastage_pct: float = Field(5.0, description="Wastage percentage", example=5.0)
     grade: str = Field("M20", description="Concrete nominal grade (M7.5, M10, M15, M20, M25)", example="M20")
     stairs_steps: int = Field(0, description="Staircase steps count", example=0)
@@ -69,6 +91,15 @@ class ConcreteCalcRequest(BaseModel):
     stairs_riser: float = Field(0.0, description="Staircase riser in meters", example=0.0)
     stairs_tread: float = Field(0.0, description="Staircase tread in meters", example=0.0)
     stairs_waist: float = Field(0.0, description="Staircase waist slab thickness in meters", example=0.0)
+
+    @model_validator(mode="after")
+    def validate_volume(self):
+        """Reject negative volumes. Zero is allowed only when staircase dimensions are provided."""
+        if self.wet_volume < 0:
+            raise ValueError("wet_volume must be >= 0 (use staircase fields for stair volumes)")
+        if self.wet_volume == 0.0 and self.stairs_steps == 0:
+            raise ValueError("wet_volume must be > 0 when no staircase dimensions are provided")
+        return self
 
 @router.post("/concrete")
 def calc_concrete(req: ConcreteCalcRequest):
@@ -181,6 +212,7 @@ class BrickCalcRequest(BaseModel):
     wastage_pct: float = Field(10.0, example=10.0)
 
 @router.post("/brick")
+@router.post("/brickwork")  # DEFECT-01 fix: spec-compatible alias
 def calc_brick(req: BrickCalcRequest):
     b_len = (req.brick_length_mm + req.joint_mm) / 1000.0
     b_hgt = (req.brick_height_mm + req.joint_mm) / 1000.0
@@ -258,6 +290,7 @@ class TileCalcRequest(BaseModel):
     wastage_pct: float = Field(10.0, example=10.0)
 
 @router.post("/tile")
+@router.post("/flooring")  # DEFECT-01 fix: spec-compatible alias
 def calc_tile(req: TileCalcRequest):
     room_area_sqft = req.length_ft * req.width_ft
     grout_inch = req.grout_mm / 25.4
@@ -279,20 +312,38 @@ class PlasterCalcRequest(BaseModel):
     wastage_pct: float = Field(10.0, example=10.0)
 
 @router.post("/plaster")
+@router.post("/plastering")  # DEFECT-01 fix: spec-compatible alias
 def calc_plaster(req: PlasterCalcRequest):
     thick_m = req.thickness_mm / 1000.0
     wet_volume = req.wall_area_m2 * thick_m
     dry_volume = wet_volume * 1.33 * (1 + req.wastage_pct / 100.0)
-    
+
+    # DEFECT-05 fix: validate mix_ratio format before splitting to avoid IndexError / HTTP 500
     parts = req.mix_ratio.split(":")
-    cement_parts = float(parts[0])
-    sand_parts = float(parts[1])
+    if len(parts) != 2:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Invalid mix_ratio '{req.mix_ratio}'. Expected format 'cement:sand', e.g. '1:4' or '1:6'."
+        )
+    try:
+        cement_parts = float(parts[0])
+        sand_parts = float(parts[1])
+    except ValueError:
+        raise HTTPException(
+            status_code=422,
+            detail=f"mix_ratio parts must be numeric, got '{req.mix_ratio}'."
+        )
+    if cement_parts <= 0 or sand_parts <= 0:
+        raise HTTPException(
+            status_code=422,
+            detail="mix_ratio parts must both be positive numbers."
+        )
     total_parts = cement_parts + sand_parts
-    
+
     cement_m3 = dry_volume * (cement_parts / total_parts)
     cement_bags = (cement_m3 * 1440.0) / 50.0
     sand_m3 = dry_volume * (sand_parts / total_parts)
-    
+
     return {
         "wet_volume_m3": round(wet_volume, 4),
         "dry_volume_m3": round(dry_volume, 4),

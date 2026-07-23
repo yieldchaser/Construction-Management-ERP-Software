@@ -115,6 +115,19 @@ def create_payment(req: PaymentCreateRequest, db: Session = Depends(get_db), cur
         sub_cost_code=req.sub_cost_code,
         category=req.category
     )
+
+    # DEFECT-07 fix: reject duplicate reference_number within the same company
+    if req.reference_number:
+        existing = db.query(Payment).filter(
+            Payment.company_id == comp_uuid,
+            Payment.reference_number == req.reference_number
+        ).first()
+        if existing:
+            raise HTTPException(
+                status_code=409,
+                detail=f"A payment with reference_number '{req.reference_number}' already exists for this company. Use a unique reference number."
+            )
+
     db.add(payment)
     db.flush()
 

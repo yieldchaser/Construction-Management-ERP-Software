@@ -199,6 +199,146 @@ def estimate_penalty(company_id: uuid.UUID, report_type: str = Query(...), retur
     }
 
 
+# DEFECT-08 fix: Dedicated statutory export endpoints referenced in API spec
+# These were missing — the spec says /gstr1, /pf-ecr, /tds-26q but only /{company_id} existed.
+
+@router.get("/{company_id}/gstr1")
+def export_gstr1(
+    company_id: uuid.UUID,
+    month: int = Query(..., ge=1, le=12, description="Month (1-12)"),
+    year: int = Query(..., ge=2020, description="Financial year (e.g. 2026)"),
+    db: Session = Depends(get_db),
+    _: None = Depends(verify_company_access),
+    current_user: User = Depends(get_current_user),
+):
+    """GSTR-1 outward supply summary report for the given month/year."""
+    require_module_view(db, current_user, company_id, "payroll")
+    return_period = f"{year}-{month:02d}"
+    # Query filed reports of type gst for this period
+    reports = db.query(StatutoryReport).filter(
+        StatutoryReport.company_id == company_id,
+        StatutoryReport.report_type == "gst",
+        StatutoryReport.return_period == return_period,
+    ).all()
+    return {
+        "report": "GSTR-1",
+        "company_id": str(company_id),
+        "return_period": return_period,
+        "due_date": f"{year}-{month:02d}-11",
+        "status": reports[0].status if reports else "not_generated",
+        "records": [
+            {
+                "id": str(r.id),
+                "return_period": r.return_period,
+                "total_wages": float(r.total_wages),
+                "tds_deducted": float(r.tds_deducted),
+                "status": r.status,
+                "filed_at": r.filed_at.isoformat() if r.filed_at else None,
+                "acknowledgment_number": r.acknowledgment_number,
+            }
+            for r in reports
+        ],
+    }
+
+
+@router.get("/{company_id}/pf-ecr")
+def export_pf_ecr(
+    company_id: uuid.UUID,
+    month: int = Query(..., ge=1, le=12, description="Month (1-12)"),
+    year: int = Query(..., ge=2020, description="Financial year"),
+    db: Session = Depends(get_db),
+    _: None = Depends(verify_company_access),
+    current_user: User = Depends(get_current_user),
+):
+    """PF Electronic Challan cum Return (ECR) data for the given month."""
+    require_module_view(db, current_user, company_id, "payroll")
+    return_period = f"{year}-{month:02d}"
+    employees = db.query(StaffEmployee).filter(
+        StaffEmployee.company_id == company_id,
+        StaffEmployee.status == "active",
+    ).all()
+
+    ecr_lines = []
+    for emp in employees:
+        basic = float(emp.basic_salary or 0)
+        pf_wages = min(basic, 15000.0)  # PF capped at ₹15,000 wage ceiling
+        ee_pf = round(pf_wages * float(emp.pf_employee_pct or 12) / 100, 2)
+        er_pf = round(pf_wages * float(emp.pf_employer_pct or 12) / 100, 2)
+        ecr_lines.append({
+            "uan": "NOT_LINKED",  # UAN not stored on model; placeholder
+            "employee_code": emp.employee_code or str(emp.id)[:8].upper(),
+            "name": emp.name,
+            "pf_wages": pf_wages,
+            "ee_pf_contribution": ee_pf,
+            "er_pf_contribution": er_pf,
+            "total_pf": round(ee_pf + er_pf, 2),
+        })
+
+    total_ee = round(sum(r["ee_pf_contribution"] for r in ecr_lines), 2)
+    total_er = round(sum(r["er_pf_contribution"] for r in ecr_lines), 2)
+    return {
+        "report": "PF-ECR",
+        "company_id": str(company_id),
+        "return_period": return_period,
+        "due_date": f"{year}-{month:02d}-15",
+        "total_employees": len(ecr_lines),
+        "total_ee_pf": total_ee,
+        "total_er_pf": total_er,
+        "total_pf_liability": round(total_ee + total_er, 2),
+        "ecr_lines": ecr_lines,
+    }
+
+
+@router.get("/{company_id}/tds-26q")
+def export_tds_26q(
+    company_id: uuid.UUID,
+    quarter: str = Query(..., description="Quarter: Q1, Q2, Q3, Q4"),
+    year: int = Query(..., ge=2020, description="Financial year (e.g. 2026)"),
+    db: Session = Depends(get_db),
+    _: None = Depends(verify_company_access),
+    current_user: User = Depends(get_current_user),
+):
+    """TDS Form 26Q — quarterly TDS return for non-salary deductions (subcon payments etc.)."""
+    require_module_view(db, current_user, company_id, "payroll")
+    quarter_map = {"Q1": ("04", "06"), "Q2": ("07", "09"), "Q3": ("10", "12"), "Q4": ("01", "03")}
+    if quarter not in quarter_map:
+        raise HTTPException(status_code=422, detail=f"Invalid quarter '{quarter}'. Use Q1, Q2, Q3, or Q4.")
+    start_month, end_month = quarter_map[quarter]
+    due_map = {"Q1": f"{year}-07-31", "Q2": f"{year}-10-31", "Q3": f"{year+1}-01-31", "Q4": f"{year+1}-05-31"}
+
+    employees = db.query(StaffEmployee).filter(
+        StaffEmployee.company_id == company_id,
+        StaffEmployee.status == "active",
+    ).all()
+
+    deductee_rows = []
+    total_tds = 0.0
+    for emp in employees:
+        monthly_tds = float(emp.tds_monthly or 0)
+        quarterly_tds = round(monthly_tds * 3, 2)
+        if quarterly_tds > 0:
+            total_tds += quarterly_tds
+            deductee_rows.append({
+                "pan": "NOPANAVAIL",  # PAN not stored on model; placeholder
+                "name": emp.name,
+                "employee_code": emp.employee_code or str(emp.id)[:8].upper(),
+                "tds_section": "194C",
+                "gross_payment": round(float(emp.basic_salary or 0) * 3, 2),
+                "tds_deducted": quarterly_tds,
+            })
+
+    return {
+        "report": "TDS-26Q",
+        "company_id": str(company_id),
+        "quarter": quarter,
+        "year": year,
+        "due_date": due_map[quarter],
+        "total_deductees": len(deductee_rows),
+        "total_tds_liability": round(total_tds, 2),
+        "deductee_rows": deductee_rows,
+    }
+
+
 def _enrich(report: StatutoryReport, db: Session) -> StatutoryReportResponse:
     days_overdue = 0
     penalty = 0.0
@@ -210,3 +350,4 @@ def _enrich(report: StatutoryReport, db: Session) -> StatutoryReportResponse:
     data["days_overdue"] = days_overdue
     data["penalty_estimate"] = penalty
     return StatutoryReportResponse(**data)
+
