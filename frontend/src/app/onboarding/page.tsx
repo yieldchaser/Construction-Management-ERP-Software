@@ -84,7 +84,7 @@ export default function CreateCompanyOnboardingPage() {
           </span>
         </div>
 
-        <div className="z-10 max-w-md space-y-8">
+        <div className="z-10 max-w-md space-y-8 my-auto">
           <div className="space-y-4">
             <h1 className="font-headline text-3xl font-extrabold leading-tight text-sky-950">
               Set up your company workspace.
@@ -151,10 +151,6 @@ export default function CreateCompanyOnboardingPage() {
               </li>
             ))}
           </ul>
-        </div>
-
-        <div className="text-xs text-sky-900/60 z-10 font-medium">
-          © {new Date().getFullYear()} SiteFlow Inc.
         </div>
       </div>
 
