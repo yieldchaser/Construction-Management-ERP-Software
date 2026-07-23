@@ -149,7 +149,7 @@ export default function OnboardingPage() {
           </span>
         </div>
 
-        <div className="z-10 max-w-md space-y-8 my-auto">
+        <div className="z-10 max-w-md space-y-8 mt-auto">
           <div className="space-y-4">
             <h1 className="font-headline text-3xl font-extrabold leading-tight text-sky-950">
               Personalize your SiteFlow workspace.
