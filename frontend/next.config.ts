@@ -66,6 +66,7 @@ const nextConfig: NextConfig = {
     formats: ["image/avif", "image/webp"],
     minimumCacheTTL: 31536000,
   },
+  turbopack: {},
   experimental: {
     // Consolidate CSS chunks to prevent Next.js from emitting separate <link rel="preload" as="style">
     // tags for unused component CSS chunks on initial page load, resolving Chrome DevTools preload warnings.
