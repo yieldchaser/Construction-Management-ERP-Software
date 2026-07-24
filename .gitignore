@@ -247,3 +247,46 @@ temp-stitch/
 # frontend/src/content, plus stale duplicate components — kept locally only.
 docs/hy3-output/
 backend/1
+
+# ==============================================================================
+# Explicit Agent, IDE & Environment Hardening
+# ==============================================================================
+.agents/
+.claude/
+.code-review-graph/
+.kilo/
+.vscode/
+
+# ==============================================================================
+# Frontend Build Outputs & Caches
+# ==============================================================================
+frontend/.next/
+frontend/node_modules/
+frontend/build.log
+frontend/tsconfig.tsbuildinfo
+
+# ==============================================================================
+# Backend Virtual Environments & Pytest Caches
+# ==============================================================================
+backend/__pycache__/
+backend/.pytest_cache/
+backend/.venv/
+
+# ==============================================================================
+# Local Database & Secrets Protection
+# ==============================================================================
+*.db
+*.sqlite
+.env
+.env.*.local
+
+# ==============================================================================
+# Local Scratch & Competitor Recon Folders
+# ==============================================================================
+To Fix/
+context/
+onsiteteams-recon/
+outputs/
+scratch/
+temp-stitch/
+
