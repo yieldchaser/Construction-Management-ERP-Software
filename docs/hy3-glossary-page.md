@@ -8,7 +8,7 @@ ROLE: Build the SiteFlow glossary page (A-Z, searchable) in the customized Next.
 FIRST read frontend/AGENTS.md + the relevant node_modules/next/dist/docs guide (this Next.js differs).
 
 REPO ROOT: C:/Users/Dell/Github/Construction-Management-ERP-Software
-SOURCE (200 terms): construction-erp-glossary-200.md  (repo root; each entry = Term + definition,
+SOURCE (200 terms): docs/construction-erp-glossary-200.md  (each entry = Term + definition,
   some cross-ref "See X", a few are SiteFlow-specific like Tally integration, PWA, geofenced attendance)
 STAGING OUTPUT (write here, do NOT edit worktree src directly):
   docs/hy3-output/glossary/  (create it; put every file you create/change here, preserving the

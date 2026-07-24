@@ -52,11 +52,10 @@ Every page must **match or exceed** its stitch reference in `temp-stitch/` (main
 
 ## Discrete fixes
 - [ ] **Legal alignment bug** — privacy/terms H1 + LEGAL chip hang left of content column. Share one container.
-- [ ] Glossary: place `construction-erp-glossary-200.md` into content pipeline (after preview approved).
-
-## Placement / housekeeping
-- [ ] Move `Long Screenshots of current state of website/` → gitignored recon folder (confirm path w/ founder).
-- [ ] Confirm `construction-erp-glossary-200.md` staging location.
+- [ ] Glossary: place `docs/construction-erp-glossary-200.md` into content pipeline (after preview approved).
+- [ ] Parse `docs/construction-erp-glossary-200.md` (200 terms, A–Z) into `frontend/src/content/resources/construction-terms-meanings.json` (or a dedicated typescript dictionary module `glossaryData`).
+- [ ] Generate individual term pages (or letter-anchored scroll target design) with proper title tag, description, breadcrumb schema, and "Related features" cross-links.
+- [ ] Confirm `docs/construction-erp-glossary-200.md` staging location.
 
 ## Product JSON schema (pilot — HY-3 fills this)
 ```

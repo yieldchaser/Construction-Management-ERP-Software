@@ -233,7 +233,7 @@ Perform every step of each chain in order in the actual UI, confirming the numbe
 
 ## 4. Findings log format
 
-Keep one file, e.g. `AUDIT_FINDINGS.md`, appended to continuously — not written from memory at the end of a phase. One entry per test:
+Keep one file, e.g. `docs/AUDIT_FINDINGS.md`, appended to continuously — not written from memory at the end of a phase. One entry per test:
 
 ```
 ### [Phase N] [Module] > [Submodule] > [Specific action]

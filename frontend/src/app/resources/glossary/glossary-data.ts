@@ -1,4 +1,4 @@
-// AUTO-GENERATED from construction-erp-glossary-200.md by parse-glossary.mjs.
+// AUTO-GENERATED from docs/construction-erp-glossary-200.md by parse-glossary.mjs.
 // Do not hand-edit: re-run the parser to regenerate. All 200 definitions are
 // transcribed verbatim from the source file.
 export interface GlossaryTerm {
