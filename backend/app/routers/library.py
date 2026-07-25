@@ -39,14 +39,14 @@ class PartyCreate(BaseModel):
     creator_name: Optional[str] = None
     aadhaar_file: Optional[str] = None
     pan_file: Optional[str] = None
-    opening_balance_direction: Optional[str] = None  # will_pay / will_receive
+    opening_balance_direction: Optional[str] = Field(None, pattern="^(will_pay|will_receive)$")  # will_pay / will_receive
     opening_balance_amount: Optional[float] = Field(0.0, ge=0)
     # Finance tab company-level extensions
     contractor_role: Optional[str] = None
     service_rate_categories: Optional[str] = None  # JSON list of tag strings
     bank_account_id: Optional[uuid.UUID] = None
     opening_balance: Optional[float] = Field(0.0, ge=0)
-    opening_balance_type: Optional[str] = None  # "pay" / "receive"
+    opening_balance_type: Optional[str] = Field(None, pattern="^(pay|receive)$")  # "pay" / "receive"
 
 class AssetTypeCreate(BaseModel):
     company_id: uuid.UUID
