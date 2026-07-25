@@ -17,6 +17,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.auth import get_current_user, verify_company_access
+from app.constants import REVENUE_INVOICE_TYPES, EXPENSE_INVOICE_TYPES, SETTLEMENT_INVOICE_TYPES
 from app.models import (
     AttendanceLog,
     Bill,
@@ -545,11 +546,11 @@ def get_company_financial_analytics(company_id: uuid.UUID, db: Session = Depends
 
     for b in bills:
         val = _to_float(b.total_payable) - _to_float(b.paid_amount)
-        if b.invoice_type == "sale":
+        if b.invoice_type in REVENUE_INVOICE_TYPES:
             to_receive += max(0.0, val)
             if b.status == "Paid" and _to_float(b.total_payable) == 0:
                 advance_received += _to_float(b.paid_amount)
-        elif b.invoice_type in ("purchase", "subcon"):
+        elif b.invoice_type in EXPENSE_INVOICE_TYPES:
             to_pay += max(0.0, val)
             if b.status == "Paid" and _to_float(b.total_payable) == 0:
                 advance_paid += _to_float(b.paid_amount)
@@ -573,10 +574,10 @@ def get_company_financial_analytics(company_id: uuid.UUID, db: Session = Depends
             )
 
         p_bills = [b for b in bills if b.project_id == p.id]
-        total_expense = sum(_to_float(b.total_payable) for b in p_bills if b.invoice_type in ("purchase", "subcon"))
-        total_sales = sum(_to_float(b.total_payable) for b in p_bills if b.invoice_type == "sale")
-        payment_in = sum(_to_float(b.paid_amount) for b in p_bills if b.invoice_type == "sale")
-        payment_out = sum(_to_float(b.paid_amount) for b in p_bills if b.invoice_type in ("purchase", "subcon"))
+        total_expense = sum(_to_float(b.total_payable) for b in p_bills if b.invoice_type in EXPENSE_INVOICE_TYPES)
+        total_sales = sum(_to_float(b.total_payable) for b in p_bills if b.invoice_type in REVENUE_INVOICE_TYPES)
+        payment_in = sum(_to_float(b.paid_amount) for b in p_bills if b.invoice_type in REVENUE_INVOICE_TYPES or b.invoice_type in SETTLEMENT_INVOICE_TYPES)
+        payment_out = sum(_to_float(b.paid_amount) for b in p_bills if b.invoice_type in EXPENSE_INVOICE_TYPES or b.invoice_type in SETTLEMENT_INVOICE_TYPES)
 
         if p_status == "Completed":
             health = "Completed"
@@ -606,11 +607,11 @@ def get_company_financial_analytics(company_id: uuid.UUID, db: Session = Depends
 
     for b in bills:
         m_label = b.invoice_date.strftime("%b %Y") if b.invoice_date else "Jan 2026"
-        if b.invoice_type in ("sale", "material_sale"):
+        if b.invoice_type in REVENUE_INVOICE_TYPES:
             monthly_sales[m_label] += _to_float(b.total_payable)
-        else:
+        elif b.invoice_type in EXPENSE_INVOICE_TYPES:
             monthly_expense[m_label] += _to_float(b.total_payable)
-            t_label = "Debit Note" if b.invoice_type == "debit_note" else "Subcontractor Bill" if b.invoice_type == "subcon" else "Purchase Invoice"
+            t_label = "Subcontractor Bill" if b.invoice_type == "subcon" else "Purchase Invoice"
             expense_by_type[t_label] += _to_float(b.total_payable)
 
         party_balances[str(b.party_company_user_id)] += (_to_float(b.total_payable) - _to_float(b.paid_amount))

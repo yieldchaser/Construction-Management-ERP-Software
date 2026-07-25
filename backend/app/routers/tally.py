@@ -13,6 +13,7 @@ from app.models import (
 )
 from app.tally_xml import build_tally_envelope
 from pydantic import BaseModel
+from app.constants import REVENUE_INVOICE_TYPES, EXPENSE_INVOICE_TYPES
 
 router = APIRouter(
     prefix="/tally",
@@ -198,7 +199,7 @@ def _build_vouchers(db: Session, conn: TallyConnection, bills, payments, advance
 
     for b in bills:
         total = float(b.total_payable or 0)
-        if b.invoice_type == "sale":
+        if b.invoice_type in REVENUE_INVOICE_TYPES:
             vchtype = "Sales"
             ledger_key = "Sales Invoice"
             fallback_ledger = "Sales A/c"

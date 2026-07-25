@@ -11,6 +11,7 @@ from app.models import (
     ProjectTower, ProjectBudget
 )
 from pydantic import BaseModel
+from app.constants import EXPENSE_INVOICE_TYPES
 
 router = APIRouter(
     prefix="/budget",

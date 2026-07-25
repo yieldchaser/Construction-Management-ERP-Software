@@ -26,6 +26,7 @@ from sqlalchemy.orm import Session
 
 from app.auth import get_company_membership, get_current_user, require_permission
 from app.config import settings
+from app.constants import REVENUE_INVOICE_TYPES, EXPENSE_INVOICE_TYPES
 from app.database import get_db
 from app.rate_limit import limiter
 from app import models

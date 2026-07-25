@@ -9,6 +9,7 @@ from app.models import Payment, PaymentSettlement, Bill, PayrollRun, PayrollLine
 from app.auth import get_current_user, verify_project_in_company, verify_company_access, verify_project_access, get_company_membership, require_permission, require_module_view
 from app.approvals import find_matching_rule, match_approver, levels_approved, user_already_acted, record_action
 from pydantic import BaseModel, Field
+from app.constants import REVENUE_INVOICE_TYPES, EXPENSE_INVOICE_TYPES, SETTLEMENT_INVOICE_TYPES
 
 # Tolerance for "fully paid" money comparisons (1 paisa/cent). Mirrors the 0.01
 # tolerance used in routers/three_way.py for variance matching, so float drift
@@ -134,9 +135,7 @@ def create_payment(req: PaymentCreateRequest, db: Session = Depends(get_db), cur
     # FIFO Auto-Settlement Logic against Outstanding Bills
     if party_uuid:
         # Determine target invoice type based on payment type
-        # Payment IN (receipt) settles client sale invoices
-        # Payment OUT (expense payment) settles vendor purchase or subcon bills
-        target_inv_type = "sale" if req.payment_type == "in" else ["purchase", "subcon"]
+        target_inv_type = list(REVENUE_INVOICE_TYPES) if req.payment_type == "in" else list(EXPENSE_INVOICE_TYPES)
         
         query = db.query(Bill).filter(
             Bill.party_company_user_id == party_uuid,
@@ -304,7 +303,7 @@ def get_ledger(project_id: uuid.UUID, db: Session = Depends(get_db), _: None = D
                     user = db.query(User).filter(User.id == team_member.user_id).first()
                     if user:
                         party_name = user.name
-            is_receipt = obj.invoice_type == "sale"
+            is_receipt = obj.invoice_type in REVENUE_INVOICE_TYPES
             amount = float(obj.total_payable)
             debit = amount if is_receipt else 0.0
             credit = 0.0 if is_receipt else amount
@@ -313,8 +312,8 @@ def get_ledger(project_id: uuid.UUID, db: Session = Depends(get_db), _: None = D
             else:
                 running_balance -= amount
                 
-            category = "Client Invoice" if obj.invoice_type == "sale" else ("Subcon Invoice" if obj.invoice_type == "subcon" else "Material Bill")
-            ledger_head = "Revenue" if obj.invoice_type == "sale" else ("Subcon Cost" if obj.invoice_type == "subcon" else "Material Cost")
+            category = "Client Invoice" if obj.invoice_type in REVENUE_INVOICE_TYPES else ("Subcon Invoice" if obj.invoice_type == "subcon" else "Material Bill")
+            ledger_head = "Revenue" if obj.invoice_type in REVENUE_INVOICE_TYPES else ("Subcon Cost" if obj.invoice_type == "subcon" else "Material Cost")
             
             ledger_entries.append(
                 LedgerTransactionResponse(
@@ -388,13 +387,13 @@ def get_project_pl(project_id: uuid.UUID, db: Session = Depends(get_db), _: None
     # 1. Revenue: Client invoices & material sales (invoice_type in ["sale", "material_sale"])
     revenue_actual = db.query(func.sum(Bill.total_payable)).filter(
         Bill.project_id == proj_uuid,
-        Bill.invoice_type.in_(["sale", "material_sale"])
+        Bill.invoice_type.in_(REVENUE_INVOICE_TYPES)
     ).scalar() or 0.0
 
-    # 2. Material Cost: Vendor bills (invoice_type == "purchase")
+    # 2. Material Cost: Vendor bills (invoice_type in EXPENSE_INVOICE_TYPES)
     material_actual = db.query(func.sum(Bill.total_payable)).filter(
         Bill.project_id == proj_uuid,
-        Bill.invoice_type == "purchase"
+        Bill.invoice_type.in_(EXPENSE_INVOICE_TYPES)
     ).scalar() or 0.0
 
     # 3. Labour Cost: Salary expenses

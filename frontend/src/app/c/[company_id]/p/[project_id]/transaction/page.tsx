@@ -179,12 +179,18 @@ export default function TransactionPage() {
     for (const b of bills) {
       const amt = Number(b.total_payable) || 0;
       const sub = Number(b.subtotal) || 0;
-      if (isInType(b.invoice_type)) {
-        totalIn += amt;
+      const t = b.invoice_type;
+
+      if (REVENUE_TYPES.includes(t)) {
         sales += sub;
-      } else {
-        totalOut += amt;
+      } else if (EXPENSE_TYPES.includes(t)) {
         expense += sub;
+      } else if (SETTLEMENT_TYPES.includes(t)) {
+        if (t === "payment_in" || t === "i_received") {
+          totalIn += amt;
+        } else if (t === "payment_out" || t === "i_paid") {
+          totalOut += amt;
+        }
       }
     }
     return {

@@ -18,6 +18,7 @@ from app.database import get_db
 # and reads stay consistent regardless of the process's current working dir.
 REPORTS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "static", "reports")
 from app.auth import get_current_user, verify_project_access, get_company_membership, require_permission
+from app.constants import REVENUE_INVOICE_TYPES, EXPENSE_INVOICE_TYPES
 from app.models import (
     ClientReport, Project, Task, Bill, WorkOrder,
     MaterialIndent, PurchaseOrder, SiteInspection, NCR, MaterialTestResult,
@@ -624,7 +625,7 @@ def _build_party_ledger(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
             if obj.project_id:
                 proj = db.query(Project).filter(Project.id == obj.project_id).first()
         elif et == "bill":
-            is_receipt = obj.invoice_type == "sale"
+            is_receipt = obj.invoice_type in REVENUE_INVOICE_TYPES
             amount = float(obj.total_payable) if obj.total_payable is not None else 0.0
             party_name = _team_user_name(db, obj.party_company_user_id) or "Vendor/Client"
             if is_receipt:
@@ -744,7 +745,7 @@ def _rep_item_wise_sales(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
 
 def _rep_company_sales(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
     try:
-        q = db.query(Bill).filter(Bill.company_id == cid, Bill.invoice_type == "sale")
+        q = db.query(Bill).filter(Bill.company_id == cid, Bill.invoice_type.in_(REVENUE_INVOICE_TYPES))
         if pid:
             q = q.filter(Bill.project_id == pid)
         rows = []
@@ -1009,7 +1010,7 @@ def _gst_split(tax_amount):
 
 def _rep_gstr1_sales(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
     try:
-        q = db.query(Bill).filter(Bill.company_id == cid, Bill.invoice_type == "sale")
+        q = db.query(Bill).filter(Bill.company_id == cid, Bill.invoice_type.in_(REVENUE_INVOICE_TYPES))
         if pid:
             q = q.filter(Bill.project_id == pid)
         rows = []
@@ -1040,7 +1041,7 @@ def _rep_gstr1_sales(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
 def _rep_gstr2_purchase(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
     try:
         rows = []
-        bills_q = db.query(Bill).filter(Bill.company_id == cid, Bill.invoice_type != "sale")
+        bills_q = db.query(Bill).filter(Bill.company_id == cid, Bill.invoice_type.in_(EXPENSE_INVOICE_TYPES))
         if pid:
             bills_q = bills_q.filter(Bill.project_id == pid)
         for b in bills_q.order_by(Bill.invoice_date.desc()).all():
