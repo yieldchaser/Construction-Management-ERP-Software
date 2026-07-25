@@ -21,7 +21,7 @@ class PartyCreate(BaseModel):
     project_id: Optional[uuid.UUID] = None
     phone: Optional[str] = None
     email: Optional[str] = None
-    party_type: Optional[str] = None
+    party_type: Optional[str] = Field(None, pattern="(?i)^(Client|Supplier|Vendor|Subcontractor|Contractor|Staff|Party|Architect|Consultant|Other)$")
     address: Optional[str] = None
     bank_name: Optional[str] = None
     account_name: Optional[str] = None
