@@ -54,16 +54,19 @@ def test_drawing_category_validation():
         project_id=uuid.uuid4(),
         name="Layout A",
         category="2D Layout",
-        created_by=uuid.uuid4()
+        created_by=uuid.uuid4(),
+        file_url="/images/drawings/test.pdf"
     )
     assert valid.category == "2D Layout"
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError) as exc_info:
         DrawingCreateRequest(
             project_id=uuid.uuid4(),
             name="Layout A",
             category="4D Hologram",
-            created_by=uuid.uuid4()
+            created_by=uuid.uuid4(),
+            file_url="/images/drawings/test.pdf"
         )
+    assert any(e["loc"] == ("category",) for e in exc_info.value.errors()), exc_info.value.errors()
 
 def test_approval_status_validation():
     """Test valid and invalid approval_status in drawings."""
@@ -83,10 +86,11 @@ def test_concrete_grade_validation():
 
 def test_calculator_deduction_type_validation():
     """Test valid and invalid deduction item type in calculators."""
-    valid = DeductionItem(type="pct_total", value=10.0)
+    valid = DeductionItem(type="pct_total", val=10.0)
     assert valid.type == "pct_total"
-    with pytest.raises(ValidationError):
-        DeductionItem(type="unknown_pct", value=10.0)
+    with pytest.raises(ValidationError) as exc_info:
+        DeductionItem(type="unknown_pct", val=10.0)
+    assert any(e["loc"] == ("type",) for e in exc_info.value.errors()), exc_info.value.errors()
 
 def test_payment_type_validation():
     """Test valid and invalid payment_type in finance."""
