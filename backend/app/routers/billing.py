@@ -14,6 +14,7 @@ from app.routers.custom_fields import CustomFieldValueInput, upsert_values_for_e
 from app.zatca import build_zatca_payload
 from app.workflow_controls import enforce_entry_creation_window, get_company, get_default_terms
 from app.utils.pdf_generator import generate_document_pdf
+from app.utils.document_pdf import resolve_pdf_branding
 from pydantic import BaseModel, Field
 from app.constants import INVOICE_TYPE_PATTERN, CANONICAL_INVOICE_TYPES
 

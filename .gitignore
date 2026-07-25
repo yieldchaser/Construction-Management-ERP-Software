@@ -3,6 +3,9 @@ __pycache__/
 *.py[codz]
 *$py.class
 
+# Generated PDF reports
+backend/app/static/reports/*.pdf
+
 # C extensions
 *.so
 
