@@ -391,10 +391,10 @@ def get_project_pl(project_id: uuid.UUID, db: Session = Depends(get_db), _: None
         Bill.invoice_type.in_(["sale", "material_sale"])
     ).scalar() or 0.0
 
-    # 2. Material Cost: Vendor bills & transfers (invoice_type in ["purchase", "material_transfer"])
+    # 2. Material Cost: Vendor bills (invoice_type == "purchase")
     material_actual = db.query(func.sum(Bill.total_payable)).filter(
         Bill.project_id == proj_uuid,
-        Bill.invoice_type.in_(["purchase", "material_transfer"])
+        Bill.invoice_type == "purchase"
     ).scalar() or 0.0
 
     # 3. Labour Cost: Salary expenses

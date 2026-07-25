@@ -111,7 +111,7 @@ def _project_cash(db: Session, project_id: uuid.UUID):
         models.Bill.project_id == project_id, models.Bill.invoice_type.in_(["sale", "material_sale"])
     ).scalar() or 0
     cash_out = db.query(func.coalesce(func.sum(models.Bill.total_payable), 0)).filter(
-        models.Bill.project_id == project_id, models.Bill.invoice_type.in_(["purchase", "subcon", "expense", "equipment", "material_transfer"])
+        models.Bill.project_id == project_id, models.Bill.invoice_type.in_(["purchase", "subcon", "expense", "equipment"])
     ).scalar() or 0
     return float(cash_in), float(cash_out)
 

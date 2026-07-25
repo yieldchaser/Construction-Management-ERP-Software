@@ -470,13 +470,14 @@ function NewTransactionModal({
           sales_invoice: "sale",
           material_sales: "material_sale",
           material_purchase: "purchase",
-          material_transfer: "material_transfer",
           other_expense: "expense",
           equipment_expense: "equipment",
-          payment_in: "sale",
-          payment_out: "purchase",
-          i_paid: "expense",
-          i_received: "sale",
+          payment_in: "payment_in",
+          payment_out: "payment_out",
+          i_paid: "i_paid",
+          i_received: "i_received",
+          material_transfer: "material_transfer",
+          material_return: "material_return",
         }[cfg.key] || cfg.key;
 
         res = await fetch(getApi(`/billing/bills`), {
