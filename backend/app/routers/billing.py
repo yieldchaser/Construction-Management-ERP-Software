@@ -65,7 +65,7 @@ class WOResponse(BaseModel):
         from_attributes = True
 
 class DeductionItemSchema(BaseModel):
-    deduction_type: str = Field(..., example="TDS") # TDS, Retention, Security Deposit, Advance Recovery, Material Recovery
+    deduction_type: str = Field(..., pattern="^(TDS|Retention|Security Deposit|Advance Recovery|Material Recovery)$", example="TDS") # TDS, Retention, Security Deposit, Advance Recovery, Material Recovery
     amount: float = Field(..., ge=0)
     percentage: Optional[float] = Field(None, ge=0, le=100)
     notes: Optional[str] = None
