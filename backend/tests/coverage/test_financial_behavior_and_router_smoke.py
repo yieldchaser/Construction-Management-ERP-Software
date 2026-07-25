@@ -36,7 +36,7 @@ def sample_company_and_project(db_session):
     user = User(id=uuid.uuid4(), email=f"test_{cid.hex[:6]}@example.com", name="Test User")
     comp = Company(id=cid, name="Test Company", slug=f"test-comp-{cid.hex[:6]}")
     proj = Project(id=pid, company_id=cid, name="Test Project")
-    team = CompanyTeam(id=uuid.uuid4(), company_id=cid, user_id=user.id, role="Admin")
+    team = CompanyTeam(id=uuid.uuid4(), company_id=cid, user_id=user.id)
 
     db_session.add(user)
     db_session.add(comp)
