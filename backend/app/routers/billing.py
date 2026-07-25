@@ -10,6 +10,7 @@ from app.models import (
     WorkOrder, WorkOrderItem, Bill, TransactionDeduction,
     DebitNote, CreditNote, CompanyTeam, User, Company, LibraryParty, Project, ThreeWayMatch
 )
+from app import models
 from app.routers.custom_fields import CustomFieldValueInput, upsert_values_for_entity
 from app.zatca import build_zatca_payload
 from app.workflow_controls import enforce_entry_creation_window, get_company, get_default_terms
