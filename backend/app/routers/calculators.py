@@ -367,7 +367,7 @@ def calc_waterproofing(req: WaterproofingCalcRequest):
 
 # 10. Billing Calculations
 class DeductionItem(BaseModel):
-    type: str = Field(..., description="pct_item_subtotal, pct_total, or lumpsum")
+    type: str = Field(..., pattern="^(pct_item_subtotal|pct_total|lumpsum|pct)$", description="pct_item_subtotal, pct_total, lumpsum, or pct")
     val: float = Field(..., description="Deduction value (percentage or lumpsum amount)")
 
 class BillingCalcRequest(BaseModel):
