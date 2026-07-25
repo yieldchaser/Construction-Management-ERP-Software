@@ -20,6 +20,10 @@ type TxnType = {
 
 const INVOICE_TYPES_IN = ["payment_in", "sales_invoice", "material_sales", "i_received", "sale", "material_sale"];
 
+const REVENUE_TYPES = ["sale", "material_sale"];
+const EXPENSE_TYPES = ["purchase", "subcon", "expense", "equipment"];
+const SETTLEMENT_TYPES = ["payment_in", "payment_out", "i_paid", "i_received"];
+
 const TAXONOMY: TxnType[] = [
   { key: "payment_in", label: "Payment In", endpoint: "bill", direction: "in", paymentMode: true },
   { key: "payment_out", label: "Payment Out", endpoint: "bill", direction: "out", paymentMode: true },
