@@ -28,7 +28,7 @@ class PaymentCreateRequest(BaseModel):
     party_company_user_id: Optional[uuid.UUID] = None
     payment_type: str = Field(..., pattern="^(in|out|transfer)$")  # "in" or "out" or "transfer"
     amount: float = Field(..., gt=0)
-    payment_method: str  # Cash, Bank Transfer, Cheque
+    payment_method: str = Field(..., pattern="(?i)^(Cash|Bank Transfer|Bank|Cheque|UPI|Online)$")  # Cash, Bank Transfer, Cheque
     reference_number: Optional[str] = None
     description: Optional[str] = None
     payment_date: datetime
