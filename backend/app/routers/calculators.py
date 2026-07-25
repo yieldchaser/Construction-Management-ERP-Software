@@ -85,7 +85,7 @@ def calc_steel(req: SteelCalcRequest):
 class ConcreteCalcRequest(BaseModel):
     wet_volume: float = Field(0.0, description="Wet volume in m3 (must be > 0 unless using staircase inputs)", example=2.0)
     wastage_pct: float = Field(5.0, description="Wastage percentage", example=5.0)
-    grade: str = Field("M20", description="Concrete nominal grade (M7.5, M10, M15, M20, M25)", example="M20")
+    grade: str = Field("M20", pattern="^(M5|M7\\.5|M10|M15|M20|M25|M30|M35|M40|M45)$", description="Concrete nominal grade (M5, M7.5, M10, M15, M20, M25, M30, M35, M40, M45)", example="M20")
     stairs_steps: int = Field(0, description="Staircase steps count", example=0)
     stairs_width: float = Field(0.0, description="Staircase width in meters", example=0.0)
     stairs_riser: float = Field(0.0, description="Staircase riser in meters", example=0.0)
