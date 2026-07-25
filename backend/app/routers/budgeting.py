@@ -238,7 +238,7 @@ def allocate_project_budgets(
 
 # ─── BOQ Documents (per-client BOQ layer) ────────────────────────────────────
 # Invoices raised to the client whose value counts toward "Billed Value".
-BILLING_TYPES = {"sales_invoice", "material_sales"}
+BILLING_TYPES = {"sale", "material_sale"}
 
 
 def _item_amount(i: BOQItem) -> float:

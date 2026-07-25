@@ -14,8 +14,8 @@ from app.routers.custom_fields import CustomFieldValueInput, upsert_values_for_e
 from app.zatca import build_zatca_payload
 from app.workflow_controls import enforce_entry_creation_window, get_company, get_default_terms
 from app.utils.pdf_generator import generate_document_pdf
-from app.utils.document_pdf import resolve_pdf_branding
 from pydantic import BaseModel, Field
+from app.constants import INVOICE_TYPE_PATTERN, CANONICAL_INVOICE_TYPES
 
 router = APIRouter(
     prefix="/billing",
@@ -77,7 +77,7 @@ class BillCreateRequest(BaseModel):
     invoice_number: str
     invoice_date: datetime
     due_date: Optional[datetime] = None
-    invoice_type: str = Field(..., example="subcon") # sale, purchase, subcon
+    invoice_type: str = Field(..., pattern=INVOICE_TYPE_PATTERN, example="subcon") # sale, purchase, subcon, material_sale, material_return, material_transfer, expense, equipment
     subtotal: float = Field(..., ge=0)
     gst_pct: float = Field(18.00, ge=0, le=100)
     deductions: List[DeductionItemSchema] = []
@@ -459,11 +459,19 @@ def get_bill_pdf(bill_id: UUID, db: Session = Depends(get_db), current_user=Depe
     party_user = db.query(User).filter(User.id == party.user_id).first() if party else None
     party_name = party_user.name if party_user and party_user.name else "N/A"
 
-    type_label = {
+    type_label_map = {
         "sale": "Sales Invoice",
+        "material_sale": "Material Sales Invoice",
         "purchase": "Purchase Invoice",
         "subcon": "Subcontractor Invoice",
-    }.get(bill.invoice_type, bill.invoice_type)
+        "material_return": "Material Return",
+        "material_transfer": "Material Transfer Voucher",
+        "expense": "Other Expense Voucher",
+        "equipment": "Equipment Expense Voucher",
+    }
+    if bill.invoice_type not in type_label_map:
+        raise HTTPException(status_code=400, detail=f"Invalid or unhandled invoice_type '{bill.invoice_type}'")
+    type_label = type_label_map[bill.invoice_type]
 
     party_lines = [
         f"Party: {party_name}",
@@ -630,7 +638,7 @@ def create_bill(req: BillCreateRequest, db: Session = Depends(get_db), current_u
         else get_default_terms(
             db,
             req.company_id,
-            {"sale": "invoice", "purchase": "invoice", "subcon": "subcon"}.get(req.invoice_type, "invoice"),
+            "subcon" if req.invoice_type == "subcon" else "invoice",
         ),
     )
     db.add(bill)

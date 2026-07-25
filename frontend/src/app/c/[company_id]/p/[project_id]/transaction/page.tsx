@@ -18,7 +18,7 @@ type TxnType = {
   paymentMode?: boolean; // Payment In / Payment Out → Cash/Bank/Cheque conditional fields
 };
 
-const INVOICE_TYPES_IN = ["payment_in", "sales_invoice", "material_sales", "i_received"];
+const INVOICE_TYPES_IN = ["payment_in", "sales_invoice", "material_sales", "i_received", "sale", "material_sale"];
 
 const TAXONOMY: TxnType[] = [
   { key: "payment_in", label: "Payment In", endpoint: "bill", direction: "in", paymentMode: true },
@@ -466,6 +466,19 @@ function NewTransactionModal({
 
       let res: Response;
       if (cfg.endpoint === "bill") {
+        const canonicalType = {
+          sales_invoice: "sale",
+          material_sales: "material_sale",
+          material_purchase: "purchase",
+          material_transfer: "material_transfer",
+          other_expense: "expense",
+          equipment_expense: "equipment",
+          payment_in: "sale",
+          payment_out: "purchase",
+          i_paid: "expense",
+          i_received: "sale",
+        }[cfg.key] || cfg.key;
+
         res = await fetch(getApi(`/billing/bills`), {
           method: "POST",
           headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
@@ -476,7 +489,7 @@ function NewTransactionModal({
             invoice_number: invoiceNumber,
             invoice_date: dt,
             due_date: due,
-            invoice_type: cfg.key,
+            invoice_type: canonicalType,
             subtotal: subtotal,
             gst_pct: parseFloat(gstPct) || 0,
             deductions: dedPayload,
@@ -690,7 +703,13 @@ function NewTransactionModal({
             </div>
             {deductions.map((d, i) => (
               <div key={i} className="grid grid-cols-12 gap-2 mb-2">
-                <input placeholder="Type (TDS/Advance…)" value={d.type} onChange={(e) => setDeductions((s) => s.map((x, j) => j === i ? { ...x, type: e.target.value } : x))} className="col-span-4 rounded-md border border-border-custom bg-background px-2 py-1.5 text-sm text-foreground" />
+                <select value={d.type} onChange={(e) => setDeductions((s) => s.map((x, j) => j === i ? { ...x, type: e.target.value } : x))} className="col-span-4 rounded-md border border-border-custom bg-background px-2 py-1.5 text-sm text-foreground">
+                  <option value="TDS">TDS</option>
+                  <option value="Retention">Retention</option>
+                  <option value="Security Deposit">Security Deposit</option>
+                  <option value="Advance Recovery">Advance Recovery</option>
+                  <option value="Material Recovery">Material Recovery</option>
+                </select>
                 <select value={d.mode} onChange={(e) => setDeductions((s) => s.map((x, j) => j === i ? { ...x, mode: e.target.value as any } : x))} className="col-span-2 rounded-md border border-border-custom bg-background px-2 py-1.5 text-sm text-foreground">
                   <option value="amount">₹ Amt</option>
                   <option value="percent">% </option>

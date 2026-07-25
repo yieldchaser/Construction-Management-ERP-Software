@@ -385,16 +385,16 @@ def get_project_pl(project_id: uuid.UUID, db: Session = Depends(get_db), _: None
     eq_budget = float(budget.equipment_budget) if budget else 0.0
     
     # Load actual values by summing corresponding entries in bills and salaries
-    # 1. Revenue: Client invoices (invoice_type == "sale")
+    # 1. Revenue: Client invoices & material sales (invoice_type in ["sale", "material_sale"])
     revenue_actual = db.query(func.sum(Bill.total_payable)).filter(
         Bill.project_id == proj_uuid,
-        Bill.invoice_type == "sale"
+        Bill.invoice_type.in_(["sale", "material_sale"])
     ).scalar() or 0.0
 
-    # 2. Material Cost: Vendor bills (invoice_type == "purchase")
+    # 2. Material Cost: Vendor bills & transfers (invoice_type in ["purchase", "material_transfer"])
     material_actual = db.query(func.sum(Bill.total_payable)).filter(
         Bill.project_id == proj_uuid,
-        Bill.invoice_type == "purchase"
+        Bill.invoice_type.in_(["purchase", "material_transfer"])
     ).scalar() or 0.0
 
     # 3. Labour Cost: Salary expenses

@@ -606,11 +606,11 @@ def get_company_financial_analytics(company_id: uuid.UUID, db: Session = Depends
 
     for b in bills:
         m_label = b.invoice_date.strftime("%b %Y") if b.invoice_date else "Jan 2026"
-        if b.invoice_type == "sale":
+        if b.invoice_type in ("sale", "material_sale"):
             monthly_sales[m_label] += _to_float(b.total_payable)
         else:
             monthly_expense[m_label] += _to_float(b.total_payable)
-            t_label = "Debit Note" if b.invoice_type == "debit_note" else "Purchase Invoice" if b.invoice_type == "purchase" else "Subcontractor Bill"
+            t_label = "Debit Note" if b.invoice_type == "debit_note" else "Subcontractor Bill" if b.invoice_type == "subcon" else "Purchase Invoice"
             expense_by_type[t_label] += _to_float(b.total_payable)
 
         party_balances[str(b.party_company_user_id)] += (_to_float(b.total_payable) - _to_float(b.paid_amount))

@@ -291,16 +291,23 @@ export default function DrawingsPage() {
     const newStatus = activeRev?.status === "locked" ? "superseded" : "locked";
     try {
       const apiHost = getApiHost();
-      await fetch(`${apiHost}/apis/v3/drawings/revisions/${revId}/approve`, {
+      const res = await fetch(`${apiHost}/apis/v3/drawings/revisions/${revId}/approve`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify({
           approval_status: newStatus === "locked" ? "approved" : "rejected",
-          approved_by: "current-user",
         }),
       });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        const msg = typeof errData.detail === "string" ? errData.detail : `HTTP ${res.status}`;
+        alert(`Approval failed: ${msg}`);
+        return;
+      }
     } catch (err) {
       console.error("Lock toggle error:", err);
+      alert("Failed to update revision approval status.");
+      return;
     }
     setDrawings(prev => prev.map(d => d.id !== activeDrawingId ? d : {
       ...d,
@@ -308,7 +315,7 @@ export default function DrawingsPage() {
         if (r.id !== revId) return r;
         if (r.status === "locked") return { ...r, status: "superseded" as RevStatus };
         if (r.status === "superseded") return { ...r, status: "locked" as RevStatus };
-        return r; // current stays current
+        return { ...r, status: "locked" as RevStatus };
       })
     }));
   };
