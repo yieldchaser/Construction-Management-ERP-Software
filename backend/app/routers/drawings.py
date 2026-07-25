@@ -57,7 +57,7 @@ class DrawingResponse(BaseModel):
 class DrawingCreateRequest(BaseModel):
     project_id: UUID
     name: str = Field(..., example="Architectural Ground Floor Plan")
-    category: str = Field(..., example="2D Layout") # e.g. "2D Layout", "3D Layout", "Production File"
+    category: str = Field(..., pattern="^(2D Layout|3D Layout|Production File)$", example="2D Layout") # e.g. "2D Layout", "3D Layout", "Production File"
     created_by: Optional[UUID] = None
     file_url: str = Field(..., example="/images/drawings/ground_floor.pdf")
 
