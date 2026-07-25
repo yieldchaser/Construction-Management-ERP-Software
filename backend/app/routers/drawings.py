@@ -67,7 +67,7 @@ class RevisionCreateRequest(BaseModel):
     comments: Optional[str] = Field(None, example="Fixed staircase dimensions")
 
 class RevisionApproveRequest(BaseModel):
-    approval_status: str = Field(..., example="approved") # "approved", "rejected"
+    approval_status: str = Field(..., pattern="^(pending|approved|rejected)$", example="approved") # "pending", "approved", "rejected"
     approved_by: Optional[UUID] = None
     comments: Optional[str] = None
 
