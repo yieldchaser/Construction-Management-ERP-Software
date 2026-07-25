@@ -51,9 +51,8 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
 
 def get_company_membership(db: Session, user: models.User, company_id: uuid.UUID) -> models.CompanyTeam:
     """Verify the user actually belongs to the given company; raise 403 otherwise."""
-    user_id = user.id if hasattr(user, "id") else user
     membership = db.query(models.CompanyTeam).filter(
-        models.CompanyTeam.user_id == user_id,
+        models.CompanyTeam.user_id == user.id,
         models.CompanyTeam.company_id == company_id,
     ).first()
     if not membership:
@@ -78,16 +77,23 @@ def verify_project_in_company(db: Session, project_id: uuid.UUID, company_id: uu
 
 
 def require_permission(db: Session, current_user: models.User, company_id: uuid.UUID, permission_key: str) -> None:
-    if current_user is None:
-        return
+    """PHASE 2 RBAC enforcement.
+
+    Reuses the tenant guard (`get_company_membership`) and then denies unless the
+    caller's role holds `permission_key`. Failsafes (SECURITY_rbac_design.md):
+      - A `partner` member always passes (never lockable out).
+      - An empty / null role permissions dict fails OPEN (allows) so un-migrated
+        tenants keep working until an admin actually configures roles.
+      - The `all` superuser flag bypasses every check (Owner / Admin).
+    """
     membership = get_company_membership(db, current_user, company_id)
 
     # Failsafe 1: partners can never be locked out.
-    if membership and membership.priority_type == "partner":
+    if membership.priority_type == "partner":
         return
 
     role_perms: dict = {}
-    if membership and membership.role_id is not None:
+    if membership.role_id is not None:
         role = db.query(models.CompanyRole).filter(models.CompanyRole.id == membership.role_id).first()
         if role is not None:
             role_perms = role.permissions or {}
@@ -110,8 +116,13 @@ def require_permission(db: Session, current_user: models.User, company_id: uuid.
 def require_module_view(
     db: Session, current_user: models.User, company_id: uuid.UUID, module: str
 ) -> None:
-    if current_user is None:
-        return
+    """Sibling of `require_permission` for SENSITIVE READ gating.
+
+    Passes if the caller has ANY access to `module` (view/edit/approve), is a
+    partner, has `all`, or has no configured role/permissions yet (fail-open so
+    un-migrated tenants keep working). 403s otherwise. Used only for the
+    sensitive financial/payroll GETs called out in the Phase 2b spec.
+    """
     membership = get_company_membership(db, current_user, company_id)
 
     # Failsafe 1: partners can never be locked out.
