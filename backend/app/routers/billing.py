@@ -77,7 +77,7 @@ class BillCreateRequest(BaseModel):
     invoice_number: str
     invoice_date: datetime
     due_date: Optional[datetime] = None
-    invoice_type: str = Field(..., example="subcon") # sale, purchase, subcon
+    invoice_type: str = Field(..., pattern="^(sale|purchase|subcon|material_sale|material_return|material_transfer|expense|equipment)$", example="subcon") # sale, purchase, subcon
     subtotal: float = Field(..., ge=0)
     gst_pct: float = Field(18.00, ge=0, le=100)
     deductions: List[DeductionItemSchema] = []
