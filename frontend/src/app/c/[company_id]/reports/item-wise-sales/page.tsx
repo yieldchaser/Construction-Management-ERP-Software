@@ -73,9 +73,6 @@ export default function ItemWiseSalesReportPage() {
                 className="bg-card border border-border-custom rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-primary"
               >
                 <option value="All">All Projects</option>
-                <option value="Metro Terminal">Metro Terminal</option>
-                <option value="Bypass Highway">Bypass Flyover</option>
-                <option value="Alpha Premium">Alpha Residences</option>
               </select>
             </div>
 

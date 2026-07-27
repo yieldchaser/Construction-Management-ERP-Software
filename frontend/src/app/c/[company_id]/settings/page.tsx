@@ -2496,7 +2496,7 @@ function Placeholder({ section }: { section: string }) {
     <div className="bg-card border border-dashed border-border-custom rounded-lg p-10 text-center space-y-2">
       <div className="text-sm font-bold text-foreground">{section}</div>
       <p className="text-xs text-muted max-w-md mx-auto">
-        This section is implemented in a later build round (per the Setting tab build order). Round 1 covers <span className="text-primary font-bold">Company</span> (Details, Branches, Business Profile).
+        This section is not available yet.
       </p>
     </div>
   );

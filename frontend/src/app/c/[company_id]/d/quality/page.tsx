@@ -222,13 +222,13 @@ export default function QualityPage() {
             id: insp.id,
             checklistId: insp.checklist_id,
             zone: insp.zone || "General Site",
-            checklist: foundCl ? foundCl.title : "IS 456 Concrete Pre-Pour",
+            checklist: foundCl ? foundCl.title : "—",
             date: insp.inspection_date ? insp.inspection_date.split("T")[0] : "",
             status: insp.status,
             passCount: insp.pass_count,
             failCount: insp.fail_count,
             naCount: insp.na_count,
-            inspector: "Meera Nair"
+            inspector: insp.inspected_by ? String(insp.inspected_by) : "—"
           };
         });
         setInspections(mapped);

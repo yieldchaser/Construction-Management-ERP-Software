@@ -128,9 +128,6 @@ export default function DPRReportPage() {
                 className="bg-card border border-border-custom rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary"
               >
                 <option value="All">All Projects</option>
-                <option value="Metro Terminal">Metro Terminal (Phase 2)</option>
-                <option value="Bypass Highway">Bypass Highway Flyover</option>
-                <option value="Alpha Premium">Alpha Premium Residences</option>
               </select>
             </div>
 

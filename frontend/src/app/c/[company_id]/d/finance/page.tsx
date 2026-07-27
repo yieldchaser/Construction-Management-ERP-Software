@@ -2274,7 +2274,7 @@ export default function FinancePage() {
                           <li>
                             Ensure the column structure aligns with the{" "}
                             <span onClick={() => {
-                              const tpl = "Payment Type,Party Name,Amount,Project Name,Payment Date,Mode of Payment,Category,Payment Request ID,Remark\nout,Sample Vendor Pvt Ltd,12500,Sample Project,2026-07-09,Cash,Material,PR-1,June material advance\nin,Sample Client Ltd,80000,Sample Project,2026-07-09,Bank,Client,INV-1,July milestone";
+                              const tpl = "Payment Type,Party Name,Amount,Project Name,Payment Date,Mode of Payment,Category,Payment Request ID,Remark";
                               const blob = new Blob([tpl], { type: "text/csv" });
                               const url = URL.createObjectURL(blob);
                               const a = document.createElement("a");

@@ -918,14 +918,8 @@ export default function HRPayrollPage() {
                     <div className="w-3 h-3 rounded-full bg-primary animate-ping absolute" />
                     <div className="w-3 h-3 rounded-full bg-primary absolute" />
                   </div>
-                  {/* Employee dots */}
-                  <div className="absolute top-12 left-16 w-2 h-2 rounded-full bg-green-400" title="Ramesh — inside" />
-                  <div className="absolute top-16 left-24 w-2 h-2 rounded-full bg-green-400" title="Priya — inside" />
-                  <div className="absolute top-5 left-8 w-2 h-2 rounded-full bg-yellow-400" title="Sanjay — outside" />
-                  <div className="absolute top-20 left-28 w-2 h-2 rounded-full bg-green-400" title="Meera — inside" />
                 </div>
-                <p className="text-xs text-muted mt-4">Live Geofence Map (PostGIS-powered in production)</p>
-                <p className="text-[10px] text-muted mt-1">Radius: 500m  •  Site: Metro Terminal Phase 2, Mumbai</p>
+                <p className="text-xs text-muted mt-4">Geofence map not available</p>
               </div>
             </div>
           )}

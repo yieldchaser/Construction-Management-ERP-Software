@@ -118,45 +118,6 @@ export default function PaymentApprovalPage() {
     }
   };
 
-  const handleCreateDemoRequest = async () => {
-    try {
-      // 1. Fetch user ID to assign as party user
-      const userRes = await fetch(`${apiHost}/apis/v3/auth/otp/verify`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mobile: "+919876543210", code: "123456" }) // mock verify to get user
-      });
-      let userId = "00000000-0000-0000-0000-000000000000";
-      if (userRes.ok) {
-        const uData = await userRes.json();
-        userId = uData.user.id;
-      }
-
-      // 2. Create Payment Request
-      const res = await fetch(`${apiHost}/apis/v3/finance/payment-requests/${companyId}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${accessToken}`
-        },
-        body: JSON.stringify({
-          party_company_user_id: userId,
-          amount: 45000.0,
-          details: "Steel structures delivery invoice ST-1092",
-          due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
-        })
-      });
-
-      if (res.ok) {
-        setToastMessage("Demo payment request created!");
-        setTimeout(() => setToastMessage(""), 3000);
-        fetchData();
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
   const projectMap = new Map(projects.map((project) => [project.id, project]));
   const normalizedSearch = searchQuery.toLowerCase();
 
@@ -182,14 +143,6 @@ export default function PaymentApprovalPage() {
           <h1 className="text-base font-semibold text-foreground">Payment Approvals</h1>
           <p className="text-xs text-muted mt-1">Review, authorize, or decline transactions submitted by team members.</p>
         </div>
-
-        {/* Create Demo Request Button */}
-        <button
-          onClick={handleCreateDemoRequest}
-          className="px-4 py-2 border border-border-custom text-foreground bg-card hover:bg-elevated rounded-md text-xs font-medium transition-all cursor-pointer"
-        >
-          + Create Demo Request
-        </button>
       </div>
 
       {/* Filter and Search Bar */}
@@ -241,15 +194,7 @@ export default function PaymentApprovalPage() {
             <div>
               <h3 className="text-foreground font-semibold text-sm">No Approvals Found</h3>
               <p className="text-muted text-xs mt-1">
-                No requests match the selected status or project filter.{" "}
-                <button
-                  type="button"
-                  onClick={handleCreateDemoRequest}
-                  className="text-primary hover:underline font-bold cursor-pointer"
-                >
-                  Click + Create Demo Request
-                </button>{" "}
-                to try the flow.
+                No requests match the selected status or project filter.
               </p>
             </div>
           </div>

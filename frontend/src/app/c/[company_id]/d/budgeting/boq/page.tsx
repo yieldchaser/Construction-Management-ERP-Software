@@ -140,7 +140,7 @@ export default function BOQPage() {
         setImportMsg(data.detail || "Import failed.");
       }
     } catch {
-      setImportMsg("Backend not reachable. — using demo data.");
+      setImportMsg("Backend not reachable.");
     } finally {
       setImporting(false);
     }

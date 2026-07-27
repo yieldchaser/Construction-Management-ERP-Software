@@ -126,25 +126,12 @@ export default function EquipmentTrackingPage() {
         setFuelLogs(await fuelRes.json());
       }
     } catch (err) {
-      console.error("Error loading equipment data, using fallback mock data:", err);
-      setError("Using demo data — backend connection unavailable");
-      // Fallback mocks
-      setFleet([
-        { id: "EQ-01", company_id: companyId, name: "JCB Excavator 3DX", code: "JCB-001", category: "Excavator", ownership_type: "Owned", status: "Active", hourly_rate: 1500, created_at: "2026-06-01" },
-        { id: "EQ-02", company_id: companyId, name: "Concrete Mixer 10/7", code: "MIX-002", category: "Mixer", ownership_type: "Rented", status: "Active", hourly_rate: 600, created_at: "2026-06-05" },
-        { id: "EQ-03", company_id: companyId, name: "Crawler Crane Demag", code: "CRN-003", category: "Crane", ownership_type: "Owned", status: "Maintenance", hourly_rate: 4500, created_at: "2026-06-10" }
-      ]);
-      setDeployments([
-        { id: "DEP-01", equipment_id: "EQ-01", project_id: projectId, start_date: "2026-06-25T08:00:00Z", end_date: null, remarks: "Start reading: 435. Photo Proof: true" },
-        { id: "DEP-02", equipment_id: "EQ-02", project_id: projectId, start_date: "2026-06-20T09:00:00Z", end_date: "2026-06-20T17:00:00Z", remarks: "Start reading: 120. Stop reading: 128. Photo Proof: true" }
-      ]);
-      setFuelLogs([
-        { id: "FL-01", equipment_id: "EQ-01", project_id: projectId, logged_date: "2026-06-26T10:00:00Z", liters: 45, cost_per_liter: 92, total_cost: 4140, odometer_hours: 438, remarks: "Normal refueling" }
-      ]);
-      setMaintenanceLogs([
-        { id: "MT-01", equipment_id: "EQ-01", service_type: "Engine Oil & Filter Change", scheduled_date: "2026-06-20", completed_date: null, cost: 8500, status: "Overdue", remarks: "Scheduled but pending crew confirmation" },
-        { id: "MT-02", equipment_id: "EQ-03", service_type: "Hydraulic Hose Leak Repair", scheduled_date: "2026-06-28", completed_date: "2026-06-29", cost: 12000, status: "Completed", remarks: "Replaced main high pressure hose" }
-      ]);
+      console.error("Error loading equipment data:", err);
+      setError("Could not load equipment data");
+      setFleet([]);
+      setDeployments([]);
+      setFuelLogs([]);
+      setMaintenanceLogs([]);
     } finally {
       setLoading(false);
     }

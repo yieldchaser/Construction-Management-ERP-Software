@@ -11,7 +11,7 @@ export default function DashboardPage() {
   const companyId = params?.company_id as string;
 
   const [activeProject, setActiveProject] = useState("d0000000-0000-0000-0000-000000000001");
-  const [tallySyncStatus, setTallySyncStatus] = useState("Connected");
+  const [tallySyncStatus, setTallySyncStatus] = useState("Unknown");
   const [isSyncing, setIsSyncing] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
   const [overviewTab, setOverviewTab] = useState<"operational" | "financial">("operational");
@@ -127,17 +127,6 @@ export default function DashboardPage() {
           const list = Array.isArray(data) ? data : [];
           if (list.length > 0) {
             const merged = list.map((dbProj: any) => {
-              const defaultMatch = [
-                { id: "d0000000-0000-0000-0000-000000000001", name: "Metro Terminal (Phase 2)", code: "MET-02", city: "Mumbai", address: "Andheri East Metro Line", attendance_radius_meters: 500, status: "Ongoing", health: "Healthy", startDate: "2026-01-01", endDate: "2026-12-31", category: "Prestige Developers", keyPersonnel: "Yash Desai", progress: 12.5, customerName: "Prestige Group", projectStage: "Structure" },
-                { id: "d0000000-0000-0000-0000-000000000002", name: "Bypass Highway Flyover", code: "HWY-FLY", city: "Pune", address: "NH-4 Bypass Crossing", attendance_radius_meters: 300, status: "Ongoing", health: "Warning", startDate: "2026-02-15", endDate: "2027-01-10", category: "Developers", keyPersonnel: "Amit Sharma", progress: 0.0, customerName: "Developers Inc", projectStage: "Excavation" },
-                { id: "d0000000-0000-0000-0000-000000000003", name: "Alpha Premium Residences", code: "ALF-RES", city: "Delhi", address: "Sector 62, Dwarka", attendance_radius_meters: 500, status: "Ongoing", health: "Critical", startDate: "2025-10-01", endDate: "2026-09-30", category: "Nerul", keyPersonnel: "Rohan Gupta", progress: 45.0, customerName: "Alpha Group", projectStage: "Finishing" },
-                { id: "d0000000-0000-0000-0000-000000000004", name: "Prestige Commercial Hub", code: "PRG-COM", city: "Bangalore", address: "MG Road, Central District", attendance_radius_meters: 500, status: "Not Started", health: "Healthy", startDate: "2026-08-01", endDate: "2027-12-31", category: "New Project", keyPersonnel: "Siddharth Malhotra", progress: 0.0, customerName: "Acme Corp", projectStage: "Piling" }
-              ].find(p => p.id === dbProj.id);
-
-              if (defaultMatch) {
-                return { ...dbProj, ...defaultMatch };
-              }
-
               let uiHealth = dbProj.health;
               if (uiHealth === "Good" || uiHealth === "healthy") uiHealth = "Healthy";
               if (uiHealth === "warning") uiHealth = "Warning";
@@ -155,9 +144,9 @@ export default function DashboardPage() {
                 startDate: dbProj.start_date || new Date().toISOString().split('T')[0],
                 endDate: dbProj.end_date || "2027-12-31",
                 category: dbProj.category || "General",
-                keyPersonnel: dbProj.key_personnel_id ? "Staff Member" : "Siddharth Malhotra",
+                keyPersonnel: dbProj.key_personnel_id ? "Staff Member" : "Unassigned",
                 progress: dbProj.progress || 0.0,
-                customerName: dbProj.customer_name || "Acme Corp",
+                customerName: dbProj.customer_name || "—",
                 projectStage: dbProj.stage || "Structure"
               };
             });
@@ -185,12 +174,7 @@ export default function DashboardPage() {
   const [selStatus, setSelStatus] = useState("All");
   const [selHealth, setSelHealth] = useState("All");
 
-  const [projects, setProjects] = useState<any[]>([
-    { id: "d0000000-0000-0000-0000-000000000001", name: "Metro Terminal (Phase 2)", code: "MET-02", city: "Mumbai", address: "Andheri East Metro Line", attendance_radius_meters: 500, status: "Ongoing", health: "Healthy", startDate: "2026-01-01", endDate: "2026-12-31", category: "Prestige Developers", keyPersonnel: "Yash Desai", progress: 12.5, customerName: "Prestige Group", projectStage: "Structure" },
-    { id: "d0000000-0000-0000-0000-000000000002", name: "Bypass Highway Flyover", code: "HWY-FLY", city: "Pune", address: "NH-4 Bypass Crossing", attendance_radius_meters: 300, status: "Ongoing", health: "Warning", startDate: "2026-02-15", endDate: "2027-01-10", category: "Developers", keyPersonnel: "Amit Sharma", progress: 0.0, customerName: "Developers Inc", projectStage: "Excavation" },
-    { id: "d0000000-0000-0000-0000-000000000003", name: "Alpha Premium Residences", code: "ALF-RES", city: "Delhi", address: "Sector 62, Dwarka", attendance_radius_meters: 500, status: "Ongoing", health: "Critical", startDate: "2025-10-01", endDate: "2026-09-30", category: "Nerul", keyPersonnel: "Rohan Gupta", progress: 45.0, customerName: "Alpha Group", projectStage: "Finishing" },
-    { id: "d0000000-0000-0000-0000-000000000004", name: "Prestige Commercial Hub", code: "PRG-COM", city: "Bangalore", address: "MG Road, Central District", attendance_radius_meters: 500, status: "Not Started", health: "Healthy", startDate: "2026-08-01", endDate: "2027-12-31", category: "New Project", keyPersonnel: "Siddharth Malhotra", progress: 0.0, customerName: "Acme Corp", projectStage: "Piling" }
-  ]);
+  const [projects, setProjects] = useState<any[]>([]);
 
   // Steel calculator states
   const [diameter, setDiameter] = useState(12);
@@ -312,24 +296,13 @@ export default function DashboardPage() {
   const totalWeightNoWastage = totalBarLength * standardUnitWeight; // kg
   const reinforcementWeight = totalWeightNoWastage * (1 + wastagePercent / 100); // kg
 
-  const activeProjDetails = projects.find(p => p.id === activeProject) || projects[0];
+  const activeProjDetails = projects.find(p => p.id === activeProject) || projects[0] || {};
   const normalizeText = (value: any) => (typeof value === "string" ? value.trim() : value == null ? "" : String(value).trim());
   const uniqueValues = (values: string[]) => Array.from(new Set(values.filter(Boolean))).sort((a, b) => a.localeCompare(b));
   const activeProjectName = normalizeText(activeProjDetails.name) || "Active Project";
   const activeProjectStatus = normalizeText(activeProjDetails.status) || "Ongoing";
   const formatMoney = (value: number) => `₹${value.toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
-  const fallbackWorkforceEmployees = [
-    {
-      id: "demo-employee-1",
-      name: "Sample Crew Lead",
-      designation: "Monthly",
-      department: "Labour",
-      employee_code: "EMP-001",
-      basic_salary: 18000,
-      hra: 2000,
-      other_allowances: 500
-    }
-  ];
+  const fallbackWorkforceEmployees: any[] = [];
   const fallbackMaterials = [
     { id: "demo-material-1", name: "Cement", category: "Structural", unit: "bag", lead_time_days: 3 },
     { id: "demo-material-2", name: "Sand", category: "Aggregate", unit: "m3", lead_time_days: 2 }
@@ -524,7 +497,7 @@ export default function DashboardPage() {
 
             {/* Tally Connection status dot */}
             <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-elevated border border-border-custom text-xs text-muted">
-              <span className="h-2 w-2 rounded-full bg-success" />
+              <span className={`h-2 w-2 rounded-full ${tallySyncStatus === "Connected" ? "bg-success" : "bg-muted"}`} />
               <span>Tally Agent: {tallySyncStatus}</span>
             </div>
 
