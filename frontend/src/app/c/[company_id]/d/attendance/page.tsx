@@ -399,11 +399,8 @@ export default function AttendancePage() {
   };
 
   const captureLocation = async () => {
-    const fallback = { lat: "12.9716", lng: "77.5946", label: "Metro Geofence Yard" };
-    if (typeof navigator === "undefined" || !navigator.geolocation) {
-      return fallback;
-    }
-    return new Promise<{ lat: string; lng: string; label: string }>((resolve) => {
+    if (typeof navigator === "undefined" || !navigator.geolocation) return null;
+    return new Promise<{ lat: string; lng: string; label: string } | null>((resolve) => {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           resolve({
@@ -412,7 +409,7 @@ export default function AttendancePage() {
             label: isGpsSimulatedVerified ? "GPS coordinates verified" : "GPS coordinates (Off-site warning)",
           });
         },
-        () => resolve(fallback),
+        () => resolve(null),
         { enableHighAccuracy: true, timeout: 5000 }
       );
     });
@@ -428,6 +425,10 @@ export default function AttendancePage() {
     const multiplier = punchMultiplier === 0 ? parseFloat(customMultiplierVal || "1.0") : punchMultiplier;
 
     const location = await captureLocation();
+    if (!location) {
+      alert("Location unavailable. Punch not recorded. Enable GPS access and try again.");
+      return;
+    }
     const punch: PunchRecord = {
       id: `${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
       mode,
