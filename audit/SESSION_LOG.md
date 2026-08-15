@@ -2,6 +2,18 @@
 
 Append-only. Every working block ends with a 5-line entry. Never edit an existing entry; if a commit was reverted, add a new entry.
 
+## Session 10 — fixes 9 and 10 (2026-08-15)
+
+- Action 1: applied R2-121 (W07 subcon pages, MEDIUM). Both `d/subcon/page.tsx` and `p/[project_id]/subcon/page.tsx` already had a `loading` flag around `fetchSubconData` but never consulted it in the render, so the first ~1.6s asserted "No subcontractor workorders found." / "No subcontractors yet." (live-observed; data appears at ~5s, worse on cold backend R2-080). Both pages now branch on `loading` first: "Loading subcontractor work orders..." / "Loading subcontractors...", empty states only after settle.
+- Action 2: applied R2-037 (W08 analytics.py, MEDIUM). The wastage KPI computed `max(ordered - consumed, 0)/ordered` → 100% immediately after raising a PO before anything was issued (live-reproduced: 100 bags PO, no issues, "MATERIAL WASTAGE 100%"). Now suppressed: `wastage_pct` is JSON null when there are no material transactions (frontend renders "—"), `wastage_qty` 0.0; math identical when consumption exists (hand-verified 82/100 → 18.0, matches test_phase14's assertions). Frontend contract (type `number | null` + 2 render sites) updated in the same commit. New test `test_analytics_wastage_suppressed_without_consumption` in test_domain_formula_fixes.py.
+- Verified: npm run build green (30.8s + 46s TS); pytest tests/coverage/ 207 passed rc=0 (206 + 1 new); test_competitor_parity rc=0. Verifier APPROVE on both (JSX nesting, ZeroDivision guard, no key deletion, no refetch loops).
+- Commits: `25f30db` (R2-121), `df91126` (R2-037).
+- Register: R2-121 and R2-037 STATUS TODO → FIXED.
+- NOTE (pre-existing, NOT from these commits, confirmed via stash test by the coder and diff-attribution by the verifier): `backend/tests/test_phase14.py` fails its burn-series assertion (`Burn series final pct: expected 23.5, got 79.4`) — lives in the S-curve/burn block of analytics.py (~258-312), unrelated to the wastage block; phase14 is NOT part of the tests/coverage baseline. Needs its own investigation later.
+- Next session: R2-178 still blocked on the founder's wire-13-vs-cut-to-2 decision. R2-034's sibling R2-007/R2-008 (procurement page) are HIGH. R2-012/R2-022 (W27 finance page) are MEDIUM single-file candidates.
+
+---
+
 ## Session 9 — eighth fix + Render build failure (2026-08-15)
 
 - Action 1 (infra, founder-reported): the Render backend deploy was failing at `pip install -r requirements.txt` with PyPI 502s (`too many 502 error responses` from files.pythonhosted.org). Added a 5-attempt retry loop with `--retries 10 --timeout 60` to the Dockerfile (`b27bffc`). The verifier subagent REJECTED it: in POSIX shell the all-5-fail path exits 0 (loop exit status = last command `sleep 10`; `set -e` exempts non-final `&&` failures), which would build an image with no deps and die at uvicorn boot. Re-fixed with `[ "$i" -eq 5 ] && exit 1;` (`95e4a86`), empirically verified on dash and bash: success=0, fail-then-success=0, all-5-fail=1. APPROVE. Founder still needs to re-trigger the Render deploy (out of my reach).
