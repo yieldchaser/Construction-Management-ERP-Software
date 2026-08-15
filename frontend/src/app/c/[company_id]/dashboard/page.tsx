@@ -143,11 +143,11 @@ export default function DashboardPage() {
                 health: uiHealth || "Healthy",
                 startDate: dbProj.start_date || new Date().toISOString().split('T')[0],
                 endDate: dbProj.end_date || "2027-12-31",
-                category: dbProj.category || "General",
+                category: dbProj.category || "—",
                 keyPersonnel: dbProj.key_personnel_id ? "Staff Member" : "Unassigned",
                 progress: dbProj.progress || 0.0,
                 customerName: dbProj.customer_name || "—",
-                projectStage: dbProj.stage || "Structure"
+                projectStage: dbProj.stage || "—"
               };
             });
             setProjects(merged);
