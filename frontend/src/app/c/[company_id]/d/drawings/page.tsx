@@ -97,6 +97,8 @@ export default function DrawingsPage() {
   const [showRevModal, setShowRevModal] = useState(false);
   const [newRevCode, setNewRevCode] = useState("");
   const [newRevComment, setNewRevComment] = useState("");
+  const [newDrawingName, setNewDrawingName] = useState("");
+  const [newDrawingCategory, setNewDrawingCategory] = useState("2D Layout");
 
   const canvasRef = useRef<HTMLDivElement>(null);
 
@@ -245,7 +247,9 @@ export default function DrawingsPage() {
   };
 
   const handlePublishRevision = async () => {
-    if (!newRevCode.trim() || !activeDrawing) return;
+    if (!newRevCode.trim()) return;
+    let targetDrawingId = activeDrawingId;
+    let newDrawing: Drawing | null = null;
     const newRev: Revision = {
       id: `rev-${Date.now()}`,
       version: newRevCode.toUpperCase(),
@@ -259,7 +263,33 @@ export default function DrawingsPage() {
 
     try {
       const apiHost = getApiHost();
-      const res = await fetch(`${apiHost}/apis/v3/drawings/${activeDrawingId}/revisions`, {
+      if (!targetDrawingId) {
+        const dRes = await fetch(`${apiHost}/apis/v3/drawings`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
+          body: JSON.stringify({
+            project_id: projectId,
+            name: newDrawingName.trim(),
+            category: newDrawingCategory,
+            file_url: "",
+          }),
+        });
+        if (!dRes.ok) {
+          const err = await dRes.json().catch(() => ({}));
+          alert(`Failed to create drawing: ${err.detail || "Failed to publish revision"}`);
+          return;
+        }
+        const savedD = await dRes.json();
+        targetDrawingId = savedD.id;
+        newDrawing = {
+          id: targetDrawingId,
+          name: newDrawingName.trim(),
+          category: newDrawingCategory,
+          createdAt: new Date().toISOString().split("T")[0],
+          revisions: [],
+        };
+      }
+      const res = await fetch(`${apiHost}/apis/v3/drawings/${targetDrawingId}/revisions`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify({
@@ -268,19 +298,31 @@ export default function DrawingsPage() {
           comments: newRev.comments,
         }),
       });
-      if (!res.ok) throw new Error("Failed to publish revision");
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        alert(`Failed to publish revision: ${err.detail || "Failed to publish revision"}`);
+        return;
+      }
       const saved = await res.json();
       newRev.id = saved.id;
-    } catch (err) {
-      console.error("Revision publish error, using local only:", err);
+    } catch (e) {
+      console.error("Failed to publish revision", e);
+      alert("Failed to publish revision. Your change was not saved.");
+      return;
     }
 
-    setDrawings(prev => prev.map(d => d.id !== activeDrawingId ? d : {
-      ...d,
-      revisions: [newRev, ...d.revisions.map(r =>
-        r.status === "current" ? { ...r, status: "superseded" as RevStatus } : r
-      )]
-    }));
+    setDrawings(prev => {
+      if (newDrawing) {
+        return [{ ...newDrawing, revisions: [newRev] }, ...prev];
+      }
+      return prev.map(d => d.id !== targetDrawingId ? d : {
+        ...d,
+        revisions: [newRev, ...d.revisions.map(r =>
+          r.status === "current" ? { ...r, status: "superseded" as RevStatus } : r
+        )]
+      });
+    });
+    setActiveDrawingId(targetDrawingId);
     setActiveRevId(newRev.id);
     setImgLoaded(false);
     setShowRevModal(false);
@@ -652,11 +694,12 @@ export default function DrawingsPage() {
             <div className="flex justify-between items-start border-b border-border-custom pb-3">
               <div>
                 <div className="text-sm font-extrabold text-foreground">Upload New Revision</div>
-                <div className="text-[10px] text-muted mt-0.5">Current revision will be automatically archived as Superseded</div>
+                <div className="text-[10px] text-muted mt-0.5">{activeDrawing ? "Current revision will be automatically archived as Superseded" : "Creates the first drawing for this project"}</div>
               </div>
               <button onClick={() => setShowRevModal(false)} className="text-muted hover:text-foreground text-lg leading-none">×</button>
             </div>
             {/* State transition preview */}
+            {activeDrawing && (
             <div className="bg-input border border-border-custom rounded-md p-3 space-y-1.5">
               <div className="text-[9px] uppercase tracking-wider text-muted mb-2">What will happen</div>
               {activeDrawing?.revisions.slice(0, 3).map(r => (
@@ -674,6 +717,25 @@ export default function DrawingsPage() {
                 <span className="px-1.5 py-0.5 rounded text-[8px] font-bold border bg-emerald-500/10 border-emerald-500/20 text-emerald-400">New Current</span>
               </div>
             </div>
+            )}
+            {!activeDrawing && (
+              <div className="space-y-3">
+                <div>
+                  <div className="text-muted mb-1">Drawing Name</div>
+                  <input type="text" value={newDrawingName} onChange={e => setNewDrawingName(e.target.value)}
+                    className="w-full bg-input border border-border-custom rounded-lg p-2.5 text-foreground font-sans font-bold" />
+                </div>
+                <div>
+                  <div className="text-muted mb-1">Category</div>
+                  <select value={newDrawingCategory} onChange={e => setNewDrawingCategory(e.target.value)}
+                    className="w-full bg-input border border-border-custom rounded-lg p-2.5 text-foreground font-sans">
+                    {["2D Layout", "3D Layout", "Production File"].map(c => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            )}
             <div>
               <div className="text-muted mb-1">Version Code</div>
               <input type="text" value={newRevCode} onChange={e => setNewRevCode(e.target.value)}
@@ -687,7 +749,7 @@ export default function DrawingsPage() {
             </div>
             <div className="flex gap-2 justify-end border-t border-border-custom pt-3">
               <button onClick={() => setShowRevModal(false)} className="px-4 py-2 bg-zinc-800 text-muted hover:text-foreground rounded-md">Cancel</button>
-              <button onClick={handlePublishRevision} disabled={!newRevCode.trim()}
+              <button onClick={handlePublishRevision} disabled={!newRevCode.trim() || (!activeDrawing && !newDrawingName.trim())}
                 className="px-5 py-2 bg-primary text-white font-bold rounded-md hover:opacity-90 disabled:opacity-40 transition-all">
                 Publish {newRevCode}
               </button>
