@@ -1,6 +1,6 @@
 "use client";
 import { getApiHost } from "@/lib/api";
-import { authHeaders } from "@/lib/siteflow";
+import { authHeaders, fmtINR } from "@/lib/siteflow";
 
 
 import { useParams } from "next/navigation";
@@ -78,9 +78,7 @@ const chartColors = {
 };
 
 function formatCurrency(value: number) {
-  return new Intl.NumberFormat("en-IN", {
-    maximumFractionDigits: 0,
-  }).format(value);
+  return fmtINR(value);
 }
 
 function buildPoints(values: number[], width = 640, height = 220, padding = 24) {
@@ -318,7 +316,7 @@ export default function CompanyAnalyticsPage() {
             {[
               {
                 label: "Budget Variance",
-                value: data ? `Rs ${formatCurrency(data.budget_variance)}` : "—",
+                value: data ? formatCurrency(data.budget_variance) : "—",
                 hint: data ? `Spend ${formatCurrency(data.total_spend)} vs budget ${formatCurrency(data.total_budget)}` : "Loading",
                 tone: "text-foreground",
               },
@@ -445,7 +443,7 @@ export default function CompanyAnalyticsPage() {
                     <div className="flex items-center justify-between gap-4">
                       <span className="text-muted">Cumulative:</span>
                       <span className="font-bold font-sans text-foreground">
-                        Rs {formatCurrency(data.budget_burn_series[hoveredBurnIndex].spend)}
+                        {formatCurrency(data.budget_burn_series[hoveredBurnIndex].spend)}
                       </span>
                     </div>
                   </div>
@@ -494,10 +492,10 @@ export default function CompanyAnalyticsPage() {
                           <div className="font-semibold text-foreground">{project.project_name}</div>
                           <div className="text-[11px] text-muted">{project.code ?? "No code"}</div>
                         </td>
-                        <td className="px-4 py-3 text-right text-muted">Rs {formatCurrency(project.budget)}</td>
-                        <td className="px-4 py-3 text-right text-muted">Rs {formatCurrency(project.spend)}</td>
+                        <td className="px-4 py-3 text-right text-muted">{formatCurrency(project.budget)}</td>
+                        <td className="px-4 py-3 text-right text-muted">{formatCurrency(project.spend)}</td>
                         <td className={`px-4 py-3 text-right font-semibold ${project.variance >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
-                          Rs {formatCurrency(project.variance)}
+                          {formatCurrency(project.variance)}
                         </td>
                         <td className="px-4 py-3 text-right text-foreground">{project.completion_pct}%</td>
                       </tr>
