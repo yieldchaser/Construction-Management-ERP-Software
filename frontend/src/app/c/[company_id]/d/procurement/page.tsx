@@ -133,12 +133,22 @@ export default function ProcurementPage() {
     if (!projectId) return;
     try {
       const apiHost = getApiHost();
-      const [indentsRes, posRes, grnsRes, invRes] = await Promise.all([
+      const [indentsRes, posRes, grnsRes, invRes, vendorsRes] = await Promise.all([
         fetch(`${apiHost}/apis/v3/procurement/indents?project_id=${projectId}`, { headers: authHeaders() }),
         fetch(`${apiHost}/apis/v3/procurement/pos?project_id=${projectId}`, { headers: authHeaders() }),
         fetch(`${apiHost}/apis/v3/procurement/grns?project_id=${projectId}`, { headers: authHeaders() }),
         fetch(`${apiHost}/apis/v3/procurement/inventory?project_id=${projectId}`, { headers: authHeaders() }),
+        fetch(`${apiHost}/apis/v3/billing/subcontractors?company_id=${companyId}`, { headers: authHeaders() }),
       ]);
+
+      const vendorOptionsArr: Array<{ id: string; name: string }> = [];
+      if (vendorsRes.ok) {
+        const vdata = await vendorsRes.json();
+        vdata.forEach((v: any) => vendorOptionsArr.push({ id: String(v.company_team_id), name: v.name }));
+        setVendorOptions(vendorOptionsArr);
+      }
+      const vendorById: Record<string, string> = {};
+      vendorOptionsArr.forEach((v) => (vendorById[v.id] = v.name));
 
       if (indentsRes.ok) {
         const data = await indentsRes.json();
@@ -157,7 +167,7 @@ export default function ProcurementPage() {
         const mapped = data.map((po: any) => ({
           id: po.id,
           poNumber: po.po_number,
-          vendor: "Vendor",
+          vendor: po.vendor_id ? (vendorById[String(po.vendor_id)] || "Vendor") : "Vendor",
           items: (po.items || []).map((item: any) => ({ name: item.material_name, qty: item.quantity, unit: item.unit, rate: item.rate })),
           grossAmount: po.gross_amount,
           taxAmount: po.tax_amount,
@@ -236,7 +246,8 @@ export default function ProcurementPage() {
 
   // New PO form state (Multi-item support)
   const [newPONum, setNewPONum] = useState("PO-2026-043");
-  const [newPOVendor, setNewPOVendor] = useState("Shree Cement Traders");
+  const [newPOVendor, setNewPOVendor] = useState("");
+  const [vendorOptions, setVendorOptions] = useState<Array<{ id: string; name: string }>>([]);
   const [poFormItems, setPoFormItems] = useState<POItem[]>([
     { name: "UltraTech Cement", qty: 100, unit: "bags", rate: 410 }
   ]);
@@ -334,7 +345,7 @@ export default function ProcurementPage() {
     const newPO: PO = {
       id: `PO-${Date.now()}`,
       poNumber: newPONum,
-      vendor: newPOVendor,
+      vendor: vendorOptions.find((v) => v.id === newPOVendor)?.name || "Vendor",
       items: poFormItems,
       grossAmount: gross,
       taxAmount: tax,
@@ -363,6 +374,7 @@ export default function ProcurementPage() {
           project_id: projectId,
           po_number: newPONum,
           po_date: new Date().toISOString().split("T")[0],
+          vendor_id: newPOVendor || null,
           items: poFormItems.map(item => ({ material_name: item.name, quantity: item.qty, unit: item.unit, rate: item.rate })),
           terms: newPOTerms || null,
         }),
@@ -1158,8 +1170,9 @@ export default function ProcurementPage() {
               <div className="space-y-1">
                 <label className="text-muted font-bold">Supplier Vendor</label>
                 <select value={newPOVendor} onChange={(e) => setNewPOVendor(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground">
-                  {VENDORS.map(v => (
-                    <option key={v.id} value={v.name}>{v.name}</option>
+                  <option value="">Select Vendor</option>
+                  {vendorOptions.map(v => (
+                    <option key={v.id} value={v.id}>{v.name}</option>
                   ))}
                 </select>
               </div>
