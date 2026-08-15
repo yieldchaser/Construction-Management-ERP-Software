@@ -13,11 +13,11 @@ This folder is the single source of truth for the 582-finding bug-fixing campaig
 | Numbers issued (R2-001 … R2-601) | 601 |
 | Retracted as duplicates | 15 |
 | FIX_VERIFIED (founder live-confirmed) | 93 |
-| FIXED (code in, awaiting founder live-verify) | 6 |
+| FIXED (code in, awaiting founder live-verify) | 7 |
 | WONTFIX | 1 |
-| **TODO (your job)** | **482** |
+| **TODO (your job)** | **481** |
 
-By severity of the remaining TODO: **CRITICAL 122 · HIGH 202 · MEDIUM 146 · LOW 12** (re-counted after the 99 closed).
+By severity of the remaining TODO: **CRITICAL 121 · HIGH 202 · MEDIUM 146 · LOW 12** (re-counted after the 100 closed).
 
 ---
 
