@@ -68,31 +68,6 @@ interface LabTest {
   zone: string;
 }
 
-// ─── Mock Data ────────────────────────────────────────────────────────────────
-
-const CHECKLISTS: Checklist[] = [
-  {
-    id: "CL-01", title: "IS 456 Concrete Pre-Pour", category: "Concrete", isCode: "IS 456:2000",
-    items: [
-      { id: "I-01", sequence: 1, description: "Reinforcement cover", criteria: "Cover ≥ 40mm", mandatory: true },
-      { id: "I-02", sequence: 2, description: "Shuttering alignment", criteria: "Plumb within 5mm", mandatory: true },
-      { id: "I-03", sequence: 3, description: "Cube mould cleanliness", criteria: "No old concrete", mandatory: false },
-      { id: "I-04", sequence: 4, description: "Water-cement ratio", criteria: "W/C ≤ 0.45", mandatory: true },
-      { id: "I-05", sequence: 5, description: "Vibrator availability", criteria: "Min 2 vibrators on-site", mandatory: true },
-    ]
-  },
-  {
-    id: "CL-02", title: "IS 1786 Rebar Acceptance", category: "Steel", isCode: "IS 1786:2008",
-    items: [
-      { id: "I-06", sequence: 1, description: "Bar marking (Fe500D)", criteria: "Visible marking", mandatory: true },
-      { id: "I-07", sequence: 2, description: "Mill test certificate", criteria: "TC available", mandatory: true },
-      { id: "I-08", sequence: 3, description: "Rust & scale check", criteria: "Max mill scale only", mandatory: true },
-    ]
-  },
-];
-
-
-
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 const severityColors: Record<string, string> = {
@@ -220,7 +195,7 @@ export default function QualityPage() {
             id: insp.id,
             checklistId: insp.checklist_id,
             zone: insp.zone || "General Site",
-            checklist: foundCl ? foundCl.title : "—",
+            checklist: foundCl ? foundCl.title : "Unknown checklist",
             date: insp.inspection_date ? insp.inspection_date.split("T")[0] : "",
             status: insp.status,
             passCount: insp.pass_count,
@@ -422,7 +397,7 @@ export default function QualityPage() {
     const responses = Object.entries(inspectionResponses).map(([itemId, result]) => ({
       checklist_item_id: itemId,
       result,
-      remarks: "Checked on site"
+      remarks: null
     }));
 
     try {
