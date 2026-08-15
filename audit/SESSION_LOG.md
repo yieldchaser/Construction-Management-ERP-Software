@@ -2,6 +2,22 @@
 
 Append-only. Every working block ends with a 5-line entry. Never edit an existing entry; if a commit was reverted, add a new entry.
 
+## Session 19 — fixes 38, 39, 40, 41, 42, 43, 44 and 45 (2026-08-15)
+
+- Action 1: applied R2-067 (W13 budget.py, CRITICAL). Cost Control hardcoded labour and equipment actual to ₹0 — a user budgeting labour saw a permanent ₹0 actual and favourable variance. Both actuals now compute from real data (payroll net_payable for labour; equipment bills + deployment hours + fuel for equipment), mirroring the finance P&L. Test added (5000/3000). Committed-at-zero and the per-tower project-wide-total gap are logged as open.
+- Action 2: applied R2-063 (W44 quality ×2, MEDIUM). Checklist responses no longer persist the fabricated remark "Checked on site" (now null); unresolvable checklists read "Unknown checklist" instead of a fake IS code; the dead mock CHECKLISTS const is deleted. Follow-up flagged: `is_code_reference || "IS 456:2000"` fallback in the same mapping (display-only).
+- Action 3: applied R2-064 (W132 boq, LOW) — the import-failure message no longer claims "using demo data" when nothing loads; and R2-065 (W30 hr, LOW) — the dead duplicate payroll calculator computePayslips is deleted.
+- Action 4: applied R2-084 (W34 dashboard, MEDIUM). The status counters matched a dead vocabulary ("Not Started"/"Onhold" — canonical is Planning/On Hold/Cancelled), so a company with one Planning project showed all-zero summary. Counters/filter/badge now use the canonical list with legacy normalization, and a Cancelled counter card was added.
+- Action 5: applied R2-083 (W47 dashboard, CRITICAL) — the last fabricated attribute fallbacks (category "General", stage "Structure") render "—" now. R2-061 (equipment, MEDIUM) closed with evidence: already fixed by cd01b15 (catch blocks only set the error banner; setFleet only gets API data or []).
+- Action 6: R2-062 (W47 dashboard, MEDIUM) — the verifier caught that the fabricated fallback consts (Cement/Sand demo rows) and a 94-line dead rows/options pipeline still existed despite the earlier cd01b15 sweep (invisible today, a landmine for future JSX wiring). Deleted in `bd928e7` (pure removal, -94).
+- Verified: npm run build green (47s + 76s, then 45s + 70s after the cleanup); pytest tests/coverage/ 213 passed rc=0 (212 + 1 new); verifier APPROVE on all seven commits plus both evidence checks.
+- Commits: `241f76c` (R2-067), `6114f17` (R2-063), `ba7e65f` (R2-064), `f53dafd` (R2-065), `355cfc3` (R2-084), `b8e314b` (R2-083), `bd928e7` (R2-062). R2-061 closed via `cd01b15` (pre-existing main commit).
+- Register: R2-061, R2-062, R2-063, R2-064, R2-065, R2-067, R2-083, R2-084 STATUS TODO → FIXED.
+- Follow-ups logged: R2-063-bis (is_code_reference fallback); formatMoney dead const; R2-067 committed-at-zero + per-tower scoping (needs schema decision); test FK seed mismatch (latent).
+- Next session: R2-063-bis (1-liner), R2-106 (W28 GPS-verification checkbox, CRITICAL, contract change), R2-109 (CTC), R2-003 (W06 delete-logs filters, MEDIUM). R2-178 still awaits the founder.
+
+---
+
 ## Session 18 — fixes 33, 34, 35, 36 and 37 (2026-08-15)
 
 - Action 1: applied R2-060 (W28 attendance ×2, CRITICAL). `captureLocation` used to substitute a hardcoded Bangalore pair ("Metro Geofence Yard") on geolocation failure — invented location evidence stored indistinguishably from a real fix. Now returns null on every failure path and `queuePunch` blocks the punch with an explicit message; no coordinates are ever fabricated.
