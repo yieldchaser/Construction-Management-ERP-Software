@@ -242,7 +242,7 @@ export default function HRPayrollPage() {
       console.error("Failed to fetch project tasks", e);
     }
   };
-  const [selectedDate, setSelectedDate] = useState("2026-06-26");
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0]);
   const [payrollMonth, setPayrollMonth] = useState("2026-06");
   const [daysInMonth, setDaysInMonth] = useState(26);
   const [payrollRun, setPayrollRun] = useState<PayrollRun | null>(null);

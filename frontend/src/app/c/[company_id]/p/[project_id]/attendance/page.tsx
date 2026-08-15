@@ -143,7 +143,7 @@ export default function AttendancePage() {
   const [lang, setLang] = useState<string>("English");
   const [showLanguageDrawer, setShowLanguageDrawer] = useState(false);
   
-  const [date, setDate] = useState("2026-06-30");
+  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [isOnline, setIsOnline] = useState(true);
   useEffect(() => {
     const updateOnline = () => setIsOnline(navigator.onLine);
