@@ -142,7 +142,7 @@ def get_tower_budget(project_id: UUID, db: Session = Depends(get_db), _: None = 
         ) if budget else 0.0
         pos = db.query(PurchaseOrder).filter(PurchaseOrder.project_id == project_id).all()
         committed = sum(float(p.total_amount) for p in pos)
-        bills = db.query(Bill).filter(Bill.project_id == project_id).all()
+        bills = db.query(Bill).filter(Bill.project_id == project_id, Bill.invoice_type.in_(EXPENSE_INVOICE_TYPES)).all()
         actual = sum(float(b.total_payable) for b in bills)
         return [TowerBudgetBreakdown(
             tower_id=None,
@@ -156,7 +156,7 @@ def get_tower_budget(project_id: UUID, db: Session = Depends(get_db), _: None = 
     result = []
     for t in towers:
         committed = float(t.budget)
-        bills = db.query(Bill).filter(Bill.project_id == project_id).all()
+        bills = db.query(Bill).filter(Bill.project_id == project_id, Bill.invoice_type.in_(EXPENSE_INVOICE_TYPES)).all()
         actual = sum(float(b.total_payable) for b in bills)
         result.append(TowerBudgetBreakdown(
             tower_id=t.id,

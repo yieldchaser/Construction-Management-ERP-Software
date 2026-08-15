@@ -220,7 +220,7 @@ def get_company_analytics(company_id: uuid.UUID, db: Session = Depends(get_db), 
                 + _to_float(budget.equipment_budget)
             )
 
-        project_spend = sum(_to_float(bill.total_payable) for bill in bills_by_project.get(project.id, []))
+        project_spend = sum(_to_float(bill.total_payable) for bill in bills_by_project.get(project.id, []) if bill.invoice_type in EXPENSE_INVOICE_TYPES)
         project_variance = project_budget_total - project_spend
         total_tasks = len(tasks_by_project.get(project.id, []))
         completed_tasks = sum(
@@ -437,7 +437,7 @@ def get_company_operational_analytics(company_id: uuid.UUID, db: Session = Depen
                 + _to_float(budget.subcon_budget)
                 + _to_float(budget.equipment_budget)
             )
-        spend = sum(_to_float(b.total_payable) for b in db.query(Bill).filter(Bill.project_id == p.id).all())
+        spend = sum(_to_float(b.total_payable) for b in db.query(Bill).filter(Bill.project_id == p.id, Bill.invoice_type.in_(EXPENSE_INVOICE_TYPES)).all())
 
         # Determine Health
         if p_status == "Completed":

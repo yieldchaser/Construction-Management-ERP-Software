@@ -418,3 +418,26 @@ def test_project_progress_reads_task_progress(client, db, make_tenant, auth_head
         filter=lambda *a, **k: types.SimpleNamespace(
             all=lambda: [_StubTask(10, None, "completed")])))
     assert projects_mod._project_progress(stub_db, p1.id) == 100.0
+
+
+def test_analytics_spend_excludes_sales(client, db, make_tenant, auth_headers):
+    comp, user, _ = make_tenant(company_name="E10", user_name="UE10", mobile=_mob(31), email=_mail(31))
+    hdr = auth_headers(user, comp)
+    project = _mk_project(db, comp)
+
+    base = dict(company_id=comp.id, project_id=project.id, party_company_user_id=user.id,
+                invoice_date=_utc(2026, 1, 1))
+    db.add_all([
+        models.Bill(id=uuid.uuid4(), invoice_number="SALE-1", invoice_type="sale",
+                    subtotal=Decimal("118000"), total_payable=Decimal("118000"), **base),
+        models.Bill(id=uuid.uuid4(), invoice_number="PUR-1", invoice_type="purchase",
+                    subtotal=Decimal("23600"), total_payable=Decimal("23600"), **base),
+    ])
+    db.commit()
+
+    r = client.get(f"/apis/v3/analytics/company/{comp.id}", headers=hdr)
+    assert r.status_code == 200, r.text
+    data = r.json()
+    assert data["projects"][0]["spend"] == 23600.0
+    assert data["total_spend"] == 23600.0
+    assert data["total_spend"] != 141600.0

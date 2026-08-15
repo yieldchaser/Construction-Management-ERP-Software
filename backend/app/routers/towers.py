@@ -4,6 +4,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from app.database import get_db
+from app.constants import REVENUE_INVOICE_TYPES
 from app.auth import get_current_user, verify_project_access, get_company_membership, require_permission
 from app.models import ProjectTower, ProjectBudget, PurchaseOrder, Bill, WorkOrder, Project, User
 from pydantic import BaseModel, Field
@@ -174,7 +175,7 @@ def consolidated_pnl(project_id: UUID, tower_id: Optional[UUID] = Query(None), d
             total_pos = db.query(PurchaseOrder).filter(PurchaseOrder.project_id == project_id).count()
             pos_value = db.query(PurchaseOrder).filter(PurchaseOrder.project_id == project_id).all()
             total_po_value = sum(float(p.total_amount) for p in pos_value)
-            bills = db.query(Bill).filter(Bill.project_id == project_id).all()
+            bills = db.query(Bill).filter(Bill.project_id == project_id, Bill.invoice_type.in_(REVENUE_INVOICE_TYPES)).all()
             total_billed = sum(float(b.total_payable) for b in bills)
             wos = db.query(WorkOrder).filter(WorkOrder.project_id == project_id).all()
             total_wo_value = sum(float(w.estimated_work_amount) for w in wos)
@@ -196,7 +197,7 @@ def consolidated_pnl(project_id: UUID, tower_id: Optional[UUID] = Query(None), d
             continue
         pos = db.query(PurchaseOrder).filter(PurchaseOrder.project_id == project_id).all()
         total_po_value = sum(float(p.total_amount) for p in pos)
-        bills = db.query(Bill).filter(Bill.project_id == project_id).all()
+        bills = db.query(Bill).filter(Bill.project_id == project_id, Bill.invoice_type.in_(REVENUE_INVOICE_TYPES)).all()
         total_billed = sum(float(b.total_payable) for b in bills)
         wos = db.query(WorkOrder).filter(WorkOrder.project_id == project_id).all()
         total_wo_value = sum(float(w.estimated_work_amount) for w in wos)
