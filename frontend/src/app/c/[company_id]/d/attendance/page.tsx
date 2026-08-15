@@ -87,6 +87,8 @@ type PunchRecord = {
   shift_multiplier: number;
   location_verified: boolean;
   synced: boolean;
+  employee_id: string;
+  project_id: string;
 };
 
 const PUNCH_QUEUE_KEY = "siteflow-punch-queue";
@@ -159,6 +161,7 @@ export default function AttendancePage() {
   }, []);
   const [queuedPunches, setQueuedPunches] = useState<PunchRecord[]>([]);
   const [syncMessage, setSyncMessage] = useState("Mobile punch queue ready");
+  const [isSyncing, setIsSyncing] = useState(false);
 
   // Project Settings Modal State
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
@@ -434,6 +437,8 @@ export default function AttendancePage() {
       lng: location.lng,
       shift_multiplier: multiplier,
       location_verified: isGpsSimulatedVerified,
+      employee_id: finalEmpId,
+      project_id: projectId,
       synced: navigator.onLine,
     };
 
@@ -473,13 +478,59 @@ export default function AttendancePage() {
     }
   };
 
-  const flushQueue = () => {
+  const flushQueue = async () => {
     if (queuedPunches.length === 0) {
       setSyncMessage("No queued punches to sync");
       return;
     }
-    persistQueue([]);
-    setSyncMessage(`Synced ${queuedPunches.length} queued punches successfully`);
+    if (isSyncing) return;
+    setIsSyncing(true);
+    let synced = 0;
+    let failed = 0;
+    const remaining: PunchRecord[] = [];
+    for (const punch of queuedPunches) {
+      if (!punch.employee_id || !punch.project_id) {
+        remaining.push(punch);
+        failed += 1;
+        continue;
+      }
+      try {
+        const res = await fetch(`${getApiHost()}/apis/v3/hr/attendance/punch`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
+          body: JSON.stringify({
+            employee_id: punch.employee_id,
+            project_id: punch.project_id,
+            lat: parseFloat(punch.lat),
+            lng: parseFloat(punch.lng),
+            punch_type: punch.mode.toLowerCase(),
+            shift_multiplier: punch.shift_multiplier,
+            location_verified: punch.location_verified,
+            notes: "Offline queued punch synced",
+          }),
+        });
+        if (res.ok) {
+          synced += 1;
+        } else {
+          await res.json().catch(() => ({}));
+          remaining.push({ ...punch, synced: false });
+          failed += 1;
+        }
+      } catch (e) {
+        remaining.push({ ...punch, synced: false });
+        failed += 1;
+      }
+    }
+    persistQueue(remaining);
+    setIsSyncing(false);
+    if (synced > 0) {
+      fetchEmpsAndLogs();
+    }
+    if (failed === 0) {
+      setSyncMessage(`Synced ${synced} queued punches successfully`);
+    } else {
+      setSyncMessage(`Synced ${synced} of ${queuedPunches.length}; ${failed} failed and remain queued`);
+    }
   };
 
   // Submit subcontractor attendance
@@ -672,7 +723,7 @@ export default function AttendancePage() {
                       <button onClick={() => queuePunch("OUT")} className="rounded-md border border-border-custom bg-elevated px-5 py-2.5 text-xs font-bold text-foreground transition-colors hover:bg-elevated">
                         Clock Punch Out
                       </button>
-                      <button onClick={flushQueue} className="rounded-md border border-secondary/20 bg-secondary/15 px-5 py-2.5 text-xs font-bold text-secondary transition-colors hover:bg-secondary/20 ml-auto">
+                      <button onClick={flushQueue} disabled={isSyncing} className="rounded-md border border-secondary/20 bg-secondary/15 px-5 py-2.5 text-xs font-bold text-secondary transition-colors hover:bg-secondary/20 ml-auto disabled:cursor-not-allowed disabled:opacity-50">
                         Sync Offline Queue ({queuedPunches.length})
                       </button>
                     </div>
