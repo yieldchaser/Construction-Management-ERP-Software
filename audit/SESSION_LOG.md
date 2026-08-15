@@ -29,6 +29,19 @@ Append-only. Every working block ends with a 5-line entry. Never edit an existin
 
 ---
 
+## Session 4 — fourth fix (2026-08-15)
+
+- Action: applied R2-018 (W130 reports/dpr). Wired the dead date input on the DPR report. Was a hardcoded `defaultValue="2026-07-04"` with no state, no onChange, no value binding. Now controlled via `customDate` state, disabled when the select is not "Custom", and the export handler has a new "Custom" branch that uses the picked date.
+- Why this was the right fourth fix: LOW severity, single-file, no cross-file. The audit's complaint was straightforward — the dead input misled users. The fix is the protocol's "wire it to the Custom Range option" alternative.
+- Design decision: disabled the input when the select is not "Custom" (cleaner than letting users set a date that gets ignored). Label flips from "Date Range" to "Pick Date" so the visible affordance matches the active filter.
+- Verified: static. Export handler now has a "Custom" branch with a toast if no date is picked.
+- Blast radius: 1 file, +11/-2 lines.
+- Commits: `8fa1f7c`.
+- Register: R2-018 STATUS TODO → FIXED.
+- Next session: still many viable LOW/MEDIUM single-file candidates (R2-038, R2-044, R2-037, R2-098, R2-121). Founder's call.
+
+---
+
 
 ## Session 0 — initial dump (2026-08-15)
 
