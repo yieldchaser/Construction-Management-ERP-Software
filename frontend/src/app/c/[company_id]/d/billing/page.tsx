@@ -105,13 +105,15 @@ export default function SubcontractorBillingPage() {
         const mapped = data.map((wo: any) => ({
           id: wo.id,
           woNumber: wo.wo_number,
-          subcontractor: nameMap[wo.subcontractor_id] || "Unassigned",
+          subcontractor: wo.subcontractor_name || nameMap[wo.subcontractor_id] || "Unassigned",
           item: wo.items && wo.items.length > 0 ? wo.items[0].description || wo.terms : wo.terms || "Subcontractor Works",
           value: wo.estimated_work_amount,
           status: wo.status === "active" ? "Active" : wo.status,
           date: wo.wo_date ? wo.wo_date.split("T")[0] : "",
         }));
         setWorkOrders(mapped);
+      } else {
+        console.error("Failed to fetch work orders", res.status);
       }
     } catch (e) {
       console.error("Failed to fetch work orders", e);
@@ -172,6 +174,8 @@ export default function SubcontractorBillingPage() {
           };
         });
         setBills(mapped);
+      } else {
+        console.error("Failed to fetch bills", res.status);
       }
     } catch (e) {
       console.error("Failed to fetch bills", e);
@@ -214,7 +218,7 @@ export default function SubcontractorBillingPage() {
   };
 
   useEffect(() => {
-    if (!projectId) return;
+    if (!projectId || !companyId) return;
     (async () => {
       let nameMap: Record<string, string> = {};
       try {
@@ -223,6 +227,8 @@ export default function SubcontractorBillingPage() {
           const subs = await res.json();
           setSubcontractors(subs);
           subs.forEach((s: any) => (nameMap[s.company_team_id] = s.name));
+        } else {
+          console.error("Failed to fetch subcontractors", res.status);
         }
       } catch (e) {
         console.error("Failed to fetch subcontractors", e);
@@ -234,7 +240,7 @@ export default function SubcontractorBillingPage() {
         fetchTowers(),
       ]);
     })();
-  }, [projectId]);
+  }, [companyId, projectId]);
 
   const [towers, setTowers] = useState<Array<{ id: string; tower_name: string; tower_code: string }>>([]);
   const [selectedTower, setSelectedTower] = useState<string>("all");
