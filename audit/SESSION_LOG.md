@@ -2,16 +2,17 @@
 
 Append-only. Every working block ends with a 5-line entry. Never edit an existing entry; if a commit was reverted, add a new entry.
 
-## Session 1 — first fix (2026-08-15)
+## Session 2 — second fix (2026-08-15)
 
-- Action: applied R2-097 (W01 finance.py). One-line default "Active"→"All" on the party sub-tab status filter in `frontend/src/app/c/[company_id]/d/finance/page.tsx:243`.
-- Why this was the right first fix: the audit's suggested fix ("Either default to All OR treat null status as active") was both in the audit's own text and trivially safe. The backend derives `status` from balance components (line 726-735 of `backend/app/routers/finance.py`), so any newly-created party with zero balances gets `status = "Settled"` and the old "Active" default hid them silently.
-- Verified: static. The filter logic at line 1253 already handles "All" correctly. No test added — pure UX default.
-- Blast radius: 1 file, 1 line. No cross-file impact.
-- Commits: `5580919` (fix), `3d14f12` (register update).
-- Register: R2-097 STATUS TODO → FIXED; commit hash recorded.
-- TODO W01 after this: R2-101, R2-179, R2-311, R2-328, R2-335, R2-358 (6 remaining).
-- Next session: pick R2-101 (still medium, single-file, but architectural) OR pivot to T1 cross-wave LOW/MEDIUM single-file fixes. Founder's call.
+- Action: applied R2-101 (W01 finance.py). Lifted `unbilledCount` and `pendingCount` to component scope and replaced the hardcoded `0` in the Finance header chips with the computed values (+12/-2 lines in `frontend/src/app/c/[company_id]/d/finance/page.tsx`).
+- Why this was the right second fix: the audit observed `UNBILLED MATERIALS 0` in the header chip while the toolbar button on the same screen read `New 2`. The chip was hardcoded 0; the button computed from `txns.filter(...)`. Now they share the same source.
+- Partial fix explicitly noted in the register: 2 of 3 sub-bugs addressed. Still deferred: (a) toolbar button has no onClick (R2-072 dead button); (b) procurement page computes its own unbilled count from `grns.filter(g => !g.isBilled)` — the audit's "one source of truth via the procurement GRN query" half needs a backend endpoint or shared query cache.
+- Verified: static. Both consumers now read the same `useMemo`-wrapped value.
+- Blast radius: 1 file, +12/-2 lines.
+- Commits: `2253758`.
+- Register: R2-101 STATUS TODO → FIXED (partial, with deferral notes).
+- TODO W01 after this: R2-179, R2-311, R2-328, R2-335, R2-358 (5 remaining; R2-101 no longer blocks).
+- Next session: pick the simplest W01 remaining (R2-358 PARTIAL marker) OR pivot to T1 cross-wave LOW/MEDIUM single-file fixes. Founder's call.
 
 ---
 
