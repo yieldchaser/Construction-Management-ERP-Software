@@ -173,7 +173,7 @@ export default function QualityPage() {
             id: cl.id,
             title: cl.title,
             category: cl.category || "Concrete",
-            isCode: cl.is_code_reference || "IS 456:2000",
+            isCode: cl.is_code_reference || "-",
             items
           };
         }));
