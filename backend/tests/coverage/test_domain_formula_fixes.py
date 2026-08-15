@@ -535,3 +535,57 @@ def test_committed_costs_labour_and_equipment_actuals(client, db, make_tenant, a
     data = r.json()
     assert data["labour_actual"] == 5000.0
     assert data["equipment_actual"] == 3000.0
+
+
+def test_punch_location_verified_derived_from_geofence(client, db, make_tenant, auth_headers):
+    comp, user, _ = make_tenant(company_name="E13", user_name="UE13", mobile=_mob(34), email=_mail(34))
+    hdr = auth_headers(user, comp)
+    project = models.Project(
+        id=uuid.uuid4(), company_id=comp.id, name="Geofence Proj", code="GF-1",
+        status="Ongoing", location="12.9716,77.5946", attendance_radius_meters=500,
+    )
+    db.add(project)
+    db.commit()
+
+    emp = models.StaffEmployee(
+        id=uuid.uuid4(), company_id=comp.id, project_id=project.id, name="Emp E13",
+        status="active", basic_salary=1000.0, hra=0.0, other_allowances=0.0,
+        pf_employee_pct=0.0, pf_employer_pct=0.0, esi_employee_pct=0.0,
+        esi_employer_pct=0.0, tds_monthly=0.0, is_esi_applicable=False,
+    )
+    emp2 = models.StaffEmployee(
+        id=uuid.uuid4(), company_id=comp.id, project_id=project.id, name="Emp2 E13",
+        status="active", basic_salary=1000.0, hra=0.0, other_allowances=0.0,
+        pf_employee_pct=0.0, pf_employer_pct=0.0, esi_employee_pct=0.0,
+        esi_employer_pct=0.0, tds_monthly=0.0, is_esi_applicable=False,
+    )
+    db.add_all([emp, emp2])
+    db.commit()
+
+    inside = client.post(
+        "/apis/v3/hr/attendance/punch",
+        json={
+            "employee_id": str(emp.id),
+            "project_id": str(project.id),
+            "lat": 12.9716, "lng": 77.5946,
+            "punch_type": "in", "shift_multiplier": 1.0,
+            "location_verified": False,
+        },
+        headers=hdr,
+    )
+    assert inside.status_code == 201, inside.text
+    assert inside.json()["location_verified"] is True
+
+    outside = client.post(
+        "/apis/v3/hr/attendance/punch",
+        json={
+            "employee_id": str(emp2.id),
+            "project_id": str(project.id),
+            "lat": 28.6, "lng": 77.2,
+            "punch_type": "in", "shift_multiplier": 1.0,
+            "location_verified": True,
+        },
+        headers=hdr,
+    )
+    assert outside.status_code == 201, outside.text
+    assert outside.json()["location_verified"] is False

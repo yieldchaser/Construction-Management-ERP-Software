@@ -85,7 +85,6 @@ type PunchRecord = {
   lat: string;
   lng: string;
   shift_multiplier: number;
-  location_verified: boolean;
   synced: boolean;
   employee_id: string;
   project_id: string;
@@ -294,7 +293,6 @@ export default function AttendancePage() {
   // Punch inputs
   const [selectedEmpId, setSelectedEmpId] = useState<string>("");
   const [punchMultiplier, setPunchMultiplier] = useState<number>(1.0);
-  const [isGpsSimulatedVerified, setIsGpsSimulatedVerified] = useState<boolean>(true);
   const [customMultiplierVal, setCustomMultiplierVal] = useState<string>("");
   
   // Subcontractor entry drawer
@@ -406,7 +404,7 @@ export default function AttendancePage() {
           resolve({
             lat: position.coords.latitude.toFixed(6),
             lng: position.coords.longitude.toFixed(6),
-            label: isGpsSimulatedVerified ? "GPS coordinates verified" : "GPS coordinates (Off-site warning)",
+            label: "GPS coordinates captured",
           });
         },
         () => resolve(null),
@@ -437,7 +435,6 @@ export default function AttendancePage() {
       lat: location.lat,
       lng: location.lng,
       shift_multiplier: multiplier,
-      location_verified: isGpsSimulatedVerified,
       employee_id: finalEmpId,
       project_id: projectId,
       synced: navigator.onLine,
@@ -461,8 +458,7 @@ export default function AttendancePage() {
           lng: parseFloat(location.lng),
           punch_type: mode.toLowerCase(),
           shift_multiplier: multiplier,
-          location_verified: isGpsSimulatedVerified,
-          notes: `Punch recorded at shift multiplier ${multiplier}. Location verified: ${isGpsSimulatedVerified}`
+          notes: `Punch recorded at shift multiplier ${multiplier}.`
         }),
       });
       if (res.ok) {
@@ -505,9 +501,8 @@ export default function AttendancePage() {
             lat: parseFloat(punch.lat),
             lng: parseFloat(punch.lng),
             punch_type: punch.mode.toLowerCase(),
-            shift_multiplier: punch.shift_multiplier,
-            location_verified: punch.location_verified,
-            notes: "Offline queued punch synced",
+          shift_multiplier: punch.shift_multiplier,
+          notes: "Offline queued punch synced",
           }),
         });
         if (res.ok) {
@@ -702,19 +697,6 @@ export default function AttendancePage() {
                         </div>
                       )}
 
-                      {/* GPS simulated lock */}
-                      <div className="flex items-center gap-2 mb-2">
-                        <input
-                          type="checkbox"
-                          id="gps_verify"
-                          checked={isGpsSimulatedVerified}
-                          onChange={(e) => setIsGpsSimulatedVerified(e.target.checked)}
-                          className="accent-primary h-4 w-4 rounded"
-                        />
-                        <label htmlFor="gps_verify" className="text-xs text-muted select-none cursor-pointer">
-                          Simulate GPS lock (On-Site)
-                        </label>
-                      </div>
                     </div>
 
                     <div className="flex flex-wrap items-center gap-3 border-t border-border-custom pt-4">

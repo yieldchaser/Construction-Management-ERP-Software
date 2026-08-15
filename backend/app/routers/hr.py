@@ -311,7 +311,7 @@ def punch(payload: PunchRequest, db: Session = Depends(get_db), current_user: Us
             is_within_geofence=within_geofence,
             status="Present" if within_geofence else "Present (Off-Site)",
             shift_multiplier=Decimal(str(payload.shift_multiplier or 1.0)),
-            location_verified=payload.location_verified if payload.location_verified is not None else True,
+            location_verified=within_geofence,
             notes=payload.notes
         )
         db.add(log)
@@ -336,8 +336,7 @@ def punch(payload: PunchRequest, db: Session = Depends(get_db), current_user: Us
 
         if payload.shift_multiplier is not None:
             log.shift_multiplier = Decimal(str(payload.shift_multiplier))
-        if payload.location_verified is not None:
-            log.location_verified = payload.location_verified
+        log.location_verified = within_geofence
 
         # Compute hours worked
         if log.punch_in:
