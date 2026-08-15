@@ -2,6 +2,19 @@
 
 Append-only. Every working block ends with a 5-line entry. Never edit an existing entry; if a commit was reverted, add a new entry.
 
+## Session 14 — fixes 22, 23 and 24 (2026-08-15)
+
+- Action 1: applied R2-019 (W40 hr page, HIGH). The Holidays feature was entirely local-only: a fabricated "Diwali 2026-07-04" seed (factually wrong date), no load, no delete persistence. Now: seed removed, list loads from GET /apis/v3/hr/holidays/{companyId} (mapped to the same shape the R2-013 add path uses), Delete calls DELETE /hr/holidays/{id} and removes the row only on 204.
+- Action 2: applied R2-020 (W115 dpr page, MEDIUM). The M.B. Sheet modal opened pre-filled with two fabricated takeoff rows totalling 20.430 m³ (live-confirmed), so one click on "Apply to Executed Qty" injected measurements that were never taken into a progress report that feeds billing. Now opens with a single empty row; the total is 0.000 until real entries.
+- Action 3: applied R2-035 (W10 projects.py, CRITICAL). Project progress ignored the Task.progress column entirely — earned value came from a 4-bucket status map, so a task at 75% with status "not_started" left the project at 0% forever (live-reproduced; the Gantt only exposes a progress input). Now reads progress (with a float() wrap for the Numeric/Decimal runtime type — my original spec would have crashed on a real Decimal, caught by the coder) and falls back to status only for legacy NULL rows. Test added (75.0 via HTTP, 100.0 fallback via stubbed query — the NULL case is unreachable through the ORM since the column is NOT NULL default 0.0; the coder proved the HTTP path can't produce it).
+- Verified: npm run build green (71s + 55s TS); pytest tests/coverage/ 208 passed rc=0 (207 + 1 new). Verifier APPROVE on all three, including verdicts that both coder deviations (float wrap, stubbed fallback test) were correct.
+- Commits: `45ffb76` (R2-019), `4be5ccf` (R2-020), `89c607a` (R2-035).
+- Register: R2-019, R2-020, R2-035 STATUS TODO → FIXED.
+- Deferred this session: R2-010 (calculators: 14 orphaned endpoints; the audit offers three fix options — wire console to API, shared formula module, or contract tests — an implementer pick, sizeable; logged for a dedicated session).
+- Next session: R2-036 (W08 analytics spend counting revenue as expenditure, CRITICAL — the fix already exists in constants.py as EXPENSE_INVOICE_TYPES), R2-025-adjacent rollups, R2-017 (W47 dashboard, CRITICAL). R2-178 still awaits the founder.
+
+---
+
 ## Session 13 — fixes 18, 19, 20 and 21 (2026-08-15)
 
 - Action 1: applied R2-016 (W114 task page, MEDIUM). `updateProgress` never checked the PUT response and applied the optimistic state update unconditionally — a 422/500 rendered the new progress as saved (Gantt/Forecast End/S-curve all derive from it). Now sets state only on `res.ok` and alerts with the server detail on failure.
