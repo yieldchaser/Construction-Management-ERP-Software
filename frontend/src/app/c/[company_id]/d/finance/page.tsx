@@ -148,6 +148,7 @@ export default function FinancePage() {
   const [desc, setDesc] = useState("");
   const [txnDate, setTxnDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [costCode, setCostCode] = useState("1.2.1 Site Conveyance");
+  const [paymentMethod, setPaymentMethod] = useState("Cash");
   const [submitting, setSubmitting] = useState(false);
   const [photoUrl, setPhotoUrl] = useState<string>("");
 
@@ -529,7 +530,7 @@ export default function FinancePage() {
           project_id: projectId,
           payment_type: paymentType,
           amount: amtVal,
-          payment_method: "Cash",
+          payment_method: paymentMethod,
           reference_number: refNum || `ONS-V-${Date.now().toString().slice(-4)}`,
           description: desc || `Recorded ${selectedTxnType} voucher`,
           payment_date: new Date(txnDate + "T00:00:00").toISOString()
@@ -3412,7 +3413,8 @@ export default function FinancePage() {
                           <input
                             type="radio"
                             name="paymentMethod"
-                            defaultChecked={m === "Cash"}
+                            checked={paymentMethod === m}
+                            onChange={() => setPaymentMethod(m)}
                             className="accent-primary"
                           />
                           <span>{m}</span>
