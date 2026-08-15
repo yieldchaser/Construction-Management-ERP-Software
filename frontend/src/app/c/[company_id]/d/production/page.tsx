@@ -296,7 +296,6 @@ export default function ProductionPage() {
         <header className="border-b border-border-custom bg-card px-6 py-5">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <div className="text-[10px] uppercase tracking-[0.28em] text-muted">Phase 16</div>
               <h1 className="mt-1 text-2xl font-black tracking-tight text-foreground">Production Management</h1>
               <p className="mt-2 text-sm text-muted">
                 Recipe standards, batch execution, consumption variance, and inventory pull-through in one view.

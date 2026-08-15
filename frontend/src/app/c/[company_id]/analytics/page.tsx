@@ -300,7 +300,6 @@ export default function CompanyAnalyticsPage() {
       <main className="flex-1 overflow-y-auto">
         <header className="flex flex-col gap-4 border-b border-border-custom bg-card px-6 py-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <div className="text-[10px] uppercase tracking-[0.28em] text-muted">Phase 14</div>
             <h1 className="mt-2 text-2xl font-extrabold tracking-tight text-foreground">Advanced Analytics Dashboard</h1>
             <p className="mt-2 max-w-3xl text-sm text-muted">
               Cross-project KPI view for burn rate, progress cadence, labour productivity, procurement leakage, and subcontractor performance.
