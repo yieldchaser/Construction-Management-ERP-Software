@@ -2,6 +2,19 @@
 
 Append-only. Every working block ends with a 5-line entry. Never edit an existing entry; if a commit was reverted, add a new entry.
 
+## Session 16 — fixes 27, 28 and 29 (2026-08-15)
+
+- Action 1: fixed R2-036-bis (the logged follow-up). `month_spend` in the S-curve/burn block (analytics.py:293) still summed total_payable unfiltered, so budget_burn_series stayed inflated by sales while the headline burn rate was already fixed — the two displays disagreed. Now EXPENSE-filtered; the R2-036 test extended to assert the burn series shows 23600 not 141600.
+- Action 2: applied R2-011 (W43 party page + library.py, HIGH) — the second instance of the invoice_type bug class. 6 of the 9 UI party_type options 422'd (Investor, Worker, Labour Contractor, Material Supplier, Equipment Supplier, Other Vendor) and the modal closed silently as if saved (live-proven with Investor). The backend pattern is now a union allowlist covering both vocabularies — every UI option validates AND every previously-stored value still matches. The form now alerts with the server detail and stays open on non-2xx.
+- Action 3: applied R2-031 (W11 planning.py, MEDIUM). `update_task` derives status from progress when status isn't supplied (0 → not_started, 0<p<100 → ongoing, 100 → completed; explicit status wins) — a task at 75% no longer reads "not_started", fixing status filters/rollups (Lookahead, Milestones). Chose "ongoing" over the audit's "in_progress" wording after verifier adjudication (a new token would silently fall to the 0.0 rollup fallback). Test `test_task_status_derives_from_progress` added.
+- Verified: pytest tests/coverage/ 211 passed rc=0 (209 + 2 new); npm run build green (78s + 41s TS, party page touched); verifier APPROVE on all three plus adjudication.
+- Follow-ups flagged (not fixed, drive-by rule): (a) planning.py:742-744 `add_task_comment` writes `status = "in_progress"` without touching progress — dual vocabulary that counts those tasks at 0% in the R2-035 rollup when progress is NULL; fix = "ongoing" there; (b) the "Add Existing Party" flow (party page ~:326) has the same silent-close pattern.
+- Commits: `4ee3856` (R2-036-bis), `ca3a742` (R2-011), `c962290` (R2-031).
+- Register: R2-011, R2-031 STATUS TODO → FIXED; R2-036 Notes updated (bis resolved).
+- Next session: R2-031-followup (planning.py:742), R2-029 (W20 zoho_books, MEDIUM), R2-039 (W04 reports.py, CRITICAL, PARTIAL 5/91 — needs care), R2-034-family. R2-178 still awaits the founder.
+
+---
+
 ## Session 15 — fixes 25 and 26 (2026-08-15)
 
 - Action 1: applied R2-036 (W08 analytics/budget/towers, CRITICAL). All 5 systemic bill-sum sites now filter by invoice-type bucket: analytics project_spend (:223) + operational spend (:440) → EXPENSE_INVOICE_TYPES; budget committed/actual (:145/:159) → EXPENSE_INVOICE_TYPES; towers consolidated-pnl "Billed" (:177/:199) → REVENUE_INVOICE_TYPES (the finance P&L labels the same figure "Revenue (Billed)" — verifier agreed with the revenue-side choice). Live repro was "Spend ₹1,41,600" for ₹23,600 of purchases + one ₹1,18,000 sale; now ₹23,600. Regression test `test_analytics_spend_excludes_sales` added (209/209).
