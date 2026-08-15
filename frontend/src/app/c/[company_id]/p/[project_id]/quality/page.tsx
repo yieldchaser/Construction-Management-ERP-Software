@@ -170,8 +170,8 @@ export default function QualityPage() {
           return {
             id: cl.id,
             title: cl.title,
-            category: cl.category || "Concrete",
-            isCode: cl.is_code_reference || "-",
+category: cl.category || "—",
+isCode: cl.is_code_reference || "—",
             items
           };
         }));
