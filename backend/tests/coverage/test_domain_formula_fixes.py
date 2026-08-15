@@ -441,3 +441,6 @@ def test_analytics_spend_excludes_sales(client, db, make_tenant, auth_headers):
     assert data["projects"][0]["spend"] == 23600.0
     assert data["total_spend"] == 23600.0
     assert data["total_spend"] != 141600.0
+    jan_burn = next(b for b in data["budget_burn_series"] if b["label"].startswith("Jan"))
+    assert jan_burn["spend"] == 23600.0
+    assert jan_burn["spend"] != 141600.0
