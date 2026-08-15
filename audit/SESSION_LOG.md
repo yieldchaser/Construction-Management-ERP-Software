@@ -42,6 +42,19 @@ Append-only. Every working block ends with a 5-line entry. Never edit an existin
 
 ---
 
+## Session 5 — fifth fix (2026-08-15)
+
+- Action: applied R2-038 (W81 analytics). The Analytics page had a local `formatCurrency` that hardcoded `Rs ` as the currency prefix and ignored `currency_decimal_places`. Replaced its body with a wrapper around the shared `fmtINR` helper and removed the 6 `Rs ` literals from the call sites.
+- Why this was the right fifth fix: LOW severity, single-file, no cross-file. The audit's complaint was purely cosmetic ("Rs vs ₹") — the fix mechanically aligns with the rest of the codebase.
+- Honest note recorded in the register: fmtINR defaults to 0 decimal places; the analytics page doesn't have company settings in scope, so the second half of the audit's complaint ("omits the decimal places") is still open at the project-wide level. Same pattern as dozens of other call sites — fixing all of them at once is a separate pass.
+- Verified: static — output now starts with ₹.
+- Blast radius: 1 file, +5/-4 lines.
+- Commits: `d48e67c`.
+- Register: R2-038 STATUS TODO → FIXED.
+- Next session: a quick NPM build / pytest pass is now warranted (5 frontend fixes in, no build run yet). Or continue to next LOW/MEDIUM single-file. Founder's call.
+
+---
+
 
 ## Session 0 — initial dump (2026-08-15)
 
