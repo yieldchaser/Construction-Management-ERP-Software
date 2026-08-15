@@ -2,6 +2,17 @@
 
 Append-only. Every working block ends with a 5-line entry. Never edit an existing entry; if a commit was reverted, add a new entry.
 
+## Session 9 — eighth fix + Render build failure (2026-08-15)
+
+- Action 1 (infra, founder-reported): the Render backend deploy was failing at `pip install -r requirements.txt` with PyPI 502s (`too many 502 error responses` from files.pythonhosted.org). Added a 5-attempt retry loop with `--retries 10 --timeout 60` to the Dockerfile (`b27bffc`). The verifier subagent REJECTED it: in POSIX shell the all-5-fail path exits 0 (loop exit status = last command `sleep 10`; `set -e` exempts non-final `&&` failures), which would build an image with no deps and die at uvicorn boot. Re-fixed with `[ "$i" -eq 5 ] && exit 1;` (`95e4a86`), empirically verified on dash and bash: success=0, fail-then-success=0, all-5-fail=1. APPROVE. Founder still needs to re-trigger the Render deploy (out of my reach).
+- Action 2: applied R2-034 (W95 billing page, HIGH). In `d/billing/page.tsx`: the Work Orders tab's Subcontractor column now uses the server-supplied `subcontractor_name` (was a client-side nameMap that could be empty); the loader's subcontractors fetch, fetchWorkOrders, and fetchBills gained `else` branches that log the HTTP status (no more silent swallow); loader effect re-keyed on `[companyId, projectId]` with a `!companyId` guard so it re-runs once project context resolves.
+- Why this was the right fix: live reproduction showed the RA-bill modal's subcontractor dropdown never populating and WOs reading "Unassigned" while the API response carried the name. Verified: npm run build green (55.4s, zero TS errors); verifier APPROVE (spec 3/3, no refetch loop, dropdown contract preserved).
+- Commits: `b27bffc` (superseded), `95e4a86` (Dockerfile), `0866171` (R2-034).
+- Register: R2-034 STATUS TODO → FIXED.
+- Next session: R2-178 still needs a founder decision (wire 13 vs cut to 2 approval categories). R2-121 (subcon tab premature empty state) is same-family as R2-099 and is a clean 2-file frontend fix (`d/subcon` + `p/[project_id]/subcon`). R2-037 (analytics wastage formula) is a small backend fix.
+
+---
+
 ## Session 8 — seventh fix (2026-08-15)
 
 - Action: applied R2-014 (W84 attendance pages), the audit's #1 CRITICAL and the live-reproduced R2-105 bug. In both `d/attendance/page.tsx` and `p/[project_id]/attendance/page.tsx` (identical code, identical fix), `flushQueue` was rewritten: it now POSTs each queued punch to `/apis/v3/hr/attendance/punch`, removes a punch only on a confirmed 2xx, retains failures (including legacy records missing `employee_id`/`project_id`), and reports honest counts ("Synced X of Y; Z failed and remain queued" instead of the old unconditional "Synced N successfully" with zero network activity). `PunchRecord` and `queuePunch` now persist `employee_id`/`project_id` on queued punches (they were missing, so the flush had nothing to send). Added an `isSyncing` guard that disables the Sync button mid-flight (prevents double-POST "Already punched in" 400s).

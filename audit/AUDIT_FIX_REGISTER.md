@@ -185,7 +185,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-031 | MEDIUM | W11 | `planning.py` | `frontend/src/app/c/[company_id]/p/[project_id]/task/page.tsx` | TODO | | reg L835 |
 | R2-032 | HIGH | W40 | `frontend/src/app/c/[company_id]/d/hr/page.tsx` | — | TODO | | reg L1439 |
 | R2-033 | HIGH | W03 | `hr.py` | — | FIX_VERIFIED | `e2e449d` | reg L1471; hr.py direct-fix pass; suite RC-047 |
-| R2-034 | HIGH | W95 | `frontend/src/app/c/[company_id]/d/billing/page.tsx` | — | TODO | | reg L1512 |
+| R2-034 | HIGH | W95 | `frontend/src/app/c/[company_id]/d/billing/page.tsx` | — | FIXED | `0866171` | reg L1512; the loader no longer depends solely on a client-side nameMap for the work-order Subcontractor column — it now uses the server-supplied `subcontractor_name` (WOResponse field) with nameMap as fallback. Silent-failure swallowing fixed: the loader's subcontractors fetch, fetchWorkOrders, and fetchBills each gained an `else` branch logging `res.status`. Loader effect re-keyed on `[companyId, projectId]` with a `!companyId` guard so a first-run with unresolved context re-runs once it settles. Blast-radius 1 file (p/[project_id]/billing is a redirect to this page), +9/-3. No test added. Note: `companyId = company_id || "demo-company"` fallback (pre-existing) makes the !companyId guard inert in practice. |
 | R2-035 | CRITICAL | W10 | `projects.py` | — | TODO | | reg L1550 |
 | R2-036 | CRITICAL | W08 | `analytics.py` | `budget.py`, `towers.py`, `constants.py` | TODO | | reg L1582 |
 | R2-037 | MEDIUM | W08 | `analytics.py` | — | TODO | | reg L1636 |
