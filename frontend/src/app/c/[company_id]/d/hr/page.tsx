@@ -97,33 +97,6 @@ interface LeaveBalanceRow {
   earned: LeaveTypeBalance;
 }
 
-// ─── Mock Data ────────────────────────────────────────────────────────────────
-
-const computePayslips = (employees: Employee[], daysPresent: Record<string, number>, daysInMonth: number): PayslipLine[] => {
-  return employees.map(emp => {
-    const days = daysPresent[emp.id] ?? daysInMonth;
-    const ratio = days / daysInMonth;
-    const gross = Math.round(emp.grossMonthly * ratio * 100) / 100;
-    const basicPro = Math.round(emp.basic * ratio * 100) / 100;
-    // Cap PF at ₹1,800 monthly contribution limit
-    const pfEmp = Math.min(1800, Math.round(basicPro * emp.pfPct / 100 * 100) / 100);
-    const pfEr  = Math.min(1800, Math.round(basicPro * emp.pfPct / 100 * 100) / 100);
-    const esiEmp = emp.esiApplicable ? Math.round(gross * 0.75 / 100 * 100) / 100 : 0;
-    const esiEr  = emp.esiApplicable ? Math.round(gross * 3.25 / 100 * 100) / 100 : 0;
-    const tds = emp.tdsMonthly;
-    const totalDed = Math.round((pfEmp + esiEmp + tds) * 100) / 100;
-    const net = Math.round((gross - totalDed) * 100) / 100;
-    return {
-      employeeId: emp.id, employeeName: emp.name, designation: emp.designation,
-      daysPresent: days, daysInMonth, gross, basic: basicPro,
-      hra: Math.round(emp.hra * ratio * 100) / 100,
-      allowances: Math.round(emp.allowances * ratio * 100) / 100,
-      pfEmployee: pfEmp, pfEmployer: pfEr, esiEmployee: esiEmp, esiEmployer: esiEr,
-      tds, totalDeductions: totalDed, netPayable: net,
-    };
-  });
-};
-
 const fmt = (n: number) => "₹" + n.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 // ─── Component ────────────────────────────────────────────────────────────────
