@@ -17,7 +17,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Install python dependencies
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN set -e; for i in 1 2 3 4 5; do pip install --no-cache-dir --retries 10 --timeout 60 -r requirements.txt && break; echo "pip install attempt $i failed (PyPI throttling), retrying in 10s..."; sleep 10; done
 
 # Copy application code
 COPY . .
