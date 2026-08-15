@@ -134,14 +134,42 @@ export default function ToDoPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [companyId, accessToken, projectMap, teamMap]);
 
-  const handleToggleTodo = (id: string) => {
-    setTodos((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, is_completed: !t.is_completed } : t))
-    );
+  const handleToggleTodo = async (t: ToDoItem) => {
+    const next = t.is_completed ? "pending" : "done";
+    try {
+      const res = await fetch(`${apiHost}/apis/v3/todos/${t.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
+        body: JSON.stringify({ status: next }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        alert(`Failed to update task: ${typeof err.detail === "string" ? err.detail : `HTTP ${res.status}`}`);
+        return;
+      }
+      fetchTodos();
+    } catch (e) {
+      console.error("Failed to update task", e);
+      alert("Failed to update task. Check your connection.");
+    }
   };
 
-  const handleDeleteTodo = (id: string) => {
-    setTodos((prev) => prev.filter((t) => t.id !== id));
+  const handleDeleteTodo = async (id: string) => {
+    try {
+      const res = await fetch(`${apiHost}/apis/v3/todos/${id}`, {
+        method: "DELETE",
+        headers: authHeaders() || {},
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        alert(`Failed to delete task: ${typeof err.detail === "string" ? err.detail : `HTTP ${res.status}`}`);
+        return;
+      }
+      fetchTodos();
+    } catch (e) {
+      console.error("Failed to delete task", e);
+      alert("Failed to delete task. Check your connection.");
+    }
   };
 
   const handleCreateTodo = async (e: React.FormEvent) => {
@@ -283,7 +311,7 @@ export default function ToDoPage() {
                     <input
                       type="checkbox"
                       checked={t.is_completed}
-                      onChange={() => handleToggleTodo(t.id)}
+                      onChange={() => handleToggleTodo(t)}
                       className="h-4.5 w-4.5 rounded border-white/20 bg-transparent text-primary focus:ring-primary/20 accent-primary cursor-pointer"
                     />
                   </td>
