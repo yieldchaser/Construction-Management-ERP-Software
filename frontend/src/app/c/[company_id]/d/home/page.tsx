@@ -549,9 +549,23 @@ export default function ProjectsHomePage() {
                           View Tasks
                         </Link>
                         <button
-                          onClick={() => {
-                            setTodoCount((c) => c + 1);
-                            showToast("Task quick-added to WBS backlog!");
+                          onClick={async () => {
+                            try {
+                              const res = await fetch(`${apiHost}/apis/v3/todos/`, {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json", "Authorization": `Bearer ${accessToken}` },
+                                body: JSON.stringify({ company_id: companyId, project_id: p.id, title: "Quick task" }),
+                              });
+                              if (res.ok) {
+                                setTodoCount((c) => c + 1);
+                                showToast("Task quick-added to WBS backlog!");
+                              } else {
+                                const err = await res.json().catch(() => ({}));
+                                showToast(err.detail || "Failed to add task");
+                              }
+                            } catch (e) {
+                              showToast("Failed to add task");
+                            }
                           }}
                           className="h-6 w-6 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold hover:bg-primary/20 transition-all cursor-pointer"
                         >
