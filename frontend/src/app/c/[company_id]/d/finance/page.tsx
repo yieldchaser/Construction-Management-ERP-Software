@@ -888,6 +888,18 @@ export default function FinancePage() {
     return [...transactions].sort((a, b) => a.date.localeCompare(b.date));
   }, [transactions]);
 
+  // Header-chip counts (lifted from the inline IIFE so the header chips and the
+  // toolbar buttons can share the same source of truth). Fix for R2-101.
+  const txnsForHeader = txnSummary.transactions || [];
+  const unbilledCount = useMemo(
+    () => txnsForHeader.filter((t: any) => /material/i.test(t.type || "") && t.status && t.status !== "Paid").length,
+    [txnsForHeader]
+  );
+  const pendingCount = useMemo(
+    () => txnsForHeader.filter((t: any) => t.status && t.status !== "Paid" && t.status !== "Approved").length,
+    [txnsForHeader]
+  );
+
   // Main ledger with running balance
   const ledgerWithRunningBalance = useMemo(() => {
     let balance = 0;
@@ -1059,14 +1071,14 @@ export default function FinancePage() {
             <div className="hidden sm:flex items-center gap-1.5 cursor-pointer hover:bg-elevated/40 px-2.5 py-1.5 rounded-lg border border-border-custom/50">
               <Icon name="trolley" className="w-3.5 h-3.5" />
               <span className="text-[10px] text-muted uppercase font-bold tracking-wider">Unbilled Materials</span>
-              <span className="bg-primary/20 text-primary border border-primary/30 text-[9px] font-bold px-1.5 py-0.5 rounded-full">0</span>
+              <span className="bg-primary/20 text-primary border border-primary/30 text-[9px] font-bold px-1.5 py-0.5 rounded-full">{unbilledCount}</span>
             </div>
 
             {/* Pending Entries Badge */}
             <div className="hidden sm:flex items-center gap-1.5 cursor-pointer hover:bg-elevated/40 px-2.5 py-1.5 rounded-lg border border-border-custom/50">
               <Icon name="schedule" className="w-3.5 h-3.5" />
               <span className="text-[10px] text-muted uppercase font-bold tracking-wider">Pending Entries</span>
-              <span className="bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[9px] font-bold px-1.5 py-0.5 rounded-full">0</span>
+              <span className="bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[9px] font-bold px-1.5 py-0.5 rounded-full">{pendingCount}</span>
             </div>
 
             <div className="relative">
@@ -1128,8 +1140,6 @@ export default function FinancePage() {
               const matchD = !txnDateFilter || (t.date || "").startsWith(txnDateFilter);
               return matchQ && matchD;
             });
-            const unbilledCount = txns.filter((t: any) => /material/i.test(t.type || "") && t.status && t.status !== "Paid").length;
-            const pendingCount = txns.filter((t: any) => t.status && t.status !== "Paid" && t.status !== "Approved").length;
             const statusClass = (s: string) => {
               if (s === "Paid" || s === "Approved") return "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
               if (s === "Partially Paid") return "bg-amber-500/10 text-amber-400 border border-amber-500/20";
