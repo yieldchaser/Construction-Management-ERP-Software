@@ -247,7 +247,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-094 | MEDIUM | W02 | `UNMAPPED` | — | TODO | | reg L3885 |
 | R2-095 | LOW | W02 | `UNMAPPED` | — | TODO | | reg L3896 |
 | R2-096 | CRITICAL | W04 | `reports.py` | `finance.py` | FIX_VERIFIED | `d4db32f` | reg L3918; reports.py direct-fix pass; suite RC-081 |
-| R2-097 | MEDIUM | W01 | `finance.py` | — | TODO | | reg L3965 |
+| R2-097 | MEDIUM | W01 | `finance.py` | `frontend/src/app/c/[company_id]/d/finance/page.tsx` | FIXED | <insert-commit-hash> | reg L3965; 1-line default "Active"→"All" on the party sub-tab status filter; backend derives status ("To Pay"/"Advance Paid"/"To Receive"/"Advance Received"/"Settled") so any newly-created party with zero balances is "Settled" and was hidden by the old default; matches the audit's first suggested fix; blast-radius 1 file / 1 line; no test added (visual UX, no logic change).
 | R2-098 | MEDIUM | W02 | `UNMAPPED` | — | TODO | | reg L3978 |
 | R2-099 | CRITICAL | W27 | `frontend/src/app/c/[company_id]/d/finance/page.tsx` | — | TODO | | reg L3999 |
 | R2-100 | MEDIUM | W01 | `finance.py` | — | FIX_VERIFIED | `a6bfdb4` | reg L4040; direct-fix pass; suite RC-035 |

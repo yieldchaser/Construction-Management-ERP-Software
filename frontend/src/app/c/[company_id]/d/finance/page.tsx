@@ -240,7 +240,7 @@ export default function FinancePage() {
   // Company-level Party sub-tab states
   const [companyParties, setCompanyParties] = useState<any[]>([]);
   const [showAddPartyModal, setShowAddPartyModal] = useState(false);
-  const [partyTabStatus, setPartyTabStatus] = useState("Active");
+  const [partyTabStatus, setPartyTabStatus] = useState("All");
   const [newParty, setNewParty] = useState({
     name: "", phone: "", email: "", party_type: "Supplier", address: "",
     party_id_custom: "", date_of_joining: "", aadhaar_number: "", pan_number: "",
