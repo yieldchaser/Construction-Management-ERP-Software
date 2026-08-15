@@ -48,17 +48,6 @@ export default function DashboardPage() {
   const [workforceEmployees, setWorkforceEmployees] = useState<any[]>([]);
   const [workforceLibraries, setWorkforceLibraries] = useState<any[]>([]);
   const [materialLibraries, setMaterialLibraries] = useState<any[]>([]);
-  const [snapshotFilters, setSnapshotFilters] = useState<{
-    payrollType: string;
-    workforceName: string;
-    materialCategory: string;
-    materialName: string;
-  }>({
-    payrollType: "All",
-    workforceName: "All",
-    materialCategory: "All",
-    materialName: "All"
-  });
   const [isLightTheme, setIsLightTheme] = useState(false);
 
   useEffect(() => {
@@ -298,92 +287,9 @@ export default function DashboardPage() {
 
   const activeProjDetails = projects.find(p => p.id === activeProject) || projects[0] || {};
   const normalizeText = (value: any) => (typeof value === "string" ? value.trim() : value == null ? "" : String(value).trim());
-  const uniqueValues = (values: string[]) => Array.from(new Set(values.filter(Boolean))).sort((a, b) => a.localeCompare(b));
   const activeProjectName = normalizeText(activeProjDetails.name) || "Active Project";
   const activeProjectStatus = normalizeText(activeProjDetails.status) || "Ongoing";
   const formatMoney = (value: number) => `₹${value.toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
-  const fallbackWorkforceEmployees: any[] = [];
-  const fallbackMaterials = [
-    { id: "demo-material-1", name: "Cement", category: "Structural", unit: "bag", lead_time_days: 3 },
-    { id: "demo-material-2", name: "Sand", category: "Aggregate", unit: "m3", lead_time_days: 2 }
-  ];
-  const workforceSource = workforceEmployees.length ? workforceEmployees : fallbackWorkforceEmployees;
-  const materialSource = materialLibraries.length ? materialLibraries : fallbackMaterials;
-
-  const workforceRows = workforceSource.map((emp: any, idx: number) => {
-    const designation = normalizeText(emp?.designation);
-    const department = normalizeText(emp?.department);
-    const payrollType = normalizeText(emp?.payroll_type) || normalizeText(emp?.payrollType) || designation || department || "General";
-    const libraryMatch = workforceLibraries.find((item: any) => {
-      const libraryName = normalizeText(item?.name).toLowerCase();
-      const normalizedDesignation = designation.toLowerCase();
-      const normalizedDepartment = department.toLowerCase();
-      return (
-        (normalizedDesignation && (libraryName === normalizedDesignation || libraryName.includes(normalizedDesignation))) ||
-        (normalizedDepartment && (libraryName === normalizedDepartment || libraryName.includes(normalizedDepartment)))
-      );
-    });
-    const grossSalary = Number(emp?.basic_salary ?? emp?.basic ?? 0) + Number(emp?.hra ?? 0) + Number(emp?.other_allowances ?? 0);
-
-    return {
-      id: String(emp?.id ?? emp?.employee_id ?? `emp-${idx}`),
-      workforceName: normalizeText(emp?.workforce_name)
-        || normalizeText(emp?.workforceName)
-        || normalizeText(emp?.workforce)
-        || normalizeText(emp?.workforce_type)
-        || normalizeText(emp?.workforceType)
-        || normalizeText(emp?.team_name)
-        || normalizeText(emp?.team)
-        || normalizeText(libraryMatch?.name)
-        || normalizeText(emp?.name)
-        || payrollType,
-      payrollType,
-      costCode: normalizeText(emp?.employee_code) || `CC-${String(idx + 1).padStart(2, "0")}`,
-      salaryPerShift: grossSalary > 0 ? grossSalary / 26 : Number(emp?.salary_per_shift ?? 0),
-      shiftHours: Number(emp?.shift_hours ?? emp?.shiftHours ?? 8) || 8,
-      projectName: normalizeText(emp?.project_name) || activeProjectName,
-      projectStatus: normalizeText(emp?.project_status) || activeProjectStatus,
-      basicSalary: Number(emp?.basic_salary ?? emp?.basic ?? 0) || 0
-    };
-  });
-
-  const materialRows = materialSource.map((item: any, idx: number) => ({
-    id: String(item?.id ?? `mat-${idx}`),
-    materialName: normalizeText(item?.name) || normalizeText(item?.material_name) || "Material",
-    materialCategory: normalizeText(item?.category) || normalizeText(item?.material_category) || "General",
-    unit: normalizeText(item?.unit) || normalizeText(item?.uom) || "-",
-    leadTime: normalizeText(item?.lead_time) || (item?.lead_time_days !== undefined && item?.lead_time_days !== null && item?.lead_time_days !== ""
-      ? `${item.lead_time_days} days`
-      : "-"),
-    projectName: normalizeText(item?.project_name) || activeProjectName
-  }));
-
-  const workforcePayrollOptions = uniqueValues([
-    ...workforceRows.map((row) => row.payrollType),
-    ...workforceLibraries.map((item: any) => normalizeText(item?.name))
-  ]);
-  const workforceNameOptions = uniqueValues([
-    ...workforceRows.map((row) => row.workforceName),
-    ...workforceLibraries.map((item: any) => normalizeText(item?.name))
-  ]);
-  const materialCategoryOptions = uniqueValues([
-    ...materialRows.map((row) => row.materialCategory),
-    ...materialLibraries.map((item: any) => normalizeText(item?.category))
-  ]);
-  const materialNameOptions = uniqueValues([
-    ...materialRows.map((row) => row.materialName),
-    ...materialLibraries.map((item: any) => normalizeText(item?.name))
-  ]);
-
-  const filteredWorkforceRows = workforceRows.filter((row) => (
-    (snapshotFilters.payrollType === "All" || row.payrollType === snapshotFilters.payrollType) &&
-    (snapshotFilters.workforceName === "All" || row.workforceName === snapshotFilters.workforceName)
-  ));
-  const filteredMaterialRows = materialRows.filter((row) => (
-    (snapshotFilters.materialCategory === "All" || row.materialCategory === snapshotFilters.materialCategory) &&
-    (snapshotFilters.materialName === "All" || row.materialName === snapshotFilters.materialName)
-  ));
-
 
   const handleSyncTally = async () => {
     setIsSyncing(true);
