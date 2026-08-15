@@ -2,6 +2,18 @@
 
 Append-only. Every working block ends with a 5-line entry. Never edit an existing entry; if a commit was reverted, add a new entry.
 
+## Session 15 — fixes 25 and 26 (2026-08-15)
+
+- Action 1: applied R2-036 (W08 analytics/budget/towers, CRITICAL). All 5 systemic bill-sum sites now filter by invoice-type bucket: analytics project_spend (:223) + operational spend (:440) → EXPENSE_INVOICE_TYPES; budget committed/actual (:145/:159) → EXPENSE_INVOICE_TYPES; towers consolidated-pnl "Billed" (:177/:199) → REVENUE_INVOICE_TYPES (the finance P&L labels the same figure "Revenue (Billed)" — verifier agreed with the revenue-side choice). Live repro was "Spend ₹1,41,600" for ₹23,600 of purchases + one ₹1,18,000 sale; now ₹23,600. Regression test `test_analytics_spend_excludes_sales` added (209/209).
+- Action 2: closed R2-017 (W47 dashboard, CRITICAL) with NO code — already fixed by main commit `cd01b15` (2026-07-28 "remove fabricated demo data shipped to production"): the 4 invented projects, defaultMatch merge, demo filter options in the dpr/item-wise-sales reports and the "Metro Terminal" caption in hr are all gone from the working tree (greps verified; the audit's line refs predate that commit). Marked FIXED with that hash and the evidence recorded.
+- Verified: pytest tests/coverage/ 209 passed rc=0; verifier APPROVE on the commit (6 query lines + test, import hygiene, no cross-test leakage, semantics: settlements correctly excluded from spend). npm build not needed (backend-only wave).
+- Follow-up logged (R2-036-bis, not fixed — drive-by rule): `month_spend` at analytics.py:293 still sums total_payable unfiltered, so `budget_burn_series` remains inflated by sales while the headline burn_rate_pct is now fixed — the two displays disagree. One-line fix, file it next session. NOTE: party_balances (analytics.py:618) nets all types — likely intentional; don't re-file.
+- Commits: `9234220` (R2-036). R2-017 closed via `cd01b15` (pre-existing main commit).
+- Register: R2-036, R2-017 STATUS TODO → FIXED.
+- Next session: R2-036-bis (analytics.py:293 month_spend, 1 line), then R2-011 (W43 party page, HIGH), R2-035-sibling rollups, R2-029 (zoho_books), R2-033-family backend fixes. R2-178 still awaits the founder.
+
+---
+
 ## Session 14 — fixes 22, 23 and 24 (2026-08-15)
 
 - Action 1: applied R2-019 (W40 hr page, HIGH). The Holidays feature was entirely local-only: a fabricated "Diwali 2026-07-04" seed (factually wrong date), no load, no delete persistence. Now: seed removed, list loads from GET /apis/v3/hr/holidays/{companyId} (mapped to the same shape the R2-013 add path uses), Delete calls DELETE /hr/holidays/{id} and removes the row only on 204.
