@@ -21,6 +21,7 @@ interface Employee {
   allowances: number;
   grossMonthly: number;
   pfPct: number;
+  pfEmployerPct: number;
   esiApplicable: boolean;
   tdsMonthly: number;
   status: "active" | "inactive";
@@ -275,6 +276,7 @@ export default function HRPayrollPage() {
           allowances: emp.other_allowances,
           grossMonthly: emp.basic_salary + emp.hra + emp.other_allowances,
           pfPct: emp.pf_employee_pct,
+          pfEmployerPct: emp.pf_employer_pct,
           esiApplicable: emp.is_esi_applicable,
           tdsMonthly: emp.tds_monthly,
           status: emp.status === "active" ? "active" : "inactive",
@@ -805,7 +807,7 @@ export default function HRPayrollPage() {
               <div className="grid grid-cols-4 gap-4 mb-6">
                 {[
                   { label: "Total Active", val: employees.filter(e => e.status === "active").length, color: "text-green-400" },
-                  { label: "Total Monthly CTC", val: fmt(employees.reduce((a, e) => a + e.grossMonthly + e.basic * 0.24, 0)), color: "text-primary" },
+                  { label: "Total Monthly CTC", val: fmt(employees.reduce((a, e) => a + e.grossMonthly + e.basic * (e.pfEmployerPct ?? 12) / 100, 0)), color: "text-primary" },
                   { label: "Departments", val: new Set(employees.map(e => e.department)).size, color: "text-secondary" },
                   { label: "PF Enrolled", val: employees.length, color: "text-blue-400" },
                 ].map(({ label, val, color }) => (
