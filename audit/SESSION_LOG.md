@@ -16,6 +16,19 @@ Append-only. Every working block ends with a 5-line entry. Never edit an existin
 
 ---
 
+## Session 3 — third fix (2026-08-15)
+
+- Action: applied R2-005 (W77 calculators). Inside the masonry category block, conditionally render plaster-specific notes when `activeCalc === "plaster"`, otherwise show brick notes.
+- Why this was the right third fix: LOW severity, single-file, no cross-file, pure content swap. The audit's complaint was "the Plaster tab shows brick notes" — the fix is a 1-conditional ternary.
+- Verified: static. Default (Bricks tab) shows brick notes; Plaster tab shows plaster notes.
+- Blast radius: 1 file, +10/-3 lines.
+- Repo convention check: replaced an em dash I'd accidentally used in the plaster notes with a comma (no em dashes in user-facing copy, per project README).
+- Commits: `2ed961c`.
+- Register: R2-005 STATUS TODO → FIXED.
+- Next session: pick the next LOW/MEDIUM single-file fix. R2-018, R2-038, R2-044, R2-037 all viable. Or pivot back to W01.
+
+---
+
 
 ## Session 0 — initial dump (2026-08-15)
 
