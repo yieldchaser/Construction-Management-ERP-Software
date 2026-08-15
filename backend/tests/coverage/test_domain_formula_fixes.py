@@ -475,3 +475,35 @@ def test_task_status_derives_from_progress(client, db, make_tenant, auth_headers
     assert status_of() == "not_started"
     put({"progress": 50, "status": "completed"})
     assert status_of() == "completed"
+
+
+def test_zoho_duplicate_vendor_searches_all_contact_types(monkeypatch):
+    import requests
+    from app.routers.zoho_books import _find_or_create_vendor
+
+    class _Resp:
+        def __init__(self, status_code, text, data=None):
+            self.status_code = status_code
+            self.text = text
+            self._data = data
+
+        def json(self):
+            return self._data
+
+    get_params = []
+
+    def fake_get(url, headers=None, params=None, timeout=None):
+        get_params.append(params)
+        if params and "contact_type" in params:
+            return _Resp(200, "", {"contacts": []})
+        return _Resp(200, "", {"contacts": [{"contact_id": "ZOHO-999"}]})
+
+    def fake_post(url, headers=None, params=None, json=None, timeout=None):
+        return _Resp(400, '{"code": 3062, "message": "a vendor with this name already exists"}')
+
+    monkeypatch.setattr(requests, "get", fake_get)
+    monkeypatch.setattr(requests, "post", fake_post)
+
+    contact_id = _find_or_create_vendor("tok", "org", name="Acme", email=None, phone=None, gstin=None)
+    assert contact_id == "ZOHO-999"
+    assert any(p is not None and "contact_type" not in p for p in get_params)

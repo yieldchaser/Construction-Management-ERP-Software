@@ -229,9 +229,11 @@ def _default_expense_account_id(access_token: str, organization_id: str) -> Opti
     return None
 
 
-def _search_vendor(access_token: str, organization_id: str, *, email: Optional[str] = None, name: Optional[str] = None) -> Optional[str]:
+def _search_vendor(access_token: str, organization_id: str, *, email: Optional[str] = None, name: Optional[str] = None, contact_type: Optional[str] = "vendor") -> Optional[str]:
     """Look up an existing vendor contact_id by email or by exact contact_name."""
-    params = {"contact_type": "vendor", "organization_id": organization_id}
+    params: dict = {"organization_id": organization_id}
+    if contact_type:
+        params["contact_type"] = contact_type
     if email:
         params["email"] = email
     elif name:
@@ -309,7 +311,7 @@ def _find_or_create_vendor(access_token: str, organization_id: str, *, name: str
         )
     if resp.status_code not in (200, 201):
         # Duplicate-name (code 3062) means it already exists — resolve by name.
-        dup = _search_vendor(access_token, organization_id, name=name)
+        dup = _search_vendor(access_token, organization_id, name=name, contact_type=None)
         if dup:
             return dup
         raise HTTPException(
