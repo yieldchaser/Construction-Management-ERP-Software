@@ -234,7 +234,11 @@ export default function SubconPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border-custom/40">
-                {filteredWO.length === 0 ? (
+                {loading ? (
+                  <tr>
+                    <td colSpan={7} className="px-4 py-8 text-center text-muted">Loading subcontractor work orders...</td>
+                  </tr>
+                ) : filteredWO.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="px-4 py-8 text-center text-muted">No subcontractor workorders found.</td>
                   </tr>
@@ -271,7 +275,9 @@ export default function SubconPage() {
           {/* Subcontractor Directory — company subcontractors (userless team + party) */}
           <div className="mt-6 bg-card border border-border-custom rounded-xl overflow-hidden">
             <div className="px-4 py-3 border-b border-border-custom text-[10px] uppercase font-bold tracking-wider text-muted">Subcontractor Directory</div>
-            {subcontractors.length === 0 ? (
+            {loading ? (
+              <div className="px-4 py-8 text-center text-muted text-xs">Loading subcontractors...</div>
+            ) : subcontractors.length === 0 ? (
               <div className="px-4 py-8 text-center text-muted text-xs">No subcontractors yet. Create one from the Work Order form.</div>
             ) : (
               <ul className="divide-y divide-border-custom/40">
