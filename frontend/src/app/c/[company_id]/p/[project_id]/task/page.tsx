@@ -109,12 +109,20 @@ export default function TaskPage() {
   const updateProgress = async (id: string, value: number) => {
     setSavingId(id);
     try {
-      await fetch(getApi(`/planning/tasks/${id}`), {
+      const res = await fetch(getApi(`/planning/tasks/${id}`), {
         method: "PUT",
         headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify({ progress: clamp(value, 0, 100) }),
       });
-      setTasks((ts) => ts.map((t) => (t.id === id ? { ...t, progress: clamp(value, 0, 100) } : t)));
+      if (res.ok) {
+        setTasks((ts) => ts.map((t) => (t.id === id ? { ...t, progress: clamp(value, 0, 100) } : t)));
+      } else {
+        const err = await res.json().catch(() => ({}));
+        alert(`Failed to save progress: ${err.detail || `HTTP ${res.status}`}`);
+      }
+    } catch (e) {
+      console.error("Failed to update progress", e);
+      alert("Failed to save progress. Your change was not saved.");
     } finally {
       setSavingId(null);
     }
