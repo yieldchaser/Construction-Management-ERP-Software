@@ -169,7 +169,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-015 | MEDIUM | W78 | `frontend/src/app/c/[company_id]/d/home/page.tsx` | — | TODO | | reg L760 |
 | R2-016 | MEDIUM | W114 | `frontend/src/app/c/[company_id]/p/[project_id]/task/page.tsx` | `p/[project_id]/layout.tsx` | TODO | | reg L784 |
 | R2-017 | CRITICAL | W47 | `frontend/src/app/c/[company_id]/dashboard/page.tsx` | `backend/app/main.py`, `reports/dpr/page.tsx`, `reports/item-wise-sales/page.tsx` | TODO | | reg L857 |
-| R2-018 | LOW | W130 | `frontend/src/app/c/[company_id]/reports/dpr/page.tsx` | — | TODO | | reg L893 |
+| R2-018 | LOW | W130 | `frontend/src/app/c/[company_id]/reports/dpr/page.tsx` | — | FIXED | <insert-commit-hash> | reg L893; the dead date input is now controlled (was `defaultValue="2026-07-04"` with no state) and wired to a new `customDate` state; the input is disabled when the date select is not "Custom"; the export handler now has a "Custom" branch that uses the picked date (and shows a toast if no date is picked). Label flips "Date Range" to "Pick Date" when the select is "Custom". Blast-radius 1 file, +11/-2 lines. No test added.
 | R2-019 | HIGH | W40 | `frontend/src/app/c/[company_id]/d/hr/page.tsx` | `hr.py` | TODO | | reg L908 |
 | R2-020 | MEDIUM | W115 | `frontend/src/app/c/[company_id]/d/dpr/page.tsx` | — | TODO | | reg L937 |
 | R2-021 | HIGH | W10 | `projects.py` | `frontend/src/app/c/[company_id]/p/[project_id]/dashboard/page.tsx` | TODO | | reg L964 |

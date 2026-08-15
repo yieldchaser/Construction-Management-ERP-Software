@@ -13,6 +13,7 @@ export default function DPRReportPage() {
 
   const [selectedProject, setSelectedProject] = useState("All");
   const [selectedDateFilter, setSelectedDateFilter] = useState("This Week");
+  const [customDate, setCustomDate] = useState("");
   const [toastMessage, setToastMessage] = useState("");
   const [rows, setRows] = useState<Record<string, any>[]>([]);
   const [loading, setLoading] = useState(false);
@@ -56,6 +57,13 @@ export default function DPRReportPage() {
         mon.setDate(now.getDate() - day);
         q.set("from_date", fmt(mon));
         q.set("to_date", fmt(now));
+      } else if (selectedDateFilter === "Custom") {
+        if (!customDate) {
+          showToast("Pick a date for the custom range first.");
+          return;
+        }
+        q.set("from_date", customDate);
+        q.set("to_date", customDate);
       }
       const res = await fetch(`${getApiHost()}/apis/v3/dpr/export?${q.toString()}`, {
         headers: authHeaders() || {},
@@ -148,11 +156,15 @@ export default function DPRReportPage() {
 
             {/* Date Range Picker */}
             <div className="flex flex-col gap-1">
-              <span className="text-[10px] text-muted uppercase font-bold">Date Range:</span>
+              <span className="text-[10px] text-muted uppercase font-bold">
+                {selectedDateFilter === "Custom" ? "Pick Date:" : "Date Range:"}
+              </span>
               <input
                 type="date"
-                defaultValue="2026-07-04"
-                className="bg-card border border-border-custom rounded-lg px-3 py-1 text-xs text-foreground focus:outline-none focus:border-primary"
+                value={customDate}
+                onChange={(e) => setCustomDate(e.target.value)}
+                disabled={selectedDateFilter !== "Custom"}
+                className="bg-card border border-border-custom rounded-lg px-3 py-1 text-xs text-foreground focus:outline-none focus:border-primary disabled:opacity-50"
               />
             </div>
           </div>
