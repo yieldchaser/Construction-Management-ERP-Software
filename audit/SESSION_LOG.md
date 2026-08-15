@@ -55,6 +55,17 @@ Append-only. Every working block ends with a 5-line entry. Never edit an existin
 
 ---
 
+## Session 6 — baseline check (2026-08-15)
+
+- Action: ran `npm run build` and `pytest tests/coverage/` to establish the post-fixes baseline.
+- Result:
+  - **npm run build**: compiled successfully in 29.0s. TypeScript clean. All 22 static pages generated. **No regressions from the 5 frontend fixes.**
+  - **pytest tests/coverage/**: 206 passed, 214 warnings, **0 failed, 0 errored**. All warnings are pre-existing Pydantic v1→v2 deprecation warnings in `auth.py`, `profile.py`, `team_schedule.py`, `files.py`, `hr.py`, `tally.py` — none are from my changes.
+- Baseline established. Safe to continue. The protocol's "verify with the post-wave tests" rule is now satisfied for the first time in this campaign.
+- No new commits (baseline check only).
+
+---
+
 
 ## Session 0 — initial dump (2026-08-15)
 
