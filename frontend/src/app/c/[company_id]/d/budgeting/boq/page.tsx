@@ -140,7 +140,7 @@ export default function BOQPage() {
         setImportMsg(data.detail || "Import failed.");
       }
     } catch {
-      setImportMsg("Backend not reachable.");
+      setImportMsg("Import failed: backend not reachable. The BOQ was not modified.");
     } finally {
       setImporting(false);
     }
