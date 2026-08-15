@@ -150,6 +150,18 @@ export default function HRPayrollPage() {
   const [showLibraryDrawer, setShowLibraryDrawer] = useState(false);
   const [showDetailsDrawer, setShowDetailsDrawer] = useState(false);
   const [selectedEmpDetail, setSelectedEmpDetail] = useState<any>(null);
+  const [detailsForm, setDetailsForm] = useState({ salaryAmount: "", shiftHours: "", otRate: "", designation: "" });
+
+  useEffect(() => {
+    if (selectedEmpDetail) {
+      setDetailsForm({
+        salaryAmount: selectedEmpDetail.grossMonthly != null ? String(selectedEmpDetail.grossMonthly) : "",
+        shiftHours: selectedEmpDetail.shiftHours != null ? String(selectedEmpDetail.shiftHours) : "8",
+        otRate: selectedEmpDetail.otRate != null ? String(selectedEmpDetail.otRate) : "150",
+        designation: selectedEmpDetail.designation || "",
+      });
+    }
+  }, [showDetailsDrawer]);
   
   const [workforceForm, setWorkforceForm] = useState({
     workerType: "",
@@ -444,6 +456,85 @@ export default function HRPayrollPage() {
       }
     } catch (e) {
       console.error("Failed to save employee", e);
+    }
+  };
+
+  const handleSaveHoliday = async () => {
+    if (!holidayForm.name || !holidayForm.date) return;
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/hr/holidays/${companyId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
+        body: JSON.stringify({ name: holidayForm.name, date: new Date(holidayForm.date).toISOString() }),
+      });
+      if (res.ok) {
+        const h = await res.json();
+        const d = new Date(h.date);
+        setHolidays((prev) => [...prev, { id: h.id, holidayName: h.name, date: h.date.split("T")[0], day: d.toLocaleDateString("en-US", { weekday: "long" }) }]);
+        setShowAddHolidayModal(false);
+        setHolidayForm({ name: "", date: "" });
+        triggerLocalToast("Holiday added successfully");
+      } else {
+        const err = await res.json().catch(() => ({}));
+        alert(`Failed to add holiday: ${err.detail || "Server error"}`);
+      }
+    } catch (e) {
+      console.error("Failed to add holiday", e);
+      alert("Failed to add holiday: server unreachable");
+    }
+  };
+
+  const handleSaveWorkforce = async () => {
+    if (!workforceForm.workerType) return;
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/library/workforces`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
+        body: JSON.stringify({ company_id: companyId, name: workforceForm.workerType }),
+      });
+      if (res.ok) {
+        setShowWorkforceDrawer(false);
+        triggerLocalToast("Workforce added successfully");
+      } else {
+        const err = await res.json().catch(() => ({}));
+        alert(`Failed to add workforce: ${err.detail || "Server error"}`);
+      }
+    } catch (e) {
+      console.error("Failed to add workforce", e);
+      alert("Failed to add workforce: server unreachable");
+    }
+  };
+
+  const handleSaveEmployeeDetails = async () => {
+    if (!selectedEmpDetail) return;
+    try {
+      const [profRes, empRes] = await Promise.all([
+        fetch(`${getApiHost()}/apis/v3/hr/payroll-profiles/${selectedEmpDetail.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
+          body: JSON.stringify({
+            salary_amount: parseFloat(detailsForm.salaryAmount) || 0,
+            shift_hours: parseFloat(detailsForm.shiftHours) || 8,
+            overtime_rate: parseFloat(detailsForm.otRate) || 0,
+          }),
+        }),
+        fetch(`${getApiHost()}/apis/v3/hr/employees/${selectedEmpDetail.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
+          body: JSON.stringify({ designation: detailsForm.designation || null }),
+        }),
+      ]);
+      if (profRes.ok && empRes.ok) {
+        setShowDetailsDrawer(false);
+        fetchEmployees();
+        triggerLocalToast("Details updated successfully");
+      } else {
+        const err = await profRes.json().catch(() => ({}));
+        alert(`Failed to save details: ${err.detail || "Server error"}`);
+      }
+    } catch (e) {
+      console.error("Failed to save employee details", e);
+      alert("Failed to save details: server unreachable");
     }
   };
 
@@ -1740,21 +1831,7 @@ export default function HRPayrollPage() {
             </div>
             <div className="flex gap-3 mt-6">
               <button
-                onClick={() => {
-                  if (!holidayForm.name || !holidayForm.date) return;
-                  const d = new Date(holidayForm.date);
-                  const dayStr = d.toLocaleDateString('en-US', { weekday: 'long' });
-                  const newH = {
-                    id: "H-" + Date.now(),
-                    holidayName: holidayForm.name,
-                    date: holidayForm.date,
-                    day: dayStr
-                  };
-                  setHolidays([...holidays, newH]);
-                  setShowAddHolidayModal(false);
-                  setHolidayForm({ name: "", date: "" });
-                  triggerLocalToast("Holiday added successfully");
-                }}
+                onClick={handleSaveHoliday}
                 className="flex-1 py-2 bg-primary rounded-lg text-white text-sm font-bold hover:bg-primary/90 transition-all"
               >
                 Save Holiday
@@ -1846,11 +1923,7 @@ export default function HRPayrollPage() {
 
             <div className="flex gap-3 mt-8 pt-4 border-t border-border-custom">
               <button
-                onClick={() => {
-                  if (!workforceForm.workerType) return;
-                  triggerLocalToast("Workforce added successfully");
-                  setShowWorkforceDrawer(false);
-                }}
+                onClick={handleSaveWorkforce}
                 className="flex-1 py-2.5 bg-primary text-white font-bold rounded-lg hover:bg-primary/95 text-xs transition-all"
               >
                 Save
@@ -1931,7 +2004,8 @@ export default function HRPayrollPage() {
                   <div className="flex items-center gap-2">
                     <input
                       type="number"
-                      defaultValue={selectedEmpDetail.grossMonthly}
+                      value={detailsForm.salaryAmount}
+                      onChange={(e) => setDetailsForm({ ...detailsForm, salaryAmount: e.target.value })}
                       className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary"
                     />
                     <span className="text-xs text-muted shrink-0">per month</span>
@@ -1953,7 +2027,8 @@ export default function HRPayrollPage() {
                   <div className="flex items-center gap-2">
                     <input
                       type="number"
-                      defaultValue="8"
+                      value={detailsForm.shiftHours}
+                      onChange={(e) => setDetailsForm({ ...detailsForm, shiftHours: e.target.value })}
                       className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary"
                     />
                     <span className="text-xs text-muted shrink-0">per shift</span>
@@ -1965,7 +2040,8 @@ export default function HRPayrollPage() {
                   <div className="flex items-center gap-2">
                     <input
                       type="number"
-                      defaultValue="150"
+                      value={detailsForm.otRate}
+                      onChange={(e) => setDetailsForm({ ...detailsForm, otRate: e.target.value })}
                       className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary"
                     />
                     <span className="text-xs text-muted shrink-0">per hour</span>
@@ -1976,7 +2052,8 @@ export default function HRPayrollPage() {
                   <label className="text-[10px] text-muted uppercase font-bold block mb-1">Designation</label>
                   <input
                     type="text"
-                    defaultValue={selectedEmpDetail.designation}
+                    value={detailsForm.designation}
+                    onChange={(e) => setDetailsForm({ ...detailsForm, designation: e.target.value })}
                     className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary"
                   />
                 </div>
@@ -2003,10 +2080,7 @@ export default function HRPayrollPage() {
 
             <div className="flex gap-3 mt-8 pt-4 border-t border-border-custom">
               <button
-                onClick={() => {
-                  triggerLocalToast("Details updated successfully");
-                  setShowDetailsDrawer(false);
-                }}
+                onClick={handleSaveEmployeeDetails}
                 className="flex-1 py-2.5 bg-primary text-white font-bold rounded-lg hover:bg-primary/95 text-xs transition-all"
               >
                 Save
