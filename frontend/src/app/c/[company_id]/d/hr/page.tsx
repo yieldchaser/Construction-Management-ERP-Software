@@ -139,9 +139,7 @@ export default function HRPayrollPage() {
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
   
   // Holidays & Calendar states
-  const [holidays, setHolidays] = useState<any[]>([
-    { id: "H-01", holidayName: "Diwali", date: "2026-07-04", day: "Saturday" }
-  ]);
+  const [holidays, setHolidays] = useState<any[]>([]);
   const [showAddHolidayModal, setShowAddHolidayModal] = useState(false);
   const [holidayForm, setHolidayForm] = useState({ name: "", date: "" });
   
@@ -301,6 +299,41 @@ export default function HRPayrollPage() {
     }
   };
 
+  const fetchHolidays = async () => {
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/hr/holidays/${companyId}`, { headers: authHeaders() });
+      if (res.ok) {
+        const data = await res.json();
+        setHolidays(data.map((h: any) => ({
+          id: h.id,
+          holidayName: h.name,
+          date: h.date ? h.date.split("T")[0] : "",
+          day: h.date ? new Date(h.date).toLocaleDateString("en-US", { weekday: "long" }) : "",
+        })));
+      }
+    } catch (e) {
+      console.error("Failed to fetch holidays", e);
+    }
+  };
+
+  const handleDeleteHoliday = async (holidayId: string) => {
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/hr/holidays/${holidayId}`, {
+        method: "DELETE",
+        headers: authHeaders() || {},
+      });
+      if (res.ok) {
+        setHolidays((prev) => prev.filter((x) => x.id !== holidayId));
+      } else {
+        const err = await res.json().catch(() => ({}));
+        alert(`Failed to delete holiday: ${err.detail || "Server error"}`);
+      }
+    } catch (e) {
+      console.error("Failed to delete holiday", e);
+      alert("Failed to delete holiday: server unreachable");
+    }
+  };
+
   const fetchAttendance = async () => {
     if (!projectId) return;
     try {
@@ -399,6 +432,12 @@ export default function HRPayrollPage() {
       fetchEmployees();
     }
   }, [projectId]);
+
+  useEffect(() => {
+    if (companyId) {
+      fetchHolidays();
+    }
+  }, [companyId]);
 
   useEffect(() => {
     if (projectId && selectedDate) {
@@ -1557,7 +1596,7 @@ export default function HRPayrollPage() {
                             <td className="py-3 text-muted">{h.date}</td>
                             <td className="py-3 text-muted">{h.day}</td>
                             <td className="py-3 text-right">
-                              <button onClick={() => setHolidays(holidays.filter(x => x.id !== h.id))} className="text-red-400 hover:text-red-300 text-[10px] font-bold">Delete</button>
+                              <button onClick={() => handleDeleteHoliday(h.id)} className="text-red-400 hover:text-red-300 text-[10px] font-bold">Delete</button>
                             </td>
                           </tr>
                         ))
