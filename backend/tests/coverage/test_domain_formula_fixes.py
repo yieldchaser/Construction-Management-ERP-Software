@@ -389,3 +389,32 @@ def test_analytics_wastage_suppressed_without_consumption(client, db, make_tenan
     assert mw["consumed_qty"] == 0.0
     assert mw["wastage_pct"] is None
     assert mw["wastage_qty"] == 0.0
+
+
+def test_project_progress_reads_task_progress(client, db, make_tenant, auth_headers, monkeypatch):
+    comp, user, _ = make_tenant(company_name="E9a", user_name="UE9a", mobile=_mob(29), email=_mail(29))
+    hdr = auth_headers(user, comp)
+    p1 = _mk_project(db, comp)
+
+    db.add(models.Task(
+        id=uuid.uuid4(), project_id=p1.id, name="T1", status="not_started",
+        duration_days=10, progress=Decimal("75"),
+        start_date=_utc(2026, 1, 1), end_date=_utc(2026, 1, 11)))
+    db.commit()
+
+    r = client.get(f"/apis/v3/projects/company/{comp.id}", headers=hdr)
+    assert r.status_code == 200, r.text
+    by_id = {str(p["id"]): p for p in r.json()}
+    assert by_id[str(p1.id)]["progress"] == 75.0
+
+    import types
+    from app.routers import projects as projects_mod
+    class _StubTask:
+        def __init__(self, duration_days, progress, status):
+            self.duration_days = duration_days
+            self.progress = progress
+            self.status = status
+    stub_db = types.SimpleNamespace(query=lambda m: types.SimpleNamespace(
+        filter=lambda *a, **k: types.SimpleNamespace(
+            all=lambda: [_StubTask(10, None, "completed")])))
+    assert projects_mod._project_progress(stub_db, p1.id) == 100.0

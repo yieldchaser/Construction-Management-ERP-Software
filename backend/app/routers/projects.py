@@ -102,7 +102,10 @@ def _project_progress(db: Session, project_id: uuid.UUID) -> float:
     if not tasks:
         return 0.0
     total_dur = sum((t.duration_days or 0) for t in tasks) or 1
-    earned = sum((t.duration_days or 0) * _TASK_PROGRESS.get(t.status, 0.0) for t in tasks)
+    earned = sum(
+        (t.duration_days or 0) * (float(t.progress or 0.0) / 100.0 if t.progress is not None else _TASK_PROGRESS.get(t.status, 0.0))
+        for t in tasks
+    )
     return round(earned / total_dur * 100, 1)
 
 
