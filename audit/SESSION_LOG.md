@@ -2,6 +2,20 @@
 
 Append-only. Every working block ends with a 5-line entry. Never edit an existing entry; if a commit was reverted, add a new entry.
 
+## Session 13 — fixes 18, 19, 20 and 21 (2026-08-15)
+
+- Action 1: applied R2-016 (W114 task page, MEDIUM). `updateProgress` never checked the PUT response and applied the optimistic state update unconditionally — a 422/500 rendered the new progress as saved (Gantt/Forecast End/S-curve all derive from it). Now sets state only on `res.ok` and alerts with the server detail on failure.
+- Action 2: applied R2-006 (W94 drawings page, HIGH) — the module was unusable from a cold start: with zero drawings the modal button silently did nothing (`!activeDrawing` early return) and every failure was console.error + fake-optimistic local state. Now a first publish POSTs /apis/v3/drawings (new Drawing Name input + Category select) then the revision under the new id; all failures alert and leave state untouched; the misleading "will be archived as Superseded" subtitle swaps when no drawing exists.
+- Action 3: applied R2-007 (W38 procurement page, HIGH). POs were saved vendorless (the UI showed a hardcoded "Shree Cement Traders" that never reached the DB; after reload the column read "Vendor"). The modal select now uses live company team data, `vendor_id` is sent, and the list resolves names from the same source. Backend needed no change.
+- Action 4: applied R2-008 (W38 procurement page, HIGH). The RFQ Analysis Center presented invented quotes/ratings/credit terms (incl. real brand names) as "L1 PREFERRED" recommendations. Per the audit's sanctioned option, the fabricated constants are deleted and the drawer shows an honest empty state; wiring to the real rfq.py endpoints is deferred.
+- Verified: npm run build green (27.2s + 29.1s TS, zero errors); verifier APPROVE on all four (setTasks only in res.ok, first-drawing flow correct, vendor resolution resilient to vendor-fetch failure, zero fabricated-data remnants). pytest unaffected (frontend-only wave); tree clean.
+- Commits: `ddf1290` (R2-016), `3257e0a` (R2-006), `2205ffd` (R2-007), `fc22a98` (R2-008).
+- Register: R2-006, R2-007, R2-008, R2-016 STATUS TODO → FIXED.
+- Follow-ups logged in register: handleCreatePO still prepends its local row when the POST fails (fake-optimistic, same family as the old drawings catch); newDrawingName/category not reset after publish; orphan drawing edge case if the revision POST fails after the drawing POST succeeds; dead selectedRFQItem state.
+- Next session: R2-019 (W40 hr), R2-020 (W115 dpr), R2-010 (W77 calculators), R2-035 (W10 projects progress, HIGH) are decision-free. R2-178 still awaits the founder.
+
+---
+
 ## Session 12 — fixes 14, 15, 16 and 17 (2026-08-15)
 
 - Action 1: applied R2-032 (W40 hr page, HIGH). "Total Monthly CTC" double-counted PF (basic × 0.24 = employee 12% + employer 12%, the employee half already inside grossMonthly) and hardcoded the rate. Now uses the per-employee `pf_employer_pct` from the API: `grossMonthly + basic × (pfEmployerPct ?? 12) / 100`.
