@@ -329,8 +329,9 @@ def get_company_analytics(company_id: uuid.UUID, db: Session = Depends(get_db), 
 
     ordered_qty = sum(_to_float(item.quantity) for item in purchase_order_items)
     consumed_qty = sum(_to_float(tx.qty) for tx in material_transactions)
-    wastage_qty = max(ordered_qty - consumed_qty, 0.0)
-    wastage_pct = round((wastage_qty / ordered_qty) * 100, 2) if ordered_qty else 0.0
+    has_consumption = len(material_transactions) > 0
+    wastage_qty = max(ordered_qty - consumed_qty, 0.0) if has_consumption else 0.0
+    wastage_pct = round((wastage_qty / ordered_qty) * 100, 2) if has_consumption and ordered_qty else None
 
     subcontractor_scorecard = []
     for subcontractor_id, orders in work_orders_by_subcontractor.items():

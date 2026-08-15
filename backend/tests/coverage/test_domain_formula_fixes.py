@@ -362,3 +362,30 @@ def test_tally_voucher_sequence_durable(client, db, make_tenant, auth_headers):
     ex2 = client.get(f"/apis/v3/tally/export?company_id={comp.id}", headers=hdr)
     assert ex2.status_code == 200, ex2.text
     assert conn_seq() == 6
+
+
+def test_analytics_wastage_suppressed_without_consumption(client, db, make_tenant, auth_headers):
+    comp, user, _ = make_tenant(company_name="E8", user_name="UE8", mobile=_mob(28), email=_mail(28))
+    hdr = auth_headers(user, comp)
+    project = _mk_project(db, comp)
+
+    po = models.PurchaseOrder(
+        id=uuid.uuid4(), company_id=comp.id, project_id=project.id,
+        po_number="PO-1", po_date=_utc(2026, 1, 1), status="received",
+        gross_amount=Decimal("100.00"), tax_amount=Decimal("0.00"),
+        total_amount=Decimal("100.00"))
+    db.add(po)
+    db.flush()
+    db.add(models.PurchaseOrderItem(
+        id=uuid.uuid4(), po_id=po.id, material_name="Cement",
+        quantity=Decimal("100"), unit="bags", rate=Decimal("10.00"),
+        tax_pct=Decimal("0.00")))
+    db.commit()
+
+    r = client.get(f"/apis/v3/analytics/company/{comp.id}", headers=hdr)
+    assert r.status_code == 200, r.text
+    mw = r.json()["material_wastage"]
+    assert mw["ordered_qty"] == 100.0
+    assert mw["consumed_qty"] == 0.0
+    assert mw["wastage_pct"] is None
+    assert mw["wastage_qty"] == 0.0

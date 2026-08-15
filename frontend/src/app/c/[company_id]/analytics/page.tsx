@@ -64,7 +64,7 @@ interface AnalyticsPayload {
     ordered_qty: number;
     consumed_qty: number;
     wastage_qty: number;
-    wastage_pct: number;
+    wastage_pct: number | null;
   };
   projects: ProjectSummary[];
   subcontractor_scorecard: SubcontractorScore[];
@@ -334,7 +334,7 @@ export default function CompanyAnalyticsPage() {
               },
               {
                 label: "Material Wastage",
-                value: data ? `${data.material_wastage.wastage_pct}%` : "—",
+                value: data ? (data.material_wastage.wastage_pct == null ? "—" : `${data.material_wastage.wastage_pct}%`) : "—",
                 hint: "Ordered vs consumed from procurement",
                 tone: "text-amber-400",
               },
@@ -547,7 +547,7 @@ export default function CompanyAnalyticsPage() {
                     </div>
                   </div>
                   <div className="text-xs text-muted">
-                    Wastage: <span className="font-semibold text-amber-400">{data?.material_wastage.wastage_pct ?? "—"}%</span>
+                    Wastage: <span className="font-semibold text-amber-400">{data?.material_wastage.wastage_pct == null ? "—" : `${data.material_wastage.wastage_pct}%`}</span>
                   </div>
                 </div>
               </div>
