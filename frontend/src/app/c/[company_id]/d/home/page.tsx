@@ -118,7 +118,7 @@ export default function ProjectsHomePage() {
   const [paymentRequests, setPaymentRequests] = useState<PaymentRequest[]>([]);
   const [indents, setIndents] = useState<Indent[]>([]);
   const [leaves, setLeaves] = useState<Leave[]>([]);
-  const [todoCount, setTodoCount] = useState(3);
+  const [todoCount, setTodoCount] = useState(0);
   const [toastMessage, setToastMessage] = useState("");
 
   const showToast = (msg: string) => {
@@ -167,6 +167,12 @@ export default function ProjectsHomePage() {
       if (paymentsRes.ok) {
         const data = await paymentsRes.json();
         setPaymentRequests(data);
+      }
+
+      const todoRes = await fetch(`${apiHost}/apis/v3/todos/company/${companyId}`, { headers: authHeaders });
+      if (todoRes.ok) {
+        const todos = await todoRes.json();
+        setTodoCount((todos as any[]).filter((t) => t.status === "pending").length);
       }
 
       // 3. Indents
