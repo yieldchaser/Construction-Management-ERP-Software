@@ -17,7 +17,12 @@ from app.workflow_controls import enforce_entry_creation_window, get_company, ge
 from app.utils.pdf_generator import generate_document_pdf
 from app.utils.document_pdf import resolve_pdf_branding
 from pydantic import BaseModel, Field
-from app.constants import INVOICE_TYPE_PATTERN, CANONICAL_INVOICE_TYPES
+from app.constants import (
+    INVOICE_TYPE_PATTERN,
+    CANONICAL_INVOICE_TYPES,
+    REVENUE_INVOICE_TYPES,
+    EXPENSE_INVOICE_TYPES,
+)
 
 router = APIRouter(
     prefix="/billing",
@@ -427,8 +432,8 @@ def get_bill_zatca(bill_id: UUID, db: Session = Depends(get_db), current_user: U
     # Tenant check: the bill belongs to a company the caller is a member of.
     get_company_membership(db, current_user, bill.company_id)
     require_module_view(db, current_user, bill.company_id, "billing")
-    if bill.invoice_type != "sale":
-        raise HTTPException(status_code=400, detail="ZATCA e-invoicing applies to sale (simplified tax) invoices")
+    if bill.invoice_type not in REVENUE_INVOICE_TYPES:
+        raise HTTPException(status_code=400, detail="ZATCA e-invoicing applies to revenue (taxable) invoices")
     company = db.query(Company).filter(Company.id == bill.company_id).first()
     if not company:
         raise HTTPException(status_code=404, detail="Company not found")
@@ -540,8 +545,8 @@ def _resolve_bill_match_id(db: Session, invoice_type: str, match_id, company_id:
     """
     if not match_id:
         return None
-    if invoice_type == "sale":
-        # 3-way matching is a purchase-side control; ignore for sale invoices.
+    if invoice_type not in EXPENSE_INVOICE_TYPES:
+        # 3-way matching is a purchase-side control; ignore for revenue, settlement, and movement invoices.
         return None
     match = db.query(ThreeWayMatch).filter(ThreeWayMatch.id == match_id).first()
     if not match:
@@ -727,10 +732,7 @@ def link_bill_match(bill_id: UUID, req: BillMatchLinkRequest, db: Session = Depe
     verify_project_in_company(db, bill.project_id, bill.company_id)
     require_permission(db, current_user, bill.company_id, "billing:edit")
 
-    if bill.invoice_type == "sale":
-        # Sale invoices are exempt from 3-way matching; ignore any supplied match.
-        bill.match_id = None
-    else:
+    if bill.invoice_type in EXPENSE_INVOICE_TYPES:
         match_id = _resolve_bill_match_id(db, bill.invoice_type, req.match_id, bill.company_id, bill.project_id)
         bill.match_id = match_id
         if match_id is not None:
@@ -738,6 +740,9 @@ def link_bill_match(bill_id: UUID, req: BillMatchLinkRequest, db: Session = Depe
             if linked_match:
                 linked_match.invoice_id = bill.id
                 db.add(linked_match)
+    else:
+        # Revenue, settlement, and movement invoices are exempt from 3-way matching; clear any supplied match.
+        bill.match_id = None
 
     db.commit()
     db.refresh(bill)
