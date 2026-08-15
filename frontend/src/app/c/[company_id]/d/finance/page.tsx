@@ -372,10 +372,10 @@ export default function FinancePage() {
   }, []);
 
   useEffect(() => {
-    if (projectId) {
+    if (companyId) {
       fetchData();
     }
-  }, [projectId, companyId]);
+  }, [companyId, projectId]);
 
   const handleUploadCSV = async (file: File) => {
     setSubmitting(true);
