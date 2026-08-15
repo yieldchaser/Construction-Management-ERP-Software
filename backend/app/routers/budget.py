@@ -8,7 +8,8 @@ from app.database import get_db
 from app.auth import get_current_user, verify_project_access
 from app.models import (
     PurchaseOrder, Bill, WorkOrder, WorkOrderItem,
-    ProjectTower, ProjectBudget
+    ProjectTower, ProjectBudget, PayrollRun, PayrollLineItem,
+    Equipment, EquipmentDeployment, FuelLog
 )
 from pydantic import BaseModel
 from app.constants import EXPENSE_INVOICE_TYPES
@@ -95,10 +96,21 @@ def get_committed_costs(project_id: UUID, db: Session = Depends(get_db), _: None
     subcon_actual = sum(float(b.total_payable) for b in bills_subcon)
 
     labour_committed = 0.0
-    labour_actual = 0.0
+    labour_actual = float(db.query(func.sum(PayrollLineItem.net_payable)).join(PayrollRun).filter(PayrollRun.project_id == project_id).scalar() or 0.0)
 
     equipment_committed = 0.0
-    equipment_actual = 0.0
+    equipment_bills = float(db.query(func.sum(Bill.total_payable)).filter(Bill.project_id == project_id, Bill.invoice_type == "equipment").scalar() or 0.0)
+    deployments = db.query(EquipmentDeployment).filter(EquipmentDeployment.project_id == project_id).all()
+    dep_cost = 0.0
+    for dep in deployments:
+        eq = db.query(Equipment).filter(Equipment.id == dep.equipment_id).first()
+        if eq and eq.hourly_rate:
+            rate = float(eq.hourly_rate)
+            end = dep.end_date if dep.end_date else datetime.utcnow()
+            hours = (end - dep.start_date).total_seconds() / 3600.0
+            dep_cost += max(0.0, hours * rate)
+    fuel_cost = float(db.query(func.sum(FuelLog.total_cost)).filter(FuelLog.project_id == project_id).scalar() or 0.0)
+    equipment_actual = equipment_bills + dep_cost + fuel_cost
 
     total_budget = (
         float(budget.material_budget) +

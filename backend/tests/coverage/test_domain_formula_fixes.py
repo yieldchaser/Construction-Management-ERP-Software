@@ -507,3 +507,31 @@ def test_zoho_duplicate_vendor_searches_all_contact_types(monkeypatch):
     contact_id = _find_or_create_vendor("tok", "org", name="Acme", email=None, phone=None, gstin=None)
     assert contact_id == "ZOHO-999"
     assert any(p is not None and "contact_type" not in p for p in get_params)
+
+
+def test_committed_costs_labour_and_equipment_actuals(client, db, make_tenant, auth_headers):
+    comp, user, _ = make_tenant(company_name="E12", user_name="UE12", mobile=_mob(33), email=_mail(33))
+    hdr = auth_headers(user, comp)
+    project = _mk_project(db, comp)
+
+    run = models.PayrollRun(id=uuid.uuid4(), company_id=comp.id, project_id=project.id,
+                            payroll_month="2026-01", status="finalized")
+    db.add(run)
+    db.flush()
+    db.add(models.PayrollLineItem(
+        id=uuid.uuid4(), payroll_run_id=run.id, employee_id=user.id, days_present=10,
+        days_in_month=30, gross_salary=0.0, basic=0.0, hra=0.0, other_allowances=0.0,
+        overtime_amount=0.0, pf_employee=0.0, pf_employer=0.0, esi_employee=0.0,
+        esi_employer=0.0, tds=0.0, advance_recovery=0.0, other_deductions=0.0,
+        total_deductions=0.0, net_payable=Decimal("5000")))
+    db.add(models.Bill(
+        id=uuid.uuid4(), company_id=comp.id, project_id=project.id,
+        party_company_user_id=user.id, invoice_number="EQ-1", invoice_date=_utc(2026, 1, 1),
+        invoice_type="equipment", subtotal=Decimal("3000"), total_payable=Decimal("3000")))
+    db.commit()
+
+    r = client.get(f"/apis/v3/budget/committed/{project.id}", headers=hdr)
+    assert r.status_code == 200, r.text
+    data = r.json()
+    assert data["labour_actual"] == 5000.0
+    assert data["equipment_actual"] == 3000.0
