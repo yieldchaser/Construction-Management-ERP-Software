@@ -741,7 +741,7 @@ def create_task_comment(task_id: UUID, payload: CommentCreate, db: Session = Dep
     if payload.progress_qty_added is not None and payload.progress_qty_added > 0:
         # Check if the task has status not_started, set to in_progress
         if task.status == "not_started":
-            task.status = "in_progress"
+            task.status = "ongoing"
             db.add(task)
             
     db.commit()
