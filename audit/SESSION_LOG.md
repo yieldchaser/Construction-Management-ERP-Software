@@ -2,6 +2,21 @@
 
 Append-only. Every working block ends with a 5-line entry. Never edit an existing entry; if a commit was reverted, add a new entry.
 
+## Session 18 — fixes 33, 34, 35, 36 and 37 (2026-08-15)
+
+- Action 1: applied R2-060 (W28 attendance ×2, CRITICAL). `captureLocation` used to substitute a hardcoded Bangalore pair ("Metro Geofence Yard") on geolocation failure — invented location evidence stored indistinguishably from a real fix. Now returns null on every failure path and `queuePunch` blocks the punch with an explicit message; no coordinates are ever fabricated.
+- Action 2: applied R2-107 (W28, MEDIUM). Attendance and HR pages opened on hardcoded past dates (`2026-06-30` / `2026-06-26`) whose staleness grew daily. The three date defaults now default to today.
+- Action 3: applied R2-149 (W98 d/todo, HIGH). The Repeat Settings modal configured nothing — `repeat_type` was never sent and no recurrence runtime exists anywhere. Removed the modal, trigger and all five repeat states (−144 lines); the hardcoded endsDate default went with it (also closing R2-107's d/todo half).
+- Action 4: applied R2-148 (W98 d/todo, CRITICAL). Complete/delete only changed React state — every tick and deletion silently reverted on the next fetch. Both handlers now PUT/DELETE to /apis/v3/todos/{id} and refetch only on success, with honest alerts on failure.
+- Action 5: applied R2-040 (W117 reports/[slug], MEDIUM). "Export as Excel" shipped CSV content under a .xlsx name (Excel warning; openpyxl/pandas fail). Item relabeled "Export as CSV (Excel-compatible)" and the handler always writes .csv.
+- Verified: npm run build green (41s + 51s TS, zero errors); pytest 212 rc=0 (no backend changes); verifier APPROVE on all five (JSX balance after the modal removal, TS narrowing in the GPS guard, status vocabulary consistent end-to-end, no .xlsx can be produced).
+- Commits: `287db85` (R2-060), `7ffa1c9` (R2-107), `6d9493c` (R2-149), `534451e` (R2-148), `8759d2a` (R2-040).
+- Register: R2-040, R2-060, R2-107, R2-148, R2-149 STATUS TODO → FIXED.
+- Still open (logged): the project-level To-Do page still SENDS `repeat_type` to a backend with no recurrence runtime (needs a product decision); d/hr's attendance `selectedDate` has no bound UI input.
+- Next session: R2-106 (W28 "Simulate GPS lock" checkbox — server-side geofence verification is a contract change), R2-061 (W74 equipment demo-data fallback, MEDIUM), R2-003/others in W06 settings. R2-178 still awaits the founder.
+
+---
+
 ## Session 17 — fixes 30, 31 and 32 (2026-08-15)
 
 - Action 1: applied R2-029 (W20 zoho_books.py, MEDIUM). The duplicate-vendor fallback (Sentry 3062) re-ran the same vendor-filtered by-name query that had just returned [] — the telemetry proved the query can't see the duplicate. `_search_vendor` now takes `contact_type` (default "vendor"; existing call sites unchanged) and the 3062 fallback searches across ALL contact types (Zoho enforces name uniqueness across types; a same-named customer blocks vendor creation but was invisible to the vendor filter). Test `test_zoho_duplicate_vendor_searches_all_contact_types` added — verified to fail pre-fix.
