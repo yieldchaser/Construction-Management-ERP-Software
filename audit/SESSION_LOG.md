@@ -2,6 +2,20 @@
 
 Append-only. Every working block ends with a 5-line entry. Never edit an existing entry; if a commit was reverted, add a new entry.
 
+## Session 12 — fixes 14, 15, 16 and 17 (2026-08-15)
+
+- Action 1: applied R2-032 (W40 hr page, HIGH). "Total Monthly CTC" double-counted PF (basic × 0.24 = employee 12% + employer 12%, the employee half already inside grossMonthly) and hardcoded the rate. Now uses the per-employee `pf_employer_pct` from the API: `grossMonthly + basic × (pfEmployerPct ?? 12) / 100`.
+- Action 2: applied R2-013 (W40 hr page, HIGH) — the audit's "reports success while saving nothing" trio, the most misleading failure mode found. Save Holiday now POSTs /apis/v3/hr/holidays/{companyId} and appends the server response; Save Workforce POSTs /apis/v3/library/workforces; the Employee Details drawer's inputs are now controlled (were defaultValue-only, so salary/OT/designation edits were never even captured) and Save does Promise.all of PUT payroll-profiles + PUT employees, closing/refetching only on both 2xx. Success toasts only after confirmed 2xx; failures alert and keep the modal open.
+- Action 3: applied R2-026 (W78 home page, MEDIUM). "TO DO (PENDING)" was a hardcoded `useState(3)` no fetch ever populated. Now fetched from /apis/v3/todos/company/{companyId} counting `status === "pending"` — the exact definition the projects API uses.
+- Action 4: applied R2-015 (W78 home page, MEDIUM). The "+" quick-add button now POSTs a real todo (/apis/v3/todos/ with the row's project_id, title "Quick task") and only then increments the counter; failures toast honestly.
+- Verified: npm run build green (30.5s + 36s TS, zero errors; one intermediate failure on a missing `pfEmployerPct` interface field was fixed by the coder within the wave); verifier APPROVE on all four (no leftover defaultValue / useState(3) / 0.24, success toasts only in res.ok branches, correct history after two soft-reset splits + an amend). pytest unaffected (frontend-only wave); tree clean.
+- Commits: `261bd41` (R2-032), `820717b` (R2-013), `e870664` (R2-026), `a83510d` (R2-015).
+- Register: R2-013, R2-015, R2-026, R2-032 STATUS TODO → FIXED.
+- Deferred notes in register: statutory PF ceiling (₹15,000) not applied (R2-032 Defect 3); Workforce drawer's rate/salary/cost-code fields still unpersisted + fabricated cost-code options (R2-008/R2-009 family).
+- Next session: W40 is nearly cleared; strong remaining candidates — R2-016 (W114 task page, MEDIUM), R2-019/R2-020 (W40 hr/dpr), R2-006 (W94 drawings, HIGH), R2-007/R2-008 (W38 procurement, HIGH). R2-178 still awaits the founder.
+
+---
+
 ## Session 11 — fixes 11, 12 and 13 (2026-08-15)
 
 - Action 1: applied R2-012 (W27 finance page, MEDIUM). The Payment Method radio group in the Standard Voucher drawer was uncontrolled (no value/checked/onChange — `paymentMethod` appeared once in the file as a name attribute) and `handleRecordPayment` hardcoded `payment_method: "Cash"` in the POST body. Now: `paymentMethod` state, controlled radios, and the payload sends the actual selection. Backend allowlist verified (`finance.py:32` covers all three labels).
