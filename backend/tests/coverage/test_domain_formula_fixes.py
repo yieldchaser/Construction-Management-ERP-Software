@@ -444,3 +444,34 @@ def test_analytics_spend_excludes_sales(client, db, make_tenant, auth_headers):
     jan_burn = next(b for b in data["budget_burn_series"] if b["label"].startswith("Jan"))
     assert jan_burn["spend"] == 23600.0
     assert jan_burn["spend"] != 141600.0
+
+
+def test_task_status_derives_from_progress(client, db, make_tenant, auth_headers):
+    comp, user, _ = make_tenant(company_name="E11", user_name="UE11", mobile=_mob(32), email=_mail(32))
+    hdr = auth_headers(user, comp)
+    project = _mk_project(db, comp)
+
+    task = models.Task(
+        id=uuid.uuid4(), project_id=project.id, name="T", status="not_started",
+        duration_days=10, progress=Decimal("0"),
+        start_date=_utc(2026, 1, 1), end_date=_utc(2026, 1, 11))
+    db.add(task)
+    db.commit()
+
+    def put(body):
+        r = client.put(f"/apis/v3/planning/tasks/{task.id}", json=body, headers=hdr)
+        assert r.status_code == 200, r.text
+
+    def status_of():
+        r = client.get(f"/apis/v3/planning/tasks?project_id={project.id}", headers=hdr)
+        assert r.status_code == 200, r.text
+        return next(t for t in r.json() if t["id"] == str(task.id))["status"]
+
+    put({"progress": 75})
+    assert status_of() == "ongoing"
+    put({"progress": 100})
+    assert status_of() == "completed"
+    put({"progress": 0})
+    assert status_of() == "not_started"
+    put({"progress": 50, "status": "completed"})
+    assert status_of() == "completed"

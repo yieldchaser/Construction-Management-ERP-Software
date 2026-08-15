@@ -499,6 +499,13 @@ def update_task(task_id: UUID, request: TaskUpdateRequest, db: Session = Depends
         task.assigned_to = request.assigned_to
     if request.progress is not None:
         task.progress = request.progress
+        if request.status is None:
+            if request.progress <= 0:
+                task.status = "not_started"
+            elif request.progress >= 100:
+                task.status = "completed"
+            else:
+                task.status = "ongoing"
 
     # Handle duration or start date changes
     if request.start_date is not None or request.duration_days is not None:
