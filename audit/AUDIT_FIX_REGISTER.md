@@ -157,7 +157,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-002 | LOW | W54 | `Sidebar.tsx` | `frontend/src/app/c/[company_id]/reports/[slug]/page.tsx` | TODO | | reg L415 |
 | R2-003 | MEDIUM | W49 | `frontend/src/app/c/[company_id]/d/delete-logs/page.tsx` | `crm.py` | TODO | | reg L434 |
 | R2-004 | MEDIUM | W21 | `calculators.py` | — | TODO | | reg L458 |
-| R2-005 | LOW | W77 | `frontend/src/app/c/[company_id]/d/reports/calculators/page.tsx` | — | TODO | | reg L2027 |
+| R2-005 | LOW | W77 | `frontend/src/app/c/[company_id]/d/reports/calculators/page.tsx` | — | FIXED | <insert-commit-hash> | reg L2027; the masonry category shows brick-specific notes only when activeCalc is "bricks"; when activeCalc is "plaster" it now shows plaster-specific notes (dry factor 1.33, 12 mm internal / 15–20 mm external per IS 1661, 1:4 internal / 1:6 external mix). Blast-radius 1 file, +10/-3 lines. No test added.
 | R2-006 | HIGH | W94 | `frontend/src/app/c/[company_id]/d/drawings/page.tsx` | `drawings.py` | TODO | | reg L2045 |
 | R2-007 | HIGH | W38 | `frontend/src/app/c/[company_id]/d/procurement/page.tsx` | `procurement.py`, `models.py` | TODO | | reg L2086 |
 | R2-008 | HIGH | W38 | `frontend/src/app/c/[company_id]/d/procurement/page.tsx` | `rfq.py` | TODO | | reg L2113 |

@@ -1980,9 +1980,19 @@ export default function CalculatorsPage() {
               )}
               {activeCategory === "masonry" && (
                 <>
-                  <div>• Modular Brick dimensions: 190 x 90 x 90 mm. Traditional Brick: 230 x 110 x 75 mm.</div>
-                  <div>• Standard mortar joint thickness is 10 mm (horizontal and vertical).</div>
-                  <div>• Mortar volume constitutes ~30% of total brick wall volume.</div>
+                  {activeCalc === "plaster" ? (
+                    <>
+                      <div>• Dry-to-Wet volume expansion factor for plaster: 1.33 (cement:sand mix, accounting for sand bulk + cement void).</div>
+                      <div>• Standard plaster thickness: 12 mm internal walls, 15–20 mm external walls (per IS 1661).</div>
+                      <div>• Nominal mix ratio 1:4 (cement:sand) for internal plaster; 1:6 for external plaster.</div>
+                    </>
+                  ) : (
+                    <>
+                      <div>• Modular Brick dimensions: 190 x 90 x 90 mm. Traditional Brick: 230 x 110 x 75 mm.</div>
+                      <div>• Standard mortar joint thickness is 10 mm (horizontal and vertical).</div>
+                      <div>• Mortar volume constitutes ~30% of total brick wall volume.</div>
+                    </>
+                  )}
                 </>
               )}
               {activeCategory === "finishes" && (
