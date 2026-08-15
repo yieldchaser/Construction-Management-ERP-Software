@@ -36,6 +36,7 @@ Generated from `docs/AUDIT_ROUND2_FINDINGS.md` by `scratchpad/mkcanon.py`. **Thi
 | R2-587 | retracted duplicate | **R2-052** |
 | R2-591 | retracted duplicate | **R2-098** |
 | R2-439 | same defect as R2-098, filed twice | **R2-098** |
+| R2-109 | retracted duplicate — same defect as R2-032 (CTC formula double-counting employee PF; closed by `261bd41`) | **R2-032** |
 | R2-009 | FIXED by commit `cd01b15` | — |
 | R2-058 | FIXED by commit `cd01b15` | — |
 | R2-223 | FIXED by commit `cd01b15` | — |

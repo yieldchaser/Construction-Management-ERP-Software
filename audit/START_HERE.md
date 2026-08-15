@@ -74,7 +74,7 @@ If a finding needs any of these, mark it `DEFERRED:<reason>` in the register's N
 
 ## Where pending founder decisions live
 
-The raw log and the canonical findings each have a **DECISIONS** section (search for `D1`, `D2`, …). These are the calls only the founder can make. Read them before guessing — the wrong guess will burn hours.
+**`DECISIONS.md` (this folder) is the consolidated, durable home for every pending decision** — the original D1–D7 set, the later D-006…D-013 markers (whose full wording was lost; surviving context is preserved there), and every campaign-discovered decision (CD-1…CD-6) with its options and the findings it gates. The raw log's own DECISIONS section (search `D1`, `D2`, …) is the historical source; DECISIONS.md is the working one. Read it before guessing — the wrong guess will burn hours.
 
 ---
 
