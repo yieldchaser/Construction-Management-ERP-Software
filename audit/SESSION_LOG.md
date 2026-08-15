@@ -2,6 +2,17 @@
 
 Append-only. Every working block ends with a 5-line entry. Never edit an existing entry; if a commit was reverted, add a new entry.
 
+## Session 17 — fixes 30, 31 and 32 (2026-08-15)
+
+- Action 1: applied R2-029 (W20 zoho_books.py, MEDIUM). The duplicate-vendor fallback (Sentry 3062) re-ran the same vendor-filtered by-name query that had just returned [] — the telemetry proved the query can't see the duplicate. `_search_vendor` now takes `contact_type` (default "vendor"; existing call sites unchanged) and the 3062 fallback searches across ALL contact types (Zoho enforces name uniqueness across types; a same-named customer blocks vendor creation but was invisible to the vendor filter). Test `test_zoho_duplicate_vendor_searches_all_contact_types` added — verified to fail pre-fix.
+- Action 2: closed two logged follow-ups. `add_task_comment` (planning.py:744) now writes the canonical "ongoing" instead of "in_progress" (which the R2-035 rollup fallback silently counted at 0%). The "Add Existing Party" modal (party page) now alerts and stays open on failure instead of closing silently.
+- Verified: pytest tests/coverage/ 212 passed rc=0 (211 + 1 new); npm run build green (63s + 68s TS); verifier APPROVE on all three (one-line vocab diff, alert guards handle FastAPI's list-typed 422 details, the test genuinely fails pre-fix, no call-site drift from the new keyword default).
+- Commits: `e771b66` (R2-031 follow-up), `8a934f0` (R2-011 follow-up), `ce0e154` (R2-029).
+- Register: R2-029 STATUS TODO → FIXED; R2-011 and R2-031 Notes updated (follow-ups resolved).
+- Next session: R2-039 (W04 reports.py) stays deferred per D-012; viable candidates: R2-010 (calculators — needs an option pick), R2-040 (W117 reports slug page, MEDIUM), R2-012-family done, R2-024 (blocked by D6). R2-178 still awaits the founder.
+
+---
+
 ## Session 16 — fixes 27, 28 and 29 (2026-08-15)
 
 - Action 1: fixed R2-036-bis (the logged follow-up). `month_spend` in the S-curve/burn block (analytics.py:293) still summed total_payable unfiltered, so budget_burn_series stayed inflated by sales while the headline burn rate was already fixed — the two displays disagreed. Now EXPENSE-filtered; the R2-036 test extended to assert the burn series shows 23600 not 141600.
