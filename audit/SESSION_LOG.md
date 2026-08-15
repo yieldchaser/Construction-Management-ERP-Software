@@ -2,6 +2,18 @@
 
 Append-only. Every working block ends with a 5-line entry. Never edit an existing entry; if a commit was reverted, add a new entry.
 
+## Session 11 — fixes 11, 12 and 13 (2026-08-15)
+
+- Action 1: applied R2-012 (W27 finance page, MEDIUM). The Payment Method radio group in the Standard Voucher drawer was uncontrolled (no value/checked/onChange — `paymentMethod` appeared once in the file as a name attribute) and `handleRecordPayment` hardcoded `payment_method: "Cash"` in the POST body. Now: `paymentMethod` state, controlled radios, and the payload sends the actual selection. Backend allowlist verified (`finance.py:32` covers all three labels).
+- Action 2: applied R2-022 (W27 finance page, MEDIUM). The loader effect ran only when `projectId` was set, though fetchData is almost entirely company-scoped — no active project → empty Finance module with real API data available. Effect now runs on `companyId`; P&L/employees fetches stay internally project-guarded.
+- Action 3: applied R2-023 (LOW). Removed the internal "PHASE 14"/"PHASE 16" eyebrow labels from the Analytics and Production pages (build-plan labels meant nothing to customers); ZATCA "Phase 1" in settings untouched.
+- Verified: npm run build green (32.3s + 25.1s TS, zero errors); verifier APPROVE on all three (controlled radios, only-2-line effect diff, project guards intact, no Phase remnants). The coder's mid-task soft-reset (erroneous commit mixing A+B) left no residue — verifier confirmed linear history and cleanly separated diffs.
+- Commits: `e9111eb` (R2-012), `5fda93e` (R2-022), `6ef2cc8` (R2-023).
+- Register: R2-012, R2-022, R2-023 STATUS TODO → FIXED.
+- Next session: R2-013/R2-032 (W40 hr page, HIGH — "reports success while saving nothing" trio, no founder decision needed) and R2-015/R2-026 (W78 home page) are the best remaining candidates; R2-178 still awaits the founder's wire-vs-cut decision.
+
+---
+
 ## Session 10 — fixes 9 and 10 (2026-08-15)
 
 - Action 1: applied R2-121 (W07 subcon pages, MEDIUM). Both `d/subcon/page.tsx` and `p/[project_id]/subcon/page.tsx` already had a `loading` flag around `fetchSubconData` but never consulted it in the render, so the first ~1.6s asserted "No subcontractor workorders found." / "No subcontractors yet." (live-observed; data appears at ~5s, worse on cold backend R2-080). Both pages now branch on `loading` first: "Loading subcontractor work orders..." / "Loading subcontractors...", empty states only after settle.
