@@ -6,17 +6,18 @@ This folder is the single source of truth for the 582-finding bug-fixing campaig
 
 ---
 
-## The numbers (as of last sync)
+## The numbers (as of last sync — 2026-08-15)
 
 | Bucket | Count |
 |---|---|
 | Numbers issued (R2-001 … R2-601) | 601 |
 | Retracted as duplicates | 15 |
-| Verified FIXED (commit-tracked) | **93** |
+| FIX_VERIFIED (founder live-confirmed) | 93 |
+| FIXED (code in, awaiting founder live-verify) | 6 |
 | WONTFIX | 1 |
-| **TODO (your job)** | **488** |
+| **TODO (your job)** | **482** |
 
-By severity of the remaining TODO: **CRITICAL 172 · HIGH 231 · MEDIUM 70 · LOW 15** (re-counted after the 93 done).
+By severity of the remaining TODO: **CRITICAL 122 · HIGH 202 · MEDIUM 146 · LOW 12** (re-counted after the 99 closed).
 
 ---
 

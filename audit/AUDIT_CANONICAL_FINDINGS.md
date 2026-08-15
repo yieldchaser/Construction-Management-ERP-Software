@@ -8,10 +8,12 @@ Generated from `docs/AUDIT_ROUND2_FINDINGS.md` by `scratchpad/mkcanon.py`. **Thi
 | Numbers issued (R2-001 … R2-601) | **601** |
 | Retracted as duplicates (Round 11) | 14 |
 | Duplicate filed by the audit itself | 1 |
-| Verified FIXED (commit `cd01b15`) | 4 |
-| **ACTIONABLE — need a fix prompt** | **582** |
+| Already FIX_VERIFIED (in register, for reference) | 93 |
+| FIXED this session (awaiting founder live-verify) | 6 |
+| WONTFIX | 1 |
+| **ACTIONABLE — need a fix prompt** | **576** |
 
-**Actionable by severity:** CRITICAL **172** · HIGH **231** · MEDIUM **164** · LOW **15**
+**Actionable by severity:** CRITICAL **172** · HIGH **231** · MEDIUM **161** · LOW **12**
 
 ---
 
