@@ -2,6 +2,21 @@
 
 Append-only. Every working block ends with a 5-line entry. Never edit an existing entry; if a commit was reverted, add a new entry.
 
+## Session 20 — fixes 46 and 47, one retraction, one counts correction (2026-08-15)
+
+- Action 1: applied R2-106 (W28, CRITICAL) — the "Simulate GPS lock (On-Site)" checkbox (default ON) is deleted; `location_verified` is now derived server-side from the geofence comparison in BOTH punch directions (the coder found the punch-out path also read the client value — unmentioned in the audit) and client-supplied values are ignored. The "Location verified:" claim is out of the notes, the label is "GPS coordinates captured". Test `test_punch_location_verified_derived_from_geofence` proves both directions (inside + client false → true; far outside + client true → false).
+- Action 2: applied R2-003 (W49, MEDIUM) — the delete-logs filter's entity list now matches the 29 entity types the backend actually writes (enumerated from every log_deletion call site); the permanently-dead `lead`/`workorder` options are gone.
+- Action 3: R2-063-bis/ter — the `is_code_reference || "IS 456:2000"` and `category || "Concrete"` fabrications now render the em-dash empty glyph (byte-verified U+2014) after a verifier rejection of the first attempt (ASCII hyphen misapplied the no-em-dash prose rule to a display glyph).
+- Action 4: RETRACTED R2-109 — it is an exact duplicate of R2-032 (same formula, same line, same ₹55,440 repro) already closed by `261bd41`.
+- Correction: the previous session's START_HERE FIXED/severity numbers were recomputed from the register — FIXED is 42 (not 45), and the severity split is CRITICAL 114 · HIGH 193 · MEDIUM 130 · LOW 9; the register (582 rows, statuses summing to 582) is authoritative for all future counting.
+- Verified: pytest tests/coverage/ 214 passed rc=0 (213 + 1 new; rbac + domain-fixes files re-run together); npm run build green (49s + 77s, then 41s + 71s after the glyph fix); verifier APPROVE on A/B and the glyph re-fix.
+- Commits: `3a559d9` (R2-106), `4d27bcd` (R2-003), `75a98b3` + `b711a57` (R2-063 bis/ter).
+- Register: R2-003, R2-106 STATUS TODO → FIXED; R2-109 STATUS TODO → RETRACTED (duplicate of R2-032).
+- Notes logged: `PunchRequest.location_verified` is dead schema (future removal candidate); "Geofence: Active" badge kept; quality mapping lines landed at column 0 (indent regression, valid JS — restore on a future touch); `material: t.material || "Concrete"` in the lab-test mapping is the same class (follow-up).
+- Next session: R2-110 (W29 hr holidays local-only — sibling of R2-019, likely already fixed by it), R2-167 (W28 attendance), R2-030 (blocked by D5). R2-178 still awaits the founder.
+
+---
+
 ## Session 19 — fixes 38, 39, 40, 41, 42, 43, 44 and 45 (2026-08-15)
 
 - Action 1: applied R2-067 (W13 budget.py, CRITICAL). Cost Control hardcoded labour and equipment actual to ₹0 — a user budgeting labour saw a permanent ₹0 actual and favourable variance. Both actuals now compute from real data (payroll net_payable for labour; equipment bills + deployment hours + fuel for equipment), mirroring the finance P&L. Test added (5000/3000). Committed-at-zero and the per-tower project-wide-total gap are logged as open.
