@@ -322,8 +322,12 @@ function AddPartyModal({
           opening_balance_amount: amount ? parseFloat(amount) : 0,
         }),
       });
-      if (res.ok) onAdded();
-      else onClose();
+      if (res.ok) {
+        onAdded();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        alert(`Failed to add party: ${typeof err.detail === "string" ? err.detail : `HTTP ${res.status}`}`);
+      }
     } finally {
       setSaving(false);
     }
