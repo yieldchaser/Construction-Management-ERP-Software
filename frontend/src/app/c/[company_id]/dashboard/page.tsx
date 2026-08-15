@@ -563,15 +563,16 @@ export default function DashboardPage() {
               {overviewTab === "operational" && (() => {
                 const filteredProjList = projects.filter(p => {
                   const matchProj = selProject === "All" || p.id === selProject;
-                  const matchStatus = selStatus === "All" || p.status === selStatus;
+                  const matchStatus = selStatus === "All" || p.status === selStatus || (selStatus === "On Hold" && p.status === "Onhold") || (selStatus === "Planning" && p.status === "Not Started");
                   const matchHealth = selHealth === "All" || p.health === selHealth;
                   return matchProj && matchStatus && matchHealth;
                 });
 
-                const notStartedCount = filteredProjList.filter(p => p.status === "Not Started").length;
+                const notStartedCount = filteredProjList.filter(p => p.status === "Planning" || p.status === "Not Started").length;
                 const ongoingCount = filteredProjList.filter(p => p.status === "Ongoing").length;
-                const onHoldCount = filteredProjList.filter(p => p.status === "Onhold").length;
+                const onHoldCount = filteredProjList.filter(p => p.status === "On Hold" || p.status === "Onhold").length;
                 const completedCount = filteredProjList.filter(p => p.status === "Completed").length;
+                const cancelledCount = filteredProjList.filter(p => p.status === "Cancelled").length;
 
                 const healthyCount = filteredProjList.filter(p => p.health === "Healthy").length;
                 const warningCount = filteredProjList.filter(p => p.health === "Warning").length;
@@ -631,9 +632,10 @@ export default function DashboardPage() {
                           >
                             <option value="All">All</option>
                             <option value="Ongoing">Ongoing</option>
-                            <option value="Onhold">Onhold</option>
+                            <option value="On Hold">On Hold</option>
                             <option value="Completed">Completed</option>
-                            <option value="Not Started">Not Started</option>
+                            <option value="Cancelled">Cancelled</option>
+                            <option value="Planning">Planning</option>
                           </select>
                         </div>
 
@@ -654,7 +656,7 @@ export default function DashboardPage() {
                     </div>
 
                     {/* Summary Counters Grid */}
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-2 lg:grid-cols-5 gap-6">
                       <div className="rounded-md border border-border-custom bg-card p-5 flex flex-col justify-center items-center text-center transition-all">
                         <span className="text-[11px] font-bold text-red-500 [.light-theme_&]:text-red-600 uppercase tracking-wider block mb-1">Not Started Projects</span>
                         <span className="text-2xl font-bold text-foreground">{notStartedCount}</span>
@@ -670,6 +672,10 @@ export default function DashboardPage() {
                       <div className="rounded-md border border-border-custom bg-card p-5 flex flex-col justify-center items-center text-center transition-all">
                         <span className="text-[11px] font-bold text-muted uppercase tracking-wider block mb-1">Completed Projects</span>
                         <span className="text-2xl font-bold text-foreground">{completedCount}</span>
+                      </div>
+                      <div className="rounded-md border border-border-custom bg-card p-5 flex flex-col justify-center items-center text-center transition-all">
+                        <span className="text-[11px] font-bold text-red-400 uppercase tracking-wider block mb-1">Cancelled Projects</span>
+                        <span className="text-2xl font-bold text-foreground">{cancelledCount}</span>
                       </div>
                     </div>
 
@@ -1067,7 +1073,7 @@ export default function DashboardPage() {
                                   <td className="px-4 py-3 text-center border-r border-border-custom">
                                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
                                       p.status === "Ongoing" ? "bg-success/15 text-success border-success/30" :
-                                      p.status === "Onhold" ? "bg-yellow-500/15 text-yellow-500 border-yellow-500/30" :
+                                      p.status === "Onhold" || p.status === "On Hold" ? "bg-yellow-500/15 text-yellow-500 border-yellow-500/30" :
                                       p.status === "Completed" ? "bg-zinc-500/15 text-zinc-400 border-zinc-500/30" :
                                       "bg-red-500/15 text-red-500 border-red-500/30"
                                     }`}>
