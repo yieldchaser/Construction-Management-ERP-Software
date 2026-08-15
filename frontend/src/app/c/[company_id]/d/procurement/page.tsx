@@ -83,26 +83,6 @@ interface Transaction {
   date: string;
 }
 
-const VENDORS = [
-  { id: "V001", name: "Shree Cement Traders", category: "Cement & Aggregate", rating: 4.8, city: "Delhi", status: "Active" },
-  { id: "V002", name: "National Steel Suppliers", category: "TMT & Steel", rating: 4.5, city: "Mumbai", status: "Active" },
-  { id: "V003", name: "RajBuild Hardware", category: "Hardware & Fittings", rating: 4.2, city: "Pune", status: "Active" },
-  { id: "V004", name: "Indus Paint House", category: "Paints & Chemicals", rating: 3.9, city: "Chennai", status: "On Hold" }
-];
-
-const RFQ_DATA = {
-  "UltraTech Cement": [
-    { vendor: "Shree Cement Traders", rate: 410, delivery: 2, terms: "30 Days Credit", isL1: true },
-    { vendor: "National Cement & Co", rate: 425, delivery: 1, terms: "Cash on Delivery", isL1: false },
-    { vendor: "Ultratech Direct Dist", rate: 430, delivery: 3, terms: "45 Days Credit", isL1: false },
-  ],
-  "TMT Steel 16mm": [
-    { vendor: "National Steel Suppliers", rate: 62000, delivery: 3, terms: "45 Days Credit", isL1: true },
-    { vendor: "Apex Steel Industries", rate: 63500, delivery: 2, terms: "30 Days Credit", isL1: false },
-    { vendor: "Tata Astrum Dealer", rate: 65000, delivery: 1, terms: "Cash on Delivery", isL1: false },
-  ]
-};
-
 export default function ProcurementPage() {
   const { company_id } = useParams();
   const companyId = company_id || "demo-company";
@@ -1248,50 +1228,8 @@ export default function ProcurementPage() {
               <button onClick={() => setShowRFQDrawer(false)} className="text-muted hover:text-foreground">✕ Close</button>
             </div>
 
-            <div className="p-6 border-b border-border-custom bg-input flex items-center gap-2">
-              <span className="text-muted font-bold">Select Material Item:</span>
-              {["UltraTech Cement", "TMT Steel 16mm"].map((item) => (
-                <button key={item} onClick={() => setSelectedRFQItem(item as any)}
-                  className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all ${selectedRFQItem === item ? "bg-primary text-white" : "bg-elevated text-muted hover:text-foreground"}`}>
-                  {item}
-                </button>
-              ))}
-            </div>
-
             <div className="flex-1 p-6 overflow-y-auto space-y-6">
-              <div className="grid grid-cols-3 gap-4">
-                {(RFQ_DATA[selectedRFQItem] || []).map((quote, idx) => (
-                  <div key={idx} className={`border rounded-lg p-4 space-y-4 relative flex flex-col justify-between ${quote.isL1 ? "border-emerald-500/30 bg-emerald-500/[0.02]" : "border-border-custom bg-elevated"}`}>
-                    {quote.isL1 && (
-                      <span className="absolute -top-2.5 left-4 bg-emerald-500 text-black text-[8px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider">L1 Preferred</span>
-                    )}
-                    <div className="space-y-1">
-                      <h4 className="font-bold text-foreground text-xs">{quote.vendor}</h4>
-                      <span className="text-[9px] text-muted">Commercial terms</span>
-                    </div>
-
-                    <div className="space-y-2 font-sans text-[10px]">
-                      <div className="flex justify-between border-b border-border-custom pb-1">
-                        <span className="text-muted">Rate:</span>
-                        <strong className={quote.isL1 ? "text-emerald-400" : "text-foreground"}>₹{quote.rate.toLocaleString()}/unit</strong>
-                      </div>
-                      <div className="flex justify-between border-b border-border-custom pb-1">
-                        <span className="text-muted">Delivery:</span>
-                        <strong className="text-foreground">{quote.delivery} days</strong>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted">Payment:</span>
-                        <strong className="text-foreground">{quote.terms}</strong>
-                      </div>
-                    </div>
-
-                    <button onClick={() => { setNewPOVendor(quote.vendor); setPoFormItems([{ name: selectedRFQItem, qty: 100, unit: selectedRFQItem.includes("Cement") ? "bags" : "tons", rate: quote.rate }]); setShowRFQDrawer(false); setShowPOModal(true); }}
-                      className={`w-full py-1.5 rounded-md font-bold text-[9px] uppercase tracking-wider transition-all ${quote.isL1 ? "bg-emerald-500 text-black font-extrabold" : "bg-elevated border border-border-custom text-muted hover:text-foreground"}`}>
-                      Select Vendor
-                    </button>
-                  </div>
-                ))}
-              </div>
+              <div className="text-muted">No vendor quotes yet. Quote comparisons will appear here once RFQs are answered.</div>
             </div>
           </div>
         </div>
