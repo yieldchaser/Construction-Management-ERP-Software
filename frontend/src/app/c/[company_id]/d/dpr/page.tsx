@@ -70,8 +70,7 @@ export default function DPRPage() {
   
   // Measurement Book (M.B.) takeoff items state
   const [mbRows, setMbRows] = useState<any[]>([
-    { description: "Main Floor 2 Slab section A", nos: 1, l: 15.0, w: 8.0, h: 0.15 },
-    { description: "Beam drop grid B-C", nos: 3, l: 6.0, w: 0.3, h: 0.45 },
+    { description: "", nos: 1, l: 0, w: 0, h: 0 },
   ]);
 
   const [submitting, setSubmitting] = useState(false);
