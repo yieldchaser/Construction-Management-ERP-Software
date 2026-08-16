@@ -114,13 +114,19 @@ export default function ProcurementPage() {
     if (!projectId) return;
     try {
       const apiHost = getApiHost();
-      const [indentsRes, posRes, grnsRes, invRes, vendorsRes] = await Promise.all([
+      const [indentsRes, posRes, grnsRes, invRes, vendorsRes, materialsRes] = await Promise.all([
         fetch(`${apiHost}/apis/v3/procurement/indents?project_id=${projectId}`, { headers: authHeaders() }),
         fetch(`${apiHost}/apis/v3/procurement/pos?project_id=${projectId}`, { headers: authHeaders() }),
         fetch(`${apiHost}/apis/v3/procurement/grns?project_id=${projectId}`, { headers: authHeaders() }),
         fetch(`${apiHost}/apis/v3/procurement/inventory?project_id=${projectId}`, { headers: authHeaders() }),
         fetch(`${apiHost}/apis/v3/billing/subcontractors?company_id=${companyId}`, { headers: authHeaders() }),
+        fetch(`${apiHost}/apis/v3/library/materials/${companyId}`, { headers: authHeaders() }),
       ]);
+
+      if (materialsRes.ok) {
+        const mdata = await materialsRes.json();
+        setMaterials(mdata.map((m: any) => ({ id: m.id, name: m.name })));
+      }
 
       const vendorOptionsArr: Array<{ id: string; name: string }> = [];
       if (vendorsRes.ok) {
@@ -215,11 +221,11 @@ export default function ProcurementPage() {
   const [showGRNModal, setShowGRNModal] = useState(false);
   const [showUseModal, setShowUseModal] = useState(false);
   const [showRFQDrawer, setShowRFQDrawer] = useState(false);
-  const [selectedRFQItem, setSelectedRFQItem] = useState<"UltraTech Cement" | "TMT Steel 16mm">("UltraTech Cement");
+  const [selectedRFQItem, setSelectedRFQItem] = useState<string>("");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   // New Indent form state
   const [newIndentNum, setNewIndentNum] = useState("");
-  const [newIndentMaterial, setNewIndentMaterial] = useState("UltraTech Cement");
+  const [newIndentMaterial, setNewIndentMaterial] = useState("");
   const [newIndentQty, setNewIndentQty] = useState(50);
   const [newIndentUnit, setNewIndentUnit] = useState("bags");
   const [newIndentSpec, setNewIndentSpec] = useState("");
@@ -229,8 +235,9 @@ export default function ProcurementPage() {
   const [newPONum, setNewPONum] = useState("");
   const [newPOVendor, setNewPOVendor] = useState("");
   const [vendorOptions, setVendorOptions] = useState<Array<{ id: string; name: string }>>([]);
+  const [materials, setMaterials] = useState<Array<{ id: string; name: string }>>([]);
   const [poFormItems, setPoFormItems] = useState<POItem[]>([
-    { name: "UltraTech Cement", qty: 100, unit: "bags", rate: 410 }
+    { name: "", qty: 0, unit: "", rate: 0 }
   ]);
   const [newPOTerms, setNewPOTerms] = useState("");
   const [poDefaultTerms, setPoDefaultTerms] = useState("");
@@ -247,7 +254,7 @@ export default function ProcurementPage() {
   const [grnReceivedQtys, setGrnReceivedQtys] = useState<Record<string, string>>({});
   const [grnGatePhoto, setGrnGatePhoto] = useState("");
   // Material usage form state
-  const [useMaterialName, setUseMaterialName] = useState("UltraTech Cement");
+  const [useMaterialName, setUseMaterialName] = useState("");
   const [useQty, setUseQty] = useState(10);
   const [useSourceRef, setUseSourceRef] = useState("DPR Column C-1 concrete pour");
 
@@ -371,7 +378,7 @@ export default function ProcurementPage() {
 
     setPos([newPO, ...pos]);
     setShowPOModal(false);
-    setPoFormItems([{ name: "UltraTech Cement", qty: 100, unit: "bags", rate: 410 }]);
+    setPoFormItems([{ name: "", qty: 0, unit: "", rate: 0 }]);
     setNewPOTerms("");
     setNewPONum("");
   };
@@ -597,7 +604,7 @@ export default function ProcurementPage() {
             <span className="text-xs font-medium text-muted">SiteFlow workflows</span>
           </div>
           <div className="flex gap-2">
-            <button onClick={() => { setSelectedRFQItem("UltraTech Cement"); setShowRFQDrawer(true); }} className="px-4 py-2 border border-primary/20 hover:bg-primary/10 rounded-md text-xs font-bold text-primary transition-all inline-flex items-center gap-1.5">
+            <button onClick={() => { setSelectedRFQItem(""); setShowRFQDrawer(true); }} className="px-4 py-2 border border-primary/20 hover:bg-primary/10 rounded-md text-xs font-bold text-primary transition-all inline-flex items-center gap-1.5">
               <Icon name="bolt" className="w-3.5 h-3.5" />Compare RFQs
             </button>
             <button onClick={() => setShowIndentModal(true)} className="px-4 py-2 border border-border-custom hover:bg-elevated rounded-md text-xs font-bold text-foreground transition-all">
@@ -987,10 +994,10 @@ export default function ProcurementPage() {
               <div className="space-y-1">
                 <label className="text-muted">Material Item</label>
                 <select value={newIndentMaterial} onChange={(e) => setNewIndentMaterial(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground">
-                  <option value="UltraTech Cement">UltraTech Cement</option>
-                  <option value="TMT Steel 16mm">TMT Steel 16mm</option>
-                  <option value="Traditional Clay Bricks">Traditional Clay Bricks</option>
-                  <option value="Fine River Sand">Fine River Sand</option>
+                  <option value="">Select Material</option>
+                  {materials.map((m) => (
+                    <option key={m.id} value={m.name}>{m.name}</option>
+                  ))}
                 </select>
               </div>
 
@@ -1114,10 +1121,10 @@ export default function ProcurementPage() {
               <div className="space-y-1">
                 <label className="text-muted">Select Material Item</label>
                 <select value={useMaterialName} onChange={(e) => setUseMaterialName(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground">
-                  <option value="UltraTech Cement">UltraTech Cement</option>
-                  <option value="TMT Steel 16mm">TMT Steel 16mm</option>
-                  <option value="Traditional Clay Bricks">Traditional Clay Bricks</option>
-                  <option value="Fine River Sand">Fine River Sand</option>
+                  <option value="">Select Material</option>
+                  {materials.map((m) => (
+                    <option key={m.id} value={m.name}>{m.name}</option>
+                  ))}
                 </select>
               </div>
 
@@ -1169,7 +1176,7 @@ export default function ProcurementPage() {
               <div className="space-y-2 border-t border-border-custom pt-3">
                 <div className="flex justify-between items-center">
                   <span className="text-muted font-bold uppercase tracking-wider text-[9px]">PO Line Items</span>
-                  <button type="button" onClick={() => setPoFormItems([...poFormItems, { name: "TMT Steel 16mm", qty: 10, unit: "tons", rate: 62000 }])}
+                  <button type="button" onClick={() => setPoFormItems([...poFormItems, { name: "", qty: 0, unit: "", rate: 0 }])}
                     className="text-[9px] text-primary font-bold hover:underline">+ Add Item Line</button>
                 </div>
                 {poFormItems.map((item, idx) => (
@@ -1186,8 +1193,10 @@ export default function ProcurementPage() {
                           setPoFormItems(next);
                         }}
                         className="w-full bg-input border border-border-custom rounded p-1 text-foreground text-[11px]">
-                        <option value="UltraTech Cement">UltraTech Cement</option>
-                        <option value="TMT Steel 16mm">TMT Steel 16mm</option>
+                        <option value="">Select Material</option>
+                        {materials.map((m) => (
+                          <option key={m.id} value={m.name}>{m.name}</option>
+                        ))}
                       </select>
                     </div>
                     <div className="grid grid-cols-2 gap-2">
