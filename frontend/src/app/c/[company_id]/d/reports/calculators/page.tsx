@@ -128,7 +128,6 @@ export default function CalculatorsPage() {
   const [windowsCount, setWindowsCount] = useState(3);
   const [paintCoats, setPaintCoats] = useState(2);
   const [paintQuality, setPaintQuality] = useState("premium"); // economy / premium / luxury / texture
-  const [paintMode, setPaintMode] = useState<"interior" | "exterior">("interior");
 
   // 7. Tile Flooring
   const [tileRoomL, setTileRoomL] = useState(12.0); // ft
@@ -305,7 +304,7 @@ export default function CalculatorsPage() {
       luxury: 155.0,
       texture: 80.0,
     };
-    const coverage = coverageMap[paintQuality] || 135.0;
+    const coverage = coverageMap[paintQuality];
     const litres = (pArea / coverage) * paintCoats * 1.10;
     const puttyKg = (pArea / 100.0) * 2.25 * 1.10;
     const primerL = (pArea / 175.0) * 1.05;
@@ -1254,19 +1253,6 @@ export default function CalculatorsPage() {
                 {activeCalc === "paint" && (
                   <>
                     <div className="space-y-1">
-                      <label className="text-muted">Paint Context</label>
-                      <select
-                        value={paintMode}
-                        onChange={(e) => {
-                          setPaintMode(e.target.value as any);
-                        }}
-                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
-                      >
-                        <option value="interior">Interior Walls</option>
-                        <option value="exterior">Exterior Walls</option>
-                      </select>
-                    </div>
-                    <div className="space-y-1">
                       <label className="text-muted">Paint Type / Quality</label>
                       <select
                         value={paintQuality}
@@ -1275,7 +1261,7 @@ export default function CalculatorsPage() {
                         }}
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       >
-                        <option value="economy">Economy Emulsion (120 sqft/L)</option>
+                        <option value="economy">Economy Emulsion (115 sqft/L)</option>
                         <option value="premium">Premium Emulsion (140 sqft/L)</option>
                         <option value="luxury">Luxury / Sheen (155 sqft/L)</option>
                         <option value="texture">Texture Paint (80 sqft/L)</option>
