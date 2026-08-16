@@ -2,6 +2,18 @@
 
 Append-only. Every working block ends with a 5-line entry. Never edit an existing entry; if a commit was reverted, add a new entry.
 
+## Session 30 — Phase M batch 1: W36+W23+W05+W11 (docs registered; code waves landed) (2026-08-16)
+
+- Batch mode (founder request: fix more per pass): dispatched 4 parallel waves — W36 bi_export (4), W23 finance page (3), W05 procurement (6), W11 planning (4). Landed: **W36 4/4, W23 3/3, W05 6/6, W11 2/4** (R2-136, R2-255; R2-461, R2-566 still TODO — redispatch later). All wave commits verified by each wave's own review pass; central pins + batch pytest/npm build were DEFERRED (see the tree-state note).
+- **TREE-STATE ALERT (important):** the working tree now contains ~180 uncommitted modified files (marketing content, blogs, help, migrations, libs, several routers/tests) that are NOT from this campaign, plus five committed W02 fixes (R2-117, R2-119, R2-190, R2-213, R2-268) that this session did not dispatch — the founder's other agent is evidently working in the same checkout. **All code work and further commits are PAUSED until the tree settles or the founder confirms ownership.** This session only committed `audit/` files (register, DECISIONS, WORKLIST, session log) — no code files were staged.
+- Registered: 20 findings → FIXED (15 from our waves + 5 from the other agent's committed W02 work): R2-045, R2-066, R2-193, R2-251 (W36); R2-071, R2-072, R2-428 (W23, 428 evidence-close via cd01b15); R2-298, R2-336, R2-341, R2-351, R2-572, R2-573 (W05); R2-136, R2-255 (W11); R2-117, R2-119, R2-190, R2-213, R2-268 (W02, other agent's commits).
+- Needs-decision logged: CD-7 (RFQ has no "sent" writer — gates R2-298's remaining half) and CD-8 (PO close/cancel transition doesn't exist — gates R2-341's remaining half) added to DECISIONS.md.
+- Siblings logged (report-only, not fixed): finance Pending Entries toolbar button dead; dashboard Copy Key dead; `create_transaction` still overwrites inventory unit; IndentCreateRequest.items and RFQ items lack min_length; POCreateRequest.po_date accepts future dates; BI CSV formula-injection (R2-185 class) noted.
+- Commits (campaign waves, already in history): `ea0ee87`, `650077a` (W23); `b70ebac`, `07764bc`, `b8e837b` (W36 — note: an absorbed intermediate `48bd6d1` with the R2-045/066 message also contains the R2-193 change; final tree is correct, history cleanup deferred); `04b7c10`, `9906aa9`, `57f78de`, `53b9499`, `4d85244`, `00427eb` (W05); `048f72f`, `bd1c9f7` (W11).
+- Next (when the tree is clean): add the collected pins centrally, run batch pytest + npm build, redispatch W11's remaining two (R2-461, R2-566) plus the next Phase M waves (W15 models, W08 analytics, W06 settings).
+
+---
+
 ## Session 29 — Phase L wave L4 — PHASE L COMPLETE (2026-08-16)
 
 - Action 1 (Phase L, wave L4): R2-085 closed by evidence — the "PHASE 14" analytics eyebrow was already removed by R2-023 (`6ef2cc8`); verified zero `PHASE 1[0-9]`/`Phase 1[0-9]` across frontend/src (ZATCA "Phase 1" untouched, legitimate). Pinned.

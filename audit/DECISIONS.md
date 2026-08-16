@@ -125,6 +125,16 @@ The attendance header badge reads "Geofence: Active" unconditionally. The server
 
 STATUS: **OPEN** (cosmetic)
 
+### CD-7 — RFQ status transitions: there is no "sent/issued" writer *(from R2-298, partial)*
+`RFQ.status` vocabulary is draft/sent/closed (models.py:1805) but no endpoint or UI anywhere writes "sent". R2-298 enforced past-`valid_until` rejection and expired-quote gating, but the "quotes only on non-draft RFQs" gate was NOT enforced because doing so would make quote submission impossible (nothing can leave draft). Decide: (a) add a send/issue transition (endpoint + UI action), or (b) drop the "sent" state from the vocabulary and enforce on draft/closed only.
+
+STATUS: **OPEN** — gates the remaining half of R2-298
+
+### CD-8 — PO close/cancel transition does not exist *(from R2-341, partial)*
+The PO item report now fills Received/Pending/Item Status, but the `closed` status is unreachable — no close/cancel endpoint exists anywhere in the product (same class as R2-232/R2-296). Decide: (a) add a close/reject transition for POs, or (b) drop the closed status from the report's vocabulary.
+
+STATUS: **OPEN** — gates the remaining half of R2-341
+
 ### Implementation follow-ups that need no decision (for completeness)
 - `PunchRequest.location_verified` is dead schema after R2-106 — remove in a future pass.
 - Quality lab-test mapping `material: t.material || "Concrete"` — same fabrication class as R2-063-ter.

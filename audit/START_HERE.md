@@ -13,11 +13,13 @@ This folder is the single source of truth for the 582-finding bug-fixing campaig
 | Numbers issued (R2-001 … R2-601) | 601 |
 | Retracted as duplicates | 16 |
 | FIX_VERIFIED (founder live-confirmed) | 93 |
-| FIXED (code in, awaiting founder live-verify) | 71 |
+| FIXED (code in, awaiting founder live-verify) | 91 |
 | WONTFIX | 1 |
-| **TODO (your job)** | **416** |
+| **TODO (your job)** | **396** |
 
-By severity of the remaining TODO: **CRITICAL 102 · HIGH 188 · MEDIUM 126 · LOW 0** (re-counted directly from the register after the 164 closed; Phase L complete).
+By severity of the remaining TODO: **CRITICAL 102 · HIGH 188 · MEDIUM 106 · LOW 0** (re-counted directly from the register after the 184 closed; Phase M in progress).
+
+⚠️ **TREE-STATE ALERT (Session 30):** another agent works in this checkout — ~180 uncommitted files exist that are not from this campaign, plus five committed W02 fixes made outside this campaign (R2-117/119/190/213/268, registered). **Do not stage code files blindly; `git add` only the files your wave actually changed. Verify a clean tree before running build/pytest as a baseline.**
 
 ---
 

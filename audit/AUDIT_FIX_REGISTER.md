@@ -196,7 +196,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-042 | CRITICAL | W27 | `frontend/src/app/c/[company_id]/d/finance/page.tsx` | `finance.py`, `dashboard/page.tsx` | FIX_VERIFIED | `db9cfbd` | reg L1784; wave 0; suite RC-004/RC-005 |
 | R2-043 | CRITICAL | W04 | `reports.py` | `tally.py`, `finance.py`, `analytics.py` | FIX_VERIFIED | `d5b628a` | reg L1827; reports.py direct-fix pass; suite RC-075 |
 | R2-044 | MEDIUM | W07 | `billing.py` | — | FIXED | `c2c2cc6` | reg L1919; (a) ZATCA gate at line 430 now uses `bill.invoice_type not in REVENUE_INVOICE_TYPES` so `material_sale` is also eligible for an e-invoice; (b) `_resolve_bill_match_id` and `link_bill_match` now test membership in `EXPENSE_INVOICE_TYPES` instead of literal `"sale"`, so all revenue, settlement, and movement types are correctly exempt from three-way matching. Required adding 2 new imports (REVENUE_INVOICE_TYPES, EXPENSE_INVOICE_TYPES) to billing.py. Blast-radius 1 file. pytest 14/14 billing-specific tests pass; full coverage suite 206/206. No test added (existing coverage already exercises the gates).
-| R2-045 | MEDIUM | W36 | `bi_export.py` | `subcon_performance.py`, `budgeting.py`, `hr/page.tsx` | TODO | | reg L1957 |
+| R2-045 | MEDIUM | W36 | `bi_export.py` | `subcon_performance.py`, `budgeting.py`, `hr/page.tsx` | FIXED | FIXED b70ebac; BI budget-variance feed now counts purchase+expense bills as material and equipment bills on top of deployments+fuel (mirrors the P&L); total_actual reconciles with get_project_pl. Pins pending central collection. |
 | R2-046 | CRITICAL | W02 | `UNMAPPED` | — | TODO | | reg L2209 |
 | R2-047 | CRITICAL | W54 | `Sidebar.tsx` | `app/login/page.tsx` | TODO | | reg L2232 |
 | R2-048 | MEDIUM | W79 | `helpContent.tsx` | `p/[project_id]/layout.tsx`, `auth.py`, `projects.py` | TODO | | reg L2248 |
@@ -216,13 +216,13 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-063 | MEDIUM | W44 | `d/quality/page.tsx` | `p/[project_id]/quality/page.tsx` | FIXED | `6114f17`, `75a98b3`, `b711a57` | reg L2697; checklist responses no longer persist the fabricated remark "Checked on site" (now `remarks: null` — there is no remarks input in the UI); the unresolvable-checklist fallback label is "Unknown checklist" instead of the fabricated "IS 456 Concrete Pre-Pour"; the dead `CHECKLISTS` const (two IS-code mock checklists) is deleted from both pages. Follow-ups in the same wave: `is_code_reference || "IS 456:2000"` → "—" and `category: cl.category || "Concrete"` → "—" (em-dash empty glyph, byte-verified U+2014) in both pages (`75a98b3` + `b711a57`). Blast-radius 2 files. NOTES: two mapping lines landed at column 0 (indentation regression, valid JS — restore 12-space indent on a future quality touch); `material: t.material || "Concrete"` in the lab-test mapping (d:248 + p/ sibling) is the same fabrication class — follow-up candidate. |
 | R2-064 | LOW | W132 | `d/budgeting/boq/page.tsx` | `p/[project_id]/boq/page.tsx` | FIXED | `ba7e65f` | reg L2731; the import-failure catch no longer claims "using demo data" (nothing followed the message — the BOQ was simply not modified). Now: "Import failed: backend not reachable. The BOQ was not modified." Blast-radius 1 file, +1/-1. No test added. |
 | R2-065 | LOW | W30 | `library.py` | `finance.py`, `drawings.py`, `equipment.py` | FIXED | `f53dafd` | reg L2748; the dead duplicate payroll calculator `computePayslips` (a complete second implementation of pro-rated gross/PF/ESI/TDS/net under a "Mock Data" header, zero call sites) is deleted from the HR page — the page's payslips come from the server. It also embedded the D2 assumption (absent attendance silently = full month); deleting it removes the risk of it being wired up later. Blast-radius 1 file, -27. No test added. |
-| R2-066 | MEDIUM | W36 | `bi_export.py` | `constants.py` | TODO | | reg L2832 |
+| R2-066 | MEDIUM | W36 | `bi_export.py` | `constants.py` | FIXED | FIXED b70ebac (same commit as R2-045 - same function); expense/equipment bills no longer orphaned from the BI feed. |
 | R2-067 | CRITICAL | W13 | `budget.py` | `equipment.py`, `analytics.py` | FIXED | `241f76c` | reg L2849; labour and equipment cost are no longer hardcoded to zero in `get_committed_costs` — `labour_actual` = payroll net_payable joined by project (the finance P&L pattern), `equipment_actual` = equipment-type bills + deployment hours × hourly rate + fuel logs. A user budgeting labour/equipment no longer sees a permanent ₹0 actual and favourable variance. Test added: `test_committed_costs_labour_and_equipment_actuals` (5000/3000 via GET /apis/v3/budget/committed/{project_id}). Blast-radius 1 file + 1 test. NOTES (still open): labour/equipment `committed` remain 0.0 (no committed source exists — logged); the per-tower loop at :159 still uses project-wide totals (bills have no tower_id — needs a schema decision); test seed uses a company_team id for PayrollLineItem.employee_id (FK contract mismatch, latent under SQLite FK-off). |
 | R2-068 | CRITICAL | W39 | `d/procurement/page.tsx` | `d/attendance/page.tsx`, `p/[pid]/attendance/page.tsx`, `d/drawings/page.tsx` | FIXED | `401cf1e` | reg L2963; per the audit's sanctioned option, all fabricated photo-evidence controls are removed: the indent "Take Item Photo" button (hardcoded Unsplash URL + "✓ Captured"), the GRN gate file input that threw the user's file away and stored a stock URL (now keeps a real local `URL.createObjectURL(f)` preview), and both attendance pages' subcon crew-photo buttons ("✓ Photo Attached" + stock URL POSTed as photo_url — now omitted). `unsplash` = 0 across frontend/src. Blast-radius 4 files (incl. the rfq page's own fabricated seed/caption), +3/-40. NOTES: `gatePhotoUrl` is an in-session objectURL — nothing persists it server-side (pre-existing upload gap, follow-up); real upload wiring (files.py FormData path) is the deferred proper fix. |
 | R2-069 | HIGH | W23 | `d/finance/page.tsx` | — | FIXED | `a07d1e2` | reg L3005; the payment-attachment control stored only the filename and displayed a paperclip as if a document were attached (the File was discarded; nothing is ever uploaded). Per the audit's sanctioned option the affordance is now honest: the field is labeled "Reference / document name (file is not uploaded)", the paperclip icon is gone (plain muted text), and `attachment_name` remains a reference string. Real upload wiring is the deferred proper fix. Blast-radius 1 file, +2/-2. No test added. |
 | R2-070 | LOW | W39 | `d/procurement/page.tsx` | — | FIXED | `dd0ed9a` | reg L3024; the indent card's hidden file input (local-only objectURL preview, never uploaded, never revoked) is removed. The "View item photo proof" button stays — it opens a genuine preview of the server-provided `photoUrl`. Real upload wiring remains the deferred proper fix. Blast-radius 1 file, −9 (pure removal). Pinned. No test added (pins only). |
-| R2-071 | MEDIUM | W23 | `d/finance/page.tsx` | — | TODO | | reg L3037 |
-| R2-072 | MEDIUM | W23 | `d/finance/page.tsx` | `d/hr/page.tsx`, `dashboard/page.tsx`, `p/[pid]/attendance/page.tsx` | TODO | | reg L3058 |
+| R2-071 | MEDIUM | W23 | `d/finance/page.tsx` | — | FIXED | FIXED ea0ee87; work-order terms captured via innerText instead of raw innerHTML (no unsanitized markup reaches /billing/work-orders terms). |
+| R2-072 | MEDIUM | W23 | `d/finance/page.tsx` | `d/hr/page.tsx`, `dashboard/page.tsx`, `p/[pid]/attendance/page.tsx` | FIXED | FIXED 650077a; 10 finance-page dead buttons wired (Unbilled Materials toggle, + Add Equipment, View Bill/Ship) or dropped (KYC uploads, View Statement x2, Filter x2, Attach Media) per the no-backing-infra precedent. Siblings noted: Pending Entries toolbar button still dead; dashboard Copy Key still dead (out of wave scope). |
 | R2-073 | CRITICAL | W06 | `settings.py` | `auth.py`, `permissions.py` | TODO | | reg L3112 |
 | R2-074 | CRITICAL | W03 | `hr.py` | `drawings.py`, `reports.py`, `permissions.py` | FIX_VERIFIED | `acee51f` | reg L3151; hr.py direct-fix pass; suite RC-052 |
 | R2-075 | CRITICAL | W04 | `reports.py` | `frontend/src/app/c/[company_id]/reports/page.tsx`, `reports/[slug]/page.tsx`, `reports/page.tsx` | FIX_VERIFIED | `d5b628a` | reg L3225; reports.py direct-fix pass; suite RC-074 |
@@ -267,9 +267,9 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-114 | MEDIUM | W82 | `backend/app/models.py` | `settings.py` | TODO | | reg L4448 |
 | R2-115 | MEDIUM | W06 | `settings.py` | `Sidebar.tsx`, `reports/page.tsx` | TODO | | reg L4469 |
 | R2-116 | CRITICAL | W49 | `frontend/src/app/c/[company_id]/d/delete-logs/page.tsx` | — | TODO | | reg L4500 |
-| R2-117 | MEDIUM | W02 | `UNMAPPED` | — | TODO | | reg L4561 |
+| R2-117 | MEDIUM | W02 | `UNMAPPED` | — | FIXED | FIXED bbad99e (committed by the founder/other agent session); internal build-plan copy removed from Settings. |
 | R2-118 | MEDIUM | W02 | `UNMAPPED` | — | TODO | | reg L4586 |
-| R2-119 | MEDIUM | W02 | `UNMAPPED` | — | TODO | | reg L4606 |
+| R2-119 | MEDIUM | W02 | `UNMAPPED` | — | FIXED | FIXED b69ab40 (other agent); approval categories whose approve keys cannot be granted dropped from Settings. |
 | R2-120 | LOW | W67 | `google_drive.py` | `bi_export.py` | FIXED | `06cde63` | reg L4627; the Integrations page already listed Sheets/Drive/Zoho/BI (the audit's "only one" claim was stale); this session closed the remainder: the wrong instruction ("Connect from the Payroll tab (HR)") now says "Payroll Runs tab (HR)" (same fix in the "HR -> Payroll Runs -> Export to Google Sheets" copy), and the missing fifth integration — Tally — has a card with a real status fetch (`/apis/v3/tally/connections?company_id=`, strict boolean `connected` gate — no fabrication) and a "Manage in Finance → Tally Sync" deep link (`?tab=tally`, verified in the finance page's allowlist). Blast-radius 1 file (settings page; the register's google_drive.py attribution is the backend half), +39/-2. Pinned. No test added (pins only). |
 | R2-121 | MEDIUM | W07 | `billing.py` | — | FIXED | `25f30db` | reg L4659; the Subcon page no longer renders its terminal empty states ("No subcontractor workorders found." / "No subcontractors yet...") while the data fetch is in flight. Both `d/subcon/page.tsx` and `p/[project_id]/subcon/page.tsx` now branch on the existing-but-unused `loading` flag: loading rows read "Loading subcontractor work orders..." / "Loading subcontractors...", then the empty states only after the request settles. Blast-radius 2 files (twin pages), +16/-4 each. No test added. NOTE: same failure family as R2-099/R2-075 (empty state standing in for unknown state); `loading` starts false so one paint frame still shows the empty state before the effect fires (cosmetic, pre-existing pattern across the app). |
 | R2-122 | MEDIUM | W19 | `budgeting.py` | `finance.py`, `main.py`, `delete_logs.py` | TODO | | reg L4688 |
@@ -286,7 +286,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-133 | CRITICAL | W16 | `three_way.py` | — | TODO | | reg L5165 |
 | R2-134 | MEDIUM | W16 | `three_way.py` | — | TODO | | reg L5195 |
 | R2-135 | MEDIUM | W22 | `safety.py` | `billing.py`, `assets.py`, `d/safety/page.tsx` | TODO | | reg L5230 |
-| R2-136 | MEDIUM | W11 | `planning.py` | `crm.py`, `mom.py`, `towers.py` | TODO | | reg L5450 |
+| R2-136 | MEDIUM | W11 | `planning.py` | `crm.py`, `mom.py`, `towers.py` | FIXED | FIXED 048f72f PARTIAL: the planning.py discriminator instances (milestone type/status, predecessor type) validated; the other 14 catalogue fields remain (tracked by the finding). |
 | R2-137 | CRITICAL | W85 | `d/face-recognition/page.tsx` | `d/payroll-attendance/page.tsx`, `d/crm/page.tsx` | TODO | | reg L5505; CLASS finding (219 of 307 `if (res.ok)` checks have no else) — STILL OPEN as a class. The face-recognition page instance was closed by `f30fffe` (loadError states distinguish failure from empty); the class sweep across the remaining ~200 sites is a dedicated pass (register this finding as the tracking row). |
 | R2-138 | CRITICAL | W14 | `auth.py` | — | TODO | | reg L5567 |
 | R2-139 | CRITICAL | W57 | `main.py` | `delete_logs.py`, `d/delete-logs/page.tsx` | TODO | | reg L5602 |
@@ -340,10 +340,10 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-187 | CRITICAL | W20 | `zoho_books.py` | — | TODO | | reg L7012 |
 | R2-188 | HIGH | W20 | `zoho_books.py` | `billing.py` | TODO | | reg L7027 |
 | R2-189 | HIGH | W02 | `UNMAPPED` | — | TODO | | reg L7044 |
-| R2-190 | MEDIUM | W02 | `UNMAPPED` | — | TODO | | reg L7056 |
+| R2-190 | MEDIUM | W02 | `UNMAPPED` | — | FIXED | FIXED 592af3a (other agent); Zoho upstream bodies logged server-side with a correlation ref. |
 | R2-191 | MEDIUM | W14 | `auth.py` | `models.py`, `billing.py`, `bi_export.py` | TODO | | reg L7074 |
 | R2-192 | HIGH | W67 | `google_drive.py` | `zoho_books.py`, `google_sheets.py`, `auth.py` | TODO | | reg L7114 |
-| R2-193 | MEDIUM | W36 | `bi_export.py` | `auth.py`, `hr.py`, `drawings.py` | TODO | | reg L7138 |
+| R2-193 | MEDIUM | W36 | `bi_export.py` | `auth.py`, `hr.py`, `drawings.py` | FIXED | FIXED 07764bc; BI key last_used_at touched at most every 5 min (was every request, ~7200 writes/day); naive/aware tz guard for legacy rows. |
 | R2-194 | CRITICAL | W57 | `main.py` | — | TODO | | reg L7277 |
 | R2-195 | HIGH | W04 | `reports.py` | `chat.py`, `database.py`, `finance.py` | TODO | | reg L7331; DEFERRED per D-013 — performance task, needs measurements |
 | R2-196 | HIGH | W14 | `auth.py` | `siteflow.ts`, `config.py`, `d/hr/page.tsx` | TODO | | reg L7380 |
@@ -363,7 +363,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-210 | CRITICAL | W03 | `hr.py` | `models.py`, `zoho_books.py`, `d/hr/page.tsx` | FIX_VERIFIED | `e2e449d` | reg L8405; hr.py direct-fix pass; suite RC-045 |
 | R2-211 | HIGH | W03 | `hr.py` | `transaction/page.tsx`, `zoho_books.py`, `d/safety/page.tsx` | FIX_VERIFIED | `034bc1e` | reg L8530; hr.py direct-fix pass; suite RC-065 |
 | R2-212 | HIGH | W22 | `safety.py` | — | TODO | | reg L8775 |
-| R2-213 | MEDIUM | W02 | `UNMAPPED` | — | TODO | | reg L8792 |
+| R2-213 | MEDIUM | W02 | `UNMAPPED` | — | FIXED | FIXED d824d3e (other agent); PPE gauge shows a no-data state instead of a red 0%. |
 | R2-214 | CRITICAL | W88 | `d/billing/page.tsx` | — | TODO | | reg L8847 |
 | R2-215 | CRITICAL | W39 | `d/procurement/page.tsx` | — | TODO | | reg L8859 |
 | R2-216 | HIGH | W39 | `d/procurement/page.tsx` | — | TODO | | reg L8874 |
@@ -399,11 +399,11 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-248 | CRITICAL | W33 | `towers.py` | `budget.py`, `models.py` | TODO | | reg L10557 |
 | R2-249 | HIGH | W13 | `budget.py` | — | TODO | | reg L10623 |
 | R2-250 | HIGH | W13 | `budget.py` | — | TODO | | reg L10647 |
-| R2-251 | MEDIUM | W36 | `bi_export.py` | `constants.py`, `api.ts` | TODO | | reg L10680 |
+| R2-251 | MEDIUM | W36 | `bi_export.py` | `constants.py`, `api.ts` | FIXED | FIXED b8e837b (in mom.py, not bi_export - register attribution corrected); MOM author comes from the authenticated caller, not the body. |
 | R2-252 | CRITICAL | W22 | `safety.py` | — | TODO | | reg L10839 |
 | R2-253 | HIGH | W15 | `models.py` | — | TODO | | reg L10901 |
 | R2-254 | HIGH | W05 | `procurement.py` | — | TODO | | reg L10940 |
-| R2-255 | MEDIUM | W11 | `planning.py` | — | TODO | | reg L10972 |
+| R2-255 | MEDIUM | W11 | `planning.py` | — | FIXED | FIXED bd1c9f7; negative task durations rejected, propagation duration bounded. |
 | R2-256 | MEDIUM | W22 | `safety.py` | — | TODO | | reg L10992 |
 | R2-257 | CRITICAL | W41 | `team_schedule.py` | `frontend/src/app/c/[company_id]/d/team-action/page.tsx`, `drawings/page.tsx` | TODO | | reg L11102 |
 | R2-258 | HIGH | W41 | `team_schedule.py` | — | TODO | | reg L11156 |
@@ -416,7 +416,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-265 | HIGH | W35 | `files.py` | `hr.py`, `finance.py`, `assets.py` | TODO | | reg L11458 |
 | R2-266 | CRITICAL | W58 | `dpr.py` | — | TODO | | reg L11595 |
 | R2-267 | HIGH | W25 | `tally.py` | — | TODO | | reg L11641 |
-| R2-268 | MEDIUM | W02 | `UNMAPPED` | — | TODO | | reg L11672 |
+| R2-268 | MEDIUM | W02 | `UNMAPPED` | — | FIXED | FIXED ad328dd (other agent); DPR export resolves the author name, never a raw UUID. |
 | R2-269 | MEDIUM | W24 | `labour.py` | — | TODO | | reg L11688 |
 | R2-270 | CRITICAL | W89 | `frontend/src/app/c/[company_id]/d/chat/page.tsx` | `models.py` | TODO | | reg L11773 |
 | R2-271 | CRITICAL | W02 | `UNMAPPED` | — | TODO | | reg L11831 |
@@ -446,7 +446,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-295 | MEDIUM | W59 | `rate_limit.py` | — | TODO | | reg L13015 |
 | R2-296 | HIGH | W68 | `subcon.py` | — | TODO | | reg L13102 |
 | R2-297 | HIGH | W05 | `procurement.py` | — | TODO | | reg L13145 |
-| R2-298 | MEDIUM | W05 | `procurement.py` | — | TODO | | reg L13171 |
+| R2-298 | MEDIUM | W05 | `procurement.py` | — | FIXED | FIXED 04b7c10 PARTIAL: past valid_until rejected (400), quotes on expired RFQs rejected, comparison now ranks vendors (extended_total, is_lowest, price_spread, recommended_vendor_name). DEFERRED half: the not-issued gate needs a product decision - RFQ.status has no writer for sent anywhere (see DECISIONS.md CD-7). |
 | R2-299 | HIGH | W71 | `public_leads.py` | `rate_limit.py` | TODO | | reg L13242 |
 | R2-300 | CRITICAL | W15 | `models.py` | — | TODO | | reg L13346 |
 | R2-301 | HIGH | W72 | `delete_logs.py` | `models.py`, `finance.py` | TODO | | reg L13400 |
@@ -484,12 +484,12 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-333 | HIGH | W24 | `labour.py` | `models.py`, `subcon_attendance.py`, `reports/page.tsx` | TODO | | reg L15364 |
 | R2-334 | HIGH | W19 | `budgeting.py` | `finance.py`, `models.py` | TODO | | reg L15424 |
 | R2-335 | HIGH | W01 | `finance.py` | `models.py`, `reports.py` | TODO | | reg L15460; DEFERRED per D-008 — a missing feature, not a defect |
-| R2-336 | MEDIUM | W05 | `procurement.py` | `crm.py`, `models.py`, `reports.py` | TODO | | reg L15494 |
+| R2-336 | MEDIUM | W05 | `procurement.py` | `crm.py`, `models.py`, `reports.py` | FIXED | FIXED 9906aa9; material movements no longer reclassify the inventory master category (last-write-wins overwrite removed). Sibling: inv.unit still overwritten by the movement - follow-up. |
 | R2-337 | CRITICAL | W59 | `rate_limit.py` | `proxy_headers.py` | TODO | | reg L15583 |
 | R2-338 | HIGH | W11 | `planning.py` | `models.py`, `dpr.py`, `vendor_performance.py` | TODO | | reg L15669 |
 | R2-339 | CRITICAL | W04 | `reports.py` | `dpr.py`, `projects.py` | FIX_VERIFIED | `2ddc411` | reg L15796; reports.py direct-fix pass; suite RC-076 |
 | R2-340 | HIGH | W11 | `planning.py` | `models.py`, `workflow_controls.py` | TODO | | reg L15830 |
-| R2-341 | MEDIUM | W05 | `procurement.py` | `models.py`, `reports.py`, `quality.py` | TODO | | reg L15862 |
+| R2-341 | MEDIUM | W05 | `procurement.py` | `models.py`, `reports.py`, `quality.py` | FIXED | FIXED 57f78de; PO item report fills Received/Pending Qty and Item Status from GRNs. DEFERRED half: the closed transition has no endpoint anywhere - needs a decision (CD-8). |
 | R2-342 | CRITICAL | W01 | `finance.py` | `models.py`, `procurement.py` | FIX_VERIFIED | `4b7add4` | reg L15935; direct-fix pass; suite RC-036 |
 | R2-343 | HIGH | W01 | `finance.py` | `models.py`, `reports.py`, `projects.py` | FIX_VERIFIED | `d63c2db` | reg L16005; wave W01c; suite RC-026 |
 | R2-344 | CRITICAL | W01 | `finance.py` | — | FIX_VERIFIED | `3ac2694` | reg L16091; wave W01b; suite RC-020 |
@@ -499,7 +499,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-348 | CRITICAL | W05 | `procurement.py` | `three_way.py` | FIX_VERIFIED | `e9e3308` | reg L16257; procurement.py direct-fix pass; suite RC-083 |
 | R2-349 | HIGH | W16 | `three_way.py` | `models.py` | TODO | | reg L16310 |
 | R2-350 | HIGH | W07 | `billing.py` | `three_way.py` | TODO | | reg L16338 |
-| R2-351 | MEDIUM | W05 | `procurement.py` | `models.py` | TODO | | reg L16372 |
+| R2-351 | MEDIUM | W05 | `procurement.py` | `models.py` | FIXED | FIXED 53b9499; GRN-written stock transactions carry the PO item unit + inventory category. |
 | R2-352 | CRITICAL | W03 | `hr.py` | — | FIX_VERIFIED | `e2e449d` | reg L16437; hr.py direct-fix pass; suite RC-047 |
 | R2-353 | CRITICAL | W03 | `hr.py` | `reports.py`, `models.py`, `subcon_attendance.py` | FIX_VERIFIED | `e2e449d` | reg L16473; hr.py direct-fix pass; suite RC-048 |
 | R2-354 | HIGH | W03 | `hr.py` | `models.py` | FIX_VERIFIED | `05a41e9` | reg L16516; hr.py direct-fix pass; suite RC-050 |
@@ -576,7 +576,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-425 | HIGH | W29 | `d/hr/page.tsx` | `dashboard/page.tsx`, `models.py`, `reports/dpr/page.tsx` | TODO | | reg L21108 |
 | R2-426 | CRITICAL | W60 | `d/payment-approval/page.tsx` | — | TODO | | reg L21170 |
 | R2-427 | HIGH | W74 | `d/equipment/page.tsx` | `d/budgeting/boq/page.tsx` | TODO | | reg L21214 |
-| R2-428 | MEDIUM | W23 | `d/finance/page.tsx` | — | TODO | | reg L21248 |
+| R2-428 | MEDIUM | W23 | `d/finance/page.tsx` | — | FIXED | FIXED (evidence, cd01b15); finance CSV import template is header-only since the demo-data purge - no sample rows remain. |
 | R2-429 | HIGH | W03 | `hr.py` | `models.py` | FIX_VERIFIED | `034bc1e` | reg L21329; hr.py direct-fix pass; suite RC-067 |
 | R2-430 | CRITICAL | W03 | `hr.py` | — | FIX_VERIFIED | `05a41e9` | reg L21389; hr.py direct-fix pass; suite RC-049 |
 | R2-431 | CRITICAL | W91 | `errors.py` | `hr.py` | TODO | | reg L21423 |
@@ -716,8 +716,8 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-566 | MEDIUM | W11 | `planning.py` | `gantt/page.tsx` | TODO | | reg L29657 |
 | R2-568 | CRITICAL | W01 | `finance.py` | — | FIX_VERIFIED | `e3866c9` | reg L29770; wave W01b; suite RC-024 |
 | R2-570 | HIGH | W37 | `equipment.py` | `finance.py` | TODO | | reg L29839 |
-| R2-572 | MEDIUM | W05 | `procurement.py` | — | TODO | | reg L29934 |
-| R2-573 | MEDIUM | W05 | `procurement.py` | — | TODO | | reg L29948 |
+| R2-572 | MEDIUM | W05 | `procurement.py` | — | FIXED | FIXED 4d85244; empty PO items rejected at the schema (min_length=1). Siblings: IndentCreateRequest.items and RFQ items lack min_length - follow-up. |
+| R2-573 | MEDIUM | W05 | `procurement.py` | — | FIXED | FIXED 00427eb; GRN received_date in the future rejected (422), naive datetimes normalized before compare. Sibling: POCreateRequest.po_date accepts future dates - follow-up. |
 | R2-578 | MEDIUM | W17 | `chat.py` | — | TODO | | reg L30164 |
 | R2-580 | HIGH | W10 | `projects.py` | — | TODO | | reg L30244 |
 | R2-582 | HIGH | W10 | `projects.py` | — | TODO | | reg L30288 |

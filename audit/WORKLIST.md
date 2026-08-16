@@ -34,6 +34,11 @@ Ordering is **severity-ascending**, with founder-gates and live-only work last. 
 
 ## ✅ PHASE L COMPLETE (Session 29) — 8/8 LOWs closed, exit condition met (pytest 254/254 incl. 37 pins, npm build green, counts recomputed from the register, pushed)
 
+## PHASE M — in progress (Sessions 30+)
+- Batch 1 (Session 30): W36 ✅ 4/4 (R2-045, R2-066, R2-193, R2-251), W23 ✅ 3/3 (R2-071, R2-072, R2-428), W05 ✅ 6/6 (R2-298*, R2-336, R2-341*, R2-351, R2-572, R2-573 — *partial, gated by CD-7/CD-8), W11 ⏳ 2/4 (R2-136, R2-255 done; R2-461, R2-566 pending). W02 (other agent): R2-117, R2-119, R2-190, R2-213, R2-268 closed by external commits, registered.
+- ⚠️ Tree-state: another agent is working in this checkout (~180 uncommitted files). Code waves PAUSED until the tree settles; central pins + batch verification deferred.
+- Remaining Phase M queue (next): W15 models.py (5), W08 analytics.py (3), W06 settings.py (3), W12 statutory.py (3), W22 safety.py (3), W35 files.py (3), W10 projects.py (3), W07 billing.py (3), then the 2-finding waves (W79, W82, W19, W46, W17, W31, W14, W83, W41, W18) and the W02 remainder.
+
 ---
 
 ## Status summary (as of Session 24)
