@@ -77,8 +77,11 @@ def get_committed_costs(project_id: UUID, db: Session = Depends(get_db), _: None
         db.commit()
         db.refresh(budget)
 
-    pos = db.query(PurchaseOrder).filter(PurchaseOrder.project_id == project_id).all()
-    material_committed = sum(float(p.total_amount) for p in pos if p.status not in ("closed",))
+    pos = db.query(PurchaseOrder).filter(
+        PurchaseOrder.project_id == project_id,
+        PurchaseOrder.status.in_(("sent", "partial", "received")),
+    ).all()
+    material_committed = sum(float(p.total_amount) for p in pos)
 
     bills_material = db.query(Bill).filter(
         Bill.project_id == project_id,
@@ -86,7 +89,10 @@ def get_committed_costs(project_id: UUID, db: Session = Depends(get_db), _: None
     ).all()
     material_actual = sum(float(b.total_payable) for b in bills_material)
 
-    wos = db.query(WorkOrder).filter(WorkOrder.project_id == project_id).all()
+    wos = db.query(WorkOrder).filter(
+        WorkOrder.project_id == project_id,
+        WorkOrder.status != "cancelled",
+    ).all()
     subcon_committed = sum(float(w.estimated_work_amount) for w in wos)
 
     bills_subcon = db.query(Bill).filter(
@@ -166,10 +172,10 @@ def get_tower_budget(project_id: UUID, db: Session = Depends(get_db), _: None = 
         )]
 
     result = []
+    bills = db.query(Bill).filter(Bill.project_id == project_id, Bill.invoice_type.in_(EXPENSE_INVOICE_TYPES)).all()
+    actual = sum(float(b.total_payable) for b in bills)
     for t in towers:
         committed = float(t.budget)
-        bills = db.query(Bill).filter(Bill.project_id == project_id, Bill.invoice_type.in_(EXPENSE_INVOICE_TYPES)).all()
-        actual = sum(float(b.total_payable) for b in bills)
         result.append(TowerBudgetBreakdown(
             tower_id=t.id,
             tower_name=f"{t.tower_name} ({t.tower_code})",

@@ -93,6 +93,8 @@ export default function BudgetPage() {
   const fmt = (v: number) => Number(v || 0).toLocaleString();
   const pct = (used: number, total: number) => total > 0 ? ((used / total) * 100).toFixed(1) : "0.0";
 
+  const noBudget = budget ? (budget.total_budget || 0) <= 0 : false;
+
   return (
     <div className="flex-1 flex flex-col overflow-hidden font-sans">
       
@@ -121,7 +123,7 @@ export default function BudgetPage() {
                   { label: "Total Budget", value: `₹${fmt(budget.total_budget)}`, color: "text-foreground" },
                   { label: "Total Committed", value: `₹${fmt(budget.total_committed)}`, color: "text-amber-400" },
                   { label: "Total Actual", value: `₹${fmt(budget.total_actual)}`, color: "text-primary" },
-                  { label: "Committed Variance", value: `₹${fmt(budget.total_committed_variance)}`, color: budget.total_committed_variance >= 0 ? "text-green-400" : "text-red-400" },
+                  { label: "Committed Variance", value: noBudget ? "—" : `₹${fmt(budget.total_committed_variance)}`, color: noBudget ? "text-muted" : (budget.total_committed_variance >= 0 ? "text-green-400" : "text-red-400") },
                 ].map((s, idx) => (
                   <div key={idx} className="bg-card border border-border-custom rounded-lg p-4 rounded-md border border-border-custom">
                     <span className="text-[10px] font-bold text-muted uppercase tracking-wider block">{s.label}</span>
@@ -129,6 +131,12 @@ export default function BudgetPage() {
                   </div>
                 ))}
               </div>
+
+              {noBudget && (
+                <div className="p-4 rounded-md bg-amber-500/10 border border-amber-500/20 text-xs text-amber-400">
+                  No budget has been set for this project — set one to see committed variance and utilization.
+                </div>
+              )}
 
               <div className="bg-card border border-border-custom rounded-lg border border-border-custom rounded-lg overflow-hidden">
                 <div className="px-5 py-4 border-b border-border-custom">
@@ -153,24 +161,27 @@ export default function BudgetPage() {
                         { label: "Labour", b: budget.labour_budget, c: budget.labour_committed, a: budget.labour_actual },
                         { label: "Subcontractor", b: budget.subcon_budget, c: budget.subcon_committed, a: budget.subcon_actual },
                         { label: "Equipment", b: budget.equipment_budget, c: budget.equipment_committed, a: budget.equipment_actual },
-                      ].map((row) => (
+                      ].map((row) => {
+                        const noRowBudget = row.b <= 0;
+                        return (
                         <tr key={row.label} className="border-b border-border-custom hover:bg-elevated transition-all">
                           <td className="px-5 py-3.5 text-foreground font-semibold">{row.label}</td>
                           <td className="px-5 py-3.5 text-right font-sans text-muted">₹{fmt(row.b)}</td>
                           <td className="px-5 py-3.5 text-right font-sans text-amber-400">₹{fmt(row.c)}</td>
                           <td className="px-5 py-3.5 text-right font-sans text-primary">₹{fmt(row.a)}</td>
-                          <td className="px-5 py-3.5 text-right font-sans text-muted">₹{fmt(row.b - row.c)}</td>
-                          <td className="px-5 py-3.5 text-right font-sans text-muted">₹{fmt(row.b - row.a)}</td>
+                          <td className="px-5 py-3.5 text-right font-sans text-muted">{noRowBudget ? "—" : `₹${fmt(row.b - row.c)}`}</td>
+                          <td className="px-5 py-3.5 text-right font-sans text-muted">{noRowBudget ? "—" : `₹${fmt(row.b - row.a)}`}</td>
                           <td className="px-5 py-3.5 text-center">
                             <div className="flex items-center justify-center gap-2">
                               <div className="w-24 bg-elevated rounded-full h-1.5 overflow-hidden">
-                                <div className="h-full bg-primary rounded-full" style={{ width: `${Math.min(Number(pct(row.a, row.b)), 100)}%` }} />
+                                <div className="h-full bg-primary rounded-full" style={{ width: `${noRowBudget ? 0 : Math.min(Number(pct(row.a, row.b)), 100)}%` }} />
                               </div>
-                              <span className="text-[10px] text-muted w-10 text-right">{pct(row.a, row.b)}%</span>
+                              <span className="text-[10px] text-muted w-10 text-right">{noRowBudget ? "—" : `${pct(row.a, row.b)}%`}</span>
                             </div>
                           </td>
                         </tr>
-                      ))}
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
