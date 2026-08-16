@@ -692,3 +692,42 @@ def test_face_recognition_endpoints_work_with_created_at(client, db, make_tenant
         headers=hdr,
     )
     assert summary.status_code == 200, summary.text
+
+# -- W11 R2-136: planning discriminator fields validated ----------------------
+
+def test_planning_discriminator_fields_validated(client, db, make_tenant, auth_headers):
+    comp, user, _ = make_tenant(company_name="E40", user_name="UE40", mobile=_mob(41), email=_mail(41))
+    hdr = auth_headers(user, comp)
+    project = _mk_project(db, comp)
+
+    base = dict(project_id=str(project.id), name="M", milestone_date="2026-01-01T00:00:00")
+    r = client.post("/apis/v3/planning/milestones", json={**base, "type": "bogus", "status": "upcoming"}, headers=hdr)
+    assert r.status_code == 422
+    r = client.post("/apis/v3/planning/milestones", json={**base, "type": "start", "status": "bogus"}, headers=hdr)
+    assert r.status_code == 422
+    r = client.post("/apis/v3/planning/milestones", json={**base, "type": "payment", "status": "achieved"}, headers=hdr)
+    assert r.status_code == 201, r.text
+
+    task_a = models.Task(
+        id=uuid.uuid4(), project_id=project.id, name="A", status="not_started",
+        duration_days=2, progress=Decimal("0"),
+        start_date=_utc(2026, 1, 1), end_date=_utc(2026, 1, 3))
+    task_b = models.Task(
+        id=uuid.uuid4(), project_id=project.id, name="B", status="not_started",
+        duration_days=2, progress=Decimal("0"),
+        start_date=_utc(2026, 1, 1), end_date=_utc(2026, 1, 3))
+    db.add_all([task_a, task_b])
+    db.commit()
+
+    r = client.post(
+        f"/apis/v3/planning/tasks/{task_b.id}/predecessors",
+        json={"predecessor_id": str(task_a.id), "type": "start_to_start"},
+        headers=hdr,
+    )
+    assert r.status_code == 422
+    r = client.post(
+        f"/apis/v3/planning/tasks/{task_b.id}/predecessors",
+        json={"predecessor_id": str(task_a.id), "type": "finish_to_start"},
+        headers=hdr,
+    )
+    assert r.status_code == 201, r.text

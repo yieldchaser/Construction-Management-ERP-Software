@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.auth import get_current_user, verify_company_access, verify_project_access, get_company_membership, require_permission
 from app.models import Task, TaskPredecessor, ProjectMilestone, Project, TaskTodo, TaskComment, CompanyTeam, User
+from app.constants import MILESTONE_TYPE_PATTERN, MILESTONE_STATUS_PATTERN, PREDECESSOR_LINK_TYPE_PATTERN
 from app.workflow_controls import (
     enforce_entry_creation_window,
     enforce_entry_editing_window,
@@ -67,7 +68,7 @@ class TaskUpdateRequest(BaseModel):
 
 class PredecessorCreateRequest(BaseModel):
     predecessor_id: UUID
-    type: str = "finish_to_start"
+    type: str = Field("finish_to_start", pattern=PREDECESSOR_LINK_TYPE_PATTERN)
 
 # ── Project Milestone schemas ────────────────────────────────────────────────
 class MilestoneResponse(BaseModel):
@@ -87,15 +88,15 @@ class MilestoneCreateRequest(BaseModel):
     project_id: UUID
     name: str
     milestone_date: datetime
-    type: str = "start"  # start | inspection | critical | payment | handover
-    status: str = "upcoming"  # upcoming | achieved
+    type: str = Field("start", pattern=MILESTONE_TYPE_PATTERN)  # start | inspection | critical | payment | handover
+    status: str = Field("upcoming", pattern=MILESTONE_STATUS_PATTERN)  # upcoming | achieved
     description: Optional[str] = None
 
 class MilestoneUpdateRequest(BaseModel):
     name: Optional[str] = None
     milestone_date: Optional[datetime] = None
-    type: Optional[str] = None
-    status: Optional[str] = None
+    type: Optional[str] = Field(None, pattern=MILESTONE_TYPE_PATTERN)
+    status: Optional[str] = Field(None, pattern=MILESTONE_STATUS_PATTERN)
     description: Optional[str] = None
 
 # ── Lookahead task schema ────────────────────────────────────────────────────

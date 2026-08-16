@@ -14,3 +14,10 @@ REVENUE_INVOICE_TYPES = ("sale", "material_sale")
 EXPENSE_INVOICE_TYPES = ("purchase", "subcon", "expense", "equipment")
 SETTLEMENT_INVOICE_TYPES = ("payment_in", "payment_out", "i_paid", "i_received")
 MOVEMENT_INVOICE_TYPES = ("material_transfer", "material_return")
+
+MILESTONE_TYPES = ("start", "inspection", "critical", "payment", "handover")
+MILESTONE_TYPE_PATTERN = f"^({'|'.join(MILESTONE_TYPES)})$"
+MILESTONE_STATUSES = ("upcoming", "achieved")
+MILESTONE_STATUS_PATTERN = f"^({'|'.join(MILESTONE_STATUSES)})$"
+PREDECESSOR_LINK_TYPES = ("finish_to_start",)
+PREDECESSOR_LINK_TYPE_PATTERN = f"^({'|'.join(PREDECESSOR_LINK_TYPES)})$"
