@@ -32,6 +32,9 @@ By severity of the remaining TODO: **CRITICAL 105 · HIGH 188 · MEDIUM 126 · L
 | `AUDIT_FIX_REGISTER.md` | 582 rows, one per actionable finding. The masterwork. STATUS column is yours to update. | To find a finding, or to update its status. |
 | `AUDIT_CANONICAL_FINDINGS.md` | 601-entry human-readable list. The input for fix-prompt authoring. | Skim, don't edit. |
 | `AUDIT_ROUND2_FINDINGS.md` | 1.9 MB / 29,421-line raw audit log. R2-001 → R2-601. | Read the long-form "why" for a specific finding (each finding has a `reg L<line>` line reference). |
+| `WORKLIST.md` | The map of all 582 findings: status summary, the 14 founder-gated items, the 413-fixable queue by wave, evidence-close candidates, working rules. | Start of every session, after this file — pick the next wave from it. |
+| `DECISIONS.md` | Every pending decision (D1–D7, D-006…D-013, CD-1…CD-6) with options and what each gates. | Before touching any gated finding. |
+| `LEARNINGS.md` | Every lesson the campaign has paid for — regressions, stale refs, vocabulary drift, fabrication class, etc. | Before every fix; add to it whenever a fix surprises you. |
 
 ---
 
