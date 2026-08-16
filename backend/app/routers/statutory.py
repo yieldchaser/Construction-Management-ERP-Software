@@ -62,19 +62,11 @@ class StatutoryReportResponse(BaseModel):
 def calculate_due_date(report_type: str, return_period: str) -> Optional[datetime]:
     try:
         year, month = map(int, return_period.split("-"))
-        if report_type == "pf":
-            return datetime(year, month, 15)
-        elif report_type == "esi":
-            return datetime(year, month, 15)
-        elif report_type == "tds":
-            next_month = month + 1 if month < 12 else 1
-            next_year = year if month < 12 else year + 1
-            day = 31 if month == 12 else 30
-            if next_month == 2:
-                day = 28
-            return datetime(next_year, next_month, day)
-        elif report_type == "bocw":
-            return datetime(year, month, 15)
+        next_year, next_month = (year + 1, 1) if month == 12 else (year, month + 1)
+        if report_type == "tds":
+            return datetime(next_year, next_month, 7)
+        elif report_type in ("pf", "esi", "bocw"):
+            return datetime(next_year, next_month, 15)
         return None
     except Exception:
         return None
