@@ -2,6 +2,20 @@
 
 Append-only. Every working block ends with a 5-line entry. Never edit an existing entry; if a commit was reverted, add a new entry.
 
+## Session 23 — fixes 59, 60 and 61 + a regressed-fix restoration (2026-08-15)
+
+- Action 1: R2-096 (finance.py) — the register said FIX_VERIFIED (d4db32f), but the code had REGRESSED: commit `f8c097f` (a parallel-branch Finance rebuild based before d4db32f) reintroduced the wrong balance formula and the to_pay-first status ladder. Restored the audit-correct formula (live case +54,400 "To Receive" instead of −1,01,600 "TO PAY") and derived status from the net sign per the audit's suggestion; test `test_party_balance_nets_receivables_and_payables` added (215/215). Lesson logged: verification greps beat register trust — always re-read the code.
+- Action 2: R2-069 (finance page, HIGH) — the payment attachment control stored only a filename with a paperclip "attached" affordance; relabeled "Reference / document name (file is not uploaded)", paperclip removed.
+- Action 3: R2-094 (procurement, MEDIUM) — "Log Usage -" label fixed and `handleRecordUsage` now POSTs to /procurement/transactions (2xx-gated, honest alerts); the same wave converted the GRN handler off the identical local-only fake-success class (verifier approved the in-wave extension).
+- Action 4: R2-095 (procurement, LOW) — honest empty states for the Indent/Inventory/Ledger tabs; "(Stock Contextual)" internal phrasing removed from the heading.
+- Verified: npm run build green (30.8s + 47s TS); pytest 215 rc=0; verifier APPROVE on all four (incl. hand-math on the balance, the GRN-extension verdict, colSpan counts).
+- Commits: `f5da315` (R2-096), `a07d1e2` (R2-069), `2525cab` (R2-094), `6111efe` (R2-095).
+- Register: R2-069, R2-094, R2-095 STATUS TODO → FIXED; R2-096 Notes updated (regression documented, hash appended; status stays FIX_VERIFIED).
+- Notes logged: dead statusChip branch (finance:1255); usage transactions lose the free-text reference (source_ref_id is UUID-typed); test seeds use non-existent project ids (latent FK, SQLite-off).
+- Next session: R2-098 (party custom IDs duplicate/skip — W02 UNMAPPED, backend library.py, decision-free: per-company sequence + unique constraint + backfill), R2-071 (work-order terms innerHTML, MEDIUM), R2-099 (W27 finance, CRITICAL — root cause now known to be R2-198/R2-221 family). R2-178 still awaits the founder (DECISIONS.md CD-1).
+
+---
+
 ## Session 22 — fixes 50–58 (procurement wave + attendance + drawings, 2026-08-15)
 
 - Action 1: applied R2-050 + R2-090 (W38, CRITICAL ×2) — procurement approval buttons no longer mark themselves approved regardless of the server (the unconditional state patch that made a 403 look like APPROVED/SENT, live-proven in R2-090). Both handlers now alert the server detail on non-2xx and refetch on success.
