@@ -16,89 +16,89 @@ router = APIRouter(prefix="/library", tags=["Company Libraries"], dependencies=[
 
 class PartyCreate(BaseModel):
     company_id: uuid.UUID
-    party_id_custom: Optional[str] = None
-    name: str
+    party_id_custom: Optional[str] = Field(None, max_length=100)
+    name: str = Field(..., max_length=255)
     project_id: Optional[uuid.UUID] = None
-    phone: Optional[str] = None
-    email: Optional[str] = None
-    party_type: Optional[str] = Field(None, pattern="(?i)^(Client|Supplier|Vendor|Subcontractor|Contractor|Staff|Party|Architect|Consultant|Other|Investor|Worker|Labour Contractor|Material Supplier|Equipment Supplier|Other Vendor)$")
+    phone: Optional[str] = Field(None, max_length=50)
+    email: Optional[str] = Field(None, max_length=255)
+    party_type: Optional[str] = Field(None, max_length=100, pattern="(?i)^(Client|Supplier|Vendor|Subcontractor|Contractor|Staff|Party|Architect|Consultant|Other|Investor|Worker|Labour Contractor|Material Supplier|Equipment Supplier|Other Vendor)$")
     address: Optional[str] = None
-    bank_name: Optional[str] = None
-    account_name: Optional[str] = None
-    account_number: Optional[str] = None
-    ifsc_code: Optional[str] = None
-    tax_no: Optional[str] = None
+    bank_name: Optional[str] = Field(None, max_length=255)
+    account_name: Optional[str] = Field(None, max_length=255)
+    account_number: Optional[str] = Field(None, max_length=100)
+    ifsc_code: Optional[str] = Field(None, max_length=20)
+    tax_no: Optional[str] = Field(None, max_length=100)
     date_of_joining: Optional[str] = None # ISO format or custom date string
-    aadhaar_number: Optional[str] = None
-    pan_number: Optional[str] = None
-    esi_number: Optional[str] = None
-    pf_number: Optional[str] = None
-    father_name: Optional[str] = None
-    passport_no: Optional[str] = None
+    aadhaar_number: Optional[str] = Field(None, max_length=50)
+    pan_number: Optional[str] = Field(None, max_length=50)
+    esi_number: Optional[str] = Field(None, max_length=100)
+    pf_number: Optional[str] = Field(None, max_length=100)
+    father_name: Optional[str] = Field(None, max_length=255)
+    passport_no: Optional[str] = Field(None, max_length=100)
     passport_expiry_date: Optional[str] = None
-    creator_name: Optional[str] = None
+    creator_name: Optional[str] = Field(None, max_length=255)
     aadhaar_file: Optional[str] = None
     pan_file: Optional[str] = None
     opening_balance_direction: Optional[str] = Field(None, pattern="^(will_pay|will_receive)$")  # will_pay / will_receive
     opening_balance_amount: Optional[float] = Field(0.0, ge=0)
     # Finance tab company-level extensions
-    contractor_role: Optional[str] = None
+    contractor_role: Optional[str] = Field(None, max_length=100)
     service_rate_categories: Optional[str] = None  # JSON list of tag strings
     bank_account_id: Optional[uuid.UUID] = None
     opening_balance: Optional[float] = Field(0.0, ge=0)
-    opening_balance_type: Optional[str] = Field(None, pattern="^(pay|receive)$")  # "pay" / "receive"
+    opening_balance_type: Optional[str] = Field(None, max_length=20, pattern="^(pay|receive)$")  # "pay" / "receive"
 
 class AssetTypeCreate(BaseModel):
     company_id: uuid.UUID
-    name: str
+    name: str = Field(..., max_length=255)
 
 class CostCodeCreate(BaseModel):
     company_id: uuid.UUID
-    code: str
-    sub_cost_code: Optional[str] = None
+    code: str = Field(..., max_length=100)
+    sub_cost_code: Optional[str] = Field(None, max_length=100)
     parent_id: Optional[uuid.UUID] = None
-    name: str
+    name: str = Field(..., max_length=255)
     budget_amount: float = Field(0.0, ge=0)
 
 class DeductionCreate(BaseModel):
     company_id: uuid.UUID
-    name: str
+    name: str = Field(..., max_length=255)
 
 class ProgressCreate(BaseModel):
     company_id: uuid.UUID
-    name: str
+    name: str = Field(..., max_length=255)
 
 class WorkforceCreate(BaseModel):
     company_id: uuid.UUID
-    name: str
+    name: str = Field(..., max_length=255)
 
 class MaterialCreate(BaseModel):
     company_id: uuid.UUID
-    name: str
-    unit: str
-    alternate_unit: Optional[str] = None
+    name: str = Field(..., max_length=255)
+    unit: str = Field(..., max_length=50)
+    alternate_unit: Optional[str] = Field(None, max_length=50)
     gst_rate: float = Field(0.0, ge=0, le=100)
-    category: Optional[str] = None
+    category: Optional[str] = Field(None, max_length=100)
     unit_cost: float = Field(0.0, ge=0)
     lead_time_days: int = Field(0, ge=0)
-    hsn_sac: Optional[str] = None
-    item_code: Optional[str] = None
+    hsn_sac: Optional[str] = Field(None, max_length=50)
+    item_code: Optional[str] = Field(None, max_length=100)
     specifications: Optional[str] = None
 
 class RateCreate(BaseModel):
     company_id: uuid.UUID
-    name: str
-    item_code: Optional[str] = None
-    unit: str
+    name: str = Field(..., max_length=255)
+    item_code: Optional[str] = Field(None, max_length=100)
+    unit: str = Field(..., max_length=50)
     gst_rate: float = Field(0.0, ge=0, le=100)
-    category: Optional[str] = None
+    category: Optional[str] = Field(None, max_length=100)
     unit_cost: float = Field(0.0, ge=0)
     markup_value: float = 0.0
-    markup_type: str = "percent"
+    markup_type: str = Field("percent", max_length=10)
     unit_sale_price: float = Field(0.0, ge=0)
     note: Optional[str] = None
-    cost_code: Optional[str] = None
-    hsn_sac: Optional[str] = None
+    cost_code: Optional[str] = Field(None, max_length=100)
+    hsn_sac: Optional[str] = Field(None, max_length=50)
 
 
 def _parse_optional_datetime(value: Optional[str]) -> Optional[datetime]:
@@ -466,7 +466,7 @@ def delete_library_rate(item_id: uuid.UUID, db: Session = Depends(get_db), curre
 
 class RetentionCreate(BaseModel):
     company_id: uuid.UUID
-    name: str
+    name: str = Field(..., max_length=255)
 
 
 @router.get("/retentions/{company_id}")
@@ -503,7 +503,7 @@ def delete_library_retention(item_id: uuid.UUID, db: Session = Depends(get_db), 
 
 class MaterialCategoryCreate(BaseModel):
     company_id: uuid.UUID
-    name: str
+    name: str = Field(..., max_length=255)
     parent_id: Optional[uuid.UUID] = None
 
 
@@ -545,7 +545,7 @@ def delete_material_category(item_id: uuid.UUID, db: Session = Depends(get_db), 
 
 class TodoCreate(BaseModel):
     company_id: uuid.UUID
-    name: str
+    name: str = Field(..., max_length=255)
 
 
 @router.get("/todos/{company_id}")
