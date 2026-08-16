@@ -21,3 +21,6 @@ MILESTONE_STATUSES = ("upcoming", "achieved")
 MILESTONE_STATUS_PATTERN = f"^({'|'.join(MILESTONE_STATUSES)})$"
 PREDECESSOR_LINK_TYPES = ("finish_to_start",)
 PREDECESSOR_LINK_TYPE_PATTERN = f"^({'|'.join(PREDECESSOR_LINK_TYPES)})$"
+
+WASTAGE_TYPES = ("scrap", "offcut", "damaged", "expired", "theft")
+WASTAGE_TYPE_PATTERN = f"^({'|'.join(WASTAGE_TYPES)})$"

@@ -36,7 +36,6 @@ export default function WastagePage() {
     unit: "kg",
     estimated_value: 0,
     reason: "",
-    reported_by: "",
     photo_urls: [] as string[],
     task_id: "",
   });
@@ -65,12 +64,12 @@ export default function WastagePage() {
       const res = await fetch(`${getApiHost()}/apis/v3/wastage`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
-        body: JSON.stringify({ ...form, company_id: companyId, project_id: projectId }),
+        body: JSON.stringify({ ...form, company_id: companyId, project_id: projectId, estimated_value_override: form.estimated_value > 0 }),
       });
       if (res.ok) {
         setMessage("Wastage recorded successfully");
         setShowModal(false);
-        setForm({ material_name: "", wastage_type: "scrap", quantity: 0, unit: "kg", estimated_value: 0, reason: "", reported_by: "", photo_urls: [], task_id: "" });
+        setForm({ material_name: "", wastage_type: "scrap", quantity: 0, unit: "kg", estimated_value: 0, reason: "", photo_urls: [], task_id: "" });
         fetchRecords();
       } else {
         const err = await res.json();
@@ -218,10 +217,6 @@ export default function WastagePage() {
                     <label className="block text-xs font-medium text-muted mb-1">Est. Value (₹)</label>
                     <input type="number" required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-foreground" value={form.estimated_value} onChange={(e) => setForm({...form, estimated_value: parseFloat(e.target.value)})} />
                   </div>
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-muted mb-1">Reported By</label>
-                  <input type="text" required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-foreground" value={form.reported_by} onChange={(e) => setForm({...form, reported_by: e.target.value})} />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-muted mb-1">Reason</label>

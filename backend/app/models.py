@@ -1607,7 +1607,7 @@ class MaterialWastage(Base):
     unit = Column(String(50), nullable=False)
     estimated_value = Column(Numeric(14, 2), default=0.0, nullable=False)
     reason = Column(String, nullable=True)
-    reported_by = Column(String(255), nullable=True)
+    reported_by = Column(UUID(as_uuid=True), ForeignKey("company_team.id", ondelete="SET NULL"), nullable=True)
     photo_urls = Column(JSONB, default=list, nullable=False)
     task_id = Column(UUID(as_uuid=True), ForeignKey("tasks.id", ondelete="SET NULL"), nullable=True)
     status = Column(String(50), default="reported", nullable=False) # reported, reviewed, approved, disposed

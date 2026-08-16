@@ -1049,4 +1049,108 @@ def test_chat_message_poll_cursor_and_capped_load(client, db, make_tenant, auth_
     assert any(mc == 0 for mc in by_id.values())
 
 
+# ── W83 / R2-206: wastage_type enumerated; reporter + value server-derived ──
+def test_wastage_derives_reporter_and_value_and_rejects_unknown_type(client, db, make_tenant, auth_headers):
+    comp, user, team = make_tenant(company_name="W83", user_name="UW83", mobile=_mob(71), email=_mail(71))
+    hdr = auth_headers(user, comp)
+    project = _mk_project(db, comp)
+
+    po = models.PurchaseOrder(
+        id=uuid.uuid4(), company_id=comp.id, project_id=project.id,
+        po_number="PO-W83", po_date=_utc(2026, 1, 1), status="received",
+        gross_amount=Decimal("8200.00"), tax_amount=Decimal("0.00"),
+        total_amount=Decimal("8200.00"))
+    db.add(po)
+    db.flush()
+    db.add(models.PurchaseOrderItem(
+        id=uuid.uuid4(), po_id=po.id, material_name="Cement",
+        quantity=Decimal("20"), unit="bags", rate=Decimal("410.00"),
+        tax_pct=Decimal("0.00")))
+    db.commit()
+
+    bad = client.post(
+        "/apis/v3/wastage",
+        json={
+            "company_id": str(comp.id), "project_id": str(project.id),
+            "material_name": "Cement", "wastage_type": "NOT_A_REAL_TYPE",
+            "quantity": 20, "unit": "bags",
+        },
+        headers=hdr,
+    )
+    assert bad.status_code == 422, bad.text
+
+    r = client.post(
+        "/apis/v3/wastage",
+        json={
+            "company_id": str(comp.id), "project_id": str(project.id),
+            "material_name": "Cement", "wastage_type": "damaged",
+            "quantity": 20, "unit": "bags",
+        },
+        headers=hdr,
+    )
+    assert r.status_code == 201, r.text
+    body = r.json()
+    assert body["estimated_value"] == 8200.0
+    assert body["reported_by"] == str(team.id)
+
+    r2 = client.post(
+        "/apis/v3/wastage",
+        json={
+            "company_id": str(comp.id), "project_id": str(project.id),
+            "material_name": "Cement", "wastage_type": "theft",
+            "quantity": 2, "unit": "bags",
+            "estimated_value": 999.0, "estimated_value_override": True,
+        },
+        headers=hdr,
+    )
+    assert r2.status_code == 201, r2.text
+    assert r2.json()["estimated_value"] == 999.0
+    assert r2.json()["reported_by"] == str(team.id)
+
+
+# ── W83 / R2-207: recipe wastage_pct is applied to batch consumption ──────
+def test_production_batch_applies_recipe_wastage_pct(client, db, make_tenant, auth_headers):
+    comp, user, _ = make_tenant(company_name="W83b", user_name="UW83b", mobile=_mob(72), email=_mail(72))
+    hdr = auth_headers(user, comp)
+    project = _mk_project(db, comp)
+    db.add(models.WarehouseInventory(
+        id=uuid.uuid4(), project_id=project.id, material_name="Cement",
+        on_hand_qty=Decimal("200"), reserved_qty=Decimal("0"), unit="bags"))
+    db.commit()
+
+    r = client.post(
+        "/apis/v3/production/recipes",
+        json={
+            "company_id": str(comp.id), "project_id": str(project.id),
+            "recipe_code": "REC-W83", "product_name": "M25", "mix_type": "Site Mix",
+            "unit": "m3", "target_output_qty": 1.0, "wastage_pct": 5.0,
+            "materials": [{"material_name": "Cement", "planned_qty": 8, "unit": "bags", "is_optional": False}],
+        },
+        headers=hdr,
+    )
+    assert r.status_code == 201, r.text
+    recipe = r.json()
+
+    b = client.post(
+        "/apis/v3/production/batches",
+        json={
+            "company_id": str(comp.id), "project_id": str(project.id),
+            "recipe_id": recipe["id"], "batch_number": "B-W83",
+            "actual_output_qty": 2.0, "status": "completed",
+        },
+        headers=hdr,
+    )
+    assert b.status_code == 201, b.text
+    batch = b.json()
+    cement = next(m for m in batch["materials"] if m["material_name"] == "Cement")
+    assert abs(cement["actual_qty"] - 16.8) < 1e-9
+    assert abs(batch["actual_material_qty"] - 16.8) < 1e-9
+
+    inv = db.query(models.WarehouseInventory).filter(
+        models.WarehouseInventory.project_id == project.id,
+        models.WarehouseInventory.material_name == "Cement",
+    ).first()
+    assert float(inv.on_hand_qty) == 183.2
+
+
 

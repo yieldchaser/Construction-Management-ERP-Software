@@ -6,7 +6,8 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
 from app.database import get_db
 from app.auth import get_current_user, verify_project_access, get_company_membership, require_permission
-from app.models import MaterialWastage, User
+from app.constants import WASTAGE_TYPE_PATTERN
+from app.models import MaterialWastage, PurchaseOrder, PurchaseOrderItem, User
 from decimal import Decimal
 
 router = APIRouter(prefix="/wastage", tags=["Material Wastage & Scrap"], dependencies=[Depends(get_current_user)])
@@ -16,12 +17,12 @@ class MaterialWastageCreate(BaseModel):
     company_id: uuid.UUID
     project_id: uuid.UUID
     material_name: str
-    wastage_type: str
+    wastage_type: str = Field(..., pattern=WASTAGE_TYPE_PATTERN)
     quantity: float = Field(..., ge=0)
     unit: str
-    estimated_value: float = Field(0.0, ge=0)
+    estimated_value: Optional[float] = Field(None, ge=0)
+    estimated_value_override: bool = False
     reason: Optional[str] = None
-    reported_by: Optional[str] = None
     photo_urls: List[str] = []
     task_id: Optional[uuid.UUID] = None
 
@@ -36,7 +37,7 @@ class MaterialWastageResponse(BaseModel):
     unit: str
     estimated_value: float
     reason: Optional[str]
-    reported_by: Optional[str]
+    reported_by: Optional[uuid.UUID]
     photo_urls: List[str]
     task_id: Optional[uuid.UUID]
     status: str
@@ -46,13 +47,44 @@ class MaterialWastageResponse(BaseModel):
         from_attributes = True
 
 
+def _last_material_rate(db: Session, project_id: uuid.UUID, material_name: str) -> Optional[float]:
+    item = (
+        db.query(PurchaseOrderItem)
+        .join(PurchaseOrder, PurchaseOrder.id == PurchaseOrderItem.po_id)
+        .filter(
+            PurchaseOrder.project_id == project_id,
+            PurchaseOrderItem.material_name == material_name,
+        )
+        .order_by(PurchaseOrder.created_at.desc())
+        .first()
+    )
+    if not item:
+        return None
+    return float(item.rate)
+
+
 @router.post("", response_model=MaterialWastageResponse, status_code=status.HTTP_201_CREATED)
 def create_wastage(payload: MaterialWastageCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    get_company_membership(db, current_user, payload.company_id)
+    membership = get_company_membership(db, current_user, payload.company_id)
     require_permission(db, current_user, payload.company_id, "procurement:edit")
-    data = payload.model_dump()
-    data["estimated_value"] = Decimal(str(data["estimated_value"]))
-    wastage = MaterialWastage(**data)
+    if payload.estimated_value_override and payload.estimated_value is not None:
+        estimated_value = payload.estimated_value
+    else:
+        rate = _last_material_rate(db, payload.project_id, payload.material_name)
+        estimated_value = payload.quantity * rate if rate is not None else 0.0
+    wastage = MaterialWastage(
+        company_id=payload.company_id,
+        project_id=payload.project_id,
+        material_name=payload.material_name,
+        wastage_type=payload.wastage_type,
+        quantity=payload.quantity,
+        unit=payload.unit,
+        estimated_value=Decimal(str(estimated_value)),
+        reason=payload.reason,
+        reported_by=membership.id,
+        photo_urls=payload.photo_urls,
+        task_id=payload.task_id,
+    )
     db.add(wastage)
     db.commit()
     db.refresh(wastage)
