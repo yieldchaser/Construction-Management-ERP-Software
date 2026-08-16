@@ -359,8 +359,12 @@ export default function ChatPage() {
                   </div>
                 </button>
               ))
-            ) : (
+            ) : projectId ? (
               <div className="text-center py-8 text-xs text-muted">No chats found.</div>
+            ) : (
+              <div className="text-center py-8 px-3 text-xs text-muted leading-relaxed">
+                No active project selected. Pick a project from the "Pinned Projects" dropdown in the sidebar to view its chats.
+              </div>
             )}
           </div>
         </div>
