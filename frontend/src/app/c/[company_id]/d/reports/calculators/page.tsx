@@ -1722,6 +1722,9 @@ export default function CalculatorsPage() {
                           <span className="text-[9px] text-muted uppercase">Aggregate (m³)</span>
                         </div>
                       </div>
+                      <span className="text-[10px] text-muted italic block mt-2">
+                        Includes {concreteWastage}% wastage allowance
+                      </span>
                     </div>
                     {concMaterialCost > 0 && (
                       <div className="bg-input p-4 rounded-md border border-border-custom">
@@ -1891,6 +1894,9 @@ export default function CalculatorsPage() {
                         </strong>
                       </div>
                     </div>
+                    <span className="text-[10px] text-muted italic block mt-2">
+                      Includes {plasterWastage}% wastage allowance
+                    </span>
                   </div>
                 )}
 
