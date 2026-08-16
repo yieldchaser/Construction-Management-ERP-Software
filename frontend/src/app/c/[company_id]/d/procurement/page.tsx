@@ -27,6 +27,7 @@ interface Indent {
 }
 
 interface POItem {
+  id?: string;
   name: string;
   qty: number;
   unit: string;
@@ -148,7 +149,7 @@ export default function ProcurementPage() {
           id: po.id,
           poNumber: po.po_number,
           vendor: po.vendor_id ? (vendorById[String(po.vendor_id)] || "Vendor") : "Vendor",
-          items: (po.items || []).map((item: any) => ({ name: item.material_name, qty: item.quantity, unit: item.unit, rate: item.rate })),
+          items: (po.items || []).map((item: any) => ({ id: item.id, name: item.material_name, qty: item.quantity, unit: item.unit, rate: item.rate })),
           grossAmount: po.gross_amount,
           taxAmount: po.tax_amount,
           totalAmount: po.total_amount,
@@ -217,7 +218,7 @@ export default function ProcurementPage() {
   const [selectedRFQItem, setSelectedRFQItem] = useState<"UltraTech Cement" | "TMT Steel 16mm">("UltraTech Cement");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   // New Indent form state
-  const [newIndentNum, setNewIndentNum] = useState("IND-2026-003");
+  const [newIndentNum, setNewIndentNum] = useState("");
   const [newIndentMaterial, setNewIndentMaterial] = useState("UltraTech Cement");
   const [newIndentQty, setNewIndentQty] = useState(50);
   const [newIndentUnit, setNewIndentUnit] = useState("bags");
@@ -225,7 +226,7 @@ export default function ProcurementPage() {
   const [newIndentPhoto, setNewIndentPhoto] = useState("");
 
   // New PO form state (Multi-item support)
-  const [newPONum, setNewPONum] = useState("PO-2026-043");
+  const [newPONum, setNewPONum] = useState("");
   const [newPOVendor, setNewPOVendor] = useState("");
   const [vendorOptions, setVendorOptions] = useState<Array<{ id: string; name: string }>>([]);
   const [poFormItems, setPoFormItems] = useState<POItem[]>([
@@ -291,7 +292,7 @@ export default function ProcurementPage() {
     setShowIndentModal(false);
     setNewIndentSpec("");
     setNewIndentPhoto("");
-    setNewIndentNum(`IND-2026-0${indents.length + 4}`);
+    setNewIndentNum("");
   };
 
   // Approve Indent
@@ -372,7 +373,7 @@ export default function ProcurementPage() {
     setShowPOModal(false);
     setPoFormItems([{ name: "UltraTech Cement", qty: 100, unit: "bags", rate: 410 }]);
     setNewPOTerms("");
-    setNewPONum(`PO-2026-0${pos.length + 43}`);
+    setNewPONum("");
   };
 
   // Approve PO
@@ -415,15 +416,20 @@ export default function ProcurementPage() {
     if (!selectedPOForGRN) return;
     
     const receivedItems = selectedPOForGRN.items
-      .filter((_, idx) => grnItemsChecked[idx.toString()])
       .map((item, idx) => ({
+        id: item.id,
         name: item.name,
         qty: parseFloat(grnReceivedQtys[idx.toString()] || "0"),
         unit: item.unit,
         rate: item.rate
-      }));
+      }))
+      .filter((_, idx) => grnItemsChecked[idx.toString()]);
 
     if (receivedItems.length === 0) return;
+    if (receivedItems.some((item) => !item.id)) {
+      alert("Some PO items are missing references; GRN not submitted");
+      return;
+    }
 
     const newGRN: GRN = {
       id: `GRN-${Date.now()}`,
@@ -458,7 +464,7 @@ export default function ProcurementPage() {
           po_id: selectedPOForGRN.id,
           grn_number: grnNum,
           received_date: new Date().toISOString().split("T")[0],
-          items: receivedItems.map((item, idx) => ({ po_item_id: `placeholder-${idx}`, received_qty: item.qty })),
+          items: receivedItems.map((item) => ({ po_item_id: item.id, received_qty: item.qty })),
         }),
       });
     } catch (err) {
@@ -975,7 +981,7 @@ export default function ProcurementPage() {
             <div className="space-y-3">
               <div className="space-y-1">
                 <label className="text-muted">Indent Number</label>
-                <input type="text" value={newIndentNum} onChange={(e) => setNewIndentNum(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground" />
+                <input type="text" value={newIndentNum} onChange={(e) => setNewIndentNum(e.target.value)} required className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground" />
               </div>
               
               <div className="space-y-1">
@@ -1146,7 +1152,7 @@ export default function ProcurementPage() {
             <div className="space-y-3">
               <div className="space-y-1">
                 <label className="text-muted font-bold">PO Number</label>
-                <input type="text" value={newPONum} onChange={(e) => setNewPONum(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground" />
+                <input type="text" value={newPONum} onChange={(e) => setNewPONum(e.target.value)} required className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground" />
               </div>
 
               <div className="space-y-1">
