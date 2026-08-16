@@ -257,6 +257,7 @@ export default function FinancePage() {
     company_balance: 0, cash_balance: 0, in_total: 0, out_total: 0, transactions: [],
   });
   const [txnDateFilter, setTxnDateFilter] = useState("");
+  const [showUnbilledOnly, setShowUnbilledOnly] = useState(false);
 
   // Tally Sync States
   const [tallyPending, setTallyPending] = useState<{ count: number; bill_ids: string[]; payment_ids: string[]; vouchers: TallyPendingVoucher[] }>({ count: 0, bill_ids: [], payment_ids: [], vouchers: [] });
@@ -1146,7 +1147,8 @@ export default function FinancePage() {
               const q = searchQuery.toLowerCase();
               const matchQ = !q || (t.party || "").toLowerCase().includes(q) || (t.details || "").toLowerCase().includes(q) || (t.ref || "").toLowerCase().includes(q);
               const matchD = !txnDateFilter || (t.date || "").startsWith(txnDateFilter);
-              return matchQ && matchD;
+              const matchM = !showUnbilledOnly || (/material/i.test(t.type || "") && t.status && t.status !== "Paid");
+              return matchQ && matchD && matchM;
             });
             const statusClass = (s: string) => {
               if (s === "Paid" || s === "Approved") return "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
@@ -1178,9 +1180,8 @@ export default function FinancePage() {
 
               {/* Toolbar */}
               <div className="flex flex-wrap items-center gap-2">
-                <button className="py-1 px-3 border border-border-custom hover:bg-elevated rounded text-[11px] font-medium text-foreground transition-all inline-flex items-center gap-1"><Icon name="schedule" className="w-3.5 h-3.5" /> Filter</button>
                 <input type="date" value={txnDateFilter} onChange={(e) => setTxnDateFilter(e.target.value)} className="py-1 px-2 border border-border-custom bg-card hover:bg-elevated rounded text-[11px] text-foreground focus:outline-none" />
-                <button className="py-1 px-3 border border-border-custom hover:bg-elevated rounded text-[11px] font-medium text-foreground transition-all flex items-center gap-1">
+                <button onClick={() => setShowUnbilledOnly(!showUnbilledOnly)} className={`py-1 px-3 border border-border-custom hover:bg-elevated rounded text-[11px] font-medium transition-all flex items-center gap-1 ${showUnbilledOnly ? "text-primary border-primary/60" : "text-foreground"}`}>
                   <Icon name="trolley" className="w-3.5 h-3.5" /> Unbilled Materials <span className="bg-primary/20 text-primary text-[9px] font-bold px-1.5 py-0.5 rounded-full">New {unbilledCount}</span>
                 </button>
                 <button className="py-1 px-3 border border-border-custom hover:bg-elevated rounded text-[11px] font-medium text-foreground transition-all flex items-center gap-1">
@@ -1329,9 +1330,6 @@ export default function FinancePage() {
                   />
                   <Icon name="search" className="absolute left-2.5 top-2 w-3.5 h-3.5 text-muted" />
                 </div>
-                <button className="py-1 px-3 border border-border-custom hover:bg-elevated rounded text-[11px] font-medium text-foreground transition-all flex items-center justify-center gap-1">
-                  <Icon name="schedule" className="w-3.5 h-3.5" /> Filter
-                </button>
                 <select
                   value={partyTabStatus}
                   onChange={(e) => setPartyTabStatus(e.target.value)}
@@ -1460,8 +1458,6 @@ export default function FinancePage() {
                     <label className="text-[10px] font-bold text-muted uppercase tracking-wider">Aadhaar Number</label>
                     <div className="flex gap-2">
                       <input value={newParty.aadhaar_number} onChange={(e) => setNewParty({ ...newParty, aadhaar_number: e.target.value })} className="flex-1 bg-input border border-border-custom rounded-md p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
-                      <button type="button" className="px-3 py-2 border border-border-custom rounded-md text-[10px] text-muted hover:bg-elevated inline-flex items-center gap-1"><Icon name="arrow_up" className="w-3 h-3" /> Aadhaar</button>
-                      <button type="button" className="px-3 py-2 border border-border-custom rounded-md text-[10px] text-muted hover:bg-elevated inline-flex items-center gap-1"><Icon name="arrow_up" className="w-3 h-3" /> PAN</button>
                     </div>
                   </div>
 
@@ -1557,7 +1553,6 @@ export default function FinancePage() {
                         </div>
                         <div>
                           <label className="text-[10px] font-bold text-muted uppercase tracking-wider">Attach Media</label>
-                          <button type="button" className="w-full py-3 border border-dashed border-border-custom rounded-md text-[10px] text-muted hover:bg-elevated inline-flex items-center justify-center gap-1"><Icon name="arrow_up" className="w-3 h-3" /> Drop files or click to upload</button>
                         </div>
                       </>
                     )}
@@ -1767,9 +1762,6 @@ export default function FinancePage() {
                         <p className="text-[8px] text-muted uppercase tracking-wider">Running Balance</p>
                         <span className="text-base font-bold text-foreground">₹{cashRunning.toLocaleString("en-IN")}</span>
                       </div>
-                      <button className="px-3 py-1.5 bg-sidebar hover:bg-elevated border border-border-custom rounded-lg text-[10px] font-bold text-muted hover:text-foreground transition-all flex items-center gap-1">
-                        View Statement <span className="text-[9px]">↗</span>
-                      </button>
                     </div>
                   </div>
                 ) : (
@@ -1805,9 +1797,6 @@ export default function FinancePage() {
                           </div>
                           
                           <div className="flex items-center gap-2">
-                            <button className="px-3 py-1.5 bg-sidebar hover:bg-elevated border border-border-custom rounded-lg text-[10px] font-bold text-muted hover:text-foreground transition-all flex items-center gap-1">
-                              View Statement <span className="text-[9px]">↗</span>
-                            </button>
                             <span className="text-muted cursor-pointer hover:text-foreground font-bold p-1">⋮</span>
                           </div>
                         </div>
@@ -2609,6 +2598,10 @@ export default function FinancePage() {
 
                   <button
                     type="button"
+                    onClick={() => {
+                      setNewItemName("");
+                      setShowAddItemForm(true);
+                    }}
                     className="w-full py-2.5 border border-dashed border-primary/50 text-primary hover:bg-primary/5 font-bold rounded-lg text-xs transition-all"
                   >
                     + Add Equipment
@@ -2905,7 +2898,7 @@ export default function FinancePage() {
                       <span className="text-muted block text-[9px] uppercase font-bold">Bill To / Ship To</span>
                       <span className="text-foreground block font-semibold mt-0.5">{billToShipTo}</span>
                     </div>
-                    <button type="button" className="text-primary hover:underline font-bold text-[10px]">View</button>
+                    <button type="button" onClick={() => setShowBillShipModal(true)} className="text-primary hover:underline font-bold text-[10px]">View</button>
                   </div>
 
 
