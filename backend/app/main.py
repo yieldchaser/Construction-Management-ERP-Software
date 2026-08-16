@@ -441,6 +441,7 @@ if _app_settings.SENTRY_DSN:
 
     sentry_sdk.init(
         dsn=_app_settings.SENTRY_DSN,
+        release=_app_settings.SENTRY_RELEASE or None,
         integrations=[StarletteIntegration(), FastApiIntegration()],
         # Error tracking, not full APM: sample a small fraction of transactions
         # for performance rather than tracing every request in prod.

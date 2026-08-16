@@ -120,6 +120,7 @@ class Settings(BaseSettings):
     # skipped cleanly and the app runs normally. Set SENTRY_DSN in the prod env
     # (e.g. Render) to enable backend error/performance reporting.
     SENTRY_DSN: str = ""
+    SENTRY_RELEASE: str = ""
 
     # Google Sheets OAuth (integrations). Optional: when empty, the connect flow
     # returns a clear error. Create an OAuth client in Google Cloud and register
