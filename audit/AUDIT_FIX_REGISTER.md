@@ -154,7 +154,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | Finding | Sev | Wave | Primary file | Other files touched | STATUS | Fix commit | Notes |
 |---|---|---|---|---|---|---|---|
 | R2-001 | LOW | W53 | `frontend/src/app/c/[company_id]/d/payment-approval/page.tsx` | — | TODO | | reg L400 |
-| R2-002 | LOW | W54 | `Sidebar.tsx` | `frontend/src/app/c/[company_id]/reports/[slug]/page.tsx` | TODO | | reg L415 |
+| R2-002 | LOW | W54 | `Sidebar.tsx` | `frontend/src/app/c/[company_id]/reports/[slug]/page.tsx` | FIXED | `807f092` | reg L415; the last four console emoji (📝 MOM, ✅ To Do, 💬 Chat in Sidebar; ⬆️ Export in reports/[slug]) are replaced with existing stroke icons (`note`, `check`, `chat_bubble`, `arrow_up` — all verified in the Icon type union). Full-range emoji scan of both files = 0 remaining. Pinned (codepoint-based, covers the U+FE0F form). Blast-radius 2 files, +6/-4. No test added (pins only). |
 | R2-003 | MEDIUM | W49 | `frontend/src/app/c/[company_id]/d/delete-logs/page.tsx` | `crm.py` | FIXED | `4d27bcd` | reg L434; the entity filter's `ENTITY_TYPES` is now the 29 entity types the backend actually writes (enumerated from every log_deletion call site): `lead` (backend writes `crm_lead`) and `workorder` (never written by any call site) are gone, and the 21 previously unlisted types are present. The backend filters by exact entity_type (delete_logs.py:76-77), so every filter option now matches real rows. Blast-radius 1 file, +26/-5. No test added. |
 | R2-004 | MEDIUM | W21 | `calculators.py` | — | TODO | | reg L458 |
 | R2-005 | LOW | W77 | `frontend/src/app/c/[company_id]/d/reports/calculators/page.tsx` | — | FIXED | `2ed961c` | reg L2027; the masonry category shows brick-specific notes only when activeCalc is "bricks"; when activeCalc is "plaster" it now shows plaster-specific notes (dry factor 1.33, 12 mm internal / 15–20 mm external per IS 1661, 1:4 internal / 1:6 external mix). Blast-radius 1 file, +10/-3 lines. No test added.
@@ -229,7 +229,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-076 | CRITICAL | W04 | `reports.py` | — | FIX_VERIFIED | `723af26` | reg L3285; reports.py direct-fix pass; suite RC-068 — same mechanism as R2-312 |
 | R2-077 | MEDIUM | W119 | `frontend/src/app/c/[company_id]/reports/page.tsx` | `reports.py`, `reports/page.tsx` | TODO | | reg L3317 |
 | R2-078 | MEDIUM | W80 | `PageHeader.tsx` | — | TODO | | reg L3358 |
-| R2-079 | LOW | W80 | `PageHeader.tsx` | `reports/page.tsx` | TODO | | reg L3374 |
+| R2-079 | LOW | W80 | `PageHeader.tsx` | `reports/page.tsx` | FIXED | `a1d639b` | reg L3374; the fabricated "demo-construction" fallback chain (and the disagreeing demo-UUID default in reports/page.tsx) is gone. A missing company_id now redirects to /login (PageHeader has exactly one usage site — c/[company_id]/layout.tsx — so the redirect cannot loop; the login page never renders it). Greps `demo-construction`/demo UUID = 0 in both files. Pinned. Blast-radius 2 files, +15/-6. No test added (pins only). NOTE: a first-paint fetch with `companyId=""` is theoretically possible on a malformed route before the redirect lands (cosmetic). |
 | R2-080 | CRITICAL | W08 | `analytics.py` | — | TODO | | reg L3397 |
 | R2-081 | CRITICAL | W08 | `analytics.py` | — | TODO | | reg L3510 |
 | R2-082 | MEDIUM | W81 | `frontend/src/app/c/[company_id]/analytics/page.tsx` | — | TODO | | reg L3541 |

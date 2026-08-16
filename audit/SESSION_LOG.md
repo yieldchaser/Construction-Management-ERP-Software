@@ -2,6 +2,18 @@
 
 Append-only. Every working block ends with a 5-line entry. Never edit an existing entry; if a commit was reverted, add a new entry.
 
+## Session 26 — Phase L wave L1 (2026-08-15)
+
+- Action 0: logged the phased execution strategy into WORKLIST.md (phases L/M/H/C/G/V, interconnection rules, non-regression guarantees, logging policy, concrete wave queue) per the founder's instruction to document the strategy before executing.
+- Action 1 (Phase L, wave L1): R2-002 — the last four console emoji (📝 MOM, ✅ To Do, 💬 Chat in the Sidebar; ⬆️ Export in reports/[slug]) replaced with existing stroke icons (`note`, `check`, `chat_bubble`, `arrow_up`); full-range emoji scan = 0 remaining; codepoint-based pin added (covers the U+FE0F variation-selector form).
+- Action 2 (Phase L, wave L1): R2-079 — the fabricated "demo-construction" fallback chain in PageHeader (and the disagreeing demo-UUID default in reports/page.tsx) replaced with an honest /login redirect on a missing company_id; loop-analysis: PageHeader has exactly one usage site (c/[company_id]/layout.tsx), so the redirect cannot fire on /login; greps = 0; pin added.
+- Verified: npm build green (55s + 36.4s TS); pytest 248 rc=0 (247 behavior + 31 pins); verifier APPROVE on all three commits (icon names verified in the type union, loop analysis, handleLogout untouched, pins correctly scoped).
+- Commits: `807f092` (R2-002), `a1d639b` (R2-079), `da76f31` (pins).
+- Register: R2-002, R2-079 STATUS TODO → FIXED. Phase L progress: 2 of 8 done.
+- Next session: Phase L wave L2 — R2-001 (payment-approval) + R2-104 (finance page).
+
+---
+
 ## Session 25 — the system docs + the face-recognition wave (2026-08-15)
 
 - Action 0 (founder request: "maintain all findings, learnings, state so resuming is easy and regressions never repeat"): completed the documentation system — `audit/LEARNINGS.md` (16 consolidated lessons, incl. the two regression incidents and the verification-beats-register rule), `audit/WORKLIST.md` (the map of all 582: status summary, the 14 founder-gated findings with their decision IDs, the 413-fixable queue by wave with the notable CRITICALs, evidence-close candidates, working rules), and START_HERE now points at both plus DECISIONS.md. The full 582 triage was computed programmatically from the register.

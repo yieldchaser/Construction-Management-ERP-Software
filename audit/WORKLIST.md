@@ -27,7 +27,7 @@ Ordering is **severity-ascending**, with founder-gates and live-only work last. 
 **Logging policy:** every session → SESSION_LOG; every status change → register; every new gate → DECISIONS.md; every surprise → LEARNINGS.md; anything impossible from our side → `DEFERRED-LIVE:<reason>` in the Notes + session entry (the founder's other agent promotes it after live verification).
 
 **Phase L waves (first concrete queue):**
-- L1: R2-002 (Sidebar) + R2-079 (PageHeader)
+- L1 ✅ DONE (Session 26): R2-002 (Sidebar emoji → stroke icons, `807f092`) + R2-079 (missing company_id → login redirect, `a1d639b`)
 - L2: R2-001 (payment-approval) + R2-104 (finance page)
 - L3: R2-057 (gantt) + R2-070 (procurement photo preview)
 - L4: R2-085 (analytics.py labels) + R2-120 (google_drive.py)
