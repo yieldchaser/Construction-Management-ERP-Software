@@ -23,6 +23,7 @@ Tokens are encrypted at rest (app/crypto.py, Fernet) before being written and
 decrypted right before use. This module never logs token values.
 """
 import json
+import logging
 import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Optional
@@ -32,6 +33,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import RedirectResponse
 from jose import JWTError, jwt
 from sqlalchemy.orm import Session
+
+logger = logging.getLogger(__name__)
 
 from app.auth import (
     create_access_token,
@@ -314,9 +317,14 @@ def _find_or_create_vendor(access_token: str, organization_id: str, *, name: str
         dup = _search_vendor(access_token, organization_id, name=name, contact_type=None)
         if dup:
             return dup
+        _ref = uuid.uuid4().hex[:8]
+        logger.error(
+            "Zoho Books vendor contact creation failed (ref=%s, status=%s): %s",
+            _ref, resp.status_code, resp.text[:500],
+        )
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
-            detail=f"Failed to create the Zoho Books vendor contact: {resp.text[:500]}",
+            detail=f"Failed to create the Zoho Books vendor contact. Reference {_ref}.",
         )
     contact = (resp.json() or {}).get("contact") or {}
     contact_id = contact.get("contact_id")
@@ -544,13 +552,14 @@ def push_bill(
                 organization_id = str(orgs[0].get("organization_id"))
                 connection.organization_id = organization_id
         if not organization_id:
+            _ref = uuid.uuid4().hex[:8]
+            logger.error(
+                "Zoho Books organization resolution failed (ref=%s, region=%s, api=%s, status=%s): %s",
+                _ref, _region(), _api_base(), org_resp.status_code, org_resp.text[:400],
+            )
             raise HTTPException(
                 status_code=status.HTTP_502_BAD_GATEWAY,
-                detail=(
-                    f"Could not determine the Zoho Books organization id "
-                    f"(region={_region()}, api={_api_base()}organizations, "
-                    f"status={org_resp.status_code}): {org_resp.text[:400]}"
-                ),
+                detail=f"Could not determine the Zoho Books organization id. Reference {_ref}.",
             )
     db.commit()  # persist any refreshed token / resolved org id
 
@@ -646,9 +655,14 @@ def push_bill(
         timeout=60,
     )
     if resp.status_code not in (200, 201):
+        _ref = uuid.uuid4().hex[:8]
+        logger.error(
+            "Zoho Books bill creation failed (ref=%s, status=%s): %s",
+            _ref, resp.status_code, resp.text[:500],
+        )
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
-            detail=f"Failed to create the Zoho Books bill: {resp.text[:500]}",
+            detail=f"Failed to create the Zoho Books bill. Reference {_ref}.",
         )
     zoho_bill = (resp.json() or {}).get("bill") or {}
     return {
