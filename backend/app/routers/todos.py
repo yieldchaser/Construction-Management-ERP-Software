@@ -60,7 +60,6 @@ def _serialize(db: Session, t: models.Todo):
 class TodoCreate(BaseModel):
     company_id: uuid.UUID
     project_id: Optional[uuid.UUID] = None
-    created_by: Optional[uuid.UUID] = None
     title: str
     due_date: Optional[str] = None
     repeat_type: str = "none"
@@ -105,14 +104,14 @@ def list_todos(
 
 @router.post("/")
 def create_todo(payload: TodoCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    get_company_membership(db, current_user, payload.company_id)
+    membership = get_company_membership(db, current_user, payload.company_id)
     if payload.project_id:
         verify_project_in_company(db, payload.project_id, payload.company_id)
     require_permission(db, current_user, payload.company_id, "planning:edit")
     t = models.Todo(
         company_id=payload.company_id,
         project_id=payload.project_id,
-        created_by=payload.created_by,
+        created_by=membership.id,
         title=payload.title,
         due_date=_parse_dt(payload.due_date),
         repeat_type=payload.repeat_type,
