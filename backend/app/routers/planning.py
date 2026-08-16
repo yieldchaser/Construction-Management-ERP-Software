@@ -128,7 +128,7 @@ def compute_critical_task_ids(tasks, db: Session) -> set:
     task_ids = [t.id for t in tasks]
     end_by_id = {t.id: t.end_date for t in tasks}
     start_by_id = {t.id: t.start_date for t in tasks}
-    dur_by_id = {t.id: max(1.0, (t.end_date - t.start_date).total_seconds() / 86400.0) for t in tasks}
+    dur_by_id = {t.id: max(1.0, float(t.duration_days or 0)) for t in tasks}
     project_end = max(end_by_id.values())
 
     links = db.query(TaskPredecessor).filter(TaskPredecessor.task_id.in_(task_ids)).all()
@@ -220,7 +220,7 @@ def propagate_schedule(task_id: UUID, db: Session):
         if max_end_date and successor.start_date < max_end_date:
             duration = max(1, successor.duration_days)
             successor.start_date = max_end_date
-            successor.end_date = successor.start_date + timedelta(days=duration)
+            successor.end_date = successor.start_date + timedelta(days=duration - 1)
             db.add(successor)
             # Recurse
             propagate_schedule(successor.id, db)
@@ -447,7 +447,7 @@ def create_task(request: TaskCreateRequest, db: Session = Depends(get_db), curre
     enforce_progress_over_estimate(db, project.company_id, request.progress)
 
     # Auto-calculate end_date based on start_date and duration_days
-    end_date = request.start_date + timedelta(days=request.duration_days)
+    end_date = request.start_date + timedelta(days=request.duration_days - 1)
     if end_date < request.start_date:
         raise HTTPException(status_code=400, detail="Task duration must not end before it starts")
 
@@ -517,7 +517,7 @@ def update_task(task_id: UUID, request: TaskUpdateRequest, db: Session = Depends
 
         task.start_date = start_date
         task.duration_days = duration_days
-        task.end_date = start_date + timedelta(days=duration_days)
+        task.end_date = start_date + timedelta(days=duration_days - 1)
         if task.end_date < task.start_date:
             raise HTTPException(status_code=400, detail="Task duration must not end before it starts")
         dates_changed = True

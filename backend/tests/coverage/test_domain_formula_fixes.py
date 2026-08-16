@@ -758,3 +758,46 @@ def test_task_duration_bounds_enforced(client, db, make_tenant, auth_headers):
 
     r = client.put(f"/apis/v3/planning/tasks/{task.id}", json={"duration_days": -3}, headers=hdr)
     assert r.status_code == 422
+
+# -- W11 R2-461: task end_date is inclusive of the start day ------------------
+
+def test_task_end_date_inclusive_of_start_day(client, db, make_tenant, auth_headers):
+    comp, user, _ = make_tenant(company_name="E42", user_name="UE42", mobile=_mob(45), email=_mail(45))
+    hdr = auth_headers(user, comp)
+    project = _mk_project(db, comp)
+
+    r = client.post(
+        "/apis/v3/planning/tasks",
+        json={
+            "project_id": str(project.id), "name": "FiveDay", "duration_days": 5,
+            "start_date": "2026-01-01T00:00:00",
+        },
+        headers=hdr,
+    )
+    assert r.status_code == 201, r.text
+    task = r.json()
+    assert task["end_date"].startswith("2026-01-05"), task["end_date"]
+    assert task["baseline_end"].startswith("2026-01-05"), task["baseline_end"]
+
+    r = client.put(f"/apis/v3/planning/tasks/{task['id']}", json={"duration_days": 3}, headers=hdr)
+    assert r.status_code == 200, r.text
+    assert r.json()["end_date"].startswith("2026-01-03"), r.json()["end_date"]
+
+    task_b = models.Task(
+        id=uuid.uuid4(), project_id=project.id, name="B", status="not_started",
+        duration_days=3, progress=Decimal("0"),
+        start_date=_utc(2026, 1, 1), end_date=_utc(2026, 1, 3))
+    db.add(task_b)
+    db.commit()
+
+    r = client.post(
+        f"/apis/v3/planning/tasks/{task_b.id}/predecessors",
+        json={"predecessor_id": task["id"]},
+        headers=hdr,
+    )
+    assert r.status_code == 201, r.text
+    r = client.get(f"/apis/v3/planning/tasks?project_id={project.id}", headers=hdr)
+    assert r.status_code == 200, r.text
+    b = next(t for t in r.json() if t["id"] == str(task_b.id))
+    assert b["start_date"].startswith("2026-01-03"), b["start_date"]
+    assert b["end_date"].startswith("2026-01-05"), b["end_date"]
