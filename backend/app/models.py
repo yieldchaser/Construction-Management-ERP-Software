@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import Column, String, ForeignKey, DateTime, Date, Integer, Boolean, Table, Numeric, Float, Text, BigInteger, LargeBinary
+from sqlalchemy import Column, String, ForeignKey, DateTime, Date, Integer, Boolean, Table, Numeric, Float, Text, BigInteger, LargeBinary, UniqueConstraint
 from sqlalchemy.sql import func
 from app.database import Base, engine
 
@@ -258,6 +258,9 @@ class CompanyPayrollSettings(Base):
 
 class CompanyTeam(Base):
     __tablename__ = "company_team"
+    __table_args__ = (
+        UniqueConstraint("company_id", "user_id", name="uq_company_team_company_id_user_id"),
+    )
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"))
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"))
@@ -1338,18 +1341,6 @@ class CashAccount(Base):
     company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
     name = Column(String(255), default="Cash Account", nullable=False)
     opening_balance = Column(Float, default=0.0, nullable=False)
-    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
-
-
-class Quotation(Base):
-    __tablename__ = "quotations"
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
-    subject = Column(String(255), nullable=False)
-    client_name = Column(String(255), nullable=False)
-    estimated_amount = Column(Float, default=0.0, nullable=False)
-    status = Column(String(50), default="Draft", nullable=False) # Draft, Sent, Won, Lost
-    expiry_date = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 
 
