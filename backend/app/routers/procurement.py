@@ -855,8 +855,6 @@ def create_transaction(req: TransactionCreateRequest, db: Session = Depends(get_
     ).first()
     if inv:
         inv.on_hand_qty = float(inv.on_hand_qty) + delta
-        if req.category and req.category != "Uncategorized":
-            inv.category = req.category
         if req.unit:
             inv.unit = req.unit
     else:
