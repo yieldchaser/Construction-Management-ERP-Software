@@ -44,20 +44,6 @@ interface Drawing {
   revisions: Revision[];
 }
 
-const SITE_PHOTOS = [
-  { id: "sp1", url: "https://images.unsplash.com/photo-1541888946425-d81bb19240f5?w=500", label: "Excavation Ground Lock" },
-  { id: "sp2", url: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=500", label: "Column Casting Complete" },
-  { id: "sp3", url: "https://images.unsplash.com/photo-1590069261209-f8e9b8642343?w=500", label: "Material Cement Yard" },
-];
-
-const FOLDERS = [
-  { id: "f1", name: "Quotation from Vendors", count: 6 },
-  { id: "f2", name: "Updated Drawings", count: 14 },
-  { id: "f3", name: "Indent Book Vouchers", count: 9 },
-  { id: "f4", name: "NOC Documents (Local Auth)", count: 3 },
-  { id: "f5", name: "Material Photo Proofs", count: 15 },
-];
-
 const PIN_META: Record<PinCategory, { bg: string; text: string; ring: string; label: string }> = {
   RFI:         { bg: "bg-amber-500",   text: "text-black",  ring: "ring-amber-400/40",   label: "RFI" },
   Clash:       { bg: "bg-red-500",     text: "text-white",  ring: "ring-red-400/40",     label: "Clash" },
@@ -600,41 +586,8 @@ export default function DrawingsPage() {
           {/* ── FILES TAB ── */}
           {tab === "files" && (
             <div className="h-full overflow-y-auto p-5 space-y-6">
-              {/* Site photos */}
-              <div>
-                <div className="text-xs font-bold text-muted uppercase tracking-wider mb-3">Site Photos Reel</div>
-                <div className="flex gap-3 overflow-x-auto pb-1">
-                  <div className="shrink-0 h-32 w-40 border border-dashed border-border-custom rounded-md flex items-center justify-center cursor-pointer hover:bg-elevated transition-all">
-                    <span className="text-xs text-muted font-bold inline-flex items-center gap-1"><Icon name="camera" className="w-4 h-4" /> Snap Photo</span>
-                  </div>
-                  {SITE_PHOTOS.map(p => (
-                    <div key={p.id} className="shrink-0 relative h-32 w-44 rounded-md overflow-hidden border border-border-custom bg-black group">
-                      <img src={p.url} alt={p.label} className="h-full w-full object-cover opacity-75 group-hover:scale-105 transition-all" />
-                      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-2 text-[10px] text-zinc-300 font-bold">{p.label}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              {/* Folders */}
-              <div>
-                <div className="text-xs font-bold text-muted uppercase tracking-wider mb-3">Project Storage Directory</div>
-                <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
-                  {FOLDERS.map(f => (
-                    <div key={f.id} className="flex items-center justify-between p-4 bg-input border border-border-custom rounded-md hover:border-primary/20 cursor-pointer transition-all">
-                      <div className="flex items-center gap-3">
-                        <Icon name="folder" className="w-6 h-6 text-muted" />
-                        <div>
-                          <div className="text-xs font-semibold text-foreground">{f.name}</div>
-                          <div className="text-[10px] text-muted">{f.count} files</div>
-                        </div>
-                      </div>
-                      <span className="text-muted text-sm">›</span>
-                    </div>
-                  ))}
-                  <div className="flex items-center justify-center p-4 border border-dashed border-border-custom rounded-md cursor-pointer hover:bg-elevated transition-all text-xs text-muted font-bold">
-                    + Create Folder
-                  </div>
-                </div>
+              <div className="flex-1 flex items-center justify-center p-8 text-center text-muted">
+                No project files yet. Files and site photos will appear here once uploaded.
               </div>
             </div>
           )}
