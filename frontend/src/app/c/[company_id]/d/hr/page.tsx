@@ -216,7 +216,7 @@ export default function HRPayrollPage() {
     }
   };
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0]);
-  const [payrollMonth, setPayrollMonth] = useState("2026-06");
+  const [payrollMonth, setPayrollMonth] = useState(new Date().toISOString().slice(0, 7));
   const [daysInMonth, setDaysInMonth] = useState(26);
   const [payrollRun, setPayrollRun] = useState<PayrollRun | null>(null);
   const [showAddEmp, setShowAddEmp] = useState(false);
