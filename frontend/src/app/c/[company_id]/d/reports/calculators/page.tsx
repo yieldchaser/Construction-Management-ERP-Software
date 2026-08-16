@@ -154,7 +154,6 @@ export default function CalculatorsPage() {
   const [houseArea, setHouseArea] = useState(1500); // sqft
   const [houseFloors, setHouseFloors] = useState(1); // G
   const [houseQuality, setHouseQuality] = useState<"budget" | "standard" | "premium">("standard");
-  const [houseCurrency, setHouseCurrency] = useState<"INR" | "USD" | "AED">("INR");
   const [houseCompoundWall, setHouseCompoundWall] = useState(120); // ft
   const [houseContingency, setHouseContingency] = useState(10); // %
   const [houseCity, setHouseCity] = useState("default");
@@ -342,7 +341,7 @@ export default function CalculatorsPage() {
 
   // 10. House Construction Cost
   const { currencySymbol, houseTotalCost, houseContingencyCost, houseSplits } = React.useMemo(() => {
-    const CITY_MAP: Record<string, { label: string; mult: number; cur: "INR" | "AED" | "USD" }> = {
+    const CITY_MAP: Record<string, { label: string; mult: number; cur: "INR" | "AED" | "SAR" }> = {
       default: { label: "Other Indian city", mult: 1.0, cur: "INR" },
       mumbai: { label: "Mumbai", mult: 1.25, cur: "INR" },
       delhi: { label: "Delhi NCR", mult: 1.20, cur: "INR" },
@@ -352,15 +351,15 @@ export default function CalculatorsPage() {
       jaipur: { label: "Jaipur", mult: 0.95, cur: "INR" },
       lucknow: { label: "Lucknow", mult: 0.90, cur: "INR" },
       dubai: { label: "Dubai, UAE", mult: 1.0, cur: "AED" },
-      riyadh: { label: "Riyadh, KSA", mult: 0.90, cur: "USD" },
+      riyadh: { label: "Riyadh, KSA", mult: 0.90, cur: "SAR" },
     };
     const cityData = CITY_MAP[houseCity] || CITY_MAP["default"];
-    const effCurrency = cityData.cur || houseCurrency;
-    const sym = effCurrency === "INR" ? "₹" : effCurrency === "AED" ? "AED " : "$";
+    const effCurrency = cityData.cur;
+    const sym = effCurrency === "INR" ? "₹" : effCurrency === "AED" ? "AED " : "SAR ";
     const baseRates = {
-      budget: effCurrency === "INR" ? 1600 : effCurrency === "AED" ? 180 : 50,
-      standard: effCurrency === "INR" ? 2200 : effCurrency === "AED" ? 240 : 65,
-      premium: effCurrency === "INR" ? 3400 : effCurrency === "AED" ? 380 : 100,
+      budget: effCurrency === "INR" ? 1600 : effCurrency === "AED" ? 180 : 187.5,
+      standard: effCurrency === "INR" ? 2200 : effCurrency === "AED" ? 240 : 243.75,
+      premium: effCurrency === "INR" ? 3400 : effCurrency === "AED" ? 380 : 375,
     };
     const houseBaseRate = baseRates[houseQuality] * cityData.mult;
     let constructionCost = 0.0;
@@ -381,7 +380,7 @@ export default function CalculatorsPage() {
       { name: "Consultants & Permits (8%)", percentage: 0.08, color: "bg-zinc-500" },
     ];
     return { currencySymbol: sym, houseTotalCost: totalCost, houseContingencyCost: contingencyCost, houseSplits: splits };
-  }, [houseCity, houseCurrency, houseQuality, houseFloors, houseArea, houseCompoundWall, houseContingency]);
+  }, [houseCity, houseQuality, houseFloors, houseArea, houseCompoundWall, houseContingency]);
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
@@ -1529,20 +1528,6 @@ export default function CalculatorsPage() {
                           </button>
                         ))}
                       </div>
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-muted">Currency Mode</label>
-                      <select
-                        value={houseCurrency}
-                        onChange={(e) => {
-                          setHouseCurrency(e.target.value as any);
-                        }}
-                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
-                      >
-                        <option value="INR">India (₹)</option>
-                        <option value="AED">UAE (AED)</option>
-                        <option value="USD">International ($)</option>
-                      </select>
                     </div>
                   </>
                 )}
