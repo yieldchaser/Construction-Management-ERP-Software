@@ -139,6 +139,7 @@ export default function TransactionPage() {
   const [search, setSearch] = useState("");
   const [addOpen, setAddOpen] = useState(false);
   const [zatcaBillId, setZatcaBillId] = useState<string | null>(null);
+  const [zatcaEnabled, setZatcaEnabled] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -146,13 +147,14 @@ export default function TransactionPage() {
     setError(null);
     try {
       const cid = companyId;
-      const [bRes, dRes, cRes, rRes, mRes, ccRes] = await Promise.all([
+      const [bRes, dRes, cRes, rRes, mRes, ccRes, sRes] = await Promise.all([
         fetch(getApi(`/billing/bills?project_id=${projectId}`), { headers: authHeaders() }),
         fetch(getApi(`/billing/debit-notes?project_id=${projectId}`), { headers: authHeaders() }),
         fetch(getApi(`/billing/credit-notes?project_id=${projectId}`), { headers: authHeaders() }),
         fetch(getApi(`/finance/payment-requests/${cid}`), { headers: authHeaders() }),
         fetch(getApi(`/projects/${projectId}/members`), { headers: authHeaders() }),
         fetch(getApi(`/library/cost-codes/${cid}`), { headers: authHeaders() }),
+        fetch(getApi(`/settings/company/${cid}`), { headers: authHeaders() }),
       ]);
       if (bRes.ok) setBills(await bRes.json());
       if (dRes.ok) setDebits(await dRes.json());
@@ -160,6 +162,7 @@ export default function TransactionPage() {
       if (rRes.ok) setRequests(await rRes.json());
       if (mRes.ok) setMembers(await mRes.json());
       if (ccRes.ok) setCostCodes(await ccRes.json());
+      if (sRes.ok) setZatcaEnabled(Boolean((await sRes.json()).is_zatca_enable));
     } catch (e) {
       setError("Failed to load transactions.");
       console.error(e);
@@ -301,7 +304,7 @@ export default function TransactionPage() {
               <th className="text-left px-4 py-3 font-medium">Ref</th>
               <th className="text-right px-4 py-3 font-medium">Amount</th>
               <th className="text-left px-4 py-3 font-medium">Status</th>
-              <th className="text-left px-4 py-3 font-medium">ZATCA</th>
+              {zatcaEnabled && <th className="text-left px-4 py-3 font-medium">ZATCA</th>}
             </tr>
           </thead>
           <tbody>
@@ -323,7 +326,7 @@ export default function TransactionPage() {
                 </td>
                 <td className="px-4 py-3 text-muted">{r.status}</td>
                 <td className="px-4 py-3">
-                  {r.kind === "Bill" && r.type === "sale" ? (
+                  {zatcaEnabled && r.kind === "Bill" && r.type === "sale" ? (
                     <button
                       type="button"
                       onClick={() => setZatcaBillId(r.id)}
