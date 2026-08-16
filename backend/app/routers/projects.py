@@ -442,8 +442,8 @@ def remove_project_member(project_id: uuid.UUID, member_id: uuid.UUID, db: Sessi
 
 class ProjectPartyCreate(BaseModel):
     party_id: uuid.UUID
-    opening_balance_direction: Optional[str] = None  # will_pay / will_receive
-    opening_balance_amount: Optional[float] = 0.0
+    opening_balance_direction: Optional[str] = Field(None, pattern="^(will_pay|will_receive)$")  # will_pay / will_receive
+    opening_balance_amount: Optional[float] = Field(0.0, ge=0)
 
 
 @router.get("/{project_id}/parties")
