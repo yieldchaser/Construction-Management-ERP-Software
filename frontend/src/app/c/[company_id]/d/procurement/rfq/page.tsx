@@ -57,7 +57,7 @@ export default function RFQPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [viewRfqId, setViewRfqId] = useState<string | null>(null);
 
-  const [newRfqNum, setNewRfqNum] = useState("RFQ-2026-001");
+  const [newRfqNum, setNewRfqNum] = useState("");
 
   const fetchRFQs = async () => {
     setLoading(true);
@@ -86,7 +86,7 @@ export default function RFQPage() {
           company_id: companyId,
           project_id: projectId,
           rfq_number: newRfqNum,
-          items: [{ material_name: "Portland Cement OPC 43", quantity: 500, unit: "bags", specifications: "IS 8112 compliant" }],
+          items: [],
           valid_until: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
         }),
       });
@@ -183,7 +183,6 @@ export default function RFQPage() {
                 <label className="text-[10px] uppercase font-bold text-muted block mb-1">RFQ Number</label>
                 <input type="text" value={newRfqNum} onChange={(e) => setNewRfqNum(e.target.value)} className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-white outline-none font-sans" />
               </div>
-              <p className="text-[10px] text-muted">Default items: Portland Cement OPC 43 × 500 bags (IS 8112 compliant)</p>
             </div>
             <div className="flex gap-3 justify-end pt-2">
               <button onClick={() => setShowCreate(false)} className="px-4 py-2 rounded-md border border-border-custom text-xs font-bold hover:bg-white/[0.05] cursor-pointer">Cancel</button>

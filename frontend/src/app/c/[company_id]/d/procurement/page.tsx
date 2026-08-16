@@ -1017,16 +1017,6 @@ export default function ProcurementPage() {
                 <label className="text-muted">Line-Item Custom Specification Override</label>
                 <input type="text" value={newIndentSpec} onChange={(e) => setNewIndentSpec(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground" placeholder="Grade 53 OPC Cement, Fe 550D Rebars..." />
               </div>
-
-              <div className="space-y-2 border-t border-border-custom pt-3">
-                <span className="text-muted font-bold block">Attach Item Photo proof</span>
-                <div className="flex items-center gap-3">
-                  <button type="button" onClick={() => setNewIndentPhoto("https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=500")} className="px-3 py-1.5 bg-elevated border border-border-custom rounded-lg text-muted hover:text-foreground inline-flex items-center gap-1.5">
-                    <Icon name="camera" className="w-3.5 h-3.5" />Take Item Photo
-                  </button>
-                  {newIndentPhoto && <span className="text-emerald-400 font-bold">✓ Captured</span>}
-                </div>
-              </div>
             </div>
 
             <div className="flex gap-2 justify-end border-t border-border-custom pt-4">
@@ -1093,7 +1083,7 @@ export default function ProcurementPage() {
                 <input type="file" accept="image/*"
                   onChange={e => {
                     const f = e.target.files?.[0];
-                    if (f) setGrnGatePhoto("https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=500");
+                    if (f) setGrnGatePhoto(URL.createObjectURL(f));
                   }}
                   className="w-full bg-input border border-border-custom rounded-lg p-2 text-muted text-xs" />
                 {grnGatePhoto && <span className="text-emerald-400 font-bold mt-1 block">✓ Photo Attached</span>}

@@ -924,19 +924,6 @@ export default function AttendancePage() {
                           {/* Crew Photo upload */}
                           <div className="space-y-2 border-t border-border-custom pt-4">
                             <h3 className="text-xs font-bold text-muted uppercase tracking-wider">Crew Presence Verification</h3>
-                            <div className="flex items-center gap-4">
-                              <button
-                                onClick={() => setSubconPhoto("https://images.unsplash.com/photo-1541888946425-d81bb19240f5?w=500")}
-                                className="flex items-center gap-2 px-4 py-2 bg-input hover:bg-elevated border border-border-custom rounded-md text-xs font-bold text-muted transition-all"
-                              >
-                                <Icon name="camera" className="w-4 h-4" /> Camera / Capture Crew Photo
-                              </button>
-                              {subconPhoto && (
-                                <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-3 py-1 rounded-md text-[10px] font-bold">
-                                  <span>✓ Photo Attached</span>
-                                </div>
-                              )}
-                            </div>
                           </div>
                         </div>
 
