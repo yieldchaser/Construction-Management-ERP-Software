@@ -19,6 +19,26 @@ export interface FaqCategory {
 // Company-scoped path helper keeps links accurate for the signed-in company.
 const c = (companyId: string, path: string) => `/c/${companyId}${path}`;
 
+export const HELP_MODULE_LINKS: (companyId: string) => {
+  label: string;
+  href: string;
+}[] = (companyId) => [
+  { label: "Procurement", href: c(companyId, "/d/procurement") },
+  { label: "Three Way Match", href: c(companyId, "/d/three-way") },
+  { label: "Billing", href: c(companyId, "/d/billing") },
+  { label: "Subcon", href: c(companyId, "/d/subcon") },
+  { label: "HR", href: c(companyId, "/d/hr") },
+  { label: "Attendance", href: c(companyId, "/d/attendance") },
+  { label: "Face Recognition", href: c(companyId, "/d/face-recognition") },
+  { label: "Labour", href: c(companyId, "/d/labour") },
+  { label: "DPR", href: c(companyId, "/d/dpr") },
+  { label: "Quality", href: c(companyId, "/d/quality") },
+  { label: "Safety", href: c(companyId, "/d/safety") },
+  { label: "Equipment", href: c(companyId, "/d/equipment") },
+  { label: "Production", href: c(companyId, "/d/production") },
+  { label: "Cost Codes", href: c(companyId, "/cost-codes") },
+];
+
 export const HELP_CATEGORIES: (companyId: string) => FaqCategory[] = (
   companyId
 ) => [

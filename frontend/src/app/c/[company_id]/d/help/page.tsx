@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
+import Link from "next/link";
 import { useParams } from "next/navigation";
-import { HELP_CATEGORIES, FaqCategory } from "./helpContent";
+import { HELP_CATEGORIES, HELP_MODULE_LINKS, FaqCategory } from "./helpContent";
 import Icon from "@/components/marketing/Icon";
 
 export default function HelpPage() {
@@ -88,6 +89,27 @@ export default function HelpPage() {
               Clear
             </button>
           )}
+        </div>
+
+        {/* Module directory */}
+        <div className="max-w-2xl">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-muted mb-1">
+            Modules
+          </h2>
+          <p className="text-xs text-muted mb-3">
+            Direct links to every module not shown in the sidebar.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {HELP_MODULE_LINKS(companyId).map((m) => (
+              <Link
+                key={m.href}
+                href={m.href}
+                className="rounded-md border border-border-custom bg-card px-3 py-1.5 text-xs font-medium text-muted hover:text-foreground hover:bg-elevated transition-all"
+              >
+                {m.label}
+              </Link>
+            ))}
+          </div>
         </div>
 
         {filtered.length === 0 ? (
