@@ -135,6 +135,11 @@ The PO item report now fills Received/Pending/Item Status, but the `closed` stat
 
 STATUS: **OPEN** — gates the remaining half of R2-341
 
+### CD-9 — TaskTodo vs Todo: two live to-do vocabularies *(from R2-385, MEDIUM, models.py)*
+`TaskTodo` (per-task, `is_completed`) and `Todo` (company/project, `status`) are both live and console-reachable. Merging them requires choosing one surviving vocabulary and reconciling the API/console consumers — or formally keeping both with a documented boundary. Either way the dead class must go.
+
+STATUS: **OPEN** — gates R2-385 (currently TODO)
+
 ### Implementation follow-ups that need no decision (for completeness)
 - `PunchRequest.location_verified` is dead schema after R2-106 — remove in a future pass.
 - Quality lab-test mapping `material: t.material || "Concrete"` — same fabrication class as R2-063-ter.

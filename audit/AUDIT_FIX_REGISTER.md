@@ -239,7 +239,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-086 | CRITICAL | W26 | `face_recognition.py` | `backend/app/models.py` | FIXED | `97f4eb4`, `f30fffe` | reg L3655; closed by the R2-027 wave (same root cause — the missing created_at column + the swallowed-500 frontend). The audit-table-without-a-timestamp design gap is addressed by the new nullable column (legacy rows NULL, new rows stamped now()); the "still 500ing 11 hours ago" state is resolved (pins + behavior test guard it). |
 | R2-087 | HIGH | W23 | `d/finance/page.tsx` | `finance.py` | TODO | | reg L3692 |
 | R2-088 | MEDIUM | W69 | `backend/app/main.py` | — | TODO | | reg L3719 |
-| R2-089 | MEDIUM | W08 | `analytics.py` | `p/[project_id]/layout.tsx`, `dashboard/page.tsx` | TODO | | reg L3743 |
+| R2-089 | MEDIUM | W08 | `analytics.py` | `p/[project_id]/layout.tsx`, `dashboard/page.tsx` | FIXED | FIXED 80f6409; status_counts buckets all five canonical statuses (+Not Started legacy, unknown -> Other); legacy Onhold normalizes into On Hold. |
 | R2-090 | CRITICAL | W05 | `procurement.py` | — | FIXED | `fe3db93` | reg L3784; closed by the R2-050 fix — the live-proven 403 experiment (PO showed APPROVED/SENT after a forced 403, unlocking "Record GRN") is no longer possible: approval handlers only advance state on a confirmed 2xx and alert the server detail otherwise. |
 | R2-091 | CRITICAL | W55 | `procurement/page.tsx` | — | FIXED | `2205ffd`, `ab50c9d` | reg L3813; the vendor half was closed by R2-007 (`2205ffd`); this session closed the material half — every hardcoded material list (PO item rows, indent modal, usage modal, add-item defaults, "UltraTech Cement"/"TMT Steel 16mm" options) is now fed from the real material library (GET /apis/v3/library/materials/{companyId}) with "Select Material" placeholders and empty-row defaults. The `selectedRFQItem` union was relaxed to `string` (the Compare-RFQs drawer is empty-state only). Blast-radius 1 file, +27/-18. NOTE: the material selects lack `required` — an empty-material submission is possible (pre-existing handler behavior). |
 | R2-092 | CRITICAL | W56 | `rfq.py` | — | FIXED | `fc22a98`, `401cf1e` | reg L3844; the fabricated "Compare RFQs" award-recommendation screen was removed by R2-008 (`fc22a98` — honest empty state; the SELECT-VENDOR wrong-vendor carry-through died with it). This session also cleaned the RFQ creation page's own fabrications (seed RFQ number, hardcoded "Portland Cement OPC 43" item seed, and the "Default items" caption — all removed). Wiring the screen to the real rfq.py endpoints remains the deferred proper fix. Blast-radius 2 files. |
@@ -265,7 +265,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-112 | CRITICAL | W48 | `permissions.py` | `hr.py`, `drawings.py`, `reports.py` | TODO | | reg L4407 |
 | R2-113 | CRITICAL | W14 | `auth.py` | — | TODO | | reg L4430 |
 | R2-114 | MEDIUM | W82 | `backend/app/models.py` | `settings.py` | TODO | | reg L4448 |
-| R2-115 | MEDIUM | W06 | `settings.py` | `Sidebar.tsx`, `reports/page.tsx` | TODO | | reg L4469 |
+| R2-115 | MEDIUM | W06 | `settings.py` | `Sidebar.tsx`, `reports/page.tsx` | FIXED | FIXED 093fd10; GET /settings/company returns 404 for unknown companies, no more demo-tenant INSERT on GET. Residual demo chain (layout/Sidebar/projects mapping the demo UUID to demo-construction) is cosmetic only, logged. |
 | R2-116 | CRITICAL | W49 | `frontend/src/app/c/[company_id]/d/delete-logs/page.tsx` | — | TODO | | reg L4500 |
 | R2-117 | MEDIUM | W02 | `UNMAPPED` | — | FIXED | FIXED bbad99e (committed by the founder/other agent session); internal build-plan copy removed from Settings. |
 | R2-118 | MEDIUM | W02 | `UNMAPPED` | — | TODO | | reg L4586 |
@@ -279,8 +279,8 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-126 | CRITICAL | W12 | `statutory.py` | — | TODO | | reg L4900 |
 | R2-127 | CRITICAL | W12 | `statutory.py` | — | TODO | | reg L4936 |
 | R2-128 | CRITICAL | W12 | `statutory.py` | — | TODO | | reg L4963 |
-| R2-129 | MEDIUM | W12 | `statutory.py` | — | TODO | | reg L4982 |
-| R2-130 | MEDIUM | W12 | `statutory.py` | — | TODO | | reg L5013 |
+| R2-129 | MEDIUM | W12 | `statutory.py` | — | FIXED | FIXED bdaa883; PF/ESI/BOCW due the 15th, TDS the 7th of the FOLLOWING month with December rollover (was same-month - every return flagged late). Sibling: export_pf_ecr due_date string still same-month 15th (statutory.py:283). |
+| R2-130 | MEDIUM | W12 | `statutory.py` | — | FIXED | FIXED 87b15ad; the invented penalty formula deleted; /penalty returns estimated_penalty 0.0 + correct due date. Sibling: frontend Estimate Penalty modal now shows 0 (honest but dead UX). |
 | R2-131 | CRITICAL | W07 | `billing.py` | `labour.py`, `finance.py`, `subcon_performance.py` | TODO | | reg L5051 |
 | R2-132 | CRITICAL | W16 | `three_way.py` | — | TODO | | reg L5140 |
 | R2-133 | CRITICAL | W16 | `three_way.py` | — | TODO | | reg L5165 |
@@ -425,7 +425,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-274 | HIGH | W19 | `budgeting.py` | — | TODO | | reg L11993 |
 | R2-275 | HIGH | W19 | `budgeting.py` | — | TODO | | reg L12030 |
 | R2-276 | HIGH | W01 | `finance.py` | — | FIX_VERIFIED | `b998d8a` | reg L12064; wave W01c; suite RC-029; all surfaces closed |
-| R2-277 | MEDIUM | W15 | `models.py` | — | TODO | | reg L12095 |
+| R2-277 | MEDIUM | W15 | `models.py` | — | FIXED | FIXED 551831e; drawing pin coordinates bounded in the schema (ge=0, le=9999.99 matching Numeric(6,2)) and pin created_by derived from the authenticated membership instead of the request body (kills the FK-violation 500). Sibling: DrawingCreateRequest.created_by / RevisionApproveRequest.approved_by same pattern, unfixed. |
 | R2-278 | MEDIUM | W123 | `api.ts` | — | TODO | | reg L12127 |
 | R2-279 | HIGH | W21 | `calculators.py` | — | TODO | | reg L12267 |
 | R2-280 | HIGH | W21 | `calculators.py` | — | TODO | | reg L12310 |
@@ -438,7 +438,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-287 | MEDIUM | W10 | `projects.py` | — | TODO | | reg L12601 |
 | R2-288 | CRITICAL | W06 | `settings.py` | — | TODO | | reg L12645 |
 | R2-289 | HIGH | W36 | `bi_export.py` | `budget.py` | TODO | | reg L12691 |
-| R2-290 | MEDIUM | W06 | `settings.py` | — | TODO | | reg L12754 |
+| R2-290 | MEDIUM | W06 | `settings.py` | — | FIXED | FIXED 582d215; branch GSTIN enforces the canonical 15-char pattern (byte-identical to the frontend validator); salary breakup must be a valid partition (sum 100, basic_pct bounded). Deviation: GSTIN-state-vs-branch-state check deferred to R2-114/D4 (branch state is free text). |
 | R2-291 | HIGH | W69 | `backend/app/main.py` | `delete_logs.py` | TODO | | reg L12811 |
 | R2-292 | HIGH | W06 | `settings.py` | — | TODO | | reg L12867 |
 | R2-293 | MEDIUM | W25 | `tally.py` | — | TODO | | reg L12906 |
@@ -457,7 +457,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-306 | HIGH | W08 | `analytics.py` | — | TODO | | reg L13606 |
 | R2-307 | CRITICAL | W26 | `face_recognition.py` | `models.py` | FIXED | `97f4eb4` | reg L13674; the 3-of-4-endpoints-500 + commit-before-fail hazard is resolved by the created_at column (the POST's response validation now succeeds, so the "silently stored, never readable, retried forever" loop cannot recur). Pinned (`test_pin_R2_027_face_log_has_created_at`) and behavior-tested. NOTE: the commit-before-response-validation pattern itself remains structurally risky for any future schema drift — logged as a design note. |
 | R2-308 | CRITICAL | W14 | `auth.py` | — | TODO | | reg L13823 |
-| R2-309 | MEDIUM | W08 | `analytics.py` | — | TODO | | reg L13860 |
+| R2-309 | MEDIUM | W08 | `analytics.py` | — | FIXED | FIXED 438ec20 (+ evidence: the two stale Sentry entries code-fixed in 37c84d9/50a4c89); SENTRY_RELEASE setting wired into sentry_sdk.init(release=...). Manual step: set SENTRY_RELEASE env on Render. |
 | R2-310 | CRITICAL | W49 | `frontend/src/app/c/[company_id]/d/delete-logs/page.tsx` | `siteflow.ts`, `d/delete-logs/page.tsx`, `CompanySettingsContext.tsx` | FIX_VERIFIED | `af04f74` | reg L13927; wave 0; suite RC-007 |
 | R2-311 | HIGH | W01 | `finance.py` | `routing.py`, `errors.py`, `cors.py` | TODO | | reg L14081 |
 | R2-312 | CRITICAL | W04 | `reports.py` | `finance.py`, `delete-logs/page.tsx`, `main.py` | FIX_VERIFIED | `723af26` | reg L14268; reports.py direct-fix pass; suite RC-068 |
@@ -521,19 +521,19 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-370 | MEDIUM | W07 | `billing.py` | `finance.py`, `errors.py`, `cors.py` | TODO | | reg L17310 |
 | R2-371 | CRITICAL | W04 | `reports.py` | `models.py` | FIX_VERIFIED | `1b841a8` | reg L17366; reports.py direct-fix pass; suite RC-082 |
 | R2-372 | HIGH | W05 | `procurement.py` | `models.py` | TODO | | reg L17397 |
-| R2-373 | MEDIUM | W15 | `models.py` | — | TODO | | reg L17427 |
+| R2-373 | MEDIUM | W15 | `models.py` | — | FIXED | FIXED b298269; indent approve now guards pending-only (400 otherwise) and records approved_by/approved_at (additive migration 20260816_000001_indent_approval_columns.sql); new POST /indents/{id}/reject (pending-only). |
 | R2-374 | CRITICAL | W33 | `towers.py` | `budget.py`, `models.py` | TODO | | reg L17487 |
 | R2-375 | HIGH | W13 | `budget.py` | — | TODO | | reg L17543 |
 | R2-376 | MEDIUM | W33 | `towers.py` | `budget.py`, `billing.py` | TODO | | reg L17582 |
 | R2-377 | HIGH | W07 | `billing.py` | `models.py`, `reports.py` | TODO | | reg L17640 |
-| R2-378 | MEDIUM | W15 | `models.py` | — | TODO | | reg L17687 |
+| R2-378 | MEDIUM | W15 | `models.py` | — | FIXED | FIXED 3e980de; dead TransactionRetention model class removed (retention has one home: TransactionDeduction). Existing tables left in place (no destructive drop). Sibling: LibraryRetention still unreferenced by the write path. |
 | R2-379 | MEDIUM | W07 | `billing.py` | `procurement.py`, `workflow_controls.py` | TODO | | reg L17719 |
 | R2-380 | CRITICAL | W05 | `procurement.py` | `dpr.py` | FIX_VERIFIED | `03db7a3` | reg L17779; procurement.py direct-fix pass; suite RC-089 |
 | R2-381 | HIGH | W07 | `billing.py` | `dpr.py`, `planning.py` | TODO | | reg L17832 |
 | R2-382 | HIGH | W11 | `planning.py` | `billing.py`, `workflow_controls.py` | TODO | | reg L17866 |
 | R2-383 | HIGH | W31 | `todos.py` | `models.py`, `main.py` | TODO | | reg L17913 |
 | R2-384 | HIGH | W105 | `mailer.py` | `models.py`, `public_leads.py`, `auth.py` | TODO | | reg L17950 |
-| R2-385 | MEDIUM | W15 | `models.py` | — | TODO | | reg L17982 |
+| R2-385 | MEDIUM | W15 | `models.py` | — | TODO | | NEEDS-DECISION → CD-9 (see DECISIONS.md): TaskTodo vs Todo are both live and console-reachable; merging requires a surviving-vocabulary choice (is_completed vs status) with console/API blast radius. No code changed. |
 | R2-386 | HIGH | W05 | `procurement.py` | `billing.py`, `models.py`, `rfq.py` | FIX_VERIFIED | `03db7a3` | reg L18068; procurement.py direct-fix pass; suite RC-087 |
 | R2-387 | HIGH | W05 | `procurement.py` | — | TODO | | reg L18282 |
 | R2-388 | MEDIUM | W01 | `finance.py` | `delete-logs/page.tsx`, `main.py`, `delete_logs.py` | WONTFIX | `4b7add4` | reg L18410; see D-007 — 403 contract kept, guard asserts refusal instead |
@@ -559,7 +559,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-408 | HIGH | W02 | `UNMAPPED` | — | TODO | | reg L20115 |
 | R2-409 | HIGH | W25 | `tally.py` | — | TODO | | reg L20131 |
 | R2-410 | CRITICAL | W02 | `UNMAPPED` | — | TODO | | reg L20196 |
-| R2-411 | MEDIUM | W15 | `models.py` | — | TODO | | reg L20236 |
+| R2-411 | MEDIUM | W15 | `models.py` | — | FIXED | FIXED 5847922; tally export emits ledger masters with ACTION=Alter + ALTERID (create-if-absent) and vouchers carry <REFERENCE> (invoice_number / payment reference_number). |
 | R2-412 | HIGH | W73 | `zatca.py` | — | TODO | | reg L20303 |
 | R2-413 | HIGH | W73 | `zatca.py` | `models.py`, `reports.py`, `billing.py` | TODO | | reg L20329 |
 | R2-414 | MEDIUM | W04 | `reports.py` | — | FIX_VERIFIED | `d4db32f` | reg L20452; reports.py direct-fix pass; suite RC-080 |
@@ -608,7 +608,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-458 | CRITICAL | W11 | `planning.py` | — | TODO | | reg L23168 |
 | R2-459 | CRITICAL | W62 | `gantt/page.tsx` | — | TODO | | reg L23204 |
 | R2-460 | MEDIUM | W62 | `gantt/page.tsx` | — | TODO | | reg L23222 |
-| R2-461 | MEDIUM | W11 | `planning.py` | `p/[project_id]/drawings/page.tsx`, `p/[project_id]/budgeting/page.tsx` | TODO | | reg L23235 |
+| R2-461 | MEDIUM | W11 | `planning.py` | `p/[project_id]/drawings/page.tsx`, `p/[project_id]/budgeting/page.tsx` | FIXED | FIXED 94988a2 + 664b430; task end_date inclusive of start day across create/update/propagate; follow-up 664b430 fixed the CPM backward pass (datetime - timedelta, not raw days) which 94988a2 had broken. Siblings: gantt form sends status "pending" (non-canonical); task page totalDays display math. |
 | R2-462 | CRITICAL | W06 | `settings.py` | — | TODO | | reg L23322 |
 | R2-463 | HIGH | W109 | `frontend/src/app/c/[company_id]/d/page.tsx` | — | TODO | | reg L23348 |
 | R2-464 | CRITICAL | W45 | `d/drawings/page.tsx` | `drawings.py` | TODO | | reg L23379 |
@@ -643,7 +643,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-493 | MEDIUM | W64 | `transaction/page.tsx` | — | TODO | | reg L24733 |
 | R2-494 | HIGH | W110 | `subcon/page.tsx` | — | TODO | | reg L24772 |
 | R2-495 | MEDIUM | W37 | `equipment.py` | — | TODO | | reg L24823 |
-| R2-496 | MEDIUM | W08 | `analytics.py` | — | TODO | | reg L24845 |
+| R2-496 | MEDIUM | W08 | `analytics.py` | — | FIXED | FIXED fac73c8; three-way page formats with shared fmtINR en-IN grouping (was Number.toLocaleString default). Sibling: d/billing page defines a local fmtINR shadow - duplication risk. |
 | R2-497 | CRITICAL | W08 | `analytics.py` | — | TODO | | reg L24947 |
 | R2-498 | HIGH | W08 | `analytics.py` | — | TODO | | reg L24992 |
 | R2-499 | HIGH | W08 | `analytics.py` | `projects.py` | TODO | | reg L25018 |
@@ -652,7 +652,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-502 | HIGH | W111 | `production/page.tsx` | — | TODO | | reg L25119 |
 | R2-503 | CRITICAL | W65 | `assets.py` | — | TODO | | reg L25164 |
 | R2-504 | MEDIUM | W65 | `assets.py` | — | TODO | | reg L25218 |
-| R2-505 | MEDIUM | W12 | `statutory.py` | — | TODO | | reg L25247 |
+| R2-505 | MEDIUM | W12 | `statutory.py` | — | FIXED | FIXED (evidence, 6ef2cc8); PHASE 16 eyebrow already removed from d/production by the R2-023 sweep; zero PHASE matches in frontend/src. |
 | R2-506 | HIGH | W112 | `safety/page.tsx` | `safety.py` | TODO | | reg L25316 |
 | R2-507 | HIGH | W24 | `labour.py` | `models.py`, `hr.py` | TODO | | reg L25354 |
 | R2-508 | MEDIUM | W02 | `UNMAPPED` | — | TODO | | reg L25401 |
@@ -695,7 +695,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-545 | HIGH | W71 | `public_leads.py` | `models.py` | TODO | | reg L28210 |
 | R2-546 | HIGH | W06 | `settings.py` | `procurement.py`, `siteflow.ts` | TODO | | reg L28243 |
 | R2-547 | CRITICAL | W06 | `settings.py` | `hr.py` | TODO | | reg L28332 |
-| R2-548 | MEDIUM | W06 | `settings.py` | — | TODO | | reg L28378 |
+| R2-548 | MEDIUM | W06 | `settings.py` | — | FIXED | FIXED 6e2f696; five settings schemas bounded: day counts ge=0, decimal places ge=0..4, grn_numbering/name-display enums, ApprovalRuleCreate.feature_type Literal (12 categories) + levels ge=1, four payroll rates ge=0..100. tds_monthly ge=0 only (a rupee amount, not a percent). NOTE: UI Number Format inputs allow max=6 vs backend cap 4 - saving 5/6 yields 422; R2-546/R2-547 schema halves now bounded. |
 | R2-549 | CRITICAL | W01 | `finance.py` | — | FIX_VERIFIED | `41ebbf1` | reg L28469; wave W01b; suite RC-023 — same root cause as R2-544, closed by its fix |
 | R2-550 | HIGH | W01 | `finance.py` | `settings.py`, `safety.py`, `projects.py` | FIX_VERIFIED | `4b7add4` | reg L28510; direct-fix pass; suite RC-037 |
 | R2-551 | HIGH | W18 | `quality.py` | — | TODO | | reg L28614 |
@@ -713,7 +713,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-563 | MEDIUM | W76 | `hr/page.tsx` | `models.py` | TODO | | reg L29500 |
 | R2-564 | HIGH | W03 | `hr.py` | `hr/page.tsx` | FIX_VERIFIED | `ff2a2fc` | reg L29517; hr.py direct-fix pass; suite RC-062 |
 | R2-565 | CRITICAL | W11 | `planning.py` | `gantt/page.tsx` | FIX_VERIFIED | `b612f73` | reg L29573; wave 0; suite RC-001 |
-| R2-566 | MEDIUM | W11 | `planning.py` | `gantt/page.tsx` | TODO | | reg L29657 |
+| R2-566 | MEDIUM | W11 | `planning.py` | `gantt/page.tsx` | FIXED | FIXED 43fe151; TaskCreateRequest.status default not_started wired into the constructor - the client status is honored instead of discarded. Sibling: dpr.py:77-78 still writes task.status = "in_progress" (non-canonical). |
 | R2-568 | CRITICAL | W01 | `finance.py` | — | FIX_VERIFIED | `e3866c9` | reg L29770; wave W01b; suite RC-024 |
 | R2-570 | HIGH | W37 | `equipment.py` | `finance.py` | TODO | | reg L29839 |
 | R2-572 | MEDIUM | W05 | `procurement.py` | — | FIXED | FIXED 4d85244; empty PO items rejected at the schema (min_length=1). Siblings: IndentCreateRequest.items and RFQ items lack min_length - follow-up. |

@@ -2,6 +2,20 @@
 
 Append-only. Every working block ends with a 5-line entry. Never edit an existing entry; if a commit was reverted, add a new entry.
 
+## Session 31 — Phase M round 2: W15+W08+W06+W12+W11 (worktree mode) (2026-08-16)
+
+- CONTEXT: the main checkout had ~460 uncommitted files from the founder's other agent, so this session moved the campaign into an isolated worktree (`C:\Users\Dell\AppData\Local\Temp\opencode\siteflow-waves`, branch `campaign/waves`) and pushed results to main via `git push origin campaign/waves:main`.
+- Round 2 (5 parallel waves, 16 findings): W15 models 4/5 FIXED (R2-277, R2-373 + additive indent-approval migration, R2-378, R2-411; R2-385 → CD-9 needs-decision), W08 analytics 3/3 (R2-089 status buckets, R2-309 Sentry release tracking, R2-496 fmtINR on three-way), W06 settings 3/3 (R2-115 no demo-INSERT-on-GET, R2-290 GSTIN+breakup validation, R2-548 schema bounds), W12 statutory 3/3 (R2-129 due dates 15th/7th following month, R2-130 invented penalty formula deleted, R2-505 evidence), W11 remainder 2/2 (R2-461 inclusive end dates, R2-566 client status honored).
+- Two regression catches during central verification, both fixed in follow-up commits: (a) the R2-461 commit broke the CPM backward pass (`datetime - float` TypeError) — fixed with a timedelta (`664b430`); (b) the R2-573 received_date validator treated naive local times as UTC, rejecting any local-clock "now" (IST) as future — fixed to interpret naive as local (`2a30c96`). Both failures were caught by the existing test suite (the regression-pins + behavior tests did their job).
+- Central pins: 37 → 66 (+29 pins covering both Phase M batches), pins run green.
+- Verified: pytest tests/coverage/ FULL SUITE rc=0; npm build green in the worktree (fresh npm install, 2m).
+- Commits on campaign/waves (round 2): `bdaa883`, `80f6409`, `438ec20`, `fac73c8`, `87b15ad`, `94988a2`, `43fe151`, `093fd10`, `582d215`, `6e2f696`, `551831e`, `b298269`, `3e980de`, `5847922`, `664b430`, `2a30c96`, `7165dca` (pins), docs commit.
+- Register: 16 rows updated (15 FIXED + R2-385 TODO/CD-9). Counts: TODO 381 (CRITICAL 102 · HIGH 188 · MEDIUM 91 · LOW 0), FIXED 106.
+- Siblings logged (report-only): dpr.py writes non-canonical `in_progress`; gantt form sends `pending` status; export_pf_ecr due-date string same-month; LibraryRetention unreferenced; billing page local fmtINR shadow; UI max=6 vs backend cap 4 on number formats; Residual demo-construction chain in layout/Sidebar/projects (cosmetic).
+- Next: Phase M round 3 — W22 safety (3), W35 files (3), W10 projects (3), W07 billing (3), then W79/W82/W19/W46/W17/W31/W14/W83/W41/W18 (2 each) and the W02 remainder (8). Founder-gated: CD-1..CD-9 + D1..D7.
+
+---
+
 ## Session 30 — Phase M batch 1: W36+W23+W05+W11 (docs registered; code waves landed) (2026-08-16)
 
 - Batch mode (founder request: fix more per pass): dispatched 4 parallel waves — W36 bi_export (4), W23 finance page (3), W05 procurement (6), W11 planning (4). Landed: **W36 4/4, W23 3/3, W05 6/6, W11 2/4** (R2-136, R2-255; R2-461, R2-566 still TODO — redispatch later). All wave commits verified by each wave's own review pass; central pins + batch pytest/npm build were DEFERRED (see the tree-state note).
