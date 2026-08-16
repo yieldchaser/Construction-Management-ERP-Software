@@ -355,7 +355,9 @@ export default function GanttSchedulerPage() {
         setSelectedPredecessor("");
         fetchTasks();
       } else {
-        setError("Link loop detected. Predecessor rejected.");
+        const err = await res.json().catch(() => ({}));
+        const detail = typeof err.detail === "string" ? err.detail : `HTTP ${res.status}`;
+        setError(detail.toLowerCase().includes("circular") ? "Link loop detected. Predecessor rejected." : `Failed to add task link: ${detail}`);
       }
     } catch (e) {
       setError("Connection error.");
