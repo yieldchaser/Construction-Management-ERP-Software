@@ -5,7 +5,7 @@ import uuid
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from app.database import get_db
@@ -13,6 +13,7 @@ from app.auth import create_access_token, get_current_active_company_user, get_c
 from app.permissions import effective_permissions
 from app.config import settings
 from app.rate_limit import limiter
+from app.routers.settings import _validate_gstin
 from app import models, sms, email_otp, security, firebase_auth
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
@@ -742,10 +743,16 @@ def oauth_exchange(request: Request, payload: OAuthExchangeRequest, db: Session 
 class CreateCompanyRequest(BaseModel):
     name: str = Field(..., min_length=1, example="My Construction Co")
     legal_business_name: str | None = Field(default=None, example="My Construction Pvt Ltd")
-    gstin: str | None = Field(default=None, example="27AADCD2424B1ZP")
+    gstin: str | None = Field(
+        default=None,
+        pattern=r"^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$",
+        example="27AADCD2424B1ZP",
+    )
     phone: str | None = None
     city: str | None = None
     billing_address: str | None = None
+
+    _check_gstin = field_validator("gstin")(_validate_gstin)
 
 
 @router.post("/onboarding/create-company")
