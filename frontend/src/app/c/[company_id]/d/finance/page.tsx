@@ -712,7 +712,14 @@ export default function FinancePage() {
       }
 
       const logRes = await fetch(`${getApiHost()}/apis/v3/tally/sync-logs?company_id=${companyId}`, { headers: authHeaders() });
-      if (logRes.ok) setTallySyncLogs(await logRes.json());
+      if (logRes.ok) {
+        const logs = await logRes.json();
+        setTallySyncLogs(logs);
+        const exportedTimes = (logs as any[]).filter((l) => l.exported_at).map((l) => new Date(l.exported_at).getTime());
+        if (exportedTimes.length > 0) setTallyLastExport(new Date(Math.max(...exportedTimes)).toLocaleString());
+        const markedTimes = (logs as any[]).filter((l) => l.marked_synced_at).map((l) => new Date(l.marked_synced_at).getTime());
+        if (markedTimes.length > 0) setTallyLastMarked(new Date(Math.max(...markedTimes)).toLocaleString());
+      }
     } catch (e) {
       console.error("Failed to load Tally data", e);
     }

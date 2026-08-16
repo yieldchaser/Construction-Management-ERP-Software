@@ -197,3 +197,13 @@ def test_pin_R2_079_no_demo_company_fallback():
     reports = _read_frontend("src/app/c/[company_id]/reports/page.tsx")
     assert "demo-construction" not in header, "R2-079 demo company fallback reintroduced in PageHeader"
     assert "demo-construction" not in reports, "R2-079 demo company fallback reintroduced in reports dashboard"
+
+
+def test_pin_R2_104_tally_summary_derived_from_logs():
+    src = _read_frontend("src/app/c/[company_id]/d/finance/page.tsx")
+    assert "setTallyLastMarked(new Date(Math.max(...markedTimes))" in src, "R2-104 tally summary derivation regressed"
+
+
+def test_pin_R2_001_material_card_opens_drawer():
+    src = _read_frontend("src/app/c/[company_id]/d/home/page.tsx")
+    assert "setIsMaterialDrawerOpen(true)" in src, "R2-001 material card drawer affordance regressed"
