@@ -11,7 +11,7 @@ interface MoM {
   company_id: string;
   project_id: string | null;
   type: "Regular" | "Review" | "Client Meeting" | "Internal";
-  status: "Open" | "Closed" | "Action Pending";
+  status: "Open" | "Closed" | "Action Pending" | "Draft";
   attendees: string[];
   notes: string | null;
   created_by: string | null;
@@ -24,12 +24,13 @@ interface ProjectOption {
 }
 
 const MOM_TYPES = ["Regular", "Review", "Client Meeting", "Internal"] as const;
-const MOM_STATUSES = ["Open", "Closed", "Action Pending"] as const;
+const MOM_STATUSES = ["Open", "Closed", "Action Pending", "Draft"] as const;
 
 const statusColors: Record<string, string> = {
   Open: "bg-red-500/10 text-red-400 border-red-500/20",
   "Action Pending": "bg-yellow-500/10 text-yellow-400 border-yellow-500/20",
   Closed: "bg-green-500/10 text-green-400 border-green-500/20",
+  Draft: "bg-zinc-500/10 text-muted border-zinc-500/20",
 };
 
 const badge = (label: string, cls: string) => (
