@@ -629,15 +629,6 @@ export default function ProcurementPage() {
                                   >
                                     <Icon name="image" className="w-3 h-3" />View item photo proof
                                   </button>
-                                  <input
-                                    type="file"
-                                    accept="image/*"
-                                    className="hidden"
-                                    onChange={(e) => {
-                                      const file = e.target.files?.[0];
-                                      if (file) setPreviewUrl(URL.createObjectURL(file));
-                                    }}
-                                  />
                                 </div>
                               )}
                             </div>
