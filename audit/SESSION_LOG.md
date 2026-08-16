@@ -2,6 +2,22 @@
 
 Append-only. Every working block ends with a 5-line entry. Never edit an existing entry; if a commit was reverted, add a new entry.
 
+## Session 22 — fixes 50–58 (procurement wave + attendance + drawings, 2026-08-15)
+
+- Action 1: applied R2-050 + R2-090 (W38, CRITICAL ×2) — procurement approval buttons no longer mark themselves approved regardless of the server (the unconditional state patch that made a 403 look like APPROVED/SENT, live-proven in R2-090). Both handlers now alert the server detail on non-2xx and refetch on success.
+- Action 2: applied R2-051 (W38, CRITICAL) — GRNs now POST real PO item ids instead of `placeholder-N` (the restructure also fixed a latent re-index bug in the checked/qty lookups), and the fabricated PO/Indent numbers (`PO-2026-043`, auto-increment) are gone — user-entered with required inputs.
+- Action 3: applied R2-091 (W55, CRITICAL) — every hardcoded material list in procurement now comes from the real material library; empty-row defaults and "Select Material" placeholders.
+- Action 4: applied R2-068 + R2-093 (W39/W55, CRITICAL+HIGH) — all fabricated photo-evidence controls removed (indent photo button, GRN gate file input that discarded the file, subcon crew-photo buttons); the GRN input now keeps a real local preview; `unsplash` = 0 repo-wide. The rfq page's own fabrications (seed number, item seed, caption) went with it — R2-092's remaining scope closed.
+- Action 5: applied R2-108 (W02, MEDIUM) — duplicate-employee creation warns (confirm gate) and attendance pickers disambiguate with the real `employee_code` (a follow-up commit fixed the first attempt reading a nonexistent `emp.code` field — the verifier caught it).
+- Action 6: closed R2-009's remaining scope (drawings Project Files tab still shipped 3 unsplash photos + 47 phantom files) — `SITE_PHOTOS`/`FOLDERS` consts and their render blocks removed, honest empty state; the canonical's premature "FIXED by cd01b15" is now annotated with the real closer `769ba9b`.
+- Verified: npm run build green (3 builds this session); verifier APPROVE on all 7 commits incl. the GRN index-alignment verdict (coder's re-index claim correct) and the R2-009 register-discrepancy catch.
+- Commits: `fe3db93` (R2-050/090), `2d97459` (R2-051), `ab50c9d` (R2-091), `401cf1e` (R2-068/093/092-rfq), `a2a6566` + `50a0701` (R2-108), `769ba9b` (R2-009).
+- Register: R2-050, R2-051, R2-068, R2-090, R2-091, R2-092, R2-093, R2-108 STATUS TODO → FIXED.
+- Follow-ups logged: handleCreatePO + GRN handler still have fake-optimistic local patches; gatePhotoUrl objectURL not persisted server-side (real upload wiring deferred); material selects lack `required`; existing duplicate employees not merged (decision if wanted).
+- Next session: R2-094 (W38 "Log Usage" dead button, MEDIUM), R2-095 (W38 empty-state tabs, LOW), R2-069 (W23 finance page, HIGH), R2-096 (party ledger sign inversion, HIGH). R2-178 still awaits the founder (DECISIONS.md CD-1).
+
+---
+
 ## Session 21 — fixes 48 and 49, two evidence-closes (2026-08-15, resumed)
 
 - Action 1: applied R2-168's last site (W29 d/hr page, HIGH). The bounded five-site hardcoded-date sweep is now fully closed: this session fixed `payrollMonth` — the payroll screen defaulted to "2026-06" (the previous month, payroll-affecting) and now defaults to the current month (`new Date().toISOString().slice(0, 7)`).
