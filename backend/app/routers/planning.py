@@ -798,6 +798,7 @@ class ProjectResponseSchema(BaseModel):
     category: Optional[str] = None
     stage: Optional[str] = None
     key_personnel_id: Optional[UUID] = None
+    is_pinned: bool = False
 
     class Config:
         from_attributes = True
