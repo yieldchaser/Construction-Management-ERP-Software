@@ -216,6 +216,7 @@ export default function TeamSchedulePage() {
   const [tsFileName, setTsFileName] = useState<string | null>(null);
   const [tsUploading, setTsUploading] = useState(false);
   const [tsSaving, setTsSaving] = useState(false);
+  const [tsFormError, setTsFormError] = useState<string | null>(null);
 
   // ── Data loaders ──
   const loadSchedule = useCallback(async () => {
@@ -587,7 +588,11 @@ ${tasksXml}
 
   const handleSaveTimesheet = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!tsProjectId || !tsPartyId) return;
+    if (!tsProjectId || !tsPartyId) {
+      setTsFormError("Select a project and a party to save the timesheet.");
+      return;
+    }
+    setTsFormError(null);
     setTsSaving(true);
     try {
       const res = await fetch(getApi("/team-schedule/timesheets"), {
@@ -615,9 +620,16 @@ ${tasksXml}
         setTsFileUrl(null);
         setTsFileName(null);
         loadTimesheets();
+      } else {
+        try {
+          const err = await res.json();
+          setTsFormError(err?.detail || "Could not save the timesheet. Please try again.");
+        } catch {
+          setTsFormError("Could not save the timesheet. Please try again.");
+        }
       }
     } catch {
-      /* ignore */
+      setTsFormError("Could not save the timesheet. Please try again.");
     } finally {
       setTsSaving(false);
     }
@@ -897,6 +909,7 @@ ${tasksXml}
                 setTsRemarks("");
                 setTsFileUrl(null);
                 setTsFileName(null);
+                setTsFormError(null);
                 setTsDrawerOpen(true);
               }}
               className="px-4 py-1.5 bg-primary hover:bg-primary-hover text-white rounded-md text-xs font-medium shadow-sm transition-all cursor-pointer"
@@ -916,7 +929,10 @@ ${tasksXml}
                 </svg>
                 <p className="text-sm font-semibold text-muted">No Timesheet Available.</p>
                 <button
-                  onClick={() => setTsDrawerOpen(true)}
+                  onClick={() => {
+                    setTsFormError(null);
+                    setTsDrawerOpen(true);
+                  }}
                   className="mt-2 text-xs text-primary hover:underline cursor-pointer"
                 >
                   Add New Timesheet.
@@ -1140,6 +1156,9 @@ ${tasksXml}
               >
                 {tsSaving ? "Saving…" : "Save Timesheet"}
               </button>
+              {tsFormError && (
+                <p className="text-xs text-rose-500 mt-2">{tsFormError}</p>
+              )}
             </form>
           </div>
         </div>
