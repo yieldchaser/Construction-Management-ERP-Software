@@ -141,6 +141,7 @@ export default function HRPayrollPage() {
     shiftHours: "8",
     costCode: ""
   });
+  const [costCodes, setCostCodes] = useState<Array<{ id: string; code: string; name: string }>>([]);
   
   const [toastMsg, setToastMsg] = useState("");
 
@@ -289,6 +290,18 @@ export default function HRPayrollPage() {
     }
   };
 
+  const fetchCostCodes = async () => {
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/library/cost-codes/${companyId}`, { headers: authHeaders() });
+      if (res.ok) {
+        const data = await res.json();
+        setCostCodes(data.map((c: any) => ({ id: c.id, code: c.code, name: c.name })));
+      }
+    } catch (e) {
+      console.error("Failed to fetch cost codes", e);
+    }
+  };
+
   const handleDeleteHoliday = async (holidayId: string) => {
     try {
       const res = await fetch(`${getApiHost()}/apis/v3/hr/holidays/${holidayId}`, {
@@ -409,6 +422,7 @@ export default function HRPayrollPage() {
   useEffect(() => {
     if (companyId) {
       fetchHolidays();
+      fetchCostCodes();
     }
   }, [companyId]);
 
@@ -1925,9 +1939,9 @@ export default function HRPayrollPage() {
                     className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary"
                   >
                     <option value="">Select Cost Code</option>
-                    <option value="C-101">C-101 (Concrete Foundations)</option>
-                    <option value="C-204">C-204 (Masonry & Brickworks)</option>
-                    <option value="C-509">C-509 (MEP Rough-Ins)</option>
+                    {costCodes.map((cc) => (
+                      <option key={cc.id} value={cc.id}>{cc.code} ({cc.name})</option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -2082,9 +2096,10 @@ export default function HRPayrollPage() {
                 <div>
                   <label className="text-[10px] text-muted uppercase font-bold block mb-1">Cost Code</label>
                   <select className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary">
-                    <option>C-101 (Concrete Foundations)</option>
-                    <option>C-204 (Masonry & Brickworks)</option>
-                    <option>C-509 (MEP Rough-Ins)</option>
+                    <option>Select Cost Code</option>
+                    {costCodes.map((cc) => (
+                      <option key={cc.id}>{cc.code} ({cc.name})</option>
+                    ))}
                   </select>
                 </div>
               </div>
