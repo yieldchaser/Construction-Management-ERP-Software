@@ -544,3 +544,85 @@ def test_pin_R2_150_todo_creator_derived_from_membership():
 def test_pin_R2_443_todo_overdue_flag():
     src = _read("app/routers/todos.py")
     assert '"is_overdue": is_overdue' in src, "R2-443 todo is_overdue flag regressed"
+
+
+def test_pin_R2_183_gstin_validator_and_pattern_in_auth():
+    src = _read("app/routers/auth.py")
+    assert "_validate_gstin" in src, "R2-183 GSTIN validator no longer wired into auth"
+    assert 'pattern=r"^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$"' in src, "R2-183 GSTIN pattern validation regressed"
+
+
+def test_pin_R2_191_company_team_unique_membership():
+    src = _read("app/models.py")
+    assert "uq_company_team_company_id_user_id" in src, "R2-191 company-team membership unique constraint regressed"
+
+
+def test_pin_R2_206_wastage_type_pattern_and_reporter():
+    src = _read("app/routers/wastage.py")
+    assert "pattern=WASTAGE_TYPE_PATTERN" in src, "R2-206 wastage type pattern guard regressed"
+    assert "reported_by=membership.id" in src, "R2-206 wastage reporter derivation regressed"
+    constants = _read("app/constants.py")
+    assert "WASTAGE_TYPE_PATTERN" in constants, "R2-206 WASTAGE_TYPE_PATTERN constant regressed"
+
+
+def test_pin_R2_207_production_scales_by_wastage_pct():
+    src = _read("app/routers/production.py")
+    assert "float(recipe.wastage_pct) / 100.0" in src, "R2-207 production wastage allowance scaling regressed"
+
+
+def test_pin_R2_225_timesheet_save_surfaces_error():
+    src = _read_frontend("src/app/c/[company_id]/d/team-action/page.tsx")
+    assert "setTsFormError" in src, "R2-225 timesheet form error state regressed"
+    assert "!tsPartyId) return;" not in src, "R2-225 silent timesheet save early-return reintroduced"
+
+
+def test_pin_R2_261_dpr_duplicate_date_409():
+    src = _read("app/routers/dpr.py")
+    assert "A Daily Progress Report already exists for this project on this date" in src, "R2-261 DPR duplicate-date rejection message regressed"
+    assert "status_code=409" in src, "R2-261 DPR duplicate-date conflict status regressed"
+
+
+def test_pin_R2_247_quality_records_stamp_session_user():
+    src = _read("app/routers/quality.py")
+    assert "inspected_by=current_user.id" in src, "R2-247 inspection auditor derivation regressed"
+    assert "raised_by=current_user.id" in src, "R2-247 NCR raiser derivation regressed"
+
+
+def test_pin_R2_361_no_quotation_model():
+    src = _read("app/models.py")
+    assert "class Quotation" not in src, "R2-361 dead Quotation model reintroduced"
+
+
+def test_pin_R2_282_calculator_legacy_alias_conflict():
+    src = _read("app/routers/calculators.py")
+    assert "Provide either the legacy fields or their aliases, not both" in src, "R2-282 legacy/alias conflict rejection regressed"
+    assert "Field(1, ge=1" in src, "R2-282 floors minimum guard regressed"
+
+
+def test_pin_R2_508_ltif_basis_no_osha_claim():
+    src = _read("app/routers/safety.py")
+    assert "ltif_basis: int = 200000" in src, "R2-508 LTIF basis default regressed"
+    page = _read_frontend("src/app/c/[company_id]/d/safety/page.tsx")
+    assert "OSHA-aligned" not in page, "R2-508 OSHA-aligned claim reintroduced on safety page"
+
+
+def test_pin_R2_537_log_deletion_defers_commit_to_caller():
+    src = _read("app/routers/delete_logs.py")
+    body = src.split("def log_deletion", 1)[1].split("def ", 1)[0]
+    assert "db.commit()" not in body, "R2-537 log_deletion no longer defers commit to the caller"
+    assert "db.add(log)" in body, "R2-537 log_deletion no longer queues the audit row"
+
+
+def test_pin_R2_118_hr_holidays_fetch():
+    src = _read_frontend("src/app/c/[company_id]/d/hr/page.tsx")
+    assert "apis/v3/hr/holidays/${companyId}" in src, "R2-118 HR holidays fetch wiring regressed"
+
+
+def test_pin_R2_218_billing_refetch_after_subcon_import():
+    src = _read_frontend("src/app/c/[company_id]/d/billing/page.tsx")
+    assert "fetchBills(subconNameMap)" in src, "R2-218 billing refetch after subcon name map build regressed"
+
+
+def test_pin_R2_501_analytics_inr_formatting():
+    src = _read_frontend("src/app/c/[company_id]/analytics/page.tsx")
+    assert "fmtINR(" in src, "R2-501 analytics INR formatting regressed"
