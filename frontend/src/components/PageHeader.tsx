@@ -81,7 +81,6 @@ export default function PageHeader({ title, children }: PageHeaderProps) {
             <button
               onClick={() => {
                 setUserOpen((o) => !o);
-                setNotifOpen(false);
               }}
               className="h-7 w-7 rounded-full bg-primary flex items-center justify-center text-white text-xs font-semibold uppercase hover:bg-primary/90 transition-all cursor-pointer"
             >

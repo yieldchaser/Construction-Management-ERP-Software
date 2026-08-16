@@ -259,6 +259,7 @@ export default function DrawingsPage() {
       version: newRevCode.toUpperCase(),
       fileUrl: activeDrawing?.revisions[0]?.fileUrl ?? "",
       status: "current",
+      approvalStatus: "pending",
       comments: newRevComment || "New revision issued for construction.",
       date: new Date().toISOString().split("T")[0],
       uploadedBy: "Current User",

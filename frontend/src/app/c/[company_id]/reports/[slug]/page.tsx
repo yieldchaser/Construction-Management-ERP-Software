@@ -743,7 +743,7 @@ export default function DynamicReportViewPage() {
     // Default to CSV / Excel (CSV formatted stream)
     const csvContent = [
       headers.join(","),
-      ...dataRows.map(r => r.map(c => `"${c.replace(/"/g, '""')}"`).join(","))
+      ...dataRows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(","))
     ].join("\n");
 
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });

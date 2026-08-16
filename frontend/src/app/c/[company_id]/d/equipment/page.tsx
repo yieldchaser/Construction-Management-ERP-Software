@@ -464,8 +464,7 @@ export default function EquipmentTrackingPage() {
                           {new Date(evt.date).toLocaleDateString()} · {new Date(evt.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                         </div>
                       </div>
-                    ))}
-                    )}
+                    )))}
                   </div>
                 </div>
               )}
