@@ -2,6 +2,19 @@
 
 Append-only. Every working block ends with a 5-line entry. Never edit an existing entry; if a commit was reverted, add a new entry.
 
+## Session 21 — fixes 48 and 49, two evidence-closes (2026-08-15, resumed)
+
+- Action 1: applied R2-168's last site (W29 d/hr page, HIGH). The bounded five-site hardcoded-date sweep is now fully closed: this session fixed `payrollMonth` — the payroll screen defaulted to "2026-06" (the previous month, payroll-affecting) and now defaults to the current month (`new Date().toISOString().slice(0, 7)`).
+- Action 2: applied R2-111's remaining half (W97, HIGH). The workforce save was already wired by R2-013; this session replaced both fabricated Cost Code dropdowns (hardcoded C-101/C-204/C-509) with the real cost-code module (GET /apis/v3/library/cost-codes/{companyId}, rendered `{code} ({name})`).
+- Action 3: closed R2-110 (CRITICAL) and R2-167 (HIGH) with evidence — both are re-filings of defects already fixed: R2-110 is the holiday-calendar local-only/seed defect (fixed by the R2-013/R2-019 wave; verified in tree: no Diwali seed, fetchHolidays + handleDeleteHoliday wired), R2-167 is the hardcoded attendance date (fixed by R2-107; verified in tree: date defaults to today).
+- Verified: npm run build green (76s + 71s TS); verifier APPROVE on both commits (consumers format-consistent, fetch isolation, zero hardcoded cost-code strings remaining). pytest not needed (frontend-only wave).
+- Commits: `99d9287` (R2-168), `a0ceefb` (R2-111). R2-110/R2-167 closed via earlier commits (`45ffb76`/`820717b`, `7ffa1c9`).
+- Register: R2-110, R2-111, R2-167, R2-168 STATUS TODO → FIXED.
+- Follow-ups logged: R2-168-bis (`daysInMonth` hardcoded 26 vs dynamic month — a February run would report 26 days); R2-111-bis (workforce POST lacks cost_code_id — backend field needed to persist the now-real selection).
+- Next session: R2-108 (duplicate-employee guard, decision-free: warn rather than block + disambiguate dropdown labels), R2-030 (blocked by D5), R2-024 (blocked by D6), R2-050/090 family (approvals ignore the server — D7 adjacent). R2-178 still awaits the founder (DECISIONS.md CD-1).
+
+---
+
 ## Session 20 — fixes 46 and 47, one retraction, one counts correction (2026-08-15)
 
 - Action 1: applied R2-106 (W28, CRITICAL) — the "Simulate GPS lock (On-Site)" checkbox (default ON) is deleted; `location_verified` is now derived server-side from the geofence comparison in BOTH punch directions (the coder found the punch-out path also read the client value — unmentioned in the audit) and client-supplied values are ignored. The "Location verified:" claim is out of the notes, the label is "GPS coordinates captured". Test `test_punch_location_verified_derived_from_geofence` proves both directions (inside + client false → true; far outside + client true → false).
