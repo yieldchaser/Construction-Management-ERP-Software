@@ -31,6 +31,17 @@ class SteelCalcRequest(BaseModel):
     @model_validator(mode="after")
     def resolve_aliases(self):
         """Accept spec-named aliases (diameter_mm, num_bars, length_m) as alternatives."""
+        conflicts = []
+        if self.diameter_mm is not None and self.diameter != 0.0:
+            conflicts.append("diameter and diameter_mm")
+        if self.num_bars is not None and self.count != 0:
+            conflicts.append("count and num_bars")
+        if self.length_m is not None and self.length_or_height != 0.0:
+            conflicts.append("length_or_height and length_m")
+        if conflicts:
+            raise ValueError(
+                "Provide either the legacy fields or their aliases, not both: " + ", ".join(conflicts)
+            )
         if self.diameter_mm is not None and self.diameter == 0.0:
             self.diameter = self.diameter_mm
         if self.num_bars is not None and self.count == 0:
@@ -157,9 +168,9 @@ def calc_rmc(req: RMCCalcRequest):
 
 # 4. House Construction Cost
 class HouseCalcRequest(BaseModel):
-    area_sqft: float = Field(..., example=1000.0)
+    area_sqft: float = Field(..., gt=0, example=1000.0)
     base_rate: float = Field(2000.0, example=2000.0)
-    floors: int = Field(1, example=2)
+    floors: int = Field(1, ge=1, example=2)
     is_commercial: bool = Field(False, example=False)
     compound_wall_length_ft: float = Field(0.0, example=100.0)
     contingency_pct: float = Field(12.0, example=12.0)
