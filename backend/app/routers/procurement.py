@@ -116,8 +116,8 @@ class GRNCreateRequest(BaseModel):
     @classmethod
     def received_date_not_future(cls, v: datetime) -> datetime:
         if v.tzinfo is None:
-            v = v.replace(tzinfo=timezone.utc)
-        if v > datetime.now(timezone.utc):
+            v = v.astimezone()
+        if v.astimezone(timezone.utc) > datetime.now(timezone.utc):
             raise ValueError("received_date cannot be in the future")
         return v
 
