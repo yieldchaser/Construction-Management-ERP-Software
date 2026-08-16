@@ -370,7 +370,7 @@ def create_batch(payload: BatchCreate, db: Session = Depends(get_db), current_us
         else:
             # Recipe qty is the dry-material amount; scale planned material qty to
             # the actual batch output (no wet->dry 1.54 factor needed here).
-            actual_qty = (float(recipe_material.planned_qty) / float(recipe.target_output_qty)) * actual_output_qty
+            actual_qty = (float(recipe_material.planned_qty) / float(recipe.target_output_qty)) * actual_output_qty * (1.0 + float(recipe.wastage_pct) / 100.0)
         unit = override.unit if override else recipe_material.unit
         variance_qty = actual_qty - float(recipe_material.planned_qty)
 
