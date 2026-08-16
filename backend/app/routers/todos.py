@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from datetime import datetime, timezone
@@ -67,7 +67,7 @@ def _serialize(db: Session, t: models.Todo):
 class TodoCreate(BaseModel):
     company_id: uuid.UUID
     project_id: Optional[uuid.UUID] = None
-    title: str
+    title: str = Field(..., max_length=500)
     due_date: Optional[str] = None
     repeat_type: str = "none"
     type: Optional[str] = None
@@ -75,9 +75,26 @@ class TodoCreate(BaseModel):
     url: Optional[str] = None
     assignee_ids: List[uuid.UUID] = []
 
+    @field_validator("url")
+    @classmethod
+    def url_http_only(cls, v: Optional[str]) -> Optional[str]:
+        if v is not None and not (v.startswith("http://") or v.startswith("https://")):
+            raise ValueError("url must start with http:// or https://")
+        return v
+
+    @field_validator("due_date")
+    @classmethod
+    def due_date_not_past(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return v
+        parsed = _parse_dt(v)
+        if parsed is not None and parsed.date() < datetime.now(timezone.utc).date():
+            raise ValueError("due_date cannot be in the past")
+        return v
+
 
 class TodoUpdate(BaseModel):
-    title: Optional[str] = None
+    title: Optional[str] = Field(None, max_length=500)
     due_date: Optional[str] = None
     repeat_type: Optional[str] = None
     type: Optional[str] = None
@@ -85,6 +102,23 @@ class TodoUpdate(BaseModel):
     url: Optional[str] = None
     status: Optional[str] = None
     assignee_ids: Optional[List[uuid.UUID]] = None
+
+    @field_validator("url")
+    @classmethod
+    def url_http_only(cls, v: Optional[str]) -> Optional[str]:
+        if v is not None and not (v.startswith("http://") or v.startswith("https://")):
+            raise ValueError("url must start with http:// or https://")
+        return v
+
+    @field_validator("due_date")
+    @classmethod
+    def due_date_not_past(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return v
+        parsed = _parse_dt(v)
+        if parsed is not None and parsed.date() < datetime.now(timezone.utc).date():
+            raise ValueError("due_date cannot be in the past")
+        return v
 
 
 @router.get("/company/{company_id}")

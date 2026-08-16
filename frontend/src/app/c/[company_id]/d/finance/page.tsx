@@ -1220,7 +1220,7 @@ export default function FinancePage() {
                         </td>
                         <td className="p-3 text-foreground">
                           {t.details}
-                          {t.project_id ? <span className="text-[10px] text-muted block">Project: {String(t.project_id).slice(0, 8)}</span> : null}
+                          {t.project_id ? <span className="text-[10px] text-muted block">Project: {t.project_name || String(t.project_id).slice(0, 8)}</span> : null}
                         </td>
                         <td className="p-3 text-right font-bold text-foreground">₹{(t.amount || 0).toLocaleString("en-IN")}</td>
                         <td className="p-3">
@@ -1379,7 +1379,7 @@ export default function FinancePage() {
                           </div>
                         </td>
                         <td className="p-3 text-foreground">{p.party_type || "—"}</td>
-                        <td className="p-3 text-right font-bold text-foreground">₹{(p.balance || 0).toLocaleString("en-IN")}</td>
+                        <td className="p-3 text-right font-bold text-foreground">₹{Math.abs(p.balance || 0).toLocaleString("en-IN")}</td>
                         <td className="p-3">
                           <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider ${statusChip(p.status)}`}>
                             {p.status}

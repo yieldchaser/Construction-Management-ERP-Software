@@ -191,13 +191,18 @@ export default function ToDoPage() {
         headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify(payload),
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        alert(`Failed to create task: ${typeof err.detail === "string" ? err.detail : `HTTP ${res.status}`}`);
+        return;
+      }
       await fetchTodos();
       setIsNewTodoOpen(false);
       setNewTitle("");
       setNewAssignedId("");
-    } catch (err) {
-      console.error("Failed to create todo", err);
+    } catch (e) {
+      console.error("Failed to create todo", e);
+      alert("Failed to create task. Check your connection.");
     }
   };
 

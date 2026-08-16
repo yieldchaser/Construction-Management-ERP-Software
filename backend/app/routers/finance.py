@@ -933,6 +933,7 @@ class TransactionRow(BaseModel):
     status: str
     amount: float
     project_id: Optional[str] = None
+    project_name: Optional[str] = None
     ref: str = ""
 
     class Config:
@@ -958,6 +959,7 @@ class FinanceSummaryResponse(BaseModel):
 def get_company_transactions(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access), current_user: User = Depends(get_current_user)):
     require_module_view(db, current_user, company_id, "finance")
     project_ids = [p.id for p in db.query(Project).filter(Project.company_id == company_id).all()]
+    project_name_by_id = {p.id: p.name for p in db.query(Project).filter(Project.company_id == company_id).all()}
 
     bills = []
     if project_ids:
@@ -1001,6 +1003,7 @@ def get_company_transactions(company_id: uuid.UUID, db: Session = Depends(get_db
             status=b.status,
             amount=payable,
             project_id=str(b.project_id) if b.project_id else None,
+            project_name=project_name_by_id.get(b.project_id) if b.project_id else None,
             ref=b.invoice_number or "",
         ))
 
@@ -1020,6 +1023,7 @@ def get_company_transactions(company_id: uuid.UUID, db: Session = Depends(get_db
             status="Approved",
             amount=amt,
             project_id=str(p.project_id) if p.project_id else None,
+            project_name=project_name_by_id.get(p.project_id) if p.project_id else None,
             ref=p.reference_number or "",
         ))
 
