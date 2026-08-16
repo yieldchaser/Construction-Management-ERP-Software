@@ -67,8 +67,7 @@ class RevisionCreateRequest(BaseModel):
     comments: Optional[str] = Field(None, example="Fixed staircase dimensions")
 
 class RevisionApproveRequest(BaseModel):
-    approval_status: str = Field(..., pattern="^(approved|rejected)$", example="approved") # "approved", "rejected"
-    approved_by: Optional[UUID] = None
+    approval_status: str = Field(..., pattern="^(approved|rejected|pending)$", example="approved") # "approved", "rejected", "pending"
     comments: Optional[str] = None
 
 class PinCreateRequest(BaseModel):
@@ -232,11 +231,11 @@ def approve_drawing_revision(revision_id: UUID, req: RevisionApproveRequest, db:
     project = db.query(Project).filter(Project.id == drawing.project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
-    get_company_membership(db, current_user, project.company_id)
+    membership = get_company_membership(db, current_user, project.company_id)
     require_permission(db, current_user, project.company_id, "drawings:approve")
 
     revision.approval_status = req.approval_status
-    revision.approved_by = req.approved_by
+    revision.approved_by = None if req.approval_status == "pending" else membership.id
     if req.comments:
         revision.comments = req.comments
         
