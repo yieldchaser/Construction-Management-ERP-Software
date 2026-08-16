@@ -52,6 +52,7 @@ class TaskCreateRequest(BaseModel):
     name: str
     duration_days: int = Field(..., ge=0)
     start_date: datetime
+    status: str = "not_started"
     priority: str = "medium"
     assigned_to: Optional[UUID] = None
     boq_item_id: Optional[UUID] = None
@@ -458,6 +459,7 @@ def create_task(request: TaskCreateRequest, db: Session = Depends(get_db), curre
         duration_days=request.duration_days,
         start_date=request.start_date,
         end_date=end_date,
+        status=request.status,
         priority=request.priority,
         assigned_to=request.assigned_to,
         boq_item_id=request.boq_item_id,

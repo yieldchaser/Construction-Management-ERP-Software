@@ -801,3 +801,32 @@ def test_task_end_date_inclusive_of_start_day(client, db, make_tenant, auth_head
     b = next(t for t in r.json() if t["id"] == str(task_b.id))
     assert b["start_date"].startswith("2026-01-03"), b["start_date"]
     assert b["end_date"].startswith("2026-01-05"), b["end_date"]
+
+# -- W11 R2-566: task create honors the client's status -----------------------
+
+def test_task_create_honors_client_status(client, db, make_tenant, auth_headers):
+    comp, user, _ = make_tenant(company_name="E43", user_name="UE43", mobile=_mob(46), email=_mail(46))
+    hdr = auth_headers(user, comp)
+    project = _mk_project(db, comp)
+
+    r = client.post(
+        "/apis/v3/planning/tasks",
+        json={
+            "project_id": str(project.id), "name": "Pending", "duration_days": 2,
+            "start_date": "2026-01-01T00:00:00", "status": "pending",
+        },
+        headers=hdr,
+    )
+    assert r.status_code == 201, r.text
+    assert r.json()["status"] == "pending", r.json()["status"]
+
+    r = client.post(
+        "/apis/v3/planning/tasks",
+        json={
+            "project_id": str(project.id), "name": "Default", "duration_days": 2,
+            "start_date": "2026-01-01T00:00:00",
+        },
+        headers=hdr,
+    )
+    assert r.status_code == 201, r.text
+    assert r.json()["status"] == "not_started", r.json()["status"]
