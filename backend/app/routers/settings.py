@@ -3,7 +3,7 @@ from typing import List, Optional
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Response
 from sqlalchemy.orm import Session
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from app.database import get_db
 from app.auth import get_current_user, verify_company_access, get_company_membership, require_permission
 from app.models import (
@@ -120,7 +120,7 @@ class CompanySettingsUpdate(BaseModel):
 
 class BranchCreate(BaseModel):
     branch_name: str
-    gstin: str
+    gstin: str = Field(..., pattern=r"^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$")
     billing_address: str
     geo_location: Optional[str] = None
     address_line1: Optional[str] = None
@@ -634,11 +634,25 @@ class SalaryTemplateResponse(BaseModel):
         from_attributes = True
 
 
+def _validate_salary_breakup(cls, v):
+    if not v:
+        return v
+    if all(isinstance(x, (int, float)) and not isinstance(x, bool) for x in v.values()):
+        if abs(sum(v.values()) - 100) > 0.01:
+            raise ValueError("breakup components must sum to 100")
+    pct = v.get("basic_pct")
+    if isinstance(pct, (int, float)) and not (0 <= pct <= 100):
+        raise ValueError("basic_pct must be between 0 and 100")
+    return v
+
+
 class SalaryTemplateCreate(BaseModel):
     name: str
     description: Optional[str] = None
     status: Optional[str] = "Active"
     breakup: dict
+
+    _validate_breakup = field_validator("breakup")(_validate_salary_breakup)
 
 
 class SalaryTemplateUpdate(BaseModel):
@@ -646,6 +660,8 @@ class SalaryTemplateUpdate(BaseModel):
     description: Optional[str] = None
     status: Optional[str] = None
     breakup: Optional[dict] = None
+
+    _validate_breakup = field_validator("breakup")(_validate_salary_breakup)
 
 
 @router.get("/salary-templates/{company_id}", response_model=List[SalaryTemplateResponse])
