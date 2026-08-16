@@ -177,7 +177,6 @@ async def import_boq(
             elif unit.lower() in ("no", "nos", "brick", "bag", "bags"):
                 float_limit = 0
 
-            quantity = round(quantity, float_limit)
             amount = quantity * (rate + supply_rate + installation_rate)
             total_amount += amount
 
