@@ -438,31 +438,9 @@ export default function ProcurementPage() {
       return;
     }
 
-    const newGRN: GRN = {
-      id: `GRN-${Date.now()}`,
-      grnNumber: grnNum,
-      poNumber: selectedPOForGRN.poNumber,
-      vendor: selectedPOForGRN.vendor,
-      receivedDate: new Date().toISOString().split("T")[0],
-      receivedBy: "Amit K (Site Engineer)",
-      items: receivedItems,
-      isBilled: false,
-      gatePhotoUrl: grnGatePhoto || undefined
-    };
-
-    const newTxns = receivedItems.map((item, idx) => ({
-      id: `TXN-${Date.now()}-${idx}`,
-      materialName: item.name,
-      qty: item.qty,
-      unit: item.unit,
-      type: "received" as const,
-      sourceRef: grnNum,
-      date: new Date().toISOString().split("T")[0]
-    }));
-
     try {
       const apiHost = getApiHost();
-      await fetch(`${apiHost}/apis/v3/procurement/grns`, {
+      const res = await fetch(`${apiHost}/apis/v3/procurement/grns`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify({
@@ -474,58 +452,53 @@ export default function ProcurementPage() {
           items: receivedItems.map((item) => ({ po_item_id: item.id, received_qty: item.qty })),
         }),
       });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        alert(`Failed to record GRN: ${typeof err.detail === "string" ? err.detail : `HTTP ${res.status}`}`);
+        return;
+      }
     } catch (err) {
-      console.error("GRN create error, using local only:", err);
+      console.error("GRN create error:", err);
+      alert("Failed to record GRN. Check your connection.");
+      return;
     }
-
-    setInventory(prev => prev.map(inv => {
-      const match = receivedItems.find(i => i.name === inv.name);
-      if (match) {
-        return { ...inv, onHand: inv.onHand + match.qty };
-      }
-      return inv;
-    }));
-
-    setGrns([newGRN, ...grns]);
-    setTransactions([...newTxns, ...transactions]);
-    
-    setPos(prev => prev.map(po => {
-      if (po.id === selectedPOForGRN.id) {
-        return { ...po, status: "received" as const };
-      }
-      return po;
-    }));
 
     setShowGRNModal(false);
     setSelectedPOForGRN(null);
+    fetchProcurementData();
   };
 
   // Record material usage
-  const handleRecordUsage = () => {
+  const handleRecordUsage = async () => {
     const qty = parseFloat(useQty as any) || 0;
     if (qty <= 0) return;
-
-    // Save transaction
-    const newTxn: Transaction = {
-      id: `TXN-${Date.now()}`,
-      materialName: useMaterialName,
-      qty,
-      unit: useMaterialName.includes("Cement") ? "bags" : "tons",
-      type: "used",
-      sourceRef: useSourceRef,
-      date: new Date().toISOString().split("T")[0]
-    };
-
-    // Update inventory
-    setInventory(prev => prev.map(inv => {
-      if (inv.name === useMaterialName) {
-        return { ...inv, onHand: inv.onHand - qty };
+    if (!useMaterialName) {
+      alert("Select a material first.");
+      return;
+    }
+    try {
+      const apiHost = getApiHost();
+      const res = await fetch(`${apiHost}/apis/v3/procurement/transactions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
+        body: JSON.stringify({
+          project_id: projectId,
+          material_name: useMaterialName,
+          qty,
+          type: "used",
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        alert(`Failed to log usage: ${typeof err.detail === "string" ? err.detail : `HTTP ${res.status}`}`);
+        return;
       }
-      return inv;
-    }));
-
-    setTransactions([newTxn, ...transactions]);
-    setShowUseModal(false);
+      setShowUseModal(false);
+      fetchProcurementData();
+    } catch (e) {
+      console.error("Usage log error:", e);
+      alert("Failed to log usage. Check your connection.");
+    }
   };
 
   // Mark GRN as billed (Unbilled Materials tracker action)
@@ -614,7 +587,7 @@ export default function ProcurementPage() {
               + Purchase Order
             </button>
             <button onClick={() => setShowUseModal(true)} className="px-4 py-2 bg-primary rounded-md text-xs font-bold text-white hover:opacity-90 transition-all shadow-lg">
-              Log Usage -
+              Log Usage
             </button>
           </div>
         </header>
