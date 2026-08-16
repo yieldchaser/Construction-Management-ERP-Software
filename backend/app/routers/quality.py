@@ -80,7 +80,6 @@ class InspectionCreate(BaseModel):
     project_id: uuid.UUID
     checklist_id: uuid.UUID
     task_id: Optional[uuid.UUID] = None
-    inspected_by: Optional[uuid.UUID] = None
     zone: Optional[str] = None
     inspection_date: datetime
     overall_remarks: Optional[str] = None
@@ -121,8 +120,6 @@ class NCRCreate(BaseModel):
     title: str
     description: Optional[str] = None
     severity: str = Field("Major", pattern="^(Minor|Major|Critical)$")
-    raised_by: Optional[uuid.UUID] = None
-    assigned_to: Optional[uuid.UUID] = None
     due_date: Optional[datetime] = None
 
 
@@ -230,7 +227,7 @@ def create_inspection(payload: InspectionCreate, db: Session = Depends(get_db), 
         raise HTTPException(status_code=404, detail="Project not found")
     get_company_membership(db, current_user, project.company_id)
     require_permission(db, current_user, project.company_id, "quality:edit")
-    insp = SiteInspection(**payload.model_dump())
+    insp = SiteInspection(**payload.model_dump(), inspected_by=current_user.id)
     db.add(insp)
     db.commit()
     db.refresh(insp)
@@ -316,7 +313,7 @@ def raise_ncr(payload: NCRCreate, db: Session = Depends(get_db), current_user: U
         raise HTTPException(status_code=404, detail="Project not found")
     get_company_membership(db, current_user, project.company_id)
     require_permission(db, current_user, project.company_id, "quality:edit")
-    ncr = NCR(**payload.model_dump())
+    ncr = NCR(**payload.model_dump(), raised_by=current_user.id, assigned_to=current_user.id)
     db.add(ncr)
     db.commit()
     db.refresh(ncr)
