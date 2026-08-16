@@ -985,8 +985,13 @@ def get_po_pdf(po_id: UUID, db: Session = Depends(get_db), current_user=Depends(
     ]
 
     items = db.query(PurchaseOrderItem).filter(PurchaseOrderItem.po_id == po.id).all()
-    table_headers = ["Material", "Qty", "Unit", "Rate", "Tax%", "Amount"]
-    col_widths = [34, 10, 8, 14, 8, 16]
+    received_by_po_item = {}
+    grn_items = db.query(GRNItem).join(GoodsReceiptNote).filter(GoodsReceiptNote.po_id == po.id).all()
+    for gi in grn_items:
+        received_by_po_item[gi.po_item_id] = received_by_po_item.get(gi.po_item_id, 0.0) + float(gi.received_qty)
+
+    table_headers = ["Material", "Qty", "Unit", "Rate", "Tax%", "Amount", "Received"]
+    col_widths = [30, 9, 8, 13, 7, 15, 15]
     table_rows = []
     for it in items:
         amt = float(it.total_amount) if it.total_amount else float(it.quantity * it.rate)
@@ -997,9 +1002,10 @@ def get_po_pdf(po_id: UUID, db: Session = Depends(get_db), current_user=Depends(
             str(it.rate),
             str(it.tax_pct),
             f"{amt:.2f}",
+            f"{received_by_po_item.get(it.id, 0.0):.4f}",
         ])
     if not table_rows:
-        table_rows.append(["(No line items)", "", "", "", "", ""])
+        table_rows.append(["(No line items)", "", "", "", "", "", ""])
 
     totals_lines = [
         f"Gross Amount: {po.gross_amount}",
