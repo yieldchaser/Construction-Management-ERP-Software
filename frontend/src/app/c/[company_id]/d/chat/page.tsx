@@ -244,7 +244,10 @@ export default function ChatPage() {
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!activeGroup || (!messageText.trim() && !imageUrl.trim())) return;
+    const imageUrls = imageUrl
+      ? imageUrl.split(",").map((s) => s.trim()).filter(Boolean).filter((u) => /^https?:\/\//i.test(u))
+      : [];
+    if (!activeGroup || (!messageText.trim() && imageUrls.length === 0)) return;
 
     try {
       const body: Record<string, unknown> = {
@@ -252,7 +255,7 @@ export default function ChatPage() {
         message_text: messageText || null,
         is_mom: isMom,
         mom_date: isMom ? new Date(momDate).toISOString() : null,
-        image_urls: imageUrl ? imageUrl.split(",").map((s) => s.trim()).filter(Boolean) : [],
+        image_urls: imageUrls,
       };
       const res = await fetch(`${getApiHost()}/apis/v3/chat/messages`, {
         method: "POST",
@@ -524,9 +527,9 @@ export default function ChatPage() {
                           )}
 
                           {/* Image attachments */}
-                          {msg.image_urls && msg.image_urls.length > 0 && (
+                          {msg.image_urls && msg.image_urls.filter((u) => /^https?:\/\//i.test(u)).length > 0 && (
                             <div className="flex flex-wrap gap-2 mt-2.5">
-                              {msg.image_urls.map((url, i) => (
+                              {msg.image_urls.filter((u) => /^https?:\/\//i.test(u)).map((url, i) => (
                                 <img
                                   key={i}
                                   src={url}
