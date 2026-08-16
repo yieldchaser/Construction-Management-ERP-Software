@@ -193,11 +193,8 @@ def delete_payment(payment_id: uuid.UUID, db: Session = Depends(get_db), current
         raise HTTPException(status_code=404, detail="Payment not found")
     get_company_membership(db, current_user, payment.company_id)
     require_permission(db, current_user, payment.company_id, "data:delete")
-    try:
-        from app.routers.delete_logs import log_deletion
-        log_deletion(db, payment.company_id, "payment", payment.id, f"Payment {payment.id}")
-    except Exception:
-        pass
+    from app.routers.delete_logs import log_deletion
+    log_deletion(db, payment.company_id, "payment", payment.id, f"Payment {payment.id}")
 
     # Reverse any FIFO settlements this payment recorded against bills. The DB
     # cascade-deletes the PaymentSettlement rows at commit, so we read them first
@@ -1267,11 +1264,8 @@ def delete_payment_request(request_id: uuid.UUID, db: Session = Depends(get_db),
         raise HTTPException(status_code=404, detail="Payment request not found")
     get_company_membership(db, current_user, req.company_id)
     require_permission(db, current_user, req.company_id, "data:delete")
-    try:
-        from app.routers.delete_logs import log_deletion
-        log_deletion(db, req.company_id, "payment_request", req.id, f"Payment Request: {req.request_no or req.id}")
-    except Exception:
-        pass
+    from app.routers.delete_logs import log_deletion
+    log_deletion(db, req.company_id, "payment_request", req.id, f"Payment Request: {req.request_no or req.id}")
     db.delete(req)
     db.commit()
 

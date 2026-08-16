@@ -267,12 +267,9 @@ def remove_member(group_id: uuid.UUID, user_id: uuid.UUID, db: Session = Depends
         raise HTTPException(status_code=404, detail="Chat group not found")
     get_company_membership(db, current_user, group.company_id)
     verify_group_membership(db, current_user, group.id)
-    try:
-        from app.routers.delete_logs import log_deletion
-        company_id = group.company_id if group else None
-        log_deletion(db, company_id, "chat_group_member", member.id, f"Chat Group Member removed from: {group.name if group else group_id}")
-    except Exception:
-        pass
+    from app.routers.delete_logs import log_deletion
+    company_id = group.company_id if group else None
+    log_deletion(db, company_id, "chat_group_member", member.id, f"Chat Group Member removed from: {group.name if group else group_id}")
     db.delete(member)
     db.commit()
     return None

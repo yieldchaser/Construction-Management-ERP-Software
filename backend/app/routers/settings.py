@@ -372,11 +372,8 @@ def delete_approval_rule(rule_id: uuid.UUID, db: Session = Depends(get_db), curr
         raise HTTPException(status_code=404, detail="Approval rule not found")
     get_company_membership(db, current_user, rule.company_id)
     require_permission(db, current_user, rule.company_id, "settings:manage")
-    try:
-        from app.routers.delete_logs import log_deletion
-        log_deletion(db, rule.company_id, "approval_rule", rule.id, f"Approval Rule: {rule.feature_type}")
-    except Exception:
-        pass
+    from app.routers.delete_logs import log_deletion
+    log_deletion(db, rule.company_id, "approval_rule", rule.id, f"Approval Rule: {rule.feature_type}")
     db.delete(rule)
     db.commit()
 
@@ -737,11 +734,8 @@ def delete_salary_template(template_id: uuid.UUID, db: Session = Depends(get_db)
         raise HTTPException(status_code=404, detail="Salary template not found")
     get_company_membership(db, current_user, obj.company_id)
     require_permission(db, current_user, obj.company_id, "data:delete")
-    try:
-        from app.routers.delete_logs import log_deletion
-        log_deletion(db, obj.company_id, "salary_template", obj.id, f"Salary Template: {obj.name}")
-    except Exception:
-        pass
+    from app.routers.delete_logs import log_deletion
+    log_deletion(db, obj.company_id, "salary_template", obj.id, f"Salary Template: {obj.name}")
     db.delete(obj)
     db.commit()
 

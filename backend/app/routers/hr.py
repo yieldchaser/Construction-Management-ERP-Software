@@ -524,11 +524,8 @@ def delete_timesheet(ts_id: uuid.UUID, db: Session = Depends(get_db), current_us
         raise HTTPException(status_code=404, detail="Timesheet's project not found")
     get_company_membership(db, current_user, project.company_id)
     require_permission(db, current_user, project.company_id, "data:delete")
-    try:
-        from app.routers.delete_logs import log_deletion
-        log_deletion(db, project.company_id, "timesheet", ts.id, f"Timesheet {ts.id}")
-    except Exception:
-        pass
+    from app.routers.delete_logs import log_deletion
+    log_deletion(db, project.company_id, "timesheet", ts.id, f"Timesheet {ts.id}")
     db.delete(ts)
     db.commit()
 
@@ -1153,11 +1150,8 @@ def delete_leave_template(leave_template_id: uuid.UUID, db: Session = Depends(ge
         raise HTTPException(status_code=404, detail="Leave template not found")
     get_company_membership(db, current_user, obj.company_id)
     require_permission(db, current_user, obj.company_id, "data:delete")
-    try:
-        from app.routers.delete_logs import log_deletion
-        log_deletion(db, obj.company_id, "leave_template", obj.id, f"Leave Template: {obj.name}")
-    except Exception:
-        pass
+    from app.routers.delete_logs import log_deletion
+    log_deletion(db, obj.company_id, "leave_template", obj.id, f"Leave Template: {obj.name}")
     db.delete(obj)
     db.commit()
 
@@ -1448,11 +1442,8 @@ def delete_holiday(holiday_id: uuid.UUID, db: Session = Depends(get_db), current
         raise HTTPException(status_code=404, detail="Holiday not found")
     get_company_membership(db, current_user, obj.company_id)
     require_permission(db, current_user, obj.company_id, "data:delete")
-    try:
-        from app.routers.delete_logs import log_deletion
-        log_deletion(db, obj.company_id, "holiday", obj.id, f"Holiday: {obj.name}")
-    except Exception:
-        pass
+    from app.routers.delete_logs import log_deletion
+    log_deletion(db, obj.company_id, "holiday", obj.id, f"Holiday: {obj.name}")
     db.delete(obj)
     db.commit()
 

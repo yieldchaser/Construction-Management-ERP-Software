@@ -349,11 +349,8 @@ def delete_lead(lead_id: uuid.UUID, db: Session = Depends(get_db), current_user:
         raise HTTPException(status_code=404, detail="Lead not found")
     get_company_membership(db, current_user, lead.company_id)
     require_permission(db, current_user, lead.company_id, "data:delete")
-    try:
-        from app.routers.delete_logs import log_deletion
-        log_deletion(db, lead.company_id, "crm_lead", lead.id, f"CRM Lead: {lead.contact_name}")
-    except Exception:
-        pass
+    from app.routers.delete_logs import log_deletion
+    log_deletion(db, lead.company_id, "crm_lead", lead.id, f"CRM Lead: {lead.contact_name}")
     db.delete(lead)
     db.commit()
 

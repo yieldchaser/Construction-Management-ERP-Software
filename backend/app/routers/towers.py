@@ -154,12 +154,9 @@ def delete_tower(tower_id: UUID, db: Session = Depends(get_db), current_user: Us
         raise HTTPException(status_code=404, detail="Project not found")
     get_company_membership(db, current_user, proj.company_id)
     require_permission(db, current_user, proj.company_id, "data:delete")
-    try:
-        from app.routers.delete_logs import log_deletion
-        company_id = proj.company_id if proj else None
-        log_deletion(db, company_id, "tower", tower.id, f"Tower: {tower.tower_name}")
-    except Exception:
-        pass
+    from app.routers.delete_logs import log_deletion
+    company_id = proj.company_id if proj else None
+    log_deletion(db, company_id, "tower", tower.id, f"Tower: {tower.tower_name}")
     db.delete(tower)
     db.commit()
     return None

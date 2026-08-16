@@ -25,24 +25,19 @@ def log_deletion(
     party_name: str = None,
     deleted_by: str = None,
 ):
-    """Non-blocking audit log of a deletion. NEVER raises into the caller."""
-    try:
-        cid = uuid.UUID(str(company_id)) if company_id else None
-        log = DeleteLog(
-            company_id=cid,
-            entity_type=entity_type,
-            entity_id=str(entity_id),
-            entity_summary=summary,
-            party_name=party_name,
-            deleted_by=deleted_by,
-        )
-        db.add(log)
-        db.commit()
-    except Exception:
-        try:
-            db.rollback()
-        except Exception:
-            pass
+    """Queue an audit log row on the caller's session. The caller's commit
+    persists it in the same transaction as the deletion, so either both land
+    or neither does; a failure here aborts the caller's delete."""
+    cid = uuid.UUID(str(company_id)) if company_id else None
+    log = DeleteLog(
+        company_id=cid,
+        entity_type=entity_type,
+        entity_id=str(entity_id),
+        entity_summary=summary,
+        party_name=party_name,
+        deleted_by=deleted_by,
+    )
+    db.add(log)
 
 
 def _serialize(l: DeleteLog) -> dict:

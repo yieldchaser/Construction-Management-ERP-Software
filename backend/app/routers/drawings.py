@@ -325,11 +325,8 @@ def delete_pin(pin_id: UUID, db: Session = Depends(get_db), current_user: User =
     get_company_membership(db, current_user, proj.company_id)
     require_permission(db, current_user, proj.company_id, "data:delete")
 
-    try:
-        from app.routers.delete_logs import log_deletion
-        log_deletion(db, proj.company_id, "drawing_pin", pin.id, f"Drawing Pin: {pin.comment[:100]}")
-    except Exception:
-        pass
+    from app.routers.delete_logs import log_deletion
+    log_deletion(db, proj.company_id, "drawing_pin", pin.id, f"Drawing Pin: {pin.comment[:100]}")
     db.delete(pin)
     db.commit()
     return {"status": "success", "message": "Pin deleted successfully"}
