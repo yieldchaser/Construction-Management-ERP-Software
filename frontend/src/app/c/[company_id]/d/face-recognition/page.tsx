@@ -38,6 +38,7 @@ export default function FaceRecognitionPage() {
 
   const [logs, setLogs] = useState<FaceLog[]>([]);
   const [summary, setSummary] = useState<DailySummary[]>([]);
+  const [loadError, setLoadError] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0]);
   const [view, setView] = useState<"logs" | "summary">("logs");
 
@@ -47,9 +48,15 @@ export default function FaceRecognitionPage() {
         ? `${getApiHost()}/apis/v3/face/logs/${companyId}?project_id=${projectId}`
         : `${getApiHost()}/apis/v3/face/logs/${companyId}`;
       const res = await fetch(url, { headers: authHeaders() });
-      if (res.ok) setLogs(await res.json());
+      if (res.ok) {
+        setLogs(await res.json());
+        setLoadError(false);
+      } else {
+        setLoadError(true);
+      }
     } catch (e) {
       console.error("Failed to load face logs", e);
+      setLoadError(true);
     }
   };
 
@@ -57,9 +64,15 @@ export default function FaceRecognitionPage() {
     try {
       const url = `${getApiHost()}/apis/v3/face/summary/${companyId}?date=${selectedDate}${projectId ? `&project_id=${projectId}` : ""}`;
       const res = await fetch(url, { headers: authHeaders() });
-      if (res.ok) setSummary(await res.json());
+      if (res.ok) {
+        setSummary(await res.json());
+        setLoadError(false);
+      } else {
+        setLoadError(true);
+      }
     } catch (e) {
       console.error("Failed to load summary", e);
+      setLoadError(true);
     }
   };
 
@@ -98,6 +111,9 @@ export default function FaceRecognitionPage() {
 
         {view === "logs" && (
           <div className="bg-white/5 border border-border-custom rounded-lg overflow-hidden">
+            {loadError ? (
+              <div className="px-6 py-8 text-center text-muted">Failed to load face recognition data. The server returned an error.</div>
+            ) : (
             <table className="w-full text-left text-sm">
               <thead className="bg-white/5 text-muted">
                 <tr>
@@ -136,6 +152,7 @@ export default function FaceRecognitionPage() {
                 )}
               </tbody>
             </table>
+            )}
           </div>
         )}
 
@@ -145,6 +162,9 @@ export default function FaceRecognitionPage() {
               <label className="text-xs font-medium text-muted">Date</label>
               <input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} className="bg-white/5 border border-border-custom rounded-md px-4 py-2 text-foreground text-sm" />
             </div>
+            {loadError ? (
+              <div className="px-6 py-8 text-center text-muted">Failed to load face recognition data. The server returned an error.</div>
+            ) : (
             <table className="w-full text-left text-sm">
               <thead className="bg-white/5 text-muted">
                 <tr>
@@ -181,6 +201,7 @@ export default function FaceRecognitionPage() {
                 )}
               </tbody>
             </table>
+            )}
           </div>
         )}
       </div>
