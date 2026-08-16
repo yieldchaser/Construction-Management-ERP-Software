@@ -1551,7 +1551,7 @@ export default function FinancePage() {
                           <div
                             contentEditable
                             suppressContentEditableWarning
-                            onBlur={(e) => setNewParty({ ...newParty, wo_terms: e.currentTarget.innerHTML })}
+                            onBlur={(e) => setNewParty({ ...newParty, wo_terms: e.currentTarget.innerText })}
                             className="w-full min-h-[80px] bg-input border border-border-custom rounded-md p-2 text-xs text-foreground focus:outline-none focus:border-primary"
                           />
                         </div>
