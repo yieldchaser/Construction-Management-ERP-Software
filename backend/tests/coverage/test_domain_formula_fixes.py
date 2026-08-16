@@ -932,4 +932,44 @@ def test_tally_envelope_ledger_alter_and_reference():
     assert "<ALTERID>" in xml
     assert "<REFERENCE>INV-42</REFERENCE>" in xml
 
+# -- W17 R2-578: send_message stamps the real sender, never the client --------
+
+def test_chat_message_sender_stamped_not_client_supplied(client, db, make_tenant, auth_headers):
+    comp, user, team = make_tenant(company_name="E60", user_name="UE60", mobile=_mob(61), email=_mail(61))
+    hdr = auth_headers(user, comp)
+    project = _mk_project(db, comp)
+    r = client.post(
+        "/apis/v3/chat/groups",
+        json={
+            "company_id": str(comp.id),
+            "project_id": str(project.id),
+            "name": "ZZ W17 Stamp",
+            "group_type": "general",
+            "created_by": str(user.id),
+        },
+        headers=hdr,
+    )
+    assert r.status_code == 201, r.text
+    group_id = r.json()["id"]
+
+    r = client.post(
+        "/apis/v3/chat/messages",
+        json={
+            "group_id": group_id,
+            "message_text": "forged sender",
+            "user_id": str(uuid.uuid4()),
+            "user_name": "Not Me",
+        },
+        headers=hdr,
+    )
+    assert r.status_code == 201, r.text
+    body = r.json()
+    assert body["user_id"] == str(team.id)
+    assert body["user_name"] == user.name
+
+    r = client.get(f"/apis/v3/chat/messages/{group_id}", headers=hdr)
+    assert r.status_code == 200, r.text
+    assert r.json()[0]["user_name"] == user.name
+
+
 

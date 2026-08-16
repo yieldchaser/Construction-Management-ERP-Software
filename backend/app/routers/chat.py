@@ -46,8 +46,6 @@ class ChatGroupResponse(BaseModel):
 
 class ChatMessageCreate(BaseModel):
     group_id: uuid.UUID
-    user_id: Optional[uuid.UUID] = None
-    user_name: Optional[str] = None
     message_text: Optional[str] = None
     media_url: Optional[str] = None
     voice_note_url: Optional[str] = None
@@ -149,8 +147,9 @@ def send_message(payload: ChatMessageCreate, db: Session = Depends(get_db), curr
         CompanyTeam.company_id == group.company_id,
         CompanyTeam.user_id == current_user.id
     ).first()
-    if ct is not None:
-        msg.user_id = ct.id
+    if ct is None:
+        raise HTTPException(status_code=403, detail="Not a member of this company team")
+    msg.user_id = ct.id
     msg.user_name = current_user.name
     db.add(msg)
     db.commit()
