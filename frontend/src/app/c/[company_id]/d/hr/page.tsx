@@ -577,10 +577,13 @@ export default function HRPayrollPage() {
       });
       if (res.ok) {
         setTimesheets(prev => prev.map(ts => ts.id === tsId ? { ...ts, status: action === "submit" ? "submitted" : "approved" } : ts));
+      } else {
+        const err = await res.json().catch(() => ({}));
+        alert(`Failed to ${action} timesheet: ${typeof err.detail === "string" ? err.detail : "Server error"}`);
       }
     } catch (e) {
       console.error("Failed to update timesheet", e);
-      setTimesheets(prev => prev.map(ts => ts.id === tsId ? { ...ts, status: action === "submit" ? "submitted" : "approved" } : ts));
+      alert(`Failed to ${action} timesheet. Please check your connection and try again.`);
     }
   };
 
