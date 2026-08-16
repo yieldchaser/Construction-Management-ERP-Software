@@ -288,7 +288,7 @@ def _build_doc_response(db: Session, d: BOQDocument) -> BOQDocumentResponse:
 
     bills = (
         db.query(Bill)
-        .filter(Bill.project_id == d.project_id, Bill.boq_document_id == d.id, Bill.invoice_type.in_(BILLING_TYPES))
+        .filter(Bill.project_id == d.project_id, Bill.boq_document_id == d.id, Bill.invoice_type.in_(BILLING_TYPES), Bill.status != "Cancelled")
         .all()
     )
     billed_value = sum(float(b.total_payable) for b in bills)

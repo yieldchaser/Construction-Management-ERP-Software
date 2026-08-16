@@ -80,7 +80,7 @@ def generate_report(
 
     # 2. Query Billing & Financials
     billing_wo_count = db.query(WorkOrder).filter(WorkOrder.project_id == project_id).count()
-    subcon_bills = db.query(Bill).filter(Bill.project_id == project_id, Bill.invoice_type == "subcon").all()
+    subcon_bills = db.query(Bill).filter(Bill.project_id == project_id, Bill.invoice_type == "subcon", Bill.status != "Cancelled").all()
     approved_subcon_bills = [b for b in subcon_bills if b.approval_flag and b.approval_flag.lower() in ("approved", "auto_approved")]
     billing_ra_count = len(approved_subcon_bills)
     total_certified = sum(b.total_payable for b in approved_subcon_bills)
@@ -758,7 +758,7 @@ def _rep_item_wise_sales(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
 
 def _rep_company_sales(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
     try:
-        q = db.query(Bill).filter(Bill.company_id == cid, Bill.invoice_type.in_(REVENUE_INVOICE_TYPES))
+        q = db.query(Bill).filter(Bill.company_id == cid, Bill.invoice_type.in_(REVENUE_INVOICE_TYPES), Bill.status != "Cancelled")
         if pid:
             q = q.filter(Bill.project_id == pid)
         rows = []
@@ -1023,7 +1023,7 @@ def _gst_split(tax_amount):
 
 def _rep_gstr1_sales(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
     try:
-        q = db.query(Bill).filter(Bill.company_id == cid, Bill.invoice_type.in_(REVENUE_INVOICE_TYPES))
+        q = db.query(Bill).filter(Bill.company_id == cid, Bill.invoice_type.in_(REVENUE_INVOICE_TYPES), Bill.status != "Cancelled")
         if pid:
             q = q.filter(Bill.project_id == pid)
         rows = []
@@ -1054,7 +1054,7 @@ def _rep_gstr1_sales(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
 def _rep_gstr2_purchase(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
     try:
         rows = []
-        bills_q = db.query(Bill).filter(Bill.company_id == cid, Bill.invoice_type.in_(EXPENSE_INVOICE_TYPES))
+        bills_q = db.query(Bill).filter(Bill.company_id == cid, Bill.invoice_type.in_(EXPENSE_INVOICE_TYPES), Bill.status != "Cancelled")
         if pid:
             bills_q = bills_q.filter(Bill.project_id == pid)
         for b in bills_q.order_by(Bill.invoice_date.desc()).all():

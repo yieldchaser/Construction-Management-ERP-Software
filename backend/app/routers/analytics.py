@@ -439,7 +439,7 @@ def get_company_operational_analytics(company_id: uuid.UUID, db: Session = Depen
                 + _to_float(budget.subcon_budget)
                 + _to_float(budget.equipment_budget)
             )
-        spend = sum(_to_float(b.total_payable) for b in db.query(Bill).filter(Bill.project_id == p.id, Bill.invoice_type.in_(EXPENSE_INVOICE_TYPES)).all())
+        spend = sum(_to_float(b.total_payable) for b in db.query(Bill).filter(Bill.project_id == p.id, Bill.invoice_type.in_(EXPENSE_INVOICE_TYPES), Bill.status != "Cancelled").all())
 
         # Determine Health
         if p_status == "Completed":

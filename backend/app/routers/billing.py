@@ -1,6 +1,6 @@
 import json
 from uuid import UUID
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.orm import Session
@@ -423,6 +423,64 @@ def get_bills(project_id: UUID, invoice_type: Optional[str] = None, db: Session 
             )
         )
     return res
+
+@router.post("/bills/{bill_id}/cancel", response_model=BillResponse)
+def cancel_bill(bill_id: UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    bill = db.query(Bill).filter(Bill.id == bill_id).first()
+    if not bill:
+        raise HTTPException(status_code=404, detail="Bill not found")
+    get_company_membership(db, current_user, bill.company_id)
+    require_permission(db, current_user, bill.company_id, "finance:edit")
+    if float(bill.paid_amount or 0.0) > 0.0:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Cannot cancel a bill with payments; reverse the payment first",
+        )
+    bill.status = "Cancelled"
+    bill.cancelled_at = datetime.now(timezone.utc)
+    bill.cancelled_by = current_user.id
+    db.add(bill)
+    db.commit()
+    db.refresh(bill)
+
+    deductions = db.query(TransactionDeduction).filter(TransactionDeduction.bill_id == bill.id).all()
+    ded_schemas = [
+        DeductionResponseSchema(
+            id=d.id,
+            deduction_type=d.deduction_type,
+            amount=float(d.amount),
+            percentage=float(d.percentage) if d.percentage else None,
+            notes=d.notes,
+        ) for d in deductions
+    ]
+    return BillResponse(
+        id=bill.id,
+        company_id=bill.company_id,
+        project_id=bill.project_id,
+        party_company_user_id=bill.party_company_user_id,
+        invoice_number=bill.invoice_number,
+        invoice_date=bill.invoice_date,
+        due_date=bill.due_date,
+        invoice_type=bill.invoice_type,
+        status=bill.status,
+        subtotal=float(bill.subtotal),
+        gst_amount=float(bill.gst_amount),
+        total_payable=float(bill.total_payable),
+        paid_amount=float(bill.paid_amount),
+        approval_flag=bill.approval_flag,
+        is_milestone_fixed_amount=bill.is_milestone_fixed_amount,
+        created_at=bill.created_at,
+        deductions=ded_schemas,
+        items_json=bill.items_json,
+        payment_mode=bill.payment_mode,
+        payment_bank_name=bill.payment_bank_name,
+        payment_ref=bill.payment_ref,
+        ship_to=bill.ship_to,
+        terms=bill.terms,
+        match_id=bill.match_id,
+        match_status=_derive_bill_match_status(db, bill),
+    )
+
 
 @router.get("/bills/{bill_id}/zatca")
 def get_bill_zatca(bill_id: UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):

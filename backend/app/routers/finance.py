@@ -387,13 +387,15 @@ def get_project_pl(project_id: uuid.UUID, db: Session = Depends(get_db), _: None
     # 1. Revenue: Client invoices & material sales (invoice_type in ["sale", "material_sale"])
     revenue_actual = db.query(func.sum(Bill.total_payable)).filter(
         Bill.project_id == proj_uuid,
-        Bill.invoice_type.in_(REVENUE_INVOICE_TYPES)
+        Bill.invoice_type.in_(REVENUE_INVOICE_TYPES),
+        Bill.status != "Cancelled"
     ).scalar() or 0.0
 
     # 2. Material Cost: Vendor bills (invoice_type in EXPENSE_INVOICE_TYPES)
     material_actual = db.query(func.sum(Bill.total_payable)).filter(
         Bill.project_id == proj_uuid,
-        Bill.invoice_type.in_(EXPENSE_INVOICE_TYPES)
+        Bill.invoice_type.in_(EXPENSE_INVOICE_TYPES),
+        Bill.status != "Cancelled"
     ).scalar() or 0.0
 
     # 3. Labour Cost: Salary expenses
@@ -404,7 +406,8 @@ def get_project_pl(project_id: uuid.UUID, db: Session = Depends(get_db), _: None
     # 4. Subcontractor Cost: Subcon bills (invoice_type == "subcon")
     subcon_actual = db.query(func.sum(Bill.total_payable)).filter(
         Bill.project_id == proj_uuid,
-        Bill.invoice_type == "subcon"
+        Bill.invoice_type == "subcon",
+        Bill.status != "Cancelled"
     ).scalar() or 0.0
 
     # 5. Plant & Machinery (Equipment deployment cost + fuel costs)
@@ -961,7 +964,7 @@ def get_company_transactions(company_id: uuid.UUID, db: Session = Depends(get_db
 
     bills = []
     if project_ids:
-        bills = db.query(Bill).filter(Bill.project_id.in_(project_ids)).all()
+        bills = db.query(Bill).filter(Bill.project_id.in_(project_ids), Bill.status != "Cancelled").all()
     payments = []
     if project_ids:
         payments = db.query(Payment).filter(Payment.project_id.in_(project_ids)).all()

@@ -1,0 +1,6 @@
+ALTER TABLE "bills"
+    ADD COLUMN IF NOT EXISTS "cancelled_at" TIMESTAMPTZ;
+
+ALTER TABLE "bills"
+    ADD COLUMN IF NOT EXISTS "cancelled_by" UUID
+    REFERENCES "users"("id") ON DELETE SET NULL;

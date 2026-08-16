@@ -256,13 +256,13 @@ def feed_budget_variance(
 
         material_actual = float(
             db.query(func.coalesce(func.sum(models.Bill.total_payable), 0))
-            .filter(models.Bill.project_id == p.id, models.Bill.invoice_type.in_(("purchase", "expense")))
+            .filter(models.Bill.project_id == p.id, models.Bill.invoice_type.in_(("purchase", "expense")), models.Bill.status != "Cancelled")
             .scalar()
             or 0
         )
         subcon_actual = float(
             db.query(func.coalesce(func.sum(models.Bill.total_payable), 0))
-            .filter(models.Bill.project_id == p.id, models.Bill.invoice_type == "subcon")
+            .filter(models.Bill.project_id == p.id, models.Bill.invoice_type == "subcon", models.Bill.status != "Cancelled")
             .scalar()
             or 0
         )

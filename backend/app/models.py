@@ -583,6 +583,8 @@ class Bill(Base):
     due_date = Column(DateTime(timezone=True), nullable=True)
     invoice_type = Column(String(50), nullable=False) # sale, purchase, subcon
     status = Column(String(50), default="Unpaid", nullable=False) # Unpaid, Partially Paid, Paid, Cancelled
+    cancelled_at = Column(DateTime(timezone=True), nullable=True)
+    cancelled_by = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     subtotal = Column(Numeric(18, 2), nullable=False)
     gst_amount = Column(Numeric(18, 2), default=0.0, nullable=False)
     total_payable = Column(Numeric(18, 2), nullable=False)
