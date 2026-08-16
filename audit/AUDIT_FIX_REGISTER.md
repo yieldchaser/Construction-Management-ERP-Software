@@ -268,14 +268,14 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-115 | MEDIUM | W06 | `settings.py` | `Sidebar.tsx`, `reports/page.tsx` | FIXED | FIXED 093fd10; GET /settings/company returns 404 for unknown companies, no more demo-tenant INSERT on GET. Residual demo chain (layout/Sidebar/projects mapping the demo UUID to demo-construction) is cosmetic only, logged. |
 | R2-116 | CRITICAL | W49 | `frontend/src/app/c/[company_id]/d/delete-logs/page.tsx` | — | TODO | | reg L4500 |
 | R2-117 | MEDIUM | W02 | `UNMAPPED` | — | FIXED | FIXED bbad99e (committed by the founder/other agent session); internal build-plan copy removed from Settings. |
-| R2-118 | MEDIUM | W02 | `UNMAPPED` | — | TODO | | reg L4586 |
+| R2-118 | MEDIUM | W02 | `UNMAPPED` | — | FIXED | FIXED (evidence, 45ffb76 family); HR holidays load from the same /hr/holidays/{cid} endpoint as Settings; no Diwali seed anywhere. The "Sunday off by default" suggestion is a product opinion - noted, not implemented. |
 | R2-119 | MEDIUM | W02 | `UNMAPPED` | — | FIXED | FIXED b69ab40 (other agent); approval categories whose approve keys cannot be granted dropped from Settings. |
 | R2-120 | LOW | W67 | `google_drive.py` | `bi_export.py` | FIXED | `06cde63` | reg L4627; the Integrations page already listed Sheets/Drive/Zoho/BI (the audit's "only one" claim was stale); this session closed the remainder: the wrong instruction ("Connect from the Payroll tab (HR)") now says "Payroll Runs tab (HR)" (same fix in the "HR -> Payroll Runs -> Export to Google Sheets" copy), and the missing fifth integration — Tally — has a card with a real status fetch (`/apis/v3/tally/connections?company_id=`, strict boolean `connected` gate — no fabrication) and a "Manage in Finance → Tally Sync" deep link (`?tab=tally`, verified in the finance page's allowlist). Blast-radius 1 file (settings page; the register's google_drive.py attribution is the backend half), +39/-2. Pinned. No test added (pins only). |
 | R2-121 | MEDIUM | W07 | `billing.py` | — | FIXED | `25f30db` | reg L4659; the Subcon page no longer renders its terminal empty states ("No subcontractor workorders found." / "No subcontractors yet...") while the data fetch is in flight. Both `d/subcon/page.tsx` and `p/[project_id]/subcon/page.tsx` now branch on the existing-but-unused `loading` flag: loading rows read "Loading subcontractor work orders..." / "Loading subcontractors...", then the empty states only after the request settles. Blast-radius 2 files (twin pages), +16/-4 each. No test added. NOTE: same failure family as R2-099/R2-075 (empty state standing in for unknown state); `loading` starts false so one paint frame still shows the empty state before the effect fires (cosmetic, pre-existing pattern across the app). |
 | R2-122 | MEDIUM | W19 | `budgeting.py` | `finance.py`, `main.py`, `delete_logs.py` | FIXED | FIXED 9236ea4; POST /boq-documents/{doc_id}/items added (404s on missing doc/project, budgeting:edit permission, stores unrounded) - the D5-(a) BACKEND half. D5 stays OPEN: frontend inline row (W116/R2-030) + the founder decision remain. |
 | R2-123 | CRITICAL | W30 | `library.py` | — | TODO | | reg L4774 |
 | R2-124 | MEDIUM | W121 | `frontend/src/app/c/[company_id]/d/equipment/page.tsx` | — | TODO | | reg L4810 |
-| R2-125 | MEDIUM | W02 | `UNMAPPED` | — | TODO | | reg L4836 |
+| R2-125 | MEDIUM | W02 | `UNMAPPED` | — | TODO | NEEDS-DECISION -> D4; quotation structure is CGST/SGST-only (crm.py:585-587); adding IGST is a schema + tax-model change routed through D4 (OPEN, blocks R2-041). No code changed. |
 | R2-126 | CRITICAL | W12 | `statutory.py` | — | TODO | | reg L4900 |
 | R2-127 | CRITICAL | W12 | `statutory.py` | — | TODO | | reg L4936 |
 | R2-128 | CRITICAL | W12 | `statutory.py` | — | TODO | | reg L4963 |
@@ -333,7 +333,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-180 | HIGH | W32 | `custom_fields.py` | — | TODO | | reg L6781 |
 | R2-181 | CRITICAL | W14 | `auth.py` | `permissions.py`, `billing.py`, `main.py` | TODO | | reg L6857 |
 | R2-182 | HIGH | W14 | `auth.py` | — | TODO | | reg L6888 |
-| R2-183 | MEDIUM | W14 | `auth.py` | `settings.py` | TODO | | reg L6909 |
+| R2-183 | MEDIUM | W14 | `auth.py` | `settings.py` | FIXED | FIXED e31ff9b; onboarding CreateCompanyRequest.gstin enforces the canonical 15-char pattern + mod-36 check digit via the shared settings helper (dummy 29ABCDE1234F1Z5 now rejected; valid 27AAPFU0939F1ZV accepted). Suggested state-vs-address cross-check not code-fixable (no structured state) - D4 territory; "collect city once" is frontend-only (onboarding + profile pages) - follow-up. |
 | R2-184 | CRITICAL | W04 | `reports.py` | `main.py`, `supabase_storage.py`, `files.py` | TODO | | reg L6929; ESCALATED per D-010 — needs object storage |
 | R2-185 | HIGH | W24 | `labour.py` | `dpr.py`, `hr.py`, `bi_export.py` | TODO | | reg L6958 |
 | R2-186 | HIGH | W14 | `auth.py` | `zoho_books.py` | TODO | | reg L6980 |
@@ -341,7 +341,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-188 | HIGH | W20 | `zoho_books.py` | `billing.py` | TODO | | reg L7027 |
 | R2-189 | HIGH | W02 | `UNMAPPED` | — | TODO | | reg L7044 |
 | R2-190 | MEDIUM | W02 | `UNMAPPED` | — | FIXED | FIXED 592af3a (other agent); Zoho upstream bodies logged server-side with a correlation ref. |
-| R2-191 | MEDIUM | W14 | `auth.py` | `models.py`, `billing.py`, `bi_export.py` | TODO | | reg L7074 |
+| R2-191 | MEDIUM | W14 | `auth.py` | `models.py`, `billing.py`, `bi_export.py` | FIXED | FIXED (evidence, b4c0a37); CompanyTeam gained UniqueConstraint(company_id, user_id) - bundled into the R2-361 commit by the W18 wave; verified at runtime (duplicate insert -> IntegrityError; userless rows still allowed). NOTE: prod needs a Supabase migration to dedupe existing rows + CREATE UNIQUE INDEX (schema-sync only affects fresh DBs). |
 | R2-192 | HIGH | W67 | `google_drive.py` | `zoho_books.py`, `google_sheets.py`, `auth.py` | TODO | | reg L7114 |
 | R2-193 | MEDIUM | W36 | `bi_export.py` | `auth.py`, `hr.py`, `drawings.py` | FIXED | FIXED 07764bc; BI key last_used_at touched at most every 5 min (was every request, ~7200 writes/day); naive/aware tz guard for legacy rows. |
 | R2-194 | CRITICAL | W57 | `main.py` | — | TODO | | reg L7277 |
@@ -356,8 +356,8 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-203 | HIGH | W101 | `d/safety/page.tsx` | `safety.py`, `quality.py` | TODO | | reg L7843 |
 | R2-204 | HIGH | W18 | `quality.py` | — | TODO | | reg L7862 |
 | R2-205 | CRITICAL | W50 | `wastage.py` | `procurement.py` | TODO | | reg L7890 |
-| R2-206 | MEDIUM | W83 | `production.py` | `wastage.py` | TODO | | reg L7916 |
-| R2-207 | MEDIUM | W83 | `production.py` | `models.py`, `d/production/page.tsx`, `analytics.py` | TODO | | reg L7959 |
+| R2-206 | MEDIUM | W83 | `production.py` | `wastage.py` | FIXED | FIXED 83c32c2; wastage_type enumerated (WASTAGE_TYPE_PATTERN in constants.py, applied in wastage.py - invalid 422s), reported_by derived server-side from the membership (column converted to UUID FK, migration 20260816_000005 nulls legacy free text), estimated_value computed from the last PO item rate unless explicitly overridden. Siblings: R2-205 CRITICAL still open (no stock-out transaction). |
+| R2-207 | MEDIUM | W83 | `production.py` | `models.py`, `d/production/page.tsx`, `analytics.py` | FIXED | FIXED 89056dd; batch-derived material qty now applies the recipe allowance (scale x (1 + wastage_pct/100)) - 8 bags x 2 m3 x 1.05 = 16.8 matching the audit example. |
 | R2-208 | MEDIUM | W122 | `p/budgeting/page.tsx` | `safety.py`, `hr.py`, `database.py` | TODO | | reg L8042 |
 | R2-209 | CRITICAL | W20 | `zoho_books.py` | — | TODO | | reg L8295 |
 | R2-210 | CRITICAL | W03 | `hr.py` | `models.py`, `zoho_books.py`, `d/hr/page.tsx` | FIX_VERIFIED | `e2e449d` | reg L8405; hr.py direct-fix pass; suite RC-045 |
@@ -368,13 +368,13 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-215 | CRITICAL | W39 | `d/procurement/page.tsx` | — | TODO | | reg L8859 |
 | R2-216 | HIGH | W39 | `d/procurement/page.tsx` | — | TODO | | reg L8874 |
 | R2-217 | MEDIUM | W45 | `d/drawings/page.tsx` | — | TODO | | reg L8879 |
-| R2-218 | MEDIUM | W02 | `UNMAPPED` | — | TODO | | reg L8915 |
+| R2-218 | MEDIUM | W02 | `UNMAPPED` | — | FIXED | FIXED (evidence); handleCreateBill already refetches the bills list on success (billing page). |
 | R2-219 | CRITICAL | W05 | `procurement.py` | `production.py`, `settings.py`, `d/hr/page.tsx` | FIX_VERIFIED | `e9e3308` | reg L8931; procurement.py direct-fix pass; suite RC-085 |
 | R2-220 | HIGH | W03 | `hr.py` | — | FIX_VERIFIED | `29a1bdb` | reg L9046; hr.py direct-fix pass; suite RC-063 |
 | R2-221 | CRITICAL | W01 | `finance.py` | `d/finance/page.tsx` | FIX_VERIFIED | `7a47131` | reg L9068; wave W01a; suite RC-011 |
 | R2-222 | CRITICAL | W03 | `hr.py` | `finance.py`, `bi_export.py`, `models.py` | FIX_VERIFIED | `e2e449d` | reg L9123; hr.py direct-fix pass; suite RC-045 |
 | R2-224 | HIGH | W102 | `d/team-action/page.tsx` | — | TODO | | reg L9223 |
-| R2-225 | MEDIUM | W41 | `team_schedule.py` | — | TODO | | reg L9247 |
+| R2-225 | MEDIUM | W41 | `team_schedule.py` | — | FIXED | FIXED 28ce750 (in d/team-action/page.tsx - the register attribution was off); handleSaveTimesheet no longer returns silently: inline tsFormError, server detail surfaced, network errors surfaced. |
 | R2-226 | CRITICAL | W10 | `projects.py` | `projects/page.tsx` | TODO | | reg L9269 |
 | R2-227 | MEDIUM | W10 | `projects.py` | — | FIXED | FIXED 15e83fd; planning ProjectResponseSchema carries is_pinned (list/get/post/patch agree); frontend had already moved to /projects/company/{id}. |
 | R2-228 | CRITICAL | W33 | `towers.py` | `budget.py` | TODO | | reg L9319 |
@@ -395,7 +395,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-244 | CRITICAL | W01 | `finance.py` | — | FIX_VERIFIED | `7a47131` | reg L10396; wave W01a; suite RC-011 |
 | R2-245 | HIGH | W02 | `UNMAPPED` | — | TODO | | reg L10447 |
 | R2-246 | CRITICAL | W18 | `quality.py` | — | TODO | | reg L10477 |
-| R2-247 | MEDIUM | W18 | `quality.py` | — | TODO | | reg L10501 |
+| R2-247 | MEDIUM | W18 | `quality.py` | — | FIXED | FIXED d838e44; inspection/NCR identities derived from the caller (inspected_by/raised_by/assigned_to dropped from the request schemas, stamped current_user.id). |
 | R2-248 | CRITICAL | W33 | `towers.py` | `budget.py`, `models.py` | TODO | | reg L10557 |
 | R2-249 | HIGH | W13 | `budget.py` | — | TODO | | reg L10623 |
 | R2-250 | HIGH | W13 | `budget.py` | — | TODO | | reg L10647 |
@@ -409,7 +409,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-258 | HIGH | W41 | `team_schedule.py` | — | TODO | | reg L11156 |
 | R2-259 | HIGH | W42 | `drawings.py` | — | TODO | | reg L11191 |
 | R2-260 | HIGH | W32 | `custom_fields.py` | — | TODO | | reg L11219 |
-| R2-261 | MEDIUM | W41 | `team_schedule.py` | `team-action/page.tsx` | TODO | | reg L11260 |
+| R2-261 | MEDIUM | W41 | `team_schedule.py` | `team-action/page.tsx` | FIXED | FIXED 7b868ea (in dpr.py - attribution off); create_dpr 409s on a second DPR for the same project+day before any side effects; the DPR page surfaces the detail. Chose 409 over upsert (no update endpoint exists; upsert semantics = product decision). NOTE: prod holds a duplicate pair already, so a DB unique-index migration would fail - app-level guard chosen. |
 | R2-262 | CRITICAL | W03 | `hr.py` | `finance.py`, `safety.py` | FIX_VERIFIED | `e2e449d` | reg L11354; hr.py direct-fix pass; suite RC-045 |
 | R2-263 | HIGH | W24 | `labour.py` | — | TODO | | reg L11418 |
 | R2-264 | HIGH | W68 | `subcon.py` | — | TODO | | reg L11439 |
@@ -430,7 +430,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-279 | HIGH | W21 | `calculators.py` | — | TODO | | reg L12267 |
 | R2-280 | HIGH | W21 | `calculators.py` | — | TODO | | reg L12310 |
 | R2-281 | HIGH | W21 | `calculators.py` | — | TODO | | reg L12344 |
-| R2-282 | MEDIUM | W02 | `UNMAPPED` | — | TODO | | reg L12380 |
+| R2-282 | MEDIUM | W02 | `UNMAPPED` | — | FIXED | FIXED 9994fab; steel calculators reject requests populating both parameter sets (422 with named conflicts); floors ge=1, area_sqft gt=0. |
 | R2-283 | CRITICAL | W12 | `statutory.py` | `models.py` | TODO | | reg L12433 |
 | R2-284 | HIGH | W103 | `cashbook.py` | — | TODO | | reg L12527 |
 | R2-285 | HIGH | W06 | `settings.py` | — | TODO | | reg L12549 |
@@ -509,7 +509,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-358 | MEDIUM | W01 | `finance.py` | `models.py` | TODO | `a245605` | reg L16692; PARTIAL: (b) per-company code fixed (RC-042); (a) zero-rate report is a feature, not fixed |
 | R2-359 | HIGH | W52 | `crm.py` | `models.py`, `reports.py` | TODO | | reg L16756 |
 | R2-360 | HIGH | W52 | `crm.py` | `models.py` | TODO | | reg L16805 |
-| R2-361 | MEDIUM | W18 | `quality.py` | `models.py` | TODO | | reg L16838 |
+| R2-361 | MEDIUM | W18 | `quality.py` | `models.py` | FIXED | FIXED b4c0a37; dead Quotation model removed (no destructive drop; create_all stops making the table). Sibling: LibraryRetention same dead-model family. |
 | R2-362 | CRITICAL | W18 | `quality.py` | — | TODO | | reg L16914 |
 | R2-363 | HIGH | W18 | `quality.py` | `models.py` | TODO | | reg L16970 |
 | R2-364 | HIGH | W18 | `quality.py` | `models.py`, `reports.py` | TODO | | reg L17002 |
@@ -647,15 +647,15 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-497 | CRITICAL | W08 | `analytics.py` | — | TODO | | reg L24947 |
 | R2-498 | HIGH | W08 | `analytics.py` | — | TODO | | reg L24992 |
 | R2-499 | HIGH | W08 | `analytics.py` | `projects.py` | TODO | | reg L25018 |
-| R2-500 | MEDIUM | W02 | `UNMAPPED` | — | TODO | | reg L25049 |
-| R2-501 | MEDIUM | W02 | `UNMAPPED` | — | TODO | | reg L25066 |
+| R2-500 | MEDIUM | W02 | `UNMAPPED` | — | FIXED | FIXED (evidence, 6ef2cc8); PHASE 14 eyebrow already gone from analytics. |
+| R2-501 | MEDIUM | W02 | `UNMAPPED` | — | FIXED | FIXED (evidence, d48e67c); analytics formatCurrency delegates to shared fmtINR. |
 | R2-502 | HIGH | W111 | `production/page.tsx` | — | TODO | | reg L25119 |
 | R2-503 | CRITICAL | W65 | `assets.py` | — | TODO | | reg L25164 |
 | R2-504 | MEDIUM | W65 | `assets.py` | — | TODO | | reg L25218 |
 | R2-505 | MEDIUM | W12 | `statutory.py` | — | FIXED | FIXED (evidence, 6ef2cc8); PHASE 16 eyebrow already removed from d/production by the R2-023 sweep; zero PHASE matches in frontend/src. |
 | R2-506 | HIGH | W112 | `safety/page.tsx` | `safety.py` | TODO | | reg L25316 |
 | R2-507 | HIGH | W24 | `labour.py` | `models.py`, `hr.py` | TODO | | reg L25354 |
-| R2-508 | MEDIUM | W02 | `UNMAPPED` | — | TODO | | reg L25401 |
+| R2-508 | MEDIUM | W02 | `UNMAPPED` | — | FIXED | FIXED deb3a9a; ltif_basis query param (default 200,000) returned in the response; banner no longer claims OSHA alignment; KPI labeled LTIFR with the real basis in the caption. NEEDS-DECISION (CD-10): whether the default should flip to 1,000,000 (ILO/IS 3786) - changes reported numbers. |
 | R2-509 | CRITICAL | W01 | `finance.py` | — | FIX_VERIFIED | `f32ca77+3f65098` | reg L25450; wave W01b; suite RC-032 — own gate added 2026-08-06 |
 | R2-510 | HIGH | W75 | `supabase_storage.py` | `services/page.tsx` | TODO | | reg L25505 |
 | R2-511 | CRITICAL | W14 | `auth.py` | `rate_limit.py`, `bi_export.py`, `public_leads.py` | TODO | | reg L25601 |
@@ -684,7 +684,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-534 | HIGH | W01 | `finance.py` | — | FIX_VERIFIED | `4b7add4` | reg L27209; direct-fix pass; suite RC-039 |
 | R2-535 | MEDIUM | W128 | `vendor_performance.py` | `projects.py`, `crypto.py`, `auth.py` | TODO | | reg L27246 |
 | R2-536 | HIGH | W72 | `delete_logs.py` | — | TODO | | reg L27350 |
-| R2-537 | MEDIUM | W02 | `UNMAPPED` | — | TODO | | reg L27395 |
+| R2-537 | MEDIUM | W02 | `UNMAPPED` | — | FIXED | FIXED d9f99b3; log_deletion no longer commits or swallows - the audit row lands in the caller transaction (all-or-nothing); redundant try/except:pass removed at all 30 call sites across 14 files. Sibling: R2-536 (deleted_by still omitted at all call sites). |
 | R2-538 | CRITICAL | W16 | `three_way.py` | — | TODO | | reg L27457 |
 | R2-539 | HIGH | W16 | `three_way.py` | `models.py`, `calculators.py` | TODO | | reg L27497 |
 | R2-540 | CRITICAL | W03 | `hr.py` | `models.py` | FIX_VERIFIED | `e2e449d` | reg L27683; hr.py direct-fix pass; suite RC-046 |
