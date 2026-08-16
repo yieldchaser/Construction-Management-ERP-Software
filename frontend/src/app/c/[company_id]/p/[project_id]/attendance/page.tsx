@@ -651,7 +651,7 @@ export default function AttendancePage() {
                             <option>No active employees found</option>
                           ) : (
                             employees.map((emp) => (
-                              <option key={emp.id} value={emp.id}>{emp.name} ({emp.code ? emp.code + ", " : ""}{emp.designation || "Labor"})</option>
+                              <option key={emp.id} value={emp.id}>{emp.name} ({(emp.employee_code ?? emp.code) ? (emp.employee_code ?? emp.code) + ", " : ""}{emp.designation || "Labor"})</option>
                             ))
                           )}
                         </select>
