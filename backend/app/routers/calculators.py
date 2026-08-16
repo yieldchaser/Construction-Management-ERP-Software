@@ -58,7 +58,7 @@ class SteelCalcRequest(BaseModel):
 
 @router.post("/steel")
 def calc_steel(req: SteelCalcRequest):
-    unit_weight = (req.diameter ** 2) / 162.89
+    unit_weight = (req.diameter ** 2) / 162.0
     
     if req.is_column:
         lap_length = 50 * (req.diameter / 1000.0)
