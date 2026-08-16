@@ -74,8 +74,8 @@ def test_pin_R2_031_task_status_derives_from_progress():
 
 def test_pin_R2_044_billing_bucket_gates():
     src = _read("app/routers/billing.py")
-    assert "REVENUE_INVOICE_TYPES" in src, "R2-044 revenue bucket gate regressed"
-    assert "EXPENSE_INVOICE_TYPES" in src, "R2-044 expense bucket gate regressed"
+    assert src.count("REVENUE_INVOICE_TYPES") >= 2, "R2-044 revenue bucket gate regressed"
+    assert src.count("EXPENSE_INVOICE_TYPES") >= 2, "R2-044 expense bucket gate regressed"
 
 
 def test_pin_R2_011_party_type_allowlist_covers_ui_vocabulary():
@@ -152,9 +152,14 @@ def test_pin_R2_107_dates_default_to_today():
     assert 'useState(new Date().toISOString().split("T")[0])' in src, "R2-107 today default regressed"
 
 
+def test_pin_R2_107_no_frozen_dates_in_project_attendance():
+    src = _read_frontend("src/app/c/[company_id]/p/[project_id]/attendance/page.tsx")
+    assert 'useState("2026' not in src, "R2-107 frozen date seed reintroduced in project attendance"
+
+
 def test_pin_R2_013_details_drawer_controlled():
     src = _read_frontend("src/app/c/[company_id]/d/hr/page.tsx")
-    assert "defaultValue={selectedEmpDetail.grossMonthly}" not in src, "R2-013 uncontrolled drawer input reintroduced"
+    assert "defaultValue" not in src, "R2-013 uncontrolled drawer input reintroduced"
 
 
 def test_pin_R2_015_quick_add_posts_real_todo():
