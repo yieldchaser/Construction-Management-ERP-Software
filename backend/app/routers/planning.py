@@ -50,7 +50,7 @@ class TaskCreateRequest(BaseModel):
     project_id: UUID
     parent_id: Optional[UUID] = None
     name: str
-    duration_days: int
+    duration_days: int = Field(..., ge=0)
     start_date: datetime
     priority: str = "medium"
     assigned_to: Optional[UUID] = None
@@ -59,7 +59,7 @@ class TaskCreateRequest(BaseModel):
 
 class TaskUpdateRequest(BaseModel):
     name: Optional[str] = None
-    duration_days: Optional[int] = None
+    duration_days: Optional[int] = Field(None, ge=0)
     start_date: Optional[datetime] = None
     status: Optional[str] = None
     priority: Optional[str] = None
@@ -218,7 +218,7 @@ def propagate_schedule(task_id: UUID, db: Session):
                     max_end_date = pred_task.end_date
 
         if max_end_date and successor.start_date < max_end_date:
-            duration = successor.duration_days
+            duration = max(1, successor.duration_days)
             successor.start_date = max_end_date
             successor.end_date = successor.start_date + timedelta(days=duration)
             db.add(successor)
@@ -448,6 +448,8 @@ def create_task(request: TaskCreateRequest, db: Session = Depends(get_db), curre
 
     # Auto-calculate end_date based on start_date and duration_days
     end_date = request.start_date + timedelta(days=request.duration_days)
+    if end_date < request.start_date:
+        raise HTTPException(status_code=400, detail="Task duration must not end before it starts")
 
     task = Task(
         project_id=request.project_id,
@@ -516,6 +518,8 @@ def update_task(task_id: UUID, request: TaskUpdateRequest, db: Session = Depends
         task.start_date = start_date
         task.duration_days = duration_days
         task.end_date = start_date + timedelta(days=duration_days)
+        if task.end_date < task.start_date:
+            raise HTTPException(status_code=400, detail="Task duration must not end before it starts")
         dates_changed = True
 
     # Enforce the editing window against the EFFECTIVE start date that will be

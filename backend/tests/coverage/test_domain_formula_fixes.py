@@ -731,3 +731,30 @@ def test_planning_discriminator_fields_validated(client, db, make_tenant, auth_h
         headers=hdr,
     )
     assert r.status_code == 201, r.text
+
+# -- W11 R2-255: negative task duration rejected ------------------------------
+
+def test_task_duration_bounds_enforced(client, db, make_tenant, auth_headers):
+    comp, user, _ = make_tenant(company_name="E41", user_name="UE41", mobile=_mob(42), email=_mail(42))
+    hdr = auth_headers(user, comp)
+    project = _mk_project(db, comp)
+
+    r = client.post(
+        "/apis/v3/planning/tasks",
+        json={
+            "project_id": str(project.id), "name": "Neg", "duration_days": -3,
+            "start_date": "2026-01-01T00:00:00",
+        },
+        headers=hdr,
+    )
+    assert r.status_code == 422
+
+    task = models.Task(
+        id=uuid.uuid4(), project_id=project.id, name="T", status="not_started",
+        duration_days=3, progress=Decimal("0"),
+        start_date=_utc(2026, 1, 1), end_date=_utc(2026, 1, 4))
+    db.add(task)
+    db.commit()
+
+    r = client.put(f"/apis/v3/planning/tasks/{task.id}", json={"duration_days": -3}, headers=hdr)
+    assert r.status_code == 422
