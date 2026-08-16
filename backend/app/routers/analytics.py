@@ -24,6 +24,7 @@ from app.models import (
     BOQItem,
     Company,
     CompanyTeam,
+    LibraryParty,
     NCR,
     Project,
     ProjectBudget,
@@ -98,9 +99,13 @@ def _month_range(start: datetime, end: datetime) -> List[datetime]:
     return months
 
 
-def _resolve_team_name(team: CompanyTeam, users_by_id: Dict[uuid.UUID, User]) -> str:
+def _resolve_team_name(db: Session, team: CompanyTeam, users_by_id: Dict[uuid.UUID, User]) -> str:
     if team.user_id and team.user_id in users_by_id and users_by_id[team.user_id].name:
         return users_by_id[team.user_id].name
+    if team.library_party_id:
+        party = db.query(LibraryParty).filter(LibraryParty.id == team.library_party_id).first()
+        if party and party.name:
+            return party.name
     return f"Team {str(team.id)[:8]}"
 
 
@@ -255,7 +260,7 @@ def get_company_analytics(company_id: uuid.UUID, db: Session = Depends(get_db), 
     completed_tasks = sum(
         1 for task in tasks if (task.status or "").lower() in COMPLETED_TASK_STATUSES
     )
-    burn_rate_pct = round((total_spend / total_budget) * 100, 2) if total_budget else 0.0
+    burn_rate_pct = round((total_spend / total_budget) * 100, 2) if total_budget else None
     budget_variance = round(total_budget - total_spend, 2)
 
     date_candidates = []
@@ -319,14 +324,14 @@ def get_company_analytics(company_id: uuid.UUID, db: Session = Depends(get_db), 
         elif (log.status or "").lower() == "present":
             total_hours += 8.0
 
-    labour_days = round(total_hours / 8.0, 2) if total_hours else 0.0
+    labour_days = round(total_hours / 8.0, 2) if attendance_logs and total_hours else None
     completed_area = 0.0
     for task in tasks:
         if (task.status or "").lower() in COMPLETED_TASK_STATUSES and task.boq_item_id:
             boq = boq_by_id.get(task.boq_item_id)
             if boq and (boq.unit or "").strip().lower() in AREA_UNITS:
                 completed_area += _to_float(boq.quantity)
-    labour_productivity = round(completed_area / labour_days, 2) if labour_days else 0.0
+    labour_productivity = round(completed_area / labour_days, 2) if labour_days else None
 
     ordered_qty = sum(_to_float(item.quantity) for item in purchase_order_items)
     consumed_qty = sum(_to_float(tx.qty) for tx in material_transactions)
@@ -361,7 +366,7 @@ def get_company_analytics(company_id: uuid.UUID, db: Session = Depends(get_db), 
         subcontractor_scorecard.append(
             {
                 "subcontractor_id": str(subcontractor_id),
-                "subcontractor_name": _resolve_team_name(company_team, users_by_id) if company_team else str(subcontractor_id),
+                "subcontractor_name": _resolve_team_name(db, company_team, users_by_id) if company_team else str(subcontractor_id),
                 "project_names": [
                     project.name
                     for project in projects
@@ -390,7 +395,7 @@ def get_company_analytics(company_id: uuid.UUID, db: Session = Depends(get_db), 
         "s_curve": s_curve,
         "budget_burn_series": monthly_burn,
         "labour_productivity": {
-            "total_hours": round(total_hours, 2),
+            "total_hours": round(total_hours, 2) if attendance_logs else None,
             "labour_days": labour_days,
             "completed_area_m2": round(completed_area, 2),
             "productivity_m2_per_labour_day": labour_productivity,

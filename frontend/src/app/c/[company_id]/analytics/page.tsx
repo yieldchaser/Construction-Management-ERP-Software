@@ -51,14 +51,14 @@ interface AnalyticsPayload {
   total_budget: number;
   total_spend: number;
   budget_variance: number;
-  burn_rate_pct: number;
+  burn_rate_pct: number | null;
   s_curve: AnalyticsPoint[];
   budget_burn_series: BurnPoint[];
   labour_productivity: {
-    total_hours: number;
-    labour_days: number;
+    total_hours: number | null;
+    labour_days: number | null;
     completed_area_m2: number;
-    productivity_m2_per_labour_day: number;
+    productivity_m2_per_labour_day: number | null;
   };
   material_wastage: {
     ordered_qty: number;
@@ -321,13 +321,13 @@ export default function CompanyAnalyticsPage() {
               },
               {
                 label: "Burn Rate",
-                value: data ? `${data.burn_rate_pct}%` : "—",
-                hint: "Company-wide budget consumption",
+                value: data ? (data.burn_rate_pct == null ? "—" : `${data.burn_rate_pct}%`) : "—",
+                hint: data && data.burn_rate_pct == null ? "No budget set — not tracked" : "Company-wide budget consumption",
                 tone: "text-emerald-400",
               },
               {
                 label: "Labour Productivity",
-                value: data ? `${data.labour_productivity.productivity_m2_per_labour_day}` : "—",
+                value: data ? (data.labour_productivity.productivity_m2_per_labour_day == null ? "—" : `${data.labour_productivity.productivity_m2_per_labour_day}`) : "—",
                 hint: "m2 per labour-day",
                 tone: "text-primary",
               },
@@ -489,7 +489,7 @@ export default function CompanyAnalyticsPage() {
                       <tr key={project.project_id} className="border-t border-border-custom hover:bg-elevated">
                         <td className="px-4 py-3">
                           <div className="font-semibold text-foreground">{project.project_name}</div>
-                          <div className="text-[11px] text-muted">{project.code ?? "No code"}</div>
+                          <div className="text-[11px] text-muted">{project.code ?? "—"}</div>
                         </td>
                         <td className="px-4 py-3 text-right text-muted">{formatCurrency(project.budget)}</td>
                         <td className="px-4 py-3 text-right text-muted">{formatCurrency(project.spend)}</td>
