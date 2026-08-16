@@ -2071,18 +2071,6 @@ class LibraryRetention(Base):
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 
 
-class TransactionRetention(Base):
-    """Retention line attached to a bill (mirrors TransactionDeduction)."""
-    __tablename__ = "transaction_retentions"
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    bill_id = Column(UUID(as_uuid=True), ForeignKey("bills.id", ondelete="CASCADE"), nullable=False)
-    retention_type = Column(String(100), nullable=False)
-    amount = Column(Numeric(18, 2), nullable=False)
-    percentage = Column(Numeric(5, 2), nullable=True)
-    notes = Column(String, nullable=True)
-    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
-
-
 class MaterialCategory(Base):
     """Hierarchical material categories (creatable, nested)."""
     __tablename__ = "material_categories"
