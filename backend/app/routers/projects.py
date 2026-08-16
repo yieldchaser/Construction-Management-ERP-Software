@@ -369,7 +369,14 @@ def list_project_members(project_id: uuid.UUID, search: Optional[str] = None, db
     p = db.query(models.Project).filter(models.Project.id == project_id).first()
     if not p:
         raise HTTPException(status_code=404, detail="Project not found")
-    q = db.query(models.CompanyTeam).filter(models.CompanyTeam.company_id == p.company_id)
+    q = (
+        db.query(models.CompanyTeam)
+        .join(models.ProjectMember, models.ProjectMember.company_team_id == models.CompanyTeam.id)
+        .filter(
+            models.ProjectMember.project_id == project_id,
+            models.CompanyTeam.company_id == p.company_id,
+        )
+    )
     members = q.all()
     result = []
     for m in members:
