@@ -1990,6 +1990,7 @@ export default function CalculatorsPage() {
                 <>
                   <div>• Standard door deduction is 21 sqft (3x7 ft). Window deduction is 12 sqft (3x4 ft).</div>
                   <div>• Putty rate: 2.25 kg per 100 sqft for 2 coats. Primer rate: 1L per 175 sqft.</div>
+                  <div>• Paint and putty quantities include a 10% application allowance; primer a 5% allowance.</div>
                   <div>• Tile quantities account for grout width additions prior to area division.</div>
                 </>
               )}
