@@ -1,6 +1,6 @@
 "use client";
 import { getApiHost } from "@/lib/api";
-import { authHeaders } from "@/lib/siteflow";
+import { authHeaders, fmtINR } from "@/lib/siteflow";
 import React, { useState, useEffect } from "react";
 import { useProject } from "@/context/ProjectContext";
 import { useParams } from "next/navigation";
@@ -197,10 +197,10 @@ export default function ThreeWayPage() {
                   <tr key={m.id} className="hover:bg-white/5 transition-colors">
                     <td className="px-6 py-4">{m.po_number || m.po_id.slice(0, 8)}</td>
                     <td className="px-6 py-4">{m.grn_number || m.grn_id.slice(0, 8)}</td>
-                    <td className="px-6 py-4">₹{Number(m.po_amount).toLocaleString()}</td>
-                    <td className="px-6 py-4">₹{Number(m.invoiced_amount).toLocaleString()}</td>
+                    <td className="px-6 py-4">{fmtINR(m.po_amount)}</td>
+                    <td className="px-6 py-4">{fmtINR(m.invoiced_amount)}</td>
                     <td className={`px-6 py-4 font-medium ${Number(m.variance_amount) < 0 ? "text-red-400" : Number(m.variance_amount) > 0 ? "text-amber-400" : "text-emerald-400"}`}>
-                      ₹{Number(m.variance_amount).toLocaleString()}
+                      {fmtINR(m.variance_amount)}
                     </td>
                     <td className="px-6 py-4">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[m.match_status] || "bg-zinc-500/10 text-muted"}`}>
@@ -231,7 +231,7 @@ export default function ThreeWayPage() {
                   <label className="block text-xs font-medium text-muted mb-1">Purchase Order</label>
                   <select required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-foreground" value={form.po_id} onChange={(e) => setForm({...form, po_id: e.target.value})}>
                     <option value="">Select PO</option>
-                    {pos.map((p) => <option key={p.id} value={p.id}>{p.po_number} — ₹{Number(p.total_amount).toLocaleString()}</option>)}
+                    {pos.map((p) => <option key={p.id} value={p.id}>{p.po_number} — {fmtINR(p.total_amount)}</option>)}
                   </select>
                 </div>
                 <div>
@@ -245,7 +245,7 @@ export default function ThreeWayPage() {
                   <label className="block text-xs font-medium text-muted mb-1">Invoiced Amount (₹)</label>
                   <input type="number" required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-foreground" value={form.invoiced_amount} onChange={(e) => setForm({...form, invoiced_amount: parseFloat(e.target.value)})} />
                   {selectedPo && (
-                    <p className="text-xs text-muted mt-1">PO Amount: ₹{Number(selectedPo.total_amount).toLocaleString()} • Variance: <span className={autoVariance < 0 ? "text-red-400" : autoVariance > 0 ? "text-amber-400" : "text-emerald-400"}>₹{Number(autoVariance).toLocaleString()}</span></p>
+                    <p className="text-xs text-muted mt-1">PO Amount: {fmtINR(selectedPo.total_amount)} • Variance: <span className={autoVariance < 0 ? "text-red-400" : autoVariance > 0 ? "text-amber-400" : "text-emerald-400"}>{fmtINR(autoVariance)}</span></p>
                   )}
                 </div>
                 <div>
