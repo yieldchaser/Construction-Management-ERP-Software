@@ -20,7 +20,7 @@ router = APIRouter(prefix="/safety", tags=["Safety & HSE"], dependencies=[Depend
 # ─── Pydantic Schemas ────────────────────────────────────────────────────────
 
 class IncidentCreate(BaseModel):
-    project_id: str
+    project_id: uuid.UUID
     incident_type: str          # Near Miss, First Aid, LTI, Fatal
     severity: str               # Low, Medium, High, Critical
     description: str
@@ -46,18 +46,18 @@ class IncidentClose(BaseModel):
 
 
 class ToolboxTalkCreate(BaseModel):
-    project_id: str
+    project_id: uuid.UUID
     topic: str
     conducted_by: str
-    conducted_at: str           # ISO datetime string
+    conducted_at: datetime       # ISO datetime string
     attendee_count: int = 0
     notes: Optional[str] = None
 
 
 class PPECheckCreate(BaseModel):
-    project_id: str
+    project_id: uuid.UUID
     checked_by: str
-    check_date: str             # ISO datetime string
+    check_date: datetime         # ISO datetime string
     total_workers: int
     compliant_workers: int
     non_compliant_items: List[str] = []
@@ -68,13 +68,13 @@ class PPECheckCreate(BaseModel):
 @router.post("/incidents")
 def log_incident(payload: IncidentCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """Log a new safety incident on site."""
-    project = db.query(Project).filter(Project.id == uuid.UUID(payload.project_id)).first()
+    project = db.query(Project).filter(Project.id == payload.project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     get_company_membership(db, current_user, project.company_id)
     require_permission(db, current_user, project.company_id, "safety:edit")
     incident = SafetyIncident(
-        project_id=uuid.UUID(payload.project_id),
+        project_id=payload.project_id,
         incident_type=payload.incident_type,
         severity=payload.severity,
         description=payload.description,
@@ -234,16 +234,16 @@ def get_safety_stats(
 @router.post("/toolbox-talks")
 def log_toolbox_talk(payload: ToolboxTalkCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """Record a toolbox talk session conducted on site."""
-    project = db.query(Project).filter(Project.id == uuid.UUID(payload.project_id)).first()
+    project = db.query(Project).filter(Project.id == payload.project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     get_company_membership(db, current_user, project.company_id)
     require_permission(db, current_user, project.company_id, "safety:edit")
     talk = ToolboxTalk(
-        project_id=uuid.UUID(payload.project_id),
+        project_id=payload.project_id,
         topic=payload.topic,
         conducted_by=payload.conducted_by,
-        conducted_at=datetime.fromisoformat(payload.conducted_at),
+        conducted_at=payload.conducted_at,
         attendee_count=payload.attendee_count,
         notes=payload.notes,
     )
@@ -298,16 +298,16 @@ def log_ppe_check(payload: PPECheckCreate, db: Session = Depends(get_db), curren
     if payload.compliant_workers > payload.total_workers:
         raise HTTPException(status_code=400, detail="Compliant workers cannot exceed total workers.")
 
-    project = db.query(Project).filter(Project.id == uuid.UUID(payload.project_id)).first()
+    project = db.query(Project).filter(Project.id == payload.project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     get_company_membership(db, current_user, project.company_id)
     require_permission(db, current_user, project.company_id, "safety:edit")
 
     check = PPECheck(
-        project_id=uuid.UUID(payload.project_id),
+        project_id=payload.project_id,
         checked_by=payload.checked_by,
-        check_date=datetime.fromisoformat(payload.check_date),
+        check_date=payload.check_date,
         total_workers=payload.total_workers,
         compliant_workers=payload.compliant_workers,
         non_compliant_items=payload.non_compliant_items,
