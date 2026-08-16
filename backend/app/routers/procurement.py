@@ -1,5 +1,5 @@
 from uuid import UUID
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy.orm import Session
@@ -16,7 +16,7 @@ from app.approvals import find_matching_rule, match_approver, levels_approved, u
 from app.workflow_controls import enforce_stock_availability, get_company, get_default_terms
 from app.utils.pdf_generator import generate_document_pdf
 from app.utils.document_pdf import resolve_pdf_branding
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 router = APIRouter(
     prefix="/procurement",
@@ -109,6 +109,15 @@ class GRNCreateRequest(BaseModel):
     received_date: datetime
     received_by: Optional[UUID] = None
     items: List[GRNCreateItemSchema]
+
+    @field_validator("received_date")
+    @classmethod
+    def received_date_not_future(cls, v: datetime) -> datetime:
+        if v.tzinfo is None:
+            v = v.replace(tzinfo=timezone.utc)
+        if v > datetime.now(timezone.utc):
+            raise ValueError("received_date cannot be in the future")
+        return v
 
 class GRNResponseItemSchema(BaseModel):
     id: UUID
