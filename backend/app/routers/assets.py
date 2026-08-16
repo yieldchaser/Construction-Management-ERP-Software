@@ -70,6 +70,18 @@ class DepreciationEntryResponse(BaseModel):
 @router.post("/schedules", response_model=DepreciationScheduleResponse, status_code=status.HTTP_201_CREATED)
 def create_schedule(payload: DepreciationScheduleCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     require_permission(db, current_user, payload.company_id, "finance:edit")
+    if payload.method == "straight_line":
+        max_pct = 100.0 / payload.useful_life_years
+        if payload.salvage_value == 0 and round(payload.depreciation_pct, 2) != round(max_pct, 2):
+            raise HTTPException(
+                status_code=422,
+                detail=f"straight_line depreciation_pct must be {max_pct:.2f}% (100 / useful_life_years) when salvage_value is 0",
+            )
+        if payload.salvage_value > 0 and payload.depreciation_pct >= max_pct:
+            raise HTTPException(
+                status_code=422,
+                detail=f"straight_line depreciation_pct must be below {max_pct:.2f}% (100 / useful_life_years) when salvage_value > 0",
+            )
     data = payload.model_dump()
     for k in ("salvage_value", "depreciation_pct"):
         data[k] = Decimal(str(data[k]))
