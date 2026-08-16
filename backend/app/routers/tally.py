@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Literal, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import Response
 from sqlalchemy.orm import Session
@@ -65,9 +65,9 @@ class AgentResponse(BaseModel):
 
 class LedgerMappingCreateRequest(BaseModel):
     company_id: uuid.UUID
-    onsite_transaction_type: str
+    onsite_transaction_type: Literal["Material Purchase", "Subcon Expense", "Sales Invoice"]
     posting_mode: str = "lumpsum"
-    tally_voucher_type: str
+    tally_voucher_type: Literal["Sales", "Purchase", "Receipt", "Payment", "Journal"]
     tally_ledger_name: str
     freight_ledger: Optional[str] = None
     surcharge_ledger: Optional[str] = None
