@@ -2,6 +2,7 @@ from uuid import UUID
 from datetime import datetime, timedelta
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Query
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.auth import get_current_user, verify_company_access, verify_project_access
@@ -140,7 +141,7 @@ def check_duplicate_po(
 ):
     existing = db.query(PurchaseOrder).filter(
         PurchaseOrder.company_id == company_id,
-        PurchaseOrder.po_number == po_number
+        func.lower(func.trim(PurchaseOrder.po_number)) == func.lower(func.trim(po_number))
     ).all()
     if existing:
         return DuplicatePOCheckResponse(
