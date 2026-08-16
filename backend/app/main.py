@@ -20,6 +20,10 @@ from app.routers import (
 from app.database import engine, Base, SessionLocal
 from app import models
 
+# Anchor the static mount to the repo's backend/static directory (the same
+# location reports.py writes PDFs to) so it never depends on the process CWD.
+STATIC_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "static")
+
 # Initialize SQLAlchemy tables if they do not exist
 # Note: In production this is handled via Supabase SQL migrations, but for local/SQLite dev it serves as an auto-fallback.
 # The actual create_all() call runs ONCE PER BOOT inside the FastAPI lifespan (see lifespan()), NOT at import time.
@@ -427,9 +431,6 @@ def auto_seed_database():
     # (call runs in lifespan)
 
 
-# Ensure static reports directory exists (now handled in lifespan)
-# os.makedirs("static/reports", exist_ok=True)
-
 # Initialize Sentry error tracking before the FastAPI app is constructed.
 # Gated on a non-empty DSN: calling sentry_sdk.init with an empty DSN is a
 # silent no-op, but we skip it explicitly so behaviour is obvious in logs and
@@ -481,7 +482,7 @@ async def lifespan(app: FastAPI):
     ensure_sqlite_schema_sync()
     ensure_postgres_schema_sync()  # Production PostgreSQL: add missing model columns
     auto_seed_database()
-    os.makedirs("static/reports", exist_ok=True)
+    os.makedirs(os.path.join(STATIC_DIR, "reports"), exist_ok=True)
     yield
 
 
@@ -530,8 +531,7 @@ app.add_middleware(
     allow_headers=["Authorization", "Content-Type", "X-Admin-Secret"],
 )
 
-os.makedirs("static/reports", exist_ok=True)
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 # Register routers
 app.include_router(auth.router, prefix="/apis/v3")
