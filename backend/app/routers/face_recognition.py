@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from collections import defaultdict
 from app.database import get_db
 from app.auth import get_current_user, verify_company_access
@@ -18,10 +18,10 @@ class FacePunchRequest(BaseModel):
     employee_id: uuid.UUID
     punch_type: str
     face_verified: bool
-    confidence_score: Optional[float] = None
+    confidence_score: Optional[float] = Field(None, ge=0, le=1)
     image_url: Optional[str] = None
-    lat: Optional[float] = None
-    lng: Optional[float] = None
+    lat: Optional[float] = Field(None, ge=-90, le=90)
+    lng: Optional[float] = Field(None, ge=-180, le=180)
     is_within_geofence: bool = False
 
 
