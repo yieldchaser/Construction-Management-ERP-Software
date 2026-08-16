@@ -4,20 +4,25 @@ from decimal import Decimal, InvalidOperation
 from typing import Any, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from app.database import get_db
 from app.auth import get_current_user, verify_company_access, get_company_membership, require_permission
 from app.models import CustomField, CustomFieldValue, User
 
 router = APIRouter(prefix="/custom-fields", tags=["Custom Fields"], dependencies=[Depends(get_current_user)])
 
+CUSTOM_FIELD_ENTITY_TYPES = ("project", "task", "bill", "invoice", "lead", "vendor")
+CUSTOM_FIELD_TYPES = ("text", "number", "date", "select", "multiselect", "checkbox")
+CUSTOM_FIELD_ENTITY_TYPE_PATTERN = f"^({'|'.join(CUSTOM_FIELD_ENTITY_TYPES)})$"
+CUSTOM_FIELD_TYPE_PATTERN = f"^({'|'.join(CUSTOM_FIELD_TYPES)})$"
+
 
 class CustomFieldCreate(BaseModel):
     company_id: uuid.UUID
-    entity_type: str
+    entity_type: str = Field(..., pattern=CUSTOM_FIELD_ENTITY_TYPE_PATTERN)
     field_name: str
     field_label: str
-    field_type: str
+    field_type: str = Field(..., pattern=CUSTOM_FIELD_TYPE_PATTERN)
     is_required: bool = False
     options: List[str] = []
     display_order: int = 0
@@ -47,7 +52,7 @@ class CustomFieldResponse(BaseModel):
 class CustomFieldValueCreate(BaseModel):
     company_id: uuid.UUID
     field_id: uuid.UUID
-    entity_type: str
+    entity_type: str = Field(..., pattern=CUSTOM_FIELD_ENTITY_TYPE_PATTERN)
     entity_id: uuid.UUID
     value_text: Optional[str] = None
     value_number: Optional[float] = None
