@@ -75,8 +75,10 @@ def _resolve_key(company_id: uuid.UUID, request: Request, db: Session) -> models
     )
     if not key:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or revoked API key")
-    key.last_used_at = datetime.now(timezone.utc)
-    db.commit()
+    now = datetime.now(timezone.utc)
+    if key.last_used_at is None or key.last_used_at.tzinfo is None or (now - key.last_used_at).total_seconds() > 300:
+        key.last_used_at = now
+        db.commit()
     return key
 
 
@@ -254,7 +256,7 @@ def feed_budget_variance(
 
         material_actual = float(
             db.query(func.coalesce(func.sum(models.Bill.total_payable), 0))
-            .filter(models.Bill.project_id == p.id, models.Bill.invoice_type == "purchase")
+            .filter(models.Bill.project_id == p.id, models.Bill.invoice_type.in_(("purchase", "expense")))
             .scalar()
             or 0
         )
@@ -272,8 +274,13 @@ def feed_budget_variance(
             .scalar()
             or 0
         )
-        # Equipment actual: deployment hourly cost + fuel cost (mirrors finance.get_project_pl).
-        equipment_actual = 0.0
+        # Equipment actual: equipment-type bills + deployment hourly cost + fuel cost (mirrors finance.get_project_pl).
+        equipment_actual = float(
+            db.query(func.coalesce(func.sum(models.Bill.total_payable), 0))
+            .filter(models.Bill.project_id == p.id, models.Bill.invoice_type == "equipment")
+            .scalar()
+            or 0
+        )
         deployments = db.query(models.EquipmentDeployment).filter(models.EquipmentDeployment.project_id == p.id).all()
         for dep in deployments:
             eq = db.query(models.Equipment).filter(models.Equipment.id == dep.equipment_id).first()
