@@ -63,7 +63,6 @@ export default function MoMPage() {
     status: "Open" as typeof MOM_STATUSES[number],
     attendees: "",
     notes: "",
-    created_by: "",
   });
 
   const loadProjects = async () => {
@@ -121,7 +120,6 @@ export default function MoMPage() {
       status: "Open",
       attendees: "",
       notes: "",
-      created_by: "",
     });
   };
 
@@ -139,7 +137,6 @@ export default function MoMPage() {
       status: m.status,
       attendees: (m.attendees || []).join(", "),
       notes: m.notes || "",
-      created_by: m.created_by || "",
     });
     setShowForm(true);
   };
@@ -155,7 +152,6 @@ export default function MoMPage() {
       status: form.status,
       attendees: attendeesList,
       notes: form.notes || null,
-      created_by: form.created_by || null,
     };
     try {
       const url = selectedMom
@@ -337,12 +333,6 @@ export default function MoMPage() {
                     ))}
                   </select>
                 </div>
-              </div>
-              <div>
-                <label className="text-[10px] uppercase font-bold text-muted block mb-1">Created By</label>
-                <input type="text" placeholder="Recorder name"
-                  value={form.created_by} onChange={(e) => setForm(prev => ({ ...prev, created_by: e.target.value }))}
-                  className={inputCls} />
               </div>
               <div>
                 <label className="text-[10px] uppercase font-bold text-muted block mb-1">Notes</label>

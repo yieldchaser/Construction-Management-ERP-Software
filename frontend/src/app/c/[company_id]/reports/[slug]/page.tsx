@@ -629,10 +629,19 @@ export default function DynamicReportViewPage() {
   const handleExportSelect = (format: string) => {
     setShowExportDropdown(false);
     
-    const headers = ["#", ...meta.columns];
+    const exportColumns = meta.columns.filter(col => processedData.length === 0 || processedData.some(row => (row[col] ?? "") !== ""));
+    const formatExportCell = (value: unknown) => {
+      if (value === null || value === undefined) return "";
+      if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(value)) {
+        const d = new Date(value);
+        if (!isNaN(d.getTime())) return d.toLocaleString("en-IN");
+      }
+      return value;
+    };
+    const headers = ["#", ...exportColumns];
     const dataRows = processedData.map((row, i) => [
       String(i + 1),
-      ...meta.columns.map(col => row[col] || "")
+      ...exportColumns.map(col => formatExportCell(row[col]))
     ]);
 
     if (format === "html") {
