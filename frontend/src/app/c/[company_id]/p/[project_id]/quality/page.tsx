@@ -418,7 +418,7 @@ isCode: cl.is_code_reference || "—",
   const openNCRs = ncrs.filter(n => n.status === "open");
   const reviewNCRs = ncrs.filter(n => n.status === "under_review");
   const closedNCRs = ncrs.filter(n => n.status === "closed");
-  const inspectionInspectorOptions = Array.from(new Set(inspections.map((inspection) => inspection.inspector))).sort((a, b) => a.localeCompare(b));
+  const inspectionInspectorOptions = Array.from(new Set(inspections.map((inspection) => inspection.inspector).filter((name) => name && name !== "—"))).sort((a, b) => a.localeCompare(b));
   const inspectionStatusOptions = ["pending", "pass", "partial", "fail"];
   const inspectionSearchValue = inspectionSearch.trim().toLowerCase();
   const filteredInspections = inspections.filter((insp) => {
