@@ -298,19 +298,20 @@ export default function ProcurementPage() {
   const handleApproveIndent = async (id: string) => {
     try {
       const apiHost = getApiHost();
-      await fetch(`${apiHost}/apis/v3/procurement/indents/${id}/approve`, {
+      const res = await fetch(`${apiHost}/apis/v3/procurement/indents/${id}/approve`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) }
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
       });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        alert(`Approval failed: ${typeof err.detail === "string" ? err.detail : `HTTP ${res.status}`}`);
+        return;
+      }
+      fetchProcurementData();
     } catch (err) {
       console.error("Indent approve error:", err);
+      alert("Approval failed. Check your connection.");
     }
-    setIndents(prev => prev.map(ind => {
-      if (ind.id === id) {
-        return { ...ind, status: "approved" };
-      }
-      return ind;
-    }));
   };
 
   // Add Purchase Order Submission (Multi-item support)
@@ -378,19 +379,20 @@ export default function ProcurementPage() {
   const handleApprovePO = async (id: string) => {
     try {
       const apiHost = getApiHost();
-      await fetch(`${apiHost}/apis/v3/procurement/pos/${id}/approve`, {
+      const res = await fetch(`${apiHost}/apis/v3/procurement/pos/${id}/approve`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) }
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
       });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        alert(`Approval failed: ${typeof err.detail === "string" ? err.detail : `HTTP ${res.status}`}`);
+        return;
+      }
+      fetchProcurementData();
     } catch (err) {
       console.error("PO approve error:", err);
+      alert("Approval failed. Check your connection.");
     }
-    setPos(prev => prev.map(po => {
-      if (po.id === id) {
-        return { ...po, approvalFlag: "approved", status: "sent" };
-      }
-      return po;
-    }));
   };
 
   // Initialize GRN items
