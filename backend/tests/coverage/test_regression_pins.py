@@ -217,3 +217,15 @@ def test_pin_R2_057_gantt_link_errors_use_server_detail():
 def test_pin_R2_070_no_local_only_indent_photo_input():
     src = _read_frontend("src/app/c/[company_id]/d/procurement/page.tsx")
     assert "setPreviewUrl(URL.createObjectURL(file))" not in src, "R2-070 local-only indent photo picker reintroduced"
+
+
+def test_pin_R2_120_tally_card_and_tab_name():
+    src = _read_frontend("src/app/c/[company_id]/settings/page.tsx")
+    assert "tally/connections?company_id=" in src, "R2-120 Tally status fetch regressed"
+    assert "Payroll Runs tab (HR)" in src, "R2-120 wrong tab name reintroduced"
+
+
+def test_pin_R2_085_no_internal_phase_labels():
+    import re
+    src = _read_frontend("src/app/c/[company_id]/analytics/page.tsx")
+    assert not re.search(r"PHASE 1[0-9]", src), "R2-085 internal phase label reintroduced on analytics"

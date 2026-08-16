@@ -681,6 +681,22 @@ export default function CompanySettingsPage() {
     finally { setZbBusy(false); }
   };
 
+  // ─── Integrations: Tally (accounting sync) ─────────────────────────────────
+  const [tallyConn, setTallyConn] = useState<{ connected: boolean; tally_company_name?: string } | null>(null);
+  useEffect(() => {
+    if (!company_id) return;
+    fetch(`${apiHost}/apis/v3/tally/connections?company_id=${company_id}`, { headers: authHeaders() })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data && typeof data.connected === "boolean") {
+          setTallyConn({ connected: data.connected, tally_company_name: data.tally_company_name });
+        } else {
+          setTallyConn({ connected: false });
+        }
+      })
+      .catch(() => setTallyConn({ connected: false }));
+  }, [company_id, apiHost]);
+
   // ─── Integrations: BI Data Export (API keys) ───────────────────────────────
   interface BiKey { id: string; label: string; masked_key: string; created_at: string | null; last_used_at: string | null; revoked: boolean; }
   const [biKeys, setBiKeys] = useState<BiKey[]>([]);
@@ -2228,7 +2244,7 @@ export default function CompanySettingsPage() {
                   ) : (
                     <div className="flex items-center gap-2 text-xs text-muted">
                       <span className="h-2 w-2 rounded-full bg-zinc-500" />
-                      <span>Not connected. Connect from the Payroll tab (HR) to authorize a Google account.</span>
+                      <span>Not connected. Connect from the Payroll Runs tab (HR) to authorize a Google account.</span>
                     </div>
                   )}
                 </div>
@@ -2240,7 +2256,7 @@ export default function CompanySettingsPage() {
                 </div>
 
                 <div className="p-4 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs rounded-lg">
-                  Live export is wired for payroll runs (HR -&gt; Payroll -&gt; Export to Google Sheets). The enable flag and authorized-phone whitelist below gate who may connect a Google account. Other report types are not exported yet.
+                  Live export is wired for payroll runs (HR -&gt; Payroll Runs -&gt; Export to Google Sheets). The enable flag and authorized-phone whitelist below gate who may connect a Google account. Other report types are not exported yet.
                 </div>
 
                 {gsStatus === "saved" && (<div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-lg">Integration settings saved</div>)}
@@ -2346,6 +2362,27 @@ export default function CompanySettingsPage() {
                 {biMsg && (
                   <div className={`p-4 text-xs rounded-lg ${biMsg.type === "ok" ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400" : "bg-rose-500/10 border border-rose-500/20 text-rose-400"}`}>{biMsg.text}</div>
                 )}
+              </div>
+
+              {/* Tally */}
+              <div className="bg-card border border-border-custom rounded-lg bg-background p-6 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-sm font-bold text-foreground">Tally</div>
+                    <div className="text-[10px] text-muted">Sync ledgers and vouchers to your Tally accounting software.</div>
+                  </div>
+                  <a href={`/c/${company_id}/d/finance?tab=tally`} className="text-primary text-xs font-bold hover:underline">
+                    Manage in Finance &rarr; Tally Sync
+                  </a>
+                </div>
+                <div className="rounded-lg border border-border-custom p-4 space-y-2">
+                  <div className="text-[10px] uppercase tracking-wider text-muted font-bold">Connection Status</div>
+                  {tallyConn?.connected ? (
+                    <div className="flex items-center gap-2 text-xs text-emerald-400"><span className="h-2 w-2 rounded-full bg-emerald-400" /><span>Connected{tallyConn.tally_company_name ? ` (${tallyConn.tally_company_name})` : ""}</span></div>
+                  ) : (
+                    <div className="flex items-center gap-2 text-xs text-muted"><span className="h-2 w-2 rounded-full bg-zinc-500" /><span>Not connected.</span></div>
+                  )}
+                </div>
               </div>
 
             </div>
