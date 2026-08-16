@@ -624,3 +624,27 @@ def test_party_balance_nets_receivables_and_payables(client, db, make_tenant, au
     assert party["balance"] == 54400.0
     assert party["status"] == "To Receive"
     assert party["balance"] != -101600.0
+
+
+def test_party_pid_generator_bumps_past_used_ids(client, db, make_tenant, auth_headers):
+    comp, user, _ = make_tenant(company_name="E15", user_name="UE15", mobile=_mob(36), email=_mail(36))
+    hdr = auth_headers(user, comp)
+
+    for pid in ("PID-1", "PID-2"):
+        db.add(models.LibraryParty(id=uuid.uuid4(), company_id=comp.id, name=f"Party {pid}",
+                                   party_id_custom=pid))
+    db.add(models.LibraryParty(id=uuid.uuid4(), company_id=comp.id, name="Party Gap",
+                               party_id_custom="PID-4"))
+    db.commit()
+
+    r = client.post(
+        "/apis/v3/library/parties",
+        json={"company_id": str(comp.id), "name": "Party New"},
+        headers=hdr,
+    )
+    assert r.status_code == 200, r.text
+    assert r.json()["party_id_custom"] == "PID-5"
+
+    all_pids = [p.party_id_custom for p in db.query(models.LibraryParty)
+                .filter(models.LibraryParty.company_id == comp.id).all()]
+    assert all_pids.count("PID-5") == 1

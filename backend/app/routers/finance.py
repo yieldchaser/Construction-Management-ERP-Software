@@ -1105,7 +1105,13 @@ def create_payment_request(company_id: uuid.UUID, data: PaymentRequestCreate, db
     # Auto-generate sequential request no (PR-1, PR-2, ...) per company
     if not data.request_no:
         count = db.query(PaymentRequest).filter(PaymentRequest.company_id == company_id).count()
-        request_no = f"PR-{count + 1}"
+        candidate = f"PR-{count + 1}"
+        while db.query(PaymentRequest).filter(
+                PaymentRequest.company_id == company_id,
+                PaymentRequest.request_no == candidate).first():
+            count += 1
+            candidate = f"PR-{count + 1}"
+        request_no = candidate
     else:
         request_no = data.request_no
 

@@ -139,7 +139,13 @@ def create_library_party(payload: PartyCreate, db: Session = Depends(get_db), cu
     # Automatically generate custom PID if not supplied
     if not payload.party_id_custom:
         count = db.query(models.LibraryParty).filter(models.LibraryParty.company_id == payload.company_id).count()
-        payload.party_id_custom = f"PID-{count + 1}"
+        candidate = f"PID-{count + 1}"
+        while db.query(models.LibraryParty).filter(
+                models.LibraryParty.company_id == payload.company_id,
+                models.LibraryParty.party_id_custom == candidate).first():
+            count += 1
+            candidate = f"PID-{count + 1}"
+        payload.party_id_custom = candidate
     
     party = models.LibraryParty(
         company_id=payload.company_id,
