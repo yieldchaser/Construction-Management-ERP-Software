@@ -2,6 +2,38 @@
 
 Generated from `AUDIT_FIX_REGISTER.md` (the authoritative source). **Regenerate/re-verify from the register whenever counts matter — never hand-total.**
 
+## PHASES — the execution strategy (decided Session 25, founder-approved)
+
+Ordering is **severity-ascending**, with founder-gates and live-only work last. One wave = one primary file; findings sharing a file are fixed together (severity-ascending within the file) so one commit's context covers its siblings; class sweeps get dedicated passes (one commit per touched file).
+
+| Phase | Scope | Entry condition | Exit condition |
+|---|---|---|---|
+| **L** | 8 LOWs (R2-001, 002, 057, 070, 079, 085, 104, 120) | none | all closed, pins added |
+| **M** | 123 MEDIUMs (minus gated), wave order W02→… | Phase L green | all closed, pins added |
+| **H** | 184 HIGHs (minus gated), wave order | Phase M green | all closed, pins added |
+| **C** | 98 CRITICALs (minus gated), wave order | Phase H green | all closed, pins added |
+| **G** | 14 founder-gated (D1–D7, CD-1…CD-6, D-008/010/011/012/013) + schema/high-risk | founder answers in DECISIONS.md | decided + closed |
+| **V** | live-only items (Render/Vercel/Supabase/browser/Sentry) | anything unreachable | founder agent verifies → FIX_VERIFIED |
+
+**Interconnection rules:**
+- Fix-before orderings (dependency map): R2-042 before the D1-(a) option; R2-114 before D4; additive migrations before any dependent read; a LOW in a file with later CRITICALs is fixed now, pinned, and the file is re-read fresh in its CRITICAL wave.
+- No drive-by fixes: siblings go in the Notes column, not the diff.
+
+**Non-regression guarantees (per wave):**
+- Every fix adds a tripwire pin to `test_regression_pins.py` BEFORE the wave closes; a red pin = reopened finding (never weaken).
+- Verifier subagent reviews every commit; blast-radius template pre/post; `git fetch` + re-read the current code before each wave (register trust is never blind — R2-096/R2-054 lesson).
+- Phase exit: `pytest tests/coverage/` (pins included) + `npm run build` green, counts recomputed from the register, push to main.
+
+**Logging policy:** every session → SESSION_LOG; every status change → register; every new gate → DECISIONS.md; every surprise → LEARNINGS.md; anything impossible from our side → `DEFERRED-LIVE:<reason>` in the Notes + session entry (the founder's other agent promotes it after live verification).
+
+**Phase L waves (first concrete queue):**
+- L1: R2-002 (Sidebar) + R2-079 (PageHeader)
+- L2: R2-001 (payment-approval) + R2-104 (finance page)
+- L3: R2-057 (gantt) + R2-070 (procurement photo preview)
+- L4: R2-085 (analytics.py labels) + R2-120 (google_drive.py)
+
+---
+
 ## Status summary (as of Session 24)
 
 | Bucket | Count |
