@@ -532,7 +532,7 @@ export default function FinancePage() {
           payment_type: paymentType,
           amount: amtVal,
           payment_method: paymentMethod,
-          reference_number: refNum || `ONS-V-${Date.now().toString().slice(-4)}`,
+          reference_number: refNum || `SF-V-${crypto.randomUUID().replace(/-/g, "").slice(0, 6).toUpperCase()}`,
           description: desc || `Recorded ${selectedTxnType} voucher`,
           payment_date: new Date(txnDate + "T00:00:00").toISOString()
         }),
@@ -546,7 +546,7 @@ export default function FinancePage() {
         description: desc || `Recorded ${selectedTxnType} voucher`,
         amount: amtVal,
         party: partyName,
-        ref: refNum || `ONS-V-${Date.now().toString().slice(-4)}`,
+        ref: refNum || `SF-V-${crypto.randomUUID().replace(/-/g, "").slice(0, 6).toUpperCase()}`,
         ref_invoice: ["Debit Note", "Credit Note"].includes(selectedTxnType) ? (taggedSalesInvoice || refInvoice) : undefined,
         ledger: selectedTxnType,
         status: "Pending",
