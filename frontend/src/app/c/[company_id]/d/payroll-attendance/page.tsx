@@ -958,24 +958,36 @@ function PeopleTab({
   };
 
   const createDesignation = async (name: string) => {
-    await jpost(`/hr/designations/${companyId}`, { name });
-    reload();
-    toast("Designation added");
+    try {
+      await jpost(`/hr/designations/${companyId}`, { name });
+      reload();
+      toast("Designation added");
+    } catch (e: any) {
+      toast(`Could not add designation: ${e?.message ?? "unknown error"}`);
+    }
   };
   const createLeaveTemplate = async (name: string) => {
-    await jpost(`/hr/leave-templates/${companyId}`, { name });
-    reload();
-    toast("Leave template added");
+    try {
+      await jpost(`/hr/leave-templates/${companyId}`, { name });
+      reload();
+      toast("Leave template added");
+    } catch (e: any) {
+      toast(`Could not add leave template: ${e?.message ?? "unknown error"}`);
+    }
   };
   const saveBreakup = (b: Breakup) => {
     if (!drawerEmp) return;
     (async () => {
-      await jput(`/hr/payroll-profiles/${drawerEmp.id}`, {
-        salary_amount: b.net,
-        salary_breakup: JSON.stringify(b),
-      });
-      toast("Salary breakup saved");
-      reload();
+      try {
+        await jput(`/hr/payroll-profiles/${drawerEmp.id}`, {
+          salary_amount: b.net,
+          salary_breakup: JSON.stringify(b),
+        });
+        toast("Salary breakup saved");
+        reload();
+      } catch (e: any) {
+        toast(`Could not save salary breakup: ${e?.message ?? "unknown error"}`);
+      }
     })();
   };
 
