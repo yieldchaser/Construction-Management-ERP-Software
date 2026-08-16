@@ -63,6 +63,14 @@ interface CommentItem {
   created_at: string;
 }
 
+const fmtDate = (iso?: string): string => {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return iso;
+  const m = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  return `${String(d.getDate()).padStart(2, "0")} ${m[d.getMonth()]} ${d.getFullYear()}`;
+};
+
 // Safe evaluation of mathematical formulas typed by field workers (e.g. 2+3+6)
 const evaluateFormula = (str: string): number => {
   try {
@@ -522,7 +530,7 @@ export default function GanttSchedulerPage() {
                   <div key={m.id} className={`flex items-start gap-4 p-4 rounded-md border ${colors[m.type]}`}>
                     <div className="flex flex-col items-center gap-1 shrink-0">
                       <div className="w-8 h-8 rounded-lg bg-elevated border border-border-custom flex items-center justify-center"><Icon name={icon[m.type]} className="w-4 h-4" /></div>
-                      <div className="text-[9px] font-sans text-muted">{new Date(m.milestone_date).toLocaleDateString()}</div>
+                      <div className="text-[9px] font-sans text-muted">{fmtDate(m.milestone_date)}</div>
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
@@ -638,13 +646,13 @@ export default function GanttSchedulerPage() {
                     </div>
                     {/* Baseline bar */}
                     <div className="text-[9px] text-muted">
-                      Baseline: {hasBaseline ? `${new Date(t.baseline_start!).toLocaleDateString()} → ${new Date(t.baseline_end!).toLocaleDateString()}` : "not captured"}
+                      Baseline: {hasBaseline ? `${fmtDate(t.baseline_start)} → ${fmtDate(t.baseline_end)}` : "not captured"}
                     </div>
                     <div className="h-2 bg-blue-400/20 rounded-full relative overflow-hidden">
                       <div className={`h-full rounded-full ${t.is_critical ? "bg-red-400/50" : "bg-blue-400/50"}`} style={{ width: hasBaseline ? "100%" : "0%" }} />
                     </div>
                     {/* Actual bar */}
-                    <div className="text-[9px] text-muted">Actual: {new Date(t.start_date).toLocaleDateString()} → {t.end_date ? new Date(t.end_date).toLocaleDateString() : "Ongoing"}</div>
+                    <div className="text-[9px] text-muted">Actual: {fmtDate(t.start_date)} → {t.end_date ? fmtDate(t.end_date) : "Ongoing"}</div>
                     <div className="h-2 bg-elevated rounded-full overflow-hidden">
                       <div className="h-full rounded-full bg-emerald-400" style={{ width: `${pct}%` }} />
                     </div>
@@ -672,7 +680,7 @@ export default function GanttSchedulerPage() {
                 const statusCls = t.status === "in_progress" ? "bg-blue-500/10 border-blue-500/20 text-blue-400" : t.status === "completed" ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" : "bg-zinc-700/20 border-zinc-600/20 text-muted";
                 return (
                   <div key={t.id} className="bg-input border border-border-custom rounded-md p-4 flex items-start gap-4">
-                    <div className="shrink-0 text-[9px] font-sans text-muted w-20">{new Date(t.start_date).toLocaleDateString()}<br/>→ {new Date(t.end_date).toLocaleDateString()}</div>
+                    <div className="shrink-0 text-[9px] font-sans text-muted w-20">{fmtDate(t.start_date)}<br/>→ {fmtDate(t.end_date)}</div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-xs font-semibold text-foreground">{t.name}</span>
@@ -822,7 +830,7 @@ export default function GanttSchedulerPage() {
                         }`}>{task.priority}</span>
                       </div>
                       <div className="text-[10px] text-muted">
-                        Start: {new Date(task.start_date).toLocaleDateString()} · Duration: {task.duration_days} Days
+                        Start: {fmtDate(task.start_date)} · Duration: {task.duration_days} Days
                       </div>
                     </div>
 
