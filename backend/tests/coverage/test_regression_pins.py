@@ -626,3 +626,256 @@ def test_pin_R2_218_billing_refetch_after_subcon_import():
 def test_pin_R2_501_analytics_inr_formatting():
     src = _read_frontend("src/app/c/[company_id]/analytics/page.tsx")
     assert "fmtINR(" in src, "R2-501 analytics INR formatting regressed"
+
+
+def test_pin_R2_004_calculators_wastage_allowance_labels():
+    src = _read_frontend("src/app/c/[company_id]/d/reports/calculators/page.tsx")
+    assert "Includes {concreteWastage}% wastage allowance" in src, "R2-004 concrete wastage allowance label regressed"
+    assert "Includes {plasterWastage}% wastage allowance" in src, "R2-004 plaster wastage allowance label regressed"
+
+
+def test_pin_R2_521_steel_unit_weight_162_formula():
+    src = _read("app/routers/calculators.py")
+    assert "unit_weight = (req.diameter ** 2) / 162.0" in src, "R2-521 steel unit-weight formula regressed"
+
+
+def test_pin_R2_134_three_way_match_tolerance():
+    src = _read("app/routers/three_way.py")
+    assert "MATCH_TOLERANCE_PCT = 0.01" in src, "R2-134 match tolerance pct regressed"
+    assert "abs(variance) <= max(MATCH_TOLERANCE_MIN, abs(po_amount) * MATCH_TOLERANCE_PCT)" in src, "R2-134 three-way match gate regressed"
+
+
+def test_pin_R2_154_budget_po_wo_status_filters():
+    src = _read("app/routers/budget.py")
+    assert 'PurchaseOrder.status.in_(("sent", "partial", "received"))' in src, "R2-154 PO status filter regressed"
+    assert 'WorkOrder.status != "cancelled"' in src, "R2-154 WO cancelled exclusion regressed"
+
+
+def test_pin_R2_159_custom_field_patterns():
+    src = _read("app/routers/custom_fields.py")
+    assert "pattern=CUSTOM_FIELD_ENTITY_TYPE_PATTERN" in src, "R2-159 entity type pattern regressed"
+    assert "pattern=CUSTOM_FIELD_TYPE_PATTERN" in src, "R2-159 field type pattern regressed"
+
+
+def test_pin_R2_269_hr_employee_code_label():
+    src = _read("app/routers/hr.py")
+    assert '"Employee Code"' in src, "R2-269 Employee Code header regressed"
+
+
+def test_pin_R2_273_crm_lead_email_and_closure_validator():
+    src = _read("app/routers/crm.py")
+    assert "email: Optional[EmailStr] = None" in src, "R2-273 lead email typing regressed"
+    assert "expected_closure must not be in the past" in src, "R2-273 expected_closure past-date validator regressed"
+
+
+def test_pin_R2_293_tally_onsite_transaction_literal():
+    src = _read("app/routers/tally.py")
+    assert 'Literal["Material Purchase", "Subcon Expense", "Sales Invoice"]' in src, "R2-293 onsite transaction type literal regressed"
+
+
+def test_pin_R2_295_rate_limit_storage_uri():
+    src = _read("app/rate_limit.py")
+    assert "RATE_LIMIT_STORAGE_URI" in src, "R2-295 rate-limit storage URI wiring regressed"
+
+
+def test_pin_R2_331_wastage_status_pattern():
+    src = _read("app/routers/wastage.py")
+    assert "pattern=WASTAGE_STATUS_PATTERN" in src, "R2-331 wastage status pattern regressed"
+
+
+def test_pin_R2_367_drawing_revision_approval_status_audit():
+    src = _read("app/routers/drawings.py")
+    assert 'pattern="^(approved|rejected|pending)$"' in src, "R2-367 revision approval pattern regressed"
+    assert 'revision.approved_by = None if req.approval_status == "pending" else membership.id' in src, "R2-367 revision approval auditor regressed"
+
+
+def test_pin_R2_376_tower_rollup_untagged_variance():
+    src = _read("app/routers/towers.py")
+    assert "tower_id=None" in src, "R2-376 untagged tower rollup regressed"
+    assert "variance=total_budget - total_billed" in src, "R2-376 tower variance derivation regressed"
+
+
+def test_pin_R2_379_advance_recovery_guard():
+    src = _read("app/routers/billing.py")
+    assert "advance_recovery_total" in src, "R2-379 advance recovery total regressed"
+    assert "exceeds the party's remaining project advance" in src, "R2-379 advance recovery overshoot rejection regressed"
+
+
+def test_pin_R2_398_report_export_columns_and_formatter():
+    src = _read_frontend("src/app/c/[company_id]/reports/[slug]/page.tsx")
+    assert "exportColumns" in src, "R2-398 report export column filter regressed"
+    assert "formatExportCell" in src, "R2-398 report export cell formatter regressed"
+
+
+def test_pin_R2_504_asset_depreciation_pct_round_guard():
+    src = _read("app/routers/assets.py")
+    assert "round(payload.depreciation_pct, 2) != round(max_pct, 2)" in src, "R2-504 depreciation pct rounding guard regressed"
+
+
+def test_pin_R2_512_backfill_rbac_endpoint_singleton():
+    src = _read("app/routers/admin_migrations.py")
+    assert src.count('@router.post("/backfill-rbac")') == 1, "R2-512 backfill-rbac endpoint count regressed"
+
+
+def test_pin_R2_535_vendor_performance_po_normalization():
+    src = _read("app/routers/vendor_performance.py")
+    assert "func.lower(func.trim(PurchaseOrder.po_number))" in src, "R2-535 vendor PO number normalization regressed"
+
+
+def test_pin_R2_553_face_confidence_score_bounds():
+    src = _read("app/routers/face_recognition.py")
+    assert "Field(None, ge=0, le=1)" in src, "R2-553 face confidence score bounds regressed"
+
+
+def test_pin_R2_555_library_schema_name_max_length():
+    src = _read("app/routers/library.py")
+    assert "name: str = Field(..., max_length=255)" in src, "R2-555 library schema name max_length regressed"
+
+
+def test_pin_R2_558_main_integrity_error_handler():
+    src = _read("app/main.py")
+    assert "@app.exception_handler(IntegrityError)" in src, "R2-558 global IntegrityError handler regressed"
+    assert "Record is still referenced by another row" in src, "R2-558 IntegrityError 409 detail regressed"
+
+
+def test_pin_R2_088_anchored_static_mount():
+    src = _read("app/main.py")
+    assert "backend/static" in src, "R2-088 anchored static mount regressed"
+
+
+def test_pin_R2_217_drawing_pin_patch_route():
+    src = _read("app/routers/drawings.py")
+    assert '@router.patch("/pins/{pin_id}")' in src, "R2-217 drawing pin patch route regressed"
+
+
+def test_pin_R2_278_todo_url_allowlist():
+    src = _read("app/routers/todos.py")
+    assert 'v.startswith("http://") or v.startswith("https://")' in src, "R2-278 todo url scheme allowlist regressed"
+
+
+def test_pin_R2_077_report_export_schemas_removed():
+    src = _read_frontend("src/app/c/[company_id]/reports/[slug]/page.tsx")
+    assert "exportSchemas" not in src, "R2-077 dead exportSchemas reintroduced"
+
+
+def test_pin_R2_056_payroll_attendance_error_toast():
+    src = _read_frontend("src/app/c/[company_id]/d/payroll-attendance/page.tsx")
+    assert 'Could not add designation: ${e?.message ?? "unknown error"}' in src, "R2-056 payroll-attendance error toast regressed"
+
+
+def test_pin_R2_082_analytics_subcon_name_resolution():
+    src = _read("app/routers/analytics.py")
+    assert "library_party_id" in src, "R2-082 scorecard library_party_id resolution regressed"
+
+
+def test_pin_R2_078_no_notification_fabrication_in_header():
+    src = _read_frontend("src/components/PageHeader.tsx")
+    assert "siteflow_notifications" not in src, "R2-078 fabricated notification table reintroduced"
+    assert "seedNotifications" not in src, "R2-078 seeded notifications reintroduced"
+
+
+def test_pin_R2_103_finance_sf_prefix_only():
+    src = _read_frontend("src/app/c/[company_id]/d/finance/page.tsx")
+    assert "ONS-V-" not in src, "R2-103 ONS- voucher prefix reintroduced"
+    assert "SF-V-" in src, "R2-103 SF- voucher prefix regressed"
+
+
+def test_pin_R2_124_equipment_empty_states():
+    d = _read_frontend("src/app/c/[company_id]/d/equipment/page.tsx")
+    p = _read_frontend("src/app/c/[company_id]/p/[project_id]/equipment/page.tsx")
+    for src in (d, p):
+        assert "No equipment yet" in src, "R2-124 equipment empty state regressed"
+
+
+def test_pin_R2_208_safety_attendee_count_guard():
+    src = _read("app/routers/safety.py")
+    assert "attendee_count: int = Field(0, ge=0)" in src, "R2-208 toolbox attendee count guard regressed"
+
+
+def test_pin_R2_402_po_pdf_received_header():
+    src = _read("app/routers/procurement.py")
+    assert 'table_headers = ["Material", "Qty", "Unit", "Rate", "Tax%", "Amount", "Received"]' in src, "R2-402 PO-PDF Received header regressed"
+
+
+def test_pin_R2_420_finance_abs_balance_and_project_name():
+    page = _read_frontend("src/app/c/[company_id]/d/finance/page.tsx")
+    assert "Math.abs(p.balance" in page, "R2-420 finance abs balance render regressed"
+    finance = _read("app/routers/finance.py")
+    assert "project_name=project_name_by_id" in finance, "R2-420 finance project name resolution regressed"
+
+
+def test_pin_R2_436_mom_creator_not_in_form():
+    d = _read_frontend("src/app/c/[company_id]/d/mom/page.tsx")
+    p = _read_frontend("src/app/c/[company_id]/p/[project_id]/mom/page.tsx")
+    for src in (d, p):
+        assert "form.created_by" not in src, "R2-436 client-stamped MOM creator reintroduced"
+    src = _read("app/routers/mom.py")
+    assert "created_by=current_user.name," in src, "R2-436 MOM creator session derivation regressed"
+
+
+def test_pin_R2_446_mom_statuses_include_draft():
+    d = _read_frontend("src/app/c/[company_id]/d/mom/page.tsx")
+    p = _read_frontend("src/app/c/[company_id]/p/[project_id]/mom/page.tsx")
+    for src in (d, p):
+        assert '"Action Pending", "Draft"' in src, "R2-446 MOM Draft status regressed"
+
+
+def test_pin_R2_460_gantt_fmt_date_helper():
+    src = _read_frontend("src/app/c/[company_id]/d/planning/gantt/page.tsx")
+    assert "fmtDate(" in src, "R2-460 gantt fmtDate helper regressed"
+    assert "toLocaleDateString" not in src, "R2-460 gantt locale date render reintroduced"
+
+
+def test_pin_R2_144_chat_no_media_fields():
+    src = _read("app/routers/chat.py")
+    assert "media_url" not in src, "R2-144 chat media_url reintroduced"
+    assert "voice_note_url" not in src, "R2-144 chat voice_note_url reintroduced"
+
+
+def test_pin_R2_162_calculators_sar_currency():
+    src = _read_frontend("src/app/c/[company_id]/d/reports/calculators/page.tsx")
+    assert 'cur: "SAR"' in src, "R2-162 calculators SAR currency regressed"
+    assert "houseCurrency" not in src, "R2-162 houseCurrency fallback reintroduced"
+
+
+def test_pin_R2_164_calculators_application_allowance():
+    src = _read_frontend("src/app/c/[company_id]/d/reports/calculators/page.tsx")
+    assert "10% application allowance" in src, "R2-164 paint application allowance regressed"
+
+
+def test_pin_R2_467_drawings_active_revision_and_status():
+    src = _read_frontend("src/app/c/[company_id]/d/drawings/page.tsx")
+    assert "registerActiveRev" in src, "R2-467 drawings active revision derivation regressed"
+    assert "approvalStatus" in src, "R2-467 drawings approval status render regressed"
+
+
+def test_pin_R2_472_chat_url_allowlist():
+    src = _read_frontend("src/app/c/[company_id]/d/chat/page.tsx")
+    assert "/^https?:\\/\\//i.test" in src, "R2-472 chat url scheme allowlist regressed"
+
+
+def test_pin_R2_486_calculators_paint_coverage_no_mode():
+    src = _read_frontend("src/app/c/[company_id]/d/reports/calculators/page.tsx")
+    assert "115 sqft/L" in src, "R2-486 paint coverage label regressed"
+    assert "paintMode" not in src, "R2-486 paintMode reintroduced"
+
+
+def test_pin_R2_493_transaction_zatca_column():
+    src = _read_frontend("src/app/c/[company_id]/p/[project_id]/transaction/page.tsx")
+    assert "zatcaEnabled &&" in src, "R2-493 ZATCA column gate regressed"
+
+
+def test_pin_R2_563_timesheet_entry_week_window():
+    src = _read("app/routers/hr.py")
+    assert "week_start <= entry_date <= week_end" in src, "R2-563 timesheet week window validator regressed"
+
+
+def test_pin_R2_596_timesheet_error_surfaces():
+    import re
+    src = _read_frontend("src/app/c/[company_id]/d/hr/page.tsx")
+    assert re.search(r"catch[^{]*\{[^}]*setTimesheets", src) is None, "R2-596 setTimesheets inside a catch reintroduced"
+
+
+def test_pin_R2_600_home_featured_project_filtered():
+    src = _read_frontend("src/app/c/[company_id]/d/home/page.tsx")
+    assert "filteredProjects[0]" in src, "R2-600 home featured project binding regressed"
