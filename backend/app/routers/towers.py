@@ -52,7 +52,7 @@ class TowerUpdateRequest(BaseModel):
 
 
 class ConsolidatedPNLItem(BaseModel):
-    tower_id: UUID
+    tower_id: Optional[UUID] = None
     tower_name: str
     tower_code: str
     total_po_value: float
@@ -169,7 +169,7 @@ def consolidated_pnl(project_id: UUID, tower_id: Optional[UUID] = Query(None), d
     if not towers:
         budget = db.query(ProjectBudget).filter(ProjectBudget.project_id == project_id).first()
         if budget:
-            total_pos = db.query(PurchaseOrder).filter(PurchaseOrder.project_id == project_id).count()
+            total_budget = float(budget.subcon_budget) + float(budget.material_budget) + float(budget.labour_budget) + float(budget.equipment_budget)
             pos_value = db.query(PurchaseOrder).filter(PurchaseOrder.project_id == project_id).all()
             total_po_value = sum(float(p.total_amount) for p in pos_value)
             bills = db.query(Bill).filter(Bill.project_id == project_id, Bill.invoice_type.in_(REVENUE_INVOICE_TYPES)).all()
@@ -177,27 +177,28 @@ def consolidated_pnl(project_id: UUID, tower_id: Optional[UUID] = Query(None), d
             wos = db.query(WorkOrder).filter(WorkOrder.project_id == project_id).all()
             total_wo_value = sum(float(w.estimated_work_amount) for w in wos)
             return [ConsolidatedPNLItem(
-                tower_id=UUID("00000000-0000-0000-0000-000000000000"),
+                tower_id=None,
                 tower_name="Overall Project",
                 tower_code="ALL",
                 total_po_value=total_po_value,
                 total_billed=total_billed,
                 total_wo_value=total_wo_value,
-                budget=float(budget.subcon_budget) + float(budget.material_budget) + float(budget.labour_budget) + float(budget.equipment_budget),
-                variance=0.0,
+                budget=total_budget,
+                variance=total_budget - total_billed,
             )]
         return []
+
+    pos_value = db.query(PurchaseOrder).filter(PurchaseOrder.project_id == project_id).all()
+    total_po_value = sum(float(p.total_amount) for p in pos_value)
+    bills = db.query(Bill).filter(Bill.project_id == project_id, Bill.invoice_type.in_(REVENUE_INVOICE_TYPES)).all()
+    total_billed = sum(float(b.total_payable) for b in bills)
+    wos = db.query(WorkOrder).filter(WorkOrder.project_id == project_id).all()
+    total_wo_value = sum(float(w.estimated_work_amount) for w in wos)
 
     result = []
     for t in towers:
         if tower_id and t.id != tower_id:
             continue
-        pos = db.query(PurchaseOrder).filter(PurchaseOrder.project_id == project_id).all()
-        total_po_value = sum(float(p.total_amount) for p in pos)
-        bills = db.query(Bill).filter(Bill.project_id == project_id, Bill.invoice_type.in_(REVENUE_INVOICE_TYPES)).all()
-        total_billed = sum(float(b.total_payable) for b in bills)
-        wos = db.query(WorkOrder).filter(WorkOrder.project_id == project_id).all()
-        total_wo_value = sum(float(w.estimated_work_amount) for w in wos)
 
         result.append(ConsolidatedPNLItem(
             tower_id=t.id,
