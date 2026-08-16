@@ -906,3 +906,30 @@ def test_indent_approval_guard_approver_and_rejection(client, db, make_tenant, a
     assert r.status_code == 200, r.text
     assert r.json()["status"] == "rejected"
 
+# -- W15 R2-411: tally export uses Alter ledger masters and carries reference --
+
+def test_tally_envelope_ledger_alter_and_reference():
+    from app.tally_xml import build_tally_envelope
+
+    xml = build_tally_envelope(
+        "TestCo",
+        [{
+            "vchtype": "Purchase",
+            "voucher_type_name": "Purchase",
+            "voucher_number": "ONS-2026-1",
+            "reference": "INV-42",
+            "date": "20260801",
+            "party_ledger_name": "Vendor Ledger",
+            "narration": "SiteFlow purchase invoice INV-42.",
+            "entries": [
+                {"ledger": "Purchase A/c", "amount": 100.0, "debit": True, "ledger_type": "purchase"},
+                {"ledger": "Vendor Ledger", "amount": 100.0, "debit": False, "ledger_type": "party_creditor"},
+            ],
+        }],
+        auto_create=True,
+    )
+    assert 'ACTION="Alter"' in xml
+    assert "<ALTERID>" in xml
+    assert "<REFERENCE>INV-42</REFERENCE>" in xml
+
+

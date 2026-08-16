@@ -52,8 +52,9 @@ def _ledger_parent(ledger_type: str) -> str:
 
 def _emit_ledger_master(out, name, ledger_type):
     out.append('        <TALLYMESSAGE xmlns:UDF="TallyUDF">')
-    out.append(f'          <LEDGER NAME="{_esc(name)}" ACTION="Create">')
+    out.append(f'          <LEDGER NAME="{_esc(name)}" ACTION="Alter">')
     out.append(f"            <NAME>{_esc(name)}</NAME>")
+    out.append(f"            <ALTERID>{_esc(name)}</ALTERID>")
     out.append(f"            <PARENT>{_esc(_ledger_parent(ledger_type))}</PARENT>")
     out.append("            <OPENINGBALANCE>0</OPENINGBALANCE>")
     out.append("          </LEDGER>")
@@ -122,6 +123,7 @@ def build_tally_envelope(company_name: str, vouchers: list, auto_create: bool = 
         out.append(f"            <DATE>{_esc(v.get('date'))}</DATE>")
         out.append(f"            <VOUCHERTYPENAME>{vtypename}</VOUCHERTYPENAME>")
         out.append(f"            <VOUCHERNUMBER>{_esc(v.get('voucher_number'))}</VOUCHERNUMBER>")
+        out.append(f"            <REFERENCE>{_esc(v.get('reference'))}</REFERENCE>")
         out.append(f"            <PARTYLEDGERNAME>{_esc(v.get('party_ledger_name'))}</PARTYLEDGERNAME>")
         out.append(f"            <NARRATION>{_esc(v.get('narration'))}</NARRATION>")
         for e in v.get("entries", []):
