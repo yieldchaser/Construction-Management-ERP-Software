@@ -2,6 +2,18 @@
 
 Append-only. Every working block ends with a 5-line entry. Never edit an existing entry; if a commit was reverted, add a new entry.
 
+## Session 29 — Phase L wave L4 — PHASE L COMPLETE (2026-08-16)
+
+- Action 1 (Phase L, wave L4): R2-085 closed by evidence — the "PHASE 14" analytics eyebrow was already removed by R2-023 (`6ef2cc8`); verified zero `PHASE 1[0-9]`/`Phase 1[0-9]` across frontend/src (ZATCA "Phase 1" untouched, legitimate). Pinned.
+- Action 2 (Phase L, wave L4): R2-120 — the Integrations page's wrong "Payroll tab (HR)" instruction now says "Payroll Runs tab (HR)" (same in the export-flow copy), and the missing fifth integration — Tally — gained a card with a real status fetch (strict boolean `connected` gate, no fabrication) and a verified deep link to Finance → Tally Sync.
+- **PHASE L COMPLETE: 8/8 LOWs closed.** Phase exit condition met: pytest 254/254 rc=0 (247 behavior + 37 pins), npm build green, counts recomputed from the register, pushed to main.
+- Verified: verifier APPROVE (Tally card structure mirrors siblings, effect deps clean, deep-link tab verified in the finance allowlist, pins byte-exact, tree clean).
+- Commits: `06cde63` (R2-120 + 2 pins). R2-085 closed via evidence (`6ef2cc8`).
+- Register: R2-085, R2-120 STATUS TODO → FIXED. LOW bucket: 0 remaining.
+- Next session: **Phase M begins** — MEDIUM (126, minus gated), wave order per WORKLIST: start with the largest clusters (W02: 13, W09: 6, W05: 6, W15: 5).
+
+---
+
 ## Session 28 — Phase L wave L3 (2026-08-16)
 
 - Action 1 (Phase L, wave L3): R2-057 — the Gantt predecessor-link handler reported every non-2xx as "Link loop detected"; it now reads the server detail and reserves the loop message for the backend's cycle 400 (detail contains "circular"), surfacing the real error otherwise (401/403/404/500 included).
