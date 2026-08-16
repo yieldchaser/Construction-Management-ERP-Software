@@ -2,6 +2,19 @@
 
 Append-only. Every working block ends with a 5-line entry. Never edit an existing entry; if a commit was reverted, add a new entry.
 
+## Session 32 — Phase M COMPLETE (rounds 5-6, worktree mode, 64 findings) (2026-08-16)
+
+- Round 5 (5 parallel waves, 15 closes + 1 needs-decision): W14 auth (R2-183 GSTIN checksum on onboarding; R2-191 evidence — CompanyTeam unique constraint, bundled in b4c0a37), W83 production (R2-206 wastage_type enum + reported_by server-derived + estimated_value from PO rate + migration; R2-207 recipe allowance applied), W41 team_schedule (R2-225 timesheet save surfaces errors; R2-261 duplicate-DPR 409), W18 quality (R2-247 caller-derived identities; R2-361 dead Quotation model removed), W02 remainder (R2-282 steel dual-set 422; R2-508 LTIF basis param; R2-537 log_deletion no-commit at 30 call sites; evidence: R2-118/218/500/501; R2-125 -> D4).
+- Round 6 (5 parallel waves, 49 closes): M-A (R2-004/521/134/154/159/269/273/293/295/331), M-B (R2-358 evidence + R2-367/376/379/398/495 evidence/504/512/535/553), M-C (R2-555/558/088/217/278/077/056/082), M-D (R2-078/103/124/208/402/406 evidence/420/436/446/460), M-E (R2-144/162/164/467/472/486/493/518 evidence/563/596/600).
+- **PHASE M COMPLETE: all 121 non-gated MEDIUMs closed.** Remaining MEDIUMs (5) are founder-gated: R2-010 (CD-2), R2-030 (D5), R2-125 (D4), R2-319 (D4), R2-385 (CD-9).
+- Batch verification caught 5 issues, all fixed in follow-ups: R2-461's CPM `datetime - float` TypeError; R2-573's naive-local-as-UTC validator; R2-124's dangling JSX closers (build breaker); R2-467's missing approvalStatus on the local revision object; R2-078's stale setNotifOpen; R2-398's CSV cell `.replace` on `{}`. Plus one stale test updated (R2-367's approval_status pending is now valid by contract).
+- Pins: 37 -> 147 (110 added across 6 rounds). Full suite green every round; npm build green at the end.
+- Sweep-interleaving incidents logged: b2ddf1f/e59316f/8025709 swept other waves' staged files into their commits (content verified intact; no amendment to avoid rewriting concurrent history).
+- Register: 192 FIXED + 93 FIX_VERIFIED + 1 RETRACTED + 1 WONTFIX + 295 TODO (CRITICAL 102 · HIGH 188 · MEDIUM 5).
+- Next: **Phase H begins** — 188 HIGHs (minus gated), wave order per WORKLIST. Founder-gated set unchanged: D1-D7, CD-1..CD-10, D-008/010/011/012/013.
+
+---
+
 ## Session 31 — Phase M round 2: W15+W08+W06+W12+W11 (worktree mode) (2026-08-16)
 
 - CONTEXT: the main checkout had ~460 uncommitted files from the founder's other agent, so this session moved the campaign into an isolated worktree (`C:\Users\Dell\AppData\Local\Temp\opencode\siteflow-waves`, branch `campaign/waves`) and pushed results to main via `git push origin campaign/waves:main`.
