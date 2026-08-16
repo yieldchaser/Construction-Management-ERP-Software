@@ -405,3 +405,72 @@ def test_pin_R2_566_task_default_and_create_status():
     src = _read("app/routers/planning.py")
     assert 'status: str = "not_started"' in src, "R2-566 task default status regressed"
     assert "status=request.status," in src, "R2-566 task create status wiring regressed"
+
+
+def test_pin_R2_135_depreciation_method_and_book_value_guards():
+    src = _read("app/routers/assets.py")
+    assert 'pattern="^(straight_line|wdv)$"' in src, "R2-135 depreciation method pattern regressed"
+    assert "accumulated_depreciation must equal the prior accumulated total" in src, "R2-135 accumulated total guard regressed"
+    assert "book_value cannot fall below the schedule's salvage_value" in src, "R2-135 book value floor guard regressed"
+
+
+def test_pin_R2_256_incident_close_audit_and_lost_time_guard():
+    src = _read("app/routers/safety.py")
+    assert "incident.closed_by = current_user.id" in src, "R2-256 incident close auditor regressed"
+    assert "lost_time_days: int = Field(0, ge=0)" in src, "R2-256 lost time days guard regressed"
+    assert "reported_at cannot be in the future" in src, "R2-256 future reported_at rejection regressed"
+    models = _read("app/models.py")
+    assert 'closed_by = Column(UUID(as_uuid=True), ForeignKey("users.id"' in models, "R2-256 incident closed_by FK regressed"
+
+
+def test_pin_R2_532_safety_create_schemas_typed_ids():
+    src = _read("app/routers/safety.py")
+    assert src.count("project_id: uuid.UUID") >= 3, "R2-532 safety create schema project_id typing regressed"
+    assert "conducted_at: datetime" in src, "R2-532 toolbox talk conducted_at typing regressed"
+    assert "check_date: datetime" in src, "R2-532 PPE check check_date typing regressed"
+    assert "uuid.UUID(payload" not in src, "R2-532 untyped uuid.UUID(payload coercion reintroduced"
+
+
+def test_pin_R2_174_txn_party_name_resolves_library_party():
+    src = _read("app/routers/finance.py")
+    body = src.split("def _txn_party_name", 1)[1].split("def ", 1)[0]
+    assert "LibraryParty" in body, "R2-174 _txn_party_name no longer resolves through LibraryParty"
+
+
+def test_pin_R2_176_upload_content_type_sniffing():
+    src = _read("app/routers/files.py")
+    assert "ALLOWED_CONTENT_TYPES" in src, "R2-176 upload content-type allowlist regressed"
+    assert "_sniff_content_type" in src, "R2-176 upload content-type sniffing regressed"
+    assert "download=true" in src, "R2-176 signed URL download param regressed"
+
+
+def test_pin_R2_489_quality_inspector_options_no_dash_placeholder():
+    d = _read_frontend("src/app/c/[company_id]/d/quality/page.tsx")
+    p = _read_frontend("src/app/c/[company_id]/p/[project_id]/quality/page.tsx")
+    frag = 'filter((name) => name && name !== "\u2014")'
+    for src in (d, p):
+        assert frag in src, "R2-489 inspector options dash placeholder reintroduced"
+
+
+def test_pin_R2_227_planning_is_pinned_default():
+    src = _read("app/routers/planning.py")
+    assert "is_pinned: bool = False" in src, "R2-227 planning is_pinned default regressed"
+
+
+def test_pin_R2_287_project_party_opening_balance_guards():
+    src = _read("app/routers/projects.py")
+    assert 'pattern="^(will_pay|will_receive)$"' in src, "R2-287 project party direction pattern regressed"
+    assert "opening_balance_amount: Optional[float] = Field(0.0, ge=0)" in src, "R2-287 opening balance negative guard regressed"
+
+
+def test_pin_R2_492_project_member_company_team_join():
+    src = _read("app/routers/projects.py")
+    assert "models.ProjectMember.company_team_id == models.CompanyTeam.id" in src, "R2-492 project member company-team join regressed"
+
+
+def test_pin_R2_370_bill_cancel_audit():
+    src = _read("app/routers/billing.py")
+    assert '@router.post("/bills/{bill_id}/cancel"' in src, "R2-370 bill cancel endpoint regressed"
+    assert "bill.cancelled_at = datetime.now(timezone.utc)" in src, "R2-370 bill cancel audit timestamp regressed"
+    models = _read("app/models.py")
+    assert "cancelled_at = Column(DateTime(timezone=True), nullable=True)" in models, "R2-370 bill cancelled_at column regressed"
