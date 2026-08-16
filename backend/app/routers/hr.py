@@ -763,7 +763,7 @@ def export_payslips_csv(run_id: uuid.UUID, db: Session = Depends(get_db), curren
     lines = db.query(PayrollLineItem).filter(PayrollLineItem.payroll_run_id == run_id).all()
 
     columns = [
-        "Employee Name", "Designation", "Days Present", "Days In Month",
+        "Employee Code", "Employee Name", "Designation", "Days Present", "Days In Month",
         "Gross", "PF Employee", "PF Employer", "ESI Employee", "ESI Employer",
         "TDS", "Advance Recovery", "Other Deductions", "Total Deductions", "Net Pay",
     ]
@@ -774,6 +774,7 @@ def export_payslips_csv(run_id: uuid.UUID, db: Session = Depends(get_db), curren
     for line in lines:
         emp = db.query(StaffEmployee).filter(StaffEmployee.id == line.employee_id).first()
         writer.writerow([
+            (emp.employee_code if (emp and emp.employee_code) else (str(line.employee_id)[:8].upper() if emp else "Unknown")),
             emp.name if emp else "Unknown",
             emp.designation if (emp and emp.designation) else "",
             float(line.days_present),
