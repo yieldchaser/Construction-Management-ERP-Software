@@ -589,3 +589,38 @@ def test_punch_location_verified_derived_from_geofence(client, db, make_tenant, 
     )
     assert outside.status_code == 201, outside.text
     assert outside.json()["location_verified"] is False
+
+
+def test_party_balance_nets_receivables_and_payables(client, db, make_tenant, auth_headers):
+    comp, user, _ = make_tenant(company_name="E14", user_name="UE14", mobile=_mob(35), email=_mail(35))
+    hdr = auth_headers(user, comp)
+
+    lp = models.LibraryParty(id=uuid.uuid4(), company_id=comp.id, name="Party E14")
+    db.add(lp)
+    db.flush()
+    team = models.CompanyTeam(
+        id=uuid.uuid4(), company_id=comp.id, user_id=None,
+        library_party_id=lp.id, priority_type="vendor",
+    )
+    db.add(team)
+    db.flush()
+
+    base = dict(company_id=comp.id, project_id=uuid.uuid4(), party_company_user_id=team.id,
+                invoice_date=_utc(2026, 1, 1))
+    db.add_all([
+        models.Bill(id=uuid.uuid4(), invoice_number="SALE-14", invoice_type="sale",
+                    subtotal=Decimal("118000"), total_payable=Decimal("118000"),
+                    paid_amount=Decimal("40000"), **base),
+        models.Bill(id=uuid.uuid4(), invoice_number="PUR-14A", invoice_type="purchase",
+                    subtotal=Decimal("15000"), total_payable=Decimal("15000"), **base),
+        models.Bill(id=uuid.uuid4(), invoice_number="PUR-14B", invoice_type="purchase",
+                    subtotal=Decimal("8600"), total_payable=Decimal("8600"), **base),
+    ])
+    db.commit()
+
+    r = client.get(f"/apis/v3/finance/parties/{comp.id}", headers=hdr)
+    assert r.status_code == 200, r.text
+    party = next(p for p in r.json() if p["id"] == str(lp.id))
+    assert party["balance"] == 54400.0
+    assert party["status"] == "To Receive"
+    assert party["balance"] != -101600.0

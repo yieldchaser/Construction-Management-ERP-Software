@@ -721,16 +721,12 @@ def get_company_parties(company_id: uuid.UUID, db: Session = Depends(get_db), _:
         advance_received = round(max(0.0, recv_net), 2)
         to_receive = round(max(0.0, -recv_net), 2)
 
-        balance = round(advance_paid + advance_received - to_pay - to_receive, 2)
+        balance = round(advance_paid + to_receive - advance_received - to_pay, 2)
 
-        if to_pay > 0:
-            status = "To Pay"
-        elif advance_paid > 0:
-            status = "Advance Paid"
-        elif to_receive > 0:
+        if balance > 0:
             status = "To Receive"
-        elif advance_received > 0:
-            status = "Advance Received"
+        elif balance < 0:
+            status = "To Pay"
         else:
             status = "Settled"
 
