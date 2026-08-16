@@ -23,7 +23,13 @@ interface ReportCategory {
 export default function ReportsDashboard() {
   const params = useParams();
   const router = useRouter();
-  const companyId = params?.company_id as string || "e0000000-0000-0000-0000-000000000000";
+  const companyId = params?.company_id as string;
+
+  useEffect(() => {
+    if (!companyId) {
+      router.replace("/login");
+    }
+  }, [companyId, router]);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [toastMessage, setToastMessage] = useState("");

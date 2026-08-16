@@ -36,10 +36,13 @@ export default function PageHeader({ title, children }: PageHeaderProps) {
   const router = useRouter();
   const params = useParams();
   const { toggleMobile } = useSidebar();
-  const rawCompanyId = params?.company_id as string;
-  const companyId = rawCompanyId === "e0000000-0000-0000-0000-000000000000"
-    ? "demo-construction"
-    : (rawCompanyId || (typeof window !== "undefined" ? localStorage.getItem("company_id") : null) || "demo-construction");
+  const companyId = params?.company_id as string;
+
+  useEffect(() => {
+    if (!companyId) {
+      router.replace("/login");
+    }
+  }, [companyId, router]);
 
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [notifOpen, setNotifOpen] = useState(false);
