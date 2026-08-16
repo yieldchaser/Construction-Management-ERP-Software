@@ -2,6 +2,17 @@
 
 Append-only. Every working block ends with a 5-line entry. Never edit an existing entry; if a commit was reverted, add a new entry.
 
+## Session 27 — Phase L wave L2 (2026-08-15)
+
+- Action 1 (Phase L, wave L2): R2-001 closed by evidence — the "Material (Pending)" card opens a fully functional Material Requests drawer (real indents, status tabs, filters, working Approve with POST+refetch+toast); the audit's "dead card" premise predates the drawer's onClick. Verifier confirmed functionality and the single usage site. Register note records the primary-file misattribution (payment-approval vs d/home).
+- Action 2 (Phase L, wave L2): R2-104 — the Tally Sync "Last export"/"Last marked synced" summaries are now derived from the sync-log rows the same panel fetches (max exported_at / marked_synced_at, empty-guarded), fixing the live "Not yet" vs history contradiction that invited duplicate Tally exports.
+- Verified: npm build green (46s + 56s TS); pytest 250 rc=0 (247 behavior + 33 pins); verifier APPROVE (fetch restructure, untouched mark-synced POST path, pins byte-exact, R2-001 evidence verdict sound).
+- Commits: `a99e206` (R2-104 + 2 pins). R2-001 closed without code.
+- Register: R2-001, R2-104 STATUS TODO → FIXED. Phase L progress: 4 of 8 done.
+- Next session: Phase L wave L3 — R2-057 (gantt) + R2-070 (procurement photo preview).
+
+---
+
 ## Session 26 — Phase L wave L1 (2026-08-15)
 
 - Action 0: logged the phased execution strategy into WORKLIST.md (phases L/M/H/C/G/V, interconnection rules, non-regression guarantees, logging policy, concrete wave queue) per the founder's instruction to document the strategy before executing.
