@@ -199,7 +199,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-045 | MEDIUM | W36 | `bi_export.py` | `subcon_performance.py`, `budgeting.py`, `hr/page.tsx` | FIXED | FIXED b70ebac; BI budget-variance feed now counts purchase+expense bills as material and equipment bills on top of deployments+fuel (mirrors the P&L); total_actual reconciles with get_project_pl. Pins pending central collection. |
 | R2-046 | CRITICAL | W02 | `UNMAPPED` | — | TODO | | reg L2209 |
 | R2-047 | CRITICAL | W54 | `Sidebar.tsx` | `app/login/page.tsx` | TODO | | reg L2232 |
-| R2-048 | MEDIUM | W79 | `helpContent.tsx` | `p/[project_id]/layout.tsx`, `auth.py`, `projects.py` | TODO | | reg L2248 |
+| R2-048 | MEDIUM | W79 | `helpContent.tsx` | `p/[project_id]/layout.tsx`, `auth.py`, `projects.py` | FIXED | FIXED e8ad9cd; Help page now renders a first-class Modules directory (HELP_MODULE_LINKS, 14 modules, all routes verified) instead of burying the navigation in prose. Full sidebar IA remains R2-046/047 waves. |
 | R2-049 | CRITICAL | W05 | `procurement.py` | `billing.py`, `backend/app/models.py`, `equipment.py` | FIX_VERIFIED | `e9e3308` | reg L2286; procurement.py direct-fix pass; suite RC-086 |
 | R2-050 | CRITICAL | W38 | `frontend/src/app/c/[company_id]/d/procurement/page.tsx` | — | FIXED | `fe3db93` | reg L2318; `handleApproveIndent` and `handleApprovePO` no longer mark themselves approved regardless of the server — the state patch ran unconditionally after a swallowed error, so a 403/500 showed the PO as APPROVED/SENT (live-proven, R2-090) and unlocked "Record GRN". Both now check `res.ok`: non-2xx alerts the server detail and changes nothing; success refetches the list. Blast-radius 1 file, +18/-16. No test added (frontend). NOTE: `handleCreatePO` and the GRN handler still have their pre-existing fake-optimistic local patches — separate follow-up class. |
 | R2-051 | CRITICAL | W38 | `frontend/src/app/c/[company_id]/d/procurement/page.tsx` | `procurement.py` | FIXED | `2d97459` | reg L2347; GRNs no longer POST placeholder foreign keys (`po_item_id: "placeholder-0"`) — the PO loader now carries the real PO item ids from the API and the GRN handler sends them (its map-then-filter restructure also fixed a latent re-index bug where the checked/qty lookups read against filtered positions; missing-id items abort with an alert). The fabricated PO/Indent numbers (`PO-2026-043`, `IND-2026-003`, and the `pos.length + 43` auto-increment) are gone — both numbers default to empty and are user-entered with `required` inputs. Blast-radius 1 file, +16/-10. No test added. |
@@ -252,7 +252,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-099 | CRITICAL | W27 | `frontend/src/app/c/[company_id]/d/finance/page.tsx` | — | TODO | | reg L3999 |
 | R2-100 | MEDIUM | W01 | `finance.py` | — | FIX_VERIFIED | `a6bfdb4` | reg L4040; direct-fix pass; suite RC-035 |
 | R2-101 | MEDIUM | W01 | `finance.py` | — | FIXED | `2253758` | reg L4063; partial fix: lifted `unbilledCount` and `pendingCount` from the ledger-tab IIFE to component scope; the Finance header chip and the toolbar button now share the same source of truth (both render the same `.length` from `txnSummary.transactions`). DEFERRED — toolbar button still has no onClick (R2-072 dead button); procurement page still computes its own unbilled count from `grns.filter(g => !g.isBilled)` (the audit's "one source of truth via the procurement GRN query" half); the third source-of-truth unification needs a backend endpoint or a shared query cache. Blast-radius 1 file, +12/-2 lines. No test added.
-| R2-102 | MEDIUM | W82 | `backend/app/models.py` | `tally.py`, `/d/finance/page.tsx` | TODO | | reg L4097 |
+| R2-102 | MEDIUM | W82 | `backend/app/models.py` | `tally.py`, `/d/finance/page.tsx` | FIXED | FIXED 8a0def3; Tally voucher template default ONS-{year}-{number} -> SF-{year}-{number} across all 8 shipped default sites + additive migration 20260816_000004. Sibling: ONS-V- payment-reference fallback is R2-103. |
 | R2-103 | MEDIUM | W120 | `/d/finance/page.tsx` | `finance.py` | TODO | | reg L4113 |
 | R2-104 | LOW | W43 | `finance/page.tsx` | — | FIXED | `a99e206` | reg L4133; the Tally Sync panel's "Last export" / "Last marked synced" summaries are now derived from the sync-log rows the same panel already fetches (max `exported_at` / max `marked_synced_at`, formatted, with empty-guards so "Not yet" survives when there are no logs). The live contradiction (history showing two "Marked synced" entries while the summary said "Not yet") is gone. Blast-radius 1 file, +9/-1. Pinned. No test added (pins only). |
 | R2-105 | CRITICAL | W28 | `d/attendance/page.tsx` | — | TODO | | reg L4178 |
@@ -264,7 +264,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-111 | HIGH | W97 | `frontend/src/app/c/[company_id]/cost-codes/page.tsx` | — | FIXED | `820717b`, `a0ceefb` | reg L4352; the "Add Workforce" save was already wired by R2-013 (`820717b` — POST /library/workforces, toast only on 2xx). This session closed the remaining half: both fabricated Cost Code dropdowns (workforce drawer + employee-details drawer, hardcoded C-101/C-204/C-509) are now fed from the real cost-code module (GET /apis/v3/library/cost-codes/{companyId}, rendered `{code} ({name})`). Blast-radius 1 file (hr page), +21/-6. Notes: the selected cost-code id is captured in state but the workforce POST still sends name only — backend `workforces` endpoint lacks a cost_code_id field (R2-111-bis, follow-up). |
 | R2-112 | CRITICAL | W48 | `permissions.py` | `hr.py`, `drawings.py`, `reports.py` | TODO | | reg L4407 |
 | R2-113 | CRITICAL | W14 | `auth.py` | — | TODO | | reg L4430 |
-| R2-114 | MEDIUM | W82 | `backend/app/models.py` | `settings.py` | TODO | | reg L4448 |
+| R2-114 | MEDIUM | W82 | `backend/app/models.py` | `settings.py` | FIXED | FIXED 4cdc81b (format+checksum half); company + branch GSTIN write paths enforce the canonical 15-char pattern + mod-36 Luhn check digit (known-valid 27AAPFU0939F1ZV verified; the dummy 29ABCDE1234F1Z5 now rejected). The state-vs-address cross-check is NOT code-fixable (no structured state field) - deferred to D4. Siblings: onboarding CreateCompanyRequest.gstin unvalidated; demo-seed GSTINs now checksum-invalid (bypass Pydantic via ORM); DB-level CHECK constraint needs the founder. |
 | R2-115 | MEDIUM | W06 | `settings.py` | `Sidebar.tsx`, `reports/page.tsx` | FIXED | FIXED 093fd10; GET /settings/company returns 404 for unknown companies, no more demo-tenant INSERT on GET. Residual demo chain (layout/Sidebar/projects mapping the demo UUID to demo-construction) is cosmetic only, logged. |
 | R2-116 | CRITICAL | W49 | `frontend/src/app/c/[company_id]/d/delete-logs/page.tsx` | — | TODO | | reg L4500 |
 | R2-117 | MEDIUM | W02 | `UNMAPPED` | — | FIXED | FIXED bbad99e (committed by the founder/other agent session); internal build-plan copy removed from Settings. |
@@ -272,7 +272,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-119 | MEDIUM | W02 | `UNMAPPED` | — | FIXED | FIXED b69ab40 (other agent); approval categories whose approve keys cannot be granted dropped from Settings. |
 | R2-120 | LOW | W67 | `google_drive.py` | `bi_export.py` | FIXED | `06cde63` | reg L4627; the Integrations page already listed Sheets/Drive/Zoho/BI (the audit's "only one" claim was stale); this session closed the remainder: the wrong instruction ("Connect from the Payroll tab (HR)") now says "Payroll Runs tab (HR)" (same fix in the "HR -> Payroll Runs -> Export to Google Sheets" copy), and the missing fifth integration — Tally — has a card with a real status fetch (`/apis/v3/tally/connections?company_id=`, strict boolean `connected` gate — no fabrication) and a "Manage in Finance → Tally Sync" deep link (`?tab=tally`, verified in the finance page's allowlist). Blast-radius 1 file (settings page; the register's google_drive.py attribution is the backend half), +39/-2. Pinned. No test added (pins only). |
 | R2-121 | MEDIUM | W07 | `billing.py` | — | FIXED | `25f30db` | reg L4659; the Subcon page no longer renders its terminal empty states ("No subcontractor workorders found." / "No subcontractors yet...") while the data fetch is in flight. Both `d/subcon/page.tsx` and `p/[project_id]/subcon/page.tsx` now branch on the existing-but-unused `loading` flag: loading rows read "Loading subcontractor work orders..." / "Loading subcontractors...", then the empty states only after the request settles. Blast-radius 2 files (twin pages), +16/-4 each. No test added. NOTE: same failure family as R2-099/R2-075 (empty state standing in for unknown state); `loading` starts false so one paint frame still shows the empty state before the effect fires (cosmetic, pre-existing pattern across the app). |
-| R2-122 | MEDIUM | W19 | `budgeting.py` | `finance.py`, `main.py`, `delete_logs.py` | TODO | | reg L4688 |
+| R2-122 | MEDIUM | W19 | `budgeting.py` | `finance.py`, `main.py`, `delete_logs.py` | FIXED | FIXED 9236ea4; POST /boq-documents/{doc_id}/items added (404s on missing doc/project, budgeting:edit permission, stores unrounded) - the D5-(a) BACKEND half. D5 stays OPEN: frontend inline row (W116/R2-030) + the founder decision remain. |
 | R2-123 | CRITICAL | W30 | `library.py` | — | TODO | | reg L4774 |
 | R2-124 | MEDIUM | W121 | `frontend/src/app/c/[company_id]/d/equipment/page.tsx` | — | TODO | | reg L4810 |
 | R2-125 | MEDIUM | W02 | `UNMAPPED` | — | TODO | | reg L4836 |
@@ -295,12 +295,12 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-142 | HIGH | W17 | `chat.py` | `models.py`, `d/chat/page.tsx`, `page.tsx` | TODO | | reg L5734 |
 | R2-143 | HIGH | W17 | `chat.py` | `d/chat/page.tsx`, `page.tsx` | TODO | | reg L5760 |
 | R2-144 | MEDIUM | W09 | `page.tsx` | `models.py`, `chat.py`, `d/chat/page.tsx` | TODO | | reg L5781 |
-| R2-145 | MEDIUM | W46 | `d/chat/page.tsx` | `page.tsx` | TODO | | reg L5793 |
-| R2-146 | MEDIUM | W46 | `d/chat/page.tsx` | `page.tsx`, `chat.py` | TODO | | reg L5802 |
-| R2-147 | MEDIUM | W17 | `chat.py` | `d/chat/page.tsx`, `d/todo/page.tsx`, `/todo/page.tsx` | TODO | | reg L5814 |
+| R2-145 | MEDIUM | W46 | `d/chat/page.tsx` | `page.tsx` | FIXED | FIXED d84fb8d; chat Add Member free-text UUID input replaced with a team-member select from /crm/team-members/{companyId} (company_team.id = the correct FK space). |
+| R2-146 | MEDIUM | W46 | `d/chat/page.tsx` | `page.tsx`, `chat.py` | FIXED | FIXED 47813c2; chat empty state distinguishes no-groups vs no-active-project ("No active project selected..."). Sibling: create-group without project POSTs project_id undefined (422). |
+| R2-147 | MEDIUM | W17 | `chat.py` | `d/chat/page.tsx`, `d/todo/page.tsx`, `/todo/page.tsx` | FIXED | FIXED b8c36c4; message poll uses a since_id cursor with capped load; member_count is a single GROUP BY (N+1 gone). Siblings: R2-577 created_by deadlock, add_member unvalidated, remove_member swallows errors. |
 | R2-148 | CRITICAL | W31 | `todos.py` | `frontend/src/app/c/[company_id]/d/todo/page.tsx`, `p/[project_id]/todo/page.tsx` | FIXED | `534451e` | reg L5841; the company To-Do list's complete/delete only mutated React state — completion and deletion vanished on the next fetch, with no error (same failure shape as R2-105). `handleToggleTodo` now PUTs /apis/v3/todos/{id} with status "pending"/"done" (inverted from `is_completed`, matching the API vocabulary) and `handleDeleteTodo` DELETEs; both alert on failure and refetch only on success. Blast-radius 1 file, +35/-7. No test added (frontend). |
 | R2-149 | HIGH | W98 | `d/todo/page.tsx` | `models.py`, `p/[project_id]/todo/page.tsx`, `todos.py` | FIXED | `6d9493c` | reg L5864; the company To-Do "Repeat Settings" modal was fully decorative — nothing it configured was ever sent (no `repeat_type` in the create payload) and no recurrence runtime exists anywhere in the codebase (the project page stores the field, but nothing expands it). Per the audit's verdict ("a config UI for a feature with no runtime is worse than not shipping the feature"), the modal, its trigger, and all five repeat states were removed (−144 lines, pure removal; the orphaned Icon import went too). The `endsDate` hardcoded `2026-12-05` default went with it (closing R2-107's d/todo part). NOTE (deeper gap, still open): the project-level page still SENDS `repeat_type` to a backend that never expands recurrences — same dead field, just better hidden; needs a product decision (build the expansion job or remove there too). |
-| R2-150 | MEDIUM | W31 | `todos.py` | `models.py`, `crm.py` | TODO | | reg L5887 |
+| R2-150 | MEDIUM | W31 | `todos.py` | `models.py`, `crm.py` | FIXED | FIXED 7edc3be; todo created_by derived from the company membership (correct FK space), field removed from TodoCreate. |
 | R2-151 | HIGH | W13 | `budget.py` | `safety.py`, `d/budget/page.tsx` | TODO | | reg L5923 |
 | R2-152 | HIGH | W13 | `budget.py` | `budgeting.py` | TODO | | reg L5947 |
 | R2-153 | HIGH | W13 | `budget.py` | `constants.py` | TODO | | reg L5964 |
@@ -590,7 +590,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-440 | HIGH | W30 | `library.py` | — | TODO | | reg L21996 |
 | R2-441 | HIGH | W10 | `projects.py` | — | TODO | | reg L22088 |
 | R2-442 | HIGH | W31 | `todos.py` | — | TODO | | reg L22154 |
-| R2-443 | MEDIUM | W31 | `todos.py` | — | TODO | | reg L22174 |
+| R2-443 | MEDIUM | W31 | `todos.py` | — | FIXED | FIXED bbcad30 (back half); _serialize returns is_overdue (due_date passed, status != done, tz-guarded). repeat_type half is R2-383/CD-3 (founder-gated). UI half (overdue badge/sort) remains. |
 | R2-444 | CRITICAL | W02 | `UNMAPPED` | — | TODO | | reg L22245 |
 | R2-445 | HIGH | W107 | `delete-logs/page.tsx` | — | TODO | | reg L22276 |
 | R2-446 | MEDIUM | W127 | `mom/page.tsx` | — | TODO | | reg L22381 |
@@ -599,7 +599,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-449 | HIGH | W19 | `budgeting.py` | — | TODO | | reg L22833 |
 | R2-450 | HIGH | W19 | `budgeting.py` | — | TODO | | reg L22871 |
 | R2-451 | HIGH | W19 | `budgeting.py` | — | TODO | | reg L22899 |
-| R2-452 | MEDIUM | W19 | `budgeting.py` | — | TODO | | reg L22922 |
+| R2-452 | MEDIUM | W19 | `budgeting.py` | — | FIXED | FIXED e22dd9f; BOQ Excel importer no longer rounds quantities to float_limit at import (2.5 Nos / 0.5 bags store as typed); the limit remains display metadata only. |
 | R2-453 | HIGH | W19 | `budgeting.py` | — | TODO | | reg L22944 |
 | R2-454 | HIGH | W108 | `boq/page.tsx` | `siteflow.ts`, `billing/page.tsx`, `procurement/page.tsx` | TODO | | reg L22978 |
 | R2-455 | CRITICAL | W61 | `d/planning/gantt/page.tsx` | `planning.py` | TODO | | reg L23074 |
@@ -661,7 +661,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-511 | CRITICAL | W14 | `auth.py` | `rate_limit.py`, `bi_export.py`, `public_leads.py` | TODO | | reg L25601 |
 | R2-512 | MEDIUM | W70 | `admin_migrations.py` | `public_leads.py`, `mailer.py` | TODO | | reg L25675 |
 | R2-513 | HIGH | W26 | `face_recognition.py` | — | TODO | | reg L25769 |
-| R2-514 | MEDIUM | W79 | `helpContent.tsx` | `chat.py`, `projects.py`, `analytics.py` | TODO | | reg L25811 |
+| R2-514 | MEDIUM | W79 | `helpContent.tsx` | `chat.py`, `projects.py`, `analytics.py` | FIXED | FIXED 9afd6f7; the multi-level approval help answer no longer claims enforcement ("not enforced on transactions; do not rely on them as an approval control") and the onboarding answer is neutralized; sweep greps clean. |
 | R2-515 | CRITICAL | W63 | `p/[project_id]/attendance/page.tsx` | — | TODO | | reg L26127 |
 | R2-516 | HIGH | W09 | `page.tsx` | — | TODO | | reg L26195 |
 | R2-517 | HIGH | W75 | `supabase_storage.py` | — | TODO | | reg L26217 |
@@ -718,7 +718,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-570 | HIGH | W37 | `equipment.py` | `finance.py` | TODO | | reg L29839 |
 | R2-572 | MEDIUM | W05 | `procurement.py` | — | FIXED | FIXED 4d85244; empty PO items rejected at the schema (min_length=1). Siblings: IndentCreateRequest.items and RFQ items lack min_length - follow-up. |
 | R2-573 | MEDIUM | W05 | `procurement.py` | — | FIXED | FIXED 00427eb; GRN received_date in the future rejected (422), naive datetimes normalized before compare. Sibling: POCreateRequest.po_date accepts future dates - follow-up. |
-| R2-578 | MEDIUM | W17 | `chat.py` | — | TODO | | reg L30164 |
+| R2-578 | MEDIUM | W17 | `chat.py` | — | FIXED | FIXED 83d9cf0; send_message drops client-supplied user_id/user_name, 403s without a CompanyTeam row, stamps the sender unconditionally. |
 | R2-580 | HIGH | W10 | `projects.py` | — | TODO | | reg L30244 |
 | R2-582 | HIGH | W10 | `projects.py` | — | TODO | | reg L30288 |
 | R2-583 | HIGH | W10 | `projects.py` | — | TODO | | reg L30320 |
