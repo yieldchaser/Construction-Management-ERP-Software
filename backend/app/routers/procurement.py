@@ -63,7 +63,7 @@ class POCreateRequest(BaseModel):
     vendor_id: Optional[UUID] = None
     po_number: str
     po_date: datetime
-    items: List[POCreateItemSchema]
+    items: List[POCreateItemSchema] = Field(..., min_length=1)
     terms: Optional[str] = None  # Terms & Conditions; defaults to company Purchase Order Terms on create
 
 class POResponseItemSchema(BaseModel):
