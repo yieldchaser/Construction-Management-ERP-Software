@@ -172,3 +172,13 @@ def test_pin_R2_062_083_dashboard_no_fabricated_identity():
     assert "Acme Corp" not in src, "R2-062/083 fabricated customer name reintroduced"
     assert "Siddharth Malhotra" not in src, "R2-062/083 fabricated key person reintroduced"
     assert "fallbackMaterials" not in src, "R2-062 fabricated materials fallback reintroduced"
+
+
+def test_pin_R2_027_face_log_has_created_at():
+    src = _read("app/models.py")
+    assert "created_at = Column(DateTime(timezone=True), default=func.now(), nullable=True)" in src, "R2-027 FaceRecognitionLog created_at regressed"
+
+
+def test_pin_R2_086_face_page_surfaces_errors():
+    src = _read_frontend("src/app/c/[company_id]/d/face-recognition/page.tsx")
+    assert "setLoadError" in src, "R2-086 face page error state regressed"

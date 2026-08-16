@@ -79,7 +79,7 @@ def list_logs(company_id: uuid.UUID, project_id: Optional[uuid.UUID] = None, db:
     query = db.query(FaceRecognitionLog).filter(FaceRecognitionLog.company_id == company_id)
     if project_id:
         query = query.filter(FaceRecognitionLog.project_id == project_id)
-    return query.order_by(FaceRecognitionLog.created_at.desc()).limit(200).all()
+    return query.order_by(FaceRecognitionLog.created_at.desc().nulls_last()).limit(200).all()
 
 
 @router.get("/employees/{company_id}", response_model=List[EmployeeRef])
@@ -106,7 +106,7 @@ def daily_summary(company_id: uuid.UUID, date: str = Query(...), project_id: Opt
     if project_id:
         query = query.filter(FaceRecognitionLog.project_id == project_id)
 
-    logs = query.order_by(FaceRecognitionLog.created_at.asc()).all()
+    logs = query.order_by(FaceRecognitionLog.created_at.asc().nulls_last()).all()
     summary = defaultdict(lambda: {"in": None, "out": None, "name": ""})
     for log in logs:
         key = str(log.employee_id)

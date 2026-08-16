@@ -1745,6 +1745,7 @@ class FaceRecognitionLog(Base):
     lat = Column(Numeric(10, 7), nullable=True)
     lng = Column(Numeric(10, 7), nullable=True)
     is_within_geofence = Column(Boolean, default=False, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=True)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Phase 17 — Advanced Subcontractor, Procurement, Labour & Multi-Tower
