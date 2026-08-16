@@ -598,7 +598,10 @@ export default function ProcurementPage() {
           {/* TAB 1: INDENTS / REQUISITIONS */}
           {tab === "indent" && (
             <div className="space-y-4">
-              <h2 className="text-xs font-bold text-muted uppercase tracking-wider">Indent & Requisitions (Stock Contextual)</h2>
+              <h2 className="text-xs font-bold text-muted uppercase tracking-wider">Indent & Requisitions</h2>
+              {indents.length === 0 ? (
+                <div className="text-center py-14 text-muted text-xs">No indents yet. Create one with "+ Material Indent".</div>
+              ) : (
               <div className="grid gap-4 md:grid-cols-2">
                 {indents.map((ind) => (
                   <div key={ind.id} className="bg-card border border-border-custom rounded-lg p-5 space-y-4">
@@ -659,6 +662,7 @@ export default function ProcurementPage() {
                   </div>
                 ))}
               </div>
+              )}
             </div>
           )}
 
@@ -760,7 +764,12 @@ export default function ProcurementPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {inventory.map((inv, idx) => (
+                    {inventory.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="px-5 py-10 text-center text-muted">No inventory yet. Receive material via a GRN.</td>
+                      </tr>
+                    ) : (
+                    inventory.map((inv, idx) => (
                       <tr key={idx} className="border-b border-border-custom hover:bg-elevated transition-all">
                         <td className="px-5 py-3 font-bold text-foreground">{inv.name}</td>
                         <td className="px-5 py-3 text-muted font-sans uppercase">{inv.unit}</td>
@@ -779,7 +788,8 @@ export default function ProcurementPage() {
                           )}
                         </td>
                       </tr>
-                    ))}
+                    ))
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -802,7 +812,12 @@ export default function ProcurementPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {transactions.map((txn, idx) => (
+                    {transactions.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="px-5 py-10 text-center text-muted">No material transactions yet.</td>
+                      </tr>
+                    ) : (
+                    transactions.map((txn, idx) => (
                       <tr key={idx} className="border-b border-border-custom hover:bg-elevated transition-all">
                         <td className="px-5 py-3 font-bold text-foreground">{txn.materialName}</td>
                         <td className={`px-5 py-3 font-sans font-bold ${txn.type === "used" ? "text-amber-400" : "text-emerald-400"}`}>
@@ -812,7 +827,8 @@ export default function ProcurementPage() {
                         <td className="px-5 py-3 text-muted font-sans">{txn.sourceRef}</td>
                         <td className="px-5 py-3 text-muted">{txn.date}</td>
                       </tr>
-                    ))}
+                    ))
+                    )}
                   </tbody>
                 </table>
               </div>
