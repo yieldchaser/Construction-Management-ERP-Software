@@ -29,6 +29,7 @@ interface Revision {
   version: string;
   fileUrl: string;
   status: RevStatus;
+  approvalStatus: string;
   comments: string;
   date: string;
   uploadedBy: string;
@@ -105,6 +106,7 @@ export default function DrawingsPage() {
             version: r.version_code,
             fileUrl: r.file_url,
             status: r.approval_status === "approved" ? "current" : (r.approval_status === "rejected" ? "locked" : "superseded"),
+            approvalStatus: r.approval_status || "pending",
             comments: r.comments || "",
             date: r.created_at ? r.created_at.split("T")[0] : "",
             uploadedBy: "Auto-synced",
@@ -151,6 +153,7 @@ export default function DrawingsPage() {
   const activeDrawing = drawings.find(d => d.id === activeDrawingId);
   const activeRev = activeDrawing?.revisions.find(r => r.id === activeRevId);
   const currentRev = activeDrawing?.revisions.find(r => r.status === "current");
+  const registerActiveRev = currentRev ?? activeDrawing?.revisions[0];
   const isEditable = activeRev?.status === "current";
 
   const visiblePins = (activeRev?.pins ?? []).filter(p => filterCat === "All" || p.category === filterCat);
@@ -414,7 +417,7 @@ export default function DrawingsPage() {
                 <div className="flex items-center justify-between bg-input border border-border-custom rounded-md px-4 py-2.5 text-xs shrink-0">
                   <div>
                     <div className="font-bold text-foreground text-sm">{activeDrawing.name}</div>
-                    <div className="text-[10px] text-muted mt-0.5">{activeDrawing.category} · Active: {currentRev?.version} · {currentRev?.date}</div>
+                    <div className="text-[10px] text-muted mt-0.5">{activeDrawing.category} · Active: {registerActiveRev?.version ?? "—"} · {registerActiveRev?.date ?? "—"} · {registerActiveRev?.approvalStatus === "approved" ? "Approved" : registerActiveRev?.approvalStatus === "rejected" ? "Rejected" : "Pending"}</div>
                   </div>
                   <div className="flex items-center gap-2">
                     {openCount > 0 && (
@@ -542,7 +545,7 @@ export default function DrawingsPage() {
                               </span>
                             </div>
                             <div className="text-[10px] text-muted line-clamp-2">{rev.comments}</div>
-                            <div className="text-[9px] text-muted mt-1">{rev.date} · {rev.uploadedBy}</div>
+                            <div className="text-[9px] text-muted mt-1">{rev.date} · {rev.uploadedBy} · {rev.approvalStatus === "approved" ? "Approved" : rev.approvalStatus === "rejected" ? "Rejected" : "Pending"}</div>
                             {rev.pins.length > 0 && (
                               <div className="flex items-center gap-2 mt-1 text-[9px]">
                                 <span className="text-muted">{rev.pins.length} pins</span>
