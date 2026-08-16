@@ -1,3 +1,4 @@
+import re
 import uuid
 from typing import List, Optional, Literal
 from datetime import datetime
@@ -21,6 +22,33 @@ router = APIRouter(prefix="/settings", tags=["Settings & Configurations"], depen
 
 
 # ─── Pydantic Schemas ────────────────────────────────────────────────────────
+
+_GSTIN_RE = re.compile(r"^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$")
+_GSTIN_CHARS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+
+def _gstin_checksum_ok(gstin: str) -> bool:
+    total = 0
+    for i, ch in enumerate(gstin[:14]):
+        val = _GSTIN_CHARS.index(ch)
+        if i % 2 == 0:
+            val = (val * 2) % 36
+        total += val
+    return _GSTIN_CHARS[(36 - (total % 36)) % 36] == gstin[14]
+
+
+def _validate_gstin(cls, v):
+    if v is None:
+        return v
+    v = v.strip()
+    if not v:
+        return v
+    if not _GSTIN_RE.fullmatch(v):
+        raise ValueError("GSTIN must match the 15-character format NNAAAAANNNNANAN")
+    if not _gstin_checksum_ok(v):
+        raise ValueError("GSTIN check digit is invalid")
+    return v
+
 
 class CompanySettingsResponse(BaseModel):
     id: uuid.UUID
@@ -117,6 +145,8 @@ class CompanySettingsUpdate(BaseModel):
     subscription_end: Optional[datetime] = None
     subscription_renewal: Optional[datetime] = None
 
+    _check_gstin = field_validator("gstin")(_validate_gstin)
+
 
 class BranchCreate(BaseModel):
     branch_name: str
@@ -128,6 +158,8 @@ class BranchCreate(BaseModel):
     state: Optional[str] = None
     zip: Optional[str] = None
     country: str = "India"
+
+    _check_gstin = field_validator("gstin")(_validate_gstin)
 
 
 class BranchResponse(BaseModel):
