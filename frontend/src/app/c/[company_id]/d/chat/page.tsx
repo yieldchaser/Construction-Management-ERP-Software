@@ -19,8 +19,6 @@ interface ChatMessage {
   id: string;
   user_name?: string;
   message_text?: string;
-  media_url?: string;
-  voice_note_url?: string;
   image_urls?: string[];
   is_mom: boolean;
   mom_date?: string;

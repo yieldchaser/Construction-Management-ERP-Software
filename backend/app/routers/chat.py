@@ -48,8 +48,6 @@ class ChatGroupResponse(BaseModel):
 class ChatMessageCreate(BaseModel):
     group_id: uuid.UUID
     message_text: Optional[str] = None
-    media_url: Optional[str] = None
-    voice_note_url: Optional[str] = None
     image_urls: List[str] = []
     is_mom: bool = False
     mom_date: Optional[datetime] = None
@@ -61,8 +59,6 @@ class ChatMessageResponse(BaseModel):
     user_id: Optional[uuid.UUID]
     user_name: Optional[str]
     message_text: Optional[str]
-    media_url: Optional[str]
-    voice_note_url: Optional[str]
     image_urls: List[str]
     is_mom: bool
     mom_date: Optional[datetime]
@@ -79,8 +75,6 @@ class ChatMessageResponse(BaseModel):
             "user_id": obj.user_id,
             "user_name": obj.user_name,
             "message_text": obj.message_text,
-            "media_url": obj.media_url,
-            "voice_note_url": obj.voice_note_url,
             "image_urls": obj.image_urls or [],
             "is_mom": obj.is_mom,
             "mom_date": obj.mom_date,
@@ -200,8 +194,6 @@ def list_messages(
             "user_id": msg.user_id,
             "user_name": resolved_name or msg.user_name or "SiteFlow",
             "message_text": msg.message_text,
-            "media_url": msg.media_url,
-            "voice_note_url": msg.voice_note_url,
             "image_urls": msg.image_urls or [],
             "is_mom": msg.is_mom,
             "mom_date": msg.mom_date,

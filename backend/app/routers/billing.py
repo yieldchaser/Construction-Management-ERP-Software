@@ -3,12 +3,13 @@ from uuid import UUID
 from datetime import datetime, timezone
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Response, status
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.auth import get_current_user, verify_project_in_company, verify_project_access, verify_company_access, get_company_membership, require_permission, require_module_view
 from app.models import (
     WorkOrder, WorkOrderItem, Bill, TransactionDeduction,
-    DebitNote, CreditNote, CompanyTeam, User, Company, LibraryParty, Project, ThreeWayMatch
+    DebitNote, CreditNote, CompanyTeam, User, Company, LibraryParty, Project, ThreeWayMatch, ProjectParty
 )
 from app import models
 from app.routers.custom_fields import CustomFieldValueInput, upsert_values_for_entity
@@ -645,6 +646,43 @@ def create_bill(req: BillCreateRequest, db: Session = Depends(get_db), current_u
     # are NOT blocked when no match is supplied; only an invalid/non-approved/wrong-scope
     # match_id is rejected.
     match_id = _resolve_bill_match_id(db, req.invoice_type, req.match_id, req.company_id, req.project_id)
+
+    # R2-379: an "Advance Recovery" deduction may only draw against an advance that is
+    # actually on record for this party + project (ProjectParty.advance_paid), and the
+    # cumulative recovery across all bills can never exceed it.
+    advance_recovery_total = sum(
+        d.amount if not d.percentage else req.subtotal * (d.percentage / 100.0)
+        for d in req.deductions
+        if d.deduction_type == "Advance Recovery"
+    )
+    if advance_recovery_total > 0:
+        team = db.query(CompanyTeam).filter(CompanyTeam.id == req.party_company_user_id).first()
+        link = None
+        if team and team.library_party_id:
+            link = db.query(ProjectParty).filter(
+                ProjectParty.project_id == req.project_id,
+                ProjectParty.party_id == team.library_party_id,
+            ).first()
+        available = float(link.advance_paid) if link else 0.0
+        already_recovered = float(
+            db.query(func.coalesce(func.sum(TransactionDeduction.amount), 0))
+            .join(Bill, TransactionDeduction.bill_id == Bill.id)
+            .filter(
+                Bill.company_id == req.company_id,
+                Bill.project_id == req.project_id,
+                Bill.party_company_user_id == req.party_company_user_id,
+                Bill.status != "Cancelled",
+                TransactionDeduction.deduction_type == "Advance Recovery",
+            )
+            .scalar()
+            or 0.0
+        )
+        remaining = max(0.0, available - already_recovered)
+        if advance_recovery_total > remaining:
+            raise HTTPException(
+                status_code=422,
+                detail=f"Advance Recovery of ₹{advance_recovery_total:,.2f} exceeds the party's remaining project advance of ₹{remaining:,.2f}",
+            )
 
     # Workflow Controls: Entry Controls (creation date window)
     enforce_entry_creation_window(db, req.company_id, req.invoice_date)
