@@ -971,5 +971,82 @@ def test_chat_message_sender_stamped_not_client_supplied(client, db, make_tenant
     assert r.status_code == 200, r.text
     assert r.json()[0]["user_name"] == user.name
 
+# -- W17 R2-147: message poll cursor, capped load, GROUP BY member_count ------
+
+def test_chat_message_poll_cursor_and_capped_load(client, db, make_tenant, auth_headers):
+    comp, user, team = make_tenant(company_name="E61", user_name="UE61", mobile=_mob(62), email=_mail(62))
+    hdr = auth_headers(user, comp)
+    project = _mk_project(db, comp)
+    r = client.post(
+        "/apis/v3/chat/groups",
+        json={
+            "company_id": str(comp.id),
+            "project_id": str(project.id),
+            "name": "ZZ W17 Cursor",
+            "group_type": "general",
+            "created_by": str(user.id),
+        },
+        headers=hdr,
+    )
+    assert r.status_code == 201, r.text
+    group_id = r.json()["id"]
+
+    sent_ids = []
+    for text in ["one", "two", "three"]:
+        r = client.post(
+            "/apis/v3/chat/messages",
+            json={"group_id": group_id, "message_text": text},
+            headers=hdr,
+        )
+        assert r.status_code == 201, r.text
+        sent_ids.append(r.json()["id"])
+
+    r = client.get(f"/apis/v3/chat/messages/{group_id}", headers=hdr)
+    assert r.status_code == 200, r.text
+    assert {m["message_text"] for m in r.json()} == {"one", "two", "three"}
+
+    r = client.get(f"/apis/v3/chat/messages/{group_id}?since_id={sent_ids[-1]}", headers=hdr)
+    assert r.status_code == 200, r.text
+    poll_ids = [m["id"] for m in r.json()]
+    assert sent_ids[-1] not in poll_ids
+
+    r = client.post(
+        "/apis/v3/chat/messages",
+        json={"group_id": group_id, "message_text": "four"},
+        headers=hdr,
+    )
+    assert r.status_code == 201, r.text
+
+    r = client.get(f"/apis/v3/chat/messages/{group_id}?since_id={sent_ids[-1]}", headers=hdr)
+    assert r.status_code == 200, r.text
+    after = r.json()
+    assert any(m["message_text"] == "four" for m in after)
+    assert len(after) == len({m["id"] for m in after})
+
+    r = client.get(f"/apis/v3/chat/messages/{group_id}?limit=1", headers=hdr)
+    assert r.status_code == 200, r.text
+    assert len(r.json()) == 1
+
+    r = client.get(f"/apis/v3/chat/messages/{group_id}?limit=0", headers=hdr)
+    assert r.status_code == 422
+
+    r = client.post(
+        "/apis/v3/chat/groups",
+        json={
+            "company_id": str(comp.id),
+            "project_id": str(project.id),
+            "name": "ZZ W17 Empty",
+            "group_type": "general",
+        },
+        headers=hdr,
+    )
+    assert r.status_code == 201, r.text
+
+    r = client.get(f"/apis/v3/chat/groups/{project.id}", headers=hdr)
+    assert r.status_code == 200, r.text
+    by_id = {g["id"]: g["member_count"] for g in r.json()}
+    assert by_id[group_id] == 1
+    assert any(mc == 0 for mc in by_id.values())
+
 
 

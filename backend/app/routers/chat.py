@@ -2,6 +2,7 @@ import uuid
 from datetime import datetime
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Query
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from app.database import get_db
@@ -126,10 +127,16 @@ def list_groups(project_id: uuid.UUID, db: Session = Depends(get_db), _: None = 
         ChatGroup.project_id == project_id,
         ChatGroup.is_archived == False
     ).all()
-    result = []
-    for g in groups:
-        count = db.query(ChatGroupMember).filter(ChatGroupMember.group_id == g.id).count()
-        result.append(ChatGroupResponse(**{**g.__dict__, "member_count": count}))
+    counts = dict(
+        db.query(ChatGroupMember.group_id, func.count(ChatGroupMember.id))
+        .filter(ChatGroupMember.group_id.in_([g.id for g in groups]))
+        .group_by(ChatGroupMember.group_id)
+        .all()
+    )
+    result = [
+        ChatGroupResponse(**{**g.__dict__, "member_count": counts.get(g.id, 0)})
+        for g in groups
+    ]
     return result
 
 
@@ -158,20 +165,33 @@ def send_message(payload: ChatMessageCreate, db: Session = Depends(get_db), curr
 
 
 @router.get("/messages/{group_id}", response_model=List[ChatMessageResponse])
-def list_messages(group_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def list_messages(
+    group_id: uuid.UUID,
+    since_id: Optional[uuid.UUID] = None,
+    limit: int = Query(200, ge=1, le=500),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     group = db.query(ChatGroup).filter(ChatGroup.id == group_id).first()
     if not group:
         raise HTTPException(status_code=404, detail="Chat group not found")
     get_company_membership(db, current_user, group.company_id)
     verify_group_membership(db, current_user, group.id)
-    rows = (
+    q = (
         db.query(ChatMessage, User.name)
         .join(CompanyTeam, CompanyTeam.id == ChatMessage.user_id, isouter=True)
         .join(User, User.id == CompanyTeam.user_id, isouter=True)
         .filter(ChatMessage.group_id == group_id)
-        .order_by(ChatMessage.created_at.asc())
-        .all()
     )
+    rows = q.order_by(ChatMessage.created_at.desc()).limit(limit).all()
+    if since_id is not None:
+        anchor = db.query(ChatMessage.created_at).filter(ChatMessage.id == since_id).scalar()
+        if anchor is not None:
+            rows = [
+                r for r in rows
+                if r[0].created_at >= anchor and r[0].id != since_id
+            ]
+    rows = rows[::-1]
     result = []
     for msg, resolved_name in rows:
         data = {

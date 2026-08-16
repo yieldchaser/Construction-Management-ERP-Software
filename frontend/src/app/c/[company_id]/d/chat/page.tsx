@@ -69,6 +69,7 @@ export default function ChatPage() {
   
   // Auto-scroll ref
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const lastMessageIdRef = useRef<string | null>(null);
 
   // Group Details Inputs (for creation)
   const [newGroupName, setNewGroupName] = useState("");
@@ -83,10 +84,22 @@ export default function ChatPage() {
     }
   };
 
-  const fetchMessages = async (groupId: string) => {
+  const fetchMessages = async (groupId: string, sinceId?: string) => {
     try {
-      const res = await fetch(`${getApiHost()}/apis/v3/chat/messages/${groupId}`, { headers: authHeaders() });
-      if (res.ok) setMessages(await res.json());
+      const url = `${getApiHost()}/apis/v3/chat/messages/${groupId}`;
+      const query = sinceId ? `?since_id=${sinceId}` : "?limit=200";
+      const res = await fetch(`${url}${query}`, { headers: authHeaders() });
+      if (res.ok) {
+        const fresh: ChatMessage[] = await res.json();
+        setMessages((prev) => {
+          if (!sinceId) return fresh;
+          const seen = new Set(prev.map((m) => m.id));
+          return [...prev, ...fresh.filter((m) => !seen.has(m.id))];
+        });
+        if (fresh.length > 0) {
+          lastMessageIdRef.current = fresh[fresh.length - 1].id;
+        }
+      }
     } catch (e) {
       console.error("Failed to load messages", e);
     }
@@ -143,13 +156,14 @@ export default function ChatPage() {
 
   useEffect(() => {
     if (!activeGroup) return;
+    lastMessageIdRef.current = null;
     let interval: NodeJS.Timeout;
     
     fetchMessages(activeGroup.id);
     fetchMembers(activeGroup.id);
     
     interval = setInterval(() => {
-      fetchMessages(activeGroup.id);
+      fetchMessages(activeGroup.id, lastMessageIdRef.current || undefined);
     }, 4000);
 
     return () => {
