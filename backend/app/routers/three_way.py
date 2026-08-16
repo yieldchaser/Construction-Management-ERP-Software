@@ -11,6 +11,9 @@ from app.models import ThreeWayMatch, PurchaseOrder, PurchaseOrderItem, GoodsRec
 
 router = APIRouter(prefix="/three-way", tags=["3-Way Matching"], dependencies=[Depends(get_current_user)])
 
+MATCH_TOLERANCE_PCT = 0.01
+MATCH_TOLERANCE_MIN = 1.0
+
 
 class ThreeWayMatchCreate(BaseModel):
     company_id: uuid.UUID
@@ -111,7 +114,7 @@ def create_match(payload: ThreeWayMatchCreate, db: Session = Depends(get_db), cu
 
     invoiced_amount = float(payload.invoiced_amount)
     variance = round(invoiced_amount - po_amount, 2)
-    match_status = payload.match_status if payload.match_status else ("matched" if abs(variance) < 0.01 else "mismatch")
+    match_status = payload.match_status if payload.match_status else ("matched" if abs(variance) <= max(MATCH_TOLERANCE_MIN, abs(po_amount) * MATCH_TOLERANCE_PCT) else "mismatch")
 
     match = ThreeWayMatch(
         company_id=payload.company_id,
