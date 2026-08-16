@@ -11,7 +11,7 @@ from app.models import (
     LibraryParty,
 )
 from app.workflow_controls import get_default_terms
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, EmailStr, field_validator
 
 router = APIRouter(
     prefix="/crm",
@@ -72,9 +72,9 @@ class LeadCreateRequest(BaseModel):
     assignee_id: Optional[uuid.UUID] = None
     lead_type: str
     contact_name: str
-    phone_no: str
+    phone_no: str = Field(..., pattern=r"^\+?\d{8,15}$")
     country_code: Optional[str] = None
-    email: Optional[str] = None
+    email: Optional[EmailStr] = None
     client_company_name: Optional[str] = None
     party_id: Optional[uuid.UUID] = None
     address: Optional[str] = None
@@ -89,13 +89,20 @@ class LeadCreateRequest(BaseModel):
     next_follow_up: Optional[datetime] = None
     expected_closure: Optional[datetime] = None
 
+    @field_validator("expected_closure")
+    @classmethod
+    def _reject_past_closure(cls, v: Optional[datetime]) -> Optional[datetime]:
+        if v is not None and v < datetime.utcnow():
+            raise ValueError("expected_closure must not be in the past")
+        return v
+
 class LeadUpdateRequest(BaseModel):
     assignee_id: Optional[uuid.UUID] = None
     lead_type: Optional[str] = None
     contact_name: Optional[str] = None
-    phone_no: Optional[str] = None
+    phone_no: Optional[str] = Field(None, pattern=r"^\+?\d{8,15}$")
     country_code: Optional[str] = None
-    email: Optional[str] = None
+    email: Optional[EmailStr] = None
     client_company_name: Optional[str] = None
     party_id: Optional[uuid.UUID] = None
     address: Optional[str] = None
