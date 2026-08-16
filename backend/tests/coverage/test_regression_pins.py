@@ -229,3 +229,179 @@ def test_pin_R2_085_no_internal_phase_labels():
     import re
     src = _read_frontend("src/app/c/[company_id]/analytics/page.tsx")
     assert not re.search(r"PHASE 1[0-9]", src), "R2-085 internal phase label reintroduced on analytics"
+
+
+def test_pin_R2_045_066_purchase_expense_and_equipment_bills():
+    src = _read("app/routers/bi_export.py")
+    assert 'Bill.invoice_type.in_(("purchase", "expense"))' in src, "R2-045 purchase/expense BI export filter regressed"
+    assert 'Bill.invoice_type == "equipment"' in src, "R2-066 equipment BI export filter regressed"
+
+
+def test_pin_R2_193_bi_api_key_inactivity_window():
+    src = _read("app/routers/bi_export.py")
+    assert "total_seconds() > 300" in src, "R2-193 BI API key 5-minute inactivity window regressed"
+
+
+def test_pin_R2_251_mom_creator_from_session_user():
+    src = _read("app/routers/mom.py")
+    assert "created_by=current_user.name," in src, "R2-251 MOM created_by no longer derived from session user"
+
+
+def test_pin_R2_071_wo_terms_uses_inner_text():
+    src = _read_frontend("src/app/c/[company_id]/d/finance/page.tsx")
+    assert "currentTarget.innerText" in src, "R2-071 WO terms innerText capture regressed"
+    assert "currentTarget.innerHTML" not in src, "R2-071 WO terms innerHTML capture reintroduced"
+
+
+def test_pin_R2_072_unbilled_materials_toggle():
+    src = _read_frontend("src/app/c/[company_id]/d/finance/page.tsx")
+    assert "setShowUnbilledOnly(!showUnbilledOnly)" in src, "R2-072 Unbilled Materials toolbar toggle regressed"
+
+
+def test_pin_R2_428_csv_template_has_payment_type_no_sample():
+    src = _read_frontend("src/app/c/[company_id]/d/finance/page.tsx")
+    assert 'const tpl = "Payment Type' in src, "R2-428 CSV template string regressed"
+    tpl_line = next(line for line in src.splitlines() if 'const tpl = "Payment Type' in line)
+    assert "Sample" not in tpl_line, "R2-428 CSV template sample filler reintroduced"
+
+
+def test_pin_R2_298_rfq_compare_metrics():
+    src = _read("app/routers/rfq.py")
+    assert "is_lowest" in src, "R2-298 RFQ is_lowest metric regressed"
+    assert "price_spread" in src, "R2-298 RFQ price_spread metric regressed"
+    assert "recommended_vendor_name" in src, "R2-298 RFQ recommended_vendor_name metric regressed"
+
+
+def test_pin_R2_336_movements_do_not_reclassify_master_category():
+    src = _read("app/routers/procurement.py")
+    tx_body = src.split("def create_transaction", 1)[1].split("def ", 1)[0]
+    assert "inv.category = req.category" not in tx_body, "R2-336 material movement reclassifies inventory master category"
+
+
+def test_pin_R2_341_po_item_pending_qty_report():
+    src = _read("app/routers/reports.py")
+    assert '"PO Pending Qty"' in src, "R2-341 PO-item pending qty report regressed"
+
+
+def test_pin_R2_351_grn_transaction_keeps_po_item_unit():
+    src = _read("app/routers/procurement.py")
+    assert "unit=po_item.unit" in src, "R2-351 GRN transaction unit derivation regressed"
+
+
+def test_pin_R2_572_po_requires_at_least_one_item():
+    src = _read("app/routers/procurement.py")
+    assert "items: List[POCreateItemSchema] = Field(..., min_length=1)" in src, "R2-572 PO min-length items validation regressed"
+
+
+def test_pin_R2_573_grn_rejects_future_received_date():
+    src = _read("app/routers/procurement.py")
+    assert "def received_date_not_future(cls, v: datetime) -> datetime:" in src, "R2-573 GRN future received_date validator regressed"
+    assert 'raise ValueError("received_date cannot be in the future")' in src, "R2-573 GRN future-date rejection regressed"
+
+
+def test_pin_R2_136_milestone_type_discriminator_pattern():
+    src = _read("app/routers/planning.py")
+    assert "pattern=MILESTONE_TYPE_PATTERN" in src, "R2-136 milestone type discriminator pattern regressed"
+    assert "pattern=PREDECESSOR_LINK_TYPE_PATTERN" in src, "R2-136 predecessor link type discriminator pattern regressed"
+
+
+def test_pin_R2_255_task_duration_non_negative():
+    src = _read("app/routers/planning.py")
+    assert "duration_days: int = Field(..., ge=0)" in src, "R2-255 task duration negative guard regressed"
+
+
+def test_pin_R2_277_drawing_pin_bounds_and_creator():
+    src = _read("app/routers/drawings.py")
+    assert src.count("le=9999.99") >= 2, "R2-277 drawing pin coordinate bounds regressed"
+    assert "created_by=membership.id" in src, "R2-277 drawing pin creator derivation regressed"
+
+
+def test_pin_R2_373_indent_approval_guards_and_reject():
+    src = _read("app/routers/procurement.py")
+    assert 'if indent.status != "pending":' in src, "R2-373 indent approve pending-only guard regressed"
+    assert "/indents/{indent_id}/reject" in src, "R2-373 indent reject endpoint regressed"
+    models = _read("app/models.py")
+    assert 'approved_by = Column(UUID(as_uuid=True), ForeignKey("company_team.id"), nullable=True)' in models, "R2-373 indent approved_by FK regressed"
+
+
+def test_pin_R2_378_no_dead_transaction_retention_model():
+    src = _read("app/models.py")
+    assert "class TransactionRetention" not in src, "R2-378 dead TransactionRetention model reintroduced"
+    assert "transaction_retentions" not in src, "R2-378 dead transaction_retentions table reintroduced"
+
+
+def test_pin_R2_411_tally_alter_ledger_with_reference():
+    src = _read("app/tally_xml.py")
+    assert 'ACTION="Alter"' in src, "R2-411 Tally Alter ledger action regressed"
+    assert "<ALTERID>" in src, "R2-411 Tally ALTERID regressed"
+    assert "<REFERENCE>" in src, "R2-411 Tally reference tag regressed"
+
+
+def test_pin_R2_089_project_status_buckets():
+    src = _read("app/routers/analytics.py")
+    assert 'status_counts["Other"] += 1' in src, "R2-089 Other status bucket regressed"
+    assert '"Cancelled": 0' in src, "R2-089 Cancelled status bucket regressed"
+    assert '"Planning": 0' in src, "R2-089 Planning status bucket regressed"
+
+
+def test_pin_R2_309_sentry_release_wired():
+    main = _read("app/main.py")
+    config = _read("app/config.py")
+    assert "release=_app_settings.SENTRY_RELEASE or None" in main, "R2-309 Sentry release wiring regressed"
+    assert "SENTRY_RELEASE: str = \"\"" in config, "R2-309 Sentry release setting regressed"
+
+
+def test_pin_R2_496_three_way_po_amount_formatted_inr():
+    src = _read_frontend("src/app/c/[company_id]/d/three-way/page.tsx")
+    assert "fmtINR(m.po_amount)" in src, "R2-496 three-way PO amount INR formatting regressed"
+    assert "toLocaleString" not in src, "R2-496 toLocaleString fallback reintroduced"
+
+
+def test_pin_R2_115_no_demo_uuid_in_company_settings():
+    src = _read("app/routers/settings.py")
+    body = src.split("def get_company_settings", 1)[1]
+    assert "e0000000-0000-0000-0000-000000000000" not in body, "R2-115 demo UUID fallback reintroduced in get_company_settings"
+
+
+def test_pin_R2_290_breakup_and_gstin_validation():
+    src = _read("app/routers/settings.py")
+    assert "breakup components must sum to 100" in src, "R2-290 breakup sum validation regressed"
+    assert 'pattern=r"^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$"' in src, "R2-290 GSTIN pattern validation regressed"
+
+
+def test_pin_R2_548_settings_literals_and_decimals():
+    src = _read("app/routers/settings.py")
+    assert 'Literal["Project Level", "Company Level"]' in src, "R2-548 grn_numbering literal regressed"
+    assert 'Literal["company", "branch"]' in src, "R2-548 document company display literal regressed"
+    assert "Field(None, ge=0, le=4)" in src, "R2-548 decimal places bounds regressed"
+
+
+def test_pin_R2_129_statutory_due_date_derivation():
+    from datetime import datetime
+    from app.routers.statutory import calculate_due_date
+    assert calculate_due_date("pf", "2026-07") == datetime(2026, 8, 15), "R2-129 PF due date derivation regressed"
+    assert calculate_due_date("tds", "2026-06") == datetime(2026, 7, 7), "R2-129 TDS due date derivation regressed"
+    assert calculate_due_date("pf", "2026-12") == datetime(2027, 1, 15), "R2-129 year-rollover due date derivation regressed"
+
+
+def test_pin_R2_130_no_penalty_calculator():
+    src = _read("app/routers/statutory.py")
+    assert "calculate_penalty" not in src, "R2-130 penalty calculator reintroduced"
+
+
+def test_pin_R2_505_no_internal_phase_labels_on_production():
+    import re
+    src = _read_frontend("src/app/c/[company_id]/d/production/page.tsx")
+    assert not re.search(r"PHASE 1[0-9]", src), "R2-505 internal phase label reintroduced on production page"
+
+
+def test_pin_R2_461_cpm_backward_pass_timedeltas():
+    src = _read("app/routers/planning.py")
+    assert "timedelta(days=request.duration_days - 1)" in src, "R2-461 task end-date timedelta regressed"
+    assert "timedelta(days=dur_by_id.get(s, 1))" in src, "R2-461 CPM backward pass timedelta regressed"
+
+
+def test_pin_R2_566_task_default_and_create_status():
+    src = _read("app/routers/planning.py")
+    assert 'status: str = "not_started"' in src, "R2-566 task default status regressed"
+    assert "status=request.status," in src, "R2-566 task create status wiring regressed"
