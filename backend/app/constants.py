@@ -24,3 +24,6 @@ PREDECESSOR_LINK_TYPE_PATTERN = f"^({'|'.join(PREDECESSOR_LINK_TYPES)})$"
 
 WASTAGE_TYPES = ("scrap", "offcut", "damaged", "expired", "theft")
 WASTAGE_TYPE_PATTERN = f"^({'|'.join(WASTAGE_TYPES)})$"
+
+WASTAGE_STATUSES = ("reported", "reviewed", "approved", "disposed")
+WASTAGE_STATUS_PATTERN = f"^({'|'.join(WASTAGE_STATUSES)})$"

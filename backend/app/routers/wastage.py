@@ -1,12 +1,12 @@
 import uuid
 from datetime import datetime
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
 from app.database import get_db
 from app.auth import get_current_user, verify_project_access, get_company_membership, require_permission
-from app.constants import WASTAGE_TYPE_PATTERN
+from app.constants import WASTAGE_TYPE_PATTERN, WASTAGE_STATUS_PATTERN
 from app.models import MaterialWastage, PurchaseOrder, PurchaseOrderItem, User
 from decimal import Decimal
 
@@ -99,7 +99,7 @@ def list_wastage(project_id: uuid.UUID, db: Session = Depends(get_db), _: None =
 
 
 @router.patch("/{wastage_id}/status", response_model=MaterialWastageResponse)
-def update_wastage_status(wastage_id: uuid.UUID, status: str, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def update_wastage_status(wastage_id: uuid.UUID, status: str = Query(..., pattern=WASTAGE_STATUS_PATTERN), db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     wastage = db.query(MaterialWastage).filter(MaterialWastage.id == wastage_id).first()
     if not wastage:
         raise HTTPException(status_code=404, detail="Wastage record not found")
