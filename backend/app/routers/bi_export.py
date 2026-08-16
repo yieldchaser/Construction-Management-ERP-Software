@@ -75,8 +75,10 @@ def _resolve_key(company_id: uuid.UUID, request: Request, db: Session) -> models
     )
     if not key:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or revoked API key")
-    key.last_used_at = datetime.now(timezone.utc)
-    db.commit()
+    now = datetime.now(timezone.utc)
+    if key.last_used_at is None or key.last_used_at.tzinfo is None or (now - key.last_used_at).total_seconds() > 300:
+        key.last_used_at = now
+        db.commit()
     return key
 
 
