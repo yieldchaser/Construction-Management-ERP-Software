@@ -157,7 +157,8 @@ export default function DPRPage() {
         fetchDPRSummary();
         fetchDPRLogs();
       } else {
-        setMessage("Failed to submit DPR.");
+        const detail = await res.json().catch(() => null);
+        setMessage(detail?.detail || "Failed to submit DPR.");
       }
     } catch (err) {
       setMessage("Server connection failed.");

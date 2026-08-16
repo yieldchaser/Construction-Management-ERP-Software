@@ -67,6 +67,16 @@ def create_dpr(req: DPRCreateRequest, db: Session = Depends(get_db), current_use
     # Workflow Controls: Entry Controls (creation date window)
     enforce_entry_creation_window(db, project.company_id, req.dpr_date)
 
+    existing = db.query(DailyProgressReport).filter(
+        DailyProgressReport.project_id == project_uuid,
+        func.date(DailyProgressReport.dpr_date) == req.dpr_date.date(),
+    ).first()
+    if existing:
+        raise HTTPException(
+            status_code=409,
+            detail="A Daily Progress Report already exists for this project on this date",
+        )
+
     task_uuid = None
     if req.task_id:
         task_uuid = uuid.UUID(str(req.task_id))
