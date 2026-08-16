@@ -232,10 +232,21 @@ def export_dpr_csv(
             f"{m.get('material_name')} {m.get('quantity')} {m.get('unit') or ''}".strip()
             for m in mats
         )
+        author = d.reported_by or ""
+        if author:
+            try:
+                author_uuid = uuid.UUID(author)
+            except ValueError:
+                pass
+            else:
+                user = db.query(User).filter(User.id == author_uuid).first()
+                author = user.name if user else "Unknown"
+        else:
+            author = "Unknown"
         writer.writerow([
             d.dpr_date.strftime("%Y-%m-%d") if d.dpr_date else "",
             project.name if project else "",
-            d.reported_by or "",
+            author,
             float(d.executed_qty or 0),
             d.notes or "",
             d.workers_deployed or 0,
