@@ -1,5 +1,5 @@
 import uuid
-from typing import List, Optional
+from typing import List, Optional, Literal
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Response
 from sqlalchemy.orm import Session
@@ -90,25 +90,25 @@ class CompanySettingsUpdate(BaseModel):
     weekly_off: Optional[str] = None
     weekly_off_days: Optional[List[str]] = None
     restrict_entry_creation_enabled: Optional[bool] = None
-    restrict_entry_creation_days: Optional[int] = None
+    restrict_entry_creation_days: Optional[int] = Field(None, ge=0)
     restrict_entry_editing_enabled: Optional[bool] = None
-    restrict_entry_editing_days: Optional[int] = None
+    restrict_entry_editing_days: Optional[int] = Field(None, ge=0)
     restrict_progress_over_estimate: Optional[bool] = None
     pretax_deduction_retention: Optional[bool] = None
     restrict_subcon_material_issue: Optional[bool] = None
     restrict_material_transfer: Optional[bool] = None
     restrict_production_material: Optional[bool] = None
-    grn_numbering: Optional[str] = None
-    currency_decimal_places: Optional[int] = None
-    quantity_decimal_places: Optional[int] = None
-    back_dated_limit_days: Optional[int] = None
+    grn_numbering: Optional[Literal["Project Level", "Company Level"]] = None
+    currency_decimal_places: Optional[int] = Field(None, ge=0, le=4)
+    quantity_decimal_places: Optional[int] = Field(None, ge=0, le=4)
+    back_dated_limit_days: Optional[int] = Field(None, ge=0)
     negative_stock_lock: Optional[bool] = None
     bom_restriction: Optional[bool] = None
     po_restriction: Optional[bool] = None
     material_request_restriction: Optional[bool] = None
     negative_balance_warning: Optional[bool] = None
     custom_pdf_template_enabled: Optional[bool] = None
-    document_company_name_display: Optional[str] = None
+    document_company_name_display: Optional[Literal["company", "branch"]] = None
     google_sheets_auth_phone: Optional[str] = None
     google_sheets_enabled: Optional[bool] = None
     google_sheets_authorized_phones: Optional[List[str]] = None
@@ -150,10 +150,15 @@ class BranchResponse(BaseModel):
 
 
 class ApprovalRuleCreate(BaseModel):
-    feature_type: str
+    feature_type: Literal[
+        "Asset Transfer", "Equipment Expense", "GRN Material",
+        "Material Issue", "Material Purchase",
+        "Material Transfer", "Material Used", "Other Expense", "Payment Entries",
+        "Payment Request", "Purchase Order", "RFQ",
+    ]
     min_amount: float = Field(..., ge=0)
     max_amount: Optional[float] = Field(None, ge=0)
-    levels: int
+    levels: int = Field(..., ge=1)
     approvers: str
 
 
@@ -586,11 +591,11 @@ class PayrollSettingsResponse(BaseModel):
 
 
 class PayrollSettingsUpdate(BaseModel):
-    pf_employee_pct: Optional[float] = None
-    pf_employer_pct: Optional[float] = None
-    esi_employee_pct: Optional[float] = None
-    esi_employer_pct: Optional[float] = None
-    tds_monthly: Optional[float] = None
+    pf_employee_pct: Optional[float] = Field(None, ge=0, le=100)
+    pf_employer_pct: Optional[float] = Field(None, ge=0, le=100)
+    esi_employee_pct: Optional[float] = Field(None, ge=0, le=100)
+    esi_employer_pct: Optional[float] = Field(None, ge=0, le=100)
+    tds_monthly: Optional[float] = Field(None, ge=0)
     is_esi_applicable: Optional[bool] = None
 
 
@@ -649,7 +654,7 @@ def _validate_salary_breakup(cls, v):
 class SalaryTemplateCreate(BaseModel):
     name: str
     description: Optional[str] = None
-    status: Optional[str] = "Active"
+    status: Optional[Literal["Active", "Inactive"]] = "Active"
     breakup: dict
 
     _validate_breakup = field_validator("breakup")(_validate_salary_breakup)
@@ -658,7 +663,7 @@ class SalaryTemplateCreate(BaseModel):
 class SalaryTemplateUpdate(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
-    status: Optional[str] = None
+    status: Optional[Literal["Active", "Inactive"]] = None
     breakup: Optional[dict] = None
 
     _validate_breakup = field_validator("breakup")(_validate_salary_breakup)
