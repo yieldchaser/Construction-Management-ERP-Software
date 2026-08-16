@@ -398,6 +398,8 @@ class MaterialIndent(Base):
     company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
     project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
     requested_by = Column(UUID(as_uuid=True), ForeignKey("company_team.id"), nullable=True)
+    approved_by = Column(UUID(as_uuid=True), ForeignKey("company_team.id"), nullable=True)
+    approved_at = Column(DateTime(timezone=True), nullable=True)
     indent_number = Column(String(100), nullable=False)
     status = Column(String(50), default="pending", nullable=False) # pending, approved, ordered, rejected
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)

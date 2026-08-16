@@ -868,3 +868,41 @@ def test_drawing_pin_bounds_and_actor_derived(client, db, make_tenant, auth_head
     )
     assert r.status_code == 200, r.text
     assert r.json()["created_by"] == str(team.id)
+
+# -- W15 R2-373: indent approval guard, approver and rejection endpoint --------
+
+def test_indent_approval_guard_approver_and_rejection(client, db, make_tenant, auth_headers):
+    comp, user, team = make_tenant(company_name="E45", user_name="UE45", mobile=_mob(48), email=_mail(48))
+    hdr = auth_headers(user, comp)
+    project = _mk_project(db, comp)
+    indent = models.MaterialIndent(
+        id=uuid.uuid4(), company_id=comp.id, project_id=project.id,
+        requested_by=team.id, indent_number="IND-W15-1", status="pending",
+    )
+    db.add(indent)
+    db.commit()
+
+    r = client.post(f"/apis/v3/procurement/indents/{indent.id}/approve", headers=hdr)
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["status"] == "approved"
+    assert body["approved_by"] == str(team.id)
+    assert body["approved_at"] is not None
+
+    r = client.post(f"/apis/v3/procurement/indents/{indent.id}/approve", headers=hdr)
+    assert r.status_code == 400
+
+    r = client.post(f"/apis/v3/procurement/indents/{indent.id}/reject", headers=hdr)
+    assert r.status_code == 400
+
+    indent2 = models.MaterialIndent(
+        id=uuid.uuid4(), company_id=comp.id, project_id=project.id,
+        requested_by=team.id, indent_number="IND-W15-2", status="pending",
+    )
+    db.add(indent2)
+    db.commit()
+
+    r = client.post(f"/apis/v3/procurement/indents/{indent2.id}/reject", headers=hdr)
+    assert r.status_code == 200, r.text
+    assert r.json()["status"] == "rejected"
+

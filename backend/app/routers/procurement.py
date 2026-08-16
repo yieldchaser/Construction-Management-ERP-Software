@@ -42,6 +42,8 @@ class IndentResponse(BaseModel):
     company_id: UUID
     project_id: UUID
     requested_by: Optional[UUID] = None
+    approved_by: Optional[UUID] = None
+    approved_at: Optional[datetime] = None
     indent_number: str
     status: str
     created_at: datetime
@@ -244,6 +246,8 @@ def get_indents(
                 company_id=ind.company_id,
                 project_id=ind.project_id,
                 requested_by=ind.requested_by,
+                approved_by=ind.approved_by,
+                approved_at=ind.approved_at,
                 indent_number=ind.indent_number,
                 status=ind.status,
                 created_at=ind.created_at,
@@ -271,6 +275,8 @@ def get_company_indents(company_id: UUID, db: Session = Depends(get_db), _: None
                 company_id=ind.company_id,
                 project_id=ind.project_id,
                 requested_by=ind.requested_by,
+                approved_by=ind.approved_by,
+                approved_at=ind.approved_at,
                 indent_number=ind.indent_number,
                 status=ind.status,
                 created_at=ind.created_at,
@@ -321,6 +327,8 @@ def create_indent(req: IndentCreateRequest, db: Session = Depends(get_db), curre
         company_id=indent.company_id,
         project_id=indent.project_id,
         requested_by=indent.requested_by,
+        approved_by=indent.approved_by,
+        approved_at=indent.approved_at,
         indent_number=indent.indent_number,
         status=indent.status,
         created_at=indent.created_at,
@@ -332,10 +340,14 @@ def approve_indent(indent_id: UUID, db: Session = Depends(get_db), current_user:
     indent = db.query(MaterialIndent).filter(MaterialIndent.id == indent_id).first()
     if not indent:
         raise HTTPException(status_code=404, detail="Indent not found")
-    get_company_membership(db, current_user, indent.company_id)
+    membership = get_company_membership(db, current_user, indent.company_id)
     require_permission(db, current_user, indent.company_id, "procurement:approve")
+    if indent.status != "pending":
+        raise HTTPException(status_code=400, detail=f"Only pending indents can be approved (current status: {indent.status})")
 
     indent.status = "approved"
+    indent.approved_by = membership.id
+    indent.approved_at = datetime.now(timezone.utc)
     db.commit()
     db.refresh(indent)
 
@@ -352,6 +364,43 @@ def approve_indent(indent_id: UUID, db: Session = Depends(get_db), current_user:
         company_id=indent.company_id,
         project_id=indent.project_id,
         requested_by=indent.requested_by,
+        approved_by=indent.approved_by,
+        approved_at=indent.approved_at,
+        indent_number=indent.indent_number,
+        status=indent.status,
+        created_at=indent.created_at,
+        items=item_schemas
+    )
+
+@router.post("/indents/{indent_id}/reject", response_model=IndentResponse)
+def reject_indent(indent_id: UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    indent = db.query(MaterialIndent).filter(MaterialIndent.id == indent_id).first()
+    if not indent:
+        raise HTTPException(status_code=404, detail="Indent not found")
+    get_company_membership(db, current_user, indent.company_id)
+    require_permission(db, current_user, indent.company_id, "procurement:approve")
+    if indent.status != "pending":
+        raise HTTPException(status_code=400, detail=f"Only pending indents can be rejected (current status: {indent.status})")
+
+    indent.status = "rejected"
+    db.commit()
+    db.refresh(indent)
+
+    items = db.query(MaterialIndentItem).filter(MaterialIndentItem.indent_id == indent.id).all()
+    item_schemas = [
+        IndentItemSchema(
+            material_name=i.material_name,
+            quantity=float(i.quantity),
+            unit=i.unit
+        ) for i in items
+    ]
+    return IndentResponse(
+        id=indent.id,
+        company_id=indent.company_id,
+        project_id=indent.project_id,
+        requested_by=indent.requested_by,
+        approved_by=indent.approved_by,
+        approved_at=indent.approved_at,
         indent_number=indent.indent_number,
         status=indent.status,
         created_at=indent.created_at,
