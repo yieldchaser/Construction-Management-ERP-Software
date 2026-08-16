@@ -105,7 +105,7 @@ def create_mom(
         status=payload.status,
         attendees=payload.attendees or [],
         notes=payload.notes,
-        created_by=payload.created_by,
+        created_by=current_user.name,
     )
     db.add(mom)
     db.commit()
@@ -159,7 +159,7 @@ def update_mom(
     if payload.notes is not None:
         mom.notes = payload.notes
     if payload.created_by is not None:
-        mom.created_by = payload.created_by
+        mom.created_by = current_user.name
     db.commit()
     db.refresh(mom)
     return {**_serialize(mom), "message": "MOM updated successfully."}
