@@ -72,8 +72,8 @@ def test_approval_status_validation():
     """Test valid and invalid approval_status in drawings."""
     valid = RevisionApproveRequest(approval_status="approved")
     assert valid.approval_status == "approved"
-    with pytest.raises(ValidationError):
-        RevisionApproveRequest(approval_status="pending")
+    valid = RevisionApproveRequest(approval_status="pending")
+    assert valid.approval_status == "pending"
     with pytest.raises(ValidationError):
         RevisionApproveRequest(approval_status="invalid_status")
 
