@@ -418,15 +418,16 @@ def get_company_operational_analytics(company_id: uuid.UUID, db: Session = Depen
     # Calculate Project Health and Progress
     project_summary = []
     health_counts = {"Healthy": 0, "Warning": 0, "Critical": 0, "Onhold": 0, "Completed": 0}
-    status_counts = {"Not Started": 0, "Ongoing": 0, "Onhold": 0, "Completed": 0}
+    status_counts = {"Not Started": 0, "Ongoing": 0, "On Hold": 0, "Cancelled": 0, "Planning": 0, "Completed": 0, "Other": 0}
 
     for p in projects:
         # Determine status
         p_status = p.status or "Ongoing"
-        if p_status in status_counts:
-            status_counts[p_status] += 1
+        count_status = "On Hold" if p_status == "Onhold" else p_status
+        if count_status in status_counts:
+            status_counts[count_status] += 1
         else:
-            status_counts["Ongoing"] += 1
+            status_counts["Other"] += 1
 
         # Budget vs Spend
         budget = db.query(ProjectBudget).filter(ProjectBudget.project_id == p.id).first()
