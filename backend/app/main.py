@@ -1,9 +1,11 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 import os
 from contextlib import asynccontextmanager
 from sqlalchemy import DateTime, String, Numeric, Boolean, Text, func
+from sqlalchemy.exc import IntegrityError
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from app.rate_limit import limiter
@@ -496,6 +498,20 @@ app = FastAPI(
 # endpoints) rather than globally, so no SlowAPIMiddleware is registered here.
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+@app.exception_handler(IntegrityError)
+async def integrity_error_handler(request, exc: IntegrityError):
+    # A referential or uniqueness constraint rejected the write — e.g. a
+    # delete whose parent is still referenced by an FK with no ondelete rule.
+    # That is the client's conflict to resolve, not a server fault.
+    if exc.orig is not None:
+        detail = str(exc.orig).split("\n")[0]
+    else:
+        detail = str(exc)
+    return JSONResponse(
+        status_code=409,
+        content={"detail": f"Record is still referenced by another row: {detail}"},
+    )
 
 # Configure CORS for Next.js frontend communication.
 # Allowed origins are parsed dynamically from ALLOWED_ORIGINS and FRONTEND_URL env vars.
