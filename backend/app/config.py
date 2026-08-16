@@ -152,6 +152,7 @@ class Settings(BaseSettings):
     # the admin migration routes always reject with 403. Set a random value in the
     # prod env (e.g. Render) per deployment; never ship a default here.
     ADMIN_MIGRATION_SECRET: str = ""
+    RATE_LIMIT_STORAGE_URI: str = ""
 
     # Encryption key for OAuth tokens stored at rest (currently
     # GoogleSheetsConnection.access_token / refresh_token; see app/crypto.py).

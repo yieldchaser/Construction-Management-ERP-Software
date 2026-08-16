@@ -6,5 +6,7 @@ a circular import with app.main (which imports the routers).
 """
 from slowapi import Limiter
 from slowapi.util import get_remote_address
+from app.config import settings
 
-limiter = Limiter(key_func=get_remote_address)
+_storage_uri = (settings.RATE_LIMIT_STORAGE_URI or "").strip()
+limiter = Limiter(key_func=get_remote_address, storage_uri=_storage_uri) if _storage_uri else Limiter(key_func=get_remote_address)
