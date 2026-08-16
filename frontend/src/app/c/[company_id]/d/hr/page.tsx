@@ -440,6 +440,11 @@ export default function HRPayrollPage() {
   }, [projectId, tab]);
 
   const handleSaveEmployee = async () => {
+    const dup = employees.find((e) => e.name.trim().toLowerCase() === empForm.name.trim().toLowerCase());
+    if (dup) {
+      const ok = window.confirm(`An employee named "${empForm.name}" already exists. Create another anyway?`);
+      if (!ok) return;
+    }
     try {
       const res = await fetch(`${getApiHost()}/apis/v3/hr/employees`, {
         method: "POST",
