@@ -182,3 +182,18 @@ def test_pin_R2_027_face_log_has_created_at():
 def test_pin_R2_086_face_page_surfaces_errors():
     src = _read_frontend("src/app/c/[company_id]/d/face-recognition/page.tsx")
     assert "setLoadError" in src, "R2-086 face page error state regressed"
+
+
+def test_pin_R2_002_no_emoji_in_sidebar():
+    sidebar = _read_frontend("src/components/Sidebar.tsx")
+    reports = _read_frontend("src/app/c/[company_id]/reports/[slug]/page.tsx")
+    for glyph in ("\U0001F4DD", "\u2705", "\U0001F4AC", "\u2B06"):
+        assert glyph not in sidebar, f"R2-002 emoji {hex(ord(glyph))} reintroduced in Sidebar"
+        assert glyph not in reports, f"R2-002 emoji {hex(ord(glyph))} reintroduced in reports page"
+
+
+def test_pin_R2_079_no_demo_company_fallback():
+    header = _read_frontend("src/components/PageHeader.tsx")
+    reports = _read_frontend("src/app/c/[company_id]/reports/page.tsx")
+    assert "demo-construction" not in header, "R2-079 demo company fallback reintroduced in PageHeader"
+    assert "demo-construction" not in reports, "R2-079 demo company fallback reintroduced in reports dashboard"
