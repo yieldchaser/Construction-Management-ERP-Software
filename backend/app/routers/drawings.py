@@ -72,11 +72,10 @@ class RevisionApproveRequest(BaseModel):
     comments: Optional[str] = None
 
 class PinCreateRequest(BaseModel):
-    x_coordinate: float = Field(..., example=45.5)
-    y_coordinate: float = Field(..., example=60.2)
+    x_coordinate: float = Field(..., ge=0, le=9999.99, example=45.5)
+    y_coordinate: float = Field(..., ge=0, le=9999.99, example=60.2)
     comment: str = Field(..., example="Check structural column thickness here")
     tagged_user_id: Optional[UUID] = None
-    created_by: Optional[UUID] = None
 
 # Endpoints
 
@@ -282,7 +281,7 @@ def add_pin_to_revision(revision_id: UUID, req: PinCreateRequest, db: Session = 
     project = db.query(Project).filter(Project.id == drawing.project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
-    get_company_membership(db, current_user, project.company_id)
+    membership = get_company_membership(db, current_user, project.company_id)
     require_permission(db, current_user, project.company_id, "drawings:edit")
 
     pin = DrawingPin(
@@ -291,7 +290,7 @@ def add_pin_to_revision(revision_id: UUID, req: PinCreateRequest, db: Session = 
         y_coordinate=req.y_coordinate,
         comment=req.comment,
         tagged_user_id=req.tagged_user_id,
-        created_by=req.created_by
+        created_by=membership.id
     )
     db.add(pin)
     db.commit()

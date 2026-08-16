@@ -830,3 +830,41 @@ def test_task_create_honors_client_status(client, db, make_tenant, auth_headers)
     )
     assert r.status_code == 201, r.text
     assert r.json()["status"] == "not_started", r.json()["status"]
+
+# -- W15 R2-277: drawing pins bounded and actor-derived -----------------------
+
+def test_drawing_pin_bounds_and_actor_derived(client, db, make_tenant, auth_headers):
+    comp, user, team = make_tenant(company_name="E44", user_name="UE44", mobile=_mob(47), email=_mail(47))
+    hdr = auth_headers(user, comp)
+    project = _mk_project(db, comp)
+    drawing = models.Drawing(id=uuid.uuid4(), project_id=project.id, name="D", category="2D Layout")
+    db.add(drawing)
+    db.commit()
+    revision = models.DrawingRevision(
+        id=uuid.uuid4(), drawing_id=drawing.id, version_code="V1",
+        file_url="/f.pdf", approval_status="pending",
+    )
+    db.add(revision)
+    db.commit()
+
+    r = client.post(
+        f"/apis/v3/drawings/revisions/{revision.id}/pins",
+        json={"x_coordinate": 99999, "y_coordinate": 10, "comment": "ZZ off"},
+        headers=hdr,
+    )
+    assert r.status_code == 422
+
+    r = client.post(
+        f"/apis/v3/drawings/revisions/{revision.id}/pins",
+        json={"x_coordinate": 10, "y_coordinate": -5, "comment": "ZZ neg"},
+        headers=hdr,
+    )
+    assert r.status_code == 422
+
+    r = client.post(
+        f"/apis/v3/drawings/revisions/{revision.id}/pins",
+        json={"x_coordinate": 10, "y_coordinate": 10, "comment": "ZZ ok", "created_by": "not-a-uuid"},
+        headers=hdr,
+    )
+    assert r.status_code == 200, r.text
+    assert r.json()["created_by"] == str(team.id)
