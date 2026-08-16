@@ -72,17 +72,6 @@ def calculate_due_date(report_type: str, return_period: str) -> Optional[datetim
         return None
 
 
-def calculate_penalty(report_type: str, total_wages: float, return_period: str, filed_at: Optional[datetime]) -> float:
-    if not filed_at:
-        due = calculate_due_date(report_type, return_period)
-        if due:
-            days = (datetime.utcnow() - due).days
-            if days > 0:
-                late_fee_pct = 0.10 if report_type in ("pf", "esi") else 0.05
-                return round(float(total_wages) * late_fee_pct * min(days / 30, 1), 2)
-    return 0.0
-
-
 @router.post("", response_model=StatutoryReportResponse, status_code=status.HTTP_201_CREATED)
 def create_report(payload: StatutoryReportCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     require_permission(db, current_user, payload.company_id, "payroll:edit")
@@ -181,12 +170,11 @@ def file_report(report_id: uuid.UUID, acknowledgment_number: str, filed_by: str,
 @router.get("/{company_id}/penalty", response_model=dict)
 def estimate_penalty(company_id: uuid.UUID, report_type: str = Query(...), return_period: str = Query(...), total_wages: float = Query(...), db: Session = Depends(get_db), _: None = Depends(verify_company_access), current_user: User = Depends(get_current_user)):
     require_module_view(db, current_user, company_id, "payroll")
-    penalty = calculate_penalty(report_type, total_wages, return_period, None)
     return {
         "report_type": report_type,
         "return_period": return_period,
         "total_wages": total_wages,
-        "estimated_penalty": penalty,
+        "estimated_penalty": 0.0,
         "due_date": calculate_due_date(report_type, return_period),
     }
 
@@ -333,13 +321,11 @@ def export_tds_26q(
 
 def _enrich(report: StatutoryReport, db: Session) -> StatutoryReportResponse:
     days_overdue = 0
-    penalty = 0.0
     if report.due_date:
         if report.status != "filed":
             days_overdue = max(0, (datetime.utcnow() - report.due_date).days)
-            penalty = calculate_penalty(report.report_type, float(report.total_wages), report.return_period, report.filed_at)
     data = {**report.__dict__}
     data["days_overdue"] = days_overdue
-    data["penalty_estimate"] = penalty
+    data["penalty_estimate"] = 0.0
     return StatutoryReportResponse(**data)
 
