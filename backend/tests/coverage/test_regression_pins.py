@@ -474,3 +474,73 @@ def test_pin_R2_370_bill_cancel_audit():
     assert "bill.cancelled_at = datetime.now(timezone.utc)" in src, "R2-370 bill cancel audit timestamp regressed"
     models = _read("app/models.py")
     assert "cancelled_at = Column(DateTime(timezone=True), nullable=True)" in models, "R2-370 bill cancelled_at column regressed"
+
+
+def test_pin_R2_514_help_approval_note_and_no_rollout_claim():
+    src = _read_frontend("src/app/c/[company_id]/d/help/helpContent.tsx")
+    assert "approval rules defined here are not" in src, "R2-514 help approval-rules disclaimer regressed"
+    assert "rolled out category by category" not in src, "R2-514 fabricated rollout claim reintroduced"
+
+
+def test_pin_R2_048_help_module_links_exported_and_modules_section():
+    src = _read_frontend("src/app/c/[company_id]/d/help/helpContent.tsx")
+    assert "export const HELP_MODULE_LINKS" in src, "R2-048 HELP_MODULE_LINKS export regressed"
+    page = _read_frontend("src/app/c/[company_id]/d/help/page.tsx")
+    assert "Modules" in page, "R2-048 Modules directory section regressed"
+
+
+def test_pin_R2_102_tally_voucher_template_sf_prefix():
+    src = _read("app/models.py")
+    assert 'default="SF-{year}-{number}"' in src, "R2-102 Tally voucher SF template default regressed"
+    assert "ONS-{year}-{number}" not in src, "R2-102 unexplained ONS- prefix reintroduced"
+
+
+def test_pin_R2_114_gstin_checksum_validation():
+    src = _read("app/routers/settings.py")
+    assert "_gstin_checksum_ok" in src, "R2-114 GSTIN checksum helper regressed"
+    assert "GSTIN check digit is invalid" in src, "R2-114 GSTIN check digit rejection regressed"
+
+
+def test_pin_R2_452_no_float_limit_rounding_in_budgeting():
+    src = _read("app/routers/budgeting.py")
+    assert "quantity = round(quantity, float_limit)" not in src, "R2-452 float_limit rounding reintroduced"
+
+
+def test_pin_R2_122_boq_document_item_create_endpoint():
+    src = _read("app/routers/budgeting.py")
+    assert '@router.post("/boq-documents/{doc_id}/items"' in src, "R2-122 BOQ document item create endpoint regressed"
+
+
+def test_pin_R2_145_chat_team_members_fetch_and_placeholder():
+    src = _read_frontend("src/app/c/[company_id]/d/chat/page.tsx")
+    assert "apis/v3/crm/team-members/" in src, "R2-145 chat team members fetch regressed"
+    assert "Select a team member" in src, "R2-145 team member placeholder regressed"
+
+
+def test_pin_R2_146_chat_no_active_project_hint():
+    src = _read_frontend("src/app/c/[company_id]/d/chat/page.tsx")
+    assert 'No active project selected. Pick a project from the "Pinned Projects" dropdown' in src, "R2-146 no-active-project hint regressed"
+
+
+def test_pin_R2_578_chat_server_stamps_sender_identity():
+    src = _read("app/routers/chat.py")
+    assert "msg.user_id = ct.id" in src, "R2-578 chat sender user_id stamping regressed"
+    assert "msg.user_name = current_user.name" in src, "R2-578 chat sender user_name stamping regressed"
+
+
+def test_pin_R2_147_chat_poll_since_id_and_member_count_group_by():
+    src = _read("app/routers/chat.py")
+    assert "since_id: Optional[uuid.UUID] = None" in src, "R2-147 chat poll since_id cursor regressed"
+    assert "func.count(ChatGroupMember.id)" in src, "R2-147 member_count single GROUP BY regressed"
+
+
+def test_pin_R2_150_todo_creator_derived_from_membership():
+    src = _read("app/routers/todos.py")
+    assert "membership = get_company_membership" in src, "R2-150 todo membership lookup regressed"
+    assert "created_by=membership.id" in src, "R2-150 todo creator derivation regressed"
+    assert "created_by: Optional[uuid.UUID] = None" not in src, "R2-150 untyped optional created_by reintroduced"
+
+
+def test_pin_R2_443_todo_overdue_flag():
+    src = _read("app/routers/todos.py")
+    assert '"is_overdue": is_overdue' in src, "R2-443 todo is_overdue flag regressed"
