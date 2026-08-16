@@ -328,6 +328,19 @@ def _rep_po_item(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
     for it in q.all():
         po = db.query(PurchaseOrder).filter(PurchaseOrder.id == it.po_id).first()
         proj = db.query(Project).filter(Project.id == po.project_id).first() if po and po.project_id else None
+        received_qty = 0.0
+        for gi in db.query(GRNItem).join(GoodsReceiptNote).filter(
+            GoodsReceiptNote.po_id == it.po_id,
+            GRNItem.po_item_id == it.id,
+        ).all():
+            received_qty += float(gi.received_qty)
+        ordered_qty = float(it.quantity)
+        if received_qty >= ordered_qty:
+            item_status = "received"
+        elif received_qty > 0.0:
+            item_status = "partial"
+        else:
+            item_status = "pending"
         rows.append({
             "PO Date": _clean(po.po_date) if po else "",
             "PO Number": po.po_number if po else "",
@@ -338,9 +351,9 @@ def _rep_po_item(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
             "Unit": it.unit,
             "Unit Price": _clean(it.rate),
             "PO Qty": _clean(it.quantity),
-            "PO Received Qty": "",
-            "PO Pending Qty": "",
-            "Item Status": "",
+            "PO Received Qty": _clean(received_qty),
+            "PO Pending Qty": _clean(max(0.0, ordered_qty - received_qty)),
+            "Item Status": item_status,
             "Approval Status": po.approval_flag if po else "",
             "MR No.": "",
             "Challan Number": "",
