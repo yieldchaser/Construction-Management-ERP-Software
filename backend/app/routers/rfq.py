@@ -1,5 +1,5 @@
 from uuid import UUID
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -80,6 +80,8 @@ class RFQQuoteResponse(BaseModel):
     terms: Optional[str] = None
     validity_days: int
     submitted_at: datetime
+    extended_total: Optional[float] = None
+    is_lowest: bool = False
 
     class Config:
         from_attributes = True
@@ -91,6 +93,10 @@ class ComparisonRow(BaseModel):
     quantity: float
     unit: str
     vendors: List[RFQQuoteResponse]
+    lowest_rate: Optional[float] = None
+    highest_rate: Optional[float] = None
+    price_spread: Optional[float] = None
+    recommended_vendor_name: Optional[str] = None
 
 
 # --- Endpoints ---
@@ -106,6 +112,13 @@ def create_rfq(req: RFQCreateRequest, db: Session = Depends(get_db), current_use
     ).first()
     if existing:
         raise HTTPException(status_code=400, detail="RFQ number already exists for this company")
+
+    if req.valid_until:
+        valid_until = req.valid_until
+        if valid_until.tzinfo is None:
+            valid_until = valid_until.replace(tzinfo=timezone.utc)
+        if valid_until < datetime.now(timezone.utc):
+            raise HTTPException(status_code=400, detail="valid_until must be in the future")
 
     rfq = RFQ(
         company_id=req.company_id,
@@ -191,6 +204,13 @@ def submit_quote(rfq_id: UUID, req: RFQQuoteCreate, db: Session = Depends(get_db
     get_company_membership(db, current_user, rfq.company_id)
     require_permission(db, current_user, rfq.company_id, "procurement:edit")
 
+    if rfq.valid_until:
+        valid_until = rfq.valid_until
+        if valid_until.tzinfo is None:
+            valid_until = valid_until.replace(tzinfo=timezone.utc)
+        if datetime.now(timezone.utc) > valid_until:
+            raise HTTPException(status_code=400, detail="RFQ validity has expired; quotes cannot be submitted")
+
     db_item = db.query(RFQItem).filter(RFQItem.id == req.item_id).first()
     if not db_item or db_item.rfq_id != rfq_id:
         raise HTTPException(status_code=404, detail="RFQ item not found")
@@ -234,6 +254,9 @@ def get_comparison(rfq_id: UUID, db: Session = Depends(get_db), current_user: Us
     result = []
     for item in items:
         quotes = db.query(RFQQuote).filter(RFQQuote.item_id == item.id).all()
+        rates = [float(q.quoted_rate) for q in quotes]
+        lowest_rate = min(rates) if rates else None
+        highest_rate = max(rates) if rates else None
         quote_responses = [
             RFQQuoteResponse(
                 id=q.id,
@@ -246,13 +269,20 @@ def get_comparison(rfq_id: UUID, db: Session = Depends(get_db), current_user: Us
                 terms=q.terms,
                 validity_days=q.validity_days,
                 submitted_at=q.submitted_at,
+                extended_total=round(float(q.quoted_rate) * float(item.quantity), 2),
+                is_lowest=(lowest_rate is not None and float(q.quoted_rate) == lowest_rate),
             ) for q in quotes
         ]
+        recommended = next((r for r in quote_responses if r.is_lowest), None)
         result.append(ComparisonRow(
             item_id=item.id,
             material_name=item.material_name,
             quantity=float(item.quantity),
             unit=item.unit,
             vendors=quote_responses,
+            lowest_rate=lowest_rate,
+            highest_rate=highest_rate,
+            price_spread=round(highest_rate - lowest_rate, 2) if lowest_rate is not None and highest_rate is not None else None,
+            recommended_vendor_name=recommended.vendor_name if recommended else None,
         ))
     return result
