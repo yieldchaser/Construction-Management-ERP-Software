@@ -17,7 +17,7 @@ import csv
 import io
 import math
 import uuid
-from datetime import datetime, date, timedelta
+from datetime import datetime, date, timedelta, timezone
 from decimal import Decimal
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, File, Form, UploadFile, Response
@@ -393,6 +393,21 @@ def add_timesheet_entry(ts_id: uuid.UUID, payload: TimesheetEntryCreate, db: Ses
     require_permission(db, current_user, project.company_id, "attendance:edit")
     if ts.status not in ("draft", "rejected"):
         raise HTTPException(status_code=400, detail=f"Cannot add entries to timesheet in status '{ts.status}'")
+
+    entry_date = payload.entry_date
+    week_start = ts.week_start
+    week_end = ts.week_end
+    if entry_date.tzinfo is None:
+        entry_date = entry_date.replace(tzinfo=timezone.utc)
+    if week_start.tzinfo is None:
+        week_start = week_start.replace(tzinfo=timezone.utc)
+    if week_end.tzinfo is None:
+        week_end = week_end.replace(tzinfo=timezone.utc)
+    if not (week_start <= entry_date <= week_end):
+        raise HTTPException(
+            status_code=422,
+            detail=f"entry_date must fall within the timesheet's week ({week_start.date()} to {week_end.date()})",
+        )
 
     entry_data = payload.model_dump()
     if entry_data.get("start_time") and entry_data.get("end_time") and not entry_data.get("duration"):
