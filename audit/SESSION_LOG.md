@@ -2,6 +2,17 @@
 
 Append-only. Every working block ends with a 5-line entry. Never edit an existing entry; if a commit was reverted, add a new entry.
 
+## Session 25 — the system docs + the face-recognition wave (2026-08-15)
+
+- Action 0 (founder request: "maintain all findings, learnings, state so resuming is easy and regressions never repeat"): completed the documentation system — `audit/LEARNINGS.md` (16 consolidated lessons, incl. the two regression incidents and the verification-beats-register rule), `audit/WORKLIST.md` (the map of all 582: status summary, the 14 founder-gated findings with their decision IDs, the 413-fixable queue by wave with the notable CRITICALs, evidence-close candidates, working rules), and START_HERE now points at both plus DECISIONS.md. The full 582 triage was computed programmatically from the register.
+- Action 1: applied the face-recognition wave (R2-027, R2-086, R2-307 — CRITICAL ×3, one root cause, Sentry-proven). `FaceRecognitionLog` had no `created_at` column while four query sites and the response model required it — every endpoint 500'd, the POST committed-then-failed (punches stored but unreadable), and the frontend's `if (res.ok)` with no else rendered it as an empty module. Added the nullable column (no false timestamps on legacy rows), `.nulls_last()` ordering, an additive prod migration, honest load-error states on the page (the R2-137 instance), a behavior test, and two pins. CORRECTION recorded: the face endpoints ARE auth-gated (router-level dependency) — the audit's "no auth" claim was wrong.
+- Verified: pytest 246 rc=0 (243 + 1 test + 2 pins; 29 pins total); npm build green (36.6s + 38.8s TS); verifier APPROVE on both commits incl. the auth-claim verdict and the midnight-crossing test-flake note.
+- Commits: `97f4eb4` (R2-027/086/307), `f30fffe` (R2-137 page instance).
+- Register: R2-027, R2-086, R2-307 STATUS TODO → FIXED; R2-137 keeps TODO (class open) with the instance closure noted.
+- Next session: W12 statutory.py (6 CRITICALs incl. the R2-127 any()-guard class), W16 three_way.py (4 CRITICALs), or W08 analytics (R2-080 backend asleep / R2-081). R2-178 + the D-set still await the founder (DECISIONS.md).
+
+---
+
 ## Session 24 — the regression guard + R2-098 (2026-08-15)
 
 - Context (founder-raised): "this regressions thing is pretty serious" — and it is. Two FIX_VERIFIED findings were silently reintroduced by parallel-branch merges: R2-096's party-balance formula (found in session 23) and — discovered this session — R2-054's PR-number collision loop (plain `count + 1` again, reintroduced by the same Finance rebuild that won the merge). Pattern confirmed: without tests pinning the fix, a merge can re-break anything.
