@@ -913,8 +913,15 @@ def _txn_party_name(db, team_id):
     team = db.query(CompanyTeam).filter(CompanyTeam.id == team_id).first()
     if not team:
         return "Unknown Party"
-    user = db.query(User).filter(User.id == team.user_id).first()
-    return user.name if user else "Unknown Party"
+    if team.user_id:
+        user = db.query(User).filter(User.id == team.user_id).first()
+        if user and user.name:
+            return user.name
+    if team.library_party_id:
+        party = db.query(LibraryParty).filter(LibraryParty.id == team.library_party_id).first()
+        if party and party.name:
+            return party.name
+    return "Unknown Party"
 
 
 class TransactionRow(BaseModel):
