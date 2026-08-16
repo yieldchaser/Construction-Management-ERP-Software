@@ -1735,7 +1735,7 @@ export default function CompanySettingsPage() {
               {/* Weekly Off — company default (bonus; not part of /hr/holidays) */}
               <div className="bg-card border border-border-custom rounded-lg bg-background p-6 space-y-4 max-w-xl">
                 <h2 className="text-sm font-bold text-foreground uppercase tracking-wider text-muted border-b border-border-custom pb-3">Weekly Off</h2>
-                <p className="text-[11px] text-muted -mt-2">Default weekly off day for this company. Stored on the company record (separate from the Holiday Calendar above).</p>
+                <p className="text-[11px] text-muted -mt-2">Default weekly off day for this company.</p>
                 <Field label="Weekly Off Days">
                   <div className="flex gap-2">
                     {WEEKDAYS.map((d) => {
@@ -1901,7 +1901,7 @@ export default function CompanySettingsPage() {
                         );
                       })}
                     </div>
-                    <p className="text-[10px] text-muted">Stored on the company record (custom_pdf_template_enabled). Consumed by the Client Portal PDF report generator: when enabled, it looks up a configured PDF Template (default-flagged, else most recent) for this company and renders its content as a banner in place of the standard layout. No template configured yet still falls back to Default. Other document PDFs (invoices, quotations, purchase orders) do not generate a server-rendered PDF at all yet, so this flag has no effect there.</p>
+                    <p className="text-[10px] text-muted">When enabled, the Client Portal PDF uses your configured PDF template and renders its content as a banner in place of the standard layout. If no template is configured yet, the default layout is used.</p>
                   </div>
 
                   <div className="bg-card border border-border-custom rounded-lg bg-background p-6 space-y-3">
