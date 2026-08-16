@@ -777,7 +777,7 @@ export default function DynamicReportViewPage() {
                   className="text-muted hover:text-primary text-xs border border-border-custom bg-card/20 rounded-lg px-3 py-1.5 transition-all flex items-center gap-1"
                   title="Export Options"
                 >
-                  ⬆️ Export
+                  <Icon name="arrow_up" className="w-3.5 h-3.5" /> Export
                 </button>
                 {showExportDropdown && (
                   <div className="absolute right-0 mt-2 w-40 bg-card border border-border-custom rounded-lg shadow-xl py-1 z-50">

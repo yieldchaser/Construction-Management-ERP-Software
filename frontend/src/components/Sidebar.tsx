@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
 import { getApiHost } from "@/lib/api";
 import { useProject } from "@/context/ProjectContext";
+import Icon from "@/components/marketing/Icon";
 import { usePermissions } from "@/context/PermissionsContext";
 import { useSidebar } from "@/context/SidebarContext";
 import CompanySwitcher from "@/components/CompanySwitcher";
@@ -329,7 +330,7 @@ export default function Sidebar() {
                 : "bg-card hover:bg-elevated border-border-custom text-muted hover:text-foreground"
             }`}
           >
-            <span>📝</span>
+            <Icon name="note" className="w-5 h-5" />
             <span className="mt-0.5">MOM</span>
           </Link>
           <Link
@@ -341,7 +342,7 @@ export default function Sidebar() {
                 : "bg-card hover:bg-elevated border-border-custom text-muted hover:text-foreground"
             }`}
           >
-            <span>✅</span>
+            <Icon name="check" className="w-5 h-5" />
             <span className="mt-0.5">To Do</span>
           </Link>
           <Link
@@ -353,7 +354,7 @@ export default function Sidebar() {
                 : "bg-card hover:bg-elevated border-border-custom text-muted hover:text-foreground"
             }`}
           >
-            <span>💬</span>
+            <Icon name="chat_bubble" className="w-5 h-5" />
             <span className="mt-0.5">Chat</span>
           </Link>
         </div>
