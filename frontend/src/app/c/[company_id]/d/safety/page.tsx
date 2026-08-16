@@ -429,8 +429,17 @@ export default function SafetyPage() {
           <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: 24, alignItems: 'start' }}>
             {/* Donut */}
             <div style={{ padding: 24, borderRadius: 16, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', textAlign: 'center' }}>
-              <DonutGauge pct={overallPPE} />
-              <p style={{ margin: '10px 0 0', fontSize: 13, color: 'rgba(255,255,255,0.45)' }}>Overall Compliance<br />(average of all checks)</p>
+              {ppeChecks.length === 0 ? (
+                <>
+                  <div style={{ width: 140, height: 140, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40, fontWeight: 800, color: 'rgba(255,255,255,0.3)' }}>—</div>
+                  <p style={{ margin: '10px 0 0', fontSize: 13, color: 'rgba(255,255,255,0.45)' }}>Overall Compliance<br />(no checks recorded yet)</p>
+                </>
+              ) : (
+                <>
+                  <DonutGauge pct={overallPPE} />
+                  <p style={{ margin: '10px 0 0', fontSize: 13, color: 'rgba(255,255,255,0.45)' }}>Overall Compliance<br />(average of all checks)</p>
+                </>
+              )}
             </div>
             {/* Check list */}
             <div>
