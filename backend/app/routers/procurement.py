@@ -680,6 +680,8 @@ def create_grn(req: GRNCreateRequest, db: Session = Depends(get_db), current_use
             material_name=po_item.material_name,
             qty=item.received_qty,
             type="received",
+            unit=po_item.unit,
+            category=inv.category,
             source_ref_id=grn.id
         )
         db.add(txn)
