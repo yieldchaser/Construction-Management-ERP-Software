@@ -474,8 +474,8 @@ export default function CompanySettingsPage() {
 
   // ─── Multi Level Approval (15 categories; flat chain or amount-range blocks) ──
   const APPROVAL_CATEGORIES = [
-    "Asset Transfer", "Design Version", "Equipment Expense", "GRN Material",
-    "Inspection Form Response", "Leave Application", "Material Issue", "Material Purchase",
+    "Asset Transfer", "Equipment Expense", "GRN Material",
+    "Material Issue", "Material Purchase",
     "Material Transfer", "Material Used", "Other Expense", "Payment Entries",
     "Payment Request", "Purchase Order", "RFQ",
   ];
