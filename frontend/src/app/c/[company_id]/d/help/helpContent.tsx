@@ -32,8 +32,8 @@ export const HELP_CATEGORIES: (companyId: string) => FaqCategory[] = (
         a: (
           <>
             <p>
-              A brand-new account that does not yet belong to a company is sent to
-              the create-company screen after login. Enter your company name, legal
+              A brand-new account that belongs to no company is sent to the
+              create-company screen after login. Enter your company name, legal
               business name, GSTIN, city, billing address and phone. The session is
               then re-issued and scoped to that company, and you become its Owner.
             </p>
@@ -403,8 +403,9 @@ export const HELP_CATEGORIES: (companyId: string) => FaqCategory[] = (
             <p>
               In Settings, Multi Level Approval, define approval rule blocks per
               category (for example payments or purchases) as a flat chain or
-              amount-range blocks. Note: the rules and UI are wired, and enforcement
-              across each transaction flow is being rolled out category by category.
+              amount-range blocks. Note: approval rules defined here are not
+              enforced on transactions; do not rely on them as an approval
+              control.
             </p>
             <p className="mt-2">
               Path:{" "}
