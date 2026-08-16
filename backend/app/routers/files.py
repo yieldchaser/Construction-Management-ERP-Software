@@ -18,6 +18,68 @@ router = APIRouter(prefix="/files", tags=["Project Files"], dependencies=[Depend
 # Reject oversized uploads before buffering the whole body in memory.
 MAX_UPLOAD_BYTES = 50 * 1024 * 1024  # 50 MB
 
+# Allowlist of content types the product actually needs (documents, images, CAD, archives).
+ALLOWED_CONTENT_TYPES = {
+    "application/pdf",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/vnd.ms-excel",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "application/vnd.ms-powerpoint",
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    "text/plain",
+    "text/csv",
+    "image/png",
+    "image/jpeg",
+    "image/gif",
+    "image/webp",
+    "image/bmp",
+    "image/svg+xml",
+    "application/dwg",
+    "application/x-dwg",
+    "application/dxf",
+    "application/x-dxf",
+    "application/zip",
+    "application/x-rar-compressed",
+    "application/x-7z-compressed",
+    "application/gzip",
+    "application/x-tar",
+}
+
+
+def _sniff_content_type(data: bytes) -> Optional[str]:
+    head = data[:16]
+    if head.startswith(b"%PDF-"):
+        return "application/pdf"
+    if head.startswith(b"\x89PNG\r\n\x1a\n"):
+        return "image/png"
+    if head.startswith(b"\xff\xd8\xff"):
+        return "image/jpeg"
+    if head.startswith(b"GIF87a") or head.startswith(b"GIF89a"):
+        return "image/gif"
+    if head[:4] == b"RIFF" and head[8:12] == b"WEBP":
+        return "image/webp"
+    if head.startswith(b"PK\x03\x04"):
+        return "application/zip"
+    if head.startswith(b"Rar!\x1a\x07"):
+        return "application/x-rar-compressed"
+    if head.startswith(b"\x37\x7a\xbc\xaf\x27\x1c"):
+        return "application/x-7z-compressed"
+    if head.startswith(b"\x1f\x8b"):
+        return "application/gzip"
+    if head.startswith(b"BM"):
+        return "image/bmp"
+    if head.startswith(b"MZ"):
+        return "application/x-msdownload"
+    if head.startswith(b"\x7fELF"):
+        return "application/octet-stream"
+    lower = data[:1024].lstrip().lower()
+    if lower.startswith((b"<!doctype html", b"<html", b"<head", b"<body", b"<script", b"<!--")):
+        return "text/html"
+    if lower.startswith((b"<?xml", b"<svg")):
+        return "image/svg+xml"
+    return None
+
 
 # ─── Schemas ───────────────────────────────────────────────────────────────────
 class FolderCreateRequest(BaseModel):
@@ -151,7 +213,22 @@ async def upload_file(
         )
 
     name = file.filename or "untitled"
-    content_type = file.content_type or "application/octet-stream"
+    declared_type = (file.content_type or "").strip().lower()
+    sniffed = _sniff_content_type(contents)
+    if sniffed and sniffed not in ALLOWED_CONTENT_TYPES:
+        raise HTTPException(
+            status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            detail="File type not allowed. Upload documents, images, CAD files or archives.",
+        )
+    if declared_type in ALLOWED_CONTENT_TYPES:
+        content_type = declared_type
+    elif sniffed in ALLOWED_CONTENT_TYPES:
+        content_type = sniffed
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            detail="File type not allowed. Upload documents, images, CAD files or archives.",
+        )
     file_id = uuid.uuid4()
 
     storage_path = None
@@ -214,6 +291,9 @@ def get_file(
             signed_url = supabase_storage.create_signed_url(
                 supabase_storage.BUCKET_PROJECT_FILES, pf.storage_path
             )
+            if download:
+                sep = "&" if "?" in signed_url else "?"
+                signed_url = f"{signed_url}{sep}download=true"
             return RedirectResponse(url=signed_url, status_code=307)
         except Exception:
             # Storage unavailable or signed-URL failed: fall through to BLOB.
