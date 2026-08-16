@@ -370,6 +370,12 @@ export default function EquipmentTrackingPage() {
                     </div>
                   )}
 
+                  {fleet.length === 0 ? (
+                    <div className="bg-card border border-dashed border-border-custom rounded-lg p-10 text-center">
+                      <div className="text-xs font-bold text-foreground">No equipment yet</div>
+                      <p className="text-[11px] text-muted mt-1">Click '+ Add Equipment' to add your first asset.</p>
+                    </div>
+                  ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {fleet.map((eq) => {
                       const activeDep = deployments.find(d => d.equipment_id === eq.id && d.end_date === null);
@@ -428,6 +434,7 @@ export default function EquipmentTrackingPage() {
                     );
                   })}
                   </div>
+                  )}
                 </div>
               )}
 
@@ -439,7 +446,10 @@ export default function EquipmentTrackingPage() {
                   </div>
 
                   <div className="space-y-3">
-                    {timelineEvents.map((evt) => (
+                    {timelineEvents.length === 0 ? (
+                      <div className="text-center text-[11px] text-muted italic py-6">No usage or refuel events yet.</div>
+                    ) : (
+                    timelineEvents.map((evt) => (
                       <div key={evt.id} className="p-3.5 rounded-md border border-border-custom bg-input text-xs flex justify-between items-start gap-4">
                         <div className="space-y-1">
                           <div className="flex items-center gap-2">
@@ -455,6 +465,7 @@ export default function EquipmentTrackingPage() {
                         </div>
                       </div>
                     ))}
+                    )}
                   </div>
                 </div>
               )}
