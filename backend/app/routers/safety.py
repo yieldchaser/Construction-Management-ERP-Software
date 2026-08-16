@@ -50,7 +50,7 @@ class ToolboxTalkCreate(BaseModel):
     topic: str
     conducted_by: str
     conducted_at: datetime       # ISO datetime string
-    attendee_count: int = 0
+    attendee_count: int = Field(0, ge=0)
     notes: Optional[str] = None
 
 
