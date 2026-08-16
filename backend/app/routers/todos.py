@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 from app.database import get_db
 from app import models
@@ -39,6 +39,12 @@ def _serialize(db: Session, t: models.Todo):
     if t.linked_task_id:
         task = db.query(models.Task).filter(models.Task.id == t.linked_task_id).first()
         task_name = task.name if task else None
+    is_overdue = False
+    if t.due_date is not None and t.status != "done":
+        now = datetime.utcnow()
+        if t.due_date.tzinfo is not None:
+            now = now.replace(tzinfo=timezone.utc)
+        is_overdue = t.due_date < now
     return {
         "id": str(t.id),
         "company_id": str(t.company_id),
@@ -46,6 +52,7 @@ def _serialize(db: Session, t: models.Todo):
         "created_by": str(t.created_by) if t.created_by else None,
         "title": t.title,
         "due_date": t.due_date.isoformat() if t.due_date else None,
+        "is_overdue": is_overdue,
         "repeat_type": t.repeat_type,
         "type": t.type,
         "linked_task_id": str(t.linked_task_id) if t.linked_task_id else None,
