@@ -65,6 +65,7 @@ export default function ChatPage() {
   const [momDate, setMomDate] = useState("");
   const [currentUserRole, setCurrentUserRole] = useState("member");
   const [memberForm, setMemberForm] = useState({ user_id: "", role: "member" });
+  const [teamOptions, setTeamOptions] = useState<Array<{ id: string; name: string }>>([]);
   
   // Auto-scroll ref
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -88,6 +89,18 @@ export default function ChatPage() {
       if (res.ok) setMessages(await res.json());
     } catch (e) {
       console.error("Failed to load messages", e);
+    }
+  };
+
+  const fetchTeamOptions = async () => {
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/crm/team-members/${companyId}`, { headers: authHeaders() });
+      if (res.ok) {
+        const data = await res.json();
+        setTeamOptions(Array.isArray(data) ? data : []);
+      }
+    } catch (e) {
+      console.error("Failed to load team", e);
     }
   };
 
@@ -123,6 +136,10 @@ export default function ChatPage() {
       fetchGroups();
     }
   }, [projectId]);
+
+  useEffect(() => {
+    fetchTeamOptions();
+  }, [companyId]);
 
   useEffect(() => {
     if (!activeGroup) return;
@@ -808,15 +825,18 @@ export default function ChatPage() {
 
             <form onSubmit={handleAddMemberSubmit} className="space-y-4">
               <div>
-                <label className="block text-[10px] font-extrabold text-muted uppercase tracking-wider mb-1.5">User ID</label>
-                <input
-                  type="text"
+                <label className="block text-[10px] font-extrabold text-muted uppercase tracking-wider mb-1.5">Team Member</label>
+                <select
                   required
-                  placeholder="e.g. e0000000-0000-0000-0000-000000000000"
                   value={memberForm.user_id}
                   onChange={(e) => setMemberForm({ ...memberForm, user_id: e.target.value })}
-                  className="w-full bg-elevated/35 border border-border-custom rounded-lg px-4 py-2 text-xs text-foreground placeholder:text-muted focus:outline-none focus:border-primary"
-                />
+                  className="w-full bg-elevated border border-border-custom rounded-lg px-4 py-2 text-xs text-foreground focus:outline-none focus:border-primary"
+                >
+                  <option value="">Select a team member</option>
+                  {teamOptions.map((m) => (
+                    <option key={m.id} value={m.id}>{m.name}</option>
+                  ))}
+                </select>
               </div>
 
               <div>
