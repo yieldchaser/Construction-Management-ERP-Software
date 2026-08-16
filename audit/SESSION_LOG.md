@@ -2,6 +2,18 @@
 
 Append-only. Every working block ends with a 5-line entry. Never edit an existing entry; if a commit was reverted, add a new entry.
 
+## Session 28 — Phase L wave L3 (2026-08-16)
+
+- Action 1 (Phase L, wave L3): R2-057 — the Gantt predecessor-link handler reported every non-2xx as "Link loop detected"; it now reads the server detail and reserves the loop message for the backend's cycle 400 (detail contains "circular"), surfacing the real error otherwise (401/403/404/500 included).
+- Action 2 (Phase L, wave L3): R2-070 — the indent card's hidden file input (local-only objectURL preview that was never uploaded or revoked) is removed; the "View item photo proof" button stays (genuine server-URL preview). Upload wiring remains the deferred proper fix.
+- Incident handled: a stray working-tree modification deleted the committed LEARNINGS.md #17 lesson mid-session (origin unknown — likely an editor/process touch); restored via checkout, committed state was intact, tree clean afterwards.
+- Verified: npm build green (33.9s + 39.9s TS); pytest 252 rc=0 (247 behavior + 35 pins); verifier APPROVE on all three (backend cycle-message cross-check, remaining setPreviewUrl sites legitimate, pins byte-exact).
+- Commits: `b9a08e6` (R2-057), `dd0ed9a` (R2-070), `70fbd2d` (pins).
+- Register: R2-057, R2-070 STATUS TODO → FIXED. Phase L progress: 6 of 8 done.
+- Next session: Phase L wave L4 (final LOW wave) — R2-085 (analytics.py internal labels) + R2-120 (google_drive.py).
+
+---
+
 ## Session 27 — Phase L wave L2 (2026-08-15)
 
 - Action 1 (Phase L, wave L2): R2-001 closed by evidence — the "Material (Pending)" card opens a fully functional Material Requests drawer (real indents, status tabs, filters, working Approve with POST+refetch+toast); the audit's "dead card" premise predates the drawer's onClick. Verifier confirmed functionality and the single usage site. Register note records the primary-file misattribution (payment-approval vs d/home).

@@ -29,7 +29,7 @@ Ordering is **severity-ascending**, with founder-gates and live-only work last. 
 **Phase L waves (first concrete queue):**
 - L1 ✅ DONE (Session 26): R2-002 (Sidebar emoji → stroke icons, `807f092`) + R2-079 (missing company_id → login redirect, `a1d639b`)
 - L2 ✅ DONE (Session 27): R2-001 (evidence-close — Material card opens a working drawer) + R2-104 (Tally summaries from sync logs, `a99e206`)
-- L3: R2-057 (gantt) + R2-070 (procurement photo preview)
+- L3 ✅ DONE (Session 28): R2-057 (gantt link errors use server detail, `b9a08e6`) + R2-070 (never-persisted indent photo picker dropped, `dd0ed9a`)
 - L4: R2-085 (analytics.py labels) + R2-120 (google_drive.py)
 
 ---
