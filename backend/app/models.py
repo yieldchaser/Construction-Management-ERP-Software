@@ -989,6 +989,7 @@ class SafetyIncident(Base):
     reported_by = Column(String(255), nullable=False)
     reported_at = Column(DateTime(timezone=True), nullable=False)
     closed_at = Column(DateTime(timezone=True), nullable=True)
+    closed_by = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 
 

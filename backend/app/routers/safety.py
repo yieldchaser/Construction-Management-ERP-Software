@@ -9,9 +9,9 @@ from sqlalchemy import func as sqlfunc
 from app.database import get_db
 from app.auth import get_current_user, get_company_membership, require_permission
 from app.models import SafetyIncident, ToolboxTalk, PPECheck, Project, AttendanceLog, User
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_validator
 from typing import Optional, List
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid
 
 router = APIRouter(prefix="/safety", tags=["Safety & HSE"], dependencies=[Depends(get_current_user)])
@@ -26,9 +26,18 @@ class IncidentCreate(BaseModel):
     description: str
     location: Optional[str] = None
     injured_person: Optional[str] = None
-    lost_time_days: int = 0
+    lost_time_days: int = Field(0, ge=0)
     reported_by: str
-    reported_at: str            # ISO datetime string
+    reported_at: datetime       # ISO datetime string
+
+    @field_validator("reported_at")
+    @classmethod
+    def reported_at_not_future(cls, v: datetime) -> datetime:
+        if v.tzinfo is None:
+            v = v.astimezone()
+        if v.astimezone(timezone.utc) > datetime.now(timezone.utc):
+            raise ValueError("reported_at cannot be in the future")
+        return v
 
 
 class IncidentClose(BaseModel):
@@ -73,7 +82,7 @@ def log_incident(payload: IncidentCreate, db: Session = Depends(get_db), current
         injured_person=payload.injured_person,
         lost_time_days=payload.lost_time_days,
         reported_by=payload.reported_by,
-        reported_at=datetime.fromisoformat(payload.reported_at),
+        reported_at=payload.reported_at,
         status="open",
     )
     db.add(incident)
@@ -120,6 +129,7 @@ def list_incidents(
             "reported_by": i.reported_by,
             "reported_at": i.reported_at.isoformat() if i.reported_at else None,
             "closed_at": i.closed_at.isoformat() if i.closed_at else None,
+            "closed_by": str(i.closed_by) if i.closed_by else None,
             "created_at": i.created_at.isoformat() if i.created_at else None,
         }
         for i in incidents
@@ -144,6 +154,7 @@ def close_incident(incident_id: str, payload: IncidentClose, db: Session = Depen
     incident.root_cause = payload.root_cause
     incident.corrective_action = payload.corrective_action
     incident.closed_at = datetime.utcnow()
+    incident.closed_by = current_user.id
     db.commit()
     db.refresh(incident)
     return {
@@ -152,6 +163,7 @@ def close_incident(incident_id: str, payload: IncidentClose, db: Session = Depen
         "root_cause": incident.root_cause,
         "corrective_action": incident.corrective_action,
         "closed_at": incident.closed_at.isoformat(),
+        "closed_by": str(incident.closed_by) if incident.closed_by else None,
         "message": "Incident closed successfully."
     }
 
