@@ -78,6 +78,10 @@ Several test seeds violate FK contracts (company_team id used for staff_employee
 
 The verifier subagent has caught: a silent no-op (R2-108), a false "absent" claim (R2-062), a wrong glyph (R2-063), an exit-code inversion in my own Dockerfile loop (R2-infra), and a register/status discrepancy (R2-009). **The verifier is not a formality — it is the last line of defense.**
 
+## 17. Evidence-close discipline (Sessions 25-27)
+
+Several findings are already fixed in the tree when we reach them (R2-017, R2-061, R2-097, R2-110, R2-167, R2-001). The rules: (a) verify by grep + read, never by register trust; (b) if the current code satisfies the finding's intent even by a different mechanism (R2-001's working drawer vs the audit's "dead card"), close with evidence and note the divergence; (c) record the fixing commit; (d) still add a pin when a meaningful tripwire exists. Also: the register's primary-file attribution is occasionally wrong (R2-001 says payment-approval, the card is in d/home) — trust the finding's "Where" over the register's file column.
+
 ---
 
 ## How to add a learning
