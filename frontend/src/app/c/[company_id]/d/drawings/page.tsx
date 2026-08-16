@@ -118,7 +118,7 @@ export default function DrawingsPage() {
               photoAttached: false,
               user: "System",
               date: p.created_at ? p.created_at.split("T")[0] : "",
-              resolved: false,
+              resolved: p.resolved === true,
             })),
             approvedBy: r.approved_by ? "Approver" : undefined,
           })).sort((a: Revision, b: Revision) => {
@@ -223,13 +223,28 @@ export default function DrawingsPage() {
     setShowPinModal(false);
   };
 
-  const handleToggleResolved = (pinId: string) => {
-    setDrawings(prev => prev.map(d => d.id !== activeDrawingId ? d : {
-      ...d,
-      revisions: d.revisions.map(r => r.id !== activeRevId ? r : {
-        ...r, pins: r.pins.map(p => p.id === pinId ? { ...p, resolved: !p.resolved } : p)
-      })
-    }));
+  const handleToggleResolved = async (pinId: string) => {
+    const pin = activeRev?.pins.find(p => p.id === pinId);
+    if (!pin) return;
+    const next = !pin.resolved;
+    try {
+      const apiHost = getApiHost();
+      const res = await fetch(`${apiHost}/apis/v3/drawings/pins/${pinId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
+        body: JSON.stringify({ resolved: next }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      setDrawings(prev => prev.map(d => d.id !== activeDrawingId ? d : {
+        ...d,
+        revisions: d.revisions.map(r => r.id !== activeRevId ? r : {
+          ...r, pins: r.pins.map(p => p.id === pinId ? { ...p, resolved: next } : p)
+        })
+      }));
+    } catch (err) {
+      console.error("Failed to update pin resolution", err);
+      alert("Failed to update pin. Your change was not saved.");
+    }
   };
 
   const handlePublishRevision = async () => {

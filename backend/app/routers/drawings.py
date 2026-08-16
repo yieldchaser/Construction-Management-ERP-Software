@@ -23,6 +23,7 @@ class DrawingPinResponse(BaseModel):
     comment: str
     tagged_user_id: Optional[UUID] = None
     created_by: Optional[UUID] = None
+    resolved: Optional[bool] = None
     created_at: datetime
 
     class Config:
@@ -76,6 +77,9 @@ class PinCreateRequest(BaseModel):
     comment: str = Field(..., example="Check structural column thickness here")
     tagged_user_id: Optional[UUID] = None
 
+class PinResolveRequest(BaseModel):
+    resolved: bool
+
 # Endpoints
 
 @router.get("", response_model=List[DrawingResponse])
@@ -96,6 +100,7 @@ def get_drawings(project_id: UUID, db: Session = Depends(get_db), _: None = Depe
                     comment=p.comment,
                     tagged_user_id=p.tagged_user_id,
                     created_by=p.created_by,
+                    resolved=p.resolved,
                     created_at=p.created_at
                 )
                 for p in pins
@@ -252,6 +257,7 @@ def approve_drawing_revision(revision_id: UUID, req: RevisionApproveRequest, db:
             comment=p.comment,
             tagged_user_id=p.tagged_user_id,
             created_by=p.created_by,
+            resolved=p.resolved,
             created_at=p.created_at
         )
         for p in pins
@@ -303,8 +309,31 @@ def add_pin_to_revision(revision_id: UUID, req: PinCreateRequest, db: Session = 
         comment=pin.comment,
         tagged_user_id=pin.tagged_user_id,
         created_by=pin.created_by,
+        resolved=pin.resolved,
         created_at=pin.created_at
     )
+
+@router.patch("/pins/{pin_id}")
+def set_pin_resolved(pin_id: UUID, req: PinResolveRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    pin = db.query(DrawingPin).filter(DrawingPin.id == pin_id).first()
+    if not pin:
+        raise HTTPException(status_code=404, detail="Pin not found")
+
+    revision = db.query(DrawingRevision).filter(DrawingRevision.id == pin.revision_id).first()
+    if not revision:
+        raise HTTPException(status_code=404, detail="Revision not found")
+    drawing = db.query(Drawing).filter(Drawing.id == revision.drawing_id).first()
+    if not drawing:
+        raise HTTPException(status_code=404, detail="Drawing not found")
+    proj = db.query(Project).filter(Project.id == drawing.project_id).first()
+    if not proj:
+        raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, proj.company_id)
+    require_permission(db, current_user, proj.company_id, "drawings:edit")
+
+    pin.resolved = req.resolved
+    db.commit()
+    return {"success": True}
 
 @router.delete("/pins/{pin_id}")
 def delete_pin(pin_id: UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):

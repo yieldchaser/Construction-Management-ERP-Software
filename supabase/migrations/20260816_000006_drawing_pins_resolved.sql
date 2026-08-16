@@ -1,0 +1,2 @@
+ALTER TABLE "drawing_pins"
+    ADD COLUMN IF NOT EXISTS "resolved" BOOLEAN DEFAULT FALSE;

@@ -393,6 +393,7 @@ class DrawingPin(Base):
     comment = Column(String, nullable=False)
     tagged_user_id = Column(UUID(as_uuid=True), ForeignKey("company_team.id"), nullable=True)
     created_by = Column(UUID(as_uuid=True), ForeignKey("company_team.id"), nullable=True)
+    resolved = Column(Boolean, default=False, nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 
 class MaterialIndent(Base):
