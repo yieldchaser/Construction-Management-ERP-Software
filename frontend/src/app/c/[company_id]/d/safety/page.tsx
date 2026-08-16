@@ -33,6 +33,7 @@ interface SafetyStats {
   lti_count: number;
   total_lost_days: number;
   ltif: number;
+  ltif_basis?: number;
   type_breakdown: Record<string, number>;
   severity_breakdown: Record<string, number>;
   manhours_source?: "attendance" | "fallback";
@@ -255,7 +256,7 @@ export default function SafetyPage() {
           <div style={{ width: 42, height: 42, borderRadius: 10, background: 'rgba(232,24,76,0.15)', border: '1px solid rgba(232,24,76,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="safety_vest" className="w-5 h-5" /></div>
           <div>
             <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700 }}>HSE / Safety Management</h1>
-            <p style={{ margin: 0, fontSize: 13, color: 'rgba(255,255,255,0.45)' }}>OSHA-aligned incident tracking, toolbox talks & PPE compliance</p>
+            <p style={{ margin: 0, fontSize: 13, color: 'rgba(255,255,255,0.45)' }}>Incident tracking, toolbox talks & PPE compliance</p>
           </div>
         </div>
       </div>
@@ -346,7 +347,7 @@ export default function SafetyPage() {
                   { label: 'Closed', value: stats.closed_incidents, icon: 'check_circle', color: '#16a34a' },
                   { label: 'LTI Count', value: stats.lti_count, icon: 'hospital', color: '#f59e0b' },
                   { label: 'Lost Days', value: stats.total_lost_days, icon: 'calendar', color: '#7C5CFF' },
-                  { label: 'LTIF Rate', value: stats.ltif, icon: 'trending_up', color: '#0ea5e9' },
+                  { label: 'LTIFR', value: stats.ltif, icon: 'trending_up', color: '#0ea5e9' },
                 ] as { label: string; value: number; icon: IconName; color: string }[]).map((k, i) => (
                   <div key={i} style={{ padding: '18px 20px', borderRadius: 14, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
                     <div style={{ marginBottom: 6, color: k.color }}><Icon name={k.icon} className="w-5 h-5" /></div>
@@ -376,7 +377,7 @@ export default function SafetyPage() {
 
               {/* LTIF Formula */}
               <div style={{ marginTop: 20, padding: '14px 20px', borderRadius: 12, background: 'rgba(124,92,255,0.08)', border: '1px solid rgba(124,92,255,0.2)', fontSize: 13, color: 'rgba(255,255,255,0.6)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Icon name="clipboard" className="w-4 h-4" /> <span><strong style={{ color: '#7C5CFF' }}>LTIF Formula:</strong> (Number of LTIs × 200,000) ÷ Total Manhours Worked · Calculated on 50,000 manhours basis{stats.manhours_source === 'fallback' ? ' (estimated — no attendance data)' : ''}.</span>
+                <Icon name="clipboard" className="w-4 h-4" /> <span><strong style={{ color: '#7C5CFF' }}>LTIFR Formula:</strong> (Number of LTIs × {stats.ltif_basis ? stats.ltif_basis.toLocaleString('en-IN') : '200,000'}) ÷ Total Manhours Worked · Calculated on 50,000 manhours basis{stats.manhours_source === 'fallback' ? ' (estimated — no attendance data)' : ''}.</span>
               </div>
             </>
           )}

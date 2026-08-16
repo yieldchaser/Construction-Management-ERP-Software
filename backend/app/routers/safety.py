@@ -172,13 +172,16 @@ def close_incident(incident_id: str, payload: IncidentClose, db: Session = Depen
 def get_safety_stats(
     project_id: str,
     total_manhours: float = 10000.0,
+    ltif_basis: int = 200000,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """
     Compute HSE statistics for a project.
-    LTIF = (Number of LTIs × 200,000) / Total Manhours worked
+    LTIF = (Number of LTIs × ltif_basis) / Total Manhours worked
     total_manhours defaults to 10,000 for demo; pass as query param in production.
+    ltif_basis defaults to 200,000 (US OSHA convention); pass 1,000,000 for the
+    ILO / IS 3786 convention used in Indian construction reporting.
     """
     proj_uuid = uuid.UUID(project_id)
     project = db.query(Project).filter(Project.id == proj_uuid).first()
@@ -202,7 +205,7 @@ def get_safety_stats(
     lti_incidents = [i for i in incidents if i.incident_type in ("LTI", "Fatal")]
     lti_count = len(lti_incidents)
     total_lost_days = sum(i.lost_time_days for i in lti_incidents)
-    ltif = round((lti_count * 200000) / manhours, 2) if manhours > 0 else 0.0
+    ltif = round((lti_count * ltif_basis) / manhours, 2) if manhours > 0 else 0.0
 
     # Breakdown by type
     type_breakdown: dict = {}
@@ -222,6 +225,7 @@ def get_safety_stats(
         "lti_count": lti_count,
         "total_lost_days": total_lost_days,
         "ltif": ltif,
+        "ltif_basis": ltif_basis,
         "type_breakdown": type_breakdown,
         "severity_breakdown": severity_breakdown,
         "total_manhours_used": manhours,
