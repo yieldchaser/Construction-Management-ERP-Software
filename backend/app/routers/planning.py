@@ -145,7 +145,7 @@ def compute_critical_task_ids(tasks, db: Session) -> set:
         if not sc:
             lf_cache[tid] = project_end
             return project_end
-        value = min(latest_finish(s) - dur_by_id.get(s, 1) for s in sc)
+        value = min(latest_finish(s) - timedelta(days=dur_by_id.get(s, 1)) for s in sc)
         lf_cache[tid] = value
         return value
 
