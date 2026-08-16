@@ -13,11 +13,11 @@ This folder is the single source of truth for the 582-finding bug-fixing campaig
 | Numbers issued (R2-001 … R2-601) | 601 |
 | Retracted as duplicates | 16 |
 | FIX_VERIFIED (founder live-confirmed) | 93 |
-| FIXED (code in, awaiting founder live-verify) | 59 |
+| FIXED (code in, awaiting founder live-verify) | 60 |
 | WONTFIX | 1 |
-| **TODO (your job)** | **428** |
+| **TODO (your job)** | **427** |
 
-By severity of the remaining TODO: **CRITICAL 105 · HIGH 188 · MEDIUM 127 · LOW 8** (re-counted directly from the register after the 152 closed).
+By severity of the remaining TODO: **CRITICAL 105 · HIGH 188 · MEDIUM 126 · LOW 8** (re-counted directly from the register after the 153 closed).
 
 ---
 
@@ -91,6 +91,17 @@ Search `AUDIT_ROUND2_FINDINGS.md` for `SUPABASE MIGRATION` and `PENDING SCHEMA`.
 3. Read the affected finding's Notes column in the register.
 4. Update the register back to `TODO` with a `REGRESSED:<reason>` note.
 5. Append to `SESSION_LOG.md`.
+
+---
+
+## Regression guard — READ BEFORE EVERY WAVE
+
+Two founder-verified fixes were silently reintroduced by parallel-branch merges (R2-096's party-balance formula, R2-054's PR-number loop — both broken copies of the same Finance rebuild won a merge). The durable guard is **`backend/tests/coverage/test_regression_pins.py`**: 27 tripwire tests that read the current sources and fail loudly, naming the finding, if any closed fix regresses (formula shapes, allowlist membership, filter presence, fabrication absence — incl. a repo-wide `unsplash` = 0 walk).
+
+Rules:
+- It runs with the normal suite (`pytest tests/coverage/`) — a red pin is a REOPENED finding, not a test failure.
+- When you close a fix, ADD a pin for it in the same wave. Don't weaken a pin because the code regressed — fix the code.
+- Every session's final baseline must show the pins green.
 
 ---
 

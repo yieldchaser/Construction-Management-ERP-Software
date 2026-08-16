@@ -2,6 +2,19 @@
 
 Append-only. Every working block ends with a 5-line entry. Never edit an existing entry; if a commit was reverted, add a new entry.
 
+## Session 24 — the regression guard + R2-098 (2026-08-15)
+
+- Context (founder-raised): "this regressions thing is pretty serious" — and it is. Two FIX_VERIFIED findings were silently reintroduced by parallel-branch merges: R2-096's party-balance formula (found in session 23) and — discovered this session — R2-054's PR-number collision loop (plain `count + 1` again, reintroduced by the same Finance rebuild that won the merge). Pattern confirmed: without tests pinning the fix, a merge can re-break anything.
+- Action 1: created `backend/tests/coverage/test_regression_pins.py` — 27 tripwire tests that read the CURRENT sources and fail loudly, naming the finding, if any closed fix regresses: formula shapes (R2-096 balance, R2-035 progress read), allowlist membership (R2-011 party types, R2-036 bucket filters ×5 sites), loop presence (R2-098 PID, R2-054 PR), vocabulary (R2-031 ongoing, R2-106 geofence assignment ×2), and fabrication absence (repo-wide `unsplash` = 0, `.xlsx`, frozen dates, `basic * 0.24`, `12.9716`, Acme Corp, defaultValue ban in d/hr). START_HERE now carries the regression-guard rule: pins must go green every session and every new fix adds a pin.
+- Action 2: applied R2-098 (library.py, MEDIUM) — the party PID generator now uses the GRN-canonical collision loop (no more PID reissues/skips); test added (PID-4 gap → auto-create lands PID-5). The R2-054 regression was restored in the same commit (finance.py PR loop).
+- Verified: pytest 243 rc=0 (216 behavior + 27 pins); verifier APPROVE on the pins file (8 pins spot-checked by hand, weak-pin analysis done — R2-044/107/013 strengthened in a follow-up) and on the R2-098/054 commit (test status-code assert verified against the endpoint).
+- Commits: `551cd53` (pins), `6e43ff0` (R2-098 + R2-054 restore), `ed78914` (pins strengthen).
+- Register: R2-098 STATUS TODO → FIXED; R2-054 Notes updated (regression documented).
+- Deferred notes: DB-level unique constraint on party_id_custom + blank backfill (schema work — DECISIONS.md); R2-044 pin thresholds assume the import stays one line (safe direction).
+- Next session: R2-071 (work-order terms innerHTML, MEDIUM), R2-099 (W27 finance all-zero, CRITICAL — R2-198/R2-221 family), R2-100-family rollups. R2-178 still awaits the founder (DECISIONS.md CD-1).
+
+---
+
 ## Session 23 — fixes 59, 60 and 61 + a regressed-fix restoration (2026-08-15)
 
 - Action 1: R2-096 (finance.py) — the register said FIX_VERIFIED (d4db32f), but the code had REGRESSED: commit `f8c097f` (a parallel-branch Finance rebuild based before d4db32f) reintroduced the wrong balance formula and the to_pay-first status ladder. Restored the audit-correct formula (live case +54,400 "To Receive" instead of −1,01,600 "TO PAY") and derived status from the net sign per the audit's suggestion; test `test_party_balance_nets_receivables_and_payables` added (215/215). Lesson logged: verification greps beat register trust — always re-read the code.
