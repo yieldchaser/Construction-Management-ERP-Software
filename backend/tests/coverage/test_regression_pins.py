@@ -207,3 +207,13 @@ def test_pin_R2_104_tally_summary_derived_from_logs():
 def test_pin_R2_001_material_card_opens_drawer():
     src = _read_frontend("src/app/c/[company_id]/d/home/page.tsx")
     assert "setIsMaterialDrawerOpen(true)" in src, "R2-001 material card drawer affordance regressed"
+
+
+def test_pin_R2_057_gantt_link_errors_use_server_detail():
+    src = _read_frontend("src/app/c/[company_id]/d/planning/gantt/page.tsx")
+    assert 'detail.toLowerCase().includes("circular")' in src, "R2-057 gantt link error detail regressed"
+
+
+def test_pin_R2_070_no_local_only_indent_photo_input():
+    src = _read_frontend("src/app/c/[company_id]/d/procurement/page.tsx")
+    assert "setPreviewUrl(URL.createObjectURL(file))" not in src, "R2-070 local-only indent photo picker reintroduced"
