@@ -288,31 +288,31 @@ export default function ProjectsHomePage() {
     return true;
   });
 
-  const featuredProject = projects[0];
+  const featuredProject = filteredProjects[0];
   const projectDetailTiles = [
     {
       label: "Project Name",
-      value: featuredProject ? getProjectName(featuredProject) : "No projects yet",
+      value: featuredProject ? getProjectName(featuredProject) : "—",
       tone: "default" as const
     },
     {
       label: "Project Code",
-      value: featuredProject ? getProjectCode(featuredProject) : "No code",
+      value: featuredProject ? getProjectCode(featuredProject) : "—",
       tone: "default" as const
     },
     {
       label: "Project Status",
-      value: featuredProject ? getProjectStatus(featuredProject) : "Pending",
+      value: featuredProject ? getProjectStatus(featuredProject) : "—",
       tone: "status" as const
     },
     {
       label: "Project Address",
-      value: featuredProject ? getProjectAddress(featuredProject) : "Address not set",
+      value: featuredProject ? getProjectAddress(featuredProject) : "—",
       tone: "default" as const
     },
     {
       label: "Project Health",
-      value: featuredProject ? getProjectHealth(featuredProject) : "Healthy",
+      value: featuredProject ? getProjectHealth(featuredProject) : "—",
       tone: "health" as const
     }
   ];
