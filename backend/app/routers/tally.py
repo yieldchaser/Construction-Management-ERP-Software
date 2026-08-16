@@ -27,7 +27,7 @@ class ConnectionCreateRequest(BaseModel):
     tally_company_name: str
     registered_mobile: str
     sync_window_start_date: datetime
-    voucher_number_template: str = "ONS-{year}-{number}"
+    voucher_number_template: str = "SF-{year}-{number}"
     auto_create_missing_ledgers: bool = False
     round_off_ledger: Optional[str] = None
     default_cash_ledger: Optional[str] = None

@@ -271,7 +271,7 @@ export default function FinancePage() {
   const [showTallySetup, setShowTallySetup] = useState(false);
   const [tallyCompany, setTallyCompany] = useState("");
   const [tallyMobile, setTallyMobile] = useState("");
-  const [tallyVoucherTemplate, setTallyVoucherTemplate] = useState("ONS-{year}-{number}");
+  const [tallyVoucherTemplate, setTallyVoucherTemplate] = useState("SF-{year}-{number}");
   const [tallyDefaultCash, setTallyDefaultCash] = useState("");
   const [tallyAutoCreate, setTallyAutoCreate] = useState(false);
   const [tallySyncFrom, setTallySyncFrom] = useState(fyStartIso());
@@ -311,7 +311,7 @@ export default function FinancePage() {
           setTallyConn(data);
           setTallyCompany(data.tally_company_name || "");
           setTallyMobile(data.registered_mobile || "");
-          setTallyVoucherTemplate(data.voucher_number_template || "ONS-{year}-{number}");
+          setTallyVoucherTemplate(data.voucher_number_template || "SF-{year}-{number}");
           setTallyDefaultCash(data.default_cash_ledger || "");
           setTallyAutoCreate(Boolean(data.auto_create_missing_ledgers));
         }
@@ -735,7 +735,7 @@ export default function FinancePage() {
   const openTallySetup = () => {
     setTallyCompany(tallyConn?.tally_company_name || "");
     setTallyMobile(tallyConn?.registered_mobile || "");
-    setTallyVoucherTemplate(tallyConn?.voucher_number_template || "ONS-{year}-{number}");
+    setTallyVoucherTemplate(tallyConn?.voucher_number_template || "SF-{year}-{number}");
     setTallyDefaultCash(tallyConn?.default_cash_ledger || "");
     setTallyAutoCreate(Boolean(tallyConn?.auto_create_missing_ledgers));
     setTallySyncFrom(tallyConn?.sync_window_start_date ? String(tallyConn.sync_window_start_date).slice(0, 10) : fyStartIso());
@@ -759,7 +759,7 @@ export default function FinancePage() {
           tally_company_name: tallyCompany.trim(),
           registered_mobile: tallyMobile.trim(),
           sync_window_start_date: new Date(tallySyncFrom + "T00:00:00").toISOString(),
-          voucher_number_template: tallyVoucherTemplate.trim() || "ONS-{year}-{number}",
+          voucher_number_template: tallyVoucherTemplate.trim() || "SF-{year}-{number}",
           auto_create_missing_ledgers: tallyAutoCreate,
           default_cash_ledger: tallyDefaultCash.trim() || null,
         }),

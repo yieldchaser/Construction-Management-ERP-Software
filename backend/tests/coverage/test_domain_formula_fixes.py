@@ -310,7 +310,7 @@ def test_tally_voucher_sequence_durable(client, db, make_tenant, auth_headers):
     conn = models.TallyConnection(
         id=uuid.uuid4(), company_id=comp.id, tally_company_name="E7 Co",
         registered_mobile="9999999999", sync_window_start_date=_utc(2025, 1, 1),
-        voucher_number_template="ONS-{year}-{number}")
+        voucher_number_template="SF-{year}-{number}")
     db.add(conn)
     db.commit()
 

@@ -291,7 +291,7 @@ def main():
             "tally_company_name": "Onsite Competitor Tally Group",
             "registered_mobile": "9999912345",
             "sync_window_start_date": "2026-04-01T00:00:00",
-            "voucher_number_template": "ONS-{year}-{number}",
+            "voucher_number_template": "SF-{year}-{number}",
             "auto_create_missing_ledgers": True
         }
         conn_res = requests.post(f"{BASE}/tally/connections", json=tally_conn_payload)

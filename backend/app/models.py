@@ -1190,7 +1190,7 @@ class TallyConnection(Base):
     tally_company_name = Column(String(255), nullable=False)
     registered_mobile = Column(String(20), nullable=False)
     sync_window_start_date = Column(DateTime(timezone=True), nullable=False)
-    voucher_number_template = Column(String(100), default="ONS-{year}-{number}", nullable=False)
+    voucher_number_template = Column(String(100), default="SF-{year}-{number}", nullable=False)
     last_voucher_seq = Column(Integer, default=0, nullable=False)
     auto_create_missing_ledgers = Column(Boolean, default=False, nullable=False)
     round_off_ledger = Column(String(255), nullable=True)
