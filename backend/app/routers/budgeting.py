@@ -37,6 +37,16 @@ class BOQItemResponse(BaseModel):
     class Config:
         from_attributes = True
 
+class BOQItemCreate(BaseModel):
+    item_name: str = Field(..., min_length=1)
+    unit: str = "Nos"
+    quantity: float = Field(0.0, ge=0)
+    rate: float = Field(0.0, ge=0)
+    supply_rate: float = Field(0.0, ge=0)
+    installation_rate: float = Field(0.0, ge=0)
+    section_name: Optional[str] = None
+    cost_code: Optional[str] = None
+
 class BudgetAllocationRequest(BaseModel):
     project_id: UUID
     material_budget: float = Field(0.0, ge=0)
@@ -388,6 +398,57 @@ def patch_boq_document(doc_id: UUID, req: BOQDocumentPatch, db: Session = Depend
     db.commit()
     db.refresh(doc)
     return _build_doc_response(db, doc)
+
+
+@router.post("/boq-documents/{doc_id}/items", response_model=BOQItemResponse, status_code=status.HTTP_201_CREATED)
+def create_boq_item(doc_id: UUID, req: BOQItemCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    doc = db.query(BOQDocument).filter(BOQDocument.id == doc_id).first()
+    if not doc:
+        raise HTTPException(status_code=404, detail="BOQ document not found")
+    project = db.query(Project).filter(Project.id == doc.project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, project.company_id)
+    require_permission(db, current_user, project.company_id, "budgeting:edit")
+
+    float_limit = 2
+    if req.unit.lower() in ("kg", "ton", "t", "steel"):
+        float_limit = 3
+    elif req.unit.lower() in ("no", "nos", "brick", "bag", "bags"):
+        float_limit = 0
+
+    amount = req.quantity * (req.rate + req.supply_rate + req.installation_rate)
+    item = BOQItem(
+        project_id=doc.project_id,
+        boq_document_id=doc.id,
+        section_name=req.section_name,
+        cost_code=req.cost_code,
+        item_name=req.item_name.strip(),
+        unit=req.unit,
+        quantity=req.quantity,
+        rate=req.rate,
+        supply_rate=req.supply_rate,
+        installation_rate=req.installation_rate,
+        quantity_float_limit=float_limit,
+        amount=amount,
+    )
+    db.add(item)
+    db.commit()
+    db.refresh(item)
+    return BOQItemResponse(
+        id=item.id,
+        project_id=item.project_id,
+        section_name=item.section_name,
+        item_name=item.item_name,
+        cost_code=item.cost_code,
+        unit=item.unit,
+        quantity=float(item.quantity),
+        rate=float(item.rate),
+        supply_rate=float(item.supply_rate),
+        installation_rate=float(item.installation_rate),
+        amount=float(item.amount),
+        quantity_float_limit=item.quantity_float_limit,
+    )
 
 
 @router.get("/boq-documents/{doc_id}/pdf")
