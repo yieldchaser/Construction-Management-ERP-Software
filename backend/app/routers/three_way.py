@@ -106,6 +106,19 @@ def create_match(payload: ThreeWayMatchCreate, db: Session = Depends(get_db), cu
         )
     invoiced_amount = float(bill.total_payable)
 
+    # R2-594: a PO/GRN pair carries exactly one reconciliation record, so
+    # contradictory verdicts cannot coexist for the same receipt.
+    existing = (
+        db.query(ThreeWayMatch)
+        .filter(ThreeWayMatch.po_id == po_id, ThreeWayMatch.grn_id == grn_id)
+        .first()
+    )
+    if existing:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="A three-way match already exists for this PO/GRN pair",
+        )
+
     grn_items = db.query(GRNItem).filter(GRNItem.grn_id == grn_id).all()
     total_received_qty = sum(float(item.received_qty) for item in grn_items)
 

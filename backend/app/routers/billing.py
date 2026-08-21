@@ -602,13 +602,16 @@ def get_bill_pdf(bill_id: UUID, db: Session = Depends(get_db), current_user=Depe
 
 
 # --- Theme B (soft flag) helpers: link a Bill to an approved ThreeWayMatch ---
-def _resolve_bill_match_id(db: Session, invoice_type: str, match_id, company_id: UUID, project_id: UUID):
+def _resolve_bill_match_id(db: Session, invoice_type: str, match_id, company_id: UUID, project_id: UUID, total_payable=None):
     """Validate an optional ThreeWayMatch link for a bill.
 
     - Sale bills are exempt: a supplied match_id is ignored (returns None).
     - purchase/subcon bills are NOT required to have a match (soft flag).
     - When match_id IS supplied on purchase/subcon, it must point to an
       approved match in the same company/project, else 400.
+    - R2-594: the linked match's invoiced amount must agree with the bill's
+      total_payable, so an approved record for a different figure cannot be
+      attached to this bill.
     Returns the match_id to attach (or None).
     """
     if not match_id:
@@ -623,6 +626,11 @@ def _resolve_bill_match_id(db: Session, invoice_type: str, match_id, company_id:
         raise HTTPException(status_code=400, detail="Three-way match does not belong to this company/project")
     if match.match_status != "approved":
         raise HTTPException(status_code=400, detail=f"Three-way match is not approved (status: {match.match_status})")
+    if total_payable is not None and float(match.invoiced_amount) != round(float(total_payable), 2):
+        raise HTTPException(
+            status_code=400,
+            detail="Linked three-way match's invoiced amount does not agree with this bill's payable amount",
+        )
     return match.id
 
 
@@ -889,7 +897,7 @@ def link_bill_match(bill_id: UUID, req: BillMatchLinkRequest, db: Session = Depe
 
     if bill.invoice_type in EXPENSE_INVOICE_TYPES:
         enforce_entry_editing_window(db, bill.company_id, bill.invoice_date)
-        match_id = _resolve_bill_match_id(db, bill.invoice_type, req.match_id, bill.company_id, bill.project_id)
+        match_id = _resolve_bill_match_id(db, bill.invoice_type, req.match_id, bill.company_id, bill.project_id, total_payable=bill.total_payable)
         bill.match_id = match_id
         if match_id is not None:
             linked_match = db.query(ThreeWayMatch).filter(ThreeWayMatch.id == match_id).first()

@@ -1615,6 +1615,11 @@ class AssetDepreciationEntry(Base):
 class ThreeWayMatch(Base):
     """Reconciliation record linking PO, GRN, and Vendor Invoice."""
     __tablename__ = "three_way_matches"
+    # R2-594: one reconciliation record per PO/GRN pair — contradictory verdicts
+    # for the same receipt must not be able to coexist.
+    __table_args__ = (
+        UniqueConstraint("po_id", "grn_id", name="uq_three_way_matches_po_grn"),
+    )
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
     project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
