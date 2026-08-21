@@ -119,7 +119,7 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-051 | CRITICAL | FIXED | `2d97459` | `frontend/src/app/c/[company_id]/d/procurement/page.tsx` | no | no | — | 2 | UNVERIFIED |  |
 | R2-052 | CRITICAL | FIX_VERIFIED | `35069ae` | `finance.py` | no | no | — | 2 | UNVERIFIED |  |
 | R2-075 | CRITICAL | FIX_VERIFIED | `d5b628a` | `reports.py` | no | no | — | 2 | UNVERIFIED |  |
-| R2-083 | CRITICAL | FIXED | `b8e314b` | `frontend/src/app/c/[company_id]/dashboard/page.tsx` | no | no | — | 2 | UNVERIFIED |  |
+| R2-083 | CRITICAL | FIXED | `b8e314b` | `frontend/src/app/c/[company_id]/dashboard/page.tsx` | no | no | — | 2 | UNVERIFIED | E1 FAILS on completeness. The two edits are correct, but the note's claim that these were 'the last two fabricated attribute fallbacks' is wrong - four remain in the same object literal, including `health || "Healthy"`. Raised as R2-712 instance 11 / R2-719. |
 | R2-091 | CRITICAL | FIXED | `ab50c9d` | `procurement/page.tsx` | no | no | — | 2 | UNVERIFIED |  |
 | R2-110 | CRITICAL | FIXED | `2e8b850` | `d/hr/page.tsx` | no | no | — | 2 | CONFIRMED | E1: no Diwali seed; `fetchHolidays` GETs /hr/holidays/{companyId} (hr/page.tsx:276,278); delete calls the API (:305,307). |
 | R2-201 | CRITICAL | FIX_VERIFIED | `e2e449d` | `hr.py` | no | no | — | 2 | UNVERIFIED |  |
@@ -316,7 +316,7 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-298 | MEDIUM | FIXED | `04b7c10` | `procurement.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-309 | MEDIUM | FIXED | `438ec20` | `analytics.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-331 | MEDIUM | FIXED | `5fb03ea` | `wastage.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
-| R2-336 | MEDIUM | FIXED | `9906aa9` | `procurement.py` | yes | yes | parse_fail | 1 | UNVERIFIED |  |
+| R2-336 | MEDIUM | FIXED | `9906aa9` | `procurement.py` | yes | yes | parse_fail | 1 | CONFIRMED | E1: the `inv.category = req.category` overwrite is removed. The note's disclosed sibling (`inv.unit` still overwritten) is real and is carried by R2-717, not by this row. |
 | R2-341 | MEDIUM | FIXED | `57f78de` | `procurement.py` | yes | yes | FAKE_GATE | 1 | FAKE_GATE | `"PO Pending Qty"` was already in reports.py pre-fix as `"PO Pending Qty": ""`. The fix filled the value in; the pin only asserts the key exists. |
 | R2-351 | MEDIUM | FIXED | `53b9499` | `procurement.py` | yes | yes | FAKE_GATE | 1 | FAKE_GATE | `unit=po_item.unit` was already at procurement.py:672 (a different call site) pre-fix. The fix added a second occurrence at :683; the pin cannot tell. |
 | R2-361 | MEDIUM | FIXED | `b4c0a37` | `quality.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
@@ -324,7 +324,7 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-370 | MEDIUM | FIXED | `3e6ecb0` | `billing.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-373 | MEDIUM | FIXED | `b298269` | `models.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-376 | MEDIUM | FIXED | `e10ff46` | `towers.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
-| R2-378 | MEDIUM | FIXED | `3e980de` | `models.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
+| R2-378 | MEDIUM | FIXED | `3e980de` | `models.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: dead `TransactionRetention` model removed and zero references remain anywhere in app/. The table was left in place as the note says, so nothing is destructive. |
 | R2-379 | MEDIUM | FIXED | `b2ddf1f` | `billing.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-398 | MEDIUM | FIXED | `8858a45` | `billing.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-402 | MEDIUM | FIXED | `3007f87` | `frontend/src/app/c/[company_id]/settings/page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
@@ -334,7 +334,7 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-436 | MEDIUM | FIXED | `8025709` | `d/mom/page.tsx` | yes | yes | FAKE? | 1 | UNVERIFIED |  |
 | R2-443 | MEDIUM | FIXED | `bbcad30` | `todos.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-446 | MEDIUM | FIXED | `99f1442` | `mom/page.tsx` | yes | yes | parse_fail | 1 | UNVERIFIED |  |
-| R2-452 | MEDIUM | FIXED | `e22dd9f` | `budgeting.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
+| R2-452 | MEDIUM | FIXED | `e22dd9f` | `budgeting.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: `quantity = round(quantity, float_limit)` is gone from the importer, and BOTH write paths - Excel import (:204) and manual add (:416-430) - now store the typed quantity with `float_limit` kept only as `quantity_float_limit` display metadata. |
 | R2-460 | MEDIUM | FIXED | `d4bed18` | `gantt/page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-461 | MEDIUM | FIXED | `94988a2` | `planning.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-467 | MEDIUM | FIXED | `2f6f031` | `frontend/src/app/c/[company_id]/d/finance/page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
@@ -348,7 +348,7 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-504 | MEDIUM | FIXED | `a853932` | `assets.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-505 | MEDIUM | FIXED | `—` | `statutory.py` | yes | yes | parse_fail | 1 | UNVERIFIED |  |
 | R2-508 | MEDIUM | FIXED | `deb3a9a` | `UNMAPPED` | yes | yes | text-pin | 1 | UNVERIFIED |  |
-| R2-512 | MEDIUM | FIXED | `487f564` | `admin_migrations.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
+| R2-512 | MEDIUM | FIXED | `487f564` | `admin_migrations.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: the duplicate POST /backfill-rbac is gone and the live `backfill_rbac_roles` still serves the same route at admin_migrations.py:114. Claim accurate. |
 | R2-514 | MEDIUM | FIXED | `9afd6f7` | `helpContent.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-521 | MEDIUM | FIXED | `5f755ac` | `calculators.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-532 | MEDIUM | FIXED | `0b24a81` | `safety.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |

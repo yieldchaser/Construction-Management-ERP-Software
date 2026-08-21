@@ -138,6 +138,23 @@ VERDICTS = {
     "R2-580": ("CONFIRMED", "E1: ProjectUpdate.status is pattern-constrained and ProjectCreate "
                             "has no status field at all, so there is no unguarded write path. "
                             "E3: live project statuses are Ongoing and Planning, both allowed."),
+    "R2-512": ("CONFIRMED", "E1: the duplicate POST /backfill-rbac is gone and the live "
+                            "`backfill_rbac_roles` still serves the same route at "
+                            "admin_migrations.py:114. Claim accurate."),
+    "R2-336": ("CONFIRMED", "E1: the `inv.category = req.category` overwrite is removed. The "
+                            "note's disclosed sibling (`inv.unit` still overwritten) is real and "
+                            "is carried by R2-717, not by this row."),
+    "R2-378": ("CONFIRMED", "E1: dead `TransactionRetention` model removed and zero references "
+                            "remain anywhere in app/. The table was left in place as the note "
+                            "says, so nothing is destructive."),
+    "R2-452": ("CONFIRMED", "E1: `quantity = round(quantity, float_limit)` is gone from the "
+                            "importer, and BOTH write paths - Excel import (:204) and manual add "
+                            "(:416-430) - now store the typed quantity with `float_limit` kept "
+                            "only as `quantity_float_limit` display metadata."),
+    "R2-083": ("UNVERIFIED", "E1 FAILS on completeness. The two edits are correct, but the note's "
+                             "claim that these were 'the last two fabricated attribute fallbacks' "
+                             "is wrong - four remain in the same object literal, including "
+                             "`health || \"Healthy\"`. Raised as R2-712 instance 11 / R2-719."),
     "R2-559": ("NOT_IN_PROD", "E0: zero unique indexes on the six tables in Supabase; by column "
                               "set the only one is <table>_pkey on id. Correct in code, absent "
                               "in production. Escalated as R2-701."),
