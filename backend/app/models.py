@@ -180,6 +180,15 @@ class User(Base):
     # Audit trail of which login methods this user has linked, as a comma string
     # (e.g. "phone,google"). Kept as a plain string for SQLite/Postgres parity.
     auth_providers = Column(String(255), nullable=True)
+    tokens_revoked_at = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
+class RevokedToken(Base):
+    __tablename__ = "revoked_tokens"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    jti = Column(String(36), nullable=False, unique=True, index=True)
+    expires_at = Column(DateTime(timezone=True), nullable=False)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 
 

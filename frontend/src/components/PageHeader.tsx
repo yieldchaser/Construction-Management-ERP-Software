@@ -6,6 +6,7 @@ import { useRouter, useParams } from "next/navigation";
 import ThemeToggle from "./ThemeToggle";
 
 import { useSidebar } from "@/context/SidebarContext";
+import { getApiHost } from "@/lib/api";
 
 interface PageHeaderProps {
   title: string;
@@ -39,6 +40,13 @@ export default function PageHeader({ title, children }: PageHeaderProps) {
   }, []);
 
   const handleLogout = () => {
+    const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
+    if (token) {
+      fetch(`${getApiHost()}/apis/v3/auth/logout`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      }).catch(() => {});
+    }
     const keys = [
       "access_token",
       "company_id",

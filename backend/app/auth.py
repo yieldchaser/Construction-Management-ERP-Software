@@ -14,11 +14,12 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token", auto_error=False)
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
     to_encode = data.copy()
+    now = datetime.now(timezone.utc)
     if expires_delta:
-        expire = datetime.now(timezone.utc) + expires_delta
+        expire = now + expires_delta
     else:
-        expire = datetime.now(timezone.utc) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    to_encode.update({"exp": expire})
+        expire = now + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    to_encode.update({"exp": expire, "iat": int(now.timestamp()), "jti": str(uuid.uuid4())})
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
     return encoded_jwt
 
@@ -47,6 +48,21 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if user is None:
         raise credentials_exception
+
+    jti = payload.get("jti")
+    if jti:
+        revoked = db.query(models.RevokedToken).filter(models.RevokedToken.jti == jti).first()
+        if revoked:
+            raise credentials_exception
+
+    issued_at = payload.get("iat")
+    tokens_revoked_at = user.tokens_revoked_at
+    if isinstance(issued_at, (int, float)) and tokens_revoked_at is not None:
+        if tokens_revoked_at.tzinfo is None:
+            tokens_revoked_at = tokens_revoked_at.replace(tzinfo=timezone.utc)
+        if datetime.fromtimestamp(issued_at, tz=timezone.utc) < tokens_revoked_at:
+            raise credentials_exception
+
     return user
 
 def get_company_membership(db: Session, user: models.User, company_id: uuid.UUID) -> models.CompanyTeam:

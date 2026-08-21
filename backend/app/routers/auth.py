@@ -5,11 +5,18 @@ import uuid
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
+from jose import JWTError, jwt
 from pydantic import BaseModel, EmailStr, Field, field_validator
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from app.database import get_db
-from app.auth import create_access_token, get_company_membership, get_current_active_company_user, get_current_user
+from app.auth import (
+    create_access_token,
+    get_company_membership,
+    get_current_active_company_user,
+    get_current_user,
+    oauth2_scheme,
+)
 from app.permissions import effective_permissions
 from app.config import settings
 from app.rate_limit import limiter
@@ -699,9 +706,37 @@ def reset_password(request: Request, payload: ResetPasswordRequest, db: Session 
 
     user.password_hash = security.hash_password(payload.new_password)
     user.email_verified = True
+    user.tokens_revoked_at = datetime.now(timezone.utc)
     _add_provider(user, "password")
     db.commit()
     return {"success": True, "message": "Password updated. Please log in."}
+
+
+@router.post("/logout")
+def logout(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+    invalid = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Invalid or expired session.",
+    )
+    if not token:
+        raise invalid
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+    except JWTError:
+        raise invalid
+    jti = payload.get("jti")
+    if not jti:
+        raise invalid
+    exp = payload.get("exp")
+    if isinstance(exp, (int, float)):
+        expires_at = datetime.fromtimestamp(exp, tz=timezone.utc)
+    else:
+        expires_at = datetime.now(timezone.utc) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    already = db.query(models.RevokedToken).filter(models.RevokedToken.jti == jti).first()
+    if not already:
+        db.add(models.RevokedToken(jti=jti, expires_at=expires_at))
+        db.commit()
+    return {"success": True, "message": "Signed out."}
 
 
 # ── OAuth handoff exchange (Part D + F) ──────────────────────────────────────
