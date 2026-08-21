@@ -1,8 +1,10 @@
+import json
 import uuid
 from datetime import datetime
 from typing import List, Literal, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import Response
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.auth import get_current_user, verify_project_in_company, verify_company_access, get_company_membership, require_permission
@@ -548,6 +550,17 @@ def pending_vouchers(company_id: uuid.UUID, db: Session = Depends(get_db), _: No
             Payment.tally_synced == False,
             Payment.payment_date >= conn.sync_window_start_date,
         ).all()
+        excluded_bills = db.query(func.count(Bill.id)).filter(
+            Bill.company_id == comp_uuid,
+            Bill.status != "Cancelled",
+            Bill.tally_synced == False,
+            Bill.invoice_date < conn.sync_window_start_date,
+        ).scalar() or 0
+        excluded_payments = db.query(func.count(Payment.id)).filter(
+            Payment.company_id == comp_uuid,
+            Payment.tally_synced == False,
+            Payment.payment_date < conn.sync_window_start_date,
+        ).scalar() or 0
         if bills or payments:
             _, vouchers = _build_vouchers(db, conn, bills, payments, advance_sequence=False)
             bill_ids = [str(b.id) for b in bills]
@@ -558,6 +571,7 @@ def pending_vouchers(company_id: uuid.UUID, db: Session = Depends(get_db), _: No
         "bill_ids": bill_ids,
         "payment_ids": payment_ids,
         "vouchers": vouchers,
+        "excluded_before_window": {"bills": excluded_bills, "payments": excluded_payments},
     }
 
 
@@ -604,10 +618,14 @@ def mark_synced(req: MarkSyncedRequest, db: Session = Depends(get_db), current_u
     updated_bills = 0
     updated_payments = 0
     company_id = None
+    authorized_companies = set()
 
     if bill_ids:
         for b in db.query(Bill).filter(Bill.id.in_(bill_ids)).all():
-            get_company_membership(db, current_user, b.company_id)
+            if b.company_id not in authorized_companies:
+                get_company_membership(db, current_user, b.company_id)
+                require_permission(db, current_user, b.company_id, "settings:manage")
+                authorized_companies.add(b.company_id)
             if not b.tally_synced:
                 b.tally_synced = True
                 updated_bills += 1
@@ -615,7 +633,10 @@ def mark_synced(req: MarkSyncedRequest, db: Session = Depends(get_db), current_u
 
     if payment_ids:
         for p in db.query(Payment).filter(Payment.id.in_(payment_ids)).all():
-            get_company_membership(db, current_user, p.company_id)
+            if p.company_id not in authorized_companies:
+                get_company_membership(db, current_user, p.company_id)
+                require_permission(db, current_user, p.company_id, "settings:manage")
+                authorized_companies.add(p.company_id)
             if not p.tally_synced:
                 p.tally_synced = True
                 updated_payments += 1
@@ -630,8 +651,8 @@ def mark_synced(req: MarkSyncedRequest, db: Session = Depends(get_db), current_u
             company_id=company_id,
             voucher_count=updated_bills + updated_payments,
             marked_synced_at=datetime.utcnow(),
-            bill_ids=str(bill_ids),
-            payment_ids=str(payment_ids),
+            bill_ids=json.dumps([str(x) for x in bill_ids]),
+            payment_ids=json.dumps([str(x) for x in payment_ids]),
         )
         db.add(log)
         db.commit()
@@ -640,6 +661,44 @@ def mark_synced(req: MarkSyncedRequest, db: Session = Depends(get_db), current_u
         "marked_bills": updated_bills,
         "marked_payments": updated_payments,
         "marked_synced_at": (log.marked_synced_at.isoformat() if log else None),
+    }
+
+
+@router.post("/unmark-synced")
+def unmark_synced(req: MarkSyncedRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Undo a mark-synced so vouchers re-enter the export queue (e.g. a mark before the Tally import actually succeeded)."""
+    bill_ids = [uuid.UUID(str(x)) for x in req.bill_ids]
+    payment_ids = [uuid.UUID(str(x)) for x in req.payment_ids]
+
+    unmarked_bills = 0
+    unmarked_payments = 0
+    authorized_companies = set()
+
+    if bill_ids:
+        for b in db.query(Bill).filter(Bill.id.in_(bill_ids)).all():
+            if b.company_id not in authorized_companies:
+                get_company_membership(db, current_user, b.company_id)
+                require_permission(db, current_user, b.company_id, "settings:manage")
+                authorized_companies.add(b.company_id)
+            if b.tally_synced:
+                b.tally_synced = False
+                unmarked_bills += 1
+
+    if payment_ids:
+        for p in db.query(Payment).filter(Payment.id.in_(payment_ids)).all():
+            if p.company_id not in authorized_companies:
+                get_company_membership(db, current_user, p.company_id)
+                require_permission(db, current_user, p.company_id, "settings:manage")
+                authorized_companies.add(p.company_id)
+            if p.tally_synced:
+                p.tally_synced = False
+                unmarked_payments += 1
+
+    db.commit()
+
+    return {
+        "unmarked_bills": unmarked_bills,
+        "unmarked_payments": unmarked_payments,
     }
 
 
