@@ -5,8 +5,48 @@ Shared helpers for document-style PDF endpoints (Invoice / PO / BOQ).
 Centralises the "Document Company Name Display" + custom PDF template banner
 resolution that `routers/reports.py` already does for client progress reports,
 so the three new line-item PDF endpoints render with the same branding.
+
+Also loads the company's uploaded branding assets (logo / signature / stamp /
+watermark, R2-404) so document generators can embed them.
 """
-from app.models import Company, CompanyBranch, PdfTemplate
+from app.models import Company, CompanyBranch, CompanyFile, PdfTemplate
+from app import supabase_storage
+
+
+def load_branding_assets(db, company_id):
+    """Return {"logo"|"signature"|"stamp"|"watermark": {"data", "content_type"}}
+    for every uploaded CompanyFile asset of the company.
+
+    Storage-backed rows are downloaded when object storage is configured;
+    legacy rows keep their bytes in the DB column. An asset that cannot be
+    loaded is omitted rather than substituted.
+    """
+    assets = {}
+    if not company_id:
+        return assets
+    rows = (
+        db.query(CompanyFile)
+        .filter(
+            CompanyFile.company_id == company_id,
+            CompanyFile.asset_type.in_(["logo", "signature", "stamp", "watermark"]),
+        )
+        .all()
+    )
+    for cf in rows:
+        data = cf.data
+        if not data and cf.storage_path and supabase_storage.is_storage_configured():
+            try:
+                data = supabase_storage.download_bytes(
+                    supabase_storage.BUCKET_COMPANY_FILES, cf.storage_path
+                )
+            except Exception:
+                data = None
+        if data:
+            assets[cf.asset_type] = {
+                "data": data,
+                "content_type": cf.content_type or "application/octet-stream",
+            }
+    return assets
 
 
 def resolve_pdf_branding(db, company_id, project=None):

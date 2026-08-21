@@ -153,12 +153,14 @@ def generate_report(
                 custom_banner = template.content
 
     # 6. Generate PDF stream
+    from app.utils.document_pdf import load_branding_assets
     pdf_bytes = generate_client_report_pdf(
         payload.report_name,
         payload.summary_markdown or "",
         metrics,
         company_name=company_name,
         custom_banner=custom_banner,
+        branding=load_branding_assets(db, project.company_id),
     )
 
     # 7. Save PDF to static files directory (absolute, CWD-independent)

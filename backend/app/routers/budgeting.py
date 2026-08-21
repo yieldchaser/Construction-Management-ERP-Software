@@ -466,6 +466,8 @@ def get_boq_document_pdf(doc_id: UUID, db: Session = Depends(get_db), current_us
     require_module_view(db, current_user, project.company_id, "budgeting")
 
     company_name, custom_banner = resolve_pdf_branding(db, project.company_id, project)
+    from app.utils.document_pdf import load_branding_assets
+    branding = load_branding_assets(db, project.company_id)
     party = db.query(LibraryParty).filter(LibraryParty.id == doc.client_party_id).first() if doc.client_party_id else None
     client_name = party.name if party else "N/A"
 
@@ -509,6 +511,7 @@ def get_boq_document_pdf(doc_id: UUID, db: Session = Depends(get_db), current_us
         terms=doc.terms,
         company_name=company_name,
         custom_banner=custom_banner,
+        branding=branding,
     )
     filename = f"boq-{doc.title or doc.id}.pdf"
     return Response(

@@ -529,6 +529,8 @@ def get_bill_pdf(bill_id: UUID, db: Session = Depends(get_db), current_user=Depe
 
     project = db.query(Project).filter(Project.id == bill.project_id).first() if bill.project_id else None
     company_name, custom_banner = resolve_pdf_branding(db, bill.company_id, project)
+    from app.utils.document_pdf import load_branding_assets
+    branding = load_branding_assets(db, bill.company_id)
 
     party = db.query(CompanyTeam).filter(CompanyTeam.id == bill.party_company_user_id).first()
     party_user = db.query(User).filter(User.id == party.user_id).first() if party else None
@@ -592,6 +594,7 @@ def get_bill_pdf(bill_id: UUID, db: Session = Depends(get_db), current_user=Depe
         terms=bill.terms,
         company_name=company_name,
         custom_banner=custom_banner,
+        branding=branding,
     )
     filename = f"{bill.invoice_number or 'bill'}.pdf"
     return Response(

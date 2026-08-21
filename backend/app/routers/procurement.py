@@ -996,6 +996,8 @@ def get_po_pdf(po_id: UUID, db: Session = Depends(get_db), current_user=Depends(
 
     project = db.query(Project).filter(Project.id == po.project_id).first() if po.project_id else None
     company_name, custom_banner = resolve_pdf_branding(db, po.company_id, project)
+    from app.utils.document_pdf import load_branding_assets
+    branding = load_branding_assets(db, po.company_id)
 
     vendor = db.query(CompanyTeam).filter(CompanyTeam.id == po.vendor_id).first() if po.vendor_id else None
     vendor_user = db.query(User).filter(User.id == vendor.user_id).first() if vendor else None
@@ -1047,6 +1049,7 @@ def get_po_pdf(po_id: UUID, db: Session = Depends(get_db), current_user=Depends(
         terms=po.terms,
         company_name=company_name,
         custom_banner=custom_banner,
+        branding=branding,
     )
     filename = f"{po.po_number or 'po'}.pdf"
     return Response(
