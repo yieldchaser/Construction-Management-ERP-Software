@@ -8,7 +8,7 @@ from sqlalchemy import select
 from openpyxl import load_workbook
 from app.database import get_db
 from app.auth import get_current_user, verify_project_access, get_company_membership, require_permission, require_module_view
-from app.models import BOQItem, BOQDocument, ProjectBudget, Project, Bill, LibraryParty, Task, User, BOQRevision
+from app.models import BOQItem, BOQDocument, ProjectBudget, Project, Bill, LibraryParty, Task, User, BOQRevision, LibraryCostCode
 from app.workflow_controls import get_default_terms
 from app.utils.pdf_generator import generate_document_pdf
 from app.utils.document_pdf import resolve_pdf_branding
@@ -150,6 +150,8 @@ async def import_boq(
 
         imported_count = 0
         total_amount = 0.0
+        pending_items = []
+        cost_codes_seen = set()
 
         # Iterate rows
         is_first = True
@@ -204,8 +206,30 @@ async def import_boq(
                 quantity_float_limit=float_limit,
                 amount=amount
             )
-            db.add(boq_item)
+            pending_items.append(boq_item)
             imported_count += 1
+            if cost_code_val:
+                cost_codes_seen.add(cost_code_val)
+
+        # R2-334: every non-empty cost code must exist in the company's Cost
+        # Code Library. Otherwise one spreadsheet typo silently forks a sixth
+        # code that never rolls up with the rest.
+        if cost_codes_seen:
+            known_codes = set(
+                code for (code,) in db.query(LibraryCostCode.code).filter(
+                    LibraryCostCode.company_id == project.company_id,
+                    LibraryCostCode.code.in_(cost_codes_seen),
+                ).all()
+            )
+            unknown_codes = sorted(cost_codes_seen - known_codes)
+            if unknown_codes:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Unknown cost codes (add them to the Cost Code Library first): " + ", ".join(unknown_codes),
+                )
+
+        for boq_item in pending_items:
+            db.add(boq_item)
 
         db.commit()
         return {
@@ -214,6 +238,9 @@ async def import_boq(
             "total_estimated_cost": total_amount
         }
 
+    except HTTPException:
+        db.rollback()
+        raise
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Import failed: {str(e)}")
@@ -416,6 +443,16 @@ def create_boq_item(doc_id: UUID, req: BOQItemCreate, db: Session = Depends(get_
         raise HTTPException(status_code=404, detail="Project not found")
     get_company_membership(db, current_user, project.company_id)
     require_permission(db, current_user, project.company_id, "budgeting:edit")
+
+    # R2-334: same library gate as the spreadsheet importer. A cost code that
+    # is not in the company's Cost Code Library would never roll up.
+    if req.cost_code:
+        known = db.query(LibraryCostCode.id).filter(
+            LibraryCostCode.company_id == project.company_id,
+            LibraryCostCode.code == req.cost_code,
+        ).first()
+        if not known:
+            raise HTTPException(status_code=400, detail="Unknown cost code (add it to the Cost Code Library first)")
 
     float_limit = 2
     if req.unit.lower() in ("kg", "ton", "t", "steel"):
