@@ -879,3 +879,159 @@ def test_pin_R2_596_timesheet_error_surfaces():
 def test_pin_R2_600_home_featured_project_filtered():
     src = _read_frontend("src/app/c/[company_id]/d/home/page.tsx")
     assert "filteredProjects[0]" in src, "R2-600 home featured project binding regressed"
+
+# ── Phase H waves 1-3 ─────────────────────────────────────────────────────────
+
+def test_pin_R2_182_storage_listener():
+    src = _read_frontend("src/app/c/[company_id]/layout.tsx")
+    assert 'window.addEventListener("storage", onStorage)' in src
+    assert '"access_token"' in src
+
+def test_pin_R2_186_switch_company():
+    src = _read("app/routers/auth.py")
+    assert '@router.post("/switch-company/{company_id}")' in src
+    body = src.split("def switch_company", 1)[1].split("@router", 1)[0]
+    assert "get_company_membership" in body
+    assert "_mint_session_response" in body
+
+def test_pin_R2_196_token_revocation():
+    auth = _read("app/auth.py")
+    assert '"jti"' in auth and '"iat"' in auth
+    assert "models.RevokedToken" in auth
+    src = _read("app/routers/auth.py")
+    assert '@router.post("/logout")' in src
+    assert "user.tokens_revoked_at" in src
+    import os
+    mig = os.path.join(ROOT, "..", "supabase", "migrations", "20260821_000002_token_revocation.sql")
+    assert os.path.exists(mig)
+
+def test_pin_R2_285_approval_rule_validation():
+    src = _read("app/routers/settings.py")
+    assert "max_amount must be greater than min_amount" in src
+    assert "_validate_rule_approvers(db, company_id, rule_data.approvers)" in src
+    assert "_reject_overlapping_band(" in src
+
+def test_pin_R2_292_role_permission_guards():
+    src = _read("app/routers/settings.py")
+    assert "permissions cannot be empty" in src
+    assert "Only owner-equivalent members may grant the all superuser flag" in src
+    assert "_LOCKED_ROLES" in src
+
+def test_pin_R2_405_mobile_not_phone():
+    src = _read("app/routers/settings.py")
+    assert "phone=u.mobile" in src
+    assert ".first().mobile" in src
+    assert "u.phone" not in src
+
+def test_pin_R2_554_gstin_mod36():
+    src = _read("app/routers/settings.py")
+    body = src.split("def _gstin_checksum_ok", 1)[1].split("def ", 1)[0]
+    assert "reversed(gstin[:14])" in body
+    assert "(product // 36)" in body
+
+def test_pin_R2_204_ncr_accountability():
+    src = _read("app/routers/quality.py")
+    assert "ncr.closed_by = current_user.id" in src
+    assert "ncr.reviewed_by = current_user.id" in src
+
+def test_pin_R2_212_incident_close_min_length():
+    src = _read("app/routers/safety.py")
+    assert src.count("min_length=10") >= 2
+
+def test_pin_R2_363_foreign_checklist_item_rejected():
+    src = _read("app/routers/quality.py")
+    assert "does not belong to this inspection's checklist" in src
+
+def test_pin_R2_364_unassessed_metric():
+    src = _read("app/routers/reports.py")
+    assert "quality_tests_unassessed" in src
+
+def test_pin_R2_391_inspection_responses_endpoint():
+    src = _read("app/routers/quality.py")
+    assert "/inspections/{insp_id}/responses" in src
+
+def test_pin_R2_551_acceptance_range_not_inverted():
+    src = _read("app/routers/quality.py")
+    assert "acceptance_range_not_inverted" in src
+
+def test_pin_R2_525_penalty_reads_stored_wages():
+    src = _read("app/routers/statutory.py")
+    assert "No statutory report found for this report type and period" in src
+
+def test_pin_R2_526_filed_by_server_derived():
+    src = _read("app/routers/statutory.py")
+    assert "report.filed_by = current_user.name" in src
+
+def test_pin_R2_441_progress_vocab():
+    src = _read("app/routers/projects.py")
+    assert '"in_progress": 0.5' in src
+
+def test_pin_R2_491_member_party_fallback():
+    src = _read("app/routers/projects.py")
+    body = src.split("def list_project_members", 1)[1].split("def ", 1)[0]
+    assert "models.LibraryParty.id == m.library_party_id" in body
+
+def test_pin_R2_552_project_bounds():
+    src = _read("app/routers/projects.py")
+    assert "project_value: float = Field(0.0, ge=0, le=1e15)" in src
+    assert "attendance_radius_meters: int = Field(500, ge=0, le=100000)" in src
+    hr = _read("app/routers/hr.py")
+    assert "500 if project.attendance_radius_meters is None else project.attendance_radius_meters" in hr
+
+def test_pin_R2_580_status_pattern():
+    src = _read("app/routers/projects.py")
+    assert 'pattern=r"^(Not Started|Planning|Ongoing|On Hold|Onhold|Completed|Cancelled)$"' in src
+
+def test_pin_R2_582_party_status_typed():
+    src = _read("app/routers/projects.py")
+    assert 'status: str = Field(..., pattern="^(Active|Inactive)$")' in src
+
+def test_pin_R2_583_party_balance_update():
+    src = _read("app/routers/projects.py")
+    body = src.split("def add_project_party", 1)[1].split("@router", 1)[0]
+    assert "existing.advance_paid = adv" in body
+
+def test_pin_R2_202_boq_revision_applies():
+    models = _read("app/models.py")
+    assert "revised_amount = Column(Numeric(18, 2), nullable=True)" in models
+    src = _read("app/routers/budgeting.py")
+    assert "doc.revised_amount = req.revised_amount" in src
+
+def test_pin_R2_338_vendor_perf_wired():
+    vp = _read("app/routers/vendor_performance.py")
+    assert "baseline = po.expected_delivery_date or po.po_date" in vp
+    proc = _read("app/routers/procurement.py")
+    assert "refresh_vendor_performance(db, req.project_id, req.company_id)" in proc
+
+def test_pin_R2_340_progress_consumers():
+    planning = _read("app/routers/planning.py")
+    assert "task.progress = 100.0" in planning
+    dpr = _read("app/routers/dpr.py")
+    assert "sum(float(t.progress or 0) for t in tasks)" in dpr
+    analytics = _read("app/routers/analytics.py")
+    assert analytics.count("_task_is_completed(") >= 5
+
+def test_pin_R2_382_edit_window_bills():
+    src = _read("app/routers/billing.py")
+    assert src.count("enforce_entry_editing_window(db, bill.company_id, bill.invoice_date)") >= 2
+
+def test_pin_R2_230_revision_file_required():
+    src = _read("app/routers/drawings.py")
+    assert src.count("file_url cannot be blank") >= 2
+
+def test_pin_R2_253_subcon_wo_cap():
+    billing = _read("app/routers/billing.py")
+    assert "Subcon bill exceeds work order" in billing
+    models = _read("app/models.py")
+    assert "wo_id = Column(UUID(as_uuid=True), ForeignKey" in models
+
+def test_pin_R2_433_po_vendor_name():
+    proc = _read("app/routers/procurement.py")
+    assert "vendor_name=vendor_name" in proc
+
+def test_pin_R2_559_doc_number_uniques():
+    models = _read("app/models.py")
+    for uq in ("uq_bills_company_id_invoice_number", "uq_purchase_orders_company_id_po_number",
+               "uq_goods_receipt_notes_company_id_grn_number", "uq_material_indents_company_id_indent_number",
+               "uq_work_orders_company_id_wo_number", "uq_library_cost_codes_company_id_code"):
+        assert uq in models
