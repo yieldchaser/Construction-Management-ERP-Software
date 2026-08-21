@@ -4,7 +4,7 @@ from typing import List, Optional, Literal
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Response
 from sqlalchemy.orm import Session
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 from app.database import get_db
 from app.auth import get_current_user, verify_company_access, get_company_membership, require_permission
 from app.models import (
@@ -193,6 +193,12 @@ class ApprovalRuleCreate(BaseModel):
     levels: int = Field(..., ge=1)
     approvers: str
 
+    @model_validator(mode="after")
+    def _check_amount_band(self):
+        if self.max_amount is not None and self.max_amount <= self.min_amount:
+            raise ValueError("max_amount must be greater than min_amount")
+        return self
+
 
 class ApprovalRuleResponse(BaseModel):
     id: uuid.UUID
@@ -334,9 +340,54 @@ def list_approval_rules(company_id: uuid.UUID, db: Session = Depends(get_db), _:
     return db.query(ApprovalRule).filter(ApprovalRule.company_id == company_id).all()
 
 
+def _validate_rule_approvers(db: Session, company_id: uuid.UUID, approvers: str) -> None:
+    members = (
+        db.query(CompanyTeam, User)
+        .join(User, User.id == CompanyTeam.user_id)
+        .filter(CompanyTeam.company_id == company_id)
+        .all()
+    )
+    known = set()
+    for team_row, member_user in members:
+        if member_user.email:
+            known.add(member_user.email.strip().lower())
+        if member_user.name:
+            known.add(member_user.name.strip().lower())
+        known.add(str(team_row.id).lower())
+    unknown = [
+        raw.strip()
+        for raw in (approvers or "").split(",")
+        if raw.strip() and raw.strip().lower() not in known
+    ]
+    if unknown:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Unknown approver(s): {', '.join(unknown)}. Approvers must be team members of this company (email or name).",
+        )
+
+
+def _reject_overlapping_band(db: Session, company_id: uuid.UUID, feature_type: str, min_amount: float, max_amount: Optional[float], exclude_id=None) -> None:
+    query = db.query(ApprovalRule).filter(
+        ApprovalRule.company_id == company_id,
+        ApprovalRule.feature_type == feature_type,
+    )
+    if exclude_id is not None:
+        query = query.filter(ApprovalRule.id != exclude_id)
+    for existing in query.all():
+        existing_min = existing.min_amount or 0
+        existing_max = existing.max_amount
+        if (existing_max is None or min_amount <= existing_max) and (max_amount is None or existing_min <= max_amount):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"The amount band overlaps an existing {feature_type} approval rule",
+            )
+
+
 @router.post("/approval-rules/{company_id}", response_model=ApprovalRuleResponse)
 def create_approval_rule(company_id: uuid.UUID, rule_data: ApprovalRuleCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user), _: None = Depends(verify_company_access)):
     require_permission(db, current_user, company_id, "settings:manage")
+    _validate_rule_approvers(db, company_id, rule_data.approvers)
+    _reject_overlapping_band(db, company_id, rule_data.feature_type, rule_data.min_amount, rule_data.max_amount)
     new_rule = ApprovalRule(
         company_id=company_id,
         feature_type=rule_data.feature_type,
@@ -358,6 +409,8 @@ def update_approval_rule(rule_id: uuid.UUID, rule_data: ApprovalRuleCreate, db: 
         raise HTTPException(status_code=404, detail="Approval rule not found")
     get_company_membership(db, current_user, rule.company_id)
     require_permission(db, current_user, rule.company_id, "settings:manage")
+    _validate_rule_approvers(db, rule.company_id, rule_data.approvers)
+    _reject_overlapping_band(db, rule.company_id, rule_data.feature_type, rule_data.min_amount, rule_data.max_amount, exclude_id=rule.id)
     for field, val in rule_data.model_dump(exclude_unset=True).items():
         setattr(rule, field, val)
     db.commit()
