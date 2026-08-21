@@ -76,6 +76,9 @@ class ComparativeItem(BaseModel):
 
 # --- Work Order Amendments ---
 
+AMENDABLE_WO_FIELDS = {"estimated_work_amount", "terms"}
+
+
 @router.get("/work-orders/{wo_id}/amendments", response_model=List[AmendmentResponse])
 def get_amendments(wo_id: UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     wo = db.query(WorkOrder).filter(WorkOrder.id == wo_id).first()
@@ -95,6 +98,16 @@ def create_amendment(wo_id: UUID, req: AmendmentCreateRequest, db: Session = Dep
         raise HTTPException(status_code=404, detail="Work Order not found")
     require_permission(db, current_user, wo.company_id, "subcontractor:edit")
 
+    unknown = set(req.amended_fields) - AMENDABLE_WO_FIELDS
+    if unknown:
+        raise HTTPException(status_code=422, detail=f"Fields cannot be amended: {sorted(unknown)}")
+    if "estimated_work_amount" in req.amended_fields:
+        amount = req.amended_fields["estimated_work_amount"]
+        if not isinstance(amount, (int, float)) or isinstance(amount, bool) or amount < 0:
+            raise HTTPException(status_code=422, detail="estimated_work_amount must be a non-negative number")
+    if "terms" in req.amended_fields and not isinstance(req.amended_fields["terms"], str):
+        raise HTTPException(status_code=422, detail="terms must be a string")
+
     last = db.query(WorkOrderAmendment).filter(
         WorkOrderAmendment.wo_id == wo_id
     ).order_by(WorkOrderAmendment.amendment_number.desc()).first()
@@ -105,9 +118,11 @@ def create_amendment(wo_id: UUID, req: AmendmentCreateRequest, db: Session = Dep
         wo_id=wo_id,
         amendment_number=next_number,
         amended_fields=req.amended_fields,
-        amended_by=req.amended_by,
+        amended_by=current_user.name or str(current_user.id),
         reason=req.reason
     )
+    for field, value in req.amended_fields.items():
+        setattr(wo, field, value)
     db.add(amendment)
     db.commit()
     db.refresh(amendment)
