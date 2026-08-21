@@ -192,15 +192,17 @@ def list_grns(company_id: uuid.UUID, project_id: Optional[uuid.UUID] = None, db:
 
 
 @router.patch("/{match_id}/approve", response_model=ThreeWayMatchResponse)
-def approve_match(match_id: uuid.UUID, approved_by: Optional[uuid.UUID] = None, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def approve_match(match_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     match = db.query(ThreeWayMatch).filter(ThreeWayMatch.id == match_id).first()
     if not match:
         raise HTTPException(status_code=404, detail="Match not found")
     get_company_membership(db, current_user, match.company_id)
     require_permission(db, current_user, match.company_id, "finance:approve")
+    # R2-539: the approving actor is the authenticated user, never a
+    # caller-supplied query parameter.
     match.match_status = "approved"
-    match.matched_by = approved_by
-    match.matched_at = datetime.utcnow()
+    match.matched_by = current_user.id
+    match.matched_at = datetime.now(timezone.utc)
     db.commit()
     db.refresh(match)
     po = db.query(PurchaseOrder).filter(PurchaseOrder.id == match.po_id).first()
@@ -219,7 +221,10 @@ def reject_match(match_id: uuid.UUID, reason: Optional[str] = None, db: Session 
         raise HTTPException(status_code=404, detail="Match not found")
     get_company_membership(db, current_user, match.company_id)
     require_permission(db, current_user, match.company_id, "finance:approve")
+    # R2-539: a rejection records who refused and when, like an approval does.
     match.match_status = "rejected"
+    match.matched_by = current_user.id
+    match.matched_at = datetime.now(timezone.utc)
     match.variance_reason = reason or match.variance_reason
     db.commit()
     db.refresh(match)

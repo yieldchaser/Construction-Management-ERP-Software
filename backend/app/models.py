@@ -1621,7 +1621,7 @@ class ThreeWayMatch(Base):
     po_id = Column(UUID(as_uuid=True), ForeignKey("purchase_orders.id", ondelete="CASCADE"), nullable=False)
     grn_id = Column(UUID(as_uuid=True), ForeignKey("goods_receipt_notes.id", ondelete="CASCADE"), nullable=False)
     invoice_id = Column(UUID(as_uuid=True), ForeignKey("bills.id", ondelete="SET NULL"), nullable=True)
-    match_status = Column(String(50), default="pending", nullable=False) # pending, matched, mismatch, approved
+    match_status = Column(String(50), default="pending", nullable=False) # pending, matched, mismatch, approved, rejected
     po_amount = Column(Numeric(18, 2), nullable=False)
     grn_qty = Column(Numeric(18, 4), nullable=False)
     invoiced_amount = Column(Numeric(18, 2), nullable=False)

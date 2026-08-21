@@ -132,7 +132,7 @@ export default function ThreeWayPage() {
 
   const handleApprove = async (id: string) => {
     try {
-      const res = await fetch(`${getApiHost()}/apis/v3/three-way/${id}/approve?approved_by=current_user`, { method: "PATCH", headers: authHeaders() });
+      const res = await fetch(`${getApiHost()}/apis/v3/three-way/${id}/approve`, { method: "PATCH", headers: authHeaders() });
       if (res.ok) {
         setMessage("Match approved");
         fetchMatches();
