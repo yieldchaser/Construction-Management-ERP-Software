@@ -663,11 +663,15 @@ def assign_member_role(
         db.query(CompanyRole).filter(CompanyRole.id == member.role_id).first()
         if member.role_id else None
     )
+    # R2-390: resolve the member's user once and never crash after the commit —
+    # this endpoint must answer 200 with the new role even when the backing
+    # user row has gone, instead of committing the change and returning 500.
+    user = db.query(User).filter(User.id == member.user_id).first()
     return TeamMemberResponse(
         id=member.id,
-        name=db.query(User).filter(User.id == member.user_id).first().name,
-        email=db.query(User).filter(User.id == member.user_id).first().email,
-        phone=db.query(User).filter(User.id == member.user_id).first().mobile,
+        name=user.name if user else "Unknown member",
+        email=user.email if user else None,
+        phone=user.mobile if user else None,
         role_id=member.role_id,
         role_name=role.role_name if role else None,
         priority_type=member.priority_type,
