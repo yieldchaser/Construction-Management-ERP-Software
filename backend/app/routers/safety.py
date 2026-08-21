@@ -41,8 +41,8 @@ class IncidentCreate(BaseModel):
 
 
 class IncidentClose(BaseModel):
-    root_cause: str
-    corrective_action: str
+    root_cause: str = Field(..., min_length=10)
+    corrective_action: str = Field(..., min_length=10)
 
 
 class ToolboxTalkCreate(BaseModel):
