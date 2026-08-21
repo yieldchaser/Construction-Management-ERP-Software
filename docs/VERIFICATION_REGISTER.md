@@ -175,7 +175,7 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-149 | HIGH | FIXED | `6d9493c` | `d/todo/page.tsx` | yes | yes | text-pin | 1 | CONFIRMED | E1: pure removal of 144 lines. Zero repeat/recurrence/endsDate residue left in d/todo/page.tsx. |
 | R2-168 | HIGH | FIXED | `99d9287` | `d/hr/page.tsx` | yes | yes | text-pin | 1 | CONFIRMED | E1: `payrollMonth` defaults to the current month (`new Date().toISOString().slice(0,7)`, hr/page.tsx:220), not the hardcoded 2026-06. The note's own follow-up on `daysInMonth` is disclosed residue and is carried by R2-717. |
 | R2-182 | HIGH | FIXED | `94e7923` | `auth.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
-| R2-186 | HIGH | FIXED | `1a564f1` | `auth.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
+| R2-186 | HIGH | FIXED | `1a564f1` | `auth.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: POST /auth/switch-company calls get_company_membership at auth.py:955 before re-minting the session, so a non-member cannot switch into a company. |
 | R2-196 | HIGH | FIXED | `aaa5041` | `auth.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-202 | HIGH | FIXED | `42d2c9a` | `planning.py` | yes | yes | text-pin | 1 | UNVERIFIED | E0 passes - column live. Behaviour not yet exercised. |
 | R2-204 | HIGH | FIXED | `5b37186` | `quality.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
@@ -186,7 +186,7 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-292 | HIGH | FIXED | `e88a5f1` | `settings.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-338 | HIGH | FIXED | `959ae3b` | `planning.py` | yes | yes | text-pin | 1 | UNVERIFIED | E0 passes - both columns live. Behaviour not yet exercised. |
 | R2-340 | HIGH | FIXED | `d034a0a` | `planning.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
-| R2-363 | HIGH | FIXED | `4095671` | `quality.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
+| R2-363 | HIGH | FIXED | `4095671` | `quality.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: quality.py builds valid_item_ids from insp.checklist_id and raises 400 at :308 inside the response loop, before any upsert, so a foreign checklist item cannot be written. |
 | R2-364 | HIGH | FIXED | `cdc82d9` | `quality.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-382 | HIGH | FIXED | `1725fea` | `planning.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: `enforce_entry_editing_window` is called on both mutations - billing.py:447 and :891 - so cancel and match-link are covered, not just task updates. |
 | R2-391 | HIGH | FIXED | `ac10a52` | `quality.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
@@ -195,19 +195,19 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-441 | HIGH | FIXED | `583c47d` | `projects.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: `_TASK_PROGRESS` covers every value the UI can emit - the frontend option list is exactly not_started/start/in_progress/completed, and the map holds all four plus `ongoing`. E3: production task statuses are `not_started` only. |
 | R2-491 | HIGH | FIXED | `—` | `projects.py` | yes | yes | parse_fail | 1 | UNVERIFIED |  |
 | R2-525 | HIGH | FIXED | `268b8ef` | `statutory.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
-| R2-526 | HIGH | FIXED | `2c5fe8c` | `statutory.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
-| R2-551 | HIGH | FIXED | `dc53828` | `quality.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
+| R2-526 | HIGH | FIXED | `2c5fe8c` | `statutory.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: statutory.py:168 sets report.filed_by = current_user.name; a blank acknowledgment is 422 at :163 and an empty return is 400 at :165. All three claims hold. |
+| R2-551 | HIGH | FIXED | `dc53828` | `quality.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: result_value Field(..., ge=0) at :155, both acceptance limits ge=0 at :157-158, and a model_validator at :162 rejecting min_acceptable > max_acceptable. |
 | R2-552 | HIGH | FIXED | `abc5669` | `projects.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-554 | HIGH | FIXED | `185dc60` | `settings.py` | yes | yes | parse_fail | 1 | CONFIRMED | BEHAVIOURAL, not a read. Executed `_gstin_checksum_ok` against an independently written implementation of the canonical GSTN mod-36 algorithm: 400 GSTINs carrying an independently computed check digit were accepted 400/400, and all 400x35 = 14,000 wrong check digits were rejected. The public sample 27AAPFU0939F1ZV passes. |
 | R2-559 | HIGH | FIXED | `e0f2f6e` | `models.py` | yes | yes | parse_fail | 1 | NOT_IN_PROD | E0: zero unique indexes on the six tables in Supabase; by column set the only one is <table>_pkey on id. Correct in code, absent in production. Escalated as R2-701. |
 | R2-580 | HIGH | FIXED | `b813b11` | `projects.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: ProjectUpdate.status is pattern-constrained and ProjectCreate has no status field at all, so there is no unguarded write path. E3: live project statuses are Ongoing and Planning, both allowed. |
 | R2-582 | HIGH | FIXED | `5c39df3` | `projects.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: ProjectPartyStatusUpdate.status is Field(..., pattern='^(Active|Inactive)$') at projects.py:527. |
-| R2-583 | HIGH | FIXED | `7c7a381` | `projects.py` | yes | yes | parse_fail | 1 | UNVERIFIED |  |
+| R2-583 | HIGH | FIXED | `7c7a381` | `projects.py` | yes | yes | parse_fail | 1 | CONFIRMED | E1: the existing-link branch (projects.py:508-515) updates advance_paid, to_pay and balance and the endpoint returns the new state, so a re-posted opening balance is no longer a silent no-op. |
 | R2-006 | HIGH | FIXED | `3257e0a` | `frontend/src/app/c/[company_id]/d/drawings/page.tsx` | no | no | — | 2 | UNVERIFIED |  |
 | R2-007 | HIGH | FIXED | `2205ffd` | `frontend/src/app/c/[company_id]/d/procurement/page.tsx` | no | no | — | 2 | UNVERIFIED |  |
 | R2-008 | HIGH | FIXED | `fc22a98` | `frontend/src/app/c/[company_id]/d/procurement/page.tsx` | no | no | — | 2 | CONFIRMED | E1: fabricated VENDORS, RFQ_DATA and 'L1 PREFERRED' are gone. The note's disclosed caveat is accurate - `selectedRFQItem` survives at :224 and is write-only. |
 | R2-019 | HIGH | FIXED | `45ffb76` | `frontend/src/app/c/[company_id]/d/hr/page.tsx` | no | no | — | 2 | UNVERIFIED |  |
-| R2-034 | HIGH | FIXED | `0866171` | `frontend/src/app/c/[company_id]/d/billing/page.tsx` | no | no | — | 2 | UNVERIFIED |  |
+| R2-034 | HIGH | FIXED | `0866171` | `frontend/src/app/c/[company_id]/d/billing/page.tsx` | no | no | — | 2 | CONFIRMED | E1: `wo.subcontractor_name || nameMap[...] || "Unassigned"` - the server field leads and the honest placeholder is last. The three swallowed fetch failures now log, and the effect dependency array gained companyId. Nuance: the failures log to console rather than surfacing to the user, which matches the note's wording but is not a user-visible error. |
 | R2-069 | HIGH | FIXED | `a07d1e2` | `d/finance/page.tsx` | no | no | — | 2 | CONFIRMED | E1: the field is labelled 'Reference / document name (file is not uploaded)' at finance/page.tsx:4112 - the affordance is honest. |
 | R2-093 | HIGH | FIXED | `401cf1e` | `procurement/page.tsx` | no | no | — | 2 | UNVERIFIED |  |
 | R2-111 | HIGH | FIXED | `a0ceefb` | `frontend/src/app/c/[company_id]/cost-codes/page.tsx` | no | no | — | 2 | UNVERIFIED |  |

@@ -216,6 +216,27 @@ VERDICTS = {
                             "failure path (no geolocation :400, error callback :410) and "
                             "`queuePunch` blocks the punch with an alert when it is null, so no "
                             "invented coordinate can reach the geofence audit trail."),
+    "R2-363": ("CONFIRMED", "E1: quality.py builds valid_item_ids from insp.checklist_id and "
+                            "raises 400 at :308 inside the response loop, before any upsert, so "
+                            "a foreign checklist item cannot be written."),
+    "R2-526": ("CONFIRMED", "E1: statutory.py:168 sets report.filed_by = current_user.name; a "
+                            "blank acknowledgment is 422 at :163 and an empty return is 400 at "
+                            ":165. All three claims hold."),
+    "R2-551": ("CONFIRMED", "E1: result_value Field(..., ge=0) at :155, both acceptance limits "
+                            "ge=0 at :157-158, and a model_validator at :162 rejecting "
+                            "min_acceptable > max_acceptable."),
+    "R2-186": ("CONFIRMED", "E1: POST /auth/switch-company calls get_company_membership at "
+                            "auth.py:955 before re-minting the session, so a non-member cannot "
+                            "switch into a company."),
+    "R2-583": ("CONFIRMED", "E1: the existing-link branch (projects.py:508-515) updates "
+                            "advance_paid, to_pay and balance and the endpoint returns the new "
+                            "state, so a re-posted opening balance is no longer a silent no-op."),
+    "R2-034": ("CONFIRMED", "E1: `wo.subcontractor_name || nameMap[...] || \"Unassigned\"` - the "
+                            "server field leads and the honest placeholder is last. The three "
+                            "swallowed fetch failures now log, and the effect dependency array "
+                            "gained companyId. Nuance: the failures log to console rather than "
+                            "surfacing to the user, which matches the note's wording but is not "
+                            "a user-visible error."),
     "R2-083": ("UNVERIFIED", "E1 FAILS on completeness. The two edits are correct, but the note's "
                              "claim that these were 'the last two fabricated attribute fallbacks' "
                              "is wrong - four remain in the same object literal, including "
