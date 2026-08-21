@@ -97,6 +97,11 @@ class BillCreateRequest(BaseModel):
     payment_ref: Optional[str] = None  # cheque no / bank txn ref
     ship_to: Optional[str] = None
     boq_document_id: Optional[UUID] = None  # link this bill to a BOQ document (for Billed Value)
+    # Subcontractor work order this RA bill bills against. Required to be resolvable
+    # for subcon bills: supplied directly, or auto-resolved when the subcontractor has
+    # exactly one active work order on the project. Cumulative billing is validated
+    # against the WO's estimated_work_amount.
+    wo_id: Optional[UUID] = None
     terms: Optional[str] = None  # Terms & Conditions; defaults to company Invoice Terms on create
     # Theme B (soft flag): optional link to an APPROVED ThreeWayMatch. Ignored for
     # sale invoices; required to be approved + same company/project when supplied on
@@ -143,6 +148,7 @@ class BillResponse(BaseModel):
     # linked match's match_status (e.g. "approved").
     match_id: Optional[UUID] = None
     match_status: Optional[str] = None
+    wo_id: Optional[UUID] = None
 
     class Config:
         from_attributes = True
@@ -421,6 +427,7 @@ def get_bills(project_id: UUID, invoice_type: Optional[str] = None, db: Session 
                 terms=b.terms,
                 match_id=b.match_id,
                 match_status=_derive_bill_match_status(db, b),
+                wo_id=b.wo_id,
             )
         )
     return res
@@ -481,6 +488,7 @@ def cancel_bill(bill_id: UUID, db: Session = Depends(get_db), current_user: User
         terms=bill.terms,
         match_id=bill.match_id,
         match_status=_derive_bill_match_status(db, bill),
+        wo_id=bill.wo_id,
     )
 
 
@@ -688,6 +696,52 @@ def create_bill(req: BillCreateRequest, db: Session = Depends(get_db), current_u
     # Workflow Controls: Entry Controls (creation date window)
     enforce_entry_creation_window(db, req.company_id, req.invoice_date)
 
+    # R2-253: a subcon bill must be comparable to its work order. Resolve the WO
+    # (supplied, or the subcontractor's single active WO on the project) and cap
+    # cumulative billing at its estimated_work_amount.
+    wo_id = req.wo_id
+    if req.invoice_type == "subcon":
+        if wo_id is None:
+            candidates = (
+                db.query(WorkOrder)
+                .filter(
+                    WorkOrder.project_id == req.project_id,
+                    WorkOrder.subcontractor_id == req.party_company_user_id,
+                    WorkOrder.status == "active",
+                )
+                .all()
+            )
+            if len(candidates) == 1:
+                wo_id = candidates[0].id
+        if wo_id is not None:
+            wo = db.query(WorkOrder).filter(WorkOrder.id == wo_id).first()
+            if not wo:
+                raise HTTPException(status_code=404, detail="Work order not found")
+            if wo.company_id != req.company_id or wo.project_id != req.project_id:
+                raise HTTPException(status_code=400, detail="Work order does not belong to this company/project")
+            already_billed = float(
+                db.query(func.coalesce(func.sum(Bill.subtotal), 0))
+                .filter(
+                    Bill.company_id == req.company_id,
+                    Bill.project_id == req.project_id,
+                    Bill.wo_id == wo_id,
+                    Bill.invoice_type == "subcon",
+                    Bill.status != "Cancelled",
+                )
+                .scalar()
+                or 0.0
+            )
+            ceiling = float(wo.estimated_work_amount or 0.0)
+            if already_billed + float(req.subtotal) > ceiling:
+                raise HTTPException(
+                    status_code=422,
+                    detail=(
+                        f"Subcon bill exceeds work order {wo.wo_number}: cumulative billing "
+                        f"₹{already_billed + float(req.subtotal):,.2f} against committed ₹{ceiling:,.2f}. "
+                        f"Raise a work-order amendment first."
+                    ),
+                )
+
     # Workflow Controls: Finance Controls (Pre-Tax Deduction/Retention order)
     company = get_company(db, req.company_id)
     pretax_order = bool(company.pretax_deduction_retention) if company else False
@@ -733,6 +787,7 @@ def create_bill(req: BillCreateRequest, db: Session = Depends(get_db), current_u
         payment_ref=req.payment_ref,
         ship_to=req.ship_to,
         boq_document_id=req.boq_document_id,
+        wo_id=wo_id,
         match_id=match_id,
         # Settings -> Terms & Conditions -> Invoice Terms (or Subcon Terms for
         # subcon invoices): pre-fill the company default when the caller doesn't
@@ -812,6 +867,7 @@ def create_bill(req: BillCreateRequest, db: Session = Depends(get_db), current_u
         terms=bill.terms,
         match_id=bill.match_id,
         match_status=_derive_bill_match_status(db, bill),
+        wo_id=bill.wo_id,
     )
 
 
@@ -881,6 +937,7 @@ def link_bill_match(bill_id: UUID, req: BillMatchLinkRequest, db: Session = Depe
         terms=bill.terms,
         match_id=bill.match_id,
         match_status=_derive_bill_match_status(db, bill),
+        wo_id=bill.wo_id,
     )
 
 

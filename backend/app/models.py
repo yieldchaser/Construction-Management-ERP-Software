@@ -612,6 +612,10 @@ class Bill(Base):
     is_milestone_fixed_amount = Column(Boolean, default=False, nullable=False)
     tally_synced = Column(Boolean, default=False, nullable=False)
     boq_document_id = Column(UUID(as_uuid=True), ForeignKey("boq_documents.id", ondelete="SET NULL"), nullable=True)
+    # Subcontractor work order this bill bills against (subcon RA bills). Null for
+    # non-subcon bills and legacy rows; when set, cumulative billing is validated
+    # against the WO's estimated_work_amount.
+    wo_id = Column(UUID(as_uuid=True), ForeignKey("work_orders.id", ondelete="SET NULL"), nullable=True)
     match_id = Column(UUID(as_uuid=True), ForeignKey("three_way_matches.id", ondelete="SET NULL"), nullable=True)
     # Transaction sub-entity persistence (Project Tab Transaction build)
     items_json = Column(Text, nullable=True)  # JSON array of line items: {desc, cost_code_id, cost_code_name, qty, rate, amount}
