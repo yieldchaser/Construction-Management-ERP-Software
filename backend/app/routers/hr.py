@@ -276,7 +276,7 @@ def punch(payload: PunchRequest, db: Session = Depends(get_db), current_user: Us
         raise HTTPException(status_code=403, detail="Employee does not belong to this project's company")
 
     site_lat, site_lng = _parse_site_coords(project.location)
-    radius = project.attendance_radius_meters or 500
+    radius = 500 if project.attendance_radius_meters is None else project.attendance_radius_meters
 
     distance_m: Optional[float] = None
     within_geofence = False

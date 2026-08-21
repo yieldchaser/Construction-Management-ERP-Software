@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 from sqlalchemy.orm import Session
 from sqlalchemy import func, Numeric, Boolean, DateTime, String
 from datetime import datetime
@@ -177,16 +177,24 @@ class ProjectCreate(BaseModel):
     state: Optional[str] = None
     stage: Optional[str] = None
     category: Optional[str] = None
-    project_value: float = 0.0
+    project_value: float = Field(0.0, ge=0, le=1e15)
     planned_start_date: Optional[str] = None
     planned_end_date: Optional[str] = None
     orientation: Optional[str] = None
     dimension: Optional[str] = None
     scope_of_work: Optional[str] = None
-    attendance_radius_meters: int = 500
+    attendance_radius_meters: int = Field(500, ge=0, le=100000)
     branch_id: Optional[uuid.UUID] = None
     member_ids: List[uuid.UUID] = []
     custom_fields: List[CustomFieldValueInput] = []
+
+    @model_validator(mode="after")
+    def planned_dates_not_inverted(self):
+        start = _parse_dt(self.planned_start_date)
+        end = _parse_dt(self.planned_end_date)
+        if start and end and end < start:
+            raise ValueError("planned_end_date cannot be before planned_start_date")
+        return self
 
 
 class ProjectUpdate(BaseModel):
@@ -198,7 +206,7 @@ class ProjectUpdate(BaseModel):
     state: Optional[str] = None
     stage: Optional[str] = None
     category: Optional[str] = None
-    project_value: Optional[float] = None
+    project_value: Optional[float] = Field(None, ge=0, le=1e15)
     planned_start_date: Optional[str] = None
     planned_end_date: Optional[str] = None
     actual_start_date: Optional[str] = None
@@ -207,7 +215,7 @@ class ProjectUpdate(BaseModel):
     dimension: Optional[str] = None
     scope_of_work: Optional[str] = None
     project_avatar: Optional[str] = None
-    attendance_radius_meters: Optional[int] = None
+    attendance_radius_meters: Optional[int] = Field(None, ge=0, le=100000)
     branch_id: Optional[uuid.UUID] = None
     custom_fields: Optional[List[CustomFieldValueInput]] = None
 
@@ -329,6 +337,8 @@ def update_project(project_id: uuid.UUID, payload: ProjectUpdate, db: Session = 
         if field in ("planned_start_date", "planned_end_date", "actual_start_date", "actual_end_date"):
             value = _parse_dt(value)
         setattr(p, field, value)
+    if p.planned_start_date and p.planned_end_date and p.planned_end_date < p.planned_start_date:
+        raise HTTPException(status_code=422, detail="planned_end_date cannot be before planned_start_date")
     upsert_values_for_entity(db, p.company_id, "project", p.id, custom_fields)
     db.commit()
     db.refresh(p)
