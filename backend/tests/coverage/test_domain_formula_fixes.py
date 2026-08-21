@@ -527,7 +527,8 @@ def test_committed_costs_labour_and_equipment_actuals(client, db, make_tenant, a
     db.add(models.Bill(
         id=uuid.uuid4(), company_id=comp.id, project_id=project.id,
         party_company_user_id=user.id, invoice_number="EQ-1", invoice_date=_utc(2026, 1, 1),
-        invoice_type="equipment", subtotal=Decimal("3000"), total_payable=Decimal("3000")))
+        invoice_type="equipment", subtotal=Decimal("3000"), total_payable=Decimal("3000"),
+        approval_flag="approved"))
     db.commit()
 
     r = client.get(f"/apis/v3/budget/committed/{project.id}", headers=hdr)

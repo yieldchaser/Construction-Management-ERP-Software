@@ -83,9 +83,13 @@ def get_committed_costs(project_id: UUID, db: Session = Depends(get_db), _: None
     ).all()
     material_committed = sum(float(p.total_amount) for p in pos)
 
+    # Only approved, non-cancelled bills are actual spend (R2-233): an
+    # unapproved bill must not book cost the moment it is typed.
     bills_expense = db.query(Bill).filter(
         Bill.project_id == project_id,
-        Bill.invoice_type.in_(EXPENSE_INVOICE_TYPES)
+        Bill.invoice_type.in_(EXPENSE_INVOICE_TYPES),
+        Bill.status != "Cancelled",
+        Bill.approval_flag == "approved",
     ).all()
     material_actual = 0.0
     subcon_actual = 0.0

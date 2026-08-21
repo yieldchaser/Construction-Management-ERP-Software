@@ -38,6 +38,7 @@ def _mk_bill(db, comp, project, team, inv_type, amount, tag):
         party_company_user_id=team.id, invoice_number=f"INV-R153-{tag}-{_SUFFIX}",
         invoice_date=datetime.datetime(2026, 1, 1),
         invoice_type=inv_type, subtotal=amount, total_payable=amount,
+        approval_flag="approved",
     )
     db.add(b)
     db.commit()
