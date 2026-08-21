@@ -437,6 +437,9 @@ class PurchaseOrder(Base):
     vendor_id = Column(UUID(as_uuid=True), ForeignKey("company_team.id"), nullable=True)
     po_number = Column(String(100), nullable=False)
     po_date = Column(DateTime(timezone=True), nullable=False)
+    # Promised delivery date: the baseline vendor on-time delivery is measured
+    # against. Null falls back to po_date for legacy rows.
+    expected_delivery_date = Column(DateTime(timezone=True), nullable=True)
     status = Column(String(50), default="draft", nullable=False) # draft, sent, partial, received, closed
     gross_amount = Column(Numeric(18, 2), default=0.0, nullable=False)
     tax_amount = Column(Numeric(18, 2), default=0.0, nullable=False)
@@ -878,6 +881,9 @@ class NCR(Base):
     title = Column(String(255), nullable=False)
     description = Column(String, nullable=True)
     severity = Column(String(50), default="Major", nullable=False)  # Minor, Major, Critical
+    # Optional vendor attribution: when set, the NCR counts toward that vendor's
+    # quality_issues on the vendor performance scorecard.
+    vendor_id = Column(UUID(as_uuid=True), ForeignKey("company_team.id", ondelete="SET NULL"), nullable=True)
     raised_by = Column(UUID(as_uuid=True), nullable=True)
     assigned_to = Column(UUID(as_uuid=True), nullable=True)
     due_date = Column(DateTime(timezone=True), nullable=True)

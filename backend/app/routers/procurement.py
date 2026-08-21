@@ -65,6 +65,7 @@ class POCreateRequest(BaseModel):
     vendor_id: Optional[UUID] = None
     po_number: str
     po_date: datetime
+    expected_delivery_date: Optional[datetime] = None
     items: List[POCreateItemSchema] = Field(..., min_length=1)
     terms: Optional[str] = None  # Terms & Conditions; defaults to company Purchase Order Terms on create
 
@@ -84,6 +85,7 @@ class POResponse(BaseModel):
     vendor_id: Optional[UUID] = None
     po_number: str
     po_date: datetime
+    expected_delivery_date: Optional[datetime] = None
     status: str
     gross_amount: float
     tax_amount: float
@@ -436,6 +438,7 @@ def _po_response(db: Session, po: PurchaseOrder) -> POResponse:
         vendor_id=po.vendor_id,
         po_number=po.po_number,
         po_date=po.po_date,
+        expected_delivery_date=po.expected_delivery_date,
         status=po.status,
         gross_amount=float(po.gross_amount),
         tax_amount=float(po.tax_amount),
@@ -491,6 +494,7 @@ def create_po(req: POCreateRequest, db: Session = Depends(get_db), current_user:
         vendor_id=req.vendor_id,
         po_number=req.po_number,
         po_date=req.po_date,
+        expected_delivery_date=req.expected_delivery_date,
         status="draft",
         gross_amount=gross_amount,
         tax_amount=tax_amount,
@@ -765,6 +769,12 @@ def create_grn(req: GRNCreateRequest, db: Session = Depends(get_db), current_use
     
     db.commit()
     db.refresh(grn)
+
+    from app.routers.vendor_performance import refresh_vendor_performance
+    try:
+        refresh_vendor_performance(db, req.project_id, req.company_id)
+    except Exception:
+        db.rollback()
 
     return GRNResponse(
         id=grn.id,

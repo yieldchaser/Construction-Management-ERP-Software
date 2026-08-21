@@ -120,6 +120,7 @@ class NCRCreate(BaseModel):
     title: str
     description: Optional[str] = None
     severity: str = Field("Major", pattern="^(Minor|Major|Critical)$")
+    vendor_id: Optional[uuid.UUID] = None
     due_date: Optional[datetime] = None
 
 
@@ -130,6 +131,7 @@ class NCRResponse(BaseModel):
     title: str
     severity: str
     status: str
+    vendor_id: Optional[uuid.UUID] = None
     raised_by: Optional[uuid.UUID] = None
     assigned_to: Optional[uuid.UUID] = None
     reviewed_by: Optional[uuid.UUID] = None
