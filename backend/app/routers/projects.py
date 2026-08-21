@@ -511,9 +511,13 @@ def add_project_party(project_id: uuid.UUID, payload: ProjectPartyCreate, db: Se
     }
 
 
+class ProjectPartyStatusUpdate(BaseModel):
+    status: str = Field(..., pattern="^(Active|Inactive)$")
+
+
 @router.put("/{project_id}/parties/{party_id}")
 def set_project_party_status(
-    project_id: uuid.UUID, party_id: uuid.UUID, payload: dict, db: Session = Depends(get_db),
+    project_id: uuid.UUID, party_id: uuid.UUID, payload: ProjectPartyStatusUpdate, db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user),
     _: None = Depends(verify_project_access)
 ):
@@ -525,10 +529,7 @@ def set_project_party_status(
     ).first()
     if not link:
         raise HTTPException(status_code=404, detail="Party link not found")
-    status = (payload.get("status") or "Active")
-    if status not in ("Active", "Inactive"):
-        status = "Active"
-    link.status = status
+    link.status = payload.status
     db.commit()
     return {"party_id": str(party_id), "status": link.status}
 
