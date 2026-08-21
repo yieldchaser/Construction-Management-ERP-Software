@@ -124,14 +124,21 @@ class ChatGroupMemberResponse(BaseModel):
 @router.post("/groups", response_model=ChatGroupResponse, status_code=status.HTTP_201_CREATED)
 def create_group(payload: ChatGroupCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     get_company_membership(db, current_user, payload.company_id)
-    group = ChatGroup(**payload.model_dump())
+    creator = db.query(CompanyTeam).filter(
+        CompanyTeam.company_id == payload.company_id,
+        CompanyTeam.user_id == current_user.id
+    ).first()
+    if creator is None:
+        raise HTTPException(status_code=403, detail="Not a member of this company team")
+    data = payload.model_dump()
+    data.pop("created_by", None)
+    group = ChatGroup(**data)
+    group.created_by = creator.id
     db.add(group)
+    db.flush()
+    db.add(ChatGroupMember(group_id=group.id, user_id=creator.id, role="admin"))
     db.commit()
     db.refresh(group)
-    if payload.created_by:
-        member = ChatGroupMember(group_id=group.id, user_id=payload.created_by, role="admin")
-        db.add(member)
-        db.commit()
     return group
 
 
