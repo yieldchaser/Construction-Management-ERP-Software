@@ -1,8 +1,73 @@
 # Migration audit — models.py vs `supabase/migrations/` @ `campaign/waves`
 
-**Run 2026-08-21. Offline half only.** Supabase access will settle the other half (was each
-migration actually *applied*). Tool: `scratchpad/migaudit.py`, self-tested against four
-known-positive columns from three different SQL shapes before its output was believed.
+**Run 2026-08-21, offline pass then checked against live Supabase the same day.** Tool:
+`scripts/verification/migaudit.py`, self-tested against four known-positive columns from three
+different SQL shapes before its output was believed.
+
+---
+
+## LIVE RESULT — read this before the offline reasoning below
+
+The offline pass produced **one right answer and one wrong one.** Both are recorded here on
+purpose; the wrong one is the argument for doing this rung at all.
+
+### Columns — my offline claim was WRONG. No defect.
+
+All four deployed columns are present in production:
+
+| Column | live |
+|---|---|
+| `bills.wo_id` | present, `uuid` |
+| `boq_documents.revised_amount` | present, `numeric` |
+| `ncrs.vendor_id` | present, `uuid` |
+| `purchase_orders.expected_delivery_date` | present, `timestamp with time zone` |
+
+Because there is a **third** schema helper I missed: `ensure_postgres_schema_sync()`
+(`app/main.py:270`, called at boot from the lifespan at `:483`). It walks every model table and
+issues `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` on Postgres. Model columns therefore land in
+production automatically, with no migration file, on the next deploy.
+
+I missed it because I grepped for `ensure_sqlite_schema_sync` and `create_all`, then took
+`test_ensure_sqlite_schema_sync.py`'s docstring — *"the dev-only fallback … production uses
+Supabase migrations"* — as authority. That docstring is wrong about its own codebase, and I
+quoted it as evidence instead of checking. **R2-253, R2-338, R2-202 keep their `FIXED` status on
+the schema question.**
+
+One real caveat remains: `ensure_postgres_schema_sync` **skips any non-nullable column with no
+default**, printing a line and moving on. Every column the campaign added is nullable, so nothing
+is currently affected — but a future NOT NULL column will silently never reach production.
+
+### Constraints — the offline claim STANDS, and is now live-confirmed.
+
+```
+unique constraints in the DB (any name) : 72     <- sanity check, query shape works
+unique indexes in public (any name)     : 156    <- sanity check
+constraints named uq_*                  : 0
+indexes named uq_*                      : 0
+```
+
+Checked by column set rather than by name, in case Postgres had auto-named them: on
+`purchase_orders`, `goods_receipt_notes`, `material_indents`, `bills`, `library_cost_codes` and
+`company_team` the **only** unique index is `<table>_pkey` on `id`. Nothing on
+`(company_id, po_number)` or any of its siblings.
+
+`ensure_postgres_schema_sync` adds columns and nothing else — no constraints, no indexes. So
+**R2-559's six document-number uniques and R2-191 are inert in production**, confirmed live, not
+inferred. Duplicate document numbers are accepted today.
+
+Good news for the fix: **there are currently zero duplicates** on all six column pairs, so the
+constraints can be added cleanly right now with no dedupe decision. That window closes as data
+grows.
+
+### Incidental finding — `work_orders` has no primary key in production
+
+`work_orders` exists and holds 2 rows, but has **no unique index at all**, not even
+`work_orders_pkey`, while every sibling table has one. Not something the fix campaign caused; found
+by the same query. Needs its own finding number.
+
+---
+
+## Offline reasoning (kept for the record — the constraint half of this is what held up)
 
 ## Why this is the first check
 
@@ -78,19 +143,27 @@ is a data decision (which duplicate survives), not a mechanical one.
 
 ## Verdicts
 
-No row moves to `CONFIRMED` on this evidence. Twelve rows are candidates for
-`UNVERIFIED` → new finding, pending the live check:
+| Finding | Verdict | Basis |
+|---|---|---|
+| R2-253 (`bills.wo_id`) | schema rung **passes** | column live in Supabase |
+| R2-338 (`purchase_orders.expected_delivery_date`, `ncrs.vendor_id`) | schema rung **passes** | both live |
+| R2-202 (`boq_documents.revised_amount`) | schema rung **passes** | column live |
+| R2-368 (`bills.zoho_bill_id`) | schema rung **n/a** | not deployed yet; will auto-add on deploy |
+| **R2-559** (six document-number uniques) | **not fixed in production** | 0 matching unique indexes live; duplicates accepted |
+| **R2-191** (`company_team` membership unique) | **not fixed in production** | same |
 
-- R2-253, R2-338, R2-202, R2-368 — closed `FIXED` on a column production may not have.
-- R2-559 (six constraints), R2-191 — closed `FIXED` on a constraint production certainly does not
-  have, because no migration exists to create it anywhere.
+Passing the schema rung is **not** `CONFIRMED` — it only means the column exists. The behaviour
+those four findings claim still has to be exercised (E1 code read + E3 live) before any of them
+moves off `UNVERIFIED`.
 
-R2-559 and R2-191 do not need Supabase to decide: the migration does not exist in the repo, so it
-cannot have been applied. Those two are the safest immediate escalation.
+R2-559 and R2-191 are the first real verification results: closed `FIXED` on a green SQLite test
+suite, and demonstrably not in effect in production.
 
 ## Next
 
-1. Read the live Supabase schema; check the five columns and the seven constraints.
-2. Same pass over migration *application*: a file existing in `supabase/migrations/` is not
-   evidence it ran. The nine files dated 2026-08-15 and later are the ones most likely to be
-   unapplied.
+1. R2-559 / R2-191 → new finding numbers, with a migration that adds the seven constraints while
+   the duplicate count is still zero.
+2. Add a gate that fails when a model `UniqueConstraint` or `Index` has no migration — this class
+   of miss is invisible to `pytest` on SQLite by construction, so it will recur otherwise.
+3. Confirm whether migration *files* were applied at all. A file in `supabase/migrations/` is not
+   evidence it ran, and the auto-sync masks the column half of that question entirely.
