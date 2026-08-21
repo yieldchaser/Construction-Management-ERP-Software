@@ -10,6 +10,7 @@ from app.auth import get_current_user, verify_project_in_company, verify_company
 from app.approvals import find_matching_rule, match_approver, levels_approved, user_already_acted, record_action
 from pydantic import BaseModel, Field
 from app.constants import REVENUE_INVOICE_TYPES, EXPENSE_INVOICE_TYPES, SETTLEMENT_INVOICE_TYPES
+from app.workflow_controls import enforce_entry_creation_window
 
 # Tolerance for "fully paid" money comparisons (1 paisa/cent). Mirrors the 0.01
 # tolerance used in routers/three_way.py for variance matching, so float drift
@@ -104,6 +105,9 @@ def create_payment(req: PaymentCreateRequest, db: Session = Depends(get_db), cur
             raise HTTPException(status_code=404, detail="Project not found")
         if project.company_id != comp_uuid:
             raise HTTPException(status_code=403, detail="Project does not belong to this company")
+
+    # R2-381: money entries obey the same Entry Controls back-dating window as bills.
+    enforce_entry_creation_window(db, req.company_id, req.payment_date)
 
     payment = Payment(
         id=uuid.uuid4(),
@@ -1172,6 +1176,9 @@ def record_payment_request(request_id: uuid.UUID, data: PaymentRequestPaymentCre
     if req.approval_rule_id and req.approval_status != "Approved":
         raise HTTPException(status_code=400, detail="Payment request is pending approval; it cannot be recorded as paid until all required levels have signed off")
 
+    # R2-381: a recorded payment obeys the same back-dating window as bills.
+    enforce_entry_creation_window(db, req.company_id, data.payment_date)
+
     # Balance due is cumulative across ALL recorded payments against this request,
     # not just the current call — otherwise each new payment resets the balance.
     prior = db.query(PaymentRequestPayment).filter(
@@ -1323,6 +1330,9 @@ def perform_p2p_transfer(req: P2PTransferRequest, db: Session):
 
     if req.amount <= 0:
         raise HTTPException(status_code=400, detail="Transfer amount must be greater than zero")
+
+    # R2-381: P2P transfers are money entries and obey the back-dating window.
+    enforce_entry_creation_window(db, comp_uuid, req.payment_date)
 
     sender_payment = Payment(
         id=uuid.uuid4(),
