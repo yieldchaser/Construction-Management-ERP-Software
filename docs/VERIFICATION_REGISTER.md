@@ -110,17 +110,17 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-086 | CRITICAL | FIXED | `97f4eb4` | `face_recognition.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-096 | CRITICAL | FIX_VERIFIED | `f5da315` | `reports.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-106 | CRITICAL | FIXED | `3a559d9` | `d/attendance/page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
-| R2-148 | CRITICAL | FIXED | `534451e` | `todos.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
+| R2-148 | CRITICAL | FIXED | `534451e` | `todos.py` | yes | yes | text-pin | 1 | CONFIRMED | E1 + E3 LIVE, end to end in the test company. Ticking a to-do fires PUT /apis/v3/todos/{id} then re-fetches the list; after a full page reload Pending held 2 and Completed held 1, so completion persists server-side - the exact defect ('vanished on the next fetch') is gone. Delete fires DELETE /apis/v3/todos/{id} then re-fetches. Probe rows created for the test were removed afterwards. |
 | R2-232 | CRITICAL | FIX_VERIFIED | `69b4a98` | `finance.py` | yes | no | — | 1 | UNVERIFIED |  |
 | R2-017 | CRITICAL | FIXED | `15bc202` | `frontend/src/app/c/[company_id]/dashboard/page.tsx` | no | no | — | 2 | CONFIRMED | E1: the four files it names are free of fabricated strings. Claim holds exactly as written. The defect CLASS survives elsewhere - raised as R2-712, which does not detract from this closure. |
 | R2-025 | CRITICAL | FIX_VERIFIED | `f32ca77` | `finance.py` | no | no | — | 2 | UNVERIFIED |  |
 | R2-042 | CRITICAL | FIX_VERIFIED | `db9cfbd` | `frontend/src/app/c/[company_id]/d/finance/page.tsx` | no | no | — | 2 | UNVERIFIED |  |
-| R2-050 | CRITICAL | FIXED | `fe3db93` | `frontend/src/app/c/[company_id]/d/procurement/page.tsx` | no | no | — | 2 | UNVERIFIED |  |
-| R2-051 | CRITICAL | FIXED | `2d97459` | `frontend/src/app/c/[company_id]/d/procurement/page.tsx` | no | no | — | 2 | UNVERIFIED |  |
+| R2-050 | CRITICAL | FIXED | `fe3db93` | `frontend/src/app/c/[company_id]/d/procurement/page.tsx` | no | no | — | 2 | CONFIRMED | E1: both handleApproveIndent (:309-313) and handleApprovePO (:390-394) now check res.ok and alert the server detail on non-2xx instead of patching state unconditionally. The note's disclosed residue on handleCreatePO is carried by R2-717. |
+| R2-051 | CRITICAL | FIXED | `2d97459` | `frontend/src/app/c/[company_id]/d/procurement/page.tsx` | no | no | — | 2 | CONFIRMED | E1: zero occurrences of placeholder-, PO-2026-043, IND-2026-003 or the pos.length+43 auto-increment remain. |
 | R2-052 | CRITICAL | FIX_VERIFIED | `35069ae` | `finance.py` | no | no | — | 2 | UNVERIFIED |  |
 | R2-075 | CRITICAL | FIX_VERIFIED | `d5b628a` | `reports.py` | no | no | — | 2 | UNVERIFIED |  |
 | R2-083 | CRITICAL | FIXED | `b8e314b` | `frontend/src/app/c/[company_id]/dashboard/page.tsx` | no | no | — | 2 | UNVERIFIED | E1 FAILS on completeness. The two edits are correct, but the note's claim that these were 'the last two fabricated attribute fallbacks' is wrong - four remain in the same object literal, including `health || "Healthy"`. Raised as R2-712 instance 11 / R2-719. |
-| R2-091 | CRITICAL | FIXED | `ab50c9d` | `procurement/page.tsx` | no | no | — | 2 | UNVERIFIED |  |
+| R2-091 | CRITICAL | FIXED | `ab50c9d` | `procurement/page.tsx` | no | no | — | 2 | CONFIRMED | E1: the hardcoded material literals are gone and the page fetches GET /library/materials/{companyId} at :123. |
 | R2-110 | CRITICAL | FIXED | `2e8b850` | `d/hr/page.tsx` | no | no | — | 2 | CONFIRMED | E1: no Diwali seed; `fetchHolidays` GETs /hr/holidays/{companyId} (hr/page.tsx:276,278); delete calls the API (:305,307). |
 | R2-201 | CRITICAL | FIX_VERIFIED | `e2e449d` | `hr.py` | no | no | — | 2 | UNVERIFIED |  |
 | R2-210 | CRITICAL | FIX_VERIFIED | `e2e449d` | `hr.py` | no | no | — | 2 | UNVERIFIED |  |
