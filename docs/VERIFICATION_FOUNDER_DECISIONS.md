@@ -33,6 +33,11 @@ These are not inert. Eight console sites coalesce a missing route param or emplo
 those UUIDs, so six pages will fetch that tenant's data and the attendance punch path will write
 against that user.
 
+**One more detail, in favour of deleting it.** The seeded demo company's GSTIN,
+`27AADCD2424B1ZP`, has an **invalid check digit** — the canonical GSTN mod-36 algorithm gives `A`
+for that body, not `P`. So the demo tenant would now be rejected by the product's own GSTIN
+validation (R2-554, verified correct). It cannot be edited and saved as-is.
+
 **Options**
 
 1. **Delete both rows**, and make the fallbacks throw. Cleanest. Needs a check first for anything

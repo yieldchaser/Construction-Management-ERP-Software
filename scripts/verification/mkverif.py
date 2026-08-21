@@ -186,6 +186,31 @@ VERDICTS = {
                             "server-side - the exact defect ('vanished on the next fetch') is "
                             "gone. Delete fires DELETE /apis/v3/todos/{id} then re-fetches. "
                             "Probe rows created for the test were removed afterwards."),
+    "R2-554": ("CONFIRMED", "BEHAVIOURAL, not a read. Executed `_gstin_checksum_ok` against an "
+                            "independently written implementation of the canonical GSTN mod-36 "
+                            "algorithm: 400 GSTINs carrying an independently computed check "
+                            "digit were accepted 400/400, and all 400x35 = 14,000 wrong check "
+                            "digits were rejected. The public sample 27AAPFU0939F1ZV passes."),
+    "R2-405": ("CONFIRMED", "E1: no `User.phone` reference survives in app/ (the one grep hit is "
+                            "a comment in google_sheets.py explaining its absence). The model "
+                            "carries `mobile`."),
+    "R2-212": ("CONFIRMED", "E1: IncidentClose.root_cause and .corrective_action both carry "
+                            "Field(..., min_length=10) at safety.py:44-45."),
+    "R2-582": ("CONFIRMED", "E1: ProjectPartyStatusUpdate.status is "
+                            "Field(..., pattern='^(Active|Inactive)$') at projects.py:527."),
+    "R2-382": ("CONFIRMED", "E1: `enforce_entry_editing_window` is called on both mutations - "
+                            "billing.py:447 and :891 - so cancel and match-link are covered, not "
+                            "just task updates."),
+    "R2-032": ("CONFIRMED", "E1: CTC is `grossMonthly + basic * (pfEmployerPct ?? 12) / 100` at "
+                            "hr/page.tsx:935, and `pfEmployerPct` is mapped from the API's "
+                            "`pf_employer_pct` at :263, so the employee half is no longer "
+                            "double-counted and the rate is per-employee."),
+    "R2-069": ("CONFIRMED", "E1: the field is labelled 'Reference / document name (file is not "
+                            "uploaded)' at finance/page.tsx:4112 - the affordance is honest."),
+    "R2-168": ("CONFIRMED", "E1: `payrollMonth` defaults to the current month "
+                            "(`new Date().toISOString().slice(0,7)`, hr/page.tsx:220), not the "
+                            "hardcoded 2026-06. The note's own follow-up on `daysInMonth` is "
+                            "disclosed residue and is carried by R2-717."),
     "R2-083": ("UNVERIFIED", "E1 FAILS on completeness. The two edits are correct, but the note's "
                              "claim that these were 'the last two fabricated attribute fallbacks' "
                              "is wrong - four remain in the same object literal, including "
