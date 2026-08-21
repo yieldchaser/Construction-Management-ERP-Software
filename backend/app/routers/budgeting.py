@@ -494,6 +494,107 @@ def create_boq_item(doc_id: UUID, req: BOQItemCreate, db: Session = Depends(get_
     )
 
 
+# R2-449: a line item that can only ever be added (Excel import or POST items)
+# cannot be corrected in place, so the only fix for a wrong rate was a
+# corrective re-import that doubled the document's lines. PATCH and DELETE
+# close that loop. tasks/work_order_items reference boq_items with
+# ON DELETE SET NULL, so deleting a row nulls links instead of failing.
+
+
+def _unit_float_limit(unit: str) -> int:
+    u = unit.lower()
+    if u in ("kg", "ton", "t", "steel"):
+        return 3
+    if u in ("no", "nos", "brick", "bag", "bags"):
+        return 0
+    return 2
+
+
+class BOQItemPatch(BaseModel):
+    section_name: Optional[str] = None
+    item_name: Optional[str] = Field(None, min_length=1)
+    cost_code: Optional[str] = None
+    unit: Optional[str] = None
+    quantity: Optional[float] = Field(None, ge=0)
+    rate: Optional[float] = Field(None, ge=0)
+    supply_rate: Optional[float] = Field(None, ge=0)
+    installation_rate: Optional[float] = Field(None, ge=0)
+
+
+@router.patch("/boq/{item_id}", response_model=BOQItemResponse)
+def update_boq_item(item_id: UUID, req: BOQItemPatch, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    item = db.query(BOQItem).filter(BOQItem.id == item_id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="BOQ line item not found")
+    project = db.query(Project).filter(Project.id == item.project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, project.company_id)
+    require_permission(db, current_user, project.company_id, "budgeting:edit")
+
+    if req.item_name is not None:
+        item.item_name = req.item_name.strip()
+    if req.section_name is not None:
+        item.section_name = req.section_name or None
+    if req.unit is not None and req.unit.strip():
+        item.unit = req.unit.strip()
+    if req.cost_code is not None:
+        code = req.cost_code.strip() or None
+        # R2-334 parity with the importer and create: a code outside the
+        # company's Cost Code Library never rolls up.
+        if code:
+            known = db.query(LibraryCostCode.id).filter(
+                LibraryCostCode.company_id == project.company_id,
+                LibraryCostCode.code == code,
+            ).first()
+            if not known:
+                raise HTTPException(status_code=400, detail="Unknown cost code (add it to the Cost Code Library first)")
+        item.cost_code = code
+    if req.quantity is not None:
+        item.quantity = req.quantity
+    if req.rate is not None:
+        item.rate = req.rate
+    if req.supply_rate is not None:
+        item.supply_rate = req.supply_rate
+    if req.installation_rate is not None:
+        item.installation_rate = req.installation_rate
+
+    item.quantity_float_limit = _unit_float_limit(item.unit)
+    item.amount = float(item.quantity) * (
+        float(item.rate) + float(item.supply_rate) + float(item.installation_rate)
+    )
+    db.commit()
+    db.refresh(item)
+    return BOQItemResponse(
+        id=item.id,
+        project_id=item.project_id,
+        section_name=item.section_name,
+        item_name=item.item_name,
+        cost_code=item.cost_code,
+        unit=item.unit,
+        quantity=float(item.quantity),
+        rate=float(item.rate),
+        supply_rate=float(item.supply_rate),
+        installation_rate=float(item.installation_rate),
+        amount=float(item.amount),
+        quantity_float_limit=item.quantity_float_limit,
+    )
+
+
+@router.delete("/boq/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_boq_item(item_id: UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    item = db.query(BOQItem).filter(BOQItem.id == item_id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="BOQ line item not found")
+    project = db.query(Project).filter(Project.id == item.project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, project.company_id)
+    require_permission(db, current_user, project.company_id, "budgeting:edit")
+    db.delete(item)
+    db.commit()
+
+
 @router.get("/boq-documents/{doc_id}/pdf")
 def get_boq_document_pdf(doc_id: UUID, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
     doc = db.query(BOQDocument).filter(BOQDocument.id == doc_id).first()
