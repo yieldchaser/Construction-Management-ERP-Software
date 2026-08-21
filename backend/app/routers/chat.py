@@ -4,12 +4,14 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy import func
 from sqlalchemy.orm import Session
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from app.database import get_db
 from app.auth import get_current_user, verify_project_access, get_company_membership
 from app.models import ChatGroup, ChatMessage, ChatGroupMember, User, CompanyTeam
 
 router = APIRouter(prefix="/chat", tags=["Chat & MOM"], dependencies=[Depends(get_current_user)])
+
+CHAT_GROUP_ROLE_PATTERN = "^(admin|member|viewer)$"
 
 
 def verify_group_membership(db: Session, current_user: User, group_id: uuid.UUID):
@@ -20,6 +22,24 @@ def verify_group_membership(db: Session, current_user: User, group_id: uuid.UUID
     if not membership:
         raise HTTPException(status_code=403, detail="Not a member of this chat group")
     return membership
+
+
+def require_group_admin(db: Session, current_user: User, group_id: uuid.UUID):
+    membership = verify_group_membership(db, current_user, group_id)
+    if membership.role != "admin":
+        raise HTTPException(status_code=403, detail="Group admin role required")
+    return membership
+
+
+def ensure_not_last_admin(db: Session, group_id: uuid.UUID, member: ChatGroupMember, new_role: Optional[str] = None):
+    if member.role != "admin" or new_role == "admin":
+        return
+    admin_count = db.query(func.count(ChatGroupMember.id)).filter(
+        ChatGroupMember.group_id == group_id,
+        ChatGroupMember.role == "admin"
+    ).scalar()
+    if (admin_count or 0) <= 1:
+        raise HTTPException(status_code=400, detail="Cannot remove or demote the last admin of the group")
 
 
 class ChatGroupCreate(BaseModel):
@@ -86,7 +106,7 @@ class ChatMessageResponse(BaseModel):
 class ChatGroupMemberCreate(BaseModel):
     group_id: uuid.UUID
     user_id: uuid.UUID
-    role: str = "member"  # admin, member, viewer
+    role: str = Field("member", pattern=CHAT_GROUP_ROLE_PATTERN)  # admin, member, viewer
 
 
 class ChatGroupMemberResponse(BaseModel):
@@ -238,7 +258,7 @@ def add_member(group_id: uuid.UUID, payload: ChatGroupMemberCreate, db: Session 
     if not group:
         raise HTTPException(status_code=404, detail="Chat group not found")
     get_company_membership(db, current_user, group.company_id)
-    verify_group_membership(db, current_user, group.id)
+    require_group_admin(db, current_user, group.id)
     member = ChatGroupMember(**payload.model_dump())
     db.add(member)
     db.commit()
@@ -258,7 +278,8 @@ def remove_member(group_id: uuid.UUID, user_id: uuid.UUID, db: Session = Depends
     if not group:
         raise HTTPException(status_code=404, detail="Chat group not found")
     get_company_membership(db, current_user, group.company_id)
-    verify_group_membership(db, current_user, group.id)
+    require_group_admin(db, current_user, group.id)
+    ensure_not_last_admin(db, group_id, member)
     from app.routers.delete_logs import log_deletion
     company_id = group.company_id if group else None
     log_deletion(db, company_id, "chat_group_member", member.id, f"Chat Group Member removed from: {group.name if group else group_id}")
@@ -268,7 +289,7 @@ def remove_member(group_id: uuid.UUID, user_id: uuid.UUID, db: Session = Depends
 
 
 @router.patch("/groups/{group_id}/members/{user_id}/role", response_model=ChatGroupMemberResponse)
-def update_member_role(group_id: uuid.UUID, user_id: uuid.UUID, role: str = Query(...), db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def update_member_role(group_id: uuid.UUID, user_id: uuid.UUID, role: str = Query(..., pattern=CHAT_GROUP_ROLE_PATTERN), db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     member = db.query(ChatGroupMember).filter(
         ChatGroupMember.group_id == group_id,
         ChatGroupMember.user_id == user_id
@@ -279,7 +300,8 @@ def update_member_role(group_id: uuid.UUID, user_id: uuid.UUID, role: str = Quer
     if not group:
         raise HTTPException(status_code=404, detail="Chat group not found")
     get_company_membership(db, current_user, group.company_id)
-    verify_group_membership(db, current_user, group.id)
+    require_group_admin(db, current_user, group.id)
+    ensure_not_last_admin(db, group_id, member, new_role=role)
     member.role = role
     db.commit()
     db.refresh(member)
