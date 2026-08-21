@@ -378,6 +378,67 @@ def create_work_order(req: WOCreateRequest, db: Session = Depends(get_db), curre
         items=item_schemas
     )
 
+@router.post("/work-orders/{wo_id}/cancel", response_model=WOResponse)
+def cancel_work_order(wo_id: UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    wo = db.query(WorkOrder).filter(WorkOrder.id == wo_id).first()
+    if not wo:
+        raise HTTPException(status_code=404, detail="Work order not found")
+    get_company_membership(db, current_user, wo.company_id)
+    require_permission(db, current_user, wo.company_id, "billing:edit")
+    if wo.status == "cancelled":
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Work order is already cancelled")
+    open_bills = (
+        db.query(Bill)
+        .filter(
+            Bill.wo_id == wo.id,
+            Bill.status != "Cancelled",
+        )
+        .count()
+    )
+    if open_bills:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Cannot cancel a work order with open bills; cancel those bills first",
+        )
+    enforce_entry_editing_window(db, wo.company_id, wo.wo_date)
+    wo.status = "cancelled"
+    db.add(wo)
+    db.commit()
+    db.refresh(wo)
+
+    items = db.query(WorkOrderItem).filter(WorkOrderItem.wo_id == wo.id).all()
+    item_schemas = [
+        WOResponseItem(
+            id=i.id,
+            boq_item_id=i.boq_item_id,
+            task_id=i.task_id,
+            quantity=float(i.quantity),
+            rate=float(i.rate),
+            amount=float(i.amount) if i.amount else float(i.quantity * i.rate)
+        ) for i in items
+    ]
+    team = db.query(CompanyTeam).filter(CompanyTeam.id == wo.subcontractor_id).first()
+    user = db.query(User).filter(User.id == team.user_id).first() if team and team.user_id else None
+    subcontractor_name = user.name if user and user.name else "Unknown"
+    if subcontractor_name == "Unknown" and team and team.library_party_id:
+        party = db.query(models.LibraryParty).filter(models.LibraryParty.id == team.library_party_id).first()
+        if party and party.name:
+            subcontractor_name = party.name
+    return WOResponse(
+        id=wo.id,
+        company_id=wo.company_id,
+        project_id=wo.project_id,
+        subcontractor_id=wo.subcontractor_id,
+        subcontractor_name=subcontractor_name,
+        wo_number=wo.wo_number,
+        wo_date=wo.wo_date,
+        status=wo.status,
+        estimated_work_amount=float(wo.estimated_work_amount),
+        terms=wo.terms,
+        created_at=wo.created_at,
+        items=item_schemas
+    )
+
 # 2. Bills
 @router.get("/bills", response_model=List[BillResponse])
 def get_bills(project_id: UUID, invoice_type: Optional[str] = None, db: Session = Depends(get_db), _: None = Depends(verify_project_access), current_user: User = Depends(get_current_user)):
