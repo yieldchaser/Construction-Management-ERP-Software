@@ -11,6 +11,7 @@ Covers:
   - PATCH /bills/{id}/match links an approved match on an existing unmatched bill
 """
 import datetime
+import json
 import uuid
 
 from app import models
@@ -133,7 +134,10 @@ def test_sale_bill_with_match_id_ignored(client, db, make_tenant, auth_headers):
 
     r = client.post("/apis/v3/billing/bills", json=_bill_payload(
         comp.id, proj.id, team.id, invoice_type="sale", invoice_number="INV-SALE1",
-        match_id=str(match.id)), headers=hdr)
+        match_id=str(match.id),
+        # R2-401: tax invoices must carry line items reconciling to the subtotal.
+        items_json=json.dumps([{"desc": "Supply", "qty": 1, "rate": 100000.0, "amount": 100000.0}]),
+    ), headers=hdr)
     assert r.status_code == 201, r.text
     assert r.json()["match_id"] is None
     assert r.json()["match_status"] == "unmatched"

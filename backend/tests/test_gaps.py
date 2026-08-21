@@ -236,6 +236,8 @@ def main():
             "due_date": "2026-07-26",
             "invoice_type": "sale",
             "subtotal": 100000.0,
+            # R2-401: tax invoices must carry line items reconciling to the subtotal.
+            "items_json": '[{"desc": "Client supply", "qty": 1, "rate": 100000.0, "amount": 100000.0}]',
             "gst_amount": 18000.0,
             "total_payable": 118000.0
         }

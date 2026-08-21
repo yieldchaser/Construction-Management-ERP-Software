@@ -733,6 +733,58 @@ def _derive_bill_match_status(db: Session, bill: Bill) -> Optional[str]:
     return match.match_status if match else "unmatched"
 
 
+def _validate_bill_line_items(items_json: Optional[str], subtotal: float, invoice_type: str) -> None:
+    """R2-401: line detail is what makes an invoice verifiable.
+
+    A tax invoice (sale / material_sale) must carry at least one described
+    line item; a null or empty blob prints "(No line items)" on the PDF and
+    gives the recipient nothing to audit. Whenever lines ARE supplied (any
+    invoice type), each needs a description and their amounts must reconcile
+    to the bill subtotal, so the stated total cannot drift from the goods.
+    """
+    if items_json is None or not str(items_json).strip():
+        if invoice_type in REVENUE_INVOICE_TYPES:
+            raise HTTPException(
+                status_code=422,
+                detail="Tax invoices require at least one line item describing what was supplied",
+            )
+        return
+    try:
+        items = json.loads(items_json)
+    except (TypeError, ValueError):
+        raise HTTPException(status_code=422, detail="items_json must be a valid JSON array of line items")
+    if not isinstance(items, list):
+        raise HTTPException(status_code=422, detail="items_json must be a JSON array of line item objects")
+    if not items:
+        if invoice_type in REVENUE_INVOICE_TYPES:
+            raise HTTPException(
+                status_code=422,
+                detail="Tax invoices require at least one line item describing what was supplied",
+            )
+        return
+    lines_total = 0.0
+    for it in items:
+        if not isinstance(it, dict):
+            raise HTTPException(status_code=422, detail="Each line item must be a JSON object")
+        if not str(it.get("desc") or it.get("description") or "").strip():
+            raise HTTPException(status_code=422, detail="Every line item needs a description")
+        amount = it.get("amount")
+        if amount is None:
+            amount = float(it.get("qty") or 0) * float(it.get("rate") or 0)
+        try:
+            lines_total += float(amount or 0)
+        except (TypeError, ValueError):
+            raise HTTPException(status_code=422, detail="Line item amounts must be numeric")
+    if abs(lines_total - float(subtotal)) > 0.01:
+        raise HTTPException(
+            status_code=422,
+            detail=(
+                f"Line items total Rs {lines_total:,.2f} does not match the bill subtotal "
+                f"Rs {float(subtotal):,.2f}"
+            ),
+        )
+
+
 @router.post("/bills", response_model=BillResponse, status_code=201)
 def create_bill(req: BillCreateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     # Tenant check: the caller must be a member of the company this bill belongs to.
@@ -749,6 +801,10 @@ def create_bill(req: BillCreateRequest, db: Session = Depends(get_db), current_u
     ).first()
     if existing:
         raise HTTPException(status_code=400, detail="Invoice number already exists for this company")
+
+    # R2-401: reject tax invoices with no line items, and reconcile any
+    # supplied lines against the subtotal before the bill is persisted.
+    _validate_bill_line_items(req.items_json, req.subtotal, req.invoice_type)
 
     # Theme B (soft flag): resolve and validate the optional ThreeWayMatch link.
     # Returns the (possibly None) match_id to attach, or raises 400. Sale bills are

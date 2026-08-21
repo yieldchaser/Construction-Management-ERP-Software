@@ -14,6 +14,7 @@ over-release (422); bill creation persists release_due_date; the two report
 columns carry real values.
 """
 import datetime
+import json
 import uuid
 
 import pytest
@@ -216,6 +217,10 @@ def test_reports_surface_retention_and_due_date(client, db, make_tenant, auth_he
             "invoice_type": "sale",
             "subtotal": 50000.0,
             "gst_pct": 18.0,
+            # R2-401: tax invoices must carry line items reconciling to the subtotal.
+            "items_json": json.dumps([
+                {"desc": "Fitout work supplied", "qty": 1, "rate": 50000.0, "amount": 50000.0}
+            ]),
             "deductions": [
                 {
                     "deduction_type": "Retention",
