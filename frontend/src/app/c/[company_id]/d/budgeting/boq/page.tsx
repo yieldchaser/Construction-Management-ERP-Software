@@ -138,7 +138,14 @@ export default function BOQPage() {
       const res = await fetch(`${getApiHost()}/apis/v3/budgeting/boq/import`, { method: "POST", headers: authHeaders(), body: formData });
       const data = await res.json();
       if (res.ok && data.success) {
-        setImportMsg("BOQ imported successfully!");
+        // R2-450: report dropped rows so a partial import can't pass as complete.
+        const skippedCount = typeof data.skipped_count === "number" ? data.skipped_count : 0;
+        const skipWarnings: string[] = Array.isArray(data.warnings) ? data.warnings : [];
+        setImportMsg(
+          skippedCount > 0
+            ? `BOQ imported: ${data.imported_count} row(s) kept, ${skippedCount} skipped. ${skipWarnings.join(" ")}`
+            : "BOQ imported successfully!"
+        );
         setFile(null);
         await loadBoq();
       } else {

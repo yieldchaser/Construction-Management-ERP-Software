@@ -149,20 +149,28 @@ async def import_boq(
             )
 
         imported_count = 0
+        skipped_count = 0
+        skipped_details = []
         total_amount = 0.0
         pending_items = []
         cost_codes_seen = set()
 
-        # Iterate rows
-        is_first = True
-        for row in sheet.iter_rows(values_only=True):
-            if is_first:
-                is_first = False
+        # R2-450: a partially imported BOQ must never be reported like a
+        # complete one, so every dropped row is counted and explained.
+        for offset, row in enumerate(sheet.iter_rows(values_only=True)):
+            row_no = offset + 1  # 1-based spreadsheet row number
+            if offset == 0:
                 continue
 
             item_name = row[name_col]
             if not item_name:
-                continue # Skip blank lines
+                # A fully blank row is sheet padding, not lost data; a row
+                # that carries quantities under a blank name cell (merged
+                # cells) would otherwise vanish from the totals unseen.
+                if any(v is not None and str(v).strip() for v in row):
+                    skipped_count += 1
+                    skipped_details.append(f"Row {row_no}: item name is blank, skipped")
+                continue
 
             qty_val = row[qty_col]
             unit_val = row[unit_col]
@@ -175,8 +183,13 @@ async def import_boq(
                 rate = float(rate_val) if rate_val is not None else 0.0
                 supply_rate = float(supply_val) if supply_val is not None else 0.0
                 installation_rate = float(install_val) if install_val is not None else 0.0
-            except ValueError:
-                continue # Skip rows with non-numeric qty/rates
+            except (TypeError, ValueError):
+                # TypeError included: float() raises it (not ValueError) on
+                # datetime or None-typed cell objects, which used to abort
+                # the whole import with a 500 instead of skipping the row.
+                skipped_count += 1
+                skipped_details.append(f"Row {row_no}: quantity or rate is not numeric ({qty_val!r}), skipped")
+                continue
 
             section_name = str(row[section_col]).strip() if (section_col is not None and row[section_col]) else None
             cost_code_val = str(row[cost_code_col]).strip() if (cost_code_col is not None and row[cost_code_col]) else None
@@ -235,6 +248,8 @@ async def import_boq(
         return {
             "success": True,
             "imported_count": imported_count,
+            "skipped_count": skipped_count,
+            "warnings": skipped_details,
             "total_estimated_cost": total_amount
         }
 
