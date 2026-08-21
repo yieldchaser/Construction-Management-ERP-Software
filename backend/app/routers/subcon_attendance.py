@@ -16,7 +16,7 @@ class SubconAttendanceCreate(BaseModel):
     attendance_date: datetime
     labor_role: str
     worker_count: int = Field(..., ge=0)
-    shift_multiplier: float = 1.0
+    shift_multiplier: float = Field(1.0, ge=0.5, le=3.0)
     overtime_hours: float = Field(0.0, ge=0)
     allowance: float = Field(0.0, ge=0)
     deduction: float = Field(0.0, ge=0)
@@ -51,6 +51,10 @@ def create_subcon_attendance(payload: SubconAttendanceCreate, db: Session = Depe
     subcontractor = db.query(CompanyTeam).filter(CompanyTeam.id == payload.subcontractor_id).first()
     if not subcontractor or subcontractor.company_id != project.company_id:
         raise HTTPException(status_code=403, detail="Subcontractor does not belong to this company")
+    if payload.worker_count <= 0 and (payload.overtime_hours > 0 or payload.allowance > 0):
+        raise HTTPException(status_code=422, detail="worker_count must be greater than zero when overtime or allowance is recorded")
+    if payload.overtime_hours > payload.worker_count * 12:
+        raise HTTPException(status_code=422, detail="overtime_hours cannot exceed 12 per worker per day")
     # Check if entry already exists for subcontractor, date, and role
     date_only = payload.attendance_date.date()
     existing = db.query(SubcontractorAttendance).filter(
