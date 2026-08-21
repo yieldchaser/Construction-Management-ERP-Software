@@ -383,8 +383,11 @@ def list_project_members(project_id: uuid.UUID, search: Optional[str] = None, db
         if m.role_id:
             role = db.query(models.CompanyRole).filter(models.CompanyRole.id == m.role_id).first()
             role_name = role.role_name if role else None
-        name = user.name if user else "Unknown"
-        if search and search.lower() not in name.lower() and search.lower() not in (role_name or "").lower():
+        name = user.name if user else None
+        if not name and m.library_party_id:
+            party = db.query(models.LibraryParty).filter(models.LibraryParty.id == m.library_party_id).first()
+            name = party.name if party else None
+        if search and search.lower() not in (name or "").lower() and search.lower() not in (role_name or "").lower():
             continue
         result.append({
             "company_team_id": str(m.id),

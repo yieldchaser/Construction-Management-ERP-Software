@@ -28,6 +28,19 @@ export default function CompanyLayout({ children }: { children: React.ReactNode 
     setAuthed(true);
   }, []);
 
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key !== "access_token" || e.oldValue === e.newValue) return;
+      if (!e.newValue) {
+        window.location.href = "/login";
+        return;
+      }
+      window.location.reload();
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
+
   if (params?.company_id === "e0000000-0000-0000-0000-000000000000") {
     if (typeof window !== "undefined") {
       const newPath = window.location.pathname.replace("e0000000-0000-0000-0000-000000000000", "demo-construction");
