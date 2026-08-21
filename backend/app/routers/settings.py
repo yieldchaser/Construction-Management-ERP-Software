@@ -515,10 +515,27 @@ def update_role_permissions(
     require_permission(db, current_user, role.company_id, "settings:manage")
     if payload is None:
         raise HTTPException(status_code=400, detail="permissions body is required")
+    if not payload.permissions:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="permissions cannot be empty; deny-all must be an explicit all-false matrix",
+        )
     if role.role_name in _LOCKED_ROLES and not payload.permissions.get("all"):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"The {role.role_name} role must retain full access (all=true) and cannot be restricted.",
+        )
+    membership = get_company_membership(db, current_user, role.company_id)
+    caller_role_perms: dict = {}
+    if membership.role_id is not None:
+        caller_role = db.query(CompanyRole).filter(CompanyRole.id == membership.role_id).first()
+        if caller_role is not None:
+            caller_role_perms = caller_role.permissions or {}
+    owner_equivalent = membership.priority_type == "partner" or caller_role_perms.get("all") is True
+    if "all" in payload.permissions and not owner_equivalent:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Only owner-equivalent members may grant the all superuser flag",
         )
     try:
         normalized = validate_permissions(payload.permissions)
@@ -538,10 +555,10 @@ def delete_role(
 ):
     """Delete a custom (non-default) role that is not assigned to any member."""
     require_permission(db, current_user, role.company_id, "settings:manage")
-    if role.role_name in DEFAULT_ROLES:
+    if role.role_name in DEFAULT_ROLES or role.role_name in _LOCKED_ROLES:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Default roles cannot be deleted",
+            detail="Built-in roles cannot be deleted",
         )
     assigned = (
         db.query(CompanyTeam).filter(CompanyTeam.role_id == role.id).first()
