@@ -22,7 +22,7 @@ from typing import List, Optional
 from decimal import Decimal
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 from app.database import get_db
 from app.auth import get_current_user, verify_company_access, verify_project_access, get_company_membership, require_permission
 from app.models import (
@@ -150,12 +150,18 @@ class MaterialTestCreate(BaseModel):
     material: Optional[str] = None
     sample_ref: Optional[str] = None
     test_date: datetime
-    result_value: float
+    result_value: float = Field(..., ge=0)
     unit: Optional[str] = None
-    min_acceptable: Optional[float] = None
-    max_acceptable: Optional[float] = None
+    min_acceptable: Optional[float] = Field(None, ge=0)
+    max_acceptable: Optional[float] = Field(None, ge=0)
     zone: Optional[str] = None
     remarks: Optional[str] = None
+
+    @model_validator(mode="after")
+    def acceptance_range_not_inverted(self):
+        if self.min_acceptable is not None and self.max_acceptable is not None and self.min_acceptable > self.max_acceptable:
+            raise ValueError("min_acceptable cannot exceed max_acceptable")
+        return self
 
 
 class MaterialTestResponse(BaseModel):
