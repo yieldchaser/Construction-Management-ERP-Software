@@ -29,11 +29,12 @@ _GSTIN_CHARS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 def _gstin_checksum_ok(gstin: str) -> bool:
     total = 0
-    for i, ch in enumerate(gstin[:14]):
+    factor = 2
+    for ch in reversed(gstin[:14]):
         val = _GSTIN_CHARS.index(ch)
-        if i % 2 == 0:
-            val = (val * 2) % 36
-        total += val
+        product = factor * val
+        total += (product // 36) + (product % 36)
+        factor = 1 if factor == 2 else 2
     return _GSTIN_CHARS[(36 - (total % 36)) % 36] == gstin[14]
 
 
