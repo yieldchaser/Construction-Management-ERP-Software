@@ -73,7 +73,7 @@ export default function DeleteLogsPage() {
       if (toDate) qs.set("to_date", toDate);
       const query = qs.toString();
       const res = await fetch(
-        `${apiHost}/apis/v3/${companyId}${query ? `?${query}` : ""}`,
+        `${apiHost}/apis/v3/delete-logs/${companyId}${query ? `?${query}` : ""}`,
         { headers: authHeaders }
       );
       if (res.ok) {
@@ -96,7 +96,7 @@ export default function DeleteLogsPage() {
   const handlePurge = async (log: DeleteLog) => {
     if (!confirm(`Permanently purge this delete log for "${log.entity_summary}"?`)) return;
     try {
-      const res = await fetch(`${apiHost}/apis/v3/${companyId}/${log.id}`, {
+      const res = await fetch(`${apiHost}/apis/v3/delete-logs/${companyId}/${log.id}`, {
         method: "DELETE",
         headers: authHeaders,
       });

@@ -57,7 +57,7 @@ def _serialize(l: DeleteLog) -> dict:
 
 @router.get("/{company_id}")
 def list_delete_logs(
-    company_id: str,
+    company_id: uuid.UUID,
     entity_type: str = None,
     party: str = None,
     from_date: str = None,
@@ -66,8 +66,8 @@ def list_delete_logs(
     current_user: User = Depends(get_current_user),
 ):
     """List deletion logs for a company, with optional filters."""
-    get_company_membership(db, current_user, uuid.UUID(company_id))
-    query = db.query(DeleteLog).filter(DeleteLog.company_id == uuid.UUID(company_id))
+    get_company_membership(db, current_user, company_id)
+    query = db.query(DeleteLog).filter(DeleteLog.company_id == company_id)
     if entity_type:
         query = query.filter(DeleteLog.entity_type == entity_type)
     if party:
@@ -88,16 +88,16 @@ def list_delete_logs(
 
 @router.delete("/{company_id}/{log_id}")
 def purge_delete_log(
-    company_id: str,
-    log_id: str,
+    company_id: uuid.UUID,
+    log_id: uuid.UUID,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """Permanently purge a single delete-log entry."""
-    get_company_membership(db, current_user, uuid.UUID(company_id))
+    get_company_membership(db, current_user, company_id)
     log = (
         db.query(DeleteLog)
-        .filter(DeleteLog.id == uuid.UUID(log_id), DeleteLog.company_id == uuid.UUID(company_id))
+        .filter(DeleteLog.id == log_id, DeleteLog.company_id == company_id)
         .first()
     )
     if not log:

@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -573,7 +573,7 @@ app.include_router(profile.router, prefix="/apis/v3")
 app.include_router(mom.router, prefix="/apis/v3")
 app.include_router(projects.router, prefix="/apis/v3")
 app.include_router(todos.router, prefix="/apis/v3")
-app.include_router(delete_logs.router, prefix="/apis/v3")
+app.include_router(delete_logs.router, prefix="/apis/v3/delete-logs")
 from app.routers import files as files_router
 app.include_router(files_router.router, prefix="/apis/v3")
 app.include_router(team_schedule.router, prefix="/apis/v3")
@@ -591,6 +591,10 @@ from app.routers import zoho_books as zoho_books_router
 app.include_router(zoho_books_router.router, prefix="/apis/v3")
 from app.routers import public_leads as public_leads_router
 app.include_router(public_leads_router.router, prefix="/apis/v3")
+
+@app.api_route("/apis/v3/{unmatched_path:path}", methods=["GET", "POST", "PUT", "PATCH", "DELETE"], include_in_schema=False)
+def api_v3_not_found(unmatched_path: str):
+    raise HTTPException(status_code=404, detail="Not found")
 
 @app.get("/")
 def read_root():
