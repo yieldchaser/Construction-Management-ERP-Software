@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.auth import get_current_user, verify_project_access, get_company_membership, require_permission
 from app.models import Drawing, DrawingRevision, DrawingPin, Project, User
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 router = APIRouter(
     prefix="/drawings",
@@ -60,12 +60,26 @@ class DrawingCreateRequest(BaseModel):
     name: str = Field(..., example="Architectural Ground Floor Plan")
     category: str = Field(..., pattern="^(2D Layout|3D Layout|Production File)$", example="2D Layout") # e.g. "2D Layout", "3D Layout", "Production File"
     created_by: Optional[UUID] = None
-    file_url: str = Field(..., example="/images/drawings/ground_floor.pdf")
+    file_url: str = Field(..., min_length=1, example="/images/drawings/ground_floor.pdf")
+
+    @field_validator("file_url")
+    @classmethod
+    def file_url_not_blank(cls, v: str) -> str:
+        if not v.strip():
+            raise ValueError("file_url cannot be blank; a drawing revision must reference a real file")
+        return v
 
 class RevisionCreateRequest(BaseModel):
     version_code: str = Field(..., example="V2")
-    file_url: str = Field(..., example="/images/drawings/ground_floor_v2.pdf")
+    file_url: str = Field(..., min_length=1, example="/images/drawings/ground_floor_v2.pdf")
     comments: Optional[str] = Field(None, example="Fixed staircase dimensions")
+
+    @field_validator("file_url")
+    @classmethod
+    def revision_file_url_not_blank(cls, v: str) -> str:
+        if not v.strip():
+            raise ValueError("file_url cannot be blank; a revision must point at its own drawing file, not inherit the previous revision's")
+        return v
 
 class RevisionApproveRequest(BaseModel):
     approval_status: str = Field(..., pattern="^(approved|rejected|pending)$", example="approved") # "approved", "rejected", "pending"
