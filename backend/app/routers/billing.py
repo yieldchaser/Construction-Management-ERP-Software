@@ -77,6 +77,9 @@ class DeductionItemSchema(BaseModel):
     amount: float = Field(..., ge=0)
     percentage: Optional[float] = Field(None, ge=0, le=100)
     notes: Optional[str] = None
+    # R2-377: when a Retention deduction falls due for release (e.g. half at
+    # practical completion, half after the defect-liability period).
+    release_due_date: Optional[datetime] = None
 
 class BillCreateRequest(BaseModel):
     company_id: UUID
@@ -118,6 +121,11 @@ class DeductionResponseSchema(BaseModel):
     amount: float
     percentage: Optional[float] = None
     notes: Optional[str] = None
+    # R2-377: retention lifecycle surfaced to clients so outstanding retention
+    # is enumerable (released_at None + type Retention = still held).
+    release_due_date: Optional[datetime] = None
+    released_at: Optional[datetime] = None
+    released_amount: Optional[float] = None
 
 class BillResponse(BaseModel):
     id: UUID
@@ -458,7 +466,10 @@ def get_bills(project_id: UUID, invoice_type: Optional[str] = None, db: Session 
                 deduction_type=d.deduction_type,
                 amount=float(d.amount),
                 percentage=float(d.percentage) if d.percentage else None,
-                notes=d.notes
+                notes=d.notes,
+                release_due_date=d.release_due_date,
+                released_at=d.released_at,
+                released_amount=float(d.released_amount) if d.released_amount is not None else None,
             ) for d in deductions
         ]
         res.append(
@@ -521,6 +532,9 @@ def cancel_bill(bill_id: UUID, db: Session = Depends(get_db), current_user: User
             amount=float(d.amount),
             percentage=float(d.percentage) if d.percentage else None,
             notes=d.notes,
+            release_due_date=d.release_due_date,
+            released_at=d.released_at,
+            released_amount=float(d.released_amount) if d.released_amount is not None else None,
         ) for d in deductions
     ]
     return BillResponse(
@@ -897,18 +911,23 @@ def create_bill(req: BillCreateRequest, db: Session = Depends(get_db), current_u
             deduction_type=d.deduction_type,
             amount=calculated_amt,
             percentage=d.percentage,
-            notes=d.notes
+            notes=d.notes,
+            # R2-377: record when withheld retention falls due for release.
+            release_due_date=d.release_due_date
         )
         db.add(db_ded)
         db.flush()
-        
+
         ded_responses.append(
             DeductionResponseSchema(
                 id=db_ded.id,
                 deduction_type=db_ded.deduction_type,
                 amount=float(db_ded.amount),
                 percentage=float(db_ded.percentage) if db_ded.percentage else None,
-                notes=db_ded.notes
+                notes=db_ded.notes,
+                release_due_date=db_ded.release_due_date,
+                released_at=db_ded.released_at,
+                released_amount=float(db_ded.released_amount) if db_ded.released_amount is not None else None,
             )
         )
 
@@ -983,6 +1002,9 @@ def link_bill_match(bill_id: UUID, req: BillMatchLinkRequest, db: Session = Depe
             amount=float(d.amount),
             percentage=float(d.percentage) if d.percentage else None,
             notes=d.notes,
+            release_due_date=d.release_due_date,
+            released_at=d.released_at,
+            released_amount=float(d.released_amount) if d.released_amount is not None else None,
         ) for d in deductions
     ]
     return BillResponse(
@@ -1012,6 +1034,76 @@ def link_bill_match(bill_id: UUID, req: BillMatchLinkRequest, db: Session = Depe
         match_id=bill.match_id,
         match_status=_derive_bill_match_status(db, bill),
         wo_id=bill.wo_id,
+    )
+
+
+# --- R2-377: retention release path ---
+# Withheld retention was write-only: deducted from every subcon bill's payable
+# but never recorded as a liability, with no way to give the money back or say
+# when it falls due. The lifecycle columns on TransactionDeduction record the
+# obligation; this endpoint is the release path. The cash payout itself keeps
+# flowing through the existing Payments records.
+class RetentionReleaseRequest(BaseModel):
+    released_amount: Optional[float] = Field(None, gt=0)
+
+
+@router.post("/bills/{bill_id}/deductions/{deduction_id}/release", response_model=DeductionResponseSchema)
+def release_retention(bill_id: UUID, deduction_id: UUID, req: Optional[RetentionReleaseRequest] = None, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Release withheld retention back to the subcontractor.
+
+    Only Retention deductions on non-cancelled bills can be released; TDS and
+    other deduction types are remitted to authorities, not returned. Omitting
+    the body releases the full outstanding amount; supplying released_amount
+    performs a partial release (e.g. half at practical completion, half after
+    the defect-liability period). Mirrors the R2-346 settlement gate: money
+    only leaves against bills that have passed review."""
+    bill = db.query(Bill).filter(Bill.id == bill_id).first()
+    if not bill:
+        raise HTTPException(status_code=404, detail="Bill not found")
+    get_company_membership(db, current_user, bill.company_id)
+    require_permission(db, current_user, bill.company_id, "finance:edit")
+    ded = db.query(TransactionDeduction).filter(
+        TransactionDeduction.id == deduction_id,
+        TransactionDeduction.bill_id == bill.id,
+    ).first()
+    if not ded:
+        raise HTTPException(status_code=404, detail="Deduction not found on this bill")
+    if ded.deduction_type != "Retention":
+        raise HTTPException(status_code=400, detail="Only Retention deductions can be released")
+    if bill.status == "Cancelled":
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Cannot release retention on a cancelled bill",
+        )
+    if bill.approval_flag not in ("approved", "auto_approved"):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Bill must pass review before its retention can be released",
+        )
+    already = float(ded.released_amount or 0.0)
+    outstanding = round(float(ded.amount) - already, 2)
+    if outstanding <= 0:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Retention is already fully released")
+    amount = round(float(req.released_amount), 2) if req is not None and req.released_amount is not None else outstanding
+    if amount > outstanding:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Release of \u20b9{amount:,.2f} exceeds the outstanding retention of \u20b9{outstanding:,.2f}",
+        )
+    ded.released_amount = round(already + amount, 2)
+    ded.released_at = datetime.now(timezone.utc)
+    db.add(ded)
+    db.commit()
+    db.refresh(ded)
+    return DeductionResponseSchema(
+        id=ded.id,
+        deduction_type=ded.deduction_type,
+        amount=float(ded.amount),
+        percentage=float(ded.percentage) if ded.percentage else None,
+        notes=ded.notes,
+        release_due_date=ded.release_due_date,
+        released_at=ded.released_at,
+        released_amount=float(ded.released_amount) if ded.released_amount is not None else None,
     )
 
 

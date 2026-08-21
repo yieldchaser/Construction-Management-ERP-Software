@@ -651,6 +651,12 @@ class TransactionDeduction(Base):
     amount = Column(Numeric(18, 2), nullable=False)
     percentage = Column(Numeric(5, 2), nullable=True)
     notes = Column(String, nullable=True)
+    # R2-377: retention lifecycle. release_due_date states when the withheld
+    # amount falls due for release; released_at/released_amount record the
+    # actual release. Nullable so TDS and other deduction rows are unaffected.
+    release_due_date = Column(DateTime(timezone=True), nullable=True)
+    released_at = Column(DateTime(timezone=True), nullable=True)
+    released_amount = Column(Numeric(18, 2), nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 
 class DebitNote(Base):

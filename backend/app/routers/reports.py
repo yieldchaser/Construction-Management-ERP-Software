@@ -10,6 +10,7 @@ from decimal import Decimal
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import FileResponse
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from app.database import get_db
@@ -768,6 +769,20 @@ def _rep_company_sales(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
         q = db.query(Bill).filter(Bill.company_id == cid, Bill.invoice_type.in_(REVENUE_INVOICE_TYPES), Bill.status != "Cancelled")
         if pid:
             q = q.filter(Bill.project_id == pid)
+        # R2-377: report the retention actually withheld per bill instead of a
+        # hardcoded empty column, so held retention is enumerable.
+        ret_q = (
+            db.query(TransactionDeduction.bill_id, func.coalesce(func.sum(TransactionDeduction.amount), 0))
+            .join(Bill, TransactionDeduction.bill_id == Bill.id)
+            .filter(
+                Bill.company_id == cid,
+                Bill.status != "Cancelled",
+                TransactionDeduction.deduction_type == "Retention",
+            )
+        )
+        if pid:
+            ret_q = ret_q.filter(Bill.project_id == pid)
+        retention_by_bill = dict(ret_q.group_by(TransactionDeduction.bill_id).all())
         rows = []
         for b in q.order_by(Bill.invoice_date.desc()).all():
             proj = db.query(Project).filter(Project.id == b.project_id).first() if b.project_id else None
@@ -779,7 +794,7 @@ def _rep_company_sales(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
                 "Project Name": proj.name if proj else "",
                 "Invoice Number": b.invoice_number,
                 "Total Amount": _clean(b.total_payable),
-                "Retention Amount": "",
+                "Retention Amount": _clean(retention_by_bill.get(b.id, 0)),
                 "Post Tax Deduction": "",
                 "Net Amount": "",
                 "Due Date": _clean(b.due_date),
@@ -1130,7 +1145,7 @@ def _rep_sales_deduction_retention(db: Session, cid: uuid.UUID, pid: Optional[uu
                 "Creator Name": "",
                 "Type": d.deduction_type,
                 "Entry Creation Date": _clean(d.created_at),
-                "Due Date": "",
+                "Due Date": _clean(d.release_due_date),
             })
         return rows
     except Exception:
