@@ -305,6 +305,9 @@ class BOQDocument(Base):
     title = Column(String(255), nullable=False)
     milestone_done = Column(Integer, default=0, nullable=False)
     milestone_total = Column(Integer, default=0, nullable=False)
+    # Budget currently in force: set when a BOQRevision is applied. Null until
+    # the first revision, in which case the line-item sum is the budget.
+    revised_amount = Column(Numeric(18, 2), nullable=True)
     terms = Column(Text, nullable=True)  # Terms & Conditions; pre-filled from CompanyTerms on create
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 

@@ -26,6 +26,7 @@ interface BOQDocumentLite {
   id: string;
   title: string;
   project_id: string;
+  revised_amount?: number | null;
 }
 
 interface BOQRevision {
@@ -96,7 +97,11 @@ export default function BOQPage() {
   const [savingRev, setSavingRev] = useState(false);
   const [revMsg, setRevMsg] = useState("");
 
-  const totalBudget = useMemo(() => boqItems.reduce((s, i) => s + i.amount, 0), [boqItems]);
+  const selectedDoc = useMemo(() => documents.find(d => d.id === selectedDocId), [documents, selectedDocId]);
+  const totalBudget = useMemo(() => {
+    if (selectedDoc?.revised_amount != null) return Number(selectedDoc.revised_amount);
+    return boqItems.reduce((s, i) => s + i.amount, 0);
+  }, [boqItems, selectedDoc]);
   const totalActual = useMemo(() => boqItems.reduce((s, i) => s + i.actual_spent, 0), [boqItems]);
   const totalVariance = totalActual - totalBudget;
   const overallPct = varPct(totalBudget, totalActual);
@@ -389,7 +394,7 @@ export default function BOQPage() {
               {/* KPI strip */}
               <div className="grid grid-cols-4 gap-3">
                 {[
-                  { label: "Total Budget", value: fmt(totalBudget), sub: "Original contract value", color: "text-blue-400" },
+                  { label: "Total Budget", value: fmt(totalBudget), sub: selectedDoc?.revised_amount != null ? "Latest applied revision" : "Original contract value", color: "text-blue-400" },
                   { label: "Total Actual Spent", value: fmt(totalActual), sub: "As of today", color: "text-foreground" },
                   { label: "Variance (₹)", value: (totalVariance >= 0 ? "+" : "") + fmt(totalVariance), sub: totalVariance > 0 ? "Over budget" : "Under budget", color: varColor(overallPct) },
                   { label: "Variance (%)", value: (overallPct > 0 ? "+" : "") + overallPct.toFixed(1) + "%", sub: statusBadge(overallPct).label, color: varColor(overallPct) },

@@ -282,6 +282,7 @@ class BOQDocumentResponse(BaseModel):
     milestone_done: int
     milestone_total: int
     boq_value: float
+    revised_amount: Optional[float] = None
     billed_value: float
     physical_progress: float  # 0-100, value-weighted linked-task completion
     item_count: int
@@ -329,6 +330,7 @@ def _build_doc_response(db: Session, d: BOQDocument) -> BOQDocumentResponse:
         milestone_done=d.milestone_done,
         milestone_total=d.milestone_total,
         boq_value=round(boq_value, 2),
+        revised_amount=float(d.revised_amount) if d.revised_amount is not None else None,
         billed_value=round(billed_value, 2),
         physical_progress=physical_progress,
         item_count=len(items),
@@ -622,6 +624,7 @@ def create_boq_revision(
         reason=req.reason,
         revised_by_user_id=current_user.id,
     )
+    doc.revised_amount = req.revised_amount
     db.add(rev)
     db.commit()
     db.refresh(rev)
