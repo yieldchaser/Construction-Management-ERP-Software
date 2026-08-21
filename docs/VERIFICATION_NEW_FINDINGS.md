@@ -160,136 +160,84 @@ Cheap, and it closes the whole class rather than the seven instances.
 
 ---
 
-## Class D — found by verifying a closed finding, in a file the closure never covered
+## Class D — one class finding
 
-### R2-712 · CRITICAL · the Material Transfer form ships a fabricated company and two fabricated projects, and cannot reach a real project
+### R2-712 · CRITICAL · fabricated data is hardcoded into console forms that write real records
 
-**Found while verifying:** R2-017 (CRITICAL, `FIXED`).
-**File:** `frontend/src/app/c/[company_id]/d/finance/page.tsx` lines 2255, 2931, 2944-2945.
-**Present on both `origin/main` and `campaign/waves` — deployed.**
+**Found while verifying:** R2-017 (CRITICAL, `FIXED`), by sweeping the defect class rather than
+the four files that closure named. R2-017's own claim **verifies clean** — the four files it lists
+are free of fabricated strings. The pattern simply lives in nine other places.
 
-Finance → Transaction → **+ Material Transfer** opens a drawer that is hardcoded:
+**This is one finding with many instances on purpose.** They share a single root cause and one
+fixer can clear them in a single pass. Sub-ids R2-713..R2-716 were filed separately first and are
+folded in below; they are kept in the table so the history is traceable.
 
-- header caption: `PRESTIGE DEVELOPERS` (line 2255)
-- **FROM**: a `readOnly` input with `value="Prestige Developers"` (line 2931) — not the signed-in
-  company, and not editable
-- **TO**: a `<select>` whose only options are `Skyline Premium Towers` and
-  `Grand Orchard Villas` (lines 2944-2945) — two invented projects, hardcoded. **The company's own
-  projects are not in the list.**
+**Sweep:** `scripts/verification/fabsweep.py`, run over all of `frontend/src/app/c`. It looks for
+four shapes — entity names in `<option value>`, in `readOnly`/`defaultValue` inputs, as
+`useState` defaults, and as fallback object arrays in `catch` blocks — and filters an explicit,
+reviewable domain-vocabulary list so statuses and invoice types are not reported as data. It
+self-tests against five hand-confirmed instances and against three known-vocabulary strings before
+it will emit anything. 34 candidate sites; 20 survive triage as real instances.
 
-**Live evidence.** Verified in production against the test company *ZZ R8 Throwaway*
-(`1fa705a4-7aa6-42f2-9906-65902c96916f`) on 2026-08-21. The rendered drawer reads
-"MATERIAL TRANSFER / PRESTIGE DEVELOPERS", FROM shows `Prestige Developers`, and the TO select
-enumerates exactly `Select Project / Skyline Premium Towers / Grand Orchard Villas`. Note that the
-adjacent project picker on the same screen was still rendering `Loading projects...` from the real
-API while this one was already populated with invented values — the two are unrelated code paths.
+#### Instances
 
-**Impact.** Material Transfer is unusable: a transfer can only be addressed to a project that does
-not exist. Any record it does create names the wrong originating company. This is the same defect
-class R2-017 was raised for and closed on — the closure swept four files
-(`dashboard`, `reports/dpr`, `reports/item-wise-sales`, `hr`) and this fifth site was never in
-scope. Worth checking whether it can write, and what it writes, before anyone uses it.
+| # | file | lines | what is hardcoded | should come from |
+|---|---|---|---|---|
+| 1 | `d/finance/page.tsx` | 2255, 2930 | `Prestige Developers` as the Material Transfer FROM party and header caption, `readOnly` | the signed-in company |
+| 2 | `d/finance/page.tsx` | 2944-2945 | `Skyline Premium Towers`, `Grand Orchard Villas` as the only TO projects | `projects` |
+| 3 | `d/finance/page.tsx` | 193-194, 3072-3073, 3083-3084, 3106-3107, 3122-3123 | `Main Savings Account (HDFC)`, `Escrow Account (SBI)`, `Petty Cash Account (HDFC)` on Internal Transfer, **and as the `useState` defaults** | `bank_accounts` / `cash_accounts` |
+| 4 | `d/finance/page.tsx` | 150, 3354-3356, 3433-3436 | cost codes `1.2.1 Site Conveyance`, `2.1 Raw Materials`, `3.5 Subcontractor Labours` | `library_cost_codes` |
+| 5 | `d/finance/page.tsx` | 165 | `Pune Site Office Address` as the Bill-To/Ship-To default | company addresses |
+| 6 | `reports/item-wise-sales/page.tsx` | 88-90, 112-114 | clients `L&T Construction`, `Public Works Dept`, `Alpha Builders Ltd`; items `Reinforcement Steel`, `Ready Mix Concrete`, `OPC Cement` | parties / material library |
+| 7 | `d/attendance/page.tsx` | 179, 1260-1262 | branches `Pune Main Office (Branch #1)`, `Mumbai Central (Branch #2)` | company addresses |
+| 8 | `p/[project_id]/attendance/page.tsx` | 1257-1258 | same two branches | same |
+| 9 | `d/procurement/page.tsx` | 259 | `DPR Column C-1 concrete pour` as the source-reference default | the referenced DPR |
+| 10 | `d/subcon/work-orders/amendments/page.tsx` | 39 | `Project Manager` as the `amendedBy` default | the authenticated user |
+| 11 | `dashboard/page.tsx` | 133-134 | `endDate: dbProj.end_date \|\| "2027-12-31"` and `startDate: … \|\| today` | absent should render `—`, as its neighbours already do |
 
-**Also visible in the same drawer, not yet investigated:** `TRANSFER OUT NO` renders as `0`.
+**Borderline, deliberately excluded** — flagging so nobody re-files them: `transferType` defaults to
+`"Bank To Bank"` (a typed union, legitimate); `purchaseLedgerInput`/`salesLedger` default to
+`Purchase A/c`/`Sales A/c` (standard Tally ledger names); `rateCategory` defaults to `Civil Works`.
+These are defaults drawn from vocabulary, not invented records.
 
-### R2-713 · MEDIUM · the dashboard invents a start and end date for any project that has none
+#### The two that matter most
 
-**Found while verifying:** R2-017.
-**File:** `frontend/src/app/c/[company_id]/dashboard/page.tsx` lines 133-134.
+**Instance 3 is a money path.** Internal Transfer moves funds between three accounts, and the
+component state *defaults* to those literals, so a form submitted without touching either dropdown
+still carries them. Two independent rungs of evidence: the browser shows exactly those options in
+production for the test company *ZZ R8 Throwaway*, and Supabase shows **`bank_accounts` holds zero
+rows for the entire database** — no account by any of those names exists for anyone. Account
+selection is a free-text string, not a foreign key. What the endpoint persists should be checked
+before anyone transfers anything.
 
-R2-017's closure correctly removed the four fabricated projects and the `defaultMatch` merge, and
-that part verifies clean — zero fabricated strings remain in the four files it names. But the
-surviving real-data mapper still fabricates per-field:
+**Instance 2 makes Material Transfer unusable.** The tenant's real projects are absent from the TO
+list, so a transfer can only be addressed to a project that does not exist. Verified live; the
+project picker beside it was still rendering `Loading projects...` from the real API while this one
+was already populated with invented values.
+
+#### A separate bug found inside instance 4
 
 ```
-startDate: dbProj.start_date || new Date().toISOString().split('T')[0],
-endDate:   dbProj.end_date   || "2027-12-31",
+<option value="1.2.1 Site Conveyance">Select Cost Code</option>
 ```
 
-A project with no dates in the database is displayed as starting today and ending 2027-12-31, with
-nothing marking either as absent. Neighbouring fields in the same object literal handle this
-correctly with `"—"` (`category`, `customerName`, `projectStage`), so the pattern to follow is
-already there.
+The **placeholder option carries a real-looking value.** A user who never opens the dropdown, or
+who deliberately picks "Select Cost Code", silently submits the cost code `1.2.1 Site Conveyance`.
+The same shape appears at `d/attendance/page.tsx:179`, where `company_branch` initialises to the
+literal `"Select Company Address"` — there the placeholder is submitted as data instead. Both are
+the placeholder-is-a-value error; they just fail in opposite directions.
 
-### R2-714 · CRITICAL · Internal Transfer moves money between three hardcoded bank accounts that do not exist
+#### Why the campaign missed it
 
-**Found while verifying:** R2-017, by sweeping the class instead of the four files.
-**File:** `frontend/src/app/c/[company_id]/d/finance/page.tsx` lines 193-194, 3072-3073,
-3083-3084, 3106-3107, 3122-3123. Deployed on `origin/main`.
+Not carelessness — **scope**. R2-017 was filed against the dashboard, and the fix cleaned the four
+files the finding named. Its note even counts the lines removed from `item-wise-sales` (`-3`); three
+fabricated options went and six remained in that same file, because the closure was measured
+against the finding text rather than against the file.
 
-Finance → Transaction → **+ Internal Transfer** offers a fixed pair of `<select>`s:
-
-- **From**: `Main Savings Account (HDFC)` / `Escrow Account (SBI)`
-- **To**: `Petty Cash Account (HDFC)` / `Escrow Account (SBI)`
-
-The component state also *defaults* to these string literals
-(`useState("Main Savings Account")`, `useState("Petty Cash Account")`), so a transfer submitted
-without touching the dropdowns still carries them.
-
-**Live evidence, two independent rungs.**
-
-1. Browser, production, test company *ZZ R8 Throwaway*: the two selects enumerate exactly the
-   options above. The tenant's own accounts are not offered.
-2. Supabase: `bank_accounts` holds **0 rows for the entire database** — not merely none for this
-   tenant. `cash_accounts` likewise 0 for this tenant. No account named Escrow, Main Savings or
-   Petty Cash exists anywhere.
-
-**Impact.** Every internal transfer is recorded against an account name that corresponds to no
-account record, for any company. Account selection is a free-text literal rather than a foreign
-key. This is a money-movement path, so it should be treated ahead of the rest of this batch —
-and what the endpoint actually persists needs checking before anyone transfers anything.
-
-### R2-715 · HIGH · the item-wise sales report still filters on fabricated clients and items
-
-**Found while verifying:** R2-017 — whose closure explicitly claims it removed *"the hardcoded
-demo filter options in reports/item-wise-sales/page.tsx (-3)"*.
-
-Three were removed. Six remain in the same file:
-
-- Client filter (lines 88-90): `L&T Construction`, `Public Works Dept`, `Alpha Builders Ltd`
-- Item filter (lines 112-114): `Reinforcement Steel`, `Ready Mix Concrete`, `OPC Cement`
-
-Two consequences. The report filters by a client the tenant does not have, so it returns nothing
-and reads as "no sales" rather than "wrong filter". And `L&T Construction` is a **real competitor's
-name** shipped in the product — the campaign scrubbed competitor branding elsewhere, so this is a
-straggler from that sweep too.
-
-This one is worth noting as a process signal: the closure counted lines removed and stopped, rather
-than re-reading the file for the same pattern.
-
-### R2-716 · HIGH · attendance branch selector is hardcoded to two invented offices
-
-**File:** `frontend/src/app/c/[company_id]/d/attendance/page.tsx` lines 179, 1260-1262, and the
-same block in `p/[project_id]/attendance/page.tsx`.
-
-The company-branch `<select>` offers only `Pune Main Office (Branch #1)` and
-`Mumbai Central (Branch #2)`, and `company_branch` initialises to the literal string
-`"Select Company Address"` — the placeholder itself is a submittable value, so an untouched form
-posts the placeholder as data.
-
-Attendance is geofenced, so branch is not cosmetic. Needs checking against what the punch endpoint
-does with an unrecognised branch string.
-
-## Summary
-
-| id | sev | class | from |
-|---|---|---|---|
-| R2-701 | CRITICAL | not in effect in prod | R2-559 |
-| R2-702 | HIGH | not in effect in prod | R2-191 |
-| R2-703 | HIGH | prod defect | — |
-| R2-704 | MEDIUM | latent prod defect | — |
-| R2-705 | MEDIUM | fake gate | R2-077 |
-| R2-706 | MEDIUM | fake gate | R2-578 |
-| R2-707 | MEDIUM | fake gate | R2-351 |
-| R2-708 | MEDIUM | fake gate | R2-341 |
-| R2-709 | LOW | fake gate | R2-040 |
-| R2-710 | HIGH | evidence class | the pin suite |
-| R2-711 | MEDIUM | evidence class | — |
-| R2-712 | CRITICAL | live prod defect, proved in browser | found via R2-017 |
-| R2-713 | MEDIUM | fabricated fallback data | found via R2-017 |
-| R2-714 | CRITICAL | live prod defect, money path, proved in browser + SQL | found via R2-017 class sweep |
-| R2-715 | HIGH | fabricated filters + competitor brand | found via R2-017 class sweep |
-| R2-716 | HIGH | fabricated branch list on a geofenced path | found via R2-017 class sweep |
+**Fix direction.** One pass, not eleven. Every instance is the same edit: replace the literal with
+the fetch the page already performs elsewhere, and give every placeholder option `value=""`. Then a
+lint rule or a test asserting no `<option value>` in `app/c` matches a proper-noun pattern outside
+the vocabulary list, so the class cannot return.
 
 ## Verified clean so far
 
