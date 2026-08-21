@@ -210,7 +210,7 @@ it will emit anything. 34 candidate sites; 20 survive triage as real instances.
 | 8 | `p/[project_id]/attendance/page.tsx` | 1257-1258 | same two branches | same |
 | 9 | `d/procurement/page.tsx` | 259 | `DPR Column C-1 concrete pour` as the source-reference default | the referenced DPR |
 | 10 | `d/subcon/work-orders/amendments/page.tsx` | 39 | `Project Manager` as the `amendedBy` default | the authenticated user |
-| 11 | `dashboard/page.tsx` | 133-134 | `endDate: dbProj.end_date \|\| "2027-12-31"` and `startDate: … \|\| today` | absent should render `—`, as its neighbours already do |
+| 11 | `dashboard/page.tsx` | 131-134 | **four** fabricated fallbacks in one object literal — `health \|\| "Healthy"`, `status \|\| "Ongoing"`, `startDate \|\| today`, `endDate \|\| "2027-12-31"` | absent should render `—`, as its neighbours already do. See R2-083 below |
 
 **Borderline, deliberately excluded** — flagging so nobody re-files them: `transferType` defaults to
 `"Bank To Bank"` (a typed union, legitimate); `purchaseLedgerInput`/`salesLedger` default to
@@ -316,6 +316,68 @@ residue, inheriting a severity of its own rather than the parent's. Then make th
 refuse a `FIXED` whose note contains hand-off phrasing without an accompanying id — the same shape
 as R2-711, a rule that closes the class rather than the instances.
 
+### R2-083 · the CRITICAL closure that claims completeness it does not have
+
+Not a separate finding — it is instance 11 above, recorded here because *how* it was closed is the
+point.
+
+R2-083 (**CRITICAL**, `FIXED`, `b8e314b`, note: *"No test added"*) states:
+
+> the **last two** fabricated attribute fallbacks on real projects are gone
+
+Its diff is exactly two lines:
+
+```
+-  category: dbProj.category || "General",     +  category: dbProj.category || "—",
+-  projectStage: dbProj.stage || "Structure"   +  projectStage: dbProj.stage || "—"
+```
+
+Both edits are correct. The completeness claim is not. **Four fabricated fallbacks remain in the
+same object literal**, two of them directly above the lines that were changed:
+
+```
+status:    dbProj.status     || "Ongoing",
+health:    uiHealth          || "Healthy",
+startDate: dbProj.start_date || new Date().toISOString().split('T')[0],
+endDate:   dbProj.end_date   || "2027-12-31",
+```
+
+**`health || "Healthy"` is the serious one.** `uiHealth` is `dbProj.health` (null when the database
+has none), so a project with no health value is rendered with a **green "Healthy" badge**
+(`:991`) and counted in `healthyCount` (`:483`). A dashboard risk indicator defaults to the
+reassuring answer when it has no data. `status || "Ongoing"` does the same for project status.
+
+The author changed two adjacent lines and described them as the last two, without re-reading the
+eight-line block they sit in. With no test and no pin on this row, nothing else could have caught
+it.
+
+## Class F — one class finding
+
+### R2-718 · HIGH · 169 of 315 closed findings have no automated gate of any kind
+
+**Distinct from R2-710.** That finding says the pins test source text rather than behaviour. This
+one says that for most closures **there is no pin at all**.
+
+| cut | count |
+|---|---|
+| closed findings in the pinned snapshot | 315 |
+| **with no `REAL_GATE` pin** | **169** — 61 CRITICAL, 43 HIGH, 55 MEDIUM, 10 LOW |
+| note explicitly says "No test added" | 43 — 5 CRITICAL, 9 HIGH |
+| **both: no pin and no test** → zero automated evidence | **28** — 4 CRITICAL, 6 HIGH |
+
+So of 315 closures, 146 have a text pin (which R2-710 shows proves only textual presence), and 169
+have nothing. **61 CRITICAL findings are closed with no automated gate.** If any of them is undone
+by a later edit, the suite stays green and the register still reads `FIXED`.
+
+The four CRITICAL rows with neither a pin nor a test are R2-050, R2-051, R2-060 and R2-083. R2-083
+is the one written up immediately above — closed on a claim that is demonstrably wrong, with
+nothing in place to detect it. That is what this class costs in practice, not in theory.
+
+**Fix direction.** Not 169 tests. Take the 61 CRITICAL closures, and for each ask whether a
+behavioural test is possible; where it is, write it, and where it is not, record why in the row so
+the absence is a decision rather than an omission. The 28 zero-evidence rows are the place to
+start, because they are the only ones where *nothing* would notice a regression.
+
 ## Verified clean so far
 
 Recorded so the pass is not only a list of complaints. Each claim was re-checked against the tree,
@@ -352,8 +414,9 @@ were scoped to the files a finding named rather than to the defect class.
 | ~~R2-715~~ | — | merged into R2-712 as instance 6 | — |
 | ~~R2-716~~ | — | merged into R2-712 as instances 7-8 | — |
 | **R2-717** | **HIGH** | **class finding — 29 closed rows disclose untracked residue** | register-wide sweep |
+| **R2-718** | **HIGH** | **class finding — 169 closures have no gate; 61 of them CRITICAL** | register-wide sweep |
 
-**Thirteen live findings.** R2-713..R2-716 were filed separately first and are struck through, not
+**Fourteen live findings.** R2-713..R2-716 were filed separately first and are struck through, not
 deleted, so the history stays traceable.
 
 Three to act on first, for different reasons:
