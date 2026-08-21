@@ -168,14 +168,21 @@ def file_report(report_id: uuid.UUID, acknowledgment_number: str, filed_by: str,
 
 
 @router.get("/{company_id}/penalty", response_model=dict)
-def estimate_penalty(company_id: uuid.UUID, report_type: str = Query(...), return_period: str = Query(...), total_wages: float = Query(...), db: Session = Depends(get_db), _: None = Depends(verify_company_access), current_user: User = Depends(get_current_user)):
+def estimate_penalty(company_id: uuid.UUID, report_type: str = Query(...), return_period: str = Query(...), db: Session = Depends(get_db), _: None = Depends(verify_company_access), current_user: User = Depends(get_current_user)):
     require_module_view(db, current_user, company_id, "payroll")
+    report = db.query(StatutoryReport).filter(
+        StatutoryReport.company_id == company_id,
+        StatutoryReport.report_type == report_type,
+        StatutoryReport.return_period == return_period,
+    ).order_by(StatutoryReport.created_at.desc()).first()
+    if not report:
+        raise HTTPException(status_code=404, detail="No statutory report found for this report type and period")
     return {
-        "report_type": report_type,
-        "return_period": return_period,
-        "total_wages": total_wages,
+        "report_type": report.report_type,
+        "return_period": report.return_period,
+        "total_wages": float(report.total_wages or 0),
         "estimated_penalty": 0.0,
-        "due_date": calculate_due_date(report_type, return_period),
+        "due_date": calculate_due_date(report.report_type, report.return_period),
     }
 
 
