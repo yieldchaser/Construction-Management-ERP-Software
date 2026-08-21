@@ -1901,7 +1901,7 @@ export default function CompanySettingsPage() {
                         );
                       })}
                     </div>
-                    <p className="text-[10px] text-muted">When enabled, the Client Portal PDF uses your configured PDF template and renders its content as a banner in place of the standard layout. If no template is configured yet, the default layout is used.</p>
+                    <p className="text-[10px] text-muted">When enabled, client portal reports, bills, purchase orders, and BOQ documents render with your configured PDF template, shown as a banner in place of the standard layout. Until a template is configured, these documents use the default layout.</p>
                   </div>
 
                   <div className="bg-card border border-border-custom rounded-lg bg-background p-6 space-y-3">
@@ -1921,7 +1921,7 @@ export default function CompanySettingsPage() {
                         );
                       })}
                     </div>
-                    <p className="text-[10px] text-muted">Stored on the company record (document_company_name_display). Consumed by the Client Portal PDF report generator's masthead: "Branch Name" prints the project's issuing branch (falls back to the company name if the project has no branch), "Company Name" always prints the parent company. Other document PDFs (invoices, quotations, purchase orders) do not generate a server-rendered PDF at all yet, so this flag has no effect there.</p>
+                    <p className="text-[10px] text-muted">Chooses the name printed in the masthead of your PDF documents. With Branch Name selected, a document for a project that belongs to a branch prints that branch's name, and projects without a branch print the company name. With Company Name selected, every document prints the parent company name. Applies to client portal reports, bills, purchase orders, and BOQ documents.</p>
                   </div>
 
                   {pdfStatus === "saved" && (<div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-lg">PDF template settings saved</div>)}
@@ -2088,7 +2088,7 @@ export default function CompanySettingsPage() {
                   </div>
 
                   <div className="p-4 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs rounded-lg">
-                    Enforcement gap: custom fields are stored and listed here, but the entity forms (Project, Task, Invoice, etc.) do not yet render these fields on records. Storage + this definition UI are wired; per-record rendering is pending a later round.
+                    Note: custom fields you define here are saved per record type and listed above. They do not yet appear on Project, Task, Invoice, or other record forms, so values cannot be filled in on individual records yet.
                   </div>
                 </div>
               )}
@@ -2189,7 +2189,7 @@ export default function CompanySettingsPage() {
               </div>
 
               <div className="p-4 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs rounded-lg">
-                Enforcement gap: approval rules are stored and managed here (via the existing ApprovalRule backend), but the document/transaction flows for these 15 categories do not yet consult these chains to gate actions. Storage + UI wired; the enforcement engine that blocks/requests approvals per category is pending a later round.
+                Approval chains are enforced today on Payment Requests and Purchase Orders: when a matching rule covers the amount, the document is held until every level approves it. For the remaining categories, rules are saved here but are not yet enforced.
               </div>
             </div>
           )}
