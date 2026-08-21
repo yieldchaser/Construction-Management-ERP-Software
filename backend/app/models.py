@@ -626,6 +626,7 @@ class Bill(Base):
     approval_flag = Column(String(50), default="pending", nullable=False)
     is_milestone_fixed_amount = Column(Boolean, default=False, nullable=False)
     tally_synced = Column(Boolean, default=False, nullable=False)
+    zoho_bill_id = Column(String(100), nullable=True)
     boq_document_id = Column(UUID(as_uuid=True), ForeignKey("boq_documents.id", ondelete="SET NULL"), nullable=True)
     # Subcontractor work order this bill bills against (subcon RA bills). Null for
     # non-subcon bills and legacy rows; when set, cumulative billing is validated

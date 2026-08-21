@@ -537,6 +537,12 @@ def push_bill(
     if not project or project.company_id != company_id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Bill project does not belong to this company")
 
+    if bill.zoho_bill_id:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"This bill was already pushed to Zoho Books (Zoho bill id {bill.zoho_bill_id}); pushing it again would create a duplicate.",
+        )
+
     organization_id = connection.organization_id
     access_token = _valid_access_token(connection)
     if not organization_id:
@@ -666,11 +672,26 @@ def push_bill(
             "Zoho Books bill creation failed (ref=%s, status=%s): %s",
             _ref, resp.status_code, resp.text[:500],
         )
+        try:
+            zoho_error = resp.json() or {}
+        except ValueError:
+            zoho_error = {}
+        if zoho_error.get("code") in (13011, 3062):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=(
+                    f"A bill with number {bill.invoice_number} already exists in Zoho Books "
+                    f"(Zoho code {zoho_error.get('code')}); the push was not repeated."
+                ),
+            )
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail=f"Failed to create the Zoho Books bill. Reference {_ref}.",
         )
     zoho_bill = (resp.json() or {}).get("bill") or {}
+    if zoho_bill.get("bill_id"):
+        bill.zoho_bill_id = str(zoho_bill.get("bill_id"))
+        db.commit()
     return {
         "zoho_bill_id": zoho_bill.get("bill_id"),
         "vendor_id": vendor_id,
