@@ -96,8 +96,10 @@ def generate_report(
     quality_ncr_closed = db.query(NCR).filter(NCR.project_id == project_id, NCR.status == "closed").count()
     quality_tests = db.query(MaterialTestResult).filter(MaterialTestResult.project_id == project_id).all()
     quality_tests_total = len(quality_tests)
-    quality_tests_pass_count = sum(1 for t in quality_tests if t.is_pass)
-    quality_tests_pass_rate = int((quality_tests_pass_count / quality_tests_total) * 100) if quality_tests_total > 0 else 0
+    quality_tests_assessed = [t for t in quality_tests if t.is_pass is not None]
+    quality_tests_unassessed = quality_tests_total - len(quality_tests_assessed)
+    quality_tests_pass_count = sum(1 for t in quality_tests_assessed if t.is_pass)
+    quality_tests_pass_rate = int((quality_tests_pass_count / len(quality_tests_assessed)) * 100) if quality_tests_assessed else 0
 
     metrics = {
         "tasks_total": tasks_total,
@@ -114,6 +116,7 @@ def generate_report(
         "quality_ncr_closed": quality_ncr_closed,
         "quality_tests_total": quality_tests_total,
         "quality_tests_pass_count": quality_tests_pass_count,
+        "quality_tests_unassessed": quality_tests_unassessed,
         "quality_tests_pass_rate": quality_tests_pass_rate,
     }
 

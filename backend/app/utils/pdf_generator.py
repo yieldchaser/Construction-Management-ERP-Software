@@ -115,7 +115,7 @@ def generate_client_report_pdf(
             f"Total Site Inspections Run: {metrics.get('quality_inspections', 0)}",
             f"Open Non-Conformance Reports (NCRs): {metrics.get('quality_ncr_open', 0)}",
             f"Closed/Resolved NCRs: {metrics.get('quality_ncr_closed', 0)}",
-            f"Material Lab Tests Pass Rate: {metrics.get('quality_tests_pass_rate', 0)}% ({metrics.get('quality_tests_pass_count', 0)} pass / {metrics.get('quality_tests_total', 0)} total)"
+            f"Material Lab Tests Pass Rate: {metrics.get('quality_tests_pass_rate', 0)}% ({metrics.get('quality_tests_pass_count', 0)} passed of {metrics.get('quality_tests_total', 0) - metrics.get('quality_tests_unassessed', 0)} assessed; {metrics.get('quality_tests_unassessed', 0)} not assessed)"
         ])
     ]
 
