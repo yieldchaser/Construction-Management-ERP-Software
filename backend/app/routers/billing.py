@@ -608,8 +608,21 @@ def get_bill_pdf(bill_id: UUID, db: Session = Depends(get_db), current_user=Depe
     branding = load_branding_assets(db, bill.company_id)
 
     party = db.query(CompanyTeam).filter(CompanyTeam.id == bill.party_company_user_id).first()
-    party_user = db.query(User).filter(User.id == party.user_id).first() if party else None
-    party_name = party_user.name if party_user and party_user.name else "N/A"
+    # R2-400: the invoice addressee is the counterparty's business name held on
+    # LibraryParty (the vendor master); a platform login name is only a fallback
+    # because vendors routinely have no users row at all.
+    party_name = None
+    if party:
+        if party.library_party_id:
+            linked_party = db.query(LibraryParty).filter(LibraryParty.id == party.library_party_id).first()
+            if linked_party and linked_party.name:
+                party_name = linked_party.name
+        if not party_name and party.user_id:
+            party_user = db.query(User).filter(User.id == party.user_id).first()
+            if party_user and party_user.name:
+                party_name = party_user.name
+    if not party_name:
+        party_name = "N/A"
 
     type_label_map = {
         "sale": "Sales Invoice",
