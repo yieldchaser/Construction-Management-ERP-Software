@@ -65,6 +65,8 @@ class TowerBudgetBreakdown(BaseModel):
 
 @router.get("/committed/{project_id}", response_model=BudgetWithCommitted)
 def get_committed_costs(project_id: UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
+    # A missing budget row is reported as zeros in memory; a read must never
+    # persist anything (R2-152).
     budget = db.query(ProjectBudget).filter(ProjectBudget.project_id == project_id).first()
     if not budget:
         budget = ProjectBudget(
@@ -74,9 +76,6 @@ def get_committed_costs(project_id: UUID, db: Session = Depends(get_db), _: None
             subcon_budget=0.0,
             equipment_budget=0.0,
         )
-        db.add(budget)
-        db.commit()
-        db.refresh(budget)
 
     pos = db.query(PurchaseOrder).filter(
         PurchaseOrder.project_id == project_id,
