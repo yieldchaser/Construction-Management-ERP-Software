@@ -262,9 +262,16 @@ def submit_inspection_responses(
     get_company_membership(db, current_user, project.company_id)
     require_permission(db, current_user, project.company_id, "quality:edit")
 
+    valid_item_ids = {
+        item.id
+        for item in db.query(ChecklistItem).filter(ChecklistItem.checklist_id == insp.checklist_id).all()
+    }
+
     pass_count = fail_count = na_count = 0
 
     for resp_data in payload.responses:
+        if resp_data.checklist_item_id not in valid_item_ids:
+            raise HTTPException(status_code=400, detail="Checklist item does not belong to this inspection's checklist")
         # Upsert: check if response for this item already exists
         existing = db.query(InspectionResponse).filter(
             InspectionResponse.inspection_id == insp_id,
