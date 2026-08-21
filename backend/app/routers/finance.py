@@ -1307,6 +1307,9 @@ def perform_p2p_transfer(req: P2PTransferRequest, db: Session):
     if not receiver:
         raise HTTPException(status_code=404, detail="Receiver not found in company team")
 
+    if sender_uuid == receiver_uuid:
+        raise HTTPException(status_code=422, detail="Sender and receiver must be different parties")
+
     if req.amount <= 0:
         raise HTTPException(status_code=400, detail="Transfer amount must be greater than zero")
 
