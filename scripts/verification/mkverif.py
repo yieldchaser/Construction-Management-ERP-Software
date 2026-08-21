@@ -277,6 +277,50 @@ VERDICTS = {
                             "exists (drawings/page.tsx:272), so the first drawing can be created."),
     "R2-013": ("CONFIRMED", "E1: the holiday flow is wired end to end - POST /hr/holidays/{cid} "
                             "at :967, DELETE at :975 and the list GET at :1020."),
+    "R2-077": ("CONFIRMED", "THE FIX IS GOOD; ONLY ITS GATE IS FAKE. `exportSchemas` is gone "
+                            "from frontend/src entirely and CSV headers now derive from "
+                            "Object.keys(rows[0]) at reports/page.tsx:259. The pin watches the "
+                            "wrong file, which is a defect in the TEST and is carried by R2-705 - "
+                            "it says nothing against this fix."),
+    "R2-521": ("CONFIRMED", "E1: backend calculators.py:61 uses D**2 / 162.0 and the console uses "
+                            "/162.0 at three sites, so the two agree. Nuance worth recording: the "
+                            "physically exact divisor is ~162.2 (pi/4 x 7850 / 1e6), and 162 is "
+                            "the standard Indian site approximation - defensible, but the fix's "
+                            "stated rationale is parity with the console, not correctness."),
+    "R2-572": ("CONFIRMED", "E1: items is Field(..., min_length=1) at procurement.py:69, so an "
+                            "empty PO is rejected at the schema. The note's disclosed siblings "
+                            "(IndentCreateRequest.items, RFQ items) are real and sit in R2-717."),
+    "R2-103": ("CONFIRMED", "E1: no 'ONS-' reference survives anywhere in frontend/src."),
+    "R2-208": ("CONFIRMED", "E1: attendee_count is Field(0, ge=0) at safety.py:53. Note the "
+                            "register's own file attribution for this row is wrong - the fix is "
+                            "in safety.py, not p/budgeting/page.tsx - which the note itself "
+                            "flags. Disclosed sibling (conducted_by/checked_by free text) sits "
+                            "in R2-717."),
+    "R2-164": ("CONFIRMED", "E1: the calculator discloses 'Paint and putty quantities include a "
+                            "10% application allowance; primer a 5% allowance' at :1979, so the "
+                            "allowance is no longer silently baked into the number."),
+    "R2-227": ("CONFIRMED", "E1: is_pinned is emitted by the shared project serializer at "
+                            "projects.py:154 and the toggle returns it at :360, so list, get and "
+                            "the mutation agree."),
+    "R2-022": ("CONFIRMED", "E1: the loader effect's outer gate changed from `if (projectId)` to "
+                            "`if (companyId)`, so a company with no active project now loads "
+                            "Finance. The two remaining `if (projectId)` checks at :299 and :354 "
+                            "are inner guards for genuinely project-scoped sub-fetches, which is "
+                            "correct."),
+    "R2-040": ("CONFIRMED", "THE FIX IS GOOD; ONLY ITS GATE IS FAKE (R2-709). The menu now reads "
+                            "'Export as CSV (Excel-compatible)' and the toast says CSV - `xlsx` "
+                            "survives only as an internal format key, not as a claim to the "
+                            "user. The defect was shipping a CSV named and described as Excel, "
+                            "and that is resolved."),
+    "R2-341": ("CONFIRMED", "THE FIX IS GOOD; ONLY ITS GATE IS FAKE (R2-708). reports.py:360 "
+                            "computes `max(0.0, ordered_qty - received_qty)` instead of the "
+                            "blank string that was the defect."),
+    "R2-351": ("CONFIRMED", "THE FIX IS GOOD; ONLY ITS GATE IS FAKE (R2-707). Both call sites "
+                            "now carry the PO item's unit - procurement.py:737 and :748 - and "
+                            ":748 is the one the fix added."),
+    "R2-578": ("CONFIRMED", "THE FIX IS GOOD; ONLY ITS GATE IS FAKE (R2-706). chat.py:179 raises "
+                            "403 for a non-member, and the sender identity is stamped from the "
+                            "session rather than the client payload."),
     "R2-083": ("UNVERIFIED", "E1 FAILS on completeness. The two edits are correct, but the note's "
                              "claim that these were 'the last two fabricated attribute fallbacks' "
                              "is wrong - four remain in the same object literal, including "

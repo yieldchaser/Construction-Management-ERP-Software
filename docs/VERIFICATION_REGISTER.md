@@ -248,7 +248,7 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-029 | MEDIUM | FIXED | `ce0e154` | `zoho_books.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-031 | MEDIUM | FIXED | `c962290` | `planning.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-037 | MEDIUM | FIXED | `df91126` | `analytics.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
-| R2-040 | MEDIUM | FIXED | `8759d2a` | `frontend/src/app/c/[company_id]/reports/[slug]/page.tsx` | yes | yes | FAKE_GATE | 1 | FAKE_GATE | the pin asserts `.xlsx` (with the dot) is absent, but that literal is in neither the pre-fix nor the post-fix file, and the Excel button still calls `handleExportSelect("xlsx")` after the fix. Passes either way. |
+| R2-040 | MEDIUM | FIXED | `8759d2a` | `frontend/src/app/c/[company_id]/reports/[slug]/page.tsx` | yes | yes | FAKE_GATE | 1 | CONFIRMED | THE FIX IS GOOD; ONLY ITS GATE IS FAKE (R2-709). The menu now reads 'Export as CSV (Excel-compatible)' and the toast says CSV - `xlsx` survives only as an internal format key, not as a claim to the user. The defect was shipping a CSV named and described as Excel, and that is resolved. |
 | R2-044 | MEDIUM | FIXED | `c2c2cc6` | `billing.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-045 | MEDIUM | FIXED | `48bd6d1` | `bi_export.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-048 | MEDIUM | FIXED | `e8ad9cd` | `helpContent.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
@@ -258,7 +258,7 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-066 | MEDIUM | FIXED | `48bd6d1` | `bi_export.py` | yes | yes | — | 1 | UNVERIFIED |  |
 | R2-071 | MEDIUM | FIXED | `ea0ee87` | `d/finance/page.tsx` | yes | yes | text-pin | 1 | CONFIRMED | E1: the work-order terms field reads e.currentTarget.innerText at finance/page.tsx:1550 and `innerHTML` appears nowhere in the file, so no unsanitised markup can reach /billing/work-orders. |
 | R2-072 | MEDIUM | FIXED | `650077a` | `d/finance/page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
-| R2-077 | MEDIUM | FIXED | `160aaec` | `frontend/src/app/c/[company_id]/reports/page.tsx` | yes | yes | FAKE_GATE | 1 | FAKE_GATE | the pin reads `reports/[slug]/page.tsx`; `exportSchemas` only ever existed in `reports/page.tsx`, which is the file the fix changed. Watches the wrong file. |
+| R2-077 | MEDIUM | FIXED | `160aaec` | `frontend/src/app/c/[company_id]/reports/page.tsx` | yes | yes | FAKE_GATE | 1 | CONFIRMED | THE FIX IS GOOD; ONLY ITS GATE IS FAKE. `exportSchemas` is gone from frontend/src entirely and CSV headers now derive from Object.keys(rows[0]) at reports/page.tsx:259. The pin watches the wrong file, which is a defect in the TEST and is carried by R2-705 - it says nothing against this fix. |
 | R2-078 | MEDIUM | FIXED | `35263bd` | `PageHeader.tsx` | yes | yes | text-pin | 1 | CONFIRMED | E1: no notification, bell or badge symbol remains in PageHeader. |
 | R2-082 | MEDIUM | FIXED | `248c809` | `frontend/src/app/c/[company_id]/analytics/page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-084 | MEDIUM | FIXED | `355cfc3` | `dashboard/page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
@@ -266,7 +266,7 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-089 | MEDIUM | FIXED | `80f6409` | `analytics.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-098 | MEDIUM | FIXED | `6e43ff0` | `UNMAPPED` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-102 | MEDIUM | FIXED | `8a0def3` | `backend/app/models.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
-| R2-103 | MEDIUM | FIXED | `f773b6d` | `/d/finance/page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
+| R2-103 | MEDIUM | FIXED | `f773b6d` | `/d/finance/page.tsx` | yes | yes | text-pin | 1 | CONFIRMED | E1: no 'ONS-' reference survives anywhere in frontend/src. |
 | R2-107 | MEDIUM | FIXED | `7ffa1c9` | `d/attendance/page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-114 | MEDIUM | FIXED | `4cdc81b` | `backend/app/models.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-115 | MEDIUM | FIXED | `093fd10` | `settings.py` | yes | yes | parse_fail | 1 | CONFIRMED | E1: the demo-tenant INSERT on GET is gone; unknown companies now 404. NOTE - this row's separate judgement that the residual demo chain is 'cosmetic only' is contradicted by R2-719: six pages still send the sentinel company id and the attendance path writes against the sentinel user. The fix is right; that assessment is not. |
@@ -286,7 +286,7 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-154 | MEDIUM | FIXED | `bd41ec7` | `budget.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-159 | MEDIUM | FIXED | `d92cb93` | `custom_fields.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-162 | MEDIUM | FIXED | `590560f` | `page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
-| R2-164 | MEDIUM | FIXED | `3e8a602` | `page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
+| R2-164 | MEDIUM | FIXED | `3e8a602` | `page.tsx` | yes | yes | text-pin | 1 | CONFIRMED | E1: the calculator discloses 'Paint and putty quantities include a 10% application allowance; primer a 5% allowance' at :1979, so the allowance is no longer silently baked into the number. |
 | R2-174 | MEDIUM | FIXED | `4d06017` | `files.py` | yes | yes | parse_fail | 1 | UNVERIFIED |  |
 | R2-176 | MEDIUM | FIXED | `fd5a709` | `files.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-183 | MEDIUM | FIXED | `e31ff9b` | `auth.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
@@ -294,11 +294,11 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-193 | MEDIUM | FIXED | `07764bc` | `bi_export.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-206 | MEDIUM | FIXED | `83c32c2` | `production.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-207 | MEDIUM | FIXED | `89056dd` | `production.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: the recipe allowance is applied - 8 x 2 x 1.05 = 16.8 matches the audit example. E3: I suspected float(recipe.wastage_pct) could 500 on NULL, and DISPROVED it - production_recipes.wastage_pct is NOT NULL in Supabase, and the Pydantic field is bounded 0..100. |
-| R2-208 | MEDIUM | FIXED | `574ebe9` | `p/budgeting/page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
+| R2-208 | MEDIUM | FIXED | `574ebe9` | `p/budgeting/page.tsx` | yes | yes | text-pin | 1 | CONFIRMED | E1: attendee_count is Field(0, ge=0) at safety.py:53. Note the register's own file attribution for this row is wrong - the fix is in safety.py, not p/budgeting/page.tsx - which the note itself flags. Disclosed sibling (conducted_by/checked_by free text) sits in R2-717. |
 | R2-217 | MEDIUM | FIXED | `f38215e` | `d/drawings/page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-218 | MEDIUM | FIXED | `—` | `UNMAPPED` | yes | yes | no_commit | 1 | UNVERIFIED |  |
 | R2-225 | MEDIUM | FIXED | `28ce750` | `team_schedule.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
-| R2-227 | MEDIUM | FIXED | `15e83fd` | `projects.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
+| R2-227 | MEDIUM | FIXED | `15e83fd` | `projects.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: is_pinned is emitted by the shared project serializer at projects.py:154 and the toggle returns it at :360, so list, get and the mutation agree. |
 | R2-247 | MEDIUM | FIXED | `d838e44` | `quality.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-251 | MEDIUM | FIXED | `b8e837b` | `bi_export.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-255 | MEDIUM | FIXED | `bd1c9f7` | `planning.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
@@ -317,8 +317,8 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-309 | MEDIUM | FIXED | `438ec20` | `analytics.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-331 | MEDIUM | FIXED | `5fb03ea` | `wastage.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-336 | MEDIUM | FIXED | `9906aa9` | `procurement.py` | yes | yes | parse_fail | 1 | CONFIRMED | E1: the `inv.category = req.category` overwrite is removed. The note's disclosed sibling (`inv.unit` still overwritten) is real and is carried by R2-717, not by this row. |
-| R2-341 | MEDIUM | FIXED | `57f78de` | `procurement.py` | yes | yes | FAKE_GATE | 1 | FAKE_GATE | `"PO Pending Qty"` was already in reports.py pre-fix as `"PO Pending Qty": ""`. The fix filled the value in; the pin only asserts the key exists. |
-| R2-351 | MEDIUM | FIXED | `53b9499` | `procurement.py` | yes | yes | FAKE_GATE | 1 | FAKE_GATE | `unit=po_item.unit` was already at procurement.py:672 (a different call site) pre-fix. The fix added a second occurrence at :683; the pin cannot tell. |
+| R2-341 | MEDIUM | FIXED | `57f78de` | `procurement.py` | yes | yes | FAKE_GATE | 1 | CONFIRMED | THE FIX IS GOOD; ONLY ITS GATE IS FAKE (R2-708). reports.py:360 computes `max(0.0, ordered_qty - received_qty)` instead of the blank string that was the defect. |
+| R2-351 | MEDIUM | FIXED | `53b9499` | `procurement.py` | yes | yes | FAKE_GATE | 1 | CONFIRMED | THE FIX IS GOOD; ONLY ITS GATE IS FAKE (R2-707). Both call sites now carry the PO item's unit - procurement.py:737 and :748 - and :748 is the one the fix added. |
 | R2-361 | MEDIUM | FIXED | `b4c0a37` | `quality.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-367 | MEDIUM | FIXED | `93184e6` | `drawings.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-370 | MEDIUM | FIXED | `3e6ecb0` | `billing.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
@@ -350,7 +350,7 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-508 | MEDIUM | FIXED | `deb3a9a` | `UNMAPPED` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-512 | MEDIUM | FIXED | `487f564` | `admin_migrations.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: the duplicate POST /backfill-rbac is gone and the live `backfill_rbac_roles` still serves the same route at admin_migrations.py:114. Claim accurate. |
 | R2-514 | MEDIUM | FIXED | `9afd6f7` | `helpContent.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
-| R2-521 | MEDIUM | FIXED | `5f755ac` | `calculators.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
+| R2-521 | MEDIUM | FIXED | `5f755ac` | `calculators.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: backend calculators.py:61 uses D**2 / 162.0 and the console uses /162.0 at three sites, so the two agree. Nuance worth recording: the physically exact divisor is ~162.2 (pi/4 x 7850 / 1e6), and 162 is the standard Indian site approximation - defensible, but the fix's stated rationale is parity with the console, not correctness. |
 | R2-532 | MEDIUM | FIXED | `0b24a81` | `safety.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-535 | MEDIUM | FIXED | `2ae795b` | `vendor_performance.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-537 | MEDIUM | FIXED | `d9f99b3` | `UNMAPPED` | yes | yes | parse_fail | 1 | UNVERIFIED |  |
@@ -360,15 +360,15 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-558 | MEDIUM | FIXED | `154eeb5` | `library.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-563 | MEDIUM | FIXED | `d2ad02f` | `hr/page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-566 | MEDIUM | FIXED | `43fe151` | `planning.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
-| R2-572 | MEDIUM | FIXED | `4d85244` | `procurement.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
+| R2-572 | MEDIUM | FIXED | `4d85244` | `procurement.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: items is Field(..., min_length=1) at procurement.py:69, so an empty PO is rejected at the schema. The note's disclosed siblings (IndentCreateRequest.items, RFQ items) are real and sit in R2-717. |
 | R2-573 | MEDIUM | FIXED | `00427eb` | `procurement.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
-| R2-578 | MEDIUM | FIXED | `83d9cf0` | `chat.py` | yes | yes | FAKE_GATE | 1 | FAKE_GATE | both `msg.user_id = ct.id` and `msg.user_name = current_user.name` were present pre-fix (lines 153-154). The fix changed control flow around them - dropping the client-supplied fields and raising 403 - which the pin does not test at all. |
+| R2-578 | MEDIUM | FIXED | `83d9cf0` | `chat.py` | yes | yes | FAKE_GATE | 1 | CONFIRMED | THE FIX IS GOOD; ONLY ITS GATE IS FAKE (R2-706). chat.py:179 raises 403 for a non-member, and the sender identity is stamped from the session rather than the client payload. |
 | R2-596 | MEDIUM | FIXED | `b70fd88` | `d/hr/page.tsx` | yes | yes | parse_fail | 1 | UNVERIFIED |  |
 | R2-600 | MEDIUM | FIXED | `1d3235d` | `home/page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-012 | MEDIUM | FIXED | `e9111eb` | `frontend/src/app/c/[company_id]/d/finance/page.tsx` | no | no | — | 2 | UNVERIFIED |  |
 | R2-016 | MEDIUM | FIXED | `ddf1290` | `frontend/src/app/c/[company_id]/p/[project_id]/task/page.tsx` | no | no | — | 2 | UNVERIFIED |  |
 | R2-020 | MEDIUM | FIXED | `4be5ccf` | `frontend/src/app/c/[company_id]/d/dpr/page.tsx` | no | no | — | 2 | CONFIRMED | E1: the fabricated takeoff rows ('Main Floor 2 Slab section A', 'Beam drop grid B-C') are gone from frontend/src entirely. |
-| R2-022 | MEDIUM | FIXED | `5fda93e` | `frontend/src/app/c/[company_id]/d/finance/page.tsx` | no | no | — | 2 | UNVERIFIED |  |
+| R2-022 | MEDIUM | FIXED | `5fda93e` | `frontend/src/app/c/[company_id]/d/finance/page.tsx` | no | no | — | 2 | CONFIRMED | E1: the loader effect's outer gate changed from `if (projectId)` to `if (companyId)`, so a company with no active project now loads Finance. The two remaining `if (projectId)` checks at :299 and :354 are inner guards for genuinely project-scoped sub-fetches, which is correct. |
 | R2-026 | MEDIUM | FIXED | `e870664` | `frontend/src/app/c/[company_id]/d/home/page.tsx` | no | no | — | 2 | UNVERIFIED |  |
 | R2-053 | MEDIUM | FIX_VERIFIED | `a6bfdb4` | `finance.py` | no | no | — | 2 | UNVERIFIED |  |
 | R2-061 | MEDIUM | FIXED | `b2e837e` | `d/equipment/page.tsx` | no | no | — | 2 | CONFIRMED | E1: `setFleet` is called at exactly two sites - `:108` with API data and `:133` with `[]`. No fabricated fleet remains. |

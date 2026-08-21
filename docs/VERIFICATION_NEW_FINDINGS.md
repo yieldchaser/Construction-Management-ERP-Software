@@ -109,8 +109,8 @@ signal anyone reads.
 
 ## Class C — gates that do not gate
 
-Each of these findings may well be **correctly fixed**; the defect is that nothing protects the
-fix. A later edit removes it and the suite stays green. Verified by re-evaluating each pin's own
+Each of these findings **is** correctly fixed — all five were checked and all five hold. The defect
+here is that nothing protects the fix. A later edit removes it and the suite stays green. Verified by re-evaluating each pin's own
 assertion against the fix commit's first parent, then reading the commit diff by hand.
 
 ### R2-705 · MEDIUM · `test_pin_R2_077_report_export_schemas_removed` watches the wrong file
@@ -141,9 +141,10 @@ Asserts `"PO Pending Qty"` is in `reports.py`. Pre-fix the file contained
 ### R2-709 · LOW · `test_pin_R2_040_report_export_never_xlsx` asserts a string that never existed
 
 Asserts `.xlsx` (with the dot) is absent from `reports/[slug]/page.tsx`. That literal is in neither
-the pre-fix nor the post-fix file, so the assertion is vacuous. Separately, the fix only relabelled
-the button — it still calls `handleExportSelect("xlsx")`. Whether R2-040's *underlying* defect is
-actually resolved needs its own look.
+the pre-fix nor the post-fix file, so the assertion is vacuous. **Correction to an earlier draft of this entry:** I first wrote that the fix "only relabelled the
+button" and that the underlying defect might survive. I have since checked it. The menu reads
+*"Export as CSV (Excel-compatible)"* and the toast says CSV; `xlsx` survives only as an internal
+format key, never as a claim to the user. **R2-040's fix is correct** — only its pin is vacuous.
 
 ### R2-710 · HIGH · the regression-pin suite tests source text, never behaviour
 
