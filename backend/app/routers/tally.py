@@ -13,7 +13,7 @@ from app.models import (
 )
 from app.tally_xml import build_tally_envelope
 from pydantic import BaseModel
-from app.constants import REVENUE_INVOICE_TYPES, EXPENSE_INVOICE_TYPES
+from app.constants import REVENUE_INVOICE_TYPES, EXPENSE_INVOICE_TYPES, SETTLEMENT_INVOICE_TYPES
 
 router = APIRouter(
     prefix="/tally",
@@ -199,25 +199,51 @@ def _build_vouchers(db: Session, conn: TallyConnection, bills, payments, advance
 
     for b in bills:
         total = float(b.total_payable or 0)
-        if b.invoice_type in REVENUE_INVOICE_TYPES:
+        cost_centre = cc_map.get(str(b.project_id)) if b.project_id else None
+        year = b.invoice_date.year if b.invoice_date else datetime.utcnow().year
+        date_str = b.invoice_date.strftime("%Y%m%d") if b.invoice_date else ""
+        vnumber = _render_number(conn.voucher_number_template, b.invoice_number, year, seq)
+
+        if b.invoice_type in SETTLEMENT_INVOICE_TYPES:
+            # Settlement rows move money, not goods: money-in bills are Receipt
+            # vouchers (debit bank/cash, credit the party) and money-out bills
+            # are Payment vouchers, never Purchase/Sales.
+            money_in = b.invoice_type in ("payment_in", "i_received")
+            vchtype = "Receipt" if money_in else "Payment"
+            cash_ledger = bank_ledger or conn.default_cash_ledger or "Bank/Cash"
+            party_ledger = _resolve_party_ledger(
+                db, conn.company_id, b.party_company_user_id,
+                "Client Ledger" if money_in else "Vendor Ledger",
+            )
+            narration = f"SiteFlow {b.invoice_type} settlement {b.invoice_number}."
+            if money_in:
+                entries = [
+                    {"ledger": cash_ledger, "amount": total, "debit": True, "ledger_type": _cash_bank_type(cash_ledger, conn.default_cash_ledger)},
+                    {"ledger": party_ledger, "amount": total, "debit": False, "ledger_type": "party_debtor"},
+                ]
+            else:
+                entries = [
+                    {"ledger": party_ledger, "amount": total, "debit": True, "ledger_type": "party_creditor"},
+                    {"ledger": cash_ledger, "amount": total, "debit": False, "ledger_type": _cash_bank_type(cash_ledger, conn.default_cash_ledger)},
+                ]
+        elif b.invoice_type in REVENUE_INVOICE_TYPES:
             vchtype = "Sales"
             ledger_key = "Sales Invoice"
             fallback_ledger = "Sales A/c"
             party_default = "Client Ledger"
+            mapped = ledger_map.get(ledger_key)
+            expense_ledger = mapped.tally_ledger_name if mapped else fallback_ledger
+            party_ledger = _resolve_party_ledger(db, conn.company_id, b.party_company_user_id, party_default)
+            narration = f"SiteFlow {b.invoice_type} invoice {b.invoice_number}."
         else:
             vchtype = "Purchase"
             ledger_key = "Subcon Expense" if b.invoice_type == "subcon" else "Material Purchase"
             fallback_ledger = "Purchase A/c"
             party_default = "Vendor Ledger"
-
-        mapped = ledger_map.get(ledger_key)
-        expense_ledger = mapped.tally_ledger_name if mapped else fallback_ledger
-        party_ledger = _resolve_party_ledger(db, conn.company_id, b.party_company_user_id, party_default)
-        cost_centre = cc_map.get(str(b.project_id)) if b.project_id else None
-        year = b.invoice_date.year if b.invoice_date else datetime.utcnow().year
-        date_str = b.invoice_date.strftime("%Y%m%d") if b.invoice_date else ""
-        vnumber = _render_number(conn.voucher_number_template, b.invoice_number, year, seq)
-        narration = f"SiteFlow {b.invoice_type} invoice {b.invoice_number}."
+            mapped = ledger_map.get(ledger_key)
+            expense_ledger = mapped.tally_ledger_name if mapped else fallback_ledger
+            party_ledger = _resolve_party_ledger(db, conn.company_id, b.party_company_user_id, party_default)
+            narration = f"SiteFlow {b.invoice_type} invoice {b.invoice_number}."
 
         if vchtype == "Sales":
             # Sale: the customer now owes us, so DEBIT the party (Sundry
