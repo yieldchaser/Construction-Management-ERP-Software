@@ -153,15 +153,20 @@ def auto_populate(company_id: uuid.UUID, report_type: str = Query(...), return_p
 
 
 @router.patch("/{report_id}/file", response_model=StatutoryReportResponse)
-def file_report(report_id: uuid.UUID, acknowledgment_number: str, filed_by: str, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def file_report(report_id: uuid.UUID, acknowledgment_number: str, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     report = db.query(StatutoryReport).filter(StatutoryReport.id == report_id).first()
     if not report:
         raise HTTPException(status_code=404, detail="Report not found")
     require_permission(db, current_user, report.company_id, "payroll:edit")
+    ack = acknowledgment_number.strip()
+    if not ack:
+        raise HTTPException(status_code=422, detail="acknowledgment_number must not be blank")
+    if not report.total_wages and not report.total_employees:
+        raise HTTPException(status_code=400, detail="Cannot file an empty return: the report has no employees and no wages")
     report.status = "filed"
     report.filed_at = datetime.utcnow()
-    report.filed_by = filed_by
-    report.acknowledgment_number = acknowledgment_number
+    report.filed_by = current_user.name
+    report.acknowledgment_number = ack
     db.commit()
     db.refresh(report)
     return _enrich(report, db)
