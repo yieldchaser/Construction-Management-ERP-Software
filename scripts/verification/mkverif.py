@@ -211,6 +211,11 @@ VERDICTS = {
                             "(`new Date().toISOString().slice(0,7)`, hr/page.tsx:220), not the "
                             "hardcoded 2026-06. The note's own follow-up on `daysInMonth` is "
                             "disclosed residue and is carried by R2-717."),
+    "R2-060": ("CONFIRMED", "E1: zero matches for 12.9716 / 77.5946 / 'Metro Geofence Yard' "
+                            "across frontend/src. `captureLocation` returns null on every "
+                            "failure path (no geolocation :400, error callback :410) and "
+                            "`queuePunch` blocks the punch with an alert when it is null, so no "
+                            "invented coordinate can reach the geofence audit trail."),
     "R2-083": ("UNVERIFIED", "E1 FAILS on completeness. The two edits are correct, but the note's "
                              "claim that these were 'the last two fabricated attribute fallbacks' "
                              "is wrong - four remain in the same object literal, including "

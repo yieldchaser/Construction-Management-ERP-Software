@@ -104,7 +104,7 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-027 | CRITICAL | FIXED | `97f4eb4` | `face_recognition.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-035 | CRITICAL | FIXED | `89c607a` | `projects.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-036 | CRITICAL | FIXED | `9234220` | `analytics.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
-| R2-060 | CRITICAL | FIXED | `287db85` | `d/attendance/page.tsx` | yes | yes | parse_fail | 1 | UNVERIFIED |  |
+| R2-060 | CRITICAL | FIXED | `287db85` | `d/attendance/page.tsx` | yes | yes | parse_fail | 1 | CONFIRMED | E1: zero matches for 12.9716 / 77.5946 / 'Metro Geofence Yard' across frontend/src. `captureLocation` returns null on every failure path (no geolocation :400, error callback :410) and `queuePunch` blocks the punch with an alert when it is null, so no invented coordinate can reach the geofence audit trail. |
 | R2-067 | CRITICAL | FIXED | `241f76c` | `budget.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-068 | CRITICAL | FIXED | `401cf1e` | `d/procurement/page.tsx` | yes | yes | parse_fail | 1 | UNVERIFIED |  |
 | R2-086 | CRITICAL | FIXED | `97f4eb4` | `face_recognition.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
