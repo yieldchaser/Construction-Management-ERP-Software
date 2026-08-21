@@ -246,6 +246,32 @@ def list_inspections(project_id: uuid.UUID, db: Session = Depends(get_db), _: No
     ).order_by(SiteInspection.inspection_date.desc()).all()
 
 
+@router.get("/inspections/{insp_id}/responses")
+def list_inspection_responses(insp_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    insp = db.query(SiteInspection).filter(SiteInspection.id == insp_id).first()
+    if not insp:
+        raise HTTPException(status_code=404, detail="Inspection not found")
+    project = db.query(Project).filter(Project.id == insp.project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, project.company_id)
+    rows = db.query(InspectionResponse).filter(
+        InspectionResponse.inspection_id == insp_id
+    ).order_by(InspectionResponse.created_at.asc()).all()
+    return [
+        {
+            "id": str(r.id),
+            "inspection_id": str(r.inspection_id),
+            "checklist_item_id": str(r.checklist_item_id),
+            "result": r.result,
+            "remarks": r.remarks,
+            "photo_url": r.photo_url,
+            "created_at": r.created_at.isoformat() if r.created_at else None,
+        }
+        for r in rows
+    ]
+
+
 @router.patch("/inspections/{insp_id}/respond", response_model=InspectionResponse_)
 def submit_inspection_responses(
     insp_id: uuid.UUID,
