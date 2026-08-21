@@ -130,9 +130,14 @@ class NCRResponse(BaseModel):
     title: str
     severity: str
     status: str
+    raised_by: Optional[uuid.UUID] = None
+    assigned_to: Optional[uuid.UUID] = None
+    reviewed_by: Optional[uuid.UUID] = None
+    reviewed_at: Optional[datetime] = None
     due_date: Optional[datetime]
     resolution_notes: Optional[str]
     closed_at: Optional[datetime]
+    closed_by: Optional[uuid.UUID] = None
     created_at: datetime
 
     class Config:
@@ -340,6 +345,8 @@ def ncr_under_review(ncr_id: uuid.UUID, db: Session = Depends(get_db), current_u
     if ncr.status != "open":
         raise HTTPException(status_code=400, detail="Only open NCRs can move to under_review")
     ncr.status = "under_review"
+    ncr.reviewed_by = current_user.id
+    ncr.reviewed_at = datetime.utcnow()
     db.commit()
     db.refresh(ncr)
     return ncr
@@ -364,6 +371,7 @@ def close_ncr(ncr_id: uuid.UUID, payload: NCRCloseRequest, db: Session = Depends
     ncr.status = "closed"
     ncr.resolution_notes = payload.resolution_notes
     ncr.closed_at = datetime.utcnow()
+    ncr.closed_by = current_user.id
     db.commit()
     db.refresh(ncr)
     return ncr
