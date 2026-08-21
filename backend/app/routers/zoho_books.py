@@ -279,7 +279,7 @@ def _find_or_create_vendor(access_token: str, organization_id: str, *, name: str
         return existing
 
     # 2) Otherwise create the vendor contact.
-    contact_payload: dict = {"contact_type": "vendor", "contact_name": name or "Vendor"}
+    contact_payload: dict = {"contact_type": "vendor", "contact_name": name}
     if email:
         contact_payload["email"] = email
     if phone:
@@ -564,7 +564,7 @@ def push_bill(
     db.commit()  # persist any refreshed token / resolved org id
 
     # Resolve the vendor from the bill's party (company_team -> user).
-    vendor_name = "Vendor"
+    vendor_name: Optional[str] = None
     vendor_email: Optional[str] = None
     vendor_phone: Optional[str] = None
     gstin: Optional[str] = None
@@ -586,6 +586,12 @@ def push_bill(
                 vendor_name = party.name
                 vendor_email = vendor_email or party.email
                 vendor_phone = vendor_phone or party.phone
+
+    if not vendor_name:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Cannot resolve the bill's vendor to a named party; refusing to push an unnamed vendor to Zoho Books. Link the bill's party to a company member or library party first.",
+        )
 
     vendor_id = _find_or_create_vendor(
         access_token,
