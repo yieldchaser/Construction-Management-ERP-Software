@@ -15,9 +15,19 @@ CHAT_GROUP_ROLE_PATTERN = "^(admin|member|viewer)$"
 
 
 def verify_group_membership(db: Session, current_user: User, group_id: uuid.UUID):
+    group = db.query(ChatGroup).filter(ChatGroup.id == group_id).first()
+    if not group:
+        raise HTTPException(status_code=404, detail="Chat group not found")
+    team = db.query(CompanyTeam).filter(
+        CompanyTeam.company_id == group.company_id,
+        CompanyTeam.user_id == current_user.id
+    ).first()
+    caller_ids = [current_user.id]
+    if team:
+        caller_ids.append(team.id)
     membership = db.query(ChatGroupMember).filter(
         ChatGroupMember.group_id == group_id,
-        ChatGroupMember.user_id == current_user.id
+        ChatGroupMember.user_id.in_(caller_ids)
     ).first()
     if not membership:
         raise HTTPException(status_code=403, detail="Not a member of this chat group")

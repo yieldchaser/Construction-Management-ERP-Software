@@ -1046,7 +1046,7 @@ def test_chat_message_poll_cursor_and_capped_load(client, db, make_tenant, auth_
     assert r.status_code == 200, r.text
     by_id = {g["id"]: g["member_count"] for g in r.json()}
     assert by_id[group_id] == 1
-    assert any(mc == 0 for mc in by_id.values())
+    assert all(mc >= 1 for mc in by_id.values())
 
 
 # ── W83 / R2-206: wastage_type enumerated; reporter + value server-derived ──
