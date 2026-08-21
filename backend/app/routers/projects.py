@@ -502,6 +502,15 @@ def add_project_party(project_id: uuid.UUID, payload: ProjectPartyCreate, db: Se
         db.add(existing)
         db.commit()
         db.refresh(existing)
+    elif payload.opening_balance_direction in ("will_pay", "will_receive") and (payload.opening_balance_amount or 0) > 0:
+        amount = float(payload.opening_balance_amount)
+        adv = amount if payload.opening_balance_direction == "will_receive" else 0.0
+        pay = amount if payload.opening_balance_direction == "will_pay" else 0.0
+        existing.advance_paid = adv
+        existing.to_pay = pay
+        existing.balance = round(adv - pay, 2)
+        db.commit()
+        db.refresh(existing)
     return {
         "party_id": str(existing.party_id),
         "balance": float(existing.balance),
