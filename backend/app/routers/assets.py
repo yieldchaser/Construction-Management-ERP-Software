@@ -124,14 +124,17 @@ def create_entry(payload: DepreciationEntryCreate, db: Session = Depends(get_db)
     dep = Decimal(str(payload.depreciation_amount))
     acc = Decimal(str(payload.accumulated_depreciation))
     bv = Decimal(str(payload.book_value))
+    cents = Decimal("0.01")
     if prior:
-        cents = Decimal("0.01")
         prev_acc = Decimal(str(prior.accumulated_depreciation)).quantize(cents)
         prev_bv = Decimal(str(prior.book_value)).quantize(cents)
         if acc.quantize(cents) != (prev_acc + dep).quantize(cents):
             raise HTTPException(status_code=400, detail="accumulated_depreciation must equal the prior accumulated total plus this period's depreciation_amount")
         if bv.quantize(cents) != (prev_bv - dep).quantize(cents):
             raise HTTPException(status_code=400, detail="book_value must equal the prior book value minus this period's depreciation_amount")
+    else:
+        if acc.quantize(cents) != dep.quantize(cents):
+            raise HTTPException(status_code=400, detail="the first entry's accumulated_depreciation must equal its own depreciation_amount")
     if bv < Decimal(str(schedule.salvage_value)):
         raise HTTPException(status_code=400, detail="book_value cannot fall below the schedule's salvage_value")
     data = payload.model_dump()
