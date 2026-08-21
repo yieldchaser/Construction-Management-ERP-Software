@@ -44,6 +44,7 @@ def test_delete_payment_reverses_bill_settlement(client, db, make_tenant, auth_h
         party_company_user_id=team.id, invoice_number="INV-C1",
         invoice_date=datetime.datetime(2026, 1, 1), invoice_type="sale",
         subtotal=100.0, total_payable=100.0,
+        approval_flag="approved",  # R2-346: FIFO settles approved bills only
     )
     db.add(bill)
     db.commit()
@@ -86,6 +87,7 @@ def test_delete_payment_partial_reverts_to_partially_paid(client, db, make_tenan
         party_company_user_id=team.id, invoice_number="INV-C1B",
         invoice_date=datetime.datetime(2026, 1, 1), invoice_type="sale",
         subtotal=200.0, total_payable=200.0,
+        approval_flag="approved",  # R2-346: FIFO settles approved bills only
     )
     db.add(bill)
     db.commit()
@@ -127,6 +129,7 @@ def test_ledger_does_not_double_count_settled_payment(client, db, make_tenant, a
         party_company_user_id=team.id, invoice_number="INV-C2",
         invoice_date=datetime.datetime(2026, 1, 1), invoice_type="sale",
         subtotal=100.0, total_payable=100.0,
+        approval_flag="approved",  # R2-346: FIFO settles approved bills only
     )
     db.add(bill)
     db.commit()
@@ -241,6 +244,7 @@ def test_fifo_settlement_reaches_paid_with_float_drift(client, db, make_tenant, 
         party_company_user_id=team.id, invoice_number="INV-C4",
         invoice_date=datetime.datetime(2026, 1, 1), invoice_type="sale",
         subtotal=100.0, total_payable=100.0,
+        approval_flag="approved",  # R2-346: FIFO settles approved bills only
     )
     db.add(bill)
     db.commit()

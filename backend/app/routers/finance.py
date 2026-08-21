@@ -16,6 +16,12 @@ from app.constants import REVENUE_INVOICE_TYPES, EXPENSE_INVOICE_TYPES, SETTLEME
 # across many partial payments can't leave a bill stuck at "Partially Paid".
 MONEY_EPSILON = 0.01
 
+# R2-346: FIFO settlement may only apply money to bills that have passed review.
+# "approved" is written by PATCH /finance/approve/{id}; "auto_approved" is the
+# legacy value reports.py already treats as approved. A pending/rejected bill is
+# never settled: the payment simply stays unsettled until the bill is approved.
+SETTLEMENT_APPROVAL_FLAGS = ("approved", "auto_approved")
+
 router = APIRouter(
     prefix="/finance",
     tags=["Finance & P&L"],
@@ -137,9 +143,14 @@ def create_payment(req: PaymentCreateRequest, db: Session = Depends(get_db), cur
         # Determine target invoice type based on payment type
         target_inv_type = list(REVENUE_INVOICE_TYPES) if req.payment_type == "in" else list(EXPENSE_INVOICE_TYPES)
         
+        # R2-346: settlement is gated on approval. Every bill created through
+        # the product starts approval_flag="pending"; flipping an unreviewed
+        # bill to Paid is a control failure, so only approved bills are
+        # eligible and the payment simply stays unsettled until review happens.
         query = db.query(Bill).filter(
             Bill.party_company_user_id == party_uuid,
-            Bill.status != "Paid"
+            Bill.status != "Paid",
+            Bill.approval_flag.in_(SETTLEMENT_APPROVAL_FLAGS),
         )
         if proj_uuid:
             query = query.filter(Bill.project_id == proj_uuid)
