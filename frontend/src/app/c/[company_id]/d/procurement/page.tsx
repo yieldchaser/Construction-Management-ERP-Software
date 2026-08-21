@@ -154,7 +154,7 @@ export default function ProcurementPage() {
         const mapped = data.map((po: any) => ({
           id: po.id,
           poNumber: po.po_number,
-          vendor: po.vendor_id ? (vendorById[String(po.vendor_id)] || "Vendor") : "Vendor",
+          vendor: po.vendor_name || (po.vendor_id ? (vendorById[String(po.vendor_id)] || "—") : "—"),
           items: (po.items || []).map((item: any) => ({ id: item.id, name: item.material_name, qty: item.quantity, unit: item.unit, rate: item.rate })),
           grossAmount: po.gross_amount,
           taxAmount: po.tax_amount,

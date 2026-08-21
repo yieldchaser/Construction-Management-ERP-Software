@@ -10,7 +10,7 @@ from app.models import (
     PurchaseOrder, PurchaseOrderItem,
     GoodsReceiptNote, GRNItem,
     WarehouseInventory, MaterialTransaction,
-    Project, User, ApprovalRule, CompanyTeam
+    Project, User, ApprovalRule, CompanyTeam, LibraryParty
 )
 from app.approvals import find_matching_rule, match_approver, levels_approved, user_already_acted, record_action
 from app.workflow_controls import enforce_stock_availability, get_company, get_default_terms
@@ -83,6 +83,7 @@ class POResponse(BaseModel):
     company_id: UUID
     project_id: UUID
     vendor_id: Optional[UUID] = None
+    vendor_name: Optional[str] = None
     po_number: str
     po_date: datetime
     expected_delivery_date: Optional[datetime] = None
@@ -427,6 +428,16 @@ def _po_response(db: Session, po: PurchaseOrder) -> POResponse:
             total_amount=float(i.total_amount) if i.total_amount else float(i.quantity * i.rate)
         ) for i in items
     ]
+    vendor_name = None
+    if po.vendor_id:
+        team = db.query(CompanyTeam).filter(CompanyTeam.id == po.vendor_id).first()
+        if team:
+            if team.user_id:
+                user = db.query(User).filter(User.id == team.user_id).first()
+                vendor_name = user.name if user and user.name else None
+            if not vendor_name and team.library_party_id:
+                party = db.query(LibraryParty).filter(LibraryParty.id == team.library_party_id).first()
+                vendor_name = party.name if party else None
     levels_required = 0
     if po.approval_rule_id:
         rule = db.query(ApprovalRule).filter(ApprovalRule.id == po.approval_rule_id).first()
@@ -436,6 +447,7 @@ def _po_response(db: Session, po: PurchaseOrder) -> POResponse:
         company_id=po.company_id,
         project_id=po.project_id,
         vendor_id=po.vendor_id,
+        vendor_name=vendor_name,
         po_number=po.po_number,
         po_date=po.po_date,
         expected_delivery_date=po.expected_delivery_date,
