@@ -32,7 +32,23 @@ Ordering is **severity-ascending**, with founder-gates and live-only work last. 
 - L3 ✅ DONE (Session 28): R2-057 (gantt link errors use server detail, `b9a08e6`) + R2-070 (never-persisted indent photo picker dropped, `dd0ed9a`)
 - L4 ✅ DONE (Session 29): R2-085 (evidence-close — phase labels already gone via R2-023) + R2-120 (Tally card + Payroll Runs tab name, `06cde63`)
 
-## ✅ PHASE L COMPLETE (Session 29) — 8/8 LOWs closed, exit condition met (pytest 254/254 incl. 37 pins, npm build green, counts recomputed from the register, pushed)
+## 🔶 PHASE H IN PROGRESS (Sessions 31-32) — 51 of 188 HIGHs closed
+
+Completed waves:
+- H-auth-settings ✅ 7/7 (R2-182, R2-186, R2-196, R2-285, R2-292, R2-405, R2-554; R2-457 evidence)
+- H-qss ✅ 8/8 (R2-204, R2-212, R2-363, R2-364, R2-391, R2-551, R2-525, R2-526)
+- H-pmp ✅ 14/14 (R2-441, R2-491, R2-552, R2-580, R2-582, R2-583, R2-202, R2-338, R2-340, R2-382, R2-230, R2-253, R2-433, R2-559)
+- H-cf-chat ✅ 8/8 (R2-141, R2-142, R2-143, R2-155, R2-156, R2-158, R2-165, R2-260)
+- H-zoho-tally ✅ 5/5 (R2-188, R2-267, R2-368, R2-542, R2-595)
+- H-miscC ✅ 8/8 (R2-258, R2-263, R2-264, R2-265, R2-284, R2-291, R2-296, R2-297)
+
+Remaining HIGH clusters (~137):
+- budget.py/budgeting.py: ~16 (R2-151/152/153/233/237/242/249/250/274/275/334/375/449/450/451/453)
+- billing.py: ~9 (R2-177/346/350/377/381/400/401/403/480)
+- UNMAPPED/misc frontend: ~80+ scattered across pages
+- zoho/tally/files/subcon/labour: ~25 remainder
+
+## ✅ PHASE L COMPLETE (Session 29) — 8/8 LOWs closed
 
 ## PHASE M — in progress (Sessions 30+)
 - Batch 1 (Session 30): W36 ✅ 4/4 (R2-045, R2-066, R2-193, R2-251), W23 ✅ 3/3 (R2-071, R2-072, R2-428), W05 ✅ 6/6 (R2-298*, R2-336, R2-341*, R2-351, R2-572, R2-573 — *partial, gated by CD-7/CD-8), W11 ⏳ 2/4 (R2-136, R2-255 done; R2-461, R2-566 pending). W02 (other agent): R2-117, R2-119, R2-190, R2-213, R2-268 closed by external commits, registered.

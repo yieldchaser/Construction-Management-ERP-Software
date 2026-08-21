@@ -2,24 +2,32 @@
 
 **If you are a new session, READ THIS FIRST.**
 
-This folder is the single source of truth for the 582-finding bug-fixing campaign. Every new session must start here. Do not start fixing without reading the strategy.
+This folder is the single source of truth for the 582-finding bug-fixing campaign.
 
 ---
 
-## The numbers (as of last sync — 2026-08-15)
+## Current state (as of Session 32 — 2026-08-16)
 
 | Bucket | Count |
 |---|---|
 | Numbers issued (R2-001 … R2-601) | 601 |
 | Retracted as duplicates | 16 |
 | FIX_VERIFIED (founder live-confirmed) | 93 |
-| FIXED (code in, awaiting founder live-verify) | 91 |
+| FIXED (code in, awaiting founder live-verify) | 243 |
 | WONTFIX | 1 |
-| **TODO (your job)** | **396** |
+| **TODO (your job)** | **244** |
 
-By severity of the remaining TODO: **CRITICAL 102 · HIGH 188 · MEDIUM 106 · LOW 0** (re-counted directly from the register after the 184 closed; Phase M in progress).
+By severity of the remaining TODO: **CRITICAL 102 · HIGH 137 · MEDIUM 5 · LOW 0**.
 
-⚠️ **TREE-STATE ALERT (Session 30):** another agent works in this checkout — ~180 uncommitted files exist that are not from this campaign, plus five committed W02 fixes made outside this campaign (R2-117/119/190/213/268, registered). **Do not stage code files blindly; `git add` only the files your wave actually changed. Verify a clean tree before running build/pytest as a baseline.**
+**Phase progress:**
+- ✅ Phase L (LOW): COMPLETE — all 8 closed
+- ✅ Phase M (MEDIUM): COMPLETE — all 121 non-gated closed; 5 remain founder-gated (R2-010/CD-2, R2-030/D5, R2-125/D4, R2-319/D4, R2-385/CD-9)
+- 🔶 Phase H (HIGH): IN PROGRESS — 51 of 188 closed; ~137 remaining
+- ⬜ Phase C (CRITICAL): not started — 102 remaining
+- ⬜ Phase G (founder-gated): blocked on DECISIONS.md answers
+- ⬜ Phase V (live verification): deferred items for the founder's other agent
+
+**Working mode:** the campaign runs in an isolated worktree at `C:\Users\Dell\AppData\Local\Temp\opencode\siteflow-waves` (branch `campaign/waves`) because the main checkout has concurrent activity from another agent. Pushes go via `git push origin campaign/waves:main`.
 
 ---
 
@@ -30,62 +38,76 @@ By severity of the remaining TODO: **CRITICAL 102 · HIGH 188 · MEDIUM 106 · L
 | `START_HERE.md` | This file. | Always first. |
 | `STRATEGY.md` | The per-fix protocol. The "no regression" rule. | Before every fix. |
 | `BLAST_RADIUS_TEMPLATE.md` | The pre-fix / post-fix checklist you fill in for each finding. | Copy it for every fix. |
-| `SESSION_LOG.md` | Append-only log. Every session writes its report at the bottom. | End of every working block. |
-| `AUDIT_FIX_REGISTER.md` | 582 rows, one per actionable finding. The masterwork. STATUS column is yours to update. | To find a finding, or to update its status. |
-| `AUDIT_CANONICAL_FINDINGS.md` | 601-entry human-readable list. The input for fix-prompt authoring. | Skim, don't edit. |
-| `AUDIT_ROUND2_FINDINGS.md` | 1.9 MB / 29,421-line raw audit log. R2-001 → R2-601. | Read the long-form "why" for a specific finding (each finding has a `reg L<line>` line reference). |
-| `WORKLIST.md` | The map of all 582 findings: status summary, the 14 founder-gated items, the 413-fixable queue by wave, evidence-close candidates, working rules. | Start of every session, after this file — pick the next wave from it. |
-| `DECISIONS.md` | Every pending decision (D1–D7, D-006…D-013, CD-1…CD-6) with options and what each gates. | Before touching any gated finding. |
-| `LEARNINGS.md` | Every lesson the campaign has paid for — regressions, stale refs, vocabulary drift, fabrication class, etc. | Before every fix; add to it whenever a fix surprises you. |
+| `SESSION_LOG.md` | Append-only log. Sessions 1–32 recorded. Read the LAST entry to resume. | Start and end of every session. |
+| `AUDIT_FIX_REGISTER.md` | 582 rows, one per actionable finding. STATUS column tracks progress. | To find a finding, or to update its status. |
+| `WORKLIST.md` | The map: phases, gated findings, wave queue, working rules. **Has the execution strategy.** | Start of every session — pick the next batch from it. |
+| `DECISIONS.md` | Every pending decision (D1–D7, D-006…D-013, CD-1…CD-10). | Before touching any gated finding. |
+| `LEARNINGS.md` | Every lesson the campaign has paid for. | Before every fix; add to it when surprised. |
+| `AUDIT_CANONICAL_FINDINGS.md` | 601-entry human-readable list. | Skim, don't edit. |
+| `AUDIT_ROUND2_FINDINGS.md` | 1.9 MB raw audit log with long-form "why" per finding. | Read the long-form for a specific finding. |
 
 ---
 
-## The 5-step protocol (every session)
+## How to resume (new session checklist)
 
-1. **Read `STRATEGY.md`** — it is short. Memorize the 7 anti-regression rules.
-2. **Read `SESSION_LOG.md` end-of-file** — see what the last session did. Resume the wave it ended on.
-3. **Pick a wave** (the register is wave-ordered by `Primary file`).
-4. **For each finding in that wave:** copy `BLAST_RADIUS_TEMPLATE.md`, fill it in, apply the fix, update the register, append to `SESSION_LOG.md`.
-5. **After the wave:** run `npm run build` and `pytest tests/coverage/ -q`. If either fails, fix the regression before moving on.
-
----
-
-## What "FIXED" vs "FIX_VERIFIED" means
-
-- **FIXED** — code change is in, types pass, blast-radius call-sites were re-read. YOU can mark this.
-- **FIX_VERIFIED** — the founder + the live regression-suite (RC-001 … RC-086) has confirmed the fix in production. **Do not mark this yourself.** The existing 93 FIX_VERIFIED entries were promoted by the founder's verification, not by the agent.
+1. `git log --oneline -10` — see where you are.
+2. Read `audit/SESSION_LOG.md` — the LAST entry tells you exactly where the previous session stopped.
+3. Read `audit/WORKLIST.md` — the PHASES section shows which phase you're in and what's next.
+4. Read `audit/DECISIONS.md` — check if any founder decisions have been answered.
+5. Pick findings from the register (TODO rows), group by file cluster, dispatch parallel coder agents.
+6. After each batch: central pin collection → full pytest → npm build → register + session log + counts → push.
 
 ---
 
-## What I can do without the founder
+## The regression guard — READ BEFORE EVERY WAVE
 
-- Read the codebase top to bottom.
-- Edit Python, TypeScript, SQL, Markdown.
-- Run `pytest` and `npm run build` (the latter is slow, use it sparingly).
-- Grep for blast radius.
-- Update the register, the canonical, and the session log.
+Two founder-verified fixes were silently reintroduced by parallel-branch merges. The durable guard is **`backend/tests/coverage/test_regression_pins.py`**: now **147 tripwire tests** that read the current sources and fail loudly, naming the finding, if any closed fix regresses.
 
-## What I cannot do (defer it)
-
-- Hit the live API on `construction-erp-backend-73vm.onrender.com`.
-- Authenticate to the founder's Supabase project.
-- Drive the founder's browser to reproduce a UI-only bug.
-- Verify a Sentry exception is no longer firing.
-- Push to `main` on the user's behalf.
-
-If a finding needs any of these, mark it `DEFERRED:<reason>` in the register's Notes column and move it to the bottom of the wave's working list. The founder will pick it up.
+Rules:
+- It runs with the normal suite (`pytest tests/coverage/`) — a red pin is a REOPENED finding, not a test failure.
+- When you close a fix, ADD a pin for it in the same wave. Don't weaken a pin because the code regressed — fix the code.
+- Every session's final baseline must show the pins green.
 
 ---
 
-## Where pending founder decisions live
+## Batch-mode protocol (how we work now)
 
-**`DECISIONS.md` (this folder) is the consolidated, durable home for every pending decision** — the original D1–D7 set, the later D-006…D-013 markers (whose full wording was lost; surviving context is preserved there), and every campaign-discovered decision (CD-1…CD-6) with its options and the findings it gates. The raw log's own DECISIONS section (search `D1`, `D2`, …) is the historical source; DECISIONS.md is the working one. Read it before guessing — the wrong guess will burn hours.
+The campaign uses **parallel subagent waves** for throughput:
+
+1. Group 8–15 findings by primary file into waves.
+2. Dispatch 4–6 parallel CODER agents, each handling one wave (different files = no conflicts).
+3. Each agent: reads the long-form, applies the minimal fix, commits per finding, reports back.
+4. Orchestrator collects results, dispatches a VERIFIER agent for adversarial review.
+5. Central pin collection: one agent appends all new pins to `test_regression_pins.py`.
+6. Full pytest + npm build as batch verification.
+7. Register + session log + counts + push.
+
+**Key rules:**
+- Never `git add -A` — stage only your files (other agents commit concurrently).
+- Success toasts only after confirmed 2xx; failures alert with server detail.
+- No fabricated data anywhere — honest empty states.
+- Every fix gets a regression pin.
 
 ---
 
-## Where deferred Supabase migrations live
+## Pending founder decisions
 
-Search `AUDIT_ROUND2_FINDINGS.md` for `SUPABASE MIGRATION` and `PENDING SCHEMA`. Migrations are additive-only per repo convention (`supabase/migrations/`). Never modify a column in place — add a new nullable one, backfill, then drop the old one in a later migration.
+See `DECISIONS.md` for the full list. The highest-priority open decisions:
+- **CD-1** (R2-178): approval categories — wire 13 or cut to 2
+- **CD-7** (R2-298): RFQ status transitions — no "sent" writer exists
+- **CD-8** (R2-341): PO close/cancel transition doesn't exist
+- **CD-9** (R2-385): TaskTodo vs Todo vocabulary merge
+- **D6**: Is the demo OTP path live on Render? (2-minute env check)
+
+---
+
+## Convention reminder
+
+- **No drive-by fixes.** Report siblings in Notes, don't fix them now.
+- **No em dashes in user-facing copy** (founder pref). Em dash U+2014 is the empty-value display glyph.
+- **Migrations are additive-only.**
+- **Batch mode:** multiple parallel agents, one verification pass at the end.
+- **Commit messages:** `fix(R2-XXX): <one-line>. Wave: Wxx. Blast-radius: n files.`
 
 ---
 
@@ -96,24 +118,3 @@ Search `AUDIT_ROUND2_FINDINGS.md` for `SUPABASE MIGRATION` and `PENDING SCHEMA`.
 3. Read the affected finding's Notes column in the register.
 4. Update the register back to `TODO` with a `REGRESSED:<reason>` note.
 5. Append to `SESSION_LOG.md`.
-
----
-
-## Regression guard — READ BEFORE EVERY WAVE
-
-Two founder-verified fixes were silently reintroduced by parallel-branch merges (R2-096's party-balance formula, R2-054's PR-number loop — both broken copies of the same Finance rebuild won a merge). The durable guard is **`backend/tests/coverage/test_regression_pins.py`**: 27 tripwire tests that read the current sources and fail loudly, naming the finding, if any closed fix regresses (formula shapes, allowlist membership, filter presence, fabrication absence — incl. a repo-wide `unsplash` = 0 walk).
-
-Rules:
-- It runs with the normal suite (`pytest tests/coverage/`) — a red pin is a REOPENED finding, not a test failure.
-- When you close a fix, ADD a pin for it in the same wave. Don't weaken a pin because the code regressed — fix the code.
-- Every session's final baseline must show the pins green.
-
----
-
-## Convention reminder
-
-- **No drive-by fixes.** If you're in `finance.py` to fix R2-XXX and you spot R2-YYY, write it down in the Notes column, do not fix it now.
-- **No em dashes in user-facing copy** (founder pref).
-- **Migrations are additive-only.**
-- **One wave = one working block.** Don't bounce between files.
-- **Commit messages:** `fix(R2-XXX): <one-line>. Blast-radius: n files. Wave: Wyy.`

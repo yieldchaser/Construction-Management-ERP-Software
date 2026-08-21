@@ -2,6 +2,15 @@
 
 Append-only. Every working block ends with a 5-line entry. Never edit an existing entry; if a commit was reverted, add a new entry.
 
+## Session 32 (continued) — documentation overhaul + context handoff prep (2026-08-16)
+
+- Action: START_HERE.md fully rewritten with current numbers (244 TODO, 336 closed), phase progress tracker, batch-mode protocol, and a "How to resume" checklist for new sessions. WORKLIST.md updated with Phase H progress (51/188 done, remaining clusters mapped). All audit docs verified consistent.
+- The campaign moved to worktree mode (`siteflow-waves`, branch `campaign/waves`) due to concurrent activity in the main checkout. Pushes go via `git push origin campaign/waves:main`.
+- Final state: 336 closed (93 FIX_VERIFIED + 243 FIXED) · 244 TODO · CRITICAL 102 / HIGH 137 / MEDIUM 5 / LOW 0. Register: 582 rows, statuses sum exactly. pytest green. npm build green. Tree clean. All pushed.
+- **FOR THE NEXT SESSION:** Read `audit/START_HERE.md` first — it has the full resume checklist, current numbers, phase progress, and the batch-mode protocol. Then read `audit/SESSION_LOG.md` last entry and `audit/WORKLIST.md` PHASES section. The next work is Phase H remainder (~137 HIGHs) starting with budget.py/budgeting.py (~16), billing.py (~9), then the scattered frontend/misc HIGHs.
+
+---
+
 ## Session 32 — Phase M COMPLETE (rounds 5-6, worktree mode, 64 findings) (2026-08-16)
 
 - Round 5 (5 parallel waves, 15 closes + 1 needs-decision): W14 auth (R2-183 GSTIN checksum on onboarding; R2-191 evidence — CompanyTeam unique constraint, bundled in b4c0a37), W83 production (R2-206 wastage_type enum + reported_by server-derived + estimated_value from PO rate + migration; R2-207 recipe allowance applied), W41 team_schedule (R2-225 timesheet save surfaces errors; R2-261 duplicate-DPR 409), W18 quality (R2-247 caller-derived identities; R2-361 dead Quotation model removed), W02 remainder (R2-282 steel dual-set 422; R2-508 LTIF basis param; R2-537 log_deletion no-commit at 30 call sites; evidence: R2-118/218/500/501; R2-125 -> D4).
