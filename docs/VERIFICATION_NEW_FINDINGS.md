@@ -211,6 +211,65 @@ nothing marking either as absent. Neighbouring fields in the same object literal
 correctly with `"—"` (`category`, `customerName`, `projectStage`), so the pattern to follow is
 already there.
 
+### R2-714 · CRITICAL · Internal Transfer moves money between three hardcoded bank accounts that do not exist
+
+**Found while verifying:** R2-017, by sweeping the class instead of the four files.
+**File:** `frontend/src/app/c/[company_id]/d/finance/page.tsx` lines 193-194, 3072-3073,
+3083-3084, 3106-3107, 3122-3123. Deployed on `origin/main`.
+
+Finance → Transaction → **+ Internal Transfer** offers a fixed pair of `<select>`s:
+
+- **From**: `Main Savings Account (HDFC)` / `Escrow Account (SBI)`
+- **To**: `Petty Cash Account (HDFC)` / `Escrow Account (SBI)`
+
+The component state also *defaults* to these string literals
+(`useState("Main Savings Account")`, `useState("Petty Cash Account")`), so a transfer submitted
+without touching the dropdowns still carries them.
+
+**Live evidence, two independent rungs.**
+
+1. Browser, production, test company *ZZ R8 Throwaway*: the two selects enumerate exactly the
+   options above. The tenant's own accounts are not offered.
+2. Supabase: `bank_accounts` holds **0 rows for the entire database** — not merely none for this
+   tenant. `cash_accounts` likewise 0 for this tenant. No account named Escrow, Main Savings or
+   Petty Cash exists anywhere.
+
+**Impact.** Every internal transfer is recorded against an account name that corresponds to no
+account record, for any company. Account selection is a free-text literal rather than a foreign
+key. This is a money-movement path, so it should be treated ahead of the rest of this batch —
+and what the endpoint actually persists needs checking before anyone transfers anything.
+
+### R2-715 · HIGH · the item-wise sales report still filters on fabricated clients and items
+
+**Found while verifying:** R2-017 — whose closure explicitly claims it removed *"the hardcoded
+demo filter options in reports/item-wise-sales/page.tsx (-3)"*.
+
+Three were removed. Six remain in the same file:
+
+- Client filter (lines 88-90): `L&T Construction`, `Public Works Dept`, `Alpha Builders Ltd`
+- Item filter (lines 112-114): `Reinforcement Steel`, `Ready Mix Concrete`, `OPC Cement`
+
+Two consequences. The report filters by a client the tenant does not have, so it returns nothing
+and reads as "no sales" rather than "wrong filter". And `L&T Construction` is a **real competitor's
+name** shipped in the product — the campaign scrubbed competitor branding elsewhere, so this is a
+straggler from that sweep too.
+
+This one is worth noting as a process signal: the closure counted lines removed and stopped, rather
+than re-reading the file for the same pattern.
+
+### R2-716 · HIGH · attendance branch selector is hardcoded to two invented offices
+
+**File:** `frontend/src/app/c/[company_id]/d/attendance/page.tsx` lines 179, 1260-1262, and the
+same block in `p/[project_id]/attendance/page.tsx`.
+
+The company-branch `<select>` offers only `Pune Main Office (Branch #1)` and
+`Mumbai Central (Branch #2)`, and `company_branch` initialises to the literal string
+`"Select Company Address"` — the placeholder itself is a submittable value, so an untouched form
+posts the placeholder as data.
+
+Attendance is geofenced, so branch is not cosmetic. Needs checking against what the punch endpoint
+does with an unrecognised branch string.
+
 ## Summary
 
 | id | sev | class | from |
@@ -228,6 +287,24 @@ already there.
 | R2-711 | MEDIUM | evidence class | — |
 | R2-712 | CRITICAL | live prod defect, proved in browser | found via R2-017 |
 | R2-713 | MEDIUM | fabricated fallback data | found via R2-017 |
+| R2-714 | CRITICAL | live prod defect, money path, proved in browser + SQL | found via R2-017 class sweep |
+| R2-715 | HIGH | fabricated filters + competitor brand | found via R2-017 class sweep |
+| R2-716 | HIGH | fabricated branch list on a geofenced path | found via R2-017 class sweep |
+
+## Verified clean so far
+
+Recorded so the pass is not only a list of complaints. Each claim was re-checked against the tree,
+not taken from the note.
+
+| id | sev | claim | result |
+|---|---|---|---|
+| R2-017 | CRITICAL | fabricated demo data gone from 4 named files | **holds** — zero matches in all four |
+| R2-110 | CRITICAL | holiday seed gone, `fetchHolidays` GETs, delete calls the API | **holds** — `hr/page.tsx:276,278,305,307` |
+| R2-061 | MEDIUM | `setFleet` only ever called with API data or `[]` | **holds** — only `:108` and `:133` |
+| R2-085 | LOW | no internal phase labels remain | **holds** — only ZATCA "Phase 1", legitimate domain term |
+
+The four closures are accurate about what they claim. R2-712..R2-716 exist because three of them
+were scoped to named files rather than to the defect class.
 
 R2-701 and R2-711 together are the highest-value pair: one is a live defect, the other is the
 reason it could be closed as fixed without anyone noticing.
