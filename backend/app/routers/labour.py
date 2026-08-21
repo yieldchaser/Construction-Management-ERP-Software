@@ -205,6 +205,8 @@ def create_bocw(req: BOCWCreate, db: Session = Depends(get_db), current_user: Us
     get_company_membership(db, current_user, req.company_id)
     verify_project_in_company(db, req.project_id, req.company_id)
     require_permission(db, current_user, req.company_id, "attendance:edit")
+    if req.wages_paid > 0 and req.workers_count <= 0:
+        raise HTTPException(status_code=422, detail="workers_count must be greater than zero when wages are recorded")
     record = BOCWRecord(
         company_id=req.company_id,
         project_id=req.project_id,
@@ -261,6 +263,10 @@ def create_muster_roll(req: MusterRollCreate, db: Session = Depends(get_db), cur
     get_company_membership(db, current_user, req.company_id)
     verify_project_in_company(db, req.project_id, req.company_id)
     require_permission(db, current_user, req.company_id, "attendance:edit")
+    if req.hours_worked > req.workers_present * 24:
+        raise HTTPException(status_code=422, detail="hours_worked cannot exceed workers_present × 24")
+    if req.overtime_hours > req.hours_worked:
+        raise HTTPException(status_code=422, detail="overtime_hours cannot exceed hours_worked")
     record = MusterRoll(
         company_id=req.company_id,
         project_id=req.project_id,
