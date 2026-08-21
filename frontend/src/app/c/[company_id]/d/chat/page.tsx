@@ -287,6 +287,9 @@ export default function ChatPage() {
         setActiveGroup(null);
         setShowDropdown(false);
         fetchGroups();
+      } else {
+        const err = await res.json().catch(() => null);
+        console.error("Failed to delete group", err?.detail || res.status);
       }
     } catch (e) {
       console.error("Failed to delete group", e);

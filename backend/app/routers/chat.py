@@ -273,6 +273,18 @@ def add_member(group_id: uuid.UUID, payload: ChatGroupMemberCreate, db: Session 
     return member
 
 
+@router.delete("/groups/{group_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_group(group_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    group = db.query(ChatGroup).filter(ChatGroup.id == group_id).first()
+    if not group:
+        raise HTTPException(status_code=404, detail="Chat group not found")
+    get_company_membership(db, current_user, group.company_id)
+    require_group_admin(db, current_user, group.id)
+    group.is_archived = True
+    db.commit()
+    return None
+
+
 @router.delete("/groups/{group_id}/members/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
 def remove_member(group_id: uuid.UUID, user_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     member = db.query(ChatGroupMember).filter(
