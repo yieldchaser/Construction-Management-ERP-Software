@@ -256,6 +256,66 @@ the fetch the page already performs elsewhere, and give every placeholder option
 lint rule or a test asserting no `<option value>` in `app/c` matches a proper-noun pattern outside
 the vocabulary list, so the class cannot return.
 
+## Class E — one class finding
+
+### R2-717 · HIGH · 29 closed findings disclose unresolved work in their own note and carry no tracking id
+
+**Method.** Every closed row's note was matched against explicit hand-off phrasing — `Sibling:`,
+`follow-up`, `is deferred`, `not implemented`, `left open`, `remains open`, `out of scope`. Loose
+matches on the bare word "still" were excluded because they produce false positives on innocent
+phrasing.
+
+**40 of the 315 closed rows disclose unresolved work. 11 name a tracking id. 29 do not.**
+By severity of the parent row: 1 CRITICAL, 3 HIGH, 24 MEDIUM, 1 LOW.
+
+This is the same shape as R2-191, which wrote *"prod needs a Supabase migration to dedupe existing
+rows + CREATE UNIQUE INDEX"* into its note and was then closed `FIXED` — the remaining work was
+identified honestly and then lost, because a note is not a queue. The disclosure is good practice.
+The gap is that nothing converts it into a tracked row.
+
+#### Notable instances
+
+**R2-068 (parent CRITICAL) — the disclosure understates it.** The note says `gatePhotoUrl` is
+*"an in-session objectURL — nothing persists it server-side"*. What the code actually does
+(`d/procurement/page.tsx:1066-1069`):
+
+```
+if (f) setGrnGatePhoto(URL.createObjectURL(f));
+...
+{grnGatePhoto && <span className="text-emerald-400 font-bold mt-1 block">✓ Photo Attached</span>}
+```
+
+The user selects a GRN gate photo, is told **"✓ Photo Attached"** in green, and the file is
+discarded on navigation. It is never sent — `photo_url` appears nowhere in the request, and the
+`gatePhotoUrl` type field at `:66` is now referenced by nothing. So this is not merely a missing
+upload: it is a **fabricated success affirmation**, which is the exact defect class R2-068 was
+raised to remove. The fix deleted the stock-photo URL and left the false confirmation in place.
+
+**R2-007 (parent HIGH)** — `handleCreatePO` still prepends the PO row optimistically even when the
+POST fails. The note names it "the same fake-optimistic family" and defers it. Untracked.
+
+**R2-008 (parent HIGH)** — wiring the RFQ drawer to the real `rfq.py` endpoints is deferred pending
+an API contract. The fabricated data is gone and the empty state is honest, so the parent closure
+is sound, but the feature is inert and nothing tracks finishing it.
+
+**R2-336 (parent MEDIUM)** — *"Sibling: `inv.unit` still overwritten by the movement"*. The fix
+stopped material movements reclassifying the inventory master **category**; the same last-write-wins
+overwrite on **unit** survives, disclosed and untracked.
+
+**R2-378 (parent MEDIUM)** — *"Sibling: `LibraryRetention` still unreferenced by the write path"*.
+
+#### Why this matters more than the individual items
+
+Each parent closure is defensible — the finding as filed was fixed, and the residue was stated
+plainly rather than hidden. But 29 pieces of known remaining work now exist only inside prose in a
+column of a register, where no worklist, no count and no severity triage can reach them. They are
+invisible to the campaign's own "how much is left" figure.
+
+**Fix direction.** Two steps, both cheap. Sweep the 29 notes and open a row for each piece of
+residue, inheriting a severity of its own rather than the parent's. Then make the closure checklist
+refuse a `FIXED` whose note contains hand-off phrasing without an accompanying id — the same shape
+as R2-711, a rule that closes the class rather than the instances.
+
 ## Verified clean so far
 
 Recorded so the pass is not only a list of complaints. Each claim was re-checked against the tree,
@@ -291,8 +351,9 @@ were scoped to the files a finding named rather than to the defect class.
 | ~~R2-714~~ | — | merged into R2-712 as instance 3, the money path | — |
 | ~~R2-715~~ | — | merged into R2-712 as instance 6 | — |
 | ~~R2-716~~ | — | merged into R2-712 as instances 7-8 | — |
+| **R2-717** | **HIGH** | **class finding — 29 closed rows disclose untracked residue** | register-wide sweep |
 
-**Twelve live findings.** R2-713..R2-716 were filed separately first and are struck through, not
+**Thirteen live findings.** R2-713..R2-716 were filed separately first and are struck through, not
 deleted, so the history stays traceable.
 
 Three to act on first, for different reasons:
