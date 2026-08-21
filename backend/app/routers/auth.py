@@ -9,7 +9,7 @@ from pydantic import BaseModel, EmailStr, Field, field_validator
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from app.database import get_db
-from app.auth import create_access_token, get_current_active_company_user, get_current_user
+from app.auth import create_access_token, get_company_membership, get_current_active_company_user, get_current_user
 from app.permissions import effective_permissions
 from app.config import settings
 from app.rate_limit import limiter
@@ -909,3 +909,13 @@ def my_companies(current_user: models.User = Depends(get_current_user), db: Sess
         for c in companies
     ]
     return {"companies": result}
+
+
+@router.post("/switch-company/{company_id}")
+def switch_company(
+    company_id: uuid.UUID,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    get_company_membership(db, current_user, company_id)
+    return _mint_session_response(db, current_user, company_id, onboarding=False)
