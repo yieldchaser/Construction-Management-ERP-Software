@@ -42,6 +42,23 @@ tables the only unique index is `<table>_pkey` on `id`.
 **Impact.** Duplicate PO, GRN, indent, bill, work-order and cost-code numbers are accepted in
 production today. This is the exact defect R2-559 was raised to fix.
 
+**Is this just deploy lag?** No, and the question is worth answering precisely because it applies
+to every `NOT_IN_PROD` verdict.
+
+- Both fixes are on **`origin/main`**, not only `campaign/waves` — `e0f2f6e` and `b4c0a37` are
+  both ancestors of `origin/main`, which is what Render deploys.
+- The running build is current. `bills.wo_id` exists in production, and the only mechanism that
+  creates it is `ensure_postgres_schema_sync` running at boot against code that already contains
+  `e2a6963` (2026-08-21 11:56). So the live instance booted from a build at or after that commit,
+  which is three commits before the tip.
+- **Most decisive: deploy currency cannot change the outcome.** A model-level `UniqueConstraint`
+  has no path to Postgres at all. `create_all` only creates missing *tables*; the boot sync only
+  adds *columns*. No amount of redeploying will produce these constraints — a migration is the
+  only route, and none exists.
+
+That is what separates `NOT_IN_PROD` from "not shipped yet". The test is not "is the commit
+deployed" but "is there any mechanism by which this fix could take effect in the running system".
+
 **Fix direction.** One migration creating the six unique indexes. **Do it now:** the duplicate
 count is currently **zero** on all six pairs, so the migration applies cleanly. Once real
 duplicates exist, `CREATE UNIQUE INDEX` fails and someone has to decide which row survives.
