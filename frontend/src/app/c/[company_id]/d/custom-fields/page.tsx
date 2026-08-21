@@ -17,6 +17,15 @@ interface Field {
   is_active: boolean;
 }
 
+interface FieldValueRow {
+  field_id: string;
+  entity_type: string;
+  value_text: string | null;
+  value_number: number | null;
+  value_date: string | null;
+  value_json: unknown;
+}
+
 export default function CustomFieldsPage() {
   const params = useParams();
   const companyId = params?.company_id as string;
@@ -28,6 +37,7 @@ export default function CustomFieldsPage() {
   const [showValueModal, setShowValueModal] = useState(false);
   const [selectedField, setSelectedField] = useState<Field | null>(null);
   const [message, setMessage] = useState("");
+  const [values, setValues] = useState<FieldValueRow[]>([]);
 
   const [fieldForm, setFieldForm] = useState({
     entity_type: "project",
@@ -55,11 +65,29 @@ export default function CustomFieldsPage() {
     } catch (e) { console.error("Failed to load fields", e); }
   };
 
-  const fetchValues = async () => {
-    if (!selectedField) return;
+  const fetchValues = async (entityType?: string) => {
+    const type = entityType || selectedField?.entity_type;
+    if (!type || !projectId) return;
     try {
-      await fetch(`${getApiHost()}/apis/v3/custom-fields/values/${selectedField.entity_type}/${projectId}`, { headers: authHeaders() });
+      const res = await fetch(`${getApiHost()}/apis/v3/custom-fields/values/${type}/${projectId}`, { headers: authHeaders() });
+      if (res.ok) {
+        const data = await res.json();
+        const rows: FieldValueRow[] = Array.isArray(data) ? data : [];
+        setValues((prev) => [...prev.filter((v) => v.entity_type !== type), ...rows]);
+      }
     } catch (e) { console.error("Failed to load values", e); }
+  };
+
+  const formatFieldValue = (f: Field): string => {
+    const v = values.find((row) => row.field_id === f.id);
+    if (!v) return "Not set";
+    if (f.field_type === "number") return v.value_number === null || v.value_number === undefined ? "Not set" : String(v.value_number);
+    if (f.field_type === "date") return v.value_date ? new Date(v.value_date).toLocaleDateString() : "Not set";
+    if (v.value_json !== null && v.value_json !== undefined) {
+      if (Array.isArray(v.value_json)) return v.value_json.length ? v.value_json.join(", ") : "Not set";
+      return String(v.value_json);
+    }
+    return v.value_text || "Not set";
   };
 
   useEffect(() => {
@@ -69,9 +97,15 @@ export default function CustomFieldsPage() {
 
   useEffect(() => {
     if (!selectedField) return;
-    const id = setTimeout(() => fetchValues(), 0);
+    const id = setTimeout(() => fetchValues(selectedField.entity_type), 0);
     return () => clearTimeout(id);
   }, [selectedField]);
+
+  useEffect(() => {
+    const types = Array.from(new Set(fields.map((f) => f.entity_type)));
+    const id = setTimeout(() => types.forEach((t) => fetchValues(t)), 0);
+    return () => clearTimeout(id);
+  }, [fields]);
 
   const handleCreateField = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -121,7 +155,7 @@ export default function CustomFieldsPage() {
       if (res.ok) {
         setMessage("Value saved");
         setShowValueModal(false);
-        if (selectedField) fetchValues();
+        if (selectedField) fetchValues(selectedField.entity_type);
       } else {
         const err = await res.json();
         setMessage(err.detail || "Failed");
@@ -172,6 +206,10 @@ export default function CustomFieldsPage() {
                 <div className="flex items-center justify-between text-xs text-muted mb-4">
                   <span className="capitalize">{f.entity_type}</span>
                   {f.is_required && <span className="text-red-400">Required</span>}
+                </div>
+                <div className="text-xs mb-4 truncate">
+                  <span className="text-muted">Current value: </span>
+                  <span className="text-foreground font-medium">{formatFieldValue(f)}</span>
                 </div>
                 <button onClick={() => openValueModal(f)} className="w-full px-3 py-2 bg-input hover:bg-elevated text-foreground rounded-md text-xs font-medium transition-all">
                   Set Value
