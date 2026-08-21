@@ -500,6 +500,8 @@ def get_boq_document_pdf(doc_id: UUID, db: Session = Depends(get_db), current_us
         f"BOQ Value: {boq_value:.2f}",
         f"Line Items: {len(items)}",
     ]
+    if doc.revised_amount is not None:
+        totals_lines.append(f"Revised Amount: {float(doc.revised_amount):.2f}")
 
     pdf_bytes = generate_document_pdf(
         title="Bill of Quantities (BOQ)",
@@ -616,7 +618,16 @@ def create_boq_revision(
         .first()
     )
     next_no = (last.revision_no + 1) if last else 1
-    previous_amount = last.revised_amount if last else None
+    if last:
+        previous_amount = last.revised_amount
+    else:
+        item_sum = sum(
+            _item_amount(i)
+            for i in db.query(BOQItem).filter(BOQItem.boq_document_id == doc_id).all()
+        )
+        previous_amount = (
+            float(doc.revised_amount) if doc.revised_amount is not None else round(item_sum, 2)
+        )
 
     rev = BOQRevision(
         boq_document_id=doc_id,
