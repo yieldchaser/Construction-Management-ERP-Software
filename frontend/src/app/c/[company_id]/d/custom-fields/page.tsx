@@ -143,10 +143,13 @@ export default function CustomFieldsPage() {
         entity_type: valueForm.entity_type,
         entity_id: valueForm.entity_id,
         company_id: companyId,
-        value_text: valueForm.value_text || "",
       };
-      if (!(body.value_number === 0 && valueForm.value_text)) {
+      if (selectedField?.field_type === "number") {
         body.value_number = valueForm.value_number;
+      } else if (selectedField?.field_type === "date") {
+        body.value_date = valueForm.value_date || null;
+      } else {
+        body.value_text = valueForm.value_text || "";
       }
       const res = await fetch(`${getApiHost()}/apis/v3/custom-fields/values`, {
         method: "POST",
