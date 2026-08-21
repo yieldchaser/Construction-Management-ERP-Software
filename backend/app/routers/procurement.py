@@ -968,7 +968,9 @@ def patch_inventory(inventory_id: UUID, req: InventoryPatchRequest, db: Session 
     require_permission(db, current_user, project.company_id, "procurement:edit")
     if req.category is not None:
         inv.category = req.category
-    if req.unit is not None:
+    if req.unit is not None and req.unit != inv.unit:
+        if float(inv.on_hand_qty or 0) != 0 or float(inv.reserved_qty or 0) != 0:
+            raise HTTPException(status_code=422, detail="Cannot change the unit of an item that holds stock; restate the quantity through movements instead")
         inv.unit = req.unit
     db.commit()
     db.refresh(inv)
