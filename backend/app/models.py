@@ -410,6 +410,9 @@ class DrawingPin(Base):
 
 class MaterialIndent(Base):
     __tablename__ = "material_indents"
+    __table_args__ = (
+        UniqueConstraint("company_id", "indent_number", name="uq_material_indents_company_id_indent_number"),
+    )
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
     project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
@@ -431,6 +434,9 @@ class MaterialIndentItem(Base):
 
 class PurchaseOrder(Base):
     __tablename__ = "purchase_orders"
+    __table_args__ = (
+        UniqueConstraint("company_id", "po_number", name="uq_purchase_orders_company_id_po_number"),
+    )
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
     project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
@@ -463,6 +469,9 @@ class PurchaseOrderItem(Base):
 
 class GoodsReceiptNote(Base):
     __tablename__ = "goods_receipt_notes"
+    __table_args__ = (
+        UniqueConstraint("company_id", "grn_number", name="uq_goods_receipt_notes_company_id_grn_number"),
+    )
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
     project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
@@ -569,6 +578,9 @@ class ProductionBatchMaterial(Base):
 
 class WorkOrder(Base):
     __tablename__ = "work_orders"
+    __table_args__ = (
+        UniqueConstraint("company_id", "wo_number", name="uq_work_orders_company_id_wo_number"),
+    )
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
     project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
@@ -593,6 +605,9 @@ class WorkOrderItem(Base):
 
 class Bill(Base):
     __tablename__ = "bills"
+    __table_args__ = (
+        UniqueConstraint("company_id", "invoice_number", name="uq_bills_company_id_invoice_number"),
+    )
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
     project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
@@ -1943,6 +1958,9 @@ class LibraryAssetType(Base):
 
 class LibraryCostCode(Base):
     __tablename__ = "library_cost_codes"
+    __table_args__ = (
+        UniqueConstraint("company_id", "code", name="uq_library_cost_codes_company_id_code"),
+    )
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
     code = Column(String(100), nullable=False)
