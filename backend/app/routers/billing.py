@@ -12,7 +12,7 @@ from app.models import (
     DebitNote, CreditNote, CompanyTeam, User, Company, LibraryParty, Project, ThreeWayMatch, ProjectParty
 )
 from app import models
-from app.routers.custom_fields import CustomFieldValueInput, upsert_values_for_entity
+from app.routers.custom_fields import CustomFieldValueInput, upsert_values_for_entity, enforce_required_custom_fields
 from app.zatca import build_zatca_payload
 from app.workflow_controls import enforce_entry_creation_window, enforce_entry_editing_window, get_company, get_default_terms
 from app.utils.pdf_generator import generate_document_pdf
@@ -640,6 +640,8 @@ def create_bill(req: BillCreateRequest, db: Session = Depends(get_db), current_u
     get_company_membership(db, current_user, req.company_id)
     verify_project_in_company(db, req.project_id, req.company_id)
     require_permission(db, current_user, req.company_id, "billing:edit")
+    enforce_required_custom_fields(db, req.company_id, "invoice", [cf.model_dump() for cf in req.custom_fields])
+    enforce_required_custom_fields(db, req.company_id, "bill", [cf.model_dump() for cf in req.custom_fields])
 
     # Check if invoice number already exists for company
     existing = db.query(Bill).filter(

@@ -7,7 +7,7 @@ from typing import List, Optional
 from app.database import get_db
 from app import models
 from app.auth import get_current_user, verify_company_access, verify_project_access, get_company_membership, require_permission
-from app.routers.custom_fields import CustomFieldValueInput, upsert_values_for_entity
+from app.routers.custom_fields import CustomFieldValueInput, upsert_values_for_entity, enforce_required_custom_fields
 import uuid
 
 router = APIRouter(prefix="/projects", tags=["Projects"], dependencies=[Depends(get_current_user)])
@@ -285,6 +285,7 @@ def project_summary(company_id: uuid.UUID, user_id: Optional[uuid.UUID] = None, 
 def create_project(payload: ProjectCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
     get_company_membership(db, current_user, payload.company_id)
     require_permission(db, current_user, payload.company_id, "projects:edit")
+    enforce_required_custom_fields(db, payload.company_id, "project", [cf.model_dump() for cf in payload.custom_fields])
     proj = models.Project(
         company_id=payload.company_id,
         name=payload.name,
@@ -339,6 +340,8 @@ def update_project(project_id: uuid.UUID, payload: ProjectUpdate, db: Session = 
         setattr(p, field, value)
     if p.planned_start_date and p.planned_end_date and p.planned_end_date < p.planned_start_date:
         raise HTTPException(status_code=422, detail="planned_end_date cannot be before planned_start_date")
+    if custom_fields:
+        enforce_required_custom_fields(db, p.company_id, "project", custom_fields)
     upsert_values_for_entity(db, p.company_id, "project", p.id, custom_fields)
     db.commit()
     db.refresh(p)

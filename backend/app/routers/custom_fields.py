@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
 from app.database import get_db
 from app.auth import get_current_user, verify_company_access, get_company_membership, require_permission
-from app.models import CustomField, CustomFieldValue, User
+from app.models import CustomField, CustomFieldValue, User, Project, Task, Bill, CRMLead
 
 router = APIRouter(prefix="/custom-fields", tags=["Custom Fields"], dependencies=[Depends(get_current_user)])
 
@@ -15,6 +15,14 @@ CUSTOM_FIELD_ENTITY_TYPES = ("project", "task", "bill", "invoice", "lead", "vend
 CUSTOM_FIELD_TYPES = ("text", "number", "date", "select", "multiselect", "checkbox")
 CUSTOM_FIELD_ENTITY_TYPE_PATTERN = f"^({'|'.join(CUSTOM_FIELD_ENTITY_TYPES)})$"
 CUSTOM_FIELD_TYPE_PATTERN = f"^({'|'.join(CUSTOM_FIELD_TYPES)})$"
+
+CUSTOM_FIELD_ENTITY_MODELS = {
+    "project": Project,
+    "task": Task,
+    "bill": Bill,
+    "invoice": Bill,
+    "lead": CRMLead,
+}
 
 
 class CustomFieldCreate(BaseModel):
@@ -190,6 +198,34 @@ def upsert_values_for_entity(
             ))
 
 
+def enforce_required_custom_fields(
+    db: Session,
+    company_id: uuid.UUID,
+    entity_type: str,
+    values: Optional[List[dict]],
+) -> None:
+    provided = set()
+    for item in values or []:
+        field_id = item.get("field_id") if isinstance(item, dict) else getattr(item, "field_id", None)
+        if field_id:
+            provided.add(str(field_id))
+    missing = [
+        f.field_label or f.field_name
+        for f in db.query(CustomField).filter(
+            CustomField.company_id == company_id,
+            CustomField.entity_type == entity_type,
+            CustomField.is_active == True,
+            CustomField.is_required == True,
+        ).all()
+        if str(f.id) not in provided
+    ]
+    if missing:
+        raise HTTPException(
+            status_code=422,
+            detail="Missing required custom field(s): " + ", ".join(missing),
+        )
+
+
 @router.post("/fields", response_model=CustomFieldResponse, status_code=status.HTTP_201_CREATED)
 def create_field(payload: CustomFieldCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     require_permission(db, current_user, payload.company_id, "settings:manage")
@@ -214,15 +250,64 @@ def list_fields(company_id: uuid.UUID, entity_type: Optional[str] = None, db: Se
 @router.post("/values", response_model=CustomFieldValueResponse, status_code=status.HTTP_201_CREATED)
 def set_value(payload: CustomFieldValueCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     require_permission(db, current_user, payload.company_id, "settings:manage")
+    field = db.query(CustomField).filter(
+        CustomField.id == payload.field_id,
+        CustomField.company_id == payload.company_id
+    ).first()
+    if not field:
+        raise HTTPException(status_code=404, detail="Custom field not found")
+    entity_model = CUSTOM_FIELD_ENTITY_MODELS.get(payload.entity_type)
+    if entity_model is None:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Custom field values cannot be attached to entity_type '{payload.entity_type}'",
+        )
+    entity = db.query(entity_model).filter(
+        entity_model.id == payload.entity_id,
+        entity_model.company_id == payload.company_id
+    ).first()
+    if not entity:
+        raise HTTPException(status_code=404, detail=f"{payload.entity_type} not found in this company")
+
+    label = field.field_label or field.field_name
+    data = {
+        "company_id": payload.company_id,
+        "field_id": payload.field_id,
+        "entity_type": payload.entity_type,
+        "entity_id": payload.entity_id,
+        "value_text": None,
+        "value_number": None,
+        "value_date": None,
+        "value_json": None,
+    }
+    if field.field_type == "number":
+        if payload.value_text not in (None, "") or payload.value_date is not None or payload.value_json is not None:
+            raise HTTPException(status_code=422, detail=f"Field '{label}' expects a number value")
+        if payload.value_number is not None:
+            try:
+                data["value_number"] = Decimal(str(payload.value_number))
+            except InvalidOperation:
+                raise HTTPException(status_code=422, detail=f"Field '{label}' expects a number value")
+    elif field.field_type == "date":
+        if payload.value_text not in (None, "") or payload.value_number is not None or payload.value_json is not None:
+            raise HTTPException(status_code=422, detail=f"Field '{label}' expects a date value")
+        data["value_date"] = payload.value_date
+    elif field.field_type in ("multiselect", "checkbox"):
+        if payload.value_text not in (None, "") or payload.value_number is not None or payload.value_date is not None:
+            raise HTTPException(status_code=422, detail=f"Field '{label}' expects a {'list' if field.field_type == 'multiselect' else 'boolean'} value")
+        if field.field_type == "checkbox" and payload.value_json is not None and not isinstance(payload.value_json, bool):
+            raise HTTPException(status_code=422, detail=f"Field '{label}' expects a boolean value")
+        data["value_json"] = payload.value_json
+    else:
+        if payload.value_number is not None or payload.value_date is not None or payload.value_json is not None:
+            raise HTTPException(status_code=422, detail=f"Field '{label}' expects a text value")
+        data["value_text"] = payload.value_text
+
     existing = db.query(CustomFieldValue).filter(
         CustomFieldValue.field_id == payload.field_id,
         CustomFieldValue.entity_type == payload.entity_type,
         CustomFieldValue.entity_id == payload.entity_id
     ).first()
-
-    data = payload.model_dump()
-    if data.get("value_number") is not None:
-        data["value_number"] = Decimal(str(data["value_number"]))
 
     if existing:
         for k, v in data.items():
