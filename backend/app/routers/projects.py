@@ -200,7 +200,7 @@ class ProjectCreate(BaseModel):
 class ProjectUpdate(BaseModel):
     name: Optional[str] = None
     code: Optional[str] = None
-    status: Optional[str] = None
+    status: Optional[str] = Field(None, pattern=r"^(Not Started|Planning|Ongoing|On Hold|Onhold|Completed|Cancelled)$")
     address: Optional[str] = None
     city: Optional[str] = None
     state: Optional[str] = None
