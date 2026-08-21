@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
@@ -23,8 +23,9 @@ class ThreeWayMatchCreate(BaseModel):
     invoice_id: Optional[uuid.UUID] = None
     invoiced_amount: float = Field(..., ge=0)
     variance_reason: Optional[str] = None
-    matched_by: Optional[uuid.UUID] = None
-    match_status: str = "pending"
+    # R2-241: match_status and matched_by are server-computed. The verdict is
+    # derived from the variance, never accepted from the request body; the actor
+    # is the authenticated user, not a caller-chosen UUID.
 
 
 class ThreeWayMatchResponse(BaseModel):
@@ -114,7 +115,10 @@ def create_match(payload: ThreeWayMatchCreate, db: Session = Depends(get_db), cu
 
     invoiced_amount = float(payload.invoiced_amount)
     variance = round(invoiced_amount - po_amount, 2)
-    match_status = payload.match_status if payload.match_status else ("matched" if abs(variance) <= max(MATCH_TOLERANCE_MIN, abs(po_amount) * MATCH_TOLERANCE_PCT) else "mismatch")
+    # R2-241: the verdict is always server-computed from the variance; the
+    # caller cannot supply or override match_status.
+    tolerance = max(MATCH_TOLERANCE_MIN, abs(po_amount) * MATCH_TOLERANCE_PCT)
+    match_status = "matched" if abs(variance) <= tolerance else "mismatch"
 
     match = ThreeWayMatch(
         company_id=payload.company_id,
@@ -128,8 +132,8 @@ def create_match(payload: ThreeWayMatchCreate, db: Session = Depends(get_db), cu
         invoiced_amount=Decimal(str(invoiced_amount)),
         variance_amount=Decimal(str(variance)),
         variance_reason=payload.variance_reason,
-        matched_by=payload.matched_by,
-        matched_at=datetime.utcnow() if match_status == "matched" else None,
+        matched_by=current_user.id if match_status == "matched" else None,
+        matched_at=datetime.now(timezone.utc) if match_status == "matched" else None,
     )
     db.add(match)
     db.commit()
