@@ -291,9 +291,9 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-138 | CRITICAL | W14 | `auth.py` | — | TODO | | reg L5567 |
 | R2-139 | CRITICAL | W57 | `main.py` | `delete_logs.py`, `d/delete-logs/page.tsx` | TODO | | reg L5602 |
 | R2-140 | CRITICAL | W17 | `chat.py` | `backend/app/models.py`, `models.py`, `d/chat/page.tsx` | TODO | | reg L5691 |
-| R2-141 | HIGH | W17 | `chat.py` | `frontend/src/app/c/[company_id]/d/chat/page.tsx` | TODO | | reg L5720 |
-| R2-142 | HIGH | W17 | `chat.py` | `models.py`, `d/chat/page.tsx`, `page.tsx` | TODO | | reg L5734 |
-| R2-143 | HIGH | W17 | `chat.py` | `d/chat/page.tsx`, `page.tsx` | TODO | | reg L5760 |
+| R2-141 | HIGH | W17 | `chat.py` | `frontend/src/app/c/[company_id]/d/chat/page.tsx` | FIXED | FIXED fbbb93a; DELETE /chat/groups/{id} archives the group behind the group-admin guard instead of answering 405. |
+| R2-142 | HIGH | W17 | `chat.py` | `models.py`, `d/chat/page.tsx`, `page.tsx` | FIXED | FIXED f311485; chat group member mutations require server-side group-admin role; role values constrained to admin/member/viewer; last admin cannot be removed or demoted. |
+| R2-143 | HIGH | W17 | `chat.py` | `d/chat/page.tsx`, `page.tsx` | FIXED | FIXED 696216e; create_group ignores client-supplied created_by, stamps the creator CompanyTeam row and inserts the admin member in the same transaction. |
 | R2-144 | MEDIUM | W09 | `page.tsx` | `models.py`, `chat.py`, `d/chat/page.tsx` | FIXED | FIXED (content in b2ddf1f, swept by M-B; verified in HEAD); chat message create/media fields hardened (media_url/voice_note_url removed from the client contract). |
 | R2-145 | MEDIUM | W46 | `d/chat/page.tsx` | `page.tsx` | FIXED | FIXED d84fb8d; chat Add Member free-text UUID input replaced with a team-member select from /crm/team-members/{companyId} (company_team.id = the correct FK space). |
 | R2-146 | MEDIUM | W46 | `d/chat/page.tsx` | `page.tsx`, `chat.py` | FIXED | FIXED 47813c2; chat empty state distinguishes no-groups vs no-active-project ("No active project selected..."). Sibling: create-group without project POSTs project_id undefined (422). |
@@ -305,17 +305,17 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-152 | HIGH | W13 | `budget.py` | `budgeting.py` | TODO | | reg L5947 |
 | R2-153 | HIGH | W13 | `budget.py` | `constants.py` | TODO | | reg L5964 |
 | R2-154 | MEDIUM | W13 | `budget.py` | `d/budget/page.tsx`, `budgeting.py`, `custom_fields.py` | FIXED | FIXED bd41ec7; committed counts only live PO states (sent/partial/received) and non-cancelled WOs; budget page shows a set-budget prompt when total_budget == 0. Sibling: towers.py:177/199 + budget.py:155 same unfiltered sums. |
-| R2-155 | HIGH | W66 | `d/custom-fields/page.tsx` | `custom_fields.py` | TODO | | reg L6013 |
-| R2-156 | HIGH | W66 | `d/custom-fields/page.tsx` | `c/[company_id]/projects/page.tsx`, `p/[project_id]/transaction/page.tsx`, `projects.py` | TODO | | reg L6036 |
+| R2-155 | HIGH | W66 | `d/custom-fields/page.tsx` | `custom_fields.py` | FIXED | FIXED 0f6ba71; Set Value screen parses stored custom-field values into state and renders current value per field card. |
+| R2-156 | HIGH | W66 | `d/custom-fields/page.tsx` | `c/[company_id]/projects/page.tsx`, `p/[project_id]/transaction/page.tsx`, `projects.py` | FIXED | FIXED b2955f1; field builder select cut to project/invoice (the wired entity types); list follows user-controlled entity-type filter. |
 | R2-157 | CRITICAL | W32 | `custom_fields.py` | `page.tsx`, `chat.py` | TODO | | reg L6057 |
-| R2-158 | HIGH | W32 | `custom_fields.py` | `d/custom-fields/page.tsx` | TODO | | reg L6097 |
+| R2-158 | HIGH | W32 | `custom_fields.py` | `d/custom-fields/page.tsx` | FIXED | FIXED 4d1b3d1; Set Value dispatches on field type - date values sent as value_date, number 0 no longer dropped into text rows. |
 | R2-159 | MEDIUM | W32 | `custom_fields.py` | `calculators.py` | FIXED | FIXED d92cb93; custom_fields entity_type/field_type pattern-constrained on both create paths. |
 | R2-160 | HIGH | W99 | `d/reports/calculators/page.tsx` | — | TODO | | reg L6133 |
 | R2-161 | HIGH | W09 | `page.tsx` | — | TODO | | reg L6156 |
 | R2-162 | MEDIUM | W09 | `page.tsx` | — | FIXED | FIXED 590560f; Riyadh calculator uses SAR, houseCurrency removed. |
 | R2-163 | HIGH | W09 | `page.tsx` | `calculators.py` | TODO | | reg L6189 |
 | R2-164 | MEDIUM | W09 | `page.tsx` | `calculators.py` | FIXED | FIXED 3e8a602; finishes calculator discloses the 10% application allowance. |
-| R2-165 | HIGH | W46 | `d/chat/page.tsx` | — | TODO | | reg L6247 |
+| R2-165 | HIGH | W46 | `d/chat/page.tsx` | — | FIXED | FIXED 35c756b; chat collapses to single pane below md with conversation list as drawer. |
 | R2-166 | HIGH | W02 | `UNMAPPED` | — | TODO | | reg L6267 |
 | R2-167 | HIGH | W28 | `d/attendance/page.tsx` | — | FIXED | `7ffa1c9` | reg L6283; ALREADY FIXED by R2-107 — the attendance date default was part of the hardcoded-date sweep (d/attendance:148 → `new Date().toISOString().split("T")[0]`). Verified in the working tree (line 149 now). The re-tested-live section of this finding also referenced R2-106/R2-105, both fixed since. No code changed this session. |
 | R2-168 | HIGH | W29 | `d/hr/page.tsx` | `chat.py`, `d/attendance/page.tsx`, `p/[project_id]/attendance/page.tsx` | FIXED | `7ffa1c9`, `6d9493c`, `99d9287` | reg L6314; the bounded five-site hardcoded-date sweep is fully closed: the three date defaults (d/attendance, p/attendance, d/hr selectedDate) by R2-107 (`7ffa1c9`), the d/todo recurrence "Ends" date by R2-149's modal removal (`6d9493c`), and this session the last one — `payrollMonth` (d/hr:219, previously "2026-06" — the payroll screen opened on the previous month, a payroll-affecting stale default) now defaults to the current month (`99d9287`). Blast-radius 1 file this session, +1/-1. Follow-up (R2-168-bis, flagged): `daysInMonth` is still hardcoded `useState(26)` while the month default is now dynamic — a February run would report 26 days; tie it to the month length. |
@@ -338,7 +338,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-185 | HIGH | W24 | `labour.py` | `dpr.py`, `hr.py`, `bi_export.py` | TODO | | reg L6958 |
 | R2-186 | HIGH | W14 | `auth.py` | `zoho_books.py` | FIXED | FIXED 1a564f1; POST /auth/switch-company/{company_id} verifies membership and re-mints the company-scoped session. |
 | R2-187 | CRITICAL | W20 | `zoho_books.py` | — | TODO | | reg L7012 |
-| R2-188 | HIGH | W20 | `zoho_books.py` | `billing.py` | TODO | | reg L7027 |
+| R2-188 | HIGH | W20 | `zoho_books.py` | `billing.py` | FIXED | FIXED b6bf9e8; Zoho push resolves vendor from linked library party instead of inventing a contact named Vendor. |
 | R2-189 | HIGH | W02 | `UNMAPPED` | — | TODO | | reg L7044 |
 | R2-190 | MEDIUM | W02 | `UNMAPPED` | — | FIXED | FIXED 592af3a (other agent); Zoho upstream bodies logged server-side with a correlation ref. |
 | R2-191 | MEDIUM | W14 | `auth.py` | `models.py`, `billing.py`, `bi_export.py` | FIXED | FIXED (evidence, b4c0a37); CompanyTeam gained UniqueConstraint(company_id, user_id) - bundled into the R2-361 commit by the W18 wave; verified at runtime (duplicate insert -> IntegrityError; userless rows still allowed). NOTE: prod needs a Supabase migration to dedupe existing rows + CREATE UNIQUE INDEX (schema-sync only affects fresh DBs). |
@@ -406,16 +406,16 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-255 | MEDIUM | W11 | `planning.py` | — | FIXED | FIXED bd1c9f7; negative task durations rejected, propagation duration bounded. |
 | R2-256 | MEDIUM | W22 | `safety.py` | — | FIXED | FIXED d879c01; close_incident stamps closed_by (new nullable FK users.id, additive migration 20260816_000002), lost_time_days ge=0, reported_at typed datetime with future rejection. |
 | R2-257 | CRITICAL | W41 | `team_schedule.py` | `frontend/src/app/c/[company_id]/d/team-action/page.tsx`, `drawings/page.tsx` | TODO | | reg L11102 |
-| R2-258 | HIGH | W41 | `team_schedule.py` | — | TODO | | reg L11156 |
+| R2-258 | HIGH | W41 | `team_schedule.py` | — | FIXED | FIXED 521d887; same-day timesheets with end_time not after start_time rejected with 422 instead of wrapping into phantom 23-hour shift. |
 | R2-259 | HIGH | W42 | `drawings.py` | — | TODO | | reg L11191 |
-| R2-260 | HIGH | W32 | `custom_fields.py` | — | TODO | | reg L11219 |
+| R2-260 | HIGH | W32 | `custom_fields.py` | — | FIXED | FIXED c92b707; custom field values validated against declared type/typed column, target entity must exist inside authorised company, is_required enforced on project+bill create/update with 422 naming missing fields. |
 | R2-261 | MEDIUM | W41 | `team_schedule.py` | `team-action/page.tsx` | FIXED | FIXED 7b868ea (in dpr.py - attribution off); create_dpr 409s on a second DPR for the same project+day before any side effects; the DPR page surfaces the detail. Chose 409 over upsert (no update endpoint exists; upsert semantics = product decision). NOTE: prod holds a duplicate pair already, so a DB unique-index migration would fail - app-level guard chosen. |
 | R2-262 | CRITICAL | W03 | `hr.py` | `finance.py`, `safety.py` | FIX_VERIFIED | `e2e449d` | reg L11354; hr.py direct-fix pass; suite RC-045 |
-| R2-263 | HIGH | W24 | `labour.py` | — | TODO | | reg L11418 |
-| R2-264 | HIGH | W68 | `subcon.py` | — | TODO | | reg L11439 |
-| R2-265 | HIGH | W35 | `files.py` | `hr.py`, `finance.py`, `assets.py` | TODO | | reg L11458 |
+| R2-263 | HIGH | W24 | `labour.py` | — | FIXED | FIXED 6884efe; muster roll hours bounded by workers_present x 24, overtime by hours_worked, BOCW wages require positive workers_count. |
+| R2-264 | HIGH | W68 | `subcon.py` | — | FIXED | FIXED 5df994e; subcon attendance shift_multiplier bounded 0.5-3.0, workers required when OT/allowance logged, OT capped at 12h per worker. |
+| R2-265 | HIGH | W35 | `files.py` | `hr.py`, `finance.py`, `assets.py` | FIXED | FIXED 873d065 (top-up); first depreciation entry requires accumulated == depreciation_amount (parts a-chain and c rate-vs-life closed by a32d60e/a853932). |
 | R2-266 | CRITICAL | W58 | `dpr.py` | — | TODO | | reg L11595 |
-| R2-267 | HIGH | W25 | `tally.py` | — | TODO | | reg L11641 |
+| R2-267 | HIGH | W25 | `tally.py` | — | FIXED | FIXED 4c3e02b; Tally export books settlement bills as Receipt/Payment vouchers instead of Purchase. |
 | R2-268 | MEDIUM | W02 | `UNMAPPED` | — | FIXED | FIXED ad328dd (other agent); DPR export resolves the author name, never a raw UUID. |
 | R2-269 | MEDIUM | W24 | `labour.py` | — | FIXED | FIXED bf1343e (in hr.py - register said labour.py); payslip CSV leads with an Employee Code column. |
 | R2-270 | CRITICAL | W89 | `frontend/src/app/c/[company_id]/d/chat/page.tsx` | `models.py` | TODO | | reg L11773 |
@@ -432,20 +432,20 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-281 | HIGH | W21 | `calculators.py` | — | TODO | | reg L12344 |
 | R2-282 | MEDIUM | W02 | `UNMAPPED` | — | FIXED | FIXED 9994fab; steel calculators reject requests populating both parameter sets (422 with named conflicts); floors ge=1, area_sqft gt=0. |
 | R2-283 | CRITICAL | W12 | `statutory.py` | `models.py` | TODO | | reg L12433 |
-| R2-284 | HIGH | W103 | `cashbook.py` | — | TODO | | reg L12527 |
+| R2-284 | HIGH | W103 | `cashbook.py` | — | FIXED | FIXED 8dd6afd; p2p transfers reject sender == receiver (422) covering both /cashbook/p2p and /finance/cashbook/p2p. |
 | R2-285 | HIGH | W06 | `settings.py` | — | FIXED | FIXED 5e261ba; approval rules reject empty amount bands, unknown approvers, and overlapping bands per feature type. |
 | R2-286 | MEDIUM | W04 | `reports.py` | — | FIX_VERIFIED | `2ddc411` | reg L12577; reports.py direct-fix pass; suite RC-077 |
 | R2-287 | MEDIUM | W10 | `projects.py` | — | FIXED | FIXED 061f949 (residue close; apply half was already fixed); negative opening balances 422, non-canonical direction 422 instead of silent 200-with-0. |
 | R2-288 | CRITICAL | W06 | `settings.py` | — | TODO | | reg L12645 |
 | R2-289 | HIGH | W36 | `bi_export.py` | `budget.py` | TODO | | reg L12691 |
 | R2-290 | MEDIUM | W06 | `settings.py` | — | FIXED | FIXED 582d215; branch GSTIN enforces the canonical 15-char pattern (byte-identical to the frontend validator); salary breakup must be a valid partition (sum 100, basic_pct bounded). Deviation: GSTIN-state-vs-branch-state check deferred to R2-114/D4 (branch state is free text). |
-| R2-291 | HIGH | W69 | `backend/app/main.py` | `delete_logs.py` | TODO | | reg L12811 |
+| R2-291 | HIGH | W69 | `backend/app/main.py` | `delete_logs.py` | FIXED | FIXED aeb5642; delete-logs router moved to /apis/v3/delete-logs, path ids UUID-typed (422 not ValueError-500), catch-all /apis/v3/{path} 404 handler added. |
 | R2-292 | HIGH | W06 | `settings.py` | — | FIXED | FIXED e88a5f1; role permission updates reject empty matrices and the all superuser flag unless owner-equivalent; Owner/Admin undeletable. |
 | R2-293 | MEDIUM | W25 | `tally.py` | — | FIXED | FIXED afe1f97; tally onsite_transaction_type/tally_voucher_type Literals match the voucher builder. |
 | R2-294 | HIGH | W70 | `admin_migrations.py` | — | TODO | | reg L12969 |
 | R2-295 | MEDIUM | W59 | `rate_limit.py` | — | FIXED | FIXED fed144d (config-gated); limiter uses shared storage_uri when RATE_LIMIT_STORAGE_URI set, falls back to in-memory. Items 2-3 (proxy verification, per-account lockout) remain. |
-| R2-296 | HIGH | W68 | `subcon.py` | — | TODO | | reg L13102 |
-| R2-297 | HIGH | W05 | `procurement.py` | — | TODO | | reg L13145 |
+| R2-296 | HIGH | W68 | `subcon.py` | — | FIXED | FIXED f2e276a; work-order amendments whitelist amendable fields {estimated_work_amount, terms}, applied in same transaction, amended_by from authenticated user. |
+| R2-297 | HIGH | W05 | `procurement.py` | — | FIXED | FIXED ef5f171; unit change refused (422) while on_hand_qty/reserved_qty non-zero. |
 | R2-298 | MEDIUM | W05 | `procurement.py` | — | FIXED | FIXED 04b7c10 PARTIAL: past valid_until rejected (400), quotes on expired RFQs rejected, comparison now ranks vendors (extended_total, is_lowest, price_spread, recommended_vendor_name). DEFERRED half: the not-issued gate needs a product decision - RFQ.status has no writer for sent anywhere (see DECISIONS.md CD-7). |
 | R2-299 | HIGH | W71 | `public_leads.py` | `rate_limit.py` | TODO | | reg L13242 |
 | R2-300 | CRITICAL | W15 | `models.py` | — | TODO | | reg L13346 |
@@ -516,7 +516,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-365 | CRITICAL | W42 | `drawings.py` | `models.py` | TODO | | reg L17078 |
 | R2-366 | HIGH | W42 | `drawings.py` | `supabase_storage.py` | TODO | | reg L17132 |
 | R2-367 | MEDIUM | W42 | `drawings.py` | — | FIXED | FIXED 93184e6; drawing revision approval_status pattern now includes pending; approved_by derived from membership, cleared on return to pending. |
-| R2-368 | HIGH | W20 | `zoho_books.py` | `models.py` | TODO | | reg L17220 |
+| R2-368 | HIGH | W20 | `zoho_books.py` | `models.py` | FIXED | FIXED 52179b9; Zoho push persists bills.zoho_bill_id, short-circuits re-pushes with 409, maps duplicate codes 13011/3062 to 409. |
 | R2-369 | HIGH | W25 | `tally.py` | `models.py` | TODO | | reg L17270 |
 | R2-370 | MEDIUM | W07 | `billing.py` | `finance.py`, `errors.py`, `cors.py` | FIXED | FIXED 3e6ecb0 (10 files); bill cancel endpoint POST /bills/{bill_id}/cancel with payment guard (409), cancelled_at/cancelled_by columns (additive migration 20260816_000003), and Cancelled bills excluded from every bill aggregation. NOTE: this also lands the R2-232 content on THIS lineage — R2-232 was FIX_VERIFIED on a diverged branch (5d3609c) that never merged here; the register row for R2-232 should be annotated. |
 | R2-371 | CRITICAL | W04 | `reports.py` | `models.py` | FIX_VERIFIED | `1b841a8` | reg L17366; reports.py direct-fix pass; suite RC-082 |
@@ -689,7 +689,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-539 | HIGH | W16 | `three_way.py` | `models.py`, `calculators.py` | TODO | | reg L27497 |
 | R2-540 | CRITICAL | W03 | `hr.py` | `models.py` | FIX_VERIFIED | `e2e449d` | reg L27683; hr.py direct-fix pass; suite RC-046 |
 | R2-541 | CRITICAL | W06 | `settings.py` | — | TODO | | reg L27736 |
-| R2-542 | HIGH | W25 | `tally.py` | `chat.py`, `budgeting/page.tsx` | TODO | | reg L27796 |
+| R2-542 | HIGH | W25 | `tally.py` | `chat.py`, `budgeting/page.tsx` | FIXED | FIXED 12346aa; mark-synced requires settings:manage, unmark-synced route restores vouchers, /tally/pending reports pre-window exclusions. |
 | R2-543 | CRITICAL | W05 | `procurement.py` | `finance.py`, `billing.py` | FIX_VERIFIED | `03db7a3` | reg L28036; procurement.py direct-fix pass; suite RC-088 |
 | R2-544 | CRITICAL | W01 | `finance.py` | — | FIX_VERIFIED | `41ebbf1` | reg L28090; wave W01b; suite RC-021 |
 | R2-545 | HIGH | W71 | `public_leads.py` | `models.py` | TODO | | reg L28210 |
@@ -728,7 +728,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-592 | MEDIUM | W01 | `finance.py` | `d/hr/page.tsx`, `procurement.py`, `planning.py` | FIX_VERIFIED | `e69bcae` | reg L30680; direct-fix pass; suite RC-044 |
 | R2-593 | HIGH | W03 | `hr.py` | `models.py`, `face_recognition.py`, `towers.py` | FIX_VERIFIED | `05a53c9` | reg L31102; hr.py direct-fix pass; suite RC-060 |
 | R2-594 | HIGH | W16 | `three_way.py` | `relsweep.py`, `billing.py`, `drawings.py` | TODO | | reg L31194 |
-| R2-595 | HIGH | W25 | `tally.py` | `models.py`, `finance.py` | TODO | | reg L31298 |
+| R2-595 | HIGH | W25 | `tally.py` | `models.py`, `finance.py` | FIXED | FIXED 937d984; Tally export resolves bank/cash ledger from its own account via bank mappings; /tally/mappings/bank gives the mapping table a writer. |
 | R2-596 | MEDIUM | W29 | `d/hr/page.tsx` | `fesweep.py`, `hr.py`, `frontend/src/app/login/page.tsx` | FIXED | FIXED b70fd88; timesheet submit/approve no longer renders transport failure as success. |
 | R2-597 | HIGH | W113 | `subcon_performance.py` | `vendor_performance.py` | TODO | | reg L31481 |
 | R2-598 | HIGH | W56 | `rfq.py` | `models.py`, `gantt/page.tsx`, `planning.py` | TODO | | reg L31550 |
