@@ -38,6 +38,7 @@ export default function CustomFieldsPage() {
   const [selectedField, setSelectedField] = useState<Field | null>(null);
   const [message, setMessage] = useState("");
   const [values, setValues] = useState<FieldValueRow[]>([]);
+  const [entityFilter, setEntityFilter] = useState("project");
 
   const [fieldForm, setFieldForm] = useState({
     entity_type: "project",
@@ -60,7 +61,7 @@ export default function CustomFieldsPage() {
 
   const fetchFields = async () => {
     try {
-      const res = await fetch(`${getApiHost()}/apis/v3/custom-fields/fields/${companyId}?entity_type=project`, { headers: authHeaders() });
+      const res = await fetch(`${getApiHost()}/apis/v3/custom-fields/fields/${companyId}?entity_type=${entityFilter}`, { headers: authHeaders() });
       if (res.ok) setFields(await res.json());
     } catch (e) { console.error("Failed to load fields", e); }
   };
@@ -93,7 +94,7 @@ export default function CustomFieldsPage() {
   useEffect(() => {
     const id = setTimeout(() => fetchFields(), 0);
     return () => clearTimeout(id);
-  }, [companyId]);
+  }, [companyId, entityFilter]);
 
   useEffect(() => {
     if (!selectedField) return;
@@ -177,9 +178,20 @@ export default function CustomFieldsPage() {
             <h1 className="text-3xl font-bold text-foreground">Custom Fields</h1>
             <p className="text-muted mt-1">Add dynamic fields to projects, tasks, bills, and more</p>
           </div>
-          <button onClick={() => setShowFieldModal(true)} className="px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-md text-sm font-semibold transition-all">
-            New Field
-          </button>
+          <div className="flex items-center gap-3">
+            <select
+              value={entityFilter}
+              onChange={(e) => setEntityFilter(e.target.value)}
+              className="bg-input border border-border-custom rounded-md px-3 py-2 text-sm text-foreground"
+              title="Filter fields by entity type"
+            >
+              <option value="project">Project fields</option>
+              <option value="invoice">Invoice fields</option>
+            </select>
+            <button onClick={() => setShowFieldModal(true)} className="px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-md text-sm font-semibold transition-all">
+              New Field
+            </button>
+          </div>
         </div>
 
         {message && (
@@ -229,11 +241,7 @@ export default function CustomFieldsPage() {
                 <label className="block text-xs font-medium text-muted mb-1">Entity Type</label>
                 <select className="w-full bg-input border border-border-custom rounded-md px-4 py-2 text-foreground" value={fieldForm.entity_type} onChange={(e) => setFieldForm({...fieldForm, entity_type: e.target.value})}>
                   <option value="project">Project</option>
-                  <option value="task">Task</option>
-                  <option value="bill">Bill</option>
                   <option value="invoice">Invoice</option>
-                  <option value="lead">Lead</option>
-                  <option value="vendor">Vendor</option>
                 </select>
               </div>
               <div>
