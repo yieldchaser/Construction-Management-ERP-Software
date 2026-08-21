@@ -378,6 +378,84 @@ behavioural test is possible; where it is, write it, and where it is not, record
 the absence is a decision rather than an omission. The 28 zero-evidence rows are the place to
 start, because they are the only ones where *nothing* would notice a regression.
 
+## Class G — one class finding
+
+### R2-719 · CRITICAL · absent data is coalesced into an invented definite value in 90 places, including 8 sentinel UUIDs that resolve to real production rows
+
+**Found by generalising R2-083.** Sweep: `scripts/verification/defaultsweep.py`, over all of
+`frontend/src/app/c`. It reports `X || "literal"` and `X ?? "literal"`, and classifies the fallback
+by whether it **admits absence** (`—`, `N/A`, `Unassigned`, `Unknown`) or **asserts a fact**. It
+self-tests on the three known R2-083 lines and on the honest `category || "—"` sibling in the same
+object literal before it will emit anything.
+
+**90 data-fabrication sites. 68 further sites excluded as legitimate** — `err.detail || "Save
+failed"` is a message shown to a human, not a value written to a record. The exclusion count is
+reported so it is visible rather than silent.
+
+#### Tier 1 — sentinel UUIDs that point at real rows (8 sites)
+
+| file:line | expression |
+|---|---|
+| `d/chat/page.tsx:38` | `params?.company_id as string \|\| "e0000000-…-000000000000"` |
+| `d/services/page.tsx:20` | same |
+| `d/subcon/page.tsx:31` | same |
+| `reports/[slug]/page.tsx:485` | same |
+| `reports/dpr/page.tsx:12` | same |
+| `reports/item-wise-sales/page.tsx:12` | same |
+| `d/attendance/page.tsx:421` | `selectedEmpId \|\| "e0000000-…-000000000100"` |
+| `p/[project_id]/attendance/page.tsx:417` | same |
+
+**These are not dead sentinels. Both rows exist in the production database:**
+
+- `companies e0000000-…-000000000000` → **"Demo Construction Ltd"**, holding **5 projects**
+- `users e0000000-…-000000000100` → **"Demo Engineer" / demo@siteflow.co**
+
+So whenever `useParams()` has not resolved the route segment, six console pages — chat, services,
+subcon and three report pages — issue their fetches against a **real tenant that is not the
+signed-in one**, and will render its projects. It is a demo tenant rather than a paying customer,
+which caps the blast radius, but it is a real row, visible to RLS, and the pages cannot tell the
+difference.
+
+The attendance pair is worse because it **writes**. `queuePunch` guards with
+`if (!selectedEmpId && employees.length > 0) return`, so when the roster is *empty* the guard does
+not fire and the punch is queued against **Demo Engineer**. `attendance_logs` currently holds zero
+rows for that id, so this has not happened in production yet.
+
+**That a demo tenant carrying 5 projects exists in the production database at all** needs its own
+decision, independent of this finding.
+
+#### Tier 2 — risk indicators that default to reassuring (10 sites, 4 files)
+
+```
+dashboard/page.tsx:131-132      dbProj.status || "Ongoing"    uiHealth || "Healthy"
+d/home/page.tsx:60,73           project.status || "Ongoing"   project.health || "Healthy"
+p/[project_id]/layout.tsx:60,62 data.status || "Ongoing"
+p/[project_id]/party/page.tsx:75,89,178,183   p.status || "Active"
+```
+
+R2-083's `health` case is not isolated: `d/home` defaults status and health the same way, and party
+status defaults to `Active` in four places. A dashboard health badge and a party's active flag are
+both decision inputs, and both silently read "fine" when the data is missing.
+
+#### Tier 3 — fabricated values on paths that matter (selection from 71)
+
+| site | fallback | why it matters |
+|---|---|---|
+| `d/dpr/page.tsx:138` | `reportedBy \|\| "Site Engineer"` | actor-from-client on a signed daily report |
+| `d/chat/page.tsx:530-531` | `msg.user_name \|\| "SiteFlow"` | a message with no sender is attributed to the product |
+| `d/finance/page.tsx:3305,3320,3870` | `u.role \|\| "Staff"` / `"Employee"` | role drives approval rights |
+| `d/finance/page.tsx:463-464,474,490` | `name \|\| "Sender"` / `"Receiver"`, `refNum \|\| "P2P-OUT"` | party and reference on a money transfer |
+| `d/attendance/page.tsx:423` | `customMultiplierVal \|\| "1.0"` | payroll multiplier |
+| `d/payroll-attendance/page.tsx:289,311,752-753,765-766` | `day_off \|\| "Sunday"`, `shift_start \|\| "09:00"`, `shift_end \|\| "18:00"` | payroll shift window |
+| `d/attendance/page.tsx:658`, `d/hr/page.tsx:722,1153` | `designation \|\| "Labor"` / `"Staff"` | wage-band adjacent |
+
+**Fix direction.** Tier 1 first, on its own terms: a missing route param must fail loudly rather
+than fall back to an id, and the demo tenant needs a decision. Tier 2 is a mechanical edit to the
+honest form these same files already use elsewhere. Tier 3 needs judgement per site — some are
+defensible product defaults and some are fabrications, so the table above is triage, not verdict.
+Then a lint rule forbidding a non-honest string literal on the right of `||` where the left is a
+fetched field, so the class cannot regrow.
+
 ## Verified clean so far
 
 Recorded so the pass is not only a list of complaints. Each claim was re-checked against the tree,
@@ -415,8 +493,9 @@ were scoped to the files a finding named rather than to the defect class.
 | ~~R2-716~~ | — | merged into R2-712 as instances 7-8 | — |
 | **R2-717** | **HIGH** | **class finding — 29 closed rows disclose untracked residue** | register-wide sweep |
 | **R2-718** | **HIGH** | **class finding — 169 closures have no gate; 61 of them CRITICAL** | register-wide sweep |
+| **R2-719** | **CRITICAL** | **class finding — 90 invented-default sites; 8 sentinel UUIDs resolve to real production rows** | generalised from R2-083 |
 
-**Fourteen live findings.** R2-713..R2-716 were filed separately first and are struck through, not
+**Fifteen live findings.** R2-713..R2-716 were filed separately first and are struck through, not
 deleted, so the history stays traceable.
 
 Three to act on first, for different reasons:
