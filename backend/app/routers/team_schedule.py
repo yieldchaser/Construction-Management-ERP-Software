@@ -77,8 +77,6 @@ def _compute_duration(start: Optional[datetime], end: Optional[datetime]) -> Opt
     if not start or not end:
         return None
     seconds = (end - start).total_seconds()
-    if seconds < 0:
-        seconds += 24 * 3600  # wrap-around past midnight
     return int(round(seconds / 60))
 
 
@@ -121,6 +119,8 @@ def create_timesheet(payload: TimesheetCreate, db: Session = Depends(get_db), cu
     if payload.project_id:
         verify_project_in_company(db, payload.project_id, payload.company_id)
     require_permission(db, current_user, payload.company_id, "attendance:edit")
+    if payload.start_time and payload.end_time and payload.end_time <= payload.start_time:
+        raise HTTPException(status_code=422, detail="end_time must be after start_time; for a night shift send the true end date")
     party_name = None
     if payload.party_id:
         party = db.query(models.LibraryParty).filter(models.LibraryParty.id == payload.party_id).first()
