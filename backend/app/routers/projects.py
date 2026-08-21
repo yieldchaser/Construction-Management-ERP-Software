@@ -72,6 +72,7 @@ _TASK_PROGRESS = {
     "not_started": 0.0,
     "start": 0.1,
     "ongoing": 0.5,
+    "in_progress": 0.5,
     "completed": 1.0,
 }
 
