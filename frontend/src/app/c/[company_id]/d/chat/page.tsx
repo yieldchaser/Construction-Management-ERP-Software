@@ -64,6 +64,7 @@ export default function ChatPage() {
   const [currentUserRole, setCurrentUserRole] = useState("member");
   const [memberForm, setMemberForm] = useState({ user_id: "", role: "member" });
   const [teamOptions, setTeamOptions] = useState<Array<{ id: string; name: string }>>([]);
+  const [showMobileList, setShowMobileList] = useState(true);
   
   // Auto-scroll ref
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -324,7 +325,7 @@ export default function ChatPage() {
       <div className="flex flex-1 overflow-hidden h-full">
         
         {/* Left Column: Recent Chats Sidebar */}
-        <div className="w-72 bg-card border-r border-border-custom flex flex-col shrink-0">
+        <div className={`${showMobileList ? "flex" : "hidden"} md:flex w-full md:w-72 bg-card border-r border-border-custom flex-col shrink-0`}>
           <div className="p-4 border-b border-border-custom flex items-center justify-between">
             <h2 className="text-xs font-bold text-foreground uppercase tracking-wider">Recent Chats</h2>
             <button
@@ -359,6 +360,7 @@ export default function ChatPage() {
                   onClick={() => {
                     setActiveGroup(g);
                     setCurrentUserRole("member");
+                    setShowMobileList(false);
                   }}
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all cursor-pointer ${
                     activeGroup?.id === g.id
@@ -388,12 +390,19 @@ export default function ChatPage() {
         </div>
 
         {/* Right Column: Chat Window */}
-        <div className="flex-1 flex flex-col bg-elevated/5 relative overflow-hidden">
+        <div className={`${showMobileList ? "hidden" : "flex"} md:flex flex-1 flex-col bg-elevated/5 relative overflow-hidden`}>
           {activeGroup ? (
             <>
               {/* Chat Header */}
               <div className="px-6 py-4 border-b border-border-custom bg-card flex items-center justify-between shrink-0">
                 <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setShowMobileList(true)}
+                    className="md:hidden h-8 w-8 shrink-0 flex items-center justify-center rounded-lg hover:bg-elevated text-muted hover:text-foreground transition-all cursor-pointer"
+                    title="Back to chats"
+                  >
+                    <span className="text-base leading-none">&#8592;</span>
+                  </button>
                   <div className={`h-9 w-9 rounded-full flex items-center justify-center font-bold text-sm ${getAvatarColor(activeGroup.group_type)}`}>
                     {activeGroup.name.charAt(0).toUpperCase()}
                   </div>
@@ -575,20 +584,20 @@ export default function ChatPage() {
                     <div className="flex flex-col gap-2">
                       
                       {/* Top inputs row */}
-                      <div className="flex flex-wrap items-center gap-2">
+                      <div className="flex flex-col md:flex-row md:flex-wrap items-stretch md:items-center gap-2">
                         <input
                           type="text"
                           value={messageText}
                           onChange={(e) => setMessageText(e.target.value)}
                           placeholder="Enter Message..."
-                          className="flex-1 min-w-[200px] bg-elevated/35 border border-border-custom rounded-lg px-4 py-2 text-xs text-foreground placeholder:text-muted focus:outline-none focus:border-primary transition-all"
+                          className="flex-1 min-w-0 md:min-w-[200px] bg-elevated/35 border border-border-custom rounded-lg px-4 py-2 text-xs text-foreground placeholder:text-muted focus:outline-none focus:border-primary transition-all"
                         />
                         <input
                           type="text"
                           value={imageUrl}
                           onChange={(e) => setImageUrl(e.target.value)}
                           placeholder="Image URL (optional)"
-                          className="w-44 bg-elevated/35 border border-border-custom rounded-lg px-4 py-2 text-xs text-foreground placeholder:text-muted focus:outline-none focus:border-primary transition-all"
+                          className="w-full md:w-44 bg-elevated/35 border border-border-custom rounded-lg px-4 py-2 text-xs text-foreground placeholder:text-muted focus:outline-none focus:border-primary transition-all"
                         />
                       </div>
 
