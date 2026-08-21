@@ -46,6 +46,7 @@ class BudgetWithCommitted(BaseModel):
     subcon_actual: float
     equipment_committed: float
     equipment_actual: float
+    other_actual: float = 0.0
     total_budget: float
     total_committed: float
     total_actual: float
@@ -83,11 +84,24 @@ def get_committed_costs(project_id: UUID, db: Session = Depends(get_db), _: None
     ).all()
     material_committed = sum(float(p.total_amount) for p in pos)
 
-    bills_material = db.query(Bill).filter(
+    bills_expense = db.query(Bill).filter(
         Bill.project_id == project_id,
-        Bill.invoice_type == "purchase"
+        Bill.invoice_type.in_(EXPENSE_INVOICE_TYPES)
     ).all()
-    material_actual = sum(float(b.total_payable) for b in bills_material)
+    material_actual = 0.0
+    subcon_actual = 0.0
+    equipment_bill_total = 0.0
+    other_actual = 0.0
+    for b in bills_expense:
+        amount = float(b.total_payable or 0.0)
+        if b.invoice_type == "purchase":
+            material_actual += amount
+        elif b.invoice_type == "subcon":
+            subcon_actual += amount
+        elif b.invoice_type == "equipment":
+            equipment_bill_total += amount
+        else:
+            other_actual += amount
 
     wos = db.query(WorkOrder).filter(
         WorkOrder.project_id == project_id,
@@ -95,17 +109,10 @@ def get_committed_costs(project_id: UUID, db: Session = Depends(get_db), _: None
     ).all()
     subcon_committed = sum(float(w.estimated_work_amount) for w in wos)
 
-    bills_subcon = db.query(Bill).filter(
-        Bill.project_id == project_id,
-        Bill.invoice_type == "subcon"
-    ).all()
-    subcon_actual = sum(float(b.total_payable) for b in bills_subcon)
-
     labour_committed = 0.0
     labour_actual = float(db.query(func.sum(PayrollLineItem.net_payable)).join(PayrollRun).filter(PayrollRun.project_id == project_id).scalar() or 0.0)
 
     equipment_committed = 0.0
-    equipment_bills = float(db.query(func.sum(Bill.total_payable)).filter(Bill.project_id == project_id, Bill.invoice_type == "equipment").scalar() or 0.0)
     deployments = db.query(EquipmentDeployment).filter(EquipmentDeployment.project_id == project_id).all()
     dep_cost = 0.0
     for dep in deployments:
@@ -116,7 +123,7 @@ def get_committed_costs(project_id: UUID, db: Session = Depends(get_db), _: None
             hours = (end - dep.start_date).total_seconds() / 3600.0
             dep_cost += max(0.0, hours * rate)
     fuel_cost = float(db.query(func.sum(FuelLog.total_cost)).filter(FuelLog.project_id == project_id).scalar() or 0.0)
-    equipment_actual = equipment_bills + dep_cost + fuel_cost
+    equipment_actual = equipment_bill_total + dep_cost + fuel_cost
 
     total_budget = (
         float(budget.material_budget) +
@@ -125,7 +132,7 @@ def get_committed_costs(project_id: UUID, db: Session = Depends(get_db), _: None
         float(budget.equipment_budget)
     )
     total_committed = material_committed + labour_committed + subcon_committed + equipment_committed
-    total_actual = material_actual + labour_actual + subcon_actual + equipment_actual
+    total_actual = material_actual + labour_actual + subcon_actual + equipment_actual + other_actual
 
     return BudgetWithCommitted(
         project_id=project_id,
@@ -141,6 +148,7 @@ def get_committed_costs(project_id: UUID, db: Session = Depends(get_db), _: None
         subcon_actual=subcon_actual,
         equipment_committed=equipment_committed,
         equipment_actual=equipment_actual,
+        other_actual=other_actual,
         total_budget=total_budget,
         total_committed=total_committed,
         total_actual=total_actual,
