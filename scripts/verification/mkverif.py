@@ -1,0 +1,267 @@
+"""Tier 0 - build VERIFICATION_REGISTER.md from the agent's fix register.
+
+One row per CLOSED finding (FIXED or FIX_VERIFIED). Columns:
+  R2-id | severity | status | commit | files | test? | pin? | TIER | VERDICT | evidence
+
+test?  = an R2 id appears in any file under backend/tests (campaign/waves)
+pin?   = that reference is inside test_regression_pins.py specifically
+TIER   = triage: 1 if it has a test (gate integrity is checkable)
+                 2 if no test but schema/live observable (migration touched, or frontend file)
+                 3 otherwise (no evidence obtainable without new work)
+"""
+import os
+import re
+import sys
+from collections import defaultdict
+
+S = os.path.dirname(os.path.abspath(__file__))
+REG = os.path.join(S, "register.md")
+TESTS = os.path.join(S, "waves", "backend", "tests")
+LOG = os.path.join(S, "waves_log.txt")
+OUT = os.path.join(S, "VERIFICATION_REGISTER.md")
+
+ID_RE = re.compile(r"R2[-_ ]?(\d{3})", re.I)
+
+
+def norm(m):
+    return "R2-" + m.group(1)
+
+
+# --- 1. test / pin references ------------------------------------------------
+test_refs = defaultdict(set)   # id -> set of test file basenames
+for root, _dirs, files in os.walk(TESTS):
+    for fn in files:
+        if not fn.endswith(".py"):
+            continue
+        path = os.path.join(root, fn)
+        with open(path, encoding="utf-8", errors="replace") as fh:
+            body = fh.read()
+        for m in ID_RE.finditer(body):
+            test_refs[norm(m)].add(fn)
+
+# --- 2. commit subjects ------------------------------------------------------
+commits = defaultdict(list)    # id -> [(sha, subject)]
+with open(LOG, encoding="utf-8", errors="replace") as fh:
+    for line in fh:
+        sha, _, subj = line.rstrip("\n").partition("\t")
+        for m in ID_RE.finditer(subj):
+            commits[norm(m)].append((sha, subj))
+
+# --- 3. register rows --------------------------------------------------------
+rows = []
+with open(REG, encoding="utf-8", errors="replace") as fh:
+    for line in fh:
+        if not line.startswith("| R2-"):
+            continue
+        cells = [c.strip() for c in line.strip().strip("|").split("|")]
+        # id, severity, wave, file1, file2, status, commit, notes
+        if len(cells) < 7:
+            continue
+        rows.append({
+            "id": cells[0],
+            "sev": cells[1],
+            "wave": cells[2],
+            "file1": cells[3],
+            "file2": cells[4],
+            "status": cells[5],
+            "commit": cells[6],
+            "notes": cells[7] if len(cells) > 7 else "",
+        })
+
+closed = [r for r in rows if r["status"] in ("FIXED", "FIX_VERIFIED")]
+
+SEV_ORDER = {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3}
+
+SCHEMA_HINT = re.compile(
+    r"migration|column|constraint|unique|index|backfill|nullable|alter table", re.I)
+FRONTEND_HINT = re.compile(r"\.tsx|\.ts\b|frontend/", re.I)
+
+
+def tier(r):
+    if r["id"] in test_refs:
+        return 1
+    if SCHEMA_HINT.search(r["notes"]):
+        return 2
+    if FRONTEND_HINT.search(r["file1"] + r["file2"]):
+        return 2
+    return 3
+
+
+# --- 3b. Tier-1 gate verdicts from gatecheck.py ------------------------------
+import json
+GATE = os.path.join(S, "gatecheck.json")
+gate = {}
+if os.path.exists(GATE):
+    for g in json.load(open(GATE, encoding="utf-8")):
+        if g.get("id"):
+            gate[g["id"]] = g
+
+# Hand-confirmed against the diffs. A mechanical FAKE_GATE is only reported as one after the
+# fix commit's own diff was read; these are the ones that survived that check.
+CONFIRMED_FAKE = {
+    "R2-040": "the pin asserts `.xlsx` (with the dot) is absent, but that literal is in neither "
+              "the pre-fix nor the post-fix file, and the Excel button still calls "
+              "`handleExportSelect(\"xlsx\")` after the fix. Passes either way.",
+    "R2-077": "the pin reads `reports/[slug]/page.tsx`; `exportSchemas` only ever existed in "
+              "`reports/page.tsx`, which is the file the fix changed. Watches the wrong file.",
+    "R2-341": '`"PO Pending Qty"` was already in reports.py pre-fix as `"PO Pending Qty": ""`. '
+              "The fix filled the value in; the pin only asserts the key exists.",
+    "R2-351": "`unit=po_item.unit` was already at procurement.py:672 (a different call site) "
+              "pre-fix. The fix added a second occurrence at :683; the pin cannot tell.",
+    "R2-578": "both `msg.user_id = ct.id` and `msg.user_name = current_user.name` were present "
+              "pre-fix (lines 153-154). The fix changed control flow around them - dropping the "
+              "client-supplied fields and raising 403 - which the pin does not test at all.",
+}
+EVIDENCE_CLOSE = {"R2-001", "R2-118", "R2-428"}
+
+for r in closed:
+    g = gate.get(r["id"])
+    gv = g["verdict"] if g else ""
+    if r["id"] in CONFIRMED_FAKE:
+        r["gate"] = "FAKE_GATE"
+    elif r["id"] in EVIDENCE_CLOSE:
+        r["gate"] = "EVIDENCE_CLOSE"
+    elif gv in ("FAKE_GATE", "FAKE_GATE_PARTIAL"):
+        r["gate"] = "FAKE?"
+    elif gv == "REAL_GATE":
+        r["gate"] = "text-pin"
+    elif gv:
+        r["gate"] = gv.lower()
+    else:
+        r["gate"] = "—"
+
+for r in closed:
+    r["tier"] = tier(r)
+    r["test"] = "yes" if r["id"] in test_refs else "no"
+    r["pin"] = "yes" if "test_regression_pins.py" in test_refs.get(r["id"], ()) else "no"
+    cs = commits.get(r["id"], [])
+    # oldest commit naming the id = the original fix, and the one gatecheck.py diffed against
+    r["sha"] = cs[-1][0] if cs else (
+        r["commit"] if re.fullmatch(r"`?[0-9a-f]{7,40}`?", r["commit"]) else "—")
+    g = gate.get(r["id"])
+    if g and g.get("fix"):
+        r["sha"] = g["fix"]
+
+closed.sort(key=lambda r: (SEV_ORDER.get(r["sev"], 9), r["tier"], r["id"]))
+
+# --- 4. emit -----------------------------------------------------------------
+lines = []
+W = lines.append
+W("# SiteFlow — INDEPENDENT VERIFICATION REGISTER (Tier 0)")
+W("")
+W("Generated by `scratchpad/mkverif.py` from `audit/AUDIT_FIX_REGISTER.md` @ `campaign/waves`.")
+W("**This file is mine. The agent owns `audit/*`; do not merge this into it while the agent runs.**")
+W("")
+W("One row per **closed** finding — the agent's `FIXED` (its own pytest) or `FIX_VERIFIED` ")
+W("(founder live-confirmed). Purpose: prove independently that the fix holds in production and ")
+W("that its test actually gates something.")
+W("")
+W("Verdicts, and only these four:")
+W("")
+W("- `CONFIRMED` — evidence obtained, fix holds.")
+W("- `FAKE_GATE` — the test passes against the *unfixed* tree, so it gates nothing.")
+W("- `REGRESSED` — worked before, broken now.")
+W("- `UNVERIFIED` — no evidence obtainable. Honest answer, not a failure.")
+W("")
+W("Anything not `CONFIRMED` gets a **new** R2 number in the agent's register. Never silently ")
+W("reopen a row.")
+W("")
+W("Tier assignment:")
+W("")
+W("- **Tier 1** — a test references this id. Gate integrity is checkable offline: revert the fix ")
+W("  hunk in a scratch worktree, run the test, confirm it fails at its own assertion.")
+W("- **Tier 2** — no test, but the symptom is observable live (schema change, or a frontend ")
+W("  surface). Needs Supabase / Render / browser.")
+W("- **Tier 3** — neither. `UNVERIFIED` by default until a gate is written or the risk is ")
+W("  accepted with a logged decision.")
+W("")
+
+tot = len(closed)
+by_sev = defaultdict(int)
+by_tier = defaultdict(int)
+by_status = defaultdict(int)
+for r in closed:
+    by_sev[r["sev"]] += 1
+    by_tier[r["tier"]] += 1
+    by_status[r["status"]] += 1
+
+W("## Tier 1 result — what the 176 regression pins actually gate")
+W("")
+W("Run by `scripts/verification/gatecheck.py`, which reconstructs each pin's assertion against ")
+W("the fix commit's **first parent** — the unfixed tree — and re-evaluates it there. A pin that ")
+W("holds pre-fix gates nothing.")
+W("")
+W("**The structural result comes before the individual ones.** `test_regression_pins.py` is 1037 ")
+W("lines and 176 tests. It imports `pathlib` and nothing else. 174 of the 176 read a source file ")
+W("as text and assert a substring is present or absent; one scans the filesystem for stock ")
+W("photos; exactly one (`test_pin_R2_129_statutory_due_date_derivation`) imports application code ")
+W("and calls it. There is no `TestClient` in the file and no HTTP request.")
+W("")
+W("So even a pin that passes this check proves only that **the edit is still textually present**. ")
+W("It cannot show the code runs, is reached, or is correct. That is why every row below is ")
+W("`UNVERIFIED` rather than `CONFIRMED`: passing gate integrity is necessary, not sufficient, and ")
+W("behavioural evidence has to come from Tier 2.")
+W("")
+W("| Outcome | Pins | Meaning |")
+W("|---|---|---|")
+W("| `REAL_GATE` | 147 | the asserted text was absent pre-fix, so the pin would have failed. A ")
+W("real guard against textual regression — no behavioural claim. |")
+W("| `FAKE_GATE` | 5 confirmed | the assertion held pre-fix. Hand-checked against each fix ")
+W("commit's diff. |")
+W("| `EVIDENCE_CLOSE` | 3 | R2-001, R2-118, R2-428 — closed on the reading that the code was ")
+W("already correct, so no fix commit exists and the pin necessarily passes pre-fix. Not a fake ")
+W("gate; a closure with no independent evidence. |")
+W("| `PARSE_FAIL` | 19 | the assertion is not a plain substring or `.count()` form. Not judged ")
+W("here — needs reading by hand. |")
+W("| `NO_COMMIT` | 1 | R2-218, closed as `FIXED (evidence)` with no sha anywhere. |")
+W("")
+W("**The five confirmed fake gates are all MEDIUM. No CRITICAL pin failed this check.** That is ")
+W("a real, and reassuring, negative result — the highest-severity gates are textually sound.")
+W("")
+for _id in sorted(CONFIRMED_FAKE):
+    W(f"- **{_id}** — {CONFIRMED_FAKE[_id]}")
+W("")
+W("Each of the five reopens as a **new** finding: the underlying fix may well be correct (R2-578's ")
+W("403 and R2-351's second call site both read right), but nothing gates it, so a later edit ")
+W("removes it silently. R2-077 is the sharpest: its pin watches a file the string never lived in.")
+W("")
+W("Not yet done at Tier 1: the 19 `PARSE_FAIL` pins, and the 138 closed findings with no pin at ")
+W("all. See `docs/VERIFICATION_MIGRATION_AUDIT.md` for the schema half of the same question.")
+W("")
+W("## Counts")
+W("")
+W("| Cut | Value |")
+W("|---|---|")
+W(f"| Closed findings in scope | {tot} |")
+for k in ("FIX_VERIFIED", "FIXED"):
+    W(f"| status {k} | {by_status[k]} |")
+for k in ("CRITICAL", "HIGH", "MEDIUM", "LOW"):
+    W(f"| severity {k} | {by_sev[k]} |")
+for k in (1, 2, 3):
+    W(f"| Tier {k} | {by_tier[k]} |")
+W(f"| has a test | {sum(1 for r in closed if r['test'] == 'yes')} |")
+W(f"| has a regression pin | {sum(1 for r in closed if r['pin'] == 'yes')} |")
+W("")
+W("## Rows")
+W("")
+W("Ordered severity, then tier, then id — which is the order to work them.")
+W("")
+W("| R2 | SEV | STATUS | COMMIT | PRIMARY FILE | TEST? | PIN? | GATE | TIER | VERDICT | EVIDENCE |")
+W("|---|---|---|---|---|---|---|---|---|---|---|")
+for r in closed:
+    verdict = "FAKE_GATE" if r["gate"] == "FAKE_GATE" else "UNVERIFIED"
+    ev = CONFIRMED_FAKE.get(r["id"], "")
+    W("| {id} | {sev} | {status} | `{sha}` | `{f}` | {test} | {pin} | {gate} | {tier} | "
+      "{v} | {ev} |".format(
+          id=r["id"], sev=r["sev"], status=r["status"], sha=r["sha"].strip("`"),
+          f=r["file1"].strip("`") or "—", test=r["test"], pin=r["pin"], gate=r["gate"],
+          tier=r["tier"], v=verdict, ev=ev))
+W("")
+
+with open(OUT, "w", encoding="utf-8", newline="\n") as fh:
+    fh.write("\n".join(lines))
+
+print(f"wrote {OUT}: {tot} closed rows")
+print("tiers:", dict(by_tier))
+print("sev:", dict(by_sev))
+print("tests referenced ids:", len(test_refs))
