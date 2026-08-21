@@ -115,6 +115,20 @@ class CostCentreMappingResponse(BaseModel):
     class Config:
         from_attributes = True
 
+class BankMappingCreateRequest(BaseModel):
+    company_id: uuid.UUID
+    onsite_bank_account_details: str
+    tally_ledger_name: str
+
+class BankMappingResponse(BaseModel):
+    id: uuid.UUID
+    company_id: uuid.UUID
+    onsite_bank_account_details: str
+    tally_ledger_name: str
+
+    class Config:
+        from_attributes = True
+
 class MarkSyncedRequest(BaseModel):
     bill_ids: List[uuid.UUID] = []
     payment_ids: List[uuid.UUID] = []
@@ -192,10 +206,10 @@ def _build_vouchers(db: Session, conn: TallyConnection, bills, payments, advance
         str(m.project_id): m.tally_cost_centre_name
         for m in db.query(TallyCostCentreMapping).filter(TallyCostCentreMapping.company_id == conn.company_id).all()
     }
-    bank_ledger = None
-    bank = db.query(TallyBankMapping).filter(TallyBankMapping.company_id == conn.company_id).first()
-    if bank:
-        bank_ledger = bank.tally_ledger_name
+    bank_maps = {
+        m.onsite_bank_account_details: m.tally_ledger_name
+        for m in db.query(TallyBankMapping).filter(TallyBankMapping.company_id == conn.company_id).all()
+    }
 
     seq = (conn.last_voucher_seq or 0) + 1
 
@@ -212,7 +226,11 @@ def _build_vouchers(db: Session, conn: TallyConnection, bills, payments, advance
             # are Payment vouchers, never Purchase/Sales.
             money_in = b.invoice_type in ("payment_in", "i_received")
             vchtype = "Receipt" if money_in else "Payment"
-            cash_ledger = bank_ledger or conn.default_cash_ledger or "Bank/Cash"
+            cash_ledger = (
+                bank_maps.get(b.payment_bank_name)
+                if b.payment_bank_name
+                else None
+            ) or conn.default_cash_ledger or "Bank/Cash"
             party_ledger = _resolve_party_ledger(
                 db, conn.company_id, b.party_company_user_id,
                 "Client Ledger" if money_in else "Vendor Ledger",
@@ -290,8 +308,15 @@ def _build_vouchers(db: Session, conn: TallyConnection, bills, payments, advance
         total = float(p.amount or 0)
         if p.payment_type == "in":
             vchtype = "Receipt"
-            # Money comes IN: debit bank/cash, credit party.
-            cash_ledger = bank_ledger or conn.default_cash_ledger or "Bank/Cash"
+            # Money comes IN: debit bank/cash, credit party. The bank/cash
+            # ledger follows the payment's own account when a bank mapping
+            # exists for it, so payments from different accounts post to
+            # different ledgers instead of one shared CASH ledger.
+            cash_ledger = (
+                bank_maps.get(p.account_name)
+                if p.account_name
+                else None
+            ) or conn.default_cash_ledger or "Bank/Cash"
             party_ledger = _resolve_party_ledger(db, conn.company_id, p.party_company_user_id, cash_ledger)
             entries = [
                 {"ledger": cash_ledger, "amount": total, "debit": True, "ledger_type": _cash_bank_type(cash_ledger, conn.default_cash_ledger)},
@@ -300,7 +325,11 @@ def _build_vouchers(db: Session, conn: TallyConnection, bills, payments, advance
         else:
             vchtype = "Payment"
             # Money goes OUT: debit party, credit bank/cash.
-            cash_ledger = bank_ledger or conn.default_cash_ledger or "Bank/Cash"
+            cash_ledger = (
+                bank_maps.get(p.account_name)
+                if p.account_name
+                else None
+            ) or conn.default_cash_ledger or "Bank/Cash"
             party_ledger = _resolve_party_ledger(db, conn.company_id, p.party_company_user_id, cash_ledger)
             entries = [
                 {"ledger": party_ledger, "amount": total, "debit": True, "ledger_type": "party_creditor"},
@@ -525,6 +554,41 @@ def create_cost_centre_mapping(req: CostCentreMappingCreateRequest, db: Session 
 def get_cost_centre_mappings(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     comp_uuid = uuid.UUID(str(company_id))
     return db.query(TallyCostCentreMapping).filter(TallyCostCentreMapping.company_id == comp_uuid).all()
+
+
+# --- Bank mappings ---
+
+@router.post("/mappings/bank", response_model=BankMappingResponse, status_code=status.HTTP_201_CREATED)
+def create_bank_mapping(req: BankMappingCreateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    comp_uuid = uuid.UUID(str(req.company_id))
+    get_company_membership(db, current_user, comp_uuid)
+    require_permission(db, current_user, comp_uuid, "settings:manage")
+
+    mapping = db.query(TallyBankMapping).filter(
+        TallyBankMapping.company_id == comp_uuid,
+        TallyBankMapping.onsite_bank_account_details == req.onsite_bank_account_details,
+    ).first()
+
+    if mapping:
+        mapping.tally_ledger_name = req.tally_ledger_name
+    else:
+        mapping = TallyBankMapping(
+            id=uuid.uuid4(),
+            company_id=comp_uuid,
+            onsite_bank_account_details=req.onsite_bank_account_details,
+            tally_ledger_name=req.tally_ledger_name,
+        )
+        db.add(mapping)
+
+    db.commit()
+    db.refresh(mapping)
+    return mapping
+
+
+@router.get("/mappings/bank", response_model=List[BankMappingResponse])
+def get_bank_mappings(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
+    comp_uuid = uuid.UUID(str(company_id))
+    return db.query(TallyBankMapping).filter(TallyBankMapping.company_id == comp_uuid).all()
 
 
 # --- Real export flow ---
