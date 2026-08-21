@@ -260,6 +260,23 @@ VERDICTS = {
                             "the employee drawer, carry no fabricated cost codes - the only "
                             "hardcoded cost codes left in the console are in d/finance, a "
                             "different surface already filed as R2-712 instance 4."),
+    "R2-285": ("CONFIRMED", "E1, and checked for completeness on BOTH mutation paths: "
+                            "_validate_rule_approvers and _reject_overlapping_band are each "
+                            "called on create (settings.py:390-391) and on update (:413-414), "
+                            "with the amount-band validator at :198. All three claims hold and "
+                            "neither path is left unguarded."),
+    "R2-071": ("CONFIRMED", "E1: the work-order terms field reads e.currentTarget.innerText at "
+                            "finance/page.tsx:1550 and `innerHTML` appears nowhere in the file, "
+                            "so no unsanitised markup can reach /billing/work-orders."),
+    "R2-020": ("CONFIRMED", "E1: the fabricated takeoff rows ('Main Floor 2 Slab section A', "
+                            "'Beam drop grid B-C') are gone from frontend/src entirely."),
+    "R2-019": ("CONFIRMED", "E1: no 'Diwali' seed anywhere in frontend/src; holidays load from "
+                            "GET /hr/holidays/{companyId}. Consistent with R2-110, which covers "
+                            "the same defect from the other page."),
+    "R2-006": ("CONFIRMED", "E1: the revision flow POSTs /apis/v3/drawings first when no drawing "
+                            "exists (drawings/page.tsx:272), so the first drawing can be created."),
+    "R2-013": ("CONFIRMED", "E1: the holiday flow is wired end to end - POST /hr/holidays/{cid} "
+                            "at :967, DELETE at :975 and the list GET at :1020."),
     "R2-083": ("UNVERIFIED", "E1 FAILS on completeness. The two edits are correct, but the note's "
                              "claim that these were 'the last two fabricated attribute fallbacks' "
                              "is wrong - four remain in the same object literal, including "

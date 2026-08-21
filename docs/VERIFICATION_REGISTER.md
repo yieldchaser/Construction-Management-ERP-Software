@@ -170,7 +170,7 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-568 | CRITICAL | FIX_VERIFIED | `e3866c9` | `finance.py` | no | no | — | 3 | UNVERIFIED |  |
 | R2-599 | CRITICAL | FIX_VERIFIED | `bef6c73` | `dpr.py` | no | no | — | 3 | UNVERIFIED |  |
 | R2-011 | HIGH | FIXED | `ca3a742` | `finance/page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
-| R2-013 | HIGH | FIXED | `820717b` | `frontend/src/app/c/[company_id]/d/hr/page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
+| R2-013 | HIGH | FIXED | `820717b` | `frontend/src/app/c/[company_id]/d/hr/page.tsx` | yes | yes | text-pin | 1 | CONFIRMED | E1: the holiday flow is wired end to end - POST /hr/holidays/{cid} at :967, DELETE at :975 and the list GET at :1020. |
 | R2-032 | HIGH | FIXED | `261bd41` | `frontend/src/app/c/[company_id]/d/hr/page.tsx` | yes | yes | text-pin | 1 | CONFIRMED | E1: CTC is `grossMonthly + basic * (pfEmployerPct ?? 12) / 100` at hr/page.tsx:935, and `pfEmployerPct` is mapped from the API's `pf_employer_pct` at :263, so the employee half is no longer double-counted and the rate is per-employee. |
 | R2-149 | HIGH | FIXED | `6d9493c` | `d/todo/page.tsx` | yes | yes | text-pin | 1 | CONFIRMED | E1: pure removal of 144 lines. Zero repeat/recurrence/endsDate residue left in d/todo/page.tsx. |
 | R2-168 | HIGH | FIXED | `99d9287` | `d/hr/page.tsx` | yes | yes | text-pin | 1 | CONFIRMED | E1: `payrollMonth` defaults to the current month (`new Date().toISOString().slice(0,7)`, hr/page.tsx:220), not the hardcoded 2026-06. The note's own follow-up on `daysInMonth` is disclosed residue and is carried by R2-717. |
@@ -182,7 +182,7 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-212 | HIGH | FIXED | `bbe3871` | `safety.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: IncidentClose.root_cause and .corrective_action both carry Field(..., min_length=10) at safety.py:44-45. |
 | R2-230 | HIGH | FIXED | `1a8374f` | `models.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: BOTH surfaces are covered - drawing create and revision create each have Field(..., min_length=1) plus a validator rejecting a whitespace-only file_url (drawings.py:63-69 and :74-81). The note's own disclosure that the UI half is unwired is accurate and belongs to R2-717. |
 | R2-253 | HIGH | FIXED | `e2a6963` | `models.py` | yes | yes | text-pin | 1 | UNVERIFIED | E0 passes - bills.wo_id is live. Behaviour not yet exercised. |
-| R2-285 | HIGH | FIXED | `5e261ba` | `settings.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
+| R2-285 | HIGH | FIXED | `5e261ba` | `settings.py` | yes | yes | text-pin | 1 | CONFIRMED | E1, and checked for completeness on BOTH mutation paths: _validate_rule_approvers and _reject_overlapping_band are each called on create (settings.py:390-391) and on update (:413-414), with the amount-band validator at :198. All three claims hold and neither path is left unguarded. |
 | R2-292 | HIGH | FIXED | `e88a5f1` | `settings.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: all four guards present in settings.py - empty matrix 400 at :522, the `all` superuser flag gated on owner_equivalent at :536, and _LOCKED_ROLES = {Owner, Admin} at :500 with the locked-role check at :524. |
 | R2-338 | HIGH | FIXED | `959ae3b` | `planning.py` | yes | yes | text-pin | 1 | UNVERIFIED | E0 passes - both columns live. Behaviour not yet exercised. |
 | R2-340 | HIGH | FIXED | `d034a0a` | `planning.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
@@ -203,10 +203,10 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-580 | HIGH | FIXED | `b813b11` | `projects.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: ProjectUpdate.status is pattern-constrained and ProjectCreate has no status field at all, so there is no unguarded write path. E3: live project statuses are Ongoing and Planning, both allowed. |
 | R2-582 | HIGH | FIXED | `5c39df3` | `projects.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: ProjectPartyStatusUpdate.status is Field(..., pattern='^(Active|Inactive)$') at projects.py:527. |
 | R2-583 | HIGH | FIXED | `7c7a381` | `projects.py` | yes | yes | parse_fail | 1 | CONFIRMED | E1: the existing-link branch (projects.py:508-515) updates advance_paid, to_pay and balance and the endpoint returns the new state, so a re-posted opening balance is no longer a silent no-op. |
-| R2-006 | HIGH | FIXED | `3257e0a` | `frontend/src/app/c/[company_id]/d/drawings/page.tsx` | no | no | — | 2 | UNVERIFIED |  |
+| R2-006 | HIGH | FIXED | `3257e0a` | `frontend/src/app/c/[company_id]/d/drawings/page.tsx` | no | no | — | 2 | CONFIRMED | E1: the revision flow POSTs /apis/v3/drawings first when no drawing exists (drawings/page.tsx:272), so the first drawing can be created. |
 | R2-007 | HIGH | FIXED | `2205ffd` | `frontend/src/app/c/[company_id]/d/procurement/page.tsx` | no | no | — | 2 | CONFIRMED | E1: 'Shree Cement Traders' is gone from frontend/src entirely and the PO modal fetches /billing/subcontractors at :122. The note's disclosed residue - handleCreatePO still prepending optimistically on failure - is real and is carried by R2-717. |
 | R2-008 | HIGH | FIXED | `fc22a98` | `frontend/src/app/c/[company_id]/d/procurement/page.tsx` | no | no | — | 2 | CONFIRMED | E1: fabricated VENDORS, RFQ_DATA and 'L1 PREFERRED' are gone. The note's disclosed caveat is accurate - `selectedRFQItem` survives at :224 and is write-only. |
-| R2-019 | HIGH | FIXED | `45ffb76` | `frontend/src/app/c/[company_id]/d/hr/page.tsx` | no | no | — | 2 | UNVERIFIED |  |
+| R2-019 | HIGH | FIXED | `45ffb76` | `frontend/src/app/c/[company_id]/d/hr/page.tsx` | no | no | — | 2 | CONFIRMED | E1: no 'Diwali' seed anywhere in frontend/src; holidays load from GET /hr/holidays/{companyId}. Consistent with R2-110, which covers the same defect from the other page. |
 | R2-034 | HIGH | FIXED | `0866171` | `frontend/src/app/c/[company_id]/d/billing/page.tsx` | no | no | — | 2 | CONFIRMED | E1: `wo.subcontractor_name || nameMap[...] || "Unassigned"` - the server field leads and the honest placeholder is last. The three swallowed fetch failures now log, and the effect dependency array gained companyId. Nuance: the failures log to console rather than surfacing to the user, which matches the note's wording but is not a user-visible error. |
 | R2-069 | HIGH | FIXED | `a07d1e2` | `d/finance/page.tsx` | no | no | — | 2 | CONFIRMED | E1: the field is labelled 'Reference / document name (file is not uploaded)' at finance/page.tsx:4112 - the affordance is honest. |
 | R2-093 | HIGH | FIXED | `401cf1e` | `procurement/page.tsx` | no | no | — | 2 | UNVERIFIED |  |
@@ -256,7 +256,7 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-056 | MEDIUM | FIXED | `5f89eb1` | `d/payroll-attendance/page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-062 | MEDIUM | FIXED | `bd928e7` | `frontend/src/app/c/[company_id]/dashboard/page.tsx` | yes | yes | text-pin | 1 | CONFIRMED | E1: zero residue for all six named symbols (fallbackWorkforceEmployees, fallbackMaterials, workforceRows, materialRows, snapshotFilters, uniqueValues). |
 | R2-066 | MEDIUM | FIXED | `48bd6d1` | `bi_export.py` | yes | yes | — | 1 | UNVERIFIED |  |
-| R2-071 | MEDIUM | FIXED | `ea0ee87` | `d/finance/page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
+| R2-071 | MEDIUM | FIXED | `ea0ee87` | `d/finance/page.tsx` | yes | yes | text-pin | 1 | CONFIRMED | E1: the work-order terms field reads e.currentTarget.innerText at finance/page.tsx:1550 and `innerHTML` appears nowhere in the file, so no unsanitised markup can reach /billing/work-orders. |
 | R2-072 | MEDIUM | FIXED | `650077a` | `d/finance/page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-077 | MEDIUM | FIXED | `160aaec` | `frontend/src/app/c/[company_id]/reports/page.tsx` | yes | yes | FAKE_GATE | 1 | FAKE_GATE | the pin reads `reports/[slug]/page.tsx`; `exportSchemas` only ever existed in `reports/page.tsx`, which is the file the fix changed. Watches the wrong file. |
 | R2-078 | MEDIUM | FIXED | `35263bd` | `PageHeader.tsx` | yes | yes | text-pin | 1 | CONFIRMED | E1: no notification, bell or badge symbol remains in PageHeader. |
@@ -367,7 +367,7 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-600 | MEDIUM | FIXED | `1d3235d` | `home/page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-012 | MEDIUM | FIXED | `e9111eb` | `frontend/src/app/c/[company_id]/d/finance/page.tsx` | no | no | — | 2 | UNVERIFIED |  |
 | R2-016 | MEDIUM | FIXED | `ddf1290` | `frontend/src/app/c/[company_id]/p/[project_id]/task/page.tsx` | no | no | — | 2 | UNVERIFIED |  |
-| R2-020 | MEDIUM | FIXED | `4be5ccf` | `frontend/src/app/c/[company_id]/d/dpr/page.tsx` | no | no | — | 2 | UNVERIFIED |  |
+| R2-020 | MEDIUM | FIXED | `4be5ccf` | `frontend/src/app/c/[company_id]/d/dpr/page.tsx` | no | no | — | 2 | CONFIRMED | E1: the fabricated takeoff rows ('Main Floor 2 Slab section A', 'Beam drop grid B-C') are gone from frontend/src entirely. |
 | R2-022 | MEDIUM | FIXED | `5fda93e` | `frontend/src/app/c/[company_id]/d/finance/page.tsx` | no | no | — | 2 | UNVERIFIED |  |
 | R2-026 | MEDIUM | FIXED | `e870664` | `frontend/src/app/c/[company_id]/d/home/page.tsx` | no | no | — | 2 | UNVERIFIED |  |
 | R2-053 | MEDIUM | FIX_VERIFIED | `a6bfdb4` | `finance.py` | no | no | — | 2 | UNVERIFIED |  |
