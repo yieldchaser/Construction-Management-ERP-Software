@@ -41,6 +41,15 @@ interface SubcontractorScore {
   late_bills: number;
 }
 
+interface MaterialReconciliationRow {
+  material_name: string;
+  unit: string;
+  ordered_qty: number;
+  consumed_qty: number;
+  variance_qty: number;
+  over_consumed: boolean;
+}
+
 interface AnalyticsPayload {
   company_id: string;
   company_name: string;
@@ -67,6 +76,7 @@ interface AnalyticsPayload {
     wastage_qty: number;
     wastage_pct: number | null;
   };
+  material_reconciliation: MaterialReconciliationRow[];
   projects: ProjectSummary[];
   subcontractor_scorecard: SubcontractorScore[];
 }

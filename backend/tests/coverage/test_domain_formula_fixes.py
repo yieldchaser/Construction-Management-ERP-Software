@@ -1189,4 +1189,51 @@ def test_analytics_wastage_reads_records_and_keeps_negative_variance(client, db,
     assert mw["stock_variance_qty"] == -50.0  # over-consumption surfaced, never clamped
 
 
+# -- W08 / R2-329: reconciliation computed per material and per unit ----------
+
+def test_analytics_reconciliation_per_material_and_unit(client, db, make_tenant, auth_headers):
+    comp, user, _ = make_tenant(company_name="H-R2329", user_name="U-H329", mobile=_mob(82), email=_mail(82))
+    hdr = auth_headers(user, comp)
+    project = _mk_project(db, comp)
+
+    po = models.PurchaseOrder(
+        id=uuid.uuid4(), company_id=comp.id, project_id=project.id,
+        po_number="PO-R2329", po_date=_utc(2026, 1, 1), status="received",
+        gross_amount=Decimal("2000.00"), tax_amount=Decimal("0.00"),
+        total_amount=Decimal("2000.00"))
+    db.add(po)
+    db.flush()
+    db.add_all([
+        models.PurchaseOrderItem(
+            id=uuid.uuid4(), po_id=po.id, material_name="Cement",
+            quantity=Decimal("100"), unit="bags", rate=Decimal("10.00"),
+            tax_pct=Decimal("0.00")),
+        models.PurchaseOrderItem(
+            id=uuid.uuid4(), po_id=po.id, material_name="Steel",
+            quantity=Decimal("10"), unit="tonnes", rate=Decimal("100.00"),
+            tax_pct=Decimal("0.00")),
+        # Cement over-consumed in bags; Steel fine in tonnes. One mixed-unit
+        # scalar (110 ordered vs 152 consumed) cannot tell these apart.
+        models.MaterialTransaction(
+            id=uuid.uuid4(), project_id=project.id, material_name="Cement",
+            qty=Decimal("150"), type="used", unit="bags"),
+        models.MaterialTransaction(
+            id=uuid.uuid4(), project_id=project.id, material_name="Steel",
+            qty=Decimal("2"), type="used", unit="tonnes"),
+    ])
+    db.commit()
+
+    r = client.get(f"/apis/v3/analytics/company/{comp.id}", headers=hdr)
+    assert r.status_code == 200, r.text
+    rows = r.json()["material_reconciliation"]
+    cement = next(row for row in rows if row["material_name"] == "Cement")
+    steel = next(row for row in rows if row["material_name"] == "Steel")
+    assert cement["unit"] == "bags"
+    assert cement["over_consumed"] is True
+    assert cement["variance_qty"] == -50.0
+    assert steel["unit"] == "tonnes"
+    assert steel["over_consumed"] is False
+    assert steel["variance_qty"] == 8.0
+
+
 

@@ -365,6 +365,30 @@ def get_company_analytics(company_id: uuid.UUID, db: Session = Depends(get_db), 
         else None
     )
 
+    # Stock reconciliation per material and per unit: summing bags, tonnes and
+    # cft into one scalar makes the comparison meaningless, so each material
+    # line is compared in its own unit.
+    ordered_by_material = defaultdict(float)
+    for item in purchase_order_items:
+        ordered_by_material[(item.material_name, (item.unit or "").strip().lower())] += _to_float(item.quantity)
+    consumed_by_material = defaultdict(float)
+    for tx in material_transactions:
+        consumed_by_material[(tx.material_name, (tx.unit or "").strip().lower())] += _to_float(tx.qty)
+    material_reconciliation = []
+    for material, unit in sorted(set(ordered_by_material) | set(consumed_by_material)):
+        ordered_m = ordered_by_material.get((material, unit), 0.0)
+        consumed_m = consumed_by_material.get((material, unit), 0.0)
+        material_reconciliation.append(
+            {
+                "material_name": material,
+                "unit": unit,
+                "ordered_qty": round(ordered_m, 2),
+                "consumed_qty": round(consumed_m, 2),
+                "variance_qty": round(ordered_m - consumed_m, 2),
+                "over_consumed": consumed_m > ordered_m,
+            }
+        )
+
     subcontractor_scorecard = []
     for subcontractor_id, orders in work_orders_by_subcontractor.items():
         company_team = next((team for team in teams if team.id == subcontractor_id), None)
@@ -433,6 +457,7 @@ def get_company_analytics(company_id: uuid.UUID, db: Session = Depends(get_db), 
             "wastage_qty": round(wastage_qty, 2),
             "wastage_pct": wastage_pct,
         },
+        "material_reconciliation": material_reconciliation,
         "projects": project_summary,
         "subcontractor_scorecard": subcontractor_scorecard,
     }
