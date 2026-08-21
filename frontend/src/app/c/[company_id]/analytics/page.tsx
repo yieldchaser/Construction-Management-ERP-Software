@@ -559,6 +559,11 @@ export default function CompanyAnalyticsPage() {
                   <div className="text-xs text-muted">
                     Wastage: <span className="font-semibold text-amber-400">{data?.material_wastage.wastage_pct == null ? "—" : `${data.material_wastage.wastage_pct}%`}</span>
                   </div>
+                  {data && data.material_reconciliation.some((row) => row.over_consumed) ? (
+                    <div className="rounded-lg border border-red-500/40 bg-red-500/10 p-3 text-xs font-semibold text-red-300">
+                      Over-consumed {data.material_reconciliation.filter((row) => row.over_consumed).length} material line(s): consumption exceeds the ordered quantity.
+                    </div>
+                  ) : null}
                 </div>
               </div>
             </div>
