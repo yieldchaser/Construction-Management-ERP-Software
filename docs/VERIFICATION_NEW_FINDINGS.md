@@ -251,8 +251,37 @@ not taken from the note.
 | R2-061 | MEDIUM | `setFleet` only ever called with API data or `[]` | **holds** — only `:108` and `:133` |
 | R2-085 | LOW | no internal phase labels remain | **holds** — only ZATCA "Phase 1", legitimate domain term |
 
-The four closures are accurate about what they claim. R2-712..R2-716 exist because three of them
-were scoped to named files rather than to the defect class.
+The four closures are accurate about what they claim. R2-712 exists anyway, because three of them
+were scoped to the files a finding named rather than to the defect class.
 
-R2-701 and R2-711 together are the highest-value pair: one is a live defect, the other is the
-reason it could be closed as fixed without anyone noticing.
+## Summary
+
+| id | sev | class | from |
+|---|---|---|---|
+| R2-701 | CRITICAL | not in effect in prod | R2-559 |
+| R2-702 | HIGH | not in effect in prod | R2-191 |
+| R2-703 | HIGH | prod defect | — |
+| R2-704 | MEDIUM | latent prod defect | — |
+| R2-705 | MEDIUM | fake gate | R2-077 |
+| R2-706 | MEDIUM | fake gate | R2-578 |
+| R2-707 | MEDIUM | fake gate | R2-351 |
+| R2-708 | MEDIUM | fake gate | R2-341 |
+| R2-709 | LOW | fake gate | R2-040 |
+| R2-710 | HIGH | evidence class | the pin suite |
+| R2-711 | MEDIUM | evidence class | — |
+| **R2-712** | **CRITICAL** | **class finding, 11 instances, proved live in browser + SQL** | R2-017 class sweep |
+| ~~R2-713~~ | — | merged into R2-712 as instance 11 | — |
+| ~~R2-714~~ | — | merged into R2-712 as instance 3, the money path | — |
+| ~~R2-715~~ | — | merged into R2-712 as instance 6 | — |
+| ~~R2-716~~ | — | merged into R2-712 as instances 7-8 | — |
+
+**Twelve live findings.** R2-713..R2-716 were filed separately first and are struck through, not
+deleted, so the history stays traceable.
+
+Three to act on first, for different reasons:
+
+- **R2-712 instance 3** — a money-movement form writing account names that exist for nobody.
+- **R2-701** — a live defect with a closing window: the migration applies cleanly only while the
+  duplicate count is still zero.
+- **R2-711** — the reason R2-701 could be closed as fixed without anyone noticing. Cheap, and it
+  closes the whole class rather than the seven instances.
