@@ -151,6 +151,27 @@ VERDICTS = {
                             "importer, and BOTH write paths - Excel import (:204) and manual add "
                             "(:416-430) - now store the typed quantity with `float_limit` kept "
                             "only as `quantity_float_limit` display metadata."),
+    "R2-062": ("CONFIRMED", "E1: zero residue for all six named symbols "
+                            "(fallbackWorkforceEmployees, fallbackMaterials, workforceRows, "
+                            "materialRows, snapshotFilters, uniqueValues)."),
+    "R2-065": ("CONFIRMED", "E1: `computePayslips` and its 'Mock Data' header are gone from "
+                            "d/hr/page.tsx."),
+    "R2-070": ("CONFIRMED", "E1: the indent card's file input is gone and the photoUrl view "
+                            "button survives at :624 as claimed. The one remaining "
+                            "createObjectURL in the file is the GRN gate photo, a different "
+                            "control (R2-068 / R2-717). Minor undisclosed residue: "
+                            "`newIndentPhoto` is still read at :271 but `setNewIndentPhoto` has "
+                            "no call site, so it always sends undefined - dead, not wrong."),
+    "R2-078": ("CONFIRMED", "E1: no notification, bell or badge symbol remains in PageHeader."),
+    "R2-115": ("CONFIRMED", "E1: the demo-tenant INSERT on GET is gone; unknown companies now "
+                            "404. NOTE - this row's separate judgement that the residual demo "
+                            "chain is 'cosmetic only' is contradicted by R2-719: six pages still "
+                            "send the sentinel company id and the attendance path writes against "
+                            "the sentinel user. The fix is right; that assessment is not."),
+    "R2-207": ("CONFIRMED", "E1: the recipe allowance is applied - 8 x 2 x 1.05 = 16.8 matches "
+                            "the audit example. E3: I suspected float(recipe.wastage_pct) could "
+                            "500 on NULL, and DISPROVED it - production_recipes.wastage_pct is "
+                            "NOT NULL in Supabase, and the Pydantic field is bounded 0..100."),
     "R2-083": ("UNVERIFIED", "E1 FAILS on completeness. The two edits are correct, but the note's "
                              "claim that these were 'the last two fabricated attribute fallbacks' "
                              "is wrong - four remain in the same object literal, including "

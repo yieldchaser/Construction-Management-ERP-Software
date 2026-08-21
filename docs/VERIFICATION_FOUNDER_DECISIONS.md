@@ -20,6 +20,15 @@ yes/no, not an investigation.
 **5 projects**. `users` row `e0000000-0000-0000-0000-000000000100` is **"Demo Engineer" /
 demo@siteflow.co**.
 
+**Where it came from.** `GET /settings/company` used to *create* it: if the requested company id
+was the sentinel UUID, the endpoint INSERTed "Demo Construction Ltd" and committed. R2-115
+(`093fd10`) removed that and now 404s — verified. So the tenant is a leftover of the old behaviour,
+and nothing recreates it today. That makes deleting it safer than it would otherwise be.
+
+R2-115's closure also judged the residual demo chain "cosmetic only". R2-719 contradicts that: six
+pages still send the sentinel company id, and the attendance punch path writes against the sentinel
+user. The fix is right; that assessment is not.
+
 These are not inert. Eight console sites coalesce a missing route param or employee id into exactly
 those UUIDs, so six pages will fetch that tenant's data and the attendance punch path will write
 against that user.

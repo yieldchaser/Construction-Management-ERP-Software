@@ -254,12 +254,12 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-048 | MEDIUM | FIXED | `e8ad9cd` | `helpContent.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-054 | MEDIUM | FIX_VERIFIED | `6e43ff0` | `finance.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-056 | MEDIUM | FIXED | `5f89eb1` | `d/payroll-attendance/page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
-| R2-062 | MEDIUM | FIXED | `bd928e7` | `frontend/src/app/c/[company_id]/dashboard/page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
+| R2-062 | MEDIUM | FIXED | `bd928e7` | `frontend/src/app/c/[company_id]/dashboard/page.tsx` | yes | yes | text-pin | 1 | CONFIRMED | E1: zero residue for all six named symbols (fallbackWorkforceEmployees, fallbackMaterials, workforceRows, materialRows, snapshotFilters, uniqueValues). |
 | R2-066 | MEDIUM | FIXED | `48bd6d1` | `bi_export.py` | yes | yes | — | 1 | UNVERIFIED |  |
 | R2-071 | MEDIUM | FIXED | `ea0ee87` | `d/finance/page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-072 | MEDIUM | FIXED | `650077a` | `d/finance/page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-077 | MEDIUM | FIXED | `160aaec` | `frontend/src/app/c/[company_id]/reports/page.tsx` | yes | yes | FAKE_GATE | 1 | FAKE_GATE | the pin reads `reports/[slug]/page.tsx`; `exportSchemas` only ever existed in `reports/page.tsx`, which is the file the fix changed. Watches the wrong file. |
-| R2-078 | MEDIUM | FIXED | `35263bd` | `PageHeader.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
+| R2-078 | MEDIUM | FIXED | `35263bd` | `PageHeader.tsx` | yes | yes | text-pin | 1 | CONFIRMED | E1: no notification, bell or badge symbol remains in PageHeader. |
 | R2-082 | MEDIUM | FIXED | `248c809` | `frontend/src/app/c/[company_id]/analytics/page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-084 | MEDIUM | FIXED | `355cfc3` | `dashboard/page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-088 | MEDIUM | FIXED | `d90b8fc` | `backend/app/main.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
@@ -269,7 +269,7 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-103 | MEDIUM | FIXED | `f773b6d` | `/d/finance/page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-107 | MEDIUM | FIXED | `7ffa1c9` | `d/attendance/page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-114 | MEDIUM | FIXED | `4cdc81b` | `backend/app/models.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
-| R2-115 | MEDIUM | FIXED | `093fd10` | `settings.py` | yes | yes | parse_fail | 1 | UNVERIFIED |  |
+| R2-115 | MEDIUM | FIXED | `093fd10` | `settings.py` | yes | yes | parse_fail | 1 | CONFIRMED | E1: the demo-tenant INSERT on GET is gone; unknown companies now 404. NOTE - this row's separate judgement that the residual demo chain is 'cosmetic only' is contradicted by R2-719: six pages still send the sentinel company id and the attendance path writes against the sentinel user. The fix is right; that assessment is not. |
 | R2-118 | MEDIUM | FIXED | `45ffb76` | `UNMAPPED` | yes | yes | EVIDENCE_CLOSE | 1 | UNVERIFIED |  |
 | R2-122 | MEDIUM | FIXED | `9236ea4` | `budgeting.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-124 | MEDIUM | FIXED | `89839c9` | `frontend/src/app/c/[company_id]/d/equipment/page.tsx` | yes | yes | parse_fail | 1 | UNVERIFIED |  |
@@ -293,7 +293,7 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-191 | MEDIUM | FIXED | `b4c0a37` | `auth.py` | yes | yes | text-pin | 1 | NOT_IN_PROD | E0: company_team's only unique index is its pkey. Correct in code, absent in production. Escalated as R2-702. |
 | R2-193 | MEDIUM | FIXED | `07764bc` | `bi_export.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-206 | MEDIUM | FIXED | `83c32c2` | `production.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
-| R2-207 | MEDIUM | FIXED | `89056dd` | `production.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
+| R2-207 | MEDIUM | FIXED | `89056dd` | `production.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: the recipe allowance is applied - 8 x 2 x 1.05 = 16.8 matches the audit example. E3: I suspected float(recipe.wastage_pct) could 500 on NULL, and DISPROVED it - production_recipes.wastage_pct is NOT NULL in Supabase, and the Pydantic field is bounded 0..100. |
 | R2-208 | MEDIUM | FIXED | `574ebe9` | `p/budgeting/page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-217 | MEDIUM | FIXED | `f38215e` | `d/drawings/page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-218 | MEDIUM | FIXED | `—` | `UNMAPPED` | yes | yes | no_commit | 1 | UNVERIFIED |  |
@@ -403,7 +403,7 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-001 | LOW | FIXED | `dd6c5fe` | `frontend/src/app/c/[company_id]/d/payment-approval/page.tsx` | yes | yes | EVIDENCE_CLOSE | 1 | UNVERIFIED |  |
 | R2-002 | LOW | FIXED | `807f092` | `Sidebar.tsx` | yes | yes | parse_fail | 1 | UNVERIFIED |  |
 | R2-057 | LOW | FIXED | `b9a08e6` | `d/planning/gantt/page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
-| R2-070 | LOW | FIXED | `dd0ed9a` | `d/procurement/page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
+| R2-070 | LOW | FIXED | `dd0ed9a` | `d/procurement/page.tsx` | yes | yes | text-pin | 1 | CONFIRMED | E1: the indent card's file input is gone and the photoUrl view button survives at :624 as claimed. The one remaining createObjectURL in the file is the GRN gate photo, a different control (R2-068 / R2-717). Minor undisclosed residue: `newIndentPhoto` is still read at :271 but `setNewIndentPhoto` has no call site, so it always sends undefined - dead, not wrong. |
 | R2-079 | LOW | FIXED | `a1d639b` | `PageHeader.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-085 | LOW | FIXED | `1828ff0` | `analytics.py` | yes | yes | parse_fail | 1 | CONFIRMED | E1: case-insensitive sweep of the whole console returns one hit, ZATCA 'Phase 1' in settings, which is domain terminology. |
 | R2-104 | LOW | FIXED | `a99e206` | `finance/page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
@@ -413,5 +413,5 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-023 | LOW | FIXED | `6ef2cc8` | `analytics/page.tsx` | no | no | — | 2 | UNVERIFIED |  |
 | R2-038 | LOW | FIXED | `d48e67c` | `frontend/src/app/c/[company_id]/analytics/page.tsx` | no | no | — | 2 | UNVERIFIED |  |
 | R2-064 | LOW | FIXED | `ba7e65f` | `d/budgeting/boq/page.tsx` | no | no | — | 2 | UNVERIFIED |  |
-| R2-065 | LOW | FIXED | `f53dafd` | `library.py` | no | no | — | 3 | UNVERIFIED |  |
+| R2-065 | LOW | FIXED | `f53dafd` | `library.py` | no | no | — | 3 | CONFIRMED | E1: `computePayslips` and its 'Mock Data' header are gone from d/hr/page.tsx. |
 | R2-095 | LOW | FIXED | `6111efe` | `UNMAPPED` | no | no | — | 3 | UNVERIFIED |  |
