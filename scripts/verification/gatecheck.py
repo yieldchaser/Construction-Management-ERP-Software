@@ -39,6 +39,22 @@ def git(*args):
 
 
 # ---------------------------------------------------------------- commit index
+TOUCHES_SOURCE = {}
+
+
+def touches_source(sha):
+    """A commit that changes only audit/ or docs/ is a register update, not a fix. Diffing a
+    pin against such a commit's parent compares the pin to a tree the fix is ALREADY in, which
+    silently reports a real gate as fake (or the reverse)."""
+    if sha in TOUCHES_SOURCE:
+        return TOUCHES_SOURCE[sha]
+    _, out, _ = git("show", "--name-only", "--format=", sha)
+    files = [f for f in out.splitlines() if f.strip()]
+    val = any(not (f.startswith("audit/") or f.startswith("docs/")) for f in files)
+    TOUCHES_SOURCE[sha] = val
+    return val
+
+
 def commit_index():
     _, out, _ = git("log", "campaign/waves", "--format=%H%x09%s")
     idx = {}
@@ -46,8 +62,9 @@ def commit_index():
         sha, _, subj = line.partition("\t")
         for m in re.finditer(r"R2[-_ ]?(\d{3})", subj, re.I):
             idx.setdefault("R2-" + m.group(1), []).append(sha)
-    # newest first from git log; keep the OLDEST (the original fix) last
-    return idx
+    # newest first from git log; keep the OLDEST (the original fix) last. Drop
+    # register-only commits so the oldest SOURCE commit is what gets diffed.
+    return {k: [s for s in v if touches_source(s)] or [] for k, v in idx.items()}
 
 
 FILE_CACHE = {}
@@ -160,6 +177,7 @@ def main():
                 code, out, _ = git("rev-parse", "--verify", "--quiet", sh + "^{commit}")
                 if code == 0:
                     real.append(out.strip())
+            real = [s for s in real if touches_source(s)]
             if real:
                 reg_shas[cells[0]] = list(reversed(real))
     results = []

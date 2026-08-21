@@ -160,6 +160,57 @@ Cheap, and it closes the whole class rather than the seven instances.
 
 ---
 
+## Class D — found by verifying a closed finding, in a file the closure never covered
+
+### R2-712 · CRITICAL · the Material Transfer form ships a fabricated company and two fabricated projects, and cannot reach a real project
+
+**Found while verifying:** R2-017 (CRITICAL, `FIXED`).
+**File:** `frontend/src/app/c/[company_id]/d/finance/page.tsx` lines 2255, 2931, 2944-2945.
+**Present on both `origin/main` and `campaign/waves` — deployed.**
+
+Finance → Transaction → **+ Material Transfer** opens a drawer that is hardcoded:
+
+- header caption: `PRESTIGE DEVELOPERS` (line 2255)
+- **FROM**: a `readOnly` input with `value="Prestige Developers"` (line 2931) — not the signed-in
+  company, and not editable
+- **TO**: a `<select>` whose only options are `Skyline Premium Towers` and
+  `Grand Orchard Villas` (lines 2944-2945) — two invented projects, hardcoded. **The company's own
+  projects are not in the list.**
+
+**Live evidence.** Verified in production against the test company *ZZ R8 Throwaway*
+(`1fa705a4-7aa6-42f2-9906-65902c96916f`) on 2026-08-21. The rendered drawer reads
+"MATERIAL TRANSFER / PRESTIGE DEVELOPERS", FROM shows `Prestige Developers`, and the TO select
+enumerates exactly `Select Project / Skyline Premium Towers / Grand Orchard Villas`. Note that the
+adjacent project picker on the same screen was still rendering `Loading projects...` from the real
+API while this one was already populated with invented values — the two are unrelated code paths.
+
+**Impact.** Material Transfer is unusable: a transfer can only be addressed to a project that does
+not exist. Any record it does create names the wrong originating company. This is the same defect
+class R2-017 was raised for and closed on — the closure swept four files
+(`dashboard`, `reports/dpr`, `reports/item-wise-sales`, `hr`) and this fifth site was never in
+scope. Worth checking whether it can write, and what it writes, before anyone uses it.
+
+**Also visible in the same drawer, not yet investigated:** `TRANSFER OUT NO` renders as `0`.
+
+### R2-713 · MEDIUM · the dashboard invents a start and end date for any project that has none
+
+**Found while verifying:** R2-017.
+**File:** `frontend/src/app/c/[company_id]/dashboard/page.tsx` lines 133-134.
+
+R2-017's closure correctly removed the four fabricated projects and the `defaultMatch` merge, and
+that part verifies clean — zero fabricated strings remain in the four files it names. But the
+surviving real-data mapper still fabricates per-field:
+
+```
+startDate: dbProj.start_date || new Date().toISOString().split('T')[0],
+endDate:   dbProj.end_date   || "2027-12-31",
+```
+
+A project with no dates in the database is displayed as starting today and ending 2027-12-31, with
+nothing marking either as absent. Neighbouring fields in the same object literal handle this
+correctly with `"—"` (`category`, `customerName`, `projectStage`), so the pattern to follow is
+already there.
+
 ## Summary
 
 | id | sev | class | from |
@@ -175,6 +226,8 @@ Cheap, and it closes the whole class rather than the seven instances.
 | R2-709 | LOW | fake gate | R2-040 |
 | R2-710 | HIGH | evidence class | the pin suite |
 | R2-711 | MEDIUM | evidence class | — |
+| R2-712 | CRITICAL | live prod defect, proved in browser | found via R2-017 |
+| R2-713 | MEDIUM | fabricated fallback data | found via R2-017 |
 
 R2-701 and R2-711 together are the highest-value pair: one is a live defect, the other is the
 reason it could be closed as fixed without anyone noticing.
