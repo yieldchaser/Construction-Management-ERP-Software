@@ -57,6 +57,12 @@ COMPLETED_TASK_STATUSES = {
 }
 
 
+def _task_is_completed(task) -> bool:
+    if (task.status or "").lower() in COMPLETED_TASK_STATUSES:
+        return True
+    return float(task.progress or 0) >= 100
+
+
 def _to_float(value) -> float:
     if value is None:
         return 0.0
@@ -231,7 +237,7 @@ def get_company_analytics(company_id: uuid.UUID, db: Session = Depends(get_db), 
         completed_tasks = sum(
             1
             for task in tasks_by_project.get(project.id, [])
-            if (task.status or "").lower() in COMPLETED_TASK_STATUSES
+            if _task_is_completed(task)
         )
         completion_pct = round((completed_tasks / total_tasks) * 100, 1) if total_tasks else 0.0
 
@@ -258,7 +264,7 @@ def get_company_analytics(company_id: uuid.UUID, db: Session = Depends(get_db), 
 
     total_tasks = len(tasks)
     completed_tasks = sum(
-        1 for task in tasks if (task.status or "").lower() in COMPLETED_TASK_STATUSES
+        1 for task in tasks if _task_is_completed(task)
     )
     burn_rate_pct = round((total_spend / total_budget) * 100, 2) if total_budget else None
     budget_variance = round(total_budget - total_spend, 2)
@@ -293,7 +299,7 @@ def get_company_analytics(company_id: uuid.UUID, db: Session = Depends(get_db), 
             if task.end_date
             and _to_date(task.end_date)
             and _to_date(task.end_date) <= month_end_d
-            and (task.status or "").lower() in COMPLETED_TASK_STATUSES
+            and _task_is_completed(task)
         )
         month_spend = sum(
             _to_float(bill.total_payable)
@@ -327,7 +333,7 @@ def get_company_analytics(company_id: uuid.UUID, db: Session = Depends(get_db), 
     labour_days = round(total_hours / 8.0, 2) if attendance_logs and total_hours else None
     completed_area = 0.0
     for task in tasks:
-        if (task.status or "").lower() in COMPLETED_TASK_STATUSES and task.boq_item_id:
+        if _task_is_completed(task) and task.boq_item_id:
             boq = boq_by_id.get(task.boq_item_id)
             if boq and (boq.unit or "").strip().lower() in AREA_UNITS:
                 completed_area += _to_float(boq.quantity)
@@ -464,7 +470,7 @@ def get_company_operational_analytics(company_id: uuid.UUID, db: Session = Depen
         # Task Progress
         tasks = db.query(Task).filter(Task.project_id == p.id).all()
         total_tasks = len(tasks)
-        completed_tasks = sum(1 for t in tasks if (t.status or "").lower() in COMPLETED_TASK_STATUSES)
+        completed_tasks = sum(1 for t in tasks if _task_is_completed(t))
         progress_pct = round((completed_tasks / total_tasks) * 100, 1) if total_tasks else 0.0
 
         s_val = getattr(p, "actual_start_date", None) or getattr(p, "planned_start_date", None) or getattr(p, "created_at", None)

@@ -73,10 +73,12 @@ def generate_report(
     report_id = uuid.uuid4()
 
     # 1. Query Timeline Progress
-    tasks_total = db.query(Task).filter(Task.project_id == project_id).count()
-    tasks_completed = db.query(Task).filter(Task.project_id == project_id, Task.status == "completed").count()
-    tasks_active = db.query(Task).filter(Task.project_id == project_id, Task.status == "in_progress").count()
-    tasks_completion_pct = int((tasks_completed / tasks_total) * 100) if tasks_total > 0 else 0
+    project_tasks = db.query(Task).filter(Task.project_id == project_id).all()
+    tasks_total = len(project_tasks)
+    tasks_completed = sum(1 for t in project_tasks if t.status == "completed")
+    tasks_active = sum(1 for t in project_tasks if t.status == "in_progress")
+    avg_task_progress = (sum(float(t.progress or 0) for t in project_tasks) / tasks_total) if tasks_total > 0 else 0.0
+    tasks_completion_pct = int(avg_task_progress)
 
     # 2. Query Billing & Financials
     billing_wo_count = db.query(WorkOrder).filter(WorkOrder.project_id == project_id).count()

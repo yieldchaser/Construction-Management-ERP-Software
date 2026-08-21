@@ -165,10 +165,9 @@ def get_dpr_summary(project_id: uuid.UUID, db: Session = Depends(get_db), _: Non
         for d in dprs if d.issues and d.issues.strip()
     ]
     
-    # Calculate average completion based on tasks completed vs planned in the project
+    # Average completion from the maintained per-task progress field
     tasks = db.query(Task).filter(Task.project_id == project_uuid).all()
-    completed_tasks = sum(1 for t in tasks if t.status == "completed")
-    avg_completion = (completed_tasks / len(tasks) * 100) if tasks else 0
+    avg_completion = (sum(float(t.progress or 0) for t in tasks) / len(tasks)) if tasks else 0
     
     return {
         "activities_tracked": activities_count,
