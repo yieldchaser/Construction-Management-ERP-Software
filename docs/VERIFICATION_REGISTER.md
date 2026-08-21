@@ -14,6 +14,11 @@ Verdicts, and only these four:
 - `REGRESSED` — worked before, broken now.
 - `UNVERIFIED` — no evidence obtainable. Honest answer, not a failure.
 
+- `NOT_IN_PROD` — **a fifth verdict, added during the pass.** The fix is correct in code and 
+  demonstrably not in effect in production. None of the original four fit: the gate is real, 
+  nothing regressed, and `UNVERIFIED` would understate a defect that has been positively 
+  proven. Used only where live evidence shows the fix absent from the running system.
+
 Anything not `CONFIRMED` gets a **new** R2 number in the agent's register. Never silently 
 reopen a row.
 
@@ -107,7 +112,7 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-106 | CRITICAL | FIXED | `3a559d9` | `d/attendance/page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-148 | CRITICAL | FIXED | `534451e` | `todos.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-232 | CRITICAL | FIX_VERIFIED | `69b4a98` | `finance.py` | yes | no | — | 1 | UNVERIFIED |  |
-| R2-017 | CRITICAL | FIXED | `15bc202` | `frontend/src/app/c/[company_id]/dashboard/page.tsx` | no | no | — | 2 | UNVERIFIED |  |
+| R2-017 | CRITICAL | FIXED | `15bc202` | `frontend/src/app/c/[company_id]/dashboard/page.tsx` | no | no | — | 2 | CONFIRMED | E1: the four files it names are free of fabricated strings. Claim holds exactly as written. The defect CLASS survives elsewhere - raised as R2-712, which does not detract from this closure. |
 | R2-025 | CRITICAL | FIX_VERIFIED | `f32ca77` | `finance.py` | no | no | — | 2 | UNVERIFIED |  |
 | R2-042 | CRITICAL | FIX_VERIFIED | `db9cfbd` | `frontend/src/app/c/[company_id]/d/finance/page.tsx` | no | no | — | 2 | UNVERIFIED |  |
 | R2-050 | CRITICAL | FIXED | `fe3db93` | `frontend/src/app/c/[company_id]/d/procurement/page.tsx` | no | no | — | 2 | UNVERIFIED |  |
@@ -116,7 +121,7 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-075 | CRITICAL | FIX_VERIFIED | `d5b628a` | `reports.py` | no | no | — | 2 | UNVERIFIED |  |
 | R2-083 | CRITICAL | FIXED | `b8e314b` | `frontend/src/app/c/[company_id]/dashboard/page.tsx` | no | no | — | 2 | UNVERIFIED |  |
 | R2-091 | CRITICAL | FIXED | `ab50c9d` | `procurement/page.tsx` | no | no | — | 2 | UNVERIFIED |  |
-| R2-110 | CRITICAL | FIXED | `2e8b850` | `d/hr/page.tsx` | no | no | — | 2 | UNVERIFIED |  |
+| R2-110 | CRITICAL | FIXED | `2e8b850` | `d/hr/page.tsx` | no | no | — | 2 | CONFIRMED | E1: no Diwali seed; `fetchHolidays` GETs /hr/holidays/{companyId} (hr/page.tsx:276,278); delete calls the API (:305,307). |
 | R2-201 | CRITICAL | FIX_VERIFIED | `e2e449d` | `hr.py` | no | no | — | 2 | UNVERIFIED |  |
 | R2-210 | CRITICAL | FIX_VERIFIED | `e2e449d` | `hr.py` | no | no | — | 2 | UNVERIFIED |  |
 | R2-219 | CRITICAL | FIX_VERIFIED | `e9e3308` | `procurement.py` | no | no | — | 2 | UNVERIFIED |  |
@@ -167,19 +172,19 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-011 | HIGH | FIXED | `ca3a742` | `finance/page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-013 | HIGH | FIXED | `820717b` | `frontend/src/app/c/[company_id]/d/hr/page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-032 | HIGH | FIXED | `261bd41` | `frontend/src/app/c/[company_id]/d/hr/page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
-| R2-149 | HIGH | FIXED | `6d9493c` | `d/todo/page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
+| R2-149 | HIGH | FIXED | `6d9493c` | `d/todo/page.tsx` | yes | yes | text-pin | 1 | CONFIRMED | E1: pure removal of 144 lines. Zero repeat/recurrence/endsDate residue left in d/todo/page.tsx. |
 | R2-168 | HIGH | FIXED | `99d9287` | `d/hr/page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-182 | HIGH | FIXED | `94e7923` | `auth.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-186 | HIGH | FIXED | `1a564f1` | `auth.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-196 | HIGH | FIXED | `aaa5041` | `auth.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
-| R2-202 | HIGH | FIXED | `42d2c9a` | `planning.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
+| R2-202 | HIGH | FIXED | `42d2c9a` | `planning.py` | yes | yes | text-pin | 1 | UNVERIFIED | E0 passes - column live. Behaviour not yet exercised. |
 | R2-204 | HIGH | FIXED | `5b37186` | `quality.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-212 | HIGH | FIXED | `bbe3871` | `safety.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-230 | HIGH | FIXED | `1a8374f` | `models.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
-| R2-253 | HIGH | FIXED | `e2a6963` | `models.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
+| R2-253 | HIGH | FIXED | `e2a6963` | `models.py` | yes | yes | text-pin | 1 | UNVERIFIED | E0 passes - bills.wo_id is live. Behaviour not yet exercised. |
 | R2-285 | HIGH | FIXED | `5e261ba` | `settings.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-292 | HIGH | FIXED | `e88a5f1` | `settings.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
-| R2-338 | HIGH | FIXED | `959ae3b` | `planning.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
+| R2-338 | HIGH | FIXED | `959ae3b` | `planning.py` | yes | yes | text-pin | 1 | UNVERIFIED | E0 passes - both columns live. Behaviour not yet exercised. |
 | R2-340 | HIGH | FIXED | `d034a0a` | `planning.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-363 | HIGH | FIXED | `4095671` | `quality.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-364 | HIGH | FIXED | `cdc82d9` | `quality.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
@@ -187,20 +192,20 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-391 | HIGH | FIXED | `ac10a52` | `quality.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-405 | HIGH | FIXED | `161b2c0` | `settings.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-433 | HIGH | FIXED | `e67476b` | `models.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
-| R2-441 | HIGH | FIXED | `583c47d` | `projects.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
+| R2-441 | HIGH | FIXED | `583c47d` | `projects.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: `_TASK_PROGRESS` covers every value the UI can emit - the frontend option list is exactly not_started/start/in_progress/completed, and the map holds all four plus `ongoing`. E3: production task statuses are `not_started` only. |
 | R2-491 | HIGH | FIXED | `—` | `projects.py` | yes | yes | parse_fail | 1 | UNVERIFIED |  |
 | R2-525 | HIGH | FIXED | `268b8ef` | `statutory.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-526 | HIGH | FIXED | `2c5fe8c` | `statutory.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-551 | HIGH | FIXED | `dc53828` | `quality.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-552 | HIGH | FIXED | `abc5669` | `projects.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-554 | HIGH | FIXED | `185dc60` | `settings.py` | yes | yes | parse_fail | 1 | UNVERIFIED |  |
-| R2-559 | HIGH | FIXED | `e0f2f6e` | `models.py` | yes | yes | parse_fail | 1 | UNVERIFIED |  |
-| R2-580 | HIGH | FIXED | `b813b11` | `projects.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
+| R2-559 | HIGH | FIXED | `e0f2f6e` | `models.py` | yes | yes | parse_fail | 1 | NOT_IN_PROD | E0: zero unique indexes on the six tables in Supabase; by column set the only one is <table>_pkey on id. Correct in code, absent in production. Escalated as R2-701. |
+| R2-580 | HIGH | FIXED | `b813b11` | `projects.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: ProjectUpdate.status is pattern-constrained and ProjectCreate has no status field at all, so there is no unguarded write path. E3: live project statuses are Ongoing and Planning, both allowed. |
 | R2-582 | HIGH | FIXED | `5c39df3` | `projects.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-583 | HIGH | FIXED | `7c7a381` | `projects.py` | yes | yes | parse_fail | 1 | UNVERIFIED |  |
 | R2-006 | HIGH | FIXED | `3257e0a` | `frontend/src/app/c/[company_id]/d/drawings/page.tsx` | no | no | — | 2 | UNVERIFIED |  |
 | R2-007 | HIGH | FIXED | `2205ffd` | `frontend/src/app/c/[company_id]/d/procurement/page.tsx` | no | no | — | 2 | UNVERIFIED |  |
-| R2-008 | HIGH | FIXED | `fc22a98` | `frontend/src/app/c/[company_id]/d/procurement/page.tsx` | no | no | — | 2 | UNVERIFIED |  |
+| R2-008 | HIGH | FIXED | `fc22a98` | `frontend/src/app/c/[company_id]/d/procurement/page.tsx` | no | no | — | 2 | CONFIRMED | E1: fabricated VENDORS, RFQ_DATA and 'L1 PREFERRED' are gone. The note's disclosed caveat is accurate - `selectedRFQItem` survives at :224 and is write-only. |
 | R2-019 | HIGH | FIXED | `45ffb76` | `frontend/src/app/c/[company_id]/d/hr/page.tsx` | no | no | — | 2 | UNVERIFIED |  |
 | R2-034 | HIGH | FIXED | `0866171` | `frontend/src/app/c/[company_id]/d/billing/page.tsx` | no | no | — | 2 | UNVERIFIED |  |
 | R2-069 | HIGH | FIXED | `a07d1e2` | `d/finance/page.tsx` | no | no | — | 2 | UNVERIFIED |  |
@@ -285,7 +290,7 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-174 | MEDIUM | FIXED | `4d06017` | `files.py` | yes | yes | parse_fail | 1 | UNVERIFIED |  |
 | R2-176 | MEDIUM | FIXED | `fd5a709` | `files.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-183 | MEDIUM | FIXED | `e31ff9b` | `auth.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
-| R2-191 | MEDIUM | FIXED | `b4c0a37` | `auth.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
+| R2-191 | MEDIUM | FIXED | `b4c0a37` | `auth.py` | yes | yes | text-pin | 1 | NOT_IN_PROD | E0: company_team's only unique index is its pkey. Correct in code, absent in production. Escalated as R2-702. |
 | R2-193 | MEDIUM | FIXED | `07764bc` | `bi_export.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-206 | MEDIUM | FIXED | `83c32c2` | `production.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-207 | MEDIUM | FIXED | `89056dd` | `production.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
@@ -366,7 +371,7 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-022 | MEDIUM | FIXED | `5fda93e` | `frontend/src/app/c/[company_id]/d/finance/page.tsx` | no | no | — | 2 | UNVERIFIED |  |
 | R2-026 | MEDIUM | FIXED | `e870664` | `frontend/src/app/c/[company_id]/d/home/page.tsx` | no | no | — | 2 | UNVERIFIED |  |
 | R2-053 | MEDIUM | FIX_VERIFIED | `a6bfdb4` | `finance.py` | no | no | — | 2 | UNVERIFIED |  |
-| R2-061 | MEDIUM | FIXED | `b2e837e` | `d/equipment/page.tsx` | no | no | — | 2 | UNVERIFIED |  |
+| R2-061 | MEDIUM | FIXED | `b2e837e` | `d/equipment/page.tsx` | no | no | — | 2 | CONFIRMED | E1: `setFleet` is called at exactly two sites - `:108` with API data and `:133` with `[]`. No fabricated fleet remains. |
 | R2-063 | MEDIUM | FIXED | `6114f17` | `d/quality/page.tsx` | no | no | — | 2 | UNVERIFIED |  |
 | R2-094 | MEDIUM | FIXED | `2525cab` | `UNMAPPED` | no | no | — | 2 | UNVERIFIED |  |
 | R2-097 | MEDIUM | FIXED | `5580919` | `finance.py` | no | no | — | 2 | UNVERIFIED |  |
@@ -400,7 +405,7 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-057 | LOW | FIXED | `b9a08e6` | `d/planning/gantt/page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-070 | LOW | FIXED | `dd0ed9a` | `d/procurement/page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-079 | LOW | FIXED | `a1d639b` | `PageHeader.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
-| R2-085 | LOW | FIXED | `1828ff0` | `analytics.py` | yes | yes | parse_fail | 1 | UNVERIFIED |  |
+| R2-085 | LOW | FIXED | `1828ff0` | `analytics.py` | yes | yes | parse_fail | 1 | CONFIRMED | E1: case-insensitive sweep of the whole console returns one hit, ZATCA 'Phase 1' in settings, which is domain terminology. |
 | R2-104 | LOW | FIXED | `a99e206` | `finance/page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-120 | LOW | FIXED | `06cde63` | `google_drive.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-005 | LOW | FIXED | `2ed961c` | `frontend/src/app/c/[company_id]/d/reports/calculators/page.tsx` | no | no | — | 2 | UNVERIFIED |  |

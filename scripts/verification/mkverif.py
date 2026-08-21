@@ -114,6 +114,40 @@ CONFIRMED_FAKE = {
 }
 EVIDENCE_CLOSE = {"R2-001", "R2-118", "R2-428"}
 
+# Verdicts reached by hand, one finding at a time. E1 = code read, E3 = live product.
+# NOT_IN_PROD is a FIFTH verdict, added deliberately - see the header note in the emitted file.
+VERDICTS = {
+    "R2-017": ("CONFIRMED", "E1: the four files it names are free of fabricated strings. Claim "
+                            "holds exactly as written. The defect CLASS survives elsewhere - "
+                            "raised as R2-712, which does not detract from this closure."),
+    "R2-110": ("CONFIRMED", "E1: no Diwali seed; `fetchHolidays` GETs /hr/holidays/{companyId} "
+                            "(hr/page.tsx:276,278); delete calls the API (:305,307)."),
+    "R2-061": ("CONFIRMED", "E1: `setFleet` is called at exactly two sites - `:108` with API "
+                            "data and `:133` with `[]`. No fabricated fleet remains."),
+    "R2-085": ("CONFIRMED", "E1: case-insensitive sweep of the whole console returns one hit, "
+                            "ZATCA 'Phase 1' in settings, which is domain terminology."),
+    "R2-149": ("CONFIRMED", "E1: pure removal of 144 lines. Zero repeat/recurrence/endsDate "
+                            "residue left in d/todo/page.tsx."),
+    "R2-008": ("CONFIRMED", "E1: fabricated VENDORS, RFQ_DATA and 'L1 PREFERRED' are gone. The "
+                            "note's disclosed caveat is accurate - `selectedRFQItem` survives "
+                            "at :224 and is write-only."),
+    "R2-441": ("CONFIRMED", "E1: `_TASK_PROGRESS` covers every value the UI can emit - the "
+                            "frontend option list is exactly not_started/start/in_progress/"
+                            "completed, and the map holds all four plus `ongoing`. "
+                            "E3: production task statuses are `not_started` only."),
+    "R2-580": ("CONFIRMED", "E1: ProjectUpdate.status is pattern-constrained and ProjectCreate "
+                            "has no status field at all, so there is no unguarded write path. "
+                            "E3: live project statuses are Ongoing and Planning, both allowed."),
+    "R2-559": ("NOT_IN_PROD", "E0: zero unique indexes on the six tables in Supabase; by column "
+                              "set the only one is <table>_pkey on id. Correct in code, absent "
+                              "in production. Escalated as R2-701."),
+    "R2-191": ("NOT_IN_PROD", "E0: company_team's only unique index is its pkey. Correct in "
+                              "code, absent in production. Escalated as R2-702."),
+    "R2-253": ("UNVERIFIED", "E0 passes - bills.wo_id is live. Behaviour not yet exercised."),
+    "R2-338": ("UNVERIFIED", "E0 passes - both columns live. Behaviour not yet exercised."),
+    "R2-202": ("UNVERIFIED", "E0 passes - column live. Behaviour not yet exercised."),
+}
+
 for r in closed:
     g = gate.get(r["id"])
     gv = g["verdict"] if g else ""
@@ -162,6 +196,11 @@ W("- `CONFIRMED` — evidence obtained, fix holds.")
 W("- `FAKE_GATE` — the test passes against the *unfixed* tree, so it gates nothing.")
 W("- `REGRESSED` — worked before, broken now.")
 W("- `UNVERIFIED` — no evidence obtainable. Honest answer, not a failure.")
+W("")
+W("- `NOT_IN_PROD` — **a fifth verdict, added during the pass.** The fix is correct in code and ")
+W("  demonstrably not in effect in production. None of the original four fit: the gate is real, ")
+W("  nothing regressed, and `UNVERIFIED` would understate a defect that has been positively ")
+W("  proven. Used only where live evidence shows the fix absent from the running system.")
 W("")
 W("Anything not `CONFIRMED` gets a **new** R2 number in the agent's register. Never silently ")
 W("reopen a row.")
@@ -249,8 +288,11 @@ W("")
 W("| R2 | SEV | STATUS | COMMIT | PRIMARY FILE | TEST? | PIN? | GATE | TIER | VERDICT | EVIDENCE |")
 W("|---|---|---|---|---|---|---|---|---|---|---|")
 for r in closed:
-    verdict = "FAKE_GATE" if r["gate"] == "FAKE_GATE" else "UNVERIFIED"
-    ev = CONFIRMED_FAKE.get(r["id"], "")
+    if r["id"] in VERDICTS:
+        verdict, ev = VERDICTS[r["id"]]
+    else:
+        verdict = "FAKE_GATE" if r["gate"] == "FAKE_GATE" else "UNVERIFIED"
+        ev = CONFIRMED_FAKE.get(r["id"], "")
     W("| {id} | {sev} | {status} | `{sha}` | `{f}` | {test} | {pin} | {gate} | {tier} | "
       "{v} | {ev} |".format(
           id=r["id"], sev=r["sev"], status=r["status"], sha=r["sha"].strip("`"),
