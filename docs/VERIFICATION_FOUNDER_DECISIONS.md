@@ -74,27 +74,36 @@ migration file; every week of real data makes it harder.
 
 ---
 
-## D-V3 · Internal Transfer writes account names that exist for nobody
+## D-V3 · Internal Transfer — RESOLVED, and it is not what I thought
 
-**Source:** R2-712 instance 3.
+**Source:** R2-712 instance 3, discharged by R2-720.
 
-Finance → Transaction → **+ Internal Transfer** offers three hardcoded accounts and defaults its
-state to them. `bank_accounts` holds **zero rows for the entire database**, so account selection is
-a free-text string matching no record for any company.
+I said I would check what the endpoint persists before you decided. **It persists nothing, because
+Save fires no request at all.**
 
-This is a money-movement path. The question needing your decision is not whether to fix the
-dropdown — it is **what the endpoint has already persisted**, and whether any transfer records need
-correcting.
+`handleRecordPayment` branches for Party to Party and then falls through to
+`if (!amount || amtVal <= 0 || !partyName.trim()) return;`. The Internal Transfer form has no party
+field, so `partyName` is empty and the handler exits on a **bare return with no alert**. Verified
+live in the test company: amount 2500 typed, Save clicked, `window.fetch` recorded zero calls, the
+drawer stayed open, nothing was reported. The instrumentation was validated with a positive control
+afterwards, so the zero is real.
+
+**So the data-integrity worry is withdrawn.** No transfer rows carry bogus account names, because
+no transfer rows are created. Nothing needs correcting and there is nothing to inspect.
+
+**What remains is a smaller, ordinary decision:** the control looks functional and does nothing.
+All three transfer types (Bank To Bank, Cash Deposit, Cash Withdraw) share the handler and the same
+missing party field, so all three are inert.
 
 **Options**
 
-1. Wire the dropdowns to `bank_accounts`/`cash_accounts`, and treat existing transfer rows as
-   suspect until inspected.
-2. Disable the Internal Transfer control until it is wired.
+1. **Remove the control** until a real endpoint exists. Matches the audit's standing preference for
+   an honest absence over a decorative affordance.
+2. Build the handler and endpoint now.
+3. Leave it, but make the bare `return` a visible error so it stops pretending.
 
-**My recommendation: option 2 until the endpoint is inspected**, because a money path that writes
-unresolvable account names should not stay reachable while it is being investigated. I have not
-yet checked what the endpoint stores — that is next in the pass, and may downgrade this.
+**My recommendation: option 1**, with option 3 as the one-line stopgap if removal is awkward
+mid-campaign. This is no longer urgent — downgraded from the money-path concern it looked like.
 
 ---
 
@@ -126,5 +135,5 @@ it turns the remaining absence into a recorded decision rather than an oversight
 |---|---|---|---|
 | D-V1 | 2026-08-21 | pending | — |
 | D-V2 | 2026-08-21 | pending — **time-sensitive** | — |
-| D-V3 | 2026-08-21 | pending | — |
+| D-V3 | 2026-08-21 | **resolved by verification — downgraded, see R2-720** | 2026-08-21 |
 | D-V4 | 2026-08-21 | pending | — |

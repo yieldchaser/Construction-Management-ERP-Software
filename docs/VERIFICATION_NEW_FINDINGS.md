@@ -456,6 +456,48 @@ defensible product defaults and some are fabrications, so the table above is tri
 Then a lint rule forbidding a non-honest string literal on the right of `||` where the left is a
 fetched field, so the class cannot regrow.
 
+## Class H
+
+### R2-720 · HIGH · Internal Transfer is completely inert — Save fires no request and reports nothing
+
+**Found while discharging D-V3**, which asked what the Internal Transfer endpoint persists. The
+answer is: nothing, because no request is ever made.
+
+**Cause.** The drawer's Save calls `handleRecordPayment` (`d/finance/page.tsx:436`). That function
+branches for `"Party to Party"` and then falls through to:
+
+```
+if (!amount || amtVal <= 0 || !partyName.trim()) return;
+```
+
+The Internal Transfer form has **no party field at all** — it collects From Bank, To Bank, Amount,
+Reference No and Notes. `partyName` is therefore empty, the guard hits a **bare `return` with no
+alert**, and the handler exits. `fromBank` and `toBank` are never read outside the JSX, so the
+account selection is not sent anywhere either.
+
+**Live evidence, production, test company ZZ R8 Throwaway.** Opened Finance → Transaction →
++ Internal Transfer, typed an amount of 2500 with real keystrokes, clicked Save:
+
+- `window.fetch` instrumentation recorded **zero calls**
+- the drawer stayed open, with the amount still showing 2500
+- no alert, no toast, no console error
+
+The instrumentation was then validated with a positive control (a deliberate `fetch` to
+`/favicon.ico` was captured), so the empty result is a real absence and not a lost hook.
+
+`"Cash Deposit"` and `"Cash Withdraw"` share the same handler and the same missing party field, so
+all three transfer types are inert.
+
+**This changes D-V3 rather than confirming it.** The concern was that a money path was writing
+account names matching no record. It writes nothing. That removes the data-integrity worry and
+replaces it with a plain one: **a money-movement feature that appears to work and does nothing**,
+with no error to tell the user. Same family as the silent-write-control class.
+
+**Fix direction.** Give Internal Transfer its own handler and endpoint, or — if the backend route
+does not exist yet — remove the control, per the audit's standing preference for an honest absence
+over a decorative affordance. At minimum the bare `return` must become a visible error; a Save
+button that silently does nothing is the worst of the three options.
+
 ## Verified clean so far
 
 Recorded so the pass is not only a list of complaints. Each claim was re-checked against the tree,
@@ -494,8 +536,9 @@ were scoped to the files a finding named rather than to the defect class.
 | **R2-717** | **HIGH** | **class finding — 29 closed rows disclose untracked residue** | register-wide sweep |
 | **R2-718** | **HIGH** | **class finding — 169 closures have no gate; 61 of them CRITICAL** | register-wide sweep |
 | **R2-719** | **CRITICAL** | **class finding — 90 invented-default sites; 8 sentinel UUIDs resolve to real production rows** | generalised from R2-083 |
+| **R2-720** | **HIGH** | **Internal Transfer is inert — Save fires no request, no error** | discharging D-V3 |
 
-**Fifteen live findings.** R2-713..R2-716 were filed separately first and are struck through, not
+**Sixteen live findings.** R2-713..R2-716 were filed separately first and are struck through, not
 deleted, so the history stays traceable.
 
 Three to act on first, for different reasons:
