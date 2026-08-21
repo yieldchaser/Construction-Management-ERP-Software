@@ -14,7 +14,7 @@ from app.models import (
 from app import models
 from app.routers.custom_fields import CustomFieldValueInput, upsert_values_for_entity
 from app.zatca import build_zatca_payload
-from app.workflow_controls import enforce_entry_creation_window, get_company, get_default_terms
+from app.workflow_controls import enforce_entry_creation_window, enforce_entry_editing_window, get_company, get_default_terms
 from app.utils.pdf_generator import generate_document_pdf
 from app.utils.document_pdf import resolve_pdf_branding
 from pydantic import BaseModel, Field
@@ -437,6 +437,7 @@ def cancel_bill(bill_id: UUID, db: Session = Depends(get_db), current_user: User
             status_code=status.HTTP_409_CONFLICT,
             detail="Cannot cancel a bill with payments; reverse the payment first",
         )
+    enforce_entry_editing_window(db, bill.company_id, bill.invoice_date)
     bill.status = "Cancelled"
     bill.cancelled_at = datetime.now(timezone.utc)
     bill.cancelled_by = current_user.id
@@ -829,6 +830,7 @@ def link_bill_match(bill_id: UUID, req: BillMatchLinkRequest, db: Session = Depe
     require_permission(db, current_user, bill.company_id, "billing:edit")
 
     if bill.invoice_type in EXPENSE_INVOICE_TYPES:
+        enforce_entry_editing_window(db, bill.company_id, bill.invoice_date)
         match_id = _resolve_bill_match_id(db, bill.invoice_type, req.match_id, bill.company_id, bill.project_id)
         bill.match_id = match_id
         if match_id is not None:
