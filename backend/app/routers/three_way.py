@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 from decimal import Decimal
 from app.database import get_db
 from app.auth import get_current_user, verify_company_access, get_company_membership, require_permission
-from app.models import ThreeWayMatch, PurchaseOrder, PurchaseOrderItem, GoodsReceiptNote, GRNItem, User
+from app.models import ThreeWayMatch, PurchaseOrder, PurchaseOrderItem, GoodsReceiptNote, GRNItem, User, Bill
 
 router = APIRouter(prefix="/three-way", tags=["3-Way Matching"], dependencies=[Depends(get_current_user)])
 
@@ -20,8 +20,9 @@ class ThreeWayMatchCreate(BaseModel):
     project_id: uuid.UUID
     po_id: uuid.UUID
     grn_id: uuid.UUID
-    invoice_id: Optional[uuid.UUID] = None
-    invoiced_amount: float = Field(..., ge=0)
+    # R2-349: the reconciled amount is read from the identified bill's
+    # total_payable, never typed by the caller; invoice_id is therefore required.
+    invoice_id: uuid.UUID
     variance_reason: Optional[str] = None
     # R2-241: match_status and matched_by are server-computed. The verdict is
     # derived from the variance, never accepted from the request body; the actor
@@ -93,6 +94,18 @@ def create_match(payload: ThreeWayMatchCreate, db: Session = Depends(get_db), cu
             detail="GRN does not belong to the supplied company/project",
         )
 
+    # R2-349: reconcile against the bill itself. The invoiced amount is the
+    # bill's total_payable from the database, not a number typed in the request.
+    bill = db.query(Bill).filter(Bill.id == str(payload.invoice_id)).first()
+    if not bill:
+        raise HTTPException(status_code=404, detail="Invoice (bill) not found")
+    if bill.company_id != payload.company_id or bill.project_id != payload.project_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Invoice does not belong to the supplied company/project",
+        )
+    invoiced_amount = float(bill.total_payable)
+
     grn_items = db.query(GRNItem).filter(GRNItem.grn_id == grn_id).all()
     total_received_qty = sum(float(item.received_qty) for item in grn_items)
 
@@ -113,7 +126,6 @@ def create_match(payload: ThreeWayMatchCreate, db: Session = Depends(get_db), cu
         grn_received_value += float(item.received_qty) * float(pi.rate)
     po_amount = grn_received_value if grn_value_resolved and grn_items else float(po.total_amount)
 
-    invoiced_amount = float(payload.invoiced_amount)
     variance = round(invoiced_amount - po_amount, 2)
     # R2-241: the verdict is always server-computed from the variance; the
     # caller cannot supply or override match_status.

@@ -33,6 +33,13 @@ interface GRN {
   po_id?: string;
 }
 
+interface Bill {
+  id: string;
+  invoice_number: string;
+  invoice_type: string;
+  total_payable: number;
+}
+
 export default function ThreeWayPage() {
   const params = useParams();
   const companyId = params?.company_id as string;
@@ -42,6 +49,7 @@ export default function ThreeWayPage() {
   const [matches, setMatches] = useState<Match[]>([]);
   const [pos, setPos] = useState<PO[]>([]);
   const [grns, setGrns] = useState<GRN[]>([]);
+  const [bills, setBills] = useState<Bill[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -49,9 +57,7 @@ export default function ThreeWayPage() {
     po_id: "",
     grn_id: "",
     invoice_id: "",
-    invoiced_amount: 0,
     variance_reason: "",
-    match_status: "pending",
   });
 
   const fetchMatches = async () => {
@@ -68,12 +74,17 @@ export default function ThreeWayPage() {
 
   const fetchReferenceData = async () => {
     try {
-      const [posRes, grnsRes] = await Promise.all([
+      const [posRes, grnsRes, billsRes] = await Promise.all([
         fetch(`${getApiHost()}/apis/v3/three-way/pos/${companyId}?project_id=${projectId}`, { headers: authHeaders() }),
         fetch(`${getApiHost()}/apis/v3/three-way/grns/${companyId}?project_id=${projectId}`, { headers: authHeaders() }),
+        fetch(`${getApiHost()}/apis/v3/billing/bills?project_id=${projectId}`, { headers: authHeaders() }),
       ]);
       if (posRes.ok) setPos(await posRes.json());
       if (grnsRes.ok) setGrns(await grnsRes.json());
+      if (billsRes.ok) {
+        const data: Bill[] = await billsRes.json();
+        setBills(data.filter((b) => b.invoice_type === "purchase" || b.invoice_type === "subcon"));
+      }
     } catch (e) {
       console.error("Failed to load reference data", e);
     }
@@ -94,13 +105,11 @@ export default function ThreeWayPage() {
       const body: Record<string, unknown> = {
         po_id: form.po_id,
         grn_id: form.grn_id,
-        invoiced_amount: form.invoiced_amount,
+        invoice_id: form.invoice_id,
         company_id: companyId,
         project_id: projectId,
       };
-      if (form.invoice_id) body.invoice_id = form.invoice_id;
       if (form.variance_reason) body.variance_reason = form.variance_reason;
-      body.match_status = form.match_status;
       const res = await fetch(`${getApiHost()}/apis/v3/three-way`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
@@ -110,7 +119,7 @@ export default function ThreeWayPage() {
       if (res.ok) {
         setMessage("Match created successfully");
         setShowModal(false);
-        setForm({ po_id: "", grn_id: "", invoice_id: "", invoiced_amount: 0, variance_reason: "", match_status: "pending" });
+        setForm({ po_id: "", grn_id: "", invoice_id: "", variance_reason: "" });
         fetchMatches();
       } else {
         setMessage(data.detail || "Failed to create match");
@@ -144,7 +153,8 @@ export default function ThreeWayPage() {
   };
 
   const selectedPo = pos.find((p) => p.id === form.po_id);
-  const autoVariance = selectedPo ? form.invoiced_amount - selectedPo.total_amount : 0;
+  const selectedBill = bills.find((b) => b.id === form.invoice_id);
+  const autoVariance = selectedPo && selectedBill ? selectedBill.total_payable - selectedPo.total_amount : 0;
 
   const statusColors: Record<string, string> = {
     matched: "bg-emerald-500/10 text-emerald-400",
@@ -242,10 +252,13 @@ export default function ThreeWayPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-muted mb-1">Invoiced Amount (₹)</label>
-                  <input type="number" required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-foreground" value={form.invoiced_amount} onChange={(e) => setForm({...form, invoiced_amount: parseFloat(e.target.value)})} />
-                  {selectedPo && (
-                    <p className="text-xs text-muted mt-1">PO Amount: {fmtINR(selectedPo.total_amount)} • Variance: <span className={autoVariance < 0 ? "text-red-400" : autoVariance > 0 ? "text-amber-400" : "text-emerald-400"}>{fmtINR(autoVariance)}</span></p>
+                  <label className="block text-xs font-medium text-muted mb-1">Vendor Bill</label>
+                  <select required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-foreground" value={form.invoice_id} onChange={(e) => setForm({...form, invoice_id: e.target.value})}>
+                    <option value="">Select bill</option>
+                    {bills.map((b) => <option key={b.id} value={b.id}>{b.invoice_number} — {fmtINR(b.total_payable)}</option>)}
+                  </select>
+                  {selectedBill && selectedPo && (
+                    <p className="text-xs text-muted mt-1">Bill Amount: {fmtINR(selectedBill.total_payable)} • PO Amount: {fmtINR(selectedPo.total_amount)} • Variance: <span className={autoVariance < 0 ? "text-red-400" : autoVariance > 0 ? "text-amber-400" : "text-emerald-400"}>{fmtINR(autoVariance)}</span></p>
                   )}
                 </div>
                 <div>
