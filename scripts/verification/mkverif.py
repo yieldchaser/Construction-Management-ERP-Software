@@ -237,6 +237,29 @@ VERDICTS = {
                             "gained companyId. Nuance: the failures log to console rather than "
                             "surfacing to the user, which matches the note's wording but is not "
                             "a user-visible error."),
+    "R2-525": ("CONFIRMED", "E1: estimate_penalty takes company_id, report_type and "
+                            "return_period only - no caller-supplied wages param survives in the "
+                            "signature - and loads the StatutoryReport row at :178 to read the "
+                            "stored totals."),
+    "R2-292": ("CONFIRMED", "E1: all four guards present in settings.py - empty matrix 400 at "
+                            ":522, the `all` superuser flag gated on owner_equivalent at :536, "
+                            "and _LOCKED_ROLES = {Owner, Admin} at :500 with the locked-role "
+                            "check at :524."),
+    "R2-391": ("CONFIRMED", "E1: list_inspection_responses returns per-item rows carrying "
+                            "`remarks` and `photo_url`, behind get_company_membership at :265."),
+    "R2-230": ("CONFIRMED", "E1: BOTH surfaces are covered - drawing create and revision create "
+                            "each have Field(..., min_length=1) plus a validator rejecting a "
+                            "whitespace-only file_url (drawings.py:63-69 and :74-81). The note's "
+                            "own disclosure that the UI half is unwired is accurate and belongs "
+                            "to R2-717."),
+    "R2-007": ("CONFIRMED", "E1: 'Shree Cement Traders' is gone from frontend/src entirely and "
+                            "the PO modal fetches /billing/subcontractors at :122. The note's "
+                            "disclosed residue - handleCreatePO still prepending optimistically "
+                            "on failure - is real and is carried by R2-717."),
+    "R2-111": ("CONFIRMED", "E1: the two dropdowns this finding names, the workforce drawer and "
+                            "the employee drawer, carry no fabricated cost codes - the only "
+                            "hardcoded cost codes left in the console are in d/finance, a "
+                            "different surface already filed as R2-712 instance 4."),
     "R2-083": ("UNVERIFIED", "E1 FAILS on completeness. The two edits are correct, but the note's "
                              "claim that these were 'the last two fabricated attribute fallbacks' "
                              "is wrong - four remain in the same object literal, including "
