@@ -31,6 +31,7 @@ from app.models import (
     PurchaseOrder,
     PurchaseOrderItem,
     MaterialTransaction,
+    MaterialWastage,
     Task,
     User,
     WorkOrder,
@@ -342,8 +343,27 @@ def get_company_analytics(company_id: uuid.UUID, db: Session = Depends(get_db), 
     ordered_qty = sum(_to_float(item.quantity) for item in purchase_order_items)
     consumed_qty = sum(_to_float(tx.qty) for tx in material_transactions)
     has_consumption = len(material_transactions) > 0
-    wastage_qty = max(ordered_qty - consumed_qty, 0.0) if has_consumption else 0.0
-    wastage_pct = round((wastage_qty / ordered_qty) * 100, 2) if has_consumption and ordered_qty else None
+
+    # Wastage is what the MaterialWastage log records (scrap/damage/theft).
+    # Ordered-minus-consumed is inventory still on site, not waste; it is kept
+    # as a stock reconciliation and never clamped, so over-consumption stays
+    # visible as a negative variance.
+    wastage_records = (
+        db.query(MaterialWastage)
+        .filter(MaterialWastage.project_id.in_(project_ids))
+        .all()
+        if project_ids
+        else []
+    )
+    recorded_wastage_qty = sum(_to_float(record.quantity) for record in wastage_records)
+    has_wastage_records = len(wastage_records) > 0
+    wastage_qty = recorded_wastage_qty
+    stock_variance_qty = ordered_qty - consumed_qty
+    wastage_pct = (
+        round((recorded_wastage_qty / ordered_qty) * 100, 2)
+        if has_wastage_records and has_consumption and ordered_qty
+        else None
+    )
 
     subcontractor_scorecard = []
     for subcontractor_id, orders in work_orders_by_subcontractor.items():
@@ -409,6 +429,7 @@ def get_company_analytics(company_id: uuid.UUID, db: Session = Depends(get_db), 
         "material_wastage": {
             "ordered_qty": round(ordered_qty, 2),
             "consumed_qty": round(consumed_qty, 2),
+            "stock_variance_qty": round(stock_variance_qty, 2),
             "wastage_qty": round(wastage_qty, 2),
             "wastage_pct": wastage_pct,
         },

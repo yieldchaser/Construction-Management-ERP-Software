@@ -63,6 +63,7 @@ interface AnalyticsPayload {
   material_wastage: {
     ordered_qty: number;
     consumed_qty: number;
+    stock_variance_qty: number;
     wastage_qty: number;
     wastage_pct: number | null;
   };

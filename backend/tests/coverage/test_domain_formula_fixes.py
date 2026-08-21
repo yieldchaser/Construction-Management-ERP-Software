@@ -1153,4 +1153,40 @@ def test_production_batch_applies_recipe_wastage_pct(client, db, make_tenant, au
     assert float(inv.on_hand_qty) == 183.2
 
 
+# -- W08 / R2-305: wastage reads the MaterialWastage log; stock gap separate --
+
+def test_analytics_wastage_reads_records_and_keeps_negative_variance(client, db, make_tenant, auth_headers):
+    comp, user, _ = make_tenant(company_name="H-R2305", user_name="U-H305", mobile=_mob(81), email=_mail(81))
+    hdr = auth_headers(user, comp)
+    project = _mk_project(db, comp)
+
+    po = models.PurchaseOrder(
+        id=uuid.uuid4(), company_id=comp.id, project_id=project.id,
+        po_number="PO-R2305", po_date=_utc(2026, 1, 1), status="received",
+        gross_amount=Decimal("1000.00"), tax_amount=Decimal("0.00"),
+        total_amount=Decimal("1000.00"))
+    db.add(po)
+    db.flush()
+    db.add(models.PurchaseOrderItem(
+        id=uuid.uuid4(), po_id=po.id, material_name="Cement",
+        quantity=Decimal("100"), unit="bags", rate=Decimal("10.00"),
+        tax_pct=Decimal("0.00")))
+    # 150 consumed against 100 ordered: the old formula clamped this to 0 waste.
+    db.add(models.MaterialTransaction(
+        id=uuid.uuid4(), project_id=project.id, material_name="Cement",
+        qty=Decimal("150"), type="used", unit="bags"))
+    db.add(models.MaterialWastage(
+        id=uuid.uuid4(), company_id=comp.id, project_id=project.id,
+        material_name="Cement", wastage_type="damaged", quantity=Decimal("5"),
+        unit="bags"))
+    db.commit()
+
+    r = client.get(f"/apis/v3/analytics/company/{comp.id}", headers=hdr)
+    assert r.status_code == 200, r.text
+    mw = r.json()["material_wastage"]
+    assert mw["wastage_qty"] == 5.0           # recorded wastage, not a stock gap
+    assert mw["wastage_pct"] == 5.0           # 5 of 100 ordered
+    assert mw["stock_variance_qty"] == -50.0  # over-consumption surfaced, never clamped
+
+
 
