@@ -355,6 +355,8 @@ def create_boq_document(req: BOQDocumentCreate, db: Session = Depends(get_db), c
         raise HTTPException(status_code=404, detail="Project not found")
     get_company_membership(db, current_user, project.company_id)
     require_permission(db, current_user, project.company_id, "budgeting:edit")
+    if req.milestone_done > req.milestone_total:
+        raise HTTPException(status_code=400, detail="milestone_done cannot exceed milestone_total")
     if req.client_party_id:
         party = db.query(LibraryParty).filter(LibraryParty.id == req.client_party_id).first()
         if not party:
@@ -395,6 +397,8 @@ def patch_boq_document(doc_id: UUID, req: BOQDocumentPatch, db: Session = Depend
         doc.milestone_done = req.milestone_done
     if req.milestone_total is not None:
         doc.milestone_total = req.milestone_total
+    if (req.milestone_done is not None or req.milestone_total is not None) and doc.milestone_done > doc.milestone_total:
+        raise HTTPException(status_code=400, detail="milestone_done cannot exceed milestone_total")
     if req.terms is not None:
         doc.terms = req.terms
     db.commit()
@@ -474,7 +478,9 @@ def get_boq_document_pdf(doc_id: UUID, db: Session = Depends(get_db), current_us
     party_lines = [
         f"Client: {client_name}",
         f"Title: {doc.title}",
-        f"Milestones: {doc.milestone_done} / {doc.milestone_total}",
+        # Defence in depth: legacy rows may hold done > total; never print
+        # an impossible milestone count on the client-facing document.
+        f"Milestones: {min(doc.milestone_done, doc.milestone_total)} / {doc.milestone_total}",
     ]
 
     items = db.query(BOQItem).filter(BOQItem.boq_document_id == doc.id).all()
