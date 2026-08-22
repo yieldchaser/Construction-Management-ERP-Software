@@ -431,6 +431,29 @@ VERDICTS = {
                             "po_amount, invoiced_amount and variance_amount. Its disclosed "
                             "sibling is REAL and still present - d/billing/page.tsx:477 defines "
                             "a local fmtINR that shadows the shared one - and belongs to R2-717."),
+    "R2-183": ("CONFIRMED", "E1: auth.py imports the SHARED _validate_gstin from settings and "
+                            "binds it as a field_validator at :790, so onboarding inherits the "
+                            "same mod-36 checksum I verified behaviourally under R2-554 - "
+                            "400/400 valid accepted, 0 of 14,000 wrong digits. Verifying this "
+                            "row is also what surfaced R2-722."),
+    "R2-159": ("CONFIRMED", "E1: entity_type and field_type carry the shared pattern constants "
+                            "on BOTH create paths (custom_fields.py:30, :33, :63)."),
+    "R2-492": ("CONFIRMED", "E1: list_project_members joins ProjectMember on "
+                            "ProjectMember.company_team_id == CompanyTeam.id (projects.py:385), "
+                            "so unassigned staff are excluded rather than listed."),
+    "R2-016": ("CONFIRMED", "E1: updateProgress applies the local value only inside "
+                            "`if (res.ok)`, alerts the server detail on non-2xx, and alerts "
+                            "'your change was not saved' on transport failure - so a 422 or 500 "
+                            "can no longer leave the new number rendered as if saved."),
+    "R2-174": ("CONFIRMED", "E1: _txn_party_name walks CompanyTeam -> User -> LibraryParty and "
+                            "keeps the 'Walk-in Party' / 'Unknown Party' vocabulary "
+                            "(finance.py:912-917) rather than inventing a name."),
+    "R2-402": ("CONFIRMED", "E1: the PO PDF gains a 'Received' header and sums GRNItem."
+                            "received_qty per po_item_id. Register attributes this to a frontend "
+                            "file; the fix is in the backend PDF builder."),
+    "R2-213": ("CONFIRMED", "E1: the PPE gauge renders an em-dash and 'no checks recorded yet' "
+                            "when ppeChecks is empty, instead of a red 0% that reads as total "
+                            "non-compliance."),
     "R2-083": ("UNVERIFIED", "E1 FAILS on completeness. The two edits are correct, but the note's "
                              "claim that these were 'the last two fabricated attribute fallbacks' "
                              "is wrong - four remain in the same object literal, including "

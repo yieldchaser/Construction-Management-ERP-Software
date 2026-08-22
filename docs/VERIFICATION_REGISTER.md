@@ -284,12 +284,12 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-147 | MEDIUM | FIXED | `b8c36c4` | `chat.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-150 | MEDIUM | FIXED | `7edc3be` | `todos.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: todos.py:155 sets created_by=membership.id - the company_team FK space, not users.id - and TodoCreate declares no created_by at all, so a client cannot supply it. |
 | R2-154 | MEDIUM | FIXED | `bd41ec7` | `budget.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
-| R2-159 | MEDIUM | FIXED | `d92cb93` | `custom_fields.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
+| R2-159 | MEDIUM | FIXED | `d92cb93` | `custom_fields.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: entity_type and field_type carry the shared pattern constants on BOTH create paths (custom_fields.py:30, :33, :63). |
 | R2-162 | MEDIUM | FIXED | `590560f` | `page.tsx` | yes | yes | text-pin | 1 | CONFIRMED | E1: CITY_MAP gives riyadh cur 'SAR' (:353) and the symbol map renders 'SAR ' (:357); `houseCurrency` is gone. |
 | R2-164 | MEDIUM | FIXED | `3e8a602` | `page.tsx` | yes | yes | text-pin | 1 | CONFIRMED | E1: the calculator discloses 'Paint and putty quantities include a 10% application allowance; primer a 5% allowance' at :1979, so the allowance is no longer silently baked into the number. |
-| R2-174 | MEDIUM | FIXED | `4d06017` | `files.py` | yes | yes | parse_fail | 1 | UNVERIFIED |  |
+| R2-174 | MEDIUM | FIXED | `4d06017` | `files.py` | yes | yes | parse_fail | 1 | CONFIRMED | E1: _txn_party_name walks CompanyTeam -> User -> LibraryParty and keeps the 'Walk-in Party' / 'Unknown Party' vocabulary (finance.py:912-917) rather than inventing a name. |
 | R2-176 | MEDIUM | FIXED | `fd5a709` | `files.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
-| R2-183 | MEDIUM | FIXED | `e31ff9b` | `auth.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
+| R2-183 | MEDIUM | FIXED | `e31ff9b` | `auth.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: auth.py imports the SHARED _validate_gstin from settings and binds it as a field_validator at :790, so onboarding inherits the same mod-36 checksum I verified behaviourally under R2-554 - 400/400 valid accepted, 0 of 14,000 wrong digits. Verifying this row is also what surfaced R2-722. |
 | R2-191 | MEDIUM | FIXED | `b4c0a37` | `auth.py` | yes | yes | text-pin | 1 | NOT_IN_PROD | E0: company_team's only unique index is its pkey. Correct in code, absent in production. Escalated as R2-702. |
 | R2-193 | MEDIUM | FIXED | `07764bc` | `bi_export.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: last_used_at is written only when it is None, tz-naive, or older than 300s (bi_export.py:79), which is the 5-minute throttle plus the legacy naive-datetime guard the note claims. |
 | R2-206 | MEDIUM | FIXED | `83c32c2` | `production.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
@@ -327,7 +327,7 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-378 | MEDIUM | FIXED | `3e980de` | `models.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: dead `TransactionRetention` model removed and zero references remain anywhere in app/. The table was left in place as the note says, so nothing is destructive. |
 | R2-379 | MEDIUM | FIXED | `b2ddf1f` | `billing.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-398 | MEDIUM | FIXED | `8858a45` | `billing.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
-| R2-402 | MEDIUM | FIXED | `3007f87` | `frontend/src/app/c/[company_id]/settings/page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
+| R2-402 | MEDIUM | FIXED | `3007f87` | `frontend/src/app/c/[company_id]/settings/page.tsx` | yes | yes | text-pin | 1 | CONFIRMED | E1: the PO PDF gains a 'Received' header and sums GRNItem.received_qty per po_item_id. Register attributes this to a frontend file; the fix is in the backend PDF builder. |
 | R2-411 | MEDIUM | FIXED | `5847922` | `models.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-420 | MEDIUM | FIXED | `e069dfd` | `finance/page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-428 | MEDIUM | FIXED | `cd01b15` | `d/finance/page.tsx` | yes | yes | EVIDENCE_CLOSE | 1 | UNVERIFIED |  |
@@ -341,7 +341,7 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-472 | MEDIUM | FIXED | `93cdba8` | `page.tsx` | yes | yes | text-pin | 1 | CONFIRMED | E1, and complete on BOTH surfaces: an http(s) regex filters the urls on send AND again on render, so a non-http value can neither be posted nor displayed from an existing row. |
 | R2-486 | MEDIUM | FIXED | `ca082f6` | `page.tsx` | yes | yes | text-pin | 1 | CONFIRMED | E1: the paint calculator labels the rate ('Economy Emulsion (115 sqft/L)' at :1264, constant 115.0 at :302) and `paintMode` is gone from the file. |
 | R2-489 | MEDIUM | FIXED | `b6ecb1e` | `files.py` | yes | yes | parse_fail | 1 | UNVERIFIED |  |
-| R2-492 | MEDIUM | FIXED | `084b758` | `projects.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
+| R2-492 | MEDIUM | FIXED | `084b758` | `projects.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: list_project_members joins ProjectMember on ProjectMember.company_team_id == CompanyTeam.id (projects.py:385), so unassigned staff are excluded rather than listed. |
 | R2-493 | MEDIUM | FIXED | `15d9bc4` | `transaction/page.tsx` | yes | yes | text-pin | 1 | CONFIRMED | E1: zatcaEnabled is read from /settings/company and gates both the ZATCA column header and the per-row cell, so the column disappears entirely when the feature is off. |
 | R2-496 | MEDIUM | FIXED | `fac73c8` | `analytics.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: the three-way page imports the shared fmtINR and uses it for po_amount, invoiced_amount and variance_amount. Its disclosed sibling is REAL and still present - d/billing/page.tsx:477 defines a local fmtINR that shadows the shared one - and belongs to R2-717. |
 | R2-501 | MEDIUM | FIXED | `d48e67c` | `UNMAPPED` | yes | yes | text-pin | 1 | CONFIRMED | E1: analytics imports the shared fmtINR from @/lib/siteflow and formatCurrency delegates to it at :81. |
@@ -366,7 +366,7 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-596 | MEDIUM | FIXED | `b70fd88` | `d/hr/page.tsx` | yes | yes | parse_fail | 1 | CONFIRMED | E1: handleTimesheetAction mutates local state only inside `if (res.ok)`; a non-2xx alerts the server detail and the catch block alerts on transport failure, so a failed submit or approve can no longer render as success. |
 | R2-600 | MEDIUM | FIXED | `1d3235d` | `home/page.tsx` | yes | yes | text-pin | 1 | CONFIRMED | E1: featuredProject binds to filteredProjects and all four fabricated fallbacks ('No projects yet', 'No code', 'Pending', 'Address not set') became an em-dash. This is the HONEST form of the pattern R2-719 catalogues elsewhere - a useful contrast. |
 | R2-012 | MEDIUM | FIXED | `e9111eb` | `frontend/src/app/c/[company_id]/d/finance/page.tsx` | no | no | — | 2 | CONFIRMED | E1: the Payment Method radios are controlled - `checked={paymentMethod === m}` at finance/page.tsx:3416 - and no `defaultChecked` survives in the file. |
-| R2-016 | MEDIUM | FIXED | `ddf1290` | `frontend/src/app/c/[company_id]/p/[project_id]/task/page.tsx` | no | no | — | 2 | UNVERIFIED |  |
+| R2-016 | MEDIUM | FIXED | `ddf1290` | `frontend/src/app/c/[company_id]/p/[project_id]/task/page.tsx` | no | no | — | 2 | CONFIRMED | E1: updateProgress applies the local value only inside `if (res.ok)`, alerts the server detail on non-2xx, and alerts 'your change was not saved' on transport failure - so a 422 or 500 can no longer leave the new number rendered as if saved. |
 | R2-020 | MEDIUM | FIXED | `4be5ccf` | `frontend/src/app/c/[company_id]/d/dpr/page.tsx` | no | no | — | 2 | CONFIRMED | E1: the fabricated takeoff rows ('Main Floor 2 Slab section A', 'Beam drop grid B-C') are gone from frontend/src entirely. |
 | R2-022 | MEDIUM | FIXED | `5fda93e` | `frontend/src/app/c/[company_id]/d/finance/page.tsx` | no | no | — | 2 | CONFIRMED | E1: the loader effect's outer gate changed from `if (projectId)` to `if (companyId)`, so a company with no active project now loads Finance. The two remaining `if (projectId)` checks at :299 and :354 are inner guards for genuinely project-scoped sub-fetches, which is correct. |
 | R2-026 | MEDIUM | FIXED | `e870664` | `frontend/src/app/c/[company_id]/d/home/page.tsx` | no | no | — | 2 | CONFIRMED | E1: the hardcoded `useState(3)` became `useState(0)` and a real fetch of /todos/company/{id} now counts the pending rows, so the card can no longer contradict the To Do module. |
@@ -386,7 +386,7 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-121 | MEDIUM | FIXED | `25f30db` | `billing.py` | no | no | — | 3 | UNVERIFIED |  |
 | R2-190 | MEDIUM | FIXED | `592af3a` | `UNMAPPED` | no | no | — | 3 | UNVERIFIED |  |
 | R2-200 | MEDIUM | FIX_VERIFIED | `29a1bdb` | `hr.py` | no | no | — | 3 | UNVERIFIED |  |
-| R2-213 | MEDIUM | FIXED | `d824d3e` | `UNMAPPED` | no | no | — | 3 | UNVERIFIED |  |
+| R2-213 | MEDIUM | FIXED | `d824d3e` | `UNMAPPED` | no | no | — | 3 | CONFIRMED | E1: the PPE gauge renders an em-dash and 'no checks recorded yet' when ppeChecks is empty, instead of a red 0% that reads as total non-compliance. |
 | R2-268 | MEDIUM | FIXED | `ad328dd` | `UNMAPPED` | no | no | — | 3 | UNVERIFIED |  |
 | R2-286 | MEDIUM | FIX_VERIFIED | `2ddc411` | `reports.py` | no | no | — | 3 | UNVERIFIED |  |
 | R2-302 | MEDIUM | FIX_VERIFIED | `acee51f` | `hr.py` | no | no | — | 3 | UNVERIFIED |  |
