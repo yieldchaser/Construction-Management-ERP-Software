@@ -839,6 +839,68 @@ never against the orphaned diff — the campaign's re-fix will not share my idio
 implementation's shape produces false negatives. Row list in
 `scratchpad/orphan_rows.txt`; the 48 CRITICALs come first, and this is now the top of my queue.
 
+### R2-728 · CRITICAL · attendance punch-out raises a TypeError on Postgres; the suite cannot see it
+
+**Second confirmed instance of the R2-727 class**, and this one is the phase thesis in its purest
+form: a defect that **passes on SQLite and 500s on Postgres**.
+
+R2-210 is CRITICAL and `FIX_VERIFIED`. Its cited commit `e2e449d` is orphan-only. The fix it
+describes — replacing naive `datetime.utcnow()` with the aware helpers in `app/timeutil.py` — was
+**not reproduced**. `app/timeutil.py` does not exist on `campaign/waves`.
+
+**The mechanism, in three lines of live code** (`hr.py`, punch-out branch):
+
+```
+:332   now   = datetime.utcnow()                       # NAIVE
+:342   if log.punch_in:
+:343       delta = (now - log.punch_in).total_seconds() / 3600
+```
+
+and the column (`models.py:721`):
+
+```
+punch_in = Column(DateTime(timezone=True), nullable=True)
+```
+
+`log` is freshly queried at `:323`, so `punch_in` comes back from the driver:
+
+- **Postgres** returns `timestamptz` as an **aware** datetime → `naive - aware` raises
+  `TypeError: can't subtract offset-naive and offset-aware datetimes` → **500 on every punch-out**
+- **SQLite** returns it **naive** → the subtraction succeeds → **the test suite passes**
+
+There is no `tzinfo` normalisation anywhere in the punch-out path; I checked the whole branch.
+
+**The damning contrast is in the same file.** `hr.py:400-405` normalises all three datetimes before
+comparing them:
+
+```
+if entry_date.tzinfo is None:
+    entry_date = entry_date.replace(tzinfo=timezone.utc)
+```
+
+That is R2-563, which the campaign **did** fix and which I confirmed earlier in this pass. So
+`hr.py` contains both the guarded pattern and the unguarded one, for the same hazard, a few dozen
+lines apart.
+
+**Secondary, same root cause.** `:290` builds `today_start` with naive `utcnow()` and compares it
+against the `attendance_date` timestamptz column in SQL. That will not raise, but it is compared
+across a timezone boundary, so the "today" window can be off by the server offset.
+
+**Status of the evidence.** This is a high-confidence code-level finding with the mechanism
+established from the column type and the driver contract; I have **not** executed a punch-out
+against production. That would need a real employee row and would write live attendance data, so I
+am flagging it rather than proving it by writing. If you want the live proof, say so and I will do
+it in the test company.
+
+**Impact if confirmed.** Punch-out is a daily-use path for every site worker. A 500 there means the
+punch-in row is never closed, so hours worked and overtime are never computed — which flows into
+payroll.
+
+**Fix direction.** Either port `timeutil.py` from the orphaned branch (it exists, it is small, and
+it is documentation-free code with no merge risk beyond the file itself) or apply the `:400-405`
+pattern inline at `:332` and `:290`. The second is smaller and matches what the campaign already
+does elsewhere in this file.
+
 ## Verified clean so far
 
 Recorded so the pass is not only a list of complaints. Each claim was re-checked against the tree,
@@ -885,8 +947,9 @@ were scoped to the files a finding named rather than to the defect class.
 | **R2-725** | **HIGH** | **93 FIX_VERIFIED rows cite an RC suite absent from the live lineage; 56 ids never defined** | found re-prioritising the CRITICALs |
 | **R2-726** | **CRITICAL** | **Enterprise Rollup net balance has a live sign error; R2-025 is FIX_VERIFIED but its commit is orphan-only** | found auditing commit lineage |
 | **R2-727** | **CRITICAL** | **94 closed rows (48 CRITICAL) cite commits not in the live lineage; at least one fix was never reproduced** | lineage audit |
+| **R2-728** | **CRITICAL** | **attendance punch-out raises TypeError on Postgres; passes on SQLite so the suite cannot see it** | orphan-lineage sweep |
 
-**Twenty-two live findings** (R2-724 retracted). R2-713..R2-716 were filed separately first and are struck through, not
+**Twenty-three live findings** (R2-724 retracted). R2-713..R2-716 were filed separately first and are struck through, not
 deleted, so the history stays traceable.
 
 Three to act on first, for different reasons:
