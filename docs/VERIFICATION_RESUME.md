@@ -43,8 +43,8 @@ into one class finding**, not filed separately.
 **211 of 214 closure claims verified exactly as written.** The three exceptions are R2-025, R2-210
 and R2-310 — all from the orphan-lineage class below, all CRITICAL, all live.
 
-**30 of 31 closure claims verified exactly as written.** The individual fixes hold up. What does
-not hold is the *evidence layer* around them, which is what most of the new findings are about.
+The individual fixes hold up under reading. What does not hold is the **evidence layer** around
+them — and, newly, the **lineage** of that evidence (R2-727).
 
 **25 live findings filed (R2-701..R2-730, one retracted), `docs/VERIFICATION_NEW_FINDINGS.md`,
 id block R2-701..R2-799 reserved**
@@ -76,6 +76,10 @@ only while the duplicate count is zero, which it is today.
 | `fabsweep.py` | fabricated hardcoded data across the console |
 | `defaultsweep.py` | falsy-coalesce fallbacks that invent a definite value |
 | `migaudit.py` | models.py vs `supabase/migrations` |
+| `lineage_audit.py` | **which rows cite commits not on `campaign/waves`** (produced R2-727) |
+| `rebuild_worklist.py` | rebuilds `worklist.json`; the original silently dropped 104 rows |
+| `orphan_screen.py` | triage order for orphan-cited rows — **poor precision, never quote its count** |
+| `cancelsweep.py` | bill aggregations missing the Cancelled exclusion |
 
 Scratch worktree for reverting fix hunks:
 `git worktree add --detach C:/Users/Dell/AppData/Local/Temp/claude/verif-scratch campaign/waves`
@@ -94,6 +98,17 @@ Scratch worktree for reverting fix hunks:
 5. **When picking a finding's fix commit, skip commits touching only `audit/` or `docs/`.** A
    register-only commit's parent already contains the fix, which silently inverts a gate verdict.
 6. The in-app Browser pane is `mcp__Claude_Browser__`. `claude-in-chrome` is **not** connected.
+7. **`git rev-parse` resolves ANY commit in the repo, including orphan-branch ones.** It hands
+   you diffs that were never in the live lineage. Always
+   `git merge-base --is-ancestor <sha> campaign/waves`. This nearly had me verify my own
+   abandoned diffs and credit them to the campaign.
+8. **Measuring a rate across a Next.js client-side navigation: start the clock after mount.** A
+   window beginning at the click mostly covers the route transition — that reading nearly
+   cleared R2-729, a live CRITICAL.
+9. **Check the table name before believing an `<ABSENT>` from `information_schema`.** I queried
+   `face_recognition_log` and nearly filed three CRITICALs; the table is `face_recognition_logs`.
+10. **Compare against the finding's INTENT, never the orphaned diff's shape.** The campaign
+    re-fixed in its own idiom, so grepping for the old implementation gives false negatives.
 
 ## Register-wide sweeps out-yield finding-by-finding reading
 
@@ -108,20 +123,31 @@ rather than an instance list. Run a sweep whenever a single finding suggests a p
 Resume the SiteFlow independent verification phase.
 
 Read docs/VERIFICATION_RESUME.md on branch claude/siteflow-live-verification-dba0f1
-(worktree .claude/worktrees/siteflow-audit-continuation-945943) — it has the protocol,
-the state, the tools and the traps. Then read docs/VERIFICATION_REGISTER.md for
-per-row verdicts and docs/VERIFICATION_NEW_FINDINGS.md for what I filed.
+(worktree .claude/worktrees/siteflow-audit-continuation-945943) - protocol, state, tools,
+traps. Then docs/VERIFICATION_REGISTER.md for per-row verdicts and
+docs/VERIFICATION_NEW_FINDINGS.md for the 25 findings I filed (R2-701..R2-730).
 
-Rules that matter: never touch the opencode worktree at
-C:\Users\Dell\AppData\Local\Temp\opencode\siteflow-waves and never check out
-campaign/waves — read it with git show. Never edit audit/*. Never merge
+Rules: never touch the opencode worktree under AppData/Local/Temp/opencode/siteflow-waves,
+never check out campaign/waves (use git show), never edit audit/*, never merge
 claude/siteflow-audit-round10-cont-f6961b.
 
-Start by re-syncing the register: the pinned snapshot is campaign/waves c92b707 with
-315 closed rows, and the agent has since passed 336 closed — diff and append the new
-closures to the worklist, then carry on in blast-radius-ascending order.
+State: 220 of 315 closed rows worked, 211 CONFIRMED. 95 remain.
 
-Next up: the rest of the HIGH single-file tier, then the 38 two-file fixes. Writes are
-allowed in test company ZZ R8 Throwaway (1fa705a4-7aa6-42f2-9906-65902c96916f).
-Supabase SQL editor and the Vercel console are both logged in in the Browser pane.
+DIVISION OF LABOUR - this matters. The fix campaign is itself sweeping the 94
+orphan-cited rows from R2-727, by file cluster (finance x32, hr x28, reports x18,
+procurement x9). Do NOT duplicate that. Take instead:
+  1. the ~14 non-orphan rows still unverdicted, and
+  2. anything needing Supabase or the live browser, which the campaign cannot do.
+
+Highest-value open items:
+  - R2-728 needs a live proof if the founder approves it (punch-out on Postgres; it
+    writes attendance data in the test company).
+  - The other migrations dated 2026-08-15+ should be checked for whether they RAN, the
+    way R2-730 was found. Five are confirmed landed; one never ran.
+  - D-V5 needs the founder's Render env answer.
+
+Writes are allowed in test company ZZ R8 Throwaway
+(1fa705a4-7aa6-42f2-9906-65902c96916f). Supabase SQL editor and the Vercel console are
+logged in in the Browser pane, but the Supabase session expires - ask the founder to
+re-login rather than entering credentials.
 ```
