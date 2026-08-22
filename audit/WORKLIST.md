@@ -32,7 +32,7 @@ Ordering is **severity-ascending**, with founder-gates and live-only work last. 
 - L3 ✅ DONE (Session 28): R2-057 (gantt link errors use server detail, `b9a08e6`) + R2-070 (never-persisted indent photo picker dropped, `dd0ed9a`)
 - L4 ✅ DONE (Session 29): R2-085 (evidence-close — phase labels already gone via R2-023) + R2-120 (Tally card + Payroll Runs tab name, `06cde63`)
 
-## 🔶 PHASE H IN PROGRESS (Sessions 31-32) — 51 of 188 HIGHs closed
+## 🔶 PHASE H IN PROGRESS (Sessions 31-33) — 91 of 188 HIGHs closed (register basis; +13 new siblings filed R2-602..614)
 
 Completed waves:
 - H-auth-settings ✅ 7/7 (R2-182, R2-186, R2-196, R2-285, R2-292, R2-405, R2-554; R2-457 evidence)
@@ -41,12 +41,17 @@ Completed waves:
 - H-cf-chat ✅ 8/8 (R2-141, R2-142, R2-143, R2-155, R2-156, R2-158, R2-165, R2-260)
 - H-zoho-tally ✅ 5/5 (R2-188, R2-267, R2-368, R2-542, R2-595)
 - H-miscC ✅ 8/8 (R2-258, R2-263, R2-264, R2-265, R2-284, R2-291, R2-296, R2-297)
+- H-analytics ✅ 5/5 Session 33 (R2-305/329/498 fixed; R2-306/499 evidence)
+- H-budget ✅ 9/9 Session 33 (R2-152/153/233/249 fixed; R2-151/237/242/250/375 evidence)
+- H-budgeting ✅ 7/7 Session 33 (R2-274/275/334/449/450/451/453)
+- H-billing ✅ 9/9 Session 33 (R2-177/346/377/381/400/401/403/480 fixed; R2-350 evidence)
+- H-calculators ◑ 3/5 Session 33 (R2-279/281/520 fixed; R2-280 and R2-519 still TODO — agent dispatches kept dying; long-form sketches at reg L12310/L26418)
+- H-3way-settings ✅ 7/7 Session 33 (R2-241/349/539/594/390/404 fixed; R2-546 evidence)
 
-Remaining HIGH clusters (~137):
-- budget.py/budgeting.py: ~16 (R2-151/152/153/233/237/242/249/250/274/275/334/375/449/450/451/453)
-- billing.py: ~9 (R2-177/346/350/377/381/400/401/403/480)
-- UNMAPPED/misc frontend: ~80+ scattered across pages
-- zoho/tally/files/subcon/labour: ~25 remainder
+Remaining HIGH clusters (~97 on the original register + the newly filed siblings):
+- UNMAPPED/misc frontend: ~80 scattered across pages (projects/page, d/home W09 cluster ×9+R2-463, labour.py ×4, finance.py ×3, equipment.py ×4, procurement.py ×5, three_way/todos/zoho/tally/files/storage/etc.)
+- Founder-gated inside HIGH: R2-021 (D1), R2-041 (D-011/D4), R2-195 (D-013), R2-335 (D-008)
+- New sibling rows R2-602..R2-614 (filed Session 33 per verification-pass process note 4)
 
 ## ✅ PHASE L COMPLETE (Session 29) — 8/8 LOWs closed
 

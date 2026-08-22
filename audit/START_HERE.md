@@ -6,28 +6,36 @@ This folder is the single source of truth for the 582-finding bug-fixing campaig
 
 ---
 
-## Current state (as of Session 32 — 2026-08-16)
+## Current state (as of Session 33 — 2026-08-22)
 
 | Bucket | Count |
 |---|---|
-| Numbers issued (R2-001 … R2-601) | 601 |
-| Retracted as duplicates | 16 |
+| Numbers issued | 601 + sibling block R2-602..R2-614 |
+| Register rows | 595 (582 original + 13 Session-33 siblings) |
+| Retracted as duplicates | 1 (+15 pre-campaign dup retracts not in register) |
 | FIX_VERIFIED (founder live-confirmed) | 93 |
-| FIXED (code in, awaiting founder live-verify) | 243 |
+| FIXED (code in, awaiting founder live-verify) | 283 |
 | WONTFIX | 1 |
-| **TODO (your job)** | **244** |
+| **TODO** | **217** |
 
-By severity of the remaining TODO: **CRITICAL 102 · HIGH 137 · MEDIUM 5 · LOW 0**.
+By severity of the remaining TODO: **CRITICAL 102 · HIGH 104 · MEDIUM 10 · LOW 1** (recomputed from the register after Session 33; the 13 new siblings are included in TODO).
 
 **Phase progress:**
 - ✅ Phase L (LOW): COMPLETE — all 8 closed
 - ✅ Phase M (MEDIUM): COMPLETE — all 121 non-gated closed; 5 remain founder-gated (R2-010/CD-2, R2-030/D5, R2-125/D4, R2-319/D4, R2-385/CD-9)
-- 🔶 Phase H (HIGH): IN PROGRESS — 51 of 188 closed; ~137 remaining
+- 🔶 Phase H (HIGH): IN PROGRESS — 91 of 188 closed; ~97 remaining (4 of them founder-gated) + HIGH siblings R2-603/604/606/607/610/611/613
 - ⬜ Phase C (CRITICAL): not started — 102 remaining
 - ⬜ Phase G (founder-gated): blocked on DECISIONS.md answers
 - ⬜ Phase V (live verification): deferred items for the founder's other agent
 
+⚠️ **Session 33 wrap state (read before resuming):**
+1. Four backend tests are RED at HEAD — all test-contract staleness vs landed fixes, NOT product regressions: `test_prompt7_features.py::test_import_boq_preserves_cost_code` (needs LibraryCostCode seeds for 1.1/1.2, per R2-334's gate), and pins `test_pin_R2_067` (seeds need approval_flag='approved', per R2-233), `test_pin_R2_134` (re-pin to server-computed verdict shape), `test_pin_R2_405` ('.first().mobile' substring gone after R2-390 rewrite). Exact failure lines captured in SESSION_LOG Session 33.
+2. Central pin collection for Session 33's 27 code fixes is PENDING (pin suggestions collected in SESSION_LOG).
+3. R2-280 + R2-519 (H-calculators) remain TODO — subagent dispatches kept failing; audit fix sketches are at reg L12310 / L26418.
+4. Process notes from the founder's independent verification pass are ADOPTED: constraints/indexes must ship supabase migrations (honored: R2-594, R2-334, R2-377); no overclaiming pin strength; defect-class sweeps before closing; every disclosed sibling gets a filed id.
+
 **Working mode:** the campaign runs in an isolated worktree at `C:\Users\Dell\AppData\Local\Temp\opencode\siteflow-waves` (branch `campaign/waves`) because the main checkout has concurrent activity from another agent. Pushes go via `git push origin campaign/waves:main`.
+⚠️ Subagent note (Session 33): large multi-finding coder prompts fail frequently ("empty" completions that did nothing); compact single-finding prompts with inline fix sketches are the reliable shape. Retry failures; verify each dispatch actually landed via git log before assuming success OR failure — some "empty" agents completed work silently without reporting.
 
 ---
 
