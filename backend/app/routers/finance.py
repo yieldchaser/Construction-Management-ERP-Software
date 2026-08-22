@@ -403,10 +403,13 @@ def get_project_pl(project_id: uuid.UUID, db: Session = Depends(get_db), _: None
         Bill.status != "Cancelled"
     ).scalar() or 0.0
 
-    # 2. Material Cost: Vendor bills (invoice_type in EXPENSE_INVOICE_TYPES)
+    # 2. Material Cost: Vendor bills (invoice_type in EXPENSE_INVOICE_TYPES).
+    # R2-243: EXPENSE_INVOICE_TYPES contains "subcon"; exclude it here so
+    # subcon bills are not double-counted (they are summed in subcon_actual).
     material_actual = db.query(func.sum(Bill.total_payable)).filter(
         Bill.project_id == proj_uuid,
         Bill.invoice_type.in_(EXPENSE_INVOICE_TYPES),
+        Bill.invoice_type != "subcon",
         Bill.status != "Cancelled"
     ).scalar() or 0.0
 
