@@ -415,7 +415,7 @@ VERDICTS = {
     "R2-026": ("CONFIRMED", "E1: the hardcoded `useState(3)` became `useState(0)` and a real "
                             "fetch of /todos/company/{id} now counts the pending rows, so the "
                             "card can no longer contradict the To Do module."),
-    "R2-472": ("CONFIRMED", "E1, and complete on BOTH surfaces: /^https?:\/\//i filters the "
+    "R2-472": ("CONFIRMED", "E1, and complete on BOTH surfaces: an http(s) regex filters the "
                             "urls on send AND again on render, so a non-http value can neither "
                             "be posted nor displayed from an existing row."),
     "R2-493": ("CONFIRMED", "E1: zatcaEnabled is read from /settings/company and gates both the "

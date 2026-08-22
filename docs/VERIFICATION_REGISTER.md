@@ -338,7 +338,7 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-460 | MEDIUM | FIXED | `d4bed18` | `gantt/page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-461 | MEDIUM | FIXED | `94988a2` | `planning.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-467 | MEDIUM | FIXED | `2f6f031` | `frontend/src/app/c/[company_id]/d/finance/page.tsx` | yes | yes | text-pin | 1 | CONFIRMED | E1: the drawings revision approval-status register and wiring are present, consistent with R2-367 which covers the backend half. |
-| R2-472 | MEDIUM | FIXED | `93cdba8` | `page.tsx` | yes | yes | text-pin | 1 | CONFIRMED | E1, and complete on BOTH surfaces: /^https?:\/\//i filters the urls on send AND again on render, so a non-http value can neither be posted nor displayed from an existing row. |
+| R2-472 | MEDIUM | FIXED | `93cdba8` | `page.tsx` | yes | yes | text-pin | 1 | CONFIRMED | E1, and complete on BOTH surfaces: an http(s) regex filters the urls on send AND again on render, so a non-http value can neither be posted nor displayed from an existing row. |
 | R2-486 | MEDIUM | FIXED | `ca082f6` | `page.tsx` | yes | yes | text-pin | 1 | CONFIRMED | E1: the paint calculator labels the rate ('Economy Emulsion (115 sqft/L)' at :1264, constant 115.0 at :302) and `paintMode` is gone from the file. |
 | R2-489 | MEDIUM | FIXED | `b6ecb1e` | `files.py` | yes | yes | parse_fail | 1 | UNVERIFIED |  |
 | R2-492 | MEDIUM | FIXED | `084b758` | `projects.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
