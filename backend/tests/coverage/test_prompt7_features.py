@@ -101,6 +101,13 @@ def test_import_boq_preserves_cost_code(client, db, make_tenant, auth_headers):
     proj = _project(db, comp)
     hdr = auth_headers(user, comp)
 
+    # R2-334: imported cost codes must already exist in the Cost Code Library.
+    db.add_all([
+        models.LibraryCostCode(id=uuid.uuid4(), company_id=comp.id, code="1.1", name="Earthwork"),
+        models.LibraryCostCode(id=uuid.uuid4(), company_id=comp.id, code="1.2", name="PCC"),
+    ])
+    db.commit()
+
     wb = Workbook()
     ws = wb.active
     ws.append(["item_name", "unit", "qty", "rate", "cost_code"])

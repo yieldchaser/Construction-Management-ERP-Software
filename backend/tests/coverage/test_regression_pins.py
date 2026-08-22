@@ -37,10 +37,14 @@ def test_pin_R2_036_spend_filters_expense_types():
     analytics = _read("app/routers/analytics.py")
     budget = _read("app/routers/budget.py")
     towers = _read("app/routers/towers.py")
+    scope = _read("app/bill_scope.py")
     assert analytics.count("Bill.invoice_type.in_(EXPENSE_INVOICE_TYPES)") >= 1, "R2-036 operational spend filter regressed"
     assert analytics.count("bill.invoice_type in EXPENSE_INVOICE_TYPES") >= 2, "R2-036 project/month spend filters regressed"
-    assert budget.count("Bill.invoice_type.in_(EXPENSE_INVOICE_TYPES)") >= 2, "R2-036 budget actual filters regressed"
-    assert towers.count("Bill.invoice_type.in_(REVENUE_INVOICE_TYPES)") >= 2, "R2-036 towers billed filters regressed"
+    assert towers.count("_active_bills(db, project_id, REVENUE_INVOICE_TYPES)") >= 2, "R2-036 towers billed filters regressed"
+    # R2-723: the expense-type + cancelled filters moved into bill_scope._active_bills.
+    assert "Bill.invoice_type.in_(invoice_types)" in scope, "R2-036 shared invoice-type scope filter regressed"
+    assert 'Bill.status != "Cancelled"' in scope, "R2-036 cancelled-bill exclusion regressed"
+    assert budget.count("_active_bills(") >= 2, "R2-036 budget actual filters regressed"
 
 
 def test_pin_R2_037_wastage_suppressed_without_consumption():
@@ -51,7 +55,9 @@ def test_pin_R2_037_wastage_suppressed_without_consumption():
 def test_pin_R2_067_labour_and_equipment_actuals():
     src = _read("app/routers/budget.py")
     assert "PayrollLineItem.net_payable" in src, "R2-067 labour actual regressed"
-    assert 'Bill.invoice_type == "equipment"' in src, "R2-067 equipment actual regressed"
+    assert 'b.invoice_type == "equipment"' in src, "R2-067 equipment actual regressed"
+    # R2-233: only approved bills book as actual spend.
+    assert 'Bill.approval_flag == "approved",' in src, "R2-067 approved-only actuals gate regressed"
 
 
 def test_pin_R2_029_zoho_duplicate_search_all_contact_types():
@@ -233,8 +239,10 @@ def test_pin_R2_085_no_internal_phase_labels():
 
 def test_pin_R2_045_066_purchase_expense_and_equipment_bills():
     src = _read("app/routers/bi_export.py")
-    assert 'Bill.invoice_type.in_(("purchase", "expense"))' in src, "R2-045 purchase/expense BI export filter regressed"
-    assert 'Bill.invoice_type == "equipment"' in src, "R2-066 equipment BI export filter regressed"
+    scope = _read("app/bill_scope.py")
+    assert '_active_bills(db, p.id, ("purchase", "expense"))' in src, "R2-045 purchase/expense BI export filter regressed"
+    assert '_active_bills(db, p.id, ("equipment",))' in src, "R2-066 equipment BI export filter regressed"
+    assert "Bill.invoice_type.in_(invoice_types)" in scope, "R2-045/066 bill_scope invoice-type semantics regressed"
 
 
 def test_pin_R2_193_bi_api_key_inactivity_window():
@@ -642,7 +650,8 @@ def test_pin_R2_521_steel_unit_weight_162_formula():
 def test_pin_R2_134_three_way_match_tolerance():
     src = _read("app/routers/three_way.py")
     assert "MATCH_TOLERANCE_PCT = 0.01" in src, "R2-134 match tolerance pct regressed"
-    assert "abs(variance) <= max(MATCH_TOLERANCE_MIN, abs(po_amount) * MATCH_TOLERANCE_PCT)" in src, "R2-134 three-way match gate regressed"
+    assert "tolerance = max(MATCH_TOLERANCE_MIN, abs(po_amount) * MATCH_TOLERANCE_PCT)" in src, "R2-134 three-way match gate regressed"
+    assert 'match_status = "matched" if abs(variance) <= tolerance' in src, "R2-134 server-computed verdict regressed"
 
 
 def test_pin_R2_154_budget_po_wo_status_filters():
@@ -920,7 +929,8 @@ def test_pin_R2_292_role_permission_guards():
 def test_pin_R2_405_mobile_not_phone():
     src = _read("app/routers/settings.py")
     assert "phone=u.mobile" in src
-    assert ".first().mobile" in src
+    assert "user.mobile if user else None" in src
+    assert ".first().mobile" not in src
     assert "u.phone" not in src
 
 def test_pin_R2_554_gstin_mod36():
