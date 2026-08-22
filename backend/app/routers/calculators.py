@@ -124,23 +124,25 @@ def calc_concrete(req: ConcreteCalcRequest):
     dry_volume = wet_volume * 1.54 * (1 + req.wastage_pct / 100.0)
     
     mix_library = {
-        "M7.5": (3.4, 0.48, 0.96),
-        "M10": (4.4, 0.46, 0.92),
-        "M15": (6.3, 0.44, 0.88),
-        "M20": (8.2, 0.42, 0.84),
-        "M25": (11.1, 0.38, 0.76)
+        "M7.5": (1.0, 4.0, 8.0),
+        "M10": (1.0, 3.0, 6.0),
+        "M15": (1.0, 2.0, 4.0),
+        "M20": (1.0, 1.5, 3.0),
+        "M25": (1.0, 1.0, 2.0)
     }
-    
+
     if req.grade not in mix_library:
         return {
             "wet_volume_m3": round(wet_volume, 3),
             "dry_volume_m3": round(dry_volume, 3),
             "engineered_design_mix_required": True
         }
-        
-    cement_bags = wet_volume * mix_library[req.grade][0]
-    sand_m3 = wet_volume * mix_library[req.grade][1]
-    aggregate_m3 = wet_volume * mix_library[req.grade][2]
+
+    cement_parts, sand_parts, aggregate_parts = mix_library[req.grade]
+    total_parts = cement_parts + sand_parts + aggregate_parts
+    cement_bags = (dry_volume * (cement_parts / total_parts) * 1440.0) / 50.0
+    sand_m3 = dry_volume * (sand_parts / total_parts)
+    aggregate_m3 = dry_volume * (aggregate_parts / total_parts)
     
     return {
         "wet_volume_m3": round(wet_volume, 3),
