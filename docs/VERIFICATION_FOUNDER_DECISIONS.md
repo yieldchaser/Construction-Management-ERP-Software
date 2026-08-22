@@ -31,13 +31,20 @@ successful login by an allowlisted demo number. See R2-722.
 So **deleting the rows alone will not hold** — the next demo-number login recreates them. The code
 path has to go first.
 
-R2-115's closure also judged the residual demo chain "cosmetic only". R2-719 contradicts that: six
-pages still send the sentinel company id, and the attendance punch path writes against the sentinel
-user. The fix is right; that assessment is not.
+R2-115's closure also judged the residual demo chain "cosmetic only". R2-719 contradicts that. The
+fix is right; that assessment is not.
 
-These are not inert. Eight console sites coalesce a missing route param or employee id into exactly
-those UUIDs, so six pages will fetch that tenant's data and the attendance punch path will write
-against that user.
+**These are not inert, and the count is larger than I first said.** A direct grep finds the sentinel
+at 16 places across 13 files: **11 pages coalesce a missing `company_id` into the demo tenant's id**,
+2 more default a *user* id to it in chat, and the attendance punch path defaults `selectedEmpId` to
+the demo user and then **writes**. (My first figure of 8 came from a sweep that missed the ternary
+form; corrected in R2-719.)
+
+**One genuinely encouraging detail:** three other sites already do the right thing —
+`layout.tsx:44,46` detects the sentinel in the route and rewrites the path away from it, and
+`projects/page.tsx:62` checks for it. The correct handling exists in the codebase; it simply is not
+applied at the 11 fallback sites. So the frontend half of this decision is "apply the guard you
+already have", not "design something new".
 
 **One more detail, in favour of deleting it.** The seeded demo company's GSTIN,
 `27AADCD2424B1ZP`, has an **invalid check digit** — the canonical GSTN mod-36 algorithm gives `A`
