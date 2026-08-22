@@ -250,12 +250,12 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-037 | MEDIUM | FIXED | `df91126` | `analytics.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-040 | MEDIUM | FIXED | `8759d2a` | `frontend/src/app/c/[company_id]/reports/[slug]/page.tsx` | yes | yes | FAKE_GATE | 1 | CONFIRMED | THE FIX IS GOOD; ONLY ITS GATE IS FAKE (R2-709). The menu now reads 'Export as CSV (Excel-compatible)' and the toast says CSV - `xlsx` survives only as an internal format key, not as a claim to the user. The defect was shipping a CSV named and described as Excel, and that is resolved. |
 | R2-044 | MEDIUM | FIXED | `c2c2cc6` | `billing.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
-| R2-045 | MEDIUM | FIXED | `48bd6d1` | `bi_export.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
+| R2-045 | MEDIUM | FIXED | `48bd6d1` | `bi_export.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: material_actual counts invoice_type in (purchase, expense) and equipment_actual counts equipment bills plus deployment hours and fuel, mirroring get_project_pl (bi_export.py:256-293). Verifying this is what surfaced R2-723. |
 | R2-048 | MEDIUM | FIXED | `e8ad9cd` | `helpContent.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-054 | MEDIUM | FIX_VERIFIED | `6e43ff0` | `finance.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-056 | MEDIUM | FIXED | `5f89eb1` | `d/payroll-attendance/page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-062 | MEDIUM | FIXED | `bd928e7` | `frontend/src/app/c/[company_id]/dashboard/page.tsx` | yes | yes | text-pin | 1 | CONFIRMED | E1: zero residue for all six named symbols (fallbackWorkforceEmployees, fallbackMaterials, workforceRows, materialRows, snapshotFilters, uniqueValues). |
-| R2-066 | MEDIUM | FIXED | `48bd6d1` | `bi_export.py` | yes | yes | — | 1 | UNVERIFIED |  |
+| R2-066 | MEDIUM | FIXED | `48bd6d1` | `bi_export.py` | yes | yes | — | 1 | CONFIRMED | E1: same function and same commit as R2-045 - expense and equipment bills are no longer orphaned from the BI feed. |
 | R2-071 | MEDIUM | FIXED | `ea0ee87` | `d/finance/page.tsx` | yes | yes | text-pin | 1 | CONFIRMED | E1: the work-order terms field reads e.currentTarget.innerText at finance/page.tsx:1550 and `innerHTML` appears nowhere in the file, so no unsanitised markup can reach /billing/work-orders. |
 | R2-072 | MEDIUM | FIXED | `650077a` | `d/finance/page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-077 | MEDIUM | FIXED | `160aaec` | `frontend/src/app/c/[company_id]/reports/page.tsx` | yes | yes | FAKE_GATE | 1 | CONFIRMED | THE FIX IS GOOD; ONLY ITS GATE IS FAKE. `exportSchemas` is gone from frontend/src entirely and CSV headers now derive from Object.keys(rows[0]) at reports/page.tsx:259. The pin watches the wrong file, which is a defect in the TEST and is carried by R2-705 - it says nothing against this fix. |
@@ -305,7 +305,7 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-256 | MEDIUM | FIXED | `d879c01` | `safety.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-261 | MEDIUM | FIXED | `7b868ea` | `team_schedule.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-269 | MEDIUM | FIXED | `bf1343e` | `labour.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: the payslip CSV header row leads with 'Employee Code' at hr.py:781. Register attribution says labour.py; the fix is in hr.py, which the note itself corrects. |
-| R2-273 | MEDIUM | FIXED | `a040a04` | `crm.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
+| R2-273 | MEDIUM | FIXED | `a040a04` | `crm.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: all three guards present - phone_no pattern at crm.py:75, EmailStr at :77, and an expected_closure validator at :92. |
 | R2-277 | MEDIUM | FIXED | `551831e` | `models.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-278 | MEDIUM | FIXED | `e59316f` | `api.ts` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-282 | MEDIUM | FIXED | `9994fab` | `UNMAPPED` | yes | yes | text-pin | 1 | UNVERIFIED |  |
@@ -323,10 +323,10 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-367 | MEDIUM | FIXED | `93184e6` | `drawings.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: one line carries both claims - drawings.py:257 sets `revision.approved_by = None if req.approval_status == 'pending' else membership.id`, so approval is derived from the membership and cleared on a return to pending. The pattern at :85 admits pending. |
 | R2-370 | MEDIUM | FIXED | `3e6ecb0` | `billing.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-373 | MEDIUM | FIXED | `b298269` | `models.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
-| R2-376 | MEDIUM | FIXED | `e10ff46` | `towers.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
+| R2-376 | MEDIUM | FIXED | `e10ff46` | `towers.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: the zero-UUID sentinel is replaced by tower_id=None (:180) and the no-tower branch now computes variance = total_budget - total_billed where it previously hardcoded 0.0 - a real improvement beyond what the note claims. |
 | R2-378 | MEDIUM | FIXED | `3e980de` | `models.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: dead `TransactionRetention` model removed and zero references remain anywhere in app/. The table was left in place as the note says, so nothing is destructive. |
 | R2-379 | MEDIUM | FIXED | `b2ddf1f` | `billing.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
-| R2-398 | MEDIUM | FIXED | `8858a45` | `billing.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
+| R2-398 | MEDIUM | FIXED | `8858a45` | `billing.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: all three claims hold - exportColumns drops all-blank columns, formatExportCell renders ISO timestamps as en-IN, and the cell mapping moved from `row[col] || ""` to formatExportCell(row[col]), which is what preserves a legitimate 0. |
 | R2-402 | MEDIUM | FIXED | `3007f87` | `frontend/src/app/c/[company_id]/settings/page.tsx` | yes | yes | text-pin | 1 | CONFIRMED | E1: the PO PDF gains a 'Received' header and sums GRNItem.received_qty per po_item_id. Register attributes this to a frontend file; the fix is in the backend PDF builder. |
 | R2-411 | MEDIUM | FIXED | `5847922` | `models.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-420 | MEDIUM | FIXED | `e069dfd` | `finance/page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
@@ -361,7 +361,7 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-563 | MEDIUM | FIXED | `d2ad02f` | `hr/page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-566 | MEDIUM | FIXED | `43fe151` | `planning.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-572 | MEDIUM | FIXED | `4d85244` | `procurement.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: items is Field(..., min_length=1) at procurement.py:69, so an empty PO is rejected at the schema. The note's disclosed siblings (IndentCreateRequest.items, RFQ items) are real and sit in R2-717. |
-| R2-573 | MEDIUM | FIXED | `00427eb` | `procurement.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
+| R2-573 | MEDIUM | FIXED | `00427eb` | `procurement.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: a received_date_not_future validator raises on a future GRN date (procurement.py:120-124). Its disclosed sibling - POCreateRequest.po_date still accepting a future date - sits in R2-717. |
 | R2-578 | MEDIUM | FIXED | `83d9cf0` | `chat.py` | yes | yes | FAKE_GATE | 1 | CONFIRMED | THE FIX IS GOOD; ONLY ITS GATE IS FAKE (R2-706). chat.py:179 raises 403 for a non-member, and the sender identity is stamped from the session rather than the client payload. |
 | R2-596 | MEDIUM | FIXED | `b70fd88` | `d/hr/page.tsx` | yes | yes | parse_fail | 1 | CONFIRMED | E1: handleTimesheetAction mutates local state only inside `if (res.ok)`; a non-2xx alerts the server detail and the catch block alerts on transport failure, so a failed submit or approve can no longer render as success. |
 | R2-600 | MEDIUM | FIXED | `1d3235d` | `home/page.tsx` | yes | yes | text-pin | 1 | CONFIRMED | E1: featuredProject binds to filteredProjects and all four fabricated fallbacks ('No projects yet', 'No code', 'Pending', 'Address not set') became an em-dash. This is the HONEST form of the pattern R2-719 catalogues elsewhere - a useful contrast. |
@@ -387,7 +387,7 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-190 | MEDIUM | FIXED | `592af3a` | `UNMAPPED` | no | no | — | 3 | UNVERIFIED |  |
 | R2-200 | MEDIUM | FIX_VERIFIED | `29a1bdb` | `hr.py` | no | no | — | 3 | UNVERIFIED |  |
 | R2-213 | MEDIUM | FIXED | `d824d3e` | `UNMAPPED` | no | no | — | 3 | CONFIRMED | E1: the PPE gauge renders an em-dash and 'no checks recorded yet' when ppeChecks is empty, instead of a red 0% that reads as total non-compliance. |
-| R2-268 | MEDIUM | FIXED | `ad328dd` | `UNMAPPED` | no | no | — | 3 | UNVERIFIED |  |
+| R2-268 | MEDIUM | FIXED | `ad328dd` | `UNMAPPED` | no | no | — | 3 | CONFIRMED | E1: the DPR export resolves reported_by to a User name and falls back safely when the value is not a UUID, so a raw id is never rendered as the author. |
 | R2-286 | MEDIUM | FIX_VERIFIED | `2ddc411` | `reports.py` | no | no | — | 3 | UNVERIFIED |  |
 | R2-302 | MEDIUM | FIX_VERIFIED | `acee51f` | `hr.py` | no | no | — | 3 | UNVERIFIED |  |
 | R2-321 | MEDIUM | FIX_VERIFIED | `d4db32f` | `reports.py` | no | no | — | 3 | UNVERIFIED |  |

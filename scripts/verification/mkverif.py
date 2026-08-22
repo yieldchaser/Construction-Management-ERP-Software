@@ -454,6 +454,29 @@ VERDICTS = {
     "R2-213": ("CONFIRMED", "E1: the PPE gauge renders an em-dash and 'no checks recorded yet' "
                             "when ppeChecks is empty, instead of a red 0% that reads as total "
                             "non-compliance."),
+    "R2-573": ("CONFIRMED", "E1: a received_date_not_future validator raises on a future GRN "
+                            "date (procurement.py:120-124). Its disclosed sibling - "
+                            "POCreateRequest.po_date still accepting a future date - sits in "
+                            "R2-717."),
+    "R2-273": ("CONFIRMED", "E1: all three guards present - phone_no pattern at crm.py:75, "
+                            "EmailStr at :77, and an expected_closure validator at :92."),
+    "R2-376": ("CONFIRMED", "E1: the zero-UUID sentinel is replaced by tower_id=None (:180) and "
+                            "the no-tower branch now computes variance = total_budget - "
+                            "total_billed where it previously hardcoded 0.0 - a real improvement "
+                            "beyond what the note claims."),
+    "R2-398": ("CONFIRMED", "E1: all three claims hold - exportColumns drops all-blank columns, "
+                            "formatExportCell renders ISO timestamps as en-IN, and the cell "
+                            "mapping moved from `row[col] || \"\"` to formatExportCell(row[col]), "
+                            "which is what preserves a legitimate 0."),
+    "R2-045": ("CONFIRMED", "E1: material_actual counts invoice_type in (purchase, expense) and "
+                            "equipment_actual counts equipment bills plus deployment hours and "
+                            "fuel, mirroring get_project_pl (bi_export.py:256-293). Verifying "
+                            "this is what surfaced R2-723."),
+    "R2-066": ("CONFIRMED", "E1: same function and same commit as R2-045 - expense and equipment "
+                            "bills are no longer orphaned from the BI feed."),
+    "R2-268": ("CONFIRMED", "E1: the DPR export resolves reported_by to a User name and falls "
+                            "back safely when the value is not a UUID, so a raw id is never "
+                            "rendered as the author."),
     "R2-083": ("UNVERIFIED", "E1 FAILS on completeness. The two edits are correct, but the note's "
                              "claim that these were 'the last two fabricated attribute fallbacks' "
                              "is wrong - four remain in the same object literal, including "
