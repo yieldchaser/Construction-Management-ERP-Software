@@ -677,6 +677,48 @@ before writing anything. Here I did not.
 that line before drawing any conclusion from its absence elsewhere. Line numbers from a flat grep
 carry no scope.
 
+### R2-725 · HIGH · 93 closed rows cite a regression suite that does not exist in the live lineage
+
+**Found while re-prioritising the remaining CRITICALs.** Their register notes are terse and, instead
+of describing the fix, cite an identifier: *"wave W01a; suite RC-014"*.
+
+**The suite is not in the live lineage.** `docs/AUDIT_REGRESSION_SUITE.md` exists **only on my own
+orphaned branch** (`27fab37` / `98b3a3f`), which is explicitly never to be merged. `git ls-tree` on
+`campaign/waves` returns nothing for it.
+
+| measure | value |
+|---|---|
+| register rows citing an RC id | **93** |
+| status of those rows | **all 93 are `FIX_VERIFIED`** |
+| severity | 50 CRITICAL · 29 HIGH · 14 MEDIUM |
+| distinct RC ids cited | 83 |
+| RC ids actually defined (orphan branch only) | 32 |
+| **cited but never defined anywhere** | **56** |
+
+**What this is not.** These rows are `FIX_VERIFIED`, which in this register means *founder
+live-confirmed* — the strongest status it has, and independent of any suite. So this is **not** a
+claim that 93 findings are unfixed. Several of them I have already confirmed by other means.
+
+**What it is.** For 93 closed rows — including 50 CRITICALs — the register's stated evidence points
+at a file that is not in the repository, and two-thirds of the identifiers it points at were never
+defined even where the file does exist. Anyone asking "what proves this one?" gets a dangling
+reference.
+
+**Not the fix campaign's doing.** These citations predate the opencode agent; it inherited the
+register with them already in place. The mechanism is ordinary and worth naming plainly: evidence
+was recorded as a pointer into an artifact on a branch that was later abandoned, and the pointer
+outlived the artifact.
+
+**Consequence for this pass.** For these rows the register note cannot supply E1 — there is nothing
+to read. Verification has to come from the fix commit's diff and the live product instead, which is
+how I am working them.
+
+**Fix direction.** Two options, both cheap. Either lift `AUDIT_REGRESSION_SUITE.md` off the orphaned
+branch into the live lineage as a historical record — it is a documentation file, so this carries
+none of the merge risk that makes the rest of that branch unmergeable — or replace the 93 citations
+with the evidence that actually justified them. The first is one `git show > file`; it makes 32 of
+the 83 ids resolvable and leaves the other 56 honestly marked as undefined.
+
 ## Verified clean so far
 
 Recorded so the pass is not only a list of complaints. Each claim was re-checked against the tree,
@@ -720,8 +762,9 @@ were scoped to the files a finding named rather than to the defect class.
 | **R2-722** | **HIGH** | **second demo-tenant creation path in auth.py; demo OTP allowlist/code default in source** | found verifying R2-183 |
 | **R2-723** | **HIGH** | **cancelled bills still counted in budget/BI/tower actuals — 8 sites R2-232 missed** | found verifying R2-045/066 |
 | ~~R2-724~~ | — | **RETRACTED** — branch GSTIN does run the checksum; I misread the class boundary | — |
+| **R2-725** | **HIGH** | **93 FIX_VERIFIED rows cite an RC suite absent from the live lineage; 56 ids never defined** | found re-prioritising the CRITICALs |
 
-**Nineteen live findings** (R2-724 retracted). R2-713..R2-716 were filed separately first and are struck through, not
+**Twenty live findings** (R2-724 retracted). R2-713..R2-716 were filed separately first and are struck through, not
 deleted, so the history stays traceable.
 
 Three to act on first, for different reasons:
