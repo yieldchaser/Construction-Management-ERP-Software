@@ -237,11 +237,11 @@ export default function CalculatorsPage() {
 
     const mixLib: Record<string, [number, number, number]> = {
       M5: [3.2, 0.48, 0.96],
-      M7_5: [4.0, 0.47, 0.94],
+      M7_5: [3.41, 0.47, 0.94],
       M10: [4.4, 0.46, 0.92],
       M15: [6.3, 0.44, 0.88],
-      M20: [8.2, 0.42, 0.84],
-      M25: [11.1, 0.38, 0.76],
+      M20: [8.06, 0.42, 0.84],
+      M25: [11.1, 0.38, 0.77],
     };
     const [cFactor, sFactor, aFactor] = mixLib[concreteGrade] || mixLib.M20;
     const cBags = vol * cFactor * (1 + concreteWastage / 100);
