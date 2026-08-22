@@ -34,6 +34,12 @@ Ordering is **severity-ascending**, with founder-gates and live-only work last. 
 
 ## 🔶 PHASE H IN PROGRESS (Sessions 31-33) — 91 of 188 HIGHs closed (register basis; +13 new siblings filed R2-602..614)
 
+## ⚠️ R2-727 ORPHAN-SHA SWEEP IN PROGRESS (Session 33) — runs BEFORE new Phase H waves
+94 closed rows cite fix commits unreachable from campaign/waves (docs/VERIFICATION_ORPHAN_ROWS.txt on founder branch). Method: verify INTENT idiom-independently against live code, 5-row explore micro-chunks; DRIFTED rows get coder fixes with fully-inlined specs.
+- finance.py: COMPLETE — 22/32 verified, 12 live defects found, 9 re-fixed (R2-053 b290d51, R2-221 f1a4c43, R2-231 e9dba8b, R2-238 125ebfa, R2-243 2803dad, R2-344+316 bf544f6, R2-417 c0cb9ff, R2-025/235/509 via R2-726 bbb6d51); 10 pending fix tasks spec'd in SESSION_LOG cont.3 (R2-052, R2-100+315, R2-236, R2-276, R2-327 remainder, R2-342+343, R2-533+534, R2-544+549, R2-592; R2-358/R2-420 unverified)
+- NOT actionable: R2-345 (founder-escalated product decision)
+- hr ×28, reports ×18, procurement ×9, scattered ×5: NOT STARTED
+
 Completed waves:
 - H-auth-settings ✅ 7/7 (R2-182, R2-186, R2-196, R2-285, R2-292, R2-405, R2-554; R2-457 evidence)
 - H-qss ✅ 8/8 (R2-204, R2-212, R2-363, R2-364, R2-391, R2-551, R2-525, R2-526)
