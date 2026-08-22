@@ -755,6 +755,36 @@ VERDICTS = {
                             "is present."),
     "R2-500": ("CONFIRMED", "E1: evidence-close riding on R2-023, verified - no PHASE build "
                             "label survives anywhere in frontend/src."),
+    "R2-027": ("CONFIRMED", "E0 LIVE: face_recognition_logs.created_at exists in Supabase as "
+                            "timestamp with time zone, so the Sentry-proven AttributeError 500 "
+                            "cannot recur. (My first query said ABSENT - I had used the singular "
+                            "table name. The table is face_recognition_logs.)"),
+    "R2-086": ("CONFIRMED", "E0 LIVE: same column, same query - present. Rides on R2-027."),
+    "R2-307": ("CONFIRMED", "E0 LIVE: same column - present. The commit-before-fail hazard "
+                            "depended on the POST response validation failing, which it no "
+                            "longer does."),
+    "R2-217": ("CONFIRMED", "E0 LIVE: drawing_pins.resolved exists in Supabase as boolean, so "
+                            "migration 20260816_000006 did land. Its disclosed sibling "
+                            "(handleAddPin local-only on failure) sits in R2-717."),
+    "R2-373": ("CONFIRMED", "E0 LIVE: material_indents.approved_by exists as uuid, so migration "
+                            "20260816_000001 landed."),
+    "R2-370": ("CONFIRMED", "E0 LIVE: bills.cancelled_at exists as timestamp with time zone, so "
+                            "migration 20260816_000003 landed. This row also carries the R2-232 "
+                            "content onto this lineage, which is why R2-232 verified cleanly."),
+    "R2-196": ("CONFIRMED", "E0 LIVE: the revoked_tokens TABLE exists and users.tokens_revoked_at "
+                            "exists as timestamp with time zone, so the token-revocation "
+                            "migration landed."),
+    "R2-102": ("CONFIRMED", "E1 + E0: the ONS- to SF- template change is a Python-side default "
+                            "and it is applied at the shipped sites. Note for the record: the "
+                            "voucher_number_template column has NO database default in "
+                            "production, so the value depends entirely on the ORM supplying it - "
+                            "correct today, but a non-ORM insert would leave it null."),
+    "R2-206": ("NOT_IN_PROD", "E0 LIVE, and this one is a real miss. The row claims reported_by "
+                              "was converted to a UUID FK by migration 20260816_000005. In "
+                              "Supabase it is still `character varying`, there is NO foreign key "
+                              "on it, and 2 of the 3 material_wastage rows hold non-UUID free "
+                              "text. The boot sync adds columns but cannot change a column's "
+                              "TYPE, so this migration never ran. Raised as R2-730."),
     "R2-083": ("UNVERIFIED", "E1 FAILS on completeness. The two edits are correct, but the note's "
                              "claim that these were 'the last two fabricated attribute fallbacks' "
                              "is wrong - four remain in the same object literal, including "

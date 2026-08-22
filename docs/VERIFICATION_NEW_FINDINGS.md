@@ -948,6 +948,42 @@ Logs tab open generates a sustained query stream for the entire company.
 [accessToken])`. Worth a lint rule too: an object or array literal in a `useCallback`/`useEffect`
 dependency array is always this bug.
 
+### R2-730 · HIGH · `material_wastage.reported_by` is still free text in production; its migration never ran
+
+**From R2-206** (`83c32c2`, `FIXED`), which states the column was *"converted to UUID FK, migration
+20260816_000005 nulls legacy free text"*.
+
+**Live Supabase says otherwise:**
+
+| check | result |
+|---|---|
+| `material_wastage.reported_by` type | **`character varying`** (model declares `UUID` FK to `company_team.id`) |
+| foreign key on that column | **none** |
+| rows in `material_wastage` | 3 |
+| **rows whose `reported_by` is not a UUID** | **2** |
+
+The migration file exists in the repo and did not run. This is the failure mode the boot sync
+cannot cover: `ensure_postgres_schema_sync` adds *missing columns*, but it will never change an
+existing column's **type**, so a column that is already there in the wrong type stays wrong
+forever, silently.
+
+**Concrete consequence.** The ORM maps `reported_by` as `UUID`. Two production rows hold free text.
+When SQLAlchemy loads them it will attempt to coerce that text into a UUID and raise
+`ValueError: badly formed hexadecimal UUID string` — a 500 on the wastage read path, for rows that
+already exist.
+
+**Why this one matters beyond its own severity.** It is the first *confirmed* case of a migration
+file that exists in the repository and was never applied to production. R2-701 showed migrations
+that were never written; this shows one that was written and never ran. **The other eight
+migrations dated 2026-08-15 and later should be checked the same way** — I verified five of them
+landed (`face_recognition_logs.created_at`, `drawing_pins.resolved`,
+`material_indents.approved_by`, `bills.cancelled_at`, `revoked_tokens` + `users.tokens_revoked_at`),
+so the failure is specific rather than systemic, but "specific" was only established by looking.
+
+**Fix direction.** Re-run `20260816_000005`, but it needs a data decision first: two rows hold
+names, not ids. Either map them to the matching `company_team` row or null them, per the migration's
+stated intent. Not a mechanical re-run.
+
 ## Verified clean so far
 
 Recorded so the pass is not only a list of complaints. Each claim was re-checked against the tree,
@@ -996,8 +1032,9 @@ were scoped to the files a finding named rather than to the defect class.
 | **R2-727** | **CRITICAL** | **94 closed rows (48 CRITICAL) cite commits not in the live lineage; at least one fix was never reproduced** | lineage audit |
 | **R2-728** | **CRITICAL** | **attendance punch-out raises TypeError on Postgres; passes on SQLite so the suite cannot see it** | orphan-lineage sweep |
 | **R2-729** | **CRITICAL** | **Delete Logs fetches in an unbounded loop — proved live at ~3.4 req/s against the production pool** | orphan-lineage sweep |
+| **R2-730** | **HIGH** | **material_wastage.reported_by still free text; migration 20260816_000005 exists but never ran** | live schema sweep |
 
-**Twenty-four live findings** (R2-724 retracted). R2-713..R2-716 were filed separately first and are struck through, not
+**Twenty-five live findings** (R2-724 retracted). R2-713..R2-716 were filed separately first and are struck through, not
 deleted, so the history stays traceable.
 
 Three to act on first, for different reasons:

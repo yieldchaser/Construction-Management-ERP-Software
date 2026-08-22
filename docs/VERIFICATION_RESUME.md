@@ -36,20 +36,29 @@ re-sync and append newly closed rows at the start of each session. **Writes are 
 company **ZZ R8 Throwaway = `1fa705a4-7aa6-42f2-9906-65902c96916f`**. Class-siblings are **grouped
 into one class finding**, not filed separately.
 
-## State
+## State (2026-08-22)
 
-**35 of 315 worked — 30 CONFIRMED · 2 NOT_IN_PROD · 3 UNVERIFIED.**
+**220 of 315 worked — 211 CONFIRMED · 3 NOT_IN_PROD · 5 UNVERIFIED · 1 finding of mine retracted.**
+
+**211 of 214 closure claims verified exactly as written.** The three exceptions are R2-025, R2-210
+and R2-310 — all from the orphan-lineage class below, all CRITICAL, all live.
 
 **30 of 31 closure claims verified exactly as written.** The individual fixes hold up. What does
 not hold is the *evidence layer* around them, which is what most of the new findings are about.
 
-**16 findings filed, `docs/VERIFICATION_NEW_FINDINGS.md`, id block R2-701..R2-799 reserved**
+**25 live findings filed (R2-701..R2-730, one retracted), `docs/VERIFICATION_NEW_FINDINGS.md`,
+id block R2-701..R2-799 reserved**
 (register max is R2-601, so the campaign keeps 602+). Four class findings carry most of the weight:
 
 - **R2-712** CRITICAL — 11 instances of fabricated hardcoded data in console forms
 - **R2-717** HIGH — 29 closed rows disclose residue with no tracking id
 - **R2-718** HIGH — 169 closures have no gate at all; 61 CRITICAL; 28 have zero automated evidence
-- **R2-719** CRITICAL — 90 invented-default sites; 8 sentinel UUIDs resolve to real production rows
+- **R2-719** CRITICAL — 90 invented-default sites; 16 sentinel-UUID occurrences over 13 files
+- **R2-727** CRITICAL — **94 closed rows cite commits that are NOT ancestors of `campaign/waves`**;
+  they resolve only on the orphaned branch. 48 CRITICAL. Three confirmed misses so far:
+  **R2-726** (Enterprise Rollup sign error, agent has since fixed at `bbb6d51`), **R2-728**
+  (punch-out TypeError on Postgres), **R2-729** (Delete Logs loop, measured at ~3.4 req/s live)
+- **R2-730** HIGH — first confirmed case of a migration file that exists and never ran
 
 All four zero-evidence CRITICALs from R2-718 are now examined: R2-050, R2-051, R2-060 CONFIRMED;
 R2-083 UNVERIFIED (its two edits are right, its "last two" completeness claim is not).
