@@ -46,7 +46,7 @@ def _bill_payload(company_id, project_id, party_id, **kw):
     return payload
 
 
-def _po_grn_match(db, company, project, match_status, invoice_id=None):
+def _po_grn_match(db, company, project, match_status, invoice_id=None, invoiced_amount=100000):
     po = models.PurchaseOrder(
         id=uuid.uuid4(), company_id=company.id, project_id=project.id,
         po_number=f"PO-{uuid.uuid4().hex[:6]}", po_date=datetime.datetime.now(),
@@ -64,7 +64,7 @@ def _po_grn_match(db, company, project, match_status, invoice_id=None):
         id=uuid.uuid4(), company_id=company.id, project_id=project.id,
         po_id=po.id, grn_id=grn.id, invoice_id=invoice_id,
         match_status=match_status, po_amount=100000, grn_qty=10,
-        invoiced_amount=100000, variance_amount=0,
+        invoiced_amount=invoiced_amount, variance_amount=0,
     )
     db.add(match)
     db.commit()
@@ -167,9 +167,12 @@ def test_patch_bill_link_match(client, db, make_tenant, auth_headers):
     r = client.post("/apis/v3/billing/bills", json=_bill_payload(comp.id, proj.id, team.id), headers=hdr)
     assert r.status_code == 201, r.text
     bill_id = r.json()["id"]
+    total_payable = r.json()["total_payable"]
     assert r.json()["match_status"] == "unmatched"
 
-    match = _po_grn_match(db, comp, proj, "approved")
+    # R2-594: the linked match's invoiced amount must agree with this bill's
+    # total_payable, so seed the stub match with the bill's actual payable.
+    match = _po_grn_match(db, comp, proj, "approved", invoiced_amount=total_payable)
     p = client.patch(f"/apis/v3/billing/bills/{bill_id}/match", json={"match_id": str(match.id)}, headers=hdr)
     assert p.status_code == 200, p.text
     assert str(p.json()["match_id"]) == str(match.id)

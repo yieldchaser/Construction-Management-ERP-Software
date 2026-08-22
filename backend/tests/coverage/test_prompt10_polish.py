@@ -189,11 +189,22 @@ def test_three_way_variance_vs_grn_value(client, db, make_tenant, auth_headers):
     db.add(models.GRNItem(grn_id=grn.id, po_item_id=poi.id, received_qty=50.0))
     db.commit()
 
+    # R2-349: the reconciled figure is the bill's stored total_payable, so the
+    # payload identifies a vendor bill invoicing exactly the received value.
+    bill = models.Bill(
+        id=uuid.uuid4(), company_id=comp.id, project_id=proj.id,
+        party_company_user_id=team.id, invoice_number=f"INV-{uuid.uuid4().hex[:8]}",
+        invoice_date=datetime.datetime.now(), invoice_type="purchase",
+        subtotal=500.0, gst_amount=0.0, total_payable=500.0,
+    )
+    db.add(bill)
+    db.commit()
+
     r = client.post(
         "/apis/v3/three-way",
         json={"company_id": str(comp.id), "project_id": str(proj.id),
               "po_id": str(po.id), "grn_id": str(grn.id),
-              "invoiced_amount": 500.0, "match_status": "pending"},
+              "invoice_id": str(bill.id)},
         headers=hdr,
     )
     assert r.status_code == 201, r.text
@@ -201,7 +212,7 @@ def test_three_way_variance_vs_grn_value(client, db, make_tenant, auth_headers):
     # Baseline is the GRN received value (500), so an invoice of 500 should match.
     assert body["po_amount"] == 500.0
     assert body["variance_amount"] == 0.0
-    assert body["match_status"] != "mismatch"
+    assert body["match_status"] == "matched"
 
 
 # ── F6: update task with dangling project FK -> 404 ──────────────────────────
