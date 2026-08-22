@@ -288,8 +288,15 @@ def feed_budget_variance(
             eq = db.query(models.Equipment).filter(models.Equipment.id == dep.equipment_id).first()
             if eq and eq.hourly_rate:
                 rate = float(eq.hourly_rate)
-                end = dep.end_date if dep.end_date else datetime.utcnow()
-                hours = (end - dep.start_date).total_seconds() / 3600.0
+                # R2-727: same aware/naive normalization as finance.py
+                # (Postgres returns aware datetimes, SQLite naive).
+                start = dep.start_date
+                if start.tzinfo is None:
+                    start = start.replace(tzinfo=timezone.utc)
+                end = dep.end_date if dep.end_date else datetime.now(timezone.utc)
+                if end.tzinfo is None:
+                    end = end.replace(tzinfo=timezone.utc)
+                hours = (end - start).total_seconds() / 3600.0
                 equipment_actual += max(0.0, hours * rate)
         fuel_logs = db.query(models.FuelLog).filter(models.FuelLog.project_id == p.id).all()
         equipment_actual += sum(float(log.total_cost or 0.0) for log in fuel_logs)

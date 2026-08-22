@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, File, Form, UploadFile
 from sqlalchemy import func
@@ -429,8 +429,16 @@ def get_project_pl(project_id: uuid.UUID, db: Session = Depends(get_db), _: None
         eq = db.query(Equipment).filter(Equipment.id == dep.equipment_id).first()
         if eq and eq.hourly_rate:
             rate = float(eq.hourly_rate)
-            end = dep.end_date if dep.end_date else datetime.utcnow()
-            hours = (end - dep.start_date).total_seconds() / 3600.0
+            # R2-727: EquipmentDeployment columns are timezone-aware on Postgres
+            # but round-trip naive on SQLite; normalize both operands so the
+            # "still deployed" fallback (end_date NULL) can't raise TypeError.
+            start = dep.start_date
+            if start.tzinfo is None:
+                start = start.replace(tzinfo=timezone.utc)
+            end = dep.end_date if dep.end_date else datetime.now(timezone.utc)
+            if end.tzinfo is None:
+                end = end.replace(tzinfo=timezone.utc)
+            hours = (end - start).total_seconds() / 3600.0
             dep_cost += max(0.0, hours * rate)
 
     fuel_logs = db.query(FuelLog).filter(FuelLog.project_id == proj_uuid).all()

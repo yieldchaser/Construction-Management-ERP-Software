@@ -1,5 +1,5 @@
 from uuid import UUID
-from datetime import datetime, date
+from datetime import date, datetime, timezone
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -120,8 +120,15 @@ def get_committed_costs(project_id: UUID, db: Session = Depends(get_db), _: None
         eq = db.query(Equipment).filter(Equipment.id == dep.equipment_id).first()
         if eq and eq.hourly_rate:
             rate = float(eq.hourly_rate)
-            end = dep.end_date if dep.end_date else datetime.utcnow()
-            hours = (end - dep.start_date).total_seconds() / 3600.0
+            # R2-727: same aware/naive normalization as finance.py (Postgres
+            # returns aware datetimes, SQLite naive); never mix them.
+            start = dep.start_date
+            if start.tzinfo is None:
+                start = start.replace(tzinfo=timezone.utc)
+            end = dep.end_date if dep.end_date else datetime.now(timezone.utc)
+            if end.tzinfo is None:
+                end = end.replace(tzinfo=timezone.utc)
+            hours = (end - start).total_seconds() / 3600.0
             dep_cost += max(0.0, hours * rate)
     fuel_cost = float(db.query(func.sum(FuelLog.total_cost)).filter(FuelLog.project_id == project_id).scalar() or 0.0)
     equipment_actual = equipment_bill_total + dep_cost + fuel_cost
