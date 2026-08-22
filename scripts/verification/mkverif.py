@@ -321,6 +321,38 @@ VERDICTS = {
     "R2-578": ("CONFIRMED", "THE FIX IS GOOD; ONLY ITS GATE IS FAKE (R2-706). chat.py:179 raises "
                             "403 for a non-member, and the sender identity is stamped from the "
                             "session rather than the client payload."),
+    "R2-150": ("CONFIRMED", "E1: todos.py:155 sets created_by=membership.id - the company_team "
+                            "FK space, not users.id - and TodoCreate declares no created_by at "
+                            "all, so a client cannot supply it."),
+    "R2-247": ("CONFIRMED", "E1, and the interesting part is what is ABSENT. NCRCreate (:116) "
+                            "declares neither raised_by nor assigned_to, and "
+                            "SiteInspectionCreate declares no inspected_by, so "
+                            "`NCR(**payload.model_dump(), raised_by=current_user.id, ...)` at "
+                            ":362 cannot collide on a duplicate keyword. The raised_by/"
+                            "assigned_to at :135-136 belong to NCRResponse, which is output "
+                            "only. Identity is stamped from the caller on both endpoints."),
+    "R2-251": ("CONFIRMED", "E1: mom.py:108 stamps created_by=current_user.name on create, and "
+                            "the update path at :161-162 overwrites any client-supplied value "
+                            "with the session name, so the body value is inert."),
+    "R2-130": ("CONFIRMED", "E1: the invented formula is gone - statutory.py:189 returns "
+                            "estimated_penalty 0.0. The note's own disclosure that the frontend "
+                            "modal is now honest-but-dead is accurate and sits in R2-717."),
+    "R2-287": ("CONFIRMED", "E1: opening_balance_amount is Field(0.0, ge=0) and "
+                            "opening_balance_direction carries pattern "
+                            "'^(will_pay|will_receive)$' (projects.py:456-457), so a negative "
+                            "amount or a non-canonical direction is a 422 rather than a silent "
+                            "200-with-zero."),
+    "R2-269": ("CONFIRMED", "E1: the payslip CSV header row leads with 'Employee Code' at "
+                            "hr.py:781. Register attribution says labour.py; the fix is in "
+                            "hr.py, which the note itself corrects."),
+    "R2-117": ("CONFIRMED", "E1: no build-plan, roadmap or 'Phase N of' copy survives in the "
+                            "settings page."),
+    "R2-119": ("CONFIRMED", "E1, verified as an EXACT vocabulary match rather than a spot check: "
+                            "the frontend APPROVAL_CATEGORIES list (settings/page.tsx:476-481) "
+                            "is character-for-character identical to the backend feature_type "
+                            "Literal (settings.py:186-191) - the same twelve entries in the same "
+                            "order. This is the frontend/backend vocabulary-drift class the "
+                            "audit hit repeatedly, and here the two agree."),
     "R2-083": ("UNVERIFIED", "E1 FAILS on completeness. The two edits are correct, but the note's "
                              "claim that these were 'the last two fabricated attribute fallbacks' "
                              "is wrong - four remain in the same object literal, including "

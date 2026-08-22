@@ -274,7 +274,7 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-122 | MEDIUM | FIXED | `9236ea4` | `budgeting.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-124 | MEDIUM | FIXED | `89839c9` | `frontend/src/app/c/[company_id]/d/equipment/page.tsx` | yes | yes | parse_fail | 1 | UNVERIFIED |  |
 | R2-129 | MEDIUM | FIXED | `bdaa883` | `statutory.py` | yes | yes | parse_fail | 1 | UNVERIFIED |  |
-| R2-130 | MEDIUM | FIXED | `87b15ad` | `statutory.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
+| R2-130 | MEDIUM | FIXED | `87b15ad` | `statutory.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: the invented formula is gone - statutory.py:189 returns estimated_penalty 0.0. The note's own disclosure that the frontend modal is now honest-but-dead is accurate and sits in R2-717. |
 | R2-134 | MEDIUM | FIXED | `97ed0dd` | `three_way.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-135 | MEDIUM | FIXED | `a32d60e` | `safety.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-136 | MEDIUM | FIXED | `048f72f` | `planning.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
@@ -282,7 +282,7 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-145 | MEDIUM | FIXED | `d84fb8d` | `d/chat/page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-146 | MEDIUM | FIXED | `47813c2` | `d/chat/page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-147 | MEDIUM | FIXED | `b8c36c4` | `chat.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
-| R2-150 | MEDIUM | FIXED | `7edc3be` | `todos.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
+| R2-150 | MEDIUM | FIXED | `7edc3be` | `todos.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: todos.py:155 sets created_by=membership.id - the company_team FK space, not users.id - and TodoCreate declares no created_by at all, so a client cannot supply it. |
 | R2-154 | MEDIUM | FIXED | `bd41ec7` | `budget.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-159 | MEDIUM | FIXED | `d92cb93` | `custom_fields.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-162 | MEDIUM | FIXED | `590560f` | `page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
@@ -299,17 +299,17 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-218 | MEDIUM | FIXED | `—` | `UNMAPPED` | yes | yes | no_commit | 1 | UNVERIFIED |  |
 | R2-225 | MEDIUM | FIXED | `28ce750` | `team_schedule.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-227 | MEDIUM | FIXED | `15e83fd` | `projects.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: is_pinned is emitted by the shared project serializer at projects.py:154 and the toggle returns it at :360, so list, get and the mutation agree. |
-| R2-247 | MEDIUM | FIXED | `d838e44` | `quality.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
-| R2-251 | MEDIUM | FIXED | `b8e837b` | `bi_export.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
+| R2-247 | MEDIUM | FIXED | `d838e44` | `quality.py` | yes | yes | text-pin | 1 | CONFIRMED | E1, and the interesting part is what is ABSENT. NCRCreate (:116) declares neither raised_by nor assigned_to, and SiteInspectionCreate declares no inspected_by, so `NCR(**payload.model_dump(), raised_by=current_user.id, ...)` at :362 cannot collide on a duplicate keyword. The raised_by/assigned_to at :135-136 belong to NCRResponse, which is output only. Identity is stamped from the caller on both endpoints. |
+| R2-251 | MEDIUM | FIXED | `b8e837b` | `bi_export.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: mom.py:108 stamps created_by=current_user.name on create, and the update path at :161-162 overwrites any client-supplied value with the session name, so the body value is inert. |
 | R2-255 | MEDIUM | FIXED | `bd1c9f7` | `planning.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-256 | MEDIUM | FIXED | `d879c01` | `safety.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-261 | MEDIUM | FIXED | `7b868ea` | `team_schedule.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
-| R2-269 | MEDIUM | FIXED | `bf1343e` | `labour.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
+| R2-269 | MEDIUM | FIXED | `bf1343e` | `labour.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: the payslip CSV header row leads with 'Employee Code' at hr.py:781. Register attribution says labour.py; the fix is in hr.py, which the note itself corrects. |
 | R2-273 | MEDIUM | FIXED | `a040a04` | `crm.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-277 | MEDIUM | FIXED | `551831e` | `models.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-278 | MEDIUM | FIXED | `e59316f` | `api.ts` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-282 | MEDIUM | FIXED | `9994fab` | `UNMAPPED` | yes | yes | text-pin | 1 | UNVERIFIED |  |
-| R2-287 | MEDIUM | FIXED | `061f949` | `projects.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
+| R2-287 | MEDIUM | FIXED | `061f949` | `projects.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: opening_balance_amount is Field(0.0, ge=0) and opening_balance_direction carries pattern '^(will_pay|will_receive)$' (projects.py:456-457), so a negative amount or a non-canonical direction is a 422 rather than a silent 200-with-zero. |
 | R2-290 | MEDIUM | FIXED | `582d215` | `settings.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-293 | MEDIUM | FIXED | `afe1f97` | `tally.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-295 | MEDIUM | FIXED | `fed144d` | `rate_limit.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
@@ -381,8 +381,8 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-592 | MEDIUM | FIX_VERIFIED | `e69bcae` | `finance.py` | no | no | — | 2 | UNVERIFIED |  |
 | R2-100 | MEDIUM | FIX_VERIFIED | `a6bfdb4` | `finance.py` | no | no | — | 3 | UNVERIFIED |  |
 | R2-101 | MEDIUM | FIXED | `2253758` | `finance.py` | no | no | — | 3 | UNVERIFIED |  |
-| R2-117 | MEDIUM | FIXED | `bbad99e` | `UNMAPPED` | no | no | — | 3 | UNVERIFIED |  |
-| R2-119 | MEDIUM | FIXED | `b69ab40` | `UNMAPPED` | no | no | — | 3 | UNVERIFIED |  |
+| R2-117 | MEDIUM | FIXED | `bbad99e` | `UNMAPPED` | no | no | — | 3 | CONFIRMED | E1: no build-plan, roadmap or 'Phase N of' copy survives in the settings page. |
+| R2-119 | MEDIUM | FIXED | `b69ab40` | `UNMAPPED` | no | no | — | 3 | CONFIRMED | E1, verified as an EXACT vocabulary match rather than a spot check: the frontend APPROVAL_CATEGORIES list (settings/page.tsx:476-481) is character-for-character identical to the backend feature_type Literal (settings.py:186-191) - the same twelve entries in the same order. This is the frontend/backend vocabulary-drift class the audit hit repeatedly, and here the two agree. |
 | R2-121 | MEDIUM | FIXED | `25f30db` | `billing.py` | no | no | — | 3 | UNVERIFIED |  |
 | R2-190 | MEDIUM | FIXED | `592af3a` | `UNMAPPED` | no | no | — | 3 | UNVERIFIED |  |
 | R2-200 | MEDIUM | FIX_VERIFIED | `29a1bdb` | `hr.py` | no | no | — | 3 | UNVERIFIED |  |
