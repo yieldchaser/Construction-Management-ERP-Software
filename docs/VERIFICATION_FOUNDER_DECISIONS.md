@@ -20,10 +20,16 @@ yes/no, not an investigation.
 **5 projects**. `users` row `e0000000-0000-0000-0000-000000000100` is **"Demo Engineer" /
 demo@siteflow.co**.
 
-**Where it came from.** `GET /settings/company` used to *create* it: if the requested company id
-was the sentinel UUID, the endpoint INSERTed "Demo Construction Ltd" and committed. R2-115
-(`093fd10`) removed that and now 404s — verified. So the tenant is a leftover of the old behaviour,
-and nothing recreates it today. That makes deleting it safer than it would otherwise be.
+**Where it came from — CORRECTED 2026-08-22.** I first wrote that nothing recreates this tenant.
+**That was wrong**, and the correction matters for the decision.
+
+`GET /settings/company` used to create it, and R2-115 (`093fd10`) removed that path — verified. But
+there is a **second, independent creation path** in a different router: `_ensure_demo_company`
+(`auth.py:186`) creates the company *and* seeds its 5 projects, and it runs at `auth.py:415` on any
+successful login by an allowlisted demo number. See R2-722.
+
+So **deleting the rows alone will not hold** — the next demo-number login recreates them. The code
+path has to go first.
 
 R2-115's closure also judged the residual demo chain "cosmetic only". R2-719 contradicts that: six
 pages still send the sentinel company id, and the attendance punch path writes against the sentinel
@@ -107,6 +113,32 @@ mid-campaign. This is no longer urgent — downgraded from the money-path concer
 
 ---
 
+## D-V5 · Is the demo OTP path live on Render? (needs your environment)
+
+**Source:** R2-722.
+
+`OTP_DEMO_ALLOWLIST` defaults to `9876543210,+919876543210` and `OTP_DEMO_CODE` to `123456` **in
+source** (`config.py:43-44`). The fixed code is accepted only when no SMS provider is configured
+(`use_demo_code = is_demo and not provider_ready`), so the answer turns entirely on your Render
+environment.
+
+**I did not probe this.** Determining `provider_ready` live means calling `/auth/send-otp`, which
+sends a real message to whatever number is submitted — I was not willing to message an arbitrary
+handset to satisfy a check.
+
+**What I need from you:** whether Render sets an SMS provider, and whether it overrides
+`OTP_DEMO_ALLOWLIST` / `OTP_DEMO_CODE`.
+
+- **SMS configured and allowlist overridden** → no bypass; R2-722 reduces to the demo-tenant
+  recreation, which still wants fixing.
+- **SMS not configured** → `9876543210` + `123456` is a working login to the demo tenant on the
+  public API. That would be the most urgent item in this file.
+
+**My recommendation regardless of the answer:** the defaults should be empty strings in source, so
+an unset env disables the path instead of enabling a known credential.
+
+---
+
 ## D-V4 · Whether to backfill behavioural tests for the 61 gate-less CRITICALs
 
 **Source:** R2-718.
@@ -137,3 +169,4 @@ it turns the remaining absence into a recorded decision rather than an oversight
 | D-V2 | 2026-08-21 | pending — **time-sensitive** | — |
 | D-V3 | 2026-08-21 | **resolved by verification — downgraded, see R2-720** | 2026-08-21 |
 | D-V4 | 2026-08-21 | pending | — |
+| D-V5 | 2026-08-22 | pending — **needs your Render env** | — |

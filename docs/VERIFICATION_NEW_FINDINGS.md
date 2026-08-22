@@ -527,6 +527,54 @@ constrained party status. Statutory was not swept.
 **Fix direction.** `report_type: Literal["pf", "esi", "bocw", "tds"]`, matching how the other
 discriminators were closed. One line, and it converts three silent wrong answers into a 422.
 
+### R2-722 · HIGH · the demo tenant is still actively recreated, and a fixed OTP can reach it
+
+**Found while verifying R2-183.** It also **corrects a claim I made in D-V1** — I wrote that
+nothing recreates the demo tenant. That was wrong.
+
+`auth.py:186` defines `_ensure_demo_company`, which creates the company
+`e0000000-…-000000000000` ("Demo Construction Ltd", GSTIN `27AADCD2424B1ZP`) and then calls
+`_seed_demo_projects` — which is where the 5 projects in production come from. It is invoked at
+`auth.py:415` on **any successful login by an allowlisted demo number**, unconditionally:
+
+```
+if _is_demo_mobile(mobile):
+    company = _ensure_demo_company(db)
+```
+
+R2-115 removed the *settings* endpoint's INSERT, correctly and verifiably. This is a **second,
+independent creation path** in a different router that the R2-115 closure did not cover — and
+nothing in the register points at it.
+
+#### The allowlist and code are defaults in the source
+
+```
+backend/app/config.py:43   OTP_DEMO_ALLOWLIST: str = "9876543210,+919876543210"
+backend/app/config.py:44   OTP_DEMO_CODE: str = "123456"
+backend/app/config.py:65   EMAIL_OTP_DEMO_ALLOWLIST: str = "demo@siteflow.co"
+```
+
+**State the precondition precisely, because it decides the severity.** `send_otp` sets
+`use_demo_code = is_demo and not provider_ready`. So the fixed code `123456` is accepted **only
+when no SMS provider is configured**. With SMS wired, an allowlisted number receives a real random
+OTP and there is no bypass.
+
+**What is unconditional either way** is the tenant recreation at `:415` — that runs on any
+successful demo-number login, configured provider or not.
+
+#### What I did not test, and why
+
+Distinguishing "SMS configured" from "not configured" on the live server means calling
+`/auth/send-otp`, which sends a real message to whatever number is submitted. I did not do that:
+probing it with an invented number risks messaging a real handset, and probing with the demo number
+tells me nothing about `provider_ready`. **This needs the founder to check the Render environment**
+for `SMS`/`OTP_DEMO_ALLOWLIST` overrides — added to the decisions file as D-V5.
+
+**Fix direction.** Independent of the env answer: the allowlist and demo code should have **no
+usable defaults in source** (empty string, so an unset env disables the path entirely), and
+`_ensure_demo_company` should not run on a production deploy at all. If a demo tenant is wanted,
+it should be seeded deliberately rather than materialised by a login.
+
 ## Verified clean so far
 
 Recorded so the pass is not only a list of complaints. Each claim was re-checked against the tree,
@@ -567,8 +615,9 @@ were scoped to the files a finding named rather than to the defect class.
 | **R2-719** | **CRITICAL** | **class finding — 90 invented-default sites; 8 sentinel UUIDs resolve to real production rows** | generalised from R2-083 |
 | **R2-720** | **HIGH** | **Internal Transfer is inert — Save fires no request, no error** | discharging D-V3 |
 | **R2-721** | **MEDIUM** | **statutory `report_type` unvalidated — silent no-due-date, zero cess** | found verifying R2-129 |
+| **R2-722** | **HIGH** | **second demo-tenant creation path in auth.py; demo OTP allowlist/code default in source** | found verifying R2-183 |
 
-**Seventeen live findings.** R2-713..R2-716 were filed separately first and are struck through, not
+**Eighteen live findings.** R2-713..R2-716 were filed separately first and are struck through, not
 deleted, so the history stays traceable.
 
 Three to act on first, for different reasons:
