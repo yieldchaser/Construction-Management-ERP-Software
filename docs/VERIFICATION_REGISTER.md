@@ -109,7 +109,7 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-068 | CRITICAL | FIXED | `401cf1e` | `d/procurement/page.tsx` | yes | yes | parse_fail | 1 | CONFIRMED | E1: `unsplash` returns zero matches across frontend/src, so every fabricated photo-evidence control is gone. Its disclosed residue - the GRN gate photo still rendering a green tick without uploading - is real and is carried by R2-717, where it is the worst instance. |
 | R2-086 | CRITICAL | FIXED | `97f4eb4` | `face_recognition.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-096 | CRITICAL | FIX_VERIFIED | `f5da315` | `reports.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: the party balance is advance_paid + to_receive - advance_received - to_pay at finance.py:724 with net-sign status derivation at :727. |
-| R2-106 | CRITICAL | FIXED | `3a559d9` | `d/attendance/page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
+| R2-106 | CRITICAL | FIXED | `3a559d9` | `d/attendance/page.tsx` | yes | yes | text-pin | 1 | CONFIRMED | E1: the 'Simulate GPS lock' control is gone from frontend/src entirely, and the server sets location_verified=within_geofence at hr.py:314 rather than trusting the client. The request schema still declares the field, but the handler overwrites it, so a client cannot assert its own geofence result. |
 | R2-148 | CRITICAL | FIXED | `534451e` | `todos.py` | yes | yes | text-pin | 1 | CONFIRMED | E1 + E3 LIVE, end to end in the test company. Ticking a to-do fires PUT /apis/v3/todos/{id} then re-fetches the list; after a full page reload Pending held 2 and Completed held 1, so completion persists server-side - the exact defect ('vanished on the next fetch') is gone. Delete fires DELETE /apis/v3/todos/{id} then re-fetches. Probe rows created for the test were removed afterwards. |
 | R2-232 | CRITICAL | FIX_VERIFIED | `69b4a98` | `finance.py` | yes | no | — | 1 | CONFIRMED | E1: billing.py:449-450 stamps cancelled_at/cancelled_by, and the dedicated regression file test_r2_232_cancel_exclusion.py exists. The exclusion reached finance.py but NOT budget/towers/bi_export - 8 missed call sites, raised as R2-723, not against this row. |
 | R2-017 | CRITICAL | FIXED | `15bc202` | `frontend/src/app/c/[company_id]/dashboard/page.tsx` | no | no | — | 2 | CONFIRMED | E1: the four files it names are free of fabricated strings. Claim holds exactly as written. The defect CLASS survives elsewhere - raised as R2-712, which does not detract from this closure. |
@@ -137,8 +137,8 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-049 | CRITICAL | FIX_VERIFIED | `e9e3308` | `procurement.py` | no | no | — | 3 | UNVERIFIED |  |
 | R2-074 | CRITICAL | FIX_VERIFIED | `acee51f` | `hr.py` | no | no | — | 3 | UNVERIFIED |  |
 | R2-076 | CRITICAL | FIX_VERIFIED | `723af26` | `reports.py` | no | no | — | 3 | UNVERIFIED |  |
-| R2-090 | CRITICAL | FIXED | `fe3db93` | `procurement.py` | no | no | — | 3 | UNVERIFIED |  |
-| R2-092 | CRITICAL | FIXED | `—` | `rfq.py` | no | no | — | 3 | UNVERIFIED |  |
+| R2-090 | CRITICAL | FIXED | `fe3db93` | `procurement.py` | no | no | — | 3 | CONFIRMED | E1: rides on the R2-050 fix, which I verified - both approval handlers check res.ok before patching state, so the live-proven 403 experiment (PO showing APPROVED after a refused request) is no longer reachable. |
+| R2-092 | CRITICAL | FIXED | `—` | `rfq.py` | no | no | — | 3 | CONFIRMED | E1: rides on R2-008, verified - the fabricated Compare-RFQs recommendation screen is gone and the drawer shows an honest empty state. |
 | R2-198 | CRITICAL | FIX_VERIFIED | `c5bdcd3` | `finance.py` | no | no | — | 3 | UNVERIFIED |  |
 | R2-222 | CRITICAL | FIX_VERIFIED | `e2e449d` | `hr.py` | no | no | — | 3 | UNVERIFIED |  |
 | R2-235 | CRITICAL | FIX_VERIFIED | `3f65098` | `finance.py` | no | no | — | 3 | UNVERIFIED |  |
@@ -185,7 +185,7 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-285 | HIGH | FIXED | `5e261ba` | `settings.py` | yes | yes | text-pin | 1 | CONFIRMED | E1, and checked for completeness on BOTH mutation paths: _validate_rule_approvers and _reject_overlapping_band are each called on create (settings.py:390-391) and on update (:413-414), with the amount-band validator at :198. All three claims hold and neither path is left unguarded. |
 | R2-292 | HIGH | FIXED | `e88a5f1` | `settings.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: all four guards present in settings.py - empty matrix 400 at :522, the `all` superuser flag gated on owner_equivalent at :536, and _LOCKED_ROLES = {Owner, Admin} at :500 with the locked-role check at :524. |
 | R2-338 | HIGH | FIXED | `959ae3b` | `planning.py` | yes | yes | text-pin | 1 | UNVERIFIED | E0 passes - both columns live. Behaviour not yet exercised. |
-| R2-340 | HIGH | FIXED | `d034a0a` | `planning.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
+| R2-340 | HIGH | FIXED | `d034a0a` | `planning.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: a shared `_task_is_completed` helper reads Task.progress and is used at the analytics consumers (:240, :267), with the reports and DPR consumers averaging progress rather than bucketing by status. |
 | R2-363 | HIGH | FIXED | `4095671` | `quality.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: quality.py builds valid_item_ids from insp.checklist_id and raises 400 at :308 inside the response loop, before any upsert, so a foreign checklist item cannot be written. |
 | R2-364 | HIGH | FIXED | `cdc82d9` | `quality.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: the pass-rate denominator is len(quality_tests_assessed), counting only tests where is_pass is not None, and the unassessed count is exposed separately (reports.py:101-104). |
 | R2-382 | HIGH | FIXED | `1725fea` | `planning.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: `enforce_entry_editing_window` is called on both mutations - billing.py:447 and :891 - so cancel and match-link are covered, not just task updates. |
@@ -193,7 +193,7 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-405 | HIGH | FIXED | `161b2c0` | `settings.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: no `User.phone` reference survives in app/ (the one grep hit is a comment in google_sheets.py explaining its absence). The model carries `mobile`. |
 | R2-433 | HIGH | FIXED | `e67476b` | `models.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: _po_response resolves vendor_name through User.name and falls back to LibraryParty.name (procurement.py:431-438). |
 | R2-441 | HIGH | FIXED | `583c47d` | `projects.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: `_TASK_PROGRESS` covers every value the UI can emit - the frontend option list is exactly not_started/start/in_progress/completed, and the map holds all four plus `ongoing`. E3: production task statuses are `not_started` only. |
-| R2-491 | HIGH | FIXED | `—` | `projects.py` | yes | yes | parse_fail | 1 | UNVERIFIED |  |
+| R2-491 | HIGH | FIXED | `—` | `projects.py` | yes | yes | parse_fail | 1 | CONFIRMED | E1: member names resolve through the CompanyTeam.library_party_id bridge to LibraryParty.name (projects.py:35, :400). |
 | R2-525 | HIGH | FIXED | `268b8ef` | `statutory.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: estimate_penalty takes company_id, report_type and return_period only - no caller-supplied wages param survives in the signature - and loads the StatutoryReport row at :178 to read the stored totals. |
 | R2-526 | HIGH | FIXED | `2c5fe8c` | `statutory.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: statutory.py:168 sets report.filed_by = current_user.name; a blank acknowledgment is 422 at :163 and an empty return is 400 at :165. All three claims hold. |
 | R2-551 | HIGH | FIXED | `dc53828` | `quality.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: result_value Field(..., ge=0) at :155, both acceptance limits ge=0 at :157-158, and a model_validator at :162 rejecting min_acceptable > max_acceptable. |
@@ -209,9 +209,9 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-019 | HIGH | FIXED | `45ffb76` | `frontend/src/app/c/[company_id]/d/hr/page.tsx` | no | no | — | 2 | CONFIRMED | E1: no 'Diwali' seed anywhere in frontend/src; holidays load from GET /hr/holidays/{companyId}. Consistent with R2-110, which covers the same defect from the other page. |
 | R2-034 | HIGH | FIXED | `0866171` | `frontend/src/app/c/[company_id]/d/billing/page.tsx` | no | no | — | 2 | CONFIRMED | E1: `wo.subcontractor_name || nameMap[...] || "Unassigned"` - the server field leads and the honest placeholder is last. The three swallowed fetch failures now log, and the effect dependency array gained companyId. Nuance: the failures log to console rather than surfacing to the user, which matches the note's wording but is not a user-visible error. |
 | R2-069 | HIGH | FIXED | `a07d1e2` | `d/finance/page.tsx` | no | no | — | 2 | CONFIRMED | E1: the field is labelled 'Reference / document name (file is not uploaded)' at finance/page.tsx:4112 - the affordance is honest. |
-| R2-093 | HIGH | FIXED | `401cf1e` | `procurement/page.tsx` | no | no | — | 2 | UNVERIFIED |  |
+| R2-093 | HIGH | FIXED | `401cf1e` | `procurement/page.tsx` | no | no | — | 2 | CONFIRMED | E1: rides on the R2-068 sweep, verified - `unsplash` returns zero matches across frontend/src, so the fabricated indent photo control with its tick confirmation is gone. |
 | R2-111 | HIGH | FIXED | `a0ceefb` | `frontend/src/app/c/[company_id]/cost-codes/page.tsx` | no | no | — | 2 | CONFIRMED | E1: the two dropdowns this finding names, the workforce drawer and the employee drawer, carry no fabricated cost codes - the only hardcoded cost codes left in the console are in d/finance, a different surface already filed as R2-712 instance 4. |
-| R2-167 | HIGH | FIXED | `7ffa1c9` | `d/attendance/page.tsx` | no | no | — | 2 | UNVERIFIED |  |
+| R2-167 | HIGH | FIXED | `7ffa1c9` | `d/attendance/page.tsx` | no | no | — | 2 | CONFIRMED | E1: rides on R2-107, verified - the attendance date default is `new Date().toISOString().split('T')[0]`, and no hardcoded UI date defaults remain. |
 | R2-197 | HIGH | FIX_VERIFIED | `acee51f` | `hr.py` | no | no | — | 2 | UNVERIFIED |  |
 | R2-211 | HIGH | FIX_VERIFIED | `034bc1e` | `hr.py` | no | no | — | 2 | UNVERIFIED |  |
 | R2-238 | HIGH | FIX_VERIFIED | `de6815f` | `finance.py` | no | no | — | 2 | UNVERIFIED |  |
@@ -236,7 +236,7 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-354 | HIGH | FIX_VERIFIED | `05a41e9` | `hr.py` | no | no | — | 3 | UNVERIFIED |  |
 | R2-386 | HIGH | FIX_VERIFIED | `03db7a3` | `procurement.py` | no | no | — | 3 | UNVERIFIED |  |
 | R2-429 | HIGH | FIX_VERIFIED | `034bc1e` | `hr.py` | no | no | — | 3 | UNVERIFIED |  |
-| R2-457 | HIGH | FIXED | `—` | `settings.py` | no | no | — | 3 | UNVERIFIED |  |
+| R2-457 | HIGH | FIXED | `—` | `settings.py` | no | no | — | 3 | CONFIRMED | E1: no `/c/undefined` construction survives anywhere in frontend/src, which is the reproduction path the evidence-close claims is gone. |
 | R2-527 | HIGH | FIX_VERIFIED | `05a53c9` | `hr.py` | no | no | — | 3 | UNVERIFIED |  |
 | R2-528 | HIGH | FIX_VERIFIED | `4134a11` | `hr.py` | no | no | — | 3 | UNVERIFIED |  |
 | R2-534 | HIGH | FIX_VERIFIED | `4b7add4` | `finance.py` | no | no | — | 3 | UNVERIFIED |  |
@@ -307,7 +307,7 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-269 | MEDIUM | FIXED | `bf1343e` | `labour.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: the payslip CSV header row leads with 'Employee Code' at hr.py:781. Register attribution says labour.py; the fix is in hr.py, which the note itself corrects. |
 | R2-273 | MEDIUM | FIXED | `a040a04` | `crm.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: all three guards present - phone_no pattern at crm.py:75, EmailStr at :77, and an expected_closure validator at :92. |
 | R2-277 | MEDIUM | FIXED | `551831e` | `models.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: x_coordinate and y_coordinate are Field(ge=0, le=9999.99), which matches the Numeric(6,2) column so the DB cannot overflow. |
-| R2-278 | MEDIUM | FIXED | `e59316f` | `api.ts` | yes | yes | text-pin | 1 | UNVERIFIED |  |
+| R2-278 | MEDIUM | FIXED | `e59316f` | `api.ts` | yes | yes | text-pin | 1 | CONFIRMED | E1, complete on BOTH schemas: the http(s) validator fires on create (todos.py:82) and update (:110), and due_date is rejected when past (:85-92). Its disclosed sibling (repeat_type/status unvalidated) sits in R2-717. |
 | R2-282 | MEDIUM | FIXED | `9994fab` | `UNMAPPED` | yes | yes | text-pin | 1 | CONFIRMED | E1: calculators.py builds a conflicts list naming each duplicated parameter pair (diameter/diameter_mm, count/num_bars, length_or_height/length_m) and 422s when it is non-empty. |
 | R2-287 | MEDIUM | FIXED | `061f949` | `projects.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: opening_balance_amount is Field(0.0, ge=0) and opening_balance_direction carries pattern '^(will_pay|will_receive)$' (projects.py:456-457), so a negative amount or a non-canonical direction is a 422 rather than a silent 200-with-zero. |
 | R2-290 | MEDIUM | FIXED | `582d215` | `settings.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: BranchCreate.gstin carries the canonical 15-char pattern AND binds _validate_gstin at settings.py:163, so the branch path runs the mod-36 checksum too. I first read the binding as belonging to a company schema and filed R2-724 against the supposed gap - that finding is RETRACTED. |
@@ -397,8 +397,8 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-358 | MEDIUM | FIXED | `—` | `finance.py` | no | no | — | 3 | UNVERIFIED |  |
 | R2-414 | MEDIUM | FIX_VERIFIED | `d4db32f` | `reports.py` | no | no | — | 3 | UNVERIFIED |  |
 | R2-481 | MEDIUM | FIX_VERIFIED | `29a1bdb` | `hr.py` | no | no | — | 3 | UNVERIFIED |  |
-| R2-495 | MEDIUM | FIXED | `—` | `equipment.py` | no | no | — | 3 | UNVERIFIED |  |
-| R2-500 | MEDIUM | FIXED | `—` | `UNMAPPED` | no | no | — | 3 | UNVERIFIED |  |
+| R2-495 | MEDIUM | FIXED | `—` | `equipment.py` | no | no | — | 3 | CONFIRMED | E1: evidence-close riding on the M-D wave; the projectFleet filter is present. |
+| R2-500 | MEDIUM | FIXED | `—` | `UNMAPPED` | no | no | — | 3 | CONFIRMED | E1: evidence-close riding on R2-023, verified - no PHASE build label survives anywhere in frontend/src. |
 | R2-529 | MEDIUM | FIX_VERIFIED | `70f9750` | `hr.py` | no | no | — | 3 | UNVERIFIED |  |
 | R2-001 | LOW | FIXED | `dd6c5fe` | `frontend/src/app/c/[company_id]/d/payment-approval/page.tsx` | yes | yes | EVIDENCE_CLOSE | 1 | CONFIRMED | Evidence-close and it holds: the Material card really does open a working drawer, so there was nothing to fix. Its pin passes pre-fix for that reason, which is why gatecheck flags it - correctly, and harmlessly. |
 | R2-002 | LOW | FIXED | `807f092` | `Sidebar.tsx` | yes | yes | parse_fail | 1 | CONFIRMED | E1: no emoji codepoint remains in Sidebar.tsx. |

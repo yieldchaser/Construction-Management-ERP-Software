@@ -721,6 +721,40 @@ VERDICTS = {
                             "when unset."),
     "R2-120": ("CONFIRMED", "E1: the Integrations page lists the connectors as the note "
                             "describes."),
+    "R2-106": ("CONFIRMED", "E1: the 'Simulate GPS lock' control is gone from frontend/src "
+                            "entirely, and the server sets location_verified=within_geofence at "
+                            "hr.py:314 rather than trusting the client. The request schema still "
+                            "declares the field, but the handler overwrites it, so a client "
+                            "cannot assert its own geofence result."),
+    "R2-278": ("CONFIRMED", "E1, complete on BOTH schemas: the http(s) validator fires on create "
+                            "(todos.py:82) and update (:110), and due_date is rejected when past "
+                            "(:85-92). Its disclosed sibling (repeat_type/status unvalidated) "
+                            "sits in R2-717."),
+    "R2-340": ("CONFIRMED", "E1: a shared `_task_is_completed` helper reads Task.progress and is "
+                            "used at the analytics consumers (:240, :267), with the reports and "
+                            "DPR consumers averaging progress rather than bucketing by status."),
+    "R2-491": ("CONFIRMED", "E1: member names resolve through the CompanyTeam.library_party_id "
+                            "bridge to LibraryParty.name (projects.py:35, :400)."),
+    "R2-457": ("CONFIRMED", "E1: no `/c/undefined` construction survives anywhere in "
+                            "frontend/src, which is the reproduction path the evidence-close "
+                            "claims is gone."),
+    "R2-090": ("CONFIRMED", "E1: rides on the R2-050 fix, which I verified - both approval "
+                            "handlers check res.ok before patching state, so the live-proven 403 "
+                            "experiment (PO showing APPROVED after a refused request) is no "
+                            "longer reachable."),
+    "R2-092": ("CONFIRMED", "E1: rides on R2-008, verified - the fabricated Compare-RFQs "
+                            "recommendation screen is gone and the drawer shows an honest empty "
+                            "state."),
+    "R2-093": ("CONFIRMED", "E1: rides on the R2-068 sweep, verified - `unsplash` returns zero "
+                            "matches across frontend/src, so the fabricated indent photo control "
+                            "with its tick confirmation is gone."),
+    "R2-167": ("CONFIRMED", "E1: rides on R2-107, verified - the attendance date default is "
+                            "`new Date().toISOString().split('T')[0]`, and no hardcoded UI date "
+                            "defaults remain."),
+    "R2-495": ("CONFIRMED", "E1: evidence-close riding on the M-D wave; the projectFleet filter "
+                            "is present."),
+    "R2-500": ("CONFIRMED", "E1: evidence-close riding on R2-023, verified - no PHASE build "
+                            "label survives anywhere in frontend/src."),
     "R2-083": ("UNVERIFIED", "E1 FAILS on completeness. The two edits are correct, but the note's "
                              "claim that these were 'the last two fabricated attribute fallbacks' "
                              "is wrong - four remain in the same object literal, including "
