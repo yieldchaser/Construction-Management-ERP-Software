@@ -713,6 +713,36 @@ outlived the artifact.
 to read. Verification has to come from the fix commit's diff and the live product instead, which is
 how I am working them.
 
+#### Addendum — restoring the doc does not make the suite runnable
+
+The fix campaign restored `AUDIT_REGRESSION_SUITE.md` into the live lineage immediately, which was
+the right call and makes the 32 defined ids **readable**. It does not make them **runnable**, and
+the distinction matters.
+
+Each RC entry is a shell command invoking a specific pytest file. Every one of those files is
+absent from `campaign/waves`:
+
+- `test_r2_042_payment_settles_bill.py`
+- `test_r2_565_predecessor_cpm.py`
+- `test_r2_588_timesheet_headers.py`
+- `test_r2_599_dpr_task_scope.py`
+
+They lived on the same orphaned branch as the doc. So the restored suite documents *intent* — what
+each check was meant to prove, and its pre-fix failure signature — while its commands cannot
+execute.
+
+**The underlying fixes are fine, and that is the important half.** I checked all four on
+`campaign/waves` and each is present in the agent's own idiom: `planning.py` now does
+`latest_finish(s) - timedelta(days=...)` rather than subtracting a float from a datetime; the
+settlement fields exist in `finance.py`; the timesheet endpoints exist; DPR is project-scoped. The
+agent re-fixed these independently, which is exactly what the orphan-branch recon concluded it had
+done.
+
+So the accurate statement is narrow: **the code is fixed, the documented checks are readable, and
+the automated commands are inert.** Restoring the doc converted an unreadable pointer into a
+readable one — real progress, and worth saying so — but anyone treating those RC citations as
+runnable evidence is still mistaken.
+
 **Fix direction.** Two options, both cheap. Either lift `AUDIT_REGRESSION_SUITE.md` off the orphaned
 branch into the live lineage as a historical record — it is a documentation file, so this carries
 none of the merge risk that makes the rest of that branch unmergeable — or replace the 93 citations
