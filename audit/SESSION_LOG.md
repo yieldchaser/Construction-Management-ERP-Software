@@ -2,6 +2,16 @@
 
 Append-only. Every working block ends with a 5-line entry. Never edit an existing entry; if a commit was reverted, add a new entry.
 
+## Session 33 (cont. 3) — orphan sweep: finance.py COMPLETE 22/32 verified, 12 live, 9 re-fixed (2026-08-22)
+
+- New re-fixes this block: R2-344+R2-316 `bf544f6` ("transfer" payment_type dropped from schema via validator naming in/out + P2P endpoint - no product path ever wrote it; FIFO/summary now total on two values); R2-417 `c0cb9ff` (salary branch read nonexistent StaffEmployee.company_user_id -> AttributeError; now emp.name per hr.py idiom; class site reports.py:670 fixed same wave).
+- Verified-HOLDS: R2-198, R2-244+R2-356 (tz class closed by f1a4c43), R2-347 (transactional log_deletion), R2-509 (=R2-726 helper), R2-550 (P2P self-transfer guard, H-miscC), R2-568.
+- Confirmed DRIFTED awaiting fixes (specs recorded): R2-052 party FK repoint; R2-236 ledger sort tz; R2-100+R2-315 bank receipts never mutate accounts (Payment lacks bank_account_id; one fix closes both); R2-276 ledger silent placeholder party names (_txn_party_name exists but unused by get_ledger); R2-327 remainder (equipment bills absorbed into Material Cost + overhead actual=0.0 hardcoded); R2-342 approve path consults no rules/records no actor (+R2-343 one-liner payments list hardcodes status="Approved" :1091); R2-533+534 CSV importer (random refs no dedup, utcnow fallback, silent skips, global User.name scan); R2-544 project-less payments invisible in summary but move cash_balance; R2-549 P2P legs hardcode project_id=None (same visibility mechanism); R2-592 fabricated ||0/||100/||500 fallbacks across five frontend pages.
+- NOT actionable: R2-345 explicitly founder-escalated (cross-project FIFO = product decision) - excluded from auto-fix per register note.
+- Sweep score finance.py: 22 verified of 32 (R2-358 + R2-420 outstanding), 12 live defects, 9 re-fixed, 10 fix-tasks pending. Suite GREEN exit=0 after all landings. Remaining sweep queue unchanged: hr x28, reports x18, procurement x9, scattered x5.
+
+---
+
 ## Session 33 (cont. 2) — R2-726 hotfix + R2-727 orphan-sha sweep begun (2026-08-22)
 
 - **R2-726 FIXED `bbb6d51`** (founder-flagged CRITICAL, live): Enterprise Rollup net balance had two inverted terms (advance_paid + advance_received - to_pay - to_receive); correct expression existed at :739 (the R2-096 party balance) while the rollup sites stayed wrong - both right and wrong formulas coexisted in one file. Extracted shared `_net_balance` helper, wired all three sites; test red/green proven (-130000 -> +70000).
