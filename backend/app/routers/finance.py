@@ -535,7 +535,9 @@ class PaymentRequestCreate(BaseModel):
     party_company_user_id: uuid.UUID
     project_id: Optional[uuid.UUID] = None
     amount: float = Field(..., gt=0)
-    details: str
+    # R2-053: matches models.PaymentRequest.details (nullable=True); leaving
+    # Ship To blank must not 422 the create.
+    details: Optional[str] = None
     due_date: Optional[datetime] = None
     approval_status: Optional[str] = None
     request_type: Optional[str] = None
@@ -1115,7 +1117,9 @@ def _pr_response(db: Session, req: PaymentRequest, payment_row: Optional[Payment
         party_company_user_id=req.party_company_user_id,
         party_name=party_name,
         amount=req.amount,
-        details=req.details,
+        # R2-053: rows created without details must still serialize through
+        # this plain-str response field; render the standard empty-value glyph.
+        details=req.details or "\u2014",
         status=req.status,
         due_date=req.due_date,
         approval_status=req.approval_status,
