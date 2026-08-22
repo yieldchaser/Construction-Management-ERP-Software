@@ -12,6 +12,7 @@ from app.models import (
     Equipment, EquipmentDeployment, FuelLog
 )
 from pydantic import BaseModel
+from app.bill_scope import _active_bills
 from app.constants import EXPENSE_INVOICE_TYPES
 
 router = APIRouter(
@@ -85,10 +86,7 @@ def get_committed_costs(project_id: UUID, db: Session = Depends(get_db), _: None
 
     # Only approved, non-cancelled bills are actual spend (R2-233): an
     # unapproved bill must not book cost the moment it is typed.
-    bills_expense = db.query(Bill).filter(
-        Bill.project_id == project_id,
-        Bill.invoice_type.in_(EXPENSE_INVOICE_TYPES),
-        Bill.status != "Cancelled",
+    bills_expense = _active_bills(db, project_id, EXPENSE_INVOICE_TYPES).filter(
         Bill.approval_flag == "approved",
     ).all()
     material_actual = 0.0
@@ -171,7 +169,8 @@ def get_tower_budget(project_id: UUID, db: Session = Depends(get_db), _: None = 
         ) if budget else 0.0
         pos = db.query(PurchaseOrder).filter(PurchaseOrder.project_id == project_id).all()
         committed = sum(float(p.total_amount) for p in pos)
-        bills = db.query(Bill).filter(Bill.project_id == project_id, Bill.invoice_type.in_(EXPENSE_INVOICE_TYPES)).all()
+        # Active bills only: a cancelled bill must not book cost (R2-723).
+        bills = _active_bills(db, project_id, EXPENSE_INVOICE_TYPES).all()
         actual = sum(float(b.total_payable) for b in bills)
         return [TowerBudgetBreakdown(
             tower_id=None,
@@ -183,7 +182,8 @@ def get_tower_budget(project_id: UUID, db: Session = Depends(get_db), _: None = 
         )]
 
     result = []
-    bills = db.query(Bill).filter(Bill.project_id == project_id, Bill.invoice_type.in_(EXPENSE_INVOICE_TYPES)).all()
+    # Active bills only: a cancelled bill must not book cost (R2-723).
+    bills = _active_bills(db, project_id, EXPENSE_INVOICE_TYPES).all()
     actual = sum(float(b.total_payable) for b in bills)
     pos = db.query(PurchaseOrder).filter(
         PurchaseOrder.project_id == project_id,

@@ -29,6 +29,7 @@ from app.config import settings
 from app.constants import REVENUE_INVOICE_TYPES, EXPENSE_INVOICE_TYPES
 from app.database import get_db
 from app.rate_limit import limiter
+from app.bill_scope import _active_bills
 from app import models
 
 router = APIRouter(prefix="/integrations/bi", tags=["Integrations - BI Export"])
@@ -255,14 +256,14 @@ def feed_budget_variance(
         total_budget = material_budget + labour_budget + subcon_budget + equipment_budget
 
         material_actual = float(
-            db.query(func.coalesce(func.sum(models.Bill.total_payable), 0))
-            .filter(models.Bill.project_id == p.id, models.Bill.invoice_type.in_(("purchase", "expense")), models.Bill.status != "Cancelled")
+            _active_bills(db, p.id, ("purchase", "expense"))
+            .with_entities(func.coalesce(func.sum(models.Bill.total_payable), 0))
             .scalar()
             or 0
         )
         subcon_actual = float(
-            db.query(func.coalesce(func.sum(models.Bill.total_payable), 0))
-            .filter(models.Bill.project_id == p.id, models.Bill.invoice_type == "subcon", models.Bill.status != "Cancelled")
+            _active_bills(db, p.id, ("subcon",))
+            .with_entities(func.coalesce(func.sum(models.Bill.total_payable), 0))
             .scalar()
             or 0
         )
@@ -275,9 +276,10 @@ def feed_budget_variance(
             or 0
         )
         # Equipment actual: equipment-type bills + deployment hourly cost + fuel cost (mirrors finance.get_project_pl).
+        # Active bills only: a cancelled bill must not book cost (R2-723).
         equipment_actual = float(
-            db.query(func.coalesce(func.sum(models.Bill.total_payable), 0))
-            .filter(models.Bill.project_id == p.id, models.Bill.invoice_type == "equipment")
+            _active_bills(db, p.id, ("equipment",))
+            .with_entities(func.coalesce(func.sum(models.Bill.total_payable), 0))
             .scalar()
             or 0
         )
