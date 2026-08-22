@@ -40,8 +40,9 @@ class Settings(BaseSettings):
     OTP_MAX_ATTEMPTS: int = 5
     # Comma-separated demo numbers allowed to log in with OTP_DEMO_CODE when no
     # SMS provider is configured. Never bypasses real SMS once a key is set.
-    OTP_DEMO_ALLOWLIST: str = "9876543210,+919876543210"
-    OTP_DEMO_CODE: str = "123456"
+    # Empty by default: with no env set, the demo login path is fully disabled.
+    OTP_DEMO_ALLOWLIST: str = ""
+    OTP_DEMO_CODE: str = ""
 
     # --- Email OTP login delivery (SMTP) ---
     # Email OTP reuses the SAME hardened otp_codes machinery as SMS (HMAC-hashed

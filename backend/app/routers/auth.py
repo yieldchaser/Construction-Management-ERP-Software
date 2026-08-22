@@ -183,7 +183,17 @@ def _seed_demo_projects(db: Session, company_id: uuid.UUID):
     db.commit()
 
 
+# Flips to True after the showcase projects have been seeded once for the demo
+# tenant. The company row alone is not proof of seeding: it may pre-exist from
+# boot-time auto_seed_database, and a later deletion must not re-seed either.
+_demo_projects_seeded = False
+
+
 def _ensure_demo_company(db: Session) -> models.Company:
+    """Return the shared demo tenant, creating it on first use. Project seeding
+    is one-time by design: repeated allowlisted logins are pure reads."""
+    global _demo_projects_seeded
+
     company = db.query(models.Company).filter(models.Company.id == uuid.UUID(DEMO_COMPANY_ID)).first()
     if company:
         return company
@@ -202,7 +212,11 @@ def _ensure_demo_company(db: Session) -> models.Company:
     db.commit()
     db.refresh(company)
 
-    _seed_demo_projects(db, company.id)
+    # Idempotency guard: seed the showcase projects only on the first creation,
+    # never again on subsequent allowlisted logins.
+    if not _demo_projects_seeded:
+        _seed_demo_projects(db, company.id)
+        _demo_projects_seeded = True
     return company
 
 
