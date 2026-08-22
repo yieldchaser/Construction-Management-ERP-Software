@@ -1774,6 +1774,7 @@ class StatutoryReport(Base):
     filed_by = Column(String(255), nullable=True)
     acknowledgment_number = Column(String(100), nullable=True)
     status = Column(String(50), default="draft", nullable=False) # draft, filed, overdue
+    due_date = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), default=func.now(), onupdate=func.now(), nullable=False)
 

@@ -1,9 +1,9 @@
 import uuid
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Literal, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from app.database import get_db
 from app.auth import get_current_user, verify_project_in_company, verify_company_access, require_permission, require_module_view
 from app.models import StatutoryReport, StaffEmployee, PayrollRun, PayrollLineItem, User
@@ -11,11 +11,22 @@ from decimal import Decimal
 
 router = APIRouter(prefix="/statutory", tags=["Statutory Reports"], dependencies=[Depends(get_current_user)])
 
+# Types with a derived due-date rule in calculate_due_date. R2-721: these were
+# previously matched case-sensitively, so "PF" silently saved without a due date.
+DUE_DATE_RULE_TYPES = ("tds", "pf", "esi", "bocw")
+# Full set of report types the product supports (superset used by the statutory
+# page dropdown; pt/it have no encoded due-date rule by design).
+VALID_REPORT_TYPES = DUE_DATE_RULE_TYPES + ("pt", "it")
+
+
+def _normalize_report_type(value: str) -> str:
+    return (value or "").strip().lower()
+
 
 class StatutoryReportCreate(BaseModel):
     company_id: uuid.UUID
     project_id: Optional[uuid.UUID] = None
-    report_type: str
+    report_type: Literal["pf", "esi", "bocw", "tds", "pt", "it"]
     return_period: str
     total_employees: int = Field(0, ge=0)
     total_wages: float = Field(0.0, ge=0)
@@ -29,6 +40,11 @@ class StatutoryReportCreate(BaseModel):
     acknowledgment_number: Optional[str] = None
     status: str = "draft"
     due_date: Optional[datetime] = None
+
+    @field_validator("report_type", mode="before")
+    @classmethod
+    def _lowercase_report_type(cls, v):
+        return _normalize_report_type(v) if isinstance(v, str) else v
 
 
 class StatutoryReportResponse(BaseModel):
@@ -63,9 +79,10 @@ def calculate_due_date(report_type: str, return_period: str) -> Optional[datetim
     try:
         year, month = map(int, return_period.split("-"))
         next_year, next_month = (year + 1, 1) if month == 12 else (year, month + 1)
-        if report_type == "tds":
+        rt = _normalize_report_type(report_type)
+        if rt == "tds":
             return datetime(next_year, next_month, 7)
-        elif report_type in ("pf", "esi", "bocw"):
+        elif rt in DUE_DATE_RULE_TYPES:
             return datetime(next_year, next_month, 15)
         return None
     except Exception:
@@ -93,7 +110,7 @@ def list_reports(company_id: uuid.UUID, report_type: Optional[str] = None, db: S
     require_module_view(db, current_user, company_id, "payroll")
     query = db.query(StatutoryReport).filter(StatutoryReport.company_id == company_id)
     if report_type:
-        query = query.filter(StatutoryReport.report_type == report_type)
+        query = query.filter(StatutoryReport.report_type == _normalize_report_type(report_type))
     reports = query.order_by(StatutoryReport.return_period.desc()).all()
     return [_enrich(r, db) for r in reports]
 
@@ -142,7 +159,7 @@ def auto_populate(company_id: uuid.UUID, report_type: str = Query(...), return_p
         "pf_employer_contribution": Decimal(str(round(pf_employer, 2))),
         "esi_employee_contribution": Decimal(str(round(esi_employee, 2))),
         "esi_employer_contribution": Decimal(str(round(esi_employer, 2))),
-        "bocw_cess": Decimal(str(round(total_wages * 0.01, 2))) if report_type == "bocw" else Decimal("0"),
+        "bocw_cess": Decimal(str(round(total_wages * 0.01, 2))) if _normalize_report_type(report_type) == "bocw" else Decimal("0"),
         "tds_deducted": Decimal(str(round(tds, 2))),
         "status": "draft",
     }
@@ -177,7 +194,7 @@ def estimate_penalty(company_id: uuid.UUID, report_type: str = Query(...), retur
     require_module_view(db, current_user, company_id, "payroll")
     report = db.query(StatutoryReport).filter(
         StatutoryReport.company_id == company_id,
-        StatutoryReport.report_type == report_type,
+        StatutoryReport.report_type == _normalize_report_type(report_type),
         StatutoryReport.return_period == return_period,
     ).order_by(StatutoryReport.created_at.desc()).first()
     if not report:
