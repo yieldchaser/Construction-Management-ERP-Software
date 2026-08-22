@@ -587,6 +587,49 @@ usable defaults in source** (empty string, so an unset env disables the path ent
 `_ensure_demo_company` should not run on a production deploy at all. If a demo tenant is wanted,
 it should be seeded deliberately rather than materialised by a login.
 
+### R2-723 · HIGH · cancelled bills still count toward budget, BI and tower actuals — 8 sites
+
+**Found while verifying R2-045/R2-066.** Both of those closures are correct; the inconsistency was
+visible beside them.
+
+R2-232 (CRITICAL, `FIX_VERIFIED`) added Cancelled-exclusion "across bill aggregations". It reached
+`finance.py`. It did not reach `budget.py`, `towers.py` or `bi_export.py`.
+
+**Sweep result — 8 of 18 bill aggregations omit the exclusion, and they cluster:**
+
+| file:line | aggregation | invoice types |
+|---|---|---|
+| `bi_export.py:279` | `equipment_actual` (BI budget-variance feed) | `equipment` |
+| `budget.py:108` | `equipment_bills` | `equipment` |
+| `budget.py:86` | `material_actual` | `purchase` |
+| `budget.py:98` | `subcon_actual` | `subcon` |
+| `budget.py:163` | overall-project `actual` (no-towers branch) | `EXPENSE_INVOICE_TYPES` |
+| `budget.py:175` | per-tower `actual` | `EXPENSE_INVOICE_TYPES` |
+| `towers.py:175` | `total_billed` | `REVENUE_INVOICE_TYPES` |
+| `towers.py:193` | `total_billed` | `REVENUE_INVOICE_TYPES` |
+
+The other 10 aggregations — the `finance.py` family R2-232 actually touched — all carry
+`status != "Cancelled"`. So this is a **missed set of call sites for a fix that is otherwise
+correct**, not a wrong fix.
+
+**The tell that it was an oversight rather than a decision:** `budget.py:92-94`, sitting between two
+of the unguarded bill queries, *does* exclude cancelled work orders —
+`WorkOrder.status != "cancelled"`. Cancellation was on the author's mind in that exact function;
+bills were simply not swept.
+
+**Impact.** Cancelling a bill reduces it in Finance and leaves it counted in Budget vs Actual, the
+tower breakdown and the BI feed. Two surfaces disagree about the same money, and the BI feed is the
+one customers point their own reporting at.
+
+**Not yet quantified against live data.** Production currently holds no cancelled bills to
+demonstrate the divergence, so this is a code-level finding with an obvious mechanism rather than an
+observed wrong number. Worth stating plainly: the reasoning is sound, the demonstration is pending
+data.
+
+**Fix direction.** One predicate added at 8 call sites. Better, since the sweep shows the pattern
+recurs: a shared helper (`_active_bills(db, project_id, types)`) that every aggregation goes
+through, so the next aggregation cannot forget it — the same close-the-class shape as R2-711.
+
 ## Verified clean so far
 
 Recorded so the pass is not only a list of complaints. Each claim was re-checked against the tree,
@@ -628,8 +671,9 @@ were scoped to the files a finding named rather than to the defect class.
 | **R2-720** | **HIGH** | **Internal Transfer is inert — Save fires no request, no error** | discharging D-V3 |
 | **R2-721** | **MEDIUM** | **statutory `report_type` unvalidated — silent no-due-date, zero cess** | found verifying R2-129 |
 | **R2-722** | **HIGH** | **second demo-tenant creation path in auth.py; demo OTP allowlist/code default in source** | found verifying R2-183 |
+| **R2-723** | **HIGH** | **cancelled bills still counted in budget/BI/tower actuals — 8 sites R2-232 missed** | found verifying R2-045/066 |
 
-**Eighteen live findings.** R2-713..R2-716 were filed separately first and are struck through, not
+**Nineteen live findings.** R2-713..R2-716 were filed separately first and are struck through, not
 deleted, so the history stays traceable.
 
 Three to act on first, for different reasons:
