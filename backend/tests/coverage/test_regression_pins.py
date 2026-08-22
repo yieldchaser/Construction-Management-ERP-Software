@@ -1045,3 +1045,19 @@ def test_pin_R2_559_doc_number_uniques():
                "uq_goods_receipt_notes_company_id_grn_number", "uq_material_indents_company_id_indent_number",
                "uq_work_orders_company_id_wo_number", "uq_library_cost_codes_company_id_code"):
         assert uq in models
+
+def test_pin_R2_275_milestone_bounds():
+    src = _read("app/routers/budgeting.py")
+    assert "milestone_done cannot exceed" in src
+
+def test_pin_R2_334_cost_code_library_gate():
+    src = _read("app/routers/budgeting.py")
+    assert "Unknown cost codes" in src
+
+def test_pin_R2_177_work_order_cancel():
+    src = _read("app/routers/billing.py")
+    assert 'wo.status = "cancelled"' in src
+
+def test_pin_R2_723_active_bills_cancelled_filter():
+    src = _read("app/bill_scope.py")
+    assert 'status != "Cancelled"' in src
