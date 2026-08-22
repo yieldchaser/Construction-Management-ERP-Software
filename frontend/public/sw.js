@@ -1,11 +1,18 @@
-const CACHE_NAME = "siteflow-shell-v1";
+const SITEFLOW_BUILD_ID = "__SITEFLOW_BUILD_ID__";
+const CACHE_NAME = `siteflow-shell-${SITEFLOW_BUILD_ID}`;
+const OFFLINE_URL = "/offline";
 const APP_SHELL = [
   "/",
   "/login",
+  "/offline",
   "/manifest.json",
   "/images/logo.svg",
   "/favicon.ico",
 ];
+
+function isCacheable(response) {
+  return Boolean(response) && response.status === 200 && response.type === "basic";
+}
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -30,6 +37,55 @@ self.addEventListener("activate", (event) => {
   self.clients.claim();
 });
 
+function isRscRequest(request, url) {
+  return url.searchParams.has("_rsc") || request.headers.get("RSC") === "1";
+}
+
+function isHtmlRequest(request) {
+  return (
+    request.mode === "navigate" ||
+    request.destination === "document" ||
+    request.destination === "iframe"
+  );
+}
+
+async function networkFirst(request) {
+  const cache = await caches.open(CACHE_NAME);
+  try {
+    const response = await fetch(request);
+    if (isCacheable(response)) {
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch (error) {
+    const cached = await cache.match(request);
+    if (cached) {
+      return cached;
+    }
+    if (request.mode === "navigate") {
+      const offline = await cache.match(OFFLINE_URL);
+      if (offline) {
+        return offline;
+      }
+    }
+    throw error;
+  }
+}
+
+async function staleWhileRevalidate(request) {
+  const cache = await caches.open(CACHE_NAME);
+  const cached = await cache.match(request);
+  const network = fetch(request)
+    .then((response) => {
+      if (isCacheable(response)) {
+        cache.put(request, response.clone());
+      }
+      return response;
+    })
+    .catch(() => cached);
+  return cached || network;
+}
+
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") {
     return;
@@ -40,36 +96,12 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  if (event.request.mode === "navigate") {
-    event.respondWith(
-      fetch(event.request)
-        .then((response) => {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
-          return response;
-        })
-        .catch(() =>
-          caches.match(event.request).then((cached) => cached || caches.match("/login"))
-        )
-    );
+  if (isHtmlRequest(event.request) || isRscRequest(event.request, url)) {
+    event.respondWith(networkFirst(event.request));
     return;
   }
 
-  event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) {
-        return cached;
-      }
-
-      return fetch(event.request)
-        .then((response) => {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
-          return response;
-        })
-        .catch(() => cached);
-    })
-  );
+  event.respondWith(staleWhileRevalidate(event.request));
 });
 
 self.addEventListener("push", (event) => {
