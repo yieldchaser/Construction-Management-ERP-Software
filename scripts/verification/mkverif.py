@@ -353,6 +353,33 @@ VERDICTS = {
                             "Literal (settings.py:186-191) - the same twelve entries in the same "
                             "order. This is the frontend/backend vocabulary-drift class the "
                             "audit hit repeatedly, and here the two agree."),
+    "R2-535": ("CONFIRMED", "E1: the duplicate-PO check normalises BOTH sides - "
+                            "func.lower(func.trim(PurchaseOrder.po_number)) == "
+                            "func.lower(func.trim(po_number)) at vendor_performance.py:183. "
+                            "Normalising only the input would have left the defect."),
+    "R2-134": ("CONFIRMED", "E1: MATCH_TOLERANCE_MIN = 1.0 and MATCH_TOLERANCE_PCT = 0.01, "
+                            "combined as max(1.0, abs(po_amount) * 0.01) at three_way.py:117 - "
+                            "exactly the 'max(Rs 1, 1%)' the finding asked for, replacing the "
+                            "one-paisa tolerance."),
+    "R2-193": ("CONFIRMED", "E1: last_used_at is written only when it is None, tz-naive, or "
+                            "older than 300s (bi_export.py:79), which is the 5-minute throttle "
+                            "plus the legacy naive-datetime guard the note claims."),
+    "R2-361": ("CONFIRMED", "E1: the dead Quotation model is gone from models.py, so create_all "
+                            "stops making the table, and nothing was dropped destructively. Its "
+                            "disclosed sibling (LibraryRetention) sits in R2-717."),
+    "R2-367": ("CONFIRMED", "E1: one line carries both claims - drawings.py:257 sets "
+                            "`revision.approved_by = None if req.approval_status == 'pending' "
+                            "else membership.id`, so approval is derived from the membership and "
+                            "cleared on a return to pending. The pattern at :85 admits pending."),
+    "R2-293": ("CONFIRMED", "E1: onsite_transaction_type and tally_voucher_type are Literals at "
+                            "tally.py:70 and :72, constraining both to the canonical Tally "
+                            "vocabulary the voucher builder consumes."),
+    "R2-486": ("CONFIRMED", "E1: the paint calculator labels the rate ('Economy Emulsion "
+                            "(115 sqft/L)' at :1264, constant 115.0 at :302) and `paintMode` is "
+                            "gone from the file."),
+    "R2-012": ("CONFIRMED", "E1: the Payment Method radios are controlled - "
+                            "`checked={paymentMethod === m}` at finance/page.tsx:3416 - and no "
+                            "`defaultChecked` survives in the file."),
     "R2-083": ("UNVERIFIED", "E1 FAILS on completeness. The two edits are correct, but the note's "
                              "claim that these were 'the last two fabricated attribute fallbacks' "
                              "is wrong - four remain in the same object literal, including "

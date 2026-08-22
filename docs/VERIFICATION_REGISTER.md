@@ -275,7 +275,7 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-124 | MEDIUM | FIXED | `89839c9` | `frontend/src/app/c/[company_id]/d/equipment/page.tsx` | yes | yes | parse_fail | 1 | UNVERIFIED |  |
 | R2-129 | MEDIUM | FIXED | `bdaa883` | `statutory.py` | yes | yes | parse_fail | 1 | UNVERIFIED |  |
 | R2-130 | MEDIUM | FIXED | `87b15ad` | `statutory.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: the invented formula is gone - statutory.py:189 returns estimated_penalty 0.0. The note's own disclosure that the frontend modal is now honest-but-dead is accurate and sits in R2-717. |
-| R2-134 | MEDIUM | FIXED | `97ed0dd` | `three_way.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
+| R2-134 | MEDIUM | FIXED | `97ed0dd` | `three_way.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: MATCH_TOLERANCE_MIN = 1.0 and MATCH_TOLERANCE_PCT = 0.01, combined as max(1.0, abs(po_amount) * 0.01) at three_way.py:117 - exactly the 'max(Rs 1, 1%)' the finding asked for, replacing the one-paisa tolerance. |
 | R2-135 | MEDIUM | FIXED | `a32d60e` | `safety.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-136 | MEDIUM | FIXED | `048f72f` | `planning.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-144 | MEDIUM | FIXED | `b2ddf1f` | `page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
@@ -291,7 +291,7 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-176 | MEDIUM | FIXED | `fd5a709` | `files.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-183 | MEDIUM | FIXED | `e31ff9b` | `auth.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-191 | MEDIUM | FIXED | `b4c0a37` | `auth.py` | yes | yes | text-pin | 1 | NOT_IN_PROD | E0: company_team's only unique index is its pkey. Correct in code, absent in production. Escalated as R2-702. |
-| R2-193 | MEDIUM | FIXED | `07764bc` | `bi_export.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
+| R2-193 | MEDIUM | FIXED | `07764bc` | `bi_export.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: last_used_at is written only when it is None, tz-naive, or older than 300s (bi_export.py:79), which is the 5-minute throttle plus the legacy naive-datetime guard the note claims. |
 | R2-206 | MEDIUM | FIXED | `83c32c2` | `production.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-207 | MEDIUM | FIXED | `89056dd` | `production.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: the recipe allowance is applied - 8 x 2 x 1.05 = 16.8 matches the audit example. E3: I suspected float(recipe.wastage_pct) could 500 on NULL, and DISPROVED it - production_recipes.wastage_pct is NOT NULL in Supabase, and the Pydantic field is bounded 0..100. |
 | R2-208 | MEDIUM | FIXED | `574ebe9` | `p/budgeting/page.tsx` | yes | yes | text-pin | 1 | CONFIRMED | E1: attendee_count is Field(0, ge=0) at safety.py:53. Note the register's own file attribution for this row is wrong - the fix is in safety.py, not p/budgeting/page.tsx - which the note itself flags. Disclosed sibling (conducted_by/checked_by free text) sits in R2-717. |
@@ -311,7 +311,7 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-282 | MEDIUM | FIXED | `9994fab` | `UNMAPPED` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-287 | MEDIUM | FIXED | `061f949` | `projects.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: opening_balance_amount is Field(0.0, ge=0) and opening_balance_direction carries pattern '^(will_pay|will_receive)$' (projects.py:456-457), so a negative amount or a non-canonical direction is a 422 rather than a silent 200-with-zero. |
 | R2-290 | MEDIUM | FIXED | `582d215` | `settings.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
-| R2-293 | MEDIUM | FIXED | `afe1f97` | `tally.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
+| R2-293 | MEDIUM | FIXED | `afe1f97` | `tally.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: onsite_transaction_type and tally_voucher_type are Literals at tally.py:70 and :72, constraining both to the canonical Tally vocabulary the voucher builder consumes. |
 | R2-295 | MEDIUM | FIXED | `fed144d` | `rate_limit.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-298 | MEDIUM | FIXED | `04b7c10` | `procurement.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-309 | MEDIUM | FIXED | `438ec20` | `analytics.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
@@ -319,8 +319,8 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-336 | MEDIUM | FIXED | `9906aa9` | `procurement.py` | yes | yes | parse_fail | 1 | CONFIRMED | E1: the `inv.category = req.category` overwrite is removed. The note's disclosed sibling (`inv.unit` still overwritten) is real and is carried by R2-717, not by this row. |
 | R2-341 | MEDIUM | FIXED | `57f78de` | `procurement.py` | yes | yes | FAKE_GATE | 1 | CONFIRMED | THE FIX IS GOOD; ONLY ITS GATE IS FAKE (R2-708). reports.py:360 computes `max(0.0, ordered_qty - received_qty)` instead of the blank string that was the defect. |
 | R2-351 | MEDIUM | FIXED | `53b9499` | `procurement.py` | yes | yes | FAKE_GATE | 1 | CONFIRMED | THE FIX IS GOOD; ONLY ITS GATE IS FAKE (R2-707). Both call sites now carry the PO item's unit - procurement.py:737 and :748 - and :748 is the one the fix added. |
-| R2-361 | MEDIUM | FIXED | `b4c0a37` | `quality.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
-| R2-367 | MEDIUM | FIXED | `93184e6` | `drawings.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
+| R2-361 | MEDIUM | FIXED | `b4c0a37` | `quality.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: the dead Quotation model is gone from models.py, so create_all stops making the table, and nothing was dropped destructively. Its disclosed sibling (LibraryRetention) sits in R2-717. |
+| R2-367 | MEDIUM | FIXED | `93184e6` | `drawings.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: one line carries both claims - drawings.py:257 sets `revision.approved_by = None if req.approval_status == 'pending' else membership.id`, so approval is derived from the membership and cleared on a return to pending. The pattern at :85 admits pending. |
 | R2-370 | MEDIUM | FIXED | `3e6ecb0` | `billing.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-373 | MEDIUM | FIXED | `b298269` | `models.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-376 | MEDIUM | FIXED | `e10ff46` | `towers.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
@@ -339,7 +339,7 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-461 | MEDIUM | FIXED | `94988a2` | `planning.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-467 | MEDIUM | FIXED | `2f6f031` | `frontend/src/app/c/[company_id]/d/finance/page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-472 | MEDIUM | FIXED | `93cdba8` | `page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
-| R2-486 | MEDIUM | FIXED | `ca082f6` | `page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
+| R2-486 | MEDIUM | FIXED | `ca082f6` | `page.tsx` | yes | yes | text-pin | 1 | CONFIRMED | E1: the paint calculator labels the rate ('Economy Emulsion (115 sqft/L)' at :1264, constant 115.0 at :302) and `paintMode` is gone from the file. |
 | R2-489 | MEDIUM | FIXED | `b6ecb1e` | `files.py` | yes | yes | parse_fail | 1 | UNVERIFIED |  |
 | R2-492 | MEDIUM | FIXED | `084b758` | `projects.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-493 | MEDIUM | FIXED | `15d9bc4` | `transaction/page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
@@ -352,7 +352,7 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-514 | MEDIUM | FIXED | `9afd6f7` | `helpContent.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-521 | MEDIUM | FIXED | `5f755ac` | `calculators.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: backend calculators.py:61 uses D**2 / 162.0 and the console uses /162.0 at three sites, so the two agree. Nuance worth recording: the physically exact divisor is ~162.2 (pi/4 x 7850 / 1e6), and 162 is the standard Indian site approximation - defensible, but the fix's stated rationale is parity with the console, not correctness. |
 | R2-532 | MEDIUM | FIXED | `0b24a81` | `safety.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
-| R2-535 | MEDIUM | FIXED | `2ae795b` | `vendor_performance.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
+| R2-535 | MEDIUM | FIXED | `2ae795b` | `vendor_performance.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: the duplicate-PO check normalises BOTH sides - func.lower(func.trim(PurchaseOrder.po_number)) == func.lower(func.trim(po_number)) at vendor_performance.py:183. Normalising only the input would have left the defect. |
 | R2-537 | MEDIUM | FIXED | `d9f99b3` | `UNMAPPED` | yes | yes | parse_fail | 1 | UNVERIFIED |  |
 | R2-548 | MEDIUM | FIXED | `6e2f696` | `settings.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-553 | MEDIUM | FIXED | `177d1be` | `face_recognition.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
@@ -365,7 +365,7 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-578 | MEDIUM | FIXED | `83d9cf0` | `chat.py` | yes | yes | FAKE_GATE | 1 | CONFIRMED | THE FIX IS GOOD; ONLY ITS GATE IS FAKE (R2-706). chat.py:179 raises 403 for a non-member, and the sender identity is stamped from the session rather than the client payload. |
 | R2-596 | MEDIUM | FIXED | `b70fd88` | `d/hr/page.tsx` | yes | yes | parse_fail | 1 | UNVERIFIED |  |
 | R2-600 | MEDIUM | FIXED | `1d3235d` | `home/page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
-| R2-012 | MEDIUM | FIXED | `e9111eb` | `frontend/src/app/c/[company_id]/d/finance/page.tsx` | no | no | — | 2 | UNVERIFIED |  |
+| R2-012 | MEDIUM | FIXED | `e9111eb` | `frontend/src/app/c/[company_id]/d/finance/page.tsx` | no | no | — | 2 | CONFIRMED | E1: the Payment Method radios are controlled - `checked={paymentMethod === m}` at finance/page.tsx:3416 - and no `defaultChecked` survives in the file. |
 | R2-016 | MEDIUM | FIXED | `ddf1290` | `frontend/src/app/c/[company_id]/p/[project_id]/task/page.tsx` | no | no | — | 2 | UNVERIFIED |  |
 | R2-020 | MEDIUM | FIXED | `4be5ccf` | `frontend/src/app/c/[company_id]/d/dpr/page.tsx` | no | no | — | 2 | CONFIRMED | E1: the fabricated takeoff rows ('Main Floor 2 Slab section A', 'Beam drop grid B-C') are gone from frontend/src entirely. |
 | R2-022 | MEDIUM | FIXED | `5fda93e` | `frontend/src/app/c/[company_id]/d/finance/page.tsx` | no | no | — | 2 | CONFIRMED | E1: the loader effect's outer gate changed from `if (projectId)` to `if (companyId)`, so a company with no active project now loads Finance. The two remaining `if (projectId)` checks at :299 and :354 are inner guards for genuinely project-scoped sub-fetches, which is correct. |
