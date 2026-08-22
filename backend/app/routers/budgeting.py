@@ -2,10 +2,12 @@ import io
 from datetime import datetime
 from uuid import UUID
 from typing import List, Optional
+from zipfile import BadZipFile
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Response, status
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 from openpyxl import load_workbook
+from openpyxl.utils.exceptions import InvalidFileException
 from app.database import get_db
 from app.auth import get_current_user, verify_project_access, get_company_membership, require_permission, require_module_view
 from app.models import BOQItem, BOQDocument, ProjectBudget, Project, Bill, LibraryParty, Task, User, BOQRevision, LibraryCostCode
@@ -123,9 +125,13 @@ async def import_boq(
         if not sheet:
             raise HTTPException(status_code=400, detail="Excel file is empty")
 
-        # Parse header row (assume first row has headers)
+        # Parse header row (assume first row has headers). R2-453: a sheet
+        # with zero rows makes next() raise StopIteration, which used to
+        # escape the handler as a 500 instead of the empty-file 400 below.
+        header_row = next(sheet.iter_rows(values_only=True), None)
+        if header_row is None:
+            raise HTTPException(status_code=400, detail="Excel file is empty")
         headers = {}
-        header_row = next(sheet.iter_rows(values_only=True))
         for idx, val in enumerate(header_row):
             if val:
                 headers[str(val).strip().lower()] = idx
@@ -258,6 +264,12 @@ async def import_boq(
     except HTTPException:
         db.rollback()
         raise
+    except (InvalidFileException, BadZipFile):
+        # R2-453: a corrupt or fake .xlsx is a user error. openpyxl's raw
+        # message ("File is not a zip file") used to surface as
+        # 500 "Import failed: File is not a zip file".
+        db.rollback()
+        raise HTTPException(status_code=400, detail="Uploaded file could not be read as an Excel (.xlsx) file. Please upload a valid BOQ Excel export.")
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Import failed: {str(e)}")
