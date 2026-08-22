@@ -142,57 +142,61 @@ def create_payment(req: PaymentCreateRequest, db: Session = Depends(get_db), cur
     db.add(payment)
     db.flush()
 
-    # FIFO Auto-Settlement Logic against Outstanding Bills
+    # FIFO Auto-Settlement Logic against Outstanding Bills.
+    # R2-231: the engine used to run only when the body carried a party id,
+    # but the product's sole payment caller never sends one, so the loop was
+    # unreachable and every bill stayed permanently Unpaid with paid_amount 0.
+    # Without a party we settle FIFO over the payment's natural scope: company
+    # always, project when provided, revenue invoices for "in" payments and
+    # expense invoices for "out". A supplied party keeps the exact prior
+    # party-scoped behavior.
+    target_inv_type = list(REVENUE_INVOICE_TYPES) if req.payment_type == "in" else list(EXPENSE_INVOICE_TYPES)
+
+    # R2-346: settlement is gated on approval. Every bill created through
+    # the product starts approval_flag="pending"; flipping an unreviewed
+    # bill to Paid is a control failure, so only approved bills are
+    # eligible and the payment simply stays unsettled until review happens.
+    query = db.query(Bill).filter(
+        Bill.status != "Paid",
+        Bill.approval_flag.in_(SETTLEMENT_APPROVAL_FLAGS),
+    )
     if party_uuid:
-        # Determine target invoice type based on payment type
-        target_inv_type = list(REVENUE_INVOICE_TYPES) if req.payment_type == "in" else list(EXPENSE_INVOICE_TYPES)
-        
-        # R2-346: settlement is gated on approval. Every bill created through
-        # the product starts approval_flag="pending"; flipping an unreviewed
-        # bill to Paid is a control failure, so only approved bills are
-        # eligible and the payment simply stays unsettled until review happens.
-        query = db.query(Bill).filter(
-            Bill.party_company_user_id == party_uuid,
-            Bill.status != "Paid",
-            Bill.approval_flag.in_(SETTLEMENT_APPROVAL_FLAGS),
-        )
-        if proj_uuid:
-            query = query.filter(Bill.project_id == proj_uuid)
-            
-        if isinstance(target_inv_type, list):
-            query = query.filter(Bill.invoice_type.in_(target_inv_type))
+        query = query.filter(Bill.party_company_user_id == party_uuid)
+    else:
+        query = query.filter(Bill.company_id == comp_uuid)
+    if proj_uuid:
+        query = query.filter(Bill.project_id == proj_uuid)
+    query = query.filter(Bill.invoice_type.in_(target_inv_type))
+
+    open_bills = query.order_by(Bill.invoice_date.asc()).all()
+
+    for bill in open_bills:
+        if payment.unsettled_amount <= 0:
+            break
+
+        remaining = float(bill.total_payable) - float(bill.paid_amount)
+        if remaining <= 0:
+            continue
+
+        settled = min(float(payment.unsettled_amount), remaining)
+        bill.paid_amount = float(bill.paid_amount) + settled
+
+        if float(bill.paid_amount) >= float(bill.total_payable) - MONEY_EPSILON:
+            bill.status = "Paid"
         else:
-            query = query.filter(Bill.invoice_type == target_inv_type)
-            
-        open_bills = query.order_by(Bill.invoice_date.asc()).all()
+            bill.status = "Partially Paid"
 
-        for bill in open_bills:
-            if payment.unsettled_amount <= 0:
-                break
-            
-            remaining = float(bill.total_payable) - float(bill.paid_amount)
-            if remaining <= 0:
-                continue
+        db.add(bill)
 
-            settled = min(float(payment.unsettled_amount), remaining)
-            bill.paid_amount = float(bill.paid_amount) + settled
-
-            if float(bill.paid_amount) >= float(bill.total_payable) - MONEY_EPSILON:
-                bill.status = "Paid"
-            else:
-                bill.status = "Partially Paid"
-                
-            db.add(bill)
-
-            # Record Settlement
-            settlement = PaymentSettlement(
-                id=uuid.uuid4(),
-                payment_id=payment.id,
-                bill_id=bill.id,
-                settled_amount=settled
-            )
-            db.add(settlement)
-            payment.unsettled_amount = float(payment.unsettled_amount) - settled
+        # Record Settlement
+        settlement = PaymentSettlement(
+            id=uuid.uuid4(),
+            payment_id=payment.id,
+            bill_id=bill.id,
+            settled_amount=settled
+        )
+        db.add(settlement)
+        payment.unsettled_amount = float(payment.unsettled_amount) - settled
 
     db.commit()
     db.refresh(payment)
