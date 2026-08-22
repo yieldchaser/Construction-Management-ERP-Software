@@ -901,6 +901,53 @@ it is documentation-free code with no merge risk beyond the file itself) or appl
 pattern inline at `:332` and `:290`. The second is smaller and matches what the campaign already
 does elsewhere in this file.
 
+### R2-729 · CRITICAL · the Delete Logs page fetches in an unbounded loop — proved live at ~3.4 req/s
+
+**Third confirmed miss from the R2-727 orphan-lineage class, and the first one proved against
+production rather than argued from code.**
+
+R2-310 is CRITICAL and `FIX_VERIFIED`. Its cited commit `af04f74` is orphan-only, and the fix —
+wrapping `authHeaders` in `useMemo` so the callback identity stabilises — was **not reproduced**.
+`origin/main` and `campaign/waves` carry byte-identical copies of the unfixed file.
+
+**The mechanism** (`d/delete-logs/page.tsx`):
+
+```
+:64   const authHeaders = accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined;
+:66   const fetchLogs = useCallback(async () => { … }, [ …, authHeaders ]);
+:92   useEffect(() => { fetchLogs(); }, [fetchLogs]);
+```
+
+`authHeaders` is a fresh object literal on every render, so the `useCallback` dependency changes on
+every render, so `fetchLogs` is a new function on every render, so the effect refires. `fetchLogs`
+then calls `setLoading` and `setLogs`, which re-render, which mints a new `authHeaders`. The cycle
+has no fixed point.
+
+**Live evidence, production, test company.** Instrumented `window.fetch`, navigated to the page,
+counted requests to `/apis/v3/delete-logs/…`:
+
+| elapsed | requests |
+|---|---|
+| 3 s | 8 |
+| 10 s | **32** |
+
+That is **~3.4 requests per second, sustained**, still climbing when I navigated away. Every one is
+a database query against the production pool, and it continues for as long as the tab is open.
+
+**A measurement error of mine, recorded because it nearly cleared a live CRITICAL.** My first run
+reported 2 requests in 4 seconds and I briefly concluded there was no loop. That window began at the
+moment of the client-side navigation, so it mostly covered the route transition before the component
+mounted. Re-running with a 3s/10s split showed the real rate. **When measuring a rate on a
+client-side route change, start the clock after mount, not at the click.**
+
+**Impact.** This is the defect the audit originally measured at ~16 req/s and described as
+exhausting the DB pool and taking the whole console down. It is live now. Anyone leaving the Delete
+Logs tab open generates a sustained query stream for the entire company.
+
+**Fix direction.** One line — `const authHeaders = useMemo(() => accessToken ? {…} : undefined,
+[accessToken])`. Worth a lint rule too: an object or array literal in a `useCallback`/`useEffect`
+dependency array is always this bug.
+
 ## Verified clean so far
 
 Recorded so the pass is not only a list of complaints. Each claim was re-checked against the tree,
@@ -948,8 +995,9 @@ were scoped to the files a finding named rather than to the defect class.
 | **R2-726** | **CRITICAL** | **Enterprise Rollup net balance has a live sign error; R2-025 is FIX_VERIFIED but its commit is orphan-only** | found auditing commit lineage |
 | **R2-727** | **CRITICAL** | **94 closed rows (48 CRITICAL) cite commits not in the live lineage; at least one fix was never reproduced** | lineage audit |
 | **R2-728** | **CRITICAL** | **attendance punch-out raises TypeError on Postgres; passes on SQLite so the suite cannot see it** | orphan-lineage sweep |
+| **R2-729** | **CRITICAL** | **Delete Logs fetches in an unbounded loop — proved live at ~3.4 req/s against the production pool** | orphan-lineage sweep |
 
-**Twenty-three live findings** (R2-724 retracted). R2-713..R2-716 were filed separately first and are struck through, not
+**Twenty-four live findings** (R2-724 retracted). R2-713..R2-716 were filed separately first and are struck through, not
 deleted, so the history stays traceable.
 
 Three to act on first, for different reasons:
