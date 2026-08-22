@@ -570,6 +570,18 @@ probing it with an invented number risks messaging a real handset, and probing w
 tells me nothing about `provider_ready`. **This needs the founder to check the Render environment**
 for `SMS`/`OTP_DEMO_ALLOWLIST` overrides — added to the decisions file as D-V5.
 
+#### Scope of the fix — swept, and it is bounded
+
+I swept the backend for other demo/seed materialisation paths so the fix does not turn into a hunt:
+`_seed_demo_projects` and `_ensure_demo_company` (both `auth.py`) are the **only** two. The one
+other seeder, `seed_default_roles` (`settings.py:465`), is a legitimate RBAC preset and is not demo
+data.
+
+The **email** demo path (`EMAIL_OTP_DEMO_ALLOWLIST`, default `demo@siteflow.co`) gates a fixed code
+the same way when SMTP is unconfigured, but it does **not** call `_ensure_demo_company` — only the
+mobile path at `:415` does. So the tenant-creation defect is one call site, and the fixed-code
+question covers two.
+
 **Fix direction.** Independent of the env answer: the allowlist and demo code should have **no
 usable defaults in source** (empty string, so an unset env disables the path entirely), and
 `_ensure_demo_company` should not run on a production deploy at all. If a demo tenant is wanted,
