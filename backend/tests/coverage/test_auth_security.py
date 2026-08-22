@@ -4,6 +4,8 @@ used in production, not mocks."""
 import hashlib
 import hmac
 
+import pytest
+
 from app.config import settings
 from app import models
 from app.security import hash_password, verify_password, validate_password_strength
@@ -12,7 +14,13 @@ DEMO_MOBILE = "+919876543210"
 DEMO_CODE = "123456"
 
 
-def test_otp_single_use(client):
+@pytest.fixture
+def demo_otp_settings(monkeypatch):
+    monkeypatch.setattr(settings, "OTP_DEMO_ALLOWLIST", "9876543210,+919876543210")
+    monkeypatch.setattr(settings, "OTP_DEMO_CODE", DEMO_CODE)
+
+
+def test_otp_single_use(client, demo_otp_settings):
     r = client.post("/apis/v3/auth/otp/send", json={"mobile": DEMO_MOBILE})
     assert r.status_code == 200
     code = r.json()["mock_code"]
@@ -25,7 +33,7 @@ def test_otp_single_use(client):
     assert r2.status_code == 400
 
 
-def test_otp_stored_hashed_not_plaintext(client, db):
+def test_otp_stored_hashed_not_plaintext(client, db, demo_otp_settings):
     r = client.post("/apis/v3/auth/otp/send", json={"mobile": DEMO_MOBILE})
     assert r.status_code == 200
     code = r.json()["mock_code"]
@@ -44,7 +52,7 @@ def test_otp_stored_hashed_not_plaintext(client, db):
     assert not getattr(otp, "code", None)
 
 
-def test_otp_ttl_expired(client, monkeypatch):
+def test_otp_ttl_expired(client, monkeypatch, demo_otp_settings):
     monkeypatch.setattr(settings, "OTP_TTL_SECONDS", -1)
     r = client.post("/apis/v3/auth/otp/send", json={"mobile": DEMO_MOBILE})
     assert r.status_code == 200

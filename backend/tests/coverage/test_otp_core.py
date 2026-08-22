@@ -17,7 +17,13 @@ DEMO_MOBILE = "+919876543210"
 DEMO_CODE = "123456"
 
 
-def test_otp_wrong_code_fails_constant_time_compare(client, db):
+@pytest.fixture
+def demo_otp_settings(monkeypatch):
+    monkeypatch.setattr(settings, "OTP_DEMO_ALLOWLIST", "9876543210,+919876543210")
+    monkeypatch.setattr(settings, "OTP_DEMO_CODE", DEMO_CODE)
+
+
+def test_otp_wrong_code_fails_constant_time_compare(client, db, demo_otp_settings):
     # Wrong code must never yield a token (exercises hmac.compare_digest mismatch).
     r = client.post("/apis/v3/auth/otp/send", json={"mobile": DEMO_MOBILE})
     assert r.status_code == 200
@@ -26,7 +32,7 @@ def test_otp_wrong_code_fails_constant_time_compare(client, db):
     assert "access_token" not in bad.json()
 
 
-def test_otp_wrong_code_increments_attempt_counter(client, db):
+def test_otp_wrong_code_increments_attempt_counter(client, db, demo_otp_settings):
     r = client.post("/apis/v3/auth/otp/send", json={"mobile": DEMO_MOBILE})
     assert r.status_code == 200
     for _ in range(3):
