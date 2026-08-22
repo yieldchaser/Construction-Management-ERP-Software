@@ -91,7 +91,7 @@ def get_boq_items(project_id: UUID, boq_document_id: Optional[UUID] = None, db: 
             rate=float(item.rate),
             supply_rate=float(item.supply_rate),
             installation_rate=float(item.installation_rate),
-            amount=float(item.amount or 0.0) if item.amount is not None else float(item.quantity) * (float(item.rate) + float(item.supply_rate) + float(item.installation_rate)),
+            amount=float(item.amount or 0.0) if item.amount is not None else float(item.quantity) * _effective_unit_rate(item.rate, item.supply_rate, item.installation_rate),
             quantity_float_limit=item.quantity_float_limit
         ))
     return result
@@ -202,7 +202,9 @@ async def import_boq(
             elif unit.lower() in ("no", "nos", "brick", "bag", "bags"):
                 float_limit = 0
 
-            amount = quantity * (rate + supply_rate + installation_rate)
+            # R2-451: a row quoting a composite rate alongside its
+            # supply/install split is charged once, not twice.
+            amount = quantity * _effective_unit_rate(rate, supply_rate, installation_rate)
             total_amount += amount
 
             boq_item = BOQItem(
@@ -292,10 +294,20 @@ def allocate_project_budgets(
 BILLING_TYPES = {"sale", "material_sale"}
 
 
+def _effective_unit_rate(rate, supply_rate, installation_rate) -> float:
+    # R2-451: an item is quoted either as one composite rate or as a supply
+    # rate plus an installation rate. Templates often carry the composite
+    # Rate column alongside its split; adding all three charged the work
+    # twice, so the composite wins and the split only fills in when no
+    # composite rate was given.
+    r = float(rate or 0.0)
+    return r if r else float(supply_rate or 0.0) + float(installation_rate or 0.0)
+
+
 def _item_amount(i: BOQItem) -> float:
     if i.amount is not None:
         return float(i.amount)
-    return float(i.quantity) * (float(i.rate) + float(i.supply_rate) + float(i.installation_rate))
+    return float(i.quantity) * _effective_unit_rate(i.rate, i.supply_rate, i.installation_rate)
 
 
 class BOQDocumentCreate(BaseModel):
@@ -475,7 +487,7 @@ def create_boq_item(doc_id: UUID, req: BOQItemCreate, db: Session = Depends(get_
     elif req.unit.lower() in ("no", "nos", "brick", "bag", "bags"):
         float_limit = 0
 
-    amount = req.quantity * (req.rate + req.supply_rate + req.installation_rate)
+    amount = req.quantity * _effective_unit_rate(req.rate, req.supply_rate, req.installation_rate)
     item = BOQItem(
         project_id=doc.project_id,
         boq_document_id=doc.id,
@@ -575,8 +587,8 @@ def update_boq_item(item_id: UUID, req: BOQItemPatch, db: Session = Depends(get_
         item.installation_rate = req.installation_rate
 
     item.quantity_float_limit = _unit_float_limit(item.unit)
-    item.amount = float(item.quantity) * (
-        float(item.rate) + float(item.supply_rate) + float(item.installation_rate)
+    item.amount = float(item.quantity) * _effective_unit_rate(
+        item.rate, item.supply_rate, item.installation_rate
     )
     db.commit()
     db.refresh(item)
