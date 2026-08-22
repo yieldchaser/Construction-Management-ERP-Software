@@ -749,6 +749,96 @@ none of the merge risk that makes the rest of that branch unmergeable — or rep
 with the evidence that actually justified them. The first is one `git show > file`; it makes 32 of
 the 83 ids resolvable and leaves the other 56 honestly marked as undefined.
 
+## Class I — the register's evidence points at a branch that was abandoned
+
+### R2-726 · CRITICAL · the Enterprise Rollup net-balance sign error is still live (R2-025 is `FIX_VERIFIED`)
+
+**The most consequential single defect this pass has found**, and it was found by asking a question
+I had not thought to ask: *is the commit this row cites even in the live lineage?*
+
+R2-025 is CRITICAL and `FIX_VERIFIED`. Its cited commit `f32ca77` is **not an ancestor of
+`campaign/waves`** — it is on my own orphaned branch. And unlike the four cases I checked under
+R2-725, here the fix was **not** independently reproduced. The defect is live.
+
+**Two sites in `finance.py`, both inside `get_enterprise_rollup` (`:836`):**
+
+```
+:872   balance       = p["advance_paid"] + p["advance_received"] - p["to_pay"] - p["to_receive"]
+:891   total_balance = totals["advance_paid"] + totals["advance_received"]
+                     - totals["to_pay"] - totals["to_receive"]
+```
+
+`advance_paid` and `to_receive` are assets; `advance_received` and `to_pay` are liabilities. The
+correct net is `(advance_paid + to_receive) - (to_pay + advance_received)`. Both lines **add a
+liability and subtract an asset** — two of the four terms carry the wrong sign.
+
+**The same file already contains the correct formula.** At `:724`, the party-level balance reads:
+
+```
+balance = round(advance_paid + to_receive - advance_received - to_pay, 2)
+```
+
+That is R2-096's site, which the campaign fixed and which I confirmed earlier in this pass. So
+`finance.py` holds the right formula and the wrong one about 150 lines apart, and the wrong one is
+the company- and enterprise-level figure.
+
+**Worked example.** A company that has sold 100,000 and purchased 30,000 is net owed **+70,000**.
+The live formula returns `0 + 0 - 30,000 - 100,000 = -130,000` — wrong sign, and wrong magnitude by
+200,000. An owner reading the Enterprise Rollup sees a large net liability where the business is in
+fact a net creditor.
+
+**Why the status says otherwise.** `FIX_VERIFIED` means founder live-confirmed, and it very likely
+*was* correct when confirmed — on the branch that carried `f32ca77`. That branch was never merged.
+The status is a true statement about a tree that is not the one being deployed.
+
+**Fix direction.** Two lines. Reuse the `:724` expression verbatim at both sites, or better, extract
+it into one helper so the three call sites cannot drift again.
+
+### R2-727 · CRITICAL · 94 closed rows cite commits that are not in the live lineage
+
+**R2-726 is one instance. This is the class, and it needs a row-by-row sweep.**
+
+Of the 315 closed rows, **94 cite a commit sha that is not an ancestor of `campaign/waves`** — they
+resolve only on the orphaned branch `27fab37` / `98b3a3f`.
+
+| cut | value |
+|---|---|
+| closed rows citing a sha reachable from `campaign/waves` | 218 |
+| **closed rows whose only cited sha is orphan-only** | **94** |
+| severity of those 94 | **48 CRITICAL** · 29 HIGH · 17 MEDIUM |
+| status of those 94 | 90 `FIX_VERIFIED` · 4 `FIXED` |
+| rows citing no sha at all | 3 |
+
+This is the same root cause as R2-725 — the register inherited evidence pointing into a branch that
+was later abandoned — but with a far sharper consequence. R2-725 costs traceability. This costs
+correctness wherever the fix was **not** independently reproduced.
+
+**It is not "94 live defects", and I want to be exact about that.** The orphan-branch recon
+established that the campaign re-fixed the same findings in its own idiom, and that holds for every
+one I have sampled bar R2-025:
+
+- R2-565 — `planning.py` does `latest_finish(s) - timedelta(days=…)`; the float-minus-datetime crash is gone
+- R2-042 — settlement fields present in `finance.py`
+- R2-588 — timesheet endpoints present
+- R2-599 — DPR is project-scoped
+- **R2-025 — NOT reproduced. Live defect. See R2-726.**
+
+So the finding is: **94 rows are closed on evidence that cannot be inspected, and at least one of
+them is materially wrong in production.** One in a sample of five is too high a miss rate to leave
+the other 89 unexamined.
+
+**A trap worth recording, because it nearly caught me.** My worklist resolved each row's sha with
+`git rev-parse`, which succeeds for *any* commit in the repository — including orphan-branch
+commits. I was about to read my own abandoned diffs and record the campaign's rows as CONFIRMED on
+the strength of them. Ancestry has to be checked explicitly:
+`git merge-base --is-ancestor <sha> campaign/waves`. `scripts/verification/lineage_audit.py` does
+this in one pass.
+
+**Fix direction.** Sweep the 94 by comparing the *intent* of each finding against the live tree,
+never against the orphaned diff — the campaign's re-fix will not share my idiom, so grepping for my
+implementation's shape produces false negatives. Row list in
+`scratchpad/orphan_rows.txt`; the 48 CRITICALs come first, and this is now the top of my queue.
+
 ## Verified clean so far
 
 Recorded so the pass is not only a list of complaints. Each claim was re-checked against the tree,
@@ -793,8 +883,10 @@ were scoped to the files a finding named rather than to the defect class.
 | **R2-723** | **HIGH** | **cancelled bills still counted in budget/BI/tower actuals — 8 sites R2-232 missed** | found verifying R2-045/066 |
 | ~~R2-724~~ | — | **RETRACTED** — branch GSTIN does run the checksum; I misread the class boundary | — |
 | **R2-725** | **HIGH** | **93 FIX_VERIFIED rows cite an RC suite absent from the live lineage; 56 ids never defined** | found re-prioritising the CRITICALs |
+| **R2-726** | **CRITICAL** | **Enterprise Rollup net balance has a live sign error; R2-025 is FIX_VERIFIED but its commit is orphan-only** | found auditing commit lineage |
+| **R2-727** | **CRITICAL** | **94 closed rows (48 CRITICAL) cite commits not in the live lineage; at least one fix was never reproduced** | lineage audit |
 
-**Twenty live findings** (R2-724 retracted). R2-713..R2-716 were filed separately first and are struck through, not
+**Twenty-two live findings** (R2-724 retracted). R2-713..R2-716 were filed separately first and are struck through, not
 deleted, so the history stays traceable.
 
 Three to act on first, for different reasons:
