@@ -380,6 +380,32 @@ VERDICTS = {
     "R2-012": ("CONFIRMED", "E1: the Payment Method radios are controlled - "
                             "`checked={paymentMethod === m}` at finance/page.tsx:3416 - and no "
                             "`defaultChecked` survives in the file."),
+    "R2-129": ("CONFIRMED", "BEHAVIOURAL - executed calculate_due_date directly, the one pin in "
+                            "the suite that calls application code. pf/esi/bocw return the 15th "
+                            "of the FOLLOWING month and tds the 7th, and the December rollover "
+                            "is right (2026-12 -> 2027-01). Note surfaced separately: "
+                            "report_type is case-sensitive and unconstrained - filed as R2-721."),
+    "R2-553": ("CONFIRMED", "E1: confidence_score Field(None, ge=0, le=1), lat Field(ge=-90, "
+                            "le=90), lng Field(ge=-180, le=180) - all three bounds present."),
+    "R2-089": ("CONFIRMED", "E1: status_counts seeds all six canonical statuses plus Other "
+                            "(analytics.py:432), legacy 'Onhold' normalises to 'On Hold' at "
+                            ":437, and an unrecognised status falls to Other at :441 rather "
+                            "than being dropped."),
+    "R2-596": ("CONFIRMED", "E1: handleTimesheetAction mutates local state only inside "
+                            "`if (res.ok)`; a non-2xx alerts the server detail and the catch "
+                            "block alerts on transport failure, so a failed submit or approve "
+                            "can no longer render as success."),
+    "R2-514": ("CONFIRMED", "E1: the help answer now says multi-level approvals are not "
+                            "'enforced on transactions; do not rely on them as an approval' "
+                            "control (helpContent.tsx:427). The copy wraps across lines, which "
+                            "is why a single-line grep for the phrase misses it."),
+    "R2-004": ("CONFIRMED", "E1: two 'wastage allowance' disclosures present, matching the "
+                            "Concrete and Plaster panels the note names."),
+    "R2-146": ("CONFIRMED", "E1: the chat empty state distinguishes no-groups from "
+                            "no-active-project. Its disclosed sibling (create-group without a "
+                            "project) sits in R2-717."),
+    "R2-467": ("CONFIRMED", "E1: the drawings revision approval-status register and wiring are "
+                            "present, consistent with R2-367 which covers the backend half."),
     "R2-083": ("UNVERIFIED", "E1 FAILS on completeness. The two edits are correct, but the note's "
                              "claim that these were 'the last two fabricated attribute fallbacks' "
                              "is wrong - four remain in the same object literal, including "

@@ -499,6 +499,34 @@ does not exist yet — remove the control, per the audit's standing preference f
 over a decorative affordance. At minimum the bare `return` must become a visible error; a Save
 button that silently does nothing is the worst of the three options.
 
+### R2-721 · MEDIUM · `report_type` is an unvalidated free-text discriminator on the statutory path
+
+**Found while verifying R2-129**, whose fix is correct.
+
+`StatutoryReportCreate.report_type` is a bare `str` (`statutory.py:18`) with no `Literal`, pattern
+or enum anywhere. Three separate behaviours then key off an **exact lowercase** match:
+
+| site | comparison | consequence when the case differs |
+|---|---|---|
+| `calculate_due_date` (:66-69) | `== "tds"`, `in ("pf","esi","bocw")` | returns `None` — the report is stored **with no due date** |
+| BOCW cess (:145) | `report_type == "bocw"` | cess computed as **zero** |
+| list filter (:96) | `StatutoryReport.report_type == report_type` | the report is invisible to its own filter |
+
+Executed to confirm: `calculate_due_date("pf", "2026-01")` returns 2026-02-15, while
+`calculate_due_date("PF", "2026-01")` and `("Pf", …)` both return `None`. No exception, no 422 —
+the report simply saves without a due date.
+
+**Latent, not live.** The console defaults `report_type: "pf"` (`d/statutory/page.tsx:52`) and
+sends lowercase throughout, so the UI cannot currently trigger it. The exposure is the API surface:
+BI keys, integrations, and any future screen that sends a display-cased value.
+
+**This is a sibling of a class the campaign is already fixing** — R2-136 validated the planning
+discriminators, R2-580 constrained project status, R2-293 constrained the Tally vocabulary, R2-582
+constrained party status. Statutory was not swept.
+
+**Fix direction.** `report_type: Literal["pf", "esi", "bocw", "tds"]`, matching how the other
+discriminators were closed. One line, and it converts three silent wrong answers into a 422.
+
 ## Verified clean so far
 
 Recorded so the pass is not only a list of complaints. Each claim was re-checked against the tree,
@@ -538,8 +566,9 @@ were scoped to the files a finding named rather than to the defect class.
 | **R2-718** | **HIGH** | **class finding — 169 closures have no gate; 61 of them CRITICAL** | register-wide sweep |
 | **R2-719** | **CRITICAL** | **class finding — 90 invented-default sites; 8 sentinel UUIDs resolve to real production rows** | generalised from R2-083 |
 | **R2-720** | **HIGH** | **Internal Transfer is inert — Save fires no request, no error** | discharging D-V3 |
+| **R2-721** | **MEDIUM** | **statutory `report_type` unvalidated — silent no-due-date, zero cess** | found verifying R2-129 |
 
-**Sixteen live findings.** R2-713..R2-716 were filed separately first and are struck through, not
+**Seventeen live findings.** R2-713..R2-716 were filed separately first and are struck through, not
 deleted, so the history stays traceable.
 
 Three to act on first, for different reasons:
