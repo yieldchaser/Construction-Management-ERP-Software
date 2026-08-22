@@ -2,6 +2,19 @@
 
 Append-only. Every working block ends with a 5-line entry. Never edit an existing entry; if a commit was reverted, add a new entry.
 
+## Session 33 (cont. 2) — R2-726 hotfix + R2-727 orphan-sha sweep begun (2026-08-22)
+
+- **R2-726 FIXED `bbb6d51`** (founder-flagged CRITICAL, live): Enterprise Rollup net balance had two inverted terms (advance_paid + advance_received - to_pay - to_receive); correct expression existed at :739 (the R2-096 party balance) while the rollup sites stayed wrong - both right and wrong formulas coexisted in one file. Extracted shared `_net_balance` helper, wired all three sites; test red/green proven (-130000 -> +70000).
+- **R2-727 sweep STARTED** (94 orphan-sha rows: 48C/29H/17M; list = docs/VERIFICATION_ORPHAN_ROWS.txt on founder branch). Method per founder: ancestry via merge-base --is-ancestor (not rev-parse); verify INTENT idiom-independently, never orphan-diff shapes; explore agents in 5-row micro-chunks.
+  - Chunk A (finance): R2-052 DRIFTED (party FK -> users.id vs company_team.id siblings; User-name resolution w/ Unknown Party fallback), R2-053 DRIFTED->RE-FIXED b290d51, R2-100 PARTIAL DRIFT (cash half holds; bank receipts never touch accounts), R2-198 HOLDS (backend clause), R2-221 DRIFTED->RE-FIXED f1a4c43 (+class sites budget.py/bi_export.py; SQLite round-trips aware columns naive - normalize BOTH operands).
+  - Chunk B (finance): R2-231 DRIFTED->RE-FIXED e9dba8b (settlement engine unreachable: UI never sends party_company_user_id so FIFO gate never fired; now scopes by company/project/direction when party absent; review gate kept; reversal intact; 4 tests). R2-235 = duplicate of R2-726 family -> fixed by bbb6d51. R2-236 DRIFTED (ledger sort mixes naive datetime.min with aware datetimes -> deterministic 500) FIX PENDING (3 dispatch attempts died). R2-238 DRIFTED->RE-FIXED 125ebfa (payment_in booked as Material Cost -590; now Settlement/Cash Movement signed by direction). R2-243 DRIFTED->RE-FIXED 2803dad (subcon double-counted material+subcon heads; reports.py sibling sites checked clean).
+  - Score so far: 10 rows verified, 7 live defects found, 5 re-fixed, 2 pending fixes (R2-052, R2-100 partial, R2-236 - all with full context recorded here). Founder's sample said 1-in-5; ours is worse - the sweep was justified.
+- **R2-725 addendum DONE** (`3b258eb`, `09ee4b8`): suite doc notes its RC commands are inert on campaign/waves (four cited pytest files orphaned); converted UTF-16 -> UTF-8.
+- Suite GREEN (exit=0) after all sweep fixes. Register: swept rows annotated with S33 SWEEP verdicts + new commits; R2-726 row added pointing at docs/VERIFICATION_NEW_FINDINGS.md. Counts: 599 rows, TODO 217 unchanged (sweep fixes were already-FIXED rows being repaired).
+- REMAINING SWEEP QUEUE (next sessions): finance C (R2-244/276/315/316/327) + part 2 (R2-342..592, 16 rows), hr x28 (chunks of 5), reports x18, procurement x9, scattered (R2-398 billing, R2-406 settings page, R2-420 finance page, R2-310 delete-logs page, R2-590 quality page). Pending fixes first: R2-052 (party FK repoint, may need additive migration), R2-236 (sort tz), R2-100 (bank account mutation). Central pins sets B/C still pending.
+
+---
+
 ## Session 33 (continued) — verification-pass fixes R2-721/722/723 + suite green (2026-08-22)
 
 - Adopted the founder's five follow-ups. R2-725 DONE by orchestrator: docs/AUDIT_REGRESSION_SUITE.md restored from orphan 27fab37 (`d0b40cb`) — RC citations in 93 FIX_VERIFIED rows now resolve; ids never defined anywhere stay honestly undefined. Red-test risk named per founder: ALL FOUR classified category (a) stale bookkeeping with per-test evidence recorded in START_HERE (live code read directly: three_way.py:14/145 tolerance intact; settings.py:620/674 mobile reads intact) — none mirrors drifted code.
