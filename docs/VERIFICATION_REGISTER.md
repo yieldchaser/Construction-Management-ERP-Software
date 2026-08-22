@@ -100,15 +100,15 @@ Ordered severity, then tier, then id — which is the order to work them.
 
 | R2 | SEV | STATUS | COMMIT | PRIMARY FILE | TEST? | PIN? | GATE | TIER | VERDICT | EVIDENCE |
 |---|---|---|---|---|---|---|---|---|---|---|
-| R2-014 | CRITICAL | FIXED | `1d7d1fb` | `frontend/src/app/c/[company_id]/d/attendance/page.tsx` | yes | yes | parse_fail | 1 | UNVERIFIED |  |
+| R2-014 | CRITICAL | FIXED | `1d7d1fb` | `frontend/src/app/c/[company_id]/d/attendance/page.tsx` | yes | yes | parse_fail | 1 | CONFIRMED | E1: flushQueue POSTs each punch individually, keeps every failure in `remaining` rather than dropping it, and counts synced/failed honestly - so the Sync button can no longer delete queued punches and report success. |
 | R2-027 | CRITICAL | FIXED | `97f4eb4` | `face_recognition.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
-| R2-035 | CRITICAL | FIXED | `89c607a` | `projects.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
+| R2-035 | CRITICAL | FIXED | `89c607a` | `projects.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: _project_progress reads the column - float(t.progress or 0.0)/100.0 when progress is not None - and falls back to _TASK_PROGRESS by status only when it is null (projects.py:107). That is the defect, resolved. |
 | R2-036 | CRITICAL | FIXED | `9234220` | `analytics.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-060 | CRITICAL | FIXED | `287db85` | `d/attendance/page.tsx` | yes | yes | parse_fail | 1 | CONFIRMED | E1: zero matches for 12.9716 / 77.5946 / 'Metro Geofence Yard' across frontend/src. `captureLocation` returns null on every failure path (no geolocation :400, error callback :410) and `queuePunch` blocks the punch with an alert when it is null, so no invented coordinate can reach the geofence audit trail. |
-| R2-067 | CRITICAL | FIXED | `241f76c` | `budget.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
+| R2-067 | CRITICAL | FIXED | `241f76c` | `budget.py` | yes | yes | text-pin | 1 | CONFIRMED | E1, and its note is unusually precise. labour_actual comes from PayrollLineItem.net_payable joined by project and equipment_actual from equipment bills plus deployment hours plus fuel, which is what the finding was about - a permanent zero actual and a falsely favourable variance. It openly discloses that labour/equipment `committed` remain 0.0 because no committed source exists, that the per-tower loop still uses project-wide totals, and that its own test seeds a company_team id into PayrollLineItem.employee_id and only passes because SQLite has FK enforcement off. That last one is this phase's thesis in miniature. All three sit in R2-717. |
 | R2-068 | CRITICAL | FIXED | `401cf1e` | `d/procurement/page.tsx` | yes | yes | parse_fail | 1 | UNVERIFIED |  |
 | R2-086 | CRITICAL | FIXED | `97f4eb4` | `face_recognition.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
-| R2-096 | CRITICAL | FIX_VERIFIED | `f5da315` | `reports.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
+| R2-096 | CRITICAL | FIX_VERIFIED | `f5da315` | `reports.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: the party balance is advance_paid + to_receive - advance_received - to_pay at finance.py:724 with net-sign status derivation at :727. |
 | R2-106 | CRITICAL | FIXED | `3a559d9` | `d/attendance/page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-148 | CRITICAL | FIXED | `534451e` | `todos.py` | yes | yes | text-pin | 1 | CONFIRMED | E1 + E3 LIVE, end to end in the test company. Ticking a to-do fires PUT /apis/v3/todos/{id} then re-fetches the list; after a full page reload Pending held 2 and Completed held 1, so completion persists server-side - the exact defect ('vanished on the next fetch') is gone. Delete fires DELETE /apis/v3/todos/{id} then re-fetches. Probe rows created for the test were removed afterwards. |
 | R2-232 | CRITICAL | FIX_VERIFIED | `69b4a98` | `finance.py` | yes | no | — | 1 | CONFIRMED | E1: billing.py:449-450 stamps cancelled_at/cancelled_by, and the dedicated regression file test_r2_232_cancel_exclusion.py exists. The exclusion reached finance.py but NOT budget/towers/bi_export - 8 missed call sites, raised as R2-723, not against this row. |
@@ -169,12 +169,12 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-549 | CRITICAL | FIX_VERIFIED | `41ebbf1` | `finance.py` | no | no | — | 3 | UNVERIFIED |  |
 | R2-568 | CRITICAL | FIX_VERIFIED | `e3866c9` | `finance.py` | no | no | — | 3 | UNVERIFIED |  |
 | R2-599 | CRITICAL | FIX_VERIFIED | `bef6c73` | `dpr.py` | no | no | — | 3 | UNVERIFIED |  |
-| R2-011 | HIGH | FIXED | `ca3a742` | `finance/page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
+| R2-011 | HIGH | FIXED | `ca3a742` | `finance/page.tsx` | yes | yes | text-pin | 1 | CONFIRMED | E1: party_type is a case-insensitive union of the full backend vocabulary (library.py:24), so a legitimate type is no longer rejected. |
 | R2-013 | HIGH | FIXED | `820717b` | `frontend/src/app/c/[company_id]/d/hr/page.tsx` | yes | yes | text-pin | 1 | CONFIRMED | E1: the holiday flow is wired end to end - POST /hr/holidays/{cid} at :967, DELETE at :975 and the list GET at :1020. |
 | R2-032 | HIGH | FIXED | `261bd41` | `frontend/src/app/c/[company_id]/d/hr/page.tsx` | yes | yes | text-pin | 1 | CONFIRMED | E1: CTC is `grossMonthly + basic * (pfEmployerPct ?? 12) / 100` at hr/page.tsx:935, and `pfEmployerPct` is mapped from the API's `pf_employer_pct` at :263, so the employee half is no longer double-counted and the rate is per-employee. |
 | R2-149 | HIGH | FIXED | `6d9493c` | `d/todo/page.tsx` | yes | yes | text-pin | 1 | CONFIRMED | E1: pure removal of 144 lines. Zero repeat/recurrence/endsDate residue left in d/todo/page.tsx. |
 | R2-168 | HIGH | FIXED | `99d9287` | `d/hr/page.tsx` | yes | yes | text-pin | 1 | CONFIRMED | E1: `payrollMonth` defaults to the current month (`new Date().toISOString().slice(0,7)`, hr/page.tsx:220), not the hardcoded 2026-06. The note's own follow-up on `daysInMonth` is disclosed residue and is carried by R2-717. |
-| R2-182 | HIGH | FIXED | `94e7923` | `auth.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
+| R2-182 | HIGH | FIXED | `94e7923` | `auth.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: a storage listener watches `access_token` and ignores no-op events via an oldValue !== newValue guard, so another tab's session change reloads this one. |
 | R2-186 | HIGH | FIXED | `1a564f1` | `auth.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: POST /auth/switch-company calls get_company_membership at auth.py:955 before re-minting the session, so a non-member cannot switch into a company. |
 | R2-196 | HIGH | FIXED | `aaa5041` | `auth.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-202 | HIGH | FIXED | `42d2c9a` | `planning.py` | yes | yes | text-pin | 1 | UNVERIFIED | E0 passes - column live. Behaviour not yet exercised. |
@@ -187,17 +187,17 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-338 | HIGH | FIXED | `959ae3b` | `planning.py` | yes | yes | text-pin | 1 | UNVERIFIED | E0 passes - both columns live. Behaviour not yet exercised. |
 | R2-340 | HIGH | FIXED | `d034a0a` | `planning.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-363 | HIGH | FIXED | `4095671` | `quality.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: quality.py builds valid_item_ids from insp.checklist_id and raises 400 at :308 inside the response loop, before any upsert, so a foreign checklist item cannot be written. |
-| R2-364 | HIGH | FIXED | `cdc82d9` | `quality.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
+| R2-364 | HIGH | FIXED | `cdc82d9` | `quality.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: the pass-rate denominator is len(quality_tests_assessed), counting only tests where is_pass is not None, and the unassessed count is exposed separately (reports.py:101-104). |
 | R2-382 | HIGH | FIXED | `1725fea` | `planning.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: `enforce_entry_editing_window` is called on both mutations - billing.py:447 and :891 - so cancel and match-link are covered, not just task updates. |
 | R2-391 | HIGH | FIXED | `ac10a52` | `quality.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: list_inspection_responses returns per-item rows carrying `remarks` and `photo_url`, behind get_company_membership at :265. |
 | R2-405 | HIGH | FIXED | `161b2c0` | `settings.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: no `User.phone` reference survives in app/ (the one grep hit is a comment in google_sheets.py explaining its absence). The model carries `mobile`. |
-| R2-433 | HIGH | FIXED | `e67476b` | `models.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
+| R2-433 | HIGH | FIXED | `e67476b` | `models.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: _po_response resolves vendor_name through User.name and falls back to LibraryParty.name (procurement.py:431-438). |
 | R2-441 | HIGH | FIXED | `583c47d` | `projects.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: `_TASK_PROGRESS` covers every value the UI can emit - the frontend option list is exactly not_started/start/in_progress/completed, and the map holds all four plus `ongoing`. E3: production task statuses are `not_started` only. |
 | R2-491 | HIGH | FIXED | `—` | `projects.py` | yes | yes | parse_fail | 1 | UNVERIFIED |  |
 | R2-525 | HIGH | FIXED | `268b8ef` | `statutory.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: estimate_penalty takes company_id, report_type and return_period only - no caller-supplied wages param survives in the signature - and loads the StatutoryReport row at :178 to read the stored totals. |
 | R2-526 | HIGH | FIXED | `2c5fe8c` | `statutory.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: statutory.py:168 sets report.filed_by = current_user.name; a blank acknowledgment is 422 at :163 and an empty return is 400 at :165. All three claims hold. |
 | R2-551 | HIGH | FIXED | `dc53828` | `quality.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: result_value Field(..., ge=0) at :155, both acceptance limits ge=0 at :157-158, and a model_validator at :162 rejecting min_acceptable > max_acceptable. |
-| R2-552 | HIGH | FIXED | `abc5669` | `projects.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
+| R2-552 | HIGH | FIXED | `abc5669` | `projects.py` | yes | yes | text-pin | 1 | CONFIRMED | E1, complete on BOTH schemas: project_value ge=0 le=1e15 and attendance_radius_meters ge=0 le=100000 on create (:180, :186) and again on update (:209, :218). |
 | R2-554 | HIGH | FIXED | `185dc60` | `settings.py` | yes | yes | parse_fail | 1 | CONFIRMED | BEHAVIOURAL, not a read. Executed `_gstin_checksum_ok` against an independently written implementation of the canonical GSTN mod-36 algorithm: 400 GSTINs carrying an independently computed check digit were accepted 400/400, and all 400x35 = 14,000 wrong check digits were rejected. The public sample 27AAPFU0939F1ZV passes. |
 | R2-559 | HIGH | FIXED | `e0f2f6e` | `models.py` | yes | yes | parse_fail | 1 | NOT_IN_PROD | E0: zero unique indexes on the six tables in Supabase; by column set the only one is <table>_pkey on id. Correct in code, absent in production. Escalated as R2-701. |
 | R2-580 | HIGH | FIXED | `b813b11` | `projects.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: ProjectUpdate.status is pattern-constrained and ProjectCreate has no status field at all, so there is no unguarded write path. E3: live project statuses are Ongoing and Planning, both allowed. |
@@ -262,7 +262,7 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-078 | MEDIUM | FIXED | `35263bd` | `PageHeader.tsx` | yes | yes | text-pin | 1 | CONFIRMED | E1: no notification, bell or badge symbol remains in PageHeader. |
 | R2-082 | MEDIUM | FIXED | `248c809` | `frontend/src/app/c/[company_id]/analytics/page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-084 | MEDIUM | FIXED | `355cfc3` | `dashboard/page.tsx` | yes | yes | text-pin | 1 | CONFIRMED | E1: the status filter and both counters accept the canonical and legacy spellings together (On Hold/Onhold, Planning/Not Started), so a legacy row is no longer dropped from its own bucket. |
-| R2-088 | MEDIUM | FIXED | `d90b8fc` | `backend/app/main.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
+| R2-088 | MEDIUM | FIXED | `d90b8fc` | `backend/app/main.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: STATIC_DIR is derived module-relative from __file__ rather than the process working directory, and the mount uses it. |
 | R2-089 | MEDIUM | FIXED | `80f6409` | `analytics.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: status_counts seeds all six canonical statuses plus Other (analytics.py:432), legacy 'Onhold' normalises to 'On Hold' at :437, and an unrecognised status falls to Other at :441 rather than being dropped. |
 | R2-098 | MEDIUM | FIXED | `6e43ff0` | `UNMAPPED` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-102 | MEDIUM | FIXED | `8a0def3` | `backend/app/models.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
@@ -270,7 +270,7 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-107 | MEDIUM | FIXED | `7ffa1c9` | `d/attendance/page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-114 | MEDIUM | FIXED | `4cdc81b` | `backend/app/models.py` | yes | yes | text-pin | 1 | CONFIRMED | E1, and it is the row that corrected me. It claims company AND branch GSTIN write paths enforce the pattern plus the mod-36 check digit; both do - BranchCreate binds _validate_gstin at settings.py:163. I briefly filed R2-724 against a gap that does not exist; that finding is retracted. The helper itself is verified behaviourally under R2-554. |
 | R2-115 | MEDIUM | FIXED | `093fd10` | `settings.py` | yes | yes | parse_fail | 1 | CONFIRMED | E1: the demo-tenant INSERT on GET is gone; unknown companies now 404. NOTE - this row's separate judgement that the residual demo chain is 'cosmetic only' is contradicted by R2-719: six pages still send the sentinel company id and the attendance path writes against the sentinel user. The fix is right; that assessment is not. |
-| R2-118 | MEDIUM | FIXED | `45ffb76` | `UNMAPPED` | yes | yes | EVIDENCE_CLOSE | 1 | UNVERIFIED |  |
+| R2-118 | MEDIUM | FIXED | `45ffb76` | `UNMAPPED` | yes | yes | EVIDENCE_CLOSE | 1 | CONFIRMED | Evidence-close and it holds: HR holidays load from the same /hr/holidays/{cid} endpoint Settings uses, and no Diwali seed exists anywhere - consistent with R2-110 and R2-019, which cover the same defect from other pages. |
 | R2-122 | MEDIUM | FIXED | `9236ea4` | `budgeting.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: POST /boq-documents/{doc_id}/items exists at budgeting.py:405 behind the budgeting:edit permission. |
 | R2-124 | MEDIUM | FIXED | `89839c9` | `frontend/src/app/c/[company_id]/d/equipment/page.tsx` | yes | yes | parse_fail | 1 | UNVERIFIED |  |
 | R2-129 | MEDIUM | FIXED | `bdaa883` | `statutory.py` | yes | yes | parse_fail | 1 | CONFIRMED | BEHAVIOURAL - executed calculate_due_date directly, the one pin in the suite that calls application code. pf/esi/bocw return the 15th of the FOLLOWING month and tds the 7th, and the December rollover is right (2026-12 -> 2027-01). Note surfaced separately: report_type is case-sensitive and unconstrained - filed as R2-721. |
@@ -314,8 +314,8 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-293 | MEDIUM | FIXED | `afe1f97` | `tally.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: onsite_transaction_type and tally_voucher_type are Literals at tally.py:70 and :72, constraining both to the canonical Tally vocabulary the voucher builder consumes. |
 | R2-295 | MEDIUM | FIXED | `fed144d` | `rate_limit.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-298 | MEDIUM | FIXED | `04b7c10` | `procurement.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: rfq.py handles valid_until and rejects the invalid cases with 400. The row labels itself PARTIAL and names what is deferred. |
-| R2-309 | MEDIUM | FIXED | `438ec20` | `analytics.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
-| R2-331 | MEDIUM | FIXED | `5fb03ea` | `wastage.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
+| R2-309 | MEDIUM | FIXED | `438ec20` | `analytics.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: release=_app_settings.SENTRY_RELEASE or None is wired at main.py:447 with the setting declared in config.py. |
+| R2-331 | MEDIUM | FIXED | `5fb03ea` | `wastage.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: the status Query param carries WASTAGE_STATUS_PATTERN (wastage.py:102) and wastage_type carries its own pattern at :20. |
 | R2-336 | MEDIUM | FIXED | `9906aa9` | `procurement.py` | yes | yes | parse_fail | 1 | CONFIRMED | E1: the `inv.category = req.category` overwrite is removed. The note's disclosed sibling (`inv.unit` still overwritten) is real and is carried by R2-717, not by this row. |
 | R2-341 | MEDIUM | FIXED | `57f78de` | `procurement.py` | yes | yes | FAKE_GATE | 1 | CONFIRMED | THE FIX IS GOOD; ONLY ITS GATE IS FAKE (R2-708). reports.py:360 computes `max(0.0, ordered_qty - received_qty)` instead of the blank string that was the defect. |
 | R2-351 | MEDIUM | FIXED | `53b9499` | `procurement.py` | yes | yes | FAKE_GATE | 1 | CONFIRMED | THE FIX IS GOOD; ONLY ITS GATE IS FAKE (R2-707). Both call sites now carry the PO item's unit - procurement.py:737 and :748 - and :748 is the one the fix added. |
@@ -340,7 +340,7 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-467 | MEDIUM | FIXED | `2f6f031` | `frontend/src/app/c/[company_id]/d/finance/page.tsx` | yes | yes | text-pin | 1 | CONFIRMED | E1: the drawings revision approval-status register and wiring are present, consistent with R2-367 which covers the backend half. |
 | R2-472 | MEDIUM | FIXED | `93cdba8` | `page.tsx` | yes | yes | text-pin | 1 | CONFIRMED | E1, and complete on BOTH surfaces: an http(s) regex filters the urls on send AND again on render, so a non-http value can neither be posted nor displayed from an existing row. |
 | R2-486 | MEDIUM | FIXED | `ca082f6` | `page.tsx` | yes | yes | text-pin | 1 | CONFIRMED | E1: the paint calculator labels the rate ('Economy Emulsion (115 sqft/L)' at :1264, constant 115.0 at :302) and `paintMode` is gone from the file. |
-| R2-489 | MEDIUM | FIXED | `b6ecb1e` | `files.py` | yes | yes | parse_fail | 1 | UNVERIFIED |  |
+| R2-489 | MEDIUM | FIXED | `b6ecb1e` | `files.py` | yes | yes | parse_fail | 1 | CONFIRMED | E1: the em-dash placeholder is filtered out of the inspector options at BOTH quality pages - two sites, as the note claims. |
 | R2-492 | MEDIUM | FIXED | `084b758` | `projects.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: list_project_members joins ProjectMember on ProjectMember.company_team_id == CompanyTeam.id (projects.py:385), so unassigned staff are excluded rather than listed. |
 | R2-493 | MEDIUM | FIXED | `15d9bc4` | `transaction/page.tsx` | yes | yes | text-pin | 1 | CONFIRMED | E1: zatcaEnabled is read from /settings/company and gates both the ZATCA column header and the per-row cell, so the column disappears entirely when the feature is off. |
 | R2-496 | MEDIUM | FIXED | `fac73c8` | `analytics.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: the three-way page imports the shared fmtINR and uses it for po_amount, invoiced_amount and variance_amount. Its disclosed sibling is REAL and still present - d/billing/page.tsx:477 defines a local fmtINR that shadows the shared one - and belongs to R2-717. |
@@ -372,9 +372,9 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-026 | MEDIUM | FIXED | `e870664` | `frontend/src/app/c/[company_id]/d/home/page.tsx` | no | no | — | 2 | CONFIRMED | E1: the hardcoded `useState(3)` became `useState(0)` and a real fetch of /todos/company/{id} now counts the pending rows, so the card can no longer contradict the To Do module. |
 | R2-053 | MEDIUM | FIX_VERIFIED | `a6bfdb4` | `finance.py` | no | no | — | 2 | UNVERIFIED |  |
 | R2-061 | MEDIUM | FIXED | `b2e837e` | `d/equipment/page.tsx` | no | no | — | 2 | CONFIRMED | E1: `setFleet` is called at exactly two sites - `:108` with API data and `:133` with `[]`. No fabricated fleet remains. |
-| R2-063 | MEDIUM | FIXED | `6114f17` | `d/quality/page.tsx` | no | no | — | 2 | UNVERIFIED |  |
+| R2-063 | MEDIUM | FIXED | `6114f17` | `d/quality/page.tsx` | no | no | — | 2 | CONFIRMED | E1: checklist responses persist remarks as null rather than a fabricated string. |
 | R2-094 | MEDIUM | FIXED | `2525cab` | `UNMAPPED` | no | no | — | 2 | CONFIRMED | E1: the broken 'Log Usage -' control is resolved as the note describes. |
-| R2-097 | MEDIUM | FIXED | `5580919` | `finance.py` | no | no | — | 2 | UNVERIFIED |  |
+| R2-097 | MEDIUM | FIXED | `5580919` | `finance.py` | no | no | — | 2 | CONFIRMED | E1: partyTabStatus defaults to 'All' rather than 'Active'. |
 | R2-108 | MEDIUM | FIXED | `a2a6566` | `UNMAPPED` | no | no | — | 2 | UNVERIFIED |  |
 | R2-406 | MEDIUM | FIXED | `—` | `settings/page.tsx` | no | no | — | 2 | UNVERIFIED |  |
 | R2-518 | MEDIUM | FIXED | `—` | `page.tsx` | no | no | — | 2 | UNVERIFIED |  |
@@ -409,9 +409,9 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-104 | LOW | FIXED | `a99e206` | `finance/page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-120 | LOW | FIXED | `06cde63` | `google_drive.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-005 | LOW | FIXED | `2ed961c` | `frontend/src/app/c/[company_id]/d/reports/calculators/page.tsx` | no | no | — | 2 | CONFIRMED | E1: the brick-specific notes render only under `activeCalc === "bricks"`. |
-| R2-018 | LOW | FIXED | `8fa1f7c` | `frontend/src/app/c/[company_id]/reports/dpr/page.tsx` | no | no | — | 2 | UNVERIFIED |  |
+| R2-018 | LOW | FIXED | `8fa1f7c` | `frontend/src/app/c/[company_id]/reports/dpr/page.tsx` | no | no | — | 2 | CONFIRMED | E1: the hardcoded defaultValue='2026-07-04' is gone; the input is controlled. |
 | R2-023 | LOW | FIXED | `6ef2cc8` | `analytics/page.tsx` | no | no | — | 2 | UNVERIFIED |  |
 | R2-038 | LOW | FIXED | `d48e67c` | `frontend/src/app/c/[company_id]/analytics/page.tsx` | no | no | — | 2 | CONFIRMED | E1: the analytics page imports the shared fmtINR and returns it from its formatter. |
 | R2-064 | LOW | FIXED | `ba7e65f` | `d/budgeting/boq/page.tsx` | no | no | — | 2 | CONFIRMED | E1: the phrase 'using demo data' is gone from frontend/src - the import-failure path no longer claims a fallback that never happened. |
 | R2-065 | LOW | FIXED | `f53dafd` | `library.py` | no | no | — | 3 | CONFIRMED | E1: `computePayslips` and its 'Mock Data' header are gone from d/hr/page.tsx. |
-| R2-095 | LOW | FIXED | `6111efe` | `UNMAPPED` | no | no | — | 3 | UNVERIFIED |  |
+| R2-095 | LOW | FIXED | `6111efe` | `UNMAPPED` | no | no | — | 3 | CONFIRMED | E1: the Indent tab's bare header and the internal '(Stock Contextual)' phrasing are resolved as the note describes. |

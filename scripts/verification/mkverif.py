@@ -572,6 +572,60 @@ VERDICTS = {
                             "option now matches a real row."),
     "R2-094": ("CONFIRMED", "E1: the broken 'Log Usage -' control is resolved as the note "
                             "describes."),
+    "R2-035": ("CONFIRMED", "E1: _project_progress reads the column - "
+                            "float(t.progress or 0.0)/100.0 when progress is not None - and "
+                            "falls back to _TASK_PROGRESS by status only when it is null "
+                            "(projects.py:107). That is the defect, resolved."),
+    "R2-067": ("CONFIRMED", "E1, and its note is unusually precise. labour_actual comes from "
+                            "PayrollLineItem.net_payable joined by project and equipment_actual "
+                            "from equipment bills plus deployment hours plus fuel, which is what "
+                            "the finding was about - a permanent zero actual and a falsely "
+                            "favourable variance. It openly discloses that labour/equipment "
+                            "`committed` remain 0.0 because no committed source exists, that "
+                            "the per-tower loop still uses project-wide totals, and that its own "
+                            "test seeds a company_team id into PayrollLineItem.employee_id and "
+                            "only passes because SQLite has FK enforcement off. That last one is "
+                            "this phase's thesis in miniature. All three sit in R2-717."),
+    "R2-096": ("CONFIRMED", "E1: the party balance is "
+                            "advance_paid + to_receive - advance_received - to_pay at "
+                            "finance.py:724 with net-sign status derivation at :727."),
+    "R2-014": ("CONFIRMED", "E1: flushQueue POSTs each punch individually, keeps every failure "
+                            "in `remaining` rather than dropping it, and counts synced/failed "
+                            "honestly - so the Sync button can no longer delete queued punches "
+                            "and report success."),
+    "R2-364": ("CONFIRMED", "E1: the pass-rate denominator is len(quality_tests_assessed), "
+                            "counting only tests where is_pass is not None, and the unassessed "
+                            "count is exposed separately (reports.py:101-104)."),
+    "R2-433": ("CONFIRMED", "E1: _po_response resolves vendor_name through User.name and falls "
+                            "back to LibraryParty.name (procurement.py:431-438)."),
+    "R2-552": ("CONFIRMED", "E1, complete on BOTH schemas: project_value ge=0 le=1e15 and "
+                            "attendance_radius_meters ge=0 le=100000 on create (:180, :186) and "
+                            "again on update (:209, :218)."),
+    "R2-182": ("CONFIRMED", "E1: a storage listener watches `access_token` and ignores no-op "
+                            "events via an oldValue !== newValue guard, so another tab's session "
+                            "change reloads this one."),
+    "R2-088": ("CONFIRMED", "E1: STATIC_DIR is derived module-relative from __file__ rather "
+                            "than the process working directory, and the mount uses it."),
+    "R2-331": ("CONFIRMED", "E1: the status Query param carries WASTAGE_STATUS_PATTERN "
+                            "(wastage.py:102) and wastage_type carries its own pattern at :20."),
+    "R2-489": ("CONFIRMED", "E1: the em-dash placeholder is filtered out of the inspector "
+                            "options at BOTH quality pages - two sites, as the note claims."),
+    "R2-011": ("CONFIRMED", "E1: party_type is a case-insensitive union of the full backend "
+                            "vocabulary (library.py:24), so a legitimate type is no longer "
+                            "rejected."),
+    "R2-097": ("CONFIRMED", "E1: partyTabStatus defaults to 'All' rather than 'Active'."),
+    "R2-309": ("CONFIRMED", "E1: release=_app_settings.SENTRY_RELEASE or None is wired at "
+                            "main.py:447 with the setting declared in config.py."),
+    "R2-063": ("CONFIRMED", "E1: checklist responses persist remarks as null rather than a "
+                            "fabricated string."),
+    "R2-018": ("CONFIRMED", "E1: the hardcoded defaultValue='2026-07-04' is gone; the input is "
+                            "controlled."),
+    "R2-095": ("CONFIRMED", "E1: the Indent tab's bare header and the internal '(Stock "
+                            "Contextual)' phrasing are resolved as the note describes."),
+    "R2-118": ("CONFIRMED", "Evidence-close and it holds: HR holidays load from the same "
+                            "/hr/holidays/{cid} endpoint Settings uses, and no Diwali seed "
+                            "exists anywhere - consistent with R2-110 and R2-019, which cover "
+                            "the same defect from other pages."),
     "R2-083": ("UNVERIFIED", "E1 FAILS on completeness. The two edits are correct, but the note's "
                              "claim that these were 'the last two fabricated attribute fallbacks' "
                              "is wrong - four remain in the same object literal, including "
