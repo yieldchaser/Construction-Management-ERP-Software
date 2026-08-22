@@ -394,12 +394,8 @@ def get_ledger(project_id: uuid.UUID, db: Session = Depends(get_db), _: None = D
             party_name = "Staff Member"
             if obj.employee_id:
                 emp = db.query(StaffEmployee).filter(StaffEmployee.id == obj.employee_id).first()
-                if emp and emp.company_user_id:
-                    team_member = db.query(CompanyTeam).filter(CompanyTeam.id == emp.company_user_id).first()
-                    if team_member:
-                        user = db.query(User).filter(User.id == team_member.user_id).first()
-                        if user:
-                            party_name = user.name
+                if emp and emp.name:
+                    party_name = emp.name
             amount = float(obj.net_payable)
             debit = 0.0
             credit = amount

@@ -667,8 +667,8 @@ def _build_party_ledger(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
             party_name = "Staff Member"
             if obj.employee_id:
                 emp = db.query(StaffEmployee).filter(StaffEmployee.id == obj.employee_id).first()
-                if emp and emp.company_user_id:
-                    party_name = _team_user_name(db, emp.company_user_id) or "Staff Member"
+                if emp and emp.name:
+                    party_name = emp.name
             txn_type = "Salary"
             party_type = "Staff"
             credit = amount
