@@ -341,7 +341,7 @@ consumers ΓÇö the new ledger head `"Settlement"`, the new transaction type `"
 This document is restored from the orphaned audit branch so the RC-xxx citations in
 AUDIT_FIX_REGISTER.md FIX_VERIFIED rows resolve to their definitions. It records intent
 and pre-fix failure signatures. The four pytest files its commands invoke
-(test_r2_042_payment_settlems_bill.py, test_r2_565_predecessor_cpm.py,
+(test_r2_042_payment_settles_bill.py, test_r2_565_predecessor_cpm.py,
 test_r2_588_timesheet_headers.py, test_r2_599_dpr_task_scope.py - names as cited)
 were orphaned with this branch and are ABSENT from campaign/waves: every RC command
 here is INERT on this branch until those files are ported or re-created. Treat the
