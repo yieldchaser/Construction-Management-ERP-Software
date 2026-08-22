@@ -16,7 +16,7 @@ from app.routers.custom_fields import CustomFieldValueInput, upsert_values_for_e
 from app.zatca import build_zatca_payload
 from app.workflow_controls import enforce_entry_creation_window, enforce_entry_editing_window, get_company, get_default_terms
 from app.utils.pdf_generator import generate_document_pdf
-from app.utils.document_pdf import resolve_pdf_branding
+from app.utils.document_pdf import resolve_pdf_branding, resolve_supplier_tax_details
 from pydantic import BaseModel, Field
 from app.constants import (
     INVOICE_TYPE_PATTERN,
@@ -606,6 +606,10 @@ def get_bill_pdf(bill_id: UUID, db: Session = Depends(get_db), current_user=Depe
     company_name, custom_banner = resolve_pdf_branding(db, bill.company_id, project)
     from app.utils.document_pdf import load_branding_assets
     branding = load_branding_assets(db, bill.company_id)
+    # R2-403: the registered supplier identity (legal name, GSTIN, phone,
+    # address) is stored on the Company/branch rows; print it on the invoice
+    # masthead instead of ignoring it (Rule 46 supplier side).
+    supplier_lines = resolve_supplier_tax_details(db, bill.company_id, project)
 
     party = db.query(CompanyTeam).filter(CompanyTeam.id == bill.party_company_user_id).first()
     # R2-400: the invoice addressee is the counterparty's business name held on
@@ -682,6 +686,7 @@ def get_bill_pdf(bill_id: UUID, db: Session = Depends(get_db), current_user=Depe
         terms=bill.terms,
         company_name=company_name,
         custom_banner=custom_banner,
+        supplier_lines=supplier_lines,
         branding=branding,
     )
     filename = f"{bill.invoice_number or 'bill'}.pdf"

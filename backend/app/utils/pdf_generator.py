@@ -507,6 +507,7 @@ def generate_document_pdf(
     terms=None,
     company_name: str = "",
     custom_banner: str = None,
+    supplier_lines=None,
     branding: dict = None,
 ) -> bytes:
     """
@@ -521,6 +522,10 @@ def generate_document_pdf(
     company_name / custom_banner: same semantics as the report generator
     (Document Company Name Display + optional custom PDF template banner).
 
+    supplier_lines: optional registered-identity lines of the issuing company
+        (legal name / GSTIN / phone / address, R2-403), printed under the
+        masthead so tax documents carry the supplier details Rule 46 requires.
+
     branding: optional {"logo"|"signature"|"stamp"|"watermark": {"data": bytes,
         "content_type": str}} map of the company's uploaded branding assets
         (R2-404). The watermark renders faded behind every page, the logo at
@@ -533,6 +538,7 @@ def generate_document_pdf(
     table_rows = table_rows or []
     col_widths = col_widths or []
     totals_lines = totals_lines or []
+    supplier_lines = supplier_lines or []
 
     assets = _collect_branding_assets(branding)
     watermark = _place_asset(assets, "watermark", 495, 700)
@@ -557,6 +563,8 @@ def generate_document_pdf(
 
     if company_name:
         add("F2", 11, company_name, 18)
+    for line in supplier_lines:
+        add("F1", 9, line, 12)
     if custom_banner:
         flat = " ".join(custom_banner.split())[:180]
         add("F1", 9, flat, 18)
