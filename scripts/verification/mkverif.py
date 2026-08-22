@@ -529,6 +529,49 @@ VERDICTS = {
     "R2-072": ("CONFIRMED", "E1: the dead controls are gone (Filter, Aadhaar, PAN, drop-files) "
                             "and the Unbilled Materials toggle gained a real onClick. Its two "
                             "disclosed still-dead siblings sit in R2-717."),
+    "R2-114": ("CONFIRMED", "E1, and it is the row that corrected me. It claims company AND "
+                            "branch GSTIN write paths enforce the pattern plus the mod-36 check "
+                            "digit; both do - BranchCreate binds _validate_gstin at "
+                            "settings.py:163. I briefly filed R2-724 against a gap that does not "
+                            "exist; that finding is retracted. The helper itself is verified "
+                            "behaviourally under R2-554."),
+    "R2-176": ("CONFIRMED", "E1, and a genuinely good security fix: files.py carries an "
+                            "ALLOWED_CONTENT_TYPES allowlist, sniffs magic bytes and rejects "
+                            "MZ (PE) and 0x7fELF headers, and returns 415 when the sniffed type "
+                            "is not allowed - so a renamed executable does not pass on its "
+                            "declared content-type alone."),
+    "R2-122": ("CONFIRMED", "E1: POST /boq-documents/{doc_id}/items exists at budgeting.py:405 "
+                            "behind the budgeting:edit permission."),
+    "R2-555": ("CONFIRMED", "E1: 42 max_length bounds across library.py, so an over-long string "
+                            "is a 422 rather than a database 500. Its disclosed sibling - 440+ "
+                            "other unbounded string columns - sits in R2-717."),
+    "R2-548": ("CONFIRMED", "E1: twelve ge=0 / le=4 bounds across the settings schemas."),
+    "R2-135": ("CONFIRMED", "E1: method is Field(pattern='^(straight_line|wdv)$') at "
+                            "assets.py:18. The finding lives in assets.py despite its W22 label, "
+                            "which the note itself says."),
+    "R2-298": ("CONFIRMED", "E1: rfq.py handles valid_until and rejects the invalid cases with "
+                            "400. The row labels itself PARTIAL and names what is deferred."),
+    "R2-145": ("CONFIRMED", "E1: Add Member fetches /crm/team-members/{companyId} and offers a "
+                            "select, so a free-text UUID can no longer be typed in."),
+    "R2-064": ("CONFIRMED", "E1: the phrase 'using demo data' is gone from frontend/src - the "
+                            "import-failure path no longer claims a fallback that never "
+                            "happened."),
+    "R2-057": ("CONFIRMED", "E1: the gantt link handler only reports 'Link loop detected' when "
+                            "the server detail actually contains 'circular', and otherwise "
+                            "surfaces the real detail (:367-368). That is the fix - previously "
+                            "every non-2xx was reported as a loop."),
+    "R2-038": ("CONFIRMED", "E1: the analytics page imports the shared fmtINR and returns it "
+                            "from its formatter."),
+    "R2-005": ("CONFIRMED", "E1: the brick-specific notes render only under "
+                            "`activeCalc === \"bricks\"`."),
+    "R2-056": ("CONFIRMED", "E1: the payroll-attendance handlers carry try/catch blocks that "
+                            "surface the thrown message. Its disclosed sibling sits in R2-717."),
+    "R2-003": ("CONFIRMED", "E1, counted rather than eyeballed: ENTITY_TYPES holds exactly 29 "
+                            "entries, `lead` and `workorder` are absent, and `crm_lead` - the "
+                            "spelling the backend actually writes - is present. Every filter "
+                            "option now matches a real row."),
+    "R2-094": ("CONFIRMED", "E1: the broken 'Log Usage -' control is resolved as the note "
+                            "describes."),
     "R2-083": ("UNVERIFIED", "E1 FAILS on completeness. The two edits are correct, but the note's "
                              "claim that these were 'the last two fabricated attribute fallbacks' "
                              "is wrong - four remain in the same object literal, including "
