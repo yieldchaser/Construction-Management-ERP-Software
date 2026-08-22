@@ -393,18 +393,31 @@ object literal before it will emit anything.
 failed"` is a message shown to a human, not a value written to a record. The exclusion count is
 reported so it is visible rather than silent.
 
-#### Tier 1 — sentinel UUIDs that point at real rows (8 sites)
+#### Tier 1 — sentinel UUIDs that point at real rows (11 fallback sites, corrected)
 
-| file:line | expression |
-|---|---|
-| `d/chat/page.tsx:38` | `params?.company_id as string \|\| "e0000000-…-000000000000"` |
-| `d/services/page.tsx:20` | same |
-| `d/subcon/page.tsx:31` | same |
-| `reports/[slug]/page.tsx:485` | same |
-| `reports/dpr/page.tsx:12` | same |
-| `reports/item-wise-sales/page.tsx:12` | same |
-| `d/attendance/page.tsx:421` | `selectedEmpId \|\| "e0000000-…-000000000100"` |
-| `p/[project_id]/attendance/page.tsx:417` | same |
+**Count corrected 2026-08-22, upward.** I first reported 8 sites. `defaultsweep.py` matches
+`X || "literal"` and therefore missed the ternary form
+(`typeof window !== "undefined" ? localStorage.getItem(...) || "…" : "…"`). A direct grep for the
+sentinel finds **16 occurrences across 13 files**, which resolve into three groups — and the third
+group is not a defect at all:
+
+**Group 1 — company-id fallbacks (11 sites, the defect):** `d/chat:38`, `d/help:13`,
+`d/mom:48`, `d/quality:106`, `d/services:20`, `d/subcon:31`, `p/[project_id]/mom:46`,
+`p/[project_id]/quality:105`, `reports/dpr:12`, `reports/item-wise-sales:12`,
+`reports/[slug]:485`.
+
+**Group 2 — user-id fallbacks (2 sites, a different shape):** `d/chat:133` and `:181` default
+`currentLoggedUserId` to the **company** sentinel UUID when `localStorage.getItem("user_id")` is
+absent. A user id defaulting to a company id is wrong independently of which tenant it names.
+
+**Group 3 — guards, NOT defects (3 sites):** `layout.tsx:44,46` detects the sentinel in the route
+and rewrites the path away from it, and `projects/page.tsx:62` checks for it explicitly. **The
+codebase already contains the correct handling** — it just is not applied at the 11 fallback sites.
+That materially improves the fix direction: copy the existing guard, do not invent one.
+
+**One qualification on Group 3's protection.** The layout guard fires when `company_id` *equals*
+the sentinel. The Group 1 fallbacks fire when `company_id` is *missing*, in which case the guard's
+equality test is false and does not trigger. So the guard does not cover the fallback case.
 
 **These are not dead sentinels. Both rows exist in the production database:**
 

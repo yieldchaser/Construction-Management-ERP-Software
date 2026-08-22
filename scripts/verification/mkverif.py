@@ -626,6 +626,51 @@ VERDICTS = {
                             "/hr/holidays/{cid} endpoint Settings uses, and no Diwali seed "
                             "exists anywhere - consistent with R2-110 and R2-019, which cover "
                             "the same defect from other pages."),
+    "R2-079": ("CONFIRMED", "E1: the demo-construction fallback chain is gone from BOTH files "
+                            "it names, and a missing company_id redirects to /login. Its claim "
+                            "is scoped to PageHeader.tsx and reports/page.tsx and is accurate "
+                            "there. The sentinel-UUID fallback survives in ELEVEN other files - "
+                            "not a failure of this row, and it corrected the site count in "
+                            "R2-719."),
+    "R2-261": ("CONFIRMED", "E1: create_dpr returns 409 on a second DPR for the same project and "
+                            "date. Register attributes this to team_schedule.py; the fix is in "
+                            "dpr.py, which the note says."),
+    "R2-154": ("CONFIRMED", "E1: committed counts POs whose status is in (sent, partial, "
+                            "received) and work orders that are not cancelled "
+                            "(budget.py:82, :94) - so draft and cancelled documents no longer "
+                            "inflate commitment."),
+    "R2-566": ("CONFIRMED", "E1: TaskCreateRequest.status defaults to not_started and the "
+                            "constructor uses it, so a client omitting status gets the declared "
+                            "default rather than an empty string."),
+    "R2-255": ("CONFIRMED", "E1: duration_days is Field(ge=0) on BOTH the create and the update "
+                            "schema (planning.py:53, :63)."),
+    "R2-277": ("CONFIRMED", "E1: x_coordinate and y_coordinate are Field(ge=0, le=9999.99), "
+                            "which matches the Numeric(6,2) column so the DB cannot overflow."),
+    "R2-461": ("CONFIRMED", "E1, complete across all three paths the note claims - the "
+                            "inclusive `duration - 1` appears in propagate (:224), create "
+                            "(:451) and update (:527)."),
+    "R2-029": ("CONFIRMED", "E1: _search_vendor takes contact_type with a 'vendor' default and "
+                            "applies it only when set, so the duplicate search can run "
+                            "unfiltered across contact types."),
+    "R2-031": ("CONFIRMED", "E1: update_task derives status from progress when status is not "
+                            "supplied, and progress from status when progress is not - each "
+                            "guarded so an explicit value always wins."),
+    "R2-508": ("CONFIRMED", "E1: ltif_basis is a parameter defaulting to 200000 with the OSHA "
+                            "convention documented at safety.py:175-183."),
+    "R2-446": ("CONFIRMED", "E1: MOM_STATUSES includes Draft."),
+    "R2-023": ("CONFIRMED", "E1: no PHASE build label survives anywhere in frontend/src."),
+    "R2-002": ("CONFIRMED", "E1: no emoji codepoint remains in Sidebar.tsx."),
+    "R2-420": ("CONFIRMED", "E1: the party balance renders through Math.abs with a direction "
+                            "chip and TransactionRow carries project_name."),
+    "R2-121": ("CONFIRMED", "E1: the Subcon page no longer renders terminal empty states in "
+                            "place of real data."),
+    "R2-082": ("CONFIRMED", "E1: burn-rate and labour KPIs render an em-dash for no-data rather "
+                            "than a fabricated zero, and subcontractor names resolve through "
+                            "library_party."),
+    "R2-124": ("CONFIRMED", "E1: both equipment pages render honest empty states, with a CTA on "
+                            "Fleet."),
+    "R2-048": ("CONFIRMED", "E1: the Help page renders a real Modules directory from "
+                            "HELP_MODULE_LINKS."),
     "R2-083": ("UNVERIFIED", "E1 FAILS on completeness. The two edits are correct, but the note's "
                              "claim that these were 'the last two fabricated attribute fallbacks' "
                              "is wrong - four remain in the same object literal, including "
