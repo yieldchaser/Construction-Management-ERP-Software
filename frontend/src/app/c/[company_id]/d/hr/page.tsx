@@ -465,7 +465,9 @@ export default function HRPayrollPage() {
           esi_employee_pct: 0.75,
           esi_employer_pct: 3.25,
           tds_monthly: parseFloat(empForm.tds) || 0,
-          is_esi_applicable: parseFloat(empForm.basic) < 21000,
+          is_esi_applicable:
+            (parseFloat(empForm.basic) || 0) + (parseFloat(empForm.hra) || 0) + (parseFloat(empForm.allowances) || 0) <=
+            21000,
           date_of_joining: empForm.joined ? new Date(empForm.joined).toISOString() : null,
         }),
       });

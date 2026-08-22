@@ -37,6 +37,16 @@ router = APIRouter(prefix="/hr", tags=["HR, Attendance & Payroll"], dependencies
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
 
+# Statutory ESI wage ceiling applies to GROSS wages (basic + HRA + allowances),
+# not basic pay alone.
+ESI_GROSS_WAGE_CEILING = 21000.0
+
+
+def _esi_applicable(basic_salary: float, hra: float, other_allowances: float) -> bool:
+    """True when full gross wages are within the ESI ceiling."""
+    return (float(basic_salary) + float(hra) + float(other_allowances)) <= ESI_GROSS_WAGE_CEILING
+
+
 def haversine_distance_m(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     """Return distance in metres between two GPS coordinates (Haversine formula)."""
     R = 6_371_000  # Earth radius in metres
@@ -242,7 +252,11 @@ class PayrollRunResponse(BaseModel):
 def create_employee(payload: EmployeeCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     get_company_membership(db, current_user, payload.company_id)
     require_permission(db, current_user, payload.company_id, "payroll:edit")
-    emp = StaffEmployee(**payload.model_dump())
+    data = payload.model_dump()
+    # ESI eligibility is derived from gross wages server-side; the caller's
+    # value is never trusted.
+    data["is_esi_applicable"] = _esi_applicable(data["basic_salary"], data["hra"], data["other_allowances"])
+    emp = StaffEmployee(**data)
     db.add(emp)
     db.commit()
     db.refresh(emp)
@@ -572,7 +586,7 @@ def _compute_payslip(emp: StaffEmployee, days_present: float, days_in_month: int
     pf_emp = round(basic_pro * float(emp.pf_employee_pct) / 100, 2)
     pf_er  = round(basic_pro * float(emp.pf_employer_pct) / 100, 2)
 
-    if emp.is_esi_applicable and (full_gross + ot_amount) <= 21000:
+    if emp.is_esi_applicable and (full_gross + ot_amount) <= ESI_GROSS_WAGE_CEILING:
         esi_emp = round(gross * float(emp.esi_employee_pct) / 100, 2)
         esi_er  = round(gross * float(emp.esi_employer_pct) / 100, 2)
     else:
@@ -1057,8 +1071,13 @@ def update_employee(employee_id: uuid.UUID, payload: EmployeeUpdate, db: Session
         raise HTTPException(status_code=404, detail="Employee not found")
     get_company_membership(db, current_user, emp.company_id)
     require_permission(db, current_user, emp.company_id, "payroll:edit")
-    for k, v in payload.model_dump(exclude_unset=True).items():
+    updates = payload.model_dump(exclude_unset=True)
+    for k, v in updates.items():
         setattr(emp, k, v)
+    if {"basic_salary", "hra", "other_allowances"} & updates.keys():
+        # Pay changed: re-derive ESI eligibility from the new gross wages
+        # instead of freezing the verdict captured at creation.
+        emp.is_esi_applicable = _esi_applicable(float(emp.basic_salary), float(emp.hra), float(emp.other_allowances))
     db.commit()
     db.refresh(emp)
     return emp
