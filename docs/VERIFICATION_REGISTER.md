@@ -285,7 +285,7 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-150 | MEDIUM | FIXED | `7edc3be` | `todos.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: todos.py:155 sets created_by=membership.id - the company_team FK space, not users.id - and TodoCreate declares no created_by at all, so a client cannot supply it. |
 | R2-154 | MEDIUM | FIXED | `bd41ec7` | `budget.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-159 | MEDIUM | FIXED | `d92cb93` | `custom_fields.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
-| R2-162 | MEDIUM | FIXED | `590560f` | `page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
+| R2-162 | MEDIUM | FIXED | `590560f` | `page.tsx` | yes | yes | text-pin | 1 | CONFIRMED | E1: CITY_MAP gives riyadh cur 'SAR' (:353) and the symbol map renders 'SAR ' (:357); `houseCurrency` is gone. |
 | R2-164 | MEDIUM | FIXED | `3e8a602` | `page.tsx` | yes | yes | text-pin | 1 | CONFIRMED | E1: the calculator discloses 'Paint and putty quantities include a 10% application allowance; primer a 5% allowance' at :1979, so the allowance is no longer silently baked into the number. |
 | R2-174 | MEDIUM | FIXED | `4d06017` | `files.py` | yes | yes | parse_fail | 1 | UNVERIFIED |  |
 | R2-176 | MEDIUM | FIXED | `fd5a709` | `files.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
@@ -332,19 +332,19 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-420 | MEDIUM | FIXED | `e069dfd` | `finance/page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-428 | MEDIUM | FIXED | `cd01b15` | `d/finance/page.tsx` | yes | yes | EVIDENCE_CLOSE | 1 | UNVERIFIED |  |
 | R2-436 | MEDIUM | FIXED | `8025709` | `d/mom/page.tsx` | yes | yes | FAKE? | 1 | UNVERIFIED |  |
-| R2-443 | MEDIUM | FIXED | `bbcad30` | `todos.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
+| R2-443 | MEDIUM | FIXED | `bbcad30` | `todos.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: _serialize computes is_overdue only when due_date is set and status != 'done', with the naive/aware tz guard (todos.py:42-47). The repeat_type half is founder-gated and the UI half disclosed - both belong to R2-717, not to this row. |
 | R2-446 | MEDIUM | FIXED | `99f1442` | `mom/page.tsx` | yes | yes | parse_fail | 1 | UNVERIFIED |  |
 | R2-452 | MEDIUM | FIXED | `e22dd9f` | `budgeting.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: `quantity = round(quantity, float_limit)` is gone from the importer, and BOTH write paths - Excel import (:204) and manual add (:416-430) - now store the typed quantity with `float_limit` kept only as `quantity_float_limit` display metadata. |
 | R2-460 | MEDIUM | FIXED | `d4bed18` | `gantt/page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-461 | MEDIUM | FIXED | `94988a2` | `planning.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-467 | MEDIUM | FIXED | `2f6f031` | `frontend/src/app/c/[company_id]/d/finance/page.tsx` | yes | yes | text-pin | 1 | CONFIRMED | E1: the drawings revision approval-status register and wiring are present, consistent with R2-367 which covers the backend half. |
-| R2-472 | MEDIUM | FIXED | `93cdba8` | `page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
+| R2-472 | MEDIUM | FIXED | `93cdba8` | `page.tsx` | yes | yes | text-pin | 1 | CONFIRMED | E1, and complete on BOTH surfaces: /^https?:\/\//i filters the urls on send AND again on render, so a non-http value can neither be posted nor displayed from an existing row. |
 | R2-486 | MEDIUM | FIXED | `ca082f6` | `page.tsx` | yes | yes | text-pin | 1 | CONFIRMED | E1: the paint calculator labels the rate ('Economy Emulsion (115 sqft/L)' at :1264, constant 115.0 at :302) and `paintMode` is gone from the file. |
 | R2-489 | MEDIUM | FIXED | `b6ecb1e` | `files.py` | yes | yes | parse_fail | 1 | UNVERIFIED |  |
 | R2-492 | MEDIUM | FIXED | `084b758` | `projects.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
-| R2-493 | MEDIUM | FIXED | `15d9bc4` | `transaction/page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
-| R2-496 | MEDIUM | FIXED | `fac73c8` | `analytics.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
-| R2-501 | MEDIUM | FIXED | `d48e67c` | `UNMAPPED` | yes | yes | text-pin | 1 | UNVERIFIED |  |
+| R2-493 | MEDIUM | FIXED | `15d9bc4` | `transaction/page.tsx` | yes | yes | text-pin | 1 | CONFIRMED | E1: zatcaEnabled is read from /settings/company and gates both the ZATCA column header and the per-row cell, so the column disappears entirely when the feature is off. |
+| R2-496 | MEDIUM | FIXED | `fac73c8` | `analytics.py` | yes | yes | text-pin | 1 | CONFIRMED | E1: the three-way page imports the shared fmtINR and uses it for po_amount, invoiced_amount and variance_amount. Its disclosed sibling is REAL and still present - d/billing/page.tsx:477 defines a local fmtINR that shadows the shared one - and belongs to R2-717. |
+| R2-501 | MEDIUM | FIXED | `d48e67c` | `UNMAPPED` | yes | yes | text-pin | 1 | CONFIRMED | E1: analytics imports the shared fmtINR from @/lib/siteflow and formatCurrency delegates to it at :81. |
 | R2-504 | MEDIUM | FIXED | `a853932` | `assets.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-505 | MEDIUM | FIXED | `—` | `statutory.py` | yes | yes | parse_fail | 1 | UNVERIFIED |  |
 | R2-508 | MEDIUM | FIXED | `deb3a9a` | `UNMAPPED` | yes | yes | text-pin | 1 | UNVERIFIED |  |
@@ -364,12 +364,12 @@ Ordered severity, then tier, then id — which is the order to work them.
 | R2-573 | MEDIUM | FIXED | `00427eb` | `procurement.py` | yes | yes | text-pin | 1 | UNVERIFIED |  |
 | R2-578 | MEDIUM | FIXED | `83d9cf0` | `chat.py` | yes | yes | FAKE_GATE | 1 | CONFIRMED | THE FIX IS GOOD; ONLY ITS GATE IS FAKE (R2-706). chat.py:179 raises 403 for a non-member, and the sender identity is stamped from the session rather than the client payload. |
 | R2-596 | MEDIUM | FIXED | `b70fd88` | `d/hr/page.tsx` | yes | yes | parse_fail | 1 | CONFIRMED | E1: handleTimesheetAction mutates local state only inside `if (res.ok)`; a non-2xx alerts the server detail and the catch block alerts on transport failure, so a failed submit or approve can no longer render as success. |
-| R2-600 | MEDIUM | FIXED | `1d3235d` | `home/page.tsx` | yes | yes | text-pin | 1 | UNVERIFIED |  |
+| R2-600 | MEDIUM | FIXED | `1d3235d` | `home/page.tsx` | yes | yes | text-pin | 1 | CONFIRMED | E1: featuredProject binds to filteredProjects and all four fabricated fallbacks ('No projects yet', 'No code', 'Pending', 'Address not set') became an em-dash. This is the HONEST form of the pattern R2-719 catalogues elsewhere - a useful contrast. |
 | R2-012 | MEDIUM | FIXED | `e9111eb` | `frontend/src/app/c/[company_id]/d/finance/page.tsx` | no | no | — | 2 | CONFIRMED | E1: the Payment Method radios are controlled - `checked={paymentMethod === m}` at finance/page.tsx:3416 - and no `defaultChecked` survives in the file. |
 | R2-016 | MEDIUM | FIXED | `ddf1290` | `frontend/src/app/c/[company_id]/p/[project_id]/task/page.tsx` | no | no | — | 2 | UNVERIFIED |  |
 | R2-020 | MEDIUM | FIXED | `4be5ccf` | `frontend/src/app/c/[company_id]/d/dpr/page.tsx` | no | no | — | 2 | CONFIRMED | E1: the fabricated takeoff rows ('Main Floor 2 Slab section A', 'Beam drop grid B-C') are gone from frontend/src entirely. |
 | R2-022 | MEDIUM | FIXED | `5fda93e` | `frontend/src/app/c/[company_id]/d/finance/page.tsx` | no | no | — | 2 | CONFIRMED | E1: the loader effect's outer gate changed from `if (projectId)` to `if (companyId)`, so a company with no active project now loads Finance. The two remaining `if (projectId)` checks at :299 and :354 are inner guards for genuinely project-scoped sub-fetches, which is correct. |
-| R2-026 | MEDIUM | FIXED | `e870664` | `frontend/src/app/c/[company_id]/d/home/page.tsx` | no | no | — | 2 | UNVERIFIED |  |
+| R2-026 | MEDIUM | FIXED | `e870664` | `frontend/src/app/c/[company_id]/d/home/page.tsx` | no | no | — | 2 | CONFIRMED | E1: the hardcoded `useState(3)` became `useState(0)` and a real fetch of /todos/company/{id} now counts the pending rows, so the card can no longer contradict the To Do module. |
 | R2-053 | MEDIUM | FIX_VERIFIED | `a6bfdb4` | `finance.py` | no | no | — | 2 | UNVERIFIED |  |
 | R2-061 | MEDIUM | FIXED | `b2e837e` | `d/equipment/page.tsx` | no | no | — | 2 | CONFIRMED | E1: `setFleet` is called at exactly two sites - `:108` with API data and `:133` with `[]`. No fabricated fleet remains. |
 | R2-063 | MEDIUM | FIXED | `6114f17` | `d/quality/page.tsx` | no | no | — | 2 | UNVERIFIED |  |

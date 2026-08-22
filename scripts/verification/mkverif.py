@@ -406,6 +406,31 @@ VERDICTS = {
                             "project) sits in R2-717."),
     "R2-467": ("CONFIRMED", "E1: the drawings revision approval-status register and wiring are "
                             "present, consistent with R2-367 which covers the backend half."),
+    "R2-443": ("CONFIRMED", "E1: _serialize computes is_overdue only when due_date is set and "
+                            "status != 'done', with the naive/aware tz guard (todos.py:42-47). "
+                            "The repeat_type half is founder-gated and the UI half disclosed - "
+                            "both belong to R2-717, not to this row."),
+    "R2-162": ("CONFIRMED", "E1: CITY_MAP gives riyadh cur 'SAR' (:353) and the symbol map "
+                            "renders 'SAR ' (:357); `houseCurrency` is gone."),
+    "R2-026": ("CONFIRMED", "E1: the hardcoded `useState(3)` became `useState(0)` and a real "
+                            "fetch of /todos/company/{id} now counts the pending rows, so the "
+                            "card can no longer contradict the To Do module."),
+    "R2-472": ("CONFIRMED", "E1, and complete on BOTH surfaces: /^https?:\/\//i filters the "
+                            "urls on send AND again on render, so a non-http value can neither "
+                            "be posted nor displayed from an existing row."),
+    "R2-493": ("CONFIRMED", "E1: zatcaEnabled is read from /settings/company and gates both the "
+                            "ZATCA column header and the per-row cell, so the column disappears "
+                            "entirely when the feature is off."),
+    "R2-600": ("CONFIRMED", "E1: featuredProject binds to filteredProjects and all four "
+                            "fabricated fallbacks ('No projects yet', 'No code', 'Pending', "
+                            "'Address not set') became an em-dash. This is the HONEST form of "
+                            "the pattern R2-719 catalogues elsewhere - a useful contrast."),
+    "R2-501": ("CONFIRMED", "E1: analytics imports the shared fmtINR from @/lib/siteflow and "
+                            "formatCurrency delegates to it at :81."),
+    "R2-496": ("CONFIRMED", "E1: the three-way page imports the shared fmtINR and uses it for "
+                            "po_amount, invoiced_amount and variance_amount. Its disclosed "
+                            "sibling is REAL and still present - d/billing/page.tsx:477 defines "
+                            "a local fmtINR that shadows the shared one - and belongs to R2-717."),
     "R2-083": ("UNVERIFIED", "E1 FAILS on completeness. The two edits are correct, but the note's "
                              "claim that these were 'the last two fabricated attribute fallbacks' "
                              "is wrong - four remain in the same object literal, including "
