@@ -534,12 +534,31 @@ def get_project_pl(project_id: uuid.UUID, db: Session = Depends(get_db), _: None
     return pl_data
 
 
+# R2-342: approving money must honour the Settings > Multi Level Approval rules
+# configured for "Payment Entries" (the label admins see), refuse to re-approve
+# an already-approved or cancelled document, and leave a per-decision
+# ApprovalAction row naming the approver (approver_user_id) and the time
+# (created_at). Bills have no matching category label today, so their manual
+# approval records the action ungated; wiring one for bills is CD-1 territory.
+PAYMENT_ENTRIES_FEATURE_TYPE = "Payment Entries"  # must match the Settings > Multi Level Approval category label exactly
+
+_APPROVED_FLAGS = ("approved", "auto_approved")
+
+
 @router.patch("/approve/{transaction_id}")
 def approve_transaction(transaction_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     bill = db.query(Bill).filter(Bill.id == transaction_id).first()
     if bill:
         get_company_membership(db, current_user, bill.company_id)
         require_permission(db, current_user, bill.company_id, "finance:approve")
+        if bill.status == "Cancelled":
+            raise HTTPException(status_code=409, detail="Bill is cancelled and cannot be approved")
+        if (bill.approval_flag or "").lower() in _APPROVED_FLAGS:
+            raise HTTPException(status_code=409, detail="Bill has already been approved")
+        record_action(
+            db, company_id=bill.company_id, rule_id=None, entity_type="bill",
+            entity_id=bill.id, level=1, action="approved", user=current_user, matched_label=None,
+        )
         bill.approval_flag = "approved"
         db.commit()
         return {"status": "success", "message": "Bill approved successfully", "type": "bill"}
@@ -548,10 +567,35 @@ def approve_transaction(transaction_id: uuid.UUID, db: Session = Depends(get_db)
     if payment:
         get_company_membership(db, current_user, payment.company_id)
         require_permission(db, current_user, payment.company_id, "finance:approve")
+        if (payment.approval_flag or "").lower() in _APPROVED_FLAGS:
+            raise HTTPException(status_code=409, detail="Payment has already been approved")
+        # A configured Payment Entries rule gates this call; with no rule the
+        # pre-existing ungated behaviour is unchanged.
+        rule = find_matching_rule(db, payment.company_id, PAYMENT_ENTRIES_FEATURE_TYPE, float(payment.amount or 0.0))
+        if rule:
+            matched = match_approver(rule.approvers, current_user)
+            if not matched:
+                raise HTTPException(status_code=403, detail="You are not a configured approver for this payment")
+            if user_already_acted(db, "payment", payment.id, current_user.id):
+                raise HTTPException(status_code=409, detail="You have already recorded a decision on this payment")
+            next_level = levels_approved(db, "payment", payment.id) + 1
+            record_action(
+                db, company_id=payment.company_id, rule_id=rule.id, entity_type="payment",
+                entity_id=payment.id, level=next_level, action="approved", user=current_user, matched_label=matched,
+            )
+            if next_level < rule.levels:
+                db.commit()
+                return {"status": "success", "message": f"Approval level {next_level} of {rule.levels} recorded; awaiting further sign-off", "type": "payment"}
+            # else: final level reached, flip below
+        else:
+            record_action(
+                db, company_id=payment.company_id, rule_id=None, entity_type="payment",
+                entity_id=payment.id, level=1, action="approved", user=current_user, matched_label=None,
+            )
         payment.approval_flag = "approved"
         db.commit()
         return {"status": "success", "message": "Payment confirmed", "type": "payment"}
-        
+
     raise HTTPException(status_code=404, detail="Transaction not found")
 
 
@@ -1098,7 +1142,9 @@ def get_company_transactions(company_id: uuid.UUID, db: Session = Depends(get_db
             type="Payment In" if p.payment_type == "in" else "Payment Out",
             party=party,
             details=p.description or "",
-            status="Approved",
+            # R2-343: show the payment's real approval flag (default "pending"),
+            # not a hardcoded "Approved" that misreports unreviewed money.
+            status=(p.approval_flag or "pending"),
             amount=amt,
             project_id=str(p.project_id) if p.project_id else None,
             project_name=project_name_by_id.get(p.project_id) if p.project_id else None,
