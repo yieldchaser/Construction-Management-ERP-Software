@@ -305,6 +305,8 @@ def calc_paint(req: PaintCalcRequest):
     standard_window_area = 12.0
     
     paintable_area = total_wall_area - (req.doors_count * single_door_area) - (req.windows_count * standard_window_area)
+    if paintable_area <= 0:
+        raise HTTPException(status_code=422, detail="Total opening area exceeds the wall area")
     
     coverage_rates = {
         "economy": 115.0,
