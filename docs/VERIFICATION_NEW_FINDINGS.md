@@ -630,6 +630,33 @@ data.
 recurs: a shared helper (`_active_bills(db, project_id, types)`) that every aggregation goes
 through, so the next aggregation cannot forget it — the same close-the-class shape as R2-711.
 
+### R2-724 · MEDIUM · branch GSTIN skips the checksum that company GSTIN enforces
+
+**Found while verifying R2-290**, whose claim is accurate - it promises the canonical
+15-character pattern and delivers exactly that.
+
+The codebase applies two different GSTIN standards, two of them in the same file:
+
+| schema | validation |
+|---|---|
+| `CompanySettingsUpdate` (`settings.py:149`) | `_validate_gstin` -> pattern **and** mod-36 check digit |
+| onboarding `CreateCompanyRequest` (`auth.py:790`) | `_validate_gstin` -> pattern **and** check digit |
+| **`BranchCreate.gstin`** (`settings.py:154`) | **pattern only** - no checksum |
+
+So a branch accepts a GSTIN the company field would reject. The demo tenant's own
+`27AADCD2424B1ZP` is a worked example: structurally valid, check digit wrong (should be `A`), and
+it would save as a branch while failing as a company.
+
+`BranchResponse.gstin` being a bare `str` is fine - it is output only.
+
+**Why it matters beyond tidiness.** Branch GSTIN is the place-of-supply identifier that reaches
+invoices and the GSTR exports. An invalid one is a filing problem, and the checksum exists
+precisely to catch transcription errors at entry.
+
+**Fix direction.** One line - bind `_validate_gstin` to `BranchCreate` exactly as the other two
+schemas do. The helper is already verified: I executed it against 400 valid GSTINs and 14,000
+wrong check digits under R2-554.
+
 ## Verified clean so far
 
 Recorded so the pass is not only a list of complaints. Each claim was re-checked against the tree,
@@ -672,8 +699,9 @@ were scoped to the files a finding named rather than to the defect class.
 | **R2-721** | **MEDIUM** | **statutory `report_type` unvalidated — silent no-due-date, zero cess** | found verifying R2-129 |
 | **R2-722** | **HIGH** | **second demo-tenant creation path in auth.py; demo OTP allowlist/code default in source** | found verifying R2-183 |
 | **R2-723** | **HIGH** | **cancelled bills still counted in budget/BI/tower actuals — 8 sites R2-232 missed** | found verifying R2-045/066 |
+| **R2-724** | **MEDIUM** | **branch GSTIN pattern-only — skips the mod-36 checksum company GSTIN enforces** | found verifying R2-290 |
 
-**Nineteen live findings.** R2-713..R2-716 were filed separately first and are struck through, not
+**Twenty live findings.** R2-713..R2-716 were filed separately first and are struck through, not
 deleted, so the history stays traceable.
 
 Three to act on first, for different reasons:

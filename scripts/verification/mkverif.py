@@ -477,6 +477,57 @@ VERDICTS = {
     "R2-268": ("CONFIRMED", "E1: the DPR export resolves reported_by to a User name and falls "
                             "back safely when the value is not a UUID, so a raw id is never "
                             "rendered as the author."),
+    "R2-232": ("CONFIRMED", "E1: billing.py:449-450 stamps cancelled_at/cancelled_by, and the "
+                            "dedicated regression file test_r2_232_cancel_exclusion.py exists. "
+                            "The exclusion reached finance.py but NOT budget/towers/bi_export - "
+                            "8 missed call sites, raised as R2-723, not against this row."),
+    "R2-001": ("CONFIRMED", "Evidence-close and it holds: the Material card really does open a "
+                            "working drawer, so there was nothing to fix. Its pin passes "
+                            "pre-fix for that reason, which is why gatecheck flags it - "
+                            "correctly, and harmlessly."),
+    "R2-504": ("CONFIRMED", "E1: assets.py:73-78 rejects a straight_line schedule whose "
+                            "depreciation_pct is not 100/useful_life_years when salvage is 0, "
+                            "with a 422 naming the expected value. Register attributes this to "
+                            "a depreciation.py that does not exist; the fix is in assets.py."),
+    "R2-282": ("CONFIRMED", "E1: calculators.py builds a conflicts list naming each duplicated "
+                            "parameter pair (diameter/diameter_mm, count/num_bars, "
+                            "length_or_height/length_m) and 422s when it is non-empty."),
+    "R2-532": ("CONFIRMED", "E1: safety create schemas type project_id as uuid.UUID in all "
+                            "three places and ZERO raw uuid.UUID()/fromisoformat calls remain."),
+    "R2-558": ("CONFIRMED", "E1: a global exception handler for IntegrityError is registered at "
+                            "main.py:503. Its disclosed sibling - 18 FKs still lacking ondelete "
+                            "- sits in R2-717."),
+    "R2-563": ("CONFIRMED", "E1: hr.py normalises entry_date, week_start and week_end to aware "
+                            "datetimes and 422s when the entry falls outside the inclusive "
+                            "window, naming the range in the detail."),
+    "R2-044": ("CONFIRMED", "E1: the ZATCA gate reads `bill.invoice_type not in "
+                            "REVENUE_INVOICE_TYPES` (billing.py:503) rather than testing one "
+                            "literal, so material_sales is treated as revenue."),
+    "R2-084": ("CONFIRMED", "E1: the status filter and both counters accept the canonical and "
+                            "legacy spellings together (On Hold/Onhold, Planning/Not Started), "
+                            "so a legacy row is no longer dropped from its own bucket."),
+    "R2-460": ("CONFIRMED", "E1: a local fmtDate helper renders dd MMM yyyy and is applied "
+                            "across the gantt page's date cells."),
+    "R2-015": ("CONFIRMED", "E1: the quick-add button now POSTs /apis/v3/todos/ instead of "
+                            "incrementing a local counter and showing a success toast."),
+    "R2-225": ("CONFIRMED", "E1: handleSaveTimesheet sets tsFormError instead of returning "
+                            "silently, so a missing project or party is visible. Register "
+                            "attribution is off - the fix is in d/team-action/page.tsx, which "
+                            "the note itself corrects."),
+    "R2-190": ("CONFIRMED", "E1: zoho_books.py logs upstream failures server-side with an "
+                            "8-hex correlation ref, so support can tie a report to a log line "
+                            "without echoing the upstream body to the client."),
+    "R2-290": ("CONFIRMED", "E1: BranchCreate.gstin carries the canonical 15-char pattern, "
+                            "which is exactly what the note claims. It does NOT run the mod-36 "
+                            "checksum that company GSTIN runs - that gap is a separate finding "
+                            "(R2-724), not a failure of this row."),
+    "R2-101": ("CONFIRMED", "E1: unbilledCount and pendingCount are useMemo at component scope "
+                            "(:903, :907) and feed both the header chip and the toolbar, which "
+                            "is the claim. The note labels itself a partial fix and names three "
+                            "residues - honest, and they belong to R2-717."),
+    "R2-072": ("CONFIRMED", "E1: the dead controls are gone (Filter, Aadhaar, PAN, drop-files) "
+                            "and the Unbilled Materials toggle gained a real onClick. Its two "
+                            "disclosed still-dead siblings sit in R2-717."),
     "R2-083": ("UNVERIFIED", "E1 FAILS on completeness. The two edits are correct, but the note's "
                              "claim that these were 'the last two fabricated attribute fallbacks' "
                              "is wrong - four remain in the same object literal, including "
