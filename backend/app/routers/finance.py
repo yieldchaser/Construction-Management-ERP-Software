@@ -686,6 +686,13 @@ def _company_party_team_ids(db, party_id: uuid.UUID):
     return team_ids
 
 
+def _net_balance(advance_paid: float, to_receive: float, advance_received: float, to_pay: float) -> float:
+    """Net position across all parties (R2-726): advance_paid and to_receive are
+    assets owed to us; advance_received and to_pay are liabilities we owe.
+    Positive result = receivables exceed payables."""
+    return round(advance_paid + to_receive - advance_received - to_pay, 2)
+
+
 class CompanyPartyResponse(BaseModel):
     id: uuid.UUID
     party_id_custom: Optional[str] = None
@@ -736,7 +743,7 @@ def get_company_parties(company_id: uuid.UUID, db: Session = Depends(get_db), _:
         advance_received = round(max(0.0, recv_net), 2)
         to_receive = round(max(0.0, -recv_net), 2)
 
-        balance = round(advance_paid + to_receive - advance_received - to_pay, 2)
+        balance = _net_balance(advance_paid, to_receive, advance_received, to_pay)
 
         if balance > 0:
             status = "To Receive"
@@ -884,7 +891,7 @@ def get_enterprise_rollup(
             continue
         proj_count = db.query(Project).filter(Project.company_id == cid).count()
         p = _company_party_totals(db, cid)
-        balance = p["advance_paid"] + p["advance_received"] - p["to_pay"] - p["to_receive"]
+        balance = _net_balance(p["advance_paid"], p["to_receive"], p["advance_received"], p["to_pay"])
         per_company.append(EnterpriseRollupCompanyOut(
             id=str(cid),
             name=comp.name,
@@ -894,7 +901,7 @@ def get_enterprise_rollup(
             to_receive=p["to_receive"],
             advance_paid=p["advance_paid"],
             advance_received=p["advance_received"],
-            balance=round(balance, 2),
+            balance=balance,
         ))
         totals["project_count"] += proj_count
         totals["party_count"] += p["party_count"]
@@ -903,8 +910,8 @@ def get_enterprise_rollup(
         totals["advance_paid"] += p["advance_paid"]
         totals["advance_received"] += p["advance_received"]
 
-    total_balance = round(
-        totals["advance_paid"] + totals["advance_received"] - totals["to_pay"] - totals["to_receive"], 2
+    total_balance = _net_balance(
+        totals["advance_paid"], totals["to_receive"], totals["advance_received"], totals["to_pay"]
     )
     return EnterpriseRollupResponse(
         enterprise_id=str(company_id),
