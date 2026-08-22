@@ -8,7 +8,7 @@ from app.database import get_db
 from app.models import Payment, PaymentSettlement, Bill, PayrollRun, PayrollLineItem, StaffEmployee, ProjectBudget, Project, CompanyTeam, User, Equipment, EquipmentDeployment, FuelLog, BankAccount, PaymentRequest, PaymentRequestPayment, CashAccount, LibraryParty, Company, ApprovalRule
 from app.auth import get_current_user, verify_project_in_company, verify_company_access, verify_project_access, get_company_membership, require_permission, require_module_view
 from app.approvals import find_matching_rule, match_approver, levels_approved, user_already_acted, record_action
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from app.constants import REVENUE_INVOICE_TYPES, EXPENSE_INVOICE_TYPES, SETTLEMENT_INVOICE_TYPES
 from app.workflow_controls import enforce_entry_creation_window
 
@@ -34,7 +34,21 @@ class PaymentCreateRequest(BaseModel):
     company_id: uuid.UUID
     project_id: Optional[uuid.UUID] = None
     party_company_user_id: Optional[uuid.UUID] = None
-    payment_type: str = Field(..., pattern="^(in|out|transfer)$")  # "in" or "out" or "transfer"
+    # R2-316/R2-344: payment_type is two-valued. "transfer" used to be admitted
+    # here but no consumer handled it (FIFO settlement treated it as an expense
+    # outflow, balances dropped it and reports mislabelled it), so it is
+    # rejected with a pointer to the P2P transfer endpoint.
+    payment_type: str
+
+    @field_validator("payment_type")
+    @classmethod
+    def _payment_type_must_be_in_or_out(cls, v: str) -> str:
+        if v not in ("in", "out"):
+            raise ValueError(
+                "payment_type must be 'in' or 'out'. To record an internal transfer between "
+                "team members, use the P2P transfer endpoint POST /apis/v3/finance/cashbook/p2p."
+            )
+        return v
     amount: float = Field(..., gt=0)
     payment_method: str = Field(..., pattern="(?i)^(Cash|Bank Transfer|Bank|Cheque|UPI|Online)$")  # Cash, Bank Transfer, Cheque
     reference_number: Optional[str] = None
