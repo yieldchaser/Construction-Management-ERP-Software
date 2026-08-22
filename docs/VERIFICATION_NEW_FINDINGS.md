@@ -630,32 +630,39 @@ data.
 recurs: a shared helper (`_active_bills(db, project_id, types)`) that every aggregation goes
 through, so the next aggregation cannot forget it — the same close-the-class shape as R2-711.
 
-### R2-724 · MEDIUM · branch GSTIN skips the checksum that company GSTIN enforces
+### R2-724 · **RETRACTED** · branch GSTIN does run the checksum; I misread the class boundary
 
-**Found while verifying R2-290**, whose claim is accurate - it promises the canonical
-15-character pattern and delivers exactly that.
+**Filed and withdrawn on 2026-08-22. Kept here because retractions belong in the record.**
 
-The codebase applies two different GSTIN standards, two of them in the same file:
+I claimed `BranchCreate.gstin` was pattern-only and skipped the mod-36 check digit that company
+GSTIN enforces. **That is wrong.** `BranchCreate` spans `settings.py:152-165` and carries *both*:
 
-| schema | validation |
-|---|---|
-| `CompanySettingsUpdate` (`settings.py:149`) | `_validate_gstin` -> pattern **and** mod-36 check digit |
-| onboarding `CreateCompanyRequest` (`auth.py:790`) | `_validate_gstin` -> pattern **and** check digit |
-| **`BranchCreate.gstin`** (`settings.py:154`) | **pattern only** - no checksum |
+```
+152  class BranchCreate(BaseModel):
+154      gstin: str = Field(..., pattern=r"^[0-9]{2}[A-Z]{5}...")
+163      _check_gstin = field_validator("gstin")(_validate_gstin)
+```
 
-So a branch accepts a GSTIN the company field would reject. The demo tenant's own
-`27AADCD2424B1ZP` is a worked example: structurally valid, check digit wrong (should be `A`), and
-it would save as a branch while failing as a company.
+**How I got it wrong.** A grep returned `_check_gstin` bindings at `:149` and `:163` and a pattern
+Field at `:154`. I assumed the two bindings belonged to the two *company* schemas and that the
+pattern at `:154` was therefore branch's only validation. I never resolved which class owned
+`:163`. Printing lines 152-166 settles it in one command.
 
-`BranchResponse.gstin` being a bare `str` is fine - it is output only.
+That is the same mistake I *avoided* on R2-247, where `raised_by`/`assigned_to` at `:135-136`
+turned out to belong to `NCRResponse` rather than `NCRCreate` — there I checked the class boundary
+before writing anything. Here I did not.
 
-**Why it matters beyond tidiness.** Branch GSTIN is the place-of-supply identifier that reaches
-invoices and the GSTR exports. An invalid one is a filing problem, and the checksum exists
-precisely to catch transcription errors at entry.
+**Consequences, all corrected:**
 
-**Fix direction.** One line - bind `_validate_gstin` to `BranchCreate` exactly as the other two
-schemas do. The helper is already verified: I executed it against 400 valid GSTINs and 14,000
-wrong check digits under R2-554.
+- **R2-114's claim is accurate.** It states that "company + branch GSTIN write paths enforce the
+  canonical 15-char pattern + mod-36 Luhn check digit", and both do.
+- **R2-290's claim is accurate**, and its verdict text has been corrected — it previously repeated
+  my wrong reading.
+- There is no second GSTIN standard. The finding does not exist.
+
+**Standing rule this produces:** when a grep shows a validator binding, resolve which class owns
+that line before drawing any conclusion from its absence elsewhere. Line numbers from a flat grep
+carry no scope.
 
 ## Verified clean so far
 
@@ -699,9 +706,9 @@ were scoped to the files a finding named rather than to the defect class.
 | **R2-721** | **MEDIUM** | **statutory `report_type` unvalidated — silent no-due-date, zero cess** | found verifying R2-129 |
 | **R2-722** | **HIGH** | **second demo-tenant creation path in auth.py; demo OTP allowlist/code default in source** | found verifying R2-183 |
 | **R2-723** | **HIGH** | **cancelled bills still counted in budget/BI/tower actuals — 8 sites R2-232 missed** | found verifying R2-045/066 |
-| **R2-724** | **MEDIUM** | **branch GSTIN pattern-only — skips the mod-36 checksum company GSTIN enforces** | found verifying R2-290 |
+| ~~R2-724~~ | — | **RETRACTED** — branch GSTIN does run the checksum; I misread the class boundary | — |
 
-**Twenty live findings.** R2-713..R2-716 were filed separately first and are struck through, not
+**Nineteen live findings** (R2-724 retracted). R2-713..R2-716 were filed separately first and are struck through, not
 deleted, so the history stays traceable.
 
 Three to act on first, for different reasons:

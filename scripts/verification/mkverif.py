@@ -517,10 +517,11 @@ VERDICTS = {
     "R2-190": ("CONFIRMED", "E1: zoho_books.py logs upstream failures server-side with an "
                             "8-hex correlation ref, so support can tie a report to a log line "
                             "without echoing the upstream body to the client."),
-    "R2-290": ("CONFIRMED", "E1: BranchCreate.gstin carries the canonical 15-char pattern, "
-                            "which is exactly what the note claims. It does NOT run the mod-36 "
-                            "checksum that company GSTIN runs - that gap is a separate finding "
-                            "(R2-724), not a failure of this row."),
+    "R2-290": ("CONFIRMED", "E1: BranchCreate.gstin carries the canonical 15-char pattern AND "
+                            "binds _validate_gstin at settings.py:163, so the branch path runs "
+                            "the mod-36 checksum too. I first read the binding as belonging to "
+                            "a company schema and filed R2-724 against the supposed gap - that "
+                            "finding is RETRACTED."),
     "R2-101": ("CONFIRMED", "E1: unbilledCount and pendingCount are useMemo at component scope "
                             "(:903, :907) and feed both the header chip and the toolbar, which "
                             "is the claim. The note labels itself a partial fix and names three "
