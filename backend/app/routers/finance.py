@@ -315,6 +315,35 @@ def get_ledger(project_id: uuid.UUID, db: Session = Depends(get_db), _: None = D
                     user = db.query(User).filter(User.id == team_member.user_id).first()
                     if user:
                         party_name = user.name
+            # R2-238: settlement vouchers (payment_in/payment_out/i_paid/i_received)
+            # are cash movements, not revenue or cost accruals. Classify them
+            # explicitly before the revenue/cost branches below so a receipt
+            # voucher cannot fall through to "Material Bill"/"Material Cost"
+            # with an inverted sign.
+            if obj.invoice_type in SETTLEMENT_INVOICE_TYPES:
+                money_in = obj.invoice_type in ("payment_in", "i_received")
+                settlement_amount = float(obj.total_payable)
+                if money_in:
+                    running_balance += settlement_amount
+                else:
+                    running_balance -= settlement_amount
+                ledger_entries.append(
+                    LedgerTransactionResponse(
+                        id=str(obj.id),
+                        date=obj.invoice_date.strftime("%b %d") if obj.invoice_date else "",
+                        type="Receipt" if money_in else "Expense",
+                        category="Settlement",
+                        description=f"Invoice {obj.invoice_number}",
+                        amount=settlement_amount if money_in else -settlement_amount,
+                        party=party_name,
+                        ref=obj.invoice_number,
+                        ledger="Cash Movement",
+                        debit=settlement_amount if money_in else 0.0,
+                        credit=0.0 if money_in else settlement_amount,
+                        balance=running_balance
+                    )
+                )
+                continue
             is_receipt = obj.invoice_type in REVENUE_INVOICE_TYPES
             amount = float(obj.total_payable)
             debit = amount if is_receipt else 0.0
