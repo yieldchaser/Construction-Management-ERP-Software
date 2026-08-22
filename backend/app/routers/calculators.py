@@ -219,32 +219,63 @@ class BrickCalcRequest(BaseModel):
     brick_width_mm: float = Field(90.0, example=90.0)
     brick_height_mm: float = Field(90.0, example=90.0)
     joint_mm: float = Field(10.0, example=10.0)
-    leaves: int = Field(2, example=2)
+    leaves: int = Field(2, example=2, description="Accepted for request compatibility only; leaves are derived from thickness_mm")
     wastage_pct: float = Field(10.0, example=10.0)
+
+    @model_validator(mode="after")
+    def validate_geometry(self):
+        """R2-279: reject non-physical wall or brick dimensions before deriving leaves."""
+        if self.length_m <= 0 or self.height_m <= 0:
+            raise ValueError("length_m and height_m must be greater than 0")
+        if self.thickness_mm <= 0:
+            raise ValueError("thickness_mm must be greater than 0")
+        if min(self.brick_length_mm, self.brick_width_mm, self.brick_height_mm) <= 0:
+            raise ValueError("brick dimensions must be greater than 0")
+        if self.joint_mm < 0:
+            raise ValueError("joint_mm cannot be negative")
+        return self
 
 @router.post("/brick")
 @router.post("/brickwork")  # DEFECT-01 fix: spec-compatible alias
 def calc_brick(req: BrickCalcRequest):
+    # R2-279 fix: derive leaves from wall thickness so the brick count and the volume math describe the same
+    # wall. thickness_mm wins over any supplied leaves value and the derived count is reported in the response.
+    leaves = max(1, round(req.thickness_mm / (req.brick_width_mm + req.joint_mm)))
+
     b_len = (req.brick_length_mm + req.joint_mm) / 1000.0
     b_hgt = (req.brick_height_mm + req.joint_mm) / 1000.0
-    
+
     wall_area = req.length_m * req.height_m
     single_brick_face_area = b_len * b_hgt
-    bricks_needed = (wall_area / single_brick_face_area) * req.leaves * (1 + req.wastage_pct / 100.0)
-    
+    bricks_needed = (wall_area / single_brick_face_area) * leaves * (1 + req.wastage_pct / 100.0)
+
     wall_volume = req.length_m * req.height_m * (req.thickness_mm / 1000.0)
     brick_vol_actual = (req.brick_length_mm / 1000.0) * (req.brick_width_mm / 1000.0) * (req.brick_height_mm / 1000.0)
-    net_bricks_no_wastage = (wall_area / single_brick_face_area) * req.leaves
+    net_bricks_no_wastage = (wall_area / single_brick_face_area) * leaves
     mortar_volume = wall_volume - (net_bricks_no_wastage * brick_vol_actual)
-    
+
+    # R2-279 sanity guard: real masonry has roughly 20-35% mortar by volume. Anything else means the geometry is
+    # inconsistent, so fail loudly instead of quoting an impossible wall.
+    mortar_share = mortar_volume / wall_volume
+    if not (0.20 <= mortar_share <= 0.35):
+        raise HTTPException(
+            status_code=422,
+            detail=(
+                f"Inconsistent brickwork geometry: mortar works out to {round(mortar_share * 100)}% of wall "
+                f"volume but should be between 20% and 35%. Check that thickness_mm matches the brick size "
+                f"(derived leaves: {leaves})."
+            ),
+        )
+
     dry_mortar_vol = mortar_volume * 1.33
     cement_m3 = dry_mortar_vol * (1.0 / 7.0)
     cement_bags = (cement_m3 * 1440.0) / 50.0
     sand_m3 = dry_mortar_vol * (6.0 / 7.0)
-    
+
     return {
         "wall_area_m2": round(wall_area, 2),
         "wall_volume_m3": round(wall_volume, 3),
+        "leaves": leaves,
         "bricks_needed": int(math.ceil(bricks_needed)),
         "mortar_volume_m3": round(mortar_volume, 3),
         "cement_bags": round(cement_bags, 2),
