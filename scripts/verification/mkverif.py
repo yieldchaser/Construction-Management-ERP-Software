@@ -671,6 +671,56 @@ VERDICTS = {
                             "Fleet."),
     "R2-048": ("CONFIRMED", "E1: the Help page renders a real Modules directory from "
                             "HELP_MODULE_LINKS."),
+    "R2-036": ("CONFIRMED", "E1: the invoice-type buckets are used 18 times across analytics.py, "
+                            "budget.py and towers.py, so all five systemic sites filter bill "
+                            "sums by bucket. Separately, some of those same aggregations omit "
+                            "the CANCELLED filter - that is R2-723, a different predicate."),
+    "R2-068": ("CONFIRMED", "E1: `unsplash` returns zero matches across frontend/src, so every "
+                            "fabricated photo-evidence control is gone. Its disclosed residue - "
+                            "the GRN gate photo still rendering a green tick without uploading - "
+                            "is real and is carried by R2-717, where it is the worst instance."),
+    "R2-054": ("CONFIRMED", "E1: the PR number generator loops on a candidate and re-queries "
+                            "PaymentRequest.request_no == candidate until free (finance.py:1119-"
+                            "1125), so a deletion no longer reissues a live number."),
+    "R2-098": ("CONFIRMED", "E1: the party PID generator uses the same candidate loop against "
+                            "LibraryParty.party_id_custom (library.py:145)."),
+    "R2-204": ("CONFIRMED", "E1: NCR review stamps reviewed_by from current_user (:389) and "
+                            "close stamps closed_by (:415)."),
+    "R2-256": ("CONFIRMED", "E1: close_incident stamps closed_by from the session (safety.py:157) "
+                            "and the column is returned in both read paths."),
+    "R2-037": ("CONFIRMED", "E1: wastage is gated on has_consumption - the quantity is zero and "
+                            "the percentage is None when nothing has been consumed "
+                            "(analytics.py:344-346), so un-issued stock no longer reports 100%."),
+    "R2-147": ("CONFIRMED", "E1: the message poll takes a since_id cursor and resolves it to an "
+                            "anchor timestamp before filtering (chat.py:191-209)."),
+    "R2-379": ("CONFIRMED", "E1: Advance Recovery sums the party+project advance cumulatively "
+                            "and rejects a draw beyond it (billing.py:661-669)."),
+    "R2-136": ("CONFIRMED", "E1, complete on both schemas: the predecessor link type carries "
+                            "PREDECESSOR_LINK_TYPE_PATTERN (:72) and milestone type/status carry "
+                            "their patterns on create (:92-93) AND update (:99-100). The row "
+                            "labels itself PARTIAL for the instances outside planning.py."),
+    "R2-107": ("CONFIRMED", "E1: no hardcoded UI date defaults survive - the only 2026-06-30 / "
+                            "2026-07-04 strings left in frontend/src are blog publishDate values "
+                            "in CMS content, which are legitimate."),
+    "R2-295": ("CONFIRMED", "E1: the limiter takes a shared storage_uri when "
+                            "RATE_LIMIT_STORAGE_URI is set and falls back to in-process storage "
+                            "when it is not (rate_limit.py:11-12) - config-gated, as claimed."),
+    "R2-108": ("CONFIRMED", "E1: employee creation compares trimmed-lowercase names against the "
+                            "existing list and asks for confirmation before creating a second "
+                            "one, rather than silently duplicating."),
+    "R2-436": ("CONFIRMED", "E1: `form.created_by` is gone from both MOM pages. This is the row "
+                            "whose pin gatecheck flagged as partially vacuous - the fix is "
+                            "sound, the pin's third assertion is not (R2-717 family)."),
+    "R2-411": ("CONFIRMED", "E1: the Tally XML builder emits an ALTERID element "
+                            "(tally_xml.py:57), which is the create-if-absent ledger-master "
+                            "behaviour the finding asked for."),
+    "R2-144": ("CONFIRMED", "E1: media_url and voice_note_url are gone from the chat router's "
+                            "client contract."),
+    "R2-104": ("CONFIRMED", "E1: the Tally panel's last-export and last-marked summaries are "
+                            "real state (finance.py:266-267) rendered with an honest 'Not yet' "
+                            "when unset."),
+    "R2-120": ("CONFIRMED", "E1: the Integrations page lists the connectors as the note "
+                            "describes."),
     "R2-083": ("UNVERIFIED", "E1 FAILS on completeness. The two edits are correct, but the note's "
                              "claim that these were 'the last two fabricated attribute fallbacks' "
                              "is wrong - four remain in the same object literal, including "
