@@ -133,9 +133,12 @@ export default function ThreeWayPage() {
   const handleApprove = async (id: string) => {
     try {
       const res = await fetch(`${getApiHost()}/apis/v3/three-way/${id}/approve`, { method: "PATCH", headers: authHeaders() });
+      const data = await res.json();
       if (res.ok) {
         setMessage("Match approved");
         fetchMatches();
+      } else {
+        setMessage(data.detail || "Failed to approve match");
       }
     } catch (e) { console.error("Failed to approve", e); }
   };
@@ -145,9 +148,12 @@ export default function ThreeWayPage() {
     if (!reason) return;
     try {
       const res = await fetch(`${getApiHost()}/apis/v3/three-way/${id}/reject?reason=${encodeURIComponent(reason)}`, { method: "PATCH", headers: authHeaders() });
+      const data = await res.json();
       if (res.ok) {
         setMessage("Match rejected");
         fetchMatches();
+      } else {
+        setMessage(data.detail || "Failed to reject match");
       }
     } catch (e) { console.error("Failed to reject", e); }
   };
