@@ -29,7 +29,7 @@ from app.auth import get_current_user, verify_project_in_company, verify_company
 from app.models import (
     StaffEmployee, AttendanceLog, Timesheet,
     TimesheetEntry, PayrollRun, PayrollLineItem, Project, LeaveRequest,
-    Holiday, Designation, LeaveTemplate, PayrollProfile, User
+    Holiday, Designation, LeaveTemplate, PayrollProfile, User, Company
 )
 
 router = APIRouter(prefix="/hr", tags=["HR, Attendance & Payroll"], dependencies=[Depends(get_current_user)])
@@ -860,6 +860,9 @@ def export_payslips_csv(run_id: uuid.UUID, db: Session = Depends(get_db), curren
 
     Payroll is sensitive finance data, so this is tenant-guarded and gated by the
     payroll module view permission (same as GET /payroll/{run_id}/payslips). Read-only.
+    Every row carries the identity block a filing needs (R2-409): employee code,
+    pay period, payroll run id, company and project, so same-named employees
+    stay distinguishable and the file can be reconciled to its run.
     """
     run = db.query(PayrollRun).filter(PayrollRun.id == run_id).first()
     if not run:
@@ -868,11 +871,15 @@ def export_payslips_csv(run_id: uuid.UUID, db: Session = Depends(get_db), curren
     require_module_view(db, current_user, run.company_id, "payroll")
 
     lines = db.query(PayrollLineItem).filter(PayrollLineItem.payroll_run_id == run_id).all()
+    company = db.query(Company).filter(Company.id == run.company_id).first()
+    project = db.query(Project).filter(Project.id == run.project_id).first() if run.project_id else None
 
     columns = [
         "Employee Code", "Employee Name", "Designation", "Days Present", "Days In Month",
         "Gross", "PF Employee", "PF Employer", "ESI Employee", "ESI Employer",
         "TDS", "Advance Recovery", "Other Deductions", "Total Deductions", "Net Pay",
+        # R2-409: appended so index-based readers of the original columns keep working.
+        "Pay Period", "Payroll Run ID", "Company", "Project",
     ]
 
     buf = io.StringIO()
@@ -896,6 +903,11 @@ def export_payslips_csv(run_id: uuid.UUID, db: Session = Depends(get_db), curren
             float(line.other_deductions),
             float(line.total_deductions),
             float(line.net_payable),
+            # R2-409: pay period + reconciliation identifiers.
+            run.payroll_month,
+            str(run.id),
+            company.name if company else "",
+            project.name if project else "",
         ])
     csv_text = buf.getvalue()
     filename = f"payslips-{run.payroll_month}-{datetime.utcnow().strftime('%Y%m%d')}.csv"
