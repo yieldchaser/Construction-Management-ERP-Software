@@ -56,16 +56,18 @@ def create_subcon_attendance(payload: SubconAttendanceCreate, db: Session = Depe
     if payload.overtime_hours > payload.worker_count * 12:
         raise HTTPException(status_code=422, detail="overtime_hours cannot exceed 12 per worker per day")
     # Check if entry already exists for subcontractor, date, and role
+    # R2-332: labor_role is free text; the idempotency key must be trimmed and
+    # case-insensitive so "Mason", "mason" and "Mason " resolve to one crew.
     date_only = payload.attendance_date.date()
+    role_key = payload.labor_role.strip().lower()
     existing = db.query(SubcontractorAttendance).filter(
         SubcontractorAttendance.project_id == payload.project_id,
         SubcontractorAttendance.subcontractor_id == payload.subcontractor_id,
-        SubcontractorAttendance.labor_role == payload.labor_role
     ).all()
-    
-    # Filter by date
+
+    # Filter by date and normalized role
     for item in existing:
-        if item.attendance_date.date() == date_only:
+        if item.attendance_date.date() == date_only and (item.labor_role or "").strip().lower() == role_key:
             # Update existing
             item.worker_count = payload.worker_count
             item.shift_multiplier = payload.shift_multiplier
@@ -79,7 +81,9 @@ def create_subcon_attendance(payload: SubconAttendanceCreate, db: Session = Depe
             db.refresh(item)
             return item
             
-    log = SubcontractorAttendance(**payload.model_dump())
+    data = payload.model_dump()
+    data["labor_role"] = data["labor_role"].strip()
+    log = SubcontractorAttendance(**data)
     db.add(log)
     db.commit()
     db.refresh(log)
