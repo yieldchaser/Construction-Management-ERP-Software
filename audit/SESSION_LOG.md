@@ -2,6 +2,14 @@
 
 Append-only. Every working block ends with a 5-line entry. Never edit an existing entry; if a commit was reverted, add a new entry.
 
+## Session 33 (cont. 10) — sweep: procurement 5/7 verified, GRN integrity re-fixed (2026-08-23)
+
+- New: R2-239+348 `7fbb78f` (GRN requires approved PO, forward-only lifecycle rank map, cumulative per-line receipt cap with 422 naming quantities, /stock clamped; prompt10 fixture updated for the new gate). Reports earlier this block: R2-592 f5f6749, 076/312/560 61df2f0, 286b 891f483, 075 9581917, 318+320 b53f5ab, 321 b9987d2, 414 db873cb, 322/323/324r 538e014.
+- Procurement verified DRIFTED awaiting fixes: R2-049 (Equipment.code GLOBAL unique constraint - cross-tenant squat; fix needs per-company uniqueness = additive migration + company-scoped guard), R2-219 (approve_po rewinds received->sent unconditionally), R2-380 (dpr.py material usage bypasses negative_stock_lock; creates negative inventory rows). Unverified: R2-386, R2-543.
+- Suite GREEN exit=0 at 7fbb78f. Sweep totals: 73/94 verified (finance 22, hr 28, reports 18, procurement 5), 41 live re-fixed. Remaining verify: procurement x2, scattered x5 (R2-310/398/406/420/590). Pending fixes: procurement trio above, R2-052, R2-100+315, R2-276, R2-327r, R2-302, R2-475 slice, R2-481+527, R2-043r tally, R2-317 (after R2-100), R2-371 gate-check, R2-533+534.
+
+---
+
 ## Session 33 (cont. 9) — sweep: reports.py 18/18 verified, 13 re-fixed (2026-08-23)
 
 - New re-fixes: R2-076+312+560 `61df2f0` (logger.exception at all 17 swallow sites + top-level errors marker distinguishing crash-empty from true-empty; per-party ledger accumulator); R2-286b `891f483` (self-approval 403, approved_by/at stamped, generated_by populated; nullable columns via boot sync); R2-075 `9581917` (unimplemented slugs -> 404 naming slug; catalogue download degrades honestly); R2-318+320 `b53f5ab` (gstr2 purchase reports only unsettled residual via PaymentSettlement; payment summary split per-direction, frontend columns updated); R2-321 `b9987d2` (pid filter honored truthfully; five fabricated headers dropped); R2-414 `db873cb` ("No lab tests assessed" sentinel replaces fabricated 0% headline); R2-322+323+324r `538e014` (Creator Name honest-empty - no creator columns exist; material ledger keyed project+name+unit with UOM; malformed ids 422; helper swallow removed).
