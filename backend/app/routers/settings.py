@@ -819,6 +819,17 @@ def delete_salary_template(template_id: uuid.UUID, db: Session = Depends(get_db)
 
 ALLOWED_ASSET_TYPES = {"logo", "signature", "stamp", "watermark"}
 
+# Branding assets are embedded as PNG/JPEG images in generated PDFs (R2-404),
+# so only bytes carrying one of those signatures are accepted (R2-614).
+BRANDING_IMAGE_SIGNATURES = (
+    b"\x89PNG\r\n\x1a\n",  # PNG
+    b"\xff\xd8\xff",       # JPEG
+)
+
+# Branding slots hold small images; keep them well under the general
+# project-file cap (files.py allows 50 MB for documents/CAD).
+MAX_BRANDING_FILE_BYTES = 5 * 1024 * 1024  # 5 MB
+
 
 @router.post("/company-file/{company_id}")
 async def upload_company_file(
@@ -837,6 +848,16 @@ async def upload_company_file(
     contents = await file.read()
     if not contents:
         raise HTTPException(status_code=400, detail="Empty file")
+    if len(contents) > MAX_BRANDING_FILE_BYTES:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Branding file exceeds the {MAX_BRANDING_FILE_BYTES // (1024 * 1024)} MB upload limit",
+        )
+    if not contents.startswith(BRANDING_IMAGE_SIGNATURES):
+        raise HTTPException(
+            status_code=422,
+            detail="Branding files must be a valid PNG or JPEG image",
+        )
 
     filename = file.filename or asset_type
     content_type = file.content_type or "application/octet-stream"
