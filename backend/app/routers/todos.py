@@ -1,8 +1,10 @@
+import calendar
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 from app.database import get_db
 from app import models
@@ -62,6 +64,51 @@ def _serialize(db: Session, t: models.Todo):
         "assignee_ids": [str(a.assignee_id) for a in assignees],
         "created_at": t.created_at.isoformat() if t.created_at else None,
     }
+
+
+def _add_one_month(dt: datetime) -> datetime:
+    year, month = (dt.year + 1, 1) if dt.month == 12 else (dt.year, dt.month + 1)
+    last_day = calendar.monthrange(year, month)[1]
+    return dt.replace(year=year, month=month, day=min(dt.day, last_day))
+
+
+def _spawn_next_occurrence(db: Session, t: models.Todo) -> Optional[models.Todo]:
+    """R2-383: recurring to-dos recur at completion time (no scheduler exists).
+
+    Completing a daily/weekly/monthly to-do spawns the next pending occurrence
+    with the due date advanced one interval past now.
+    """
+    if t.repeat_type not in ("daily", "weekly", "monthly"):
+        return None
+    now = datetime.now(timezone.utc)
+    nxt = t.due_date if t.due_date is not None else now
+    for _ in range(10000):
+        if t.repeat_type == "daily":
+            nxt = nxt + timedelta(days=1)
+        elif t.repeat_type == "weekly":
+            nxt = nxt + timedelta(weeks=1)
+        else:
+            nxt = _add_one_month(nxt)
+        comparable = nxt if nxt.tzinfo is not None else nxt.replace(tzinfo=timezone.utc)
+        if comparable > now:
+            spawned = models.Todo(
+                company_id=t.company_id,
+                project_id=t.project_id,
+                created_by=t.created_by,
+                title=t.title,
+                due_date=nxt,
+                repeat_type=t.repeat_type,
+                type=t.type,
+                linked_task_id=t.linked_task_id,
+                url=t.url,
+                status="pending",
+            )
+            db.add(spawned)
+            db.flush()
+            for a in db.query(models.TodoAssignee).filter(models.TodoAssignee.todo_id == t.id).all():
+                db.add(models.TodoAssignee(todo_id=spawned.id, assignee_id=a.assignee_id))
+            return spawned
+    return None
 
 
 class TodoCreate(BaseModel):
@@ -177,6 +224,7 @@ def update_todo(todo_id: uuid.UUID, payload: TodoUpdate, db: Session = Depends(g
         raise HTTPException(status_code=404, detail="Todo not found")
     get_company_membership(db, current_user, t.company_id)
     require_permission(db, current_user, t.company_id, "planning:edit")
+    prev_status = t.status
     if payload.title is not None:
         t.title = payload.title
     if payload.due_date is not None:
@@ -195,6 +243,8 @@ def update_todo(todo_id: uuid.UUID, payload: TodoUpdate, db: Session = Depends(g
         db.query(models.TodoAssignee).filter(models.TodoAssignee.todo_id == t.id).delete()
         for aid in payload.assignee_ids:
             db.add(models.TodoAssignee(todo_id=t.id, assignee_id=aid))
+    if payload.status == "done" and prev_status != "done":
+        _spawn_next_occurrence(db, t)
     db.commit()
     db.refresh(t)
     return _serialize(db, t)
