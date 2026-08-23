@@ -118,21 +118,40 @@ def test_duplicate_payment_reference_rejected_at_orm_level_and_nulls_stay_free(c
             payment_date=datetime.datetime(2026, 8, 20),
         )
 
-    db.add(_pay(comp_a, "REF-R543"))
-    db.commit()
-
-    # Same reference within the company conflicts (the race R2-543 closed).
-    db.add(_pay(comp_a, "REF-R543"))
-    with pytest.raises(IntegrityError):
+    # Per-run unique reference: the suite shares one SQLite DB with no row
+    # teardown, so a hardcoded value could already exist from an earlier test
+    # and trip the (correct) constraint on the baseline insert itself.
+    ref = f"REF-R543-{uuid.uuid4().hex}"
+    payment_ids = []
+    try:
+        baseline = _pay(comp_a, ref)
+        db.add(baseline)
         db.commit()
-    db.rollback()
+        payment_ids.append(baseline.id)
 
-    # Same reference at another company is fine (company-scoped).
-    db.add(_pay(comp_b, "REF-R543"))
-    # Multiple NULL references never group together, mirroring the router guard.
-    db.add(_pay(comp_a, None))
-    db.add(_pay(comp_a, None))
-    db.commit()
+        # Same reference within the company conflicts (the race R2-543 closed).
+        db.add(_pay(comp_a, ref))
+        with pytest.raises(IntegrityError):
+            db.commit()
+        db.rollback()
+
+        # Same reference at another company is fine (company-scoped).
+        cross_company = _pay(comp_b, ref)
+        db.add(cross_company)
+        # Multiple NULL references never group together, mirroring the router guard.
+        null_one = _pay(comp_a, None)
+        null_two = _pay(comp_a, None)
+        db.add(null_one)
+        db.add(null_two)
+        db.commit()
+        payment_ids.extend([cross_company.id, null_one.id, null_two.id])
+    finally:
+        db.rollback()
+        if payment_ids:
+            db.query(models.Payment).filter(
+                models.Payment.id.in_(payment_ids)
+            ).delete(synchronize_session=False)
+            db.commit()
 
 
 def test_create_payment_answers_friendly_409_on_duplicate_reference(client, db, make_tenant, auth_headers):
