@@ -51,7 +51,10 @@ class ReportResponse(BaseModel):
     report_date: datetime
     summary_markdown: Optional[str]
     pdf_url: Optional[str]
+    generated_by: Optional[uuid.UUID] = None
     is_approved: bool
+    approved_by: Optional[uuid.UUID] = None
+    approved_at: Optional[datetime] = None
     created_at: datetime
 
     class Config:
@@ -65,6 +68,7 @@ def generate_report(
     project_id: uuid.UUID,
     payload: ReportCreate,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
     _: None = Depends(verify_project_access)
 ):
     project = db.query(Project).filter(Project.id == project_id).first()
@@ -181,6 +185,9 @@ def generate_report(
         report_date=datetime.utcnow(),
         summary_markdown=payload.summary_markdown,
         pdf_url=f"/static/reports/{pdf_filename}",
+        # R2-286(b): record who generated the report so the approver can be
+        # required to be someone else.
+        generated_by=current_user.id,
         is_approved=False
     )
     db.add(db_report)
@@ -208,7 +215,18 @@ def approve_report(report_id: uuid.UUID, db: Session = Depends(get_db), current_
     get_company_membership(db, current_user, project.company_id)
     require_permission(db, current_user, project.company_id, "reports:approve")
 
+    # R2-286(b): the approver must be someone other than the user who
+    # generated the report. Legacy rows with a null generated_by keep the
+    # old behavior (creator unknown, cannot be compared).
+    if report.generated_by is not None and report.generated_by == current_user.id:
+        raise HTTPException(
+            status_code=403,
+            detail="You cannot approve a report you generated",
+        )
+
     report.is_approved = True
+    report.approved_by = current_user.id
+    report.approved_at = datetime.utcnow()
     db.commit()
     db.refresh(report)
     return report

@@ -965,6 +965,9 @@ class ClientReport(Base):
     summary_markdown = Column(String, nullable=True)
     pdf_url = Column(String(500), nullable=True)
     generated_by = Column(UUID(as_uuid=True), nullable=True)
+    # R2-286(b): approval must be attributable to a distinct approver.
+    approved_by = Column(UUID(as_uuid=True), nullable=True)
+    approved_at = Column(DateTime(timezone=True), nullable=True)
     is_approved = Column(Boolean, default=False, nullable=False)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), default=func.now(), onupdate=func.now(), nullable=False)
