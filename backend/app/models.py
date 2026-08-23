@@ -398,6 +398,15 @@ class DrawingRevision(Base):
     comments = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 
+class DrawingRevisionApproval(Base):
+    __tablename__ = "drawing_revision_approvals"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    revision_id = Column(UUID(as_uuid=True), ForeignKey("drawing_revisions.id", ondelete="CASCADE"), nullable=False)
+    decision = Column(String(50), nullable=False) # "approved", "rejected", "pending"
+    decided_by = Column(UUID(as_uuid=True), ForeignKey("company_team.id"), nullable=False)
+    comments = Column(String, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
 class DrawingPin(Base):
     __tablename__ = "drawing_pins"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)

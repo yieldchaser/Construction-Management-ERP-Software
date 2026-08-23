@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.config import settings
 from app.auth import get_current_user, verify_project_access, get_company_membership, require_permission
-from app.models import Drawing, DrawingRevision, DrawingPin, Project, User
+from app.models import Drawing, DrawingRevision, DrawingRevisionApproval, DrawingPin, Project, User
 from pydantic import BaseModel, Field, field_validator
 
 router = APIRouter(
@@ -273,6 +273,24 @@ def approve_drawing_revision(revision_id: UUID, req: RevisionApproveRequest, db:
     membership = get_company_membership(db, current_user, project.company_id)
     require_permission(db, current_user, project.company_id, "drawings:approve")
 
+    # R2-259: approval is append-only. An approved revision is terminal - it can
+    # never be un-approved or flipped, because site teams build from it and every
+    # earlier flip erased the record of who approved. Superseding requires a new
+    # revision, which is what version codes are for.
+    if revision.approval_status == "approved" and req.approval_status != "approved":
+        raise HTTPException(
+            status_code=409,
+            detail="This revision is already approved and approval is terminal; upload a new revision to supersede it.",
+        )
+
+    # Every decision writes an immutable ledger row stamped with the
+    # authenticated actor (never a caller-supplied id) and a server timestamp.
+    db.add(DrawingRevisionApproval(
+        revision_id=revision.id,
+        decision=req.approval_status,
+        decided_by=membership.id,
+        comments=req.comments,
+    ))
     revision.approval_status = req.approval_status
     revision.approved_by = None if req.approval_status == "pending" else membership.id
     if req.comments:
