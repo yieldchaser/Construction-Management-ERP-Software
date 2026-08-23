@@ -344,17 +344,16 @@ export default function CalculatorsPage() {
     return (wpArea / wpCoverage) * wpCoats * (1 + wpWastage / 100);
   }, [wpArea, wpCoverage, wpCoats, wpWastage]);
 
-  // 10. House Construction Cost
-  const { houseTotalCost, houseContingencyCost, houseSplits } = React.useMemo(() => {
+  // 10. House Construction Cost (mirrors POST /apis/v3/calculators/house-cost)
+  const { houseProjectCost, houseContingencyCost, houseSplits } = React.useMemo(() => {
     let constructionCost = 0.0;
     for (let f = 0; f < houseFloors; f++) {
       const multiplier = 1.0 + 0.12 * f;
       constructionCost += houseArea * (houseRate * multiplier);
     }
     const compoundCost = houseCompoundWall * (houseRate * 0.35);
-    const subtotal = constructionCost + compoundCost;
-    const contingencyCost = subtotal * (houseContingency / 100);
-    const totalCost = subtotal + contingencyCost;
+    const projectCost = constructionCost + compoundCost;
+    const contingencyCost = projectCost * (houseContingency / 100);
 
     const splits = [
       { name: "Structure & Civil (40%)", percentage: 0.40, color: "bg-primary" },
@@ -363,7 +362,7 @@ export default function CalculatorsPage() {
       { name: "Interior & Carpentry (12%)", percentage: 0.12, color: "bg-amber-500" },
       { name: "Consultants & Permits (8%)", percentage: 0.08, color: "bg-zinc-500" },
     ];
-    return { houseTotalCost: totalCost, houseContingencyCost: contingencyCost, houseSplits: splits };
+    return { houseProjectCost: projectCost, houseContingencyCost: contingencyCost, houseSplits: splits };
   }, [houseRate, houseFloors, houseArea, houseCompoundWall, houseContingency]);
 
   return (
@@ -1917,15 +1916,19 @@ export default function CalculatorsPage() {
                   <div className="space-y-4">
                     <div className="bg-input p-4 rounded-md border border-border-custom text-center">
                       <span className="text-muted text-[10px] uppercase font-bold block">
-                        Estimated Budget
+                        Estimated Project Cost
                       </span>
                       <strong className="text-2xl font-black text-success mt-1 block">
                         ₹
-                        {houseTotalCost.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                        {houseProjectCost.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                       </strong>
                       <span className="text-[9px] text-muted block mt-1">
-                        Includes {houseContingency}% contingency buffer (₹
+                        Excludes {houseContingency}% contingency buffer (₹
                         {houseContingencyCost.toLocaleString(undefined, { maximumFractionDigits: 0 })})
+                      </span>
+                      <span className="text-[9px] text-muted block">
+                        Outlay incl. buffer: ₹
+                        {(houseProjectCost + houseContingencyCost).toLocaleString(undefined, { maximumFractionDigits: 0 })}
                       </span>
                       <span className="text-[9px] text-muted italic block">
                         Indicative only: driven by the base rate you enter; not a quotation.
@@ -1937,7 +1940,7 @@ export default function CalculatorsPage() {
                         Materials & Labor Split
                       </h5>
                       {houseSplits.map((item, i) => {
-                        const itemVal = houseTotalCost * item.percentage;
+                        const itemVal = houseProjectCost * item.percentage;
                         return (
                           <div key={i} className="space-y-1 text-[11px]">
                             <div className="flex justify-between text-muted">
