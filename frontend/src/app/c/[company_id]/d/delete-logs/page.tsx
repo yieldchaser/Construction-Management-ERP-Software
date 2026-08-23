@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams } from "next/navigation";
 import { getApiHost } from "@/lib/api";
 
@@ -61,7 +61,10 @@ export default function DeleteLogsPage() {
   const [toDate, setToDate] = useState("");
   const [toast, setToast] = useState("");
 
-  const authHeaders = accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined;
+  const authHeaders = useMemo(
+    () => (accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined),
+    [accessToken]
+  );
 
   const fetchLogs = useCallback(async () => {
     setLoading(true);
