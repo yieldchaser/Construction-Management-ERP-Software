@@ -19,6 +19,12 @@ type CalcType =
   | "waterproofing"
   | "house_cost";
 
+const HOUSE_RATE_DEFAULTS: Record<"budget" | "standard" | "premium", number> = {
+  budget: 1600,
+  standard: 2200,
+  premium: 3400,
+};
+
 export default function CalculatorsPage() {
   const params = useParams();
   const companyId = params?.company_id as string;
@@ -153,9 +159,9 @@ export default function CalculatorsPage() {
   const [houseArea, setHouseArea] = useState(1500); // sqft
   const [houseFloors, setHouseFloors] = useState(1); // G
   const [houseQuality, setHouseQuality] = useState<"budget" | "standard" | "premium">("standard");
+  const [houseRate, setHouseRate] = useState(HOUSE_RATE_DEFAULTS.standard); // ₹/sqft, user-editable
   const [houseCompoundWall, setHouseCompoundWall] = useState(120); // ft
   const [houseContingency, setHouseContingency] = useState(10); // %
-  const [houseCity, setHouseCity] = useState("default");
 
   // --- MEMOIZED CALCULATION LOGIC ---
 
@@ -339,34 +345,13 @@ export default function CalculatorsPage() {
   }, [wpArea, wpCoverage, wpCoats, wpWastage]);
 
   // 10. House Construction Cost
-  const { currencySymbol, houseTotalCost, houseContingencyCost, houseSplits } = React.useMemo(() => {
-    const CITY_MAP: Record<string, { label: string; mult: number; cur: "INR" | "AED" | "SAR" }> = {
-      default: { label: "Other Indian city", mult: 1.0, cur: "INR" },
-      mumbai: { label: "Mumbai", mult: 1.25, cur: "INR" },
-      delhi: { label: "Delhi NCR", mult: 1.20, cur: "INR" },
-      bengaluru: { label: "Bengaluru", mult: 1.18, cur: "INR" },
-      hyderabad: { label: "Hyderabad", mult: 1.10, cur: "INR" },
-      pune: { label: "Pune", mult: 1.15, cur: "INR" },
-      jaipur: { label: "Jaipur", mult: 0.95, cur: "INR" },
-      lucknow: { label: "Lucknow", mult: 0.90, cur: "INR" },
-      dubai: { label: "Dubai, UAE", mult: 1.0, cur: "AED" },
-      riyadh: { label: "Riyadh, KSA", mult: 0.90, cur: "SAR" },
-    };
-    const cityData = CITY_MAP[houseCity] || CITY_MAP["default"];
-    const effCurrency = cityData.cur;
-    const sym = effCurrency === "INR" ? "₹" : effCurrency === "AED" ? "AED " : "SAR ";
-    const baseRates = {
-      budget: effCurrency === "INR" ? 1600 : effCurrency === "AED" ? 180 : 187.5,
-      standard: effCurrency === "INR" ? 2200 : effCurrency === "AED" ? 240 : 243.75,
-      premium: effCurrency === "INR" ? 3400 : effCurrency === "AED" ? 380 : 375,
-    };
-    const houseBaseRate = baseRates[houseQuality] * cityData.mult;
+  const { houseTotalCost, houseContingencyCost, houseSplits } = React.useMemo(() => {
     let constructionCost = 0.0;
     for (let f = 0; f < houseFloors; f++) {
       const multiplier = 1.0 + 0.12 * f;
-      constructionCost += houseArea * (houseBaseRate * multiplier);
+      constructionCost += houseArea * (houseRate * multiplier);
     }
-    const compoundCost = houseCompoundWall * (houseBaseRate * 0.35);
+    const compoundCost = houseCompoundWall * (houseRate * 0.35);
     const subtotal = constructionCost + compoundCost;
     const contingencyCost = subtotal * (houseContingency / 100);
     const totalCost = subtotal + contingencyCost;
@@ -378,8 +363,8 @@ export default function CalculatorsPage() {
       { name: "Interior & Carpentry (12%)", percentage: 0.12, color: "bg-amber-500" },
       { name: "Consultants & Permits (8%)", percentage: 0.08, color: "bg-zinc-500" },
     ];
-    return { currencySymbol: sym, houseTotalCost: totalCost, houseContingencyCost: contingencyCost, houseSplits: splits };
-  }, [houseCity, houseQuality, houseFloors, houseArea, houseCompoundWall, houseContingency]);
+    return { houseTotalCost: totalCost, houseContingencyCost: contingencyCost, houseSplits: splits };
+  }, [houseRate, houseFloors, houseArea, houseCompoundWall, houseContingency]);
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
@@ -1503,6 +1488,7 @@ export default function CalculatorsPage() {
                             key={q}
                             onClick={() => {
                               setHouseQuality(q);
+                              setHouseRate(HOUSE_RATE_DEFAULTS[q]);
                             }}
                             className={`py-1.5 border rounded-lg uppercase text-[10px] font-bold transition-all ${
                               houseQuality === q
@@ -1514,6 +1500,46 @@ export default function CalculatorsPage() {
                           </button>
                         ))}
                       </div>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-muted">Base Rate (₹/sqft)</label>
+                      <input
+                        type="number"
+                        min={0}
+                        value={houseRate}
+                        onChange={(e) => {
+                          setHouseRate(Number(e.target.value));
+                        }}
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
+                      />
+                      <span className="text-[9px] text-muted block">
+                        Loaded defaults: budget 1600, standard 2200, premium 3400. Edit to your own market rate.
+                      </span>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-muted">Compound Wall Length (ft)</label>
+                      <input
+                        type="number"
+                        min={0}
+                        value={houseCompoundWall}
+                        onChange={(e) => {
+                          setHouseCompoundWall(Number(e.target.value));
+                        }}
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
+                      />
+                      <span className="text-[9px] text-muted block">Priced at 35% of the base rate. Set 0 to exclude.</span>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-muted">Contingency (%)</label>
+                      <input
+                        type="number"
+                        min={0}
+                        value={houseContingency}
+                        onChange={(e) => {
+                          setHouseContingency(Number(e.target.value));
+                        }}
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
+                      />
                     </div>
                   </>
                 )}
@@ -1894,12 +1920,15 @@ export default function CalculatorsPage() {
                         Estimated Budget
                       </span>
                       <strong className="text-2xl font-black text-success mt-1 block">
-                        {currencySymbol}
+                        ₹
                         {houseTotalCost.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                       </strong>
                       <span className="text-[9px] text-muted block mt-1">
-                        Includes {houseContingency}% contingency buffer ({currencySymbol}
+                        Includes {houseContingency}% contingency buffer (₹
                         {houseContingencyCost.toLocaleString(undefined, { maximumFractionDigits: 0 })})
+                      </span>
+                      <span className="text-[9px] text-muted italic block">
+                        Indicative only: driven by the base rate you enter; not a quotation.
                       </span>
                     </div>
 
@@ -1914,7 +1943,7 @@ export default function CalculatorsPage() {
                             <div className="flex justify-between text-muted">
                               <span>{item.name}</span>
                               <span className="font-semibold text-foreground">
-                                {currencySymbol}
+                                ₹
                                 {itemVal.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                               </span>
                             </div>
