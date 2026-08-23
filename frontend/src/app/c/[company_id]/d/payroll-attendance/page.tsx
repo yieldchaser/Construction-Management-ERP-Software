@@ -614,7 +614,7 @@ function NewPayrollModal({
   };
 
   return (
-    <Modal title={staffType === "office" ? "New Office Staff" : "New Site Staff"} onClose={onClose}>
+    <Modal title={staffType === "site" ? "New Project-Assigned Staff" : "New Unassigned Staff"} onClose={onClose}>
       <Field label="Select Party">
         <div className="flex gap-2">
           <input className={inputCls} disabled value={party?.name || name} placeholder="Party name" onChange={(e) => setName(e.target.value)} />
@@ -999,15 +999,18 @@ function PeopleTab({
             className={`px-3 py-2 text-sm ${staffType === "office" ? "bg-primary text-white" : "text-foreground hover:bg-elevated"}`}
             onClick={() => setStaffType("office")}
           >
-            Office Staff
+            Unassigned
           </button>
           <button
             className={`px-3 py-2 text-sm ${staffType === "site" ? "bg-primary text-white" : "text-foreground hover:bg-elevated"}`}
             onClick={() => setStaffType("site")}
           >
-            Site Staff
+            Assigned to Project
           </button>
         </div>
+        <span className="text-xs text-muted">
+          Grouped by project assignment only. Payroll runs include every active employee.
+        </span>
         <input className={inputCls + " max-w-xs"} placeholder="Search Payroll" value={search} onChange={(e) => setSearch(e.target.value)} />
         <select className={inputCls + " max-w-[140px]"} value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
           <option>Active</option>
@@ -1031,6 +1034,7 @@ function PeopleTab({
           <thead className="bg-elevated text-left text-xs uppercase text-muted">
             <tr>
               <th className="px-3 py-2">{staffType === "site" ? "Party" : "Party"}</th>
+              <th className="px-3 py-2">Code</th>
               {staffType === "site" && <th className="px-3 py-2">Associated Projects</th>}
               <th className="px-3 py-2">Designation</th>
               <th className="px-3 py-2">Department</th>
@@ -1042,6 +1046,7 @@ function PeopleTab({
             {rows.map((e) => (
               <tr key={e.id} className="cursor-pointer border-t border-border-custom hover:bg-elevated" onClick={() => openDrawer(e)}>
                 <td className="px-3 py-2 font-medium text-foreground">{e.name}</td>
+                <td className="px-3 py-2 text-muted">{e.employee_code || e.id.slice(0, 8).toUpperCase()}</td>
                 {staffType === "site" && <td className="px-3 py-2 text-muted">{projectName(e.project_id)}</td>}
                 <td className="px-3 py-2 text-muted">{e.designation || "—"}</td>
                 <td className="px-3 py-2 text-muted">{e.department || "—"}</td>
@@ -1051,8 +1056,8 @@ function PeopleTab({
             ))}
             {rows.length === 0 && (
               <tr>
-                <td colSpan={staffType === "site" ? 6 : 5} className="px-3 py-6 text-center text-muted">
-                  No {staffType} staff yet.
+                <td colSpan={staffType === "site" ? 7 : 6} className="px-3 py-6 text-center text-muted">
+                  {staffType === "site" ? "No project-assigned staff yet." : "No unassigned staff yet."}
                 </td>
               </tr>
             )}
