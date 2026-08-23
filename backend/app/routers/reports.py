@@ -279,11 +279,11 @@ def download_report(report_id: uuid.UUID, db: Session = Depends(get_db), current
 #   frontend/src/app/c/[company_id]/reports/[slug]/page.tsx  (REPORT_METADATA)
 #   frontend/src/app/c/[company_id]/reports/page.tsx        (exportSchemas)
 #
-# A slug with no handler, or a company/project id that does not parse,
-# returns rows: []. A slug whose handler raises is logged with its full
-# traceback and returned as rows: [] PLUS a non-empty top-level "errors"
-# list, so a crashed report never masquerades as a genuinely empty one
-# (R2-076, R2-312, R2-560).
+# A slug with no handler 404s; a company/project id that does not parse
+# fails 422 naming the parameter (R2-324). A slug whose handler raises is
+# logged with its full traceback and returned as rows: [] PLUS a non-empty
+# top-level "errors" list, so a crashed report never masquerades as a
+# genuinely empty one (R2-076, R2-312, R2-560).
 #
 # Registered on the existing `router` (prefix "/reports") which main.py mounts
 # under "/apis/v3", yielding the full path "/apis/v3/reports/data/{slug}".
@@ -308,10 +308,12 @@ def _clean(v):
 
 
 def _project_ids_for_company(db: Session, cid: uuid.UUID):
-    try:
-        return [p.id for p in db.query(Project.id).filter(Project.company_id == cid).all()]
-    except Exception:
-        return []
+    # R2-324: this used to swallow every failure to [], which builders read
+    # as "company has no projects", rendering a database error as a genuinely
+    # empty company. Let the exception propagate instead: it reaches a guarded
+    # handler or the dispatcher wrapper, both of which log the traceback and
+    # surface the top-level errors marker (R2-076 mechanism).
+    return [p.id for p in db.query(Project.id).filter(Project.company_id == cid).all()]
 
 
 def _rep_dpr(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
@@ -741,11 +743,16 @@ def _build_party_ledger(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
         party_balance = running_by_party.get(party_name, 0.0) + debit - credit
         running_by_party[party_name] = party_balance
 
+        # R2-322: Creator Name used to be party_name, attributing every
+        # ledger row to the counterparty. No ledger source (Bill, Payment,
+        # DebitNote, CreditNote, PayrollLineItem) carries a created-by
+        # column, so the true creator is unrecoverable here; emit an honest
+        # empty per house convention instead of a fabricated attribution.
         rows.append({
             "Party Name": party_name,
             "Party Type": party_type,
             "Project Name": proj.name if proj else "",
-            "Creator Name": party_name,
+            "Creator Name": "",
             "Description": description,
             "Cost Code": cost_code,
             "Transaction Type": txn_type,
@@ -979,12 +986,16 @@ def _rep_material_stock_movement(db: Session, cid: uuid.UUID, pid: Optional[uuid
         if pid:
             q = q.filter(MaterialTransaction.project_id == pid)
         txns = q.order_by(MaterialTransaction.created_at.asc()).all()
-        # Compute running per-material open/close
+        # R2-323: the running balance is scoped to (project_id, material_name,
+        # unit). Keyed by name alone, two projects' identical materials merged
+        # into one company-wide series printed as each project's stock, and
+        # differing units netted against each other invisibly.
         running = {}
         rows = []
         for m in txns:
             proj = db.query(Project).filter(Project.id == m.project_id).first()
-            bal = running.get(m.material_name, 0.0)
+            bal_key = (m.project_id, m.material_name, m.unit)
+            bal = running.get(bal_key, 0.0)
             qty = float(m.qty) if m.qty is not None else 0.0
             stock_in = 0.0
             stock_out = 0.0
@@ -1001,11 +1012,11 @@ def _rep_material_stock_movement(db: Session, cid: uuid.UUID, pid: Optional[uuid
             else:
                 bal -= qty
                 stock_out = qty
-            running[m.material_name] = bal
+            running[bal_key] = bal
             rows.append({
                 "Project Name": proj.name if proj else "",
                 "Material Name": m.material_name,
-                "UOM": "",
+                "UOM": m.unit or "",
                 "Date": _clean(m.created_at),
                 "Opening Qty": opening,
                 "Stock In": stock_in,
@@ -1405,11 +1416,25 @@ def get_report_data(
     current_user: User = Depends(get_current_user)
 ):
     generated_at = datetime.utcnow().isoformat()
+    # R2-324: a malformed id used to return 200 {"rows": []}, making a typo'd
+    # company indistinguishable from an empty one. Fail 422 naming the bad
+    # parameter instead.
     try:
         cid = uuid.UUID(company_id)
-        pid = uuid.UUID(project_id) if project_id else None
-    except Exception:
-        return {"slug": slug, "rows": [], "generated_at": generated_at}
+    except (TypeError, ValueError, AttributeError):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Invalid company_id: must be a valid UUID.",
+        )
+    pid = None
+    if project_id:
+        try:
+            pid = uuid.UUID(project_id)
+        except (TypeError, ValueError, AttributeError):
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Invalid project_id: must be a valid UUID.",
+            )
 
     get_company_membership(db, current_user, cid)
     if pid is not None:
