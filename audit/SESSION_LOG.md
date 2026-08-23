@@ -2,6 +2,15 @@
 
 Append-only. Every working block ends with a 5-line entry. Never edit an existing entry; if a commit was reverted, add a new entry.
 
+## Session 33 (cont. 11) — sweep: procurement+scattered verified, constraints migrated (2026-08-23)
+
+- New: R2-386+543 `2efc31a` (SEVEN UniqueConstraints reached prod path via one duplicate-safe NOTICE-skip migration: the five unmigrated model constraints + NEW uq_ncrs_project_id_ncr_number + uq_payments_company_id_reference_number; NCR blind-insert -> 409); R2-310 `6ce1203` (delete-logs infinite refetch loop dead via useMemo'd authHeaders); R2-592 f5f6749 landed earlier this block.
+- Verified HOLDS: R2-398, R2-406, R2-420. Verified DRIFTED awaiting fixes: R2-219 (approve_po rewinds received->sent), R2-380 (dpr.py bypasses stock lock), R2-481+527, R2-302, R2-475 slice, R2-052, R2-100+315, R2-276, R2-327r, R2-043r tally, R2-317 (needs R2-100 first), R2-371 gate-check.
+- Suite incident resolved: r2_236's tz test rebuilds the SHARED sqlite payments table (CREATE TABLE AS SELECT) stripping constraints - r2_386/543 test now restores live schema before asserting (`bc8c379`); FOLLOW-UP: make r2_236's test restore/cleanup its own schema change instead of leaking it.
+- Suite GREEN exit=0 at bc8c379. SWEEP FINAL TALLY this session: 80/94 rows verified (finance 22, hr 28, reports 18, procurement 7, scattered 5), 44 live defects re-fixed, gated surfaced D2 x3 + founder x1 + CD-6/D7 slices. Unverified remaining: R2-358, R2-420(HOLDS counted? no - 420 HOLDS; unverified = none scattered... see WORKLIST) - reconcile counts next session. Remaining fix queue as listed in cont.10 + R2-590 quality-page silent failures.
+
+---
+
 ## Session 33 (cont. 10) — sweep: procurement 5/7 verified, GRN integrity re-fixed (2026-08-23)
 
 - New: R2-239+348 `7fbb78f` (GRN requires approved PO, forward-only lifecycle rank map, cumulative per-line receipt cap with 422 naming quantities, /stock clamped; prompt10 fixture updated for the new gate). Reports earlier this block: R2-592 f5f6749, 076/312/560 61df2f0, 286b 891f483, 075 9581917, 318+320 b53f5ab, 321 b9987d2, 414 db873cb, 322/323/324r 538e014.
