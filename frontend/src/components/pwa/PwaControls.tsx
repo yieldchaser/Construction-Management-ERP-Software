@@ -65,7 +65,7 @@ export default function PwaControls() {
 
     const permission = await Notification.requestPermission();
     if (permission === "granted") {
-      setStatus("Push notifications enabled");
+      setStatus("Notifications allowed on this device");
     } else {
       setStatus("Notifications blocked");
     }
@@ -76,7 +76,7 @@ export default function PwaControls() {
       <div className="flex items-center justify-between gap-3">
         <div>
           <div className="text-[10px] uppercase tracking-[0.2em] text-muted">Mobile PWA</div>
-          <div className="mt-1 text-sm font-semibold text-white">Installable shell and push alerts</div>
+          <div className="mt-1 text-sm font-semibold text-white">Installable shell and offline punch capture</div>
           <div className="mt-1 text-[11px] text-muted">{status}</div>
         </div>
         <span
@@ -101,7 +101,7 @@ export default function PwaControls() {
           onClick={handleEnableNotifications}
           className="rounded-lg border border-border-custom bg-white/[0.03] px-3 py-2 text-[11px] font-bold text-zinc-200 transition-colors hover:bg-white/[0.05]"
         >
-          Enable Push
+          Enable Notifications
         </button>
       </div>
     </div>
