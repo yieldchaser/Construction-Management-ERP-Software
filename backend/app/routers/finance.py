@@ -1,3 +1,4 @@
+import logging
 import uuid
 from datetime import datetime, timezone
 from typing import List, Optional
@@ -5,12 +6,14 @@ from fastapi import APIRouter, Depends, HTTPException, status, File, Form, Uploa
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.models import Payment, PaymentSettlement, Bill, PayrollRun, PayrollLineItem, StaffEmployee, ProjectBudget, Project, CompanyTeam, User, Equipment, EquipmentDeployment, FuelLog, BankAccount, PaymentRequest, PaymentRequestPayment, CashAccount, LibraryParty, Company, ApprovalRule
+from app.models import Payment, PaymentSettlement, Bill, PayrollRun, PayrollLineItem, StaffEmployee, ProjectBudget, Project, CompanyTeam, User, Equipment, EquipmentDeployment, FuelLog, BankAccount, PaymentRequest, PaymentRequestPayment, CashAccount, LibraryParty, Company, ApprovalRule, LibraryCostCode
 from app.auth import get_current_user, verify_project_in_company, verify_company_access, verify_project_access, get_company_membership, require_permission, require_module_view
 from app.approvals import find_matching_rule, match_approver, levels_approved, user_already_acted, record_action
 from pydantic import BaseModel, Field, field_validator
 from app.constants import REVENUE_INVOICE_TYPES, EXPENSE_INVOICE_TYPES, SETTLEMENT_INVOICE_TYPES
 from app.workflow_controls import enforce_entry_creation_window
+
+logger = logging.getLogger(__name__)
 
 # Tolerance for "fully paid" money comparisons (1 paisa/cent). Mirrors the 0.01
 # tolerance used in routers/three_way.py for variance matching, so float drift
@@ -132,6 +135,27 @@ def create_payment(req: PaymentCreateRequest, db: Session = Depends(get_db), cur
             raise HTTPException(status_code=404, detail="Project not found")
         if project.company_id != comp_uuid:
             raise HTTPException(status_code=403, detail="Project does not belong to this company")
+
+    # R2-609: payment cost codes must exist in the company's Cost Code
+    # Library (same gate as budgeting.py's BOQ import). A free-text typo
+    # used to be written as-is, silently forking a code that never rolls
+    # up with the rest. Rejected before anything is written.
+    unknown_codes = []
+    if req.cost_code and not db.query(LibraryCostCode.id).filter(
+        LibraryCostCode.company_id == comp_uuid,
+        LibraryCostCode.code == req.cost_code,
+    ).first():
+        unknown_codes.append(req.cost_code)
+    if req.sub_cost_code and not db.query(LibraryCostCode.id).filter(
+        LibraryCostCode.company_id == comp_uuid,
+        LibraryCostCode.sub_cost_code == req.sub_cost_code,
+    ).first():
+        unknown_codes.append(req.sub_cost_code)
+    if unknown_codes:
+        raise HTTPException(
+            status_code=422,
+            detail="Unknown cost codes (add them to the Cost Code Library first): " + ", ".join(unknown_codes),
+        )
 
     # R2-381: money entries obey the same Entry Controls back-dating window as bills.
     enforce_entry_creation_window(db, req.company_id, req.payment_date)
@@ -1527,11 +1551,23 @@ def upload_payments(
     import csv
     import io
 
+    # R2-608: reading the upload is the only step a bad input alone can
+    # break, so the old generic except Exception sat here returning raw
+    # interpreter internals ("'utf-8' codec can't decode byte 0xff...") for
+    # any non-text blob. An undecodable file is a user error and gets an
+    # honest 400 naming the fix; anything unexpected is logged server-side
+    # and surfaced honestly instead of masquerading.
     try:
         content = file.file.read().decode("utf-8")
         csv_reader = csv.reader(io.StringIO(content))
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Failed to read file: {str(e)}")
+    except UnicodeDecodeError:
+        raise HTTPException(
+            status_code=400,
+            detail="Uploaded file could not be decoded as UTF-8 text. Please upload a CSV export of payments.",
+        )
+    except Exception:
+        logger.exception("Payment CSV upload failed while reading the uploaded file")
+        raise HTTPException(status_code=400, detail="Failed to read the uploaded file. Please re-upload a valid CSV export.")
         
     headers = next(csv_reader, None)
     if not headers:
