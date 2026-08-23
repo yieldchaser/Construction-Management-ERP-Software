@@ -430,7 +430,7 @@ export default function AttendancePage() {
     const punch: PunchRecord = {
       id: `${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
       mode,
-      time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      time: new Date().toISOString(),
       location: location.label,
       lat: location.lat,
       lng: location.lng,
