@@ -255,18 +255,21 @@ def feed_budget_variance(
         equipment_budget = float(budget.equipment_budget or 0) if budget else 0.0
         total_budget = material_budget + labour_budget + subcon_budget + equipment_budget
 
-        material_actual = float(
-            _active_bills(db, p.id, ("purchase", "expense"))
-            .with_entities(func.coalesce(func.sum(models.Bill.total_payable), 0))
-            .scalar()
-            or 0
-        )
-        subcon_actual = float(
-            _active_bills(db, p.id, ("subcon",))
-            .with_entities(func.coalesce(func.sum(models.Bill.total_payable), 0))
-            .scalar()
-            or 0
-        )
+        # R2-289: partition the shared EXPENSE_INVOICE_TYPES scope head-for-head
+        # like budget.py (purchase -> material, subcon -> subcon, equipment ->
+        # plant, anything else e.g. "expense" -> other) so the BI feed and the
+        # Budget module can never disagree about the same project again.
+        material_actual = subcon_actual = equipment_bill_total = other_actual = 0.0
+        for b in _active_bills(db, p.id, EXPENSE_INVOICE_TYPES).all():
+            amount = float(b.total_payable or 0)
+            if b.invoice_type == "purchase":
+                material_actual += amount
+            elif b.invoice_type == "subcon":
+                subcon_actual += amount
+            elif b.invoice_type == "equipment":
+                equipment_bill_total += amount
+            else:
+                other_actual += amount
         # Labour actual: sum of payroll line-item net payables for this project's runs.
         labour_actual = float(
             db.query(func.coalesce(func.sum(models.PayrollLineItem.net_payable), 0))
@@ -275,14 +278,10 @@ def feed_budget_variance(
             .scalar()
             or 0
         )
-        # Equipment actual: equipment-type bills + deployment hourly cost + fuel cost (mirrors finance.get_project_pl).
-        # Active bills only: a cancelled bill must not book cost (R2-723).
-        equipment_actual = float(
-            _active_bills(db, p.id, ("equipment",))
-            .with_entities(func.coalesce(func.sum(models.Bill.total_payable), 0))
-            .scalar()
-            or 0
-        )
+        # Equipment actual: equipment-type bills (partitioned above) + deployment
+        # hourly cost + fuel cost (mirrors budget.py). Active bills only: a
+        # cancelled bill must not book cost (R2-723).
+        equipment_actual = equipment_bill_total
         deployments = db.query(models.EquipmentDeployment).filter(models.EquipmentDeployment.project_id == p.id).all()
         for dep in deployments:
             eq = db.query(models.Equipment).filter(models.Equipment.id == dep.equipment_id).first()
@@ -301,7 +300,7 @@ def feed_budget_variance(
         fuel_logs = db.query(models.FuelLog).filter(models.FuelLog.project_id == p.id).all()
         equipment_actual += sum(float(log.total_cost or 0.0) for log in fuel_logs)
 
-        total_actual = material_actual + subcon_actual + labour_actual + equipment_actual
+        total_actual = material_actual + subcon_actual + labour_actual + equipment_actual + other_actual
         rows.append(
             {
                 "project_id": str(p.id),
@@ -315,6 +314,7 @@ def feed_budget_variance(
                 "subcon_actual": subcon_actual,
                 "labour_actual": labour_actual,
                 "equipment_actual": equipment_actual,
+                "other_actual": other_actual,
                 "total_actual": total_actual,
                 "total_variance": total_budget - total_actual,
             }
@@ -322,7 +322,7 @@ def feed_budget_variance(
     columns = [
         "project_id", "name", "material_budget", "labour_budget", "subcon_budget",
         "equipment_budget", "total_budget", "material_actual", "subcon_actual",
-        "labour_actual", "equipment_actual", "total_actual", "total_variance",
+        "labour_actual", "equipment_actual", "other_actual", "total_actual", "total_variance",
     ]
     return _feed_response(rows, columns, fmt)
 
