@@ -516,6 +516,9 @@ def push_bill(
     """
     _require_oauth_config()
     get_company_membership(db, current_user, company_id)
+    # Pushing a bill into Zoho Books is a billing write, matching the in-app
+    # bill-edit permission.
+    require_permission(db, current_user, company_id, "billing:edit")
 
     connection = (
         db.query(models.ZohoBooksConnection)

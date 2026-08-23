@@ -22,7 +22,7 @@ from fastapi.responses import RedirectResponse
 from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 
-from app.auth import create_access_token, get_company_membership, get_current_user
+from app.auth import create_access_token, get_company_membership, get_current_user, require_module_view, require_permission
 from app.config import settings
 from app.crypto import decrypt_token, encrypt_token
 from app.database import get_db
@@ -191,6 +191,9 @@ def authorize(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Your phone number is not authorized for Google Sheets on this company",
         )
+    # Connecting the company's Google account is a settings action, matching the
+    # Drive and Zoho authorize endpoints.
+    require_permission(db, current_user, company_id, "settings:manage")
 
     state = _sign_state(company_id, current_user.id)
     # Build the redirect URI from the configured backend URL (the request base
@@ -329,6 +332,9 @@ def export_payroll_run(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Payroll run not found")
     # Multi-tenant: caller must belong to the payroll run's company.
     get_company_membership(db, current_user, run.company_id)
+    # Exporting payroll line items to an external Google account moves the same
+    # sensitive data the in-app payroll views gate behind require_module_view.
+    require_module_view(db, current_user, run.company_id, "payroll")
 
     connection = (
         db.query(models.GoogleSheetsConnection)
