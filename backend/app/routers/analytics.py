@@ -232,7 +232,7 @@ def get_company_analytics(company_id: uuid.UUID, db: Session = Depends(get_db), 
                 + _to_float(budget.equipment_budget)
             )
 
-        project_spend = sum(_to_float(bill.total_payable) for bill in bills_by_project.get(project.id, []) if bill.invoice_type in EXPENSE_INVOICE_TYPES)
+        project_spend = sum(_to_float(bill.total_payable) for bill in bills_by_project.get(project.id, []) if bill.invoice_type in EXPENSE_INVOICE_TYPES and bill.status != "Cancelled")
         project_variance = project_budget_total - project_spend
         total_tasks = len(tasks_by_project.get(project.id, []))
         completed_tasks = sum(
@@ -306,6 +306,7 @@ def get_company_analytics(company_id: uuid.UUID, db: Session = Depends(get_db), 
             _to_float(bill.total_payable)
             for bill in bills
             if bill.invoice_type in EXPENSE_INVOICE_TYPES
+            and bill.status != "Cancelled"
             and bill.invoice_date and _to_date(bill.invoice_date) and _to_date(bill.invoice_date) <= month_end_d
         )
         cumulative_spend += month_spend
@@ -597,7 +598,7 @@ def get_company_financial_analytics(company_id: uuid.UUID, db: Session = Depends
     projects = db.query(Project).filter(Project.company_id == company_id).all()
     project_ids = [p.id for p in projects]
 
-    bills = db.query(Bill).filter(Bill.project_id.in_(project_ids)).all() if project_ids else []
+    bills = db.query(Bill).filter(Bill.project_id.in_(project_ids), Bill.status != "Cancelled").all() if project_ids else []
 
     to_pay = 0.0
     to_receive = 0.0
