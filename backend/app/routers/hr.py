@@ -47,6 +47,17 @@ def _esi_applicable(basic_salary: float, hra: float, other_allowances: float) ->
     return (float(basic_salary) + float(hra) + float(other_allowances)) <= ESI_GROSS_WAGE_CEILING
 
 
+# R2-210/R2-262/R2-220: DateTime(timezone=True) columns round-trip aware on
+# Postgres but naive on SQLite; normalize every operand to aware UTC before
+# arithmetic or comparison so the two flavors never mix.
+def _aware_utc(dt: datetime) -> datetime:
+    return dt if dt.tzinfo is not None else dt.replace(tzinfo=timezone.utc)
+
+
+def _utc_midnight(dt: datetime) -> datetime:
+    return datetime(dt.year, dt.month, dt.day, tzinfo=timezone.utc)
+
+
 def haversine_distance_m(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     """Return distance in metres between two GPS coordinates (Haversine formula)."""
     R = 6_371_000  # Earth radius in metres
@@ -301,7 +312,10 @@ def punch(payload: PunchRequest, db: Session = Depends(get_db), current_user: Us
         # No site coords configured → allow punch without GPS enforcement
         within_geofence = True
 
-    today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+    # R2-210/R2-262: aware UTC clock so stored/loaded punch values (aware on
+    # Postgres) are always compared against the same flavor.
+    now = datetime.now(timezone.utc)
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
 
     if payload.punch_type == "in":
         # Check if already punched in today
@@ -317,8 +331,8 @@ def punch(payload: PunchRequest, db: Session = Depends(get_db), current_user: Us
         log = AttendanceLog(
             employee_id=payload.employee_id,
             project_id=payload.project_id,
-            attendance_date=datetime.utcnow(),
-            punch_in=datetime.utcnow(),
+            attendance_date=now,
+            punch_in=now,
             lat_in=Decimal(str(payload.lat)),
             lng_in=Decimal(str(payload.lng)),
             distance_from_site_m=Decimal(str(distance_m)) if distance_m is not None else None,
@@ -343,7 +357,7 @@ def punch(payload: PunchRequest, db: Session = Depends(get_db), current_user: Us
         if not log:
             raise HTTPException(status_code=400, detail="No open punch-in found for today.")
 
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         log.punch_out = now
         log.lat_out = Decimal(str(payload.lat))
         log.lng_out = Decimal(str(payload.lng))
@@ -353,8 +367,11 @@ def punch(payload: PunchRequest, db: Session = Depends(get_db), current_user: Us
         log.location_verified = within_geofence
 
         # Compute hours worked
+        # R2-210/R2-262: normalize BOTH operands to aware UTC; punch_in comes
+        # back aware from Postgres (naive from SQLite), and mixing flavors
+        # raised TypeError, 500ing punch-out and leaving the row open.
         if log.punch_in:
-            delta = (now - log.punch_in).total_seconds() / 3600
+            delta = (now - _aware_utc(log.punch_in)).total_seconds() / 3600
             log.hours_worked = Decimal(str(round(delta, 2)))
             # Overtime = hours beyond 8
             ot = max(0.0, delta - 8.0)
@@ -625,9 +642,11 @@ def run_payroll(payload: PayrollRunCreate, db: Session = Depends(get_db), curren
     get_company_membership(db, current_user, payload.company_id)
     require_permission(db, current_user, payload.company_id, "payroll:run")
     # Parse month boundaries
+    # R2-220: attendance_date is aware on Postgres, so the month bounds must
+    # be aware UTC too or the SQL comparison errors out.
     year, month = map(int, payload.payroll_month.split("-"))
-    month_start = datetime(year, month, 1)
-    month_end = datetime(year, month + 1, 1) if month < 12 else datetime(year + 1, 1, 1)
+    month_start = datetime(year, month, 1, tzinfo=timezone.utc)
+    month_end = datetime(year, month + 1, 1, tzinfo=timezone.utc) if month < 12 else datetime(year + 1, 1, 1, tzinfo=timezone.utc)
 
     # Fetch active employees
     query = db.query(StaffEmployee).filter(
@@ -669,7 +688,8 @@ def run_payroll(payload: PayrollRunCreate, db: Session = Depends(get_db), curren
 
         # Handle joining mid-month
         if emp.date_of_joining:
-            joining_date = emp.date_of_joining.replace(tzinfo=None)
+            # R2-220: keep the same flavor as the now-aware month bounds.
+            joining_date = _aware_utc(emp.date_of_joining)
             if joining_date > month_start:
                 if joining_date < month_end:
                     days_remaining = (month_end - joining_date).days
@@ -1450,7 +1470,9 @@ def list_holidays(company_id: uuid.UUID, db: Session = Depends(get_db), _: None 
 @router.post("/holidays/{company_id}", response_model=HolidayResponse, status_code=status.HTTP_201_CREATED)
 def create_holiday(company_id: uuid.UUID, payload: HolidayCreate, db: Session = Depends(get_db), _: None = Depends(verify_company_access), current_user: User = Depends(get_current_user)):
     require_permission(db, current_user, company_id, "payroll:edit")
-    obj = Holiday(company_id=company_id, name=payload.name, date=payload.date)
+    # R2-220: pin the calendar date at UTC midnight so a tz-offset input
+    # cannot shift the holiday to the previous day on Postgres.
+    obj = Holiday(company_id=company_id, name=payload.name, date=_utc_midnight(payload.date))
     db.add(obj)
     db.commit()
     return obj
@@ -1464,6 +1486,9 @@ def update_holiday(holiday_id: uuid.UUID, payload: HolidayUpdate, db: Session = 
     get_company_membership(db, current_user, obj.company_id)
     require_permission(db, current_user, obj.company_id, "payroll:edit")
     for k, v in payload.model_dump(exclude_unset=True).items():
+        # R2-220: same UTC-midnight pinning on update.
+        if k == "date" and v is not None:
+            v = _utc_midnight(v)
         setattr(obj, k, v)
     db.commit()
     db.refresh(obj)

@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Literal, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
@@ -352,7 +352,13 @@ def _enrich(report: StatutoryReport, db: Session) -> StatutoryReportResponse:
     days_overdue = 0
     if report.due_date:
         if report.status != "filed":
-            days_overdue = max(0, (datetime.utcnow() - report.due_date).days)
+            # R2-222: due_date round-trips aware on Postgres (naive on
+            # SQLite); normalize both operands to aware UTC so the overdue
+            # delta can't raise TypeError.
+            due = report.due_date
+            if due.tzinfo is None:
+                due = due.replace(tzinfo=timezone.utc)
+            days_overdue = max(0, (datetime.now(timezone.utc) - due).days)
     data = {**report.__dict__}
     data["days_overdue"] = days_overdue
     data["penalty_estimate"] = 0.0
