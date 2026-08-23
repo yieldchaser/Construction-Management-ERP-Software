@@ -4,7 +4,7 @@ Phase 12 — Equipment & Machinery Tracking Router
 """
 
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 from decimal import Decimal
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -15,6 +15,11 @@ from app.auth import get_current_user, verify_company_access, verify_project_acc
 from app.models import Equipment, EquipmentDeployment, FuelLog, MaintenanceSchedule, Project, User
 
 router = APIRouter(prefix="/equipment", tags=["Equipment & Machinery Tracking"], dependencies=[Depends(get_current_user)])
+
+
+def _as_aware(dt: datetime) -> datetime:
+    """SQLite round-trips DateTime(timezone=True) columns naive; normalize to UTC."""
+    return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
 
 
 # ─── Schemas ─────────────────────────────────────────────────────────────────
@@ -277,14 +282,37 @@ def schedule_maintenance(
         "remarks": data["remarks"]
     }
 
+    # R2-531: completed_date must be timezone-aware (datetime.utcnow() is not).
+    now = datetime.now(timezone.utc)
+    done_key = None
     if data["status"] == "completed":
-        db_data["completed_date"] = datetime.utcnow()
-        eq.status = "available"
-    elif data["status"] in ("scheduled", "overdue"):
-        eq.status = "maintenance"
+        db_data["completed_date"] = now
+        done_key = (data["service_type"].strip().lower(), _as_aware(data["scheduled_date"]).date())
 
     sched = MaintenanceSchedule(**db_data)
     db.add(sched)
+    db.flush()
+
+    # R2-531: derive Equipment.status from the open schedules' dates and today,
+    # never from whichever record was written last - a future-dated booking
+    # must not take the machine off the road, and completing one job must not
+    # clear the flag while other due work is still open. The completed record
+    # closes the matching (service_type, scheduled day) bookings.
+    due_open = any(
+        _as_aware(s.scheduled_date) <= now
+        and (done_key is None or (s.service_type.strip().lower(), _as_aware(s.scheduled_date).date()) != done_key)
+        for s in db.query(MaintenanceSchedule)
+        .filter(
+            MaintenanceSchedule.equipment_id == equipment_id,
+            MaintenanceSchedule.status != "completed",
+        )
+        .all()
+    )
+    if due_open:
+        eq.status = "maintenance"
+    elif data["status"] == "completed" and eq.status == "maintenance":
+        eq.status = "available"
+
     db.commit()
     db.refresh(sched)
     return sched
