@@ -19,7 +19,7 @@ import math
 import uuid
 from datetime import datetime, date, timedelta, timezone
 from decimal import Decimal
-from typing import List, Optional
+from typing import List, Literal, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, File, Form, UploadFile, Response
 from sqlalchemy import func
 from sqlalchemy.orm import Session
@@ -186,6 +186,7 @@ class TimesheetResponse(BaseModel):
     week_end: datetime
     total_hours: float
     status: str
+    approved_by: Optional[uuid.UUID] = None
     notes: Optional[str]
     created_at: datetime
 
@@ -540,6 +541,7 @@ def submit_timesheet(ts_id: uuid.UUID, db: Session = Depends(get_db), current_us
     if not project:
         raise HTTPException(status_code=404, detail="Timesheet's project not found")
     get_company_membership(db, current_user, project.company_id)
+    require_permission(db, current_user, project.company_id, "attendance:edit")
     if ts.status != "draft":
         raise HTTPException(status_code=400, detail="Only draft timesheets can be submitted")
     ts.status = "submitted"
@@ -561,6 +563,7 @@ def approve_timesheet(ts_id: uuid.UUID, db: Session = Depends(get_db), current_u
     if ts.status != "submitted":
         raise HTTPException(status_code=400, detail="Only submitted timesheets can be approved")
     ts.status = "approved"
+    ts.approved_by = current_user.id
     db.commit()
     db.refresh(ts)
     return ts
@@ -745,7 +748,7 @@ def run_payroll(payload: PayrollRunCreate, db: Session = Depends(get_db), curren
         PAID_LEAVE_TYPES = {"casual", "sick", "earned"}
         approved_leaves = db.query(LeaveRequest).filter(
             LeaveRequest.company_id == payload.company_id,
-            LeaveRequest.status == "Approved",
+            func.lower(LeaveRequest.status) == "approved",
             (LeaveRequest.employee_id == emp.id) | (func.lower(LeaveRequest.employee_name) == emp.name.lower()),
             LeaveRequest.start_date < month_end,
             LeaveRequest.end_date >= month_start,
@@ -934,8 +937,10 @@ class LeaveRequestResponse(BaseModel):
     class Config:
         from_attributes = True
 
+LeaveStatus = Literal["Pending", "Approved", "Rejected"]
+
 class LeaveStatusUpdate(BaseModel):
-    status: str
+    status: LeaveStatus
 
 
 @router.get("/leaves/{company_id}", response_model=List[LeaveRequestResponse])
@@ -1405,7 +1410,7 @@ def get_leave_balances(
         )
         .filter(
             LeaveRequest.company_id == company_id,
-            LeaveRequest.status == "Approved",
+            func.lower(LeaveRequest.status) == "approved",
             LeaveRequest.start_date >= year_start,
         )
         .group_by(
