@@ -428,7 +428,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-277 | MEDIUM | W15 | `models.py` | — | FIXED | FIXED 551831e; drawing pin coordinates bounded in the schema (ge=0, le=9999.99 matching Numeric(6,2)) and pin created_by derived from the authenticated membership instead of the request body (kills the FK-violation 500). Sibling: DrawingCreateRequest.created_by / RevisionApproveRequest.approved_by same pattern, unfixed. |
 | R2-278 | MEDIUM | W123 | `api.ts` | — | FIXED | FIXED e59316f; todo url http(s) allowlist + past-due-date rejection (create+update); created_by was already server-derived. Sibling: repeat_type/status still unvalidated. |
 | R2-279 | HIGH | W21 | `calculators.py` | — | FIXED | | reg L12267 S33 FIXED 649476b (H-calculators): brickwork derives leaves from thickness_mm/(brick_width+joint), reports derived leaves, 422 outside 20-35% mortar band; client-side twins filed R2-611; test added. |
-| R2-280 | HIGH | W21 | `calculators.py` | — | TODO | | reg L12310 |
+| R2-280 | HIGH | W21 | `calculators.py` | — | FIXED | | reg L12310 S33 FIXED eed18dd (H-calculators): paint calculator rejects openings larger than walls (422 naming the rule) instead of returning negative quantities. |
 | R2-281 | HIGH | W21 | `calculators.py` | — | FIXED | | reg L12344 S33 FIXED 8798662 (H-calculators): concrete materials derive from dry_volume via grade true ratios (bags x1440/50); wastage_pct scales ordered materials; mix_library now true ratios; test added. |
 | R2-282 | MEDIUM | W02 | `UNMAPPED` | — | FIXED | FIXED 9994fab; steel calculators reject requests populating both parameter sets (422 with named conflicts); floors ge=1, area_sqft gt=0. |
 | R2-283 | CRITICAL | W12 | `statutory.py` | `models.py` | TODO | | reg L12433 |
@@ -666,7 +666,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-516 | HIGH | W09 | `page.tsx` | — | TODO | | reg L26195 |
 | R2-517 | HIGH | W75 | `supabase_storage.py` | — | TODO | | reg L26217 |
 | R2-518 | MEDIUM | W09 | `page.tsx` | `PwaControls.tsx`, `d/reports/calculators/page.tsx`, `calculators.py` | FIXED | FIXED (evidence, 287db85); geolocation failure already blocks punches with an alert (R2-060) - no fabricated coordinates anywhere. |
-| R2-519 | HIGH | W21 | `calculators.py` | — | TODO | | reg L26418 |
+| R2-519 | HIGH | W21 | `calculators.py` | — | FIXED | | reg L26418 S33 FIXED d3c13b6 (H-calculators): client concrete factors corrected against server ratio math (M7.5 4.0->3.41, M20 8.2->8.06, M25 agg 0.76->0.77); engine consolidation remains CD-2-gated. |
 | R2-520 | HIGH | W21 | `calculators.py` | — | FIXED | | reg L26464 S33 FIXED 8798662 (H-calculators): same defect/lines as R2-281, one inseparable diff naming both ids. |
 | R2-521 | MEDIUM | W21 | `calculators.py` | `calculators/page.tsx`, `models.py` | FIXED | FIXED 5f755ac; steel unit weight D2/162.89 -> D2/162.0 matching the console constant. |
 | R2-522 | CRITICAL | W12 | `statutory.py` | — | TODO | | reg L26557 |
