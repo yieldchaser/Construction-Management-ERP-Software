@@ -3,6 +3,7 @@
 Phase 11 — Client Portal & PDF Progress Reports Router
 """
 
+import logging
 import os
 import uuid
 from datetime import datetime
@@ -35,6 +36,24 @@ from app.models import (
 from app.utils.pdf_generator import generate_client_report_pdf
 
 router = APIRouter(prefix="/reports", tags=["Client Reports Portal"], dependencies=[Depends(get_current_user)])
+
+logger = logging.getLogger(__name__)
+
+
+class _ReportFailed:
+    """Sentinel a guarded handler returns after logging an unexpected
+    exception. Lets get_report_data tell the caller the report crashed
+    instead of publishing an empty result as genuine data (R2-076, R2-312,
+    R2-560). Truthy on purpose so ``handler(...) or []`` cannot silently
+    flatten it into an empty list."""
+
+    __slots__ = ()
+
+    def __bool__(self) -> bool:
+        return True
+
+
+_REPORT_FAILED = _ReportFailed()
 
 
 # ─── Schemas ─────────────────────────────────────────────────────────────────
@@ -256,7 +275,11 @@ def download_report(report_id: uuid.UUID, db: Session = Depends(get_db), current
 #   frontend/src/app/c/[company_id]/reports/[slug]/page.tsx  (REPORT_METADATA)
 #   frontend/src/app/c/[company_id]/reports/page.tsx        (exportSchemas)
 #
-# Any slug not handled here, or any unexpected exception, returns rows: [].
+# A slug with no handler, or a company/project id that does not parse,
+# returns rows: []. A slug whose handler raises is logged with its full
+# traceback and returned as rows: [] PLUS a non-empty top-level "errors"
+# list, so a crashed report never masquerades as a genuinely empty one
+# (R2-076, R2-312, R2-560).
 #
 # Registered on the existing `router` (prefix "/reports") which main.py mounts
 # under "/apis/v3", yielding the full path "/apis/v3/reports/data/{slug}".
@@ -265,6 +288,7 @@ class ReportDataResponse(BaseModel):
     slug: str
     rows: List[dict]
     generated_at: str
+    errors: List[str] = []
 
 
 def _clean(v):
@@ -566,7 +590,8 @@ def _rep_payment_request(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
             })
         return rows
     except Exception:
-        return []
+        logger.exception("Report 'payment-request' failed to generate; returning empty fallback")
+        return _REPORT_FAILED
 
 
 # ─── Shared helpers for new report handlers ──────────────────────────────────
@@ -601,8 +626,9 @@ def _build_party_ledger(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
     """Core ledger aggregation across the company's projects.
 
     Returns (rows, party_final_balance) where rows is the chronological list of
-    party-ledger dicts and party_final_balance maps a party name to the last
-    running balance recorded for that party.
+    party-ledger dicts and party_final_balance maps a party name to that
+    party's own closing balance, accumulated only from that party's
+    transactions (R2-313/R2-560: never the company-wide total).
     """
     proj_ids = _project_ids_for_company(db, cid)
 
@@ -638,7 +664,7 @@ def _build_party_ledger(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
     raw.sort(key=lambda x: x[0] if x[0] else datetime.min)
 
     rows = []
-    running = 0.0
+    running_by_party = {}
     party_final = {}
     for dt, et, obj in raw:
         party_name = ""
@@ -658,12 +684,10 @@ def _build_party_ledger(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
                 txn_type = "Receipt"
                 party_type = "Client"
                 debit = amount
-                running += amount
             else:
                 txn_type = "Expense"
                 party_type = "Vendor"
                 credit = amount
-                running -= amount
             description = obj.description or ("Receipt Payment" if is_in else "Expense Payment")
             cost_code = obj.cost_code or ""
             if obj.project_id:
@@ -676,12 +700,10 @@ def _build_party_ledger(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
                 txn_type = "Sale Invoice"
                 party_type = "Client"
                 debit = amount
-                running += amount
             else:
                 txn_type = "Purchase Bill"
                 party_type = "Vendor"
                 credit = amount
-                running -= amount
             description = f"Invoice {obj.invoice_number}"
             if obj.project_id:
                 proj = db.query(Project).filter(Project.id == obj.project_id).first()
@@ -695,21 +717,25 @@ def _build_party_ledger(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
             txn_type = "Salary"
             party_type = "Staff"
             credit = amount
-            running -= amount
         elif et == "debit":
             amount = float(obj.total_amount) if obj.total_amount is not None else 0.0
             party_name = _team_user_name(db, obj.party_company_user_id) or "Party"
             txn_type = "Debit Note"
             credit = amount
-            running -= amount
             description = obj.notes or "Debit Note"
         elif et == "credit":
             amount = float(obj.total_amount) if obj.total_amount is not None else 0.0
             party_name = _team_user_name(db, obj.party_company_user_id) or "Party"
             txn_type = "Credit Note"
             debit = amount
-            running += amount
             description = obj.notes or "Credit Note"
+
+        # R2-313/R2-560: the balance accumulates per party, so a party's
+        # Balance never includes another party's transactions. debit is the
+        # receivable direction and credit the payable direction in every
+        # branch above.
+        party_balance = running_by_party.get(party_name, 0.0) + debit - credit
+        running_by_party[party_name] = party_balance
 
         rows.append({
             "Party Name": party_name,
@@ -722,9 +748,9 @@ def _build_party_ledger(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
             "Transaction Date": _clean(dt),
             "Party Debit": debit,
             "Party Credit": credit,
-            "Balance": running,
+            "Balance": party_balance,
         })
-        party_final[party_name] = running
+        party_final[party_name] = party_balance
 
     return rows, party_final
 
@@ -734,7 +760,8 @@ def _rep_party_ledger(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
         rows, _ = _build_party_ledger(db, cid, pid)
         return rows
     except Exception:
-        return []
+        logger.exception("Report 'party-ledger' failed to generate; returning empty fallback")
+        return _REPORT_FAILED
 
 
 def _rep_all_party_balances(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
@@ -752,7 +779,8 @@ def _rep_all_party_balances(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID
             })
         return rows
     except Exception:
-        return []
+        logger.exception("Report 'all-party-balances' failed to generate; returning empty fallback")
+        return _REPORT_FAILED
 
 
 def _rep_item_wise_sales(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
@@ -784,7 +812,8 @@ def _rep_item_wise_sales(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
             })
         return rows
     except Exception:
-        return []
+        logger.exception("Report 'item-wise-sales' failed to generate; returning empty fallback")
+        return _REPORT_FAILED
 
 
 def _rep_company_sales(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
@@ -833,7 +862,8 @@ def _rep_company_sales(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
             })
         return rows
     except Exception:
-        return []
+        logger.exception("Report 'company-sales' failed to generate; returning empty fallback")
+        return _REPORT_FAILED
 
 
 def _rep_crm_lead_detail(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
@@ -864,7 +894,8 @@ def _rep_crm_lead_detail(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
             })
         return rows
     except Exception:
-        return []
+        logger.exception("Report 'crm-lead-detail' failed to generate; returning empty fallback")
+        return _REPORT_FAILED
 
 
 def _task_ancestor_names(db: Session, task):
@@ -924,7 +955,8 @@ def _rep_task_measurement_book(db: Session, cid: uuid.UUID, pid: Optional[uuid.U
             })
         return rows
     except Exception:
-        return []
+        logger.exception("Report 'task-measurement-book' failed to generate; returning empty fallback")
+        return _REPORT_FAILED
 
 
 def _rep_material_stock_movement(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
@@ -971,7 +1003,8 @@ def _rep_material_stock_movement(db: Session, cid: uuid.UUID, pid: Optional[uuid
             })
         return rows
     except Exception:
-        return []
+        logger.exception("Report 'material-stock-movement' failed to generate; returning empty fallback")
+        return _REPORT_FAILED
 
 
 def _rep_material_received_used(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
@@ -1021,7 +1054,8 @@ def _rep_material_received_used(db: Session, cid: uuid.UUID, pid: Optional[uuid.
             })
         return rows
     except Exception:
-        return []
+        logger.exception("Report 'material-received-used' failed to generate; returning empty fallback")
+        return _REPORT_FAILED
 
 
 def _rep_task_attendance(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
@@ -1052,7 +1086,8 @@ def _rep_task_attendance(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
             })
         return rows
     except Exception:
-        return []
+        logger.exception("Report 'task-attendance' failed to generate; returning empty fallback")
+        return _REPORT_FAILED
 
 
 def _gst_split(tax_amount):
@@ -1093,7 +1128,8 @@ def _rep_gstr1_sales(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
             })
         return rows
     except Exception:
-        return []
+        logger.exception("Report 'gstr1-sales' failed to generate; returning empty fallback")
+        return _REPORT_FAILED
 
 
 def _rep_gstr2_purchase(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
@@ -1144,7 +1180,8 @@ def _rep_gstr2_purchase(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
             })
         return rows
     except Exception:
-        return []
+        logger.exception("Report 'gstr2-purchase' failed to generate; returning empty fallback")
+        return _REPORT_FAILED
 
 
 def _rep_sales_deduction_retention(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
@@ -1172,7 +1209,8 @@ def _rep_sales_deduction_retention(db: Session, cid: uuid.UUID, pid: Optional[uu
             })
         return rows
     except Exception:
-        return []
+        logger.exception("Report 'sales-deduction-retention' failed to generate; returning empty fallback")
+        return _REPORT_FAILED
 
 
 def _rep_bank_statement(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
@@ -1221,7 +1259,8 @@ def _rep_bank_statement(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
                 })
         return rows
     except Exception:
-        return []
+        logger.exception("Report 'bank-statement' failed to generate; returning empty fallback")
+        return _REPORT_FAILED
 
 
 def _rep_project_wise_payment_summary(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
@@ -1253,7 +1292,8 @@ def _rep_project_wise_payment_summary(db: Session, cid: uuid.UUID, pid: Optional
             })
         return rows
     except Exception:
-        return []
+        logger.exception("Report 'project-wise-payment-summary' failed to generate; returning empty fallback")
+        return _REPORT_FAILED
 
 
 def _rep_project_payment(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
@@ -1283,7 +1323,8 @@ def _rep_project_payment(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
             })
         return rows
     except Exception:
-        return []
+        logger.exception("Report 'project-payment' failed to generate; returning empty fallback")
+        return _REPORT_FAILED
 
 
 _REPORT_HANDLERS = {
@@ -1336,11 +1377,21 @@ def get_report_data(
             raise HTTPException(status_code=404, detail="Project not found")
         get_company_membership(db, current_user, project.company_id)
 
+    errors: List[str] = []
     rows: List[dict] = []
     handler = _REPORT_HANDLERS.get(slug)
     if handler is not None:
         try:
-            rows = handler(db, cid, pid) or []
+            built = handler(db, cid, pid) or []
         except Exception:
+            logger.exception("Report '%s' failed to generate; returning empty fallback", slug)
+            built = _REPORT_FAILED
+        if built is _REPORT_FAILED or isinstance(built, _ReportFailed):
+            # A guarded handler already logged its traceback and fell back;
+            # surface the failure to the caller instead of publishing an
+            # empty report as data (R2-076/R2-312/R2-560).
             rows = []
-    return {"slug": slug, "rows": rows, "generated_at": generated_at}
+            errors.append(f"Report '{slug}' failed to generate; an empty result was returned instead.")
+        else:
+            rows = built
+    return {"slug": slug, "rows": rows, "generated_at": generated_at, "errors": errors}
