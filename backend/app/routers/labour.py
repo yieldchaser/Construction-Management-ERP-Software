@@ -8,7 +8,8 @@ from app.database import get_db
 from app.auth import get_current_user, verify_project_in_company, verify_project_access, get_company_membership, require_permission
 from app.models import (
     WorkOrder, CompanyTeam, SubcontractorPerformance,
-    BOCWRecord, MusterRoll, Bill, User
+    BOCWRecord, MusterRoll, Bill, User,
+    AttendanceLog, SubcontractorAttendance
 )
 from pydantic import BaseModel, Field
 import csv
@@ -117,10 +118,13 @@ class MusterRollCreate(BaseModel):
     contractor_id: Optional[UUID] = None
     date: datetime
     labor_role: str
-    workers_present: int = Field(..., ge=0)
-    workers_absent: int = Field(..., ge=0)
-    hours_worked: float = Field(..., ge=0)
-    overtime_hours: float = Field(0.0, ge=0)
+    # R2-507: every figure is optional; anything left None is derived for the
+    # site-day from the punch screen (AttendanceLog) and the crew drawer
+    # (SubcontractorAttendance) so a diligent site never re-keys the register.
+    workers_present: Optional[int] = Field(None, ge=0)
+    workers_absent: Optional[int] = Field(None, ge=0)
+    hours_worked: Optional[float] = Field(None, ge=0)
+    overtime_hours: Optional[float] = Field(None, ge=0)
     notes: Optional[str] = None
 
 
@@ -251,6 +255,34 @@ def create_bocw(req: BOCWCreate, db: Session = Depends(get_db), current_user: Us
 
 # --- Muster Roll ---
 
+def _derive_day_figures(db: Session, project_id: UUID, day):
+    """R2-507: compute (present, absent, hours, overtime) for one project-day
+    from the sources the product already holds - employee punches
+    (AttendanceLog) and subcontractor crew counts (SubcontractorAttendance).
+    Returns None when the day has no source rows at all."""
+    logs = [
+        a for a in db.query(AttendanceLog).filter(AttendanceLog.project_id == project_id).all()
+        if a.attendance_date.date() == day
+    ]
+    crews = [
+        s for s in db.query(SubcontractorAttendance).filter(SubcontractorAttendance.project_id == project_id).all()
+        if s.attendance_date.date() == day
+    ]
+    if not logs and not crews:
+        return None
+    present = sum(1 for a in logs if (a.status or "") != "Absent")
+    absent = sum(1 for a in logs if (a.status or "") == "Absent")
+    hours = round(float(sum(float(a.hours_worked or 0) for a in logs)), 2)
+    overtime = round(
+        float(sum(float(a.overtime_hours or 0) for a in logs))
+        + float(sum(float(s.overtime_hours or 0) for s in crews)),
+        2,
+    )
+    # A crew row is that many workers on site, not one person.
+    present += int(sum(int(s.worker_count or 0) for s in crews))
+    return present, absent, hours, overtime
+
+
 @router.get("/muster-roll/{project_id}", response_model=List[MusterRollResponse])
 def get_muster_roll(project_id: UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     records = db.query(MusterRoll).filter(MusterRoll.project_id == project_id).all()
@@ -276,16 +308,38 @@ def create_muster_roll(req: MusterRollCreate, response: Response, db: Session = 
     get_company_membership(db, current_user, req.company_id)
     verify_project_in_company(db, req.project_id, req.company_id)
     require_permission(db, current_user, req.company_id, "attendance:edit")
-    if req.hours_worked > req.workers_present * 24:
+    date_only = req.date.date()
+    # R2-507: omitted figures are derived from attendance data instead of
+    # forcing a hand-typed statutory register.
+    workers_present = req.workers_present
+    workers_absent = req.workers_absent
+    hours_worked = req.hours_worked
+    overtime_hours = req.overtime_hours
+    if any(v is None for v in (workers_present, workers_absent, hours_worked, overtime_hours)):
+        derived = _derive_day_figures(db, req.project_id, date_only)
+        if derived is None:
+            raise HTTPException(
+                status_code=422,
+                detail="no attendance data for this day to derive the muster roll from; supply the figures explicitly",
+            )
+        d_present, d_absent, d_hours, d_overtime = derived
+        if workers_present is None:
+            workers_present = d_present
+        if workers_absent is None:
+            workers_absent = d_absent
+        if hours_worked is None:
+            hours_worked = d_hours
+        if overtime_hours is None:
+            overtime_hours = d_overtime
+    if hours_worked > workers_present * 24:
         raise HTTPException(status_code=422, detail="hours_worked cannot exceed workers_present × 24")
-    if req.overtime_hours > req.hours_worked:
+    if overtime_hours > hours_worked:
         raise HTTPException(status_code=422, detail="overtime_hours cannot exceed hours_worked")
     # R2-333: the muster roll is a statutory register; re-posting the same
     # gang for the same day (double-tap, retry after timeout, two supervisors)
     # must update one row in place instead of recording the workers twice.
     # Idempotency key follows the subcon precedent (R2-332): project +
     # contractor + calendar day + role compared trimmed and case-insensitively.
-    date_only = req.date.date()
     role_key = req.labor_role.strip().lower()
     existing = db.query(MusterRoll).filter(MusterRoll.project_id == req.project_id).all()
     record = None
@@ -307,10 +361,10 @@ def create_muster_roll(req: MusterRollCreate, response: Response, db: Session = 
             labor_role=req.labor_role.strip(),
         )
         db.add(record)
-    record.workers_present = req.workers_present
-    record.workers_absent = req.workers_absent
-    record.hours_worked = req.hours_worked
-    record.overtime_hours = req.overtime_hours
+    record.workers_present = workers_present
+    record.workers_absent = workers_absent
+    record.hours_worked = hours_worked
+    record.overtime_hours = overtime_hours
     record.notes = req.notes
     db.commit()
     db.refresh(record)
