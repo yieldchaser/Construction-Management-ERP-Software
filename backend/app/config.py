@@ -154,6 +154,10 @@ class Settings(BaseSettings):
     # prod env (e.g. Render) per deployment; never ship a default here.
     ADMIN_MIGRATION_SECRET: str = ""
     RATE_LIMIT_STORAGE_URI: str = ""
+    # Trust CF-Connecting-IP / X-Forwarded-For when keying rate limits. Keep
+    # false unless you have verified your proxy topology: a spoofable header
+    # would let callers rotate keys to dodge limits entirely.
+    RATE_LIMIT_TRUST_PROXY_HEADERS: bool = False
 
     # Encryption key for OAuth tokens stored at rest (currently
     # GoogleSheetsConnection.access_token / refresh_token; see app/crypto.py).
