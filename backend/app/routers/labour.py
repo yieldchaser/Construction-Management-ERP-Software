@@ -31,6 +31,19 @@ def _resolve_contractor_name(db: Session, contractor_id: Optional[UUID]) -> str:
     return user.name if user and user.name else "Unknown"
 
 
+_CSV_FORMULA_PREFIXES = ("=", "+", "-", "@", "\t", "\r")
+
+
+def _csv_safe_cell(value):
+    # R2-185: a cell whose text begins with = + - @ TAB or CR is executed as a
+    # formula when the statutory CSV is opened in Excel/LibreOffice/Sheets.
+    # Prefix a single quote so the value is treated as text; everything else
+    # passes through untouched.
+    if isinstance(value, str) and value.startswith(_CSV_FORMULA_PREFIXES):
+        return "'" + value
+    return value
+
+
 # --- Schemas ---
 class ReliabilityResponse(BaseModel):
     id: UUID
@@ -183,12 +196,12 @@ def export_bocw(project_id: UUID, month_year: Optional[str] = None, db: Session 
     ])
     for r in records:
         writer.writerow([
-            r.contractor_name,
-            r.month_year,
+            _csv_safe_cell(r.contractor_name),
+            _csv_safe_cell(r.month_year),
             r.workers_count,
             float(r.wages_paid),
             float(r.contribution_amount),
-            r.acknowledgement_number or "",
+            _csv_safe_cell(r.acknowledgement_number or ""),
             r.created_at.strftime("%Y-%m-%d %H:%M:%S") if r.created_at else "",
         ])
 
