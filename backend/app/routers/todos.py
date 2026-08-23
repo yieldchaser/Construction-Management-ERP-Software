@@ -35,6 +35,19 @@ def _parse_dt(value: Optional[str]):
     return None
 
 
+def _safe_url(value: Optional[str]) -> Optional[str]:
+    """R2-442: legacy rows may hold non-http(s) schemes (e.g. javascript:).
+
+    Such payloads are never served, so no current or future renderer, export or
+    notification can turn a stored value into a live link.
+    """
+    if value is None:
+        return None
+    if value.startswith("http://") or value.startswith("https://"):
+        return value
+    return None
+
+
 def _serialize(db: Session, t: models.Todo):
     assignees = db.query(models.TodoAssignee).filter(models.TodoAssignee.todo_id == t.id).all()
     task_name = None
@@ -59,7 +72,7 @@ def _serialize(db: Session, t: models.Todo):
         "type": t.type,
         "linked_task_id": str(t.linked_task_id) if t.linked_task_id else None,
         "task_name": task_name,
-        "url": t.url,
+        "url": _safe_url(t.url),
         "status": t.status,
         "assignee_ids": [str(a.assignee_id) for a in assignees],
         "created_at": t.created_at.isoformat() if t.created_at else None,
@@ -235,7 +248,8 @@ def update_todo(todo_id: uuid.UUID, payload: TodoUpdate, db: Session = Depends(g
         t.type = payload.type
     if payload.linked_task_id is not None:
         t.linked_task_id = payload.linked_task_id
-    if payload.url is not None:
+    # An explicit null clears the url (R2-442).
+    if "url" in payload.model_fields_set:
         t.url = payload.url
     if payload.status is not None:
         t.status = payload.status
