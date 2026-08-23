@@ -45,6 +45,9 @@ WORKFLOW_MODULES = {
     "procurement",
     "budgeting",
     "payroll",
+    "attendance",
+    "drawings",
+    "reports",
     "subcontractor",
 }
 
