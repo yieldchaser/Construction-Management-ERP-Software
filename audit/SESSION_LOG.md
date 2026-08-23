@@ -2,6 +2,15 @@
 
 Append-only. Every working block ends with a 5-line entry. Never edit an existing entry; if a commit was reverted, add a new entry.
 
+## Session 33 (cont. 8) — sweep: hr.py COMPLETE 28/28; finance straggler R2-236 closed (2026-08-23)
+
+- New re-fixes: R2-236 `7aa31e6` (_ledger_sort_dt helper; the chronic-failure dispatch finally landed); R2-592 `f5f6749` (??: honest nulls replace ||0/||100/||500 fabrication across quality/projects/dashboard/hr pages); R2-561+564 `0977492` (timesheet duration server-derived, ghost-employee headers 404, drawer failures alert).
+- hr.py SWEEP COMPLETE: 28/28 verified. Incidental closes noted: R2-562 (ordering guard from R2-561), R2-563 (week bounds already present). R2-593 dispatch died - gate check spec preserved: wire face-punch->AttendanceLog ONLY if long-form L31102 prescribes; else BLOCKED-GATED.
+- Sweep totals: 50/94 verified, 27 live defects re-fixed, 3 D2-gated surfaced (033/201/352), R2-345 founder-gated skipped, R2-593 verdict pending.
+- Suite GREEN exit=0 at 0977492. Remaining queue: fixes R2-052, R2-100+315, R2-276, R2-327r, R2-481+527, R2-302, R2-475 slice, R2-533+534; verify reports x18, procurement x9, scattered x5; pins sets B/C.
+
+---
+
 ## Session 33 (cont. 7) — sweep: 46/94 verified, 23 re-fixed; sibling alarms cleared (2026-08-23)
 
 - New: R2-528+529 `51ecbe9` (leave status Literal + case-normalized balances; approved_by stamped; submit gated attendance:edit); R2-430/429/211/540 landed earlier this block.
