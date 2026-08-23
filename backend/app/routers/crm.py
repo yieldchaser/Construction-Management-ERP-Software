@@ -66,6 +66,28 @@ def ensure_lead_party(db: Session, lead: CRMLead) -> None:
         db.flush()
     lead.party_id = party.id
 
+
+def _resolve_lead_lookup(db: Session, model, comp_uuid: uuid.UUID, field: str, value: Optional[str], defaults: list) -> Optional[str]:
+    """R2-359: resolve a lead's source/category/status against the company-scoped
+    lookup instead of storing free text.
+
+    Seeds the company's defaults on first use, matches case-insensitively so
+    "won" normalises to the stored name, and refuses values the company has not
+    defined - the same treatment party_id already gets - so the pipeline stays
+    groupable and renaming a lookup row cannot orphan leads silently.
+    """
+    if value is None:
+        return None
+    known = {i.name.casefold(): i.name for i in _get_or_seed(db, model, comp_uuid, defaults)}
+    canonical = known.get(value.casefold())
+    if canonical is None:
+        allowed = ", ".join(sorted(known.values())) if known else "none defined yet"
+        raise HTTPException(
+            status_code=400,
+            detail=f"'{value}' is not one of this company's CRM {field} options ({allowed}). Add it under CRM settings first.",
+        )
+    return canonical
+
 # Lead Schemas
 class LeadCreateRequest(BaseModel):
     company_id: uuid.UUID
@@ -247,6 +269,12 @@ def create_lead(req: LeadCreateRequest, db: Session = Depends(get_db), current_u
     get_company_membership(db, current_user, comp_uuid)
     require_permission(db, current_user, comp_uuid, "crm:edit")
 
+    # R2-359: the three lookup-backed fields must reference the company's
+    # tables, normalised, not arrive as free text.
+    src = _resolve_lead_lookup(db, CRMLeadSource, comp_uuid, "source", req.source, DEFAULT_SOURCES)
+    cat = _resolve_lead_lookup(db, CRMLeadCategory, comp_uuid, "category", req.category, [])
+    stat = _resolve_lead_lookup(db, CRMLeadStatus, comp_uuid, "status", req.status, DEFAULT_STATUSES)
+
     lead = CRMLead(
         id=uuid.uuid4(),
         company_id=comp_uuid,
@@ -259,9 +287,9 @@ def create_lead(req: LeadCreateRequest, db: Session = Depends(get_db), current_u
         client_company_name=req.client_company_name,
         party_id=req.party_id,
         address=req.address,
-        source=req.source,
-        category=req.category,
-        status=req.status,
+        source=src,
+        category=cat,
+        status=stat,
         priority=req.priority,
         budget=req.budget,
         lead_name=req.lead_name,
@@ -291,8 +319,14 @@ def update_lead(lead_id: uuid.UUID, req: LeadUpdateRequest, db: Session = Depend
     get_company_membership(db, current_user, lead.company_id)
     require_permission(db, current_user, lead.company_id, "crm:edit")
 
+    # R2-359: supplied lookup fields resolve against the company's tables
+    # before anything is written.
+    new_status = _resolve_lead_lookup(db, CRMLeadStatus, lead.company_id, "status", req.status, DEFAULT_STATUSES) if req.status is not None else None
+    new_source = _resolve_lead_lookup(db, CRMLeadSource, lead.company_id, "source", req.source, DEFAULT_SOURCES) if req.source is not None else None
+    new_category = _resolve_lead_lookup(db, CRMLeadCategory, lead.company_id, "category", req.category, []) if req.category is not None else None
+
     if req.status is not None:
-        lead.status = req.status
+        lead.status = new_status
     if req.priority is not None:
         lead.priority = req.priority
     if req.budget is not None:
@@ -321,9 +355,9 @@ def update_lead(lead_id: uuid.UUID, req: LeadUpdateRequest, db: Session = Depend
     if req.address is not None:
         lead.address = req.address
     if req.source is not None:
-        lead.source = req.source
+        lead.source = new_source
     if req.category is not None:
-        lead.category = req.category
+        lead.category = new_category
     if req.lead_name is not None:
         lead.lead_name = req.lead_name
     if req.last_contacted is not None:
@@ -401,7 +435,7 @@ class LookupCreate(BaseModel):
 
 
 DEFAULT_SOURCES = ["Website", "Facebook", "Instagram", "Google", "Whatsapp", "Referral", "Cold Call", "Email Campaign"]
-DEFAULT_STATUSES = ["New Lead", "Follow-Up", "Proposal Stage", "Converted", "Lost", "No Response", "Irrelevant Lead"]
+DEFAULT_STATUSES = ["New Lead", "Follow-Up", "Proposal Stage", "Converted", "Won", "Lost", "No Response", "Irrelevant Lead"]
 
 
 def _get_or_seed(db: Session, model, comp_uuid: uuid.UUID, defaults: list[str]):
