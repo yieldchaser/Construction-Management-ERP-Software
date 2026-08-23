@@ -4,7 +4,7 @@ from decimal import Decimal, InvalidOperation
 from typing import Any, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from app.database import get_db
 from app.auth import get_current_user, verify_company_access, get_company_membership, require_permission
 from app.models import CustomField, CustomFieldValue, User, Project, Task, Bill, CRMLead
@@ -26,6 +26,10 @@ CUSTOM_FIELD_ENTITY_MODELS = {
 
 
 class CustomFieldCreate(BaseModel):
+    # R2-180: a typo'd field name must be a 422, not a silently dropped key
+    # behind a 200 (extra="ignore" is the Pydantic default).
+    model_config = ConfigDict(extra="forbid")
+
     company_id: uuid.UUID
     entity_type: str = Field(..., pattern=CUSTOM_FIELD_ENTITY_TYPE_PATTERN)
     field_name: str
@@ -58,6 +62,9 @@ class CustomFieldResponse(BaseModel):
 
 
 class CustomFieldValueCreate(BaseModel):
+    # R2-180: reject unknown keys (see CustomFieldCreate).
+    model_config = ConfigDict(extra="forbid")
+
     company_id: uuid.UUID
     field_id: uuid.UUID
     entity_type: str = Field(..., pattern=CUSTOM_FIELD_ENTITY_TYPE_PATTERN)
@@ -91,6 +98,9 @@ class CustomFieldValueInput(BaseModel):
     untyped — its shape depends on the target CustomField.field_type and is
     normalized into value_text/value_number/value_date/value_json by
     `upsert_values_for_entity` below."""
+    # R2-180: reject unknown keys (see CustomFieldCreate).
+    model_config = ConfigDict(extra="forbid")
+
     field_id: uuid.UUID
     value: Optional[Any] = None
 
