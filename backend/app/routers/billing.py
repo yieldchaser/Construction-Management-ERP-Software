@@ -23,6 +23,7 @@ from app.constants import (
     CANONICAL_INVOICE_TYPES,
     REVENUE_INVOICE_TYPES,
     EXPENSE_INVOICE_TYPES,
+    SETTLEMENT_INVOICE_TYPES,
 )
 
 router = APIRouter(
@@ -907,6 +908,19 @@ def create_bill(req: BillCreateRequest, db: Session = Depends(get_db), current_u
     # Workflow Controls: Finance Controls (Pre-Tax Deduction/Retention order)
     company = get_company(db, req.company_id)
     pretax_order = bool(company.pretax_deduction_retention) if company else False
+
+    # R2-211: settlement vouchers are cash movements against already-taxed
+    # invoices, not taxable supplies of their own. A non-zero GST rate on one
+    # inflates money-in/out by the tax rate and double-counts tax charged on
+    # the underlying invoice, so the create path refuses to book it.
+    if req.invoice_type in SETTLEMENT_INVOICE_TYPES and req.gst_pct > 0:
+        raise HTTPException(
+            status_code=422,
+            detail=(
+                f"{req.invoice_type} is a settlement voucher (cash movement) and cannot carry "
+                "GST; post it with gst_pct 0"
+            ),
+        )
 
     # Mathematical Core Billing Engine
     # Calculate pre-determined deduction amounts

@@ -381,6 +381,9 @@ function NewTransactionModal({
   const [typeKey, setTypeKey] = useState<string>(TAXONOMY[0].key);
   const cfg = TAXONOMY.find((t) => t.key === typeKey)!;
   const isSalesInvoice = cfg.key === "sales_invoice";
+  // R2-211: settlement types are cash movements, not taxable supplies — the
+  // GST field is hidden and gst_pct forced to 0 for them.
+  const isSettlement = cfg.endpoint === "bill" && SETTLEMENT_TYPES.includes(cfg.key);
 
   // Custom Fields (Settings → Custom Fields, entity_type="invoice") — only surfaced
   // for the Sales Invoice transaction type, which is the entity this framework is wired to.
@@ -505,7 +508,7 @@ function NewTransactionModal({
             due_date: due,
             invoice_type: canonicalType,
             subtotal: subtotal,
-            gst_pct: parseFloat(gstPct) || 0,
+            gst_pct: isSettlement ? 0 : parseFloat(gstPct) || 0,
             deductions: dedPayload,
             pre_tax_deductions: preTax,
             items_json: itemsJson,
@@ -629,16 +632,16 @@ function NewTransactionModal({
         </div>
 
         {cfg.endpoint === "bill" && (
-          <>
-            <div>
-              <Lbl>Due Date</Lbl>
-              <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground" />
-            </div>
-            <div>
-              <Lbl>GST %</Lbl>
-              <input value={gstPct} onChange={(e) => setGstPct(e.target.value)} className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground" />
-            </div>
-          </>
+          <div>
+            <Lbl>Due Date</Lbl>
+            <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground" />
+          </div>
+        )}
+        {cfg.endpoint === "bill" && !isSettlement && (
+          <div>
+            <Lbl>GST %</Lbl>
+            <input value={gstPct} onChange={(e) => setGstPct(e.target.value)} className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground" />
+          </div>
         )}
 
         {/* Payment mode conditional fields (Payment In / Out) */}
