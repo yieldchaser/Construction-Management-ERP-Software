@@ -126,7 +126,10 @@ def generate_report(
     quality_tests_assessed = [t for t in quality_tests if t.is_pass is not None]
     quality_tests_unassessed = quality_tests_total - len(quality_tests_assessed)
     quality_tests_pass_count = sum(1 for t in quality_tests_assessed if t.is_pass)
-    quality_tests_pass_rate = int((quality_tests_pass_count / len(quality_tests_assessed)) * 100) if quality_tests_assessed else 0
+    # R2-414: with zero assessed tests there is NO pass rate, not a 0% one.
+    # None is the "no data" sentinel; 0 stays reserved for tests that exist
+    # and all fail.
+    quality_tests_pass_rate = int((quality_tests_pass_count / len(quality_tests_assessed)) * 100) if quality_tests_assessed else None
 
     metrics = {
         "tasks_total": tasks_total,

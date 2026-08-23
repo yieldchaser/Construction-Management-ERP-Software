@@ -344,6 +344,20 @@ def generate_client_report_pdf(
         b"0 -30 Td"
     ]
 
+    # R2-414: zero assessed lab tests means there IS no rate, so say that
+    # instead of printing a "0%" headline that reads as every test failed.
+    # 0% remains honest only when tests exist and all of them fail.
+    tests_pass_rate = metrics.get('quality_tests_pass_rate')
+    if tests_pass_rate is None:
+        tests_line = "Material Lab Tests Pass Rate: No lab tests assessed"
+    else:
+        tests_line = (
+            f"Material Lab Tests Pass Rate: {tests_pass_rate}% "
+            f"({metrics.get('quality_tests_pass_count', 0)} passed of "
+            f"{metrics.get('quality_tests_total', 0) - metrics.get('quality_tests_unassessed', 0)} assessed; "
+            f"{metrics.get('quality_tests_unassessed', 0)} not assessed)"
+        )
+
     # Sections mapping
     sections = [
         ("PROJECT SCHEDULE & TIMELINE", [
@@ -365,7 +379,7 @@ def generate_client_report_pdf(
             f"Total Site Inspections Run: {metrics.get('quality_inspections', 0)}",
             f"Open Non-Conformance Reports (NCRs): {metrics.get('quality_ncr_open', 0)}",
             f"Closed/Resolved NCRs: {metrics.get('quality_ncr_closed', 0)}",
-            f"Material Lab Tests Pass Rate: {metrics.get('quality_tests_pass_rate', 0)}% ({metrics.get('quality_tests_pass_count', 0)} passed of {metrics.get('quality_tests_total', 0) - metrics.get('quality_tests_unassessed', 0)} assessed; {metrics.get('quality_tests_unassessed', 0)} not assessed)"
+            tests_line
         ])
     ]
 
