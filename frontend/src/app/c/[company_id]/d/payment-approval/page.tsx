@@ -112,9 +112,17 @@ export default function PaymentApprovalPage() {
         setToastMessage(`Payment request ${action.toLowerCase()} successfully!`);
         setTimeout(() => setToastMessage(""), 3000);
         fetchData();
+      } else {
+        let detail = "";
+        try {
+          const body = await res.json();
+          if (typeof body?.detail === "string") detail = body.detail;
+        } catch {}
+        alert(`Approval failed: ${detail || `HTTP ${res.status}`}`);
       }
     } catch (err) {
       console.error(err);
+      alert("Approval failed. Check your connection and try again.");
     }
   };
 
