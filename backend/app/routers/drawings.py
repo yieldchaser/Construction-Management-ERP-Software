@@ -1,9 +1,11 @@
 from uuid import UUID
 from datetime import datetime
 from typing import List, Optional
+from urllib.parse import urlparse
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.database import get_db
+from app.config import settings
 from app.auth import get_current_user, verify_project_access, get_company_membership, require_permission
 from app.models import Drawing, DrawingRevision, DrawingPin, Project, User
 from pydantic import BaseModel, Field, field_validator
@@ -15,6 +17,16 @@ router = APIRouter(
 )
 
 # Pydantic Schemas
+def _is_allowed_file_url(url: str) -> bool:
+    stripped = url.strip()
+    if stripped.startswith("/") and not stripped.startswith("//"):
+        return True
+    parsed = urlparse(stripped)
+    if parsed.scheme != "https" or not parsed.netloc:
+        return False
+    storage_origin = urlparse((getattr(settings, "SUPABASE_URL", "") or "").strip())
+    return bool(storage_origin.netloc) and parsed.netloc == storage_origin.netloc
+
 class DrawingPinResponse(BaseModel):
     id: UUID
     revision_id: UUID
@@ -67,6 +79,10 @@ class DrawingCreateRequest(BaseModel):
     def file_url_not_blank(cls, v: str) -> str:
         if not v.strip():
             raise ValueError("file_url cannot be blank; a drawing revision must reference a real file")
+        if not _is_allowed_file_url(v):
+            raise ValueError(
+                "file_url must be a same-origin path (/...) or an https URL on this product's own storage origin; other hosts and non-https schemes are rejected"
+            )
         return v
 
 class RevisionCreateRequest(BaseModel):
@@ -79,6 +95,10 @@ class RevisionCreateRequest(BaseModel):
     def revision_file_url_not_blank(cls, v: str) -> str:
         if not v.strip():
             raise ValueError("file_url cannot be blank; a revision must point at its own drawing file, not inherit the previous revision's")
+        if not _is_allowed_file_url(v):
+            raise ValueError(
+                "file_url must be a same-origin path (/...) or an https URL on this product's own storage origin; other hosts and non-https schemes are rejected"
+            )
         return v
 
 class RevisionApproveRequest(BaseModel):
