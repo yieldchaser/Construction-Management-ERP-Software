@@ -26,6 +26,14 @@ type Member = {
 
 type Location = { id: string; name: string; parent_id: string | null };
 
+async function readErrorDetail(res: Response): Promise<string> {
+  try {
+    const body = await res.json();
+    if (typeof body?.detail === "string" && body.detail) return body.detail;
+  } catch {}
+  return `HTTP ${res.status}`;
+}
+
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
@@ -84,7 +92,7 @@ export default function ProjectSettingsModal({
   const saveDetails = async () => {
     setSaving(true);
     try {
-      await fetch(api(`/projects/${project.id}`), {
+      const res = await fetch(api(`/projects/${project.id}`), {
         method: "PUT",
         headers: { "Content-Type": "application/json", ...(auth() || {}) },
         body: JSON.stringify({
@@ -100,7 +108,14 @@ export default function ProjectSettingsModal({
           attendance_radius_meters: form.attendance_radius_meters,
         }),
       });
+      if (!res.ok) throw new Error(await readErrorDetail(res));
       onSaved();
+    } catch (e) {
+      alert(
+        `Failed to save project settings: ${
+          e instanceof Error ? e.message : "server unreachable"
+        }`
+      );
     } finally {
       setSaving(false);
     }
@@ -120,11 +135,18 @@ export default function ProjectSettingsModal({
   };
 
   const deleteLocation = async (id: string) => {
-    await fetch(api(`/projects/${project.id}/locations/${id}`), {
-      method: "DELETE",
-      headers: auth(),
-    });
-    loadLocations();
+    try {
+      const res = await fetch(api(`/projects/${project.id}/locations/${id}`), {
+        method: "DELETE",
+        headers: auth(),
+      });
+      if (!res.ok) throw new Error(await readErrorDetail(res));
+      loadLocations();
+    } catch (e) {
+      alert(
+        `Failed to delete location: ${e instanceof Error ? e.message : "server unreachable"}`
+      );
+    }
   };
 
   return (

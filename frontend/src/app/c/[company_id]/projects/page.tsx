@@ -54,6 +54,14 @@ function initials(name: string) {
     .join("");
 }
 
+async function readErrorDetail(res: Response): Promise<string> {
+  try {
+    const body = await res.json();
+    if (typeof body?.detail === "string" && body.detail) return body.detail;
+  } catch {}
+  return `HTTP ${res.status}`;
+}
+
 export default function ProjectsPage() {
   const params = useParams();
   const router = useRouter();
@@ -145,21 +153,35 @@ export default function ProjectsPage() {
   }, [projects, scopeFilter, stageFilter, categoryFilter, search]);
 
   const togglePin = async (p: Project) => {
-    await fetch(api(`/projects/${p.id}/pin`), {
-      method: "POST",
-      headers: authHeaders(),
-    });
+    try {
+      const res = await fetch(api(`/projects/${p.id}/pin`), {
+        method: "POST",
+        headers: authHeaders(),
+      });
+      if (!res.ok) throw new Error(await readErrorDetail(res));
+    } catch (e) {
+      alert(
+        `Failed to update pin: ${e instanceof Error ? e.message : "server unreachable"}`
+      );
+    }
     load();
   };
 
   const removeProject = async () => {
     if (!deleteTarget) return;
-    await fetch(api(`/projects/${deleteTarget.id}`), {
-      method: "DELETE",
-      headers: authHeaders(),
-    });
-    setDeleteTarget(null);
-    load();
+    try {
+      const res = await fetch(api(`/projects/${deleteTarget.id}`), {
+        method: "DELETE",
+        headers: authHeaders(),
+      });
+      if (!res.ok) throw new Error(await readErrorDetail(res));
+      setDeleteTarget(null);
+      load();
+    } catch (e) {
+      alert(
+        `Failed to delete project: ${e instanceof Error ? e.message : "server unreachable"}`
+      );
+    }
   };
 
   const exportCsv = () => {
@@ -837,7 +859,7 @@ function ProjectSettingsModal({
     }
     setSaving(true);
     try {
-      await fetch(api(`/projects/${project.id}`), {
+      const res = await fetch(api(`/projects/${project.id}`), {
         method: "PUT",
         headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify({
@@ -857,7 +879,14 @@ function ProjectSettingsModal({
           custom_fields: customFields.toPayload(),
         }),
       });
+      if (!res.ok) throw new Error(await readErrorDetail(res));
       onSaved();
+    } catch (e) {
+      setFormError(
+        `Failed to save project settings: ${
+          e instanceof Error ? e.message : "server unreachable"
+        }`
+      );
     } finally {
       setSaving(false);
     }
@@ -877,11 +906,18 @@ function ProjectSettingsModal({
   };
 
   const deleteLocation = async (id: string) => {
-    await fetch(api(`/projects/${project.id}/locations/${id}`), {
-      method: "DELETE",
-      headers: authHeaders(),
-    });
-    loadLocations();
+    try {
+      const res = await fetch(api(`/projects/${project.id}/locations/${id}`), {
+        method: "DELETE",
+        headers: authHeaders(),
+      });
+      if (!res.ok) throw new Error(await readErrorDetail(res));
+      loadLocations();
+    } catch (e) {
+      alert(
+        `Failed to delete location: ${e instanceof Error ? e.message : "server unreachable"}`
+      );
+    }
   };
 
   return (

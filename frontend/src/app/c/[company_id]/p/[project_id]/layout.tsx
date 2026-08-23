@@ -24,6 +24,14 @@ const TABS = [
 
 const STATUSES = ["Ongoing", "Completed", "On Hold", "Cancelled", "Planning"];
 
+async function readErrorDetail(res: Response): Promise<string> {
+  try {
+    const body = await res.json();
+    if (typeof body?.detail === "string" && body.detail) return body.detail;
+  } catch {}
+  return `HTTP ${res.status}`;
+}
+
 type ProjectInfo = {
   id: string;
   name: string;
@@ -76,16 +84,26 @@ export default function ProjectDetailLayout({ children }: { children: React.Reac
   };
 
   const onStatusChange = async (next: string) => {
+    const prev = status;
     setStatus(next);
     setSavingStatus(true);
     try {
-      await fetch(getApi(`/projects/${projectId}`), {
+      const res = await fetch(getApi(`/projects/${projectId}`), {
         method: "PUT",
         headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify({ status: next }),
       });
+      if (!res.ok) throw new Error(await readErrorDetail(res));
       setProject((p) => (p ? { ...p, status: next } : p));
       load();
+    } catch (e) {
+      setStatus(prev);
+      setProject((p) => (p ? { ...p, status: prev } : p));
+      alert(
+        `Failed to change project status: ${
+          e instanceof Error ? e.message : "server unreachable"
+        }`
+      );
     } finally {
       setSavingStatus(false);
     }

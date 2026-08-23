@@ -27,6 +27,14 @@ const PARTY_TYPES = [
   "Other Vendor", "Contractor",
 ];
 
+async function readErrorDetail(res: Response): Promise<string> {
+  try {
+    const body = await res.json();
+    if (typeof body?.detail === "string" && body.detail) return body.detail;
+  } catch {}
+  return `HTTP ${res.status}`;
+}
+
 export default function PartyPage() {
   const { currencyDecimalPlaces } = useCompanySettings();
   const params = useParams();
@@ -78,21 +86,39 @@ export default function PartyPage() {
   });
 
   const removeParty = async (partyId: string) => {
-    await fetch(getApi(`/projects/${projectId}/parties/${partyId}`), {
-      method: "DELETE",
-      headers: authHeaders(),
-    });
-    load();
+    try {
+      const res = await fetch(getApi(`/projects/${projectId}/parties/${partyId}`), {
+        method: "DELETE",
+        headers: authHeaders(),
+      });
+      if (!res.ok) throw new Error(await readErrorDetail(res));
+      load();
+    } catch (e) {
+      alert(
+        `Failed to remove party from project: ${
+          e instanceof Error ? e.message : "server unreachable"
+        }`
+      );
+    }
   };
 
   const toggleStatus = async (p: Party) => {
     const next = (p.status || "Active") === "Active" ? "Inactive" : "Active";
-    await fetch(getApi(`/projects/${projectId}/parties/${p.party_id}`), {
-      method: "PUT",
-      headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
-      body: JSON.stringify({ status: next }),
-    });
-    load();
+    try {
+      const res = await fetch(getApi(`/projects/${projectId}/parties/${p.party_id}`), {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
+        body: JSON.stringify({ status: next }),
+      });
+      if (!res.ok) throw new Error(await readErrorDetail(res));
+      load();
+    } catch (e) {
+      alert(
+        `Failed to update party status: ${
+          e instanceof Error ? e.message : "server unreachable"
+        }`
+      );
+    }
   };
 
   return (
