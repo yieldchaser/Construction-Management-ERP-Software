@@ -665,6 +665,25 @@ def run_payroll(payload: PayrollRunCreate, db: Session = Depends(get_db), curren
     month_start = datetime(year, month, 1, tzinfo=timezone.utc)
     month_end = datetime(year, month + 1, 1, tzinfo=timezone.utc) if month < 12 else datetime(year + 1, 1, 1, tzinfo=timezone.utc)
 
+    # R2-353: payroll must be idempotent per (company, project, month). A
+    # re-run used to mint a second finalized run and double-count every
+    # salary in the ledgers that sum PayrollLineItem, with no way to void
+    # either run. Name the existing run so the caller can inspect it.
+    existing_run = db.query(PayrollRun).filter(
+        PayrollRun.company_id == payload.company_id,
+        PayrollRun.project_id == payload.project_id,
+        PayrollRun.payroll_month == payload.payroll_month,
+        PayrollRun.status == "finalized",
+    ).first()
+    if existing_run:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=(
+                f"A finalized payroll run already exists for {payload.payroll_month} "
+                f"(run id {existing_run.id}). Void it before running payroll again."
+            ),
+        )
+
     # Fetch active employees
     query = db.query(StaffEmployee).filter(
         StaffEmployee.company_id == payload.company_id,

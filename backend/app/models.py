@@ -803,6 +803,13 @@ class TeamScheduleTimesheet(Base):
 class PayrollRun(Base):
     """Monthly payroll run header for one company+month."""
     __tablename__ = "payroll_runs"
+    # R2-353: one run per (company, project, month); hr.py run_payroll 409s
+    # with a friendly message and this constraint is the race-condition
+    # backstop (migration skips itself if historical duplicates exist).
+    __table_args__ = (
+        UniqueConstraint("company_id", "project_id", "payroll_month",
+                         name="uq_payroll_runs_company_project_month"),
+    )
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
     project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=True)

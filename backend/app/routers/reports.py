@@ -455,8 +455,13 @@ def _rep_attendance_salary(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]
     rows = []
     for emp in q.all():
         proj = db.query(Project).filter(Project.id == emp.project_id).first() if emp.project_id else None
+        # R2-325: count both punch-in statuses exactly as payroll pays for
+        # them (hr.py run_payroll filters status.in_(["Present", "Present
+        # (Off-Site)"])); counting only "Present" here reported off-site days
+        # as absences next to a payslip that paid for them.
         present = db.query(AttendanceLog).filter(
-            AttendanceLog.employee_id == emp.id, AttendanceLog.status == "Present"
+            AttendanceLog.employee_id == emp.id,
+            AttendanceLog.status.in_(["Present", "Present (Off-Site)"])
         ).count()
         net = ""
         pl = db.query(PayrollLineItem).join(PayrollRun, PayrollLineItem.payroll_run_id == PayrollRun.id).filter(
