@@ -7,6 +7,14 @@ import { getApiHost } from "@/lib/api";
 import { authHeaders } from "@/lib/siteflow";
 import Icon from "@/components/marketing/Icon";
 
+const escapeHtml = (value: unknown) =>
+  String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+
 // Comprehensive metadata configurations for all 70+ reports
 interface FilterConfig {
   label: string;
@@ -666,13 +674,13 @@ export default function DynamicReportViewPage() {
           <table>
             <thead>
               <tr>
-                ${headers.map(h => `<th>${h}</th>`).join("")}
+                ${headers.map(h => `<th>${escapeHtml(h)}</th>`).join("")}
               </tr>
             </thead>
             <tbody>
               ${dataRows.map(row => `
                 <tr>
-                  ${row.map(cell => `<td>${cell}</td>`).join("")}
+                  ${row.map(cell => `<td>${escapeHtml(cell)}</td>`).join("")}
                 </tr>
               `).join("")}
             </tbody>
@@ -694,8 +702,11 @@ export default function DynamicReportViewPage() {
 
     if (format === "pdf") {
       const printWindow = window.open("", "_blank");
-      if (printWindow) {
-        printWindow.document.write(`
+      if (!printWindow) {
+        showToast("Export failed: the browser blocked the print popup. Allow popups for this site and try again.");
+        return;
+      }
+      printWindow.document.write(`
           <html>
           <head>
             <title>${meta.title}</title>
@@ -714,13 +725,13 @@ export default function DynamicReportViewPage() {
             <table>
               <thead>
                 <tr>
-                  ${headers.map(h => `<th>${h}</th>`).join("")}
+                  ${headers.map(h => `<th>${escapeHtml(h)}</th>`).join("")}
                 </tr>
               </thead>
               <tbody>
                 ${dataRows.map(row => `
                   <tr>
-                    ${row.map(cell => `<td>${cell}</td>`).join("")}
+                    ${row.map(cell => `<td>${escapeHtml(cell)}</td>`).join("")}
                   </tr>
                 `).join("")}
               </tbody>
@@ -734,8 +745,7 @@ export default function DynamicReportViewPage() {
           </body>
           </html>
         `);
-        printWindow.document.close();
-      }
+      printWindow.document.close();
       showToast("Exported PDF print preview generated!");
       return;
     }
