@@ -842,8 +842,12 @@ def test_pin_R2_144_chat_no_media_fields():
 
 
 def test_pin_R2_162_calculators_sar_currency():
+    # R2-162 removed the dead currency selector; R2-161 later dropped the invented
+    # city-multiplier/currency table entirely, so the correct state is: no
+    # fabricated multi-currency surface at all.
     src = _read_frontend("src/app/c/[company_id]/d/reports/calculators/page.tsx")
-    assert 'cur: "SAR"' in src, "R2-162 calculators SAR currency regressed"
+    assert 'cur: "SAR"' not in src, "R2-162 fabricated per-city currency table reintroduced"
+    assert "Currency Mode" not in src, "R2-162 fabricated currency selector reintroduced"
     assert "houseCurrency" not in src, "R2-162 houseCurrency fallback reintroduced"
 
 
