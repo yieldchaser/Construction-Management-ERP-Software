@@ -185,7 +185,7 @@ export default function CalculatorsPage() {
     const colBar2W = colBar2TotalLen * colBar2UnitW;
 
     const colStirrupUnitW = (stirrupDia * stirrupDia) / 162.0;
-    const colStirrupLen = (2 * ((sizeA - 80) + (sizeB - 80)) + 14 * stirrupDia) / 1000;
+    const colStirrupLen = (2 * ((sizeA - 80) + (sizeB - 80)) + 6 * stirrupDia) / 1000;
     const colLo = Math.max(colHeight / 6, Math.max(sizeA, sizeB), 450);
     const endCount = Math.ceil(colLo / (colSpEnd || stirrupSpacing)) + 1;
     const midCount = Math.max(0, Math.floor((colHeight - 2 * colLo) / (colSpMid || stirrupSpacing)) - 1);
@@ -1978,7 +1978,7 @@ export default function CalculatorsPage() {
                 <>
                   <div>• IS 456:2000 compliant unit weight formula: Weight (kg/m) = D² ÷ 162.</div>
                   <div>• Column Main longitudinal reinforcement includes 50D lap length.</div>
-                  <div>• Stirrups cutting lengths account for 2 hooks of 10D and bend deductions: 90° = 2d, 135° = 3d.</div>
+                  <div>• Stirrup cutting length = closed perimeter + 2 hooks of 10D - 14d of bend deductions (four 90° corners × 2d + two 135° hooks × 3d), a net +6d.</div>
                   <div>• Slabs main reinforcement spans shorter direction; distribution steel spans longer direction.</div>
                 </>
               )}
