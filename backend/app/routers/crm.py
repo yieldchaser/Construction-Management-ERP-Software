@@ -1,14 +1,16 @@
+import json
 import uuid
 from datetime import datetime
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.auth import get_current_user, verify_company_access, get_company_membership, require_permission
+from app.auth import get_current_user, verify_company_access, get_company_membership, require_permission, verify_project_in_company
 from app.models import (
     CRMLead, CRMQuotation, CRMQuotationItem, Company,
     CRMLeadSource, CRMLeadCategory, CRMLeadStatus, CompanyTeam, User,
     LibraryParty,
+    Project, Bill,
 )
 from app.workflow_controls import get_default_terms
 from pydantic import BaseModel, Field, EmailStr, field_validator
@@ -742,3 +744,117 @@ def get_quotations(lead_id: uuid.UUID, db: Session = Depends(get_db), current_us
             )
         )
     return results
+
+
+# ─── Quotation → Invoice conversion (R2-360) ─────────────────────────────────
+
+class QuotationConvertRequest(BaseModel):
+    project_id: uuid.UUID
+    party_company_user_id: uuid.UUID
+    invoice_number: Optional[str] = None
+
+
+class QuotationConversionResponse(BaseModel):
+    bill_id: uuid.UUID
+    invoice_number: str
+    quotation_id: uuid.UUID
+    subtotal: float
+    gst_amount: float
+    total_payable: float
+
+
+@router.post(
+    "/quotations/{quotation_id}/convert-to-invoice",
+    response_model=QuotationConversionResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+def convert_quotation_to_invoice(quotation_id: uuid.UUID, req: QuotationConvertRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """R2-360: turn a CRM quotation into a sale invoice instead of re-keying it
+    by hand in Billing. Money comes from the quotation's own arithmetic (GST is
+    the stored CGST+SGST split), the itemised lines survive into items_json,
+    bill.quotation_id records the link so conversion can be reconciled, and a
+    quotation holds at most one active invoice."""
+    quot_uuid = uuid.UUID(str(quotation_id))
+    quot = db.query(CRMQuotation).filter(CRMQuotation.id == quot_uuid).first()
+    if not quot:
+        raise HTTPException(status_code=404, detail="Quotation not found")
+    lead = db.query(CRMLead).filter(CRMLead.id == quot.lead_id).first()
+    if not lead:
+        raise HTTPException(status_code=404, detail="Lead not found")
+    get_company_membership(db, current_user, lead.company_id)
+    require_permission(db, current_user, lead.company_id, "billing:edit")
+
+    project = verify_project_in_company(db, req.project_id, lead.company_id)
+    party_row = db.query(CompanyTeam).filter(CompanyTeam.id == req.party_company_user_id).first()
+    if not party_row or party_row.company_id != lead.company_id:
+        raise HTTPException(status_code=400, detail="Invoice party does not belong to this company")
+
+    already = (
+        db.query(Bill)
+        .filter(Bill.quotation_id == quot.id, Bill.status != "Cancelled")
+        .first()
+    )
+    if already:
+        raise HTTPException(
+            status_code=409,
+            detail=f"Quotation already converted to invoice {already.invoice_number}",
+        )
+
+    invoice_number = req.invoice_number or (f"INV-{quot.qt_no}" if quot.qt_no else f"INV-{str(quot.id)[:8]}")
+    number_clash = (
+        db.query(Bill)
+        .filter(Bill.company_id == lead.company_id, Bill.invoice_number == invoice_number)
+        .first()
+    )
+    if number_clash:
+        raise HTTPException(status_code=409, detail="Invoice number already exists for this company")
+
+    gst_amount = float(quot.cgst_amount or 0) + float(quot.sgst_amount or 0)
+    total_payable = float(quot.total_amount or 0)
+    subtotal = total_payable - gst_amount
+
+    items = db.query(CRMQuotationItem).filter(CRMQuotationItem.quotation_id == quot.id).all()
+    items_json = json.dumps(
+        [
+            {
+                "desc": i.item_name,
+                "cost_code_name": i.cost_code,
+                "qty": float(i.qty),
+                "rate": float(i.selling_price or 0) + float(i.supply_rate or 0) + float(i.installation_rate or 0),
+                "amount": float(i.total_amount or 0),
+            }
+            for i in items
+        ]
+    )
+
+    bill = Bill(
+        id=uuid.uuid4(),
+        company_id=lead.company_id,
+        project_id=project.id,
+        party_company_user_id=req.party_company_user_id,
+        invoice_number=invoice_number[:100],
+        invoice_date=datetime.utcnow(),
+        due_date=None,
+        invoice_type="sale",
+        status="Unpaid",
+        subtotal=subtotal,
+        gst_amount=gst_amount,
+        total_payable=total_payable,
+        paid_amount=0.0,
+        approval_flag="pending",
+        is_milestone_fixed_amount=False,
+        items_json=items_json,
+        terms=quot.terms,
+        quotation_id=quot.id,
+    )
+    db.add(bill)
+    db.commit()
+
+    return QuotationConversionResponse(
+        bill_id=bill.id,
+        invoice_number=bill.invoice_number,
+        quotation_id=quot.id,
+        subtotal=subtotal,
+        gst_amount=gst_amount,
+        total_payable=total_payable,
+    )

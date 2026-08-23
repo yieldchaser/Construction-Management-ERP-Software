@@ -639,6 +639,10 @@ class Bill(Base):
     tally_synced = Column(Boolean, default=False, nullable=False)
     zoho_bill_id = Column(String(100), nullable=True)
     boq_document_id = Column(UUID(as_uuid=True), ForeignKey("boq_documents.id", ondelete="SET NULL"), nullable=True)
+    # R2-360: the CRM quotation this sale invoice was created from. Null for
+    # manually keyed invoices and legacy rows; while a non-cancelled bill
+    # carries the link, CRM revenue and billed revenue can be reconciled.
+    quotation_id = Column(UUID(as_uuid=True), ForeignKey("crm_quotations.id", ondelete="SET NULL"), nullable=True)
     # Subcontractor work order this bill bills against (subcon RA bills). Null for
     # non-subcon bills and legacy rows; when set, cumulative billing is validated
     # against the WO's estimated_work_amount.
