@@ -62,8 +62,8 @@ interface LabTest {
   date: string;
   value: number;
   unit: string;
-  min: number;
-  max: number;
+  min: number | null;
+  max: number | null;
   pass: boolean;
   zone: string;
 }
@@ -248,8 +248,8 @@ isCode: cl.is_code_reference || "—",
           date: t.test_date ? t.test_date.split("T")[0] : "",
           value: t.result_value,
           unit: t.unit || "",
-          min: t.min_acceptable || 0,
-          max: t.max_acceptable || 100,
+          min: t.min_acceptable ?? null,
+          max: t.max_acceptable ?? null,
           pass: t.is_pass,
           zone: t.zone || "General Site"
         }));
@@ -780,7 +780,7 @@ isCode: cl.is_code_reference || "—",
                             {t.value} {t.unit}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-muted">{t.min}–{t.max} {t.unit}</td>
+                        <td className="px-4 py-3 text-muted">{t.min != null && t.max != null ? `${t.min}–${t.max} ${t.unit}` : "—"}</td>
                         <td className="px-4 py-3 text-muted">{t.zone}</td>
                         <td className="px-4 py-3">
                           {t.pass

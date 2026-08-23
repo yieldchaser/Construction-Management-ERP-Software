@@ -134,7 +134,7 @@ export default function DashboardPage() {
                 endDate: dbProj.end_date || "2027-12-31",
                 category: dbProj.category || "—",
                 keyPersonnel: dbProj.key_personnel_id ? "Staff Member" : "Unassigned",
-                progress: dbProj.progress || 0.0,
+                progress: dbProj.progress ?? 0.0,
                 customerName: dbProj.customer_name || "—",
                 projectStage: dbProj.stage || "—"
               };
@@ -1884,7 +1884,7 @@ export default function DashboardPage() {
                       code: wizardData.code || "PRJ-NEW",
                       city: wizardData.city || "Mumbai",
                       address: wizardData.address,
-                      attendance_radius_meters: wizardData.attendance_radius_meters || 500,
+                      attendance_radius_meters: wizardData.attendance_radius_meters ?? 500,
                       status: "Ongoing",
                       health: "Healthy",
                       startDate: new Date().toISOString().split('T')[0],

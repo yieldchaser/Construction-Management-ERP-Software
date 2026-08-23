@@ -35,8 +35,8 @@ interface AttendanceRecord {
   date: string;
   punchIn: string;
   punchOut: string;
-  hoursWorked: number;
-  overtime: number;
+  hoursWorked: number | null;
+  overtime: number | null;
   withinGeofence: boolean;
   status: "Present" | "Absent" | "Half-Day" | "Leave" | "Present (Off-Site)";
   distanceFromSite: number | null;
@@ -333,8 +333,8 @@ export default function HRPayrollPage() {
           date: att.attendance_date.split("T")[0],
           punchIn: att.punch_in ? new Date(att.punch_in).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) : "",
           punchOut: att.punch_out ? new Date(att.punch_out).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) : "",
-          hoursWorked: att.hours_worked || 0,
-          overtime: att.overtime_hours || 0,
+          hoursWorked: att.hours_worked ?? null,
+          overtime: att.overtime_hours ?? null,
           withinGeofence: att.is_within_geofence,
           status: att.status,
           distanceFromSite: att.distance_from_site_m ? Math.round(att.distance_from_site_m) : null,
@@ -993,7 +993,7 @@ export default function HRPayrollPage() {
                   { label: "Present Today", val: attendance.filter(a => a.status.startsWith("Present")).length, color: "text-green-400" },
                   { label: "Within Geofence", val: attendance.filter(a => a.withinGeofence).length, color: "text-blue-400" },
                   { label: "Off-Site", val: attendance.filter(a => !a.withinGeofence).length, color: "text-yellow-400" },
-                  { label: "Overtime Hours", val: attendance.reduce((a, r) => a + r.overtime, 0).toFixed(1) + " hrs", color: "text-primary" },
+                  { label: "Overtime Hours", val: attendance.reduce((a, r) => a + (r.overtime ?? 0), 0).toFixed(1) + " hrs", color: "text-primary" },
                 ].map(({ label, val, color }) => (
                   <div key={label} className="bg-card border border-border-custom rounded-md p-4">
                     <p className="text-[10px] text-muted uppercase font-bold tracking-wider mb-1">{label}</p>
@@ -1021,8 +1021,8 @@ export default function HRPayrollPage() {
                           <td className="px-3 py-3 font-semibold text-foreground">{empName}</td>
                           <td className="px-3 py-3 font-sans text-green-400">{rec.punchIn || "—"}</td>
                           <td className="px-3 py-3 font-sans text-muted">{rec.punchOut || <span className="text-yellow-500 animate-pulse">Active</span>}</td>
-                          <td className="px-3 py-3 text-foreground font-bold">{rec.hoursWorked > 0 ? `${rec.hoursWorked}h` : "—"}</td>
-                          <td className="px-3 py-3 text-orange-400">{rec.overtime > 0 ? `+${rec.overtime.toFixed(2)}h` : "—"}</td>
+                          <td className="px-3 py-3 text-foreground font-bold">{rec.hoursWorked != null && rec.hoursWorked > 0 ? `${rec.hoursWorked}h` : "—"}</td>
+                          <td className="px-3 py-3 text-orange-400">{rec.overtime != null && rec.overtime > 0 ? `+${rec.overtime.toFixed(2)}h` : "—"}</td>
                           <td className="px-3 py-3 text-muted">
                             {rec.distanceFromSite != null ? `${rec.distanceFromSite}m` : "—"}
                           </td>

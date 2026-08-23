@@ -640,7 +640,7 @@ function CreateProjectModal({
                   <input type="number" value={projectValue} onChange={(e) => setProjectValue(e.target.value)} className={inputCls} />
                 </Field>
                 <Field label="Attendance Radius (meters)">
-                  <input type="number" value={attendanceRadius} onChange={(e) => setAttendanceRadius(parseInt(e.target.value) || 500)} className={inputCls} />
+                  <input type="number" value={attendanceRadius} onChange={(e) => { const v = parseInt(e.target.value); setAttendanceRadius(Number.isNaN(v) ? 500 : v); }} className={inputCls} />
                 </Field>
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -779,7 +779,7 @@ function ProjectSettingsModal({
     orientation: project.orientation || "",
     dimension: project.dimension || "",
     scope_of_work: project.scope_of_work || "",
-    attendance_radius_meters: project.attendance_radius_meters || 500,
+    attendance_radius_meters: project.attendance_radius_meters ?? 500,
   });
   const [locations, setLocations] = useState<{ id: string; name: string; parent_id: string | null }[]>([]);
   const [newLoc, setNewLoc] = useState("");
@@ -919,7 +919,7 @@ function ProjectSettingsModal({
                   <input value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} placeholder="e.g. PRJ-001" className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground" />
                 </Field>
                 <Field label="Attendance Radius (meters)">
-                  <input type="number" value={form.attendance_radius_meters} onChange={(e) => setForm({ ...form, attendance_radius_meters: parseInt(e.target.value) || 500 })} className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground" />
+                  <input type="number" value={form.attendance_radius_meters} onChange={(e) => { const v = parseInt(e.target.value); setForm({ ...form, attendance_radius_meters: Number.isNaN(v) ? 500 : v }); }} className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground" />
                 </Field>
               </div>
               <div className="grid grid-cols-2 gap-3">
