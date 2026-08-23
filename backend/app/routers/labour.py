@@ -1,7 +1,7 @@
 from uuid import UUID
 from datetime import datetime, date
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from app.database import get_db
@@ -272,7 +272,7 @@ def get_muster_roll(project_id: UUID, db: Session = Depends(get_db), _: None = D
 
 
 @router.post("/muster-roll", response_model=MusterRollResponse, status_code=201)
-def create_muster_roll(req: MusterRollCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def create_muster_roll(req: MusterRollCreate, response: Response, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     get_company_membership(db, current_user, req.company_id)
     verify_project_in_company(db, req.project_id, req.company_id)
     require_permission(db, current_user, req.company_id, "attendance:edit")
@@ -280,21 +280,43 @@ def create_muster_roll(req: MusterRollCreate, db: Session = Depends(get_db), cur
         raise HTTPException(status_code=422, detail="hours_worked cannot exceed workers_present × 24")
     if req.overtime_hours > req.hours_worked:
         raise HTTPException(status_code=422, detail="overtime_hours cannot exceed hours_worked")
-    record = MusterRoll(
-        company_id=req.company_id,
-        project_id=req.project_id,
-        contractor_id=req.contractor_id,
-        date=req.date,
-        labor_role=req.labor_role,
-        workers_present=req.workers_present,
-        workers_absent=req.workers_absent,
-        hours_worked=req.hours_worked,
-        overtime_hours=req.overtime_hours,
-        notes=req.notes,
-    )
-    db.add(record)
+    # R2-333: the muster roll is a statutory register; re-posting the same
+    # gang for the same day (double-tap, retry after timeout, two supervisors)
+    # must update one row in place instead of recording the workers twice.
+    # Idempotency key follows the subcon precedent (R2-332): project +
+    # contractor + calendar day + role compared trimmed and case-insensitively.
+    date_only = req.date.date()
+    role_key = req.labor_role.strip().lower()
+    existing = db.query(MusterRoll).filter(MusterRoll.project_id == req.project_id).all()
+    record = None
+    for item in existing:
+        if (
+            item.date.date() == date_only
+            and item.contractor_id == req.contractor_id
+            and (item.labor_role or "").strip().lower() == role_key
+        ):
+            record = item
+            break
+    is_update = record is not None
+    if not is_update:
+        record = MusterRoll(
+            company_id=req.company_id,
+            project_id=req.project_id,
+            contractor_id=req.contractor_id,
+            date=req.date,
+            labor_role=req.labor_role.strip(),
+        )
+        db.add(record)
+    record.workers_present = req.workers_present
+    record.workers_absent = req.workers_absent
+    record.hours_worked = req.hours_worked
+    record.overtime_hours = req.overtime_hours
+    record.notes = req.notes
     db.commit()
     db.refresh(record)
+    if is_update:
+        # An idempotent replay returns 200; only a fresh insert is 201.
+        response.status_code = status.HTTP_200_OK
     return MusterRollResponse(
         id=record.id,
         company_id=record.company_id,
