@@ -1014,6 +1014,7 @@ class EquipmentDeployment(Base):
     project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
     start_date = Column(DateTime(timezone=True), nullable=False)
     end_date = Column(DateTime(timezone=True), nullable=True)
+    hours_used = Column(Numeric(12, 2), nullable=True)  # recorded engine/shift hours on site; NULL falls back to wall-clock billing
     remarks = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 

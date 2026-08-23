@@ -514,21 +514,26 @@ def get_project_pl(project_id: uuid.UUID, db: Session = Depends(get_db), _: None
         eq = db.query(Equipment).filter(Equipment.id == dep.equipment_id).first()
         if eq and eq.hourly_rate:
             rate = float(eq.hourly_rate)
-            # R2-727: EquipmentDeployment columns are timezone-aware on Postgres
-            # but round-trip naive on SQLite; normalize both operands so the
-            # "still deployed" fallback (end_date NULL) can't raise TypeError.
-            start = dep.start_date
-            if start.tzinfo is None:
-                start = start.replace(tzinfo=timezone.utc)
-            end = dep.end_date if dep.end_date else datetime.now(timezone.utc)
-            if end.tzinfo is None:
-                end = end.replace(tzinfo=timezone.utc)
-            hours = (end - start).total_seconds() / 3600.0
-            dep_cost += max(0.0, hours * rate)
+            if dep.hours_used is not None:
+                # R2-357: recorded engine/shift hours are the billed truth;
+                # wall-clock (24 h/day) is only the fallback when never recorded.
+                hours = float(dep.hours_used)
+            else:
+                # R2-727: EquipmentDeployment columns are timezone-aware on Postgres
+                # but round-trip naive on SQLite; normalize both operands so the
+                # "still deployed" fallback (end_date NULL) can't raise TypeError.
+                start = dep.start_date
+                if start.tzinfo is None:
+                    start = start.replace(tzinfo=timezone.utc)
+                end = dep.end_date if dep.end_date else datetime.now(timezone.utc)
+                if end.tzinfo is None:
+                    end = end.replace(tzinfo=timezone.utc)
+                hours = (end - start).total_seconds() / 3600.0
+            dep_cost += round(max(0.0, hours * rate), 2)
 
     fuel_logs = db.query(FuelLog).filter(FuelLog.project_id == proj_uuid).all()
     fuel_cost = sum(float(log.total_cost or 0.0) for log in fuel_logs)
-    equipment_actual = dep_cost + fuel_cost
+    equipment_actual = round(dep_cost + fuel_cost, 2)
 
     # Variance: for Revenue, variance = Actual - Budget. For Cost, variance = Budget - Actual.
     # To keep it standard: return positive variance for positive variance outcomes, negative for cost overruns.

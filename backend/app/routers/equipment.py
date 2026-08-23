@@ -46,6 +46,7 @@ class EquipmentResponse(BaseModel):
 class DeploymentCreate(BaseModel):
     project_id: uuid.UUID
     start_date: datetime
+    hours_used: Optional[float] = Field(None, ge=0)
     remarks: Optional[str] = None
 
 
@@ -55,6 +56,7 @@ class DeploymentResponse(BaseModel):
     project_id: uuid.UUID
     start_date: datetime
     end_date: Optional[datetime]
+    hours_used: Optional[float]
     remarks: Optional[str]
 
     class Config:
@@ -165,6 +167,7 @@ def deploy_equipment(
         equipment_id=equipment_id,
         project_id=payload.project_id,
         start_date=payload.start_date,
+        hours_used=Decimal(str(payload.hours_used)) if payload.hours_used is not None else None,
         remarks=payload.remarks
     )
     eq.status = "deployed"
