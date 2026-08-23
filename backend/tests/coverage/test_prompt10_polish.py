@@ -53,7 +53,7 @@ def _po(db, company, project, items):
     po = models.PurchaseOrder(
         company_id=company.id, project_id=project.id, vendor_id=None,
         po_number=f"PO-{uuid.uuid4().hex[:6]}", po_date=datetime.datetime.now(),
-        status="sent", gross_amount=0, tax_amount=0, total_amount=0,
+        status="sent", approval_flag="approved", gross_amount=0, tax_amount=0, total_amount=0,
     )
     db.add(po)
     db.flush()

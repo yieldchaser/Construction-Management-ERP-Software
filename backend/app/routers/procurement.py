@@ -2,6 +2,7 @@ from uuid import UUID
 from datetime import datetime, timezone
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.auth import get_current_user, verify_project_in_company, verify_company_access, verify_project_access, get_company_membership, require_permission
@@ -626,6 +627,21 @@ def _generate_grn_number(db: Session, company_id: UUID, project_id: UUID) -> str
     return candidate
 
 
+# Purchase order lifecycle ranks for forward-only status movement from goods
+# receipt (R2-239/R2-348): a GRN may advance a PO along draft -> sent ->
+# partial -> received, never rewind it, and "closed" outranks them all.
+_PO_STATUS_RANK = {
+    "draft": 0,
+    "pending": 0,
+    "pending_approval": 0,
+    "sent": 1,
+    "partial": 2,
+    "partially_received": 2,
+    "received": 3,
+    "closed": 4,
+}
+
+
 @router.get("/grns", response_model=List[GRNResponse])
 def get_grns(project_id: UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     grns = db.query(GoodsReceiptNote).filter(GoodsReceiptNote.project_id == project_id).all()
@@ -680,6 +696,61 @@ def create_grn(req: GRNCreateRequest, db: Session = Depends(get_db), current_use
             detail="Purchase Order does not belong to the supplied company/project",
         )
 
+    # R2-239/R2-348: goods receipt is only legal against an APPROVED purchase
+    # order. Receiving stock must never be the act that pushes an unapproved
+    # PO through its lifecycle.
+    if (po.approval_flag or "").lower() != "approved":
+        raise HTTPException(
+            status_code=422,
+            detail=(
+                f"Purchase order is not approved (approval_flag='{po.approval_flag}', "
+                f"status='{po.status}'); goods receipt requires an approved PO"
+            ),
+        )
+
+    # R2-348: cap what this GRN may receive per line. Cumulative received
+    # across every earlier GRN plus every earlier line of THIS request may
+    # never exceed the ordered quantity (no configured tolerance exists, so
+    # the cap is exact up to float noise). Validated before anything is
+    # written so a rejection leaves zero partial state behind.
+    po_lines = db.query(PurchaseOrderItem).filter(PurchaseOrderItem.po_id == req.po_id).all()
+    ordered_by_line = {pi.id: float(pi.quantity or 0.0) for pi in po_lines}
+    already_received: dict = {}
+    prior_items = (
+        db.query(GRNItem)
+        .join(GoodsReceiptNote, GoodsReceiptNote.id == GRNItem.grn_id)
+        .filter(GoodsReceiptNote.po_id == req.po_id)
+        .all()
+    )
+    for gi in prior_items:
+        already_received[gi.po_item_id] = already_received.get(gi.po_item_id, 0.0) + float(gi.received_qty or 0.0)
+
+    line_by_id: dict = {}
+    pending_in_request: dict = {}
+    for line_no, item in enumerate(req.items, start=1):
+        po_item = db.query(PurchaseOrderItem).filter(PurchaseOrderItem.id == item.po_item_id).first()
+        if not po_item:
+            raise HTTPException(status_code=400, detail=f"PO Item {item.po_item_id} not found")
+        if po_item.po_id != req.po_id:
+            raise HTTPException(
+                status_code=400,
+                detail=f"PO Item {item.po_item_id} does not belong to PO {req.po_id}",
+            )
+        ordered = ordered_by_line.get(po_item.id, 0.0)
+        received_so_far = already_received.get(po_item.id, 0.0) + pending_in_request.get(po_item.id, 0.0)
+        remaining = ordered - received_so_far
+        if item.received_qty > remaining + 1e-9:
+            raise HTTPException(
+                status_code=422,
+                detail=(
+                    f"Over-receipt blocked on PO item line {line_no} ('{po_item.material_name}'): "
+                    f"ordered {ordered}, already received {round(received_so_far, 4)}, "
+                    f"requested {round(item.received_qty, 4)}; only {round(max(remaining, 0.0), 4)} remains"
+                ),
+            )
+        pending_in_request[po_item.id] = pending_in_request.get(po_item.id, 0.0) + item.received_qty
+        line_by_id[po_item.id] = po_item
+
     grn = GoodsReceiptNote(
         company_id=req.company_id,
         project_id=req.project_id,
@@ -693,15 +764,8 @@ def create_grn(req: GRNCreateRequest, db: Session = Depends(get_db), current_use
 
     item_responses = []
     for item in req.items:
-        # Check PO item exists and belongs to this PO
-        po_item = db.query(PurchaseOrderItem).filter(PurchaseOrderItem.id == item.po_item_id).first()
-        if not po_item:
-            raise HTTPException(status_code=400, detail=f"PO Item {item.po_item_id} not found")
-        if po_item.po_id != req.po_id:
-            raise HTTPException(
-                status_code=400,
-                detail=f"PO Item {item.po_item_id} does not belong to PO {req.po_id}",
-            )
+        # Identity already validated above; reuse the cached PO line.
+        po_item = line_by_id[item.po_item_id]
 
         # 2. Create GRN item
         db_item = GRNItem(
@@ -754,7 +818,10 @@ def create_grn(req: GRNCreateRequest, db: Session = Depends(get_db), current_use
     # 5. Recompute PO status from received quantity vs ordered quantity across
     #    ALL of the PO's line items (across every GRN). A PO is "received" only
     #    once every ordered line item has been fully received; otherwise it's
-    #    "partially_received" if some (but not all) quantity is in.
+    #    "partially_received" if some (but not all) quantity is in. Movement is
+    #    FORWARD-ONLY (R2-239/R2-348): a receipt may advance the lifecycle
+    #    (sent -> partial -> received) but never rewind it, and a closed PO
+    #    stays closed.
     po_items = db.query(PurchaseOrderItem).filter(PurchaseOrderItem.po_id == req.po_id).all()
     if po_items:
         received_by_po_item = {pi.id: 0.0 for pi in po_items}
@@ -766,18 +833,17 @@ def create_grn(req: GRNCreateRequest, db: Session = Depends(get_db), current_use
                 received_by_po_item[gi.po_item_id] += float(gi.received_qty)
 
         fully_received = all(
-            received_by_po_item[pi.id] >= float(pi.quantity) for pi in po_items
+            received_by_po_item[pi.id] >= float(pi.quantity) - 1e-9 for pi in po_items
         )
         some_received = any(
             received_by_po_item[pi.id] > 0.0 for pi in po_items
         )
-        if fully_received:
-            po.status = "received"
-        elif some_received:
-            po.status = "partial"
-        # else: nothing received yet -> leave PO status unchanged
-    else:
-        po.status = "received"
+        computed = "received" if fully_received else ("partial" if some_received else None)
+        if computed and _PO_STATUS_RANK.get(computed, 0) > _PO_STATUS_RANK.get((po.status or "").lower(), 0):
+            po.status = computed
+        # else: nothing received yet, or the PO already sits at this or a later
+        # stage -> leave PO status unchanged (no rewind, no invented jumps)
+    # An empty PO gains no status from receiving nothing.
     
     db.commit()
     db.refresh(grn)
@@ -841,6 +907,22 @@ def get_stock(project_id: UUID, db: Session = Depends(get_db), _: None = Depends
     invs = db.query(WarehouseInventory).filter(WarehouseInventory.project_id == project_id).all()
     txns = db.query(MaterialTransaction).filter(MaterialTransaction.project_id == project_id).all()
 
+    # R2-239/R2-348: receipt is capped at the ordered quantity per PO line, so
+    # stock views must never report more received than the project actually
+    # ordered. Clamp the per-material ledger aggregate at the total ordered
+    # across all of the project's POs; materials with no PO line (manual
+    # receipts) are untouched. Over-consumption stays visible as a negative.
+    ordered_totals = {
+        name: float(total or 0.0)
+        for name, total in (
+            db.query(PurchaseOrderItem.material_name, func.sum(PurchaseOrderItem.quantity))
+            .join(PurchaseOrder, PurchaseOrder.id == PurchaseOrderItem.po_id)
+            .filter(PurchaseOrder.project_id == project_id)
+            .group_by(PurchaseOrderItem.material_name)
+            .all()
+        )
+    }
+
     received: dict = {}
     consumed: dict = {}
     txn_cat: dict = {}
@@ -860,6 +942,9 @@ def get_stock(project_id: UUID, db: Session = Depends(get_db), _: None = Depends
     for name in sorted(names):
         inv = next((i for i in invs if i.material_name == name), None)
         r = received.get(name, 0.0)
+        ceiling = ordered_totals.get(name)
+        if ceiling is not None:
+            r = min(r, ceiling)   # never show more received than was ordered
         c = consumed.get(name, 0.0)
         cat = (inv.category if inv else None) or txn_cat.get(name) or "Uncategorized"
         unit = (inv.unit if inv and inv.unit else None) or txn_unit.get(name)
