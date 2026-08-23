@@ -509,7 +509,7 @@ def list_company_timesheet_entries(company_id: uuid.UUID, db: Session = Depends(
      .join(Timesheet, TimesheetEntry.timesheet_id == Timesheet.id)\
      .join(StaffEmployee, Timesheet.employee_id == StaffEmployee.id)\
      .join(Project, Timesheet.project_id == Project.id)\
-     .filter(Timesheet.company_id == company_id)\
+     .filter(Project.company_id == company_id)\
      .order_by(TimesheetEntry.entry_date.desc())\
      .all()
     
