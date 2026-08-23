@@ -706,7 +706,7 @@ def delete_task_todo(todo_id: UUID, db: Session = Depends(get_db), current_user:
     require_permission(db, current_user, proj.company_id, "data:delete")
     from app.routers.delete_logs import log_deletion
     company_id = str(proj.company_id) if proj else None
-    log_deletion(db, company_id, "task", todo.id, f"Task Todo: {todo.title}")
+    log_deletion(db, company_id, "task", todo.id, f"Task Todo: {todo.title}", deleted_by=current_user.name)
     db.delete(todo)
     db.commit()
     return {"success": True, "message": "Todo deleted successfully"}

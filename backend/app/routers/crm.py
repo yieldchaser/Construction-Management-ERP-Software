@@ -357,7 +357,7 @@ def delete_lead(lead_id: uuid.UUID, db: Session = Depends(get_db), current_user:
     get_company_membership(db, current_user, lead.company_id)
     require_permission(db, current_user, lead.company_id, "data:delete")
     from app.routers.delete_logs import log_deletion
-    log_deletion(db, lead.company_id, "crm_lead", lead.id, f"CRM Lead: {lead.contact_name}")
+    log_deletion(db, lead.company_id, "crm_lead", lead.id, f"CRM Lead: {lead.contact_name}", deleted_by=current_user.name)
     db.delete(lead)
     db.commit()
 

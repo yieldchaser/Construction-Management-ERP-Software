@@ -220,7 +220,7 @@ def delete_library_party(party_id: uuid.UUID, db: Session = Depends(get_db), cur
     get_company_membership(db, current_user, party.company_id)
     require_permission(db, current_user, party.company_id, "data:delete")
     from app.routers.delete_logs import log_deletion
-    log_deletion(db, party.company_id, "party", party.id, f"Party: {party.name}", party_name=party.name)
+    log_deletion(db, party.company_id, "party", party.id, f"Party: {party.name}", party_name=party.name, deleted_by=current_user.name)
     db.delete(party)
     db.commit()
     return {"success": True}
@@ -249,7 +249,7 @@ def delete_library_asset_type(item_id: uuid.UUID, db: Session = Depends(get_db),
     get_company_membership(db, current_user, item.company_id)
     require_permission(db, current_user, item.company_id, "data:delete")
     from app.routers.delete_logs import log_deletion
-    log_deletion(db, item.company_id, "asset_type", item.id, f"Asset Type: {item.name}")
+    log_deletion(db, item.company_id, "asset_type", item.id, f"Asset Type: {item.name}", deleted_by=current_user.name)
     db.delete(item)
     db.commit()
     return {"success": True}
@@ -285,7 +285,7 @@ def delete_library_cost_code(item_id: uuid.UUID, db: Session = Depends(get_db), 
     get_company_membership(db, current_user, item.company_id)
     require_permission(db, current_user, item.company_id, "data:delete")
     from app.routers.delete_logs import log_deletion
-    log_deletion(db, item.company_id, "cost_code", item.id, f"Cost Code: {item.name}")
+    log_deletion(db, item.company_id, "cost_code", item.id, f"Cost Code: {item.name}", deleted_by=current_user.name)
     db.delete(item)
     db.commit()
     return {"success": True}
@@ -314,7 +314,7 @@ def delete_library_deduction(item_id: uuid.UUID, db: Session = Depends(get_db), 
     get_company_membership(db, current_user, item.company_id)
     require_permission(db, current_user, item.company_id, "data:delete")
     from app.routers.delete_logs import log_deletion
-    log_deletion(db, item.company_id, "deduction", item.id, f"Deduction: {item.name}")
+    log_deletion(db, item.company_id, "deduction", item.id, f"Deduction: {item.name}", deleted_by=current_user.name)
     db.delete(item)
     db.commit()
     return {"success": True}
@@ -343,7 +343,7 @@ def delete_library_progress(item_id: uuid.UUID, db: Session = Depends(get_db), c
     get_company_membership(db, current_user, item.company_id)
     require_permission(db, current_user, item.company_id, "data:delete")
     from app.routers.delete_logs import log_deletion
-    log_deletion(db, item.company_id, "progress", item.id, f"Progress: {item.name}")
+    log_deletion(db, item.company_id, "progress", item.id, f"Progress: {item.name}", deleted_by=current_user.name)
     db.delete(item)
     db.commit()
     return {"success": True}
@@ -372,7 +372,7 @@ def delete_library_workforce(item_id: uuid.UUID, db: Session = Depends(get_db), 
     get_company_membership(db, current_user, item.company_id)
     require_permission(db, current_user, item.company_id, "data:delete")
     from app.routers.delete_logs import log_deletion
-    log_deletion(db, item.company_id, "workforce", item.id, f"Workforce: {item.name}")
+    log_deletion(db, item.company_id, "workforce", item.id, f"Workforce: {item.name}", deleted_by=current_user.name)
     db.delete(item)
     db.commit()
     return {"success": True}
@@ -413,7 +413,7 @@ def delete_library_material(item_id: uuid.UUID, db: Session = Depends(get_db), c
     get_company_membership(db, current_user, item.company_id)
     require_permission(db, current_user, item.company_id, "data:delete")
     from app.routers.delete_logs import log_deletion
-    log_deletion(db, item.company_id, "material", item.id, f"Material: {item.name}")
+    log_deletion(db, item.company_id, "material", item.id, f"Material: {item.name}", deleted_by=current_user.name)
     db.delete(item)
     db.commit()
     return {"success": True}
@@ -456,7 +456,7 @@ def delete_library_rate(item_id: uuid.UUID, db: Session = Depends(get_db), curre
     get_company_membership(db, current_user, item.company_id)
     require_permission(db, current_user, item.company_id, "data:delete")
     from app.routers.delete_logs import log_deletion
-    log_deletion(db, item.company_id, "rate", item.id, f"Rate: {item.name}")
+    log_deletion(db, item.company_id, "rate", item.id, f"Rate: {item.name}", deleted_by=current_user.name)
     db.delete(item)
     db.commit()
     return {"success": True}
@@ -493,7 +493,7 @@ def delete_library_retention(item_id: uuid.UUID, db: Session = Depends(get_db), 
     get_company_membership(db, current_user, item.company_id)
     require_permission(db, current_user, item.company_id, "data:delete")
     from app.routers.delete_logs import log_deletion
-    log_deletion(db, item.company_id, "retention", item.id, f"Retention: {item.name}")
+    log_deletion(db, item.company_id, "retention", item.id, f"Retention: {item.name}", deleted_by=current_user.name)
     db.delete(item)
     db.commit()
     return {"success": True}
@@ -535,7 +535,7 @@ def delete_material_category(item_id: uuid.UUID, db: Session = Depends(get_db), 
     get_company_membership(db, current_user, item.company_id)
     require_permission(db, current_user, item.company_id, "data:delete")
     from app.routers.delete_logs import log_deletion
-    log_deletion(db, item.company_id, "material_category", item.id, f"Material Category: {item.name}")
+    log_deletion(db, item.company_id, "material_category", item.id, f"Material Category: {item.name}", deleted_by=current_user.name)
     db.delete(item)
     db.commit()
     return {"success": True}
@@ -572,7 +572,7 @@ def delete_library_todo(item_id: uuid.UUID, db: Session = Depends(get_db), curre
     get_company_membership(db, current_user, item.company_id)
     require_permission(db, current_user, item.company_id, "data:delete")
     from app.routers.delete_logs import log_deletion
-    log_deletion(db, item.company_id, "library_todo", item.id, f"Library Todo: {item.name}")
+    log_deletion(db, item.company_id, "library_todo", item.id, f"Library Todo: {item.name}", deleted_by=current_user.name)
     db.delete(item)
     db.commit()
     return {"success": True}

@@ -183,7 +183,7 @@ def delete_mom(
     if not mom:
         raise HTTPException(status_code=404, detail="MOM not found.")
     from app.routers.delete_logs import log_deletion
-    log_deletion(db, mom.company_id, "mom", mom.id, f"MOM: {mom.type} ({mom.status})")
+    log_deletion(db, mom.company_id, "mom", mom.id, f"MOM: {mom.type} ({mom.status})", deleted_by=current_user.name)
     db.delete(mom)
     db.commit()
     return {"message": "MOM deleted successfully.", "id": str(mom.id)}

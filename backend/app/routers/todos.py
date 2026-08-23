@@ -208,7 +208,7 @@ def delete_todo(todo_id: uuid.UUID, db: Session = Depends(get_db), current_user:
     get_company_membership(db, current_user, t.company_id)
     require_permission(db, current_user, t.company_id, "data:delete")
     from app.routers.delete_logs import log_deletion
-    log_deletion(db, t.company_id, "todo", t.id, f"Todo: {t.title}")
+    log_deletion(db, t.company_id, "todo", t.id, f"Todo: {t.title}", deleted_by=current_user.name)
     db.delete(t)
     db.commit()
     return {"success": True}

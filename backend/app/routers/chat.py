@@ -311,7 +311,7 @@ def remove_member(group_id: uuid.UUID, user_id: uuid.UUID, db: Session = Depends
     ensure_not_last_admin(db, group_id, member)
     from app.routers.delete_logs import log_deletion
     company_id = group.company_id if group else None
-    log_deletion(db, company_id, "chat_group_member", member.id, f"Chat Group Member removed from: {group.name if group else group_id}")
+    log_deletion(db, company_id, "chat_group_member", member.id, f"Chat Group Member removed from: {group.name if group else group_id}", deleted_by=current_user.name)
     db.delete(member)
     db.commit()
     return None

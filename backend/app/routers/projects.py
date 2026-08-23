@@ -367,7 +367,7 @@ def delete_project(project_id: uuid.UUID, db: Session = Depends(get_db), current
         raise HTTPException(status_code=404, detail="Project not found")
     require_permission(db, current_user, p.company_id, "data:delete")
     from app.routers.delete_logs import log_deletion
-    log_deletion(db, p.company_id, "project", str(p.id), f"Project: {p.name}", party_name=p.name)
+    log_deletion(db, p.company_id, "project", str(p.id), f"Project: {p.name}", party_name=p.name, deleted_by=current_user.name)
     db.delete(p)
     db.commit()
     return {"success": True}
@@ -443,7 +443,7 @@ def remove_project_member(project_id: uuid.UUID, member_id: uuid.UUID, db: Sessi
         from app.routers.delete_logs import log_deletion
         proj = db.query(models.Project).filter(models.Project.id == project_id).first()
         company_id = proj.company_id if proj else None
-        log_deletion(db, company_id, "project_member", member_id, f"Project Member removed from: {proj.name if proj else project_id}")
+        log_deletion(db, company_id, "project_member", member_id, f"Project Member removed from: {proj.name if proj else project_id}", deleted_by=current_user.name)
         db.delete(row)
         db.commit()
     return {"success": True}
@@ -559,7 +559,7 @@ def project_party_balances(project_id: uuid.UUID, db: Session = Depends(get_db),
 
 
 @router.delete("/{project_id}/parties/{party_id}")
-def remove_project_party(project_id: uuid.UUID, party_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
+def remove_project_party(project_id: uuid.UUID, party_id: uuid.UUID, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user), _: None = Depends(verify_project_access)):
     link = db.query(models.ProjectParty).filter(
         models.ProjectParty.project_id == project_id,
         models.ProjectParty.party_id == party_id
@@ -569,7 +569,7 @@ def remove_project_party(project_id: uuid.UUID, party_id: uuid.UUID, db: Session
         proj = db.query(models.Project).filter(models.Project.id == project_id).first()
         company_id = proj.company_id if proj else None
         party = db.query(models.LibraryParty).filter(models.LibraryParty.id == party_id).first()
-        log_deletion(db, company_id, "project_party", link.id, f"Project Party removed: {party.name if party else party_id}", party_name=party.name if party else None)
+        log_deletion(db, company_id, "project_party", link.id, f"Project Party removed: {party.name if party else party_id}", party_name=party.name if party else None, deleted_by=current_user.name)
         db.delete(link)
         db.commit()
     return {"success": True}
@@ -597,7 +597,7 @@ def create_location(project_id: uuid.UUID, payload: LocationCreate, db: Session 
 
 
 @router.delete("/{project_id}/locations/{location_id}")
-def delete_location(project_id: uuid.UUID, location_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
+def delete_location(project_id: uuid.UUID, location_id: uuid.UUID, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user), _: None = Depends(verify_project_access)):
     loc = db.query(models.ProjectLocation).filter(
         models.ProjectLocation.id == location_id,
         models.ProjectLocation.project_id == project_id
@@ -607,7 +607,7 @@ def delete_location(project_id: uuid.UUID, location_id: uuid.UUID, db: Session =
     from app.routers.delete_logs import log_deletion
     proj = db.query(models.Project).filter(models.Project.id == project_id).first()
     company_id = proj.company_id if proj else None
-    log_deletion(db, company_id, "location", loc.id, f"Location: {loc.name}")
+    log_deletion(db, company_id, "location", loc.id, f"Location: {loc.name}", deleted_by=current_user.name)
     db.delete(loc)
     db.commit()
     return {"success": True}

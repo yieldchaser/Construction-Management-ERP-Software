@@ -342,6 +342,7 @@ def delete_file(
         "project_file",
         pf.id,
         f"Project File: {pf.original_filename or pf.name}",
+        deleted_by=current_user.name,
     )
     db.delete(pf)
     db.commit()
@@ -373,7 +374,7 @@ def delete_folder(
         )
 
     from app.routers.delete_logs import log_deletion
-    log_deletion(db, project.company_id, "file_folder", folder.id, f"File Folder: {folder.name}")
+    log_deletion(db, project.company_id, "file_folder", folder.id, f"File Folder: {folder.name}", deleted_by=current_user.name)
     db.delete(folder)
     db.commit()
     return {"status": "success", "message": "Folder deleted successfully"}

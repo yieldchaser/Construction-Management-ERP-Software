@@ -605,7 +605,7 @@ def delete_timesheet(ts_id: uuid.UUID, db: Session = Depends(get_db), current_us
     get_company_membership(db, current_user, project.company_id)
     require_permission(db, current_user, project.company_id, "data:delete")
     from app.routers.delete_logs import log_deletion
-    log_deletion(db, project.company_id, "timesheet", ts.id, f"Timesheet {ts.id}")
+    log_deletion(db, project.company_id, "timesheet", ts.id, f"Timesheet {ts.id}", deleted_by=current_user.name)
     db.delete(ts)
     db.commit()
 
@@ -1266,7 +1266,7 @@ def delete_leave_template(leave_template_id: uuid.UUID, db: Session = Depends(ge
     get_company_membership(db, current_user, obj.company_id)
     require_permission(db, current_user, obj.company_id, "data:delete")
     from app.routers.delete_logs import log_deletion
-    log_deletion(db, obj.company_id, "leave_template", obj.id, f"Leave Template: {obj.name}")
+    log_deletion(db, obj.company_id, "leave_template", obj.id, f"Leave Template: {obj.name}", deleted_by=current_user.name)
     db.delete(obj)
     db.commit()
 
@@ -1563,7 +1563,7 @@ def delete_holiday(holiday_id: uuid.UUID, db: Session = Depends(get_db), current
     get_company_membership(db, current_user, obj.company_id)
     require_permission(db, current_user, obj.company_id, "data:delete")
     from app.routers.delete_logs import log_deletion
-    log_deletion(db, obj.company_id, "holiday", obj.id, f"Holiday: {obj.name}")
+    log_deletion(db, obj.company_id, "holiday", obj.id, f"Holiday: {obj.name}", deleted_by=current_user.name)
     db.delete(obj)
     db.commit()
 

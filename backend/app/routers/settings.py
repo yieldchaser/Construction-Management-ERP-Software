@@ -427,7 +427,7 @@ def delete_approval_rule(rule_id: uuid.UUID, db: Session = Depends(get_db), curr
     get_company_membership(db, current_user, rule.company_id)
     require_permission(db, current_user, rule.company_id, "settings:manage")
     from app.routers.delete_logs import log_deletion
-    log_deletion(db, rule.company_id, "approval_rule", rule.id, f"Approval Rule: {rule.feature_type}")
+    log_deletion(db, rule.company_id, "approval_rule", rule.id, f"Approval Rule: {rule.feature_type}", deleted_by=current_user.name)
     db.delete(rule)
     db.commit()
 
@@ -810,7 +810,7 @@ def delete_salary_template(template_id: uuid.UUID, db: Session = Depends(get_db)
     get_company_membership(db, current_user, obj.company_id)
     require_permission(db, current_user, obj.company_id, "data:delete")
     from app.routers.delete_logs import log_deletion
-    log_deletion(db, obj.company_id, "salary_template", obj.id, f"Salary Template: {obj.name}")
+    log_deletion(db, obj.company_id, "salary_template", obj.id, f"Salary Template: {obj.name}", deleted_by=current_user.name)
     db.delete(obj)
     db.commit()
 

@@ -166,7 +166,7 @@ def delete_timesheet(timesheet_id: UUID, db: Session = Depends(get_db), current_
     get_company_membership(db, current_user, row.company_id)
     require_permission(db, current_user, row.company_id, "data:delete")
     from app.routers.delete_logs import log_deletion
-    log_deletion(db, row.company_id, "timesheet", row.id, f"Timesheet: {row.party_name or row.id}", party_name=row.party_name)
+    log_deletion(db, row.company_id, "timesheet", row.id, f"Timesheet: {row.party_name or row.id}", party_name=row.party_name, deleted_by=current_user.name)
     db.delete(row)
     db.commit()
     return {"success": True, "message": "Timesheet deleted successfully"}

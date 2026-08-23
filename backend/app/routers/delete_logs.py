@@ -23,11 +23,15 @@ def log_deletion(
     entity_id,
     summary: str,
     party_name: str = None,
-    deleted_by: str = None,
+    *,
+    deleted_by: str,
 ):
     """Queue an audit log row on the caller's session. The caller's commit
     persists it in the same transaction as the deletion, so either both land
-    or neither does; a failure here aborts the caller's delete."""
+    or neither does; a failure here aborts the caller's delete.
+
+    deleted_by is required keyword-only: an audit trail that records what was
+    deleted but never by whom is not an audit trail (R2-301 / R2-536)."""
     cid = uuid.UUID(str(company_id)) if company_id else None
     log = DeleteLog(
         company_id=cid,
