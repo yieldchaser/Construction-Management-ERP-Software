@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
 from app.database import get_db
 from app.auth import get_current_user, verify_company_access, verify_project_access, get_company_membership, require_permission
-from app.models import Equipment, EquipmentDeployment, FuelLog, MaintenanceSchedule, Project, User
+from app.models import Company, Equipment, EquipmentDeployment, FuelLog, MaintenanceSchedule, Project, User
 
 router = APIRouter(prefix="/equipment", tags=["Equipment & Machinery Tracking"], dependencies=[Depends(get_current_user)])
 
@@ -118,6 +118,10 @@ class MaintenanceResponse(BaseModel):
 
 @router.post("", response_model=EquipmentResponse, status_code=status.HTTP_201_CREATED)
 def add_equipment(payload: EquipmentCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    # R2-556: resolve the referenced company before use and 404 naming it,
+    # instead of letting an unknown id surface as a misleading membership 403.
+    if not db.query(Company).filter(Company.id == payload.company_id).first():
+        raise HTTPException(status_code=404, detail="Company not found")
     get_company_membership(db, current_user, payload.company_id)
     require_permission(db, current_user, payload.company_id, "equipment:edit")
     # Check if code already exists
