@@ -23,7 +23,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, File, Form, UploadFile, Response
 from sqlalchemy import func
 from sqlalchemy.orm import Session
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from app.database import get_db
 from app.auth import get_current_user, verify_project_in_company, verify_company_access, verify_project_access, get_company_membership, require_permission, require_module_view
 from app.models import (
@@ -216,6 +216,18 @@ class PayrollRunCreate(BaseModel):
     project_id: Optional[uuid.UUID] = None
     payroll_month: str = Field(..., pattern=r"^\d{4}-\d{2}$")  # e.g. "2026-06"
     days_in_month: int = Field(26, ge=1, le=31)
+
+    @field_validator("payroll_month")
+    @classmethod
+    def _payroll_month_is_real_month(cls, v: str) -> str:
+        # R2-355: the pattern alone accepts "2026-13", which run_payroll feeds
+        # straight into datetime() and crashes with an unhandled ValueError.
+        # Reject impossible months here so the client gets a 422 naming the
+        # valid format instead of a 500.
+        month = int(v.split("-")[1])
+        if not 1 <= month <= 12:
+            raise ValueError("payroll_month must be a real month in YYYY-MM format, e.g. 2026-06")
+        return v
 
 
 class PayslipResponse(BaseModel):
@@ -582,7 +594,9 @@ def _compute_payslip(emp: StaffEmployee, days_present: float, days_in_month: int
     """
     Compute one employee's payslip.
 
-    Gross = (Basic + HRA + OtherAllowances) * (days_present / days_in_month) + OvertimePay
+    Gross = (Basic + HRA + OtherAllowances) * ratio + OvertimePay, where the
+    pro-rata ratio is capped at 1.0 so attendance above days_in_month never
+    pays more than one full month (R2-354).
     PF employee  = Basic * pf_employee_pct%   (on prorated basic)
     PF employer  = Basic * pf_employer_pct%
     ESI employee = Gross * esi_employee_pct%  (only if is_esi_applicable)
@@ -590,7 +604,10 @@ def _compute_payslip(emp: StaffEmployee, days_present: float, days_in_month: int
     TDS          = tds_monthly (fixed, not prorated)
     Net          = Gross - PF_emp - ESI_emp - TDS
     """
-    ratio = days_present / days_in_month if days_in_month > 0 else 0
+    # R2-354: cap the pro-rata at one full month. days_in_month defaults to 26
+    # (the payroll convention) while days_present counts calendar attendance,
+    # so an uncapped ratio pays up to ~115% for a fully attended month.
+    ratio = min(1.0, days_present / days_in_month) if days_in_month > 0 else 0
     full_gross = float(emp.basic_salary) + float(emp.hra) + float(emp.other_allowances)
     
     # Overtime Calculation
