@@ -2,6 +2,14 @@
 
 Append-only. Every working block ends with a 5-line entry. Never edit an existing entry; if a commit was reverted, add a new entry.
 
+## Session 33 (cont. 6) — sweep: hr chunk E verified, 3 more re-fixed (2026-08-23)
+
+- New re-fixes: R2-429 `fb3d653` (roster shows employee_code; dishonest Office/Site split relabeled to project-assignment truth per long-form - no invented backend category); R2-540 `635197f` (/timesheets/company filtered nonexistent Timesheet.company_id -> guaranteed 500; now Project.company_id join, cross-tenant test).
+- Verified DRIFTED awaiting fixes: R2-481 (client-supplied days_in_month default 26 = payroll denominator; weekly_off_days zero readers), R2-527 (leave bucketing either/or null-id quirks), R2-528 (LeaveStatusUpdate.status unvalidated str + case-sensitive balance filter -> stored-but-never-counted), R2-529 (approve_timesheet never writes approved_by; submit_timesheet lacks permission gate). Sibling alarm from 540 fix: R2-447/R2-389/R2-513 may have the same nonexistent-column filter pattern - verify next.
+- Sweep totals: 42/94 rows verified, 21 live defects re-fixed, suite GREEN exit=0 at 635197f. Queue: fixes R2-052, R2-100+315, R2-236, R2-276, R2-327r, R2-481+527+528+529, R2-302, R2-475 slice, R2-592, R2-533+534 (repeatedly failing dispatch); verify hr F (R2-561/564/593) + reports x18 + procurement x9 + scattered x5 + sibling alarms R2-447/389/513.
+
+---
+
 ## Session 33 (cont. 5) — sweep: +9 re-fixed across finance/hr (2026-08-23)
 
 - New re-fixes: R2-342+343 `141cb5c` (approve_transaction 409s double/cancelled, consults Payment Entries rule chain, stamps ApprovalAction actor+time; transactions list shows real approval_flag); R2-200 `acf7cb9`; R2-197 `5b26e8c`; R2-210/220/222/262 `5ae8c5d`; R2-354/355 `8e56f33`; R2-325/353 `a9ef700` (+migration); R2-074 `8c4c496`; R2-211 `2297ed0` (settlement vouchers reject GST server-side, form gates the field); R2-430 `29aa92e` (company attendance joined real names; was ValidationError-on-any-row).
