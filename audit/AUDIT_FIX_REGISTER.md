@@ -310,7 +310,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-157 | CRITICAL | W32 | `custom_fields.py` | `page.tsx`, `chat.py` | TODO | | reg L6057 |
 | R2-158 | HIGH | W32 | `custom_fields.py` | `d/custom-fields/page.tsx` | FIXED | FIXED 4d1b3d1; Set Value dispatches on field type - date values sent as value_date, number 0 no longer dropped into text rows. |
 | R2-159 | MEDIUM | W32 | `custom_fields.py` | `calculators.py` | FIXED | FIXED d92cb93; custom_fields entity_type/field_type pattern-constrained on both create paths. |
-| R2-160 | HIGH | W99 | `d/reports/calculators/page.tsx` | — | TODO | | reg L6133 |
+| R2-160 | HIGH | W99 | `d/reports/calculators/page.tsx` | — | FIXED | | reg L6133 S33 FIXED 8ef468b: concrete tab has own column state (no steel-column bleed). |
 | R2-161 | HIGH | W09 | `page.tsx` | — | FIXED | | reg L6156 S33 FIXED f48dfb7: house-cost base rate editable input; fabricated CITY_MAP multipliers dropped; wall length/contingency exposed. |
 | R2-162 | MEDIUM | W09 | `page.tsx` | — | FIXED | FIXED 590560f; Riyadh calculator uses SAR, houseCurrency removed. |
 | R2-163 | HIGH | W09 | `page.tsx` | `calculators.py` | FIXED | | reg L6189 S33 FIXED 73e3cb6: console mirrors /calculators/house-cost math exactly (pre-contingency headline, no double-count). |
@@ -320,17 +320,17 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-167 | HIGH | W28 | `d/attendance/page.tsx` | — | FIXED | `7ffa1c9` | reg L6283; ALREADY FIXED by R2-107 — the attendance date default was part of the hardcoded-date sweep (d/attendance:148 → `new Date().toISOString().split("T")[0]`). Verified in the working tree (line 149 now). The re-tested-live section of this finding also referenced R2-106/R2-105, both fixed since. No code changed this session. |
 | R2-168 | HIGH | W29 | `d/hr/page.tsx` | `chat.py`, `d/attendance/page.tsx`, `p/[project_id]/attendance/page.tsx` | FIXED | `7ffa1c9`, `6d9493c`, `99d9287` | reg L6314; the bounded five-site hardcoded-date sweep is fully closed: the three date defaults (d/attendance, p/attendance, d/hr selectedDate) by R2-107 (`7ffa1c9`), the d/todo recurrence "Ends" date by R2-149's modal removal (`6d9493c`), and this session the last one — `payrollMonth` (d/hr:219, previously "2026-06" — the payroll screen opened on the previous month, a payroll-affecting stale default) now defaults to the current month (`99d9287`). Blast-radius 1 file this session, +1/-1. Follow-up (R2-168-bis, flagged): `daysInMonth` is still hardcoded `useState(26)` while the month default is now dynamic — a February run would report 26 days; tie it to the month length. |
 | R2-169 | CRITICAL | W14 | `auth.py` | `permissions.py` | TODO | | reg L6384 |
-| R2-170 | HIGH | W48 | `permissions.py` | `hr.py`, `drawings.py`, `reports.py` | TODO | | reg L6399 |
+| R2-170 | HIGH | W48 | `permissions.py` | `hr.py`, `drawings.py`, `reports.py` | FIXED | | reg L6399 S33 FIXED eda6dc4: attendance/drawings/reports in WORKFLOW_MODULES (re-added after a concurrent-write clobber lost 8c4c496 lines; mechanical scan asserts all 57 require_permission keys in taxonomy). |
 | R2-171 | CRITICAL | W48 | `permissions.py` | `auth.py`, `RolePermissionsModal.tsx` | TODO | | reg L6423 |
 | R2-172 | CRITICAL | W86 | `RolePermissionsModal.tsx` | `rbac.ts` | TODO | | reg L6507 |
 | R2-173 | CRITICAL | W87 | `p/[project_id]/transaction/page.tsx` | — | TODO | | reg L6552 |
 | R2-174 | MEDIUM | W35 | `files.py` | `supabase_storage.py` | FIXED | FIXED 4d06017 (finance.py); _txn_party_name resolves CompanyTeam -> User -> LibraryParty, keeping the Walk-in/Unknown vocabulary. |
-| R2-175 | HIGH | W35 | `files.py` | `models.py` | TODO | | reg L6610 |
+| R2-175 | HIGH | W35 | `files.py` | `models.py` | FIXED | | reg L6610 S33 FIXED be15612: DELETE file (tenant+data:delete+storage removal+audit log) and folder delete 409-while-nonempty. |
 | R2-176 | MEDIUM | W35 | `files.py` | `p/[project_id]/files/page.tsx` | FIXED | FIXED fd5a709; files upload has an ALLOWED_CONTENT_TYPES allowlist with magic-byte sniffing (415 on MZ/ELF/HTML shells) and download=1 passes download=true to signed URLs. |
 | R2-177 | HIGH | W07 | `billing.py` | `procurement.py`, `equipment.py` | FIXED | | reg L6660 S33 FIXED ff20153 (H-billing): POST /billing/work-orders/{id}/cancel void path (409 double-cancel/open linked bills; editing window honoured); no schema change; test added. |
 | R2-178 | CRITICAL | W05 | `procurement.py` | `finance.py`, `approvals.py`, `models.py` | TODO | | reg L6719 |
 | R2-179 | HIGH | W01 | `finance.py` | `procurement.py`, `settings/page.tsx` | TODO | | reg L6746 |
-| R2-180 | HIGH | W32 | `custom_fields.py` | — | TODO | | reg L6781 |
+| R2-180 | HIGH | W32 | `custom_fields.py` | — | FIXED | | reg L6781 S33 FIXED 6127791: custom-fields write models extra=forbid -> 422 naming unknown keys, atomic. |
 | R2-181 | CRITICAL | W14 | `auth.py` | `permissions.py`, `billing.py`, `main.py` | TODO | | reg L6857 |
 | R2-182 | HIGH | W14 | `auth.py` | — | FIXED | FIXED 94e7923; company-layout storage listener on access_token: other-tab session change reloads the tab or redirects to /login on sign-out. |
 | R2-183 | MEDIUM | W14 | `auth.py` | `settings.py` | FIXED | FIXED e31ff9b; onboarding CreateCompanyRequest.gstin enforces the canonical 15-char pattern + mod-36 check digit via the shared settings helper (dummy 29ABCDE1234F1Z5 now rejected; valid 27AAPFU0939F1ZV accepted). Suggested state-vs-address cross-check not code-fixable (no structured state) - D4 territory; "collect city once" is frontend-only (onboarding + profile pages) - follow-up. |
@@ -342,7 +342,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-189 | HIGH | W02 | `UNMAPPED` | — | TODO | | reg L7044 |
 | R2-190 | MEDIUM | W02 | `UNMAPPED` | — | FIXED | FIXED 592af3a (other agent); Zoho upstream bodies logged server-side with a correlation ref. |
 | R2-191 | MEDIUM | W14 | `auth.py` | `models.py`, `billing.py`, `bi_export.py` | FIXED | FIXED (evidence, b4c0a37); CompanyTeam gained UniqueConstraint(company_id, user_id) - bundled into the R2-361 commit by the W18 wave; verified at runtime (duplicate insert -> IntegrityError; userless rows still allowed). NOTE: prod needs a Supabase migration to dedupe existing rows + CREATE UNIQUE INDEX (schema-sync only affects fresh DBs). |
-| R2-192 | HIGH | W67 | `google_drive.py` | `zoho_books.py`, `google_sheets.py`, `auth.py` | TODO | | reg L7114 |
+| R2-192 | HIGH | W67 | `google_drive.py` | `zoho_books.py`, `google_sheets.py`, `auth.py` | FIXED | | reg L7114 S33 FIXED 136a82f: Sheets authorize settings:manage, payroll export module gate, Zoho push_bill billing:edit; google_drive verified compliant. |
 | R2-193 | MEDIUM | W36 | `bi_export.py` | `auth.py`, `hr.py`, `drawings.py` | FIXED | FIXED 07764bc; BI key last_used_at touched at most every 5 min (was every request, ~7200 writes/day); naive/aware tz guard for legacy rows. |
 | R2-194 | CRITICAL | W57 | `main.py` | — | TODO | | reg L7277 |
 | R2-195 | HIGH | W04 | `reports.py` | `chat.py`, `database.py`, `finance.py` | TODO | | reg L7331; DEFERRED per D-013 — performance task, needs measurements |
@@ -407,7 +407,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-256 | MEDIUM | W22 | `safety.py` | — | FIXED | FIXED d879c01; close_incident stamps closed_by (new nullable FK users.id, additive migration 20260816_000002), lost_time_days ge=0, reported_at typed datetime with future rejection. |
 | R2-257 | CRITICAL | W41 | `team_schedule.py` | `frontend/src/app/c/[company_id]/d/team-action/page.tsx`, `drawings/page.tsx` | TODO | | reg L11102 |
 | R2-258 | HIGH | W41 | `team_schedule.py` | — | FIXED | FIXED 521d887; same-day timesheets with end_time not after start_time rejected with 422 instead of wrapping into phantom 23-hour shift. |
-| R2-259 | HIGH | W42 | `drawings.py` | — | TODO | | reg L11191 |
+| R2-259 | HIGH | W42 | `drawings.py` | — | FIXED | | reg L11191 S33 FIXED 873dc06: drawing approvals append-only ledger w/ terminal approved state + actor from caller (+model). |
 | R2-260 | HIGH | W32 | `custom_fields.py` | — | FIXED | FIXED c92b707; custom field values validated against declared type/typed column, target entity must exist inside authorised company, is_required enforced on project+bill create/update with 422 naming missing fields. |
 | R2-261 | MEDIUM | W41 | `team_schedule.py` | `team-action/page.tsx` | FIXED | FIXED 7b868ea (in dpr.py - attribution off); create_dpr 409s on a second DPR for the same project+day before any side effects; the DPR page surfaces the detail. Chose 409 over upsert (no update endpoint exists; upsert semantics = product decision). NOTE: prod holds a duplicate pair already, so a DB unique-index migration would fail - app-level guard chosen. |
 | R2-262 | CRITICAL | W03 | `hr.py` | `finance.py`, `safety.py` | FIX_VERIFIED | `e2e449d` | reg L11354; hr.py direct-fix pass; suite RC-045 |
@@ -514,7 +514,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-363 | HIGH | W18 | `quality.py` | `models.py` | FIXED | FIXED 4095671; respond endpoint loads valid item ids from insp.checklist_id, rejects foreign items with 400 before any write. |
 | R2-364 | HIGH | W18 | `quality.py` | `models.py`, `reports.py` | FIXED | FIXED cdc82d9 (in reports.py); quality pass-rate denominator = assessed only; new quality_tests_unassessed metric. |
 | R2-365 | CRITICAL | W42 | `drawings.py` | `models.py` | TODO | | reg L17078 |
-| R2-366 | HIGH | W42 | `drawings.py` | `supabase_storage.py` | TODO | | reg L17132 |
+| R2-366 | HIGH | W42 | `drawings.py` | `supabase_storage.py` | FIXED | | reg L17132 S33 FIXED-FULLY 23b3482: cross-revision file reuse blocked (duplicate_file check); R2-466 closed schemes/hosts. |
 | R2-367 | MEDIUM | W42 | `drawings.py` | — | FIXED | FIXED 93184e6; drawing revision approval_status pattern now includes pending; approved_by derived from membership, cleared on return to pending. |
 | R2-368 | HIGH | W20 | `zoho_books.py` | `models.py` | FIXED | FIXED 52179b9; Zoho push persists bills.zoho_bill_id, short-circuits re-pushes with 409, maps duplicate codes 13011/3062 to 409. |
 | R2-369 | HIGH | W25 | `tally.py` | `models.py` | TODO | | reg L17270 |
@@ -663,7 +663,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-513 | HIGH | W26 | `face_recognition.py` | — | TODO | | reg L25769 |
 | R2-514 | MEDIUM | W79 | `helpContent.tsx` | `chat.py`, `projects.py`, `analytics.py` | FIXED | FIXED 9afd6f7; the multi-level approval help answer no longer claims enforcement ("not enforced on transactions; do not rely on them as an approval control") and the onboarding answer is neutralized; sweep greps clean. |
 | R2-515 | CRITICAL | W63 | `p/[project_id]/attendance/page.tsx` | — | TODO | | reg L26127 |
-| R2-516 | HIGH | W09 | `page.tsx` | — | TODO | | reg L26195 |
+| R2-516 | HIGH | W09 | `page.tsx` | — | FIXED | | reg L26195 S33 FIXED 6918efc: queued punches persist ISO capture time (server replay stamping still server-now - backend accepts no client ts). |
 | R2-517 | HIGH | W75 | `supabase_storage.py` | — | TODO | | reg L26217 |
 | R2-518 | MEDIUM | W09 | `page.tsx` | `PwaControls.tsx`, `d/reports/calculators/page.tsx`, `calculators.py` | FIXED | FIXED (evidence, 287db85); geolocation failure already blocks punches with an alert (R2-060) - no fabricated coordinates anywhere. |
 | R2-519 | HIGH | W21 | `calculators.py` | — | FIXED | | reg L26418 S33 FIXED d3c13b6 (H-calculators): client concrete factors corrected against server ratio math (M7.5 4.0->3.41, M20 8.2->8.06, M25 agg 0.76->0.77); engine consolidation remains CD-2-gated. |
