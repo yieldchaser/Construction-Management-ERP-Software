@@ -786,6 +786,14 @@ def _rep_all_party_balances(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID
 
 def _rep_item_wise_sales(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
     try:
+        # R2-321: honour the project filter. Quotation lines hang off leads
+        # (CRMQuotationItem -> CRMQuotation -> CRMLead) and crm_leads carries
+        # no project linkage whatsoever (nor does Bill reference quotations,
+        # R2-360), so no line can ever belong to one project. An explicit pid
+        # therefore selects zero rows instead of silently returning the whole
+        # company's data under a narrowed heading.
+        if pid:
+            return []
         items = db.query(CRMQuotationItem).join(
             CRMQuotation, CRMQuotationItem.quotation_id == CRMQuotation.id
         ).join(
@@ -795,19 +803,18 @@ def _rep_item_wise_sales(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
         for it in items:
             q = db.query(CRMQuotation).filter(CRMQuotation.id == it.quotation_id).first()
             lead = db.query(CRMLead).filter(CRMLead.id == q.lead_id).first() if q else None
+            # R2-321: the invoice-shaped headers Sale Type, Project Name,
+            # Invoice Number, Tax Amount and Gross Amount have no backing data
+            # anywhere on a quotation line; they are dropped outright rather
+            # than shipped as permanently blank columns.
             rows.append({
-                "Sale Type": "",
-                "Project Name": "",
                 "Client Name": lead.client_company_name if lead else "",
-                "Invoice Number": "",
                 "Invoice Date": _clean(q.created_at) if q else "",
                 "Item Name": it.item_name,
                 "Unit": it.unit,
                 "Quantity": _clean(it.qty),
                 "Item Rate": _clean(it.selling_price),
                 "Tax %": _clean(it.supply_tax_pct),
-                "Tax Amount": "",
-                "Gross Amount": "",
                 "Total Amount": _clean(it.total_amount),
                 "Invoice Created": _clean(q.created_at) if q else "",
             })

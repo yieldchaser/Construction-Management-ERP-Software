@@ -11,10 +11,8 @@ export default function ItemWiseSalesReportPage() {
   const params = useParams();
   const companyId = params?.company_id as string || "e0000000-0000-0000-0000-000000000000";
 
-  const [projectFilter, setProjectFilter] = useState("All");
   const [clientFilter, setClientFilter] = useState("All");
   const [itemFilter, setItemFilter] = useState("All");
-  const [typeFilter, setTypeFilter] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [toastMessage, setToastMessage] = useState("");
   const [rows, setRows] = useState<Record<string, any>[]>([]);
@@ -46,15 +44,12 @@ export default function ItemWiseSalesReportPage() {
   const cell = (row: Record<string, any>, key: string) => (row[key] ?? "").toString();
 
   const filteredSales = rows.filter(row => {
-    const matchesProj = projectFilter === "All" || cell(row, "Project Name").includes(projectFilter);
     const matchesClient = clientFilter === "All" || cell(row, "Client Name").includes(clientFilter);
     const matchesItem = itemFilter === "All" || cell(row, "Item Name").includes(itemFilter);
-    const matchesType = typeFilter === "All" || cell(row, "Sale Type").includes(typeFilter);
     const matchesSearch = searchQuery === "" ||
       cell(row, "Item Name").toLowerCase().includes(searchQuery.toLowerCase()) ||
-      cell(row, "Client Name").toLowerCase().includes(searchQuery.toLowerCase()) ||
-      cell(row, "Invoice Number").toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesProj && matchesClient && matchesItem && matchesType && matchesSearch;
+      cell(row, "Client Name").toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesClient && matchesItem && matchesSearch;
   });
 
   return (
@@ -63,18 +58,6 @@ export default function ItemWiseSalesReportPage() {
         {/* Filters Top Bar */}
         <div className="bg-sidebar border-b border-border-custom px-6 py-4 flex flex-col gap-4 shrink-0">
           <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-xs">
-            
-            {/* Project */}
-            <div className="flex flex-col gap-1">
-              <span className="text-[10px] text-muted uppercase font-bold">Project Name:</span>
-              <select
-                value={projectFilter}
-                onChange={e => setProjectFilter(e.target.value)}
-                className="bg-card border border-border-custom rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-primary"
-              >
-                <option value="All">All Projects</option>
-              </select>
-            </div>
 
             {/* Client */}
             <div className="flex flex-col gap-1">
@@ -115,21 +98,6 @@ export default function ItemWiseSalesReportPage() {
               </select>
             </div>
 
-            {/* Sales Type */}
-            <div className="flex flex-col gap-1">
-              <span className="text-[10px] text-muted uppercase font-bold">Sales Type:</span>
-              <select
-                value={typeFilter}
-                onChange={e => setTypeFilter(e.target.value)}
-                className="bg-card border border-border-custom rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-primary"
-              >
-                <option value="All">All Types</option>
-                <option value="Tax Invoice">Tax Invoice</option>
-                <option value="Retail Invoice">Retail Invoice</option>
-                <option value="Proforma Invoice">Proforma Invoice</option>
-              </select>
-            </div>
-
           </div>
 
           <div className="flex items-center justify-between gap-4 pt-2 border-t border-border-custom/40">
@@ -162,18 +130,13 @@ export default function ItemWiseSalesReportPage() {
                   <thead>
                     <tr className="border-b border-border-custom text-muted font-semibold text-[10px] uppercase">
                       <th className="pb-2">#</th>
-                      <th className="pb-2">Sale Type</th>
-                      <th className="pb-2">Project Name</th>
                       <th className="pb-2">Client Name</th>
-                      <th className="pb-2">Invoice Number</th>
                       <th className="pb-2">Invoice Date</th>
                       <th className="pb-2">Item Name</th>
                       <th className="pb-2">Unit</th>
                       <th className="pb-2">Quantity</th>
                       <th className="pb-2">Item Rate</th>
                       <th className="pb-2">Tax %</th>
-                      <th className="pb-2">Tax Amount</th>
-                      <th className="pb-2">Gross Amount</th>
                       <th className="pb-2">Total Amount</th>
                       <th className="pb-2">Invoice Created</th>
                     </tr>
@@ -181,24 +144,19 @@ export default function ItemWiseSalesReportPage() {
                   <tbody>
                     {filteredSales.length === 0 ? (
                       <tr>
-                        <td colSpan={15} className="py-8 text-center text-muted">No data available for this report yet.</td>
+                        <td colSpan={10} className="py-8 text-center text-muted">No data available for this report yet.</td>
                       </tr>
                     ) : (
                       filteredSales.map((row, i) => (
                         <tr key={i} className="border-b border-border-custom/40 last:border-0 hover:bg-elevated/40">
                           <td className="py-3 text-muted">{i + 1}</td>
-                          <td className="py-3 font-semibold text-white">{cell(row, "Sale Type")}</td>
-                          <td className="py-3 text-muted">{cell(row, "Project Name")}</td>
                           <td className="py-3 text-white font-medium">{cell(row, "Client Name")}</td>
-                          <td className="py-3 text-muted">{cell(row, "Invoice Number")}</td>
                           <td className="py-3 text-muted">{cell(row, "Invoice Date")}</td>
                           <td className="py-3 text-white">{cell(row, "Item Name")}</td>
                           <td className="py-3 text-muted">{cell(row, "Unit")}</td>
                           <td className="py-3 text-white font-bold">{cell(row, "Quantity")}</td>
                           <td className="py-3 text-muted">{cell(row, "Item Rate")}</td>
                           <td className="py-3 text-muted">{cell(row, "Tax %")}</td>
-                          <td className="py-3 text-muted">{cell(row, "Tax Amount")}</td>
-                          <td className="py-3 text-muted">{cell(row, "Gross Amount")}</td>
                           <td className="py-3 text-muted">{cell(row, "Total Amount")}</td>
                           <td className="py-3 text-muted">{cell(row, "Invoice Created")}</td>
                         </tr>
