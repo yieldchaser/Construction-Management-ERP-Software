@@ -2,6 +2,15 @@
 
 Append-only. Every working block ends with a 5-line entry. Never edit an existing entry; if a commit was reverted, add a new entry.
 
+## Session 33 (cont. 7) — sweep: 46/94 verified, 23 re-fixed; sibling alarms cleared (2026-08-23)
+
+- New: R2-528+529 `51ecbe9` (leave status Literal + case-normalized balances; approved_by stamped; submit gated attendance:edit); R2-430/429/211/540 landed earlier this block.
+- Sibling alarms CLEARED: R2-447 false positive (Task.company_id never existed per git -S; audit's 500 was self-described hypothesis), R2-389 fixed by 161b2c0 (u.mobile), R2-513 fixed by 97f4eb4 (+migration). Residual noted: legacy NULL FaceRecognitionLog.created_at vs non-Optional response field.
+- Verified DRIFTED still queued: R2-481 (days_in_month default 26 denominator + weekly_off_days dead), R2-527 (leave id/name bucketing fallback quirks), R2-052, R2-100+315, R2-236, R2-276, R2-327r, R2-302, R2-475 slice, R2-592, R2-533+534 (chronic dispatch failure - spec in cont.3).
+- Suite GREEN exit=0 at 51ecbe9. Totals: 46/94 verified, 23 live defects re-fixed, 3 D2-gated surfaced, R2-345 skipped (founder-gated). Remaining verify queue: hr F (R2-561/564/593), reports x18, procurement x9, scattered x5.
+
+---
+
 ## Session 33 (cont. 6) — sweep: hr chunk E verified, 3 more re-fixed (2026-08-23)
 
 - New re-fixes: R2-429 `fb3d653` (roster shows employee_code; dishonest Office/Site split relabeled to project-assignment truth per long-form - no invented backend category); R2-540 `635197f` (/timesheets/company filtered nonexistent Timesheet.company_id -> guaranteed 500; now Project.company_id join, cross-tenant test).
