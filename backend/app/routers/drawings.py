@@ -236,6 +236,18 @@ def add_drawing_revision(drawing_id: UUID, req: RevisionCreateRequest, db: Sessi
     if existing_rev:
         raise HTTPException(status_code=400, detail=f"Revision version code '{req.version_code}' already exists for this drawing.")
 
+    # R2-366: two revisions of one drawing must never carry the same file - a
+    # "V2" pointing at V1's sheet claims a change that does not exist.
+    duplicate_file = db.query(DrawingRevision).filter(
+        DrawingRevision.drawing_id == drawing_id,
+        DrawingRevision.file_url == req.file_url
+    ).first()
+    if duplicate_file:
+        raise HTTPException(
+            status_code=400,
+            detail=f"file_url already points at revision '{duplicate_file.version_code}' of this drawing; each revision must reference its own file."
+        )
+
     revision = DrawingRevision(
         drawing_id=drawing_id,
         version_code=req.version_code,
