@@ -349,7 +349,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-196 | HIGH | W14 | `auth.py` | `siteflow.ts`, `config.py`, `d/hr/page.tsx` | FIXED | FIXED aaa5041; jti+iat at mint, RevokedToken table + additive migration, POST /auth/logout, password-reset invalidates outstanding tokens. |
 | R2-197 | HIGH | W03 | `hr.py` | `billing.py`, `budget.py`, `d/hr/page.tsx` | FIX_VERIFIED | `acee51f` | reg L7438; hr.py direct-fix pass; suite RC-053 (frontend ESI ceiling; static) |
 | R2-198 | CRITICAL | W01 | `finance.py` | — | FIX_VERIFIED | `c5bdcd3` | reg L7530; wave W01a; suite RC-018 S33 SWEEP: backend clause HOLDS (all company-scoped finance routes UUID-typed -> FastAPI 422s literal 'undefined'; 403 via verify_company_access). Frontend redirect-wrapper clause unverifiable in this file. |
-| R2-199 | HIGH | W100 | `PwaControls.tsx` | — | TODO | | reg L7624 |
+| R2-199 | HIGH | W100 | `PwaControls.tsx` | — | FIXED | | reg L7624 S33 FIXED de9793c: PWA push claims relabeled honest (Enable Notifications; no subscription loop exists - option B). |
 | R2-200 | MEDIUM | W03 | `hr.py` | — | FIX_VERIFIED | `29a1bdb` | reg L7643; hr.py direct-fix pass; suite RC-066 |
 | R2-201 | CRITICAL | W03 | `hr.py` | `three_way.py`, `safety.py`, `d/hr/page.tsx` | FIX_VERIFIED | `e2e449d` | reg L7675; hr.py direct-fix pass; suite RC-047 |
 | R2-202 | HIGH | W11 | `planning.py` | `budgeting.py`, `models.py`, `d/budgeting/boq/page.tsx` | FIXED | FIXED 42d2c9a; BOQ revision applies to the document (revised_amount column) and Budget-vs-Actual measures against it. |
@@ -378,7 +378,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-226 | CRITICAL | W10 | `projects.py` | `projects/page.tsx` | TODO | | reg L9269 |
 | R2-227 | MEDIUM | W10 | `projects.py` | — | FIXED | FIXED 15e83fd; planning ProjectResponseSchema carries is_pinned (list/get/post/patch agree); frontend had already moved to /projects/company/{id}. |
 | R2-228 | CRITICAL | W33 | `towers.py` | `budget.py` | TODO | | reg L9319 |
-| R2-229 | HIGH | W33 | `towers.py` | `budgeting.py` | TODO | | reg L9346 |
+| R2-229 | HIGH | W33 | `towers.py` | `budgeting.py` | FIXED | | reg L9346 S33 FIXED 9a5685e evidence: towers Billed already revenue-only via _active_bills/REVENUE_INVOICE_TYPES; behavior test locks it. |
 | R2-230 | HIGH | W15 | `models.py` | — | FIXED | FIXED 1a8374f (API half); blank file_url rejected on drawing create + revision create. UI half remains (no file picker wired to /files/upload). |
 | R2-231 | CRITICAL | W01 | `finance.py` | `frontend/src/app/c/[company_id]/d/finance/page.tsx`, `frontend/src/app/c/[company_id]/p/[project_id]/transaction/page.tsx`, `constants.py` | FIX_VERIFIED | `8b9a378` | reg L9544; wave 0; suite RC-006 S33 SWEEP: drift CONFIRMED live (FIFO gate unreachable; UI never sends party field) -> re-fixed e9dba8b (party-less payments scope FIFO by company/project/direction; review gate kept; reversal intact). Watch: no-party settlements persist NULL party_company_user_id. |
 | R2-232 | CRITICAL | W01 | `finance.py` | `backend/app/models.py`, `tally.py`, `frontend/src/app/c/[company_id]/p/[project_id]/dashboard/page.tsx` | FIX_VERIFIED | `5d3609c`, `3e6ecb0` | reg L9647; wave W01a; suite RC-013. LINEAGE ADDENDUM (Session 31): `5d3609c` (the verified cancel/exclusion fix) exists ONLY on the diverged branch `claude/siteflow-audit-round10-cont-f6961b` — it was never merged into main's lineage; the fix content landed here via `3e6ecb0` (R2-370's wave: cancel endpoint + cancelled_at/cancelled_by columns + Cancelled-exclusion across bill aggregations + the R2-232 regression test). Main's lineage is now genuinely fixed. |
@@ -437,12 +437,12 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-286 | MEDIUM | W04 | `reports.py` | — | FIX_VERIFIED | `2ddc411` | reg L12577; reports.py direct-fix pass; suite RC-077 |
 | R2-287 | MEDIUM | W10 | `projects.py` | — | FIXED | FIXED 061f949 (residue close; apply half was already fixed); negative opening balances 422, non-canonical direction 422 instead of silent 200-with-0. |
 | R2-288 | CRITICAL | W06 | `settings.py` | — | TODO | | reg L12645 |
-| R2-289 | HIGH | W36 | `bi_export.py` | `budget.py` | TODO | | reg L12691 |
+| R2-289 | HIGH | W36 | `bi_export.py` | `budget.py` | FIXED | | reg L12691 S33 FIXED 79890c1: BI budget-variance partitions EXPENSE_INVOICE_TYPES per head like Budget (other_actual added); omission/cancel/tz parts pre-landed. |
 | R2-290 | MEDIUM | W06 | `settings.py` | — | FIXED | FIXED 582d215; branch GSTIN enforces the canonical 15-char pattern (byte-identical to the frontend validator); salary breakup must be a valid partition (sum 100, basic_pct bounded). Deviation: GSTIN-state-vs-branch-state check deferred to R2-114/D4 (branch state is free text). |
 | R2-291 | HIGH | W69 | `backend/app/main.py` | `delete_logs.py` | FIXED | FIXED aeb5642; delete-logs router moved to /apis/v3/delete-logs, path ids UUID-typed (422 not ValueError-500), catch-all /apis/v3/{path} 404 handler added. |
 | R2-292 | HIGH | W06 | `settings.py` | — | FIXED | FIXED e88a5f1; role permission updates reject empty matrices and the all superuser flag unless owner-equivalent; Owner/Admin undeletable. |
 | R2-293 | MEDIUM | W25 | `tally.py` | — | FIXED | FIXED afe1f97; tally onsite_transaction_type/tally_voucher_type Literals match the voucher builder. |
-| R2-294 | HIGH | W70 | `admin_migrations.py` | — | TODO | | reg L12969 |
+| R2-294 | HIGH | W70 | `admin_migrations.py` | — | FIXED | | reg L12969 S33 FIXED b78c8e6: duplicate /backfill-rbac already removed (487f564); app-wide duplicate-route guard test added (445 routes). |
 | R2-295 | MEDIUM | W59 | `rate_limit.py` | — | FIXED | FIXED fed144d (config-gated); limiter uses shared storage_uri when RATE_LIMIT_STORAGE_URI set, falls back to in-memory. Items 2-3 (proxy verification, per-account lockout) remain. |
 | R2-296 | HIGH | W68 | `subcon.py` | — | FIXED | FIXED f2e276a; work-order amendments whitelist amendable fields {estimated_work_amount, terms}, applied in same transaction, amended_by from authenticated user. |
 | R2-297 | HIGH | W05 | `procurement.py` | — | FIXED | FIXED ef5f171; unit change refused (422) while on_hand_qty/reserved_qty non-zero. |
