@@ -25,6 +25,13 @@ const HOUSE_RATE_DEFAULTS: Record<"budget" | "standard" | "premium", number> = {
   premium: 3400,
 };
 
+const BRICK_PRESETS: Record<string, [number, number, number]> = {
+  modular: [190, 90, 90],
+  traditional: [230, 110, 75],
+  uk: [215, 102, 65],
+  us: [203, 92, 95],
+};
+
 export default function CalculatorsPage() {
   const params = useParams();
   const companyId = params?.company_id as string;
@@ -117,10 +124,9 @@ export default function CalculatorsPage() {
   // 5. Bricks & Mortar
   const [brickWallL, setBrickWallL] = useState(5.0); // m
   const [brickWallH, setBrickWallH] = useState(3.0); // m
-  const [brickThickness, setBrickThickness] = useState(230); // mm
   const [brickSizePreset, setBrickSizePreset] = useState("modular"); // modular / traditional / uk / us
   const [brickMortarRatio, setBrickMortarRatio] = useState("1:6");
-  const [brickLeaves, setBrickLeaves] = useState(2); // 1 = 4.5", 2 = 9"
+  const [brickLeaves, setBrickLeaves] = useState<1 | 2>(2); // wall thickness derives from preset width + joint
   const [brickWastage, setBrickWastage] = useState(10); // %
   const [brickMortarJoint, setBrickMortarJoint] = useState(10); // mm
   const [brickPrice, setBrickPrice] = useState(0); // price per brick
@@ -273,18 +279,13 @@ export default function CalculatorsPage() {
 
   // 5. Bricks & Mortar
   const { bricksNeeded, brickCementBags, brickSandM3, brickTotalCost } = React.useMemo(() => {
-    const presets: Record<string, [number, number, number]> = {
-      modular: [190, 90, 90],
-      traditional: [230, 110, 75],
-      uk: [215, 102, 65],
-      us: [203, 92, 95],
-    };
-    const [bLen, bW, bH] = presets[brickSizePreset] || presets.modular;
+    const [bLen, bW, bH] = BRICK_PRESETS[brickSizePreset] || BRICK_PRESETS.modular;
     const bFaceArea = ((bLen + brickMortarJoint) / 1000.0) * ((bH + brickMortarJoint) / 1000.0);
     const wallArea = brickWallL * brickWallH;
     const bNeeded = Math.ceil((wallArea / bFaceArea) * brickLeaves * (1 + brickWastage / 100));
 
-    const wallVol = wallArea * (brickThickness / 1000.0);
+    const wallThkMm = brickLeaves === 2 ? 2 * bW + brickMortarJoint : bW + brickMortarJoint;
+    const wallVol = wallArea * (wallThkMm / 1000.0);
     const actualVol = (bLen / 1000.0) * (bW / 1000.0) * (bH / 1000.0);
     const netBricksNoWaste = (wallArea / bFaceArea) * brickLeaves;
     const mortarVol = Math.max(0, wallVol - netBricksNoWaste * actualVol);
@@ -298,7 +299,9 @@ export default function CalculatorsPage() {
     const sM3 = dryMortarVol * (sParts / totalParts);
     const cost = brickPrice > 0 ? bNeeded * brickPrice : 0;
     return { bricksNeeded: bNeeded, brickCementBags: cBags, brickSandM3: sM3, brickTotalCost: cost };
-  }, [brickSizePreset, brickMortarJoint, brickWallL, brickWallH, brickLeaves, brickWastage, brickThickness, brickMortarRatio, brickPrice]);
+  }, [brickSizePreset, brickMortarJoint, brickWallL, brickWallH, brickLeaves, brickWastage, brickMortarRatio, brickPrice]);
+
+  const selBrickWidthMm = (BRICK_PRESETS[brickSizePreset] || BRICK_PRESETS.modular)[1];
 
   // 6. Paint Quantity
   const { paintableArea, paintLitres, paintPuttyKg, paintPrimerL } = React.useMemo(() => {
@@ -1191,17 +1194,16 @@ export default function CalculatorsPage() {
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-muted">Wall Thickness (mm)</label>
+                      <label className="text-muted">Wall Thickness</label>
                       <select
-                        value={brickThickness}
+                        value={brickLeaves}
                         onChange={(e) => {
-                          setBrickThickness(Number(e.target.value));
-                          setBrickLeaves(Number(e.target.value) > 115 ? 2 : 1);
+                          setBrickLeaves(Number(e.target.value) as 1 | 2);
                         }}
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       >
-                        <option value={115}>4.5 inch (Half Brick - Single Leaf)</option>
-                        <option value={230}>9 inch (Full Brick - Double Leaf)</option>
+                        <option value={1}>{`Single Leaf (${selBrickWidthMm + brickMortarJoint} mm)`}</option>
+                        <option value={2}>{`Double Leaf (${2 * selBrickWidthMm + brickMortarJoint} mm)`}</option>
                       </select>
                     </div>
                     <div className="space-y-1">
@@ -1999,7 +2001,7 @@ export default function CalculatorsPage() {
                     <>
                       <div>• Modular Brick dimensions: 190 x 90 x 90 mm. Traditional Brick: 230 x 110 x 75 mm.</div>
                       <div>• Standard mortar joint thickness is 10 mm (horizontal and vertical).</div>
-                      <div>• Mortar volume constitutes ~30% of total brick wall volume.</div>
+                      <div>• Mortar is the residual of wall volume minus net brick volume: about 19% of a modular double-leaf wall with 10 mm joints; the ~30% rule of thumb belongs to traditional brickwork.</div>
                     </>
                   )}
                 </>
