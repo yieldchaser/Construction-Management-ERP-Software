@@ -9,7 +9,7 @@ from sqlalchemy import desc
 
 from app.database import get_db
 from app.models import FileFolder, ProjectFile, Project
-from app.auth import get_current_user, verify_project_access, get_company_membership
+from app.auth import get_current_user, verify_project_access, get_company_membership, require_permission
 from app import supabase_storage
 from pydantic import BaseModel, Field
 
@@ -314,3 +314,66 @@ def get_file(
         return Response(content=pf.data, media_type=media_type, headers=headers)
 
     raise HTTPException(status_code=404, detail="File not found")
+
+
+@router.delete("/file/{file_id}")
+def delete_file(
+    file_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """Delete an uploaded file: storage object, row, and a delete-log entry."""
+    pf = db.query(ProjectFile).filter(ProjectFile.id == file_id).first()
+    if not pf:
+        raise HTTPException(status_code=404, detail="File not found")
+    project = db.query(Project).filter(Project.id == pf.project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, project.company_id)
+    require_permission(db, current_user, project.company_id, "data:delete")
+
+    if pf.storage_path:
+        supabase_storage.delete_object(supabase_storage.BUCKET_PROJECT_FILES, pf.storage_path)
+
+    from app.routers.delete_logs import log_deletion
+    log_deletion(
+        db,
+        project.company_id,
+        "project_file",
+        pf.id,
+        f"Project File: {pf.original_filename or pf.name}",
+    )
+    db.delete(pf)
+    db.commit()
+    return {"status": "success", "message": "File deleted successfully"}
+
+
+@router.delete("/folders/{folder_id}")
+def delete_folder(
+    folder_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """Delete an empty folder; refuses while it still contains files or subfolders."""
+    folder = db.query(FileFolder).filter(FileFolder.id == folder_id).first()
+    if not folder:
+        raise HTTPException(status_code=404, detail="Folder not found")
+    project = db.query(Project).filter(Project.id == folder.project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, project.company_id)
+    require_permission(db, current_user, project.company_id, "data:delete")
+
+    has_files = db.query(ProjectFile.id).filter(ProjectFile.folder_id == folder_id).first() is not None
+    has_subfolders = db.query(FileFolder.id).filter(FileFolder.parent_id == folder_id).first() is not None
+    if has_files or has_subfolders:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Folder is not empty. Delete its files and subfolders first.",
+        )
+
+    from app.routers.delete_logs import log_deletion
+    log_deletion(db, project.company_id, "file_folder", folder.id, f"File Folder: {folder.name}")
+    db.delete(folder)
+    db.commit()
+    return {"status": "success", "message": "Folder deleted successfully"}
