@@ -84,6 +84,9 @@ export default function CalculatorsPage() {
   const [concreteL, setConcreteL] = useState(5.0); // m
   const [concreteW, setConcreteW] = useState(3.0); // m
   const [concreteD, setConcreteD] = useState(0.15); // m
+  const [concColA, setConcColA] = useState(450); // mm (own state - not shared with the Steel Column tab)
+  const [concColB, setConcColB] = useState(300); // mm
+  const [concColH, setConcColH] = useState(3000); // mm
   const [concreteGrade, setConcreteGrade] = useState("M20");
   const [concreteWastage, setConcreteWastage] = useState(5); // %
   const [stairSteps, setStairSteps] = useState(14);
@@ -237,7 +240,7 @@ export default function CalculatorsPage() {
   const { concVolume, concCementBags, concSandM3, concAggM3, concMaterialCost } = React.useMemo(() => {
     let vol = concreteL * concreteW * concreteD;
     if (concreteForm === "column") {
-      vol = (sizeA / 1000) * (sizeB / 1000) * (colHeight / 1000);
+      vol = (concColA / 1000) * (concColB / 1000) * (concColH / 1000);
     } else if (concreteForm === "circular") {
       vol = (Math.PI / 4) * circDia * circDia * circHeight * circCount;
     } else if (concreteForm === "stair") {
@@ -261,7 +264,7 @@ export default function CalculatorsPage() {
     const aM3 = vol * aFactor * (1 + concreteWastage / 100);
     const cost = (cementRate > 0 ? Math.ceil(cBags) * cementRate : 0) + (sandRate > 0 ? sM3 * sandRate : 0) + (aggRate > 0 ? aM3 * aggRate : 0);
     return { concVolume: vol, concCementBags: cBags, concSandM3: sM3, concAggM3: aM3, concMaterialCost: cost };
-  }, [concreteL, concreteW, concreteD, concreteForm, sizeA, sizeB, colHeight, circDia, circHeight, circCount, stairSteps, stairWidth, stairRiser, stairTread, stairWaist, concreteGrade, concreteWastage, cementRate, sandRate, aggRate]);
+  }, [concreteL, concreteW, concreteD, concreteForm, concColA, concColB, concColH, circDia, circHeight, circCount, stairSteps, stairWidth, stairRiser, stairTread, stairWaist, concreteGrade, concreteWastage, cementRate, sandRate, aggRate]);
 
   // 4. RMC Transit Mixer
   const { rmcTotalVol, rmcTrucks, rmcTotalCost } = React.useMemo(() => {
@@ -837,9 +840,9 @@ export default function CalculatorsPage() {
                           <label className="text-muted">Column Size A (mm)</label>
                           <input
                             type="number"
-                            value={sizeA}
+                            value={concColA}
                             onChange={(e) => {
-                              setSizeA(Number(e.target.value));
+                              setConcColA(Number(e.target.value));
                             }}
                             className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                           />
@@ -848,9 +851,9 @@ export default function CalculatorsPage() {
                           <label className="text-muted">Column Size B (mm)</label>
                           <input
                             type="number"
-                            value={sizeB}
+                            value={concColB}
                             onChange={(e) => {
-                              setSizeB(Number(e.target.value));
+                              setConcColB(Number(e.target.value));
                             }}
                             className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                           />
@@ -859,9 +862,9 @@ export default function CalculatorsPage() {
                           <label className="text-muted">Column Height (mm)</label>
                           <input
                             type="number"
-                            value={colHeight}
+                            value={concColH}
                             onChange={(e) => {
-                              setColHeight(Number(e.target.value));
+                              setConcColH(Number(e.target.value));
                             }}
                             className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                           />
