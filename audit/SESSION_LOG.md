@@ -2,6 +2,15 @@
 
 Append-only. Every working block ends with a 5-line entry. Never edit an existing entry; if a commit was reverted, add a new entry.
 
+## Session 33 (cont. 5) — sweep: +9 re-fixed across finance/hr (2026-08-23)
+
+- New re-fixes: R2-342+343 `141cb5c` (approve_transaction 409s double/cancelled, consults Payment Entries rule chain, stamps ApprovalAction actor+time; transactions list shows real approval_flag); R2-200 `acf7cb9`; R2-197 `5b26e8c`; R2-210/220/222/262 `5ae8c5d`; R2-354/355 `8e56f33`; R2-325/353 `a9ef700` (+migration); R2-074 `8c4c496`; R2-211 `2297ed0` (settlement vouchers reject GST server-side, form gates the field); R2-430 `29aa92e` (company attendance joined real names; was ValidationError-on-any-row).
+- Verified HOLDS: R2-474 (server-derived location_verified; client flag gone).
+- New DRIFTED awaiting fixes: R2-302 (site coords unvalidated: free-text lat/lng, no bounds on _parse_site_coords), R2-429 (office/site split client-only; roster lacks employee_code column -> duplicates indistinguishable), R2-475 fixable slice only (render "0m (Inside)" for unmeasured distance = fabricated; fail-open default is D7-pinned-intended, badge wording is CD-6 - do not touch those), R2-533+534 CSV importer (STILL failing dispatch - 6+ attempts, full spec in cont.3 entry).
+- Suite GREEN exit=0 at 29aa92e. Sweep totals so far: 37/94 rows verified (finance 22, hr 15), 19 live defects re-fixed, 3 D2-gated surfaced (R2-033/201/352), R2-345 founder-gated skipped. Remaining queue unchanged plus new drifted trio.
+
+---
+
 ## Session 33 (cont. 4) — sweep: hr.py 15/28 verified, 8 re-fixed, 3 gated D2 (2026-08-23)
 
 - New re-fixes: R2-074 `8c4c496` (26 enforced permission keys audited; attendance/drawings/reports :approve made grantable via WORKFLOW_MODULES + catalogue class-test); R2-200 `acf7cb9` (sw.js build-stamped cache id, network-first HTML/RSC, /offline page replaces /login fallback; static tests honest about limits); R2-197 `5b26e8c` (ESI ceiling recomputed server-side from gross basic+HRA+allowances; client bool ignored; frontend parity); R2-210/220/222/262 `5ae8c5d` (hr punch/holiday + statutory overdue tz normalization; punch-out TypeError dead; Postgres-aware simulation via load-event listener); R2-354+355 `8e56f33` (pro-rata clamped min(1.0); payroll_month real-month validator -> 422 not 500); R2-325+353 `a9ef700` (attendance report counts both Present statuses like payroll; same-month PayrollRun re-run -> 409 naming existing run + UniqueConstraint WITH supabase migration).
