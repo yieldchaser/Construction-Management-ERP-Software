@@ -605,6 +605,11 @@ def reject_po(po_id: UUID, db: Session = Depends(get_db), current_user: User = D
             level=levels_approved(db, "purchase_order", po.id) + 1, action="rejected", user=current_user, matched_label=matched,
         )
 
+    po.approval_flag = "rejected"
+    db.commit()
+    db.refresh(po)
+    return _po_response(db, po)
+
 # 3. Goods Receipt Notes (GRN) & Inventory State Trigger
 
 def _generate_grn_number(db: Session, company_id: UUID, project_id: UUID) -> str:
