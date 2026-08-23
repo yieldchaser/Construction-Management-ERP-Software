@@ -1580,10 +1580,22 @@ def company_attendance(company_id: uuid.UUID, date_str: str, db: Session = Depen
         .order_by(StaffEmployee.name)
         .all()
     )
+    # R2-430: employee_name exists only on StaffEmployee (the joined column),
+    # never on AttendanceLog itself, so model_validate(log) failed its required
+    # field and the rollup 500ed whenever any row existed. Build each row
+    # directly with the joined real name instead.
     response = []
     for log, emp_name in results:
-        res = CompanyAttendanceResponse.model_validate(log)
-        res.employee_name = emp_name
-        response.append(res)
+        response.append(CompanyAttendanceResponse(
+            employee_id=log.employee_id,
+            employee_name=emp_name,
+            attendance_date=log.attendance_date,
+            punch_in=log.punch_in,
+            punch_out=log.punch_out,
+            status=log.status,
+            hours_worked=float(log.hours_worked) if log.hours_worked is not None else None,
+            overtime_hours=float(log.overtime_hours),
+            is_within_geofence=bool(log.is_within_geofence),
+        ))
     return response
 
