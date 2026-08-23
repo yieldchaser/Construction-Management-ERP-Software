@@ -359,6 +359,17 @@ def raise_ncr(payload: NCRCreate, db: Session = Depends(get_db), current_user: U
         raise HTTPException(status_code=404, detail="Project not found")
     get_company_membership(db, current_user, project.company_id)
     require_permission(db, current_user, project.company_id, "quality:edit")
+    # R2-386: ncr_number is unique per project. Answer a friendly conflict
+    # before the database constraint (uq_ncrs_project_id_ncr_number) does.
+    dup = db.query(NCR).filter(
+        NCR.project_id == payload.project_id,
+        NCR.ncr_number == payload.ncr_number
+    ).first()
+    if dup:
+        raise HTTPException(
+            status_code=409,
+            detail=f"An NCR with number '{payload.ncr_number}' already exists for this project. Use a unique NCR number."
+        )
     ncr = NCR(**payload.model_dump(), raised_by=current_user.id, assigned_to=current_user.id)
     db.add(ncr)
     db.commit()

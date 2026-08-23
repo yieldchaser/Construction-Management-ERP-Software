@@ -909,6 +909,11 @@ class InspectionResponse(Base):
 class NCR(Base):
     """Non-Conformance Report raised against a project or inspection."""
     __tablename__ = "ncrs"
+    # R2-386 (Wave: H-verify-sweep): ncr_number is unique per project; enforced
+    # in production via supabase/migrations/20260823_000002_orphan_unique_constraints.sql
+    __table_args__ = (
+        UniqueConstraint("project_id", "ncr_number", name="uq_ncrs_project_id_ncr_number"),
+    )
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
     inspection_id = Column(UUID(as_uuid=True), ForeignKey("site_inspections.id", ondelete="SET NULL"), nullable=True)
@@ -1214,6 +1219,13 @@ class CRMLeadStatus(Base):
 class Payment(Base):
     """Receipts or expense payments recorded for a project."""
     __tablename__ = "payments"
+    # R2-543 (Wave: H-verify-sweep): reference_number is unique per company;
+    # NULLs are never grouped (Postgres UNIQUE treats NULLs as distinct),
+    # matching the router's `if req.reference_number:` 409 guard. Enforced in
+    # production via supabase/migrations/20260823_000002_orphan_unique_constraints.sql
+    __table_args__ = (
+        UniqueConstraint("company_id", "reference_number", name="uq_payments_company_id_reference_number"),
+    )
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
     project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="SET NULL"), nullable=True)
