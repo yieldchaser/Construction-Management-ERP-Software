@@ -7,7 +7,8 @@ from pydantic import BaseModel, Field
 from app.database import get_db
 from app.auth import get_current_user, verify_project_access, get_company_membership, require_permission
 from app.constants import WASTAGE_TYPE_PATTERN, WASTAGE_STATUS_PATTERN
-from app.models import MaterialWastage, PurchaseOrder, PurchaseOrderItem, User
+from app.models import MaterialWastage, MaterialTransaction, PurchaseOrder, PurchaseOrderItem, User, WarehouseInventory
+from app.workflow_controls import enforce_stock_availability
 from decimal import Decimal
 
 router = APIRouter(prefix="/wastage", tags=["Material Wastage & Scrap"], dependencies=[Depends(get_current_user)])
@@ -67,6 +68,11 @@ def _last_material_rate(db: Session, project_id: uuid.UUID, material_name: str) 
 def create_wastage(payload: MaterialWastageCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     membership = get_company_membership(db, current_user, payload.company_id)
     require_permission(db, current_user, payload.company_id, "procurement:edit")
+    inv = db.query(WarehouseInventory).filter(
+        WarehouseInventory.project_id == payload.project_id,
+        WarehouseInventory.material_name == payload.material_name,
+    ).first()
+    enforce_stock_availability(db, payload.project_id, payload.material_name, payload.quantity, "Material Wastage")
     if payload.estimated_value_override and payload.estimated_value is not None:
         estimated_value = payload.estimated_value
     else:
@@ -86,6 +92,17 @@ def create_wastage(payload: MaterialWastageCreate, db: Session = Depends(get_db)
         task_id=payload.task_id,
     )
     db.add(wastage)
+    db.flush()
+    if inv is not None:
+        inv.on_hand_qty = float(inv.on_hand_qty) - float(payload.quantity)
+    db.add(MaterialTransaction(
+        project_id=payload.project_id,
+        material_name=payload.material_name,
+        qty=payload.quantity,
+        type="used",
+        unit=payload.unit,
+        source_ref_id=wastage.id,
+    ))
     db.commit()
     db.refresh(wastage)
     return wastage

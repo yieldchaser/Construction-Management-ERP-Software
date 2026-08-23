@@ -1067,6 +1067,9 @@ def test_wastage_derives_reporter_and_value_and_rejects_unknown_type(client, db,
         id=uuid.uuid4(), po_id=po.id, material_name="Cement",
         quantity=Decimal("20"), unit="bags", rate=Decimal("410.00"),
         tax_pct=Decimal("0.00")))
+    db.add(models.WarehouseInventory(
+        id=uuid.uuid4(), project_id=project.id, material_name="Cement",
+        on_hand_qty=Decimal("22"), reserved_qty=Decimal("0"), unit="bags"))
     db.commit()
 
     bad = client.post(
