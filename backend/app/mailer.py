@@ -154,3 +154,105 @@ def send_email(to_addr: str, subject: str, text_body: str, reply_to: str | None 
         reason = _EMAIL_RE.sub("[redacted]", str(exc)).replace("\n", " ")[:120]
         print(f"[mailer] send failed via {transport}: {type(exc).__name__}: {reason}")
         raise RuntimeError("Email provider request failed") from exc
+
+
+def resolve_assignment_recipients(
+    db,
+    *,
+    company_id=None,
+    team_ids=(),
+    user_ids=(),
+    approvers_csv=None,
+) -> list:
+    """Resolve the product's assignment targets to concrete email addresses.
+
+    The schema assigns work in several shapes (audit R2-384): company_team ids
+    (Task.assigned_to, CRMLead.assignee_id, DrawingPin.tagged_user_id,
+    TeamScheduleAssignee.assignee_id), bare user ids (NCR.assigned_to), and
+    ApprovalRule.approvers (comma-separated member emails or names, matched
+    case-insensitively like approvals.match_approver). This turns any of them
+    into addresses a notification can actually reach.
+
+    Fail-closed: members without an email and entries that resolve to no real
+    member are dropped, never guessed at. Duplicates collapse
+    case-insensitively; first-seen order is preserved. Import models lazily so
+    this module stays import-light for its pure-transport callers.
+    """
+    from app import models
+
+    found = []
+    seen = set()
+
+    def _add(addr):
+        addr = (addr or "").strip()
+        key = addr.lower()
+        if addr and key not in seen:
+            seen.add(key)
+            found.append(addr)
+
+    team_ids = [tid for tid in team_ids if tid]
+    if team_ids:
+        rows = (
+            db.query(models.CompanyTeam, models.User)
+            .join(models.User, models.User.id == models.CompanyTeam.user_id)
+            .filter(models.CompanyTeam.id.in_(team_ids))
+            .all()
+        )
+        for _team, member in rows:
+            _add(member.email)
+
+    user_ids = [uid for uid in user_ids if uid]
+    if user_ids:
+        for member in db.query(models.User).filter(models.User.id.in_(user_ids)).all():
+            _add(member.email)
+
+    entries = [raw.strip().lower() for raw in (approvers_csv or "").split(",") if raw.strip()]
+    if entries:
+        query = db.query(models.CompanyTeam, models.User).join(
+            models.User, models.User.id == models.CompanyTeam.user_id
+        )
+        if company_id is not None:
+            query = query.filter(models.CompanyTeam.company_id == company_id)
+        by_email = {}
+        by_name = {}
+        for _team, member in query.all():
+            addr = (member.email or "").strip()
+            if not addr:
+                continue
+            by_email[addr.lower()] = addr
+            name = (member.name or "").strip().lower()
+            if name:
+                by_name.setdefault(name, addr)
+        for entry in entries:
+            resolved = by_email.get(entry) or by_name.get(entry)
+            if resolved:
+                _add(resolved)
+
+    return found
+
+
+def notify_recipients(recipients, subject: str, text_body: str) -> int:
+    """Best-effort fan-out of one notification to many recipients.
+
+    Assignment/approval notifications must never break the request that
+    triggered them: returns 0 immediately when no transport is configured,
+    skips blank or duplicate addresses, swallows per-recipient delivery
+    failures (send_email has already logged them PII-safely), and returns how
+    many recipients were reached.
+    """
+    if not is_configured():
+        return 0
+    delivered = 0
+    seen = set()
+    for raw in recipients or []:
+        addr = (raw or "").strip()
+        key = addr.lower()
+        if not addr or key in seen:
+            continue
+        seen.add(key)
+        try:
+            send_email(addr, subject, text_body)
+            delivered += 1
+        except RuntimeError:
+            pass
+    return delivered
