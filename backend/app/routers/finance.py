@@ -23,6 +23,19 @@ MONEY_EPSILON = 0.01
 # never settled: the payment simply stays unsettled until the bill is approved.
 SETTLEMENT_APPROVAL_FLAGS = ("approved", "auto_approved")
 
+
+# R2-236: ledger timestamp columns are NULL-able in legacy rows and tz-aware
+# on Postgres but naive on SQLite, so sorting raw values against naive
+# datetime.min raises TypeError and 500s /finance/ledger on mixed-timestamp
+# data. Normalize every sort key to an aware UTC datetime: None becomes
+# datetime.min (UTC), naive values are stamped UTC, aware values untouched.
+def _ledger_sort_dt(value):
+    if value is None:
+        return datetime.min.replace(tzinfo=timezone.utc)
+    if value.tzinfo is None:
+        return value.replace(tzinfo=timezone.utc)
+    return value
+
 router = APIRouter(
     prefix="/finance",
     tags=["Finance & P&L"],
@@ -282,8 +295,10 @@ def get_ledger(project_id: uuid.UUID, db: Session = Depends(get_db), _: None = D
     for s in salaries:
         raw_entries.append((s.created_at, "salary", s))
         
-    # Sort ascending chronologically to compute running balance
-    raw_entries.sort(key=lambda x: x[0] if x[0] else datetime.min)
+    # Sort ascending chronologically to compute running balance.
+    # R2-236: keys must be tz-normalized (see _ledger_sort_dt) or mixed
+    # naive/aware/NULL timestamps raise TypeError and 500 the endpoint.
+    raw_entries.sort(key=lambda x: _ledger_sort_dt(x[0]))
 
     ledger_entries = []
     running_balance = 0.0
