@@ -23,6 +23,7 @@ import os
 import uuid
 
 import pytest
+import sqlalchemy as sa
 from sqlalchemy.exc import IntegrityError
 
 from app import models
@@ -107,16 +108,59 @@ def test_raise_ncr_answers_friendly_409_before_insert(client, db, make_tenant, a
     assert "NCR-R386" in r2.json()["detail"], r2.text
 
 
+def _pay(comp, ref):
+    return models.Payment(
+        company_id=comp.id, payment_type="out", amount=100, unsettled_amount=100,
+        payment_method="Cash", reference_number=ref,
+        payment_date=datetime.datetime(2026, 8, 20),
+    )
+
+
+def _restore_live_payments_schema(db):
+    """Suite-ordering hermeticity guard for the shared per-session SQLite file.
+
+    test_r2_236_ledger_tz_sort legitimately rebuilds `payments` with
+    CREATE TABLE AS SELECT (mirroring a half-applied migration), which strips
+    every constraint from the live table. If this test runs after it, the
+    UNIQUE guarantee asserted below no longer exists on the wire and the
+    duplicate insert silently succeeds. Re-materialize the model-shaped table
+    (rows preserved) so the ORM-level assertion exercises the real constraint;
+    production enforcement arrives via the migration either way.
+    """
+    bind = db.get_bind()
+    present = {
+        uc["name"]
+        for uc in sa.inspect(bind).get_unique_constraints(models.Payment.__tablename__)
+    }
+    if "uq_payments_company_id_reference_number" in present:
+        return
+    db.rollback()
+    legacy = sa.Table(models.Payment.__tablename__, sa.MetaData(), autoload_with=bind)
+    with bind.begin() as conn:
+        conn.exec_driver_sql(
+            f'ALTER TABLE "{models.Payment.__tablename__}" '
+            f'RENAME TO "{models.Payment.__tablename__}_r386repair_old"'
+        )
+        models.Payment.__table__.create(conn)
+        cols = [f'"{c.name}"' for c in legacy.columns]
+        # r2-236 leaves a deliberately NULL payment_date behind; coalesce it so
+        # the model-shaped NOT NULL accepts the carried-over dead rows.
+        select_cols = ", ".join(
+            f"COALESCE({c}, '1970-01-01 00:00:00')" if c == '"payment_date"' else c
+            for c in cols
+        )
+        conn.exec_driver_sql(
+            f'INSERT INTO "{models.Payment.__tablename__}" ({", ".join(cols)}) '
+            f'SELECT {select_cols} FROM "{models.Payment.__tablename__}_r386repair_old"'
+        )
+        conn.exec_driver_sql(f'DROP TABLE "{models.Payment.__tablename__}_r386repair_old"')
+    db.expire_all()
+
+
 def test_duplicate_payment_reference_rejected_at_orm_level_and_nulls_stay_free(client, db, make_tenant):
+    _restore_live_payments_schema(db)
     comp_a, user_a, team_a = make_tenant(company_name="R543A", user_name="U543A")
     comp_b, user_b, team_b = make_tenant(company_name="R543B", user_name="U543B")
-
-    def _pay(comp, ref):
-        return models.Payment(
-            company_id=comp.id, payment_type="out", amount=100, unsettled_amount=100,
-            payment_method="Cash", reference_number=ref,
-            payment_date=datetime.datetime(2026, 8, 20),
-        )
 
     # Per-run unique reference: the suite shares one SQLite DB with no row
     # teardown, so a hardcoded value could already exist from an earlier test
