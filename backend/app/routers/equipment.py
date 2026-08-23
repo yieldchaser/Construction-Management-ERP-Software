@@ -232,6 +232,35 @@ def log_fuel(
     if proj.company_id != eq.company_id:
         raise HTTPException(status_code=403, detail="Equipment does not belong to the project's company")
 
+    # R2-570: temporal, relational and odometer guards before anything is written.
+    logged_at = _as_aware(payload.logged_date)
+    if logged_at > datetime.now(timezone.utc):
+        raise HTTPException(status_code=400, detail="logged_date cannot be in the future")
+    deployments = db.query(EquipmentDeployment).filter(
+        EquipmentDeployment.equipment_id == equipment_id,
+        EquipmentDeployment.project_id == payload.project_id,
+    ).all()
+    covered = any(
+        _as_aware(d.start_date) <= logged_at
+        and (d.end_date is None or logged_at <= _as_aware(d.end_date))
+        for d in deployments
+    )
+    if not covered:
+        raise HTTPException(
+            status_code=400,
+            detail="Equipment has no deployment on this project covering logged_date",
+        )
+    if payload.odometer_hours is not None:
+        prev = db.query(FuelLog).filter(
+            FuelLog.equipment_id == equipment_id,
+            FuelLog.odometer_hours.isnot(None),
+        ).order_by(FuelLog.logged_date.desc()).first()
+        if prev is not None and float(payload.odometer_hours) < float(prev.odometer_hours):
+            raise HTTPException(
+                status_code=400,
+                detail=f"odometer_hours cannot be lower than the machine's previous reading ({float(prev.odometer_hours)})",
+            )
+
     data = payload.model_dump()
     total_cost = data["liters"] * data["cost_per_liter"]
     
