@@ -331,23 +331,39 @@ def test_tally_voucher_sequence_durable(client, db, make_tenant, auth_headers):
         db.expire_all()
         return db.query(models.TallyConnection).filter_by(id=conn.id).first().last_voucher_seq
 
-    # First export advances the sequence to 3 (three unsynced bills).
-    ex1 = client.get(f"/apis/v3/tally/export?company_id={comp.id}", headers=hdr)
+    # R2-369: export HOLDS the sequence — it renders preview numbers from
+    # last_voucher_seq without consuming them, so the counter stays at its
+    # initial value across any number of downloads.
+    url = f"/apis/v3/tally/export?company_id={comp.id}"
+    ex1 = client.get(url, headers=hdr)
     assert ex1.status_code == 200, ex1.text
-    assert conn_seq() == 3
+    assert conn_seq() == 0
 
-    # /pending is a read-only preview and must NOT consume the sequence.
+    # Re-downloading the same queue is byte-identical and consumes nothing:
+    # the held sequence keeps every preview number stable until confirmation.
+    ex1b = client.get(url, headers=hdr)
+    assert ex1b.status_code == 200, ex1b.text
+    assert ex1b.content == ex1.content
+    assert conn_seq() == 0
+
+    # /pending is a read-only preview and must NOT consume the sequence either,
+    # and it renders the exact numbers the export carries on every call.
     for _ in range(3):
         r = client.get(f"/apis/v3/tally/pending?company_id={comp.id}", headers=hdr)
         assert r.status_code == 200, r.text
         assert len(r.json()["vouchers"]) == 3
-    assert conn_seq() == 3
+        assert {v["number"] for v in r.json()["vouchers"]} == {"num-101", "num-102", "num-103"}
+    assert conn_seq() == 0
 
-    # Mark 2 of the original bills synced, then 2 new bills arrive.
+    # Confirming 2 of the original bills is what consumes their numbers: the
+    # counter jumps past the confirmed count even though exports never touched it.
     ms = client.post(
         "/apis/v3/tally/mark-synced",
         json={"bill_ids": [str(b1.id), str(b2.id)], "payment_ids": []}, headers=hdr)
     assert ms.status_code == 200, ms.text
+    assert ms.json()["marked_bills"] == 2
+    assert conn_seq() == 2
+
     add_bill("num-104")
     add_bill("num-105")
     db.expire_all()
@@ -357,11 +373,16 @@ def test_tally_voucher_sequence_durable(client, db, make_tenant, auth_headers):
     assert rp.status_code == 200, rp.text
     assert len(rp.json()["vouchers"]) == 3
 
-    # Second export advances the high-water mark to 6 (3 + 3), so the new
-    # vouchers get numbers 4..6 and never repeat the first export's 1..3.
-    ex2 = client.get(f"/apis/v3/tally/export?company_id={comp.id}", headers=hdr)
+    # Second export is still read-only: the high-water mark stays at 2, so the
+    # fresh vouchers number from 3 onward and never repeat the confirmed 1..2.
+    ex2 = client.get(url, headers=hdr)
     assert ex2.status_code == 200, ex2.text
-    assert conn_seq() == 6
+    assert conn_seq() == 2
+
+    ex2b = client.get(url, headers=hdr)
+    assert ex2b.status_code == 200, ex2b.text
+    assert ex2b.content == ex2.content
+    assert conn_seq() == 2
 
 
 def test_analytics_wastage_suppressed_without_consumption(client, db, make_tenant, auth_headers):
