@@ -133,15 +133,14 @@ def test_genuinely_empty_report_carries_no_failure_marker(client, db, make_tenan
     assert body["rows"] == []
     assert body["errors"] == []
 
-    # Unknown slugs are honest too: no handler is not a failure.
+    # Unknown slugs fail loudly instead (R2-075): no handler means the
+    # report is not implemented, surfaced as a 404 naming the slug.
     resp = client.get(
         f"{DATA_URL}/does-not-exist?company_id={company.id}",
         headers=auth_headers(user, company),
     )
-    body = resp.json()
-    assert resp.status_code == 200
-    assert body["rows"] == []
-    assert body["errors"] == []
+    assert resp.status_code == 404
+    assert "does-not-exist" in resp.json()["detail"]
 
 
 def test_party_ledger_accumulates_per_party_not_company_wide(client, db, make_tenant, auth_headers):

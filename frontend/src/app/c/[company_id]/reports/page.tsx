@@ -254,6 +254,13 @@ export default function ReportsDashboard() {
       const res = await fetch(`${getApiHost()}/apis/v3/reports/data/${slug}?company_id=${companyId}`, {
         headers: { ...(authHeaders() || {}) }
       });
+      if (!res.ok) {
+        // R2-075: an unimplemented report returns a 404 naming it. Surface
+        // that instead of exporting a header-only CSV as a success.
+        const err = await res.json().catch(() => null);
+        showToast(typeof err?.detail === "string" && err.detail ? err.detail : "Export failed. Please try again.");
+        return;
+      }
       const data = await res.json();
       const rows: Record<string, any>[] = data.rows || [];
       const headers = rows[0] ? Object.keys(rows[0]) : [];

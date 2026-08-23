@@ -1380,18 +1380,25 @@ def get_report_data(
     errors: List[str] = []
     rows: List[dict] = []
     handler = _REPORT_HANDLERS.get(slug)
-    if handler is not None:
-        try:
-            built = handler(db, cid, pid) or []
-        except Exception:
-            logger.exception("Report '%s' failed to generate; returning empty fallback", slug)
-            built = _REPORT_FAILED
-        if built is _REPORT_FAILED or isinstance(built, _ReportFailed):
-            # A guarded handler already logged its traceback and fell back;
-            # surface the failure to the caller instead of publishing an
-            # empty report as data (R2-076/R2-312/R2-560).
-            rows = []
-            errors.append(f"Report '{slug}' failed to generate; an empty result was returned instead.")
-        else:
-            rows = built
+    if handler is None:
+        # R2-075: a slug with no registered handler means the report was
+        # never implemented, not that it produced no data. Fail loudly so
+        # an unimplemented report can never masquerade as an empty one.
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Report '{slug}' is not implemented.",
+        )
+    try:
+        built = handler(db, cid, pid) or []
+    except Exception:
+        logger.exception("Report '%s' failed to generate; returning empty fallback", slug)
+        built = _REPORT_FAILED
+    if built is _REPORT_FAILED or isinstance(built, _ReportFailed):
+        # A guarded handler already logged its traceback and fell back;
+        # surface the failure to the caller instead of publishing an
+        # empty report as data (R2-076/R2-312/R2-560).
+        rows = []
+        errors.append(f"Report '{slug}' failed to generate; an empty result was returned instead.")
+    else:
+        rows = built
     return {"slug": slug, "rows": rows, "generated_at": generated_at, "errors": errors}
