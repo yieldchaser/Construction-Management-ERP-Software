@@ -190,10 +190,14 @@ def _build_vouchers(db: Session, conn: TallyConnection, bills, payments, advance
     """Resolve Bill + Payment rows into Tally voucher dicts (double entry).
 
     Voucher numbers use a durable, per-company monotonic counter
-    (`conn.last_voucher_seq`) so numbers never repeat across partial syncs.
-    The counter is only advanced/committed when `advance_sequence=True` — i.e.
-    the real `/export` path. `/pending` (a read-only preview) renders the next
-    numbers but must NOT consume the sequence.
+    (`conn.last_voucher_seq`) so numbers never repeat across confirmed syncs.
+    This helper NEVER consumes the counter: both `/pending` and `/export`
+    render the same preview numbers on every call until the import is
+    confirmed via `/mark-synced`, which is what advances it (R2-369). A
+    re-downloaded file therefore carries identical voucher numbers instead of
+    re-numbering the same economic events past Tally's duplicate detection.
+    The `advance_sequence` flag is kept for backwards compatibility and no
+    longer has any effect.
     """
     vouchers = []
     pending = []
@@ -643,8 +647,11 @@ def pending_vouchers(company_id: uuid.UUID, db: Session = Depends(get_db), _: No
 def export_tally_xml(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     """Return a Tally-importable XML for all unsynced, in-window vouchers.
 
-    READ-ONLY and idempotent: this never marks anything as synced, so it can be
-    re-downloaded safely until the user confirms the import in Tally Prime.
+    READ-ONLY and idempotent: this never marks anything as synced and never
+    consumes the voucher sequence, so it can be re-downloaded safely until the
+    user confirms the import in Tally Prime. Every download of the same queue
+    renders identical voucher numbers (R2-369): the sequence is only advanced
+    by POST /tally/mark-synced, i.e. when the import is actually confirmed.
     """
     comp_uuid = uuid.UUID(str(company_id))
     conn = db.query(TallyConnection).filter(TallyConnection.company_id == comp_uuid).first()
@@ -663,7 +670,7 @@ def export_tally_xml(company_id: uuid.UUID, db: Session = Depends(get_db), _: No
         Payment.payment_date >= conn.sync_window_start_date,
     ).all()
 
-    vouchers, _ = _build_vouchers(db, conn, bills, payments, advance_sequence=True)
+    vouchers, _ = _build_vouchers(db, conn, bills, payments, advance_sequence=False)
     xml = build_tally_envelope(conn.tally_company_name, vouchers, auto_create=conn.auto_create_missing_ledgers)
     filename = f"siteflow-tally-{datetime.utcnow().strftime('%Y%m%d')}.xml"
     return Response(
@@ -683,6 +690,9 @@ def mark_synced(req: MarkSyncedRequest, db: Session = Depends(get_db), current_u
     updated_payments = 0
     company_id = None
     authorized_companies = set()
+    # R2-369: newly confirmed vouchers per company; each one consumes its
+    # voucher number only here, at confirmation time.
+    seq_consumption = {}
 
     if bill_ids:
         for b in db.query(Bill).filter(Bill.id.in_(bill_ids)).all():
@@ -693,6 +703,7 @@ def mark_synced(req: MarkSyncedRequest, db: Session = Depends(get_db), current_u
             if not b.tally_synced:
                 b.tally_synced = True
                 updated_bills += 1
+                seq_consumption[b.company_id] = seq_consumption.get(b.company_id, 0) + 1
             company_id = b.company_id
 
     if payment_ids:
@@ -704,9 +715,24 @@ def mark_synced(req: MarkSyncedRequest, db: Session = Depends(get_db), current_u
             if not p.tally_synced:
                 p.tally_synced = True
                 updated_payments += 1
+                seq_consumption[p.company_id] = seq_consumption.get(p.company_id, 0) + 1
             company_id = p.company_id
 
     db.commit()
+
+    # R2-369: the export renders preview numbers from conn.last_voucher_seq
+    # without consuming it, so a re-download is byte-identical and Tally's own
+    # duplicate detection keeps working. Confirmation (this call) is what
+    # advances the counter past the numbers the imported file carried.
+    for marked_company_id, consumed in seq_consumption.items():
+        marked_conn = db.query(TallyConnection).filter(
+            TallyConnection.company_id == marked_company_id
+        ).first()
+        if marked_conn:
+            marked_conn.last_voucher_seq = (marked_conn.last_voucher_seq or 0) + consumed
+            db.add(marked_conn)
+    if seq_consumption:
+        db.commit()
 
     log = None
     if company_id and (updated_bills or updated_payments):
