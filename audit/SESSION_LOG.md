@@ -2,6 +2,16 @@
 
 Append-only. Every working block ends with a 5-line entry. Never edit an existing entry; if a commit was reverted, add a new entry.
 
+## Session 33 (cont. 4) — sweep: hr.py 15/28 verified, 8 re-fixed, 3 gated D2 (2026-08-23)
+
+- New re-fixes: R2-074 `8c4c496` (26 enforced permission keys audited; attendance/drawings/reports :approve made grantable via WORKFLOW_MODULES + catalogue class-test); R2-200 `acf7cb9` (sw.js build-stamped cache id, network-first HTML/RSC, /offline page replaces /login fallback; static tests honest about limits); R2-197 `5b26e8c` (ESI ceiling recomputed server-side from gross basic+HRA+allowances; client bool ignored; frontend parity); R2-210/220/222/262 `5ae8c5d` (hr punch/holiday + statutory overdue tz normalization; punch-out TypeError dead; Postgres-aware simulation via load-event listener); R2-354+355 `8e56f33` (pro-rata clamped min(1.0); payroll_month real-month validator -> 422 not 500); R2-325+353 `a9ef700` (attendance report counts both Present statuses like payroll; same-month PayrollRun re-run -> 409 naming existing run + UniqueConstraint WITH supabase migration).
+- Verified HOLDS: none new in hr (all inspected rows drifted or gated).
+- FOUNDER-GATED findings surfaced by the sweep (do NOT auto-fix): R2-033, R2-201, R2-352 all = DECISIONS.md **D2** (zero-attendance full-month pay policy) - register notes updated accordingly.
+- Pending fixes carried: finance R2-052, R2-100+315, R2-236, R2-276, R2-327r, R2-533+534, R2-544+549, R2-592; hr R2-211 (settlement GST exposure), R2-302/429/430/474/475/481/527/528/529/540/561/564/593 unverified.
+- Suite GREEN exit=0. Next: continue sweep chunks (hr D/E/F, reports x18, procurement x9, scattered x5) + pending fix queue.
+
+---
+
 ## Session 33 (cont. 3) — orphan sweep: finance.py COMPLETE 22/32 verified, 12 live, 9 re-fixed (2026-08-22)
 
 - New re-fixes this block: R2-344+R2-316 `bf544f6` ("transfer" payment_type dropped from schema via validator naming in/out + P2P endpoint - no product path ever wrote it; FIFO/summary now total on two values); R2-417 `c0cb9ff` (salary branch read nonexistent StaffEmployee.company_user_id -> AttributeError; now emp.name per hr.py idiom; class site reports.py:670 fixed same wave).
