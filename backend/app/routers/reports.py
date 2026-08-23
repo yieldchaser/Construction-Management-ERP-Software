@@ -26,7 +26,8 @@ from app.models import (
     MaterialIndent, PurchaseOrder, SiteInspection, NCR, MaterialTestResult,
     DailyProgressReport, PurchaseOrderItem, WarehouseInventory,
     StaffEmployee, AttendanceLog, PayrollRun, PayrollLineItem,
-    PaymentRequest, Payment, ProductionBatch, ProductionBatchMaterial,
+    PaymentRequest, Payment, PaymentSettlement,
+    ProductionBatch, ProductionBatchMaterial,
     ProductionRecipeMaterial,
     CRMQuotation, CRMQuotationItem, CRMLead, CompanyTeam, User,
     BOQItem, MaterialTransaction, GRNItem, GoodsReceiptNote,
@@ -1138,7 +1139,8 @@ def _rep_gstr2_purchase(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
         bills_q = db.query(Bill).filter(Bill.company_id == cid, Bill.invoice_type.in_(EXPENSE_INVOICE_TYPES), Bill.status != "Cancelled")
         if pid:
             bills_q = bills_q.filter(Bill.project_id == pid)
-        for b in bills_q.order_by(Bill.invoice_date.desc()).all():
+        bills = bills_q.order_by(Bill.invoice_date.desc()).all()
+        for b in bills:
             proj = db.query(Project).filter(Project.id == b.project_id).first() if b.project_id else None
             party = _team_user_name(db, b.party_company_user_id)
             cgst, sgst, igst, utgst = _gst_split(b.gst_amount)
@@ -1160,7 +1162,31 @@ def _rep_gstr2_purchase(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
         pay_q = db.query(Payment).filter(Payment.company_id == cid, Payment.payment_type == "out")
         if pid:
             pay_q = pay_q.filter(Payment.project_id == pid)
-        for p in pay_q.order_by(Payment.payment_date.desc()).all():
+        payments = pay_q.order_by(Payment.payment_date.desc()).all()
+        # R2-318: a payment that settles an expense bill is the same money the
+        # bill row already carries, so only the portion of each payout that did
+        # NOT settle a bill in the list above belongs on this return (mirrors
+        # the finance ledger, which skips settled payments for the same reason).
+        settled_by_payment = {}
+        if payments:
+            settle_q = (
+                db.query(PaymentSettlement.payment_id, PaymentSettlement.settled_amount)
+                .join(Bill, Bill.id == PaymentSettlement.bill_id)
+                .filter(
+                    PaymentSettlement.payment_id.in_([p.id for p in payments]),
+                    Bill.company_id == cid,
+                    Bill.invoice_type.in_(EXPENSE_INVOICE_TYPES),
+                    Bill.status != "Cancelled",
+                )
+            )
+            if pid:
+                settle_q = settle_q.filter(Bill.project_id == pid)
+            for pay_id, amt in settle_q.all():
+                settled_by_payment[pay_id] = settled_by_payment.get(pay_id, 0.0) + float(amt or 0)
+        for p in payments:
+            outstanding = round(max(float(p.amount or 0) - settled_by_payment.get(p.id, 0.0), 0.0), 2)
+            if outstanding <= 0:
+                continue
             proj = db.query(Project).filter(Project.id == p.project_id).first() if p.project_id else None
             party = _team_user_name(db, p.party_company_user_id)
             rows.append({
@@ -1170,7 +1196,7 @@ def _rep_gstr2_purchase(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
                 "Bill Number": "",
                 "Expense Type": "Payment Out",
                 "Expense Date": _clean(p.payment_date),
-                "Expense Amount": _clean(p.amount),
+                "Expense Amount": _clean(outstanding),
                 "Tax Amount": "",
                 "CGST": 0.0,
                 "SGST": 0.0,
@@ -1279,15 +1305,20 @@ def _rep_project_wise_payment_summary(db: Session, cid: uuid.UUID, pid: Optional
             if proj is None and proj_id:
                 proj = db.query(Project).filter(Project.id == proj_id).first()
                 proj_cache[proj_id] = proj
-            count = len(ps)
-            paid = sum(float(p.amount) for p in ps if p.payment_type == "in" and p.amount is not None)
-            remaining = sum(float(p.unsettled_amount) for p in ps if p.unsettled_amount is not None)
+            # R2-320: receipts and payouts are unlike populations and are never
+            # netted into one figure; each direction reports its own count,
+            # amount and unsettled balance.
+            receipts = [p for p in ps if p.payment_type == "in"]
+            payouts = [p for p in ps if p.payment_type == "out"]
             last_dt = max((p.payment_date for p in ps if p.payment_date), default=None)
             rows.append({
                 "Project Name": proj.name if proj else (str(proj_id) if proj_id else "Unspecified"),
-                "Payment Count": count,
-                "Amount Paid (INR)": paid,
-                "Remaining Balance (INR)": remaining,
+                "Receipts Count": len(receipts),
+                "Receipts Amount (INR)": sum(float(p.amount) for p in receipts if p.amount is not None),
+                "Unsettled Receipts (INR)": sum(float(p.unsettled_amount) for p in receipts if p.unsettled_amount is not None),
+                "Payouts Count": len(payouts),
+                "Payouts Amount (INR)": sum(float(p.amount) for p in payouts if p.amount is not None),
+                "Unsettled Payouts (INR)": sum(float(p.unsettled_amount) for p in payouts if p.unsettled_amount is not None),
                 "Last Transaction Date": _clean(last_dt),
             })
         return rows

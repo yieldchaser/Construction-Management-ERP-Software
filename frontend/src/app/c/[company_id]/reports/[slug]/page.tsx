@@ -68,7 +68,7 @@ const REPORT_METADATA: Record<string, ReportMeta> = {
     title: "Project Wise Payment Summary",
     hasDownload: false,
     filters: [{ label: "Payment Date", type: "date"  }, { label: "Project Name", type: "select", options: ["All"] }],
-    columns: ['Project Name', 'Payment Count', 'Amount Paid (INR)', 'Remaining Balance (INR)', 'Last Transaction Date']
+    columns: ['Project Name', 'Receipts Count', 'Receipts Amount (INR)', 'Unsettled Receipts (INR)', 'Payouts Count', 'Payouts Amount (INR)', 'Unsettled Payouts (INR)', 'Last Transaction Date']
   },
   "project-payment": {
     title: "Project Payment Report",
