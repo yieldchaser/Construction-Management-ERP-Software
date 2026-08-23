@@ -638,8 +638,11 @@ export default function HRPayrollPage() {
         const tsData = await tsHeaderRes.json();
         tsId = tsData.id;
       } else {
-        // Fallback default
-        tsId = "d0000000-0000-0000-0000-000000000001";
+        // R2-564: no fabricated fallback id. Surface the server detail and
+        // keep the drawer (and the user's typed hours) intact.
+        const tsErr = await tsHeaderRes.json().catch(() => ({}));
+        alert(`Failed to create timesheet: ${typeof tsErr.detail === "string" ? tsErr.detail : "Server error"}`);
+        return;
       }
       
       const startDateTime = new Date(`${timesheetForm.date}T${timesheetForm.startTime}:00Z`).toISOString();
@@ -662,9 +665,13 @@ export default function HRPayrollPage() {
       if (res.ok) {
         setShowNewTimesheetDrawer(false);
         fetchTimesheetLogs();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        alert(`Failed to save timesheet entry: ${typeof err.detail === "string" ? err.detail : "Server error"}`);
       }
     } catch (e) {
       console.error("Failed to save timesheet entry", e);
+      alert("Failed to save timesheet entry: server unreachable");
     }
   };
 

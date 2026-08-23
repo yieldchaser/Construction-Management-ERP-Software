@@ -175,6 +175,8 @@ class TimesheetEntryCreate(BaseModel):
     activity_description: Optional[str] = None
     start_time: Optional[datetime] = None
     end_time: Optional[datetime] = None
+    # R2-561: accepted only for request-shape compatibility; the value is
+    # never stored. The server derives duration from start/end (else hours).
     duration: Optional[int] = None # in minutes
 
 
@@ -418,6 +420,15 @@ def create_timesheet(payload: TimesheetCreate, db: Session = Depends(get_db), cu
         raise HTTPException(status_code=404, detail="Project not found")
     get_company_membership(db, current_user, project.company_id)
     require_permission(db, current_user, project.company_id, "attendance:edit")
+    # R2-564: the staff_employees FK was enforced only by the database, so a
+    # stale employee_id surfaced as a raw 500. Resolve it here so stale
+    # clients get an honest 404.
+    employee = db.query(StaffEmployee).filter(
+        StaffEmployee.id == payload.employee_id,
+        StaffEmployee.company_id == project.company_id,
+    ).first()
+    if not employee:
+        raise HTTPException(status_code=404, detail="Employee not found")
     ts = Timesheet(**payload.model_dump())
     db.add(ts)
     db.commit()
@@ -454,9 +465,17 @@ def add_timesheet_entry(ts_id: uuid.UUID, payload: TimesheetEntryCreate, db: Ses
         )
 
     entry_data = payload.model_dump()
-    if entry_data.get("start_time") and entry_data.get("end_time") and not entry_data.get("duration"):
-        delta = entry_data["end_time"] - entry_data["start_time"]
-        entry_data["duration"] = int(delta.total_seconds() / 60)
+    # R2-561: duration is always derived server-side; any client-supplied
+    # value is discarded so hours, start/end and duration cannot disagree.
+    # end <= start is rejected rather than persisted as a negative duration.
+    if entry_data.get("start_time") and entry_data.get("end_time"):
+        start = _aware_utc(entry_data["start_time"])
+        end = _aware_utc(entry_data["end_time"])
+        if end <= start:
+            raise HTTPException(status_code=422, detail="end_time must be after start_time")
+        entry_data["duration"] = int((end - start).total_seconds() // 60)
+    else:
+        entry_data["duration"] = int(round(payload.hours * 60))
 
     entry = TimesheetEntry(timesheet_id=ts_id, **entry_data)
     db.add(entry)
