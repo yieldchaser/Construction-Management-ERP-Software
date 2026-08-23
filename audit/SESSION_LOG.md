@@ -2,6 +2,15 @@
 
 Append-only. Every working block ends with a 5-line entry. Never edit an existing entry; if a commit was reverted, add a new entry.
 
+## Session 33 (cont. 9) — sweep: reports.py 18/18 verified, 13 re-fixed (2026-08-23)
+
+- New re-fixes: R2-076+312+560 `61df2f0` (logger.exception at all 17 swallow sites + top-level errors marker distinguishing crash-empty from true-empty; per-party ledger accumulator); R2-286b `891f483` (self-approval 403, approved_by/at stamped, generated_by populated; nullable columns via boot sync); R2-075 `9581917` (unimplemented slugs -> 404 naming slug; catalogue download degrades honestly); R2-318+320 `b53f5ab` (gstr2 purchase reports only unsettled residual via PaymentSettlement; payment summary split per-direction, frontend columns updated); R2-321 `b9987d2` (pid filter honored truthfully; five fabricated headers dropped); R2-414 `db873cb` ("No lab tests assessed" sentinel replaces fabricated 0% headline); R2-322+323+324r `538e014` (Creator Name honest-empty - no creator columns exist; material ledger keyed project+name+unit with UOM; malformed ids 422; helper swallow removed).
+- Verified HOLDS: R2-339 (completion pct from Task.progress), R2-313 (per-party accumulator).
+- Pending: R2-043r (tally MOVEMENT bucket falls to Purchase; receipts-post-twice compounding), R2-317 (needs R2-100's bank_account_id first), R2-371 (PO-bill linkage - gate-check long-form L17366 before building).
+- Suite GREEN exit=0 at 538e014. Sweep totals: 68/94 verified (finance 22, hr 28, reports 18), 40 live defects re-fixed this session, gated surfaced: D2 x3, founder-escalated x1, CD-6/D7 slices x1. Remaining verify: procurement x9, scattered x5 (R2-310/398/406/420/590).
+
+---
+
 ## Session 33 (cont. 8) — sweep: hr.py COMPLETE 28/28; finance straggler R2-236 closed (2026-08-23)
 
 - New re-fixes: R2-236 `7aa31e6` (_ledger_sort_dt helper; the chronic-failure dispatch finally landed); R2-592 `f5f6749` (??: honest nulls replace ||0/||100/||500 fabrication across quality/projects/dashboard/hr pages); R2-561+564 `0977492` (timesheet duration server-derived, ghost-employee headers 404, drawer failures alert).
