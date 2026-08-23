@@ -238,10 +238,18 @@ def test_pin_R2_085_no_internal_phase_labels():
 
 
 def test_pin_R2_045_066_purchase_expense_and_equipment_bills():
+    # R2-289: bi_export partitions the shared EXPENSE_INVOICE_TYPES scope
+    # head-for-head like budget.py; R2-045/066 intent lives on in those buckets.
     src = _read("app/routers/bi_export.py")
     scope = _read("app/bill_scope.py")
-    assert '_active_bills(db, p.id, ("purchase", "expense"))' in src, "R2-045 purchase/expense BI export filter regressed"
-    assert '_active_bills(db, p.id, ("equipment",))' in src, "R2-066 equipment BI export filter regressed"
+    assert "_active_bills(db, p.id, EXPENSE_INVOICE_TYPES)" in src, "R2-045/066 expense bills no longer read through the cancelled-excluding _active_bills scope"
+    assert 'if b.invoice_type == "purchase":' in src, "R2-045 purchase -> material bucket regressed"
+    assert "material_actual += amount" in src, "R2-045 purchase material bucket regressed"
+    assert 'elif b.invoice_type == "subcon":' in src, "R2-045 subcon bucket regressed"
+    assert "subcon_actual += amount" in src, "R2-045 subcon bucket regressed"
+    assert 'elif b.invoice_type == "equipment":' in src, "R2-066 equipment bucket regressed"
+    assert "equipment_bill_total += amount" in src, "R2-066 equipment bucket regressed"
+    assert "other_actual += amount" in src, "R2-045 expense catch-all bucket regressed"
     assert "Bill.invoice_type.in_(invoice_types)" in scope, "R2-045/066 bill_scope invoice-type semantics regressed"
 
 
