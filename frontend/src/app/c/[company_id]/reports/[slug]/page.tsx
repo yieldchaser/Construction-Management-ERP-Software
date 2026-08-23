@@ -791,7 +791,6 @@ export default function DynamicReportViewPage() {
                 {showExportDropdown && (
                   <div className="absolute right-0 mt-2 w-40 bg-card border border-border-custom rounded-lg shadow-xl py-1 z-50">
                     <button onClick={() => handleExportSelect("csv")} className="w-full text-left px-4 py-2 text-xs text-muted hover:bg-elevated hover:text-white transition-colors">Export as CSV</button>
-                    <button onClick={() => handleExportSelect("xlsx")} className="w-full text-left px-4 py-2 text-xs text-muted hover:bg-elevated hover:text-white transition-colors">Export as CSV (Excel-compatible)</button>
                     <button onClick={() => handleExportSelect("pdf")} className="w-full text-left px-4 py-2 text-xs text-muted hover:bg-elevated hover:text-white transition-colors">Export as PDF</button>
                     <button onClick={() => handleExportSelect("html")} className="w-full text-left px-4 py-2 text-xs text-muted hover:bg-elevated hover:text-white transition-colors">Export as HTML</button>
                   </div>
