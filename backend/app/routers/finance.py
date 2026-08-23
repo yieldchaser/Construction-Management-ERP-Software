@@ -264,7 +264,7 @@ def delete_payment(payment_id: uuid.UUID, db: Session = Depends(get_db), current
     get_company_membership(db, current_user, payment.company_id)
     require_permission(db, current_user, payment.company_id, "data:delete")
     from app.routers.delete_logs import log_deletion
-    log_deletion(db, payment.company_id, "payment", payment.id, f"Payment {payment.id}")
+    log_deletion(db, payment.company_id, "payment", payment.id, f"Payment {payment.id}", deleted_by=current_user.name)
 
     # Reverse any FIFO settlements this payment recorded against bills. The DB
     # cascade-deletes the PaymentSettlement rows at commit, so we read them first
@@ -1437,7 +1437,7 @@ def delete_payment_request(request_id: uuid.UUID, db: Session = Depends(get_db),
     get_company_membership(db, current_user, req.company_id)
     require_permission(db, current_user, req.company_id, "data:delete")
     from app.routers.delete_logs import log_deletion
-    log_deletion(db, req.company_id, "payment_request", req.id, f"Payment Request: {req.request_no or req.id}")
+    log_deletion(db, req.company_id, "payment_request", req.id, f"Payment Request: {req.request_no or req.id}", deleted_by=current_user.name)
     db.delete(req)
     db.commit()
 
