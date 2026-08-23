@@ -9,7 +9,7 @@ from app.auth import get_current_user, verify_project_in_company, verify_project
 from app.models import (
     WorkOrder, CompanyTeam, SubcontractorPerformance,
     BOCWRecord, MusterRoll, Bill, User,
-    AttendanceLog, SubcontractorAttendance
+    AttendanceLog, SubcontractorAttendance, PayrollRun
 )
 from pydantic import BaseModel, Field
 import csv
@@ -87,11 +87,17 @@ class BOCWCreate(BaseModel):
     company_id: UUID
     project_id: UUID
     contractor_id: Optional[UUID] = None
-    contractor_name: str
-    month_year: str  # YYYY-MM
-    workers_count: int = Field(0, ge=0)
-    wages_paid: float = Field(0.0, ge=0)
-    contribution_amount: float = Field(0.0, ge=0)
+    # R2-415: the stored name comes from contractor_id when it resolves, so the
+    # return can no longer name a contractor who does not exist in the system.
+    contractor_name: str = ""
+    # R2-415: YYYY-MM like payroll_month (R2-355); "last month" is rejected
+    # instead of being exported verbatim into a statutory return.
+    month_year: str = Field(..., pattern=r"^\d{4}-\d{2}$")
+    # R2-415: every material figure is optional; anything left None is derived
+    # from the records this module already holds.
+    workers_count: Optional[int] = Field(None, ge=0)          # None => attendance in month
+    wages_paid: Optional[float] = Field(None, ge=0)           # None => payroll runs for month
+    contribution_amount: Optional[float] = Field(None, ge=0)  # None => 1% of bill-ledger cost
     acknowledgement_number: Optional[str] = None
 
 
@@ -159,6 +165,19 @@ def get_reliability(project_id: UUID, db: Session = Depends(get_db), _: None = D
 
 # --- BOCW Records ---
 
+def _derive_month_workers(db: Session, project_id: UUID, month: str) -> int:
+    """R2-415: distinct workers on the project in a YYYY-MM month - employees
+    with a punch plus subcontractor crews counted once per role."""
+    logs = db.query(AttendanceLog).filter(AttendanceLog.project_id == project_id).all()
+    employees = {a.employee_id for a in logs if a.attendance_date.strftime("%Y-%m") == month}
+    crews = {
+        (s.subcontractor_id, (s.labor_role or "").strip().lower())
+        for s in db.query(SubcontractorAttendance).filter(SubcontractorAttendance.project_id == project_id).all()
+        if s.attendance_date.strftime("%Y-%m") == month
+    }
+    return len(employees) + len(crews)
+
+
 @router.get("/bocw/{project_id}", response_model=List[BOCWResponse])
 def get_bocw(project_id: UUID, month_year: Optional[str] = None, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     query = db.query(BOCWRecord).filter(BOCWRecord.project_id == project_id)
@@ -222,17 +241,44 @@ def create_bocw(req: BOCWCreate, db: Session = Depends(get_db), current_user: Us
     get_company_membership(db, current_user, req.company_id)
     verify_project_in_company(db, req.project_id, req.company_id)
     require_permission(db, current_user, req.company_id, "attendance:edit")
-    if req.wages_paid > 0 and req.workers_count <= 0:
+    # R2-415: derive the return from the records this module already holds
+    # instead of filing whatever the caller typed.
+    if req.contractor_id:
+        contractor_name = _resolve_contractor_name(db, req.contractor_id)
+    else:
+        contractor_name = (req.contractor_name or "").strip() or "Unknown"
+    workers_count = req.workers_count
+    if workers_count is None:
+        workers_count = _derive_month_workers(db, req.project_id, req.month_year)
+    wages_paid = req.wages_paid
+    if wages_paid is None:
+        runs = db.query(PayrollRun).filter(
+            PayrollRun.project_id == req.project_id,
+            PayrollRun.payroll_month == req.month_year,
+        ).all()
+        wages_paid = float(sum(float(r.total_net or 0) for r in runs))
+    contribution_amount = req.contribution_amount
+    if contribution_amount is None:
+        # BOCW Cess Act: 1% of the cost of construction - the bill ledger
+        # holds that cost (money-out bills, cancelled ones excluded).
+        bills = db.query(Bill).filter(
+            Bill.project_id == req.project_id,
+            Bill.invoice_type.in_(["purchase", "subcon"]),
+            Bill.status != "Cancelled",
+        ).all()
+        cost_of_construction = float(sum(float(b.subtotal or 0) for b in bills))
+        contribution_amount = round(cost_of_construction * 0.01, 2)
+    if wages_paid > 0 and workers_count <= 0:
         raise HTTPException(status_code=422, detail="workers_count must be greater than zero when wages are recorded")
     record = BOCWRecord(
         company_id=req.company_id,
         project_id=req.project_id,
         contractor_id=req.contractor_id,
-        contractor_name=req.contractor_name,
+        contractor_name=contractor_name,
         month_year=req.month_year,
-        workers_count=req.workers_count,
-        wages_paid=req.wages_paid,
-        contribution_amount=req.contribution_amount,
+        workers_count=workers_count,
+        wages_paid=wages_paid,
+        contribution_amount=contribution_amount,
         acknowledgement_number=req.acknowledgement_number,
     )
     db.add(record)
