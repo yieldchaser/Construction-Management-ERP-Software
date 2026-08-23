@@ -311,9 +311,9 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-158 | HIGH | W32 | `custom_fields.py` | `d/custom-fields/page.tsx` | FIXED | FIXED 4d1b3d1; Set Value dispatches on field type - date values sent as value_date, number 0 no longer dropped into text rows. |
 | R2-159 | MEDIUM | W32 | `custom_fields.py` | `calculators.py` | FIXED | FIXED d92cb93; custom_fields entity_type/field_type pattern-constrained on both create paths. |
 | R2-160 | HIGH | W99 | `d/reports/calculators/page.tsx` | — | TODO | | reg L6133 |
-| R2-161 | HIGH | W09 | `page.tsx` | — | TODO | | reg L6156 |
+| R2-161 | HIGH | W09 | `page.tsx` | — | FIXED | | reg L6156 S33 FIXED f48dfb7: house-cost base rate editable input; fabricated CITY_MAP multipliers dropped; wall length/contingency exposed. |
 | R2-162 | MEDIUM | W09 | `page.tsx` | — | FIXED | FIXED 590560f; Riyadh calculator uses SAR, houseCurrency removed. |
-| R2-163 | HIGH | W09 | `page.tsx` | `calculators.py` | TODO | | reg L6189 |
+| R2-163 | HIGH | W09 | `page.tsx` | `calculators.py` | FIXED | | reg L6189 S33 FIXED 73e3cb6: console mirrors /calculators/house-cost math exactly (pre-contingency headline, no double-count). |
 | R2-164 | MEDIUM | W09 | `page.tsx` | `calculators.py` | FIXED | FIXED 3e8a602; finishes calculator discloses the 10% application allowance. |
 | R2-165 | HIGH | W46 | `d/chat/page.tsx` | — | FIXED | FIXED 35c756b; chat collapses to single pane below md with conversation list as drawer. |
 | R2-166 | HIGH | W02 | `UNMAPPED` | — | TODO | | reg L6267 |
@@ -543,9 +543,9 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-392 | CRITICAL | W20 | `zoho_books.py` | `errors.py`, `cors.py`, `settings.py` | TODO | | reg L19238 |
 | R2-393 | HIGH | W51 | `reports/[slug]/page.tsx` | `crm/page.tsx` | TODO | | reg L19461 |
 | R2-394 | HIGH | W51 | `reports/[slug]/page.tsx` | `reports.py` | TODO | | reg L19509 |
-| R2-395 | HIGH | W09 | `page.tsx` | — | TODO | | reg L19597 |
+| R2-395 | HIGH | W09 | `page.tsx` | — | FIXED | | reg L19597 S33 FIXED 3d10926: phantom xlsx menu entry removed; only producible formats offered. |
 | R2-396 | CRITICAL | W09 | `page.tsx` | — | TODO | | reg L19622 |
-| R2-397 | HIGH | W09 | `page.tsx` | `pdf_generator.py` | TODO | | reg L19653 |
+| R2-397 | HIGH | W09 | `page.tsx` | `pdf_generator.py` | FIXED | | reg L19653 S33 FIXED 96f6ffe: popup-blocked print fails honestly; HTML/print exports escapeHtml at all interpolation sites. |
 | R2-398 | MEDIUM | W07 | `billing.py` | — | FIXED | FIXED 8858a45; report exports omit all-blank columns, preserve legitimate 0, ISO timestamps formatted en-IN. |
 | R2-399 | CRITICAL | W02 | `UNMAPPED` | — | TODO | | reg L19749 |
 | R2-400 | HIGH | W07 | `billing.py` | — | FIXED | | reg L19780 S33 FIXED 54db876 (H-billing): bill PDF addressee resolves CompanyTeam.library_party_id -> LibraryParty.name first; never login name or bare N/A for userless vendors; test added. |
@@ -613,7 +613,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-463 | HIGH | W109 | `frontend/src/app/c/[company_id]/d/page.tsx` | — | TODO | | reg L23348 |
 | R2-464 | CRITICAL | W45 | `d/drawings/page.tsx` | `drawings.py` | TODO | | reg L23379 |
 | R2-465 | HIGH | W45 | `d/drawings/page.tsx` | — | TODO | | reg L23416 |
-| R2-466 | HIGH | W09 | `page.tsx` | — | TODO | | reg L23437 |
+| R2-466 | HIGH | W09 | `page.tsx` | — | FIXED | | reg L23437 S33 FIXED ffe4f5f: drawings file URLs validated same-origin/https (blocks javascript:/data://host); seeded malicious rows need ops cleanup. |
 | R2-467 | MEDIUM | W27 | `frontend/src/app/c/[company_id]/d/finance/page.tsx` | — | FIXED | FIXED 2f6f031; drawings revision approval status register + wiring. |
 | R2-468 | CRITICAL | W17 | `chat.py` | `models.py` | TODO | | reg L23554 |
 | R2-469 | CRITICAL | W46 | `d/chat/page.tsx` | `chat.py` | TODO | | reg L23615 |
@@ -630,9 +630,9 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-480 | HIGH | W07 | `billing.py` | — | FIXED | | reg L24052 S33 FIXED 518afa5 (H-billing): internal engineering notes in Settings replaced with honest customer copy; false no-server-PDF claim corrected; approval scope stated plainly (Payment Request + PO today). |
 | R2-481 | MEDIUM | W03 | `hr.py` | — | FIX_VERIFIED | `29a1bdb` | reg L24087; hr.py direct-fix pass; suite RC-064 |
 | R2-482 | CRITICAL | W93 | `calculators/page.tsx` | — | TODO | | reg L24159 |
-| R2-483 | HIGH | W09 | `page.tsx` | — | TODO | | reg L24208 |
-| R2-484 | HIGH | W09 | `page.tsx` | — | TODO | | reg L24254 |
-| R2-485 | HIGH | W09 | `page.tsx` | — | TODO | | reg L24287 |
+| R2-483 | HIGH | W09 | `page.tsx` | — | FIXED | | reg L24208 S33 FIXED aafe230: brick thickness derives from leaves x width + joints - controls cannot disagree. |
+| R2-484 | HIGH | W09 | `page.tsx` | — | FIXED | | reg L24254 S33 FIXED fb67016: stirrup cut length 14d->6d matching the documented arithmetic. |
+| R2-485 | HIGH | W09 | `page.tsx` | — | FIXED | | reg L24287 S33 EVIDENCE-CLOSE: remedies already at HEAD via f48dfb7/590560f/73e3cb6 (inputs exposed, inert selector removed, honest split lines). |
 | R2-486 | MEDIUM | W09 | `page.tsx` | `settings.py`, `models.py` | FIXED | FIXED ca082f6; paint calculator label 115 sqft/L, paintMode removed. |
 | R2-487 | CRITICAL | W10 | `projects.py` | — | TODO | | reg L24473 |
 | R2-488 | HIGH | W05 | `procurement.py` | — | TODO | | reg L24517 |
@@ -738,19 +738,19 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 
 ## Session 33 sibling filings (process rule: every disclosed follow-up gets an id)
 
-| R2-602 | MEDIUM | W08 | `analytics.py` | - | TODO | | filed S33 from R2-305 closure: project_spend (~:234) does not exclude Cancelled bills while operational spend (~:453) does; R2-370 sweep miss. reg - |
+| R2-602 | MEDIUM | W08 | `analytics.py` | - | FIXED | | filed S33 from R2-305 closure: project_spend (~:234) does not exclude Cancelled bills while operational spend (~:453) does; R2-370 sweep miss. reg - S33 FIXED 3e6fa7d: project_spend/month_spend//financial bill loads exclude Cancelled like operational spend. |
 | R2-603 | HIGH | W08 | `analytics.py` | - | TODO | | filed S33 from R2-305/R2-499 closures: /financial fabricates demo chart data (fixed Jun-2026 labels + 1000 expense) when a company has no bills; fabricated-data class. Also _resolve_team_name terminal fallback emits Team-{uuid[:8]}. reg - |
 | R2-604 | HIGH | W13 | `budget.py` | - | TODO | | filed S33 from R2-249/R2-250/R2-233 closures: no-towers branch (~:172) sums ALL PO statuses without the sent/partial/received whitelist, and neither budget branch applies the approved/non-cancelled bill gates the main endpoint has. reg - |
-| R2-605 | MEDIUM | W05 | `procurement.py` | - | TODO | | filed S33 from R2-242 closure: reject_po (~:586-606) shows no visible assignment of approval_flag=rejected nor commit; possible dead rejection path. Needs audit look. reg - |
+| R2-605 | MEDIUM | W05 | `procurement.py` | - | FIXED | | filed S33 from R2-242 closure: reject_po (~:586-606) shows no visible assignment of approval_flag=rejected nor commit; possible dead rejection path. Needs audit look. reg - S33 FIXED 23fff1f: reject_po was a dead path (no persist + response-model 500); now persists approval_flag=rejected, double-reject refused. |
 | R2-606 | HIGH | W07 | `hr.py` | - | TODO | | filed S33 from R2-381 closure: run_payroll period-based write still unguarded by the restrict-entry-creation window (same class as gated payments). reg - |
 | R2-607 | HIGH | W07 | `procurement.py` | - | TODO | | filed S33 from R2-403 closure: supplier identity stored but unprinted in PO PDF (:998), BOQ PDF (budgeting.py ~:649) and client report PDF (reports.py ~:157); same class as fixed bill PDF. reg - |
-| R2-608 | MEDIUM | W01 | `finance.py` | - | TODO | | filed S33 from R2-453 closure: generic except Exception -> 500 wrappers swallow user errors at finance.py:1407, hr.py:929, billing.py:663, procurement.py:788. reg - |
-| R2-609 | MEDIUM | W13 | `finance.py` | - | TODO | | filed S33 from R2-334 closure: free-text cost_code fields written without library validation outside budgeting: finance.py Payment.cost_code/sub_cost_code (~:125), crm.py quotation items (~:569/:643/:702), library.py LibraryMaterial.cost_code (~:443), hr.py PayrollProfile (~:1230). reg - |
+| R2-608 | MEDIUM | W01 | `finance.py` | - | FIXED | | filed S33 from R2-453 closure: generic except Exception -> 500 wrappers swallow user errors at finance.py:1407, hr.py:929, billing.py:663, procurement.py:788. reg - S33 FIXED 0bc12c1: CSV upload wrapper narrowed to UnicodeDecodeError -> honest 400; residual logged per R2-076 pattern. |
+| R2-609 | MEDIUM | W13 | `finance.py` | - | FIXED | | filed S33 from R2-334 closure: free-text cost_code fields written without library validation outside budgeting: finance.py Payment.cost_code/sub_cost_code (~:125), crm.py quotation items (~:569/:643/:702), library.py LibraryMaterial.cost_code (~:443), hr.py PayrollProfile (~:1230). reg - S33 FIXED 0bc12c1: payment cost_code/sub_cost_code gated against Cost Code Library (422 naming unknowns, atomic). |
 | R2-610 | HIGH | W19 | `p/[project_id]/boq/page.tsx` | - | TODO | | filed S33 from R2-450/R2-451 closures: project BOQ page ignores import response body (:250, no skip visibility) and recomputes qty x (rate+supply+install) client-side (:140), double-counting composite rates the server now guards. reg - |
 | R2-611 | HIGH | W21 | `CalculatorTools.tsx` | - | TODO | | filed S33 from R2-279 closure: public brick calculator (frontend/src/components/resources/CalculatorTools.tsx ~:433) keeps leaves independent of thickness; same under-order bug R2-279 fixed server-side; console page twin covered by R2-519 scope when landed. reg - |
-| R2-612 | MEDIUM | W16 | `three_way/page.tsx` | - | TODO | | filed S33 from R2-594 closure: three-way page approve/reject handlers show no error message on non-2xx (success-toast discipline class). reg - |
+| R2-612 | MEDIUM | W16 | `three_way/page.tsx` | - | FIXED | | filed S33 from R2-594 closure: three-way page approve/reject handlers show no error message on non-2xx (success-toast discipline class). reg - S33 FIXED 6e8fec8: three-way page approve/reject surface server detail on non-2xx; state untouched on failure. |
 | R2-613 | HIGH | W16 | `three_way.py` | - | TODO | | filed S33 from R2-594 closure: legacy duplicate three-way rows keep the additive unique constraint from enabling on prod (migration skips with NOTICE while duplicates exist); needs founder-approved data cleanup then re-run. reg - |
-| R2-614 | LOW | W75 | `supabase_storage.py` | - | TODO | | filed S33 from R2-404 closure: company branding upload validates asset_type but not bytes/content-type (harmless post-R2-404 since renderer skips junk; tighten when touched). reg - |
+| R2-614 | LOW | W75 | `supabase_storage.py` | - | FIXED | | filed S33 from R2-404 closure: company branding upload validates asset_type but not bytes/content-type (harmless post-R2-404 since renderer skips junk; tighten when touched). reg - S33 FIXED fedb387: branding upload validates PNG/JPEG magic bytes + 5MB cap (422 naming problem). |
 
 | R2-721 | MEDIUM | V-VERIFY | `statutory.py` | `models.py` | FIXED | | Definition: docs/VERIFICATION_NEW_FINDINGS.md (founder block). S33 FIXED 25cdada (H-statutory-gate): report_type Literal allowlist + case normalization at all comparison sites; unknown types 422 naming valid values; BONUS pre-existing blocker fixed - StatutoryReport had NO due_date column so every POST /statutory 500'd; nullable column added via boot schema-sync (columns are safe per verification note). Test test_r2_721_report_type_validation.py. |
 | R2-722 | HIGH | V-VERIFY | `auth.py` | `config.py` | FIXED | | Definition: docs/VERIFICATION_NEW_FINDINGS.md (founder block). S33 FIXED 80e5065 (H-auth-demo): OTP_DEMO_ALLOWLIST/OTP_DEMO_CODE defaults now empty strings (unset env disables the known credential); _seed_demo_projects wrapped in one-time guard so repeated allowlisted logins cannot re-seed; feature retained (D6/R2-024 stays founder-gated). Tests updated to pin settings explicitly (3f014c6). |
