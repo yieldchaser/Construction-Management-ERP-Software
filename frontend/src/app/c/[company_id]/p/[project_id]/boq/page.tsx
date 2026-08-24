@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
-import { getApi, authHeaders, fmtINR } from "@/lib/siteflow";
+import { getApi, authHeaders, downloadWithAuth, fmtINR } from "@/lib/siteflow";
 import { useCompanySettings } from "@/context/CompanySettingsContext";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -430,14 +430,19 @@ export default function BoqTab() {
                           </div>
 
                           <div className="mb-3" onClick={(e) => e.stopPropagation()}>
-                            <a
-                              href={getApi(`/budgeting/boq-documents/${d.id}/pdf`)}
-                              target="_blank"
-                              rel="noopener noreferrer"
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                try {
+                                  await downloadWithAuth(`/budgeting/boq-documents/${d.id}/pdf`);
+                                } catch (e) {
+                                  alert(`Download failed (${e instanceof Error ? e.message : "unknown error"}).`);
+                                }
+                              }}
                               className="inline-block px-3 py-1.5 bg-elevated border border-border-custom text-muted text-xs rounded-lg hover:bg-elevated"
                             >
                               Download PDF
-                            </a>
+                            </button>
                           </div>
 
                           {/* Line items */}

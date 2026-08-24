@@ -9,6 +9,30 @@ export const authHeaders = (): Record<string, string> | undefined => {
   return token ? { Authorization: `Bearer ${token}` } : undefined;
 };
 
+// Document downloads must go through fetch with the bearer token (a plain
+// <a href> navigation cannot attach it and the endpoints require one), then
+// hand the blob to a programmatic anchor. Throws on non-2xx so callers can
+// surface the failure instead of opening an empty tab.
+export const downloadWithAuth = async (path: string): Promise<void> => {
+  const res = await fetch(getApi(path), { headers: authHeaders() });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const blob = await res.blob();
+  const disposition = res.headers.get("content-disposition") || "";
+  const filename =
+    disposition.match(/filename="?([^";]+)"?/i)?.[1] || "document.pdf";
+  const url = URL.createObjectURL(blob);
+  try {
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = decodeURIComponent(filename);
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+};
+
 // Persist a successful auth response (any method: phone, email OTP, Google,
 // password) into localStorage the same way the app already reads it elsewhere.
 // The token is stored client-side only; it is never placed in a URL.

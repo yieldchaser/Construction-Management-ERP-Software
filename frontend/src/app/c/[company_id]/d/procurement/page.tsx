@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useProject } from "@/context/ProjectContext";
 import { getApiHost } from "@/lib/api";
-import { authHeaders } from "@/lib/siteflow";
+import { authHeaders, downloadWithAuth } from "@/lib/siteflow";
 import Icon, { type IconName } from "@/components/marketing/Icon";
 
 // Types
@@ -717,14 +717,19 @@ export default function ProcurementPage() {
                             <td className="px-5 py-3 text-right font-sans font-bold text-foreground whitespace-nowrap">₹{po.totalAmount.toLocaleString("en-IN")}</td>
                             <td className="px-5 py-3 text-right whitespace-nowrap">
                               <div className="flex gap-2 justify-end">
-                                <a
-                                  href={`${getApiHost()}/apis/v3/procurement/pos/${po.id}/pdf`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="px-3 py-1.5 bg-elevated hover:bg-elevated border border-border-custom text-zinc-300 rounded-lg text-[10px] font-bold"
+                                <button
+                                  type="button"
+                                  onClick={async () => {
+                                    try {
+                                      await downloadWithAuth(`/procurement/pos/${po.id}/pdf`);
+                                    } catch (e) {
+                                      alert(`Download failed (${e instanceof Error ? e.message : "unknown error"}).`);
+                                    }
+                                  }}
+                                  className="px-3 py-1.5 bg-elevated hover:bg-elevated border border-border-custom text-zinc-300 rounded-lg text-[10px] font-bold cursor-pointer"
                                 >
                                   PDF
-                                </a>
+                                </button>
                                 {po.approvalFlag === "pending" && (
                                   <button onClick={() => handleApprovePO(po.id)} className="px-3 py-1.5 bg-primary/10 hover:bg-primary/20 border border-primary/20 text-primary rounded-lg text-[10px] font-bold">
                                     Approve PO

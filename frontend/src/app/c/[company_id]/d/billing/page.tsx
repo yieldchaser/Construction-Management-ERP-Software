@@ -5,7 +5,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useProject } from "@/context/ProjectContext";
 import { useParams } from "next/navigation";
-import { authHeaders } from "@/lib/siteflow";
+import { authHeaders, downloadWithAuth } from "@/lib/siteflow";
 
 // Types
 interface Deduction {
@@ -671,14 +671,19 @@ export default function SubcontractorBillingPage() {
                           </td>
                           <td className="px-5 py-3.5 text-right">
                             <div className="flex items-center justify-end gap-2">
-                              <a
-                                href={`${getApiHost()}/apis/v3/billing/bills/${bill.id}/pdf`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="bg-elevated border border-border-custom text-muted rounded-lg px-2.5 py-1 text-[10px] font-bold hover:bg-elevated/70 transition-all"
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  try {
+                                    await downloadWithAuth(`/billing/bills/${bill.id}/pdf`);
+                                  } catch (e) {
+                                    alert(`Download failed (${e instanceof Error ? e.message : "unknown error"}).`);
+                                  }
+                                }}
+                                className="bg-elevated border border-border-custom text-muted rounded-lg px-2.5 py-1 text-[10px] font-bold hover:bg-elevated/70 transition-all cursor-pointer"
                               >
                                 PDF
-                              </a>
+                              </button>
                               {bill.status === "pending" && (
                                 <button
                                   onClick={() => handleApproveBill(bill.id)}
