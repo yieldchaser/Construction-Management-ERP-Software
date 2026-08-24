@@ -52,7 +52,7 @@ export default function CalculatorsPage() {
   const [mainBarCount, setMainBarCount] = useState(4); // nos
   const [stirrupDia, setStirrupDia] = useState(8); // mm
   const [stirrupSpacing, setStirrupSpacing] = useState(150); // mm
-  const [steelPrice, setSteelPrice] = useState(62); // ₹/kg
+  const [steelPrice, setSteelPrice] = useState(0); // ₹/kg
   const [steelWastage, setSteelWastage] = useState(5); // %
 
   // 2. Slab Steel
@@ -197,7 +197,7 @@ export default function CalculatorsPage() {
 
     const netW = colBar1W + colBar2W + colStirW;
     const totW = netW * (1 + steelWastage / 100);
-    const cost = totW * steelPrice;
+    const cost = steelPrice > 0 ? totW * steelPrice : 0;
     return { colBar1Weight: colBar1W, colBar2Weight: colBar2W, colStirrupWeight: colStirW, colTotalWeight: totW, colCost: cost, colStirEnd: endCount, colStirMid: midCount, colStirrupCount: totalStirrups };
   }, [mainBarDia, colHeight, slabThick, mainBarCount, colBar2Dia, colBar2Count, stirrupDia, sizeA, sizeB, colSpEnd, stirrupSpacing, colSpMid, steelWastage, steelPrice]);
 
@@ -214,7 +214,7 @@ export default function CalculatorsPage() {
     const distW = slabDistCutLen * distCnt * slabDistUnitW;
     const netW = mainW + distW;
     const totW = netW * (1 + steelWastage / 100);
-    const cost = totW * steelPrice;
+    const cost = steelPrice > 0 ? totW * steelPrice : 0;
     return { slabMainWeight: mainW, slabDistWeight: distW, slabTotalWeight: totW, slabCost: cost, slabMainCount: mainCnt, slabDistCount: distCnt };
   }, [slabMainDia, slabLength, slabMainSpacing, slabWidth, slabDevLen, slabDistDia, slabDistSpacing, steelWastage, steelPrice]);
 
@@ -232,7 +232,7 @@ export default function CalculatorsPage() {
 
     const netW = xW + yW;
     const totW = netW * (1 + steelWastage / 100);
-    const cost = totW * steelPrice;
+    const cost = steelPrice > 0 ? totW * steelPrice : 0;
     return { tw2XWeight: xW, tw2YWeight: yW, tw2TotalWeight: totW, tw2Cost: cost, tw2XCount: xCnt, tw2YCount: yCnt };
   }, [tw2XDia, tw2Ly, tw2XSp, tw2Lx, tw2DevLen, tw2YDia, tw2YSp, steelWastage, steelPrice]);
 
@@ -571,6 +571,18 @@ export default function CalculatorsPage() {
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary"
                       />
                     </div>
+                    <div className="space-y-1 col-span-2">
+                      <label className="text-muted">Steel Rate / kg (₹)</label>
+                      <input
+                        type="number"
+                        value={steelPrice}
+                        onChange={(e) => {
+                          setSteelPrice(Number(e.target.value));
+                        }}
+                        placeholder="Optional"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary"
+                      />
+                    </div>
                   </>
                 )}
 
@@ -664,6 +676,18 @@ export default function CalculatorsPage() {
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       />
                     </div>
+                    <div className="space-y-1 col-span-2">
+                      <label className="text-muted">Steel Rate / kg (₹)</label>
+                      <input
+                        type="number"
+                        value={steelPrice}
+                        onChange={(e) => {
+                          setSteelPrice(Number(e.target.value));
+                        }}
+                        placeholder="Optional"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
+                      />
+                    </div>
                   </>
                 )}
 
@@ -754,6 +778,18 @@ export default function CalculatorsPage() {
                         onChange={(e) => {
                           setTw2DevLen(Number(e.target.value));
                         }}
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
+                      />
+                    </div>
+                    <div className="space-y-1 col-span-2">
+                      <label className="text-muted">Steel Rate / kg (₹)</label>
+                      <input
+                        type="number"
+                        value={steelPrice}
+                        onChange={(e) => {
+                          setSteelPrice(Number(e.target.value));
+                        }}
+                        placeholder="Optional"
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
                       />
                     </div>
@@ -989,6 +1025,18 @@ export default function CalculatorsPage() {
                         value={sandRate}
                         onChange={(e) => {
                           setSandRate(Number(e.target.value));
+                        }}
+                        placeholder="Optional"
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-muted">Aggregate Rate / m³ (₹)</label>
+                      <input
+                        type="number"
+                        value={aggRate}
+                        onChange={(e) => {
+                          setAggRate(Number(e.target.value));
                         }}
                         placeholder="Optional"
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground"
