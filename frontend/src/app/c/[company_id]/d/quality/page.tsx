@@ -65,7 +65,7 @@ interface LabTest {
   unit: string;
   min: number | null;
   max: number | null;
-  pass: boolean;
+  pass: boolean | null;
   zone: string;
 }
 
@@ -746,9 +746,9 @@ isCode: cl.is_code_reference || "—",
               <div className="grid grid-cols-4 gap-4 mb-2">
                 {[
                   { label: "Total Tests", val: labTests.length, color: "text-foreground" },
-                  { label: "Passed", val: labTests.filter(t => t.pass).length, color: "text-green-400" },
-                  { label: "Failed", val: labTests.filter(t => !t.pass).length, color: "text-red-400" },
-                  { label: "Pass Rate", val: labTests.length ? `${Math.round(labTests.filter(t => t.pass).length / labTests.length * 100)}%` : "0%", color: "text-primary" },
+                  { label: "Passed", val: labTests.filter(t => t.pass === true).length, color: "text-green-400" },
+                  { label: "Failed", val: labTests.filter(t => t.pass === false).length, color: "text-red-400" },
+                  { label: "Pass Rate", val: (() => { const ev = labTests.filter(t => t.pass != null); return ev.length ? `${Math.round(ev.filter(t => t.pass).length / ev.length * 100)}%` : "0%"; })(), color: "text-primary" },
                 ].map(({ label, val, color }) => (
                   <div key={label} className="bg-card border border-border-custom rounded-md p-4">
                     <p className="text-[10px] text-muted uppercase font-bold tracking-wider mb-1">{label}</p>
@@ -778,16 +778,18 @@ isCode: cl.is_code_reference || "—",
                         <td className="px-4 py-3 font-sans text-muted text-[10px]">{t.sampleRef}</td>
                         <td className="px-4 py-3 text-muted">{t.date}</td>
                         <td className="px-4 py-3">
-                          <span className={`font-bold text-sm ${t.pass ? "text-green-400" : "text-red-400"}`}>
+                          <span className={`font-bold text-sm ${t.pass == null ? "text-muted" : t.pass ? "text-green-400" : "text-red-400"}`}>
                             {t.value} {t.unit}
                           </span>
                         </td>
                         <td className="px-4 py-3 text-muted">{t.min != null && t.max != null ? `${t.min}–${t.max} ${t.unit}` : "—"}</td>
                         <td className="px-4 py-3 text-muted">{t.zone}</td>
                         <td className="px-4 py-3">
-                          {t.pass
-                            ? <span className="flex items-center gap-1 text-green-400 font-bold text-[10px]"><span className="h-1.5 w-1.5 rounded-full bg-green-400" />PASS</span>
-                            : <span className="flex items-center gap-1 text-red-400 font-bold text-[10px]"><span className="h-1.5 w-1.5 rounded-full bg-red-400" />FAIL</span>}
+                          {t.pass == null
+                            ? <span className="flex items-center gap-1 text-muted font-bold text-[10px]"><span className="h-1.5 w-1.5 rounded-full bg-zinc-500" />Not evaluated</span>
+                            : t.pass
+                              ? <span className="flex items-center gap-1 text-green-400 font-bold text-[10px]"><span className="h-1.5 w-1.5 rounded-full bg-green-400" />PASS</span>
+                              : <span className="flex items-center gap-1 text-red-400 font-bold text-[10px]"><span className="h-1.5 w-1.5 rounded-full bg-red-400" />FAIL</span>}
                         </td>
                       </tr>
                     ))}
