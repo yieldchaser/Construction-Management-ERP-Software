@@ -58,8 +58,8 @@ class PPECheckCreate(BaseModel):
     project_id: uuid.UUID
     checked_by: str
     check_date: datetime         # ISO datetime string
-    total_workers: int
-    compliant_workers: int
+    total_workers: int = Field(..., ge=0)       # R2-530: a headcount cannot be negative
+    compliant_workers: int = Field(..., ge=0)   # and neither can the compliant subset
     non_compliant_items: List[str] = []
 
 
