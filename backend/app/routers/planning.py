@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.auth import get_current_user, verify_company_access, verify_project_access, get_company_membership, require_permission
 from app.models import Task, TaskPredecessor, ProjectMilestone, Project, TaskTodo, TaskComment, CompanyTeam, User
-from app.constants import MILESTONE_TYPE_PATTERN, MILESTONE_STATUS_PATTERN, PREDECESSOR_LINK_TYPE_PATTERN
+from app.constants import MILESTONE_TYPE_PATTERN, MILESTONE_STATUS_PATTERN, PREDECESSOR_LINK_TYPE_PATTERN, PROJECT_STATUS_PATTERN
 from app.workflow_controls import (
     enforce_entry_creation_window,
     enforce_entry_editing_window,
@@ -780,7 +780,7 @@ class ProjectUpdateSchema(BaseModel):
     city: Optional[str] = None
     location: Optional[str] = None
     attendance_radius_meters: Optional[int] = None
-    status: Optional[str] = None
+    status: Optional[str] = Field(None, pattern=PROJECT_STATUS_PATTERN)
     health: Optional[str] = None
     category: Optional[str] = None
     stage: Optional[str] = None

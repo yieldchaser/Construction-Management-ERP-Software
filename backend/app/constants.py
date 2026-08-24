@@ -27,3 +27,8 @@ WASTAGE_TYPE_PATTERN = f"^({'|'.join(WASTAGE_TYPES)})$"
 
 WASTAGE_STATUSES = ("reported", "reviewed", "approved", "disposed")
 WASTAGE_STATUS_PATTERN = f"^({'|'.join(WASTAGE_STATUSES)})$"
+
+CANONICAL_PROJECT_STATUSES = (
+    "Not Started", "Planning", "Ongoing", "On Hold", "Onhold", "Completed", "Cancelled",
+)
+PROJECT_STATUS_PATTERN = f"^({'|'.join(CANONICAL_PROJECT_STATUSES)})$"

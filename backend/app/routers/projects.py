@@ -8,6 +8,7 @@ from app.database import get_db
 from app import models
 from app.auth import get_current_user, verify_company_access, verify_project_access, get_company_membership, require_permission
 from app.routers.custom_fields import CustomFieldValueInput, upsert_values_for_entity, enforce_required_custom_fields
+from app.constants import PROJECT_STATUS_PATTERN
 import uuid
 
 router = APIRouter(prefix="/projects", tags=["Projects"], dependencies=[Depends(get_current_user)])
@@ -200,7 +201,7 @@ class ProjectCreate(BaseModel):
 class ProjectUpdate(BaseModel):
     name: Optional[str] = None
     code: Optional[str] = None
-    status: Optional[str] = Field(None, pattern=r"^(Not Started|Planning|Ongoing|On Hold|Onhold|Completed|Cancelled)$")
+    status: Optional[str] = Field(None, pattern=PROJECT_STATUS_PATTERN)
     address: Optional[str] = None
     city: Optional[str] = None
     state: Optional[str] = None
