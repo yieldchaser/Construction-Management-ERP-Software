@@ -211,6 +211,9 @@ def submit_quote(rfq_id: UUID, req: RFQQuoteCreate, db: Session = Depends(get_db
         if datetime.now(timezone.utc) > valid_until:
             raise HTTPException(status_code=400, detail="RFQ validity has expired; quotes cannot be submitted")
 
+    if rfq.status == "closed":
+        raise HTTPException(status_code=409, detail="RFQ is closed; quotes cannot be submitted")
+
     db_item = db.query(RFQItem).filter(RFQItem.id == req.item_id).first()
     if not db_item or db_item.rfq_id != rfq_id:
         raise HTTPException(status_code=404, detail="RFQ item not found")
@@ -241,6 +244,60 @@ def submit_quote(rfq_id: UUID, req: RFQQuoteCreate, db: Session = Depends(get_db
         validity_days=quote.validity_days,
         submitted_at=quote.submitted_at,
     )
+
+
+def _build_rfq_response(db: Session, rfq: RFQ) -> RFQResponse:
+    items = db.query(RFQItem).filter(RFQItem.rfq_id == rfq.id).all()
+    return RFQResponse(
+        id=rfq.id,
+        company_id=rfq.company_id,
+        project_id=rfq.project_id,
+        rfq_number=rfq.rfq_number,
+        status=rfq.status,
+        valid_until=rfq.valid_until,
+        notes=rfq.notes,
+        items=[
+            RFQItemResponse(
+                id=i.id,
+                rfq_id=i.rfq_id,
+                material_name=i.material_name,
+                quantity=float(i.quantity),
+                unit=i.unit,
+                specifications=i.specifications,
+            ) for i in items
+        ],
+        created_at=rfq.created_at,
+    )
+
+
+@router.post("/rfq/{rfq_id}/send", response_model=RFQResponse)
+def send_rfq(rfq_id: UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    rfq = db.query(RFQ).filter(RFQ.id == rfq_id).first()
+    if not rfq:
+        raise HTTPException(status_code=404, detail="RFQ not found")
+    get_company_membership(db, current_user, rfq.company_id)
+    require_permission(db, current_user, rfq.company_id, "procurement:edit")
+    if rfq.status != "draft":
+        raise HTTPException(status_code=409, detail=f"Only draft RFQs can be sent (current status: {rfq.status})")
+    rfq.status = "sent"
+    db.commit()
+    db.refresh(rfq)
+    return _build_rfq_response(db, rfq)
+
+
+@router.post("/rfq/{rfq_id}/close", response_model=RFQResponse)
+def close_rfq(rfq_id: UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    rfq = db.query(RFQ).filter(RFQ.id == rfq_id).first()
+    if not rfq:
+        raise HTTPException(status_code=404, detail="RFQ not found")
+    get_company_membership(db, current_user, rfq.company_id)
+    require_permission(db, current_user, rfq.company_id, "procurement:edit")
+    if rfq.status != "sent":
+        raise HTTPException(status_code=409, detail=f"Only sent RFQs can be closed (current status: {rfq.status})")
+    rfq.status = "closed"
+    db.commit()
+    db.refresh(rfq)
+    return _build_rfq_response(db, rfq)
 
 
 @router.get("/rfq/{rfq_id}/comparison", response_model=List[ComparisonRow])
