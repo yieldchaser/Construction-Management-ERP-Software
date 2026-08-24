@@ -60,6 +60,7 @@ export default function DeleteLogsPage() {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [toast, setToast] = useState("");
+  const [error, setError] = useState("");
 
   const authHeaders = useMemo(
     () => (accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined),
@@ -82,11 +83,14 @@ export default function DeleteLogsPage() {
       if (res.ok) {
         const data = await res.json();
         setLogs(Array.isArray(data) ? data : []);
+        setError("");
       } else {
         setLogs([]);
+        setError(`Could not load delete logs (HTTP ${res.status})`);
       }
     } catch {
       setLogs([]);
+      setError("Could not load delete logs. Backend connection failed.");
     } finally {
       setLoading(false);
     }
@@ -196,6 +200,12 @@ export default function DeleteLogsPage() {
               <tr>
                 <td colSpan={6} className="px-4 py-6 text-center text-muted">
                   Loading...
+                </td>
+              </tr>
+            ) : error ? (
+              <tr>
+                <td colSpan={6} className="px-4 py-6 text-center text-red-400">
+                  {error}
                 </td>
               </tr>
             ) : logs.length === 0 ? (
