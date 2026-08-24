@@ -118,6 +118,7 @@ def test_create_leave_request_allows_view_only_self_service(client, db, make_ten
         f"/apis/v3/hr/leaves/{comp.id}",
         json={
             "project_id": str(project.id),
+            "employee_id": str(uuid.uuid4()),
             "employee_name": "Self User",
             "leave_type": "Casual",
             "start_date": "2026-02-01T00:00:00",

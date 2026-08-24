@@ -175,6 +175,7 @@ def test_create_leave_request_rejects_cross_company_project_id(client, db, make_
         f"/apis/v3/hr/leaves/{comp_a.id}",
         json={
             "project_id": str(project_b.id),
+            "employee_id": str(uuid.uuid4()),
             "employee_name": "Cross Tenant",
             "leave_type": "Casual",
             "start_date": "2026-02-01T00:00:00",
@@ -199,6 +200,7 @@ def test_create_leave_request_allows_own_project(client, db, make_tenant, auth_h
         f"/apis/v3/hr/leaves/{comp_a.id}",
         json={
             "project_id": str(project_a.id),
+            "employee_id": str(uuid.uuid4()),
             "employee_name": "Own Tenant",
             "leave_type": "Casual",
             "start_date": "2026-02-01T00:00:00",

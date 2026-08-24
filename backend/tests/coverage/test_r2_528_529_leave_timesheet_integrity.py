@@ -52,6 +52,7 @@ def test_invalid_leave_status_rejected_with_vocabulary(client, db, make_tenant, 
         f"/apis/v3/hr/leaves/{comp.id}",
         headers=hdr,
         json={
+            "employee_id": str(uuid.uuid4()),
             "employee_name": f"E-{_SUFFIX}",
             "leave_type": "Sick",
             "start_date": "2026-08-10T00:00:00Z",

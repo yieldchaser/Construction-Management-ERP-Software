@@ -990,7 +990,13 @@ from pydantic import BaseModel
 
 class LeaveRequestCreate(BaseModel):
     project_id: Optional[uuid.UUID] = None
-    employee_id: Optional[uuid.UUID] = None
+    # R2-527: employee_id is mandatory. An optional id let one approved leave
+    # be counted against every employee sharing the name while the id-keyed
+    # employee lost name-matched rows entirely (the two lookups were consumed
+    # either/or). Legacy NULL-id rows are backfilled once by unambiguous name
+    # (supabase migration) and the balance lookup merges both buckets instead
+    # of falling back between them.
+    employee_id: uuid.UUID
     employee_name: str
     leave_type: str
     start_date: datetime
@@ -1444,8 +1450,10 @@ def get_leave_balances(
     if the company has no templates at all, entitlement is 0 and the response
     flags company_has_templates=False so the UI can prompt configuration.
 
-    Used days are the SUM of Approved LeaveRequest days matched to the employee
-    by name (case-insensitive) for the current leave year (calendar year).
+    Used days are the SUM of Approved LeaveRequest days for the current leave
+    year (calendar year), merging the id-keyed bucket with the legacy
+    name-matched bucket (employee_id NULL rows) instead of falling back
+    between them (R2-527).
     Balance can go negative when an employee has over-taken their entitlement.
     """
     require_module_view(db, current_user, company_id, "payroll")
@@ -1522,9 +1530,16 @@ def get_leave_balances(
             entitled["sick"] = float(template.sick_leave_days or 0.0)
             entitled["earned"] = float(template.earned_leave_days or 0.0)
 
-        used = used_by_emp_id.get(emp.id)
-        if used is None:
-            used = used_by_name.get(emp.name.lower(), {})
+        # R2-527: merge BOTH buckets instead of the either/or fallback. One
+        # employee can carry id-keyed leave and legacy name-matched (NULL-id)
+        # leave at the same time; picking one side silently dropped the other.
+        used: dict = {}
+        for bucket in (
+            used_by_emp_id.get(emp.id) or {},
+            used_by_name.get(emp.name.lower()) or {},
+        ):
+            for leave_key, total in bucket.items():
+                used[leave_key] = used.get(leave_key, 0.0) + float(total or 0.0)
 
         def balance_for(key: str) -> LeaveTypeBalance:
             ent = entitled[key]
