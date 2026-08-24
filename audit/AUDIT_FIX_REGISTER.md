@@ -641,7 +641,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-491 | HIGH | W10 | `projects.py` | `transaction/page.tsx` | FIXED | FIXED 94e7923 (swept into auth-settings commit by shared-worktree race; content verified at HEAD); member names resolve via CompanyTeam.library_party_id -> LibraryParty.name. |
 | R2-492 | MEDIUM | W10 | `projects.py` | — | FIXED | FIXED 084b758; list_project_members joins ProjectMember (company-guarded) so unassigned staff no longer appear. |
 | R2-493 | MEDIUM | W64 | `transaction/page.tsx` | — | FIXED | FIXED 15d9bc4; transaction page ZATCA column/button gated on zatcaEnabled. |
-| R2-494 | HIGH | W110 | `subcon/page.tsx` | — | TODO | | reg L24772 |
+| R2-494 | HIGH | W110 | `subcon/page.tsx` | — | FIXED | | reg L24772 S33 FIXED ad8712f: subcon register renders honest em-dash (no fabricated 0%/Rs 0). |
 | R2-495 | MEDIUM | W37 | `equipment.py` | — | FIXED | FIXED (evidence, 89839c9); the projectFleet filter already landed via the M-D wave. |
 | R2-496 | MEDIUM | W08 | `analytics.py` | — | FIXED | FIXED fac73c8; three-way page formats with shared fmtINR en-IN grouping (was Number.toLocaleString default). Sibling: d/billing page defines a local fmtINR shadow - duplication risk. |
 | R2-497 | CRITICAL | W08 | `analytics.py` | — | TODO | | reg L24947 |
@@ -649,11 +649,11 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-499 | HIGH | W08 | `analytics.py` | `projects.py` | FIXED | | reg L25018 S33 EVIDENCE-CLOSE: fixed by 248c809 (_resolve_team_name resolves LibraryParty.name); residual Team-{uuid} terminal fallback noted as sibling R2-603-family. |
 | R2-500 | MEDIUM | W02 | `UNMAPPED` | — | FIXED | FIXED (evidence, 6ef2cc8); PHASE 14 eyebrow already gone from analytics. |
 | R2-501 | MEDIUM | W02 | `UNMAPPED` | — | FIXED | FIXED (evidence, d48e67c); analytics formatCurrency delegates to shared fmtINR. |
-| R2-502 | HIGH | W111 | `production/page.tsx` | — | TODO | | reg L25119 |
+| R2-502 | HIGH | W111 | `production/page.tsx` | — | FIXED | | reg L25119 S33 FIXED f5e859d: output progress unclamped (200% shows 200%; bar cap preserved). |
 | R2-503 | CRITICAL | W65 | `assets.py` | — | TODO | | reg L25164 |
 | R2-504 | MEDIUM | W65 | `assets.py` | — | FIXED | FIXED a853932; straight_line depreciation write-time self-consistency (salvage 0 => pct == 100/life, else 422). |
 | R2-505 | MEDIUM | W12 | `statutory.py` | — | FIXED | FIXED (evidence, 6ef2cc8); PHASE 16 eyebrow already removed from d/production by the R2-023 sweep; zero PHASE matches in frontend/src. |
-| R2-506 | HIGH | W112 | `safety/page.tsx` | `safety.py` | TODO | | reg L25316 |
+| R2-506 | HIGH | W112 | `safety/page.tsx` | `safety.py` | FIXED | | reg L25316 S33 EVIDENCE-CLOSE: manhours caption already renders API value via R2-203 5c7d445. |
 | R2-507 | HIGH | W24 | `labour.py` | `models.py`, `hr.py` | FIXED | | reg L25354 S33 FIXED 7cde59f: omitted muster figures derive from attendance/crew data; empty day -> 422. |
 | R2-508 | MEDIUM | W02 | `UNMAPPED` | — | FIXED | FIXED deb3a9a; ltif_basis query param (default 200,000) returned in the response; banner no longer claims OSHA alignment; KPI labeled LTIFR with the real basis in the caption. NEEDS-DECISION (CD-10): whether the default should flip to 1,000,000 (ILO/IS 3786) - changes reported numbers. |
 | R2-509 | CRITICAL | W01 | `finance.py` | — | FIX_VERIFIED | `f32ca77+3f65098` | reg L25450; wave W01b; suite RC-032 — own gate added 2026-08-06 |
@@ -709,7 +709,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-559 | HIGH | W15 | `models.py` | — | FIXED | FIXED e0f2f6e; UniqueConstraint(company_id, number) on purchase_orders, goods_receipt_notes, material_indents, bills, work_orders, library_cost_codes. |
 | R2-560 | HIGH | W04 | `reports.py` | `models.py`, `page.tsx`, `chat.py` | FIX_VERIFIED | `723af26` | reg L29155; reports.py direct-fix pass; suite RC-068/RC-069 — the swallow and the ledger accumulator |
 | R2-561 | HIGH | W03 | `hr.py` | `hr/page.tsx` | FIX_VERIFIED | `4134a11` | reg L29446; hr.py direct-fix pass; suite RC-056 |
-| R2-562 | HIGH | W76 | `hr/page.tsx` | — | TODO | | reg L29482 |
+| R2-562 | HIGH | W76 | `hr/page.tsx` | — | FIXED | | reg L29482 S33 EVIDENCE-CLOSE: negative durations impossible since 0977492 guard. |
 | R2-563 | MEDIUM | W76 | `hr/page.tsx` | `models.py` | FIXED | FIXED d2ad02f (in hr.py); timesheet entries outside the header week window rejected (422). |
 | R2-564 | HIGH | W03 | `hr.py` | `hr/page.tsx` | FIX_VERIFIED | `ff2a2fc` | reg L29517; hr.py direct-fix pass; suite RC-062 |
 | R2-565 | CRITICAL | W11 | `planning.py` | `gantt/page.tsx` | FIX_VERIFIED | `b612f73` | reg L29573; wave 0; suite RC-001 |
@@ -723,15 +723,15 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-582 | HIGH | W10 | `projects.py` | — | FIXED | FIXED 5c39df3; typed ProjectPartyStatusUpdate with Active/Inactive pattern; unrecognised values 422. |
 | R2-583 | HIGH | W10 | `projects.py` | — | FIXED | FIXED 7c7a381; re-posting an opening balance on an existing link updates advance_paid/to_pay/balance and returns the new state. |
 | R2-588 | CRITICAL | W29 | `d/hr/page.tsx` | `hr.py` | FIX_VERIFIED | `a99715e` | reg L30505; wave 0; suite RC-003 |
-| R2-589 | HIGH | W44 | `d/quality/page.tsx` | — | TODO | | reg L30544 |
+| R2-589 | HIGH | W44 | `d/quality/page.tsx` | — | FIXED | | reg L30544 S33 FIXED 9f294a5: is_pass null renders Not evaluated (no FAIL fabrication); tiles exclude it. |
 | R2-590 | HIGH | W44 | `d/quality/page.tsx` | `d/equipment/page.tsx`, `/boq/page.tsx` | FIX_VERIFIED | `dabbcd8` | reg L30611; wave 0; suite RC-008/009/010 |
 | R2-592 | MEDIUM | W01 | `finance.py` | `d/hr/page.tsx`, `procurement.py`, `planning.py` | FIX_VERIFIED | `e69bcae` | reg L30680; direct-fix pass; suite RC-044 |
 | R2-593 | HIGH | W03 | `hr.py` | `models.py`, `face_recognition.py`, `towers.py` | FIX_VERIFIED | `05a53c9` | reg L31102; hr.py direct-fix pass; suite RC-060 |
 | R2-594 | HIGH | W16 | `three_way.py` | `relsweep.py`, `billing.py`, `drawings.py` | FIXED | | reg L31194 S33 FIXED 1fb4a64 (H-3way-settings): one match per PO/GRN pair (409 + unique constraint WITH additive dedupe-aware migration per live-schema rule); bill-link amount agreement gate; test added. |
 | R2-595 | HIGH | W25 | `tally.py` | `models.py`, `finance.py` | FIXED | FIXED 937d984; Tally export resolves bank/cash ledger from its own account via bank mappings; /tally/mappings/bank gives the mapping table a writer. |
 | R2-596 | MEDIUM | W29 | `d/hr/page.tsx` | `fesweep.py`, `hr.py`, `frontend/src/app/login/page.tsx` | FIXED | FIXED b70fd88; timesheet submit/approve no longer renders transport failure as success. |
-| R2-597 | HIGH | W113 | `subcon_performance.py` | `vendor_performance.py` | TODO | | reg L31481 |
-| R2-598 | HIGH | W56 | `rfq.py` | `models.py`, `gantt/page.tsx`, `planning.py` | TODO | | reg L31550 |
+| R2-597 | HIGH | W113 | `subcon_performance.py` | `vendor_performance.py` | FIXED | | reg L31481 S33 FIXED 768796a: scorecard empty history -> 0.0 metrics, never fabricated 100%. |
+| R2-598 | HIGH | W56 | `rfq.py` | `models.py`, `gantt/page.tsx`, `planning.py` | FIXED | | reg L31550 S33 FIXED d3b9bf8: RFQ send/close transitions added (draft->sent->closed, 409 invalid); CD-7 direction (a) implemented - founder to confirm. |
 | R2-599 | CRITICAL | W58 | `dpr.py` | `custom_fields.py`, `ownsweep.py` | FIX_VERIFIED | `bef6c73` | reg L31644; wave 0; suite RC-002 |
 | R2-600 | MEDIUM | W129 | `home/page.tsx` | `d/procurement/page.tsx`, `reports/page.tsx`, `nofetch.py` | FIXED | FIXED 1d3235d; Project Details card binds to the filtered list with an empty state (no fabricated values). |
 | R2-601 | HIGH | W23 | `d/finance/page.tsx` | `page.tsx`, `finance.py`, `d/reports/calculators/page.tsx` | FIXED | | reg L32163 S33 FIXED 590fb02: steel price no longer hardcoded 62/kg - editable Steel Rate + Aggregate Rate inputs, zero-guarded memos; real file calculators page. |
@@ -739,8 +739,8 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 ## Session 33 sibling filings (process rule: every disclosed follow-up gets an id)
 
 | R2-602 | MEDIUM | W08 | `analytics.py` | - | FIXED | | filed S33 from R2-305 closure: project_spend (~:234) does not exclude Cancelled bills while operational spend (~:453) does; R2-370 sweep miss. reg - S33 FIXED 3e6fa7d: project_spend/month_spend//financial bill loads exclude Cancelled like operational spend. |
-| R2-603 | HIGH | W08 | `analytics.py` | - | TODO | | filed S33 from R2-305/R2-499 closures: /financial fabricates demo chart data (fixed Jun-2026 labels + 1000 expense) when a company has no bills; fabricated-data class. Also _resolve_team_name terminal fallback emits Team-{uuid[:8]}. reg - |
-| R2-604 | HIGH | W13 | `budget.py` | - | TODO | | filed S33 from R2-249/R2-250/R2-233 closures: no-towers branch (~:172) sums ALL PO statuses without the sent/partial/received whitelist, and neither budget branch applies the approved/non-cancelled bill gates the main endpoint has. reg - |
+| R2-603 | HIGH | W08 | `analytics.py` | - | FIXED | | filed S33 from R2-305/R2-499 closures: /financial fabricates demo chart data (fixed Jun-2026 labels + 1000 expense) when a company has no bills; fabricated-data class. Also _resolve_team_name terminal fallback emits Team-{uuid[:8]}. reg - S33 FIXED a9a113c: /financial chart honestly empty without bills (fabrication block deleted). |
+| R2-604 | HIGH | W13 | `budget.py` | - | FIXED | | filed S33 from R2-249/R2-250/R2-233 closures: no-towers branch (~:172) sums ALL PO statuses without the sent/partial/received whitelist, and neither budget branch applies the approved/non-cancelled bill gates the main endpoint has. reg - S33 FIXED 393055b: budget no-tower PO whitelist + tower approved/cancelled gates aligned. |
 | R2-605 | MEDIUM | W05 | `procurement.py` | - | FIXED | | filed S33 from R2-242 closure: reject_po (~:586-606) shows no visible assignment of approval_flag=rejected nor commit; possible dead rejection path. Needs audit look. reg - S33 FIXED 23fff1f: reject_po was a dead path (no persist + response-model 500); now persists approval_flag=rejected, double-reject refused. |
 | R2-606 | HIGH | W07 | `hr.py` | - | TODO | | filed S33 from R2-381 closure: run_payroll period-based write still unguarded by the restrict-entry-creation window (same class as gated payments). reg - |
 | R2-607 | HIGH | W07 | `procurement.py` | - | TODO | | filed S33 from R2-403 closure: supplier identity stored but unprinted in PO PDF (:998), BOQ PDF (budgeting.py ~:649) and client report PDF (reports.py ~:157); same class as fixed bill PDF. reg - |
