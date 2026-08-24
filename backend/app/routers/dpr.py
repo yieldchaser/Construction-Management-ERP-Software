@@ -26,7 +26,6 @@ class MaterialConsumptionSchema(BaseModel):
 class DPRCreateRequest(BaseModel):
     project_id: uuid.UUID
     task_id: Optional[uuid.UUID] = None
-    reported_by: str
     dpr_date: datetime
     weather: str = "Clear"
     executed_qty: float = Field(..., ge=0)
@@ -107,7 +106,11 @@ def create_dpr(req: DPRCreateRequest, db: Session = Depends(get_db), current_use
         id=uuid.uuid4(),
         project_id=project_uuid,
         task_id=task_uuid,
-        reported_by=req.reported_by,
+        # R2-408: the author of record is the authenticated user, resolved
+        # server-side. reported_by used to be client free text stored
+        # verbatim, so a raw UUID or an arbitrary string became the author
+        # of the primary contemporaneous site record.
+        reported_by=current_user.name,
         dpr_date=req.dpr_date,
         weather=req.weather,
         executed_qty=req.executed_qty,
