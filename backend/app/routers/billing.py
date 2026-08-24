@@ -617,11 +617,17 @@ def get_bill_pdf(bill_id: UUID, db: Session = Depends(get_db), current_user=Depe
     # LibraryParty (the vendor master); a platform login name is only a fallback
     # because vendors routinely have no users row at all.
     party_name = None
+    # R2-272: the recipient GSTIN lives on the vendor master (LibraryParty
+    # tax_no, same field the Zoho integration reads) - a tax invoice that does
+    # not name its recipient's GSTIN cannot be issued.
+    party_gstin = ""
     if party:
         if party.library_party_id:
             linked_party = db.query(LibraryParty).filter(LibraryParty.id == party.library_party_id).first()
             if linked_party and linked_party.name:
                 party_name = linked_party.name
+            if linked_party and getattr(linked_party, "tax_no", None):
+                party_gstin = str(linked_party.tax_no)
         if not party_name and party.user_id:
             party_user = db.query(User).filter(User.id == party.user_id).first()
             if party_user and party_user.name:
@@ -630,10 +636,10 @@ def get_bill_pdf(bill_id: UUID, db: Session = Depends(get_db), current_user=Depe
         party_name = "N/A"
 
     type_label_map = {
-        "sale": "Sales Invoice",
-        "material_sale": "Material Sales Invoice",
-        "purchase": "Purchase Invoice",
-        "subcon": "Subcontractor Invoice",
+        "sale": "Tax Invoice",
+        "material_sale": "Tax Invoice - Material Sales",
+        "purchase": "Purchase Tax Invoice",
+        "subcon": "Subcontractor Tax Invoice",
         "material_return": "Material Return",
         "material_transfer": "Material Transfer Voucher",
         "expense": "Other Expense Voucher",
@@ -643,6 +649,19 @@ def get_bill_pdf(bill_id: UUID, db: Session = Depends(get_db), current_user=Depe
         raise HTTPException(status_code=400, detail=f"Invalid or unhandled invoice_type '{bill.invoice_type}'")
     type_label = type_label_map[bill.invoice_type]
 
+    # R2-272: place of supply is the destination state read from the recipient
+    # GSTIN prefix; inter-state supplies carry IGST while intra-state ones
+    # split CGST/SGST half each (same convention as reports._gst_split).
+    supplier_gstin = ""
+    for ln in supplier_lines:
+        if ln.startswith("GSTIN: "):
+            supplier_gstin = ln[len("GSTIN: "):].strip()
+            break
+    supplier_state = supplier_gstin[:2] if len(supplier_gstin) >= 2 else ""
+    recipient_state = party_gstin[:2] if len(party_gstin) >= 2 else ""
+    place_of_supply = recipient_state or ""
+    inter_state = bool(supplier_state and place_of_supply and supplier_state != place_of_supply)
+
     party_lines = [
         f"Party: {party_name}",
         f"Invoice No: {bill.invoice_number}",
@@ -650,17 +669,22 @@ def get_bill_pdf(bill_id: UUID, db: Session = Depends(get_db), current_user=Depe
         f"Type: {type_label}",
         f"Status: {bill.status}",
     ]
+    if party_gstin:
+        party_lines.append(f"Recipient GSTIN: {party_gstin}")
+    if place_of_supply:
+        party_lines.append(f"Place of Supply: {place_of_supply}")
     if bill.due_date:
         party_lines.append(f"Due Date: {bill.due_date.strftime('%Y-%m-%d')}")
 
-    table_headers = ["Description", "Qty", "Rate", "Amount"]
-    col_widths = [54, 10, 16, 16]
+    table_headers = ["Description", "HSN/SAC", "Qty", "Rate", "Amount"]
+    col_widths = [44, 12, 10, 15, 15]
     table_rows = []
     if bill.items_json:
         try:
             for it in json.loads(bill.items_json):
                 table_rows.append([
                     it.get("desc") or it.get("description") or "",
+                    str(it.get("hsn_sac") or ""),
                     str(it.get("qty", "")),
                     str(it.get("rate", "")),
                     str(it.get("amount", "")),
@@ -668,7 +692,7 @@ def get_bill_pdf(bill_id: UUID, db: Session = Depends(get_db), current_user=Depe
         except Exception:
             pass
     if not table_rows:
-        table_rows.append(["(No line items)", "", "", ""])
+        table_rows.append(["(No line items)", "", "", "", ""])
 
     totals_lines = [
         f"Subtotal: {bill.subtotal}",
@@ -676,6 +700,14 @@ def get_bill_pdf(bill_id: UUID, db: Session = Depends(get_db), current_user=Depe
         f"Total Payable: {bill.total_payable}",
         f"Paid Amount: {bill.paid_amount}",
     ]
+    gst_total = float(bill.gst_amount or 0)
+    if gst_total > 0:
+        if inter_state:
+            totals_lines.append(f"IGST: {gst_total:.2f}")
+        else:
+            cgst = round(gst_total / 2, 2)
+            totals_lines.append(f"CGST: {cgst:.2f}")
+            totals_lines.append(f"SGST: {(gst_total - cgst):.2f}")
 
     pdf_bytes = generate_document_pdf(
         title=type_label,
