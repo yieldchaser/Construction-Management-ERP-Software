@@ -1001,8 +1001,15 @@ def test_pin_R2_552_project_bounds():
     assert "500 if project.attendance_radius_meters is None else project.attendance_radius_meters" in hr
 
 def test_pin_R2_580_status_pattern():
-    src = _read("app/routers/projects.py")
-    assert 'pattern=r"^(Not Started|Planning|Ongoing|On Hold|Onhold|Completed|Cancelled)$"' in src
+    constants = _read("app/constants.py")
+    assert 'CANONICAL_PROJECT_STATUSES = (\n    "Not Started", "Planning", "Ongoing", "On Hold", "Onhold", "Completed", "Cancelled",\n)' in constants
+    assert 'PROJECT_STATUS_PATTERN = f"^({\'|\'.join(CANONICAL_PROJECT_STATUSES)})$"' in constants
+    projects = _read("app/routers/projects.py")
+    assert "from app.constants import PROJECT_STATUS_PATTERN" in projects
+    assert "status: Optional[str] = Field(None, pattern=PROJECT_STATUS_PATTERN)" in projects
+    planning = _read("app/routers/planning.py")
+    assert "PROJECT_STATUS_PATTERN" in planning
+    assert "status: Optional[str] = Field(None, pattern=PROJECT_STATUS_PATTERN)" in planning
 
 def test_pin_R2_582_party_status_typed():
     src = _read("app/routers/projects.py")
