@@ -677,12 +677,9 @@ def get_company_financial_analytics(company_id: uuid.UUID, db: Session = Depends
 
         party_balances[str(b.party_company_user_id)] += (_to_float(b.total_payable) - _to_float(b.paid_amount))
 
+    # R2-603: a company with no bills gets an honestly empty chart; the
+    # fabricated demo months/points ("Jun 2026" + 1000 expense) are gone.
     chart_months = sorted(list(set(list(monthly_sales.keys()) + list(monthly_expense.keys()))), key=lambda x: datetime.strptime(x, "%b %Y") if x else datetime.now())
-    if not chart_months:
-        chart_months = ["Jun 2026", "Jul 2026"]
-        monthly_sales["Jun 2026"] = 0.0
-        monthly_expense["Jun 2026"] = 1000.0
-        expense_by_type["Debit Note"] = 1000.0
 
     sales_series = [monthly_sales[m] for m in chart_months]
     expense_series = [monthly_expense[m] for m in chart_months]
