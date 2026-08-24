@@ -462,7 +462,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-311 | HIGH | W01 | `finance.py` | `routing.py`, `errors.py`, `cors.py` | FIXED | | reg L14081 S33 FIXED 5440cc7 evidence: rate limiter storage URI + proxy-aware key already wired by campaign rework; wiring tests added. |
 | R2-312 | CRITICAL | W04 | `reports.py` | `finance.py`, `delete-logs/page.tsx`, `main.py` | FIX_VERIFIED | `723af26` | reg L14268; reports.py direct-fix pass; suite RC-068 |
 | R2-313 | CRITICAL | W04 | `reports.py` | — | FIX_VERIFIED | `723af26` | reg L14529; reports.py direct-fix pass; suite RC-069 |
-| R2-314 | HIGH | W02 | `UNMAPPED` | — | TODO | | reg L14579 |
+| R2-314 | HIGH | W02 | `UNMAPPED` | — | FIXED | | reg L14579 S33 FIXED 58c68ab: party ledger/all-party-balances keyed by stable identity (CompanyTeam/StaffEmployee id), names display-only. |
 | R2-315 | CRITICAL | W01 | `finance.py` | `models.py` | FIX_VERIFIED | `dc85e34` | reg L14604; wave W01a; suite RC-012 |
 | R2-316 | HIGH | W01 | `finance.py` | `reports.py` | FIX_VERIFIED | `b998d8a` | reg L14645; wave W01c; suite RC-030; all surfaces closed |
 | R2-317 | HIGH | W04 | `reports.py` | `models.py`, `finance.py` | FIX_VERIFIED | `723af26` | reg L14673; reports.py direct-fix pass; suite RC-070 |
@@ -556,7 +556,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-405 | HIGH | W06 | `settings.py` | — | FIXED | FIXED 161b2c0; team-member listings read User.mobile instead of nonexistent User.phone that 500d GET /settings/team. |
 | R2-406 | MEDIUM | W125 | `settings/page.tsx` | — | FIXED | FIXED (evidence, 34d44b9); placeholder already reads "This section is not available yet." |
 | R2-407 | CRITICAL | W02 | `UNMAPPED` | — | TODO | | reg L20082 |
-| R2-408 | HIGH | W02 | `UNMAPPED` | — | TODO | | reg L20115 |
+| R2-408 | HIGH | W02 | `UNMAPPED` | — | FIXED | | reg L20115 S33 FIXED 9ee09fe: DPR reported_by stamped server-side from session user; free-text field removed from create schema. |
 | R2-409 | HIGH | W25 | `tally.py` | — | FIXED | | reg L20131 S33 FIXED 19cef93: payslip CSV identity block (pay period/run id/company/project) appended; lives in hr.py not tally.py. |
 | R2-410 | CRITICAL | W02 | `UNMAPPED` | — | TODO | | reg L20196 |
 | R2-411 | MEDIUM | W15 | `models.py` | — | FIXED | FIXED 5847922; tally export emits ledger masters with ACTION=Alter + ALTERID (create-if-absent) and vouchers carry <REFERENCE> (invoice_number / payment reference_number). |
@@ -567,7 +567,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-416 | CRITICAL | W43 | `finance/page.tsx` | — | TODO | | reg L20647 |
 | R2-417 | HIGH | W01 | `finance.py` | `reports.py`, `models.py`, `finance/page.tsx` | FIX_VERIFIED | `a245605` | reg L20688; direct-fix pass; suite RC-041 |
 | R2-418 | CRITICAL | W02 | `UNMAPPED` | — | TODO | | reg L20858 |
-| R2-419 | HIGH | W02 | `UNMAPPED` | — | TODO | | reg L20884 |
+| R2-419 | HIGH | W02 | `UNMAPPED` | — | FIXED | | reg L20884 S33 FIXED a11f45c evidence: subcon bill name resolution chain live since R2-174 4d06017; proof test added. |
 | R2-420 | MEDIUM | W43 | `finance/page.tsx` | — | FIXED | FIXED e069dfd; party balance renders Math.abs with direction chip; TransactionRow.project_name added (finance.py) and rendered. |
 | R2-421 | HIGH | W10 | `projects.py` | — | TODO | | reg L20967 |
 | R2-422 | HIGH | W34 | `dashboard/page.tsx` | — | TODO | | reg L20993 |
@@ -586,7 +586,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-435 | CRITICAL | W45 | `d/drawings/page.tsx` | `models.py`, `drawings.py` | TODO | | reg L21762 |
 | R2-436 | MEDIUM | W126 | `d/mom/page.tsx` | `p/[project_id]/mom/page.tsx` | FIXED | FIXED 8025709; created_by dropped from MOM forms both pages (backend already stamps current_user.name). |
 | R2-437 | CRITICAL | W51 | `reports/[slug]/page.tsx` | — | TODO | | reg L21871 |
-| R2-438 | HIGH | W02 | `UNMAPPED` | — | TODO | | reg L21904 |
+| R2-438 | HIGH | W02 | `UNMAPPED` | — | FIXED | | reg L21904 S33 FIXED 7164694: lead update rejects past expected_closure; phone dialable-only; priority vocabulary normalized. |
 | R2-440 | HIGH | W30 | `library.py` | — | TODO | | reg L21996 |
 | R2-441 | HIGH | W10 | `projects.py` | — | FIXED | FIXED 583c47d; project progress rollup covers legacy in_progress status vocabulary (_TASK_PROGRESS extended). |
 | R2-442 | HIGH | W31 | `todos.py` | — | FIXED | | reg L22154 S33 FIXED e9a586b: legacy non-http(s) todo urls serialize null + clearable via PUT null; write allowlist e59316f. |
@@ -657,14 +657,14 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-507 | HIGH | W24 | `labour.py` | `models.py`, `hr.py` | FIXED | | reg L25354 S33 FIXED 7cde59f: omitted muster figures derive from attendance/crew data; empty day -> 422. |
 | R2-508 | MEDIUM | W02 | `UNMAPPED` | — | FIXED | FIXED deb3a9a; ltif_basis query param (default 200,000) returned in the response; banner no longer claims OSHA alignment; KPI labeled LTIFR with the real basis in the caption. NEEDS-DECISION (CD-10): whether the default should flip to 1,000,000 (ILO/IS 3786) - changes reported numbers. |
 | R2-509 | CRITICAL | W01 | `finance.py` | — | FIX_VERIFIED | `f32ca77+3f65098` | reg L25450; wave W01b; suite RC-032 — own gate added 2026-08-06 |
-| R2-510 | HIGH | W75 | `supabase_storage.py` | `services/page.tsx` | TODO | | reg L25505 |
+| R2-510 | HIGH | W75 | `supabase_storage.py` | `services/page.tsx` | FIXED | | reg L25505 S33 FIXED d6edc4c: RLS tenant predicates on 108 tables + FORCE ROW LEVEL SECURITY + missing-table coverage (migration 20260824_000001); 33 no-tenancy tables allowlisted. |
 | R2-511 | CRITICAL | W14 | `auth.py` | `rate_limit.py`, `bi_export.py`, `public_leads.py` | TODO | | reg L25601 |
 | R2-512 | MEDIUM | W70 | `admin_migrations.py` | `public_leads.py`, `mailer.py` | FIXED | FIXED 487f564; dead duplicate POST /backfill-rbac deleted; live backfill_rbac_roles retained. |
 | R2-513 | HIGH | W26 | `face_recognition.py` | — | TODO | | reg L25769 |
 | R2-514 | MEDIUM | W79 | `helpContent.tsx` | `chat.py`, `projects.py`, `analytics.py` | FIXED | FIXED 9afd6f7; the multi-level approval help answer no longer claims enforcement ("not enforced on transactions; do not rely on them as an approval control") and the onboarding answer is neutralized; sweep greps clean. |
 | R2-515 | CRITICAL | W63 | `p/[project_id]/attendance/page.tsx` | — | TODO | | reg L26127 |
 | R2-516 | HIGH | W09 | `page.tsx` | — | FIXED | | reg L26195 S33 FIXED 6918efc: queued punches persist ISO capture time (server replay stamping still server-now - backend accepts no client ts). |
-| R2-517 | HIGH | W75 | `supabase_storage.py` | — | TODO | | reg L26217 |
+| R2-517 | HIGH | W75 | `supabase_storage.py` | — | FIXED | | reg L26217 S33 FIXED 402c5ad: signed URL joins /storage/v1 base (relative signedURL no longer produces broken host). |
 | R2-518 | MEDIUM | W09 | `page.tsx` | `PwaControls.tsx`, `d/reports/calculators/page.tsx`, `calculators.py` | FIXED | FIXED (evidence, 287db85); geolocation failure already blocks punches with an alert (R2-060) - no fabricated coordinates anywhere. |
 | R2-519 | HIGH | W21 | `calculators.py` | — | FIXED | | reg L26418 S33 FIXED d3c13b6 (H-calculators): client concrete factors corrected against server ratio math (M7.5 4.0->3.41, M20 8.2->8.06, M25 agg 0.76->0.77); engine consolidation remains CD-2-gated. |
 | R2-520 | HIGH | W21 | `calculators.py` | — | FIXED | | reg L26464 S33 FIXED 8798662 (H-calculators): same defect/lines as R2-281, one inseparable diff naming both ids. |
