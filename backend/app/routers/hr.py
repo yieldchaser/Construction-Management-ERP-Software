@@ -31,6 +31,7 @@ from app.models import (
     TimesheetEntry, PayrollRun, PayrollLineItem, Project, LeaveRequest,
     Holiday, Designation, LeaveTemplate, PayrollProfile, User, Company
 )
+from app.workflow_controls import enforce_entry_creation_window
 
 router = APIRouter(prefix="/hr", tags=["HR, Attendance & Payroll"], dependencies=[Depends(get_current_user)])
 
@@ -686,6 +687,13 @@ def run_payroll(payload: PayrollRunCreate, db: Session = Depends(get_db), curren
     year, month = map(int, payload.payroll_month.split("-"))
     month_start = datetime(year, month, 1, tzinfo=timezone.utc)
     month_end = datetime(year, month + 1, 1, tzinfo=timezone.utc) if month < 12 else datetime(year + 1, 1, 1, tzinfo=timezone.utc)
+
+    # R2-606: a payroll run is a money entry into a period, so it obeys the
+    # same Entry Controls back-dating window as bills and payments (R2-381).
+    # The pay period's closing boundary is what ages: a month is only
+    # rejected once it has been fully closed for longer than the window,
+    # so running last month's payroll stays possible on a normal window.
+    enforce_entry_creation_window(db, payload.company_id, month_end)
 
     # R2-353: payroll must be idempotent per (company, project, month). A
     # re-run used to mint a second finalized run and double-count every
