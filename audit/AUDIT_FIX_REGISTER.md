@@ -353,7 +353,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-200 | MEDIUM | W03 | `hr.py` | — | FIX_VERIFIED | `29a1bdb` | reg L7643; hr.py direct-fix pass; suite RC-066 |
 | R2-201 | CRITICAL | W03 | `hr.py` | `three_way.py`, `safety.py`, `d/hr/page.tsx` | FIX_VERIFIED | `e2e449d` | reg L7675; hr.py direct-fix pass; suite RC-047 |
 | R2-202 | HIGH | W11 | `planning.py` | `budgeting.py`, `models.py`, `d/budgeting/boq/page.tsx` | FIXED | FIXED 42d2c9a; BOQ revision applies to the document (revised_amount column) and Budget-vs-Actual measures against it. |
-| R2-203 | HIGH | W101 | `d/safety/page.tsx` | `safety.py`, `quality.py` | TODO | | reg L7843 |
+| R2-203 | HIGH | W101 | `d/safety/page.tsx` | `safety.py`, `quality.py` | FIXED | | reg L7843 S33 FIXED 5c7d445: safety caption renders API total_manhours_used instead of literal 50,000. |
 | R2-204 | HIGH | W18 | `quality.py` | — | FIXED | FIXED 5b37186; NCR review/close stamps reviewed_by/reviewed_at/closed_by from current_user (additive migration 20260821_000001). |
 | R2-205 | CRITICAL | W50 | `wastage.py` | `procurement.py` | TODO | | reg L7890 |
 | R2-206 | MEDIUM | W83 | `production.py` | `wastage.py` | FIXED | FIXED 83c32c2; wastage_type enumerated (WASTAGE_TYPE_PATTERN in constants.py, applied in wastage.py - invalid 422s), reported_by derived server-side from the membership (column converted to UUID FK, migration 20260816_000005 nulls legacy free text), estimated_value computed from the last PO item rate unless explicitly overridden. Siblings: R2-205 CRITICAL still open (no stock-out transaction). |
@@ -366,7 +366,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-213 | MEDIUM | W02 | `UNMAPPED` | — | FIXED | FIXED d824d3e (other agent); PPE gauge shows a no-data state instead of a red 0%. |
 | R2-214 | CRITICAL | W88 | `d/billing/page.tsx` | — | TODO | | reg L8847 |
 | R2-215 | CRITICAL | W39 | `d/procurement/page.tsx` | — | TODO | | reg L8859 |
-| R2-216 | HIGH | W39 | `d/procurement/page.tsx` | — | TODO | | reg L8874 |
+| R2-216 | HIGH | W39 | `d/procurement/page.tsx` | — | FIXED | | reg L8874 S33 FIXED 5de540c: isBilled derived from server three-way matches (survives refresh); mark-billed alerts honestly - no endpoint exists. |
 | R2-217 | MEDIUM | W45 | `d/drawings/page.tsx` | — | FIXED | FIXED f38215e; pin resolved column + migration 20260816_000006 + PATCH /drawings/pins/{id} + frontend wired. Sibling: handleAddPin still local-only on failure. |
 | R2-218 | MEDIUM | W02 | `UNMAPPED` | — | FIXED | FIXED (evidence); handleCreateBill already refetches the bills list on success (billing page). |
 | R2-219 | CRITICAL | W05 | `procurement.py` | `production.py`, `settings.py`, `d/hr/page.tsx` | FIX_VERIFIED | `e9e3308` | reg L8931; procurement.py direct-fix pass; suite RC-085 |
