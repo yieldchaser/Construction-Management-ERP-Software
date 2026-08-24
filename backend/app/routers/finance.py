@@ -1128,15 +1128,13 @@ class FinanceSummaryResponse(BaseModel):
 @router.get("/transactions/{company_id}", response_model=FinanceSummaryResponse)
 def get_company_transactions(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access), current_user: User = Depends(get_current_user)):
     require_module_view(db, current_user, company_id, "finance")
-    project_ids = [p.id for p in db.query(Project).filter(Project.company_id == company_id).all()]
+    # R2-328: scope by company, not current project membership - Payment.project_id
+    # is nullable and SET NULL on project delete, so membership-scoping silently
+    # dropped every project-less payment from totals/rows while cash_balance
+    # (company-scoped) saw them; Bill.company_id/Payment.company_id are authoritative.
+    bills = db.query(Bill).filter(Bill.company_id == company_id, Bill.status != "Cancelled").all()
+    payments = db.query(Payment).filter(Payment.company_id == company_id).all()
     project_name_by_id = {p.id: p.name for p in db.query(Project).filter(Project.company_id == company_id).all()}
-
-    bills = []
-    if project_ids:
-        bills = db.query(Bill).filter(Bill.project_id.in_(project_ids), Bill.status != "Cancelled").all()
-    payments = []
-    if project_ids:
-        payments = db.query(Payment).filter(Payment.project_id.in_(project_ids)).all()
 
     total_invoice = 0.0
     unpaid_invoice = 0.0
