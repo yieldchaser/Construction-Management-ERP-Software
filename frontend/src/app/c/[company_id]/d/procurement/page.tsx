@@ -114,14 +114,23 @@ export default function ProcurementPage() {
     if (!projectId) return;
     try {
       const apiHost = getApiHost();
-      const [indentsRes, posRes, grnsRes, invRes, vendorsRes, materialsRes] = await Promise.all([
+      const [indentsRes, posRes, grnsRes, invRes, vendorsRes, materialsRes, matchesRes] = await Promise.all([
         fetch(`${apiHost}/apis/v3/procurement/indents?project_id=${projectId}`, { headers: authHeaders() }),
         fetch(`${apiHost}/apis/v3/procurement/pos?project_id=${projectId}`, { headers: authHeaders() }),
         fetch(`${apiHost}/apis/v3/procurement/grns?project_id=${projectId}`, { headers: authHeaders() }),
         fetch(`${apiHost}/apis/v3/procurement/inventory?project_id=${projectId}`, { headers: authHeaders() }),
         fetch(`${apiHost}/apis/v3/billing/subcontractors?company_id=${companyId}`, { headers: authHeaders() }),
         fetch(`${apiHost}/apis/v3/library/materials/${companyId}`, { headers: authHeaders() }),
+        fetch(`${apiHost}/apis/v3/three-way/${companyId}`, { headers: authHeaders() }),
       ]);
+
+      const billedGrnIds = new Set<string>();
+      if (matchesRes.ok) {
+        const mdata = await matchesRes.json();
+        (Array.isArray(mdata) ? mdata : []).forEach((m: any) => {
+          if (m.grn_id) billedGrnIds.add(String(m.grn_id));
+        });
+      }
 
       if (materialsRes.ok) {
         const mdata = await materialsRes.json();
@@ -175,7 +184,7 @@ export default function ProcurementPage() {
           receivedDate: grn.received_date ? grn.received_date.split("T")[0] : "",
           receivedBy: "Auto-synced",
           items: (grn.items || []).map((item: any) => ({ name: "", qty: item.received_qty, unit: "", rate: 0 })),
-          isBilled: false,
+          isBilled: billedGrnIds.has(String(grn.id)),
         }));
         setGrns(mapped);
       }
@@ -502,8 +511,8 @@ export default function ProcurementPage() {
   };
 
   // Mark GRN as billed (Unbilled Materials tracker action)
-  const handleMarkAsBilled = (grnId: string) => {
-    setGrns(prev => prev.map(g => g.id === grnId ? { ...g, isBilled: true } : g));
+  const handleMarkAsBilled = (_grnId: string) => {
+    alert("GRN billing is reconciled server-side via 3-Way Matching against an invoice; this tracker now reflects matched GRNs and there is no manual mark-billed endpoint, so this action cannot persist.");
   };
 
   // 3-way matching check helper
