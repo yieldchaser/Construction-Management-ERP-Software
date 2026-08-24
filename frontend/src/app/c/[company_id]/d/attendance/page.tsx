@@ -588,12 +588,12 @@ export default function AttendancePage() {
 
       {/* Main Container */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        <div className="border-b border-border-custom bg-background px-6 py-3 flex items-center justify-between">
+        <div className="border-b border-border-custom bg-background px-6 py-3 flex flex-wrap items-center justify-between gap-y-2">
           <div>
             <h1 className="text-sm font-bold text-foreground">{strings.title}</h1>
             <p className="text-[10px] text-muted">{strings.subtitle}</p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3 gap-y-2">
             <span className="inline-flex items-center gap-1.5 text-xs text-muted bg-elevated border border-border-custom px-3 py-1.5 rounded-lg"><Icon name="location_pin" className="w-4 h-4" />{strings.gpsActive}</span>
             <button
               onClick={() => {
