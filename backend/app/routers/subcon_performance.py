@@ -230,10 +230,13 @@ def get_comparative(project_id: UUID, db: Session = Depends(get_db), _: None = D
 #                     within the period (amendments are the only dispute-like signal present).
 #   on_time_pct     : settlement rate of the subcontractor's bills in the period
 #                     (settled = status in Paid/Partially Paid, or not yet past due_date).
-#                     Neutral default 100.0 when there are no subcon bills.
-#   billing_accuracy_pct : NO genuine measured-vs-quoted signal exists in the schema -> neutral
-#                     default 100.0 (documented, not fabricated).
+#                     0.0 when there are no subcon bills - absence of evidence is not a perfect score.
+#   billing_accuracy_pct : measured-vs-quoted where both signals exist (sum of
+#                     WorkOrder.estimated_work_amount vs Bill.total_payable), penalised by absolute
+#                     deviation from the quote; 0.0 when either signal is missing - never a constant.
 #   quality_score   : derived from real disputes proxy: max(0, 100 - 5 * disputes_count).
+#                     An empty period (no completed tasks AND nothing billed) scores 0 across every
+#                     metric instead of reading as flawless.
 
 def _compute_subcon_metrics(db: Session, project_id: UUID, subcontractor_id: UUID,
                             period_start: datetime, period_end: datetime):
@@ -273,7 +276,7 @@ def _compute_subcon_metrics(db: Session, project_id: UUID, subcontractor_id: UUI
     for b in bills:
         if b.status in ("Paid", "Partially Paid"):
             settled += 1
-    on_time_pct = round((settled / len(bills)) * 100, 2) if bills else 100.0
+    on_time_pct = round((settled / len(bills)) * 100, 2) if bills else 0.0
 
     disputes_count = 0
     if wo_ids:
@@ -283,8 +286,18 @@ def _compute_subcon_metrics(db: Session, project_id: UUID, subcontractor_id: UUI
             WorkOrderAmendment.amended_at <= period_end,
         ).count()
 
-    billing_accuracy_pct = 100.0
+    quoted_total = sum(float(w.estimated_work_amount or 0.0) for w in wos)
+    if quoted_total > 0 and bills:
+        deviation = abs(total_billed - quoted_total) / quoted_total
+        billing_accuracy_pct = round(max(0.0, 100.0 * (1.0 - deviation)), 2)
+    else:
+        billing_accuracy_pct = 0.0
     quality_score = max(0.0, 100.0 - 5.0 * disputes_count)
+
+    if tasks_completed == 0 and total_billed == 0:
+        on_time_pct = 0.0
+        billing_accuracy_pct = 0.0
+        quality_score = 0.0
 
     return {
         "tasks_completed": tasks_completed,
