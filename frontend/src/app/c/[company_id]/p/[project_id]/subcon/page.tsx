@@ -10,9 +10,9 @@ interface WorkOrder {
   id: string;
   sNo: number;
   subContractor: string;
-  progress: string;
+  progress: string | null;
   woValue: number;
-  billedValue: number;
+  billedValue: number | null;
   status: "Draft" | "Pending Approval" | "Approved" | "Rejected";
 }
 
@@ -73,9 +73,9 @@ export default function SubconPage() {
             id: wo.wo_number || wo.id,
             sNo: i + 1,
             subContractor: wo.subcontractor_name || "Unknown",
-            progress: "0%",
+            progress: null,
             woValue: Number(wo.estimated_work_amount) || 0,
-            billedValue: 0,
+            billedValue: null,
             status: wo.status || "Draft",
           }))
         );
@@ -248,14 +248,16 @@ export default function SubconPage() {
                       <td className="px-4 py-3 font-semibold text-foreground">{wo.subContractor}</td>
                       <td className="px-4 py-3 text-muted">
                         <div className="flex items-center gap-2">
-                          <div className="w-20 bg-background h-1.5 rounded-full overflow-hidden border border-border-custom">
-                            <div className="bg-primary h-full" style={{ width: wo.progress }}></div>
-                          </div>
-                          <span>{wo.progress}</span>
+                          {wo.progress != null && (
+                            <div className="w-20 bg-background h-1.5 rounded-full overflow-hidden border border-border-custom">
+                              <div className="bg-primary h-full" style={{ width: wo.progress }}></div>
+                            </div>
+                          )}
+                          <span>{wo.progress ?? "—"}</span>
                         </div>
                       </td>
                       <td className="px-4 py-3 font-bold text-foreground">{fmt(wo.woValue)}</td>
-                      <td className="px-4 py-3 text-muted">{fmt(wo.billedValue)}</td>
+                      <td className="px-4 py-3 text-muted">{wo.billedValue != null ? fmt(wo.billedValue) : "—"}</td>
                       <td className="px-4 py-3">
                         <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
                           wo.status === "Approved" ? "bg-green-500/10 text-green-400 border border-green-500/20" :
