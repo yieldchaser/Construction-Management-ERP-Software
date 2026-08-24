@@ -572,10 +572,10 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-421 | HIGH | W10 | `projects.py` | — | TODO | | reg L20967 |
 | R2-422 | HIGH | W34 | `dashboard/page.tsx` | — | TODO | | reg L20993 |
 | R2-423 | CRITICAL | W34 | `dashboard/page.tsx` | — | TODO | | reg L21023 |
-| R2-424 | HIGH | W106 | `reports/dpr/page.tsx` | `reports/item-wise-sales/page.tsx` | TODO | | reg L21077 |
+| R2-424 | HIGH | W106 | `reports/dpr/page.tsx` | `reports/item-wise-sales/page.tsx` | FIXED | | reg L21077 S33 FIXED f1f581a: DPR project filter derives options from real fetched rows (fictional options long gone via cd01b15). |
 | R2-425 | HIGH | W29 | `d/hr/page.tsx` | `dashboard/page.tsx`, `models.py`, `reports/dpr/page.tsx` | TODO | | reg L21108 |
 | R2-426 | CRITICAL | W60 | `d/payment-approval/page.tsx` | — | TODO | | reg L21170 |
-| R2-427 | HIGH | W74 | `d/equipment/page.tsx` | `d/budgeting/boq/page.tsx` | TODO | | reg L21214 |
+| R2-427 | HIGH | W74 | `d/equipment/page.tsx` | `d/budgeting/boq/page.tsx` | FIXED | | reg L21214 S33 EVIDENCE-CLOSE: honest catch + empty states live via cd01b15/89839c9; no mock rows remain. |
 | R2-428 | MEDIUM | W23 | `d/finance/page.tsx` | — | FIXED | FIXED (evidence, cd01b15); finance CSV import template is header-only since the demo-data purge - no sample rows remain. |
 | R2-429 | HIGH | W03 | `hr.py` | `models.py` | FIX_VERIFIED | `034bc1e` | reg L21329; hr.py direct-fix pass; suite RC-067 |
 | R2-430 | CRITICAL | W03 | `hr.py` | — | FIX_VERIFIED | `05a41e9` | reg L21389; hr.py direct-fix pass; suite RC-049 |
@@ -592,7 +592,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-442 | HIGH | W31 | `todos.py` | — | FIXED | | reg L22154 S33 FIXED e9a586b: legacy non-http(s) todo urls serialize null + clearable via PUT null; write allowlist e59316f. |
 | R2-443 | MEDIUM | W31 | `todos.py` | — | FIXED | FIXED bbcad30 (back half); _serialize returns is_overdue (due_date passed, status != done, tz-guarded). repeat_type half is R2-383/CD-3 (founder-gated). UI half (overdue badge/sort) remains. |
 | R2-444 | CRITICAL | W02 | `UNMAPPED` | — | TODO | | reg L22245 |
-| R2-445 | HIGH | W107 | `delete-logs/page.tsx` | — | TODO | | reg L22276 |
+| R2-445 | HIGH | W107 | `delete-logs/page.tsx` | — | FIXED | | reg L22276 S33 FIXED ab7cb76: fetch errors render a named error row instead of the all-clear empty state (post-R2-310). |
 | R2-446 | MEDIUM | W127 | `mom/page.tsx` | — | FIXED | FIXED 99f1442; Draft added to MOM_STATUSES on both pages. |
 | R2-447 | CRITICAL | W34 | `dashboard/page.tsx` | `projects.py`, `delete-logs/page.tsx`, `main.py` | TODO | | reg L22443 |
 | R2-448 | CRITICAL | W34 | `dashboard/page.tsx` | `projects.py` | TODO | | reg L22733 |
@@ -601,7 +601,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-451 | HIGH | W19 | `budgeting.py` | — | FIXED | | reg L22899 S33 FIXED a73965f (H-budgeting): _effective_unit_rate() composite-wins across import/item-create/PATCH/amount fallbacks so split rates no longer double-count; test added. |
 | R2-452 | MEDIUM | W19 | `budgeting.py` | — | FIXED | FIXED e22dd9f; BOQ Excel importer no longer rounds quantities to float_limit at import (2.5 Nos / 0.5 bags store as typed); the limit remains display metadata only. |
 | R2-453 | HIGH | W19 | `budgeting.py` | — | FIXED | | reg L22944 S33 FIXED c2af10a (H-budgeting): fake xlsx/zero-row sheets return clean 400s (BadZipFile/InvalidFileException/StopIteration handled), real header errors keep actionable detail; test added. |
-| R2-454 | HIGH | W108 | `boq/page.tsx` | `siteflow.ts`, `billing/page.tsx`, `procurement/page.tsx` | TODO | | reg L22978 |
+| R2-454 | HIGH | W108 | `boq/page.tsx` | `siteflow.ts`, `billing/page.tsx`, `procurement/page.tsx` | FIXED | | reg L22978 S33 FIXED 024e3fd: shared downloadWithAuth (fetch+blob+anchor, non-2xx throws) for BOQ/Billing/Procurement PDFs - no more 401 tabs. |
 | R2-455 | CRITICAL | W61 | `d/planning/gantt/page.tsx` | `planning.py` | TODO | | reg L23074 |
 | R2-456 | CRITICAL | W11 | `planning.py` | `gantt/page.tsx`, `p/[project_id]/task/page.tsx` | TODO | | reg L23123 |
 | R2-457 | HIGH | W06 | `settings.py` | — | FIXED | FIXED (evidence); reproduction path no longer exists - no Planning nav item in any sidebar, no top-level /p/ route, no /c/undefined constructions. |
@@ -610,9 +610,9 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-460 | MEDIUM | W62 | `gantt/page.tsx` | — | FIXED | FIXED d4bed18; gantt dates via shared fmtDate (dd-mmm-yyyy) at all 8 sites. |
 | R2-461 | MEDIUM | W11 | `planning.py` | `p/[project_id]/drawings/page.tsx`, `p/[project_id]/budgeting/page.tsx` | FIXED | FIXED 94988a2 + 664b430; task end_date inclusive of start day across create/update/propagate; follow-up 664b430 fixed the CPM backward pass (datetime - timedelta, not raw days) which 94988a2 had broken. Siblings: gantt form sends status "pending" (non-canonical); task page totalDays display math. |
 | R2-462 | CRITICAL | W06 | `settings.py` | — | TODO | | reg L23322 |
-| R2-463 | HIGH | W109 | `frontend/src/app/c/[company_id]/d/page.tsx` | — | TODO | | reg L23348 |
+| R2-463 | HIGH | W109 | `frontend/src/app/c/[company_id]/d/page.tsx` | — | FIXED | | reg L23348 S33 FIXED e3ecaee: all 21 module redirect stubs await params, carry ?project=<id>, and ProjectContext prefers route/query id over stored. |
 | R2-464 | CRITICAL | W45 | `d/drawings/page.tsx` | `drawings.py` | TODO | | reg L23379 |
-| R2-465 | HIGH | W45 | `d/drawings/page.tsx` | — | TODO | | reg L23416 |
+| R2-465 | HIGH | W45 | `d/drawings/page.tsx` | — | FIXED | | reg L23416 S33 EVIDENCE-CLOSE: publish failure already alerts + returns before setDrawings (3257e0a/7fa1131). |
 | R2-466 | HIGH | W09 | `page.tsx` | — | FIXED | | reg L23437 S33 FIXED ffe4f5f: drawings file URLs validated same-origin/https (blocks javascript:/data://host); seeded malicious rows need ops cleanup. |
 | R2-467 | MEDIUM | W27 | `frontend/src/app/c/[company_id]/d/finance/page.tsx` | — | FIXED | FIXED 2f6f031; drawings revision approval status register + wiring. |
 | R2-468 | CRITICAL | W17 | `chat.py` | `models.py` | TODO | | reg L23554 |
@@ -742,12 +742,12 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-603 | HIGH | W08 | `analytics.py` | - | FIXED | | filed S33 from R2-305/R2-499 closures: /financial fabricates demo chart data (fixed Jun-2026 labels + 1000 expense) when a company has no bills; fabricated-data class. Also _resolve_team_name terminal fallback emits Team-{uuid[:8]}. reg - S33 FIXED a9a113c: /financial chart honestly empty without bills (fabrication block deleted). |
 | R2-604 | HIGH | W13 | `budget.py` | - | FIXED | | filed S33 from R2-249/R2-250/R2-233 closures: no-towers branch (~:172) sums ALL PO statuses without the sent/partial/received whitelist, and neither budget branch applies the approved/non-cancelled bill gates the main endpoint has. reg - S33 FIXED 393055b: budget no-tower PO whitelist + tower approved/cancelled gates aligned. |
 | R2-605 | MEDIUM | W05 | `procurement.py` | - | FIXED | | filed S33 from R2-242 closure: reject_po (~:586-606) shows no visible assignment of approval_flag=rejected nor commit; possible dead rejection path. Needs audit look. reg - S33 FIXED 23fff1f: reject_po was a dead path (no persist + response-model 500); now persists approval_flag=rejected, double-reject refused. |
-| R2-606 | HIGH | W07 | `hr.py` | - | TODO | | filed S33 from R2-381 closure: run_payroll period-based write still unguarded by the restrict-entry-creation window (same class as gated payments). reg - |
-| R2-607 | HIGH | W07 | `procurement.py` | - | TODO | | filed S33 from R2-403 closure: supplier identity stored but unprinted in PO PDF (:998), BOQ PDF (budgeting.py ~:649) and client report PDF (reports.py ~:157); same class as fixed bill PDF. reg - |
+| R2-606 | HIGH | W07 | `hr.py` | - | FIXED | | filed S33 from R2-381 closure: run_payroll period-based write still unguarded by the restrict-entry-creation window (same class as gated payments). reg - S33 FIXED 2df4a20: run_payroll obeys the restrict-entry window (period closing boundary; backdated 400, zero rows). |
+| R2-607 | HIGH | W07 | `procurement.py` | - | FIXED | | filed S33 from R2-403 closure: supplier identity stored but unprinted in PO PDF (:998), BOQ PDF (budgeting.py ~:649) and client report PDF (reports.py ~:157); same class as fixed bill PDF. reg - S33 FIXED 9a9f656: supplier identity printed on PO/BOQ/client-report PDFs via resolve_supplier_tax_details (R2-403 machinery). |
 | R2-608 | MEDIUM | W01 | `finance.py` | - | FIXED | | filed S33 from R2-453 closure: generic except Exception -> 500 wrappers swallow user errors at finance.py:1407, hr.py:929, billing.py:663, procurement.py:788. reg - S33 FIXED 0bc12c1: CSV upload wrapper narrowed to UnicodeDecodeError -> honest 400; residual logged per R2-076 pattern. |
 | R2-609 | MEDIUM | W13 | `finance.py` | - | FIXED | | filed S33 from R2-334 closure: free-text cost_code fields written without library validation outside budgeting: finance.py Payment.cost_code/sub_cost_code (~:125), crm.py quotation items (~:569/:643/:702), library.py LibraryMaterial.cost_code (~:443), hr.py PayrollProfile (~:1230). reg - S33 FIXED 0bc12c1: payment cost_code/sub_cost_code gated against Cost Code Library (422 naming unknowns, atomic). |
-| R2-610 | HIGH | W19 | `p/[project_id]/boq/page.tsx` | - | TODO | | filed S33 from R2-450/R2-451 closures: project BOQ page ignores import response body (:250, no skip visibility) and recomputes qty x (rate+supply+install) client-side (:140), double-counting composite rates the server now guards. reg - |
-| R2-611 | HIGH | W21 | `CalculatorTools.tsx` | - | TODO | | filed S33 from R2-279 closure: public brick calculator (frontend/src/components/resources/CalculatorTools.tsx ~:433) keeps leaves independent of thickness; same under-order bug R2-279 fixed server-side; console page twin covered by R2-519 scope when landed. reg - |
+| R2-610 | HIGH | W19 | `p/[project_id]/boq/page.tsx` | - | FIXED | | filed S33 from R2-450/R2-451 closures: project BOQ page ignores import response body (:250, no skip visibility) and recomputes qty x (rate+supply+install) client-side (:140), double-counting composite rates the server now guards. reg - S33 FIXED a4a93c5: BOQ page mirrors _effective_unit_rate (composite wins) + renders import skipped_count/warnings. |
+| R2-611 | HIGH | W21 | `CalculatorTools.tsx` | - | FIXED | | filed S33 from R2-279 closure: public brick calculator (frontend/src/components/resources/CalculatorTools.tsx ~:433) keeps leaves independent of thickness; same under-order bug R2-279 fixed server-side; console page twin covered by R2-519 scope when landed. reg - S33 FIXED acd097e: public brick calculator derives leaves from thickness (server formula) + honest geometry-band error. |
 | R2-612 | MEDIUM | W16 | `three_way/page.tsx` | - | FIXED | | filed S33 from R2-594 closure: three-way page approve/reject handlers show no error message on non-2xx (success-toast discipline class). reg - S33 FIXED 6e8fec8: three-way page approve/reject surface server detail on non-2xx; state untouched on failure. |
 | R2-613 | HIGH | W16 | `three_way.py` | - | TODO | | filed S33 from R2-594 closure: legacy duplicate three-way rows keep the additive unique constraint from enabling on prod (migration skips with NOTICE while duplicates exist); needs founder-approved data cleanup then re-run. reg - |
 | R2-614 | LOW | W75 | `supabase_storage.py` | - | FIXED | | filed S33 from R2-404 closure: company branding upload validates asset_type but not bytes/content-type (harmless post-R2-404 since renderer skips junk; tighten when touched). reg - S33 FIXED fedb387: branding upload validates PNG/JPEG magic bytes + 5MB cap (422 naming problem). |
