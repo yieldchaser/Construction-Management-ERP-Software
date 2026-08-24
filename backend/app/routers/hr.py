@@ -13,6 +13,7 @@ Endpoints:
   GET    /hr/payroll/{run_id}/payslips — List payslips for a run
 """
 
+import calendar
 import csv
 import io
 import math
@@ -219,7 +220,13 @@ class PayrollRunCreate(BaseModel):
     company_id: uuid.UUID
     project_id: Optional[uuid.UUID] = None
     payroll_month: str = Field(..., pattern=r"^\d{4}-\d{2}$")  # e.g. "2026-06"
-    days_in_month: int = Field(26, ge=1, le=31)
+    # R2-481: the payroll denominator is no longer a client-supplied constant
+    # defaulting to 26. Omitted -> derived server-side from the real calendar
+    # length of payroll_month minus the company's configured weekly offs
+    # (Company.weekly_off_days), so the Weekly Off configuration finally feeds
+    # payroll. An explicit value is still honored (bounds kept) for
+    # fixed-cycle companies.
+    days_in_month: Optional[int] = Field(None, ge=1, le=31)
 
     @field_validator("payroll_month")
     @classmethod
@@ -613,6 +620,24 @@ def delete_timesheet(ts_id: uuid.UUID, db: Session = Depends(get_db), current_us
 
 # ─── Payroll Engine ──────────────────────────────────────────────────────────
 
+_WEEKDAY_KEYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
+
+
+def _working_days_in_month(payroll_month: str, weekly_off_days) -> int:
+    """R2-481: real calendar length of payroll_month minus the company's
+    configured weekly offs. Stored day names may be full ("Sunday") or
+    abbreviated ("Sun"); matching is case-insensitive on the first three
+    letters."""
+    year, month = (int(part) for part in payroll_month.split("-"))
+    off_keys = {str(name).strip().lower()[:3] for name in (weekly_off_days or [])}
+    total_days = calendar.monthrange(year, month)[1]
+    return sum(
+        1
+        for day in range(1, total_days + 1)
+        if _WEEKDAY_KEYS[datetime(year, month, day).weekday()] not in off_keys
+    )
+
+
 def _compute_payslip(emp: StaffEmployee, days_present: float, days_in_month: int, overtime_hours: float = 0.0) -> dict:
     """
     Compute one employee's payslip.
@@ -627,9 +652,10 @@ def _compute_payslip(emp: StaffEmployee, days_present: float, days_in_month: int
     TDS          = tds_monthly (fixed, not prorated)
     Net          = Gross - PF_emp - ESI_emp - TDS
     """
-    # R2-354: cap the pro-rata at one full month. days_in_month defaults to 26
-    # (the payroll convention) while days_present counts calendar attendance,
-    # so an uncapped ratio pays up to ~115% for a fully attended month.
+    # R2-354: cap the pro-rata at one full month. days_present counts calendar
+    # attendance against the resolved period denominator (R2-481: derived from
+    # the real month minus weekly offs when the client omits it), so an
+    # uncapped ratio could pay past 100% for a fully attended month.
     ratio = min(1.0, days_present / days_in_month) if days_in_month > 0 else 0
     full_gross = float(emp.basic_salary) + float(emp.hra) + float(emp.other_allowances)
     
@@ -687,6 +713,17 @@ def run_payroll(payload: PayrollRunCreate, db: Session = Depends(get_db), curren
     year, month = map(int, payload.payroll_month.split("-"))
     month_start = datetime(year, month, 1, tzinfo=timezone.utc)
     month_end = datetime(year, month + 1, 1, tzinfo=timezone.utc) if month < 12 else datetime(year + 1, 1, 1, tzinfo=timezone.utc)
+
+    # R2-481: resolve the denominator server-side. An explicitly supplied
+    # days_in_month wins; otherwise the real month length minus the company's
+    # weekly offs replaces the old constant default of 26.
+    company = db.query(Company).filter(Company.id == payload.company_id).first()
+    if payload.days_in_month is not None:
+        effective_days_in_month = int(payload.days_in_month)
+    else:
+        effective_days_in_month = _working_days_in_month(
+            payload.payroll_month, company.weekly_off_days if company else []
+        )
 
     # R2-606: a payroll run is a money entry into a period, so it obeys the
     # same Entry Controls back-dating window as bills and payments (R2-381).
@@ -759,13 +796,13 @@ def run_payroll(payload: PayrollRunCreate, db: Session = Depends(get_db), curren
             if joining_date > month_start:
                 if joining_date < month_end:
                     days_remaining = (month_end - joining_date).days
-                    default_days = min(float(days_remaining), float(payload.days_in_month))
+                    default_days = min(float(days_remaining), float(effective_days_in_month))
                 else:
                     default_days = 0.0
             else:
-                default_days = float(payload.days_in_month)
+                default_days = float(effective_days_in_month)
         else:
-            default_days = float(payload.days_in_month)
+            default_days = float(effective_days_in_month)
 
         # Add approved, PAID leave days to attendance so leave isn't under-counted.
         # Mirror the name-matching convention used by get_leave_balances; also
@@ -787,7 +824,7 @@ def run_payroll(payload: PayrollRunCreate, db: Session = Depends(get_db), curren
 
         days_present = float(att_count + approved_leave_days) if (att_count + approved_leave_days) > 0 else default_days
 
-        calc = _compute_payslip(emp, days_present, payload.days_in_month, float(total_ot))
+        calc = _compute_payslip(emp, days_present, effective_days_in_month, float(total_ot))
         line = PayrollLineItem(
             payroll_run_id=run.id,
             employee_id=emp.id,
