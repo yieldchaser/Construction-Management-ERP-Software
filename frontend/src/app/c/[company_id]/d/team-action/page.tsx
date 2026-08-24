@@ -595,6 +595,9 @@ ${tasksXml}
     setTsFormError(null);
     setTsSaving(true);
     try {
+      const offMin = -new Date().getTimezoneOffset();
+      const pad2 = (n: number) => String(n).padStart(2, "0");
+      const tz = `${offMin < 0 ? "-" : "+"}${pad2(Math.floor(Math.abs(offMin) / 60))}:${pad2(Math.abs(offMin) % 60)}`;
       const res = await fetch(getApi("/team-schedule/timesheets"), {
         method: "POST",
         headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
@@ -602,9 +605,9 @@ ${tasksXml}
           company_id: companyId,
           party_id: tsPartyId,
           project_id: tsProjectId,
-          entry_date: `${tsDate}T00:00:00Z`,
-          start_time: `${tsDate}T${tsStart}:00Z`,
-          end_time: `${tsDate}T${tsEnd}:00Z`,
+          entry_date: `${tsDate}T00:00:00${tz}`,
+          start_time: `${tsDate}T${tsStart}:00${tz}`,
+          end_time: `${tsDate}T${tsEnd}:00${tz}`,
           remarks: tsRemarks || null,
           file_url: tsFileUrl,
           file_name: tsFileName,
