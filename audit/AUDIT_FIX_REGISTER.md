@@ -237,7 +237,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-084 | MEDIUM | W34 | `dashboard/page.tsx` | `p/[project_id]/layout.tsx` | FIXED | `355cfc3` | reg L3603; the status counters and filter now use the canonical status list (Ongoing, Completed, On Hold, Cancelled, Planning — layout.tsx:25): Planning counts as Not Started, On Hold matches both spellings, a new "Cancelled Projects" counter card was added (grid → lg:grid-cols-5), the filter select offers the canonical options, `matchStatus` normalizes legacy "Onhold"/"Not Started" values, and the status badge matches both On Hold spellings. Live repro (all-zero summary on a company with one Planning project) is fixed. Blast-radius 1 file, +13/-7. No test added. |
 | R2-085 | LOW | W08 | `analytics.py` | `models.py` | FIXED | `6ef2cc8` | reg L3625; ALREADY FIXED by R2-023 — the "PHASE 14" eyebrow above "Advanced Analytics Dashboard" was removed in the R2-023 label sweep (`6ef2cc8`, same commit that removed "PHASE 16" from Production). Verified in the tree: zero `PHASE 1[0-9]` / `Phase 1[0-9]` matches across frontend/src (the ZATCA "Phase 1" in settings is legitimate domain terminology and untouched). Pinned (case-sensitive regex on the analytics page — a lowercase reintroduction would evade; noted). No code changed this session. |
 | R2-086 | CRITICAL | W26 | `face_recognition.py` | `backend/app/models.py` | FIXED | `97f4eb4`, `f30fffe` | reg L3655; closed by the R2-027 wave (same root cause — the missing created_at column + the swallowed-500 frontend). The audit-table-without-a-timestamp design gap is addressed by the new nullable column (legacy rows NULL, new rows stamped now()); the "still 500ing 11 hours ago" state is resolved (pins + behavior test guard it). |
-| R2-087 | HIGH | W23 | `d/finance/page.tsx` | `finance.py` | TODO | | reg L3692 |
+| R2-087 | HIGH | W23 | `d/finance/page.tsx` | `finance.py` | FIXED | | reg L3692 S33 EVIDENCE-CLOSE: all prescribed components verified live (gst_treatment handling, account mapping, error surfacing); no change needed. |
 | R2-088 | MEDIUM | W69 | `backend/app/main.py` | — | FIXED | FIXED d90b8fc; static mount anchored to backend/static (module-relative), dir guaranteed by committed .gitkeep (Sentry "Directory static does not exist" resolved). |
 | R2-089 | MEDIUM | W08 | `analytics.py` | `p/[project_id]/layout.tsx`, `dashboard/page.tsx` | FIXED | FIXED 80f6409; status_counts buckets all five canonical statuses (+Not Started legacy, unknown -> Other); legacy Onhold normalizes into On Hold. |
 | R2-090 | CRITICAL | W05 | `procurement.py` | — | FIXED | `fe3db93` | reg L3784; closed by the R2-050 fix — the live-proven 403 experiment (PO showed APPROVED/SENT after a forced 403, unlocking "Record GRN") is no longer possible: approval handlers only advance state on a confirmed 2xx and alert the server detail otherwise. |
@@ -316,7 +316,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-163 | HIGH | W09 | `page.tsx` | `calculators.py` | FIXED | | reg L6189 S33 FIXED 73e3cb6: console mirrors /calculators/house-cost math exactly (pre-contingency headline, no double-count). |
 | R2-164 | MEDIUM | W09 | `page.tsx` | `calculators.py` | FIXED | FIXED 3e8a602; finishes calculator discloses the 10% application allowance. |
 | R2-165 | HIGH | W46 | `d/chat/page.tsx` | — | FIXED | FIXED 35c756b; chat collapses to single pane below md with conversation list as drawer. |
-| R2-166 | HIGH | W02 | `UNMAPPED` | — | TODO | | reg L6267 |
+| R2-166 | HIGH | W02 | `UNMAPPED` | — | FIXED | | reg L6267 S33 FIXED 6061e32: attendance header band wraps at mobile widths (no more 494px overflow clip). |
 | R2-167 | HIGH | W28 | `d/attendance/page.tsx` | — | FIXED | `7ffa1c9` | reg L6283; ALREADY FIXED by R2-107 — the attendance date default was part of the hardcoded-date sweep (d/attendance:148 → `new Date().toISOString().split("T")[0]`). Verified in the working tree (line 149 now). The re-tested-live section of this finding also referenced R2-106/R2-105, both fixed since. No code changed this session. |
 | R2-168 | HIGH | W29 | `d/hr/page.tsx` | `chat.py`, `d/attendance/page.tsx`, `p/[project_id]/attendance/page.tsx` | FIXED | `7ffa1c9`, `6d9493c`, `99d9287` | reg L6314; the bounded five-site hardcoded-date sweep is fully closed: the three date defaults (d/attendance, p/attendance, d/hr selectedDate) by R2-107 (`7ffa1c9`), the d/todo recurrence "Ends" date by R2-149's modal removal (`6d9493c`), and this session the last one — `payrollMonth` (d/hr:219, previously "2026-06" — the payroll screen opened on the previous month, a payroll-affecting stale default) now defaults to the current month (`99d9287`). Blast-radius 1 file this session, +1/-1. Follow-up (R2-168-bis, flagged): `daysInMonth` is still hardcoded `useState(26)` while the month default is now dynamic — a February run would report 26 days; tie it to the month length. |
 | R2-169 | CRITICAL | W14 | `auth.py` | `permissions.py` | TODO | | reg L6384 |
@@ -339,7 +339,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-186 | HIGH | W14 | `auth.py` | `zoho_books.py` | FIXED | FIXED 1a564f1; POST /auth/switch-company/{company_id} verifies membership and re-mints the company-scoped session. |
 | R2-187 | CRITICAL | W20 | `zoho_books.py` | — | TODO | | reg L7012 |
 | R2-188 | HIGH | W20 | `zoho_books.py` | `billing.py` | FIXED | FIXED b6bf9e8; Zoho push resolves vendor from linked library party instead of inventing a contact named Vendor. |
-| R2-189 | HIGH | W02 | `UNMAPPED` | — | TODO | | reg L7044 |
+| R2-189 | HIGH | W02 | `UNMAPPED` | — | FIXED | | reg L7044 S33 EVIDENCE-CLOSE: prescribed gate already live via R2-192 136a82f (zoho push_bill billing:edit). |
 | R2-190 | MEDIUM | W02 | `UNMAPPED` | — | FIXED | FIXED 592af3a (other agent); Zoho upstream bodies logged server-side with a correlation ref. |
 | R2-191 | MEDIUM | W14 | `auth.py` | `models.py`, `billing.py`, `bi_export.py` | FIXED | FIXED (evidence, b4c0a37); CompanyTeam gained UniqueConstraint(company_id, user_id) - bundled into the R2-361 commit by the W18 wave; verified at runtime (duplicate insert -> IntegrityError; userless rows still allowed). NOTE: prod needs a Supabase migration to dedupe existing rows + CREATE UNIQUE INDEX (schema-sync only affects fresh DBs). |
 | R2-192 | HIGH | W67 | `google_drive.py` | `zoho_books.py`, `google_sheets.py`, `auth.py` | FIXED | | reg L7114 S33 FIXED 136a82f: Sheets authorize settings:manage, payroll export module gate, Zoho push_bill billing:edit; google_drive verified compliant. |
@@ -373,7 +373,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-220 | HIGH | W03 | `hr.py` | — | FIX_VERIFIED | `29a1bdb` | reg L9046; hr.py direct-fix pass; suite RC-063 |
 | R2-221 | CRITICAL | W01 | `finance.py` | `d/finance/page.tsx` | FIX_VERIFIED | `7a47131` | reg L9068; wave W01a; suite RC-011 S33 SWEEP: drift CONFIRMED live (naive utcnow fallback minus aware column) -> re-fixed f1a4c43 with dual-backend tz normalization (SQLite round-trips aware as naive); class sites budget.py+bi_export.py fixed same commit. |
 | R2-222 | CRITICAL | W03 | `hr.py` | `finance.py`, `bi_export.py`, `models.py` | FIX_VERIFIED | `e2e449d` | reg L9123; hr.py direct-fix pass; suite RC-045 |
-| R2-224 | HIGH | W102 | `d/team-action/page.tsx` | — | TODO | | reg L9223 |
+| R2-224 | HIGH | W102 | `d/team-action/page.tsx` | — | FIXED | | reg L9223 S33 FIXED cc07d3a: timesheet POST carries real UTC offset instead of fabricating Z on wall-clock values. |
 | R2-225 | MEDIUM | W41 | `team_schedule.py` | — | FIXED | FIXED 28ce750 (in d/team-action/page.tsx - the register attribution was off); handleSaveTimesheet no longer returns silently: inline tsFormError, server detail surfaced, network errors surfaced. |
 | R2-226 | CRITICAL | W10 | `projects.py` | `projects/page.tsx` | TODO | | reg L9269 |
 | R2-227 | MEDIUM | W10 | `projects.py` | — | FIXED | FIXED 15e83fd; planning ProjectResponseSchema carries is_pinned (list/get/post/patch agree); frontend had already moved to /projects/company/{id}. |
@@ -393,7 +393,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-242 | HIGH | W13 | `budget.py` | — | FIXED | | reg L10285 S33 EVIDENCE-CLOSE: PO committed whitelist (sent/partial/received) already landed via R2-154 (bd41ec7); behavior test added 51384d6. |
 | R2-243 | CRITICAL | W01 | `finance.py` | `constants.py` | FIX_VERIFIED | `2ac8113` | reg L10340; wave W01a; suite RC-016 S33 SWEEP: drift CONFIRMED live (subcon in EXPENSE bucket double-counted) -> re-fixed 2803dad (material_actual excludes subcon); reports.py sites checked - disjoint reports, no change needed. |
 | R2-244 | CRITICAL | W01 | `finance.py` | — | FIX_VERIFIED | `7a47131` | reg L10396; wave W01a; suite RC-011 |
-| R2-245 | HIGH | W02 | `UNMAPPED` | — | TODO | | reg L10447 |
+| R2-245 | HIGH | W02 | `UNMAPPED` | — | FIXED | | reg L10447 S33 FIXED b993298: MaterialWastage.estimated_value reaches Budget material_actual and P&L Material Cost (stock halves pre-closed by e99fac7/83c32c2). |
 | R2-246 | CRITICAL | W18 | `quality.py` | — | TODO | | reg L10477 |
 | R2-247 | MEDIUM | W18 | `quality.py` | — | FIXED | FIXED d838e44; inspection/NCR identities derived from the caller (inspected_by/raised_by/assigned_to dropped from the request schemas, stamped current_user.id). |
 | R2-248 | CRITICAL | W33 | `towers.py` | `budget.py`, `models.py` | TODO | | reg L10557 |
@@ -420,7 +420,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-269 | MEDIUM | W24 | `labour.py` | — | FIXED | FIXED bf1343e (in hr.py - register said labour.py); payslip CSV leads with an Employee Code column. |
 | R2-270 | CRITICAL | W89 | `frontend/src/app/c/[company_id]/d/chat/page.tsx` | `models.py` | TODO | | reg L11773 |
 | R2-271 | CRITICAL | W02 | `UNMAPPED` | — | TODO | | reg L11831 |
-| R2-272 | HIGH | W20 | `zoho_books.py` | — | TODO | | reg L11876 |
+| R2-272 | HIGH | W20 | `zoho_books.py` | — | FIXED | | reg L11876 S33 FIXED c6e4b9d: tax-invoice PDF fields (title, recipient GSTIN, place of supply, HSN/SAC, IGST split) - real file billing.py not zoho_books.py. |
 | R2-273 | MEDIUM | W52 | `crm.py` | — | FIXED | FIXED a040a04; CRM email EmailStr, phone pattern, expected_closure past-rejection on create. |
 | R2-274 | HIGH | W19 | `budgeting.py` | — | FIXED | | reg L11993 S33 FIXED c7c2828 (H-budgeting): first BOQ revision records previous_amount/delta from the value replaced; revised amount in BOQ PDF; test added. |
 | R2-275 | HIGH | W19 | `budgeting.py` | — | FIXED | | reg L12030 S33 FIXED fbc3f20 (H-budgeting): milestone_done > milestone_total rejected on create/patch (400) and PDF clamps legacy rows; test added. |
@@ -459,7 +459,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-308 | CRITICAL | W14 | `auth.py` | — | TODO | | reg L13823 |
 | R2-309 | MEDIUM | W08 | `analytics.py` | — | FIXED | FIXED 438ec20 (+ evidence: the two stale Sentry entries code-fixed in 37c84d9/50a4c89); SENTRY_RELEASE setting wired into sentry_sdk.init(release=...). Manual step: set SENTRY_RELEASE env on Render. |
 | R2-310 | CRITICAL | W49 | `frontend/src/app/c/[company_id]/d/delete-logs/page.tsx` | `siteflow.ts`, `d/delete-logs/page.tsx`, `CompanySettingsContext.tsx` | FIX_VERIFIED | `af04f74` | reg L13927; wave 0; suite RC-007 |
-| R2-311 | HIGH | W01 | `finance.py` | `routing.py`, `errors.py`, `cors.py` | TODO | | reg L14081 |
+| R2-311 | HIGH | W01 | `finance.py` | `routing.py`, `errors.py`, `cors.py` | FIXED | | reg L14081 S33 FIXED 5440cc7 evidence: rate limiter storage URI + proxy-aware key already wired by campaign rework; wiring tests added. |
 | R2-312 | CRITICAL | W04 | `reports.py` | `finance.py`, `delete-logs/page.tsx`, `main.py` | FIX_VERIFIED | `723af26` | reg L14268; reports.py direct-fix pass; suite RC-068 |
 | R2-313 | CRITICAL | W04 | `reports.py` | — | FIX_VERIFIED | `723af26` | reg L14529; reports.py direct-fix pass; suite RC-069 |
 | R2-314 | HIGH | W02 | `UNMAPPED` | — | TODO | | reg L14579 |
@@ -476,7 +476,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-325 | HIGH | W03 | `hr.py` | `models.py`, `reports.py` | FIX_VERIFIED | `70f9750` | reg L14907; hr.py direct-fix pass; suite RC-057 |
 | R2-326 | CRITICAL | W90 | `constants.py` | `finance.py` | TODO | | reg L15019 |
 | R2-327 | CRITICAL | W01 | `finance.py` | — | FIX_VERIFIED | `e918b72` | reg L15066; wave W01b; suite RC-022 |
-| R2-328 | HIGH | W01 | `finance.py` | `models.py`, `errors.py`, `cors.py` | TODO | | reg L15113 |
+| R2-328 | HIGH | W01 | `finance.py` | `models.py`, `errors.py`, `cors.py` | FIXED | | reg L15113 S33 FIXED 5b231f8: company transactions scope by company_id (project-less payments no longer vanish; cash_balance agrees). |
 | R2-329 | HIGH | W08 | `analytics.py` | `wastage.py` | FIXED | | reg L15229 S33 FIXED 5b178e4 (H-analytics): stock reconciliation computed per material+unit so mixed-unit scalars cannot mask over-consumption; test added. |
 | R2-330 | HIGH | W50 | `wastage.py` | `models.py` | FIXED | | reg L15266 S33 FIXED e99fac7: wastage gates stock availability, decrements inventory, writes used MaterialTransaction linked by source_ref_id. |
 | R2-331 | MEDIUM | W50 | `wastage.py` | `models.py` | FIXED | FIXED 5fb03ea (partial evidence-close); status query param constrained (reported/reviewed/approved/disposed); wastage_type/reported_by halves closed by R2-206. |
@@ -677,7 +677,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-527 | HIGH | W03 | `hr.py` | — | FIX_VERIFIED | `05a53c9` | reg L26813; hr.py direct-fix pass; suite RC-059 |
 | R2-528 | HIGH | W03 | `hr.py` | — | FIX_VERIFIED | `4134a11` | reg L26861; hr.py direct-fix pass; suite RC-055 |
 | R2-529 | MEDIUM | W03 | `hr.py` | `models.py` | FIX_VERIFIED | `70f9750` | reg L26891; hr.py direct-fix pass; suite RC-058 |
-| R2-530 | HIGH | W22 | `safety.py` | — | TODO | | reg L26956 |
+| R2-530 | HIGH | W22 | `safety.py` | — | FIXED | | reg L26956 S33 FIXED ecdac7c: PPE checks reject negative worker counts. |
 | R2-531 | HIGH | W37 | `equipment.py` | — | FIXED | | reg L26989 S33 FIXED 020ddc6: availability derived from open schedules vs today; aware clock. |
 | R2-532 | MEDIUM | W22 | `safety.py` | — | FIXED | FIXED 0b24a81; safety create schemas typed (uuid.UUID project ids x3, datetime fields), raw UUID()/fromisoformat removed from writers - malformed input 422s instead of 500ing. |
 | R2-533 | CRITICAL | W01 | `finance.py` | — | FIX_VERIFIED | `4b7add4` | reg L27145; direct-fix pass; suite RC-038 |
@@ -734,7 +734,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-598 | HIGH | W56 | `rfq.py` | `models.py`, `gantt/page.tsx`, `planning.py` | TODO | | reg L31550 |
 | R2-599 | CRITICAL | W58 | `dpr.py` | `custom_fields.py`, `ownsweep.py` | FIX_VERIFIED | `bef6c73` | reg L31644; wave 0; suite RC-002 |
 | R2-600 | MEDIUM | W129 | `home/page.tsx` | `d/procurement/page.tsx`, `reports/page.tsx`, `nofetch.py` | FIXED | FIXED 1d3235d; Project Details card binds to the filtered list with an empty state (no fabricated values). |
-| R2-601 | HIGH | W23 | `d/finance/page.tsx` | `page.tsx`, `finance.py`, `d/reports/calculators/page.tsx` | TODO | | reg L32163 |
+| R2-601 | HIGH | W23 | `d/finance/page.tsx` | `page.tsx`, `finance.py`, `d/reports/calculators/page.tsx` | FIXED | | reg L32163 S33 FIXED 590fb02: steel price no longer hardcoded 62/kg - editable Steel Rate + Aggregate Rate inputs, zero-guarded memos; real file calculators page. |
 
 ## Session 33 sibling filings (process rule: every disclosed follow-up gets an id)
 
