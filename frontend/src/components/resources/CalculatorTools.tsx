@@ -420,7 +420,6 @@ function BrickCalculator() {
   const [mortarJoint, setMortarJoint] = React.useState(10); // mm — editable
   const [pricePerBrick, setPricePerBrick] = React.useState(0);
 
-  const leaves = thickness > 115 ? 2 : 1;
   const BRICK_PRESETS: Record<string, [number, number, number]> = {
     india: [190, 90, 90],
     india_trad: [230, 110, 75],
@@ -428,6 +427,10 @@ function BrickCalculator() {
     us: [203, 92, 95],
   };
   const [bl, bw, bh] = BRICK_PRESETS[preset] || BRICK_PRESETS.india;
+  // Same rule as the server brick calculator: leaves are derived from the
+  // wall thickness over one nominal leaf (brick width + joint); a supplied
+  // count never overrides it.
+  const leaves = Math.max(1, Math.round(thickness / (bw + mortarJoint)));
   const faceArea = ((bl + mortarJoint) / 1000) * ((bh + mortarJoint) / 1000);
   const wallArea = l * h;
   const bricks = Math.ceil((wallArea / faceArea) * leaves * (1 + wastage / 100));
@@ -436,6 +439,10 @@ function BrickCalculator() {
   const brickVol = (bl / 1000) * (bw / 1000) * (bh / 1000);
   const netBricks = (wallArea / faceArea) * leaves;
   const mortarVol = Math.max(0, wallVol - netBricks * brickVol);
+  // Same sanity guard as the server: real masonry has roughly 20-35% mortar
+  // by volume, so anything outside the band is flagged instead of quoted.
+  const mortarShare = wallVol > 0 ? mortarVol / wallVol : 0;
+  const geometryOk = wallArea > 0 && mortarShare >= 0.2 && mortarShare <= 0.35;
   const dryMortar = mortarVol * 1.33;
   const [cp, sp] = ratio.split(":").map((x) => parseFloat(x));
   const total = cp + sp;
@@ -489,15 +496,23 @@ function BrickCalculator() {
         </>
       }
       result={
-        <div className="space-y-3">
-          <Stat label="Bricks required" value={fmt(bricks, 0)} unit="nos" big note={`${leaves === 2 ? "Double" : "Single"} leaf, incl. ${wastage}% wastage`} />
-          <div className="grid grid-cols-2 gap-3">
-            <Stat label="Cement" value={fmt(cementBags, 1)} unit="bags" />
-            <Stat label="Sand" value={fmt(sandM3, 2)} unit="m³" />
+        geometryOk ? (
+          <div className="space-y-3">
+            <Stat label="Bricks required" value={fmt(bricks, 0)} unit="nos" big note={`${leaves}-leaf wall from ${thickness} mm thickness, incl. ${wastage}% wastage`} />
+            <div className="grid grid-cols-2 gap-3">
+              <Stat label="Cement" value={fmt(cementBags, 1)} unit="bags" />
+              <Stat label="Sand" value={fmt(sandM3, 2)} unit="m³" />
+            </div>
+            <Stat label="Dry mortar volume" value={fmt(dryMortar, 3)} unit="m³" />
+            {estimatedCost > 0 && <Stat label="Estimated brick cost" value={"₹" + fmt(estimatedCost, 0)} note={`${fmt(bricks, 0)} × ₹${fmt(pricePerBrick, 1)}`} />}
           </div>
-          <Stat label="Dry mortar volume" value={fmt(dryMortar, 3)} unit="m³" />
-          {estimatedCost > 0 && <Stat label="Estimated brick cost" value={"₹" + fmt(estimatedCost, 0)} note={`${fmt(bricks, 0)} × ₹${fmt(pricePerBrick, 1)}`} />}
-        </div>
+        ) : (
+          <p className="rounded-lg bg-alx-error-container text-alx-on-error-container text-xs leading-relaxed p-3.5">
+            Inconsistent brickwork geometry: mortar works out to {fmt(mortarShare * 100, 0)}% of
+            wall volume but should be between 20% and 35%. Check that the wall thickness matches
+            the selected brick size (derived leaves: {leaves}). No estimate shown.
+          </p>
+        )
       }
     />
   );
