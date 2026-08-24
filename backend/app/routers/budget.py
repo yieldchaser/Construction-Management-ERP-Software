@@ -181,10 +181,16 @@ def get_tower_budget(project_id: UUID, db: Session = Depends(get_db), _: None = 
             float(budget.material_budget) + float(budget.labour_budget) +
             float(budget.subcon_budget) + float(budget.equipment_budget)
         ) if budget else 0.0
-        pos = db.query(PurchaseOrder).filter(PurchaseOrder.project_id == project_id).all()
+        pos = db.query(PurchaseOrder).filter(
+            PurchaseOrder.project_id == project_id,
+            PurchaseOrder.status.in_(("sent", "partial", "received")),
+        ).all()
         committed = sum(float(p.total_amount) for p in pos)
-        # Active bills only: a cancelled bill must not book cost (R2-723).
-        bills = _active_bills(db, project_id, EXPENSE_INVOICE_TYPES).all()
+        # Same gates as the main endpoint: approved bills only (R2-233) and
+        # cancelled bills never book cost (R2-723); aligned by R2-604.
+        bills = _active_bills(db, project_id, EXPENSE_INVOICE_TYPES).filter(
+            Bill.approval_flag == "approved",
+        ).all()
         actual = sum(float(b.total_payable) for b in bills)
         return [TowerBudgetBreakdown(
             tower_id=None,
@@ -196,8 +202,11 @@ def get_tower_budget(project_id: UUID, db: Session = Depends(get_db), _: None = 
         )]
 
     result = []
-    # Active bills only: a cancelled bill must not book cost (R2-723).
-    bills = _active_bills(db, project_id, EXPENSE_INVOICE_TYPES).all()
+    # Approved bills only (R2-233) and cancelled bills never book cost
+    # (R2-723): gates aligned with the main endpoint by R2-604.
+    bills = _active_bills(db, project_id, EXPENSE_INVOICE_TYPES).filter(
+        Bill.approval_flag == "approved",
+    ).all()
     actual = sum(float(b.total_payable) for b in bills)
     pos = db.query(PurchaseOrder).filter(
         PurchaseOrder.project_id == project_id,
