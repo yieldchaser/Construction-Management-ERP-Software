@@ -572,11 +572,11 @@ def approve_po(po_id: UUID, db: Session = Depends(get_db), current_user: User = 
         )
         if next_level >= rule.levels:
             po.approval_flag = "approved"
-            po.status = "sent"
+            _advance_to_sent_if_behind(po)
         # else: still pending_approval, awaiting further levels
     else:
         po.approval_flag = "approved"
-        po.status = "sent"
+        _advance_to_sent_if_behind(po)
 
     db.commit()
     db.refresh(po)
@@ -645,6 +645,15 @@ _PO_STATUS_RANK = {
     "received": 3,
     "closed": 4,
 }
+
+
+def _advance_to_sent_if_behind(po) -> None:
+    # R2-219: approval authorises a PO, it never rewrites fulfilment. Only a
+    # PO that has not yet been sent is lifted to "sent" (same forward-only
+    # rank map goods receipt uses), so approving after delivery can no longer
+    # rewind a partial/received/closed PO and re-open goods receipt.
+    if _PO_STATUS_RANK.get((po.status or "").lower(), 0) < _PO_STATUS_RANK["sent"]:
+        po.status = "sent"
 
 
 @router.get("/grns", response_model=List[GRNResponse])
