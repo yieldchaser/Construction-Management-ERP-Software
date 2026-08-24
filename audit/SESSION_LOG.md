@@ -2,6 +2,15 @@
 
 Append-only. Every working block ends with a 5-line entry. Never edit an existing entry; if a commit was reverted, add a new entry.
 
+## Session 33 (cont. 12) — HIGH queue near-complete; worktree rebuilt after gutting incident (2026-08-24)
+
+- **INCIDENT:** the worktree was found gutted (.git file + backend/app/database.py + conftest.py deleted; pytest exit=2). Cause: local resource exhaustion (getaddrinfo thread-start failures) — same root as the subagent network_error windows. RECOVERED with zero work lost: rebuilt via git worktree add from campaign/waves (5de540c), re-applied R2-203/216 register flips (7ef713b), suite green.
+- HIGH queue closed this block (all committed, suite green, pushed): R2-055 67a18c1, R2-059 51ebadc, R2-087 evidence, R2-166 6061e32, R2-189 evidence(R2-192), R2-203 5c7d445, R2-216 5de540c, R2-224 cc07d3a, R2-245 b993298, R2-272 c6e4b9d (real file billing.py), R2-301 c30bdd9, R2-311 5440cc7 evidence, R2-328 5b231f8, R2-330 e99fac7, R2-332 d0ef1b5, R2-357 0520005, R2-359 d13efa8, R2-360 ea6d6e0, R2-369 1e717ca, R2-380 ff47326, R2-383 a3adb74, R2-384 fe94455, R2-395 3d10926, R2-397 96f6ffe, R2-409 19cef93, R2-415 d81c0a8, R2-419 evidence, R2-421 0a2f9f1, R2-424 f1f581a, R2-425 evidence, R2-427 evidence, R2-429 fb3d653, R2-430 29aa92e, R2-438 7164694, R2-440 533fd3e, R2-445 ab7cb76, R2-454 024e3fd, R2-463 e3ecaee, R2-471 e74e46e, R2-479 b83f08e partial (CD-1 residual), R2-481 ef468b6, R2-502 f5e859d, R2-506 evidence, R2-510 d6edc4c (**RLS on 108 tables + FORCE, migration**), R2-513 5456481, R2-517 402c5ad, R2-527 0a4a539 (+migration), R2-536 869c297, R2-540 635197f, R2-545 f5ecf88, R2-562 evidence, R2-589 9f294a5, R2-592 f5f6749, R2-597 768796a, R2-598 d3b9bf8 (**RFQ send/close — implements CD-7 direction (a), founder to confirm**), R2-599-related, R2-601 590fb02, R2-603 a9a113c, R2-604 393055b, R2-606 2df4a20, R2-607 9a9f656, R2-610 a4a93c5, R2-611 acd097e, R2-612 6e8fec8, R2-614 fedb387, R2-219 6616829, R2-280 eed18dd, R2-519 d3c13b6.
+- REMAINING decision-free HIGHs (specs recorded): R2-302 (site coord validation), R2-043r (tally MOVEMENT bucket), R2-317 (needs R2-100 bank_account_id), R2-371 (gate-check PO-bill linkage), R2-475 slice (honest distance display; fail-open/badge gated), R2-533+534 (CSV importer — chronic dispatch failure), R2-052 (party FK repoint), R2-100+315 (bank receipts), R2-276 (ledger placeholder names). Then **Phase C: ~102 CRITICALs** — next session's main course.
+- Stale pins fixed along the way: R2-162 (3ce33aa), R2-045/066 (9abf5bb), R2-580 (a3d1b6c). Suite GREEN at every checkpoint.
+
+---
+
 ## Session 33 (cont. 11) — sweep: procurement+scattered verified, constraints migrated (2026-08-23)
 
 - New: R2-386+543 `2efc31a` (SEVEN UniqueConstraints reached prod path via one duplicate-safe NOTICE-skip migration: the five unmigrated model constraints + NEW uq_ncrs_project_id_ncr_number + uq_payments_company_id_reference_number; NCR blind-insert -> 409); R2-310 `6ce1203` (delete-logs infinite refetch loop dead via useMemo'd authHeaders); R2-592 f5f6749 landed earlier this block.
