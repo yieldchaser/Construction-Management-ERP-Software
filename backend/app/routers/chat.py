@@ -153,11 +153,25 @@ def create_group(payload: ChatGroupCreate, db: Session = Depends(get_db), curren
 
 
 @router.get("/groups/{project_id}", response_model=List[ChatGroupResponse])
-def list_groups(project_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
+def list_groups(project_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user), _: None = Depends(verify_project_access)):
     groups = db.query(ChatGroup).filter(
         ChatGroup.project_id == project_id,
         ChatGroup.is_archived == False
     ).all()
+    team_ids = [
+        t.id for t in db.query(CompanyTeam.id).filter(
+            CompanyTeam.user_id == current_user.id,
+            CompanyTeam.company_id.in_([g.company_id for g in groups])
+        ).all()
+    ]
+    caller_ids = [current_user.id] + team_ids
+    member_group_ids = {
+        m.group_id for m in db.query(ChatGroupMember.group_id).filter(
+            ChatGroupMember.group_id.in_([g.id for g in groups]),
+            ChatGroupMember.user_id.in_(caller_ids)
+        ).all()
+    }
+    groups = [g for g in groups if g.id in member_group_ids]
     counts = dict(
         db.query(ChatGroupMember.group_id, func.count(ChatGroupMember.id))
         .filter(ChatGroupMember.group_id.in_([g.id for g in groups]))
