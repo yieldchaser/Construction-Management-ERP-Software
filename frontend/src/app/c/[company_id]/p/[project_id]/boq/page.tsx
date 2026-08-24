@@ -34,6 +34,15 @@ type BOQItemLine = {
 
 type Party = { id: string; name: string; party_type: string | null };
 
+// Response body of POST /budgeting/boq/import (R2-450 contract).
+type BOQImportResult = {
+  success: boolean;
+  imported_count: number;
+  skipped_count: number;
+  warnings: string[];
+  total_estimated_cost: number;
+};
+
 const UNCAT = "Uncategorized";
 
 export default function BoqTab() {
@@ -72,6 +81,7 @@ export default function BoqTab() {
   const [docItemsLoading, setDocItemsLoading] = useState(false);
   const [docFile, setDocFile] = useState<File | null>(null);
   const [docImporting, setDocImporting] = useState(false);
+  const [importNotice, setImportNotice] = useState<{ tone: "ok" | "warn"; text: string } | null>(null);
 
   const loadDocs = useCallback(async () => {
     setLoading(true);
@@ -136,8 +146,14 @@ export default function BoqTab() {
     );
   }, [docs, search]);
 
-  const amountOf = (i: BOQItemLine) =>
-    Number(i.quantity) * (Number(i.rate) + Number(i.supply_rate) + Number(i.installation_rate));
+  // Mirrors the server's _effective_unit_rate: composite rate wins; the
+  // supply + installation split only fills in when no composite rate exists.
+  const effectiveUnitRate = (i: BOQItemLine) => {
+    const r = Number(i.rate) || 0;
+    return r || (Number(i.supply_rate) || 0) + (Number(i.installation_rate) || 0);
+  };
+
+  const amountOf = (i: BOQItemLine) => Number(i.quantity) * effectiveUnitRate(i);
 
   const loadDocItems = useCallback(
     async (docId: string) => {
@@ -161,9 +177,11 @@ export default function BoqTab() {
     if (expandedId === docId) {
       setExpandedId(null);
       setDocItems([]);
+      setImportNotice(null);
     } else {
       setExpandedId(docId);
       setDocFile(null);
+      setImportNotice(null);
       loadDocItems(docId);
     }
   };
@@ -242,12 +260,26 @@ export default function BoqTab() {
   const importIntoDoc = async (docId: string) => {
     if (!docFile) return;
     setDocImporting(true);
+    setImportNotice(null);
     const formData = new FormData();
     formData.append("project_id", projectId);
     formData.append("boq_document_id", docId);
     formData.append("file", docFile);
     try {
-      await fetch(getApi("/budgeting/boq/import"), { method: "POST", body: formData, headers: authHeaders() });
+      const res = await fetch(getApi("/budgeting/boq/import"), { method: "POST", body: formData, headers: authHeaders() });
+      if (res.ok) {
+        // R2-450: the importer skips malformed rows instead of failing; show
+        // how many landed and why others were skipped.
+        const d: BOQImportResult = await res.json();
+        const imported = Number(d.imported_count) || 0;
+        const skipped = Number(d.skipped_count) || 0;
+        const warnings = Array.isArray(d.warnings) ? d.warnings : [];
+        setImportNotice(
+          skipped > 0
+            ? { tone: "warn", text: `Imported ${imported} item(s), skipped ${skipped}. ${warnings.join("; ")}`.trim() }
+            : { tone: "ok", text: `Imported ${imported} item(s).` }
+        );
+      }
       setDocFile(null);
       await loadDocItems(docId);
       await loadDocs();
@@ -426,6 +458,15 @@ export default function BoqTab() {
                               >
                                 {docImporting ? "Importing..." : "Import & Add"}
                               </button>
+                            )}
+                            {importNotice && (
+                              <span
+                                className={`text-[10px] ${
+                                  importNotice.tone === "warn" ? "text-amber-500" : "text-emerald-400"
+                                }`}
+                              >
+                                {importNotice.text}
+                              </span>
                             )}
                           </div>
 
