@@ -127,7 +127,7 @@ def create_signed_url(bucket: str, path: str, expires_in: int = 3600) -> str:
         raise RuntimeError(f"Signed URL missing in response ({bucket}/{path}): {data}")
     if signed.startswith("http"):
         return signed
-    return f"{SUPABASE_URL.rstrip('/')}/{signed.lstrip('/')}"
+    return f"{_base()}/{signed.lstrip('/')}"
 
 
 def download_bytes(bucket: str, path: str) -> bytes:
