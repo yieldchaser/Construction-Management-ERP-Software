@@ -637,9 +637,14 @@ def _build_party_ledger(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
     """Core ledger aggregation across the company's projects.
 
     Returns (rows, party_final_balance) where rows is the chronological list of
-    party-ledger dicts and party_final_balance maps a party name to that
-    party's own closing balance, accumulated only from that party's
-    transactions (R2-313/R2-560: never the company-wide total).
+    party-ledger dicts and party_final_balance maps a stable party identity to
+    that party's (display name, closing balance), accumulated only from that
+    party's transactions (R2-313/R2-560: never the company-wide total).
+
+    R2-314: the aggregation key is the counterparty's stable row id
+    (CompanyTeam.id / StaffEmployee.id), not the resolved display name, so
+    same-named parties keep separate balances and a failed name resolution no
+    longer collapses unrelated rows into one fallback bucket.
     """
     proj_ids = _project_ids_for_company(db, cid)
 
@@ -679,6 +684,7 @@ def _build_party_ledger(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
     party_final = {}
     for dt, et, obj in raw:
         party_name = ""
+        party_key = ""
         party_type = "Party"
         txn_type = ""
         debit = 0.0
@@ -690,6 +696,9 @@ def _build_party_ledger(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
         if et == "payment":
             is_in = obj.payment_type == "in"
             amount = float(obj.amount) if obj.amount is not None else 0.0
+            # R2-314: key by the stable CompanyTeam id; only truly anonymous
+            # rows (no counterparty id at all) share the fallback bucket.
+            party_key = str(obj.party_company_user_id) if obj.party_company_user_id else "Walk-in Party"
             party_name = _team_user_name(db, obj.party_company_user_id) or "Walk-in Party"
             if is_in:
                 txn_type = "Receipt"
@@ -706,6 +715,8 @@ def _build_party_ledger(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
         elif et == "bill":
             is_receipt = obj.invoice_type in REVENUE_INVOICE_TYPES
             amount = float(obj.total_payable) if obj.total_payable is not None else 0.0
+            # R2-314: same identity keying as the payment branch.
+            party_key = str(obj.party_company_user_id) if obj.party_company_user_id else "Vendor/Client"
             party_name = _team_user_name(db, obj.party_company_user_id) or "Vendor/Client"
             if is_receipt:
                 txn_type = "Sale Invoice"
@@ -720,6 +731,9 @@ def _build_party_ledger(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
                 proj = db.query(Project).filter(Project.id == obj.project_id).first()
         elif et == "salary":
             amount = float(obj.net_payable) if obj.net_payable is not None else 0.0
+            # R2-314: employees key by StaffEmployee.id, so two same-named
+            # staff never share one salary bucket.
+            party_key = str(obj.employee_id) if obj.employee_id else "Staff Member"
             party_name = "Staff Member"
             if obj.employee_id:
                 emp = db.query(StaffEmployee).filter(StaffEmployee.id == obj.employee_id).first()
@@ -730,12 +744,14 @@ def _build_party_ledger(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
             credit = amount
         elif et == "debit":
             amount = float(obj.total_amount) if obj.total_amount is not None else 0.0
+            party_key = str(obj.party_company_user_id) if obj.party_company_user_id else "Party"
             party_name = _team_user_name(db, obj.party_company_user_id) or "Party"
             txn_type = "Debit Note"
             credit = amount
             description = obj.notes or "Debit Note"
         elif et == "credit":
             amount = float(obj.total_amount) if obj.total_amount is not None else 0.0
+            party_key = str(obj.party_company_user_id) if obj.party_company_user_id else "Party"
             party_name = _team_user_name(db, obj.party_company_user_id) or "Party"
             txn_type = "Credit Note"
             debit = amount
@@ -745,8 +761,8 @@ def _build_party_ledger(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
         # Balance never includes another party's transactions. debit is the
         # receivable direction and credit the payable direction in every
         # branch above.
-        party_balance = running_by_party.get(party_name, 0.0) + debit - credit
-        running_by_party[party_name] = party_balance
+        party_balance = running_by_party.get(party_key, 0.0) + debit - credit
+        running_by_party[party_key] = party_balance
 
         # R2-322: Creator Name used to be party_name, attributing every
         # ledger row to the counterparty. No ledger source (Bill, Payment,
@@ -766,7 +782,7 @@ def _build_party_ledger(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
             "Party Credit": credit,
             "Balance": party_balance,
         })
-        party_final[party_name] = party_balance
+        party_final[party_key] = (party_name, party_balance)
 
     return rows, party_final
 
@@ -784,7 +800,7 @@ def _rep_all_party_balances(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID
     try:
         _, party_final = _build_party_ledger(db, cid, pid)
         rows = []
-        for name, bal in party_final.items():
+        for _, (name, bal) in party_final.items():
             rows.append({
                 "Party Name": name,
                 "Party Type": "",
