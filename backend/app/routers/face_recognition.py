@@ -37,7 +37,7 @@ class FacePunchResponse(BaseModel):
     lat: Optional[float]
     lng: Optional[float]
     is_within_geofence: bool
-    created_at: datetime
+    created_at: Optional[datetime]
 
     class Config:
         from_attributes = True
