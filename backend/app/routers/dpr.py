@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.auth import get_current_user, verify_project_access, get_company_membership, require_permission, require_module_view
 from app.models import DailyProgressReport, Task, WarehouseInventory, MaterialTransaction, Project, User
-from app.workflow_controls import enforce_entry_creation_window
+from app.workflow_controls import enforce_entry_creation_window, enforce_stock_availability, get_company
 from pydantic import BaseModel, Field
 
 router = APIRouter(
@@ -90,6 +90,18 @@ def create_dpr(req: DPRCreateRequest, db: Session = Depends(get_db), current_use
 
     # Convert Pydantic schemas to dict list for JSONB column
     materials_list = [mat.dict() for mat in req.materials_consumed]
+
+    # Workflow Controls: Material Controls (R2-380). The daily report consumes
+    # stock just like manual usage, so negative_stock_lock is enforced here
+    # too, checked for every consumed material BEFORE any row is written. A
+    # material with no inventory row has nothing available at all, so the lock
+    # also stops inventing stock as a brand-new row at a negative quantity.
+    company = get_company(db, project.company_id)
+    if company and company.negative_stock_lock:
+        for mat in req.materials_consumed:
+            enforce_stock_availability(
+                db, project_uuid, mat.material_name, mat.quantity, "Restrict Material Usage"
+            )
 
     dpr = DailyProgressReport(
         id=uuid.uuid4(),
