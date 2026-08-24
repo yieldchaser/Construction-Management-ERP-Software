@@ -13,7 +13,7 @@ from app.auth import get_current_user, verify_project_access, get_company_member
 from app.models import BOQItem, BOQDocument, ProjectBudget, Project, Bill, LibraryParty, Task, User, BOQRevision, LibraryCostCode
 from app.workflow_controls import get_default_terms
 from app.utils.pdf_generator import generate_document_pdf
-from app.utils.document_pdf import resolve_pdf_branding
+from app.utils.document_pdf import resolve_pdf_branding, resolve_supplier_tax_details
 from pydantic import BaseModel, Field
 
 router = APIRouter(
@@ -649,6 +649,10 @@ def get_boq_document_pdf(doc_id: UUID, db: Session = Depends(get_db), current_us
     company_name, custom_banner = resolve_pdf_branding(db, project.company_id, project)
     from app.utils.document_pdf import load_branding_assets
     branding = load_branding_assets(db, project.company_id)
+    # R2-607: the registered supplier identity (legal name, GSTIN, phone,
+    # address) is stored on the Company/branch rows; print it under the BOQ
+    # masthead like the bill PDF already does (R2-403).
+    supplier_lines = resolve_supplier_tax_details(db, project.company_id, project)
     party = db.query(LibraryParty).filter(LibraryParty.id == doc.client_party_id).first() if doc.client_party_id else None
     client_name = party.name if party else "N/A"
 
@@ -696,6 +700,7 @@ def get_boq_document_pdf(doc_id: UUID, db: Session = Depends(get_db), current_us
         terms=doc.terms,
         company_name=company_name,
         custom_banner=custom_banner,
+        supplier_lines=supplier_lines,
         branding=branding,
     )
     filename = f"boq-{doc.title or doc.id}.pdf"

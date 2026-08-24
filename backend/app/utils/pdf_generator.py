@@ -245,6 +245,7 @@ def generate_client_report_pdf(
     company_name: str = "",
     custom_banner: str = None,
     branding: dict = None,
+    supplier_lines=None,
 ) -> bytes:
     """
     Generates a valid, readable minimal PDF 1.4 byte stream.
@@ -258,6 +259,10 @@ def generate_client_report_pdf(
         and rendered as an extra banner line beneath the masthead, giving a
         visibly different ("custom") layout vs. the default template. None /
         empty keeps the default layout unchanged.
+    supplier_lines: optional registered-identity lines of the issuing company
+        (legal name / GSTIN / phone / address, R2-607 reusing the R2-403
+        machinery), printed under the masthead so client-facing reports carry
+        the same supplier details the bill/PO/BOQ documents print.
     branding: optional {"logo"|"signature"|"stamp"|"watermark": {"data": bytes,
         "content_type": str}} map of the company's uploaded branding assets
         (R2-404). Watermark renders faded behind the page, the logo sits at the
@@ -310,6 +315,20 @@ def generate_client_report_pdf(
             b"0 -18 Td",
         ]
         cursor_placed = True
+
+    # R2-607: registered supplier identity lines (legal name / GSTIN / phone /
+    # address, resolved by the caller via resolve_supplier_tax_details) print
+    # under the masthead, same placement rule as the document generator.
+    for line in (supplier_lines or []):
+        safe_line = str(line).replace('(', '\\(').replace(')', '\\)')
+        stream_lines += [b"/F1 9 Tf"]  # Supplier Font (Helvetica 9pt)
+        if not cursor_placed:
+            stream_lines += [b"50 810 Td"]  # absolute anchor: top of page
+            cursor_placed = True
+        stream_lines += [
+            f"({safe_line}) Tj".encode("latin1", "replace"),
+            b"0 -14 Td",
+        ]
 
     # Custom banner: only present when custom_pdf_template_enabled + a
     # PdfTemplate is configured for the company, giving the "Custom" layout

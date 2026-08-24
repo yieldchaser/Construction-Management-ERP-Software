@@ -16,7 +16,7 @@ from app.models import (
 from app.approvals import find_matching_rule, match_approver, levels_approved, user_already_acted, record_action
 from app.workflow_controls import enforce_stock_availability, get_company, get_default_terms
 from app.utils.pdf_generator import generate_document_pdf
-from app.utils.document_pdf import resolve_pdf_branding
+from app.utils.document_pdf import resolve_pdf_branding, resolve_supplier_tax_details
 from pydantic import BaseModel, Field, field_validator
 
 router = APIRouter(
@@ -1088,6 +1088,10 @@ def get_po_pdf(po_id: UUID, db: Session = Depends(get_db), current_user=Depends(
     company_name, custom_banner = resolve_pdf_branding(db, po.company_id, project)
     from app.utils.document_pdf import load_branding_assets
     branding = load_branding_assets(db, po.company_id)
+    # R2-607: the registered supplier identity (legal name, GSTIN, phone,
+    # address) is stored on the Company/branch rows; print it on the PO
+    # masthead like the bill PDF already does (R2-403).
+    supplier_lines = resolve_supplier_tax_details(db, po.company_id, project)
 
     vendor = db.query(CompanyTeam).filter(CompanyTeam.id == po.vendor_id).first() if po.vendor_id else None
     vendor_user = db.query(User).filter(User.id == vendor.user_id).first() if vendor else None
@@ -1139,6 +1143,7 @@ def get_po_pdf(po_id: UUID, db: Session = Depends(get_db), current_user=Depends(
         terms=po.terms,
         company_name=company_name,
         custom_banner=custom_banner,
+        supplier_lines=supplier_lines,
         branding=branding,
     )
     filename = f"{po.po_number or 'po'}.pdf"

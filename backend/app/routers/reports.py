@@ -35,6 +35,7 @@ from app.models import (
     Company, CompanyBranch, PdfTemplate
 )
 from app.utils.pdf_generator import generate_client_report_pdf
+from app.utils.document_pdf import resolve_supplier_tax_details
 
 router = APIRouter(prefix="/reports", tags=["Client Reports Portal"], dependencies=[Depends(get_current_user)])
 
@@ -189,6 +190,10 @@ def generate_report(
         company_name=company_name,
         custom_banner=custom_banner,
         branding=load_branding_assets(db, project.company_id),
+        # R2-607: the registered supplier identity (legal name, GSTIN, phone,
+        # address) is stored on the Company/branch rows; print it under the
+        # client report masthead like the bill/PO/BOQ PDFs already do (R2-403).
+        supplier_lines=resolve_supplier_tax_details(db, project.company_id, project),
     )
 
     # 7. Save PDF to static files directory (absolute, CWD-independent)
