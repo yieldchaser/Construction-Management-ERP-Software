@@ -34,6 +34,7 @@ interface SafetyStats {
   total_lost_days: number;
   ltif: number;
   ltif_basis?: number;
+  total_manhours_used?: number;
   type_breakdown: Record<string, number>;
   severity_breakdown: Record<string, number>;
   manhours_source?: "attendance" | "fallback";
@@ -377,7 +378,7 @@ export default function SafetyPage() {
 
               {/* LTIF Formula */}
               <div style={{ marginTop: 20, padding: '14px 20px', borderRadius: 12, background: 'rgba(124,92,255,0.08)', border: '1px solid rgba(124,92,255,0.2)', fontSize: 13, color: 'rgba(255,255,255,0.6)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Icon name="clipboard" className="w-4 h-4" /> <span><strong style={{ color: '#7C5CFF' }}>LTIFR Formula:</strong> (Number of LTIs × {stats.ltif_basis ? stats.ltif_basis.toLocaleString('en-IN') : '200,000'}) ÷ Total Manhours Worked · Calculated on 50,000 manhours basis{stats.manhours_source === 'fallback' ? ' (estimated — no attendance data)' : ''}.</span>
+                <Icon name="clipboard" className="w-4 h-4" /> <span><strong style={{ color: '#7C5CFF' }}>LTIFR Formula:</strong> (Number of LTIs × {stats.ltif_basis ? stats.ltif_basis.toLocaleString('en-IN') : '200,000'}) ÷ Total Manhours Worked · Calculated on {stats.total_manhours_used ? stats.total_manhours_used.toLocaleString('en-IN') : '50,000'} manhours basis{stats.manhours_source === 'fallback' ? ' (estimated — no attendance data)' : ''}.</span>
               </div>
             </>
           )}
