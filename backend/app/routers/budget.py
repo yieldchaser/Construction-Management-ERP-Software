@@ -9,7 +9,7 @@ from app.auth import get_current_user, verify_project_access
 from app.models import (
     PurchaseOrder, Bill, WorkOrder, WorkOrderItem,
     ProjectTower, ProjectBudget, PayrollRun, PayrollLineItem,
-    Equipment, EquipmentDeployment, FuelLog
+    Equipment, EquipmentDeployment, FuelLog, MaterialWastage
 )
 from pydantic import BaseModel
 from app.bill_scope import _active_bills
@@ -103,6 +103,13 @@ def get_committed_costs(project_id: UUID, db: Session = Depends(get_db), _: None
             equipment_bill_total += amount
         else:
             other_actual += amount
+
+    wastage_actual = float(
+        db.query(func.sum(MaterialWastage.estimated_value)).filter(
+            MaterialWastage.project_id == project_id
+        ).scalar() or 0.0
+    )
+    material_actual += wastage_actual
 
     wos = db.query(WorkOrder).filter(
         WorkOrder.project_id == project_id,

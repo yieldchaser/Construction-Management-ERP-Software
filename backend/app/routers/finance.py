@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, File, Form, Uploa
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.models import Payment, PaymentSettlement, Bill, PayrollRun, PayrollLineItem, StaffEmployee, ProjectBudget, Project, CompanyTeam, User, Equipment, EquipmentDeployment, FuelLog, BankAccount, PaymentRequest, PaymentRequestPayment, CashAccount, LibraryParty, Company, ApprovalRule, LibraryCostCode
+from app.models import Payment, PaymentSettlement, Bill, PayrollRun, PayrollLineItem, StaffEmployee, ProjectBudget, Project, CompanyTeam, User, Equipment, EquipmentDeployment, FuelLog, BankAccount, PaymentRequest, PaymentRequestPayment, CashAccount, LibraryParty, Company, ApprovalRule, LibraryCostCode, MaterialWastage
 from app.auth import get_current_user, verify_project_in_company, verify_company_access, verify_project_access, get_company_membership, require_permission, require_module_view
 from app.approvals import find_matching_rule, match_approver, levels_approved, user_already_acted, record_action
 from pydantic import BaseModel, Field, field_validator
@@ -494,6 +494,10 @@ def get_project_pl(project_id: uuid.UUID, db: Session = Depends(get_db), _: None
         Bill.invoice_type != "subcon",
         Bill.status != "Cancelled"
     ).scalar() or 0.0
+    material_wastage_actual = db.query(func.sum(MaterialWastage.estimated_value)).filter(
+        MaterialWastage.project_id == proj_uuid
+    ).scalar() or 0.0
+    material_actual = float(material_actual) + float(material_wastage_actual)
 
     # 3. Labour Cost: Salary expenses
     labour_actual = db.query(func.sum(PayrollLineItem.net_payable)).join(PayrollRun).filter(
