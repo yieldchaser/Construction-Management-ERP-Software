@@ -1,4 +1,16 @@
 import { redirect } from "next/navigation";
-export default function LegacyRedirect({ params }: { params: { company_id: string; project_id: string } }) {
-  redirect(`/c/${params.company_id}/d/dpr`);
+
+interface PageProps {
+  params: Promise<{
+    company_id: string;
+    project_id: string;
+  }> | {
+    company_id: string;
+    project_id: string;
+  };
+}
+
+export default async function LegacyRedirect({ params }: PageProps) {
+  const resolvedParams = await (params instanceof Promise ? params : Promise.resolve(params));
+  redirect(`/c/${resolvedParams.company_id}/d/dpr?project=${resolvedParams.project_id}`);
 }

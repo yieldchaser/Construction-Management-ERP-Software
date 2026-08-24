@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { getApiHost } from "@/lib/api";
 
 if (typeof window !== "undefined") {
@@ -64,6 +64,7 @@ const FALLBACK_PROJECT_ID = "d0000000-0000-0000-0000-000000000001";
 
 export function ProjectProvider({ children }: { children: React.ReactNode }) {
   const params = useParams();
+  const searchParams = useSearchParams();
 
   const [activeProjectId, setActiveProjectIdState] = useState<string>(() => {
     if (typeof window === "undefined") return "";
@@ -83,6 +84,16 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   });
   const [loading, setLoading] = useState(true);
 
+  // Project-module redirects carry the originating project as ?project=<id>.
+  // Prefer it over the persisted selection so a screen opened from inside a
+  // project scopes to that project instead of whatever was last active.
+  // Only well-formed ids are accepted; anything else falls through.
+  const rawQueryProjectId = searchParams.get("project") || "";
+  const queryProjectId =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(rawQueryProjectId)
+      ? rawQueryProjectId
+      : "";
+
   useEffect(() => {
     let isActive = true;
 
@@ -94,7 +105,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     // Ignore the legacy placeholder so nextProjectId can be empty -> the real
     // project gets auto-selected from the company project list below.
     const storedProjectId = storedRaw && storedRaw !== FALLBACK_PROJECT_ID ? storedRaw : null;
-    const nextProjectId = routeProjectId || storedProjectId || "";
+    const nextProjectId = routeProjectId || queryProjectId || storedProjectId || "";
 
     const token =
       typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
@@ -196,7 +207,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     return () => {
       isActive = false;
     };
-  }, [params.company_id, params.project_id]);
+  }, [params.company_id, params.project_id, queryProjectId]);
 
   const setActiveProjectId = (id: string) => {
     setActiveProjectIdState(id);
