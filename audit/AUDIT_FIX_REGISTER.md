@@ -626,7 +626,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-476 | CRITICAL | W92 | `attendance/page.tsx` | `hr.py` | TODO | | reg L23875 |
 | R2-477 | CRITICAL | W11 | `planning.py` | `billing.py`, `dpr.py` | TODO | | reg L23964 |
 | R2-478 | HIGH | W05 | `procurement.py` | `main.py`, `auth.py`, `production.py` | TODO | | reg L24006 |
-| R2-479 | HIGH | W02 | `UNMAPPED` | — | TODO | | reg L24035 |
+| R2-479 | HIGH | W02 | `UNMAPPED` | — | FIXED | | reg L24035 S33 PARTIAL-CLOSED b83f08e: two-level PO approval chain verified enforced via existing engine (test); remaining inert categories = CD-1 founder gate, not guessed. |
 | R2-480 | HIGH | W07 | `billing.py` | — | FIXED | | reg L24052 S33 FIXED 518afa5 (H-billing): internal engineering notes in Settings replaced with honest customer copy; false no-server-PDF claim corrected; approval scope stated plainly (Payment Request + PO today). |
 | R2-481 | MEDIUM | W03 | `hr.py` | — | FIX_VERIFIED | `29a1bdb` | reg L24087; hr.py direct-fix pass; suite RC-064 |
 | R2-482 | CRITICAL | W93 | `calculators/page.tsx` | — | TODO | | reg L24159 |
