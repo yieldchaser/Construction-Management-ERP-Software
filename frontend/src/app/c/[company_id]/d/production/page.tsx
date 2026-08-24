@@ -272,7 +272,7 @@ export default function ProductionPage() {
 
   const totals = useMemo(() => {
     return {
-      outputProgress: data && data.planned_output_qty > 0 ? Math.min((data.actual_output_qty / data.planned_output_qty) * 100, 120) : 0,
+      outputProgress: data && data.planned_output_qty > 0 ? ((data.actual_output_qty / data.planned_output_qty) * 100) : 0,
       materialVariancePct: data && data.planned_material_qty > 0 ? (data.material_variance_qty / data.planned_material_qty) * 100 : 0,
       lowStockCount: data?.inventory_alerts.filter((item) => item.needs_reorder).length ?? 0,
     };
