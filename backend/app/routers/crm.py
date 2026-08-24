@@ -13,6 +13,7 @@ from app.models import (
     Project, Bill,
 )
 from app.workflow_controls import get_default_terms
+from app.routers.library import next_party_id_custom
 from pydantic import BaseModel, Field, EmailStr, field_validator
 
 router = APIRouter(
@@ -57,6 +58,7 @@ def ensure_lead_party(db: Session, lead: CRMLead) -> None:
     party = existing or LibraryParty(
         id=uuid.uuid4(),
         company_id=lead.company_id,
+        party_id_custom=next_party_id_custom(db, lead.company_id),
         name=lead.client_company_name,
         party_type="Client",
         phone=lead.phone_no,

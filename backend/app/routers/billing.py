@@ -13,6 +13,7 @@ from app.models import (
 )
 from app import models
 from app.routers.custom_fields import CustomFieldValueInput, upsert_values_for_entity, enforce_required_custom_fields
+from app.routers.library import next_party_id_custom
 from app.zatca import build_zatca_payload
 from app.workflow_controls import enforce_entry_creation_window, enforce_entry_editing_window, get_company, get_default_terms
 from app.utils.pdf_generator import generate_document_pdf
@@ -1386,6 +1387,7 @@ def create_subcontractor(req: SubcontractorCreateRequest, db: Session = Depends(
     tax_no = req.tax_no or req.gstin
     party = models.LibraryParty(
         company_id=req.company_id,
+        party_id_custom=next_party_id_custom(db, req.company_id),
         name=req.name.strip(),
         phone=req.phone,
         email=req.email,

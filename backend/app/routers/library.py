@@ -128,6 +128,20 @@ def _parse_optional_datetime(value: Optional[str]) -> Optional[datetime]:
 
 
 # ─── PARTIES ───
+def next_party_id_custom(db: Session, company_id: uuid.UUID) -> str:
+    """Company-scoped party ID generator (COUNT + 1 with collision loop), shared by
+    every LibraryParty creation site so no party is stored without an identifier.
+    Uniqueness hardening of this scheme is R2-439 and stays out of scope here."""
+    count = db.query(models.LibraryParty).filter(models.LibraryParty.company_id == company_id).count()
+    candidate = f"PID-{count + 1}"
+    while db.query(models.LibraryParty).filter(
+            models.LibraryParty.company_id == company_id,
+            models.LibraryParty.party_id_custom == candidate).first():
+        count += 1
+        candidate = f"PID-{count + 1}"
+    return candidate
+
+
 @router.get("/parties/{company_id}")
 def get_library_parties(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     return db.query(models.LibraryParty).filter(models.LibraryParty.company_id == company_id).all()
@@ -137,15 +151,9 @@ def create_library_party(payload: PartyCreate, db: Session = Depends(get_db), cu
     get_company_membership(db, current_user, payload.company_id)
     require_permission(db, current_user, payload.company_id, "library:edit")
     # Automatically generate custom PID if not supplied
-    if not payload.party_id_custom:
-        count = db.query(models.LibraryParty).filter(models.LibraryParty.company_id == payload.company_id).count()
-        candidate = f"PID-{count + 1}"
-        while db.query(models.LibraryParty).filter(
-                models.LibraryParty.company_id == payload.company_id,
-                models.LibraryParty.party_id_custom == candidate).first():
-            count += 1
-            candidate = f"PID-{count + 1}"
-        payload.party_id_custom = candidate
+    # R2-440: a supplied ID is stored trimmed; blank or whitespace-only falls through
+    # to the generator so no party is ever stored without a visible identifier.
+    payload.party_id_custom = (payload.party_id_custom or "").strip() or next_party_id_custom(db, payload.company_id)
     
     party = models.LibraryParty(
         company_id=payload.company_id,
