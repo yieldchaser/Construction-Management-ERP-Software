@@ -93,6 +93,9 @@ export default function DPRReportPage() {
   }, [companyId]);
 
   const cell = (row: Record<string, any>, key: string) => row[key] ?? "";
+  const projectOptions = Array.from(
+    new Set(rows.map(r => (r["Project Name"] ?? "").toString()).filter(Boolean))
+  ).sort((a, b) => a.localeCompare(b));
   const projectMatch = (row: Record<string, any>) =>
     selectedProject === "All" || (row["Project Name"] ?? "").toString().includes(selectedProject);
 
@@ -136,6 +139,9 @@ export default function DPRReportPage() {
                 className="bg-card border border-border-custom rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary"
               >
                 <option value="All">All Projects</option>
+                {projectOptions.map(p => (
+                  <option key={p} value={p}>{p}</option>
+                ))}
               </select>
             </div>
 
