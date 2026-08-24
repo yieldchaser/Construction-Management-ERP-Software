@@ -143,6 +143,17 @@ class LeadUpdateRequest(BaseModel):
     next_follow_up: Optional[datetime] = None
     expected_closure: Optional[datetime] = None
 
+    @field_validator("expected_closure")
+    @classmethod
+    def _reject_past_closure(cls, v: Optional[datetime]) -> Optional[datetime]:
+        # R2-438: the create path has rejected past closures since R2-273;
+        # the update path silently accepted them, so a closure date in 2020
+        # could still be written after the fact.
+        if v is not None and v < datetime.utcnow():
+            raise ValueError("expected_closure must not be in the past")
+        return v
+
+
 class LeadResponse(BaseModel):
     id: uuid.UUID
     company_id: uuid.UUID

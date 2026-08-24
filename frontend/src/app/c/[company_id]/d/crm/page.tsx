@@ -435,7 +435,9 @@ export default function CRMPage() {
     const q = search.trim().toLowerCase();
     return leads.filter((l) => {
       if (fAssignee && l.assignee_id !== fAssignee) return false;
-      if (fPriority && l.priority !== fPriority) return false;
+      // R2-438: legacy rows store the same priority in different cases
+      // ("Medium" vs "medium"); the filter must treat them as one value.
+      if (fPriority && (l.priority || "").toLowerCase() !== fPriority.toLowerCase()) return false;
       if (fStatus && l.status !== fStatus) return false;
       if (fSource && l.source !== fSource) return false;
       if (fCategory && l.category !== fCategory) return false;
@@ -601,8 +603,16 @@ export default function CRMPage() {
         return l.contact_name;
       case "updated_at":
         return fmtDate(l.updated_at);
-      case "phone":
-        return `${l.country_code || ""} ${l.phone_no}`.trim();
+      case "phone": {
+        // R2-438: the country-code prefix is a validity claim - only decorate
+        // values that actually form a dialable number, so legacy junk like
+        // "not-a-phone" no longer renders as "+91 not-a-phone".
+        const combined = `${l.country_code || ""}${l.phone_no || ""}`.replace(/[\s()-]/g, "");
+        if (/^\+?\d{8,15}$/.test(combined)) {
+          return `${l.country_code || ""} ${l.phone_no}`.trim();
+        }
+        return l.phone_no || "";
+      }
       case "status":
         return l.status;
       case "source":
@@ -615,8 +625,12 @@ export default function CRMPage() {
         return l.category || "—";
       case "assignee":
         return nameById(team, l.assignee_id);
-      case "priority":
-        return l.priority;
+      case "priority": {
+        // R2-438: one value must not render as two ("Medium" vs "medium");
+        // normalise the display so sorting/filtering sees a single vocabulary.
+        const p = l.priority || "";
+        return p ? p.charAt(0).toUpperCase() + p.slice(1).toLowerCase() : p;
+      }
       case "email":
         return l.email || "—";
       case "company":
