@@ -195,13 +195,32 @@ def get_dpr_summary(project_id: uuid.UUID, db: Session = Depends(get_db), _: Non
     # Average completion from the maintained per-task progress field
     tasks = db.query(Task).filter(Task.project_id == project_uuid).all()
     avg_completion = (sum(float(t.progress or 0) for t in tasks) / len(tasks)) if tasks else 0
-    
+
+    # R2-444: the dashboard's material tiles must answer from the same stock
+    # ledger this project writes to (GRN receipts and DPR consumption both
+    # land here) for today, instead of reading fields that do not exist on
+    # the DPR payload - "No consumption logged" used to render directly above
+    # a DPR that had logged 500 cft hours earlier.
+    today_rows = (
+        db.query(MaterialTransaction.type, func.sum(MaterialTransaction.qty))
+        .filter(
+            MaterialTransaction.project_id == project_uuid,
+            func.date(MaterialTransaction.created_at) == datetime.utcnow().date(),
+        )
+        .group_by(MaterialTransaction.type)
+        .all()
+    )
+    received_today = sum(float(q) for t, q in today_rows if t == "received")
+    used_today = sum(float(q) for t, q in today_rows if t == "used")
+
     return {
         "activities_tracked": activities_count,
         "total_workers_deployed": total_workers,
         "avg_completion": round(avg_completion, 1),
         "issues_flagged": len(flagged_issues),
-        "flagged_issues_list": flagged_issues
+        "flagged_issues_list": flagged_issues,
+        "material_received_today": received_today,
+        "material_used_today": round(used_today, 2),
     }
 
 @router.get("/export")

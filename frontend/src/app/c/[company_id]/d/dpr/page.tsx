@@ -19,6 +19,10 @@ interface DPRSummary {
   total_workers_deployed: number;
   avg_completion: number;
   issues_flagged: number;
+  // R2-444: today's material movement from the stock ledger, so the tiles
+  // answer from the same source as the DPR feed rendered below them.
+  material_received_today?: number;
+  material_used_today?: number;
 }
 
 interface DPRLog {
@@ -50,7 +54,9 @@ export default function DPRPage() {
     activities_tracked: 0,
     total_workers_deployed: 0,
     avg_completion: 0,
-    issues_flagged: 0
+    issues_flagged: 0,
+    material_received_today: 0,
+    material_used_today: 0
   });
   const [logs, setLogs] = useState<DPRLog[]>([]);
 
@@ -194,8 +200,8 @@ export default function DPRPage() {
               { label: "Site Staff Present", value: summary.total_workers_deployed || "—", desc: "Clocked via geofence", color: "border-primary/20 bg-primary/5 text-primary" },
               { label: "Equipment Used", value: logs.length > 0 ? `${logs.length} Reports` : "0 Active", desc: "DPR reports logged", color: "border-secondary/20 bg-secondary/5 text-secondary" },
               { label: "Subcon Updates", value: logs.filter((l: any) => l.subcon_name).length > 0 ? `${logs.filter((l: any) => l.subcon_name).length} Updates` : "0 Tasks updated", desc: "Logged by subcontractors", color: "border-emerald-500/20 bg-emerald-500/5 text-emerald-400" },
-              { label: "Material Received", value: logs.reduce((sum: number, l: any) => sum + (l.material_received || 0), 0) > 0 ? `${logs.reduce((sum: number, l: any) => sum + (l.material_received || 0), 0)} Units` : "No GRNs today", desc: "Material inward logged", color: "border-amber-500/20 bg-amber-500/5 text-amber-400" },
-              { label: "Material Used Today", value: logs.reduce((sum: number, l: any) => sum + (l.material_used || 0), 0) > 0 ? `${logs.reduce((sum: number, l: any) => sum + (l.material_used || 0), 0)} Units` : "No consumption logged", desc: "On-site consumption", color: "border-sky-500/20 bg-sky-500/5 text-sky-400" }
+              { label: "Material Received", value: (summary.material_received_today || 0) > 0 ? `${summary.material_received_today} Units` : "No GRNs today", desc: "Material inward logged", color: "border-amber-500/20 bg-amber-500/5 text-amber-400" },
+              { label: "Material Used Today", value: (summary.material_used_today || 0) > 0 ? `${summary.material_used_today} Units` : "No consumption logged", desc: "On-site consumption", color: "border-sky-500/20 bg-sky-500/5 text-sky-400" }
             ].map((card, idx) => (
               <div key={idx} className={`p-4 rounded-lg border ${card.color} flex flex-col justify-between h-28 shadow-sm`}>
                 <span className="text-[10px] uppercase font-bold tracking-wider opacity-70">{card.label}</span>
