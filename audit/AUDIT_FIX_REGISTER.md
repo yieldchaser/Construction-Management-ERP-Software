@@ -282,8 +282,8 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-129 | MEDIUM | W12 | `statutory.py` | — | FIXED | FIXED bdaa883; PF/ESI/BOCW due the 15th, TDS the 7th of the FOLLOWING month with December rollover (was same-month - every return flagged late). Sibling: export_pf_ecr due_date string still same-month 15th (statutory.py:283). |
 | R2-130 | MEDIUM | W12 | `statutory.py` | — | FIXED | FIXED 87b15ad; the invented penalty formula deleted; /penalty returns estimated_penalty 0.0 + correct due date. Sibling: frontend Estimate Penalty modal now shows 0 (honest but dead UX). |
 | R2-131 | CRITICAL | W07 | `billing.py` | `labour.py`, `finance.py`, `subcon_performance.py` | TODO | | reg L5051 |
-| R2-132 | CRITICAL | W16 | `three_way.py` | — | TODO | | reg L5140 |
-| R2-133 | CRITICAL | W16 | `three_way.py` | — | TODO | | reg L5165 |
+| R2-132 | CRITICAL | W16 | `three_way.py` | — | FIXED | | reg L5140 S33-C EVIDENCE e68160e: satisfied by R2-241 5c73713 (match_status/matched_by deleted from create schema); proof test added. |
+| R2-133 | CRITICAL | W16 | `three_way.py` | — | FIXED | | reg L5165 S33-C EVIDENCE 5a796ce: verdict server-owned (5c73713) + approver session-stamped (a76823c/R2-539); replay test added. |
 | R2-134 | MEDIUM | W16 | `three_way.py` | — | FIXED | FIXED 97ed0dd; three-way match tolerance = max(Rs 1, 1% of baseline) instead of one paisa. |
 | R2-135 | MEDIUM | W22 | `safety.py` | `billing.py`, `assets.py`, `d/safety/page.tsx` | FIXED | FIXED a32d60e (in assets.py — the finding lives there despite the W22 label); depreciation method constrained (straight_line|wdv), create_entry 404s on missing schedule, enforces rolling continuity, cent-quantized, salvage floor. Siblings: GET/path handlers still parse str UUIDs raw (500 class); cost-based checks unimplementable (no cost column on Equipment). |
 | R2-136 | MEDIUM | W11 | `planning.py` | `crm.py`, `mom.py`, `towers.py` | FIXED | FIXED 048f72f PARTIAL: the planning.py discriminator instances (milestone type/status, predecessor type) validated; the other 14 catalogue fields remain (tracked by the finding). |
@@ -388,7 +388,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-237 | HIGH | W13 | `budget.py` | — | FIXED | | reg L10016 S33 EVIDENCE-CLOSE: subsumed by R2-153 bucketing (b9c0a20) + 241f76c; covered by test_r2_153_budget_expense_bucket.py. |
 | R2-238 | HIGH | W01 | `finance.py` | `constants.py`, `transaction/page.tsx` | FIX_VERIFIED | `de6815f` | reg L10055; wave W01c; suite RC-025 S33 SWEEP: drift CONFIRMED live (settlement vouchers booked Material Bill/Cost, inverted sign) -> re-fixed 125ebfa (Settlement/Cash Movement signed by direction; frontend untouched - /finance/ledger has no consumers). |
 | R2-239 | CRITICAL | W05 | `procurement.py` | — | FIX_VERIFIED | `e9e3308` | reg L10127; procurement.py direct-fix pass; suite RC-084 |
-| R2-240 | CRITICAL | W16 | `three_way.py` | — | TODO | | reg L10172 |
+| R2-240 | CRITICAL | W16 | `three_way.py` | — | FIXED | | reg L10172 S33-C FIXED a1ad81e: three-way baseline capped at ordered-qty (cumulative-aware), tax-inclusive both branches; ordered/received/po_total surfaced. |
 | R2-241 | HIGH | W16 | `three_way.py` | — | FIXED | | reg L10228 S33 FIXED 5c73713 (H-3way-settings): match verdict server-computed from variance; match_status/matched_by removed from create schema; aware-UTC matched_at; test added. |
 | R2-242 | HIGH | W13 | `budget.py` | — | FIXED | | reg L10285 S33 EVIDENCE-CLOSE: PO committed whitelist (sent/partial/received) already landed via R2-154 (bd41ec7); behavior test added 51384d6. |
 | R2-243 | CRITICAL | W01 | `finance.py` | `constants.py` | FIX_VERIFIED | `2ac8113` | reg L10340; wave W01a; suite RC-016 S33 SWEEP: drift CONFIRMED live (subcon in EXPENSE bucket double-counted) -> re-fixed 2803dad (material_actual excludes subcon); reports.py sites checked - disjoint reports, no change needed. |
@@ -685,7 +685,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-535 | MEDIUM | W128 | `vendor_performance.py` | `projects.py`, `crypto.py`, `auth.py` | FIXED | FIXED 2ae795b; duplicate-PO check normalizes case/whitespace on both sides. |
 | R2-536 | HIGH | W72 | `delete_logs.py` | — | FIXED | | reg L27350 S33 FIXED 869c297: all 30 log_deletion call sites pass actor; deleted_by keyword-only required; AST-scanned. |
 | R2-537 | MEDIUM | W02 | `UNMAPPED` | — | FIXED | FIXED d9f99b3; log_deletion no longer commits or swallows - the audit row lands in the caller transaction (all-or-nothing); redundant try/except:pass removed at all 30 call sites across 14 files. Sibling: R2-536 (deleted_by still omitted at all call sites). |
-| R2-538 | CRITICAL | W16 | `three_way.py` | — | TODO | | reg L27457 |
+| R2-538 | CRITICAL | W16 | `three_way.py` | — | FIXED | | reg L27457 S33-C EVIDENCE 432cbf2: same defect as R2-133 half 1; stored-verdict replay test added. |
 | R2-539 | HIGH | W16 | `three_way.py` | `models.py`, `calculators.py` | FIXED | | reg L27497 S33 FIXED a76823c (H-3way-settings): approve/reject stamp session user + timestamp; caller approved_by ignored; rejected joins model vocabulary; test added. |
 | R2-540 | CRITICAL | W03 | `hr.py` | `models.py` | FIX_VERIFIED | `e2e449d` | reg L27683; hr.py direct-fix pass; suite RC-046 |
 | R2-541 | CRITICAL | W06 | `settings.py` | — | TODO | | reg L27736 |
