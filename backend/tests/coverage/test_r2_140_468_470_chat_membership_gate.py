@@ -194,3 +194,88 @@ def test_list_groups_comparison_matches_subroute_gate(client, db, make_tenant, a
     assert [g["id"] for g in mine] == [gid]
     theirs = client.get(f"/apis/v3/chat/groups/{project.id}", headers=hdr_b).json()
     assert gid not in [g["id"] for g in theirs]
+
+
+# --- R2-470: an empty group can acquire its first member via its creator ---
+
+
+def _empty_group(db, comp, project, name, created_by):
+    group = models.ChatGroup(
+        id=uuid.uuid4(), company_id=comp.id, project_id=project.id,
+        name=name, group_type="general", created_by=created_by,
+    )
+    db.add(group)
+    db.commit()
+    return group
+
+
+def test_creator_bootstraps_first_member_into_empty_group(client, db, make_tenant, auth_headers):
+    comp, user_a, team_a = make_tenant(company_name=f"R470-{_SUFFIX}", user_name="UR470A")
+    hdr_a = auth_headers(user_a, comp)
+    project = _mk_project(db, comp, "P470")
+    group = _empty_group(db, comp, project, "orphan", team_a.id)
+
+    user_b = _mk_colleague(db, comp, "UR470B")
+    hdr_b = auth_headers(user_b, comp)
+
+    r = client.post(
+        f"/apis/v3/chat/groups/{group.id}/members",
+        json={"group_id": str(group.id), "user_id": str(user_b.id), "role": "admin"},
+        headers=hdr_b,
+    )
+    assert r.status_code == 403, "before bootstrap the empty group must still refuse outsiders"
+
+    r = client.post(
+        f"/apis/v3/chat/groups/{group.id}/members",
+        json={"group_id": str(group.id), "user_id": str(team_a.id), "role": "admin"},
+        headers=hdr_a,
+    )
+    assert r.status_code == 201, r.text
+    member = db.query(models.ChatGroupMember).filter(
+        models.ChatGroupMember.group_id == group.id,
+        models.ChatGroupMember.user_id == team_a.id,
+    ).one()
+    assert member.role == "admin"
+
+    r = client.get(f"/apis/v3/chat/messages/{group.id}", headers=hdr_a)
+    assert r.status_code == 200, "bootstrapped creator is now a full member"
+
+
+def test_empty_group_refuses_non_creator(client, db, make_tenant, auth_headers):
+    comp, user_a, team_a = make_tenant(company_name=f"R470B-{_SUFFIX}", user_name="UR470BA")
+    hdr_a = auth_headers(user_a, comp)
+    project = _mk_project(db, comp, "P470B")
+    group = _empty_group(db, comp, project, "orphan-b", team_a.id)
+
+    user_c = _mk_colleague(db, comp, "UR470C")
+    hdr_c = auth_headers(user_c, comp)
+    r = client.post(
+        f"/apis/v3/chat/groups/{group.id}/members",
+        json={"group_id": str(group.id), "user_id": str(user_c.id), "role": "admin"},
+        headers=hdr_c,
+    )
+    assert r.status_code == 403, r.text
+    assert r.json()["detail"] == "Only the group creator can add the first member to an empty group"
+
+
+def test_non_empty_group_still_requires_group_admin(client, db, make_tenant, auth_headers):
+    comp, user_a, team_a = make_tenant(company_name=f"R470C-{_SUFFIX}", user_name="UR470CA")
+    hdr_a = auth_headers(user_a, comp)
+    project = _mk_project(db, comp, "P470C")
+    gid = _create_group(client, hdr_a, comp, project, "normal")
+
+    user_d = _mk_colleague(db, comp, "UR470D")
+    hdr_d = auth_headers(user_d, comp)
+    db.add(models.ChatGroupMember(group_id=uuid.UUID(gid), user_id=user_d.id, role="member"))
+    db.commit()
+
+    r = client.post(
+        f"/apis/v3/chat/groups/{gid}/members",
+        json={
+            "group_id": gid,
+            "user_id": str(uuid.uuid4()), "role": "member",
+        },
+        headers=hdr_d,
+    )
+    assert r.status_code == 403, r.text
+    assert r.json()["detail"] == "Group admin role required"

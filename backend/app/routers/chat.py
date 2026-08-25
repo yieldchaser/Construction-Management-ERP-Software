@@ -290,7 +290,23 @@ def add_member(group_id: uuid.UUID, payload: ChatGroupMemberCreate, db: Session 
     if not group:
         raise HTTPException(status_code=404, detail="Chat group not found")
     get_company_membership(db, current_user, group.company_id)
-    require_group_admin(db, current_user, group.id)
+    member_count = db.query(func.count(ChatGroupMember.id)).filter(
+        ChatGroupMember.group_id == group.id
+    ).scalar() or 0
+    if member_count == 0:
+        # Bootstrap: a group with no members has nobody who could grant access,
+        # so its recorded creator - resolved in both ID spaces, because rows
+        # created before the created_by stamp was fixed may hold either -
+        # may seed the first member. Once one exists the normal admin gate applies.
+        team = company_team_for(db, group.company_id, current_user)
+        caller_ids = [current_user.id] + ([team.id] if team else [])
+        if group.created_by is None or group.created_by not in caller_ids:
+            raise HTTPException(
+                status_code=403,
+                detail="Only the group creator can add the first member to an empty group",
+            )
+    else:
+        require_group_admin(db, current_user, group.id)
     member = ChatGroupMember(**payload.model_dump())
     db.add(member)
     db.commit()
