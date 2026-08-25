@@ -39,6 +39,10 @@ MODULES = [
 ]
 
 # Modules that support a workflow `approve` action (in addition to view/edit).
+# R2-172: this set must cover every module DEFAULT_ROLE_PRESETS grants `:approve`
+# for - a preset key outside ALL_PERMISSION_KEYS is rejected by
+# validate_permissions, so re-saving such a role 400s on the direct-API path
+# while the permission-matrix UI silently strips the key instead.
 WORKFLOW_MODULES = {
     "finance",
     "billing",
@@ -49,6 +53,13 @@ WORKFLOW_MODULES = {
     "drawings",
     "reports",
     "subcontractor",
+    "projects",
+    "crm",
+    "production",
+    "quality",
+    "safety",
+    "equipment",
+    "planning",
 }
 
 # Cross-cutting high-risk capabilities (not tied to a single module's CRUD).

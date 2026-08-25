@@ -29,6 +29,8 @@ export const MODULES = [
 export type ModuleKey = (typeof MODULES)[number];
 
 // Modules that support a workflow `approve` action (in addition to view/edit).
+// R2-172: kept in lockstep with backend WORKFLOW_MODULES - a stored key absent
+// from this list is dropped from the draft and silently revoked on save.
 export const WORKFLOW_MODULES: ReadonlySet<string> = new Set([
   "finance",
   "billing",
@@ -39,6 +41,13 @@ export const WORKFLOW_MODULES: ReadonlySet<string> = new Set([
   "drawings",
   "reports",
   "subcontractor",
+  "projects",
+  "crm",
+  "production",
+  "quality",
+  "safety",
+  "equipment",
+  "planning",
 ]);
 
 // Cross-cutting high-risk capabilities (not tied to a single module's CRUD).
