@@ -201,8 +201,13 @@ def consolidated_pnl(project_id: UUID, tower_id: Optional[UUID] = Query(None), d
     # No document carries a tower_id (CD-5), so per-tower attribution does not
     # exist: stamping the whole project on every tower row multiplied spend by
     # the tower count (R2-228/R2-248). One honest project-wide row until the
-    # column exists (R2-374).
-    total_budget = sum(float(t.budget) for t in towers)
+    # column exists (R2-374), reconciled against the project's own budget -
+    # the construction the no-towers branch already uses.
+    budget_row = db.query(ProjectBudget).filter(ProjectBudget.project_id == project_id).first()
+    if budget_row:
+        total_budget = float(budget_row.subcon_budget) + float(budget_row.material_budget) + float(budget_row.labour_budget) + float(budget_row.equipment_budget)
+    else:
+        total_budget = sum(float(t.budget) for t in towers)
     return [ConsolidatedPNLItem(
         tower_id=None,
         tower_name="Overall Project",

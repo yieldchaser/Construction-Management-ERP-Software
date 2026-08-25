@@ -172,7 +172,10 @@ def test_budget_overall_row_reconciles_to_project_budget_row(client, db, make_te
     db.commit()
 
     _mk_po(db, comp, project, 700.0, "sent", "sent")
-    _mk_bill(db, comp, project, team, "subcon", 2000.0, "sub")
+    # Revenue-scope billed vs expense-scope actual are deliberately different
+    # figures so each endpoint reconciles against its own ledger scope.
+    _mk_bill(db, comp, project, team, "sale", 2000.0, "sale")
+    _mk_bill(db, comp, project, team, "subcon", 3000.0, "sub")
 
     r = client.get(f"/apis/v3/towers/{project.id}/consolidated-pnl", headers=hdr)
     assert r.status_code == 200, r.text
@@ -182,6 +185,7 @@ def test_budget_overall_row_reconciles_to_project_budget_row(client, db, make_te
     assert row["tower_id"] is None, row
     assert row["tower_code"] == "ALL", row
     assert row["budget"] == 1000000.0, row
+    assert row["total_billed"] == 2000.0, row
     assert row["variance"] == 1000000.0 - 2000.0, row
 
     r = client.get(f"/apis/v3/budget/committed/{project.id}/towers", headers=hdr)
@@ -190,6 +194,6 @@ def test_budget_overall_row_reconciles_to_project_budget_row(client, db, make_te
     assert len(rows) == 1, rows
     row = rows[0]
     assert row["committed"] == 700.0, row
-    assert row["actual"] == 2000.0, row
+    assert row["actual"] == 3000.0, row
     assert row["budget"] == 1000000.0, row
-    assert row["variance"] == 1000000.0 - 2000.0, row
+    assert row["variance"] == 1000000.0 - 3000.0, row
