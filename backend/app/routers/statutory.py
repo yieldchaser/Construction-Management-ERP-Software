@@ -1,3 +1,4 @@
+import re
 import uuid
 from datetime import datetime, timezone
 from typing import List, Literal, Optional
@@ -6,7 +7,7 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field, field_validator
 from app.database import get_db
 from app.auth import get_current_user, verify_project_in_company, verify_company_access, require_permission, require_module_view
-from app.models import StatutoryReport, StaffEmployee, PayrollRun, PayrollLineItem, User, Bill, CompanyTeam, LibraryParty
+from app.models import StatutoryReport, StaffEmployee, PayrollRun, PayrollLineItem, User, Bill, CompanyTeam, LibraryParty, TransactionDeduction
 from app.constants import REVENUE_INVOICE_TYPES
 from decimal import Decimal
 
@@ -245,15 +246,25 @@ def estimate_penalty(company_id: uuid.UUID, report_type: str = Query(...), retur
 # These were missing — the spec says /gstr1, /pf-ecr, /tds-26q but only /{company_id} existed.
 
 
+_TDS_SECTION_RE = re.compile(r"19\d[A-Z]+")
+
+
+def _parse_tds_section(notes: str) -> str:
+    """Pull the TDS section (e.g. 194C, 194J) recorded in deduction notes;
+    contractor payments default to 194C when none was captured."""
+    match = _TDS_SECTION_RE.search(notes or "")
+    return match.group(0) if match else "194C"
+
+
 def _party_tax_identity(db: Session, party_team_id) -> tuple:
-    """Resolve (party name, GSTIN/tax id) for a bill's company_team party."""
+    """Resolve (party name, GSTIN/tax id, PAN) for a bill's company_team party."""
     team = db.query(CompanyTeam).filter(CompanyTeam.id == party_team_id).first()
     if not team or not team.library_party_id:
-        return None, None
+        return None, None, None
     party = db.query(LibraryParty).filter(LibraryParty.id == team.library_party_id).first()
     if not party:
-        return None, None
-    return party.name, party.tax_no
+        return None, None, None
+    return party.name, party.tax_no, party.pan_number
 
 
 @router.get("/{company_id}/gstr1")
@@ -293,7 +304,7 @@ def export_gstr1(
     for b in bills:
         taxable = float(b.subtotal or 0)
         gst_amount = float(b.gst_amount or 0)
-        party_name, party_gstin = _party_tax_identity(db, b.party_company_user_id)
+        party_name, party_gstin, _pan = _party_tax_identity(db, b.party_company_user_id)
         half_tax = round(gst_amount / 2, 2)
         records.append({
             "invoice_number": b.invoice_number,
@@ -409,34 +420,59 @@ def export_tds_26q(
     _: None = Depends(verify_company_access),
     current_user: User = Depends(get_current_user),
 ):
-    """TDS Form 26Q — quarterly TDS return for non-salary deductions (subcon payments etc.)."""
-    require_module_view(db, current_user, company_id, "payroll")
-    quarter_map = {"Q1": ("04", "06"), "Q2": ("07", "09"), "Q3": ("10", "12"), "Q4": ("01", "03")}
-    if quarter not in quarter_map:
-        raise HTTPException(status_code=422, detail=f"Invalid quarter '{quarter}'. Use Q1, Q2, Q3, or Q4.")
-    start_month, end_month = quarter_map[quarter]
-    due_map = {"Q1": f"{year}-07-31", "Q2": f"{year}-10-31", "Q3": f"{year+1}-01-31", "Q4": f"{year+1}-05-31"}
+    """TDS Form 26Q — quarterly TDS return for non-salary deductions (subcon payments etc.).
 
-    employees = db.query(StaffEmployee).filter(
-        StaffEmployee.company_id == company_id,
-        StaffEmployee.status == "active",
-    ).all()
+    R2-524: built from the transaction deduction ledger - the TDS actually
+    withheld on bills inside the quarter. 26Q covers non-salary deductees;
+    salary TDS belongs on Form 24Q and is no longer invented here from the
+    salary population at a hardcoded section.
+    """
+    require_module_view(db, current_user, company_id, "payroll")
+    if quarter not in ("Q1", "Q2", "Q3", "Q4"):
+        raise HTTPException(status_code=422, detail=f"Invalid quarter '{quarter}'. Use Q1, Q2, Q3, or Q4.")
+    # R2-524: the quarter's real calendar window. `year` is the financial-year
+    # label: Q1-Q3 fall inside it, Q4 spills into the next calendar year.
+    quarter_windows = {
+        "Q1": (datetime(year, 4, 1), datetime(year, 7, 1)),
+        "Q2": (datetime(year, 7, 1), datetime(year, 10, 1)),
+        "Q3": (datetime(year, 10, 1), datetime(year + 1, 1, 1)),
+        "Q4": (datetime(year + 1, 1, 1), datetime(year + 1, 4, 1)),
+    }
+    due_map = {"Q1": f"{year}-07-31", "Q2": f"{year}-10-31", "Q3": f"{year+1}-01-31", "Q4": f"{year+1}-05-31"}
+    start_date, end_date = quarter_windows[quarter]
+
+    deduction_rows = (
+        db.query(TransactionDeduction, Bill)
+        .join(Bill, TransactionDeduction.bill_id == Bill.id)
+        .filter(
+            Bill.company_id == company_id,
+            TransactionDeduction.deduction_type == "TDS",
+            Bill.invoice_date >= start_date,
+            Bill.invoice_date < end_date,
+        )
+        .order_by(Bill.invoice_date.asc())
+        .all()
+    )
 
     deductee_rows = []
     total_tds = 0.0
-    for emp in employees:
-        monthly_tds = float(emp.tds_monthly or 0)
-        quarterly_tds = round(monthly_tds * 3, 2)
-        if quarterly_tds > 0:
-            total_tds += quarterly_tds
-            deductee_rows.append({
-                "pan": "NOPANAVAIL",  # PAN not stored on model; placeholder
-                "name": emp.name,
-                "employee_code": emp.employee_code or str(emp.id)[:8].upper(),
-                "tds_section": "194C",
-                "gross_payment": round(float(emp.basic_salary or 0) * 3, 2),
-                "tds_deducted": quarterly_tds,
-            })
+    for ded, bill in deduction_rows:
+        amount = float(ded.amount or 0)
+        pct = float(ded.percentage or 0)
+        gross = round(amount / (pct / 100), 2) if pct > 0 else float(bill.subtotal or 0)
+        party_name, _gstin, party_pan = _party_tax_identity(db, bill.party_company_user_id)
+        deductee_rows.append({
+            # Without a PAN section 206AA mandates 20% and the return is
+            # rejected; parties without one on file stay flagged NOPANAVAIL.
+            "pan": party_pan or "NOPANAVAIL",
+            "name": party_name,
+            "invoice_number": bill.invoice_number,
+            "tds_section": _parse_tds_section(ded.notes),
+            "gross_payment": gross,
+            "tds_deducted": amount,
+            "deduction_date": bill.invoice_date.date().isoformat(),
+        })
+        total_tds += amount
 
     return {
         "report": "TDS-26Q",

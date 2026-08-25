@@ -332,3 +332,74 @@ def test_r2_523_pf_ecr_from_period_payslips_with_eps_split(client, db, make_tena
     r = client.get(f"/apis/v3/statutory/{comp.id}/pf-ecr?month=9&year=2026", headers=hdr)
     assert r.status_code == 409, r.text
 
+
+# ── R2-524: Form 26Q reports the non-salary TDS actually withheld ────────────
+
+def test_r2_524_26q_from_transaction_deduction_ledger(client, db, make_tenant, auth_headers):
+    comp, user, hdr = _hdr(auth_headers, make_tenant, db, "R2524")
+    team = db.query(models.CompanyTeam).filter(models.CompanyTeam.company_id == comp.id).first()
+    project = models.Project(
+        id=uuid.uuid4(), company_id=comp.id, name="P524",
+        code=f"PRJ-524-{_SUFFIX}", status="Ongoing",
+    )
+    db.add(project)
+    lp = models.LibraryParty(
+        id=uuid.uuid4(), company_id=comp.id, name="Subcon India Pvt Ltd",
+        pan_number="ABCDE1234F",
+    )
+    db.add(lp)
+    db.flush()
+    team.library_party_id = lp.id
+    team2 = models.CompanyTeam(id=uuid.uuid4(), company_id=comp.id)  # no PAN on file
+    db.add(team2)
+    db.flush()
+
+    def _tds_bill(number, party_id, day, month, subtotal, amount, pct, notes, inv_type="subcon"):
+        bill = models.Bill(
+            id=uuid.uuid4(), company_id=comp.id, project_id=project.id,
+            party_company_user_id=party_id, invoice_number=f"{number}-{_SUFFIX}",
+            invoice_date=datetime(2026, month, day), invoice_type=inv_type,
+            status="Unpaid", subtotal=subtotal, gst_amount=0, total_payable=subtotal,
+        )
+        ded = models.TransactionDeduction(
+            id=uuid.uuid4(), bill_id=bill.id, deduction_type="TDS",
+            amount=amount, percentage=pct, notes=notes,
+        )
+        db.add_all([bill, ded])
+
+    # The audited scenario: ₹1,900 at 2% under 194C on a subcon RA bill.
+    _tds_bill("RA-1", team.id, 10, 7, 95000, 1900, 2.0, "2% TDS (Sec 194C)")
+    _tds_bill("PRO-1", team2.id, 5, 9, 50000, 5000, 10.0, "TDS u/s 194J on professional fees")
+    _tds_bill("JUN-1", team.id, 20, 6, 100000, 999, 1.0, "TDS Sec 194C")   # Q1, not Q2
+    db.commit()
+
+    r = client.get(f"/apis/v3/statutory/{comp.id}/tds-26q?quarter=Q2&year=2026", headers=hdr)
+    assert r.status_code == 200, r.text
+    body = r.json()
+    # The one deduction the old salary-population build could never see is now
+    # the headline row: correct section, resolved PAN, real gross and TDS.
+    row_c = next(row for row in body["deductee_rows"] if row["tds_section"] == "194C")
+    assert row_c["pan"] == "ABCDE1234F", body
+    assert row_c["gross_payment"] == 95000.0, row_c
+    assert row_c["tds_deducted"] == 1900.0, row_c
+    row_j = next(row for row in body["deductee_rows"] if row["tds_section"] == "194J")
+    assert row_j["tds_deducted"] == 5000.0, row_j
+    assert row_j["pan"] == "NOPANAVAIL", row_j          # flagged, not invented
+    assert len(body["deductee_rows"]) == 2, body        # June's 194C stays in Q1
+    assert body["total_tds_liability"] == 6900.0, body
+    assert body["due_date"] == "2026-10-31", body
+
+    r = client.get(f"/apis/v3/statutory/{comp.id}/tds-26q?quarter=Q1&year=2026", headers=hdr)
+    assert r.status_code == 200, r.text
+    q1 = r.json()
+    assert q1["total_deductees"] == 1, q1
+    assert q1["deductee_rows"][0]["tds_section"] == "194C", q1
+    assert q1["total_tds_liability"] == 999.0, q1
+
+    # An empty quarter stays a clean zero return; invalid quarter still 422s.
+    r = client.get(f"/apis/v3/statutory/{comp.id}/tds-26q?quarter=Q4&year=2026", headers=hdr)
+    assert r.status_code == 200, r.text
+    assert r.json()["total_deductees"] == 0 and r.json()["total_tds_liability"] == 0.0, r.text
+    r = client.get(f"/apis/v3/statutory/{comp.id}/tds-26q?quarter=QX&year=2026", headers=hdr)
+    assert r.status_code == 422, r.text
+
