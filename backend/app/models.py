@@ -394,6 +394,10 @@ class DrawingRevision(Base):
     version_code = Column(String(20), nullable=False) # e.g. "V1", "V2", "V3"
     file_url = Column(String, nullable=False)
     approval_status = Column(String(50), default="pending", nullable=False) # e.g. "pending", "approved", "rejected"
+    # R2-365: when this revision stopped being the drawing's current sheet;
+    # an approved revision with a NULL value is the one site teams build from
+    # (exactly one per drawing after any approval).
+    superseded_at = Column(DateTime(timezone=True), nullable=True)
     approved_by = Column(UUID(as_uuid=True), ForeignKey("company_team.id"), nullable=True)
     comments = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)

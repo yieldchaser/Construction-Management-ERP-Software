@@ -1,5 +1,5 @@
 from uuid import UUID
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 from urllib.parse import urlparse
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -47,6 +47,9 @@ class DrawingRevisionResponse(BaseModel):
     version_code: str
     file_url: str
     approval_status: str
+    # R2-365: NULL on an approved revision marks it as the drawing's current
+    # sheet; a stamped value means a later approved revision replaced it.
+    superseded_at: Optional[datetime] = None
     approved_by: Optional[UUID] = None
     comments: Optional[str] = None
     created_at: datetime
@@ -121,10 +124,12 @@ def get_drawings(project_id: UUID, db: Session = Depends(get_db), _: None = Depe
     drawings = db.query(Drawing).filter(Drawing.project_id == project_id).all()
     res = []
     for d in drawings:
-        revisions = db.query(DrawingRevision).filter(DrawingRevision.drawing_id == d.id).all()
+        # R2-365: newest first by a defined order; without ORDER BY the sequence
+        # depended on physical row order, which shifts after updates and vacuum.
+        revisions = db.query(DrawingRevision).filter(DrawingRevision.drawing_id == d.id).order_by(DrawingRevision.created_at.desc()).all()
         rev_responses = []
         for r in revisions:
-            pins = db.query(DrawingPin).filter(DrawingPin.revision_id == r.id).all()
+            pins = db.query(DrawingPin).filter(DrawingPin.revision_id == r.id).order_by(DrawingPin.created_at.asc()).all()
             pin_responses = [
                 DrawingPinResponse(
                     id=p.id,
@@ -146,6 +151,7 @@ def get_drawings(project_id: UUID, db: Session = Depends(get_db), _: None = Depe
                     version_code=r.version_code,
                     file_url=r.file_url,
                     approval_status=r.approval_status,
+                    superseded_at=r.superseded_at,
                     approved_by=r.approved_by,
                     comments=r.comments,
                     created_at=r.created_at,
@@ -209,6 +215,7 @@ def create_drawing(req: DrawingCreateRequest, db: Session = Depends(get_db), cur
                 version_code=revision.version_code,
                 file_url=revision.file_url,
                 approval_status=revision.approval_status,
+                superseded_at=revision.superseded_at,
                 approved_by=revision.approved_by,
                 comments=revision.comments,
                 created_at=revision.created_at,
@@ -265,6 +272,7 @@ def add_drawing_revision(drawing_id: UUID, req: RevisionCreateRequest, db: Sessi
         version_code=revision.version_code,
         file_url=revision.file_url,
         approval_status=revision.approval_status,
+        superseded_at=revision.superseded_at,
         approved_by=revision.approved_by,
         comments=revision.comments,
         created_at=revision.created_at,
@@ -305,13 +313,25 @@ def approve_drawing_revision(revision_id: UUID, req: RevisionApproveRequest, db:
     ))
     revision.approval_status = req.approval_status
     revision.approved_by = None if req.approval_status == "pending" else membership.id
+    # R2-365: an approval names the sheet site teams build from. Every other
+    # approved revision of this drawing stops being current the moment this one
+    # is approved, so a drawing can never carry two indistinguishable approved
+    # sheets; re-approving an older revision makes it current again.
+    if req.approval_status == "approved":
+        db.query(DrawingRevision).filter(
+            DrawingRevision.drawing_id == revision.drawing_id,
+            DrawingRevision.id != revision.id,
+            DrawingRevision.approval_status == "approved",
+            DrawingRevision.superseded_at.is_(None),
+        ).update({"superseded_at": datetime.now(timezone.utc)}, synchronize_session=False)
+        revision.superseded_at = None
     if req.comments:
         revision.comments = req.comments
         
     db.commit()
     db.refresh(revision)
     
-    pins = db.query(DrawingPin).filter(DrawingPin.revision_id == revision.id).all()
+    pins = db.query(DrawingPin).filter(DrawingPin.revision_id == revision.id).order_by(DrawingPin.created_at.asc()).all()
     pin_responses = [
         DrawingPinResponse(
             id=p.id,
@@ -333,6 +353,7 @@ def approve_drawing_revision(revision_id: UUID, req: RevisionApproveRequest, db:
         version_code=revision.version_code,
         file_url=revision.file_url,
         approval_status=revision.approval_status,
+        superseded_at=revision.superseded_at,
         approved_by=revision.approved_by,
         comments=revision.comments,
         created_at=revision.created_at,
