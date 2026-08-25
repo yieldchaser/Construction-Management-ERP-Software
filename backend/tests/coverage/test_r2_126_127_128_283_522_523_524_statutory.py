@@ -209,3 +209,80 @@ def test_r2_128_bocw_cess_uses_cost_of_construction(client, db, make_tenant, aut
     assert body["bocw_cess"] == 50000.0, body
     assert body["total_wages"] == 100000.0, body
 
+
+# ── R2-522: GSTR-1 is built from the outward-supply (sales) ledger ───────────
+
+def test_r2_522_gstr1_built_from_sales_ledger(client, db, make_tenant, auth_headers):
+    comp, user, hdr = _hdr(auth_headers, make_tenant, db, "R2522")
+    team = db.query(models.CompanyTeam).filter(models.CompanyTeam.company_id == comp.id).first()
+    project = models.Project(
+        id=uuid.uuid4(), company_id=comp.id, name="P522",
+        code=f"PRJ-522-{_SUFFIX}", status="Ongoing",
+    )
+    db.add(project)
+    lp = models.LibraryParty(
+        id=uuid.uuid4(), company_id=comp.id, name="Acme Traders",
+        tax_no="27AAAAA1234A1Z5", pan_number="AAAAA1234A",
+    )
+    db.add(lp)
+    db.flush()
+    team.library_party_id = lp.id
+    # A second party with no tax identity on file.
+    team2 = models.CompanyTeam(id=uuid.uuid4(), company_id=comp.id)
+    db.add(team2)
+    db.flush()
+
+    sale_a = models.Bill(
+        id=uuid.uuid4(), company_id=comp.id, project_id=project.id,
+        party_company_user_id=team.id, invoice_number=f"GSTR1-A-{_SUFFIX}",
+        invoice_date=datetime(2026, 7, 5), invoice_type="sale",
+        status="Unpaid", subtotal=100000, gst_amount=18000, total_payable=118000,
+    )
+    sale_b = models.Bill(
+        id=uuid.uuid4(), company_id=comp.id, project_id=project.id,
+        party_company_user_id=team2.id, invoice_number=f"GSTR1-B-{_SUFFIX}",
+        invoice_date=datetime(2026, 7, 15), invoice_type="material_sale",
+        status="Paid", subtotal=10000, gst_amount=500, total_payable=10500,
+    )
+    noise_purchase = models.Bill(
+        id=uuid.uuid4(), company_id=comp.id, project_id=project.id,
+        party_company_user_id=team.id, invoice_number=f"GSTR1-P-{_SUFFIX}",
+        invoice_date=datetime(2026, 7, 20), invoice_type="purchase",
+        status="Unpaid", subtotal=888888, gst_amount=0, total_payable=888888,
+    )
+    cancelled_sale = models.Bill(
+        id=uuid.uuid4(), company_id=comp.id, project_id=project.id,
+        party_company_user_id=team.id, invoice_number=f"GSTR1-C-{_SUFFIX}",
+        invoice_date=datetime(2026, 7, 25), invoice_type="sale",
+        status="Cancelled", subtotal=777777, gst_amount=70000, total_payable=847777,
+    )
+    august_sale = models.Bill(
+        id=uuid.uuid4(), company_id=comp.id, project_id=project.id,
+        party_company_user_id=team.id, invoice_number=f"GSTR1-D-{_SUFFIX}",
+        invoice_date=datetime(2026, 8, 3), invoice_type="sale",
+        status="Unpaid", subtotal=555555, gst_amount=50000, total_payable=605555,
+    )
+    db.add_all([sale_a, sale_b, noise_purchase, cancelled_sale, august_sale])
+    db.commit()
+
+    r = client.get(f"/apis/v3/statutory/{comp.id}/gstr1?month=7&year=2026", headers=hdr)
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["status"] == "generated", body
+    assert body["due_date"] == "2026-08-11", body
+    assert body["total_invoices"] == 2, body
+    assert body["total_taxable_value"] == 110000.0, body
+    assert body["total_gst"] == 18500.0, body
+    rec_a, rec_b = body["records"]
+    assert rec_a["invoice_number"] == f"GSTR1-A-{_SUFFIX}", body
+    assert rec_a["taxable_value"] == 100000.0 and rec_a["gst_amount"] == 18000.0, rec_a
+    assert rec_a["cgst"] == 9000.0 and rec_a["sgst"] == 9000.0 and rec_a["igst"] == 0.0, rec_a
+    assert rec_a["party_gstin"] == "27AAAAA1234A1Z5", rec_a
+    assert rec_b["party_gstin"] is None, rec_b
+
+    # A month without outward supplies reports not_generated instead of wages.
+    r = client.get(f"/apis/v3/statutory/{comp.id}/gstr1?month=9&year=2026", headers=hdr)
+    assert r.status_code == 200, r.text
+    assert r.json()["status"] == "not_generated", r.json()
+    assert r.json()["records"] == [], r.json()
+

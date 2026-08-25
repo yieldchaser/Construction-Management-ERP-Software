@@ -6,7 +6,8 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field, field_validator
 from app.database import get_db
 from app.auth import get_current_user, verify_project_in_company, verify_company_access, require_permission, require_module_view
-from app.models import StatutoryReport, StaffEmployee, PayrollRun, PayrollLineItem, User, Bill
+from app.models import StatutoryReport, StaffEmployee, PayrollRun, PayrollLineItem, User, Bill, CompanyTeam, LibraryParty
+from app.constants import REVENUE_INVOICE_TYPES
 from decimal import Decimal
 
 router = APIRouter(prefix="/statutory", tags=["Statutory Reports"], dependencies=[Depends(get_current_user)])
@@ -243,6 +244,18 @@ def estimate_penalty(company_id: uuid.UUID, report_type: str = Query(...), retur
 # DEFECT-08 fix: Dedicated statutory export endpoints referenced in API spec
 # These were missing — the spec says /gstr1, /pf-ecr, /tds-26q but only /{company_id} existed.
 
+
+def _party_tax_identity(db: Session, party_team_id) -> tuple:
+    """Resolve (party name, GSTIN/tax id) for a bill's company_team party."""
+    team = db.query(CompanyTeam).filter(CompanyTeam.id == party_team_id).first()
+    if not team or not team.library_party_id:
+        return None, None
+    party = db.query(LibraryParty).filter(LibraryParty.id == team.library_party_id).first()
+    if not party:
+        return None, None
+    return party.name, party.tax_no
+
+
 @router.get("/{company_id}/gstr1")
 def export_gstr1(
     company_id: uuid.UUID,
@@ -252,33 +265,62 @@ def export_gstr1(
     _: None = Depends(verify_company_access),
     current_user: User = Depends(get_current_user),
 ):
-    """GSTR-1 outward supply summary report for the given month/year."""
-    require_module_view(db, current_user, company_id, "payroll")
-    return_period = f"{year}-{month:02d}"
-    # Query filed reports of type gst for this period
-    reports = db.query(StatutoryReport).filter(
-        StatutoryReport.company_id == company_id,
-        StatutoryReport.report_type == "gst",
-        StatutoryReport.return_period == return_period,
-    ).all()
+    """GSTR-1 outward supply summary report for the given month/year.
+
+    R2-522: built from the sales invoice ledger. The StatutoryReport table this
+    endpoint previously read has no GST columns - its own comment enumerates
+    pf/esi/bocw/tds/pt/it - so the old query could only ever echo payroll wages
+    back as a "GST return". Outward supplies live in the bills table.
+    """
+    # R2-522: GST is a finance and tax responsibility, not a payroll one -
+    # a payroll clerk must not read the GST return and finance must.
+    require_module_view(db, current_user, company_id, "finance")
+    start_date = datetime(year, month, 1)
+    end_date = datetime(year + 1, 1, 1) if month == 12 else datetime(year, month + 1, 1)
+    due_year, due_month = (year + 1, 1) if month == 12 else (year, month + 1)
+
+    bills = db.query(Bill).filter(
+        Bill.company_id == company_id,
+        Bill.invoice_type.in_(REVENUE_INVOICE_TYPES),
+        Bill.status != "Cancelled",
+        Bill.invoice_date >= start_date,
+        Bill.invoice_date < end_date,
+    ).order_by(Bill.invoice_date.asc()).all()
+
+    records = []
+    taxable_total = 0.0
+    gst_total = 0.0
+    for b in bills:
+        taxable = float(b.subtotal or 0)
+        gst_amount = float(b.gst_amount or 0)
+        party_name, party_gstin = _party_tax_identity(db, b.party_company_user_id)
+        half_tax = round(gst_amount / 2, 2)
+        records.append({
+            "invoice_number": b.invoice_number,
+            "invoice_date": b.invoice_date.date().isoformat(),
+            "party_name": party_name,
+            "party_gstin": party_gstin,
+            "taxable_value": round(taxable, 2),
+            "gst_amount": round(gst_amount, 2),
+            "cgst": half_tax,
+            "sgst": half_tax,
+            # No place-of-supply data is captured per invoice; the equal
+            # CGST/SGST split mirrors reports.py's documented assumption.
+            "igst": 0.0,
+        })
+        taxable_total += taxable
+        gst_total += gst_amount
+
     return {
         "report": "GSTR-1",
         "company_id": str(company_id),
-        "return_period": return_period,
-        "due_date": f"{year}-{month:02d}-11",
-        "status": reports[0].status if reports else "not_generated",
-        "records": [
-            {
-                "id": str(r.id),
-                "return_period": r.return_period,
-                "total_wages": float(r.total_wages),
-                "tds_deducted": float(r.tds_deducted),
-                "status": r.status,
-                "filed_at": r.filed_at.isoformat() if r.filed_at else None,
-                "acknowledgment_number": r.acknowledgment_number,
-            }
-            for r in reports
-        ],
+        "return_period": f"{year}-{month:02d}",
+        "due_date": f"{due_year}-{due_month:02d}-11",
+        "status": "generated" if records else "not_generated",
+        "total_invoices": len(records),
+        "total_taxable_value": round(taxable_total, 2),
+        "total_gst": round(gst_total, 2),
+        "records": records,
     }
 
 
