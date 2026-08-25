@@ -419,7 +419,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-268 | MEDIUM | W02 | `UNMAPPED` | — | FIXED | FIXED ad328dd (other agent); DPR export resolves the author name, never a raw UUID. |
 | R2-269 | MEDIUM | W24 | `labour.py` | — | FIXED | FIXED bf1343e (in hr.py - register said labour.py); payslip CSV leads with an Employee Code column. |
 | R2-270 | CRITICAL | W89 | `frontend/src/app/c/[company_id]/d/chat/page.tsx` | `models.py` | FIXED | | reg L11773 S33-C FIXED d3d221e: chat create-group payload drops client created_by (server stamps team id). |
-| R2-271 | CRITICAL | W02 | `UNMAPPED` | — | TODO | | reg L11831 |
+| R2-271 | CRITICAL | W02 | `UNMAPPED` | — | FIXED | | reg L11831 S33-C EVIDENCE: line-items gate + explicit (No line items) row + 422 mismatch pin all live (R2-401/R2-241 era). |
 | R2-272 | HIGH | W20 | `zoho_books.py` | — | FIXED | | reg L11876 S33 FIXED c6e4b9d: tax-invoice PDF fields (title, recipient GSTIN, place of supply, HSN/SAC, IGST split) - real file billing.py not zoho_books.py. |
 | R2-273 | MEDIUM | W52 | `crm.py` | — | FIXED | FIXED a040a04; CRM email EmailStr, phone pattern, expected_closure past-rejection on create. |
 | R2-274 | HIGH | W19 | `budgeting.py` | — | FIXED | | reg L11993 S33 FIXED c7c2828 (H-budgeting): first BOQ revision records previous_amount/delta from the value replaced; revised amount in BOQ PDF; test added. |
@@ -547,7 +547,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-396 | CRITICAL | W09 | `page.tsx` | — | FIXED | | reg L19622 S33-C FIXED 88f9af5: report CSV export neutralizes formula cells client-side (mirror of backend _csv_safe_cell). |
 | R2-397 | HIGH | W09 | `page.tsx` | `pdf_generator.py` | FIXED | | reg L19653 S33 FIXED 96f6ffe: popup-blocked print fails honestly; HTML/print exports escapeHtml at all interpolation sites. |
 | R2-398 | MEDIUM | W07 | `billing.py` | — | FIXED | FIXED 8858a45; report exports omit all-blank columns, preserve legitimate 0, ISO timestamps formatted en-IN. |
-| R2-399 | CRITICAL | W02 | `UNMAPPED` | — | TODO | | reg L19749 |
+| R2-399 | CRITICAL | W02 | `UNMAPPED` | — | FIXED | | reg L19749 S33-C FIXED 399bf40: last three Rule-46 elements (amount in words, reverse-charge declaration, signatory block) on tax invoice PDF. |
 | R2-400 | HIGH | W07 | `billing.py` | — | FIXED | | reg L19780 S33 FIXED 54db876 (H-billing): bill PDF addressee resolves CompanyTeam.library_party_id -> LibraryParty.name first; never login name or bare N/A for userless vendors; test added. |
 | R2-401 | HIGH | W07 | `billing.py` | `models.py` | FIXED | | reg L19815 S33 FIXED 2be273f (H-billing): tax invoices require non-empty described line items reconciling to subtotal (422); sibling payload tests repaired; test added. |
 | R2-402 | MEDIUM | W124 | `frontend/src/app/c/[company_id]/settings/page.tsx` | — | FIXED | FIXED 3007f87; PO PDF gains a Received column (sum of GRN received_qty per line). |
@@ -558,7 +558,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-407 | CRITICAL | W02 | `UNMAPPED` | — | FIXED | | reg L20082 S33-C FIXED 74b64ce: payslip CSV neutralizes formula cells (last raw-text exporter). |
 | R2-408 | HIGH | W02 | `UNMAPPED` | — | FIXED | | reg L20115 S33 FIXED 9ee09fe: DPR reported_by stamped server-side from session user; free-text field removed from create schema. |
 | R2-409 | HIGH | W25 | `tally.py` | — | FIXED | | reg L20131 S33 FIXED 19cef93: payslip CSV identity block (pay period/run id/company/project) appended; lives in hr.py not tally.py. |
-| R2-410 | CRITICAL | W02 | `UNMAPPED` | — | TODO | | reg L20196 |
+| R2-410 | CRITICAL | W02 | `UNMAPPED` | — | FIXED | | reg L20196 S33-C FIXED c6f2dfb: Tally export posts GST split (sale/purchase legs, Duties&Taxes parent, balanced vouchers). |
 | R2-411 | MEDIUM | W15 | `models.py` | — | FIXED | FIXED 5847922; tally export emits ledger masters with ACTION=Alter + ALTERID (create-if-absent) and vouchers carry <REFERENCE> (invoice_number / payment reference_number). |
 | R2-412 | HIGH | W73 | `zatca.py` | — | TODO | | reg L20303 |
 | R2-413 | HIGH | W73 | `zatca.py` | `models.py`, `reports.py`, `billing.py` | TODO | | reg L20329 |
@@ -566,7 +566,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-415 | HIGH | W24 | `labour.py` | — | FIXED | | reg L20535 S33 FIXED d81c0a8: BOCW return month validated, contractor resolved from store, figures derived from attendance/payroll/bills. |
 | R2-416 | CRITICAL | W43 | `finance/page.tsx` | — | FIXED | | reg L20647 S33-C EVIDENCE: companyId-gated effect live since R2-022 5fda93e (+R2-099 loading/error states). |
 | R2-417 | HIGH | W01 | `finance.py` | `reports.py`, `models.py`, `finance/page.tsx` | FIX_VERIFIED | `a245605` | reg L20688; direct-fix pass; suite RC-041 |
-| R2-418 | CRITICAL | W02 | `UNMAPPED` | — | TODO | | reg L20858 |
+| R2-418 | CRITICAL | W02 | `UNMAPPED` | — | FIXED | | reg L20858 S33-C FIXED f18ee2b: party rows show Pay x / Receive y beside net balance. |
 | R2-419 | HIGH | W02 | `UNMAPPED` | — | FIXED | | reg L20884 S33 FIXED a11f45c evidence: subcon bill name resolution chain live since R2-174 4d06017; proof test added. |
 | R2-420 | MEDIUM | W43 | `finance/page.tsx` | — | FIXED | FIXED e069dfd; party balance renders Math.abs with direction chip; TransactionRow.project_name added (finance.py) and rendered. |
 | R2-421 | HIGH | W10 | `projects.py` | — | TODO | | reg L20967 |
@@ -591,7 +591,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-441 | HIGH | W10 | `projects.py` | — | FIXED | FIXED 583c47d; project progress rollup covers legacy in_progress status vocabulary (_TASK_PROGRESS extended). |
 | R2-442 | HIGH | W31 | `todos.py` | — | FIXED | | reg L22154 S33 FIXED e9a586b: legacy non-http(s) todo urls serialize null + clearable via PUT null; write allowlist e59316f. |
 | R2-443 | MEDIUM | W31 | `todos.py` | — | FIXED | FIXED bbcad30 (back half); _serialize returns is_overdue (due_date passed, status != done, tz-guarded). repeat_type half is R2-383/CD-3 (founder-gated). UI half (overdue badge/sort) remains. |
-| R2-444 | CRITICAL | W02 | `UNMAPPED` | — | TODO | | reg L22245 |
+| R2-444 | CRITICAL | W02 | `UNMAPPED` | — | FIXED | | reg L22245 S33 FIXED 51c5df7: DPR summary tiles count real used/received from ledger rows (fields never existed on payload before). |
 | R2-445 | HIGH | W107 | `delete-logs/page.tsx` | — | FIXED | | reg L22276 S33 FIXED ab7cb76: fetch errors render a named error row instead of the all-clear empty state (post-R2-310). |
 | R2-446 | MEDIUM | W127 | `mom/page.tsx` | — | FIXED | FIXED 99f1442; Draft added to MOM_STATUSES on both pages. |
 | R2-447 | CRITICAL | W34 | `dashboard/page.tsx` | `projects.py`, `delete-logs/page.tsx`, `main.py` | FIXED | | reg L22443 S33-C EVIDENCE: 500 root cause fixed by 664b430 CPM timedelta; loader gates res.ok + loadingTasks. |
