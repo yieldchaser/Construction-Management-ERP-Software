@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -10,6 +10,15 @@ from app.models import AssetDepreciationSchedule, AssetDepreciationEntry, Equipm
 from decimal import Decimal
 
 router = APIRouter(prefix="/assets", tags=["Asset Depreciation"], dependencies=[Depends(get_current_user)])
+
+
+def _aware_utc(dt: datetime) -> datetime:
+    # R2-503: entry chaining compares the payload date against the stored
+    # prior date; on SQLite the stored value comes back naive while payloads
+    # carry +00:00, and a mixed-flavor comparison is a TypeError (500).
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(timezone.utc)
 
 
 class DepreciationScheduleCreate(BaseModel):
@@ -119,7 +128,7 @@ def create_entry(payload: DepreciationEntryCreate, db: Session = Depends(get_db)
         .order_by(AssetDepreciationEntry.entry_date.desc())
         .first()
     )
-    if prior and payload.entry_date <= prior.entry_date:
+    if prior and _aware_utc(payload.entry_date) <= _aware_utc(prior.entry_date):
         raise HTTPException(status_code=400, detail="entry_date must be after the prior entry's date")
     dep = Decimal(str(payload.depreciation_amount))
     acc = Decimal(str(payload.accumulated_depreciation))
@@ -132,11 +141,42 @@ def create_entry(payload: DepreciationEntryCreate, db: Session = Depends(get_db)
             raise HTTPException(status_code=400, detail="accumulated_depreciation must equal the prior accumulated total plus this period's depreciation_amount")
         if bv.quantize(cents) != (prev_bv - dep).quantize(cents):
             raise HTTPException(status_code=400, detail="book_value must equal the prior book value minus this period's depreciation_amount")
+        opening_bv = prev_bv
     else:
         if acc.quantize(cents) != dep.quantize(cents):
             raise HTTPException(status_code=400, detail="the first entry's accumulated_depreciation must equal its own depreciation_amount")
+        opening_bv = (bv + acc).quantize(cents)
     if bv < Decimal(str(schedule.salvage_value)):
         raise HTTPException(status_code=400, detail="book_value cannot fall below the schedule's salvage_value")
+    # R2-503: the schedule's own method/life/rate now bound what an entry may
+    # book. No single dated entry may depreciate more than ONE YEAR's worth
+    # under the declared schedule - straight_line allows at most
+    # (cost - salvage) / useful_life_years, wdv at most the opening book value
+    # x depreciation_pct - while shorter periods stay free to post smaller
+    # amounts. Cost is reconstructed as book_value + accumulated_depreciation,
+    # which the running identities above guarantee. Without this the three
+    # numbers that ARE depreciation accounting were whatever the client sent,
+    # and the schedule row constrained nothing.
+    if dep > 0:
+        implied_cost = (bv + acc).quantize(cents)
+        if schedule.method == "wdv":
+            period_cap = (
+                Decimal(str(opening_bv)) * Decimal(str(schedule.depreciation_pct)) / Decimal("100")
+            ).quantize(cents)
+            cap_label = f"{schedule.depreciation_pct}% of the opening book value"
+        else:
+            depreciable = implied_cost - Decimal(str(schedule.salvage_value))
+            period_cap = (depreciable / Decimal(schedule.useful_life_years)).quantize(cents)
+            cap_label = f"(cost - salvage) / {schedule.useful_life_years} years"
+        if dep.quantize(cents) > period_cap:
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    f"depreciation_amount {dep.quantize(cents)} exceeds one year under the declared "
+                    f"{schedule.method} schedule ({cap_label} = {period_cap}); split it across periods "
+                    f"or correct the schedule"
+                ),
+            )
     data = payload.model_dump()
     for k in ("depreciation_amount", "accumulated_depreciation", "book_value"):
         data[k] = Decimal(str(data[k]))
