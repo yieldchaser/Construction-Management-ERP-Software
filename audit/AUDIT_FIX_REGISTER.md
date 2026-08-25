@@ -323,7 +323,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-170 | HIGH | W48 | `permissions.py` | `hr.py`, `drawings.py`, `reports.py` | FIXED | | reg L6399 S33 FIXED eda6dc4: attendance/drawings/reports in WORKFLOW_MODULES (re-added after a concurrent-write clobber lost 8c4c496 lines; mechanical scan asserts all 57 require_permission keys in taxonomy). |
 | R2-171 | CRITICAL | W48 | `permissions.py` | `auth.py`, `RolePermissionsModal.tsx` | TODO | | reg L6423 |
 | R2-172 | CRITICAL | W86 | `RolePermissionsModal.tsx` | `rbac.ts` | TODO | | reg L6507 |
-| R2-173 | CRITICAL | W87 | `p/[project_id]/transaction/page.tsx` | — | TODO | | reg L6552 |
+| R2-173 | CRITICAL | W87 | `p/[project_id]/transaction/page.tsx` | — | FIXED | | reg L6552 S33 FIXED 5692d6d: cash tiles fold /finance/transactions Payment rows by project_id (honest caveat on feed failure) - was Rs 0 vs Rs 90,000. |
 | R2-174 | MEDIUM | W35 | `files.py` | `supabase_storage.py` | FIXED | FIXED 4d06017 (finance.py); _txn_party_name resolves CompanyTeam -> User -> LibraryParty, keeping the Walk-in/Unknown vocabulary. |
 | R2-175 | HIGH | W35 | `files.py` | `models.py` | FIXED | | reg L6610 S33 FIXED be15612: DELETE file (tenant+data:delete+storage removal+audit log) and folder delete 409-while-nonempty. |
 | R2-176 | MEDIUM | W35 | `files.py` | `p/[project_id]/files/page.tsx` | FIXED | FIXED fd5a709; files upload has an ALLOWED_CONTENT_TYPES allowlist with magic-byte sniffing (415 on MZ/ELF/HTML shells) and download=1 passes download=true to signed URLs. |
@@ -609,7 +609,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-459 | CRITICAL | W62 | `gantt/page.tsx` | — | TODO | | reg L23204 |
 | R2-460 | MEDIUM | W62 | `gantt/page.tsx` | — | FIXED | FIXED d4bed18; gantt dates via shared fmtDate (dd-mmm-yyyy) at all 8 sites. |
 | R2-461 | MEDIUM | W11 | `planning.py` | `p/[project_id]/drawings/page.tsx`, `p/[project_id]/budgeting/page.tsx` | FIXED | FIXED 94988a2 + 664b430; task end_date inclusive of start day across create/update/propagate; follow-up 664b430 fixed the CPM backward pass (datetime - timedelta, not raw days) which 94988a2 had broken. Siblings: gantt form sends status "pending" (non-canonical); task page totalDays display math. |
-| R2-462 | CRITICAL | W06 | `settings.py` | — | TODO | | reg L23322 |
+| R2-462 | CRITICAL | W06 | `settings.py` | — | FIXED | | reg L23322 S33-C FIXED adb2b3c: remaining 8 stubs await params (zero raw params interpolations left app-wide) - /c/undefined mechanism extinct. |
 | R2-463 | HIGH | W109 | `frontend/src/app/c/[company_id]/d/page.tsx` | — | FIXED | | reg L23348 S33 FIXED e3ecaee: all 21 module redirect stubs await params, carry ?project=<id>, and ProjectContext prefers route/query id over stored. |
 | R2-464 | CRITICAL | W45 | `d/drawings/page.tsx` | `drawings.py` | FIXED | | reg L23379 S33 FIXED 9290a54: revision register carries real uploaded sheets (file picker + /files/upload + stored link). |
 | R2-465 | HIGH | W45 | `d/drawings/page.tsx` | — | FIXED | | reg L23416 S33 EVIDENCE-CLOSE: publish failure already alerts + returns before setDrawings (3257e0a/7fa1131). |
@@ -637,7 +637,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-487 | CRITICAL | W10 | `projects.py` | — | TODO | | reg L24473 |
 | R2-488 | HIGH | W05 | `procurement.py` | — | TODO | | reg L24517 |
 | R2-489 | MEDIUM | W35 | `files.py` | — | FIXED | FIXED b6ecb1e; the em-dash placeholder is filtered out of the Inspected By options on both quality pages (display placeholder in the table kept). |
-| R2-490 | CRITICAL | W64 | `transaction/page.tsx` | — | TODO | | reg L24621 |
+| R2-490 | CRITICAL | W64 | `transaction/page.tsx` | — | FIXED | | reg L24621 S33 FIXED a44acaa: transaction totals classify all canonical types (settlements to cash heads, post-GST margin legs) - was TOTAL OUT Rs 0. |
 | R2-491 | HIGH | W10 | `projects.py` | `transaction/page.tsx` | FIXED | FIXED 94e7923 (swept into auth-settings commit by shared-worktree race; content verified at HEAD); member names resolve via CompanyTeam.library_party_id -> LibraryParty.name. |
 | R2-492 | MEDIUM | W10 | `projects.py` | — | FIXED | FIXED 084b758; list_project_members joins ProjectMember (company-guarded) so unassigned staff no longer appear. |
 | R2-493 | MEDIUM | W64 | `transaction/page.tsx` | — | FIXED | FIXED 15d9bc4; transaction page ZATCA column/button gated on zatcaEnabled. |
@@ -688,13 +688,13 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-538 | CRITICAL | W16 | `three_way.py` | — | FIXED | | reg L27457 S33-C EVIDENCE 432cbf2: same defect as R2-133 half 1; stored-verdict replay test added. |
 | R2-539 | HIGH | W16 | `three_way.py` | `models.py`, `calculators.py` | FIXED | | reg L27497 S33 FIXED a76823c (H-3way-settings): approve/reject stamp session user + timestamp; caller approved_by ignored; rejected joins model vocabulary; test added. |
 | R2-540 | CRITICAL | W03 | `hr.py` | `models.py` | FIX_VERIFIED | `e2e449d` | reg L27683; hr.py direct-fix pass; suite RC-046 |
-| R2-541 | CRITICAL | W06 | `settings.py` | — | TODO | | reg L27736 |
+| R2-541 | CRITICAL | W06 | `settings.py` | — | FIXED | | reg L27736 S33 FIXED 4ad5792: five ungated settings writes now require settings:manage (roles/seed, payroll PUT, salary templates, company-file upload). |
 | R2-542 | HIGH | W25 | `tally.py` | `chat.py`, `budgeting/page.tsx` | FIXED | FIXED 12346aa; mark-synced requires settings:manage, unmark-synced route restores vouchers, /tally/pending reports pre-window exclusions. |
 | R2-543 | CRITICAL | W05 | `procurement.py` | `finance.py`, `billing.py` | FIX_VERIFIED | `03db7a3` | reg L28036; procurement.py direct-fix pass; suite RC-088 |
 | R2-544 | CRITICAL | W01 | `finance.py` | — | FIX_VERIFIED | `41ebbf1` | reg L28090; wave W01b; suite RC-021 |
 | R2-545 | HIGH | W71 | `public_leads.py` | `models.py` | FIXED | | reg L28210 S33 FIXED f5ecf88: operator console read for captured leads (newest-first, email_sent), fail-closed ADMIN_MIGRATION_SECRET gate. |
 | R2-546 | HIGH | W06 | `settings.py` | `procurement.py`, `siteflow.ts` | FIXED | | reg L28243 S33 EVIDENCE-CLOSE 0dac2f2: bounds landed in 6e2f696 reject decimals 7/9 and unknown grn_numbering/name-display with 422; tripwire test added. |
-| R2-547 | CRITICAL | W06 | `settings.py` | `hr.py` | TODO | | reg L28332 |
+| R2-547 | CRITICAL | W06 | `settings.py` | `hr.py` | FIXED | | reg L28332 S33-C EVIDENCE: remedy landed as R2-288 e9139f1 (statutory bounds + confirm gate); probes 422. |
 | R2-548 | MEDIUM | W06 | `settings.py` | — | FIXED | FIXED 6e2f696; five settings schemas bounded: day counts ge=0, decimal places ge=0..4, grn_numbering/name-display enums, ApprovalRuleCreate.feature_type Literal (12 categories) + levels ge=1, four payroll rates ge=0..100. tds_monthly ge=0 only (a rupee amount, not a percent). NOTE: UI Number Format inputs allow max=6 vs backend cap 4 - saving 5/6 yields 422; R2-546/R2-547 schema halves now bounded. |
 | R2-549 | CRITICAL | W01 | `finance.py` | — | FIX_VERIFIED | `41ebbf1` | reg L28469; wave W01b; suite RC-023 — same root cause as R2-544, closed by its fix |
 | R2-550 | HIGH | W01 | `finance.py` | `settings.py`, `safety.py`, `projects.py` | FIX_VERIFIED | `4b7add4` | reg L28510; direct-fix pass; suite RC-037 |
