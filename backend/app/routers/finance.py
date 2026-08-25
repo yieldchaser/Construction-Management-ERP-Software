@@ -72,6 +72,9 @@ class PaymentCreateRequest(BaseModel):
     description: Optional[str] = None
     payment_date: datetime
     account_name: Optional[str] = None
+    # R2-100/R2-315: bank/UPI/cheque/online movements may name their BankAccount;
+    # the payment posts to that account's balance in-transaction.
+    account_id: Optional[uuid.UUID] = None
     cost_code: Optional[str] = None
     sub_cost_code: Optional[str] = None
     category: Optional[str] = None
@@ -90,6 +93,7 @@ class PaymentResponse(BaseModel):
     payment_date: datetime
     created_at: datetime
     account_name: Optional[str]
+    account_id: Optional[uuid.UUID]
     cost_code: Optional[str]
     sub_cost_code: Optional[str]
     category: Optional[str]
@@ -161,6 +165,25 @@ def create_payment(req: PaymentCreateRequest, db: Session = Depends(get_db), cur
     # R2-381: money entries obey the same Entry Controls back-dating window as bills.
     enforce_entry_creation_window(db, req.company_id, req.payment_date)
 
+    # R2-100/R2-315: a named bank account posts the movement into
+    # BankAccount.balance in the same transaction as the payment row, so
+    # recorded receipts/expenses actually reach Company Balance (= cash wallet
+    # + bank accounts). Cash stays derived from the payments themselves and
+    # must never double-post through an account.
+    bank_account = None
+    if req.account_id:
+        bank_account = db.query(BankAccount).filter(
+            BankAccount.id == req.account_id,
+            BankAccount.company_id == comp_uuid,
+        ).first()
+        if not bank_account:
+            raise HTTPException(status_code=404, detail="Bank account not found")
+        if str(req.payment_method).strip().lower() == "cash":
+            raise HTTPException(
+                status_code=422,
+                detail="account_id applies to non-cash payments; cash movements post to the derived cash wallet",
+            )
+
     payment = Payment(
         id=uuid.uuid4(),
         company_id=comp_uuid,
@@ -174,6 +197,7 @@ def create_payment(req: PaymentCreateRequest, db: Session = Depends(get_db), cur
         description=req.description,
         payment_date=req.payment_date,
         account_name=req.account_name,
+        account_id=req.account_id,
         cost_code=req.cost_code,
         sub_cost_code=req.sub_cost_code,
         category=req.category
@@ -193,6 +217,13 @@ def create_payment(req: PaymentCreateRequest, db: Session = Depends(get_db), cur
 
     db.add(payment)
     db.flush()
+
+    # R2-100/R2-315: post the movement to the named bank account in-transaction
+    # (same commit as the payment row, so one never lands without the other).
+    if bank_account:
+        delta = float(req.amount) if req.payment_type == "in" else -float(req.amount)
+        bank_account.balance = float(bank_account.balance or 0.0) + delta
+        db.add(bank_account)
 
     # FIFO Auto-Settlement Logic against Outstanding Bills.
     # R2-231: the engine used to run only when the body carried a party id,
@@ -283,6 +314,18 @@ def delete_payment(payment_id: uuid.UUID, db: Session = Depends(get_db), current
         else:
             bill.status = "Unpaid"
         db.add(bill)
+
+    # R2-100/R2-315: reverse the bank posting this payment made when it was
+    # created (non-cash methods only; the cash wallet derives from payments).
+    if payment.account_id and str(payment.payment_method or "").strip().lower() != "cash":
+        acc = db.query(BankAccount).filter(
+            BankAccount.id == payment.account_id,
+            BankAccount.company_id == payment.company_id,
+        ).first()
+        if acc:
+            amount = float(payment.amount or 0.0)
+            acc.balance = float(acc.balance or 0.0) - (amount if payment.payment_type == "in" else -amount)
+            db.add(acc)
 
     db.delete(payment)
     db.commit()

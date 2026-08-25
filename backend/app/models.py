@@ -1258,6 +1258,10 @@ class Payment(Base):
     tally_synced = Column(Boolean, default=False, nullable=False)
     approval_pipeline_template_id = Column(String(100), nullable=True)
     account_name = Column(String(255), nullable=True)
+    # R2-100/R2-315: optional link to the BankAccount this money moved through;
+    # non-cash payments post to BankAccount.balance in-transaction (reversed on
+    # delete), so recorded receipts/expenses reach Company Balance (= cash + bank).
+    account_id = Column(UUID(as_uuid=True), ForeignKey("bank_accounts.id", ondelete="SET NULL"), nullable=True)
     cost_code = Column(String(100), nullable=True)
     sub_cost_code = Column(String(100), nullable=True)
     category = Column(String(100), nullable=True)
