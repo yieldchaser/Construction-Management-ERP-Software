@@ -8,11 +8,16 @@ from app import models
 _SUFFIX = uuid.uuid4().hex[:8]
 
 
+_TENANT_N = 0
+
+
 def _hdr(auth_headers, make_tenant, db, tag):
+    global _TENANT_N
+    _TENANT_N += 1
     comp, user, _team = make_tenant(
         company_name=f"{tag}-{_SUFFIX}",
         user_name=f"U {tag}",
-        mobile=f"+9197{_SUFFIX[:8]}{len(tag):02d}",
+        mobile=f"+9197{_SUFFIX[:8]}{_TENANT_N:03d}",
         email=f"{tag.lower()}-{_SUFFIX}@test.com",
     )
     return comp, user, auth_headers(user, comp)
@@ -60,4 +65,27 @@ def test_r2_283_create_list_roundtrip_and_auto_populate_response(client, db, mak
     assert r.status_code == 200, r.text
     rows = [row for row in r.json() if row["id"] == created["id"]]
     assert len(rows) == 1, r.json()
+
+
+# ── R2-127: ESI is charged per employee, not company-wide ────────────────────
+
+def test_r2_127_esi_charged_only_for_applicable_employees(client, db, make_tenant, auth_headers):
+    comp, user, hdr = _hdr(auth_headers, make_tenant, db, "R2127")
+    for i in range(3):
+        e = _emp(db, comp, f"E{i}", is_esi_applicable=(i == 0))
+        if i > 0:
+            # Non-applicable colleagues earn more than the applicable one, so
+            # the old any()-guarded sum would overstate ESI even harder.
+            e.basic_salary = 40000
+    db.commit()
+
+    r = client.get(
+        f"/apis/v3/statutory/{comp.id}/auto-populate?report_type=esi&return_period=2026-07",
+        headers=hdr,
+    )
+    assert r.status_code == 200, r.text
+    body = r.json()
+    # Only E0 (gross 27,500) is ESI-applicable: 0.75% ee / 3.25% er.
+    assert body["esi_employee_contribution"] == 206.25, body
+    assert body["esi_employer_contribution"] == 893.75, body
 

@@ -147,8 +147,11 @@ def auto_populate(company_id: uuid.UUID, report_type: str = Query(...), return_p
     total_wages = sum(float(e.basic_salary or 0) + float(e.hra or 0) + float(e.other_allowances or 0) for e in active_employees)
     pf_employee = sum(float(e.basic_salary or 0) * float(e.pf_employee_pct or 0) / 100 for e in active_employees)
     pf_employer = sum(float(e.basic_salary or 0) * float(e.pf_employer_pct or 0) / 100 for e in active_employees)
-    esi_employee = sum((float(e.basic_salary or 0) + float(e.hra or 0) + float(e.other_allowances or 0)) * float(e.esi_employee_pct or 0) / 100 for e in active_employees) if any(e.is_esi_applicable for e in active_employees) else 0
-    esi_employer = sum((float(e.basic_salary or 0) + float(e.hra or 0) + float(e.other_allowances or 0)) * float(e.esi_employer_pct or 0) / 100 for e in active_employees) if any(e.is_esi_applicable for e in active_employees) else 0
+    # R2-127: is_esi_applicable is a per-employee flag - it filters inside the
+    # sum, it does not gate the whole company. One applicable employee must not
+    # charge ESI on every non-applicable colleague.
+    esi_employee = sum((float(e.basic_salary or 0) + float(e.hra or 0) + float(e.other_allowances or 0)) * float(e.esi_employee_pct or 0) / 100 for e in active_employees if e.is_esi_applicable)
+    esi_employer = sum((float(e.basic_salary or 0) + float(e.hra or 0) + float(e.other_allowances or 0)) * float(e.esi_employer_pct or 0) / 100 for e in active_employees if e.is_esi_applicable)
     tds = sum(float(e.tds_monthly or 0) for e in active_employees)
 
     data = {
