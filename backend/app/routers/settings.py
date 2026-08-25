@@ -462,7 +462,8 @@ def create_role(company_id: uuid.UUID, role_data: RoleCreate, db: Session = Depe
 
 
 @router.post("/roles/seed/{company_id}", response_model=List[RoleResponse])
-def seed_default_roles(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
+def seed_default_roles(company_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user), _: None = Depends(verify_company_access)):
+    require_permission(db, current_user, company_id, "settings:manage")
     if db.query(CompanyRole).filter(CompanyRole.company_id == company_id).count() > 0:
         raise HTTPException(status_code=409, detail="Roles already exist for this company")
     created = []
@@ -720,7 +721,8 @@ def get_payroll_settings(company_id: uuid.UUID, db: Session = Depends(get_db), _
 
 
 @router.put("/payroll/{company_id}", response_model=PayrollSettingsResponse)
-def update_payroll_settings(company_id: uuid.UUID, payload: PayrollSettingsUpdate, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
+def update_payroll_settings(company_id: uuid.UUID, payload: PayrollSettingsUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user), _: None = Depends(verify_company_access)):
+    require_permission(db, current_user, company_id, "settings:manage")
     changes = payload.model_dump(exclude_unset=True)
     changes.pop("confirm_changes", None)
     if changes and not payload.confirm_changes:
@@ -784,7 +786,8 @@ def list_salary_templates(company_id: uuid.UUID, db: Session = Depends(get_db), 
 
 
 @router.post("/salary-templates/{company_id}", response_model=SalaryTemplateResponse, status_code=status.HTTP_201_CREATED)
-def create_salary_template(company_id: uuid.UUID, payload: SalaryTemplateCreate, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
+def create_salary_template(company_id: uuid.UUID, payload: SalaryTemplateCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user), _: None = Depends(verify_company_access)):
+    require_permission(db, current_user, company_id, "settings:manage")
     data = payload.model_dump()
     data["breakup"] = payload.breakup
     obj = SalaryTemplate(company_id=company_id, **data)
@@ -800,6 +803,7 @@ def update_salary_template(template_id: uuid.UUID, payload: SalaryTemplateUpdate
     if not obj:
         raise HTTPException(status_code=404, detail="Salary template not found")
     get_company_membership(db, current_user, obj.company_id)
+    require_permission(db, current_user, obj.company_id, "settings:manage")
     for k, v in payload.model_dump(exclude_unset=True).items():
         setattr(obj, k, v)
     db.commit()
@@ -842,8 +846,10 @@ async def upload_company_file(
     asset_type: str,
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
     _: None = Depends(verify_company_access),
 ):
+    require_permission(db, current_user, company_id, "settings:manage")
     if asset_type not in ALLOWED_ASSET_TYPES:
         raise HTTPException(status_code=400, detail="Invalid asset type")
     company = db.query(Company).filter(Company.id == company_id).first()
