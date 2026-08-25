@@ -414,11 +414,11 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-263 | HIGH | W24 | `labour.py` | — | FIXED | FIXED 6884efe; muster roll hours bounded by workers_present x 24, overtime by hours_worked, BOCW wages require positive workers_count. |
 | R2-264 | HIGH | W68 | `subcon.py` | — | FIXED | FIXED 5df994e; subcon attendance shift_multiplier bounded 0.5-3.0, workers required when OT/allowance logged, OT capped at 12h per worker. |
 | R2-265 | HIGH | W35 | `files.py` | `hr.py`, `finance.py`, `assets.py` | FIXED | FIXED 873d065 (top-up); first depreciation entry requires accumulated == depreciation_amount (parts a-chain and c rate-vs-life closed by a32d60e/a853932). |
-| R2-266 | CRITICAL | W58 | `dpr.py` | — | TODO | | reg L11595 |
+| R2-266 | CRITICAL | W58 | `dpr.py` | — | FIXED | | reg L11595 S33-C FIXED beb5823: DPR CSV export neutralizes formula cells (R2-185 pattern). |
 | R2-267 | HIGH | W25 | `tally.py` | — | FIXED | FIXED 4c3e02b; Tally export books settlement bills as Receipt/Payment vouchers instead of Purchase. |
 | R2-268 | MEDIUM | W02 | `UNMAPPED` | — | FIXED | FIXED ad328dd (other agent); DPR export resolves the author name, never a raw UUID. |
 | R2-269 | MEDIUM | W24 | `labour.py` | — | FIXED | FIXED bf1343e (in hr.py - register said labour.py); payslip CSV leads with an Employee Code column. |
-| R2-270 | CRITICAL | W89 | `frontend/src/app/c/[company_id]/d/chat/page.tsx` | `models.py` | TODO | | reg L11773 |
+| R2-270 | CRITICAL | W89 | `frontend/src/app/c/[company_id]/d/chat/page.tsx` | `models.py` | FIXED | | reg L11773 S33-C FIXED d3d221e: chat create-group payload drops client created_by (server stamps team id). |
 | R2-271 | CRITICAL | W02 | `UNMAPPED` | — | TODO | | reg L11831 |
 | R2-272 | HIGH | W20 | `zoho_books.py` | — | FIXED | | reg L11876 S33 FIXED c6e4b9d: tax-invoice PDF fields (title, recipient GSTIN, place of supply, HSN/SAC, IGST split) - real file billing.py not zoho_books.py. |
 | R2-273 | MEDIUM | W52 | `crm.py` | — | FIXED | FIXED a040a04; CRM email EmailStr, phone pattern, expected_closure past-rejection on create. |
@@ -448,7 +448,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-297 | HIGH | W05 | `procurement.py` | — | FIXED | FIXED ef5f171; unit change refused (422) while on_hand_qty/reserved_qty non-zero. |
 | R2-298 | MEDIUM | W05 | `procurement.py` | — | FIXED | FIXED 04b7c10 PARTIAL: past valid_until rejected (400), quotes on expired RFQs rejected, comparison now ranks vendors (extended_total, is_lowest, price_spread, recommended_vendor_name). DEFERRED half: the not-issued gate needs a product decision - RFQ.status has no writer for sent anywhere (see DECISIONS.md CD-7). |
 | R2-299 | HIGH | W71 | `public_leads.py` | `rate_limit.py` | FIXED | | reg L13242 S33 FIXED b1d4968: rate limiter fleet-wide (storage URI documented + startup warning), proxy-aware bucket key behind explicit trust flag; burst test 5x200 then 429. |
-| R2-300 | CRITICAL | W15 | `models.py` | — | TODO | | reg L13346 |
+| R2-300 | CRITICAL | W15 | `models.py` | — | FIXED | | reg L13346 S33-C FIXED 8ad5672: project delete 409s with per-type inventory while bills/payments/POs/payroll exist. |
 | R2-301 | HIGH | W72 | `delete_logs.py` | `models.py`, `finance.py` | FIXED | | reg L13400 S33 FIXED c30bdd9: payment delete-log row carries deleted_by. |
 | R2-302 | MEDIUM | W03 | `hr.py` | — | FIX_VERIFIED | `acee51f` | reg L13433; hr.py direct-fix pass; suite RC-053 |
 | R2-303 | CRITICAL | W08 | `analytics.py` | — | TODO | | reg L13489 |
@@ -474,7 +474,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-323 | HIGH | W04 | `reports.py` | `models.py`, `procurement.py` | FIX_VERIFIED | `723af26` | reg L14840; reports.py direct-fix pass; suite RC-073 — weaker evidence, see suite note |
 | R2-324 | HIGH | W04 | `reports.py` | — | FIX_VERIFIED | `723af26` | reg L14875; reports.py direct-fix pass; suite RC-068 |
 | R2-325 | HIGH | W03 | `hr.py` | `models.py`, `reports.py` | FIX_VERIFIED | `70f9750` | reg L14907; hr.py direct-fix pass; suite RC-057 |
-| R2-326 | CRITICAL | W90 | `constants.py` | `finance.py` | TODO | | reg L15019 |
+| R2-326 | CRITICAL | W90 | `constants.py` | `finance.py` | FIXED | | reg L15019 S33-C FIXED 10d36cf: finance.py bare ==sale branches use canonical buckets; settlements/movements in neither head. |
 | R2-327 | CRITICAL | W01 | `finance.py` | — | FIX_VERIFIED | `e918b72` | reg L15066; wave W01b; suite RC-022 |
 | R2-328 | HIGH | W01 | `finance.py` | `models.py`, `errors.py`, `cors.py` | FIXED | | reg L15113 S33 FIXED 5b231f8: company transactions scope by company_id (project-less payments no longer vanish; cash_balance agrees). |
 | R2-329 | HIGH | W08 | `analytics.py` | `wastage.py` | FIXED | | reg L15229 S33 FIXED 5b178e4 (H-analytics): stock reconciliation computed per material+unit so mixed-unit scalars cannot mask over-consumption; test added. |
