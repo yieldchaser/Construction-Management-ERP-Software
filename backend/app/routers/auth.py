@@ -878,11 +878,22 @@ def resolve_company(slug: str, db: Session = Depends(get_db)):
 
 
 @router.get("/me")
-def get_me(ctx: dict = Depends(get_current_active_company_user), db: Session = Depends(get_db)):
+@limiter.limit("120/minute")
+def get_me(
+    request: Request,
+    ctx: dict = Depends(get_current_active_company_user),
+    db: Session = Depends(get_db),
+):
     """Return the current authenticated user's company role context.
 
     Includes the caller's effective `permissions` dict (resolved role
     permissions, or `{"all": true}` for partners) so the frontend can gate UI.
+
+    R2-138/R2-308: this endpoint is called by every page load, and a runaway
+    client once hammered it at ~16 req/s until the 30-connection pool was
+    exhausted and login itself died. The generous 120/minute cap is invisible
+    to normal navigation but turns a request loop into a bounded 429 spray, so
+    one buggy tab can no longer take the platform down.
     """
     user = ctx["user"]
     company_id = ctx["company_id"]
