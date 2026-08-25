@@ -2,6 +2,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Query
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
 from decimal import Decimal
@@ -41,6 +42,12 @@ class ThreeWayMatchResponse(BaseModel):
     grn_qty: float
     invoiced_amount: float
     variance_amount: float
+    # R2-240: the three numbers the control is named after, surfaced so an
+    # approver can see the authorised quantity, what was actually received,
+    # and the PO total alongside the computed baseline (po_amount).
+    ordered_qty: Optional[float] = None
+    received_qty: Optional[float] = None
+    po_total: Optional[float] = None
     variance_reason: Optional[str]
     matched_by: Optional[uuid.UUID]
     matched_at: Optional[datetime]
@@ -122,13 +129,34 @@ def create_match(payload: ThreeWayMatchCreate, db: Session = Depends(get_db), cu
     grn_items = db.query(GRNItem).filter(GRNItem.grn_id == grn_id).all()
     total_received_qty = sum(float(item.received_qty) for item in grn_items)
 
-    # Fairer variance baseline: compare the invoice against the VALUE of the
-    # goods actually received in this GRN (its item quantities x the matching
-    # PO item rates), not the PO's entire grand total. A PO can legitimately
-    # receive/ invoice in multiple phases; comparing one invoice against the
-    # whole PO total would always over-report "mismatch". Falls back to the
-    # whole-PO total only if a GRN item can't be resolved to its PO item.
+    # Fairer variance baseline: compare the invoice against the value of the
+    # goods this GRN was authorised to deliver, not the PO's entire grand
+    # total. A PO can legitimately receive/ invoice in multiple phases;
+    # comparing one invoice against the whole PO total would always
+    # over-report "mismatch". Falls back to the whole-PO total only if a GRN
+    # item can't be resolved to its PO item.
+    # R2-240: receipt quantities are not gated upstream (R2-239), so the
+    # baseline itself must be immune to over-receipt. Each line counts only
+    # the quantity still authorised on its PO line after every earlier GRN on
+    # this PO - min(received_qty, ordered - already received) x rate - so
+    # receiving 150 bags against an order of 100 cannot raise what a vendor
+    # may over-bill into a "match".
+    # Tax basis: both branches below are tax-inclusive, matching the invoiced
+    # figure (bill.total_payable includes tax). Before R2-240 the GRN branch
+    # was exclusive while this fallback was inclusive, so the same invoice
+    # produced two different variances depending on which branch ran.
     po_items_by_id = {pi.id: pi for pi in db.query(PurchaseOrderItem).filter(PurchaseOrderItem.po_id == po_id).all()}
+    ordered_qty_total = sum(float(pi.quantity or 0) for pi in po_items_by_id.values())
+    received_before_this_grn = {}
+    prior_rows = (
+        db.query(GRNItem.po_item_id, func.sum(GRNItem.received_qty))
+        .join(GoodsReceiptNote, GoodsReceiptNote.id == GRNItem.grn_id)
+        .filter(GoodsReceiptNote.po_id == po_id, GoodsReceiptNote.id != grn_id)
+        .group_by(GRNItem.po_item_id)
+        .all()
+    )
+    for po_item_id, prior_qty in prior_rows:
+        received_before_this_grn[po_item_id] = float(prior_qty or 0)
     grn_received_value = 0.0
     grn_value_resolved = True
     for item in grn_items:
@@ -136,7 +164,10 @@ def create_match(payload: ThreeWayMatchCreate, db: Session = Depends(get_db), cu
         if pi is None or pi.rate is None:
             grn_value_resolved = False
             break
-        grn_received_value += float(item.received_qty) * float(pi.rate)
+        still_authorised = max(float(pi.quantity or 0) - received_before_this_grn.get(item.po_item_id, 0.0), 0.0)
+        counted_qty = min(float(item.received_qty), still_authorised)
+        line_excl_tax = counted_qty * float(pi.rate)
+        grn_received_value += line_excl_tax + line_excl_tax * float(pi.tax_pct or 0) / 100.0
     po_amount = grn_received_value if grn_value_resolved and grn_items else float(po.total_amount)
 
     variance = round(invoiced_amount - po_amount, 2)
@@ -167,6 +198,9 @@ def create_match(payload: ThreeWayMatchCreate, db: Session = Depends(get_db), cu
         **{**match.__dict__},
         po_number=po.po_number,
         grn_number=grn.grn_number,
+        ordered_qty=ordered_qty_total,
+        received_qty=total_received_qty,
+        po_total=float(po.total_amount),
     )
 
 
@@ -176,6 +210,18 @@ def list_matches(company_id: uuid.UUID, project_id: Optional[uuid.UUID] = None, 
     if project_id:
         query = query.filter(ThreeWayMatch.project_id == project_id)
     matches = query.order_by(ThreeWayMatch.created_at.desc()).all()
+    # R2-240: resolve every listed match's authorised quantity in one batched
+    # query so the approver sees ordered vs received vs PO total per row.
+    po_ids = list({m.po_id for m in matches})
+    ordered_by_po = {}
+    if po_ids:
+        rows = (
+            db.query(PurchaseOrderItem.po_id, func.sum(PurchaseOrderItem.quantity))
+            .filter(PurchaseOrderItem.po_id.in_(po_ids))
+            .group_by(PurchaseOrderItem.po_id)
+            .all()
+        )
+        ordered_by_po = {pid: float(q or 0) for pid, q in rows}
     result = []
     for m in matches:
         po = db.query(PurchaseOrder).filter(PurchaseOrder.id == m.po_id).first()
@@ -184,6 +230,9 @@ def list_matches(company_id: uuid.UUID, project_id: Optional[uuid.UUID] = None, 
             **{**m.__dict__},
             po_number=po.po_number if po else None,
             grn_number=grn.grn_number if grn else None,
+            ordered_qty=ordered_by_po.get(m.po_id),
+            received_qty=float(m.grn_qty or 0),
+            po_total=float(po.total_amount) if po else None,
         ))
     return result
 
@@ -202,6 +251,12 @@ def list_grns(company_id: uuid.UUID, project_id: Optional[uuid.UUID] = None, db:
     if project_id:
         query = query.filter(GoodsReceiptNote.project_id == project_id)
     return query.order_by(GoodsReceiptNote.created_at.desc()).limit(100).all()
+
+
+def _ordered_qty_for(db: Session, po_id: str) -> float:
+    # R2-240: the total quantity authorised across the PO's lines.
+    total = db.query(func.sum(PurchaseOrderItem.quantity)).filter(PurchaseOrderItem.po_id == po_id).scalar()
+    return float(total or 0)
 
 
 @router.patch("/{match_id}/approve", response_model=ThreeWayMatchResponse)
@@ -224,6 +279,9 @@ def approve_match(match_id: uuid.UUID, db: Session = Depends(get_db), current_us
         **{**match.__dict__},
         po_number=po.po_number if po else None,
         grn_number=grn.grn_number if grn else None,
+        ordered_qty=_ordered_qty_for(db, match.po_id),
+        received_qty=float(match.grn_qty or 0),
+        po_total=float(po.total_amount) if po else None,
     )
 
 
@@ -247,4 +305,7 @@ def reject_match(match_id: uuid.UUID, reason: Optional[str] = None, db: Session 
         **{**match.__dict__},
         po_number=po.po_number if po else None,
         grn_number=grn.grn_number if grn else None,
+        ordered_qty=_ordered_qty_for(db, match.po_id),
+        received_qty=float(match.grn_qty or 0),
+        po_total=float(po.total_amount) if po else None,
     )
