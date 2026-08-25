@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field, field_validator
 from app.database import get_db
 from app.auth import get_current_user, verify_project_in_company, verify_company_access, require_permission, require_module_view
-from app.models import StatutoryReport, StaffEmployee, PayrollRun, PayrollLineItem, User
+from app.models import StatutoryReport, StaffEmployee, PayrollRun, PayrollLineItem, User, Bill
 from decimal import Decimal
 
 router = APIRouter(prefix="/statutory", tags=["Statutory Reports"], dependencies=[Depends(get_current_user)])
@@ -163,6 +163,23 @@ def auto_populate(company_id: uuid.UUID, report_type: str = Query(...), return_p
     esi_employer = sum(float(li.esi_employer or 0) for li in line_items)
     tds = sum(float(li.tds or 0) for li in line_items)
 
+    # R2-128: the BOCW Cess Act levies 1% on the cost of construction, not on
+    # the wage bill. Same bill-ledger base as labour/bocw (R2-415): money-out
+    # invoices booked inside the period, cancelled ones excluded.
+    bocw_cess = Decimal("0")
+    if _normalize_report_type(report_type) == "bocw":
+        bills_query = db.query(Bill).filter(
+            Bill.company_id == company_id,
+            Bill.invoice_type.in_(["purchase", "subcon"]),
+            Bill.status != "Cancelled",
+            Bill.invoice_date >= start_date,
+            Bill.invoice_date < end_date,
+        )
+        if project_id:
+            bills_query = bills_query.filter(Bill.project_id == project_id)
+        cost_of_construction = sum(float(b.subtotal or 0) for b in bills_query.all())
+        bocw_cess = Decimal(str(round(cost_of_construction * 0.01, 2)))
+
     data = {
         "company_id": company_id,
         "project_id": project_id,
@@ -174,7 +191,7 @@ def auto_populate(company_id: uuid.UUID, report_type: str = Query(...), return_p
         "pf_employer_contribution": Decimal(str(round(pf_employer, 2))),
         "esi_employee_contribution": Decimal(str(round(esi_employee, 2))),
         "esi_employer_contribution": Decimal(str(round(esi_employer, 2))),
-        "bocw_cess": Decimal(str(round(total_wages * 0.01, 2))) if _normalize_report_type(report_type) == "bocw" else Decimal("0"),
+        "bocw_cess": bocw_cess,
         "tds_deducted": Decimal(str(round(tds, 2))),
         "status": "draft",
     }

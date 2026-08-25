@@ -165,3 +165,47 @@ def test_r2_126_refuses_without_finalized_run(client, db, make_tenant, auth_head
     )
     assert r.status_code == 409, r.text
 
+
+# ── R2-128: BOCW cess is levied on construction cost, not wages ──────────────
+
+def _bill(db, comp, team_id, project_id, number, inv_type, day, subtotal, status="Unpaid", gst=0, month=7):
+    b = models.Bill(
+        id=uuid.uuid4(), company_id=comp.id, project_id=project_id,
+        party_company_user_id=team_id, invoice_number=f"{number}-{_SUFFIX}",
+        invoice_date=datetime(2026, month, day), invoice_type=inv_type,
+        status=status, subtotal=subtotal, gst_amount=gst, total_payable=subtotal + gst,
+    )
+    db.add(b)
+    return b
+
+
+def test_r2_128_bocw_cess_uses_cost_of_construction(client, db, make_tenant, auth_headers):
+    comp, user, hdr = _hdr(auth_headers, make_tenant, db, "R2128")
+    team = db.query(models.CompanyTeam).filter(models.CompanyTeam.company_id == comp.id).first()
+    project = models.Project(
+        id=uuid.uuid4(), company_id=comp.id, name="P128",
+        code=f"PRJ-128-{_SUFFIX}", status="Ongoing",
+    )
+    db.add(project)
+    db.flush()
+    emp = _emp(db, comp, "Site Eng")
+    _seed_payroll(db, comp, "2026-07", [(emp, dict(basic=100000))], project_id=project.id)
+    _bill(db, comp, team.id, project.id, "PUR-1", "purchase", 5, 3000000)
+    _bill(db, comp, team.id, project.id, "SUB-1", "subcon", 20, 2000000, status="Partially Paid")
+    _bill(db, comp, team.id, project.id, "SALE-1", "sale", 21, 5000000)                              # revenue, not cost
+    _bill(db, comp, team.id, project.id, "PUR-X", "purchase", 22, 9999999, status="Cancelled")       # dead money
+    _bill(db, comp, team.id, project.id, "PUR-AUG", "purchase", 3, 7777777, month=8)                 # next period
+    db.commit()
+
+    r = client.get(
+        f"/apis/v3/statutory/{comp.id}/auto-populate?report_type=bocw&return_period=2026-07&project_id={project.id}",
+        headers=hdr,
+    )
+    assert r.status_code == 200, r.text
+    body = r.json()
+    # Cost base = live purchase+subcon subtotals booked inside the period
+    # (30,00,000 + 20,00,000), NOT the 1,00,000 wage bill; revenue, cancelled
+    # and out-of-period money stay out.
+    assert body["bocw_cess"] == 50000.0, body
+    assert body["total_wages"] == 100000.0, body
+
