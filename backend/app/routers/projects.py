@@ -67,6 +67,31 @@ def _party_settlement(db, project_id, party_id, opening_adv, opening_pay):
     to_pay = round(max(0.0, -net), 2)
     return advance_paid, to_pay
 
+
+def ensure_project_party_link(db: Session, project_id, party_id) -> None:
+    """R2-487: raise a bill against a party and the project-party link must
+    exist by the time the request commits - the Party register and the
+    balances rollup iterate over project_parties rows only, so a bill without
+    a link left the screen answering 'No parties linked to this project' and
+    Rs 0 To Pay while unpaid bills sat one tab away. Idempotent upsert with
+    zero opening balances; commits with the caller's transaction."""
+    if project_id is None or party_id is None:
+        return
+    existing = db.query(models.ProjectParty).filter(
+        models.ProjectParty.project_id == project_id,
+        models.ProjectParty.party_id == party_id,
+    ).first()
+    if existing:
+        return
+    db.add(models.ProjectParty(
+        project_id=project_id,
+        party_id=party_id,
+        balance=0.0,
+        advance_paid=0.0,
+        to_pay=0.0,
+        status="Active",
+    ))
+
 # ─── helpers ───
 
 _TASK_PROGRESS = {

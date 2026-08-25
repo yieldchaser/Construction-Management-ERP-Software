@@ -15,6 +15,7 @@ from app import models
 from app.party_names import resolve_party_name
 from app.routers.custom_fields import CustomFieldValueInput, upsert_values_for_entity, enforce_required_custom_fields
 from app.routers.library import next_party_id_custom
+from app.routers.projects import ensure_project_party_link
 from app.zatca import build_zatca_payload
 from app.workflow_controls import enforce_entry_creation_window, enforce_entry_editing_window, get_company, get_default_terms
 from app.utils.pdf_generator import generate_document_pdf
@@ -1074,6 +1075,15 @@ def create_bill(req: BillCreateRequest, db: Session = Depends(get_db), current_u
         if linked_match:
             linked_match.invoice_id = bill.id
             db.add(linked_match)
+
+    # R2-487: billing a party must create the project-party link the Party
+    # register and balances rollup iterate over - otherwise the project keeps
+    # reporting 'No parties linked' / Rs 0 To Pay while its unpaid bills exist.
+    bill_team = db.query(CompanyTeam).filter(
+        CompanyTeam.id == req.party_company_user_id
+    ).first()
+    if bill_team is not None and bill_team.library_party_id:
+        ensure_project_party_link(db, req.project_id, bill_team.library_party_id)
 
     upsert_values_for_entity(
         db, req.company_id, "invoice", bill.id,
