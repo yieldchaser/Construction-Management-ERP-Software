@@ -130,36 +130,45 @@ def auto_populate(company_id: uuid.UUID, report_type: str = Query(...), return_p
     else:
         end_date = datetime(year, month + 1, 1)
 
-    employees = db.query(StaffEmployee).filter(
-        StaffEmployee.company_id == company_id,
-        StaffEmployee.status == "active"
+    # R2-126: a statutory return is a snapshot of the period's finalized
+    # payroll, not of today's master data. Every figure comes from the payslip
+    # lines of the runs for return_period and generation refuses when no
+    # finalized run exists - the old path silently substituted current
+    # salaries (a raise rewrote history), dropped leavers whose wages were
+    # paid, and back-dated joiners into periods before they existed.
+    runs_query = db.query(PayrollRun).filter(
+        PayrollRun.company_id == company_id,
+        PayrollRun.payroll_month == return_period,
+        PayrollRun.status == "finalized",
     )
     if project_id:
-        employees = employees.filter(StaffEmployee.project_id == project_id)
-    active_employees = employees.all()
+        runs_query = runs_query.filter(PayrollRun.project_id == project_id)
+    payroll_runs = runs_query.all()
+    if not payroll_runs:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"No finalized payroll run exists for {return_period}. Finalize payroll for the period before generating a statutory return.",
+        )
 
-    payroll_runs = db.query(PayrollRun).filter(
-        PayrollRun.company_id == company_id,
-        PayrollRun.payroll_month == return_period
+    line_items = db.query(PayrollLineItem).filter(
+        PayrollLineItem.payroll_run_id.in_([r.id for r in payroll_runs])
     ).all()
-    payroll_run = payroll_runs[0] if payroll_runs else None
 
-    total_wages = sum(float(e.basic_salary or 0) + float(e.hra or 0) + float(e.other_allowances or 0) for e in active_employees)
-    pf_employee = sum(float(e.basic_salary or 0) * float(e.pf_employee_pct or 0) / 100 for e in active_employees)
-    pf_employer = sum(float(e.basic_salary or 0) * float(e.pf_employer_pct or 0) / 100 for e in active_employees)
-    # R2-127: is_esi_applicable is a per-employee flag - it filters inside the
-    # sum, it does not gate the whole company. One applicable employee must not
-    # charge ESI on every non-applicable colleague.
-    esi_employee = sum((float(e.basic_salary or 0) + float(e.hra or 0) + float(e.other_allowances or 0)) * float(e.esi_employee_pct or 0) / 100 for e in active_employees if e.is_esi_applicable)
-    esi_employer = sum((float(e.basic_salary or 0) + float(e.hra or 0) + float(e.other_allowances or 0)) * float(e.esi_employer_pct or 0) / 100 for e in active_employees if e.is_esi_applicable)
-    tds = sum(float(e.tds_monthly or 0) for e in active_employees)
+    total_wages = sum(float(li.basic or 0) + float(li.hra or 0) + float(li.other_allowances or 0) for li in line_items)
+    pf_employee = sum(float(li.pf_employee or 0) for li in line_items)
+    pf_employer = sum(float(li.pf_employer or 0) for li in line_items)
+    # R2-127: applicability is settled per employee inside payroll when the
+    # payslip is computed; the statutory return carries those amounts verbatim.
+    esi_employee = sum(float(li.esi_employee or 0) for li in line_items)
+    esi_employer = sum(float(li.esi_employer or 0) for li in line_items)
+    tds = sum(float(li.tds or 0) for li in line_items)
 
     data = {
         "company_id": company_id,
         "project_id": project_id,
         "report_type": report_type,
         "return_period": return_period,
-        "total_employees": len(active_employees),
+        "total_employees": len({li.employee_id for li in line_items}),
         "total_wages": Decimal(str(round(total_wages, 2))),
         "pf_employee_contribution": Decimal(str(round(pf_employee, 2))),
         "pf_employer_contribution": Decimal(str(round(pf_employer, 2))),
