@@ -152,3 +152,44 @@ def test_committed_towers_single_overall_row_not_project_per_tower(client, db, m
     assert row["actual"] == 1000.0, row
     assert row["budget"] == 600000.0, row
     assert row["variance"] == 600000.0 - 1000.0, row
+
+
+def test_budget_overall_row_reconciles_to_project_budget_row(client, db, make_tenant, auth_headers):
+    comp, user, team = make_tenant(
+        company_name="R374", user_name="U374", mobile=_mob(3), email=_mail(3)
+    )
+    hdr = auth_headers(user, comp)
+    project, towers = _seed_project_with_towers(db, comp, user, team, "P374")
+
+    # A project budget exists and disagrees with the sum of tower budgets;
+    # like the no-towers branch, the report must reconcile against the
+    # project's own budget.
+    db.add(models.ProjectBudget(
+        id=uuid.uuid4(), project_id=project.id,
+        material_budget=900000.0, labour_budget=50000.0,
+        subcon_budget=40000.0, equipment_budget=10000.0,
+    ))
+    db.commit()
+
+    _mk_po(db, comp, project, 700.0, "sent", "sent")
+    _mk_bill(db, comp, project, team, "subcon", 2000.0, "sub")
+
+    r = client.get(f"/apis/v3/towers/{project.id}/consolidated-pnl", headers=hdr)
+    assert r.status_code == 200, r.text
+    rows = r.json()
+    assert len(rows) == 1, rows
+    row = rows[0]
+    assert row["tower_id"] is None, row
+    assert row["tower_code"] == "ALL", row
+    assert row["budget"] == 1000000.0, row
+    assert row["variance"] == 1000000.0 - 2000.0, row
+
+    r = client.get(f"/apis/v3/budget/committed/{project.id}/towers", headers=hdr)
+    assert r.status_code == 200, r.text
+    rows = r.json()
+    assert len(rows) == 1, rows
+    row = rows[0]
+    assert row["committed"] == 700.0, row
+    assert row["actual"] == 2000.0, row
+    assert row["budget"] == 1000000.0, row
+    assert row["variance"] == 1000000.0 - 2000.0, row

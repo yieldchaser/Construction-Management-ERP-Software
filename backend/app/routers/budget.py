@@ -201,7 +201,6 @@ def get_tower_budget(project_id: UUID, db: Session = Depends(get_db), _: None = 
             variance=total_budget - actual,
         )]
 
-    result = []
     # Approved bills only (R2-233) and cancelled bills never book cost
     # (R2-723): gates aligned with the main endpoint by R2-604.
     bills = _active_bills(db, project_id, EXPENSE_INVOICE_TYPES).filter(
@@ -213,13 +212,21 @@ def get_tower_budget(project_id: UUID, db: Session = Depends(get_db), _: None = 
         PurchaseOrder.status.in_(("sent", "partial", "received")),
     ).all()
     po_committed = sum(float(p.total_amount) for p in pos)
-    for t in towers:
-        result.append(TowerBudgetBreakdown(
-            tower_id=t.id,
-            tower_name=f"{t.tower_name} ({t.tower_code})",
-            budget=float(t.budget),
-            committed=po_committed,
-            actual=actual,
-            variance=float(t.budget) - actual,
-        ))
-    return result
+
+    # Documents carry no tower_id (CD-5), so per-tower attribution does not
+    # exist: repeating the project's committed/actual on every tower row
+    # multiplied spend by the tower count (R2-248). One honest project-wide
+    # row until the column exists (R2-374).
+    budget = db.query(ProjectBudget).filter(ProjectBudget.project_id == project_id).first()
+    total_budget = (
+        float(budget.material_budget) + float(budget.labour_budget) +
+        float(budget.subcon_budget) + float(budget.equipment_budget)
+    ) if budget else sum(float(t.budget) for t in towers)
+    return [TowerBudgetBreakdown(
+        tower_id=None,
+        tower_name="Overall Project",
+        budget=total_budget,
+        committed=po_committed,
+        actual=actual,
+        variance=total_budget - actual,
+    )]
