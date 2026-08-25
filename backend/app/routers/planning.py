@@ -2,10 +2,11 @@ from uuid import UUID
 from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.auth import get_current_user, verify_company_access, verify_project_access, get_company_membership, require_permission
-from app.models import Task, TaskPredecessor, ProjectMilestone, Project, TaskTodo, TaskComment, CompanyTeam, User
+from app.models import Task, TaskPredecessor, ProjectMilestone, Project, TaskTodo, TaskComment, CompanyTeam, User, BOQItem
 from app.constants import MILESTONE_TYPE_PATTERN, MILESTONE_STATUS_PATTERN, PREDECESSOR_LINK_TYPE_PATTERN, PROJECT_STATUS_PATTERN
 from app.workflow_controls import (
     enforce_entry_creation_window,
@@ -747,11 +748,37 @@ def create_task_comment(task_id: UUID, payload: CommentCreate, db: Session = Dep
     )
     db.add(comment)
     
-    # Optional WBS physical progress status updates if quantity is logged in comment
+    # Optional WBS physical progress update when a measured quantity is booked.
+    # The measurement-book percentage is cumulative booked quantity against the
+    # linked BOQ item's contracted quantity, so Log Progress moves Task.progress
+    # (and completes the task at 100%) instead of leaving the quantity a
+    # write-only chat line. Without a linked BOQ quantity there is no honest
+    # denominator, so progress is left to the explicit PATCH path.
     if payload.progress_qty_added is not None and payload.progress_qty_added > 0:
-        # Check if the task has status not_started, set to in_progress
         if task.status == "not_started":
             task.status = "ongoing"
+            db.add(task)
+        planned_qty = None
+        if task.boq_item_id:
+            boq_item = db.query(BOQItem).filter(BOQItem.id == task.boq_item_id).first()
+            if boq_item is not None and boq_item.quantity is not None and float(boq_item.quantity) > 0:
+                planned_qty = float(boq_item.quantity)
+        if planned_qty:
+            db.flush()
+            measured_total = float(
+                db.query(func.coalesce(func.sum(TaskComment.progress_qty_added), 0.0))
+                .filter(
+                    TaskComment.task_id == task_id,
+                    TaskComment.progress_qty_added.isnot(None),
+                )
+                .scalar()
+                or 0.0
+            )
+            new_progress = round(min(100.0, max(0.0, measured_total / planned_qty * 100.0)), 2)
+            if float(task.progress or 0.0) != new_progress:
+                task.progress = new_progress
+            if new_progress >= 100.0 and task.status != "completed":
+                task.status = "completed"
             db.add(task)
             
     db.commit()
