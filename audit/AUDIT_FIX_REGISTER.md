@@ -555,7 +555,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-404 | HIGH | W06 | `settings.py` | `models.py`, `admin_migrations.py`, `google_drive.py` | FIXED | | reg L19932 S33 FIXED ac9c310 (H-3way-settings): uploaded logo/signature/stamp decoded and embedded in bill/PO/BOQ/client-report PDFs (watermark behind pages, letterhead p1, signature band last page); undecodable bytes skipped honestly; test added. |
 | R2-405 | HIGH | W06 | `settings.py` | — | FIXED | FIXED 161b2c0; team-member listings read User.mobile instead of nonexistent User.phone that 500d GET /settings/team. |
 | R2-406 | MEDIUM | W125 | `settings/page.tsx` | — | FIXED | FIXED (evidence, 34d44b9); placeholder already reads "This section is not available yet." |
-| R2-407 | CRITICAL | W02 | `UNMAPPED` | — | TODO | | reg L20082 |
+| R2-407 | CRITICAL | W02 | `UNMAPPED` | — | FIXED | | reg L20082 S33-C FIXED 74b64ce: payslip CSV neutralizes formula cells (last raw-text exporter). |
 | R2-408 | HIGH | W02 | `UNMAPPED` | — | FIXED | | reg L20115 S33 FIXED 9ee09fe: DPR reported_by stamped server-side from session user; free-text field removed from create schema. |
 | R2-409 | HIGH | W25 | `tally.py` | — | FIXED | | reg L20131 S33 FIXED 19cef93: payslip CSV identity block (pay period/run id/company/project) appended; lives in hr.py not tally.py. |
 | R2-410 | CRITICAL | W02 | `UNMAPPED` | — | TODO | | reg L20196 |
