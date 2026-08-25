@@ -814,29 +814,56 @@ export default function GanttSchedulerPage() {
               {loading ? (
                 <div className="text-center py-10 text-xs text-muted">Loading WBS Node levels...</div>
               ) : (
-                tasks.map((task) => (
+                tasks.map((task) => {
+                  const pct = Math.min(100, Math.max(0, task.progress ?? 0));
+                  const overdue =
+                    task.status !== "completed" && !!task.end_date && new Date(task.end_date) < new Date();
+                  return (
                   <div
                     key={task.id}
                     onClick={() => handleOpenDrawer(task)}
                     className="p-4 rounded-md border border-border-custom bg-input hover:border-primary/20 transition-all flex items-center justify-between cursor-pointer group"
                   >
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
+                    <div className="space-y-1.5 w-full">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <strong className="text-foreground text-xs group-hover:text-primary transition-all">
                           {task.name}
                         </strong>
+                        {task.is_critical && (
+                          <span className="text-[8px] bg-red-500/10 border border-red-500/20 text-red-400 px-1.5 py-0.5 rounded font-bold">CRITICAL</span>
+                        )}
+                        {overdue && (
+                          <span className="text-[8px] bg-orange-500/10 border border-orange-500/20 text-orange-400 px-1.5 py-0.5 rounded font-bold">OVERDUE</span>
+                        )}
                         <span className={`text-[9px] px-2 py-0.5 rounded font-bold uppercase ${
                           task.priority === "high" ? "bg-red-500/10 text-red-400" : "bg-zinc-500/10 text-muted"
                         }`}>{task.priority}</span>
+                        <span className={`text-[8px] px-1.5 py-0.5 rounded border font-bold uppercase ${
+                          task.status === "completed"
+                            ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+                            : task.status === "not_started"
+                              ? "bg-zinc-700/20 border-zinc-600/20 text-muted"
+                              : "bg-blue-500/10 border-blue-500/20 text-blue-400"
+                        }`}>{(task.status || "").replace("_", " ")}</span>
                       </div>
                       <div className="text-[10px] text-muted">
-                        Start: {fmtDate(task.start_date)} · Duration: {task.duration_days} Days
+                        Start: {fmtDate(task.start_date)} · End: {fmtDate(task.end_date)} · Duration: {task.duration_days} Days
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="h-1.5 flex-1 max-w-[240px] bg-zinc-800 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full ${overdue ? "bg-orange-400/70" : "bg-emerald-400/60"}`}
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                        <span className="text-[9px] font-bold text-muted">{Math.round(pct)}%</span>
                       </div>
                     </div>
 
-                    <span className="text-muted font-bold group-hover:text-foreground transition-all">→</span>
+                    <span className="text-muted font-bold group-hover:text-foreground transition-all ml-3">→</span>
                   </div>
-                ))
+                  );
+                })
               )}
             </div>
           </div>
@@ -940,6 +967,21 @@ export default function GanttSchedulerPage() {
                 )}
 
                 <div className="space-y-1">
+                  <div className="text-[10px] text-muted flex items-center gap-2">
+                    <span>
+                      Current progress:{" "}
+                      <strong className="text-foreground font-sans">
+                        {Math.round(Math.min(100, Math.max(0, selectedTask.progress ?? 0)))}%
+                      </strong>
+                    </span>
+                    <span className={`text-[8px] px-1.5 py-0.5 rounded border font-bold uppercase ${
+                      selectedTask.status === "completed"
+                        ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+                        : selectedTask.status === "not_started"
+                          ? "bg-zinc-700/20 border-zinc-600/20 text-muted"
+                          : "bg-blue-500/10 border-blue-500/20 text-blue-400"
+                    }`}>{(selectedTask.status || "").replace("_", " ")}</span>
+                  </div>
                   <div className="flex gap-2">
                     <input
                       type="text"
