@@ -81,6 +81,12 @@ type PRequest = {
 };
 type Member = { company_team_id: string; user_id: string | null; name: string; role: string | null };
 type CostCode = { id: string; code: string; name: string };
+type FinanceTxnRow = {
+  id: string;
+  type: string;
+  amount: number;
+  project_id: string | null;
+};
 
 type LedgerRow = {
   id: string;
@@ -134,6 +140,7 @@ export default function TransactionPage() {
   const [requests, setRequests] = useState<PRequest[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const [costCodes, setCostCodes] = useState<CostCode[]>([]);
+  const [paymentTotals, setPaymentTotals] = useState<{ received: number; paid: number } | null>(null);
   const [loading, setLoading] = useState(true);
   const [typeFilter, setTypeFilter] = useState("All");
   const [search, setSearch] = useState("");
@@ -147,7 +154,7 @@ export default function TransactionPage() {
     setError(null);
     try {
       const cid = companyId;
-      const [bRes, dRes, cRes, rRes, mRes, ccRes, sRes] = await Promise.all([
+      const [bRes, dRes, cRes, rRes, mRes, ccRes, sRes, tRes] = await Promise.all([
         fetch(getApi(`/billing/bills?project_id=${projectId}`), { headers: authHeaders() }),
         fetch(getApi(`/billing/debit-notes?project_id=${projectId}`), { headers: authHeaders() }),
         fetch(getApi(`/billing/credit-notes?project_id=${projectId}`), { headers: authHeaders() }),
@@ -155,6 +162,7 @@ export default function TransactionPage() {
         fetch(getApi(`/projects/${projectId}/members`), { headers: authHeaders() }),
         fetch(getApi(`/library/cost-codes/${cid}`), { headers: authHeaders() }),
         fetch(getApi(`/settings/company/${cid}`), { headers: authHeaders() }),
+        fetch(getApi(`/finance/transactions/${cid}`), { headers: authHeaders() }),
       ]);
       if (bRes.ok) setBills(await bRes.json());
       if (dRes.ok) setDebits(await dRes.json());
@@ -163,8 +171,30 @@ export default function TransactionPage() {
       if (mRes.ok) setMembers(await mRes.json());
       if (ccRes.ok) setCostCodes(await ccRes.json());
       if (sRes.ok) setZatcaEnabled(Boolean((await sRes.json()).is_zatca_enable));
+      // R2-173: money actually moved lives in the Payment table, which
+      // /billing/bills never returns, so a project with large receipts and no
+      // settlement-type bill showed a structural ₹0 Total In. Pull the company
+      // transaction feed and keep only this project's recorded payments so the
+      // cash tiles match what the server reports elsewhere. The feed's rows
+      // carry project_id; its aggregates are company-wide so they are not used.
+      if (tRes.ok) {
+        const body = await tRes.json();
+        const rows: FinanceTxnRow[] = Array.isArray(body?.transactions) ? body.transactions : [];
+        let received = 0;
+        let paid = 0;
+        for (const r of rows) {
+          if (r.project_id !== projectId) continue;
+          const amt = Number(r.amount) || 0;
+          if (r.type === "Payment In") received += amt;
+          else if (r.type === "Payment Out") paid += amt;
+        }
+        setPaymentTotals({ received, paid });
+      } else {
+        setPaymentTotals(null);
+      }
     } catch (e) {
       setError("Failed to load transactions.");
+      setPaymentTotals(null);
       console.error(e);
     } finally {
       setLoading(false);
@@ -180,7 +210,7 @@ export default function TransactionPage() {
     [members]
   );
 
-  // ── Summary cards (wired to real bill data) ────────────────────────────────
+  // ── Summary cards: cash heads = settlement vouchers + recorded payments ────
   const { totalIn, totalOut, sales, expense, balance, margin } = useMemo(() => {
     let totalIn = 0, totalOut = 0, sales = 0, expense = 0;
     for (const b of bills) {
@@ -200,6 +230,13 @@ export default function TransactionPage() {
         }
       }
     }
+    // R2-173: fold in the recorded payments fetched above. null means the
+    // finance feed failed; the tiles then stay voucher-only and a warning is
+    // shown instead of presenting an understated total as complete.
+    if (paymentTotals) {
+      totalIn += paymentTotals.received;
+      totalOut += paymentTotals.paid;
+    }
     return {
       totalIn,
       totalOut,
@@ -208,7 +245,7 @@ export default function TransactionPage() {
       balance: totalIn - totalOut,
       margin: sales - expense,
     };
-  }, [bills]);
+  }, [bills, paymentTotals]);
 
   // ── Unified ledger ─────────────────────────────────────────────────────────
   const ledger: LedgerRow[] = useMemo(() => {
@@ -263,8 +300,15 @@ export default function TransactionPage() {
         <Card label="Total In" value={fmtINR(totalIn, currencyDecimalPlaces)} tone="emerald" />
         <Card label="Total Out" value={fmtINR(totalOut, currencyDecimalPlaces)} tone="rose" />
         <Card label="Project Balance (In − Out)" value={fmtINR(balance, currencyDecimalPlaces)} tone={balance >= 0 ? "emerald" : "rose"} />
-        <Card label="Margin (Sales − Expense)" value={fmtINR(margin, currencyDecimalPlaces)} tone="violet" />
+        <Card label="Margin (Sales − Expense, pre-GST)" value={fmtINR(margin, currencyDecimalPlaces)} tone="violet" />
       </div>
+
+      {/* R2-173: never present voucher-only cash tiles as if they were complete */}
+      {!loading && !paymentTotals && (
+        <div className="rounded-md border border-amber-500/40 bg-amber-500/10 px-4 py-2 text-sm text-amber-400">
+          Recorded payments could not be loaded, so Total In / Total Out cover settlement vouchers only and may understate actual cash moved.
+        </div>
+      )}
 
       {error && <div className="rounded-md border border-rose-500/40 bg-rose-500/10 px-4 py-2 text-sm text-rose-400">{error}</div>}
 
