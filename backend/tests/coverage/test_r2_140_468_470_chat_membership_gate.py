@@ -143,3 +143,54 @@ def test_sender_stamped_with_company_team_id(client, db, make_tenant, auth_heade
 
     listed = client.get(f"/apis/v3/chat/messages/{gid}", headers=hdr_a).json()
     assert listed[-1]["user_name"] == user_a.name
+
+
+# --- R2-468: every site that writes or compares a company_team foreign key ---
+# --- resolves the caller through the one shared helper                    ---
+
+
+def test_create_group_stamps_creator_team_id_and_enrols_admin(client, db, make_tenant, auth_headers):
+    """created_by and the enrolled member row must hold company_team.id, never the client's users.id."""
+    comp, user_a, team_a = make_tenant(company_name=f"R468-{_SUFFIX}", user_name="UR468A")
+    hdr_a = auth_headers(user_a, comp)
+    project = _mk_project(db, comp, "P468")
+
+    r = client.post(
+        "/apis/v3/chat/groups",
+        json={
+            "company_id": str(comp.id), "project_id": str(project.id),
+            "name": "canonical", "created_by": str(user_a.id),  # hostile users.id is ignored
+        },
+        headers=hdr_a,
+    )
+    assert r.status_code == 201, r.text
+    gid = uuid.UUID(r.json()["id"])
+
+    group = db.query(models.ChatGroup).filter(models.ChatGroup.id == gid).one()
+    assert group.created_by == team_a.id, "created_by must be the creator's company_team.id"
+    member = db.query(models.ChatGroupMember).filter(
+        models.ChatGroupMember.group_id == gid
+    ).one()
+    assert member.user_id == team_a.id and member.role == "admin"
+
+
+def test_list_groups_comparison_matches_subroute_gate(client, db, make_tenant, auth_headers):
+    """The list route filters membership with the same caller keys as verify_group_membership."""
+    comp, user_a, _ = make_tenant(company_name=f"R468B-{_SUFFIX}", user_name="UR468B")
+    hdr_a = auth_headers(user_a, comp)
+    project = _mk_project(db, comp, "P468B")
+    gid = _create_group(client, hdr_a, comp, project, "mine")
+
+    user_b = _mk_colleague(db, comp, "UR468BB")
+    hdr_b = auth_headers(user_b, comp)
+    other = client.post(
+        "/apis/v3/chat/groups",
+        json={"company_id": str(comp.id), "project_id": str(project.id), "name": "b-only"},
+        headers=hdr_b,
+    )
+    assert other.status_code == 201, other.text
+
+    mine = client.get(f"/apis/v3/chat/groups/{project.id}", headers=hdr_a).json()
+    assert [g["id"] for g in mine] == [gid]
+    theirs = client.get(f"/apis/v3/chat/groups/{project.id}", headers=hdr_b).json()
+    assert gid not in [g["id"] for g in theirs]
