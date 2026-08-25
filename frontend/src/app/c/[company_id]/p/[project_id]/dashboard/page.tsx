@@ -61,6 +61,11 @@ type DrillData = {
   action?: { label: string; onClick: () => void };
 };
 
+const REVENUE_INVOICE_TYPES = ["sale", "material_sale"];
+const EXPENSE_INVOICE_TYPES = ["purchase", "subcon", "expense", "equipment"];
+const MONEY_IN_VOUCHER_TYPES = ["payment_in", "i_received"];
+const MONEY_OUT_VOUCHER_TYPES = ["payment_out", "i_paid"];
+
 // ─── Small components ───────────────────────────────────────────────────────────
 function Card({ label, value, tone }: { label: string; value: string; tone?: "emerald" | "rose" | "violet" }) {
   const color =
@@ -234,22 +239,22 @@ export default function ProjectDashboardPage() {
   const workDone = docs.reduce((s, d) => s + (d.boq_value || 0) * ((d.physical_progress || 0) / 100), 0);
   const estimatedBudget = costCodes.reduce((s, c) => s + (c.budget_amount || 0), 0);
 
-  const sale = bills.filter((b) => b.invoice_type === "sale");
-  const purchase = bills.filter((b) => b.invoice_type === "purchase");
-  const subcon = bills.filter((b) => b.invoice_type === "subcon");
+  const sale = bills.filter((b) => REVENUE_INVOICE_TYPES.includes(b.invoice_type));
+  const purchase = bills.filter((b) => EXPENSE_INVOICE_TYPES.includes(b.invoice_type));
 
   const saleTotal = sale.reduce((s, b) => s + (b.total_payable || 0), 0);
-  const expense = purchase
-    .concat(subcon)
-    .reduce((s, b) => s + (b.total_payable || 0), 0); // Total Expense (Till Date)
+  const expense = purchase.reduce((s, b) => s + (b.total_payable || 0), 0); // Total Expense (Till Date)
 
-  const cashIn = sale.reduce((s, b) => s + (b.paid_amount || 0), 0);
-  const cashOut = purchase.concat(subcon).reduce((s, b) => s + (b.paid_amount || 0), 0);
+  const cashIn = bills
+    .filter((b) => REVENUE_INVOICE_TYPES.includes(b.invoice_type) || MONEY_IN_VOUCHER_TYPES.includes(b.invoice_type))
+    .reduce((s, b) => s + (b.paid_amount || 0), 0);
+  const cashOut = bills
+    .filter((b) => EXPENSE_INVOICE_TYPES.includes(b.invoice_type) || MONEY_OUT_VOUCHER_TYPES.includes(b.invoice_type))
+    .reduce((s, b) => s + (b.paid_amount || 0), 0);
   const receivables = sale
     .filter((b) => b.status !== "Cancelled")
     .reduce((s, b) => s + ((b.total_payable || 0) - (b.paid_amount || 0)), 0);
   const payables = purchase
-    .concat(subcon)
     .filter((b) => b.status !== "Cancelled")
     .reduce((s, b) => s + ((b.total_payable || 0) - (b.paid_amount || 0)), 0);
   const projectBalance = cashIn - cashOut;
@@ -429,7 +434,7 @@ export default function ProjectDashboardPage() {
                   { key: "Status", label: "Status" },
                   { key: "Total", label: "Total" },
                 ],
-                rows: billRows(purchase.concat(subcon)),
+                rows: billRows(purchase),
               })
             }
           />
