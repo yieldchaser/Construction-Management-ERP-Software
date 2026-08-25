@@ -276,9 +276,9 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-123 | CRITICAL | W30 | `library.py` | — | TODO | | reg L4774 |
 | R2-124 | MEDIUM | W121 | `frontend/src/app/c/[company_id]/d/equipment/page.tsx` | — | FIXED | FIXED 89839c9; both equipment pages render honest empty states (Fleet has CTA). |
 | R2-125 | MEDIUM | W02 | `UNMAPPED` | — | TODO | NEEDS-DECISION -> D4; quotation structure is CGST/SGST-only (crm.py:585-587); adding IGST is a schema + tax-model change routed through D4 (OPEN, blocks R2-041). No code changed. |
-| R2-126 | CRITICAL | W12 | `statutory.py` | — | TODO | | reg L4900 |
-| R2-127 | CRITICAL | W12 | `statutory.py` | — | TODO | | reg L4936 |
-| R2-128 | CRITICAL | W12 | `statutory.py` | — | TODO | | reg L4963 |
+| R2-126 | CRITICAL | W12 | `statutory.py` | — | FIXED | | reg L4900 S33-C FIXED 545e20e: GSTR summary sourced from payslip totals incl. leavers; raise-after-period invisible; no-run 409. |
+| R2-127 | CRITICAL | W12 | `statutory.py` | — | FIXED | | reg L4936 S33-C FIXED a1481c4: exempt colleague contributes 0 ESI both halves; applicability flows from payroll per-employee. |
+| R2-128 | CRITICAL | W12 | `statutory.py` | — | FIXED | | reg L4963 S33-C FIXED 52fc958: BOCW cess = 1% of period live purchase/subcon subtotals (revenue/cancelled/out-of-period excluded). |
 | R2-129 | MEDIUM | W12 | `statutory.py` | — | FIXED | FIXED bdaa883; PF/ESI/BOCW due the 15th, TDS the 7th of the FOLLOWING month with December rollover (was same-month - every return flagged late). Sibling: export_pf_ecr due_date string still same-month 15th (statutory.py:283). |
 | R2-130 | MEDIUM | W12 | `statutory.py` | — | FIXED | FIXED 87b15ad; the invented penalty formula deleted; /penalty returns estimated_penalty 0.0 + correct due date. Sibling: frontend Estimate Penalty modal now shows 0 (honest but dead UX). |
 | R2-131 | CRITICAL | W07 | `billing.py` | `labour.py`, `finance.py`, `subcon_performance.py` | TODO | | reg L5051 |
@@ -290,7 +290,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-137 | CRITICAL | W85 | `d/face-recognition/page.tsx` | `d/payroll-attendance/page.tsx`, `d/crm/page.tsx` | TODO | | reg L5505; CLASS finding (219 of 307 `if (res.ok)` checks have no else) — STILL OPEN as a class. The face-recognition page instance was closed by `f30fffe` (loadError states distinguish failure from empty); the class sweep across the remaining ~200 sites is a dedicated pass (register this finding as the tracking row). |
 | R2-138 | CRITICAL | W14 | `auth.py` | — | TODO | | reg L5567 |
 | R2-139 | CRITICAL | W57 | `main.py` | `delete_logs.py`, `d/delete-logs/page.tsx` | TODO | | reg L5602 |
-| R2-140 | CRITICAL | W17 | `chat.py` | `backend/app/models.py`, `models.py`, `d/chat/page.tsx` | TODO | | reg L5691 |
+| R2-140 | CRITICAL | W17 | `chat.py` | `backend/app/models.py`, `models.py`, `d/chat/page.tsx` | FIXED | | reg L5691 S33-C FIXED dcfc3d1 (+behavioral 5986794): chat identity gate resolved via company_team_for - permanent deadlock dead. |
 | R2-141 | HIGH | W17 | `chat.py` | `frontend/src/app/c/[company_id]/d/chat/page.tsx` | FIXED | FIXED fbbb93a; DELETE /chat/groups/{id} archives the group behind the group-admin guard instead of answering 405. |
 | R2-142 | HIGH | W17 | `chat.py` | `models.py`, `d/chat/page.tsx`, `page.tsx` | FIXED | FIXED f311485; chat group member mutations require server-side group-admin role; role values constrained to admin/member/viewer; last admin cannot be removed or demoted. |
 | R2-143 | HIGH | W17 | `chat.py` | `d/chat/page.tsx`, `page.tsx` | FIXED | FIXED 696216e; create_group ignores client-supplied created_by, stamps the creator CompanyTeam row and inserts the admin member in the same transaction. |
@@ -377,7 +377,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-225 | MEDIUM | W41 | `team_schedule.py` | — | FIXED | FIXED 28ce750 (in d/team-action/page.tsx - the register attribution was off); handleSaveTimesheet no longer returns silently: inline tsFormError, server detail surfaced, network errors surfaced. |
 | R2-226 | CRITICAL | W10 | `projects.py` | `projects/page.tsx` | TODO | | reg L9269 |
 | R2-227 | MEDIUM | W10 | `projects.py` | — | FIXED | FIXED 15e83fd; planning ProjectResponseSchema carries is_pinned (list/get/post/patch agree); frontend had already moved to /projects/company/{id}. |
-| R2-228 | CRITICAL | W33 | `towers.py` | `budget.py` | TODO | | reg L9319 |
+| R2-228 | CRITICAL | W33 | `towers.py` | `budget.py` | FIXED | | reg L9319 S33-C FIXED eca532e: consolidated-pnl returns ONE honest Overall row (no project-dressed-as-tower echo). |
 | R2-229 | HIGH | W33 | `towers.py` | `budgeting.py` | FIXED | | reg L9346 S33 FIXED 9a5685e evidence: towers Billed already revenue-only via _active_bills/REVENUE_INVOICE_TYPES; behavior test locks it. |
 | R2-230 | HIGH | W15 | `models.py` | — | FIXED | FIXED 1a8374f (API half); blank file_url rejected on drawing create + revision create. UI half remains (no file picker wired to /files/upload). |
 | R2-231 | CRITICAL | W01 | `finance.py` | `frontend/src/app/c/[company_id]/d/finance/page.tsx`, `frontend/src/app/c/[company_id]/p/[project_id]/transaction/page.tsx`, `constants.py` | FIX_VERIFIED | `8b9a378` | reg L9544; wave 0; suite RC-006 S33 SWEEP: drift CONFIRMED live (FIFO gate unreachable; UI never sends party field) -> re-fixed e9dba8b (party-less payments scope FIFO by company/project/direction; review gate kept; reversal intact). Watch: no-party settlements persist NULL party_company_user_id. |
@@ -396,7 +396,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-245 | HIGH | W02 | `UNMAPPED` | — | FIXED | | reg L10447 S33 FIXED b993298: MaterialWastage.estimated_value reaches Budget material_actual and P&L Material Cost (stock halves pre-closed by e99fac7/83c32c2). |
 | R2-246 | CRITICAL | W18 | `quality.py` | — | TODO | | reg L10477 |
 | R2-247 | MEDIUM | W18 | `quality.py` | — | FIXED | FIXED d838e44; inspection/NCR identities derived from the caller (inspected_by/raised_by/assigned_to dropped from the request schemas, stamped current_user.id). |
-| R2-248 | CRITICAL | W33 | `towers.py` | `budget.py`, `models.py` | TODO | | reg L10557 |
+| R2-248 | CRITICAL | W33 | `towers.py` | `budget.py`, `models.py` | FIXED | | reg L10557 S33-C FIXED ee3eac8: committed-towers single Overall row; scopes equal project-level endpoint. |
 | R2-249 | HIGH | W13 | `budget.py` | — | FIXED | | reg L10623 S33 FIXED 57e5a7d (H-budget): tower Committed derived from status-whitelisted POs like the no-towers branch (project-level figure until CD-5 tower schema; honest limitation noted); test added. |
 | R2-250 | HIGH | W13 | `budget.py` | — | FIXED | | reg L10647 S33 EVIDENCE-CLOSE: tower actual expense-only filter landed via R2-036 (9234220); behavior test added 465f287. |
 | R2-251 | MEDIUM | W36 | `bi_export.py` | `constants.py`, `api.ts` | FIXED | FIXED b8e837b (in mom.py, not bi_export - register attribution corrected); MOM author comes from the authenticated caller, not the body. |
@@ -431,7 +431,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-280 | HIGH | W21 | `calculators.py` | — | FIXED | | reg L12310 S33 FIXED eed18dd (H-calculators): paint calculator rejects openings larger than walls (422 naming the rule) instead of returning negative quantities. |
 | R2-281 | HIGH | W21 | `calculators.py` | — | FIXED | | reg L12344 S33 FIXED 8798662 (H-calculators): concrete materials derive from dry_volume via grade true ratios (bags x1440/50); wastage_pct scales ordered materials; mix_library now true ratios; test added. |
 | R2-282 | MEDIUM | W02 | `UNMAPPED` | — | FIXED | FIXED 9994fab; steel calculators reject requests populating both parameter sets (422 with named conflicts); floors ge=1, area_sqft gt=0. |
-| R2-283 | CRITICAL | W12 | `statutory.py` | `models.py` | TODO | | reg L12433 |
+| R2-283 | CRITICAL | W12 | `statutory.py` | `models.py` | FIXED | | reg L12433 S33-C FIXED 7767751: auto-populate ValidationError dead - nullable filed/acknowledgment fields, create->list roundtrip. |
 | R2-284 | HIGH | W103 | `cashbook.py` | — | FIXED | FIXED 8dd6afd; p2p transfers reject sender == receiver (422) covering both /cashbook/p2p and /finance/cashbook/p2p. |
 | R2-285 | HIGH | W06 | `settings.py` | — | FIXED | FIXED 5e261ba; approval rules reject empty amount bands, unknown approvers, and overlapping bands per feature type. |
 | R2-286 | MEDIUM | W04 | `reports.py` | — | FIX_VERIFIED | `2ddc411` | reg L12577; reports.py direct-fix pass; suite RC-077 |
@@ -522,7 +522,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-371 | CRITICAL | W04 | `reports.py` | `models.py` | FIX_VERIFIED | `1b841a8` | reg L17366; reports.py direct-fix pass; suite RC-082 |
 | R2-372 | HIGH | W05 | `procurement.py` | `models.py` | TODO | | reg L17397 |
 | R2-373 | MEDIUM | W15 | `models.py` | — | FIXED | FIXED b298269; indent approve now guards pending-only (400 otherwise) and records approved_by/approved_at (additive migration 20260816_000001_indent_approval_columns.sql); new POST /indents/{id}/reject (pending-only). |
-| R2-374 | CRITICAL | W33 | `towers.py` | `budget.py`, `models.py` | TODO | | reg L17487 |
+| R2-374 | CRITICAL | W33 | `towers.py` | `budget.py`, `models.py` | FIXED | | reg L17487 S33-C FIXED b877246: budget Overall row prefers ProjectBudget over tower-sum; per-tower schema stays CD-5-gated. |
 | R2-375 | HIGH | W13 | `budget.py` | — | FIXED | | reg L17543 S33 EVIDENCE-CLOSE: duplicate of R2-249; closed by 57e5a7d; pinned by test_r2_249_tower_budget_committed_from_pos.py. |
 | R2-376 | MEDIUM | W33 | `towers.py` | `budget.py`, `billing.py` | FIXED | FIXED e10ff46; tower P&L queries hoisted out of the per-tower loop; no-tower fallback uses tower_id=None (no zero-UUID sentinel). budget.py half evidence-close (M-A bd41ec76). |
 | R2-377 | HIGH | W07 | `billing.py` | `models.py`, `reports.py` | FIXED | | reg L17640 S33 FIXED 21c681d (H-billing): retention release endpoint stamps released_at/amount with TDS/cancelled/unreviewed/double/over-release gates; 3 nullable lifecycle cols WITH additive migration; two hardcoded-empty sales-report columns now computed; test added. |
@@ -615,9 +615,9 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-465 | HIGH | W45 | `d/drawings/page.tsx` | — | FIXED | | reg L23416 S33 EVIDENCE-CLOSE: publish failure already alerts + returns before setDrawings (3257e0a/7fa1131). |
 | R2-466 | HIGH | W09 | `page.tsx` | — | FIXED | | reg L23437 S33 FIXED ffe4f5f: drawings file URLs validated same-origin/https (blocks javascript:/data://host); seeded malicious rows need ops cleanup. |
 | R2-467 | MEDIUM | W27 | `frontend/src/app/c/[company_id]/d/finance/page.tsx` | — | FIXED | FIXED 2f6f031; drawings revision approval status register + wiring. |
-| R2-468 | CRITICAL | W17 | `chat.py` | `models.py` | TODO | | reg L23554 |
+| R2-468 | CRITICAL | W17 | `chat.py` | `models.py` | FIXED | | reg L23554 S33-C FIXED 1188311: canonical company_team resolver at creator lookup; batched predicate kept. |
 | R2-469 | CRITICAL | W46 | `d/chat/page.tsx` | `chat.py` | TODO | | reg L23615 |
-| R2-470 | CRITICAL | W17 | `chat.py` | — | TODO | | reg L23651 |
+| R2-470 | CRITICAL | W17 | `chat.py` | — | FIXED | | reg L23651 S33-C FIXED 53c4e02: add_member admits recorded creator on empty member table; legacy zero-member rows need ops cleanup. |
 | R2-471 | HIGH | W17 | `chat.py` | `page.tsx` | TODO | | reg L23671 |
 | R2-472 | MEDIUM | W09 | `page.tsx` | — | FIXED | FIXED 93cdba8; chat message URLs validated http(s) on send and render. |
 | R2-473 | CRITICAL | W63 | `p/[project_id]/attendance/page.tsx` | `d/attendance/page.tsx`, `d/hr/page.tsx`, `d/todo/page.tsx` | TODO | | reg L23751 |
@@ -669,9 +669,9 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-519 | HIGH | W21 | `calculators.py` | — | FIXED | | reg L26418 S33 FIXED d3c13b6 (H-calculators): client concrete factors corrected against server ratio math (M7.5 4.0->3.41, M20 8.2->8.06, M25 agg 0.76->0.77); engine consolidation remains CD-2-gated. |
 | R2-520 | HIGH | W21 | `calculators.py` | — | FIXED | | reg L26464 S33 FIXED 8798662 (H-calculators): same defect/lines as R2-281, one inseparable diff naming both ids. |
 | R2-521 | MEDIUM | W21 | `calculators.py` | `calculators/page.tsx`, `models.py` | FIXED | FIXED 5f755ac; steel unit weight D2/162.89 -> D2/162.0 matching the console constant. |
-| R2-522 | CRITICAL | W12 | `statutory.py` | — | TODO | | reg L26557 |
-| R2-523 | CRITICAL | W12 | `statutory.py` | — | TODO | | reg L26605 |
-| R2-524 | CRITICAL | W12 | `statutory.py` | — | TODO | | reg L26650 |
+| R2-522 | CRITICAL | W12 | `statutory.py` | — | FIXED | | reg L26557 S33-C FIXED 976e504: GSTR-1 from sales ledger (invoice-wise taxable/GST, party GSTIN, due 11th next month, finance gate). |
+| R2-523 | CRITICAL | W12 | `statutory.py` | — | FIXED | | reg L26605 S33-C FIXED a050b90: ECR EPS/EPF split at 15k cap, earned wages, month-scoped; RESIDUAL: UAN column does not exist (schema + HR write path needed). |
+| R2-524 | CRITICAL | W12 | `statutory.py` | — | FIXED | | reg L26650 S33-C FIXED 4b61a06: 26Q from TransactionDeduction x Bill in real quarters; PAN = NOPANAVAIL only where genuinely absent. |
 | R2-525 | HIGH | W12 | `statutory.py` | — | FIXED | FIXED 268b8ef; penalty estimate reads total wages from the stored statutory report row instead of a caller-supplied query param. |
 | R2-526 | HIGH | W12 | `statutory.py` | `hr.py` | FIXED | FIXED 2c5fe8c; statutory filing stamps filed_by=current_user.name, blank ack rejected 422, empty returns refused 400. |
 | R2-527 | HIGH | W03 | `hr.py` | — | FIX_VERIFIED | `05a53c9` | reg L26813; hr.py direct-fix pass; suite RC-059 |
