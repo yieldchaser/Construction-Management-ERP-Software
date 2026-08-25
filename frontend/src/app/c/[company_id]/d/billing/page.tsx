@@ -29,6 +29,9 @@ interface Bill {
   deductions: Deduction[];
   preTax: boolean;
   status: "approved" | "pending" | "rejected";
+  // R2-214: audit-approval lifecycle straight from the server's approval_flag,
+  // independent of the payment status above.
+  approvalFlag: string;
   invoiceType: string | null;
   // Theme B (soft flag): link to an approved ThreeWayMatch.
   matchId: string | null;
@@ -162,6 +165,7 @@ export default function SubcontractorBillingPage() {
             totalPayable: parseFloat(bill.total_payable || 0),
             preTax: bill.is_milestone_fixed_amount,
             status: bill.status === "Unpaid" ? "pending" : (bill.status === "Paid" ? "approved" : "rejected"),
+            approvalFlag: bill.approval_flag || "pending",
             invoiceType: bill.invoice_type || null,
             matchId: bill.match_id || null,
             matchStatus: bill.match_status || "unmatched",
@@ -417,13 +421,24 @@ export default function SubcontractorBillingPage() {
     }
   };
 
-  const handleApproveBill = (id: string) => {
-    setBills(prev => prev.map(b => {
-      if (b.id === id) {
-        return { ...b, status: "approved" };
+  const handleApproveBill = async (id: string) => {
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/billing/bills/${id}/approve`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
+      });
+      if (res.ok) {
+        const bill = await res.json();
+        setBills(prev => prev.map(b => b.id === id
+          ? { ...b, approvalFlag: bill.approval_flag || "approved" }
+          : b));
+      } else {
+        const err = await res.json().catch(() => ({}));
+        alert(err.detail || "Failed to approve bill");
       }
-      return b;
-    }));
+    } catch (e) {
+      console.error("Failed to approve bill", e);
+    }
   };
 
   // Theme B (soft flag): open the match picker for a bill — list only APPROVED
@@ -488,7 +503,11 @@ export default function SubcontractorBillingPage() {
   };
   const billedThisMonth = bills.filter((b) => isThisMonth(b.invoiceDate));
   const totalBilledMTD = billedThisMonth.reduce((s, b) => s + (b.totalPayable || 0), 0);
-  const pendingBills = bills.filter((b) => b.status === "pending");
+  // R2-214: audit approval lives in approval_flag ("approved"/"auto_approved"),
+  // not in the payment status.
+  const isAuditApproved = (b: { approvalFlag: string }) =>
+    b.approvalFlag === "approved" || b.approvalFlag === "auto_approved";
+  const pendingBills = bills.filter((b) => !isAuditApproved(b));
   const pendingAmt = pendingBills.reduce((s, b) => s + (b.totalPayable || 0), 0);
   const retentionHeld = bills.reduce(
     (s, b) => s + (b.deductions || []).filter((d) => d.type === "Retention").reduce((x, d) => x + (d.amount || 0), 0),
@@ -656,11 +675,11 @@ export default function SubcontractorBillingPage() {
                           <td className="px-5 py-3.5">
                             <div className="flex flex-col gap-1">
                               <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                                bill.status === "approved"
+                                isAuditApproved(bill)
                                   ? "bg-green-500/10 text-green-400 border border-green-500/20"
                                   : "bg-amber-500/10 text-amber-400 border border-amber-500/20"
                               }`}>
-                                {bill.status}
+                                {isAuditApproved(bill) ? "approved" : bill.approvalFlag}
                               </span>
                               {bill.invoiceType !== "sale" && bill.matchStatus !== "approved" && (
                                 <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase bg-red-500/10 text-red-400 border border-red-500/20 w-fit">
@@ -684,7 +703,7 @@ export default function SubcontractorBillingPage() {
                               >
                                 PDF
                               </button>
-                              {bill.status === "pending" && (
+                              {!isAuditApproved(bill) && (
                                 <button
                                   onClick={() => handleApproveBill(bill.id)}
                                   className="bg-green-600 hover:bg-green-500 text-white rounded-lg px-2.5 py-1 text-[10px] font-bold transition-all cursor-pointer"

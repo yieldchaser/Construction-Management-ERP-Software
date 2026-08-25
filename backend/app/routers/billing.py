@@ -557,6 +557,73 @@ def cancel_bill(bill_id: UUID, db: Session = Depends(get_db), current_user: User
     )
 
 
+@router.post("/bills/{bill_id}/approve", response_model=BillResponse)
+def approve_bill(bill_id: UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Audit-approve a bill (R2-214).
+
+    Approval is its own lifecycle column (approval_flag), independent of the
+    payment status: finance settles only approved/auto_approved bills and
+    retention release requires the same, so this gate was previously writable
+    by nothing - the UI flipped a local variable instead.
+    """
+    bill = db.query(Bill).filter(Bill.id == bill_id).first()
+    if not bill:
+        raise HTTPException(status_code=404, detail="Bill not found")
+    get_company_membership(db, current_user, bill.company_id)
+    require_permission(db, current_user, bill.company_id, "billing:approve")
+    if bill.status == "Cancelled":
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Cannot approve a cancelled bill",
+        )
+    if bill.approval_flag not in ("approved", "auto_approved"):
+        bill.approval_flag = "approved"
+        db.commit()
+        db.refresh(bill)
+
+    deductions = db.query(TransactionDeduction).filter(TransactionDeduction.bill_id == bill.id).all()
+    ded_schemas = [
+        DeductionResponseSchema(
+            id=d.id,
+            deduction_type=d.deduction_type,
+            amount=float(d.amount),
+            percentage=float(d.percentage) if d.percentage else None,
+            notes=d.notes,
+            release_due_date=d.release_due_date,
+            released_at=d.released_at,
+            released_amount=float(d.released_amount) if d.released_amount is not None else None,
+        ) for d in deductions
+    ]
+    return BillResponse(
+        id=bill.id,
+        company_id=bill.company_id,
+        project_id=bill.project_id,
+        party_company_user_id=bill.party_company_user_id,
+        invoice_number=bill.invoice_number,
+        invoice_date=bill.invoice_date,
+        due_date=bill.due_date,
+        invoice_type=bill.invoice_type,
+        status=bill.status,
+        subtotal=float(bill.subtotal),
+        gst_amount=float(bill.gst_amount),
+        total_payable=float(bill.total_payable),
+        paid_amount=float(bill.paid_amount),
+        approval_flag=bill.approval_flag,
+        is_milestone_fixed_amount=bill.is_milestone_fixed_amount,
+        created_at=bill.created_at,
+        deductions=ded_schemas,
+        items_json=bill.items_json,
+        payment_mode=bill.payment_mode,
+        payment_bank_name=bill.payment_bank_name,
+        payment_ref=bill.payment_ref,
+        ship_to=bill.ship_to,
+        terms=bill.terms,
+        match_id=bill.match_id,
+        match_status=_derive_bill_match_status(db, bill),
+        wo_id=bill.wo_id,
+    )
+
+
 @router.get("/bills/{bill_id}/zatca")
 def get_bill_zatca(bill_id: UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     bill = db.query(Bill).filter(Bill.id == bill_id).first()
