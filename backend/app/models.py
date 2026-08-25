@@ -1590,7 +1590,10 @@ class PaymentRequest(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
     project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="SET NULL"), nullable=True)
-    party_company_user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    # R2-052: same column name, same meaning as bills/debit_notes/credit_notes/
+    # payments - the counterparty's company_team row, not a login user, so
+    # external parties without a platform login can receive payment requests.
+    party_company_user_id = Column(UUID(as_uuid=True), ForeignKey("company_team.id"), nullable=False)
     party_name = Column(String(255), nullable=False)
     amount = Column(Float, nullable=False)
     details = Column(String, nullable=True)
