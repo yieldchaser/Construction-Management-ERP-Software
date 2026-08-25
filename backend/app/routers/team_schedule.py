@@ -1,10 +1,12 @@
 from uuid import UUID
 from datetime import datetime
 from typing import List, Optional
+from urllib.parse import urlparse
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
+from app.config import settings
 from app.database import get_db
 from app.auth import get_current_user, verify_project_in_company, verify_company_access, get_company_membership, require_permission
 from app import models
@@ -19,6 +21,21 @@ router = APIRouter(
 
 
 # ─── Schemas ───────────────────────────────────────────────────────────────────
+def _is_allowed_file_url(url: str) -> bool:
+    """R2-257: a timesheet attachment reaches an <a href> on the Team Action
+    page, so a javascript: URL here is stored XSS in the app's own origin.
+    Same rule as drawings: a same-origin path (/...) or an https URL on this
+    product's own storage origin; every other scheme and host is rejected."""
+    stripped = url.strip()
+    if stripped.startswith("/") and not stripped.startswith("//"):
+        return True
+    parsed = urlparse(stripped)
+    if parsed.scheme != "https" or not parsed.netloc:
+        return False
+    storage_origin = urlparse((getattr(settings, "SUPABASE_URL", "") or "").strip())
+    return bool(storage_origin.netloc) and parsed.netloc == storage_origin.netloc
+
+
 class TimesheetCreate(BaseModel):
     company_id: UUID
     party_id: Optional[UUID] = None
@@ -29,6 +46,19 @@ class TimesheetCreate(BaseModel):
     remarks: Optional[str] = None
     file_url: Optional[str] = None
     file_name: Optional[str] = None
+
+    @field_validator("file_url")
+    @classmethod
+    def file_url_scheme_allowlist(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return None
+        if not v.strip():
+            raise ValueError("file_url cannot be blank; send null when there is no attachment")
+        if not _is_allowed_file_url(v):
+            raise ValueError(
+                "file_url must be a same-origin path (/...) or an https URL on this product's own storage origin; other hosts and non-https schemes are rejected"
+            )
+        return v
 
 
 class TimesheetResponse(BaseModel):

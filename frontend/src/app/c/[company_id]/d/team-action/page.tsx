@@ -56,6 +56,16 @@ type StatusFilter = "All" | "not_started" | "in_progress" | "completed";
 const DAY_MS = 86400000;
 const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
 
+// R2-257 defence in depth: a stored javascript: URL must never reach an href,
+// even if a row predates the server-side scheme allow-list.
+const safeHref = (url: string | null): string | null => {
+  if (!url) return null;
+  const u = url.trim();
+  if (/^https?:\/\//i.test(u)) return u;
+  if (u.startsWith("/") && !u.startsWith("//")) return u;
+  return null;
+};
+
 const fmtDate = (d: Date) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 const fmtDateNice = (iso: string) => {
@@ -960,8 +970,8 @@ ${tasksXml}
                       <td className="px-5 py-3 font-bold text-white">{ts.party_name || "—"}</td>
                       <td className="px-5 py-3 text-muted whitespace-nowrap">
                         {fmtTime(ts.start_time)} – {fmtTime(ts.end_time)}
-                        {ts.file_url && (
-                          <a href={ts.file_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-[10px] text-primary hover:underline">
+                        {safeHref(ts.file_url) && (
+                          <a href={safeHref(ts.file_url)!} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-[10px] text-primary hover:underline">
                             <Icon name="paperclip" className="w-3 h-3" /> {ts.file_name || "file"}
                           </a>
                         )}
