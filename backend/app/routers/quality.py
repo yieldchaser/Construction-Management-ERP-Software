@@ -97,6 +97,7 @@ class InspectionResponse_(BaseModel):
     fail_count: int
     na_count: int
     overall_remarks: Optional[str]
+    inspected_by: Optional[uuid.UUID] = None
     created_at: datetime
 
     class Config:
