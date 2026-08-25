@@ -68,7 +68,10 @@ def test_denominator_derives_working_days_from_weekly_offs(client, db, make_tena
     # off -> 22 working days replace the old constant default of 26.
     comp, hdr, emp = _payroll_tenant(db, make_tenant, auth_headers, ["Sunday", "Saturday"])
 
-    r = _run_payroll(client, comp, hdr)
+    # R2-431 gate: with zero recorded days, the full-period fallback basis is
+    # paid only on assume_full_month opt-in; the derived denominator below is
+    # still resolved server-side from the weekly offs (R2-481).
+    r = _run_payroll(client, comp, hdr, extra={"assume_full_month": True})
     assert r.status_code == 201, r.text
     slip = r.json()["payslips"][0]
     assert slip["days_in_month"] == 22, r.text
