@@ -603,3 +603,9 @@ def read_root():
         "service": "SiteFlow Core API Engine",
         "version": "3.0.0"
     }
+
+@app.get("/health")
+def health_check():
+    # R2-080: stable liveness path for uptime pingers to hit instead of "/".
+    # Deliberately cheap (no DB, no auth) so a wake-up ping answers fast.
+    return {"status": "ok"}
