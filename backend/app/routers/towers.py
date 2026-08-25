@@ -198,19 +198,18 @@ def consolidated_pnl(project_id: UUID, tower_id: Optional[UUID] = Query(None), d
     wos = db.query(WorkOrder).filter(WorkOrder.project_id == project_id).all()
     total_wo_value = sum(float(w.estimated_work_amount) for w in wos)
 
-    result = []
-    for t in towers:
-        if tower_id and t.id != tower_id:
-            continue
-
-        result.append(ConsolidatedPNLItem(
-            tower_id=t.id,
-            tower_name=t.tower_name,
-            tower_code=t.tower_code,
-            total_po_value=total_po_value,
-            total_billed=total_billed,
-            total_wo_value=total_wo_value,
-            budget=float(t.budget),
-            variance=float(t.budget) - total_billed,
-        ))
-    return result
+    # No document carries a tower_id (CD-5), so per-tower attribution does not
+    # exist: stamping the whole project on every tower row multiplied spend by
+    # the tower count (R2-228/R2-248). One honest project-wide row until the
+    # column exists (R2-374).
+    total_budget = sum(float(t.budget) for t in towers)
+    return [ConsolidatedPNLItem(
+        tower_id=None,
+        tower_name="Overall Project",
+        tower_code="ALL",
+        total_po_value=total_po_value,
+        total_billed=total_billed,
+        total_wo_value=total_wo_value,
+        budget=total_budget,
+        variance=total_budget - total_billed,
+    )]
