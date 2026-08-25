@@ -286,3 +286,49 @@ def test_r2_522_gstr1_built_from_sales_ledger(client, db, make_tenant, auth_head
     assert r.json()["status"] == "not_generated", r.json()
     assert r.json()["records"] == [], r.json()
 
+
+# ── R2-523: the PF ECR comes from the period's payslips with an EPS split ────
+
+def test_r2_523_pf_ecr_from_period_payslips_with_eps_split(client, db, make_tenant, auth_headers):
+    comp, user, hdr = _hdr(auth_headers, make_tenant, db, "R2523")
+    e_full = _emp(db, comp, "Full Month", basic_salary=30000)
+    e_part = _emp(db, comp, "Part Month", basic_salary=20000)
+    _emp(db, comp, "Not Paid In July")   # active in master, no July payslip
+    run_jul = _seed_payroll(db, comp, "2026-07", [
+        (e_full, dict(days_present=26, days_in_month=26, basic=15000)),
+        (e_part, dict(days_present=10, days_in_month=26, basic=6000)),
+    ])
+    # August pays only one of them at a different wage - the ECR must differ.
+    _seed_payroll(db, comp, "2026-08", [(e_part, dict(days_present=20, days_in_month=26, basic=8000))])
+    db.commit()
+    assert run_jul.status == "finalized"
+
+    r = client.get(f"/apis/v3/statutory/{comp.id}/pf-ecr?month=7&year=2026", headers=hdr)
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["total_employees"] == 2, body
+    lines = {row["name"]: row for row in body["ecr_lines"]}
+    full = lines["Full Month"]
+    assert full["pf_wages"] == 15000.0, full          # cap binds at the ceiling
+    assert full["ee_pf_contribution"] == 1800.0, full
+    assert full["er_pf_contribution"] == 1800.0, full
+    assert full["eps_contribution"] == 1249.5, full   # 8.33% pension split
+    assert full["epf_contribution"] == 550.5, full    # remainder to EPF
+    part = lines["Part Month"]
+    assert part["pf_wages"] == 6000.0, part           # earned wages, not master salary
+    assert part["eps_contribution"] == 499.8 and part["epf_contribution"] == 220.2, part
+    # Residual gap: no model stores a UAN yet, so the ECR stays NOT_LINKED.
+    assert full["uan"] == "NOT_LINKED", full
+    assert body["total_pf_liability"] == 5040.0, body
+
+    # Months no longer return identical figures.
+    r = client.get(f"/apis/v3/statutory/{comp.id}/pf-ecr?month=8&year=2026", headers=hdr)
+    assert r.status_code == 200, r.text
+    aug = r.json()
+    assert aug["total_employees"] == 1, aug
+    assert aug["total_ee_pf"] == 960.0, aug
+
+    # No run for the month -> refuse instead of inventing a return.
+    r = client.get(f"/apis/v3/statutory/{comp.id}/pf-ecr?month=9&year=2026", headers=hdr)
+    assert r.status_code == 409, r.text
+

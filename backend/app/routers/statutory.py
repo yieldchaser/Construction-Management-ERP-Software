@@ -333,27 +333,53 @@ def export_pf_ecr(
     _: None = Depends(verify_company_access),
     current_user: User = Depends(get_current_user),
 ):
-    """PF Electronic Challan cum Return (ECR) data for the given month."""
+    """PF Electronic Challan cum Return (ECR) data for the given month.
+
+    R2-523: built from the period's finalized payslips, so the member list and
+    PF wages are what was actually paid for return_period - not today's active
+    roster filed at full monthly salary every month. The employer share is
+    split into EPS (8.33% of PF wages, the pension scheme) and EPF (remainder),
+    as EPFO's ECR requires.
+    """
     require_module_view(db, current_user, company_id, "payroll")
     return_period = f"{year}-{month:02d}"
-    employees = db.query(StaffEmployee).filter(
-        StaffEmployee.company_id == company_id,
-        StaffEmployee.status == "active",
+    runs = db.query(PayrollRun).filter(
+        PayrollRun.company_id == company_id,
+        PayrollRun.payroll_month == return_period,
+        PayrollRun.status == "finalized",
+    ).all()
+    if not runs:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"No finalized payroll run exists for {return_period}. Finalize payroll before generating the PF ECR.",
+        )
+
+    employees_by_id = {
+        e.id: e for e in db.query(StaffEmployee).filter(StaffEmployee.company_id == company_id)
+    }
+    line_items = db.query(PayrollLineItem).filter(
+        PayrollLineItem.payroll_run_id.in_([r.id for r in runs])
     ).all()
 
     ecr_lines = []
-    for emp in employees:
-        basic = float(emp.basic_salary or 0)
-        pf_wages = min(basic, 15000.0)  # PF capped at ₹15,000 wage ceiling
+    for li in line_items:
+        emp = employees_by_id.get(li.employee_id)
+        if not emp:
+            continue
+        pf_wages = min(float(li.basic or 0), 15000.0)  # PF capped at ₹15,000 wage ceiling
         ee_pf = round(pf_wages * float(emp.pf_employee_pct or 12) / 100, 2)
         er_pf = round(pf_wages * float(emp.pf_employer_pct or 12) / 100, 2)
+        eps_pf = round(pf_wages * 8.33 / 100, 2)
+        epf_pf = round(er_pf - eps_pf, 2)
         ecr_lines.append({
-            "uan": "NOT_LINKED",  # UAN not stored on model; placeholder
+            "uan": "NOT_LINKED",  # UAN not stored on any model yet; placeholder
             "employee_code": emp.employee_code or str(emp.id)[:8].upper(),
             "name": emp.name,
             "pf_wages": pf_wages,
             "ee_pf_contribution": ee_pf,
             "er_pf_contribution": er_pf,
+            "eps_contribution": eps_pf,
+            "epf_contribution": epf_pf,
             "total_pf": round(ee_pf + er_pf, 2),
         })
 
@@ -367,6 +393,8 @@ def export_pf_ecr(
         "total_employees": len(ecr_lines),
         "total_ee_pf": total_ee,
         "total_er_pf": total_er,
+        "total_eps_pf": round(sum(r["eps_contribution"] for r in ecr_lines), 2),
+        "total_epf_pf": round(sum(r["epf_contribution"] for r in ecr_lines), 2),
         "total_pf_liability": round(total_ee + total_er, 2),
         "ecr_lines": ecr_lines,
     }
