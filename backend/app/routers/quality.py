@@ -17,7 +17,7 @@ Endpoints:
 """
 
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 from decimal import Decimal
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -122,6 +122,14 @@ class NCRCreate(BaseModel):
     severity: str = Field("Major", pattern="^(Minor|Major|Critical)$")
     vendor_id: Optional[uuid.UUID] = None
     due_date: Optional[datetime] = None
+
+    @model_validator(mode="after")
+    def due_date_not_in_the_past(self):
+        if self.due_date is not None:
+            due = self.due_date if self.due_date.tzinfo else self.due_date.replace(tzinfo=timezone.utc)
+            if due < datetime.now(timezone.utc):
+                raise ValueError("due_date cannot be in the past")
+        return self
 
 
 class NCRResponse(BaseModel):
@@ -420,6 +428,8 @@ def close_ncr(ncr_id: uuid.UUID, payload: NCRCloseRequest, db: Session = Depends
     require_permission(db, current_user, project.company_id, "quality:edit")
     if ncr.status == "closed":
         raise HTTPException(status_code=400, detail="NCR is already closed")
+    if ncr.status != "under_review":
+        raise HTTPException(status_code=400, detail="NCR must be reviewed before it can be closed")
     ncr.status = "closed"
     ncr.resolution_notes = payload.resolution_notes
     ncr.closed_at = datetime.utcnow()
