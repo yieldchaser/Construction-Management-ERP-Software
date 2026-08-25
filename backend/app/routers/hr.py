@@ -910,6 +910,19 @@ def get_payslips(run_id: uuid.UUID, db: Session = Depends(get_db), current_user:
     return result
 
 
+_CSV_FORMULA_PREFIXES = ("=", "+", "-", "@", "\t", "\r")
+
+
+def _csv_safe_cell(value):
+    # R2-407: a cell whose text begins with = + - @ TAB or CR is executed as a
+    # formula when the export CSV is opened in Excel/LibreOffice/Sheets. Prefix
+    # a single quote so the value is treated as text; everything else passes
+    # through untouched (same neutralisation the DPR and BOCW exports use).
+    if isinstance(value, str) and value.startswith(_CSV_FORMULA_PREFIXES):
+        return "'" + value
+    return value
+
+
 @router.get("/payroll/{run_id}/payslips/export")
 def export_payslips_csv(run_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """Export one row per PayrollLineItem as a CSV attachment.
@@ -944,9 +957,9 @@ def export_payslips_csv(run_id: uuid.UUID, db: Session = Depends(get_db), curren
     for line in lines:
         emp = db.query(StaffEmployee).filter(StaffEmployee.id == line.employee_id).first()
         writer.writerow([
-            (emp.employee_code if (emp and emp.employee_code) else (str(line.employee_id)[:8].upper() if emp else "Unknown")),
-            emp.name if emp else "Unknown",
-            emp.designation if (emp and emp.designation) else "",
+            _csv_safe_cell(emp.employee_code if (emp and emp.employee_code) else (str(line.employee_id)[:8].upper() if emp else "Unknown")),
+            _csv_safe_cell(emp.name if emp else "Unknown"),
+            _csv_safe_cell(emp.designation if (emp and emp.designation) else ""),
             float(line.days_present),
             line.days_in_month,
             float(line.gross_salary),
@@ -960,10 +973,10 @@ def export_payslips_csv(run_id: uuid.UUID, db: Session = Depends(get_db), curren
             float(line.total_deductions),
             float(line.net_payable),
             # R2-409: pay period + reconciliation identifiers.
-            run.payroll_month,
+            _csv_safe_cell(run.payroll_month),
             str(run.id),
-            company.name if company else "",
-            project.name if project else "",
+            _csv_safe_cell(company.name if company else ""),
+            _csv_safe_cell(project.name if project else ""),
         ])
     csv_text = buf.getvalue()
     filename = f"payslips-{run.payroll_month}-{datetime.utcnow().strftime('%Y%m%d')}.csv"
