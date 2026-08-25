@@ -367,6 +367,23 @@ def delete_project(project_id: uuid.UUID, db: Session = Depends(get_db), current
     if not p:
         raise HTTPException(status_code=404, detail="Project not found")
     require_permission(db, current_user, p.company_id, "data:delete")
+    # R2-300: one DELETE used to cascade away the project's entire financial
+    # history (bills, payments, purchase orders, payroll runs all hang off
+    # ondelete="CASCADE"/"SET NULL" FKs) with no confirmation of what would be
+    # lost and no restore path. Refuse while any financial record remains -
+    # a project with books attached must be closed/archived, never deleted.
+    financial = {
+        "bills": db.query(models.Bill).filter(models.Bill.project_id == p.id).count(),
+        "payments": db.query(models.Payment).filter(models.Payment.project_id == p.id).count(),
+        "purchase_orders": db.query(models.PurchaseOrder).filter(models.PurchaseOrder.project_id == p.id).count(),
+        "payroll_runs": db.query(models.PayrollRun).filter(models.PayrollRun.project_id == p.id).count(),
+    }
+    if any(financial.values()):
+        detail = ", ".join(f"{k}: {v}" for k, v in financial.items() if v)
+        raise HTTPException(
+            status_code=409,
+            detail=f"Project has financial records that would be destroyed ({detail}). Close or archive it instead.",
+        )
     from app.routers.delete_logs import log_deletion
     log_deletion(db, p.company_id, "project", str(p.id), f"Project: {p.name}", party_name=p.name, deleted_by=current_user.name)
     db.delete(p)
