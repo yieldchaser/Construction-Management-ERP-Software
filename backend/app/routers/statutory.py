@@ -61,9 +61,12 @@ class StatutoryReportResponse(BaseModel):
     esi_employer_contribution: float
     bocw_cess: float
     tds_deducted: float
-    filed_at: Optional[datetime]
-    filed_by: Optional[str]
-    acknowledgment_number: Optional[str]
+    # R2-283: Optional[X] without a default is REQUIRED in Pydantic v2, so any
+    # response built from a dict that omits these keys (auto-populate) died in
+    # flight with "3 validation errors" before the caller saw anything.
+    filed_at: Optional[datetime] = None
+    filed_by: Optional[str] = None
+    acknowledgment_number: Optional[str] = None
     status: str
     due_date: Optional[datetime] = None
     days_overdue: int = 0
