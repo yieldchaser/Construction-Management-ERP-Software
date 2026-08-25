@@ -334,6 +334,10 @@ def create_batch(payload: BatchCreate, db: Session = Depends(get_db), current_us
     # Workflow Controls: Material Controls -> Restrict Production Material
     company = get_company(db, payload.company_id)
     restrict_production_material = bool(company and company.restrict_production_material)
+    # R2-254: a completed batch consumes stock exactly like manual usage and the
+    # DPR do, so an armed negative_stock_lock must gate it too - checked for every
+    # consumed material BEFORE any row is written, not after stock goes negative.
+    negative_stock_lock = bool(company and company.negative_stock_lock)
 
     recipe_materials = db.query(ProductionRecipeMaterial).filter(ProductionRecipeMaterial.recipe_id == recipe.id).all()
     override_map = {item.material_name: item for item in (payload.materials or [])}
@@ -391,6 +395,8 @@ def create_batch(payload: BatchCreate, db: Session = Depends(get_db), current_us
         if batch.status == "completed":
             if restrict_production_material:
                 enforce_stock_availability(db, payload.project_id, recipe_material.material_name, actual_qty, "Restrict Production Material")
+            elif negative_stock_lock:
+                enforce_stock_availability(db, payload.project_id, recipe_material.material_name, actual_qty, "Restrict Material Usage")
             db.add(
                 MaterialTransaction(
                     project_id=payload.project_id,
@@ -422,6 +428,8 @@ def create_batch(payload: BatchCreate, db: Session = Depends(get_db), current_us
         if batch.status == "completed":
             if restrict_production_material:
                 enforce_stock_availability(db, payload.project_id, extra_material.material_name, actual_qty, "Restrict Production Material")
+            elif negative_stock_lock:
+                enforce_stock_availability(db, payload.project_id, extra_material.material_name, actual_qty, "Restrict Material Usage")
             db.add(
                 MaterialTransaction(
                     project_id=payload.project_id,
@@ -455,6 +463,9 @@ def complete_batch(batch_id: UUID, db: Session = Depends(get_db), current_user: 
     # Workflow Controls: Material Controls -> Restrict Production Material
     company = get_company(db, batch.company_id)
     restrict_production_material = bool(company and company.restrict_production_material)
+    # R2-254: completing a deferred batch is the same consumption event; the
+    # negative_stock_lock gates it identically to the create-time path.
+    negative_stock_lock = bool(company and company.negative_stock_lock)
 
     batch.status = "completed"
     batch.completed_at = datetime.utcnow()
@@ -469,6 +480,8 @@ def complete_batch(batch_id: UUID, db: Session = Depends(get_db), current_user: 
         for bm in batch_materials:
             if restrict_production_material:
                 enforce_stock_availability(db, batch.project_id, bm.material_name, float(bm.actual_qty), "Restrict Production Material")
+            elif negative_stock_lock:
+                enforce_stock_availability(db, batch.project_id, bm.material_name, float(bm.actual_qty), "Restrict Material Usage")
             db.add(
                 MaterialTransaction(
                     project_id=batch.project_id,
