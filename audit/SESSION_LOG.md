@@ -2,6 +2,15 @@
 
 Append-only. Every working block ends with a 5-line entry. Never edit an existing entry; if a commit was reverted, add a new entry.
 
+## Session 33 (cont. 13) — Phase C: ~40 more CRITICALs closed (2026-08-24)
+
+- Clusters cleared: settings remainder (R2-462 adb2b3c 8 stubs await params / R2-541 4ad5792 five writes gated settings:manage / R2-547 evidence=R2-288), transaction pages (R2-173 5692d6d cash tiles fold Payment rows / R2-490 a44acaa totals classify all types), misc singles A (R2-046 0f62538 More menu / R2-047 3a5f00f sidebar Project Hub + More Modules / R2-099 933facf finance loading+error honesty), misc B (R2-112 e223de2 frontend rbac sync / R2-116 evidence / R2-123 evidence / R2-131 8de21ee shared resolve_party_name), misc C (R2-139 evidence / R2-157 31bca13 read-tenancy / R2-172 aa17f72 WORKFLOW_MODULES x7 + mirror / R2-187 evidence), three_way (R2-132/133/538 evidence, R2-240 a1ad81e baseline cap).
+- Stale tests/pins aligned: R2-174 pin (d38c919), R2-180 test scoping (f2e873a), prompt10 variance (08e0c8e).
+- Suite GREEN at every checkpoint; all pushed through f2e873a.
+- REMAINING CRITICALs (~25): R2-209/214/215/226/252/257/266/270/271/300/326/337/396/399/407/410/416/418/426/431/437/444/482/487/503 (+ UNMAPPED stragglers). HIGH stragglers x9 + gated 16 unchanged. Pins sets B/C pending. Next session: finish Phase C, then HIGH stragglers, then founder-gate package.
+
+---
+
 ## Session 33 (cont. 12) — HIGH queue near-complete; worktree rebuilt after gutting incident (2026-08-24)
 
 - **INCIDENT:** the worktree was found gutted (.git file + backend/app/database.py + conftest.py deleted; pytest exit=2). Cause: local resource exhaustion (getaddrinfo thread-start failures) — same root as the subagent network_error windows. RECOVERED with zero work lost: rebuilt via git worktree add from campaign/waves (5de540c), re-applied R2-203/216 register flips (7ef713b), suite green.
