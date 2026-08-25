@@ -12,7 +12,8 @@ type StockRow = {
   unit: string | null;
   received: number;
   consumed: number;
-  current_stock: number; // Received - Consumed ; can be negative
+  adjusted?: number; // net stock corrections (R2-387)
+  current_stock: number; // Received - Consumed + Adjusted ; can be negative
   reserved: number;
 };
 
@@ -77,8 +78,21 @@ export default function MaterialTab() {
   }, [rows]);
 
   const negCount = rows.filter((r) => r.current_stock < 0).length;
-  const totRecv = rows.reduce((s, r) => s + r.received, 0);
-  const totCons = rows.reduce((s, r) => s + r.consumed, 0);
+  // R2-488: bags, tonnes and cft are never summed. The headline tiles break
+  // received and consumed down per unit instead of one dimensionless number.
+  const byUnit = useMemo(() => {
+    const m = new Map<string, { recv: number; cons: number }>();
+    for (const r of rows) {
+      const k = r.unit?.trim() || "units";
+      const e = m.get(k) ?? { recv: 0, cons: 0 };
+      e.recv += r.received;
+      e.cons += r.consumed;
+      m.set(k, e);
+    }
+    return Array.from(m.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+  }, [rows]);
+  const unitBreakdown = (pick: (e: { recv: number; cons: number }) => number) =>
+    byUnit.length ? byUnit.map(([u, e]) => `${num(pick(e))} ${u}`).join(" · ") : "—";
 
   const submitMovement = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -149,7 +163,7 @@ export default function MaterialTab() {
         <div className="flex items-center gap-3">
           <h1 className="text-sm font-bold text-foreground">Material Stock</h1>
           <div className="text-[10px] text-muted">
-            Current Stock = <span className="text-primary font-semibold">Received − Consumed</span>
+            Current Stock = <span className="text-primary font-semibold">Received − Consumed + Adjusted</span>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -175,11 +189,11 @@ export default function MaterialTab() {
         </div>
         <div className="px-3 py-1.5 rounded-lg bg-elevated border border-border-custom text-[11px]">
           <span className="text-muted">Received</span>{" "}
-          <span className="text-emerald-400 font-bold font-sans">{num(totRecv)}</span>
+          <span className="text-emerald-400 font-bold font-sans">{unitBreakdown((e) => e.recv)}</span>
         </div>
         <div className="px-3 py-1.5 rounded-lg bg-elevated border border-border-custom text-[11px]">
           <span className="text-muted">Consumed</span>{" "}
-          <span className="text-amber-400 font-bold font-sans">{num(totCons)}</span>
+          <span className="text-amber-400 font-bold font-sans">{unitBreakdown((e) => e.cons)}</span>
         </div>
         <div className="px-3 py-1.5 rounded-lg bg-elevated border border-border-custom text-[11px]">
           <span className="text-muted">Over-consumed</span>{" "}
