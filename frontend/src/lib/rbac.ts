@@ -35,6 +35,9 @@ export const WORKFLOW_MODULES: ReadonlySet<string> = new Set([
   "procurement",
   "budgeting",
   "payroll",
+  "attendance",
+  "drawings",
+  "reports",
   "subcontractor",
 ]);
 
