@@ -882,9 +882,12 @@ def get_company_parties(company_id: uuid.UUID, db: Session = Depends(get_db), _:
             bills = db.query(Bill).filter(Bill.party_company_user_id.in_(team_ids)).all()
             for b in bills:
                 delta = float(b.paid_amount or 0.0) - float(b.total_payable or 0.0)
-                if b.invoice_type == "sale":
+                # R2-326: classify through the canonical buckets - a bare
+                # == "sale" pushed material_sale revenue and settlement
+                # vouchers into the payable side.
+                if b.invoice_type in REVENUE_INVOICE_TYPES:
                     recv_net += delta
-                else:
+                elif b.invoice_type in EXPENSE_INVOICE_TYPES:
                     pay_net += delta
 
         advance_paid = round(max(0.0, pay_net), 2)
@@ -961,9 +964,12 @@ def _company_party_totals(db: Session, company_id: uuid.UUID) -> dict:
             ).all()
             for b in bills:
                 delta = float(b.paid_amount or 0.0) - float(b.total_payable or 0.0)
-                if b.invoice_type == "sale":
+                # R2-326: classify through the canonical buckets - a bare
+                # == "sale" pushed material_sale revenue and settlement
+                # vouchers into the payable side.
+                if b.invoice_type in REVENUE_INVOICE_TYPES:
                     recv_net += delta
-                else:
+                elif b.invoice_type in EXPENSE_INVOICE_TYPES:
                     pay_net += delta
         advance_paid += max(0.0, pay_net)
         to_pay += max(0.0, -pay_net)
@@ -1145,11 +1151,16 @@ def get_company_transactions(company_id: uuid.UUID, db: Session = Depends(get_db
             "purchase": "Material Purchase",
             "subcon": "Subcon Bill",
         }.get(b.invoice_type, b.invoice_type)
-        # Invoices are company "expense" when payable out (purchase/subcon) and "invoice" when sale
-        if b.invoice_type == "sale":
+        # R2-326: revenue is every REVENUE_INVOICE_TYPES member (sale AND
+        # material_sale) and expense is exactly EXPENSE_INVOICE_TYPES -
+        # settlement vouchers (payment_in/payment_out/i_paid/i_received) and
+        # internal movements (material_transfer/material_return) belong in
+        # neither money head, so a material sale is no longer booked as cost
+        # and money received is no longer displayed as money owed.
+        if b.invoice_type in REVENUE_INVOICE_TYPES:
             total_invoice += payable
             unpaid_invoice += outstanding
-        else:
+        elif b.invoice_type in EXPENSE_INVOICE_TYPES:
             total_expense += payable
             unpaid_expense += outstanding
         rows.append(TransactionRow(
