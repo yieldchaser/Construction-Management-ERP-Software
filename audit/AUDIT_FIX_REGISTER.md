@@ -359,13 +359,13 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-206 | MEDIUM | W83 | `production.py` | `wastage.py` | FIXED | FIXED 83c32c2; wastage_type enumerated (WASTAGE_TYPE_PATTERN in constants.py, applied in wastage.py - invalid 422s), reported_by derived server-side from the membership (column converted to UUID FK, migration 20260816_000005 nulls legacy free text), estimated_value computed from the last PO item rate unless explicitly overridden. Siblings: R2-205 CRITICAL still open (no stock-out transaction). |
 | R2-207 | MEDIUM | W83 | `production.py` | `models.py`, `d/production/page.tsx`, `analytics.py` | FIXED | FIXED 89056dd; batch-derived material qty now applies the recipe allowance (scale x (1 + wastage_pct/100)) - 8 bags x 2 m3 x 1.05 = 16.8 matching the audit example. |
 | R2-208 | MEDIUM | W122 | `p/budgeting/page.tsx` | `safety.py`, `hr.py`, `database.py` | FIXED | FIXED 574ebe9 (in safety.py - register attribution off); attendee_count ge=0. Sibling: conducted_by/checked_by still free text. |
-| R2-209 | CRITICAL | W20 | `zoho_books.py` | — | TODO | | reg L8295 |
+| R2-209 | CRITICAL | W20 | `zoho_books.py` | — | FIXED | | reg L8295 S33-C FIXED 5096c8a: Zoho bill push retries once without gst_treatment on non-GST orgs (code 8); zoho_bill_id persists. |
 | R2-210 | CRITICAL | W03 | `hr.py` | `models.py`, `zoho_books.py`, `d/hr/page.tsx` | FIX_VERIFIED | `e2e449d` | reg L8405; hr.py direct-fix pass; suite RC-045 |
 | R2-211 | HIGH | W03 | `hr.py` | `transaction/page.tsx`, `zoho_books.py`, `d/safety/page.tsx` | FIX_VERIFIED | `034bc1e` | reg L8530; hr.py direct-fix pass; suite RC-065 |
 | R2-212 | HIGH | W22 | `safety.py` | — | FIXED | FIXED bbe3871 (partial pre-fix by R2-256); IncidentClose fields min_length=10 added. |
 | R2-213 | MEDIUM | W02 | `UNMAPPED` | — | FIXED | FIXED d824d3e (other agent); PPE gauge shows a no-data state instead of a red 0%. |
-| R2-214 | CRITICAL | W88 | `d/billing/page.tsx` | — | TODO | | reg L8847 |
-| R2-215 | CRITICAL | W39 | `d/procurement/page.tsx` | — | TODO | | reg L8859 |
+| R2-214 | CRITICAL | W88 | `d/billing/page.tsx` | — | FIXED | | reg L8847 S33-C FIXED b5b9437: real bill approval endpoint (approval_flag only, 409 cancelled, billing:approve) + button/badge/KPI wired to server flag. |
+| R2-215 | CRITICAL | W39 | `d/procurement/page.tsx` | — | FIXED | | reg L8859 S33-C EVIDENCE: usage loop live since 2525cab (R2-094); register row never flipped. |
 | R2-216 | HIGH | W39 | `d/procurement/page.tsx` | — | FIXED | | reg L8874 S33 FIXED 5de540c: isBilled derived from server three-way matches (survives refresh); mark-billed alerts honestly - no endpoint exists. |
 | R2-217 | MEDIUM | W45 | `d/drawings/page.tsx` | — | FIXED | FIXED f38215e; pin resolved column + migration 20260816_000006 + PATCH /drawings/pins/{id} + frontend wired. Sibling: handleAddPin still local-only on failure. |
 | R2-218 | MEDIUM | W02 | `UNMAPPED` | — | FIXED | FIXED (evidence); handleCreateBill already refetches the bills list on success (billing page). |
@@ -375,7 +375,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-222 | CRITICAL | W03 | `hr.py` | `finance.py`, `bi_export.py`, `models.py` | FIX_VERIFIED | `e2e449d` | reg L9123; hr.py direct-fix pass; suite RC-045 |
 | R2-224 | HIGH | W102 | `d/team-action/page.tsx` | — | FIXED | | reg L9223 S33 FIXED cc07d3a: timesheet POST carries real UTC offset instead of fabricating Z on wall-clock values. |
 | R2-225 | MEDIUM | W41 | `team_schedule.py` | — | FIXED | FIXED 28ce750 (in d/team-action/page.tsx - the register attribution was off); handleSaveTimesheet no longer returns silently: inline tsFormError, server detail surfaced, network errors surfaced. |
-| R2-226 | CRITICAL | W10 | `projects.py` | `projects/page.tsx` | TODO | | reg L9269 |
+| R2-226 | CRITICAL | W10 | `projects.py` | `projects/page.tsx` | FIXED | | reg L9269 S33-C FIXED 1c849c7: project delete requires exact name match to confirm. |
 | R2-227 | MEDIUM | W10 | `projects.py` | — | FIXED | FIXED 15e83fd; planning ProjectResponseSchema carries is_pinned (list/get/post/patch agree); frontend had already moved to /projects/company/{id}. |
 | R2-228 | CRITICAL | W33 | `towers.py` | `budget.py` | FIXED | | reg L9319 S33-C FIXED eca532e: consolidated-pnl returns ONE honest Overall row (no project-dressed-as-tower echo). |
 | R2-229 | HIGH | W33 | `towers.py` | `budgeting.py` | FIXED | | reg L9346 S33 FIXED 9a5685e evidence: towers Billed already revenue-only via _active_bills/REVENUE_INVOICE_TYPES; behavior test locks it. |
@@ -400,12 +400,12 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-249 | HIGH | W13 | `budget.py` | — | FIXED | | reg L10623 S33 FIXED 57e5a7d (H-budget): tower Committed derived from status-whitelisted POs like the no-towers branch (project-level figure until CD-5 tower schema; honest limitation noted); test added. |
 | R2-250 | HIGH | W13 | `budget.py` | — | FIXED | | reg L10647 S33 EVIDENCE-CLOSE: tower actual expense-only filter landed via R2-036 (9234220); behavior test added 465f287. |
 | R2-251 | MEDIUM | W36 | `bi_export.py` | `constants.py`, `api.ts` | FIXED | FIXED b8e837b (in mom.py, not bi_export - register attribution corrected); MOM author comes from the authenticated caller, not the body. |
-| R2-252 | CRITICAL | W22 | `safety.py` | — | TODO | | reg L10839 |
+| R2-252 | CRITICAL | W22 | `safety.py` | — | FIXED | | reg L10839 S33-C FIXED 7343c28: incident_type pattern-matched to UI vocabulary; legacy Fatality rows read as LTIF. |
 | R2-253 | HIGH | W15 | `models.py` | — | FIXED | FIXED e2a6963; Bill.wo_id FK + schema/response field; subcon bills resolve their WO and cumulative subtotal capped at estimated_work_amount (422 naming WO number). |
 | R2-254 | HIGH | W05 | `procurement.py` | — | TODO | | reg L10940 |
 | R2-255 | MEDIUM | W11 | `planning.py` | — | FIXED | FIXED bd1c9f7; negative task durations rejected, propagation duration bounded. |
 | R2-256 | MEDIUM | W22 | `safety.py` | — | FIXED | FIXED d879c01; close_incident stamps closed_by (new nullable FK users.id, additive migration 20260816_000002), lost_time_days ge=0, reported_at typed datetime with future rejection. |
-| R2-257 | CRITICAL | W41 | `team_schedule.py` | `frontend/src/app/c/[company_id]/d/team-action/page.tsx`, `drawings/page.tsx` | TODO | | reg L11102 |
+| R2-257 | CRITICAL | W41 | `team_schedule.py` | `frontend/src/app/c/[company_id]/d/team-action/page.tsx`, `drawings/page.tsx` | FIXED | | reg L11102 S33-C FIXED 6b378ef: timesheet file_url scheme allowlist server-side + safeHref render guard. |
 | R2-258 | HIGH | W41 | `team_schedule.py` | — | FIXED | FIXED 521d887; same-day timesheets with end_time not after start_time rejected with 422 instead of wrapping into phantom 23-hour shift. |
 | R2-259 | HIGH | W42 | `drawings.py` | — | FIXED | | reg L11191 S33 FIXED 873dc06: drawing approvals append-only ledger w/ terminal approved state + actor from caller (+model). |
 | R2-260 | HIGH | W32 | `custom_fields.py` | — | FIXED | FIXED c92b707; custom field values validated against declared type/typed column, target entity must exist inside authorised company, is_required enforced on project+bill create/update with 422 naming missing fields. |
