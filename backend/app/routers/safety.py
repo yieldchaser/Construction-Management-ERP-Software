@@ -21,7 +21,11 @@ router = APIRouter(prefix="/safety", tags=["Safety & HSE"], dependencies=[Depend
 
 class IncidentCreate(BaseModel):
     project_id: uuid.UUID
-    incident_type: str          # Near Miss, First Aid, LTI, Fatal
+    # R2-252: the LTIF calculation selects on this field by exact string, so
+    # free text like "Fatality" silently dropped real fatalities out of the
+    # statutory metric. The vocabulary is now enforced at the boundary and the
+    # stats endpoint maps legacy rows through _is_lost_time_type.
+    incident_type: str = Field(pattern="^(Near Miss|First Aid|LTI|Fatal)$")
     severity: str               # Low, Medium, High, Critical
     description: str
     location: Optional[str] = None
@@ -168,6 +172,16 @@ def close_incident(incident_id: str, payload: IncidentClose, db: Session = Depen
     }
 
 
+# R2-252: rows stored before the incident_type pattern existed may hold
+# off-vocabulary spellings ("Fatality", "lost time injury"). The statutory
+# metric must count them; the map is the read-side migration for those rows.
+_LOST_TIME_TYPE_ALIASES = {"lti", "lost time injury", "fatal", "fatality"}
+
+
+def _is_lost_time_type(incident_type: Optional[str]) -> bool:
+    return (incident_type or "").strip().casefold() in _LOST_TIME_TYPE_ALIASES
+
+
 @router.get("/stats/{project_id}")
 def get_safety_stats(
     project_id: str,
@@ -202,7 +216,7 @@ def get_safety_stats(
     manhours = float(actual_hours) if manhours_from_attendance else total_manhours
 
     total_incidents = len(incidents)
-    lti_incidents = [i for i in incidents if i.incident_type in ("LTI", "Fatal")]
+    lti_incidents = [i for i in incidents if _is_lost_time_type(i.incident_type)]
     lti_count = len(lti_incidents)
     total_lost_days = sum(i.lost_time_days for i in lti_incidents)
     ltif = round((lti_count * ltif_basis) / manhours, 2) if manhours > 0 else 0.0
