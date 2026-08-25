@@ -256,6 +256,9 @@ export default function FinancePage() {
     total_invoice: 0, unpaid_invoice: 0, total_expense: 0, unpaid_expense: 0,
     company_balance: 0, cash_balance: 0, in_total: 0, out_total: 0, transactions: [],
   });
+  // Distinguishes "not loaded yet" / "load failed" from a genuine all-zero ledger,
+  // so a cold-start or failed fetch can no longer render as rupee-zero totals.
+  const [txnLoad, setTxnLoad] = useState<"loading" | "ready" | "error">("loading");
   const [txnDateFilter, setTxnDateFilter] = useState("");
   const [showUnbilledOnly, setShowUnbilledOnly] = useState(false);
 
@@ -342,6 +345,9 @@ export default function FinancePage() {
       const txnRes = await fetch(`${getApiHost()}/apis/v3/finance/transactions/${companyId}`, { headers: authHeaders() });
       if (txnRes.ok) {
         setTxnSummary(await txnRes.json());
+        setTxnLoad("ready");
+      } else {
+        setTxnLoad("error");
       }
       // Zoho Books connection status (gates the per-bill push button)
       const zohoRes = await fetch(`${getApiHost()}/apis/v3/integrations/zoho-books/status/${companyId}`, { headers: authHeaders() });
@@ -359,6 +365,7 @@ export default function FinancePage() {
       }
     } catch (e) {
       console.error("Failed to load finance data", e);
+      setTxnLoad("error");
     }
   };
 
@@ -1155,26 +1162,38 @@ export default function FinancePage() {
               if (s === "Partially Paid") return "bg-amber-500/10 text-amber-400 border border-amber-500/20";
               return "bg-rose-500/10 text-rose-400 border border-rose-500/20";
             };
+            const sumCell = (v: number) =>
+              txnLoad === "loading" ? (
+                <span className="text-muted animate-pulse">Loading...</span>
+              ) : (
+                `₹${(v || 0).toLocaleString("en-IN")}`
+              );
             return (
             <div className="space-y-4">
+              {txnLoad === "error" && (
+                <div className="p-3 text-xs rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center gap-2 flex-wrap">
+                  <span>Company finance totals failed to load. Figures below may be incomplete.</span>
+                  <button onClick={fetchData} className="underline font-bold cursor-pointer">Retry</button>
+                </div>
+              )}
               {/* Three Summary Cards */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="bg-card border border-border-custom rounded-lg p-4">
                   <div className="text-[10px] font-bold text-muted uppercase tracking-wider">Total Invoice</div>
-                  <div className="text-xl font-extrabold text-foreground mt-1">₹{(txnSummary.total_invoice || 0).toLocaleString("en-IN")}</div>
+                  <div className="text-xl font-extrabold text-foreground mt-1">{sumCell(txnSummary.total_invoice)}</div>
                   <div className="text-[10px] text-rose-400 mt-1">Unpaid Invoice: ₹{(txnSummary.unpaid_invoice || 0).toLocaleString("en-IN")}</div>
                 </div>
                 <div className="bg-card border border-border-custom rounded-lg p-4">
                   <div className="text-[10px] font-bold text-muted uppercase tracking-wider">Total Expense</div>
-                  <div className="text-xl font-extrabold text-foreground mt-1">₹{(txnSummary.total_expense || 0).toLocaleString("en-IN")}</div>
+                  <div className="text-xl font-extrabold text-foreground mt-1">{sumCell(txnSummary.total_expense)}</div>
                   <div className="text-[10px] text-rose-400 mt-1">Unpaid Expense: ₹{(txnSummary.unpaid_expense || 0).toLocaleString("en-IN")}</div>
                 </div>
                 <div className="bg-card border border-border-custom rounded-lg p-4">
                   <div className="text-[10px] font-bold text-muted uppercase tracking-wider flex items-center gap-1">
                     Company Balance <span title="Sum of Cash + all Bank Account balances" className="cursor-help">ⓘ</span>
                   </div>
-                  <div className="text-xl font-extrabold text-foreground mt-1">₹{(txnSummary.company_balance || 0).toLocaleString("en-IN")}</div>
-                  <div className="text-[10px] text-muted mt-1">In: ₹{(txnSummary.in_total || 0).toLocaleString("en-IN")} | Out: ₹{(txnSummary.out_total || 0).toLocaleString("en-IN")}</div>
+                  <div className="text-xl font-extrabold text-foreground mt-1">{sumCell(txnSummary.company_balance)}</div>
+                  <div className="text-[10px] text-muted mt-1">In: {sumCell(txnSummary.in_total)} | Out: {sumCell(txnSummary.out_total)}</div>
                 </div>
               </div>
 
@@ -1210,7 +1229,9 @@ export default function FinancePage() {
                   </thead>
                   <tbody className="divide-y divide-border-custom/40">
                     {filtered.length === 0 && (
-                      <tr><td colSpan={4} className="p-6 text-center text-muted">No Data Transaction</td></tr>
+                      <tr><td colSpan={4} className="p-6 text-center text-muted">
+                        {txnLoad === "loading" ? "Loading transactions..." : txnLoad === "error" ? "Could not load transactions." : "No Data Transaction"}
+                      </td></tr>
                     )}
                     {filtered.map((t: any, i: number) => (
                       <tr key={i} className="hover:bg-elevated/40 transition-all cursor-pointer" onClick={() => setSelectedVoucher(t)}>
