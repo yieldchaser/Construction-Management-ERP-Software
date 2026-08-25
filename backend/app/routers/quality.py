@@ -21,6 +21,7 @@ from datetime import datetime, timezone
 from typing import List, Optional
 from decimal import Decimal
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field, model_validator
 from app.database import get_db
@@ -331,12 +332,20 @@ def submit_inspection_responses(
             )
             db.add(resp)
 
-        if resp_data.result == "Pass":
-            pass_count += 1
-        elif resp_data.result == "Fail":
-            fail_count += 1
-        else:
-            na_count += 1
+    # R2-362: summarize from every stored response for this inspection,
+    # never from the current payload alone. The session runs with
+    # autoflush=False, so push the upserts above into the transaction before
+    # counting.
+    db.flush()
+    stored_counts = dict(
+        db.query(InspectionResponse.result, func.count(InspectionResponse.id))
+        .filter(InspectionResponse.inspection_id == insp_id)
+        .group_by(InspectionResponse.result)
+        .all()
+    )
+    pass_count = stored_counts.get("Pass", 0)
+    fail_count = stored_counts.get("Fail", 0)
+    na_count = stored_counts.get("NA", 0)
 
     # Update inspection summary counts
     insp.pass_count = pass_count
