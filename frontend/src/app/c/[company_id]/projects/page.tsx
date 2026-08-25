@@ -97,6 +97,7 @@ export default function ProjectsPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [settingsProject, setSettingsProject] = useState<Project | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Project | null>(null);
+  const [deleteConfirmName, setDeleteConfirmName] = useState("");
 
   const isViewer = role
     ? /viewer/i.test(role)
@@ -175,6 +176,7 @@ export default function ProjectsPage() {
         headers: authHeaders(),
       });
       if (!res.ok) throw new Error(await readErrorDetail(res));
+      setDeleteConfirmName("");
       setDeleteTarget(null);
       load();
     } catch (e) {
@@ -384,7 +386,10 @@ export default function ProjectsPage() {
                       {!isViewer && (
                         <button
                           title="Delete"
-                          onClick={() => setDeleteTarget(p)}
+                          onClick={() => {
+                            setDeleteConfirmName("");
+                            setDeleteTarget(p);
+                          }}
                           className="text-muted hover:text-rose-500"
                         >
                           <Icon name="trash" className="w-4 h-4" />
@@ -430,18 +435,35 @@ export default function ProjectsPage() {
           <div className="w-96 rounded-lg border border-border-custom bg-card p-6">
             <h3 className="text-lg font-semibold text-foreground mb-2">Delete Project</h3>
             <p className="text-sm text-muted mb-4">
-              Delete <strong>{deleteTarget.name}</strong>? This cannot be undone.
+              Delete <strong>{deleteTarget.name}</strong>? This cannot be undone. Every task, bill,
+              attendance record and timesheet under it is deleted with it.
             </p>
+            <div className="mb-4">
+              <label className="text-xs text-muted mb-1 block">
+                Type <strong>{deleteTarget.name}</strong> to confirm
+              </label>
+              <input
+                value={deleteConfirmName}
+                onChange={(e) => setDeleteConfirmName(e.target.value)}
+                className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground"
+                placeholder={deleteTarget.name}
+                autoFocus
+              />
+            </div>
             <div className="flex justify-end gap-2">
               <button
-                onClick={() => setDeleteTarget(null)}
+                onClick={() => {
+                  setDeleteConfirmName("");
+                  setDeleteTarget(null);
+                }}
                 className="rounded-md border border-border-custom px-4 py-2 text-sm text-muted"
               >
                 Cancel
               </button>
               <button
                 onClick={removeProject}
-                className="rounded-md bg-rose-600 px-4 py-2 text-sm text-white"
+                disabled={deleteConfirmName !== deleteTarget.name}
+                className="rounded-md bg-rose-600 px-4 py-2 text-sm text-white disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 Delete
               </button>
