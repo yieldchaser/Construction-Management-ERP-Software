@@ -7,10 +7,11 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.auth import get_current_user, verify_project_in_company, verify_project_access, get_company_membership, require_permission
 from app.models import (
-    WorkOrder, CompanyTeam, SubcontractorPerformance,
+    WorkOrder, SubcontractorPerformance,
     BOCWRecord, MusterRoll, Bill, User,
     AttendanceLog, SubcontractorAttendance, PayrollRun
 )
+from app.party_names import resolve_party_name
 from pydantic import BaseModel, Field
 import csv
 import io
@@ -23,13 +24,9 @@ router = APIRouter(
 
 
 def _resolve_contractor_name(db: Session, contractor_id: Optional[UUID]) -> str:
-    if not contractor_id:
-        return "Unknown"
-    team = db.query(CompanyTeam).filter(CompanyTeam.id == contractor_id).first()
-    if not team:
-        return "Unknown"
-    user = db.query(User).filter(User.id == team.user_id).first()
-    return user.name if user and user.name else "Unknown"
+    # R2-131: external contractors are CompanyTeam rows with no login; the
+    # shared resolver also follows library_party_id to the real name.
+    return resolve_party_name(db, contractor_id)
 
 
 _CSV_FORMULA_PREFIXES = ("=", "+", "-", "@", "\t", "\r")

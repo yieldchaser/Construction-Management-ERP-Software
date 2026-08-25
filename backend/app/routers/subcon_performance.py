@@ -8,9 +8,10 @@ from app.database import get_db
 from app.auth import get_current_user, verify_project_access, get_company_membership, require_permission
 from app.models import (
     WorkOrder, WorkOrderAmendment, SubcontractorPerformance,
-    WorkOrderItem, Bill, TransactionDeduction, CompanyTeam, User,
+    WorkOrderItem, Bill, TransactionDeduction, User,
     Project, Task,
 )
+from app.party_names import resolve_party_name
 from pydantic import BaseModel, Field
 
 router = APIRouter(
@@ -133,11 +134,9 @@ def create_amendment(wo_id: UUID, req: AmendmentCreateRequest, db: Session = Dep
 
 
 def _resolve_subcontractor_name(db: Session, subcontractor_id: UUID) -> str:
-    team = db.query(CompanyTeam).filter(CompanyTeam.id == subcontractor_id).first()
-    if not team:
-        return "Unknown"
-    user = db.query(User).filter(User.id == team.user_id).first()
-    return user.name if user and user.name else "Unknown"
+    # R2-131: scorecards must show the LibraryParty name for login-less
+    # subcontractors instead of "Unknown".
+    return resolve_party_name(db, subcontractor_id)
 
 
 @router.get("/scorecards/{project_id}", response_model=List[ScorecardResponse])

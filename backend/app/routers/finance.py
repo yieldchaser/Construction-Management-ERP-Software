@@ -12,6 +12,7 @@ from app.approvals import find_matching_rule, match_approver, levels_approved, u
 from pydantic import BaseModel, Field, field_validator
 from app.constants import REVENUE_INVOICE_TYPES, EXPENSE_INVOICE_TYPES, SETTLEMENT_INVOICE_TYPES
 from app.workflow_controls import enforce_entry_creation_window
+from app.party_names import resolve_party_name
 
 logger = logging.getLogger(__name__)
 
@@ -1080,18 +1081,7 @@ def get_enterprise_rollup(
 def _txn_party_name(db, team_id):
     if not team_id:
         return "Walk-in Party"
-    team = db.query(CompanyTeam).filter(CompanyTeam.id == team_id).first()
-    if not team:
-        return "Unknown Party"
-    if team.user_id:
-        user = db.query(User).filter(User.id == team.user_id).first()
-        if user and user.name:
-            return user.name
-    if team.library_party_id:
-        party = db.query(LibraryParty).filter(LibraryParty.id == team.library_party_id).first()
-        if party and party.name:
-            return party.name
-    return "Unknown Party"
+    return resolve_party_name(db, team_id, fallback="Unknown Party")
 
 
 class TransactionRow(BaseModel):
@@ -1221,8 +1211,9 @@ PAYMENT_REQUEST_FEATURE_TYPE = "Payment Request"  # must match the Settings > Mu
 
 
 def _pr_response(db: Session, req: PaymentRequest, payment_row: Optional[PaymentRequestPayment] = None) -> PaymentRequestResponse:
-    user = db.query(User).filter(User.id == req.party_company_user_id).first()
-    party_name = user.name if user else "Unknown Party"
+    # R2-131: the id is a CompanyTeam reference; resolve through the shared
+    # helper so external vendors surface their LibraryParty name.
+    party_name = resolve_party_name(db, req.party_company_user_id, fallback="Unknown Party")
     if payment_row is None:
         payment_row = (
             db.query(PaymentRequestPayment)
@@ -1283,8 +1274,9 @@ def create_payment_request(company_id: uuid.UUID, data: PaymentRequestCreate, db
     require_permission(db, current_user, company_id, "finance:edit")
     if data.project_id:
         verify_project_in_company(db, data.project_id, company_id)
-    user = db.query(User).filter(User.id == data.party_company_user_id).first()
-    party_name = user.name if user else "Unknown Party"
+    # R2-131: store the counterparty's real name (login user or linked library
+    # party), never the requesting login user's name or a bare placeholder.
+    party_name = resolve_party_name(db, data.party_company_user_id, fallback="Unknown Party")
     # Auto-generate sequential request no (PR-1, PR-2, ...) per company
     if not data.request_no:
         count = db.query(PaymentRequest).filter(PaymentRequest.company_id == company_id).count()

@@ -12,6 +12,7 @@ from app.models import (
     DebitNote, CreditNote, CompanyTeam, User, Company, LibraryParty, Project, ThreeWayMatch, ProjectParty
 )
 from app import models
+from app.party_names import resolve_party_name
 from app.routers.custom_fields import CustomFieldValueInput, upsert_values_for_entity, enforce_required_custom_fields
 from app.routers.library import next_party_id_custom
 from app.zatca import build_zatca_payload
@@ -286,15 +287,8 @@ def get_work_orders(project_id: UUID, db: Session = Depends(get_db), _: None = D
                 amount=float(i.amount) if i.amount else float(i.quantity * i.rate)
             ) for i in items
         ]
-        team = db.query(CompanyTeam).filter(CompanyTeam.id == wo.subcontractor_id).first()
-        user = db.query(User).filter(User.id == team.user_id).first() if team and team.user_id else None
-        subcontractor_name = user.name if user and user.name else "Unknown"
-        if subcontractor_name == "Unknown" and team and team.library_party_id:
-            party = db.query(models.LibraryParty).filter(models.LibraryParty.id == team.library_party_id).first()
-            if party and party.name:
-                subcontractor_name = party.name
-        res.append(
-            WOResponse(
+        subcontractor_name = resolve_party_name(db, wo.subcontractor_id)
+        res.append(            WOResponse(
                 id=wo.id,
                 company_id=wo.company_id,
                 project_id=wo.project_id,
@@ -427,13 +421,7 @@ def cancel_work_order(wo_id: UUID, db: Session = Depends(get_db), current_user: 
             amount=float(i.amount) if i.amount else float(i.quantity * i.rate)
         ) for i in items
     ]
-    team = db.query(CompanyTeam).filter(CompanyTeam.id == wo.subcontractor_id).first()
-    user = db.query(User).filter(User.id == team.user_id).first() if team and team.user_id else None
-    subcontractor_name = user.name if user and user.name else "Unknown"
-    if subcontractor_name == "Unknown" and team and team.library_party_id:
-        party = db.query(models.LibraryParty).filter(models.LibraryParty.id == team.library_party_id).first()
-        if party and party.name:
-            subcontractor_name = party.name
+    subcontractor_name = resolve_party_name(db, wo.subcontractor_id)
     return WOResponse(
         id=wo.id,
         company_id=wo.company_id,
