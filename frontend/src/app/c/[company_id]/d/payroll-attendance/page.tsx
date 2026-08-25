@@ -1113,17 +1113,22 @@ function AttendanceTab({
   const [date, setDate] = useState(todayStr());
   const [logs, setLogs] = useState<Att[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const [leaves, setLeaves] = useState<Leave[]>([]);
 
   const load = useCallback(async () => {
     setLoading(true);
+    setLoadError(false);
     try {
-      const [att, lv] = await Promise.all([
-        jget(`/hr/attendance/company/${companyId}/${date}`).catch(() => []),
-        jget(`/hr/leaves/${companyId}`).catch(() => []),
-      ]);
+      // R2-431: a failed attendance fetch must resolve to an error state,
+      // never to [], which rendered every unlogged employee as "Absent".
+      const att = await jget(`/hr/attendance/company/${companyId}/${date}`);
+      const lv = await jget(`/hr/leaves/${companyId}`).catch(() => []);
       setLogs(att);
       setLeaves(lv);
+    } catch {
+      setLogs([]);
+      setLoadError(true);
     } finally {
       setLoading(false);
     }
@@ -1213,12 +1218,14 @@ function AttendanceTab({
           </button>
           <input type="date" className={inputCls + " max-w-[160px]"} value={date} onChange={(e) => setDate(e.target.value)} />
         </div>
-        <div className="ml-auto flex items-center gap-3 text-sm">
-          <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-emerald-500" /> {counts.present} Present</span>
-          <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-rose-500" /> {counts.absent} Absent</span>
-          <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-amber-500" /> {counts.paid} Paid Leave</span>
-          <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-sky-500" /> {counts.weekoff} Week Off</span>
-        </div>
+        {!loadError && (
+          <div className="ml-auto flex items-center gap-3 text-sm">
+            <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-emerald-500" /> {counts.present} Present</span>
+            <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-rose-500" /> {counts.absent} Absent</span>
+            <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-amber-500" /> {counts.paid} Paid Leave</span>
+            <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-sky-500" /> {counts.weekoff} Week Off</span>
+          </div>
+        )}
       </div>
 
       <div className="overflow-x-auto rounded-md border border-border-custom">
@@ -1230,32 +1237,42 @@ function AttendanceTab({
             </tr>
           </thead>
           <tbody>
-            {filtered.map((r) => (
-              <tr key={r.emp.id} className="border-t border-border-custom">
-                <td className="px-3 py-2 font-medium text-foreground">{r.emp.name}</td>
-                <td className="px-3 py-2">
-                  <span
-                    className={
-                      r.status === "Present" || r.status === "Present (Off-Site)"
-                        ? "text-emerald-600"
-                        : r.status === "Paid Leave"
-                        ? "text-amber-600"
-                        : r.status === "Week Off"
-                        ? "text-sky-600"
-                        : "text-rose-600"
-                    }
-                  >
-                    {r.status}
-                  </span>
-                </td>
-              </tr>
-            ))}
-            {!loading && filtered.length === 0 && (
+            {loadError ? (
               <tr>
-                <td colSpan={2} className="px-3 py-6 text-center text-muted">
-                  No records for this day.
+                <td colSpan={2} className="px-3 py-6 text-center text-rose-500">
+                  Attendance could not be loaded for this day — no statuses are shown rather than marking everyone absent.
                 </td>
               </tr>
+            ) : (
+              <>
+                {filtered.map((r) => (
+                  <tr key={r.emp.id} className="border-t border-border-custom">
+                    <td className="px-3 py-2 font-medium text-foreground">{r.emp.name}</td>
+                    <td className="px-3 py-2">
+                      <span
+                        className={
+                          r.status === "Present" || r.status === "Present (Off-Site)"
+                            ? "text-emerald-600"
+                            : r.status === "Paid Leave"
+                            ? "text-amber-600"
+                            : r.status === "Week Off"
+                            ? "text-sky-600"
+                            : "text-rose-600"
+                        }
+                      >
+                        {r.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+                {!loading && filtered.length === 0 && (
+                  <tr>
+                    <td colSpan={2} className="px-3 py-6 text-center text-muted">
+                      No records for this day.
+                    </td>
+                  </tr>
+                )}
+              </>
             )}
           </tbody>
         </table>

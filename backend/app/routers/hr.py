@@ -227,6 +227,10 @@ class PayrollRunCreate(BaseModel):
     # payroll. An explicit value is still honored (bounds kept) for
     # fixed-cycle companies.
     days_in_month: Optional[int] = Field(None, ge=1, le=31)
+    # R2-431: opt in to paying a full month for employees with no recorded
+    # attendance or leave (salaried staff who do not punch). Default False —
+    # no recorded days, no pay.
+    assume_full_month: bool = False
 
     @field_validator("payroll_month")
     @classmethod
@@ -822,7 +826,14 @@ def run_payroll(payload: PayrollRunCreate, db: Session = Depends(get_db), curren
             if (lr.leave_type or "").strip().lower() in PAID_LEAVE_TYPES:
                 approved_leave_days += float(lr.days_count or 0.0)
 
-        days_present = float(att_count + approved_leave_days) if (att_count + approved_leave_days) > 0 else default_days
+        # R2-431: the zero-attendance fallback paid default_days (a full
+        # month) unconditionally, so a worker the attendance screen reports
+        # absent was paid as if present every working day. No recorded days
+        # now means no pay unless assume_full_month opts in.
+        if (att_count + approved_leave_days) > 0:
+            days_present = float(att_count + approved_leave_days)
+        else:
+            days_present = float(default_days) if payload.assume_full_month else 0.0
 
         calc = _compute_payslip(emp, days_present, effective_days_in_month, float(total_ot))
         line = PayrollLineItem(
