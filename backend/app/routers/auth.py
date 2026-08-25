@@ -1,5 +1,6 @@
 import hashlib
 import hmac
+import json
 import secrets as pysecrets
 import uuid
 from datetime import datetime, timedelta, timezone
@@ -19,13 +20,44 @@ from app.auth import (
 )
 from app.permissions import effective_permissions
 from app.config import settings
-from app.rate_limit import limiter
+from app.rate_limit import _rate_limit_key, limiter
 from app.routers.settings import _validate_gstin
 from app import models, sms, email_otp, security, firebase_auth
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 DEMO_COMPANY_ID = "e0000000-0000-0000-0000-000000000000"
+
+
+def _auth_limit_key(request: Request) -> str:
+    """Bucket key for the auth rate limits (R2-511).
+
+    The stock key is the socket peer, which behind Render's proxy is the edge
+    itself - every customer shared a handful of buckets and one visitor could
+    exhaust the login limit for the whole platform. This key composes the
+    proxy-aware client address with the identifier being authenticated
+    (mobile/email) when the JSON body has already been parsed by FastAPI, so
+    one address cannot lock out an account and one account cannot be attacked
+    from many addresses without paying the full per-address budget too.
+    Falls back to the plain client address for bodies it cannot read.
+    """
+    base = _rate_limit_key(request)
+    raw = getattr(request, "_body", None)
+    if not raw:
+        return base
+    try:
+        data = json.loads(raw)
+    except Exception:
+        return base
+    if not isinstance(data, dict):
+        return base
+    identifier = ""
+    for field in ("mobile", "email"):
+        value = str(data.get(field) or "").strip().lower()
+        if value:
+            identifier = value
+            break
+    return f"{base}:{identifier}" if identifier else base
 
 
 # ── OTP primitives (shared by SMS and email) ─────────────────────────────────
@@ -361,7 +393,7 @@ class OTPVerifyRequest(BaseModel):
 
 
 @router.post("/otp/send")
-@limiter.limit("5/minute")
+@limiter.limit("5/minute", key_func=_auth_limit_key)
 def send_otp(request: Request, payload: OTPSendRequest, db: Session = Depends(get_db)):
     """Generate a one-time code, store it hashed with a short TTL, and deliver it
     by SMS. Only demo-allowlisted numbers work when no SMS provider is wired."""
@@ -407,7 +439,7 @@ def send_otp(request: Request, payload: OTPSendRequest, db: Session = Depends(ge
 
 
 @router.post("/otp/verify")
-@limiter.limit("5/minute")
+@limiter.limit("5/minute", key_func=_auth_limit_key)
 def verify_otp(request: Request, payload: OTPVerifyRequest, db: Session = Depends(get_db)):
     mobile = (payload.mobile or "").strip()
     _verify_otp_code(db, mobile, payload.code, purpose="login")
@@ -554,7 +586,7 @@ def _deliver_email_code(db: Session, email: str, purpose: str) -> dict:
 
 
 @router.post("/email-otp/send")
-@limiter.limit("5/minute")
+@limiter.limit("5/minute", key_func=_auth_limit_key)
 def send_email_otp(request: Request, payload: EmailOTPSendRequest, db: Session = Depends(get_db)):
     email = _normalize_email(payload.email)
     if not email:
@@ -563,7 +595,7 @@ def send_email_otp(request: Request, payload: EmailOTPSendRequest, db: Session =
 
 
 @router.post("/email-otp/verify")
-@limiter.limit("5/minute")
+@limiter.limit("5/minute", key_func=_auth_limit_key)
 def verify_email_otp(request: Request, payload: EmailOTPVerifyRequest, db: Session = Depends(get_db)):
     email = _normalize_email(payload.email)
     _verify_otp_code(db, email, payload.code, purpose="login")
@@ -608,7 +640,7 @@ class ResetPasswordRequest(BaseModel):
 
 
 @router.post("/register")
-@limiter.limit("5/minute")
+@limiter.limit("5/minute", key_func=_auth_limit_key)
 def register(request: Request, payload: RegisterRequest, db: Session = Depends(get_db)):
     """Create an email+password account. The account cannot access any company
     until its email is verified via email OTP (Part C)."""
@@ -655,7 +687,7 @@ def register(request: Request, payload: RegisterRequest, db: Session = Depends(g
 
 
 @router.post("/login")
-@limiter.limit("5/minute")
+@limiter.limit("5/minute", key_func=_auth_limit_key)
 def login(request: Request, payload: LoginRequest, db: Session = Depends(get_db)):
     """Email + password login. Errors are generic so they do not reveal whether
     an email exists; bcrypt verification is constant-time."""
@@ -679,7 +711,7 @@ def login(request: Request, payload: LoginRequest, db: Session = Depends(get_db)
 
 
 @router.post("/password/forgot")
-@limiter.limit("5/minute")
+@limiter.limit("5/minute", key_func=_auth_limit_key)
 def forgot_password(request: Request, payload: ForgotPasswordRequest, db: Session = Depends(get_db)):
     """Send a password-reset code via email OTP. Always returns a generic success
     so it does not disclose whether the email is registered."""
@@ -703,7 +735,7 @@ def forgot_password(request: Request, payload: ForgotPasswordRequest, db: Sessio
 
 
 @router.post("/password/reset")
-@limiter.limit("5/minute")
+@limiter.limit("5/minute", key_func=_auth_limit_key)
 def reset_password(request: Request, payload: ResetPasswordRequest, db: Session = Depends(get_db)):
     """Reset the password using an email-OTP code (single-use). Verifying the code
     also proves email ownership, so email_verified is set true."""

@@ -25,5 +25,11 @@ COPY . .
 # Expose port
 EXPOSE 8000
 
-# Command to run application using uvicorn
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT}"]
+# Command to run application using uvicorn.
+# R2-511: behind Render's proxy the socket peer is the edge itself and rotates
+# bucket keys per request, collapsing every user of the platform into a shared
+# handful of rate-limit buckets (one visitor could exhaust login for all).
+# Trusting the forwarding headers makes request.client.host - and therefore
+# every @limiter.limit default key - the real client address. Render's origin
+# is only reachable through its own proxy, so "*" is safe here.
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT} --forwarded-allow-ips='*'"]
