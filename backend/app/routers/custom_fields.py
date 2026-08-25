@@ -335,10 +335,23 @@ def set_value(payload: CustomFieldValueCreate, db: Session = Depends(get_db), cu
 
 @router.get("/values/{entity_type}/{entity_id}", response_model=List[CustomFieldValueResponse])
 def get_values(entity_type: str, entity_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    values = db.query(CustomFieldValue).filter(
+    # R2-157: derive the tenant from the parent entity record, never from the
+    # value rows — authorizing against values[0].company_id released a
+    # multi-company row set to whichever company sorted first and answered an
+    # unchecked empty list (an existence probe) for any UUID. The company filter
+    # also keeps a stray foreign-company row out of another tenant's response.
+    entity_model = CUSTOM_FIELD_ENTITY_MODELS.get(entity_type)
+    if entity_model is None:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Custom field values cannot be attached to entity_type '{entity_type}'",
+        )
+    entity = db.query(entity_model).filter(entity_model.id == entity_id).first()
+    if not entity:
+        raise HTTPException(status_code=404, detail=f"{entity_type} not found")
+    get_company_membership(db, current_user, entity.company_id)
+    return db.query(CustomFieldValue).filter(
         CustomFieldValue.entity_type == entity_type,
-        CustomFieldValue.entity_id == entity_id
+        CustomFieldValue.entity_id == entity_id,
+        CustomFieldValue.company_id == entity.company_id,
     ).all()
-    if values:
-        get_company_membership(db, current_user, values[0].company_id)
-    return values
