@@ -651,6 +651,46 @@ def get_bill_zatca(bill_id: UUID, db: Session = Depends(get_db), current_user: U
         "total_incl_vat": payload["total_incl_vat"],
     }
 
+def _amount_in_words(value) -> str:
+    """R2-399: Rule 46 requires the invoice amount in words; render the Indian
+    numbering system (crore / lakh / thousand / hundred) with paise."""
+    ones = [
+        "Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight",
+        "Nine", "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen",
+        "Sixteen", "Seventeen", "Eighteen", "Nineteen",
+    ]
+    tens = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"]
+
+    def two(n: int) -> str:
+        return ones[n] if n < 20 else f"{tens[n // 10]} {ones[n % 10]}".strip()
+
+    def indian(n: int) -> str:
+        if n < 100:
+            return two(n)
+        if n < 1000:
+            h, r = divmod(n, 100)
+            return " ".join(filter(None, [f"{ones[h]} Hundred", indian(r) if r else ""]))
+        if n < 100000:
+            th, r = divmod(n, 1000)
+            return " ".join(filter(None, [f"{indian(th)} Thousand", indian(r) if r else ""]))
+        if n < 10000000:
+            l, r = divmod(n, 100000)
+            return " ".join(filter(None, [f"{indian(l)} Lakh", indian(r) if r else ""]))
+        c, r = divmod(n, 10000000)
+        return " ".join(filter(None, [f"{indian(c)} Crore", indian(r) if r else ""]))
+
+    try:
+        value = float(value)
+    except (TypeError, ValueError):
+        return ""
+    negative = value < 0
+    whole, paise = divmod(int(round(abs(value), 2) * 100), 100)
+    words = f"{indian(whole)} Rupees"
+    if paise:
+        words += f" and {indian(paise)} Paise"
+    return f"{'Negative ' if negative else ''}{words} Only"
+
+
 @router.get("/bills/{bill_id}/pdf")
 def get_bill_pdf(bill_id: UUID, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
     bill = db.query(Bill).filter(Bill.id == bill_id).first()
@@ -765,6 +805,14 @@ def get_bill_pdf(bill_id: UUID, db: Session = Depends(get_db), current_user=Depe
             cgst = round(gst_total / 2, 2)
             totals_lines.append(f"CGST: {cgst:.2f}")
             totals_lines.append(f"SGST: {(gst_total - cgst):.2f}")
+
+    # R2-399: the remaining Rule 46 elements - the invoice amount in words,
+    # the reverse-charge declaration, and a signature block (rendered above
+    # the company's uploaded signature image when one exists).
+    totals_lines.append(f"Amount in Words: {_amount_in_words(bill.total_payable)}")
+    totals_lines.append("Tax Payable Under Reverse Charge: No")
+    totals_lines.append(f"For {company_name or 'the supplier'}")
+    totals_lines.append("Authorised Signatory")
 
     pdf_bytes = generate_document_pdf(
         title=type_label,
