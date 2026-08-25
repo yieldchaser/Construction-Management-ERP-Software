@@ -18,6 +18,18 @@ router = APIRouter(
     dependencies=[Depends(get_current_user)]
 )
 
+_CSV_FORMULA_PREFIXES = ("=", "+", "-", "@", "\t", "\r")
+
+
+def _csv_safe_cell(value):
+    # R2-266: a cell whose text begins with = + - @ TAB or CR is executed as a
+    # formula when the export CSV is opened in Excel/LibreOffice/Sheets. Prefix
+    # a single quote so the value is treated as text; everything else passes
+    # through untouched.
+    if isinstance(value, str) and value.startswith(_CSV_FORMULA_PREFIXES):
+        return "'" + value
+    return value
+
 class MaterialConsumptionSchema(BaseModel):
     material_name: str
     quantity: float = Field(..., gt=0)
@@ -268,15 +280,15 @@ def export_dpr_csv(
         else:
             author = "Unknown"
         writer.writerow([
-            d.dpr_date.strftime("%Y-%m-%d") if d.dpr_date else "",
-            project.name if project else "",
-            author,
+            _csv_safe_cell(d.dpr_date.strftime("%Y-%m-%d") if d.dpr_date else ""),
+            _csv_safe_cell(project.name if project else ""),
+            _csv_safe_cell(author),
             float(d.executed_qty or 0),
-            d.notes or "",
+            _csv_safe_cell(d.notes or ""),
             d.workers_deployed or 0,
-            mat_str,
-            d.issues or "",
-            d.status or "",
+            _csv_safe_cell(mat_str),
+            _csv_safe_cell(d.issues or ""),
+            _csv_safe_cell(d.status or ""),
         ])
     csv_text = buf.getvalue()
     scope = str(project_id) if project_id else f"company-{cid}"
