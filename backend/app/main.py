@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -512,6 +512,27 @@ async def integrity_error_handler(request, exc: IntegrityError):
     return JSONResponse(
         status_code=409,
         content={"detail": f"Record is still referenced by another row: {detail}"},
+    )
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    # R2-194: an exception that escapes every router is rendered by
+    # ServerErrorMiddleware, which sits OUTSIDE CORSMiddleware - so a bare 500
+    # would reach the browser without CORS headers and surface as an opaque
+    # network failure instead of a status code. The origin is echoed only when
+    # whitelisted so allow_credentials stays valid; the detail stays generic so
+    # internals never leak. Starlette still logs and re-raises afterwards.
+    origin = request.headers.get("origin")
+    headers = {}
+    if origin and origin in _app_settings.allowed_origins_list:
+        headers = {
+            "access-control-allow-origin": origin,
+            "access-control-allow-credentials": "true",
+        }
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal server error"},
+        headers=headers,
     )
 
 # Configure CORS for Next.js frontend communication.
