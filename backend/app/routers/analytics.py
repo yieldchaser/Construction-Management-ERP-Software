@@ -302,12 +302,19 @@ def get_company_analytics(company_id: uuid.UUID, db: Session = Depends(get_db), 
             and _to_date(task.end_date) <= month_end_d
             and _task_is_completed(task)
         )
+        # R2-303/R2-497: the old filter counted every bill up to month end, so
+        # month_spend was already cumulative and adding it into cumulative_spend
+        # multiplied spend by the number of months elapsed. Each month
+        # contributes only the bills dated inside it.
+        month_start_d = month.date()
         month_spend = sum(
             _to_float(bill.total_payable)
             for bill in bills
             if bill.invoice_type in EXPENSE_INVOICE_TYPES
             and bill.status != "Cancelled"
-            and bill.invoice_date and _to_date(bill.invoice_date) and _to_date(bill.invoice_date) <= month_end_d
+            and bill.invoice_date
+            and _to_date(bill.invoice_date)
+            and month_start_d <= _to_date(bill.invoice_date) <= month_end_d
         )
         cumulative_spend += month_spend
         s_curve.append(
