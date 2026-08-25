@@ -375,13 +375,10 @@ def get_ledger(project_id: uuid.UUID, db: Session = Depends(get_db), _: None = D
         if entry_type == "payment":
             if obj.id in settled_payment_ids:
                 continue
-            party_name = "Walk-in Party"
-            if obj.party_company_user_id:
-                team_member = db.query(CompanyTeam).filter(CompanyTeam.id == obj.party_company_user_id).first()
-                if team_member:
-                    user = db.query(User).filter(User.id == team_member.user_id).first()
-                    if user:
-                        party_name = user.name
+            # R2-276: shared resolution (linked user, then linked LibraryParty)
+            # instead of the silent users-only walk that printed "Walk-in Party"
+            # for real parties.
+            party_name = _txn_party_name(db, obj.party_company_user_id)
             
             is_in = obj.payment_type == "in"
             amount = float(obj.amount)
@@ -409,13 +406,10 @@ def get_ledger(project_id: uuid.UUID, db: Session = Depends(get_db), _: None = D
                 )
             )
         elif entry_type == "bill":
-            party_name = "Vendor/Client"
-            if obj.party_company_user_id:
-                team_member = db.query(CompanyTeam).filter(CompanyTeam.id == obj.party_company_user_id).first()
-                if team_member:
-                    user = db.query(User).filter(User.id == team_member.user_id).first()
-                    if user:
-                        party_name = user.name
+            # R2-276: shared resolution (linked user, then linked LibraryParty)
+            # instead of the silent users-only walk that printed "Vendor/Client"
+            # for real parties.
+            party_name = _txn_party_name(db, obj.party_company_user_id)
             # R2-238: settlement vouchers (payment_in/payment_out/i_paid/i_received)
             # are cash movements, not revenue or cost accruals. Classify them
             # explicitly before the revenue/cost branches below so a receipt
