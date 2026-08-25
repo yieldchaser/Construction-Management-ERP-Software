@@ -211,23 +211,31 @@ export default function TransactionPage() {
   );
 
   // ── Summary cards: cash heads = settlement vouchers + recorded payments ────
+  // R2-490: one classification for every canonical invoice_type, mirroring
+  // backend/app/constants.py, with a single declared basis per head. In/Out are
+  // cash movements (settlement vouchers plus the Payment records folded in
+  // below); the margin legs are invoiced value incl. GST so they reconcile
+  // with the total_payable rows directly beneath instead of mixing tax bases
+  // on one card row. material_transfer / material_return move stock, not
+  // money, so they belong to no money head by design.
   const { totalIn, totalOut, sales, expense, balance, margin } = useMemo(() => {
     let totalIn = 0, totalOut = 0, sales = 0, expense = 0;
     for (const b of bills) {
       const amt = Number(b.total_payable) || 0;
-      const sub = Number(b.subtotal) || 0;
       const t = b.invoice_type;
 
-      if (REVENUE_TYPES.includes(t)) {
-        sales += sub;
-      } else if (EXPENSE_TYPES.includes(t)) {
-        expense += sub;
-      } else if (SETTLEMENT_TYPES.includes(t)) {
+      if (SETTLEMENT_TYPES.includes(t)) {
         if (t === "payment_in" || t === "i_received") {
           totalIn += amt;
-        } else if (t === "payment_out" || t === "i_paid") {
+        } else {
           totalOut += amt;
         }
+        continue;
+      }
+      if (REVENUE_TYPES.includes(t)) {
+        sales += amt;
+      } else if (EXPENSE_TYPES.includes(t)) {
+        expense += amt;
       }
     }
     // R2-173: fold in the recorded payments fetched above. null means the
@@ -296,11 +304,14 @@ export default function TransactionPage() {
       </div>
 
       {/* Summary cards */}
+      {/* R2-490: the In/Out tiles are labelled as cash deliberately - they count
+          settlement vouchers and recorded payments, not every accrual row the
+          ledger below shows, and the label must not claim otherwise. */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card label="Total In" value={fmtINR(totalIn, currencyDecimalPlaces)} tone="emerald" />
-        <Card label="Total Out" value={fmtINR(totalOut, currencyDecimalPlaces)} tone="rose" />
+        <Card label="Total In (Cash Received)" value={fmtINR(totalIn, currencyDecimalPlaces)} tone="emerald" />
+        <Card label="Total Out (Cash Paid)" value={fmtINR(totalOut, currencyDecimalPlaces)} tone="rose" />
         <Card label="Project Balance (In − Out)" value={fmtINR(balance, currencyDecimalPlaces)} tone={balance >= 0 ? "emerald" : "rose"} />
-        <Card label="Margin (Sales − Expense, pre-GST)" value={fmtINR(margin, currencyDecimalPlaces)} tone="violet" />
+        <Card label="Margin (Sales − Expense, incl. GST)" value={fmtINR(margin, currencyDecimalPlaces)} tone="violet" />
       </div>
 
       {/* R2-173: never present voucher-only cash tiles as if they were complete */}
