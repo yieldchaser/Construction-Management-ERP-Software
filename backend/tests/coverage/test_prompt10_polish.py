@@ -209,10 +209,14 @@ def test_three_way_variance_vs_grn_value(client, db, make_tenant, auth_headers):
     )
     assert r.status_code == 201, r.text
     body = r.json()
-    # Baseline is the GRN received value (500), so an invoice of 500 should match.
-    assert body["po_amount"] == 500.0
-    assert body["variance_amount"] == 0.0
-    assert body["match_status"] == "matched"
+    # R2-240: the baseline stays GRN-received-value-based (never the whole PO's
+    # 1000) but is now capped at what remains authorised on the PO line and put
+    # on a tax-inclusive basis like bill.total_payable: min(50, 100) @ 10 with
+    # the line's default 18% GST = 590. An invoice of exactly 500 therefore
+    # carries a -90 variance and must be flagged as a mismatch.
+    assert body["po_amount"] == 590.0
+    assert body["variance_amount"] == -90.0
+    assert body["match_status"] == "mismatch"
 
 
 # ── F6: update task with dangling project FK -> 404 ──────────────────────────
