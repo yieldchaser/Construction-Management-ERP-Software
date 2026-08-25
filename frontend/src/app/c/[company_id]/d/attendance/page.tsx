@@ -297,11 +297,7 @@ export default function AttendancePage() {
   
   // Subcontractor entry drawer
   const [selectedSubcon, setSelectedSubcon] = useState<any | null>(null);
-  const [subconRows, setSubconRows] = useState<any[]>([
-    { role: "Mason", count: 5, shift: 1.0, ot: 0, allowance: 250, deduction: 0, notes: "" },
-    { role: "Helper", count: 8, shift: 1.0, ot: 0, allowance: 100, deduction: 0, notes: "" },
-    { role: "Supervisor", count: 2, shift: 1.0, ot: 0, allowance: 300, deduction: 0, notes: "" },
-  ]);
+  const [subconRows, setSubconRows] = useState<any[]>([]);
   const [subconPhoto, setSubconPhoto] = useState<string>("");
   
   const strings = LOCALIZATION[lang] || LOCALIZATION.English;
@@ -532,34 +528,50 @@ export default function AttendancePage() {
   // Submit subcontractor attendance
   const submitSubconAttendance = async () => {
     if (!selectedSubcon) return;
-    try {
-      for (const row of subconRows) {
-        if (row.count <= 0) continue;
-        const body = {
-          project_id: projectId,
-          subcontractor_id: selectedSubcon.company_team_id,
-          attendance_date: new Date().toISOString(),
-          labor_role: row.role,
-          worker_count: row.count,
-          shift_multiplier: row.shift,
-          overtime_hours: row.ot,
-          allowance: row.allowance,
-          deduction: row.deduction,
-          notes: row.notes,
-          photo_url: subconPhoto || null,
-        };
-        await fetch(`${getApiHost()}/apis/v3/subcon/attendance`, {
+    const rowsToPost = subconRows.filter((row) => row.count > 0);
+    if (rowsToPost.length === 0) {
+      alert("No crew rows with a worker count entered. Add a row and enter the worker count before saving.");
+      return;
+    }
+    let saved = 0;
+    let failed = 0;
+    for (const row of rowsToPost) {
+      const body = {
+        project_id: projectId,
+        subcontractor_id: selectedSubcon.company_team_id,
+        attendance_date: new Date().toISOString(),
+        labor_role: row.role,
+        worker_count: row.count,
+        shift_multiplier: row.shift,
+        overtime_hours: row.ot,
+        allowance: row.allowance,
+        deduction: row.deduction,
+        notes: row.notes,
+        photo_url: subconPhoto || null,
+      };
+      try {
+        const res = await fetch(`${getApiHost()}/apis/v3/subcon/attendance`, {
           method: "POST",
           headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
           body: JSON.stringify(body),
         });
+        if (res.ok) {
+          saved += 1;
+        } else {
+          await res.json().catch(() => ({}));
+          failed += 1;
+        }
+      } catch (err) {
+        console.error(err);
+        failed += 1;
       }
-      alert(`Subcontractor crew attendance saved for ${selectedSubcon.name}!`);
-      setSelectedSubcon(null);
-    } catch (err) {
-      console.error(err);
-      alert("Failed to submit subcontractor attendance logs.");
     }
+    if (failed > 0) {
+      alert(`Subcontractor crew attendance for ${selectedSubcon.name}: ${saved} row(s) saved, ${failed} row(s) FAILED and were not recorded. The drawer stays open so you can retry.`);
+      return;
+    }
+    alert(`Subcontractor crew attendance saved for ${selectedSubcon.name} (${saved} row(s)).`);
+    setSelectedSubcon(null);
   };
 
   const addSubconRow = () => {
