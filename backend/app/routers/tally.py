@@ -275,20 +275,46 @@ def _build_vouchers(db: Session, conn: TallyConnection, bills, payments, advance
             # The mirror image (Dr Sales / Cr Debtor) would understate both
             # revenue and receivables, so the debit/credit flags are inverted
             # relative to the purchase branch below.
+            #
+            # R2-410: revenue is posted at the tax-exclusive base and the GST
+            # goes to Output tax ledgers under Duties & Taxes - posting the
+            # gross figure on the sales leg booked the output liability as
+            # turnover. The 50/50 CGST/SGST halves follow the same documented
+            # convention as reports._gst_split (no place-of-supply column).
+            gst = float(b.gst_amount or 0.0)
+            net = round(total - gst, 2)
             entries = [
-                {"ledger": expense_ledger, "amount": total, "debit": False, "cost_centre": cost_centre,
+                {"ledger": expense_ledger, "amount": net, "debit": False, "cost_centre": cost_centre,
                  "ledger_type": "sales"},
                 {"ledger": party_ledger, "amount": total, "debit": True,
                  "ledger_type": "party_debtor"},
             ]
+            if gst > 0:
+                half = round(gst / 2, 2)
+                entries.append({"ledger": "Output CGST", "amount": half, "debit": False,
+                                "ledger_type": "output_tax"})
+                entries.append({"ledger": "Output SGST", "amount": round(gst - half, 2), "debit": False,
+                                "ledger_type": "output_tax"})
         else:
             # Purchase / subcon: debit the expense ledger, credit the party.
+            # R2-410: the expense is the tax-exclusive base and the GST is
+            # debited to Input tax ledgers under Duties & Taxes, so input
+            # credit reaches the ledger GSTR reconciliation reads instead of
+            # being expensed into the P&L.
+            gst = float(b.gst_amount or 0.0)
+            net = round(total - gst, 2)
             entries = [
-                {"ledger": expense_ledger, "amount": total, "debit": True, "cost_centre": cost_centre,
+                {"ledger": expense_ledger, "amount": net, "debit": True, "cost_centre": cost_centre,
                  "ledger_type": "purchase"},
                 {"ledger": party_ledger, "amount": total, "debit": False,
                  "ledger_type": "party_creditor"},
             ]
+            if gst > 0:
+                half = round(gst / 2, 2)
+                entries.append({"ledger": "Input CGST", "amount": half, "debit": True,
+                                "ledger_type": "input_tax"})
+                entries.append({"ledger": "Input SGST", "amount": round(gst - half, 2), "debit": True,
+                                "ledger_type": "input_tax"})
         vouchers.append({
             "vchtype": vchtype,
             "voucher_type_name": vchtype,

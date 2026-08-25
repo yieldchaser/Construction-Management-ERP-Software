@@ -10,8 +10,10 @@ LEDGER ENTRY CONVENTION (Tally double entry):
   * Credit leg -> ISDEEMEDPOSITIVE="Yes", AMOUNT is negative.
 The legs within a voucher must net to zero.
 
-GST is intentionally OUT of v1: we post the gross total on the
-expense/sales leg. A GST breakout (CGST/SGST split ledgers) is a follow-up.
+GST handling (R2-410): Sales/Purchase vouchers post the tax-exclusive base to
+the revenue/expense ledger and the GST to Output/Input CGST+SGST ledgers under
+the "Duties & Taxes" parent, so the party leg stays at the gross figure and the
+voucher still nets to zero. Zero-GST bills keep the plain two-leg shape.
 """
 import xml.sax.saxutils as _sx
 
@@ -47,6 +49,9 @@ def _ledger_parent(ledger_type: str) -> str:
         "party_debtor": "Sundry Debtors",
         "bank": "Bank Accounts",
         "cash": "Cash-in-Hand",
+        # R2-410: GST ledgers must land in Duties & Taxes, not P&L groups.
+        "input_tax": "Duties & Taxes",
+        "output_tax": "Duties & Taxes",
     }.get(ledger_type, "Indirect Expenses")
 
 
