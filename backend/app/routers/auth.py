@@ -17,6 +17,7 @@ from app.auth import (
     get_current_active_company_user,
     get_current_user,
     oauth2_scheme,
+    require_permission,
 )
 from app.permissions import effective_permissions
 from app.config import settings
@@ -1011,3 +1012,148 @@ def switch_company(
 ):
     get_company_membership(db, current_user, company_id)
     return _mint_session_response(db, current_user, company_id, onboarding=False)
+
+
+# ── Team invitations (R2-181) ─────────────────────────────────────────────────
+#
+# Until now a CompanyTeam row was born only four ways (company creator, demo
+# allowlist, login-less subcontractor, bootstrap seed), so the RBAC subsystem
+# governed tenants that could never gain a second member. This flow lets an
+# owner with settings:manage attach a real, login-capable member to their
+# tenant with a chosen role and a non-partner priority_type:
+#   1. POST /auth/team/invite - creates (or reuses) the user by email, attaches
+#      the membership immediately, and emails a one-time claim code for brand-
+#      new accounts (demo allowlist gets the mock_code convenience).
+#   2. POST /auth/team/invite/accept - proves mailbox control via that code,
+#      sets the password, marks the email verified, and mints the session.
+# The OTP machinery (hashed codes, TTL, attempt caps, single use) is shared.
+
+class InviteMemberRequest(BaseModel):
+    email: EmailStr
+    name: str = Field(..., min_length=1)
+    role_id: uuid.UUID
+
+
+class AcceptInviteRequest(BaseModel):
+    email: EmailStr
+    code: str = Field(..., min_length=1)
+    password: str = Field(..., min_length=1)
+
+
+@router.post("/team/invite")
+@limiter.limit("10/minute", key_func=_auth_limit_key)
+def invite_member(
+    request: Request,
+    payload: InviteMemberRequest,
+    ctx: dict = Depends(get_current_active_company_user),
+    db: Session = Depends(get_db),
+):
+    """Attach an email address to the caller's company as a working member."""
+    user = ctx["user"]
+    company_id = ctx["company_id"]
+    require_permission(db, user, company_id, "settings:manage")
+
+    email = _normalize_email(payload.email)
+    if not email:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email is required")
+
+    role = (
+        db.query(models.CompanyRole)
+        .filter(models.CompanyRole.id == payload.role_id, models.CompanyRole.company_id == company_id)
+        .first()
+    )
+    if not role:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Role not found in this company.",
+        )
+
+    existing_member = (
+        db.query(models.CompanyTeam)
+        .join(models.User, models.CompanyTeam.user_id == models.User.id)
+        .filter(
+            models.CompanyTeam.company_id == company_id,
+            func.lower(models.User.email) == email,
+        )
+        .first()
+    )
+    if existing_member:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="This person is already a member of the company.",
+        )
+
+    invitee = db.query(models.User).filter(func.lower(models.User.email) == email).first()
+    if invitee:
+        # An existing account just gains the membership; it logs in with its own
+        # credentials, so no claim code is needed (and none is sent).
+        invited_status = "attached"
+        delivery = {}
+    else:
+        invited_status = "invited"
+        # Deliver BEFORE writing anything so undeliverable invites are clean 503s.
+        delivery = _deliver_email_code(db, email, purpose="team_invite")
+        invitee = models.User(
+            id=uuid.uuid4(),
+            name=(payload.name or "").strip() or email.split("@")[0],
+            email=email,
+            password_hash=None,
+            email_verified=False,
+            auth_providers="",
+        )
+        db.add(invitee)
+
+    membership = models.CompanyTeam(
+        id=uuid.uuid4(),
+        company_id=company_id,
+        user_id=invitee.id,
+        role_id=role.id,
+        priority_type="employee",
+    )
+    db.add(membership)
+    db.commit()
+
+    response = {
+        "success": True,
+        "status": invited_status,
+        "member_id": str(membership.id),
+        "email": email,
+        "role": role.role_name,
+        "message": (
+            "Existing account added to the company; they can log in right away."
+            if invited_status == "attached"
+            else "Invitation sent. They can claim the account with the code we emailed."
+        ),
+    }
+    if delivery.get("demo_mode"):
+        response["demo_mode"] = True
+        response["mock_code"] = delivery["mock_code"]
+    return response
+
+
+@router.post("/team/invite/accept")
+@limiter.limit("5/minute", key_func=_auth_limit_key)
+def accept_invite(request: Request, payload: AcceptInviteRequest, db: Session = Depends(get_db)):
+    """Claim an invited account: verify the emailed code, set the password,
+    mark the email verified, and log straight into the inviting company."""
+    email = _normalize_email(payload.email)
+    pw_error = security.validate_password_strength(payload.password)
+    if pw_error:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=pw_error)
+
+    _verify_otp_code(db, email, payload.code, purpose="team_invite")
+
+    user = db.query(models.User).filter(func.lower(models.User.email) == email).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No invitation found for this email.",
+        )
+
+    user.password_hash = security.hash_password(payload.password)
+    user.email_verified = True
+    user.tokens_revoked_at = datetime.now(timezone.utc)
+    _add_provider(user, "password")
+    db.commit()
+
+    return _post_auth(db, user, provider="password")
