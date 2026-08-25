@@ -288,7 +288,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-135 | MEDIUM | W22 | `safety.py` | `billing.py`, `assets.py`, `d/safety/page.tsx` | FIXED | FIXED a32d60e (in assets.py — the finding lives there despite the W22 label); depreciation method constrained (straight_line|wdv), create_entry 404s on missing schedule, enforces rolling continuity, cent-quantized, salvage floor. Siblings: GET/path handlers still parse str UUIDs raw (500 class); cost-based checks unimplementable (no cost column on Equipment). |
 | R2-136 | MEDIUM | W11 | `planning.py` | `crm.py`, `mom.py`, `towers.py` | FIXED | FIXED 048f72f PARTIAL: the planning.py discriminator instances (milestone type/status, predecessor type) validated; the other 14 catalogue fields remain (tracked by the finding). |
 | R2-137 | CRITICAL | W85 | `d/face-recognition/page.tsx` | `d/payroll-attendance/page.tsx`, `d/crm/page.tsx` | TODO | | reg L5505; CLASS finding (219 of 307 `if (res.ok)` checks have no else) — STILL OPEN as a class. The face-recognition page instance was closed by `f30fffe` (loadError states distinguish failure from empty); the class sweep across the remaining ~200 sites is a dedicated pass (register this finding as the tracking row). |
-| R2-138 | CRITICAL | W14 | `auth.py` | — | TODO | | reg L5567 |
+| R2-138 | CRITICAL | W14 | `auth.py` | — | FIXED | | reg L5567 S33-C FIXED f9b55eb: /auth/me capped 120/min (runaway tab gets bounded 429s, pool survives). |
 | R2-139 | CRITICAL | W57 | `main.py` | `delete_logs.py`, `d/delete-logs/page.tsx` | TODO | | reg L5602 |
 | R2-140 | CRITICAL | W17 | `chat.py` | `backend/app/models.py`, `models.py`, `d/chat/page.tsx` | FIXED | | reg L5691 S33-C FIXED dcfc3d1 (+behavioral 5986794): chat identity gate resolved via company_team_for - permanent deadlock dead. |
 | R2-141 | HIGH | W17 | `chat.py` | `frontend/src/app/c/[company_id]/d/chat/page.tsx` | FIXED | FIXED fbbb93a; DELETE /chat/groups/{id} archives the group behind the group-admin guard instead of answering 405. |
@@ -331,7 +331,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-178 | CRITICAL | W05 | `procurement.py` | `finance.py`, `approvals.py`, `models.py` | TODO | | reg L6719 |
 | R2-179 | HIGH | W01 | `finance.py` | `procurement.py`, `settings/page.tsx` | TODO | | reg L6746 |
 | R2-180 | HIGH | W32 | `custom_fields.py` | — | FIXED | | reg L6781 S33 FIXED 6127791: custom-fields write models extra=forbid -> 422 naming unknown keys, atomic. |
-| R2-181 | CRITICAL | W14 | `auth.py` | `permissions.py`, `billing.py`, `main.py` | TODO | | reg L6857 |
+| R2-181 | CRITICAL | W14 | `auth.py` | `permissions.py`, `billing.py`, `main.py` | FIXED | | reg L6857 S33-C FIXED 03430b2: real team invite flow (settings:manage-gated invite + hashed single-use TTL claim + accept sets password/mints session). |
 | R2-182 | HIGH | W14 | `auth.py` | — | FIXED | FIXED 94e7923; company-layout storage listener on access_token: other-tab session change reloads the tab or redirects to /login on sign-out. |
 | R2-183 | MEDIUM | W14 | `auth.py` | `settings.py` | FIXED | FIXED e31ff9b; onboarding CreateCompanyRequest.gstin enforces the canonical 15-char pattern + mod-36 check digit via the shared settings helper (dummy 29ABCDE1234F1Z5 now rejected; valid 27AAPFU0939F1ZV accepted). Suggested state-vs-address cross-check not code-fixable (no structured state) - D4 territory; "collect city once" is frontend-only (onboarding + profile pages) - follow-up. |
 | R2-184 | CRITICAL | W04 | `reports.py` | `main.py`, `supabase_storage.py`, `files.py` | TODO | | reg L6929; ESCALATED per D-010 — needs object storage |
@@ -394,7 +394,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-243 | CRITICAL | W01 | `finance.py` | `constants.py` | FIX_VERIFIED | `2ac8113` | reg L10340; wave W01a; suite RC-016 S33 SWEEP: drift CONFIRMED live (subcon in EXPENSE bucket double-counted) -> re-fixed 2803dad (material_actual excludes subcon); reports.py sites checked - disjoint reports, no change needed. |
 | R2-244 | CRITICAL | W01 | `finance.py` | — | FIX_VERIFIED | `7a47131` | reg L10396; wave W01a; suite RC-011 |
 | R2-245 | HIGH | W02 | `UNMAPPED` | — | FIXED | | reg L10447 S33 FIXED b993298: MaterialWastage.estimated_value reaches Budget material_actual and P&L Material Cost (stock halves pre-closed by e99fac7/83c32c2). |
-| R2-246 | CRITICAL | W18 | `quality.py` | — | TODO | | reg L10477 |
+| R2-246 | CRITICAL | W18 | `quality.py` | — | FIXED | | reg L10477 S33-C FIXED 9ab8619: NCR close requires under_review + rejects past-due at birth. |
 | R2-247 | MEDIUM | W18 | `quality.py` | — | FIXED | FIXED d838e44; inspection/NCR identities derived from the caller (inspected_by/raised_by/assigned_to dropped from the request schemas, stamped current_user.id). |
 | R2-248 | CRITICAL | W33 | `towers.py` | `budget.py`, `models.py` | FIXED | | reg L10557 S33-C FIXED ee3eac8: committed-towers single Overall row; scopes equal project-level endpoint. |
 | R2-249 | HIGH | W13 | `budget.py` | — | FIXED | | reg L10623 S33 FIXED 57e5a7d (H-budget): tower Committed derived from status-whitelisted POs like the no-towers branch (project-level figure until CD-5 tower schema; honest limitation noted); test added. |
@@ -456,7 +456,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-305 | HIGH | W08 | `analytics.py` | — | FIXED | | reg L13573 S33 FIXED f0bd000 (H-analytics): material wastage reads recorded MaterialWastage events; stock_variance_qty reported unclamped; test added. |
 | R2-306 | HIGH | W08 | `analytics.py` | — | FIXED | | reg L13606 S33 EVIDENCE-CLOSE: spend filters already landed via R2-036 (9234220) + R2-036-bis (4ee3856); pinned by test_analytics_spend_excludes_sales. |
 | R2-307 | CRITICAL | W26 | `face_recognition.py` | `models.py` | FIXED | `97f4eb4` | reg L13674; the 3-of-4-endpoints-500 + commit-before-fail hazard is resolved by the created_at column (the POST's response validation now succeeds, so the "silently stored, never readable, retried forever" loop cannot recur). Pinned (`test_pin_R2_027_face_log_has_created_at`) and behavior-tested. NOTE: the commit-before-response-validation pattern itself remains structurally risky for any future schema drift — logged as a design note. |
-| R2-308 | CRITICAL | W14 | `auth.py` | — | TODO | | reg L13823 |
+| R2-308 | CRITICAL | W14 | `auth.py` | — | FIXED | | reg L13823 S33-C FIXED 98423c6: pool fail-fast/self-heal (timeout 15, recycle 1800, pre_ping) via testable build_engine. |
 | R2-309 | MEDIUM | W08 | `analytics.py` | — | FIXED | FIXED 438ec20 (+ evidence: the two stale Sentry entries code-fixed in 37c84d9/50a4c89); SENTRY_RELEASE setting wired into sentry_sdk.init(release=...). Manual step: set SENTRY_RELEASE env on Render. |
 | R2-310 | CRITICAL | W49 | `frontend/src/app/c/[company_id]/d/delete-logs/page.tsx` | `siteflow.ts`, `d/delete-logs/page.tsx`, `CompanySettingsContext.tsx` | FIX_VERIFIED | `af04f74` | reg L13927; wave 0; suite RC-007 |
 | R2-311 | HIGH | W01 | `finance.py` | `routing.py`, `errors.py`, `cors.py` | FIXED | | reg L14081 S33 FIXED 5440cc7 evidence: rate limiter storage URI + proxy-aware key already wired by campaign rework; wiring tests added. |
@@ -510,7 +510,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-359 | HIGH | W52 | `crm.py` | `models.py`, `reports.py` | FIXED | | reg L16756 S33 FIXED d13efa8: lead source/category/status resolve against company lookups, unknowns 400. |
 | R2-360 | HIGH | W52 | `crm.py` | `models.py` | FIXED | | reg L16805 S33 FIXED ea6d6e0: Bill.quotation_id FK + convert-to-invoice endpoint with double-conversion 409. |
 | R2-361 | MEDIUM | W18 | `quality.py` | `models.py` | FIXED | FIXED b4c0a37; dead Quotation model removed (no destructive drop; create_all stops making the table). Sibling: LibraryRetention same dead-model family. |
-| R2-362 | CRITICAL | W18 | `quality.py` | — | TODO | | reg L16914 |
+| R2-362 | CRITICAL | W18 | `quality.py` | — | FIXED | | reg L16914 S33-C FIXED e44edf4: inspection summary recounted from responses after flush (mixed=partial). |
 | R2-363 | HIGH | W18 | `quality.py` | `models.py` | FIXED | FIXED 4095671; respond endpoint loads valid item ids from insp.checklist_id, rejects foreign items with 400 before any write. |
 | R2-364 | HIGH | W18 | `quality.py` | `models.py`, `reports.py` | FIXED | FIXED cdc82d9 (in reports.py); quality pass-rate denominator = assessed only; new quality_tests_unassessed metric. |
 | R2-365 | CRITICAL | W42 | `drawings.py` | `models.py` | TODO | | reg L17078 |
@@ -582,7 +582,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-431 | CRITICAL | W91 | `errors.py` | `hr.py` | TODO | | reg L21423 |
 | R2-432 | CRITICAL | W05 | `procurement.py` | — | FIX_VERIFIED | `e9e3308` | reg L21581; procurement.py direct-fix pass; suite RC-084 — same defect as R2-239 |
 | R2-433 | HIGH | W15 | `models.py` | — | FIXED | FIXED e67476b; _po_response resolves vendor_name (User.name -> LibraryParty.name); PO list renders it, literal Vendor placeholder removed. |
-| R2-434 | CRITICAL | W44 | `d/quality/page.tsx` | `models.py`, `p/[project_id]/quality/page.tsx` | TODO | | reg L21684 |
+| R2-434 | CRITICAL | W44 | `d/quality/page.tsx` | `models.py`, `p/[project_id]/quality/page.tsx` | FIXED | | reg L21684 S33-C FIXED fda5bd0: inspected_by server-owned and exposed to both quality pages. |
 | R2-435 | CRITICAL | W45 | `d/drawings/page.tsx` | `models.py`, `drawings.py` | TODO | | reg L21762 |
 | R2-436 | MEDIUM | W126 | `d/mom/page.tsx` | `p/[project_id]/mom/page.tsx` | FIXED | FIXED 8025709; created_by dropped from MOM forms both pages (backend already stamps current_user.name). |
 | R2-437 | CRITICAL | W51 | `reports/[slug]/page.tsx` | — | TODO | | reg L21871 |
@@ -658,7 +658,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-508 | MEDIUM | W02 | `UNMAPPED` | — | FIXED | FIXED deb3a9a; ltif_basis query param (default 200,000) returned in the response; banner no longer claims OSHA alignment; KPI labeled LTIFR with the real basis in the caption. NEEDS-DECISION (CD-10): whether the default should flip to 1,000,000 (ILO/IS 3786) - changes reported numbers. |
 | R2-509 | CRITICAL | W01 | `finance.py` | — | FIX_VERIFIED | `f32ca77+3f65098` | reg L25450; wave W01b; suite RC-032 — own gate added 2026-08-06 |
 | R2-510 | HIGH | W75 | `supabase_storage.py` | `services/page.tsx` | FIXED | | reg L25505 S33 FIXED d6edc4c: RLS tenant predicates on 108 tables + FORCE ROW LEVEL SECURITY + missing-table coverage (migration 20260824_000001); 33 no-tenancy tables allowlisted. |
-| R2-511 | CRITICAL | W14 | `auth.py` | `rate_limit.py`, `bi_export.py`, `public_leads.py` | TODO | | reg L25601 |
+| R2-511 | CRITICAL | W14 | `auth.py` | `rate_limit.py`, `bi_export.py`, `public_leads.py` | FIXED | | reg L25601 S33-C FIXED 2d48e13: uvicorn forwarded-allow-ips + per-identifier auth limiter keys (8 routes). |
 | R2-512 | MEDIUM | W70 | `admin_migrations.py` | `public_leads.py`, `mailer.py` | FIXED | FIXED 487f564; dead duplicate POST /backfill-rbac deleted; live backfill_rbac_roles retained. |
 | R2-513 | HIGH | W26 | `face_recognition.py` | — | TODO | | reg L25769 |
 | R2-514 | MEDIUM | W79 | `helpContent.tsx` | `chat.py`, `projects.py`, `analytics.py` | FIXED | FIXED 9afd6f7; the multi-level approval help answer no longer claims enforcement ("not enforced on transactions; do not rely on them as an approval control") and the onboarding answer is neutralized; sweep greps clean. |
