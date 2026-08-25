@@ -513,7 +513,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-362 | CRITICAL | W18 | `quality.py` | — | FIXED | | reg L16914 S33-C FIXED e44edf4: inspection summary recounted from responses after flush (mixed=partial). |
 | R2-363 | HIGH | W18 | `quality.py` | `models.py` | FIXED | FIXED 4095671; respond endpoint loads valid item ids from insp.checklist_id, rejects foreign items with 400 before any write. |
 | R2-364 | HIGH | W18 | `quality.py` | `models.py`, `reports.py` | FIXED | FIXED cdc82d9 (in reports.py); quality pass-rate denominator = assessed only; new quality_tests_unassessed metric. |
-| R2-365 | CRITICAL | W42 | `drawings.py` | `models.py` | TODO | | reg L17078 |
+| R2-365 | CRITICAL | W42 | `drawings.py` | `models.py` | FIXED | | reg L17078 S33-C FIXED e1dd303: superseded_at column + supersede-on-approve + latest-first ordering - current revision identifiable. |
 | R2-366 | HIGH | W42 | `drawings.py` | `supabase_storage.py` | FIXED | | reg L17132 S33 FIXED-FULLY 23b3482: cross-revision file reuse blocked (duplicate_file check); R2-466 closed schemes/hosts. |
 | R2-367 | MEDIUM | W42 | `drawings.py` | — | FIXED | FIXED 93184e6; drawing revision approval_status pattern now includes pending; approved_by derived from membership, cleared on return to pending. |
 | R2-368 | HIGH | W20 | `zoho_books.py` | `models.py` | FIXED | FIXED 52179b9; Zoho push persists bills.zoho_bill_id, short-circuits re-pushes with 409, maps duplicate codes 13011/3062 to 409. |
@@ -583,7 +583,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-432 | CRITICAL | W05 | `procurement.py` | — | FIX_VERIFIED | `e9e3308` | reg L21581; procurement.py direct-fix pass; suite RC-084 — same defect as R2-239 |
 | R2-433 | HIGH | W15 | `models.py` | — | FIXED | FIXED e67476b; _po_response resolves vendor_name (User.name -> LibraryParty.name); PO list renders it, literal Vendor placeholder removed. |
 | R2-434 | CRITICAL | W44 | `d/quality/page.tsx` | `models.py`, `p/[project_id]/quality/page.tsx` | FIXED | | reg L21684 S33-C FIXED fda5bd0: inspected_by server-owned and exposed to both quality pages. |
-| R2-435 | CRITICAL | W45 | `d/drawings/page.tsx` | `models.py`, `drawings.py` | TODO | | reg L21762 |
+| R2-435 | CRITICAL | W45 | `d/drawings/page.tsx` | `models.py`, `drawings.py` | FIXED | | reg L21762 S33-C FIXED 3103f5f: pin created_by server-owned; failed saves alert instead of rendering local-only pins. |
 | R2-436 | MEDIUM | W126 | `d/mom/page.tsx` | `p/[project_id]/mom/page.tsx` | FIXED | FIXED 8025709; created_by dropped from MOM forms both pages (backend already stamps current_user.name). |
 | R2-437 | CRITICAL | W51 | `reports/[slug]/page.tsx` | — | TODO | | reg L21871 |
 | R2-438 | HIGH | W02 | `UNMAPPED` | — | FIXED | | reg L21904 S33 FIXED 7164694: lead update rejects past expected_closure; phone dialable-only; priority vocabulary normalized. |
@@ -602,8 +602,8 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-452 | MEDIUM | W19 | `budgeting.py` | — | FIXED | FIXED e22dd9f; BOQ Excel importer no longer rounds quantities to float_limit at import (2.5 Nos / 0.5 bags store as typed); the limit remains display metadata only. |
 | R2-453 | HIGH | W19 | `budgeting.py` | — | FIXED | | reg L22944 S33 FIXED c2af10a (H-budgeting): fake xlsx/zero-row sheets return clean 400s (BadZipFile/InvalidFileException/StopIteration handled), real header errors keep actionable detail; test added. |
 | R2-454 | HIGH | W108 | `boq/page.tsx` | `siteflow.ts`, `billing/page.tsx`, `procurement/page.tsx` | FIXED | | reg L22978 S33 FIXED 024e3fd: shared downloadWithAuth (fetch+blob+anchor, non-2xx throws) for BOQ/Billing/Procurement PDFs - no more 401 tabs. |
-| R2-455 | CRITICAL | W61 | `d/planning/gantt/page.tsx` | `planning.py` | TODO | | reg L23074 |
-| R2-456 | CRITICAL | W11 | `planning.py` | `gantt/page.tsx`, `p/[project_id]/task/page.tsx` | TODO | | reg L23123 |
+| R2-455 | CRITICAL | W61 | `d/planning/gantt/page.tsx` | `planning.py` | FIXED | | reg L23074 S33-C FIXED ea1ad88: comments signed by authenticated caller (server-owned actor, no fictional identity). |
+| R2-456 | CRITICAL | W11 | `planning.py` | `gantt/page.tsx`, `p/[project_id]/task/page.tsx` | FIXED | | reg L23123 S33-C FIXED 5598631: Log Progress divides booked qty by linked BOQ item quantity -> Task.progress (cap 100, completes at full qty). |
 | R2-457 | HIGH | W06 | `settings.py` | — | FIXED | FIXED (evidence); reproduction path no longer exists - no Planning nav item in any sidebar, no top-level /p/ route, no /c/undefined constructions. |
 | R2-458 | CRITICAL | W11 | `planning.py` | — | TODO | | reg L23168 |
 | R2-459 | CRITICAL | W62 | `gantt/page.tsx` | — | TODO | | reg L23204 |
@@ -611,7 +611,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-461 | MEDIUM | W11 | `planning.py` | `p/[project_id]/drawings/page.tsx`, `p/[project_id]/budgeting/page.tsx` | FIXED | FIXED 94988a2 + 664b430; task end_date inclusive of start day across create/update/propagate; follow-up 664b430 fixed the CPM backward pass (datetime - timedelta, not raw days) which 94988a2 had broken. Siblings: gantt form sends status "pending" (non-canonical); task page totalDays display math. |
 | R2-462 | CRITICAL | W06 | `settings.py` | — | TODO | | reg L23322 |
 | R2-463 | HIGH | W109 | `frontend/src/app/c/[company_id]/d/page.tsx` | — | FIXED | | reg L23348 S33 FIXED e3ecaee: all 21 module redirect stubs await params, carry ?project=<id>, and ProjectContext prefers route/query id over stored. |
-| R2-464 | CRITICAL | W45 | `d/drawings/page.tsx` | `drawings.py` | TODO | | reg L23379 |
+| R2-464 | CRITICAL | W45 | `d/drawings/page.tsx` | `drawings.py` | FIXED | | reg L23379 S33 FIXED 9290a54: revision register carries real uploaded sheets (file picker + /files/upload + stored link). |
 | R2-465 | HIGH | W45 | `d/drawings/page.tsx` | — | FIXED | | reg L23416 S33 EVIDENCE-CLOSE: publish failure already alerts + returns before setDrawings (3257e0a/7fa1131). |
 | R2-466 | HIGH | W09 | `page.tsx` | — | FIXED | | reg L23437 S33 FIXED ffe4f5f: drawings file URLs validated same-origin/https (blocks javascript:/data://host); seeded malicious rows need ops cleanup. |
 | R2-467 | MEDIUM | W27 | `frontend/src/app/c/[company_id]/d/finance/page.tsx` | — | FIXED | FIXED 2f6f031; drawings revision approval status register + wiring. |
