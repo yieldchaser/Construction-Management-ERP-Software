@@ -84,6 +84,7 @@ export default function DrawingsPage() {
   const [showRevModal, setShowRevModal] = useState(false);
   const [newRevCode, setNewRevCode] = useState("");
   const [newRevComment, setNewRevComment] = useState("");
+  const [newRevFile, setNewRevFile] = useState<File | null>(null);
   const [newDrawingName, setNewDrawingName] = useState("");
   const [newDrawingCategory, setNewDrawingCategory] = useState("2D Layout");
 
@@ -251,23 +252,30 @@ export default function DrawingsPage() {
   };
 
   const handlePublishRevision = async () => {
-    if (!newRevCode.trim()) return;
+    if (!newRevCode.trim() || !newRevFile || !projectId) return;
     let targetDrawingId = activeDrawingId;
     let newDrawing: Drawing | null = null;
-    const newRev: Revision = {
-      id: `rev-${Date.now()}`,
-      version: newRevCode.toUpperCase(),
-      fileUrl: activeDrawing?.revisions[0]?.fileUrl ?? "",
-      status: "current",
-      approvalStatus: "pending",
-      comments: newRevComment || "New revision issued for construction.",
-      date: new Date().toISOString().split("T")[0],
-      uploadedBy: "Current User",
-      pins: [],
-    };
 
     try {
       const apiHost = getApiHost();
+      // R2-464: upload the actual sheet first, so the revision the server
+      // stores points at its own file instead of reusing an older revision's.
+      const fd = new FormData();
+      fd.append("project_id", String(projectId));
+      fd.append("file", newRevFile);
+      const upRes = await fetch(`${apiHost}/apis/v3/files/upload`, {
+        method: "POST",
+        headers: authHeaders() || {},
+        body: fd,
+      });
+      if (!upRes.ok) {
+        const err = await upRes.json().catch(() => ({}));
+        alert(`Failed to upload drawing file: ${err.detail || `HTTP ${upRes.status}`}`);
+        return;
+      }
+      const up = await upRes.json();
+      const fileUrl = `/apis/v3/files/file/${up.id}`;
+
       if (!targetDrawingId) {
         const dRes = await fetch(`${apiHost}/apis/v3/drawings`, {
           method: "POST",
@@ -276,7 +284,7 @@ export default function DrawingsPage() {
             project_id: projectId,
             name: newDrawingName.trim(),
             category: newDrawingCategory,
-            file_url: "",
+            file_url: fileUrl,
           }),
         });
         if (!dRes.ok) {
@@ -299,8 +307,8 @@ export default function DrawingsPage() {
         headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify({
           version_code: newRevCode.toUpperCase(),
-          file_url: newRev.fileUrl,
-          comments: newRev.comments,
+          file_url: fileUrl,
+          comments: newRevComment || "New revision issued for construction.",
         }),
       });
       if (!res.ok) {
@@ -308,30 +316,39 @@ export default function DrawingsPage() {
         alert(`Failed to publish revision: ${err.detail || "Failed to publish revision"}`);
         return;
       }
+
+      // R2-464 + R2-465: mirror what the server stored, never a local guess.
       const saved = await res.json();
-      newRev.id = saved.id;
+      const newRev: Revision = {
+        id: saved.id,
+        version: saved.version_code,
+        fileUrl: saved.file_url,
+        status: saved.approval_status === "approved" ? "current" : (saved.approval_status === "rejected" ? "locked" : "superseded"),
+        approvalStatus: saved.approval_status || "pending",
+        comments: saved.comments || "",
+        date: saved.created_at ? saved.created_at.split("T")[0] : new Date().toISOString().split("T")[0],
+        uploadedBy: "Current User",
+        pins: [],
+      };
+
+      setDrawings(prev => {
+        if (newDrawing) {
+          return [{ ...newDrawing, revisions: [newRev] }, ...prev];
+        }
+        // A pending upload does not dethrone the approved sheet; superseding
+        // happens server-side when the new revision is approved (R2-365).
+        return prev.map(d => d.id !== targetDrawingId ? d : { ...d, revisions: [newRev, ...d.revisions] });
+      });
+      setActiveDrawingId(targetDrawingId);
+      setActiveRevId(newRev.id);
+      setImgLoaded(false);
+      setShowRevModal(false);
+      setNewRevCode(""); setNewRevComment(""); setNewRevFile(null);
     } catch (e) {
       console.error("Failed to publish revision", e);
       alert("Failed to publish revision. Your change was not saved.");
       return;
     }
-
-    setDrawings(prev => {
-      if (newDrawing) {
-        return [{ ...newDrawing, revisions: [newRev] }, ...prev];
-      }
-      return prev.map(d => d.id !== targetDrawingId ? d : {
-        ...d,
-        revisions: [newRev, ...d.revisions.map(r =>
-          r.status === "current" ? { ...r, status: "superseded" as RevStatus } : r
-        )]
-      });
-    });
-    setActiveDrawingId(targetDrawingId);
-    setActiveRevId(newRev.id);
-    setImgLoaded(false);
-    setShowRevModal(false);
-    setNewRevCode(""); setNewRevComment("");
   };
 
   const handleToggleLock = async (revId: string) => {
@@ -400,7 +417,7 @@ export default function DrawingsPage() {
             </span>
           </div>
           {tab === "drawings" && (
-            <button onClick={() => { setNewRevCode(getNextRevCode()); setNewRevComment(""); setShowRevModal(true); }}
+            <button onClick={() => { setNewRevCode(getNextRevCode()); setNewRevComment(""); setNewRevFile(null); setShowRevModal(true); }}
               className="px-4 py-1.5 bg-primary text-white text-xs font-bold rounded-lg hover:opacity-90 transition-all shadow-lg">
               ↑ Upload New Revision
             </button>
@@ -666,7 +683,7 @@ export default function DrawingsPage() {
             <div className="flex justify-between items-start border-b border-border-custom pb-3">
               <div>
                 <div className="text-sm font-extrabold text-foreground">Upload New Revision</div>
-                <div className="text-[10px] text-muted mt-0.5">{activeDrawing ? "Current revision will be automatically archived as Superseded" : "Creates the first drawing for this project"}</div>
+                <div className="text-[10px] text-muted mt-0.5">{activeDrawing ? "Issued as Pending; approving it supersedes the current sheet" : "Creates the first drawing for this project"}</div>
               </div>
               <button onClick={() => setShowRevModal(false)} className="text-muted hover:text-foreground text-lg leading-none">×</button>
             </div>
@@ -679,7 +696,7 @@ export default function DrawingsPage() {
                   <span className="text-zinc-300 font-bold w-6 shrink-0">{r.version}</span>
                   <span className="text-muted">→</span>
                   <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold border ${r.status === "current" ? "bg-amber-500/10 border-amber-500/20 text-amber-400" : REV_META[r.status].badge}`}>
-                    {r.status === "current" ? "Becomes Superseded" : REV_META[r.status].label}
+                    {r.status === "current" ? "Superseded on approval" : REV_META[r.status].label}
                   </span>
                 </div>
               ))}
@@ -709,6 +726,14 @@ export default function DrawingsPage() {
               </div>
             )}
             <div>
+              <div className="text-muted mb-1">Drawing File</div>
+              <input type="file" onChange={e => setNewRevFile(e.target.files?.[0] ?? null)}
+                className="w-full bg-input border border-border-custom rounded-lg p-2.5 text-foreground text-xs file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:bg-primary/10 file:text-primary file:text-xs file:font-bold" />
+              {!newRevFile && (
+                <div className="text-[10px] text-muted mt-1">Required. A revision must carry its own sheet; reusing a previous revision&apos;s file is rejected.</div>
+              )}
+            </div>
+            <div>
               <div className="text-muted mb-1">Version Code</div>
               <input type="text" value={newRevCode} onChange={e => setNewRevCode(e.target.value)}
                 className="w-full bg-input border border-border-custom rounded-lg p-2.5 text-foreground font-sans font-bold" />
@@ -721,7 +746,7 @@ export default function DrawingsPage() {
             </div>
             <div className="flex gap-2 justify-end border-t border-border-custom pt-3">
               <button onClick={() => setShowRevModal(false)} className="px-4 py-2 bg-zinc-800 text-muted hover:text-foreground rounded-md">Cancel</button>
-              <button onClick={handlePublishRevision} disabled={!newRevCode.trim() || (!activeDrawing && !newDrawingName.trim())}
+              <button onClick={handlePublishRevision} disabled={!newRevCode.trim() || !newRevFile || (!activeDrawing && !newDrawingName.trim())}
                 className="px-5 py-2 bg-primary text-white font-bold rounded-md hover:opacity-90 disabled:opacity-40 transition-all">
                 Publish {newRevCode}
               </button>
