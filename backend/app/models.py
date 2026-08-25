@@ -467,6 +467,10 @@ class PurchaseOrder(Base):
     total_amount = Column(Numeric(18, 2), default=0.0, nullable=False)
     approval_flag = Column(String(50), default="pending", nullable=False) # pending, pending_approval, approved, rejected
     approval_rule_id = Column(UUID(as_uuid=True), ForeignKey("approval_rules.id", ondelete="SET NULL"), nullable=True)
+    # R2-372: the approved indent this PO was raised from, when any. Null keeps
+    # legacy direct-PO behaviour; a linked indent is flipped to "ordered" on
+    # creation so one approval cannot be ordered repeatedly.
+    indent_id = Column(UUID(as_uuid=True), ForeignKey("material_indents.id", ondelete="SET NULL"), nullable=True)
     terms = Column(Text, nullable=True)  # Terms & Conditions; pre-filled from CompanyTerms on create
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 

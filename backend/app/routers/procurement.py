@@ -69,6 +69,9 @@ class POCreateRequest(BaseModel):
     expected_delivery_date: Optional[datetime] = None
     items: List[POCreateItemSchema] = Field(..., min_length=1)
     terms: Optional[str] = None  # Terms & Conditions; defaults to company Purchase Order Terms on create
+    # R2-372: raise this PO from an approved material indent. The link is
+    # validated, capped at the approved quantities, and marks the indent ordered.
+    indent_id: Optional[UUID] = None
 
 class POResponseItemSchema(BaseModel):
     id: UUID
@@ -85,6 +88,7 @@ class POResponse(BaseModel):
     project_id: UUID
     vendor_id: Optional[UUID] = None
     vendor_name: Optional[str] = None
+    indent_id: Optional[UUID] = None
     po_number: str
     po_date: datetime
     expected_delivery_date: Optional[datetime] = None
@@ -449,6 +453,7 @@ def _po_response(db: Session, po: PurchaseOrder) -> POResponse:
         project_id=po.project_id,
         vendor_id=po.vendor_id,
         vendor_name=vendor_name,
+        indent_id=po.indent_id,
         po_number=po.po_number,
         po_date=po.po_date,
         expected_delivery_date=po.expected_delivery_date,
@@ -484,6 +489,50 @@ def create_po(req: POCreateRequest, db: Session = Depends(get_db), current_user:
     if existing:
         raise HTTPException(status_code=400, detail="PO number already exists for this company")
 
+    # R2-372: a PO raised from an indent carries the link, may only come off an
+    # APPROVED indent (so one approval cannot be ordered repeatedly - the flip
+    # to "ordered" below consumes it), and may never exceed what the indent
+    # approved per material. Validated before anything is written.
+    indent = None
+    if req.indent_id is not None:
+        indent = db.query(MaterialIndent).filter(MaterialIndent.id == req.indent_id).first()
+        if not indent:
+            raise HTTPException(status_code=404, detail="Material indent not found")
+        if indent.company_id != req.company_id or indent.project_id != req.project_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Material indent does not belong to the supplied company/project",
+            )
+        if indent.status != "approved":
+            raise HTTPException(
+                status_code=422,
+                detail=(
+                    f"Purchase orders can only be raised from an approved indent "
+                    f"(indent {indent.indent_number} current status: {indent.status})"
+                ),
+            )
+        approved_qty: dict = {}
+        for ii in db.query(MaterialIndentItem).filter(MaterialIndentItem.indent_id == indent.id).all():
+            approved_qty[ii.material_name] = approved_qty.get(ii.material_name, 0.0) + float(ii.quantity or 0.0)
+        requested_qty: dict = {}
+        for item in req.items:
+            requested_qty[item.material_name] = requested_qty.get(item.material_name, 0.0) + float(item.quantity)
+        for name, qty in requested_qty.items():
+            allowed = approved_qty.get(name)
+            if allowed is None:
+                raise HTTPException(
+                    status_code=422,
+                    detail=f"'{name}' is not on indent {indent.indent_number}; only approved indent items may be ordered",
+                )
+            if qty > allowed + 1e-9:
+                raise HTTPException(
+                    status_code=422,
+                    detail=(
+                        f"'{name}': indent {indent.indent_number} approved {round(allowed, 4)}, "
+                        f"this PO requests {round(qty, 4)}"
+                    ),
+                )
+
     gross_amount = 0.0
     tax_amount = 0.0
 
@@ -505,6 +554,7 @@ def create_po(req: POCreateRequest, db: Session = Depends(get_db), current_user:
         company_id=req.company_id,
         project_id=req.project_id,
         vendor_id=req.vendor_id,
+        indent_id=indent.id if indent is not None else None,
         po_number=req.po_number,
         po_date=req.po_date,
         expected_delivery_date=req.expected_delivery_date,
@@ -538,6 +588,11 @@ def create_po(req: POCreateRequest, db: Session = Depends(get_db), current_user:
             total_amount=total
         )
         db.add(db_item)
+
+    # R2-372: the approved indent is now consumed - "ordered" removes it from
+    # the approvable pool so the same approval can never fund a second PO.
+    if indent is not None:
+        indent.status = "ordered"
 
     db.commit()
     db.refresh(po)
