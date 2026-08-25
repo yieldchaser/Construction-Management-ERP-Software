@@ -325,12 +325,17 @@ def get_company_analytics(company_id: uuid.UUID, db: Session = Depends(get_db), 
             }
         )
 
+    # R2-304: a log with no hours_worked is an open punch-in (punch-out is
+    # broken upstream, R2-262), not a completed eight-hour day. Fabricating 8.0
+    # for it invented labour nobody worked; sum only recorded hours and expose
+    # the count of hourless logs so the data gap stays visible.
     total_hours = 0.0
+    logs_without_hours = 0
     for log in attendance_logs:
         if log.hours_worked is not None:
             total_hours += _to_float(log.hours_worked)
-        elif (log.status or "").lower() == "present":
-            total_hours += 8.0
+        else:
+            logs_without_hours += 1
 
     labour_days = round(total_hours / 8.0, 2) if attendance_logs and total_hours else None
     completed_area = 0.0
@@ -447,6 +452,7 @@ def get_company_analytics(company_id: uuid.UUID, db: Session = Depends(get_db), 
         "budget_burn_series": monthly_burn,
         "labour_productivity": {
             "total_hours": round(total_hours, 2) if attendance_logs else None,
+            "logs_without_hours": logs_without_hours,
             "labour_days": labour_days,
             "completed_area_m2": round(completed_area, 2),
             "productivity_m2_per_labour_day": labour_productivity,
