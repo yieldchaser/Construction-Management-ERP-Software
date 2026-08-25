@@ -250,8 +250,12 @@ export default function CalculatorsPage() {
       vol = stepsVol + waistVol;
     }
 
+    // R2-482: every factor below follows this screen's own published rules -
+    // cement bags/m3 = (1.54 / sum of ratio parts) x 1440 / 50, and
+    // sand / aggregate = 1.54 x parts / sum - so the table cannot contradict
+    // the ratios in the grade dropdown or the "1.54 FACTOR" result panel.
     const mixLib: Record<string, [number, number, number]> = {
-      M5: [3.2, 0.48, 0.96],
+      M5: [2.77, 0.48, 0.96],
       M7_5: [3.41, 0.47, 0.94],
       M10: [4.4, 0.46, 0.92],
       M15: [6.3, 0.44, 0.88],
