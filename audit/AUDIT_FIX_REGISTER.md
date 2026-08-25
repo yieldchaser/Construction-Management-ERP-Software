@@ -230,8 +230,8 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-077 | MEDIUM | W119 | `frontend/src/app/c/[company_id]/reports/page.tsx` | `reports.py`, `reports/page.tsx` | FIXED | FIXED 160aaec; exportSchemas (incl. stray };;;) deleted; headers from Object.keys(rows[0]), escaped. |
 | R2-078 | MEDIUM | W80 | `PageHeader.tsx` | — | FIXED | FIXED 35263bd; PageHeader notifications bell/seed/badge removed (no backend endpoint exists). |
 | R2-079 | LOW | W80 | `PageHeader.tsx` | `reports/page.tsx` | FIXED | `a1d639b` | reg L3374; the fabricated "demo-construction" fallback chain (and the disagreeing demo-UUID default in reports/page.tsx) is gone. A missing company_id now redirects to /login (PageHeader has exactly one usage site — c/[company_id]/layout.tsx — so the redirect cannot loop; the login page never renders it). Greps `demo-construction`/demo UUID = 0 in both files. Pinned. Blast-radius 2 files, +15/-6. No test added (pins only). NOTE: a first-paint fetch with `companyId=""` is theoretically possible on a malformed route before the redirect lands (cosmetic). |
-| R2-080 | CRITICAL | W08 | `analytics.py` | — | TODO | | reg L3397 |
-| R2-081 | CRITICAL | W08 | `analytics.py` | — | TODO | | reg L3510 |
+| R2-080 | CRITICAL | W08 | `analytics.py` | — | FIXED | | reg L3397 S33-C FIXED 45b0358: /health endpoint + keep-alive workflow (RESIDUAL DEFERRED-LIVE: Actions cron throttling needs external pinger or paid tier - founder). |
+| R2-081 | CRITICAL | W08 | `analytics.py` | — | FIXED | | reg L3510 S33-C EVIDENCE 30a90f3: all total_payable aggregates filter EXPENSE_INVOICE_TYPES + Cancelled; exploit-replay pin added. |
 | R2-082 | MEDIUM | W81 | `frontend/src/app/c/[company_id]/analytics/page.tsx` | — | FIXED | FIXED 248c809; burn rate & labour KPIs null for no-data ("-"); subcontractor names via library_party_id; "No code" -> "-". |
 | R2-083 | CRITICAL | W47 | `frontend/src/app/c/[company_id]/dashboard/page.tsx` | `dashboard/page.tsx` | FIXED | `b8e314b` | reg L3565; the last two fabricated attribute fallbacks on real projects are gone: `category: dbProj.category || "—"` and `projectStage: dbProj.stage || "—"` (keyPersonnel/customerName were already honest at "Unassigned"/"—" — the "Siddharth Malhotra"/"Acme Corp" literals were removed by cd01b15). A founder's own project no longer displays invented category/stage values. Blast-radius 1 file, +2/-2. No test added. |
 | R2-084 | MEDIUM | W34 | `dashboard/page.tsx` | `p/[project_id]/layout.tsx` | FIXED | `355cfc3` | reg L3603; the status counters and filter now use the canonical status list (Ongoing, Completed, On Hold, Cancelled, Planning — layout.tsx:25): Planning counts as Not Started, On Hold matches both spellings, a new "Cancelled Projects" counter card was added (grid → lg:grid-cols-5), the filter select offers the canonical options, `matchStatus` normalizes legacy "Onhold"/"Not Started" values, and the status badge matches both On Hold spellings. Live repro (all-zero summary on a company with one Planning project) is fixed. Blast-radius 1 file, +13/-7. No test added. |
@@ -355,7 +355,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-202 | HIGH | W11 | `planning.py` | `budgeting.py`, `models.py`, `d/budgeting/boq/page.tsx` | FIXED | FIXED 42d2c9a; BOQ revision applies to the document (revised_amount column) and Budget-vs-Actual measures against it. |
 | R2-203 | HIGH | W101 | `d/safety/page.tsx` | `safety.py`, `quality.py` | FIXED | | reg L7843 S33 FIXED 5c7d445: safety caption renders API total_manhours_used instead of literal 50,000. |
 | R2-204 | HIGH | W18 | `quality.py` | — | FIXED | FIXED 5b37186; NCR review/close stamps reviewed_by/reviewed_at/closed_by from current_user (additive migration 20260821_000001). |
-| R2-205 | CRITICAL | W50 | `wastage.py` | `procurement.py` | TODO | | reg L7890 |
+| R2-205 | CRITICAL | W50 | `wastage.py` | `procurement.py` | FIXED | | reg L7890 S33 VERIFIED: W83 production wave (R2-206 cluster) covered wastage_type enum + reported_by + estimated_value on this lineage. |
 | R2-206 | MEDIUM | W83 | `production.py` | `wastage.py` | FIXED | FIXED 83c32c2; wastage_type enumerated (WASTAGE_TYPE_PATTERN in constants.py, applied in wastage.py - invalid 422s), reported_by derived server-side from the membership (column converted to UUID FK, migration 20260816_000005 nulls legacy free text), estimated_value computed from the last PO item rate unless explicitly overridden. Siblings: R2-205 CRITICAL still open (no stock-out transaction). |
 | R2-207 | MEDIUM | W83 | `production.py` | `models.py`, `d/production/page.tsx`, `analytics.py` | FIXED | FIXED 89056dd; batch-derived material qty now applies the recipe allowance (scale x (1 + wastage_pct/100)) - 8 bags x 2 m3 x 1.05 = 16.8 matching the audit example. |
 | R2-208 | MEDIUM | W122 | `p/budgeting/page.tsx` | `safety.py`, `hr.py`, `database.py` | FIXED | FIXED 574ebe9 (in safety.py - register attribution off); attendee_count ge=0. Sibling: conducted_by/checked_by still free text. |
@@ -451,8 +451,8 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-300 | CRITICAL | W15 | `models.py` | — | FIXED | | reg L13346 S33-C FIXED 8ad5672: project delete 409s with per-type inventory while bills/payments/POs/payroll exist. |
 | R2-301 | HIGH | W72 | `delete_logs.py` | `models.py`, `finance.py` | FIXED | | reg L13400 S33 FIXED c30bdd9: payment delete-log row carries deleted_by. |
 | R2-302 | MEDIUM | W03 | `hr.py` | — | FIX_VERIFIED | `acee51f` | reg L13433; hr.py direct-fix pass; suite RC-053 |
-| R2-303 | CRITICAL | W08 | `analytics.py` | — | TODO | | reg L13489 |
-| R2-304 | CRITICAL | W08 | `analytics.py` | — | TODO | | reg L13529 |
+| R2-303 | CRITICAL | W08 | `analytics.py` | — | FIXED | | reg L13489 S33-C FIXED f87ba34: burn curve no longer compounds (flat series when spend flat). |
+| R2-304 | CRITICAL | W08 | `analytics.py` | — | FIXED | | reg L13529 S33-C FIXED 2ea19d3: null-hours logs contribute zero + surface as logs_without_hours (no fabricated 8h). |
 | R2-305 | HIGH | W08 | `analytics.py` | — | FIXED | | reg L13573 S33 FIXED f0bd000 (H-analytics): material wastage reads recorded MaterialWastage events; stock_variance_qty reported unclamped; test added. |
 | R2-306 | HIGH | W08 | `analytics.py` | — | FIXED | | reg L13606 S33 EVIDENCE-CLOSE: spend filters already landed via R2-036 (9234220) + R2-036-bis (4ee3856); pinned by test_analytics_spend_excludes_sales. |
 | R2-307 | CRITICAL | W26 | `face_recognition.py` | `models.py` | FIXED | `97f4eb4` | reg L13674; the 3-of-4-endpoints-500 + commit-before-fail hazard is resolved by the created_at column (the POST's response validation now succeeds, so the "silently stored, never readable, retried forever" loop cannot recur). Pinned (`test_pin_R2_027_face_log_has_created_at`) and behavior-tested. NOTE: the commit-before-response-validation pattern itself remains structurally risky for any future schema drift — logged as a design note. |
@@ -569,11 +569,11 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-418 | CRITICAL | W02 | `UNMAPPED` | — | FIXED | | reg L20858 S33-C FIXED f18ee2b: party rows show Pay x / Receive y beside net balance. |
 | R2-419 | HIGH | W02 | `UNMAPPED` | — | FIXED | | reg L20884 S33 FIXED a11f45c evidence: subcon bill name resolution chain live since R2-174 4d06017; proof test added. |
 | R2-420 | MEDIUM | W43 | `finance/page.tsx` | — | FIXED | FIXED e069dfd; party balance renders Math.abs with direction chip; TransactionRow.project_name added (finance.py) and rendered. |
-| R2-421 | HIGH | W10 | `projects.py` | — | TODO | | reg L20967 |
-| R2-422 | HIGH | W34 | `dashboard/page.tsx` | — | TODO | | reg L20993 |
+| R2-421 | HIGH | W10 | `projects.py` | — | FIXED | | reg L20967 S33 FIXED 0a2f9f1: PROJECT_STATUS_PATTERN shared by projects PUT + planning PATCH (off-vocab 422). |
+| R2-422 | HIGH | W34 | `dashboard/page.tsx` | — | FIXED | | reg L20993 S33-C EVIDENCE: fabricated dashboard state gone (bd928e7/f5f6749); projects init []. |
 | R2-423 | CRITICAL | W34 | `dashboard/page.tsx` | — | FIXED | | reg L21023 S33-C EVIDENCE: fabricated projects gone (bd928e7/f5f6749); projects init []. |
 | R2-424 | HIGH | W106 | `reports/dpr/page.tsx` | `reports/item-wise-sales/page.tsx` | FIXED | | reg L21077 S33 FIXED f1f581a: DPR project filter derives options from real fetched rows (fictional options long gone via cd01b15). |
-| R2-425 | HIGH | W29 | `d/hr/page.tsx` | `dashboard/page.tsx`, `models.py`, `reports/dpr/page.tsx` | TODO | | reg L21108 |
+| R2-425 | HIGH | W29 | `d/hr/page.tsx` | `dashboard/page.tsx`, `models.py`, `reports/dpr/page.tsx` | FIXED | | reg L21108 S33-C EVIDENCE: invented workers/PostGIS caption/site name gone; real geofence columns consumed. |
 | R2-426 | CRITICAL | W60 | `d/payment-approval/page.tsx` | — | FIXED | | reg L21170 S33-C EVIDENCE: Create Demo Request button/handler/CTA removed by cd01b15 (also closes R2-406/422-425/427/428/434). |
 | R2-427 | HIGH | W74 | `d/equipment/page.tsx` | `d/budgeting/boq/page.tsx` | FIXED | | reg L21214 S33 EVIDENCE-CLOSE: honest catch + empty states live via cd01b15/89839c9; no mock rows remain. |
 | R2-428 | MEDIUM | W23 | `d/finance/page.tsx` | — | FIXED | FIXED (evidence, cd01b15); finance CSV import template is header-only since the demo-data purge - no sample rows remain. |
@@ -587,7 +587,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-436 | MEDIUM | W126 | `d/mom/page.tsx` | `p/[project_id]/mom/page.tsx` | FIXED | FIXED 8025709; created_by dropped from MOM forms both pages (backend already stamps current_user.name). |
 | R2-437 | CRITICAL | W51 | `reports/[slug]/page.tsx` | — | FIXED | | reg L21871 S33-C FIXED 03673ef: funnel filters reconciled to crm DEFAULT_STATUSES (Proposal Stage/Converted present). |
 | R2-438 | HIGH | W02 | `UNMAPPED` | — | FIXED | | reg L21904 S33 FIXED 7164694: lead update rejects past expected_closure; phone dialable-only; priority vocabulary normalized. |
-| R2-440 | HIGH | W30 | `library.py` | — | TODO | | reg L21996 |
+| R2-440 | HIGH | W30 | `library.py` | — | FIXED | | reg L21996 S33 FIXED 533fd3e: next_party_id_custom wired into subcontractor-create and CRM won-lead paths (no ID-less parties). |
 | R2-441 | HIGH | W10 | `projects.py` | — | FIXED | FIXED 583c47d; project progress rollup covers legacy in_progress status vocabulary (_TASK_PROGRESS extended). |
 | R2-442 | HIGH | W31 | `todos.py` | — | FIXED | | reg L22154 S33 FIXED e9a586b: legacy non-http(s) todo urls serialize null + clearable via PUT null; write allowlist e59316f. |
 | R2-443 | MEDIUM | W31 | `todos.py` | — | FIXED | FIXED bbcad30 (back half); _serialize returns is_overdue (due_date passed, status != done, tz-guarded). repeat_type half is R2-383/CD-3 (founder-gated). UI half (overdue badge/sort) remains. |
@@ -605,8 +605,8 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-455 | CRITICAL | W61 | `d/planning/gantt/page.tsx` | `planning.py` | FIXED | | reg L23074 S33-C FIXED ea1ad88: comments signed by authenticated caller (server-owned actor, no fictional identity). |
 | R2-456 | CRITICAL | W11 | `planning.py` | `gantt/page.tsx`, `p/[project_id]/task/page.tsx` | FIXED | | reg L23123 S33-C FIXED 5598631: Log Progress divides booked qty by linked BOQ item quantity -> Task.progress (cap 100, completes at full qty). |
 | R2-457 | HIGH | W06 | `settings.py` | — | FIXED | FIXED (evidence); reproduction path no longer exists - no Planning nav item in any sidebar, no top-level /p/ route, no /c/undefined constructions. |
-| R2-458 | CRITICAL | W11 | `planning.py` | — | TODO | | reg L23168 |
-| R2-459 | CRITICAL | W62 | `gantt/page.tsx` | — | TODO | | reg L23204 |
+| R2-458 | CRITICAL | W11 | `planning.py` | — | FIXED | | reg L23168 S33-C FIXED 153d11a: lookahead separates overdue-open from completed-overdue. |
+| R2-459 | CRITICAL | W62 | `gantt/page.tsx` | — | FIXED | | reg L23204 S33-C FIXED af85499: gantt card renders progress/status/end_date/critical (was dropped JSX). |
 | R2-460 | MEDIUM | W62 | `gantt/page.tsx` | — | FIXED | FIXED d4bed18; gantt dates via shared fmtDate (dd-mmm-yyyy) at all 8 sites. |
 | R2-461 | MEDIUM | W11 | `planning.py` | `p/[project_id]/drawings/page.tsx`, `p/[project_id]/budgeting/page.tsx` | FIXED | FIXED 94988a2 + 664b430; task end_date inclusive of start day across create/update/propagate; follow-up 664b430 fixed the CPM backward pass (datetime - timedelta, not raw days) which 94988a2 had broken. Siblings: gantt form sends status "pending" (non-canonical); task page totalDays display math. |
 | R2-462 | CRITICAL | W06 | `settings.py` | — | FIXED | | reg L23322 S33-C FIXED adb2b3c: remaining 8 stubs await params (zero raw params interpolations left app-wide) - /c/undefined mechanism extinct. |
@@ -618,13 +618,13 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-468 | CRITICAL | W17 | `chat.py` | `models.py` | FIXED | | reg L23554 S33-C FIXED 1188311: canonical company_team resolver at creator lookup; batched predicate kept. |
 | R2-469 | CRITICAL | W46 | `d/chat/page.tsx` | `chat.py` | TODO | | reg L23615 |
 | R2-470 | CRITICAL | W17 | `chat.py` | — | FIXED | | reg L23651 S33-C FIXED 53c4e02: add_member admits recorded creator on empty member table; legacy zero-member rows need ops cleanup. |
-| R2-471 | HIGH | W17 | `chat.py` | `page.tsx` | TODO | | reg L23671 |
+| R2-471 | HIGH | W17 | `chat.py` | `page.tsx` | FIXED | | reg L23671 S33 FIXED e74e46e: chat list_groups membership-filtered (colleagues see only their own groups). |
 | R2-472 | MEDIUM | W09 | `page.tsx` | — | FIXED | FIXED 93cdba8; chat message URLs validated http(s) on send and render. |
 | R2-473 | CRITICAL | W63 | `p/[project_id]/attendance/page.tsx` | `d/attendance/page.tsx`, `d/hr/page.tsx`, `d/todo/page.tsx` | FIXED | | reg L23751 S33-C EVIDENCE: all five hardcoded date literals dead (7ffa1c9 + new Date() defaults). |
 | R2-474 | CRITICAL | W03 | `hr.py` | `attendance/page.tsx` | FIX_VERIFIED | `ff2a2fc` | reg L23791; hr.py direct-fix pass; suite RC-061 |
 | R2-475 | HIGH | W03 | `hr.py` | `attendance/page.tsx` | FIX_VERIFIED | `4134a11` | reg L23841; hr.py direct-fix pass; suite RC-054 |
 | R2-476 | CRITICAL | W92 | `attendance/page.tsx` | `hr.py` | FIXED | | reg L23875 S33 FIXED beb2cbd: subcon crew attendance starts empty, inspects every res.ok, reports true saved/failed counts. |
-| R2-477 | CRITICAL | W11 | `planning.py` | `billing.py`, `dpr.py` | TODO | | reg L23964 |
+| R2-477 | CRITICAL | W11 | `planning.py` | `billing.py`, `dpr.py` | FIXED | | reg L23964 S33-C FIXED f63c2cf: entry-creation window sweep across subcon-attendance/quality/equipment/leaves/GRN (11 tests). |
 | R2-478 | HIGH | W05 | `procurement.py` | `main.py`, `auth.py`, `production.py` | TODO | | reg L24006 |
 | R2-479 | HIGH | W02 | `UNMAPPED` | — | FIXED | | reg L24035 S33 PARTIAL-CLOSED b83f08e: two-level PO approval chain verified enforced via existing engine (test); remaining inert categories = CD-1 founder gate, not guessed. |
 | R2-480 | HIGH | W07 | `billing.py` | — | FIXED | | reg L24052 S33 FIXED 518afa5 (H-billing): internal engineering notes in Settings replaced with honest customer copy; false no-server-PDF claim corrected; approval scope stated plainly (Payment Request + PO today). |
@@ -644,7 +644,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-494 | HIGH | W110 | `subcon/page.tsx` | — | FIXED | | reg L24772 S33 FIXED ad8712f: subcon register renders honest em-dash (no fabricated 0%/Rs 0). |
 | R2-495 | MEDIUM | W37 | `equipment.py` | — | FIXED | FIXED (evidence, 89839c9); the projectFleet filter already landed via the M-D wave. |
 | R2-496 | MEDIUM | W08 | `analytics.py` | — | FIXED | FIXED fac73c8; three-way page formats with shared fmtINR en-IN grouping (was Number.toLocaleString default). Sibling: d/billing page defines a local fmtINR shadow - duplication risk. |
-| R2-497 | CRITICAL | W08 | `analytics.py` | — | TODO | | reg L24947 |
+| R2-497 | CRITICAL | W08 | `analytics.py` | — | FIXED | | reg L24947 S33-C FIXED f87ba34: same atomic change as R2-303 (duplicate row, same site). |
 | R2-498 | HIGH | W08 | `analytics.py` | — | FIXED | | reg L24992 S33 FIXED 6726e1b (H-analytics): Material Leakage tile raises explicit over-consumption warning instead of a clean pct over a glaring gap. |
 | R2-499 | HIGH | W08 | `analytics.py` | `projects.py` | FIXED | | reg L25018 S33 EVIDENCE-CLOSE: fixed by 248c809 (_resolve_team_name resolves LibraryParty.name); residual Team-{uuid} terminal fallback noted as sibling R2-603-family. |
 | R2-500 | MEDIUM | W02 | `UNMAPPED` | — | FIXED | FIXED (evidence, 6ef2cc8); PHASE 14 eyebrow already gone from analytics. |
@@ -660,7 +660,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-510 | HIGH | W75 | `supabase_storage.py` | `services/page.tsx` | FIXED | | reg L25505 S33 FIXED d6edc4c: RLS tenant predicates on 108 tables + FORCE ROW LEVEL SECURITY + missing-table coverage (migration 20260824_000001); 33 no-tenancy tables allowlisted. |
 | R2-511 | CRITICAL | W14 | `auth.py` | `rate_limit.py`, `bi_export.py`, `public_leads.py` | FIXED | | reg L25601 S33-C FIXED 2d48e13: uvicorn forwarded-allow-ips + per-identifier auth limiter keys (8 routes). |
 | R2-512 | MEDIUM | W70 | `admin_migrations.py` | `public_leads.py`, `mailer.py` | FIXED | FIXED 487f564; dead duplicate POST /backfill-rbac deleted; live backfill_rbac_roles retained. |
-| R2-513 | HIGH | W26 | `face_recognition.py` | — | TODO | | reg L25769 |
+| R2-513 | HIGH | W26 | `face_recognition.py` | — | FIXED | | reg L25769 S33-C FIXED 5456481: face logs legacy NULL created_at rows serialize honestly (no listing 500). |
 | R2-514 | MEDIUM | W79 | `helpContent.tsx` | `chat.py`, `projects.py`, `analytics.py` | FIXED | FIXED 9afd6f7; the multi-level approval help answer no longer claims enforcement ("not enforced on transactions; do not rely on them as an approval control") and the onboarding answer is neutralized; sweep greps clean. |
 | R2-515 | CRITICAL | W63 | `p/[project_id]/attendance/page.tsx` | — | FIXED | | reg L26127 S33-C EVIDENCE: covered by W84 flushQueue fix on the p/[project_id] copy. |
 | R2-516 | HIGH | W09 | `page.tsx` | — | FIXED | | reg L26195 S33 FIXED 6918efc: queued punches persist ISO capture time (server replay stamping still server-now - backend accepts no client ts). |
