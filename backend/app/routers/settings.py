@@ -695,12 +695,13 @@ class PayrollSettingsResponse(BaseModel):
 
 
 class PayrollSettingsUpdate(BaseModel):
-    pf_employee_pct: Optional[float] = Field(None, ge=0, le=100)
-    pf_employer_pct: Optional[float] = Field(None, ge=0, le=100)
-    esi_employee_pct: Optional[float] = Field(None, ge=0, le=100)
-    esi_employer_pct: Optional[float] = Field(None, ge=0, le=100)
+    pf_employee_pct: Optional[float] = Field(None, ge=0, le=12)
+    pf_employer_pct: Optional[float] = Field(None, ge=0, le=12)
+    esi_employee_pct: Optional[float] = Field(None, ge=0, le=1)
+    esi_employer_pct: Optional[float] = Field(None, ge=0, le=5)
     tds_monthly: Optional[float] = Field(None, ge=0)
     is_esi_applicable: Optional[bool] = None
+    confirm_changes: bool = False
 
 
 def _get_or_create_payroll_settings(company_id: uuid.UUID, db: Session):
@@ -720,8 +721,12 @@ def get_payroll_settings(company_id: uuid.UUID, db: Session = Depends(get_db), _
 
 @router.put("/payroll/{company_id}", response_model=PayrollSettingsResponse)
 def update_payroll_settings(company_id: uuid.UUID, payload: PayrollSettingsUpdate, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
+    changes = payload.model_dump(exclude_unset=True)
+    changes.pop("confirm_changes", None)
+    if changes and not payload.confirm_changes:
+        raise HTTPException(status_code=400, detail="confirm_changes must be true to modify statutory payroll rates")
     row = _get_or_create_payroll_settings(company_id, db)
-    for field, val in payload.model_dump(exclude_unset=True).items():
+    for field, val in changes.items():
         setattr(row, field, val)
     db.commit()
     db.refresh(row)
