@@ -21,6 +21,11 @@ export default function Sidebar() {
   const { mobileOpen, closeMobile } = useSidebar();
 
   const [companyName, setCompanyName] = useState("Loading Company...");
+  const [moreOpen, setMoreOpen] = useState(false);
+
+  useEffect(() => {
+    setMoreOpen(false);
+  }, [pathname]);
 
   // Company name fetch (project context resolution now lives in ProjectContext).
   useEffect(() => {
@@ -85,6 +90,16 @@ export default function Sidebar() {
           <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
         </svg>
       ),
+    },
+    {
+      label: "Project Hub",
+      href: `/c/${companyId}/d/home`,
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+        </svg>
+      ),
+      activePattern: "/d/home",
     },
     {
       label: "Report",
@@ -219,6 +234,90 @@ export default function Sidebar() {
     },
   ];
 
+  // Company modules that had no inbound link from primary navigation.
+  const moreNavItems: NavItem[] = [
+    {
+      label: "Analytics",
+      href: `/c/${companyId}/analytics`,
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M16 8v8m-4-5v5m-4-10v10M5 21h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z" />
+        </svg>
+      ),
+      activePattern: "/analytics",
+    },
+    {
+      label: "Budget",
+      href: `/c/${companyId}/d/budget`,
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 7h6m-6 4h6m-6 4h4m-7 6h12a2 2 0 002-2V5a2 2 0 00-2-2H6a2 2 0 00-2 2v14a2 2 0 002 2z" />
+        </svg>
+      ),
+      activePattern: "/d/budget",
+    },
+    {
+      label: "Custom Fields",
+      href: `/c/${companyId}/d/custom-fields`,
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      ),
+      activePattern: "/d/custom-fields",
+    },
+    {
+      label: "Depreciation",
+      href: `/c/${companyId}/d/depreciation`,
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" />
+        </svg>
+      ),
+      activePattern: "/d/depreciation",
+    },
+    {
+      label: "Drawings",
+      href: `/c/${companyId}/d/drawings`,
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+        </svg>
+      ),
+      activePattern: "/d/drawings",
+    },
+    {
+      label: "Statutory",
+      href: `/c/${companyId}/d/statutory`,
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+        </svg>
+      ),
+      activePattern: "/d/statutory",
+    },
+    {
+      label: "Towers",
+      href: `/c/${companyId}/d/towers`,
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0" />
+        </svg>
+      ),
+      activePattern: "/d/towers",
+    },
+    {
+      label: "Wastage",
+      href: `/c/${companyId}/d/wastage`,
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+        </svg>
+      ),
+      activePattern: "/d/wastage",
+    },
+  ];
+
   return (
     <>
       {/* Mobile Backdrop */}
@@ -282,12 +381,50 @@ export default function Sidebar() {
             return (
               <React.Fragment key={idx}>
                 {element}
-                {(idx === 1 || idx === 3 || idx === 6 || idx === 8) && (
+                {(idx === 2 || idx === 4 || idx === 7 || idx === 9) && (
                   <hr className="my-1.5 border-border-custom/50" />
                 )}
               </React.Fragment>
             );
           })}
+
+          {/* Collapsible group for modules with no other primary-nav entry */}
+          <div className="pt-1 mt-1 border-t border-border-custom/50">
+            <div
+              className={`flex items-center gap-3 px-3 py-2 text-sm rounded-md transition-all cursor-pointer ${
+                moreOpen ? "text-foreground" : "text-muted hover:text-foreground hover:bg-elevated"
+              }`}
+              onClick={() => setMoreOpen((o) => !o)}
+            >
+              <span className="text-sm shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z" />
+                </svg>
+              </span>
+              <span className="truncate">More Modules</span>
+              <span className="ml-auto text-[10px]">{moreOpen ? "▲" : "▼"}</span>
+            </div>
+            {moreOpen &&
+              moreNavItems.map((item) => {
+                const isActive = item.activePattern
+                  ? pathname.includes(item.activePattern)
+                  : pathname === item.href;
+                return (
+                  <Link href={item.href} prefetch={true} key={item.label} className="block">
+                    <div
+                      className={`flex items-center gap-3 pl-6 pr-3 py-2 text-sm rounded-md transition-all cursor-pointer ${
+                        isActive
+                          ? "bg-primary/10 text-primary font-medium"
+                          : "text-muted hover:text-foreground hover:bg-elevated"
+                      }`}
+                    >
+                      <span className="text-sm shrink-0">{item.icon}</span>
+                      <span className="truncate">{item.label}</span>
+                    </div>
+                  </Link>
+                );
+              })}
+          </div>
         </nav>
       </div>
 

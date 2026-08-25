@@ -37,6 +37,14 @@ export const HELP_MODULE_LINKS: (companyId: string) => {
   { label: "Equipment", href: c(companyId, "/d/equipment") },
   { label: "Production", href: c(companyId, "/d/production") },
   { label: "Cost Codes", href: c(companyId, "/cost-codes") },
+  { label: "Analytics", href: c(companyId, "/analytics") },
+  { label: "Budget", href: c(companyId, "/d/budget") },
+  { label: "Custom Fields", href: c(companyId, "/d/custom-fields") },
+  { label: "Depreciation", href: c(companyId, "/d/depreciation") },
+  { label: "Drawings", href: c(companyId, "/d/drawings") },
+  { label: "Statutory", href: c(companyId, "/d/statutory") },
+  { label: "Towers", href: c(companyId, "/d/towers") },
+  { label: "Wastage", href: c(companyId, "/d/wastage") },
 ];
 
 export const HELP_CATEGORIES: (companyId: string) => FaqCategory[] = (
