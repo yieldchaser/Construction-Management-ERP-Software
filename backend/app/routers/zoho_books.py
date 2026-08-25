@@ -669,6 +669,19 @@ def push_bill(
         json=bill_payload,
         timeout=60,
     )
+    # If a non-GST org rejected the gst_treatment element (code 8), retry once
+    # without it so the bill still gets created - the same resilience vendor
+    # creation above already has; without this, every push for a GSTIN-bearing
+    # vendor fails on such orgs (R2-209).
+    if resp.status_code not in (200, 201) and "gst_treatment" in bill_payload:
+        bill_payload.pop("gst_treatment", None)
+        resp = requests.post(
+            f"{_api_base()}bills",
+            headers={**_api_headers(access_token), "Content-Type": "application/json"},
+            params={"organization_id": organization_id},
+            json=bill_payload,
+            timeout=60,
+        )
     if resp.status_code not in (200, 201):
         _ref = uuid.uuid4().hex[:8]
         logger.error(
