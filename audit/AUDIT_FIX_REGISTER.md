@@ -289,7 +289,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-136 | MEDIUM | W11 | `planning.py` | `crm.py`, `mom.py`, `towers.py` | FIXED | FIXED 048f72f PARTIAL: the planning.py discriminator instances (milestone type/status, predecessor type) validated; the other 14 catalogue fields remain (tracked by the finding). |
 | R2-137 | CRITICAL | W85 | `d/face-recognition/page.tsx` | `d/payroll-attendance/page.tsx`, `d/crm/page.tsx` | FIXED | | reg L5505; CLASS finding (219 of 307 `if (res.ok)` checks have no else) — STILL OPEN as a class. The face-recognition page instance was closed by `f30fffe` (loadError states distinguish failure from empty); the class sweep across the remaining ~200 sites is a dedicated pass (register this finding as the tracking row). S33-C EVIDENCE: face page distinguishes failure from empty via loadError (f30fffe); class tracking row remains. |
 | R2-138 | CRITICAL | W14 | `auth.py` | — | FIXED | | reg L5567 S33-C FIXED f9b55eb: /auth/me capped 120/min (runaway tab gets bounded 429s, pool survives). |
-| R2-139 | CRITICAL | W57 | `main.py` | `delete_logs.py`, `d/delete-logs/page.tsx` | TODO | | reg L5602 |
+| R2-139 | CRITICAL | W57 | `main.py` | `delete_logs.py`, `d/delete-logs/page.tsx` | FIXED | | reg L5602 S33-C EVIDENCE: prefix mount + UUID-typed ids + frontend updated (R2-291 wave); wildcard gone. |
 | R2-140 | CRITICAL | W17 | `chat.py` | `backend/app/models.py`, `models.py`, `d/chat/page.tsx` | FIXED | | reg L5691 S33-C FIXED dcfc3d1 (+behavioral 5986794): chat identity gate resolved via company_team_for - permanent deadlock dead. |
 | R2-141 | HIGH | W17 | `chat.py` | `frontend/src/app/c/[company_id]/d/chat/page.tsx` | FIXED | FIXED fbbb93a; DELETE /chat/groups/{id} archives the group behind the group-admin guard instead of answering 405. |
 | R2-142 | HIGH | W17 | `chat.py` | `models.py`, `d/chat/page.tsx`, `page.tsx` | FIXED | FIXED f311485; chat group member mutations require server-side group-admin role; role values constrained to admin/member/viewer; last admin cannot be removed or demoted. |
@@ -307,7 +307,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-154 | MEDIUM | W13 | `budget.py` | `d/budget/page.tsx`, `budgeting.py`, `custom_fields.py` | FIXED | FIXED bd41ec7; committed counts only live PO states (sent/partial/received) and non-cancelled WOs; budget page shows a set-budget prompt when total_budget == 0. Sibling: towers.py:177/199 + budget.py:155 same unfiltered sums. |
 | R2-155 | HIGH | W66 | `d/custom-fields/page.tsx` | `custom_fields.py` | FIXED | FIXED 0f6ba71; Set Value screen parses stored custom-field values into state and renders current value per field card. |
 | R2-156 | HIGH | W66 | `d/custom-fields/page.tsx` | `c/[company_id]/projects/page.tsx`, `p/[project_id]/transaction/page.tsx`, `projects.py` | FIXED | FIXED b2955f1; field builder select cut to project/invoice (the wired entity types); list follows user-controlled entity-type filter. |
-| R2-157 | CRITICAL | W32 | `custom_fields.py` | `page.tsx`, `chat.py` | TODO | | reg L6057 |
+| R2-157 | CRITICAL | W32 | `custom_fields.py` | `page.tsx`, `chat.py` | FIXED | | reg L6057 S33-C FIXED 31bca13: custom-field read path derives tenant from parent entity, membership-checked, poisoned-row isolated. |
 | R2-158 | HIGH | W32 | `custom_fields.py` | `d/custom-fields/page.tsx` | FIXED | FIXED 4d1b3d1; Set Value dispatches on field type - date values sent as value_date, number 0 no longer dropped into text rows. |
 | R2-159 | MEDIUM | W32 | `custom_fields.py` | `calculators.py` | FIXED | FIXED d92cb93; custom_fields entity_type/field_type pattern-constrained on both create paths. |
 | R2-160 | HIGH | W99 | `d/reports/calculators/page.tsx` | — | FIXED | | reg L6133 S33 FIXED 8ef468b: concrete tab has own column state (no steel-column bleed). |
@@ -322,7 +322,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-169 | CRITICAL | W14 | `auth.py` | `permissions.py` | TODO | | reg L6384 |
 | R2-170 | HIGH | W48 | `permissions.py` | `hr.py`, `drawings.py`, `reports.py` | FIXED | | reg L6399 S33 FIXED eda6dc4: attendance/drawings/reports in WORKFLOW_MODULES (re-added after a concurrent-write clobber lost 8c4c496 lines; mechanical scan asserts all 57 require_permission keys in taxonomy). |
 | R2-171 | CRITICAL | W48 | `permissions.py` | `auth.py`, `RolePermissionsModal.tsx` | TODO | | reg L6423 |
-| R2-172 | CRITICAL | W86 | `RolePermissionsModal.tsx` | `rbac.ts` | TODO | | reg L6507 |
+| R2-172 | CRITICAL | W86 | `RolePermissionsModal.tsx` | `rbac.ts` | FIXED | | reg L6507 S33-C FIXED aa17f72: WORKFLOW_MODULES extended (7 modules) in permissions.py + rbac.ts mirror - presets round-trip without silent stripping. |
 | R2-173 | CRITICAL | W87 | `p/[project_id]/transaction/page.tsx` | — | FIXED | | reg L6552 S33 FIXED 5692d6d: cash tiles fold /finance/transactions Payment rows by project_id (honest caveat on feed failure) - was Rs 0 vs Rs 90,000. |
 | R2-174 | MEDIUM | W35 | `files.py` | `supabase_storage.py` | FIXED | FIXED 4d06017 (finance.py); _txn_party_name resolves CompanyTeam -> User -> LibraryParty, keeping the Walk-in/Unknown vocabulary. |
 | R2-175 | HIGH | W35 | `files.py` | `models.py` | FIXED | | reg L6610 S33 FIXED be15612: DELETE file (tenant+data:delete+storage removal+audit log) and folder delete 409-while-nonempty. |
@@ -337,7 +337,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-184 | CRITICAL | W04 | `reports.py` | `main.py`, `supabase_storage.py`, `files.py` | TODO | | reg L6929; ESCALATED per D-010 — needs object storage |
 | R2-185 | HIGH | W24 | `labour.py` | `dpr.py`, `hr.py`, `bi_export.py` | FIXED | | reg L6958 S33 FIXED b3d3a77: BOCW CSV export neutralizes formula cells. |
 | R2-186 | HIGH | W14 | `auth.py` | `zoho_books.py` | FIXED | FIXED 1a564f1; POST /auth/switch-company/{company_id} verifies membership and re-mints the company-scoped session. |
-| R2-187 | CRITICAL | W20 | `zoho_books.py` | — | TODO | | reg L7012 |
+| R2-187 | CRITICAL | W20 | `zoho_books.py` | — | FIXED | | reg L7012 S33-C EVIDENCE: zoho_bill_id column + pre-flight 409 + duplicate-code mapping live. |
 | R2-188 | HIGH | W20 | `zoho_books.py` | `billing.py` | FIXED | FIXED b6bf9e8; Zoho push resolves vendor from linked library party instead of inventing a contact named Vendor. |
 | R2-189 | HIGH | W02 | `UNMAPPED` | — | FIXED | | reg L7044 S33 EVIDENCE-CLOSE: prescribed gate already live via R2-192 136a82f (zoho push_bill billing:edit). |
 | R2-190 | MEDIUM | W02 | `UNMAPPED` | — | FIXED | FIXED 592af3a (other agent); Zoho upstream bodies logged server-side with a correlation ref. |
