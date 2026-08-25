@@ -485,7 +485,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-334 | HIGH | W19 | `budgeting.py` | `finance.py`, `models.py` | FIXED | | reg L15424 S33 FIXED 3175e8b (H-budgeting): BOQ cost codes must exist in company Cost Code Library (import + item create, atomic 400 naming unknown codes); cost_code widened 50->100 WITH additive migration; test added. |
 | R2-335 | HIGH | W01 | `finance.py` | `models.py`, `reports.py` | TODO | | reg L15460; DEFERRED per D-008 — a missing feature, not a defect |
 | R2-336 | MEDIUM | W05 | `procurement.py` | `crm.py`, `models.py`, `reports.py` | FIXED | FIXED 9906aa9; material movements no longer reclassify the inventory master category (last-write-wins overwrite removed). Sibling: inv.unit still overwritten by the movement - follow-up. |
-| R2-337 | CRITICAL | W59 | `rate_limit.py` | `proxy_headers.py` | TODO | | reg L15583 |
+| R2-337 | CRITICAL | W59 | `rate_limit.py` | `proxy_headers.py` | FIXED | | reg L15583 S33-C EVIDENCE: both halves live (forwarded-allow-ips + proxy-headers default; shared storage URI + trust-flag key). Pinned by R2-511/R2-311 tests. |
 | R2-338 | HIGH | W11 | `planning.py` | `models.py`, `dpr.py`, `vendor_performance.py` | FIXED | FIXED 959ae3b; vendor scorecard wired to GRN receipt + manual refresh endpoint, on-time measured against expected_delivery_date, quality_issues from vendor-attributed NCRs. |
 | R2-339 | CRITICAL | W04 | `reports.py` | `dpr.py`, `projects.py` | FIX_VERIFIED | `2ddc411` | reg L15796; reports.py direct-fix pass; suite RC-076 |
 | R2-340 | HIGH | W11 | `planning.py` | `models.py`, `workflow_controls.py` | FIXED | FIXED d034a0a; progress consumers read Task.progress: reports tasks_completion_pct=AVG(progress), dpr avg_completion=mean progress, analytics _task_is_completed() at all 5 sites. |
@@ -544,7 +544,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-393 | HIGH | W51 | `reports/[slug]/page.tsx` | `crm/page.tsx` | TODO | | reg L19461 |
 | R2-394 | HIGH | W51 | `reports/[slug]/page.tsx` | `reports.py` | TODO | | reg L19509 |
 | R2-395 | HIGH | W09 | `page.tsx` | — | FIXED | | reg L19597 S33 FIXED 3d10926: phantom xlsx menu entry removed; only producible formats offered. |
-| R2-396 | CRITICAL | W09 | `page.tsx` | — | TODO | | reg L19622 |
+| R2-396 | CRITICAL | W09 | `page.tsx` | — | FIXED | | reg L19622 S33-C FIXED 88f9af5: report CSV export neutralizes formula cells client-side (mirror of backend _csv_safe_cell). |
 | R2-397 | HIGH | W09 | `page.tsx` | `pdf_generator.py` | FIXED | | reg L19653 S33 FIXED 96f6ffe: popup-blocked print fails honestly; HTML/print exports escapeHtml at all interpolation sites. |
 | R2-398 | MEDIUM | W07 | `billing.py` | — | FIXED | FIXED 8858a45; report exports omit all-blank columns, preserve legitimate 0, ISO timestamps formatted en-IN. |
 | R2-399 | CRITICAL | W02 | `UNMAPPED` | — | TODO | | reg L19749 |
@@ -564,7 +564,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-413 | HIGH | W73 | `zatca.py` | `models.py`, `reports.py`, `billing.py` | TODO | | reg L20329 |
 | R2-414 | MEDIUM | W04 | `reports.py` | — | FIX_VERIFIED | `d4db32f` | reg L20452; reports.py direct-fix pass; suite RC-080 |
 | R2-415 | HIGH | W24 | `labour.py` | — | FIXED | | reg L20535 S33 FIXED d81c0a8: BOCW return month validated, contractor resolved from store, figures derived from attendance/payroll/bills. |
-| R2-416 | CRITICAL | W43 | `finance/page.tsx` | — | TODO | | reg L20647 |
+| R2-416 | CRITICAL | W43 | `finance/page.tsx` | — | FIXED | | reg L20647 S33-C EVIDENCE: companyId-gated effect live since R2-022 5fda93e (+R2-099 loading/error states). |
 | R2-417 | HIGH | W01 | `finance.py` | `reports.py`, `models.py`, `finance/page.tsx` | FIX_VERIFIED | `a245605` | reg L20688; direct-fix pass; suite RC-041 |
 | R2-418 | CRITICAL | W02 | `UNMAPPED` | — | TODO | | reg L20858 |
 | R2-419 | HIGH | W02 | `UNMAPPED` | — | FIXED | | reg L20884 S33 FIXED a11f45c evidence: subcon bill name resolution chain live since R2-174 4d06017; proof test added. |
@@ -574,7 +574,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-423 | CRITICAL | W34 | `dashboard/page.tsx` | — | FIXED | | reg L21023 S33-C EVIDENCE: fabricated projects gone (bd928e7/f5f6749); projects init []. |
 | R2-424 | HIGH | W106 | `reports/dpr/page.tsx` | `reports/item-wise-sales/page.tsx` | FIXED | | reg L21077 S33 FIXED f1f581a: DPR project filter derives options from real fetched rows (fictional options long gone via cd01b15). |
 | R2-425 | HIGH | W29 | `d/hr/page.tsx` | `dashboard/page.tsx`, `models.py`, `reports/dpr/page.tsx` | TODO | | reg L21108 |
-| R2-426 | CRITICAL | W60 | `d/payment-approval/page.tsx` | — | TODO | | reg L21170 |
+| R2-426 | CRITICAL | W60 | `d/payment-approval/page.tsx` | — | FIXED | | reg L21170 S33-C EVIDENCE: Create Demo Request button/handler/CTA removed by cd01b15 (also closes R2-406/422-425/427/428/434). |
 | R2-427 | HIGH | W74 | `d/equipment/page.tsx` | `d/budgeting/boq/page.tsx` | FIXED | | reg L21214 S33 EVIDENCE-CLOSE: honest catch + empty states live via cd01b15/89839c9; no mock rows remain. |
 | R2-428 | MEDIUM | W23 | `d/finance/page.tsx` | — | FIXED | FIXED (evidence, cd01b15); finance CSV import template is header-only since the demo-data purge - no sample rows remain. |
 | R2-429 | HIGH | W03 | `hr.py` | `models.py` | FIX_VERIFIED | `034bc1e` | reg L21329; hr.py direct-fix pass; suite RC-067 |
