@@ -191,17 +191,11 @@ export default function DrawingsPage() {
   const handleAddPin = async () => {
     if (!newPinComment.trim() || !activeRev) return;
     const nextSeq = (activeRev.pins.reduce((m, p) => Math.max(m, p.seq), 0)) + 1;
-    const pinData = {
-      id: `pin-${Date.now()}`, seq: nextSeq,
-      x: tempXY.x, y: tempXY.y,
-      category: newPinCat, comment: newPinComment,
-      photoAttached: newPinPhoto,
-      user: "Current User", date: new Date().toLocaleDateString("en-IN"),
-      resolved: false,
-    };
 
     try {
       const apiHost = getApiHost();
+      // R2-435: created_by is derived server-side from the authenticated
+      // caller, so the body carries only geometry and text.
       const res = await fetch(`${apiHost}/apis/v3/drawings/revisions/${activeRev.id}/pins`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
@@ -209,21 +203,27 @@ export default function DrawingsPage() {
           x_coordinate: tempXY.x,
           y_coordinate: tempXY.y,
           comment: newPinComment,
-          created_by: "current-user",
         }),
       });
-      if (!res.ok) throw new Error("Failed to save pin");
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const saved = await res.json();
-      pinData.id = saved.id;
+      const pinData = {
+        id: saved.id, seq: nextSeq,
+        x: tempXY.x, y: tempXY.y,
+        category: newPinCat, comment: newPinComment,
+        photoAttached: newPinPhoto,
+        user: "Current User", date: new Date().toLocaleDateString("en-IN"),
+        resolved: false,
+      };
+      setDrawings(prev => prev.map(d => d.id !== activeDrawingId ? d : {
+        ...d,
+        revisions: d.revisions.map(r => r.id !== activeRevId ? r : { ...r, pins: [...r.pins, pinData] })
+      }));
+      setShowPinModal(false);
     } catch (err) {
-      console.error("Pin save error, using local only:", err);
+      console.error("Failed to save pin", err);
+      alert("Failed to save pin. Your change was not saved.");
     }
-
-    setDrawings(prev => prev.map(d => d.id !== activeDrawingId ? d : {
-      ...d,
-      revisions: d.revisions.map(r => r.id !== activeRevId ? r : { ...r, pins: [...r.pins, pinData] })
-    }));
-    setShowPinModal(false);
   };
 
   const handleToggleResolved = async (pinId: string) => {
