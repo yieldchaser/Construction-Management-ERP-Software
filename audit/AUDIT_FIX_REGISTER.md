@@ -579,13 +579,13 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-428 | MEDIUM | W23 | `d/finance/page.tsx` | — | FIXED | FIXED (evidence, cd01b15); finance CSV import template is header-only since the demo-data purge - no sample rows remain. |
 | R2-429 | HIGH | W03 | `hr.py` | `models.py` | FIX_VERIFIED | `034bc1e` | reg L21329; hr.py direct-fix pass; suite RC-067 |
 | R2-430 | CRITICAL | W03 | `hr.py` | — | FIX_VERIFIED | `05a41e9` | reg L21389; hr.py direct-fix pass; suite RC-049 |
-| R2-431 | CRITICAL | W91 | `errors.py` | `hr.py` | TODO | | reg L21423 |
+| R2-431 | CRITICAL | W91 | `errors.py` | `hr.py` | FIXED | | reg L21423 S33-C FIXED 7be4739: payroll-attendance swallow removed; assume_full_month gate restored on this lineage (D2 option-a flag - founder to confirm default); attendance fetch no longer catch-to-empty. |
 | R2-432 | CRITICAL | W05 | `procurement.py` | — | FIX_VERIFIED | `e9e3308` | reg L21581; procurement.py direct-fix pass; suite RC-084 — same defect as R2-239 |
 | R2-433 | HIGH | W15 | `models.py` | — | FIXED | FIXED e67476b; _po_response resolves vendor_name (User.name -> LibraryParty.name); PO list renders it, literal Vendor placeholder removed. |
 | R2-434 | CRITICAL | W44 | `d/quality/page.tsx` | `models.py`, `p/[project_id]/quality/page.tsx` | FIXED | | reg L21684 S33-C FIXED fda5bd0: inspected_by server-owned and exposed to both quality pages. |
 | R2-435 | CRITICAL | W45 | `d/drawings/page.tsx` | `models.py`, `drawings.py` | FIXED | | reg L21762 S33-C FIXED 3103f5f: pin created_by server-owned; failed saves alert instead of rendering local-only pins. |
 | R2-436 | MEDIUM | W126 | `d/mom/page.tsx` | `p/[project_id]/mom/page.tsx` | FIXED | FIXED 8025709; created_by dropped from MOM forms both pages (backend already stamps current_user.name). |
-| R2-437 | CRITICAL | W51 | `reports/[slug]/page.tsx` | — | TODO | | reg L21871 |
+| R2-437 | CRITICAL | W51 | `reports/[slug]/page.tsx` | — | FIXED | | reg L21871 S33-C FIXED 03673ef: funnel filters reconciled to crm DEFAULT_STATUSES (Proposal Stage/Converted present). |
 | R2-438 | HIGH | W02 | `UNMAPPED` | — | FIXED | | reg L21904 S33 FIXED 7164694: lead update rejects past expected_closure; phone dialable-only; priority vocabulary normalized. |
 | R2-440 | HIGH | W30 | `library.py` | — | TODO | | reg L21996 |
 | R2-441 | HIGH | W10 | `projects.py` | — | FIXED | FIXED 583c47d; project progress rollup covers legacy in_progress status vocabulary (_TASK_PROGRESS extended). |
@@ -629,12 +629,12 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-479 | HIGH | W02 | `UNMAPPED` | — | FIXED | | reg L24035 S33 PARTIAL-CLOSED b83f08e: two-level PO approval chain verified enforced via existing engine (test); remaining inert categories = CD-1 founder gate, not guessed. |
 | R2-480 | HIGH | W07 | `billing.py` | — | FIXED | | reg L24052 S33 FIXED 518afa5 (H-billing): internal engineering notes in Settings replaced with honest customer copy; false no-server-PDF claim corrected; approval scope stated plainly (Payment Request + PO today). |
 | R2-481 | MEDIUM | W03 | `hr.py` | — | FIX_VERIFIED | `29a1bdb` | reg L24087; hr.py direct-fix pass; suite RC-064 |
-| R2-482 | CRITICAL | W93 | `calculators/page.tsx` | — | TODO | | reg L24159 |
+| R2-482 | CRITICAL | W93 | `calculators/page.tsx` | — | FIXED | | reg L24159 S33-C FIXED fba2f80: client M5 cement factor 3.2->2.77 (last outlier vs server ratio math). |
 | R2-483 | HIGH | W09 | `page.tsx` | — | FIXED | | reg L24208 S33 FIXED aafe230: brick thickness derives from leaves x width + joints - controls cannot disagree. |
 | R2-484 | HIGH | W09 | `page.tsx` | — | FIXED | | reg L24254 S33 FIXED fb67016: stirrup cut length 14d->6d matching the documented arithmetic. |
 | R2-485 | HIGH | W09 | `page.tsx` | — | FIXED | | reg L24287 S33 EVIDENCE-CLOSE: remedies already at HEAD via f48dfb7/590560f/73e3cb6 (inputs exposed, inert selector removed, honest split lines). |
 | R2-486 | MEDIUM | W09 | `page.tsx` | `settings.py`, `models.py` | FIXED | FIXED ca082f6; paint calculator label 115 sqft/L, paintMode removed. |
-| R2-487 | CRITICAL | W10 | `projects.py` | — | TODO | | reg L24473 |
+| R2-487 | CRITICAL | W10 | `projects.py` | — | FIXED | | reg L24473 S33-C FIXED d93e876: quotation-to-invoice project-side link written; no duplicates, no fabricated link. |
 | R2-488 | HIGH | W05 | `procurement.py` | — | TODO | | reg L24517 |
 | R2-489 | MEDIUM | W35 | `files.py` | — | FIXED | FIXED b6ecb1e; the em-dash placeholder is filtered out of the Inspected By options on both quality pages (display placeholder in the table kept). |
 | R2-490 | CRITICAL | W64 | `transaction/page.tsx` | — | FIXED | | reg L24621 S33 FIXED a44acaa: transaction totals classify all canonical types (settlements to cash heads, post-GST margin legs) - was TOTAL OUT Rs 0. |
@@ -650,7 +650,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-500 | MEDIUM | W02 | `UNMAPPED` | — | FIXED | FIXED (evidence, 6ef2cc8); PHASE 14 eyebrow already gone from analytics. |
 | R2-501 | MEDIUM | W02 | `UNMAPPED` | — | FIXED | FIXED (evidence, d48e67c); analytics formatCurrency delegates to shared fmtINR. |
 | R2-502 | HIGH | W111 | `production/page.tsx` | — | FIXED | | reg L25119 S33 FIXED f5e859d: output progress unclamped (200% shows 200%; bar cap preserved). |
-| R2-503 | CRITICAL | W65 | `assets.py` | — | TODO | | reg L25164 |
+| R2-503 | CRITICAL | W65 | `assets.py` | — | FIXED | | reg L25164 S33-C FIXED 917f8bf: depreciation per-entry amount bounded by one year under declared method; naive-vs-aware second-entry 500 fixed. |
 | R2-504 | MEDIUM | W65 | `assets.py` | — | FIXED | FIXED a853932; straight_line depreciation write-time self-consistency (salvage 0 => pct == 100/life, else 422). |
 | R2-505 | MEDIUM | W12 | `statutory.py` | — | FIXED | FIXED (evidence, 6ef2cc8); PHASE 16 eyebrow already removed from d/production by the R2-023 sweep; zero PHASE matches in frontend/src. |
 | R2-506 | HIGH | W112 | `safety/page.tsx` | `safety.py` | FIXED | | reg L25316 S33 EVIDENCE-CLOSE: manhours caption already renders API value via R2-203 5c7d445. |
