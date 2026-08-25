@@ -14,14 +14,21 @@ router = APIRouter(prefix="/chat", tags=["Chat & MOM"], dependencies=[Depends(ge
 CHAT_GROUP_ROLE_PATTERN = "^(admin|member|viewer)$"
 
 
+def company_team_for(db: Session, company_id: uuid.UUID, current_user: User) -> Optional[CompanyTeam]:
+    # Every chat identity check must run in the company_team ID space: the
+    # member/message user_id columns are foreign keys to company_team.id, not
+    # users.id. This lookup is the single resolver for the caller's team row.
+    return db.query(CompanyTeam).filter(
+        CompanyTeam.company_id == company_id,
+        CompanyTeam.user_id == current_user.id
+    ).first()
+
+
 def verify_group_membership(db: Session, current_user: User, group_id: uuid.UUID):
     group = db.query(ChatGroup).filter(ChatGroup.id == group_id).first()
     if not group:
         raise HTTPException(status_code=404, detail="Chat group not found")
-    team = db.query(CompanyTeam).filter(
-        CompanyTeam.company_id == group.company_id,
-        CompanyTeam.user_id == current_user.id
-    ).first()
+    team = company_team_for(db, group.company_id, current_user)
     caller_ids = [current_user.id]
     if team:
         caller_ids.append(team.id)
@@ -195,10 +202,7 @@ def send_message(payload: ChatMessageCreate, db: Session = Depends(get_db), curr
     msg = ChatMessage(**payload.model_dump())
     # Stamp the real sender so names resolve on read. The server owns the
     # sender identity, not the client payload. user_id links to company_team.id.
-    ct = db.query(CompanyTeam).filter(
-        CompanyTeam.company_id == group.company_id,
-        CompanyTeam.user_id == current_user.id
-    ).first()
+    ct = company_team_for(db, group.company_id, current_user)
     if ct is None:
         raise HTTPException(status_code=403, detail="Not a member of this company team")
     msg.user_id = ct.id
