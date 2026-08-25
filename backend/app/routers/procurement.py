@@ -170,12 +170,13 @@ class TransactionResponse(BaseModel):
     type: str
     unit: Optional[str] = None
     source_ref_id: Optional[UUID] = None
+    reason: Optional[str] = None   # R2-387: why an adjustment restated the stock
     created_at: datetime
 
     class Config:
         from_attributes = True
 
-# Computed stock (Received - Consumed), grouped by category on the frontend
+# Computed stock (Received - Consumed + Adjustments), grouped by category on the frontend
 class StockRow(BaseModel):
     inventory_id: Optional[UUID] = None
     category: str
@@ -183,6 +184,7 @@ class StockRow(BaseModel):
     unit: Optional[str] = None
     received: float = 0.0
     consumed: float = 0.0
+    adjusted: float = 0.0        # net of "adjustment" corrections (R2-387); kept out of received/consumed
     current_stock: float = 0.0   # may be negative on over-consumption (no clamp)
     reserved: float = 0.0
 
@@ -192,8 +194,8 @@ class StockRow(BaseModel):
 class TransactionCreateRequest(BaseModel):
     project_id: UUID
     material_name: str
-    qty: float = Field(..., gt=0)
-    type: str                      # received, used, transferred, returned
+    type: str                      # received, used, transferred, returned, adjustment
+    qty: float
     category: str = "Uncategorized"
     unit: Optional[str] = None
     source_ref_id: Optional[UUID] = None
@@ -201,6 +203,22 @@ class TransactionCreateRequest(BaseModel):
     # Workflow Controls -> Material Controls -> Restrict Subcontractor Material Issue
     # can be checked independently of the generic Restrict Material Usage / Transfer flags.
     is_subcon_issue: bool = False
+    # R2-387: an "adjustment" restates stock (physical count, write-off, opening
+    # balance, negative-stock repair) without fabricating a consumption event.
+    # The reason is mandatory and stored with the row; adjustments are excluded
+    # from received/consumed aggregates so consumption analytics stay truthful.
+    reason: Optional[str] = None
+
+    @field_validator("qty")
+    @classmethod
+    def _qty_sign_by_type(cls, v: float, info) -> float:
+        if info.data.get("type") == "adjustment":
+            if v == 0:
+                raise ValueError("an adjustment quantity cannot be zero")
+            return v
+        if v <= 0:
+            raise ValueError("qty must be greater than 0")
+        return v
 
 class InventoryPatchRequest(BaseModel):
     category: Optional[str] = None
@@ -211,6 +229,7 @@ class InventoryPatchRequest(BaseModel):
 # Movement classification for stock math
 RECEIVED_TYPES = {"received", "returned"}
 CONSUMED_TYPES = {"used", "transferred"}
+ADJUSTMENT_TYPES = {"adjustment"}
 
 # 1. Indents
 @router.get("/indents", response_model=List[IndentResponse])
@@ -968,6 +987,7 @@ def get_transactions(project_id: UUID, db: Session = Depends(get_db), _: None = 
             type=t.type,
             unit=t.unit,
             source_ref_id=t.source_ref_id,
+            reason=t.reason if t.type in ADJUSTMENT_TYPES else None,
             created_at=t.created_at
         ) for t in txns
     ]
@@ -997,6 +1017,7 @@ def get_stock(project_id: UUID, db: Session = Depends(get_db), _: None = Depends
 
     received: dict = {}
     consumed: dict = {}
+    adjusted: dict = {}
     txn_cat: dict = {}
     txn_unit: dict = {}
     for t in txns:
@@ -1008,6 +1029,10 @@ def get_stock(project_id: UUID, db: Session = Depends(get_db), _: None = Depends
             received[key] = received.get(key, 0.0) + float(t.qty)
         elif t.type in CONSUMED_TYPES:
             consumed[key] = consumed.get(key, 0.0) + float(t.qty)
+        elif t.type in ADJUSTMENT_TYPES:
+            # R2-387: corrections carry a signed delta of their own and never
+            # pollute the received/consumed figures the reports read.
+            adjusted[key] = adjusted.get(key, 0.0) + float(t.qty)
 
     names = set(received) | set(consumed) | {i.material_name for i in invs}
     rows = []
@@ -1018,6 +1043,7 @@ def get_stock(project_id: UUID, db: Session = Depends(get_db), _: None = Depends
         if ceiling is not None:
             r = min(r, ceiling)   # never show more received than was ordered
         c = consumed.get(name, 0.0)
+        adj = adjusted.get(name, 0.0)
         cat = (inv.category if inv else None) or txn_cat.get(name) or "Uncategorized"
         unit = (inv.unit if inv and inv.unit else None) or txn_unit.get(name)
         rows.append(StockRow(
@@ -1027,7 +1053,8 @@ def get_stock(project_id: UUID, db: Session = Depends(get_db), _: None = Depends
             unit=unit,
             received=round(r, 4),
             consumed=round(c, 4),
-            current_stock=round(r - c, 4),   # NO CLAMP — over-consumption goes negative
+            adjusted=round(adj, 4),
+            current_stock=round(r - c + adj, 4),   # NO CLAMP — over-consumption goes negative
             reserved=round(float(inv.reserved_qty), 4) if inv else 0.0,
         ))
     rows.sort(key=lambda x: (x.category, x.material_name))
@@ -1043,8 +1070,16 @@ def create_transaction(req: TransactionCreateRequest, db: Session = Depends(get_
     get_company_membership(db, current_user, project.company_id)
     require_permission(db, current_user, project.company_id, "procurement:edit")
 
-    if req.type not in RECEIVED_TYPES and req.type not in CONSUMED_TYPES:
-        raise HTTPException(status_code=400, detail=f"Unsupported type '{req.type}'. Use one of {sorted(RECEIVED_TYPES | CONSUMED_TYPES)}")
+    if req.type not in RECEIVED_TYPES and req.type not in CONSUMED_TYPES and req.type not in ADJUSTMENT_TYPES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported type '{req.type}'. Use one of {sorted(RECEIVED_TYPES | CONSUMED_TYPES | ADJUSTMENT_TYPES)}",
+        )
+
+    # R2-387: a stock correction must say why. The reason is stored on the row
+    # so the audit trail shows a deliberate restatement, not a phantom movement.
+    if req.type == "adjustment" and not (req.reason or "").strip():
+        raise HTTPException(status_code=422, detail="An inventory adjustment requires a reason describing the correction")
 
     # Workflow Controls: Material Controls (insufficient-stock restrictions)
     if req.type in CONSUMED_TYPES:
@@ -1068,12 +1103,15 @@ def create_transaction(req: TransactionCreateRequest, db: Session = Depends(get_
         type=req.type,
         unit=req.unit,
         source_ref_id=req.source_ref_id,
+        reason=req.reason if req.type == "adjustment" else None,
     )
     db.add(txn)
     db.flush()
 
     if req.type in RECEIVED_TYPES:
         delta = req.qty
+    elif req.type in ADJUSTMENT_TYPES:
+        delta = req.qty   # signed: positive restates stock up, negative writes it off
     else:
         delta = -req.qty
 
@@ -1108,6 +1146,7 @@ def create_transaction(req: TransactionCreateRequest, db: Session = Depends(get_
         type=txn.type,
         unit=txn.unit,
         source_ref_id=txn.source_ref_id,
+        reason=txn.reason if txn.type in ADJUSTMENT_TYPES else None,
         created_at=txn.created_at,
     )
 

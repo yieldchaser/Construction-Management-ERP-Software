@@ -529,6 +529,9 @@ class MaterialTransaction(Base):
     type = Column(String(50), nullable=False) # received, used, transferred, returned
     unit = Column(String(50), nullable=True)
     source_ref_id = Column(UUID(as_uuid=True), nullable=True) # grn_id, dpr_id, etc.
+    # R2-387: mandatory human justification for type="adjustment" stock
+    # corrections; null for every ordinary movement.
+    reason = Column(String(255), nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 
 #
