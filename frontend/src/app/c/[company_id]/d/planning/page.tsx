@@ -1,4 +1,14 @@
 ﻿import { redirect } from "next/navigation";
-export default function PlanningRedirect({ params }: { params: { company_id: string } }) {
-  redirect(`/c/${params.company_id}/d/planning/gantt`);
+
+interface PageProps {
+  params: Promise<{
+    company_id: string;
+  }> | {
+    company_id: string;
+  };
+}
+
+export default async function PlanningRedirect({ params }: PageProps) {
+  const resolvedParams = await (params instanceof Promise ? params : Promise.resolve(params));
+  redirect(`/c/${resolvedParams.company_id}/d/planning/gantt`);
 }
