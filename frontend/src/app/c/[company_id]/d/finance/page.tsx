@@ -1400,7 +1400,15 @@ export default function FinancePage() {
                           </div>
                         </td>
                         <td className="p-3 text-foreground">{p.party_type || "—"}</td>
-                        <td className="p-3 text-right font-bold text-foreground">₹{Math.abs(p.balance || 0).toLocaleString("en-IN")}</td>
+                        <td className="p-3 text-right font-bold text-foreground">
+                          ₹{Math.abs(p.balance || 0).toLocaleString("en-IN")}
+                          {/* R2-418: the net balance alone summed to a number that matched
+                              no tile above; surfacing each row's two directions makes the
+                              column reconcile with the To Pay / To Receive cards. */}
+                          <div className="text-[10px] font-normal text-muted mt-0.5">
+                            Pay ₹{(p.to_pay || 0).toLocaleString("en-IN")} · Receive ₹{(p.to_receive || 0).toLocaleString("en-IN")}
+                          </div>
+                        </td>
                         <td className="p-3">
                           <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider ${statusChip(p.status)}`}>
                             {p.status}
