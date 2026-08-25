@@ -448,9 +448,15 @@ def test_pin_R2_532_safety_create_schemas_typed_ids():
 
 
 def test_pin_R2_174_txn_party_name_resolves_library_party():
+    # R2-131: _txn_party_name routes through the shared resolve_party_name helper;
+    # R2-174's LibraryParty resolution now lives in app/party_names.py itself.
     src = _read("app/routers/finance.py")
+    assert "from app.party_names import resolve_party_name" in src, "R2-174 finance party-name import regressed"
     body = src.split("def _txn_party_name", 1)[1].split("def ", 1)[0]
-    assert "LibraryParty" in body, "R2-174 _txn_party_name no longer resolves through LibraryParty"
+    assert 'resolve_party_name(db, team_id, fallback="Unknown Party")' in body, "R2-174 _txn_party_name no longer routes through the shared resolver"
+    helper = _read("app/party_names.py")
+    assert "team.library_party_id" in helper, "R2-174 shared resolver no longer walks library_party_id"
+    assert "models.LibraryParty" in helper, "R2-174 shared resolver no longer resolves through LibraryParty"
 
 
 def test_pin_R2_176_upload_content_type_sniffing():
