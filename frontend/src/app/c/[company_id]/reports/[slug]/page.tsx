@@ -878,10 +878,16 @@ export default function DynamicReportViewPage() {
         <div className="flex-1 overflow-auto p-6">
           {slug === "lead-status-funnel" ? (() => {
             const totalLeadsCount = crmLeads.length;
-            const contactedLeads = crmLeads.filter(l => ["Contacted", "Qualified", "Proposal Sent", "Negotiation", "Won"].includes(l.status)).length;
-            const siteVisitLeads = crmLeads.filter(l => ["Site Visit", "Qualified", "Proposal Sent", "Negotiation", "Won"].includes(l.status)).length;
-            const quotationLeads = crmLeads.filter(l => ["Proposal Sent", "Negotiation", "Won"].includes(l.status)).length;
-            const wonLeads = crmLeads.filter(l => l.status === "Won").length;
+            // R2-437: these arrays matched none of the seven statuses the CRM
+            // actually ships (backend crm.py DEFAULT_STATUSES: New Lead,
+            // Follow-Up, Proposal Stage, Converted, Won, Lost, No Response,
+            // Irrelevant Lead), so every stage below the baseline read 0% for
+            // ever. Each stage now accepts the shipped names alongside the
+            // legacy ones, cumulative down the funnel, dead ends excluded.
+            const contactedLeads = crmLeads.filter(l => ["Contacted", "Follow-Up", "Qualified", "Site Visit", "Proposal Sent", "Proposal Stage", "Negotiation", "Converted", "Won"].includes(l.status)).length;
+            const siteVisitLeads = crmLeads.filter(l => ["Qualified", "Site Visit", "Proposal Sent", "Proposal Stage", "Negotiation", "Converted", "Won"].includes(l.status)).length;
+            const quotationLeads = crmLeads.filter(l => ["Proposal Sent", "Proposal Stage", "Negotiation", "Converted", "Won"].includes(l.status)).length;
+            const wonLeads = crmLeads.filter(l => ["Won", "Converted"].includes(l.status)).length;
 
             const contactedPct = totalLeadsCount > 0 ? Math.round((contactedLeads / totalLeadsCount) * 100) : 0;
             const siteVisitPct = totalLeadsCount > 0 ? Math.round((siteVisitLeads / totalLeadsCount) * 100) : 0;
