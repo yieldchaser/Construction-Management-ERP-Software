@@ -436,7 +436,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-285 | HIGH | W06 | `settings.py` | — | FIXED | FIXED 5e261ba; approval rules reject empty amount bands, unknown approvers, and overlapping bands per feature type. |
 | R2-286 | MEDIUM | W04 | `reports.py` | — | FIX_VERIFIED | `2ddc411` | reg L12577; reports.py direct-fix pass; suite RC-077 |
 | R2-287 | MEDIUM | W10 | `projects.py` | — | FIXED | FIXED 061f949 (residue close; apply half was already fixed); negative opening balances 422, non-canonical direction 422 instead of silent 200-with-0. |
-| R2-288 | CRITICAL | W06 | `settings.py` | — | TODO | | reg L12645 |
+| R2-288 | CRITICAL | W06 | `settings.py` | — | FIXED | | reg L12645 S33-C FIXED e9139f1: statutory payroll rates bounded (pf 0-12, esi 0-1/0-5, tds >=0) + confirm_changes gate on rate edits. |
 | R2-289 | HIGH | W36 | `bi_export.py` | `budget.py` | FIXED | | reg L12691 S33 FIXED 79890c1: BI budget-variance partitions EXPENSE_INVOICE_TYPES per head like Budget (other_actual added); omission/cancel/tz parts pre-landed. |
 | R2-290 | MEDIUM | W06 | `settings.py` | — | FIXED | FIXED 582d215; branch GSTIN enforces the canonical 15-char pattern (byte-identical to the frontend validator); salary breakup must be a valid partition (sum 100, basic_pct bounded). Deviation: GSTIN-state-vs-branch-state check deferred to R2-114/D4 (branch state is free text). |
 | R2-291 | HIGH | W69 | `backend/app/main.py` | `delete_logs.py` | FIXED | FIXED aeb5642; delete-logs router moved to /apis/v3/delete-logs, path ids UUID-typed (422 not ValueError-500), catch-all /apis/v3/{path} 404 handler added. |
@@ -537,7 +537,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-386 | HIGH | W05 | `procurement.py` | `billing.py`, `models.py`, `rfq.py` | FIX_VERIFIED | `03db7a3` | reg L18068; procurement.py direct-fix pass; suite RC-087 |
 | R2-387 | HIGH | W05 | `procurement.py` | — | TODO | | reg L18282 |
 | R2-388 | MEDIUM | W01 | `finance.py` | `delete-logs/page.tsx`, `main.py`, `delete_logs.py` | WONTFIX | `4b7add4` | reg L18410; see D-007 — 403 contract kept, guard asserts refusal instead |
-| R2-389 | CRITICAL | W06 | `settings.py` | `models.py`, `finance.py`, `reports.py` | TODO | | reg L18662 |
+| R2-389 | CRITICAL | W06 | `settings.py` | `models.py`, `finance.py`, `reports.py` | FIXED | | reg L18662 S33-C EVIDENCE-CLOSED abdd36c: team list reads mobile (R2-390 side effect); GET crash site now pinned. |
 | R2-390 | HIGH | W06 | `settings.py` | `quality.py` | FIXED | | reg L18719 S33 FIXED 6e58eec (H-3way-settings): team-role assignment resolves user once, missing backing user answers 200 not 500, so privilege change never lands while reporting failure; test added. |
 | R2-391 | HIGH | W18 | `quality.py` | `models.py`, `dpr.py`, `reports.py` | FIXED | FIXED ac10a52; GET /quality/inspections/{insp_id}/responses returns per-item rows incl. remarks/photo_url, company-gated. |
 | R2-392 | CRITICAL | W20 | `zoho_books.py` | `errors.py`, `cors.py`, `settings.py` | TODO | | reg L19238 |
