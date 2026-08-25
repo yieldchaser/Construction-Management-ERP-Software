@@ -500,6 +500,16 @@ def create_po(req: POCreateRequest, db: Session = Depends(get_db), current_user:
     get_company_membership(db, current_user, req.company_id)
     verify_project_in_company(db, req.project_id, req.company_id)
     require_permission(db, current_user, req.company_id, "procurement:edit")
+    # R2-478: Settings -> Workflow Controls -> Material Purchase Order
+    # Restriction was stored and rendered but read by nothing. With the control
+    # armed, purchase orders may only be raised from an approved material indent
+    # (R2-372 linkage); direct unlinked PO creation is refused.
+    _company = get_company(db, req.company_id)
+    if _company and _company.po_restriction and req.indent_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Material Purchase Order Restriction: purchase orders may only be raised from an approved material indent",
+        )
     # Check if PO number already exists
     existing = db.query(PurchaseOrder).filter(
         PurchaseOrder.company_id == req.company_id,
