@@ -22,6 +22,39 @@ const TABS = [
   { label: "Inspection", slug: "quality" },
 ];
 
+// Modules that live only at company level. Each entry mirrors the exact final
+// destination of that module's legacy p/[project_id] redirect stub; withProject
+// appends ?project= so the company page opens scoped to this project.
+const MORE_TABS = [
+  { label: "Billing", path: "/d/billing", withProject: true },
+  { label: "Budget", path: "/d/budget", withProject: true },
+  { label: "BOQ Budgeting", path: "/d/budgeting/boq", withProject: false },
+  { label: "Chat", path: "/d/chat", withProject: true },
+  { label: "CRM", path: "/d/crm", withProject: true },
+  { label: "Custom Fields", path: "/d/custom-fields", withProject: true },
+  { label: "Daily Progress", path: "/d/dpr", withProject: true },
+  { label: "Depreciation", path: "/d/depreciation", withProject: true },
+  { label: "Drawings", path: "/d/drawings", withProject: true },
+  { label: "Face Recognition", path: "/d/face-recognition", withProject: true },
+  { label: "Finance", path: "/d/finance", withProject: true },
+  { label: "HR & Payroll", path: "/d/hr", withProject: true },
+  { label: "Labour", path: "/d/labour", withProject: true },
+  { label: "Planning Gantt", path: "/d/planning/gantt", withProject: false },
+  { label: "Procurement", path: "/d/procurement", withProject: true },
+  { label: "Procurement RFQ", path: "/d/procurement/rfq", withProject: false },
+  { label: "Vendor Performance", path: "/d/procurement/vendor-performance", withProject: false },
+  { label: "Production", path: "/d/production", withProject: true },
+  { label: "Reports", path: "/d/reports", withProject: true },
+  { label: "Calculators", path: "/d/reports/calculators", withProject: false },
+  { label: "Safety", path: "/d/safety", withProject: true },
+  { label: "Statutory", path: "/d/statutory", withProject: true },
+  { label: "Subcon Scorecards", path: "/d/subcon/scorecards", withProject: false },
+  { label: "WO Amendments", path: "/d/subcon/work-orders/amendments", withProject: false },
+  { label: "Three-Way Match", path: "/d/three-way", withProject: true },
+  { label: "Towers", path: "/d/towers", withProject: true },
+  { label: "Wastage", path: "/d/wastage", withProject: true },
+];
+
 const STATUSES = ["Ongoing", "Completed", "On Hold", "Cancelled", "Planning"];
 
 async function readErrorDetail(res: Response): Promise<string> {
@@ -51,6 +84,11 @@ export default function ProjectDetailLayout({ children }: { children: React.Reac
   const [project, setProject] = useState<ProjectInfo | null>(null);
   const [status, setStatus] = useState("Ongoing");
   const [savingStatus, setSavingStatus] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
+
+  useEffect(() => {
+    setMoreOpen(false);
+  }, [pathname]);
 
   const base = `/c/${companyId}/p/${projectId}`;
   const currentSlug =
@@ -168,6 +206,41 @@ export default function ProjectDetailLayout({ children }: { children: React.Reac
             </Link>
           );
         })}
+
+        {/* Overflow menu for modules that live only at company level */}
+        <div className="relative shrink-0 ml-auto">
+          <button
+            type="button"
+            onClick={() => setMoreOpen((o) => !o)}
+            className={`whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium transition-all ${
+              moreOpen
+                ? "bg-primary/15 text-primary"
+                : "text-muted hover:text-foreground hover:bg-elevated"
+            }`}
+          >
+            More ▾
+          </button>
+          {moreOpen && (
+            <>
+              <div
+                className="fixed inset-0 z-40"
+                onClick={() => setMoreOpen(false)}
+                aria-hidden="true"
+              />
+              <div className="absolute right-0 top-full mt-1 z-50 w-[26rem] max-h-80 overflow-y-auto rounded-md border border-border-custom bg-card shadow-xl p-2 grid grid-cols-2 gap-1">
+                {MORE_TABS.map((m) => (
+                  <Link
+                    key={m.path}
+                    href={`/c/${companyId}${m.path}${m.withProject ? `?project=${projectId}` : ""}`}
+                    className="whitespace-nowrap rounded px-2 py-1.5 text-xs text-muted hover:text-foreground hover:bg-elevated transition-all"
+                  >
+                    {m.label}
+                  </Link>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Tab content */}
