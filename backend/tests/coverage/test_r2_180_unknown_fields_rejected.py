@@ -56,7 +56,15 @@ def test_set_value_rejects_unknown_field(client, db, make_tenant, auth_headers):
 
     from app import models
 
-    assert db.query(models.CustomFieldValue).count() == 0
+    # R2-157's read-path rework left the suite with sibling tests that store
+    # values in the shared test DB, so the no-write check must be scoped to
+    # this tenant rather than a global count.
+    assert (
+        db.query(models.CustomFieldValue)
+        .filter_by(company_id=comp.id)
+        .first()
+        is None
+    )
 
 
 def test_valid_payload_still_creates(client, make_tenant, auth_headers):
