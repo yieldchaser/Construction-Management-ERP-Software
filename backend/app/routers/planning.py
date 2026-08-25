@@ -2,7 +2,7 @@ from uuid import UUID
 from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import func
+from sqlalchemy import func, or_, and_
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.auth import get_current_user, verify_company_access, verify_project_access, get_company_membership, require_permission
@@ -284,7 +284,8 @@ def get_company_tasks(company_id: UUID, db: Session = Depends(get_db), _: None =
 
 @router.get("/tasks/lookahead", response_model=List[LookaheadTaskResponse])
 def get_lookahead(project_id: UUID, days: int = 14, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
-    """Rolling lookahead: tasks whose scheduled window overlaps the next `days` days.
+    """Rolling lookahead: tasks whose scheduled window overlaps the next `days` days,
+    plus any not-yet-completed task that has already slipped past its end date.
     Derived from real tasks only (no new table)."""
     project = db.query(Project).filter(Project.id == project_id).first()
     if not project:
@@ -296,8 +297,16 @@ def get_lookahead(project_id: UUID, days: int = 14, db: Session = Depends(get_db
     tasks = (
         db.query(Task)
         .filter(Task.project_id == project_id)
-        .filter(Task.start_date <= window_end)
-        .filter(Task.end_date >= window_start)
+        .filter(
+            or_(
+                # Scheduled work whose window overlaps the forward window.
+                and_(Task.start_date <= window_end, Task.end_date >= window_start),
+                # Open work that has already slipped past its planned end date:
+                # a lookahead exists to surface slippage, so an incomplete task
+                # stays visible until it is actually done (R2-458).
+                and_(Task.end_date < window_start, Task.status != "completed"),
+            )
+        )
         .order_by(Task.start_date.asc())
         .all()
     )
