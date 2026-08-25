@@ -178,18 +178,18 @@ export default function ChatPage() {
     e.preventDefault();
     if (!newGroupName.trim()) return;
 
-    const currentLoggedUserId = typeof window !== "undefined" ? localStorage.getItem("user_id") || "e0000000-0000-0000-0000-000000000000" : "e0000000-0000-0000-0000-000000000000";
-
     try {
       const res = await fetch(`${getApiHost()}/apis/v3/chat/groups`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
+        // R2-270: created_by references company_team.id, not users.id - it is
+        // resolved server-side from the authenticated session, so the client
+        // must not send an id of the wrong kind.
         body: JSON.stringify({
           company_id: companyId,
           project_id: projectId,
           name: newGroupName,
           group_type: newGroupType,
-          created_by: currentLoggedUserId,
         }),
       });
       if (res.ok) {
