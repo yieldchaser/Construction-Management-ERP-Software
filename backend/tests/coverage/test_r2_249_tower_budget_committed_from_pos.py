@@ -7,8 +7,9 @@ single PO of 47200). The no-towers branch of the same function already
 computed committed from purchase orders; the tower loop must do the same,
 counting only live POs (sent, partial, received — the R2-242 whitelist).
 
-Documents carry no tower_id yet (R2-248 / CD-5), so committed is a
-project-level figure repeated on each tower row until a real split exists.
+Documents carry no tower_id yet (R2-248 / CD-5), so the endpoint returns
+one project-wide "Overall Project" row (R2-228/374) whose committed is
+derived from live POs until a real split exists.
 """
 import datetime
 import uuid
@@ -69,8 +70,12 @@ def test_tower_budget_committed_comes_from_pos_not_budget(client, db, make_tenan
     r = client.get(f"/apis/v3/budget/committed/{project.id}/towers", headers=hdr)
     assert r.status_code == 200, r.text
     body = r.json()
-    assert len(body) == 2, body
+    assert len(body) == 1, body
 
-    for row in body:
-        assert row["committed"] != row["budget"], row
-        assert row["committed"] == 600.0, row
+    overall = body[0]
+    assert overall["tower_id"] is None, overall
+    assert overall["tower_name"] == "Overall Project", overall
+    # Committed comes from the whitelisted live POs (100+200+300),
+    # not an echo of the budget.
+    assert overall["committed"] != overall["budget"], overall
+    assert overall["committed"] == 600.0, overall

@@ -4,7 +4,8 @@ Gate: GET /towers/{project_id}/consolidated-pnl summed total_payable over every
 bill regardless of invoice_type, so purchases, expenses, subcontractor bills and
 even payment_in money-receipts inflated the billed figure. After the fix only
 revenue invoices (sale, material_sale) count, on both the no-tower "Overall
-Project" branch and the per-tower branch.
+Project" branch and the towers branch (which returns one project-wide
+Overall row since documents carry no tower_id — R2-228/374).
 """
 import datetime
 import uuid
@@ -72,6 +73,9 @@ def test_consolidated_pnl_billed_counts_revenue_invoices_only(client, db, make_t
     r = client.get(f"/apis/v3/towers/{project.id}/consolidated-pnl", headers=hdr)
     assert r.status_code == 200, r.text
     rows = r.json()
-    per_tower = [row for row in rows if row["tower_code"] != "ALL"]
-    assert len(per_tower) == 1, rows
-    assert per_tower[0]["total_billed"] == 168000.0, per_tower
+    assert len(rows) == 1, rows
+    overall = rows[0]
+    assert overall["tower_code"] == "ALL", overall
+    assert overall["tower_id"] is None, overall
+    # 118000 + 50000; purchases/expenses/subcon/payment_in are not billed value.
+    assert overall["total_billed"] == 168000.0, overall

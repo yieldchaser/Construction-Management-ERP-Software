@@ -6,7 +6,9 @@ Bill on the project with no invoice_type filter, so revenue invoices
 reported as cost — the audit repro showed a 118000 sale invoice and an
 11800 payment_in voucher inside actual: 271400. The
 EXPENSE_INVOICE_TYPES filter now excludes them; this test pins that a
-sale bill and a payment_in voucher never inflate any tower row's Actual.
+sale bill and a payment_in voucher never inflate the Overall row's Actual
+(the endpoint returns one project-wide row since documents carry no
+tower_id — R2-228/374).
 """
 import datetime
 import uuid
@@ -68,7 +70,11 @@ def test_tower_actual_excludes_revenue_and_settlement_bills(client, db, make_ten
     r = client.get(f"/apis/v3/budget/committed/{project.id}/towers", headers=hdr)
     assert r.status_code == 200, r.text
     body = r.json()
-    assert len(body) == 2, body
+    assert len(body) == 1, body
 
-    for row in body:
-        assert row["actual"] == 1000.0, row
+    overall = body[0]
+    assert overall["tower_id"] is None, overall
+    assert overall["tower_name"] == "Overall Project", overall
+    # Only the purchase bill is cost; sale/material_sale/payment_in noise
+    # never reaches Actual.
+    assert overall["actual"] == 1000.0, overall
