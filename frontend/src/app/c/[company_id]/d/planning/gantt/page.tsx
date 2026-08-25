@@ -429,9 +429,9 @@ export default function GanttSchedulerPage() {
 
     try {
       const evaluatedQty = progressQty ? evaluateFormula(progressQty) : null;
+      // No identity in the body: the server stamps the authenticated user as
+      // the comment author, so the feed can never be signed by a fabricated name.
       const body = {
-        user_id: "e0000000-0000-0000-0000-000000000100", // simulated logged-in user ID
-        user_name: "Vikram Joshi (Site Engineer)",
         message_text: newCommentText || (customVoiceUrl ? "Voice note logged" : `Logged progress takeoff: ${evaluatedQty}`),
         progress_qty_added: evaluatedQty,
         voice_note_url: customVoiceUrl || null

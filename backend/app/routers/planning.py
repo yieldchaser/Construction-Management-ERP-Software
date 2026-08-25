@@ -621,8 +621,6 @@ class TodoResponse(BaseModel):
         from_attributes = True
 
 class CommentCreate(BaseModel):
-    user_id: UUID
-    user_name: str
     message_text: Optional[str] = None
     media_url: Optional[str] = None
     voice_note_url: Optional[str] = None
@@ -732,13 +730,16 @@ def create_task_comment(task_id: UUID, payload: CommentCreate, db: Session = Dep
     project = db.query(Project).filter(Project.id == task.project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
-    get_company_membership(db, current_user, project.company_id)
+    membership = get_company_membership(db, current_user, project.company_id)
     require_permission(db, current_user, project.company_id, "planning:edit")
 
+    # Actor fields are server-owned: the feed records who is actually
+    # authenticated (the caller's company_team row and account name), never a
+    # name or id supplied in the request body.
     comment = TaskComment(
         task_id=task_id,
-        user_id=payload.user_id,
-        user_name=payload.user_name,
+        user_id=membership.id,
+        user_name=current_user.name or "",
         message_text=payload.message_text,
         media_url=payload.media_url,
         voice_note_url=payload.voice_note_url,
