@@ -13,6 +13,7 @@ from pydantic import BaseModel, Field
 from app.database import get_db
 from app.auth import get_current_user, verify_company_access, verify_project_access, get_company_membership, require_permission
 from app.models import Company, Equipment, EquipmentDeployment, FuelLog, MaintenanceSchedule, Project, User
+from app.workflow_controls import enforce_entry_creation_window
 
 router = APIRouter(prefix="/equipment", tags=["Equipment & Machinery Tracking"], dependencies=[Depends(get_current_user)])
 
@@ -164,6 +165,9 @@ def deploy_equipment(
     if proj.company_id != eq.company_id:
         raise HTTPException(status_code=403, detail="Equipment does not belong to the project's company")
 
+    # Workflow Controls: Entry Controls (creation date window)
+    enforce_entry_creation_window(db, eq.company_id, payload.start_date)
+
     # Set any current active deployments to finished
     active = db.query(EquipmentDeployment).filter(
         EquipmentDeployment.equipment_id == equipment_id,
@@ -236,6 +240,8 @@ def log_fuel(
     logged_at = _as_aware(payload.logged_date)
     if logged_at > datetime.now(timezone.utc):
         raise HTTPException(status_code=400, detail="logged_date cannot be in the future")
+    # Workflow Controls: Entry Controls (creation date window)
+    enforce_entry_creation_window(db, eq.company_id, payload.logged_date)
     deployments = db.query(EquipmentDeployment).filter(
         EquipmentDeployment.equipment_id == equipment_id,
         EquipmentDeployment.project_id == payload.project_id,
@@ -304,6 +310,9 @@ def schedule_maintenance(
         raise HTTPException(status_code=404, detail="Equipment not found")
     get_company_membership(db, current_user, eq.company_id)
     require_permission(db, current_user, eq.company_id, "equipment:edit")
+
+    # Workflow Controls: Entry Controls (creation date window)
+    enforce_entry_creation_window(db, eq.company_id, payload.scheduled_date)
 
     data = payload.model_dump()
     db_data = {

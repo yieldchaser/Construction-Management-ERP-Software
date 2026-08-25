@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 from app.database import get_db
 from app.auth import get_current_user, verify_project_access, get_company_membership, require_permission
 from app.models import SubcontractorAttendance, Project, User, CompanyTeam
+from app.workflow_controls import enforce_entry_creation_window, enforce_entry_editing_window
 
 router = APIRouter(prefix="/subcon", tags=["Subcontractor Attendance"], dependencies=[Depends(get_current_user)])
 
@@ -48,6 +49,10 @@ def create_subcon_attendance(payload: SubconAttendanceCreate, db: Session = Depe
         raise HTTPException(status_code=404, detail="Project not found")
     get_company_membership(db, current_user, project.company_id)
     require_permission(db, current_user, project.company_id, "attendance:edit")
+    # Workflow Controls: Entry Controls — this endpoint is the primary input to a
+    # subcontractor's RA bill, so a back-dated attendance must obey the company's
+    # creation window (R2-477) exactly like DPR/billing/planning entries.
+    enforce_entry_creation_window(db, project.company_id, payload.attendance_date)
     subcontractor = db.query(CompanyTeam).filter(CompanyTeam.id == payload.subcontractor_id).first()
     if not subcontractor or subcontractor.company_id != project.company_id:
         raise HTTPException(status_code=403, detail="Subcontractor does not belong to this company")
@@ -68,7 +73,9 @@ def create_subcon_attendance(payload: SubconAttendanceCreate, db: Session = Depe
     # Filter by date and normalized role
     for item in existing:
         if item.attendance_date.date() == date_only and (item.labor_role or "").strip().lower() == role_key:
-            # Update existing
+            # Upsert onto an already-old row is an edit of a dated record and
+            # must obey the editing window too (R2-477).
+            enforce_entry_editing_window(db, project.company_id, item.attendance_date)
             item.worker_count = payload.worker_count
             item.shift_multiplier = payload.shift_multiplier
             item.overtime_hours = payload.overtime_hours

@@ -1034,6 +1034,8 @@ def list_leaves(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = 
 def create_leave_request(company_id: uuid.UUID, data: LeaveRequestCreate, db: Session = Depends(get_db),     _: None = Depends(verify_company_access), current_user: User = Depends(get_current_user)):
     if data.project_id:
         verify_project_in_company(db, data.project_id, company_id)
+    # Workflow Controls: Entry Controls (creation date window)
+    enforce_entry_creation_window(db, company_id, data.start_date)
     new_leave = LeaveRequest(
         company_id=company_id,
         project_id=data.project_id,

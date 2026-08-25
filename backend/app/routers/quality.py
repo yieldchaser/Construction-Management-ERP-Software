@@ -30,6 +30,7 @@ from app.models import (
     QualityChecklist, ChecklistItem, SiteInspection,
     InspectionResponse, NCR, MaterialTestResult, Project, User
 )
+from app.workflow_controls import enforce_entry_creation_window
 
 router = APIRouter(prefix="/quality", tags=["Quality Control & Inspections"], dependencies=[Depends(get_current_user)])
 
@@ -250,6 +251,8 @@ def create_inspection(payload: InspectionCreate, db: Session = Depends(get_db), 
         raise HTTPException(status_code=404, detail="Project not found")
     get_company_membership(db, current_user, project.company_id)
     require_permission(db, current_user, project.company_id, "quality:edit")
+    # Workflow Controls: Entry Controls (creation date window)
+    enforce_entry_creation_window(db, project.company_id, payload.inspection_date)
     insp = SiteInspection(**payload.model_dump(), inspected_by=current_user.id)
     db.add(insp)
     db.commit()

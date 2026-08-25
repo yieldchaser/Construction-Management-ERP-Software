@@ -14,7 +14,7 @@ from app.models import (
     Project, User, ApprovalRule, CompanyTeam, LibraryParty
 )
 from app.approvals import find_matching_rule, match_approver, levels_approved, user_already_acted, record_action
-from app.workflow_controls import enforce_stock_availability, get_company, get_default_terms
+from app.workflow_controls import enforce_stock_availability, enforce_entry_creation_window, get_company, get_default_terms
 from app.utils.pdf_generator import generate_document_pdf
 from app.utils.document_pdf import resolve_pdf_branding, resolve_supplier_tax_details
 from pydantic import BaseModel, Field, field_validator
@@ -688,6 +688,9 @@ def get_grns(project_id: UUID, db: Session = Depends(get_db), _: None = Depends(
 def create_grn(req: GRNCreateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     get_company_membership(db, current_user, req.company_id)
     require_permission(db, current_user, req.company_id, "procurement:edit")
+    # Workflow Controls: Entry Controls (creation date window) — a GRN dated
+    # outside the window must be rejected like any other back-dated entry.
+    enforce_entry_creation_window(db, req.company_id, req.received_date)
     grn_number = req.grn_number.strip() if req.grn_number else None
     if not grn_number:
         grn_number = _generate_grn_number(db, req.company_id, req.project_id)
