@@ -2,6 +2,16 @@
 
 Append-only. Every working block ends with a 5-line entry. Never edit an existing entry; if a commit was reverted, add a new entry.
 
+## Session 33 (cont. 14) — FOUNDER DECISIONS EXECUTED (2026-08-26)
+
+- Founder decided ALL 22 gated items (docs/VERIFICATION_DECISIONS_RESOLVED.md on claude/siteflow-live-verification-dba0f1). Key overrides: D4 derives POS from Project.state (IGST s.12(3), NOT party address); D3 keep duality + shared classifier, defer re-architecture; D1 rename Billed In/Out + ex-GST margin; D2/CD-4 are POLICY (defaults given, founder overrides).
+- EXECUTED per the sequenced run order: R2-728 pinned (b2d42a7 — punch tz already fixed by 5ae8c5d; R2-729 loop already fixed by 6ce1203, pin still owed). **D-V1+D6+D-V5 demo eradication `847ba45`** (23 files: _ensure_demo_company/_seed_demo_projects/boot auto_seed_database deleted; 13 pages + 2 attendance writes off sentinel fallbacks; email allowlist default emptied; 879 tests + tsc green). **D-V2+R2-613 `7e8b54d`** (purge migration: backup tables -> keep-earliest delete -> all 8 constraints in one idempotent migration; three_way_matches was the live-dup table). **CD-1 `8b9d322`** (categories cut to the THREE enforced — Payment Entries/Payment Request/Purchase Order; agent correctly kept Payment Entries which R2-342 wired; legacy rules preserved hidden, 422 on hidden creation). **D7 `2f3e63f`** (backfill endpoint w/ dry-run per-tenant matrix; RBAC_EMPTY_PERMS_POLICY open/closed/per_company + per-tenant flips; NULL-role non-partner -> Viewer; full mitigation suite per decision).
+- Checkpointed: suite green, pushed through 2f3e63f.
+- **STALLED — dispatch repeatedly failed (provider windows): D4 place-of-supply (full spec in this entry's dispatch history: Project.state vs GSTIN prefix, IGST inter-state, state-required 422, would-change report endpoint, forward-only).** Also queued per the sequence table: R2-712/719 fabricated-data sweep, CD-8 PO cancel (replicate R2-370), D5 frontend inline BOQ row (endpoint exists budgeting.py:405), CD-2 shared calc module + contract tests, CD-9 boundary doc + dead class, CD-6 geofence badge, D-V4+R2-711+R2-717 gates, D3 shared classifier, D-012 remove 86 empty columns, D-010 remove upload affordances, D-013 trigger note, D2/CD-4 policy settings (defaults per decisions file), R2-730 migration run. POLICY items D2+CD-4 need founder defaults confirmed before build.
+- DECISIONS.md status updates pending (all 22 -> ANSWERED with pointers to the decisions file).
+
+---
+
 ## Session 33 (cont. 13) — Phase C: ~40 more CRITICALs closed (2026-08-24)
 
 - Clusters cleared: settings remainder (R2-462 adb2b3c 8 stubs await params / R2-541 4ad5792 five writes gated settings:manage / R2-547 evidence=R2-288), transaction pages (R2-173 5692d6d cash tiles fold Payment rows / R2-490 a44acaa totals classify all types), misc singles A (R2-046 0f62538 More menu / R2-047 3a5f00f sidebar Project Hub + More Modules / R2-099 933facf finance loading+error honesty), misc B (R2-112 e223de2 frontend rbac sync / R2-116 evidence / R2-123 evidence / R2-131 8de21ee shared resolve_party_name), misc C (R2-139 evidence / R2-157 31bca13 read-tenancy / R2-172 aa17f72 WORKFLOW_MODULES x7 + mirror / R2-187 evidence), three_way (R2-132/133/538 evidence, R2-240 a1ad81e baseline cap).
