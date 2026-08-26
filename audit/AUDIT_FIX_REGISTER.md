@@ -560,8 +560,8 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-409 | HIGH | W25 | `tally.py` | — | FIXED | | reg L20131 S33 FIXED 19cef93: payslip CSV identity block (pay period/run id/company/project) appended; lives in hr.py not tally.py. |
 | R2-410 | CRITICAL | W02 | `UNMAPPED` | — | FIXED | | reg L20196 S33-C FIXED c6f2dfb: Tally export posts GST split (sale/purchase legs, Duties&Taxes parent, balanced vouchers). |
 | R2-411 | MEDIUM | W15 | `models.py` | — | FIXED | FIXED 5847922; tally export emits ledger masters with ACTION=Alter + ALTERID (create-if-absent) and vouchers carry <REFERENCE> (invoice_number / payment reference_number). |
-| R2-412 | HIGH | W73 | `zatca.py` | — | TODO | | reg L20303 |
-| R2-413 | HIGH | W73 | `zatca.py` | `models.py`, `reports.py`, `billing.py` | TODO | | reg L20329 |
+| R2-412 | HIGH | W73 | `zatca.py` | — | FIXED | | reg L20303 S33 FIXED 28e8c0f: Zatca QR 409s unless enabled + VAT stored; GSTIN never fills tax slots. |
+| R2-413 | HIGH | W73 | `zatca.py` | `models.py`, `reports.py`, `billing.py` | FIXED | | reg L20329 S33 FIXED 34ec614: Zatca lines read real desc keys, derive qty x rate, 409 on unreconciled totals - fabricated Item line dead. |
 | R2-414 | MEDIUM | W04 | `reports.py` | — | FIX_VERIFIED | `d4db32f` | reg L20452; reports.py direct-fix pass; suite RC-080 |
 | R2-415 | HIGH | W24 | `labour.py` | — | FIXED | | reg L20535 S33 FIXED d81c0a8: BOCW return month validated, contractor resolved from store, figures derived from attendance/payroll/bills. |
 | R2-416 | CRITICAL | W43 | `finance/page.tsx` | — | FIXED | | reg L20647 S33-C EVIDENCE: companyId-gated effect live since R2-022 5fda93e (+R2-099 loading/error states). |
