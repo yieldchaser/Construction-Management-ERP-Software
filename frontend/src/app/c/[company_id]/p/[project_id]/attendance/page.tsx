@@ -86,6 +86,7 @@ function isGeofenceConfigured(settings: any): boolean {
   const lat = parseFloat(parts[0].trim());
   const lng = parseFloat(parts[1].trim());
   if (!Number.isFinite(lat) || !Number.isFinite(lng)) return false;
+  if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return false;
   return true;
 }
 
