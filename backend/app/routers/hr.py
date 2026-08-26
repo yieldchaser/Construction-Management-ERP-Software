@@ -30,7 +30,8 @@ from app.auth import get_current_user, verify_project_in_company, verify_company
 from app.models import (
     StaffEmployee, AttendanceLog, Timesheet,
     TimesheetEntry, PayrollRun, PayrollLineItem, Project, LeaveRequest,
-    Holiday, Designation, LeaveTemplate, PayrollProfile, User, Company
+    Holiday, Designation, LeaveTemplate, PayrollProfile, User, Company,
+    CompanyPayrollSettings
 )
 from app.workflow_controls import enforce_entry_creation_window
 
@@ -266,6 +267,8 @@ class PayslipResponse(BaseModel):
     other_deductions: float
     total_deductions: float
     net_payable: float
+    # D2: always returned — whether days were counted from punch/leave or assumed fallback
+    attendance_source: str = "recorded"
 
 
 class PayrollRunResponse(BaseModel):
@@ -642,7 +645,7 @@ def _working_days_in_month(payroll_month: str, weekly_off_days) -> int:
     )
 
 
-def _compute_payslip(emp: StaffEmployee, days_present: float, days_in_month: int, overtime_hours: float = 0.0) -> dict:
+def _compute_payslip(emp: StaffEmployee, days_present: float, days_in_month: int, overtime_hours: float = 0.0, pf_wage_ceiling: float = 15000.0) -> dict:
     """
     Compute one employee's payslip.
 
@@ -650,11 +653,13 @@ def _compute_payslip(emp: StaffEmployee, days_present: float, days_in_month: int
     pro-rata ratio is capped at 1.0 so attendance above days_in_month never
     pays more than one full month (R2-354).
     PF employee  = Basic * pf_employee_pct%   (on prorated basic)
-    PF employer  = Basic * pf_employer_pct%
+    PF employer  = Basic(capped at pf_wage_ceiling) * pf_employer_pct% (CD-4)
     ESI employee = Gross * esi_employee_pct%  (only if is_esi_applicable)
     ESI employer = Gross * esi_employer_pct%
     TDS          = tds_monthly (fixed, not prorated)
     Net          = Gross - PF_emp - ESI_emp - TDS
+    PF ceiling is applied in exactly one place here for employer PF (CD-4);
+    employee PF is also capped to the same wage base for ledger consistency.
     """
     # R2-354: cap the pro-rata at one full month. days_present counts calendar
     # attendance against the resolved period denominator (R2-481: derived from
@@ -670,8 +675,12 @@ def _compute_payslip(emp: StaffEmployee, days_present: float, days_in_month: int
     gross = round(full_gross * ratio, 2) + ot_amount
     basic_pro = round(float(emp.basic_salary) * ratio, 2)
 
-    pf_emp = round(basic_pro * float(emp.pf_employee_pct) / 100, 2)
-    pf_er  = round(basic_pro * float(emp.pf_employer_pct) / 100, 2)
+    # CD-4: EPF wage ceiling caps the wage base for PF at pf_wage_ceiling (default 15000).
+    # Applied in exactly one place here (employer PF wage base).
+    _ceiling = float(pf_wage_ceiling) if pf_wage_ceiling is not None else 15000.0
+    _pf_wages_capped = min(basic_pro, _ceiling)
+    pf_emp = round(_pf_wages_capped * float(emp.pf_employee_pct) / 100, 2)
+    pf_er  = round(_pf_wages_capped * float(emp.pf_employer_pct) / 100, 2)
 
     if emp.is_esi_applicable and (full_gross + ot_amount) <= ESI_GROSS_WAGE_CEILING:
         esi_emp = round(gross * float(emp.esi_employee_pct) / 100, 2)
@@ -826,20 +835,38 @@ def run_payroll(payload: PayrollRunCreate, db: Session = Depends(get_db), curren
             if (lr.leave_type or "").strip().lower() in PAID_LEAVE_TYPES:
                 approved_leave_days += float(lr.days_count or 0.0)
 
-        # R2-431: the zero-attendance fallback paid default_days (a full
-        # month) unconditionally, so a worker the attendance screen reports
-        # absent was paid as if present every working day. No recorded days
-        # now means no pay unless assume_full_month opts in.
+        # D2 + R2-431: zero-attendance payroll POLICY.
+        # Company setting assume_full_month_when_no_attendance defaults OFF (no punch = zero pay).
+        # The per-run payload flag is retained for backwards compat; effective value is OR of both.
+        # ALWAYS return attendance_source recorded|assumed and badge assumed rows (NOT optional).
+        effective_assume = bool(payload.assume_full_month) or bool(getattr(company, "assume_full_month_when_no_attendance", False))
+        # CD-4: EPF wage ceiling default 15000, capped in _compute_payslip employer PF (single place).
+        _ceiling_raw = getattr(company, "pf_wage_ceiling", None)
+        if _ceiling_raw is None:
+            try:
+                from app.models import CompanyPayrollSettings as _CPS
+                _cps_row = db.query(_CPS).filter(_CPS.company_id == payload.company_id).first()
+                if _cps_row is not None and getattr(_cps_row, "pf_wage_ceiling", None) is not None:
+                    _ceiling_raw = _cps_row.pf_wage_ceiling
+            except Exception:
+                pass
+        effective_ceiling = float(_ceiling_raw) if _ceiling_raw is not None else 15000.0
         if (att_count + approved_leave_days) > 0:
             days_present = float(att_count + approved_leave_days)
+            attendance_source = "recorded"
         else:
-            days_present = float(default_days) if payload.assume_full_month else 0.0
+            attendance_source = "assumed"
+            days_present = float(default_days) if effective_assume else 0.0
 
-        calc = _compute_payslip(emp, days_present, effective_days_in_month, float(total_ot))
+        calc = _compute_payslip(emp, days_present, effective_days_in_month, float(total_ot), pf_wage_ceiling=effective_ceiling)
+        calc["attendance_source"] = attendance_source
+        # Separate string field before Decimal conversion so it stays verbatim.
+        _calc_for_line = {k: (v if isinstance(v, int) else Decimal(str(v))) for k, v in calc.items() if k != "attendance_source"}
         line = PayrollLineItem(
             payroll_run_id=run.id,
             employee_id=emp.id,
-            **{k: (v if isinstance(v, int) else Decimal(str(v))) for k, v in calc.items()}
+            attendance_source=attendance_source,
+            **_calc_for_line
         )
         db.add(line)
         payslips.append({"employee_id": emp.id, "employee_name": emp.name, **calc})
@@ -906,6 +933,8 @@ def get_payslips(run_id: uuid.UUID, db: Session = Depends(get_db), current_user:
             "advance_recovery": float(line.advance_recovery),
             "total_deductions": float(line.total_deductions),
             "net_payable": float(line.net_payable),
+            # D2: always returned for badge
+            "attendance_source": getattr(line, "attendance_source", None) or ("assumed" if float(line.days_present or 0) == 0 and line.days_in_month else "recorded"),
         })
     return result
 

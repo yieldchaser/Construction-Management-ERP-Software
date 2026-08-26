@@ -101,6 +101,10 @@ class CompanySettingsResponse(BaseModel):
     onboarding_completed: bool = False
     is_zatca_enable: bool = False
     vat_number: Optional[str] = None
+    # D2: zero-attendance payroll policy, default OFF
+    assume_full_month_when_no_attendance: Optional[bool] = None
+    # CD-4: EPF wage ceiling, default 15000
+    pf_wage_ceiling: Optional[float] = None
 
     class Config:
         from_attributes = True
@@ -146,6 +150,8 @@ class CompanySettingsUpdate(BaseModel):
     subscription_start: Optional[datetime] = None
     subscription_end: Optional[datetime] = None
     subscription_renewal: Optional[datetime] = None
+    assume_full_month_when_no_attendance: Optional[bool] = None
+    pf_wage_ceiling: Optional[float] = Field(None, ge=0)
 
     _check_gstin = field_validator("gstin")(_validate_gstin)
 
@@ -689,6 +695,7 @@ class PayrollSettingsResponse(BaseModel):
     esi_employer_pct: float
     tds_monthly: float
     is_esi_applicable: bool
+    pf_wage_ceiling: Optional[float] = None
 
     class Config:
         from_attributes = True
@@ -701,6 +708,7 @@ class PayrollSettingsUpdate(BaseModel):
     esi_employer_pct: Optional[float] = Field(None, ge=0, le=5)
     tds_monthly: Optional[float] = Field(None, ge=0)
     is_esi_applicable: Optional[bool] = None
+    pf_wage_ceiling: Optional[float] = Field(None, ge=0)
     confirm_changes: bool = False
 
 

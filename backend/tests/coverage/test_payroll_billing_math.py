@@ -41,6 +41,7 @@ def test_payslip_basic_math():
 def test_payslip_esi_threshold_zero_above_21000():
     # Statutory ESI rule: not applicable when gross > 21000. If this branch
     # regresses, ESI would be wrongly deducted on high-earner payslips.
+    # CD-4: PF wage ceiling caps PF wages at 15000, so 30k basic yields 1800 not 3600.
     e = _emp(
         basic_salary=30000, hra=5000, other_allowances=5000,
         pf_employee_pct=12, pf_employer_pct=12, esi_employee_pct=0.75,
@@ -48,12 +49,12 @@ def test_payslip_esi_threshold_zero_above_21000():
     )
     c = _compute_payslip(e, days_present=26, days_in_month=26, overtime_hours=0)
     assert c["gross_salary"] == 40000.0
-    assert c["pf_employee"] == 3600.0
+    assert c["pf_employee"] == 1800.0  # capped at 15000 *12%
     assert c["esi_employee"] == 0.0
     assert c["esi_employer"] == 0.0
     # net_payable = gross - PF_employee - ESI_employee - TDS (employer-side
     # PF/ESI is a company cost, never withheld from the employee's net pay).
-    assert c["net_payable"] == 40000.0 - 3600.0
+    assert c["net_payable"] == 40000.0 - 1800.0
 
 
 def test_payslip_overtime():
