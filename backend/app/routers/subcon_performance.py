@@ -11,6 +11,7 @@ from app.models import (
     WorkOrderItem, Bill, TransactionDeduction, User,
     Project, Task,
 )
+from app.bill_scope import _active_bills
 from app.party_names import resolve_party_name
 from pydantic import BaseModel, Field
 
@@ -262,9 +263,7 @@ def _compute_subcon_metrics(db: Session, project_id: UUID, subcontractor_id: UUI
                 elif t.status == "delayed" or (t.progress is not None and float(t.progress) < 100 and t.end_date < period_end):
                     tasks_delayed += 1
 
-    bills = db.query(Bill).filter(
-        Bill.project_id == project_id,
-        Bill.invoice_type == "subcon",
+    bills = _active_bills(db, project_id, ["subcon"]).filter(
         Bill.party_company_user_id == subcontractor_id,
         Bill.invoice_date >= period_start,
         Bill.invoice_date <= period_end,
