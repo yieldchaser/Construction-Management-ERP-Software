@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from app.config import settings
 from app.database import get_db
 from app import models
-from app.permissions import has_permission, has_module_access
+from app.permissions import has_permission, has_module_access, VIEWER_GRANTS
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token", auto_error=False)
 
@@ -92,14 +92,79 @@ def verify_project_in_company(db: Session, project_id: uuid.UUID, company_id: uu
     return project
 
 
+def empty_permissions_fail_closed(db: Session, company_id: uuid.UUID) -> bool:
+    """D7 (R2-073/R2-113/R2-169) policy switch for unconfigured permissions.
+
+    Returns True when an empty / missing role permission set must DENY instead
+    of the legacy allow. Driven by settings.RBAC_EMPTY_PERMS_POLICY:
+      - "open" (default): never closed. The pre-D7 behaviour everywhere and
+        the rollback value; reverting is a config change, not a deploy.
+      - "closed": closed for every tenant.
+      - "per_company": closed only where companies.permissions_fail_closed is
+        explicitly true (flipped per tenant by ops during rollout).
+    """
+    mode = (getattr(settings, "RBAC_EMPTY_PERMS_POLICY", "") or "open").strip().lower()
+    if mode == "closed":
+        return True
+    if mode == "per_company":
+        company = db.query(models.Company).filter(models.Company.id == company_id).first()
+        return bool(company is not None and company.permissions_fail_closed is True)
+    return False
+
+
+def _resolve_rbac_target_perms(db: Session, membership: models.CompanyTeam) -> tuple:
+    """Resolve what require_permission / require_module_view enforce against.
+
+    Returns `(perms, fail_closed)`:
+      - `perms` non-empty: enforce against it (identical under both policies,
+        includes the superuser `all` flag).
+      - `perms` empty and `fail_closed` False: legacy fail-open, callers ALLOW
+        (RBAC_EMPTY_PERMS_POLICY="open", the default and rollback value).
+      - `perms` empty and `fail_closed` True: callers DENY unless the grants
+        say otherwise:
+          * no resolvable role (role_id NULL or dangling) -> Viewer grants
+            (D7 decision 4: defaulting, not rejecting);
+          * a configured role whose stored dict is empty/unset -> {} i.e. NO
+            permissions (D7 decision 3: empty means empty).
+
+    Partners never reach this helper (failsafe 1 runs first in the callers).
+    """
+    fail_closed = empty_permissions_fail_closed(db, membership.company_id)
+    resolved_role = None
+    if membership.role_id is not None:
+        resolved_role = db.query(models.CompanyRole).filter(
+            models.CompanyRole.id == membership.role_id
+        ).first()
+    if resolved_role is not None:
+        role_perms = resolved_role.permissions or {}
+        if role_perms:
+            return role_perms, fail_closed
+        # A configured role whose permission dict was never filled.
+        return {}, fail_closed
+    # No role assigned (or dangling reference): D7 defaults to Viewer when the
+    # tenant enforces fail-closed; legacy keeps it failing open.
+    if fail_closed:
+        return dict(VIEWER_GRANTS), True
+    return {}, False
+
+
+def _reject(permission_label: str) -> HTTPException:
+    return HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail=f"You do not have the required permission: {permission_label}",
+    )
+
+
 def require_permission(db: Session, current_user: models.User, company_id: uuid.UUID, permission_key: str) -> None:
     """PHASE 2 RBAC enforcement.
 
     Reuses the tenant guard (`get_company_membership`) and then denies unless the
     caller's role holds `permission_key`. Failsafes (SECURITY_rbac_design.md):
       - A `partner` member always passes (never lockable out).
-      - An empty / null role permissions dict fails OPEN (allows) so un-migrated
-        tenants keep working until an admin actually configures roles.
+      - An empty / null role permissions dict fails OPEN while
+        RBAC_EMPTY_PERMS_POLICY is "open" (the default). Under the D7
+        fail-closed policy an unconfigured non-partner resolves to Viewer
+        grants and an empty configured dict allows nothing.
       - The `all` superuser flag bypasses every check (Owner / Admin).
     """
     membership = get_company_membership(db, current_user, company_id)
@@ -108,14 +173,11 @@ def require_permission(db: Session, current_user: models.User, company_id: uuid.
     if membership.priority_type == "partner":
         return
 
-    role_perms: dict = {}
-    if membership.role_id is not None:
-        role = db.query(models.CompanyRole).filter(models.CompanyRole.id == membership.role_id).first()
-        if role is not None:
-            role_perms = role.permissions or {}
+    role_perms, fail_closed = _resolve_rbac_target_perms(db, membership)
 
-    # Failsafe 2: un-migrated / empty permissions -> fail-open (allow).
-    if not role_perms:
+    # Failsafe 2 (legacy): un-migrated / empty permissions -> fail-open (allow).
+    # Reachable by config (RBAC_EMPTY_PERMS_POLICY="open") for one release.
+    if not role_perms and not fail_closed:
         return
 
     # Superuser flag bypasses every check.
@@ -123,10 +185,7 @@ def require_permission(db: Session, current_user: models.User, company_id: uuid.
         return
 
     if not has_permission(role_perms, permission_key):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=f"You do not have the required permission: {permission_key}",
-        )
+        raise _reject(permission_key)
 
 
 def require_module_view(
@@ -135,8 +194,10 @@ def require_module_view(
     """Sibling of `require_permission` for SENSITIVE READ gating.
 
     Passes if the caller has ANY access to `module` (view/edit/approve), is a
-    partner, has `all`, or has no configured role/permissions yet (fail-open so
-    un-migrated tenants keep working). 403s otherwise. Used only for the
+    partner, has `all`, or has no configured role/permissions yet while the
+    legacy fail-open policy applies. Under the D7 fail-closed policy an
+    unconfigured non-partner gets Viewer (view-only) grants and an empty
+    configured dict allows nothing. 403s otherwise. Used only for the
     sensitive financial/payroll GETs called out in the Phase 2b spec.
     """
     membership = get_company_membership(db, current_user, company_id)
@@ -145,14 +206,11 @@ def require_module_view(
     if membership.priority_type == "partner":
         return
 
-    role_perms: dict = {}
-    if membership.role_id is not None:
-        role = db.query(models.CompanyRole).filter(models.CompanyRole.id == membership.role_id).first()
-        if role is not None:
-            role_perms = role.permissions or {}
+    role_perms, fail_closed = _resolve_rbac_target_perms(db, membership)
 
-    # Failsafe 2: un-migrated / empty permissions -> fail-open (allow).
-    if not role_perms:
+    # Failsafe 2 (legacy): un-migrated / empty permissions -> fail-open (allow).
+    # Reachable by config (RBAC_EMPTY_PERMS_POLICY="open") for one release.
+    if not role_perms and not fail_closed:
         return
 
     # Superuser flag bypasses every check.

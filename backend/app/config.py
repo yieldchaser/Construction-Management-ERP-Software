@@ -154,6 +154,18 @@ class Settings(BaseSettings):
     # the admin migration routes always reject with 403. Set a random value in the
     # prod env (e.g. Render) per deployment; never ship a default here.
     ADMIN_MIGRATION_SECRET: str = ""
+
+    # --- D7 (R2-073 / R2-113 / R2-169): empty-permission enforcement policy ---
+    # How require_permission / require_module_view treat an empty or missing
+    # role permission set:
+    #   "open"        legacy fail-open: unconfigured perms ALLOW. This is the
+    #                 default and the rollback value; no deploy needed to revert.
+    #   "closed"      fail-closed everywhere: an empty configured dict DENIES;
+    #                 a member with no resolvable role gets Viewer grants.
+    #   "per_company" like "closed", but only for tenants whose companies row
+    #                 opts in via permissions_fail_closed (flipped with the
+    #                 admin migrations rbac-fail-closed endpoint).
+    RBAC_EMPTY_PERMS_POLICY: str = "open"
     RATE_LIMIT_STORAGE_URI: str = ""
     # Trust CF-Connecting-IP / X-Forwarded-For when keying rate limits. Keep
     # false unless you have verified your proxy topology: a spoofable header

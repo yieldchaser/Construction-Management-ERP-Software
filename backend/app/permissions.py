@@ -235,3 +235,8 @@ DEFAULT_ROLE_PRESETS: Dict[str, Dict] = {
     "Sub Contractor": _preset(*_subcontractor_grants()),
     "Viewer": _preset(*_viewer_grants()),
 }
+
+# D7 (R2-073/R2-113/R2-169) fallback grant set: roles whose name matches no
+# preset, and members with no resolvable role, resolve to this under the
+# fail-closed policy. Always copy (dict(VIEWER_GRANTS)) before storing/sharing.
+VIEWER_GRANTS: Dict[str, bool] = DEFAULT_ROLE_PRESETS["Viewer"]

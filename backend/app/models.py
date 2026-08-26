@@ -90,6 +90,12 @@ class Company(Base):
     restrict_material_transfer = Column(Boolean, default=False, nullable=False)
     restrict_production_material = Column(Boolean, default=False, nullable=False)
     grn_numbering = Column(String(20), default="Project Level", nullable=False)
+    # D7 (R2-073/R2-113/R2-169) per-tenant fail-closed switch. Tri-state:
+    # None inherits the global RBAC_EMPTY_PERMS_POLICY default (legacy
+    # fail-open); True denies empty/unconfigured role permissions for this
+    # tenant when the global policy is "per_company". Nullable on purpose so
+    # the boot schema sync can add it to existing databases.
+    permissions_fail_closed = Column(Boolean, nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), default=func.now(), onupdate=func.now(), nullable=False)
 
