@@ -83,6 +83,12 @@ export default function BoqTab() {
   const [docImporting, setDocImporting] = useState(false);
   const [importNotice, setImportNotice] = useState<{ tone: "ok" | "warn"; text: string } | null>(null);
 
+  // Inline manual entry — D5 (R2-030): POST /boq-documents/{doc_id}/items reuses import's BOQItemCreate + R2-334 cost-code gate
+  const [showInlineRow, setShowInlineRow] = useState(false);
+  const [inlineDraft, setInlineDraft] = useState({ item_name: "", unit: "Nos", quantity: "", rate: "", supply_rate: "", installation_rate: "", section_name: "", cost_code: "" });
+  const [inlineSaving, setInlineSaving] = useState(false);
+  const [inlineError, setInlineError] = useState<string | null>(null);
+
   const loadDocs = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -178,11 +184,67 @@ export default function BoqTab() {
       setExpandedId(null);
       setDocItems([]);
       setImportNotice(null);
+      setShowInlineRow(false);
+      setInlineError(null);
     } else {
       setExpandedId(docId);
       setDocFile(null);
       setImportNotice(null);
+      setShowInlineRow(false);
+      setInlineError(null);
       loadDocItems(docId);
+    }
+  };
+
+  // Inline row validation mirrors BOQItemCreate (item_name min 1, quantity/rate ge 0) — same gate as import path (budgeting.py:405)
+  const validateInlineDraft = (): string | null => {
+    if (!inlineDraft.item_name.trim()) return "Item name is required";
+    if (inlineDraft.quantity === "" || isNaN(Number(inlineDraft.quantity))) return "Quantity must be numeric";
+    if (Number(inlineDraft.quantity) < 0) return "Quantity cannot be negative";
+    if (inlineDraft.rate !== "" && (isNaN(Number(inlineDraft.rate)) || Number(inlineDraft.rate) < 0)) return "Rate cannot be negative";
+    if (inlineDraft.supply_rate !== "" && (isNaN(Number(inlineDraft.supply_rate)) || Number(inlineDraft.supply_rate) < 0)) return "Supply rate cannot be negative";
+    if (inlineDraft.installation_rate !== "" && (isNaN(Number(inlineDraft.installation_rate)) || Number(inlineDraft.installation_rate) < 0)) return "Installation rate cannot be negative";
+    return null;
+  };
+
+  const resetInlineDraft = () => setInlineDraft({ item_name: "", unit: "Nos", quantity: "", rate: "", supply_rate: "", installation_rate: "", section_name: "", cost_code: "" });
+
+  const addInlineItem = async (docId: string) => {
+    const validationError = validateInlineDraft();
+    if (validationError) { setInlineError(validationError); return; }
+    setInlineSaving(true);
+    setInlineError(null);
+    try {
+      const payload = {
+        item_name: inlineDraft.item_name.trim(),
+        unit: inlineDraft.unit.trim() || "Nos",
+        quantity: inlineDraft.quantity === "" ? 0 : Number(inlineDraft.quantity),
+        rate: inlineDraft.rate === "" ? 0 : Number(inlineDraft.rate),
+        supply_rate: inlineDraft.supply_rate === "" ? 0 : Number(inlineDraft.supply_rate),
+        installation_rate: inlineDraft.installation_rate === "" ? 0 : Number(inlineDraft.installation_rate),
+        section_name: inlineDraft.section_name.trim() || null,
+        cost_code: inlineDraft.cost_code.trim() || null,
+      };
+      const res = await fetch(getApi(`/budgeting/boq-documents/${docId}/items`), {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
+        body: JSON.stringify(payload),
+      });
+      let data: any = null;
+      try { data = await res.json(); } catch { /* ignore */ }
+      if (!res.ok) {
+        const detail = data && typeof data.detail === "string" ? data.detail : Array.isArray(data?.detail) ? data.detail.map((d: any) => d.msg || JSON.stringify(d)).join("; ") : `Request failed (${res.status})`;
+        setInlineError(detail);
+        return;
+      }
+      resetInlineDraft();
+      setShowInlineRow(false);
+      await loadDocItems(docId);
+      await loadDocs();
+    } catch (e) {
+      setInlineError(e instanceof Error ? e.message : "Backend not reachable. The BOQ was not modified.");
+    } finally {
+      setInlineSaving(false);
     }
   };
 
@@ -469,6 +531,41 @@ export default function BoqTab() {
                               </span>
                             )}
                           </div>
+
+                          {/* Inline manual entry — D5 (R2-030): typed row POSTs to /boq-documents/{doc_id}/items reusing import validation */}
+                          <div className="flex items-center gap-2 mb-3" onClick={(e) => e.stopPropagation()}>
+                            <button
+                              type="button"
+                              onClick={() => { setShowInlineRow((v) => !v); setInlineError(null); }}
+                              className="px-3 py-1.5 bg-primary/10 border border-primary/20 text-primary text-xs font-bold rounded-lg hover:bg-primary/20"
+                            >
+                              {showInlineRow ? "Cancel" : "+ Add Item"}
+                            </button>
+                            {inlineError && <span className="text-[10px] text-rose-400">{inlineError}</span>}
+                          </div>
+                          {showInlineRow && (
+                            <div className="mb-4 p-3 bg-card border border-border-custom rounded-lg space-y-2" onClick={(e) => e.stopPropagation()}>
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                <input value={inlineDraft.section_name} onChange={(e) => setInlineDraft({ ...inlineDraft, section_name: e.target.value })} placeholder="Section" className="bg-input border border-border-custom rounded-lg px-2 py-1.5 text-xs text-foreground placeholder-muted" />
+                                <input value={inlineDraft.item_name} onChange={(e) => setInlineDraft({ ...inlineDraft, item_name: e.target.value })} placeholder="Item name *" className="bg-input border border-border-custom rounded-lg px-2 py-1.5 text-xs text-foreground placeholder-muted" />
+                                <input value={inlineDraft.cost_code} onChange={(e) => setInlineDraft({ ...inlineDraft, cost_code: e.target.value })} placeholder="Cost code" className="bg-input border border-border-custom rounded-lg px-2 py-1.5 text-xs text-foreground placeholder-muted" />
+                                <input value={inlineDraft.unit} onChange={(e) => setInlineDraft({ ...inlineDraft, unit: e.target.value })} placeholder="Unit (Nos)" className="bg-input border border-border-custom rounded-lg px-2 py-1.5 text-xs text-foreground placeholder-muted" />
+                                <input type="number" min="0" step="any" value={inlineDraft.quantity} onChange={(e) => setInlineDraft({ ...inlineDraft, quantity: e.target.value })} placeholder="Qty *" className="bg-input border border-border-custom rounded-lg px-2 py-1.5 text-xs text-foreground placeholder-muted" />
+                                <input type="number" min="0" step="any" value={inlineDraft.rate} onChange={(e) => setInlineDraft({ ...inlineDraft, rate: e.target.value })} placeholder="Rate" className="bg-input border border-border-custom rounded-lg px-2 py-1.5 text-xs text-foreground placeholder-muted" />
+                                <input type="number" min="0" step="any" value={inlineDraft.supply_rate} onChange={(e) => setInlineDraft({ ...inlineDraft, supply_rate: e.target.value })} placeholder="Supply rate" className="bg-input border border-border-custom rounded-lg px-2 py-1.5 text-xs text-foreground placeholder-muted" />
+                                <input type="number" min="0" step="any" value={inlineDraft.installation_rate} onChange={(e) => setInlineDraft({ ...inlineDraft, installation_rate: e.target.value })} placeholder="Install rate" className="bg-input border border-border-custom rounded-lg px-2 py-1.5 text-xs text-foreground placeholder-muted" />
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <button type="button" onClick={() => addInlineItem(d.id)} disabled={inlineSaving} className="px-3 py-1.5 bg-primary text-white text-xs font-bold rounded-lg disabled:opacity-40">
+                                  {inlineSaving ? "Saving..." : "Save"}
+                                </button>
+                                <button type="button" onClick={() => { setShowInlineRow(false); setInlineError(null); resetInlineDraft(); }} className="px-3 py-1.5 bg-elevated border border-border-custom text-muted text-xs rounded-lg">
+                                  Cancel
+                                </button>
+                                <span className="text-[10px] text-muted">Validates via POST /boq-documents/{"{doc_id}"}/items — same gate as Excel import (cost-code library, ge checks).</span>
+                              </div>
+                            </div>
+                          )}
 
                           <div className="mb-3" onClick={(e) => e.stopPropagation()}>
                             <button

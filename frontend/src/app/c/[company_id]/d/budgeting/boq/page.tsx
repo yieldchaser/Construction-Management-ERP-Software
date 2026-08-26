@@ -97,6 +97,13 @@ export default function BOQPage() {
   const [savingRev, setSavingRev] = useState(false);
   const [revMsg, setRevMsg] = useState("");
 
+  // Inline manual entry — D5 (R2-030): POST /boq-documents/{doc_id}/items — reuses import validation (BOQItemCreate + R2-334 cost-code gate at budgeting.py:475)
+  const [showInlineD, setShowInlineD] = useState(false);
+  const [inlineD, setInlineD] = useState({ item_name: "", unit: "Nos", quantity: "", rate: "", supply_rate: "", installation_rate: "", section_name: "", cost_code: "" });
+  const [inlineDSaving, setInlineDSaving] = useState(false);
+  const [inlineDError, setInlineDError] = useState<string | null>(null);
+  const [inlineDMsg, setInlineDMsg] = useState<string | null>(null);
+
   const selectedDoc = useMemo(() => documents.find(d => d.id === selectedDocId), [documents, selectedDocId]);
   const totalBudget = useMemo(() => {
     if (selectedDoc?.revised_amount != null) return Number(selectedDoc.revised_amount);
@@ -235,7 +242,7 @@ export default function BOQPage() {
     try {
       const res = await fetch(`${getApiHost()}/apis/v3/budgeting/boq-documents/${selectedDocId}/revisions`, {
         method: "POST",
-        headers: authHeaders(),
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify({ revised_amount: amt, reason: revReason || null }),
       });
       const data = await res.json();
@@ -245,12 +252,66 @@ export default function BOQPage() {
         setRevReason("");
         fetchRevisions();
       } else {
-        setRevMsg(typeof data.detail === "string" ? data.detail : "Failed to record revision.");
+        setRevMsg(typeof data.detail === "string" ? data.detail : Array.isArray(data.detail) ? data.detail.map((d: any) => d.msg || JSON.stringify(d)).join("; ") : "Failed to record revision.");
       }
     } catch {
       setRevMsg("Backend not reachable.");
     } finally {
       setSavingRev(false);
+    }
+  };
+
+  // Inline row validation — mirrors BOQItemCreate (budgeting.py BOQItemCreate) + cost_code gate shared with import
+  const validateInlineD = (): string | null => {
+    if (!inlineD.item_name.trim()) return "Item name is required";
+    if (inlineD.quantity === "" || isNaN(Number(inlineD.quantity))) return "Quantity must be numeric";
+    if (Number(inlineD.quantity) < 0) return "Quantity cannot be negative";
+    if (inlineD.rate !== "" && (isNaN(Number(inlineD.rate)) || Number(inlineD.rate) < 0)) return "Rate cannot be negative";
+    if (inlineD.supply_rate !== "" && (isNaN(Number(inlineD.supply_rate)) || Number(inlineD.supply_rate) < 0)) return "Supply rate cannot be negative";
+    if (inlineD.installation_rate !== "" && (isNaN(Number(inlineD.installation_rate)) || Number(inlineD.installation_rate) < 0)) return "Installation rate cannot be negative";
+    return null;
+  };
+
+  const resetInlineD = () => setInlineD({ item_name: "", unit: "Nos", quantity: "", rate: "", supply_rate: "", installation_rate: "", section_name: "", cost_code: "" });
+
+  const handleAddInlineD = async () => {
+    if (!selectedDocId) { setInlineDError("Select a BOQ document first."); return; }
+    const v = validateInlineD();
+    if (v) { setInlineDError(v); return; }
+    setInlineDSaving(true);
+    setInlineDError(null);
+    setInlineDMsg(null);
+    try {
+      const payload = {
+        item_name: inlineD.item_name.trim(),
+        unit: inlineD.unit.trim() || "Nos",
+        quantity: inlineD.quantity === "" ? 0 : Number(inlineD.quantity),
+        rate: inlineD.rate === "" ? 0 : Number(inlineD.rate),
+        supply_rate: inlineD.supply_rate === "" ? 0 : Number(inlineD.supply_rate),
+        installation_rate: inlineD.installation_rate === "" ? 0 : Number(inlineD.installation_rate),
+        section_name: inlineD.section_name.trim() || null,
+        cost_code: inlineD.cost_code.trim() || null,
+      };
+      const res = await fetch(`${getApiHost()}/apis/v3/budgeting/boq-documents/${selectedDocId}/items`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
+        body: JSON.stringify(payload),
+      });
+      let data: any = null;
+      try { data = await res.json(); } catch { /* ignore */ }
+      if (!res.ok) {
+        const detail = data && typeof data.detail === "string" ? data.detail : Array.isArray(data?.detail) ? data.detail.map((d: any) => d.msg || JSON.stringify(d)).join("; ") : `Request failed (${res.status})`;
+        setInlineDError(detail);
+        return;
+      }
+      setInlineDMsg("Item added.");
+      resetInlineD();
+      setShowInlineD(false);
+      await loadBoq();
+    } catch (e) {
+      setInlineDError(e instanceof Error ? e.message : "Backend not reachable. The BOQ was not modified.");
+    } finally {
+      setInlineDSaving(false);
     }
   };
 
@@ -314,6 +375,48 @@ export default function BOQPage() {
                     </button>
                   ))}
                 </div>
+              </div>
+
+              {/* Inline manual entry — D5 (R2-030): typed row POSTs to /boq-documents/{doc_id}/items reusing import validation */}
+              <div className="px-5 py-3 border-b border-border-custom shrink-0 space-y-2">
+                <div className="flex items-center gap-2">
+                  <button onClick={() => { setShowInlineD(v => !v); setInlineDError(null); setInlineDMsg(null); }} disabled={!selectedDocId && documents.length === 0} className="px-3 py-1.5 bg-primary/10 border border-primary/20 text-primary text-xs font-bold rounded-lg hover:bg-primary/20 disabled:opacity-40">
+                    {showInlineD ? "Cancel" : "+ Add Item"}
+                  </button>
+                  {!selectedDocId && documents.length > 0 && <span className="text-[10px] text-amber-400">Select a BOQ document to add items</span>}
+                  {documents.length === 0 && <span className="text-[10px] text-muted">Create a BOQ document first — then add items</span>}
+                  {inlineDError && <span className="text-[10px] text-rose-400">{inlineDError}</span>}
+                  {inlineDMsg && <span className="text-[10px] text-emerald-400">{inlineDMsg}</span>}
+                </div>
+                {selectedDocId && (
+                  <div className="flex items-center gap-2 text-[10px] text-muted">
+                    <span>Target BOQ:</span>
+                    <select value={selectedDocId} onChange={e => setSelectedDocId(e.target.value)} className="bg-input border border-border-custom rounded-lg px-2 py-1 text-xs text-foreground">
+                      {documents.map(d => <option key={d.id} value={d.id}>{d.title}</option>)}
+                    </select>
+                  </div>
+                )}
+                {showInlineD && (
+                  <div className="p-3 bg-card border border-border-custom rounded-lg space-y-2">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                      <input value={inlineD.section_name} onChange={e => setInlineD({ ...inlineD, section_name: e.target.value })} placeholder="Section" className="bg-input border border-border-custom rounded-lg px-2 py-1.5 text-xs text-foreground placeholder-muted" />
+                      <input value={inlineD.item_name} onChange={e => setInlineD({ ...inlineD, item_name: e.target.value })} placeholder="Item name *" className="bg-input border border-border-custom rounded-lg px-2 py-1.5 text-xs text-foreground placeholder-muted" />
+                      <input value={inlineD.cost_code} onChange={e => setInlineD({ ...inlineD, cost_code: e.target.value })} placeholder="Cost code" className="bg-input border border-border-custom rounded-lg px-2 py-1.5 text-xs text-foreground placeholder-muted" />
+                      <input value={inlineD.unit} onChange={e => setInlineD({ ...inlineD, unit: e.target.value })} placeholder="Unit (Nos)" className="bg-input border border-border-custom rounded-lg px-2 py-1.5 text-xs text-foreground placeholder-muted" />
+                      <input type="number" min="0" step="any" value={inlineD.quantity} onChange={e => setInlineD({ ...inlineD, quantity: e.target.value })} placeholder="Qty *" className="bg-input border border-border-custom rounded-lg px-2 py-1.5 text-xs text-foreground placeholder-muted" />
+                      <input type="number" min="0" step="any" value={inlineD.rate} onChange={e => setInlineD({ ...inlineD, rate: e.target.value })} placeholder="Rate" className="bg-input border border-border-custom rounded-lg px-2 py-1.5 text-xs text-foreground placeholder-muted" />
+                      <input type="number" min="0" step="any" value={inlineD.supply_rate} onChange={e => setInlineD({ ...inlineD, supply_rate: e.target.value })} placeholder="Supply rate" className="bg-input border border-border-custom rounded-lg px-2 py-1.5 text-xs text-foreground placeholder-muted" />
+                      <input type="number" min="0" step="any" value={inlineD.installation_rate} onChange={e => setInlineD({ ...inlineD, installation_rate: e.target.value })} placeholder="Install rate" className="bg-input border border-border-custom rounded-lg px-2 py-1.5 text-xs text-foreground placeholder-muted" />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button onClick={handleAddInlineD} disabled={inlineDSaving} className="px-3 py-1.5 bg-primary text-white text-xs font-bold rounded-lg disabled:opacity-40">
+                        {inlineDSaving ? "Saving..." : "Save"}
+                      </button>
+                      <button onClick={() => { setShowInlineD(false); setInlineDError(null); resetInlineD(); }} className="px-3 py-1.5 bg-elevated border border-border-custom text-muted text-xs rounded-lg">Cancel</button>
+                      <span className="text-[10px] text-muted">POST /boq-documents/{"{doc_id}"}/items — same validation as Excel import</span>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Table */}
