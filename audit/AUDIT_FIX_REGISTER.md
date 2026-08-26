@@ -616,7 +616,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-466 | HIGH | W09 | `page.tsx` | — | FIXED | | reg L23437 S33 FIXED ffe4f5f: drawings file URLs validated same-origin/https (blocks javascript:/data://host); seeded malicious rows need ops cleanup. |
 | R2-467 | MEDIUM | W27 | `frontend/src/app/c/[company_id]/d/finance/page.tsx` | — | FIXED | FIXED 2f6f031; drawings revision approval status register + wiring. |
 | R2-468 | CRITICAL | W17 | `chat.py` | `models.py` | FIXED | | reg L23554 S33-C FIXED 1188311: canonical company_team resolver at creator lookup; batched predicate kept. |
-| R2-469 | CRITICAL | W46 | `d/chat/page.tsx` | `chat.py` | TODO | | reg L23615 |
+| R2-469 | CRITICAL | W46 | `d/chat/page.tsx` | `chat.py` | FIXED | | reg L23615 S33 EVIDENCE b1bb802: frontend stopped POSTing created_by under R2-270; probe test at API level added. |
 | R2-470 | CRITICAL | W17 | `chat.py` | — | FIXED | | reg L23651 S33-C FIXED 53c4e02: add_member admits recorded creator on empty member table; legacy zero-member rows need ops cleanup. |
 | R2-471 | HIGH | W17 | `chat.py` | `page.tsx` | FIXED | | reg L23671 S33 FIXED e74e46e: chat list_groups membership-filtered (colleagues see only their own groups). |
 | R2-472 | MEDIUM | W09 | `page.tsx` | — | FIXED | FIXED 93cdba8; chat message URLs validated http(s) on send and render. |
@@ -704,7 +704,7 @@ fix and re-verify one wave, commit, regenerate, then start the next.**
 | R2-554 | HIGH | W06 | `settings.py` | — | FIXED | FIXED 185dc60; GSTIN check digit uses the official GSTN mod-36 algorithm - previous variant rejected genuinely valid GSTINs. |
 | R2-555 | MEDIUM | W30 | `library.py` | — | FIXED | FIXED 61c9cc9; library schemas bounded to column widths (422 instead of DB 500). Sibling: 440+ other string fields unbounded (scripted pass). |
 | R2-556 | HIGH | W37 | `equipment.py` | `models.py` | FIXED | | reg L28885 S33 FIXED b68fe92: all equipment write-path refs resolve-and-404 named. |
-| R2-557 | CRITICAL | W10 | `projects.py` | — | TODO | | reg L28985 |
+| R2-557 | CRITICAL | W10 | `projects.py` | — | FIXED | | reg L28985 S33 FIXED 4ee8129: project delete requires ?confirm=<name> server-side; counts all 51 CASCADE children with per-table inventory in the 400. |
 | R2-558 | MEDIUM | W30 | `library.py` | — | FIXED | FIXED 154eeb5; global IntegrityError handler returns 409 naming the constraint. Sibling: 18 FKs still lack ondelete. |
 | R2-559 | HIGH | W15 | `models.py` | — | FIXED | FIXED e0f2f6e; UniqueConstraint(company_id, number) on purchase_orders, goods_receipt_notes, material_indents, bills, work_orders, library_cost_codes. |
 | R2-560 | HIGH | W04 | `reports.py` | `models.py`, `page.tsx`, `chat.py` | FIX_VERIFIED | `723af26` | reg L29155; reports.py direct-fix pass; suite RC-068/RC-069 — the swallow and the ledger accumulator |
