@@ -4,6 +4,21 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useProject } from "@/context/ProjectContext";
 import { useParams } from "next/navigation";
+import {
+  BRICK_PRESETS,
+  calcBrickFrontend,
+  calcConcreteFrontendMix,
+  calcHouseCost,
+  calcPaint,
+  calcPlaster,
+  calcSlabSteelFrontend,
+  calcSteelColumnFrontend,
+  calcTile,
+  calcTwoWaySlabFrontend,
+  calcWaterproofing,
+  concreteVolumeM3,
+  rmcNetVolumeM3,
+} from "@/lib/calc-shared";
 
 type CalcCategory = "steel" | "concrete" | "masonry" | "finishes" | "finance";
 type CalcType =
@@ -23,13 +38,6 @@ const HOUSE_RATE_DEFAULTS: Record<"budget" | "standard" | "premium", number> = {
   budget: 1600,
   standard: 2200,
   premium: 3400,
-};
-
-const BRICK_PRESETS: Record<string, [number, number, number]> = {
-  modular: [190, 90, 90],
-  traditional: [230, 110, 75],
-  uk: [215, 102, 65],
-  us: [203, 92, 95],
 };
 
 export default function CalculatorsPage() {
@@ -174,197 +182,162 @@ export default function CalculatorsPage() {
 
   // --- MEMOIZED CALCULATION LOGIC ---
 
-  // 1. Steel Column Calculations (D² / 162 standard)
+  // 1. Steel Column Calculations — via shared module (single source, patchy-data safe)
   const { colBar1Weight, colBar2Weight, colStirrupWeight, colTotalWeight, colCost, colStirEnd, colStirMid, colStirrupCount } = React.useMemo(() => {
-    const columnMainUnitW = (mainBarDia * mainBarDia) / 162.0;
-    const colHeightM = colHeight / 1000;
-    const colSlabM = slabThick / 1000;
-    const colLapM = (50 * mainBarDia) / 1000;
-    const colBar1TotalLen = (colHeightM + colSlabM + colLapM) * mainBarCount;
-    const colBar1W = colBar1TotalLen * columnMainUnitW;
-
-    const colBar2UnitW = colBar2Dia > 0 ? (colBar2Dia * colBar2Dia) / 162.0 : 0;
-    const colBar2TotalLen = colBar2Dia > 0 ? (colHeightM + colSlabM + (50 * colBar2Dia) / 1000) * colBar2Count : 0;
-    const colBar2W = colBar2TotalLen * colBar2UnitW;
-
-    const colStirrupUnitW = (stirrupDia * stirrupDia) / 162.0;
-    const colStirrupLen = (2 * ((sizeA - 80) + (sizeB - 80)) + 6 * stirrupDia) / 1000;
-    const colLo = Math.max(colHeight / 6, Math.max(sizeA, sizeB), 450);
-    const endCount = Math.ceil(colLo / (colSpEnd || stirrupSpacing)) + 1;
-    const midCount = Math.max(0, Math.floor((colHeight - 2 * colLo) / (colSpMid || stirrupSpacing)) - 1);
-    const totalStirrups = 2 * endCount + midCount;
-    const colStirW = colStirrupLen * totalStirrups * colStirrupUnitW;
-
-    const netW = colBar1W + colBar2W + colStirW;
-    const totW = netW * (1 + steelWastage / 100);
-    const cost = steelPrice > 0 ? totW * steelPrice : 0;
-    return { colBar1Weight: colBar1W, colBar2Weight: colBar2W, colStirrupWeight: colStirW, colTotalWeight: totW, colCost: cost, colStirEnd: endCount, colStirMid: midCount, colStirrupCount: totalStirrups };
+    const r = calcSteelColumnFrontend({
+      colHeightMm: colHeight,
+      slabThickMm: slabThick,
+      sizeAMm: sizeA,
+      sizeBMm: sizeB,
+      mainBarDiaMm: mainBarDia,
+      mainBarCount: mainBarCount,
+      stirrupDiaMm: stirrupDia,
+      stirrupSpacingMm: stirrupSpacing,
+      colBar2DiaMm: colBar2Dia,
+      colBar2Count: colBar2Count,
+      colSpEndMm: colSpEnd,
+      colSpMidMm: colSpMid,
+      wastagePct: steelWastage,
+      pricePerKg: steelPrice,
+    });
+    return { colBar1Weight: r.bar1WeightKg, colBar2Weight: r.bar2WeightKg, colStirrupWeight: r.stirrupWeightKg, colTotalWeight: r.totalWeightKg, colCost: r.cost, colStirEnd: r.stirEndCount, colStirMid: r.stirMidCount, colStirrupCount: r.stirrupCount };
   }, [mainBarDia, colHeight, slabThick, mainBarCount, colBar2Dia, colBar2Count, stirrupDia, sizeA, sizeB, colSpEnd, stirrupSpacing, colSpMid, steelWastage, steelPrice]);
 
-  // 2. Slab Steel Calculations
+  // 2. Slab Steel Calculations — via shared module
   const { slabMainWeight, slabDistWeight, slabTotalWeight, slabCost, slabMainCount, slabDistCount } = React.useMemo(() => {
-    const slabMainUnitW = (slabMainDia * slabMainDia) / 162.0;
-    const mainCnt = Math.ceil(slabLength / slabMainSpacing) + 1;
-    const slabMainCutLen = (slabWidth + 2 * slabDevLen) / 1000;
-    const mainW = slabMainCutLen * mainCnt * slabMainUnitW;
-
-    const slabDistUnitW = (slabDistDia * slabDistDia) / 162.0;
-    const distCnt = Math.ceil(slabWidth / slabDistSpacing) + 1;
-    const slabDistCutLen = (slabLength + 2 * slabDevLen) / 1000;
-    const distW = slabDistCutLen * distCnt * slabDistUnitW;
-    const netW = mainW + distW;
-    const totW = netW * (1 + steelWastage / 100);
-    const cost = steelPrice > 0 ? totW * steelPrice : 0;
-    return { slabMainWeight: mainW, slabDistWeight: distW, slabTotalWeight: totW, slabCost: cost, slabMainCount: mainCnt, slabDistCount: distCnt };
+    const r = calcSlabSteelFrontend({
+      slabLengthMm: slabLength,
+      slabWidthMm: slabWidth,
+      mainDiaMm: slabMainDia,
+      mainSpacingMm: slabMainSpacing,
+      distDiaMm: slabDistDia,
+      distSpacingMm: slabDistSpacing,
+      devLenMm: slabDevLen,
+      wastagePct: steelWastage,
+      pricePerKg: steelPrice,
+    });
+    return { slabMainWeight: r.mainWeightKg, slabDistWeight: r.distWeightKg, slabTotalWeight: r.totalWeightKg, slabCost: r.cost, slabMainCount: r.mainCount, slabDistCount: r.distCount };
   }, [slabMainDia, slabLength, slabMainSpacing, slabWidth, slabDevLen, slabDistDia, slabDistSpacing, steelWastage, steelPrice]);
 
-  // 2b. Two-Way Slab Steel
+  // 2b. Two-Way Slab Steel — via shared module
   const { tw2XWeight, tw2YWeight, tw2TotalWeight, tw2Cost, tw2XCount, tw2YCount } = React.useMemo(() => {
-    const tw2XUnitW = (tw2XDia * tw2XDia) / 162.0;
-    const xCnt = Math.ceil(tw2Ly / tw2XSp) + 1;
-    const tw2XCutLen = (tw2Lx + 2 * tw2DevLen) / 1000;
-    const xW = tw2XUnitW * tw2XCutLen * xCnt;
-
-    const tw2YUnitW = (tw2YDia * tw2YDia) / 162.0;
-    const yCnt = Math.ceil(tw2Lx / tw2YSp) + 1;
-    const tw2YCutLen = (tw2Ly + 2 * tw2DevLen) / 1000;
-    const yW = tw2YUnitW * tw2YCutLen * yCnt;
-
-    const netW = xW + yW;
-    const totW = netW * (1 + steelWastage / 100);
-    const cost = steelPrice > 0 ? totW * steelPrice : 0;
-    return { tw2XWeight: xW, tw2YWeight: yW, tw2TotalWeight: totW, tw2Cost: cost, tw2XCount: xCnt, tw2YCount: yCnt };
+    const r = calcTwoWaySlabFrontend({
+      lxMm: tw2Lx,
+      lyMm: tw2Ly,
+      xDiaMm: tw2XDia,
+      xSpacingMm: tw2XSp,
+      yDiaMm: tw2YDia,
+      ySpacingMm: tw2YSp,
+      devLenMm: tw2DevLen,
+      wastagePct: steelWastage,
+      pricePerKg: steelPrice,
+    });
+    return { tw2XWeight: r.xWeightKg, tw2YWeight: r.yWeightKg, tw2TotalWeight: r.totalWeightKg, tw2Cost: r.cost, tw2XCount: r.xCount, tw2YCount: r.yCount };
   }, [tw2XDia, tw2Ly, tw2XSp, tw2Lx, tw2DevLen, tw2YDia, tw2YSp, steelWastage, steelPrice]);
 
-  // 3. Concrete Volume & Mix
+  // 3. Concrete Volume & Mix — via shared module (dry 1.54, single source)
   const { concVolume, concCementBags, concSandM3, concAggM3, concMaterialCost } = React.useMemo(() => {
-    let vol = concreteL * concreteW * concreteD;
-    if (concreteForm === "column") {
-      vol = (concColA / 1000) * (concColB / 1000) * (concColH / 1000);
-    } else if (concreteForm === "circular") {
-      vol = (Math.PI / 4) * circDia * circDia * circHeight * circCount;
-    } else if (concreteForm === "stair") {
-      const stepsVol = stairSteps * stairWidth * ((stairRiser * stairTread) / 2.0);
-      const waistLen = Math.sqrt(stairRiser ** 2 + stairTread ** 2);
-      const waistVol = stairWaist * stairWidth * waistLen * stairSteps;
-      vol = stepsVol + waistVol;
-    }
-
-    // R2-482: every factor below follows this screen's own published rules -
-    // cement bags/m3 = (1.54 / sum of ratio parts) x 1440 / 50, and
-    // sand / aggregate = 1.54 x parts / sum - so the table cannot contradict
-    // the ratios in the grade dropdown or the "1.54 FACTOR" result panel.
-    const mixLib: Record<string, [number, number, number]> = {
-      M5: [2.77, 0.48, 0.96],
-      M7_5: [3.41, 0.47, 0.94],
-      M10: [4.4, 0.46, 0.92],
-      M15: [6.3, 0.44, 0.88],
-      M20: [8.06, 0.42, 0.84],
-      M25: [11.1, 0.38, 0.77],
-    };
-    const [cFactor, sFactor, aFactor] = mixLib[concreteGrade] || mixLib.M20;
-    const cBags = vol * cFactor * (1 + concreteWastage / 100);
-    const sM3 = vol * sFactor * (1 + concreteWastage / 100);
-    const aM3 = vol * aFactor * (1 + concreteWastage / 100);
-    const cost = (cementRate > 0 ? Math.ceil(cBags) * cementRate : 0) + (sandRate > 0 ? sM3 * sandRate : 0) + (aggRate > 0 ? aM3 * aggRate : 0);
-    return { concVolume: vol, concCementBags: cBags, concSandM3: sM3, concAggM3: aM3, concMaterialCost: cost };
+    const vol = concreteVolumeM3({
+      form: concreteForm,
+      slabL: concreteL,
+      slabW: concreteW,
+      slabD: concreteD,
+      colAmm: concColA,
+      colBmm: concColB,
+      colHmm: concColH,
+      circDiaM: circDia,
+      circHeightM: circHeight,
+      circCount: circCount,
+      stairSteps: stairSteps,
+      stairWidthM: stairWidth,
+      stairRiserM: stairRiser,
+      stairTreadM: stairTread,
+      stairWaistM: stairWaist,
+    });
+    const mix = calcConcreteFrontendMix(vol, concreteGrade, concreteWastage);
+    const cost = (cementRate > 0 ? Math.ceil(mix.cementBags) * cementRate : 0) + (sandRate > 0 ? mix.sandM3 * sandRate : 0) + (aggRate > 0 ? mix.aggM3 * aggRate : 0);
+    return { concVolume: mix.volumeM3, concCementBags: mix.cementBags, concSandM3: mix.sandM3, concAggM3: mix.aggM3, concMaterialCost: cost };
   }, [concreteL, concreteW, concreteD, concreteForm, concColA, concColB, concColH, circDia, circHeight, circCount, stairSteps, stairWidth, stairRiser, stairTread, stairWaist, concreteGrade, concreteWastage, cementRate, sandRate, aggRate]);
 
-  // 4. RMC Transit Mixer
+  // 4. RMC Transit Mixer — via shared module
   const { rmcTotalVol, rmcTrucks, rmcTotalCost } = React.useMemo(() => {
-    let netVol = rmcVolume;
-    if (rmcTab === "slab") netVol = rmcSlabL * rmcSlabW * (rmcSlabT / 1000);
-    else if (rmcTab === "column") netVol = (rmcColA / 1000) * (rmcColB / 1000) * rmcColH * rmcColCount;
-    else if (rmcTab === "beam") netVol = rmcBeamL * (rmcBeamW / 1000) * (rmcBeamD / 1000) * rmcBeamCount;
-    else if (rmcTab === "footing") netVol = rmcFootL * rmcFootW * rmcFootD * rmcFootCount;
-
+    const netVol = rmcNetVolumeM3({
+      tab: rmcTab,
+      directVolM3: rmcVolume,
+      slabL: rmcSlabL,
+      slabW: rmcSlabW,
+      slabTMm: rmcSlabT,
+      colAMm: rmcColA,
+      colBMm: rmcColB,
+      colHM: rmcColH,
+      colCount: rmcColCount,
+      beamLM: rmcBeamL,
+      beamWMm: rmcBeamW,
+      beamDMm: rmcBeamD,
+      beamCount: rmcBeamCount,
+      footLM: rmcFootL,
+      footWM: rmcFootW,
+      footDM: rmcFootD,
+      footCount: rmcFootCount,
+    });
     const totVol = netVol * (1 + rmcWastage / 100);
     const trucks = Math.ceil(totVol / rmcMixerSize);
     const cost = rmcRate > 0 ? totVol * rmcRate : 0;
     return { rmcTotalVol: totVol, rmcTrucks: trucks, rmcTotalCost: cost };
   }, [rmcVolume, rmcTab, rmcSlabL, rmcSlabW, rmcSlabT, rmcColA, rmcColB, rmcColH, rmcColCount, rmcBeamL, rmcBeamW, rmcBeamD, rmcBeamCount, rmcFootL, rmcFootW, rmcFootD, rmcFootCount, rmcWastage, rmcMixerSize, rmcRate]);
 
-  // 5. Bricks & Mortar
+  // 5. Bricks & Mortar — via shared module
   const { bricksNeeded, brickCementBags, brickSandM3, brickTotalCost } = React.useMemo(() => {
-    const [bLen, bW, bH] = BRICK_PRESETS[brickSizePreset] || BRICK_PRESETS.modular;
-    const bFaceArea = ((bLen + brickMortarJoint) / 1000.0) * ((bH + brickMortarJoint) / 1000.0);
-    const wallArea = brickWallL * brickWallH;
-    const bNeeded = Math.ceil((wallArea / bFaceArea) * brickLeaves * (1 + brickWastage / 100));
-
-    const wallThkMm = brickLeaves === 2 ? 2 * bW + brickMortarJoint : bW + brickMortarJoint;
-    const wallVol = wallArea * (wallThkMm / 1000.0);
-    const actualVol = (bLen / 1000.0) * (bW / 1000.0) * (bH / 1000.0);
-    const netBricksNoWaste = (wallArea / bFaceArea) * brickLeaves;
-    const mortarVol = Math.max(0, wallVol - netBricksNoWaste * actualVol);
-    const dryMortarVol = mortarVol * 1.33;
-
-    const parts = brickMortarRatio.split(":");
-    const cParts = parseFloat(parts[0]) || 1.0;
-    const sParts = parseFloat(parts[1]) || 6.0;
-    const totalParts = cParts + sParts;
-    const cBags = ((dryMortarVol * (cParts / totalParts)) * 1440.0) / 50.0;
-    const sM3 = dryMortarVol * (sParts / totalParts);
-    const cost = brickPrice > 0 ? bNeeded * brickPrice : 0;
-    return { bricksNeeded: bNeeded, brickCementBags: cBags, brickSandM3: sM3, brickTotalCost: cost };
+    const r = calcBrickFrontend({
+      wallLM: brickWallL,
+      wallHM: brickWallH,
+      preset: brickSizePreset,
+      mortarJointMm: brickMortarJoint,
+      leaves: brickLeaves,
+      wastagePct: brickWastage,
+      mortarRatio: brickMortarRatio,
+    });
+    const cost = brickPrice > 0 ? r.bricksNeeded * brickPrice : 0;
+    return { bricksNeeded: r.bricksNeeded, brickCementBags: r.cementBags, brickSandM3: r.sandM3, brickTotalCost: cost };
   }, [brickSizePreset, brickMortarJoint, brickWallL, brickWallH, brickLeaves, brickWastage, brickMortarRatio, brickPrice]);
 
   const selBrickWidthMm = (BRICK_PRESETS[brickSizePreset] || BRICK_PRESETS.modular)[1];
 
-  // 6. Paint Quantity
+  // 6. Paint Quantity — via shared module (unified coverage: premium 135)
   const { paintableArea, paintLitres, paintPuttyKg, paintPrimerL } = React.useMemo(() => {
-    const wallArea = 2 * (roomL + roomW) * ceilingH + (paintCeiling ? roomL * roomW : 0);
-    const pArea = Math.max(0, wallArea - doorsCount * 21.0 - windowsCount * 12.0);
-    const coverageMap: Record<string, number> = {
-      economy: 115.0,
-      premium: 140.0,
-      luxury: 155.0,
-      texture: 80.0,
-    };
-    const coverage = coverageMap[paintQuality];
-    const litres = (pArea / coverage) * paintCoats * 1.10;
-    const puttyKg = (pArea / 100.0) * 2.25 * 1.10;
-    const primerL = (pArea / 175.0) * 1.05;
-    return { paintableArea: pArea, paintLitres: litres, paintPuttyKg: puttyKg, paintPrimerL: primerL };
+    const r = calcPaint({
+      roomLengthFt: roomL,
+      roomWidthFt: roomW,
+      ceilingHeightFt: ceilingH,
+      paintCeiling,
+      doorsCount,
+      windowsCount,
+      coats: paintCoats,
+      quality: paintQuality,
+    });
+    return { paintableArea: r.paintableAreaSqft, paintLitres: r.paintLitres, paintPuttyKg: r.puttyKg, paintPrimerL: r.primerLitres };
   }, [roomL, roomW, ceilingH, paintCeiling, doorsCount, windowsCount, paintQuality, paintCoats]);
 
-  // 7. Tile Flooring
+  // 7. Tile Flooring — via shared module
   const { tileRoomArea, tileTiles } = React.useMemo(() => {
-    const area = tileRoomL * tileRoomW;
-    const groutIn = tileGrout / 25.4;
-    const tileLenFt = (tileLInch + groutIn) / 12.0;
-    const tileWidFt = (tileWInch + groutIn) / 12.0;
-    const tiles = Math.ceil((area / (tileLenFt * tileWidFt)) * (1 + tileWastage / 100));
-    return { tileRoomArea: area, tileTiles: tiles };
+    const r = calcTile({ lengthFt: tileRoomL, widthFt: tileRoomW, tileLengthInch: tileLInch, tileWidthInch: tileWInch, groutMm: tileGrout, wastagePct: tileWastage });
+    return { tileRoomArea: r.roomAreaSqft, tileTiles: r.tilesNeeded };
   }, [tileRoomL, tileRoomW, tileGrout, tileLInch, tileWInch, tileWastage]);
 
-  // 8. Plastering
+  // 8. Plastering — via shared module
   const { plasterWetVol, plasterCementBags, plasterSandM3 } = React.useMemo(() => {
-    const wetVol = plasterArea * (plasterThick / 1000.0);
-    const dryVol = wetVol * 1.33 * (1 + plasterWastage / 100);
-    const pParts = plasterRatio.split(":");
-    const pC = parseFloat(pParts[0]) || 1.0;
-    const pS = parseFloat(pParts[1]) || 4.0;
-    const cBags = ((dryVol * (pC / (pC + pS))) * 1440.0) / 50.0;
-    const sM3 = dryVol * (pS / (pC + pS));
-    return { plasterWetVol: wetVol, plasterCementBags: cBags, plasterSandM3: sM3 };
+    const r = calcPlaster({ wallAreaM2: plasterArea, thicknessMm: plasterThick, mixRatio: plasterRatio, wastagePct: plasterWastage });
+    return { plasterWetVol: r.wetVolumeM3, plasterCementBags: r.cementBags, plasterSandM3: r.sandM3 };
   }, [plasterArea, plasterThick, plasterWastage, plasterRatio]);
 
-  // 9. Waterproofing
+  // 9. Waterproofing — via shared module
   const wpLitres = React.useMemo(() => {
-    return (wpArea / wpCoverage) * wpCoats * (1 + wpWastage / 100);
+    return calcWaterproofing({ areaSqft: wpArea, coverageSqftPerLitre: wpCoverage, coats: wpCoats, wastagePct: wpWastage }).litresNeeded;
   }, [wpArea, wpCoverage, wpCoats, wpWastage]);
 
-  // 10. House Construction Cost (mirrors POST /apis/v3/calculators/house-cost)
+  // 10. House Construction Cost — via shared module (mirrors POST /apis/v3/calculators/house-cost)
   const { houseProjectCost, houseContingencyCost, houseSplits } = React.useMemo(() => {
-    let constructionCost = 0.0;
-    for (let f = 0; f < houseFloors; f++) {
-      const multiplier = 1.0 + 0.12 * f;
-      constructionCost += houseArea * (houseRate * multiplier);
-    }
-    const compoundCost = houseCompoundWall * (houseRate * 0.35);
-    const projectCost = constructionCost + compoundCost;
-    const contingencyCost = projectCost * (houseContingency / 100);
-
+    const r = calcHouseCost({ areaSqft: houseArea, baseRate: houseRate, floors: houseFloors, compoundWallLengthFt: houseCompoundWall, contingencyPct: houseContingency });
     const splits = [
       { name: "Structure & Civil (40%)", percentage: 0.40, color: "bg-primary" },
       { name: "Finishing & Masonry (25%)", percentage: 0.25, color: "bg-primary" },
@@ -372,7 +345,7 @@ export default function CalculatorsPage() {
       { name: "Interior & Carpentry (12%)", percentage: 0.12, color: "bg-amber-500" },
       { name: "Consultants & Permits (8%)", percentage: 0.08, color: "bg-zinc-500" },
     ];
-    return { houseProjectCost: projectCost, houseContingencyCost: contingencyCost, houseSplits: splits };
+    return { houseProjectCost: r.totalProjectCost, houseContingencyCost: r.contingencyBuffer, houseSplits: splits };
   }, [houseRate, houseFloors, houseArea, houseCompoundWall, houseContingency]);
 
   return (
