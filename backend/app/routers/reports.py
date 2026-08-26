@@ -20,7 +20,14 @@ from app.database import get_db
 # and reads stay consistent regardless of the process's current working dir.
 REPORTS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "static", "reports")
 from app.auth import get_current_user, verify_project_access, get_company_membership, require_permission
-from app.constants import REVENUE_INVOICE_TYPES, EXPENSE_INVOICE_TYPES
+from app.constants import (
+    EXPENSE_INVOICE_TYPES,
+    REVENUE_INVOICE_TYPES,
+    is_expense_invoice_type,
+    is_revenue_invoice_type,
+    is_settlement_invoice_type,
+    is_settlement_money_in,
+)
 from app.models import (
     ClientReport, Project, Task, Bill, WorkOrder,
     MaterialIndent, PurchaseOrder, SiteInspection, NCR, MaterialTestResult,
@@ -713,7 +720,11 @@ def _build_party_ledger(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
             if obj.project_id:
                 proj = db.query(Project).filter(Project.id == obj.project_id).first()
         elif et == "bill":
-            is_receipt = obj.invoice_type in REVENUE_INVOICE_TYPES
+            # D3: route through single shared classifier so settlement never
+            # leaks into revenue or expense ledgers.
+            is_receipt = is_revenue_invoice_type(obj.invoice_type)
+            is_expense = is_expense_invoice_type(obj.invoice_type)
+            is_settlement = is_settlement_invoice_type(obj.invoice_type)
             amount = float(obj.total_payable) if obj.total_payable is not None else 0.0
             # R2-314: same identity keying as the payment branch.
             party_key = str(obj.party_company_user_id) if obj.party_company_user_id else "Vendor/Client"
@@ -722,10 +733,24 @@ def _build_party_ledger(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
                 txn_type = "Sale Invoice"
                 party_type = "Client"
                 debit = amount
-            else:
+            elif is_expense:
                 txn_type = "Purchase Bill"
                 party_type = "Vendor"
                 credit = amount
+            elif is_settlement:
+                # cash movement settlement - direction determines debit/credit
+                money_in = is_settlement_money_in(obj.invoice_type)
+                txn_type = "Settlement"
+                party_type = "Client" if money_in else "Vendor"
+                if money_in:
+                    debit = amount
+                else:
+                    credit = amount
+            else:
+                # movement and unknown - no financial posting
+                txn_type = "Movement"
+                party_type = "Vendor"
+                # no debit/credit for stock movements
             description = f"Invoice {obj.invoice_number}"
             if obj.project_id:
                 proj = db.query(Project).filter(Project.id == obj.project_id).first()

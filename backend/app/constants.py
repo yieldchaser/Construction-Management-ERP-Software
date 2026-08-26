@@ -15,6 +15,57 @@ EXPENSE_INVOICE_TYPES = ("purchase", "subcon", "expense", "equipment")
 SETTLEMENT_INVOICE_TYPES = ("payment_in", "payment_out", "i_paid", "i_received")
 MOVEMENT_INVOICE_TYPES = ("material_transfer", "material_return")
 
+SETTLEMENT_MONEY_IN_TYPES = ("payment_in", "i_received")
+SETTLEMENT_MONEY_OUT_TYPES = ("payment_out", "i_paid")
+
+BILL_BUCKET_REVENUE = "revenue"
+BILL_BUCKET_EXPENSE = "expense"
+BILL_BUCKET_SETTLEMENT = "settlement"
+BILL_BUCKET_MOVEMENT = "movement"
+BILL_BUCKET_UNKNOWN = "unknown"
+
+
+def classify_invoice_type(invoice_type: str) -> str:
+    """Classify a Bill.invoice_type into one shared bucket.
+
+    Single source of truth for D3. Every aggregation and the Tally exporter
+    must route through this helper so settlement types cannot leak into
+    revenue or expense totals. Unknown types return BILL_BUCKET_UNKNOWN.
+    """
+    if invoice_type in REVENUE_INVOICE_TYPES:
+        return BILL_BUCKET_REVENUE
+    if invoice_type in EXPENSE_INVOICE_TYPES:
+        return BILL_BUCKET_EXPENSE
+    if invoice_type in SETTLEMENT_INVOICE_TYPES:
+        return BILL_BUCKET_SETTLEMENT
+    if invoice_type in MOVEMENT_INVOICE_TYPES:
+        return BILL_BUCKET_MOVEMENT
+    return BILL_BUCKET_UNKNOWN
+
+
+def is_revenue_invoice_type(invoice_type: str) -> bool:
+    return invoice_type in REVENUE_INVOICE_TYPES
+
+
+def is_expense_invoice_type(invoice_type: str) -> bool:
+    return invoice_type in EXPENSE_INVOICE_TYPES
+
+
+def is_settlement_invoice_type(invoice_type: str) -> bool:
+    return invoice_type in SETTLEMENT_INVOICE_TYPES
+
+
+def is_movement_invoice_type(invoice_type: str) -> bool:
+    return invoice_type in MOVEMENT_INVOICE_TYPES
+
+
+def is_settlement_money_in(invoice_type: str) -> bool:
+    return invoice_type in SETTLEMENT_MONEY_IN_TYPES
+
+
+def is_settlement_money_out(invoice_type: str) -> bool:
+    return invoice_type in SETTLEMENT_MONEY_OUT_TYPES
+
 MILESTONE_TYPES = ("start", "inspection", "critical", "payment", "handover")
 MILESTONE_TYPE_PATTERN = f"^({'|'.join(MILESTONE_TYPES)})$"
 MILESTONE_STATUSES = ("upcoming", "achieved")

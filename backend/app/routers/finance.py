@@ -18,7 +18,16 @@ from app.approvals import (
     PAYMENT_REQUEST_FEATURE_TYPE,
 )
 from pydantic import BaseModel, Field, field_validator
-from app.constants import REVENUE_INVOICE_TYPES, EXPENSE_INVOICE_TYPES, SETTLEMENT_INVOICE_TYPES
+from app.constants import (
+    EXPENSE_INVOICE_TYPES,
+    REVENUE_INVOICE_TYPES,
+    classify_invoice_type,
+    is_expense_invoice_type,
+    is_revenue_invoice_type,
+    is_settlement_invoice_type,
+    is_settlement_money_in,
+    is_settlement_money_out,
+)
 from app.workflow_controls import enforce_entry_creation_window
 from app.party_names import resolve_party_name
 
@@ -418,13 +427,11 @@ def get_ledger(project_id: uuid.UUID, db: Session = Depends(get_db), _: None = D
             # instead of the silent users-only walk that printed "Vendor/Client"
             # for real parties.
             party_name = _txn_party_name(db, obj.party_company_user_id)
-            # R2-238: settlement vouchers (payment_in/payment_out/i_paid/i_received)
-            # are cash movements, not revenue or cost accruals. Classify them
-            # explicitly before the revenue/cost branches below so a receipt
-            # voucher cannot fall through to "Material Bill"/"Material Cost"
-            # with an inverted sign.
-            if obj.invoice_type in SETTLEMENT_INVOICE_TYPES:
-                money_in = obj.invoice_type in ("payment_in", "i_received")
+            # R2-238 + D3: settlement vouchers are cash movements, not revenue or
+            # cost accruals. Use the single shared classifier so the buckets
+            # cannot drift per call site.
+            if is_settlement_invoice_type(obj.invoice_type):
+                money_in = is_settlement_money_in(obj.invoice_type)
                 settlement_amount = float(obj.total_payable)
                 if money_in:
                     running_balance += settlement_amount
@@ -447,7 +454,7 @@ def get_ledger(project_id: uuid.UUID, db: Session = Depends(get_db), _: None = D
                     )
                 )
                 continue
-            is_receipt = obj.invoice_type in REVENUE_INVOICE_TYPES
+            is_receipt = is_revenue_invoice_type(obj.invoice_type)
             amount = float(obj.total_payable)
             debit = amount if is_receipt else 0.0
             credit = 0.0 if is_receipt else amount
@@ -455,9 +462,9 @@ def get_ledger(project_id: uuid.UUID, db: Session = Depends(get_db), _: None = D
                 running_balance += amount
             else:
                 running_balance -= amount
-                
-            category = "Client Invoice" if obj.invoice_type in REVENUE_INVOICE_TYPES else ("Subcon Invoice" if obj.invoice_type == "subcon" else "Material Bill")
-            ledger_head = "Revenue" if obj.invoice_type in REVENUE_INVOICE_TYPES else ("Subcon Cost" if obj.invoice_type == "subcon" else "Material Cost")
+
+            category = "Client Invoice" if is_revenue_invoice_type(obj.invoice_type) else ("Subcon Invoice" if obj.invoice_type == "subcon" else "Material Bill")
+            ledger_head = "Revenue" if is_revenue_invoice_type(obj.invoice_type) else ("Subcon Cost" if obj.invoice_type == "subcon" else "Material Cost")
             
             ledger_entries.append(
                 LedgerTransactionResponse(
@@ -927,13 +934,14 @@ def get_company_parties(company_id: uuid.UUID, db: Session = Depends(get_db), _:
             bills = db.query(Bill).filter(Bill.party_company_user_id.in_(team_ids)).all()
             for b in bills:
                 delta = float(b.paid_amount or 0.0) - float(b.total_payable or 0.0)
-                # R2-326: classify through the canonical buckets - a bare
-                # == "sale" pushed material_sale revenue and settlement
-                # vouchers into the payable side.
-                if b.invoice_type in REVENUE_INVOICE_TYPES:
+                # R2-326 + D3: single shared classifier - a bare == "sale"
+                # pushed material_sale revenue and settlement vouchers into
+                # the payable side; is_* helpers keep buckets from drifting.
+                if is_revenue_invoice_type(b.invoice_type):
                     recv_net += delta
-                elif b.invoice_type in EXPENSE_INVOICE_TYPES:
+                elif is_expense_invoice_type(b.invoice_type):
                     pay_net += delta
+                # settlement and movement are not payables/receivables (D3)
 
         advance_paid = round(max(0.0, pay_net), 2)
         to_pay = round(max(0.0, -pay_net), 2)
@@ -1009,13 +1017,14 @@ def _company_party_totals(db: Session, company_id: uuid.UUID) -> dict:
             ).all()
             for b in bills:
                 delta = float(b.paid_amount or 0.0) - float(b.total_payable or 0.0)
-                # R2-326: classify through the canonical buckets - a bare
-                # == "sale" pushed material_sale revenue and settlement
-                # vouchers into the payable side.
-                if b.invoice_type in REVENUE_INVOICE_TYPES:
+                # R2-326 + D3: single shared classifier - a bare == "sale"
+                # pushed material_sale revenue and settlement vouchers into
+                # the payable side; is_* helpers keep buckets from drifting.
+                if is_revenue_invoice_type(b.invoice_type):
                     recv_net += delta
-                elif b.invoice_type in EXPENSE_INVOICE_TYPES:
+                elif is_expense_invoice_type(b.invoice_type):
                     pay_net += delta
+                # settlement and movement are not payables/receivables (D3)
         advance_paid += max(0.0, pay_net)
         to_pay += max(0.0, -pay_net)
         advance_received += max(0.0, recv_net)
@@ -1196,18 +1205,17 @@ def get_company_transactions(company_id: uuid.UUID, db: Session = Depends(get_db
             "purchase": "Material Purchase",
             "subcon": "Subcon Bill",
         }.get(b.invoice_type, b.invoice_type)
-        # R2-326: revenue is every REVENUE_INVOICE_TYPES member (sale AND
-        # material_sale) and expense is exactly EXPENSE_INVOICE_TYPES -
-        # settlement vouchers (payment_in/payment_out/i_paid/i_received) and
-        # internal movements (material_transfer/material_return) belong in
-        # neither money head, so a material sale is no longer booked as cost
-        # and money received is no longer displayed as money owed.
-        if b.invoice_type in REVENUE_INVOICE_TYPES:
+        # R2-326 + D3: revenue is every REVENUE_INVOICE_TYPES member
+        # (sale AND material_sale) and expense is exactly EXPENSE_INVOICE_TYPES.
+        # Settlement and movement belong in neither head and are classified
+        # through the single shared helper so they cannot leak into totals.
+        if is_revenue_invoice_type(b.invoice_type):
             total_invoice += payable
             unpaid_invoice += outstanding
-        elif b.invoice_type in EXPENSE_INVOICE_TYPES:
+        elif is_expense_invoice_type(b.invoice_type):
             total_expense += payable
             unpaid_expense += outstanding
+        # settlement and movement are neither invoice nor expense (D3)
         rows.append(TransactionRow(
             id=str(b.id),
             date=(b.invoice_date.strftime("%Y-%m-%d") if b.invoice_date else ""),

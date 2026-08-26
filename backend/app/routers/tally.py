@@ -15,7 +15,15 @@ from app.models import (
 )
 from app.tally_xml import build_tally_envelope
 from pydantic import BaseModel
-from app.constants import REVENUE_INVOICE_TYPES, EXPENSE_INVOICE_TYPES, SETTLEMENT_INVOICE_TYPES
+from app.constants import (
+    REVENUE_INVOICE_TYPES,
+    classify_invoice_type,
+    is_expense_invoice_type,
+    is_movement_invoice_type,
+    is_revenue_invoice_type,
+    is_settlement_invoice_type,
+    is_settlement_money_in,
+)
 
 router = APIRouter(
     prefix="/tally",
@@ -224,11 +232,11 @@ def _build_vouchers(db: Session, conn: TallyConnection, bills, payments, advance
         date_str = b.invoice_date.strftime("%Y%m%d") if b.invoice_date else ""
         vnumber = _render_number(conn.voucher_number_template, b.invoice_number, year, seq)
 
-        if b.invoice_type in SETTLEMENT_INVOICE_TYPES:
-            # Settlement rows move money, not goods: money-in bills are Receipt
-            # vouchers (debit bank/cash, credit the party) and money-out bills
-            # are Payment vouchers, never Purchase/Sales.
-            money_in = b.invoice_type in ("payment_in", "i_received")
+        if is_settlement_invoice_type(b.invoice_type):
+            # D3: settlement rows move money, not goods - money-in bills are
+            # Receipt vouchers and money-out are Payment vouchers, never
+            # Purchase/Sales. Routed through the single shared classifier.
+            money_in = is_settlement_money_in(b.invoice_type)
             vchtype = "Receipt" if money_in else "Payment"
             cash_ledger = (
                 bank_maps.get(b.payment_bank_name)
@@ -250,7 +258,7 @@ def _build_vouchers(db: Session, conn: TallyConnection, bills, payments, advance
                     {"ledger": party_ledger, "amount": total, "debit": True, "ledger_type": "party_creditor"},
                     {"ledger": cash_ledger, "amount": total, "debit": False, "ledger_type": _cash_bank_type(cash_ledger, conn.default_cash_ledger)},
                 ]
-        elif b.invoice_type in REVENUE_INVOICE_TYPES:
+        elif is_revenue_invoice_type(b.invoice_type):
             vchtype = "Sales"
             ledger_key = "Sales Invoice"
             fallback_ledger = "Sales A/c"
@@ -259,7 +267,7 @@ def _build_vouchers(db: Session, conn: TallyConnection, bills, payments, advance
             expense_ledger = mapped.tally_ledger_name if mapped else fallback_ledger
             party_ledger = _resolve_party_ledger(db, conn.company_id, b.party_company_user_id, party_default)
             narration = f"SiteFlow {b.invoice_type} invoice {b.invoice_number}."
-        else:
+        elif is_expense_invoice_type(b.invoice_type):
             vchtype = "Purchase"
             ledger_key = "Subcon Expense" if b.invoice_type == "subcon" else "Material Purchase"
             fallback_ledger = "Purchase A/c"
@@ -268,8 +276,22 @@ def _build_vouchers(db: Session, conn: TallyConnection, bills, payments, advance
             expense_ledger = mapped.tally_ledger_name if mapped else fallback_ledger
             party_ledger = _resolve_party_ledger(db, conn.company_id, b.party_company_user_id, party_default)
             narration = f"SiteFlow {b.invoice_type} invoice {b.invoice_number}."
+        else:
+            # D3: movement (material_transfer/material_return) and unknown
+            # types are not financial accruals - they do not book revenue or
+            # cost. Previously they fell through to Purchase and leaked stock
+            # movements into cost. Now classified explicitly and skipped for
+            # Tally financial export.
+            if is_movement_invoice_type(b.invoice_type):
+                continue
+            continue
 
-        if vchtype == "Sales":
+        if is_settlement_invoice_type(b.invoice_type):
+            # D3: settlement is a cash movement, not a taxable supply.
+            # Entries were built above and must not be overwritten by the
+            # Sales/Purchase GST splitting below.
+            pass
+        elif vchtype == "Sales":
             # Sale: the customer now owes us, so DEBIT the party (Sundry
             # Debtor, receivable up) and CREDIT the sales ledger (revenue up).
             # The mirror image (Dr Sales / Cr Debtor) would understate both

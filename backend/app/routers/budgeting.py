@@ -10,6 +10,7 @@ from openpyxl import load_workbook
 from openpyxl.utils.exceptions import InvalidFileException
 from app.database import get_db
 from app.auth import get_current_user, verify_project_access, get_company_membership, require_permission, require_module_view
+from app.constants import REVENUE_INVOICE_TYPES
 from app.models import BOQItem, BOQDocument, ProjectBudget, Project, Bill, LibraryParty, Task, User, BOQRevision, LibraryCostCode
 from app.workflow_controls import get_default_terms
 from app.utils.pdf_generator import generate_document_pdf
@@ -303,7 +304,9 @@ def allocate_project_budgets(
 
 # ─── BOQ Documents (per-client BOQ layer) ────────────────────────────────────
 # Invoices raised to the client whose value counts toward "Billed Value".
-BILLING_TYPES = {"sale", "material_sale"}
+# D3: use the single shared revenue bucket so settlement/movement never leak
+# into billed value.
+BILLING_TYPES = set(REVENUE_INVOICE_TYPES)
 
 
 def _effective_unit_rate(rate, supply_rate, installation_rate) -> float:
