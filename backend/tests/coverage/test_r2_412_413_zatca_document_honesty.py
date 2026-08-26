@@ -142,3 +142,83 @@ def test_configured_seller_document_carries_stored_vat_only(client, db, make_ten
     xml = body["ubl_xml"]
     assert "<cbc:CompanyID>300000000000003</cbc:CompanyID>" in xml
     assert "29ABCDE1234F1Z5" not in xml.split("</cac:AccountingSupplierParty>")[0]
+
+
+# ---------------------------------------------------------------- R2-413
+
+
+def _configured_tenant(client, db, make_tenant, name, user):
+    comp, user, team = make_tenant(company_name=name, user_name=user)
+    _configure_zatca(db, comp)
+    return comp, user, team
+
+
+def test_legacy_bill_without_lines_refuses_instead_of_fabricating(client, db, make_tenant):
+    """items_json NULL (pre-R2-401 rows): the old code synthesised a summary
+    line; now the document is refused outright."""
+    comp, user, team = _configured_tenant(client, db, make_tenant, "Z413A", "U413A")
+    bill_id = _mk_sale_bill(client, db, comp, user, team, items_json=_lines(("Supply", 1000.0)))
+    bill = db.query(models.Bill).filter(models.Bill.id == uuid.UUID(bill_id)).first()
+    bill.items_json = None
+    db.commit()
+
+    r = _get_zatca(client, comp, user, bill_id)
+    assert r.status_code == 409, r.text
+    assert "no line items" in r.json()["detail"].lower()
+    assert "ubl_xml" not in r.json()
+
+
+def test_real_lines_render_desc_names_and_reconcile_to_total(client, db, make_tenant):
+    """The live fabrication path: stored entries key on "desc", so every real
+    line used to render as <cbc:Name>Item</cbc:Name>. Names now come through
+    and the invoice lines sum to the LegalMonetaryTotal."""
+    comp, user, team = _configured_tenant(client, db, make_tenant, "Z413B", "U413B")
+    bill_id = _mk_sale_bill(
+        client, db, comp, user, team,
+        items_json=_lines(("Cement supply", 600.0), ("Steel supply", 400.0)),
+    )
+
+    body = _get_zatca(client, comp, user, bill_id).json()
+    xml = body["ubl_xml"]
+    assert "<cbc:Name>Cement supply</cbc:Name>" in xml
+    assert "<cbc:Name>Steel supply</cbc:Name>" in xml
+    assert "<cbc:Name>Item</cbc:Name>" not in xml
+
+    segments = xml.split("<cac:InvoiceLine>")[1:]
+    amounts = [float(s.split("</cbc:LineExtensionAmount>")[0].rsplit(">", 1)[-1]) for s in segments]
+    assert len(amounts) == 2
+    assert abs(sum(amounts) - 1000.0) <= 0.01
+    assert "<cbc:LineExtensionAmount currencyID=\"SAR\">1000.00</cbc:LineExtensionAmount>" in xml.split(
+        "<cac:LegalMonetaryTotal>"
+    )[1]
+
+
+def test_qty_rate_only_lines_derive_amounts_like_the_validator(client, db, make_tenant):
+    """Lines carrying qty/rate without an amount key pass the create-time
+    validator via qty*rate; the e-invoice must price them the same way
+    instead of emitting 0.00 against the subtotal."""
+    comp, user, team = _configured_tenant(client, db, make_tenant, "Z413C", "U413C")
+    items = json.dumps([{"desc": "Formwork", "qty": 10, "rate": 100}])
+    bill_id = _mk_sale_bill(client, db, comp, user, team, items_json=items, subtotal=1000.0, gst_pct=0)
+
+    body = _get_zatca(client, comp, user, bill_id)
+    assert body.status_code == 200, body.text
+    xml = body.json()["ubl_xml"]
+    assert "<cbc:PriceAmount currencyID=\"SAR\">1000.00</cbc:PriceAmount>" in xml
+
+
+def test_divergent_legacy_rows_refuse(client, db, make_tenant):
+    """A legacy row whose lines no longer reconcile with its totals (the
+    audit's literal 10.00-vs-100,000 shape) is refused, not emitted."""
+    comp, user, team = _configured_tenant(client, db, make_tenant, "Z413D", "U413D")
+    bill_id = _mk_sale_bill(
+        client, db, comp, user, team,
+        items_json=_lines(("Supply", 600.0), ("Install", 400.0)),
+    )
+    bill = db.query(models.Bill).filter(models.Bill.id == uuid.UUID(bill_id)).first()
+    bill.items_json = json.dumps([{"desc": "Legacy row", "qty": 1, "rate": 10, "amount": 10.0}])
+    db.commit()
+
+    r = _get_zatca(client, comp, user, bill_id)
+    assert r.status_code == 409, r.text
+    assert "do not sum to the document total" in r.json()["detail"]

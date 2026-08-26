@@ -651,7 +651,12 @@ def get_bill_zatca(bill_id: UUID, db: Session = Depends(get_db), current_user: U
             status_code=409,
             detail="ZATCA seller VAT registration number is not configured for this company",
         )
-    payload = build_zatca_payload(company, bill)
+    # R2-413: a bill whose line detail is missing or does not reconcile gets
+    # a refusal, never a document with an invented line.
+    try:
+        payload = build_zatca_payload(company, bill)
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc))
     return {
         "is_zatca_enabled": True,
         "qr_tlv_base64": payload["qr_tlv_base64"],

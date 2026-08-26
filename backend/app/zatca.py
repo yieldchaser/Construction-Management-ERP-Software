@@ -129,25 +129,53 @@ def build_zatca_payload(company, bill) -> dict:
     vat_total = float(bill.gst_amount or 0)
     total_excl = round(total_incl - vat_total, 2)
 
-    line_items: List[dict] = []
+    # R2-413: the lines come from the bill's own data or there is no
+    # document. Stored entries use "desc" (quotation-to-invoice conversion,
+    # models.Bill comment); amounts fall back to qty*rate exactly as the
+    # R2-401 create-time validator computes them.
+    def _line_name(it: dict) -> str:
+        return str(
+            it.get("desc") or it.get("description") or it.get("name") or ""
+        ).strip()
+
+    def _line_amount(it: dict) -> float:
+        amount = it.get("amount")
+        if amount is None:
+            amount = float(it.get("qty") or 0) * float(it.get("rate") or 0)
+        return float(amount or 0)
+
+    raw_items: List[dict] = []
     if getattr(bill, "items_json", None):
         try:
             import json
 
             parsed = json.loads(bill.items_json)
             if isinstance(parsed, list):
-                line_items = parsed
+                raw_items = [it for it in parsed if isinstance(it, dict)]
         except Exception:
-            line_items = []
+            raw_items = []
+
+    line_items: List[dict] = []
+    for it in raw_items:
+        name = _line_name(it)
+        if not name:
+            raise ValueError("line item has no description; refusing to fabricate one")
+        line_items.append(
+            {
+                "description": name,
+                "quantity": float(it.get("qty", 1) or 1),
+                "amount": _line_amount(it),
+            }
+        )
 
     if not line_items:
-        line_items = [
-            {
-                "description": f"Invoice {bill.invoice_number}",
-                "quantity": 1,
-                "amount": total_excl,
-            }
-        ]
+        raise ValueError("bill carries no line items; refusing to fabricate a placeholder line")
+
+    lines_total = round(sum(item["amount"] for item in line_items), 2)
+    if abs(lines_total - total_excl) > 0.01:
+        raise ValueError(
+            f"invoice lines total {lines_total:.2f} do not sum to the document total {total_excl:.2f}"
+        )
 
     qr_tlv_base64 = build_tlv_base64(
         seller_name=seller_name,
