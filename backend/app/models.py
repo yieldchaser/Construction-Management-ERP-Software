@@ -1429,7 +1429,9 @@ class TaskTodo(Base):
     are different domain objects with distinct lifecycles; do not merge
     vocabularies. Use TaskTodo only under planning tasks via
     /planning/tasks/{task_id}/todos; use Todo for general company/project
-    to-dos via /todos. Both survive per CD-9.
+    to-dos via /todos. Both survive per CD-9. Verified 2026-08-27: grep
+    confirms TaskTodo live in planning.py and frontend gantt, Todo live in
+    todos.py and frontend todo pages, no dead class to delete.
     """
     __tablename__ = "task_todos"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -2235,6 +2237,9 @@ class Todo(Base):
     The two are different domain objects with distinct lifecycles; do not
     merge vocabularies. Use Todo for general action items via /todos;
     use TaskTodo only for per-task checklists. Both survive per CD-9.
+    Verified 2026-08-27: grep confirms Todo live in todos.py and frontend
+    todo pages, TaskTodo live in planning.py and frontend gantt, no dead
+    class to delete.
     """
     __tablename__ = "todos"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
