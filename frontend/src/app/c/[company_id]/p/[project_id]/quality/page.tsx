@@ -102,8 +102,14 @@ const passRate = (p: number, f: number) => {
 
 export default function QualityPage() {
   const params = useParams();
-  const companyId = (params?.company_id as string) || "e0000000-0000-0000-0000-000000000000";
+  const companyId = (params?.company_id as string) || "";
   const projectId = (params.project_id as string) || "d0000000-0000-0000-0000-000000000001";
+
+  useEffect(() => {
+    if (!companyId || companyId === "e0000000-0000-0000-0000-000000000000") {
+      if (typeof window !== "undefined") window.location.replace("/login");
+    }
+  }, [companyId]);
 
   const [tab, setTab] = useState<"checklists" | "inspections" | "ncr" | "labtests">("inspections");
   
@@ -149,6 +155,7 @@ export default function QualityPage() {
   });
 
   const loadAll = async () => {
+    if (!companyId || companyId === "e0000000-0000-0000-0000-000000000000") return;
     let currentChecklists: Checklist[] = [];
     try {
       const clRes = await fetch(`${getApiHost()}/apis/v3/quality/checklists/${companyId}`, { headers: authHeaders() });

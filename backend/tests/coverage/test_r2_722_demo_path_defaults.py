@@ -1,12 +1,12 @@
-"""R2-722 - OTP demo path must be off by default and seed exactly once.
+"""R2-722 / D-V1 - the OTP demo path must be off by default and must create nothing.
 
 Gate: OTP_DEMO_ALLOWLIST/OTP_DEMO_CODE shipped with live defaults
 ("9876543210,+919876543210" / "123456"), so an unset environment still had the
-demo login path armed in production. Additionally _ensure_demo_company seeded
-showcase projects on the creation path with no one-time guard, so any flow that
-recreates the demo tenant would re-seed projects on later allowlisted logins.
-After the fix the defaults are empty (unset env = demo disabled) and seeding is
-guarded to run at most once per process.
+demo login path armed in production. Additionally _ensure_demo_company recreated
+the shared demo tenant (and its showcase projects) on any allowlisted login.
+After D-V1 + D-V5 the defaults are empty (unset env = demo disabled) and every
+demo-tenant creation path is deleted: an allowlisted login gets exactly what an
+unknown login gets - an onboarding session and zero company rows.
 """
 import uuid
 
@@ -24,6 +24,14 @@ def test_defaults_are_inert():
     # The class-level defaults (independent of this process's env) are empty.
     assert Settings.model_fields["OTP_DEMO_ALLOWLIST"].default == ""
     assert Settings.model_fields["OTP_DEMO_CODE"].default == ""
+    assert Settings.model_fields["EMAIL_OTP_DEMO_ALLOWLIST"].default == ""
+
+
+def test_demo_tenant_creation_path_is_removed():
+    # Import-level pin for D-V1: no module-level demo machinery may come back.
+    assert not hasattr(auth_router, "_ensure_demo_company")
+    assert not hasattr(auth_router, "_seed_demo_projects")
+    assert not hasattr(auth_router, "_demo_projects_seeded")
 
 
 def test_empty_allowlist_disables_demo_login(client, db, monkeypatch):
@@ -46,48 +54,26 @@ def test_empty_allowlist_disables_demo_login(client, db, monkeypatch):
     assert after == before
 
 
-def test_explicit_allowlist_seeds_once_not_twice(client, db, monkeypatch):
+def test_allowlisted_login_creates_no_tenant(client, db, monkeypatch):
+    # Even WITH the allowlist armed (dev convenience for receiving a fixed code),
+    # a successful login must never create or attach the shared demo tenant.
     monkeypatch.setattr(settings, "OTP_DEMO_ALLOWLIST", "+919876500111")
     monkeypatch.setattr(settings, "OTP_DEMO_CODE", "654321")
 
-    # Start from a clean demo tenant so the create-and-seed branch runs.
-    db.query(models.Project).filter(models.Project.company_id == DEMO_COMPANY_ID).delete(
-        synchronize_session=False
+    r = client.post(SEND_URL, json={"mobile": "+919876500111"})
+    assert r.status_code == 200, r.text
+    v = client.post(VERIFY_URL, json={"mobile": "+919876500111", "code": "654321"})
+    assert v.status_code == 200, v.text
+
+    body = v.json()
+    assert body["onboarding"] is True, body
+    assert body["company"] is None, body
+
+    company = db.query(models.Company).filter(models.Company.id == DEMO_COMPANY_ID).first()
+    assert company is None
+    memberships = (
+        db.query(models.CompanyTeam)
+        .filter(models.CompanyTeam.user_id == body["user"]["id"])
+        .count()
     )
-    db.query(models.CompanyTeam).filter(models.CompanyTeam.company_id == DEMO_COMPANY_ID).delete(
-        synchronize_session=False
-    )
-    db.query(models.Company).filter(models.Company.id == DEMO_COMPANY_ID).delete(
-        synchronize_session=False
-    )
-    db.commit()
-    monkeypatch.setattr(auth_router, "_demo_projects_seeded", False)
-
-    seed_calls = []
-    real_seed = auth_router._seed_demo_projects
-
-    def _spy(session, company_id):
-        seed_calls.append(str(company_id))
-        return real_seed(session, company_id)
-
-    monkeypatch.setattr(auth_router, "_seed_demo_projects", _spy)
-
-    def _login():
-        r = client.post(SEND_URL, json={"mobile": "+919876500111"})
-        assert r.status_code == 200, r.text
-        body = r.json()
-        assert body.get("demo_mode") is True, body
-        v = client.post(VERIFY_URL, json={"mobile": "+919876500111", "code": body["mock_code"]})
-        assert v.status_code == 200, v.text
-
-    # First allowlisted login creates the demo tenant and seeds its projects.
-    _login()
-    assert len(seed_calls) == 1, seed_calls
-    count = db.query(models.Project).filter(models.Project.company_id == DEMO_COMPANY_ID).count()
-    assert count == 3, count
-
-    # Second allowlisted login must not re-seed anything.
-    _login()
-    assert len(seed_calls) == 1, seed_calls
-    count = db.query(models.Project).filter(models.Project.company_id == DEMO_COMPANY_ID).count()
-    assert count == 3, count
+    assert memberships == 0

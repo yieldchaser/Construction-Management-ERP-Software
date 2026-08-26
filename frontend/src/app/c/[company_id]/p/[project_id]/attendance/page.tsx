@@ -406,11 +406,13 @@ export default function AttendancePage() {
   };
 
   const queuePunch = async (mode: "IN" | "OUT") => {
-    if (!selectedEmpId && employees.length > 0) {
+    // D-V1: a punch is never attributed to a fallback/demo identity. Without an
+    // explicitly selected worker there is nothing to record.
+    if (!selectedEmpId) {
       alert("Please select a worker first!");
       return;
     }
-    const finalEmpId = selectedEmpId || "e0000000-0000-0000-0000-000000000100";
+    const finalEmpId = selectedEmpId;
     const empName = employees.find(e => e.id === finalEmpId)?.name || "Unknown";
     const multiplier = punchMultiplier === 0 ? parseFloat(customMultiplierVal || "1.0") : punchMultiplier;
 

@@ -34,11 +34,17 @@ export default function OnboardingPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const companyId =
-    typeof window !== "undefined"
-      ? localStorage.getItem("company_id") || "e0000000-0000-0000-0000-000000000000"
-      : "e0000000-0000-0000-0000-000000000000";
   const accessToken = typeof window !== "undefined" ? localStorage.getItem("access_token") : "";
+  const companyId =
+    typeof window !== "undefined" ? localStorage.getItem("company_id") : null;
+
+  useEffect(() => {
+    // D-V1: without a real company id there is no tenant context; a stale demo
+    // id is equally unusable. Both bounce to /login.
+    if (!companyId || companyId === "e0000000-0000-0000-0000-000000000000") {
+      window.location.replace("/login");
+    }
+  }, [companyId]);
 
   useEffect(() => {
     const fetchCompany = async () => {

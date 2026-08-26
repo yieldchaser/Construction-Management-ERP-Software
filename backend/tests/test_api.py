@@ -57,7 +57,7 @@ def test_backend():
         assert res.json()["success"] is True
         print("[x] OTP Send passed:", res.json())
         
-        # 3. Verify OTP (Auto-onboards demo company and user)
+        # 3. Verify OTP (creates the user; no tenant is auto-attached)
         print("\nTesting OTP Verify...")
         res = requests.post(
             f"{base_url}/apis/v3/auth/otp/verify",
@@ -67,8 +67,9 @@ def test_backend():
         data = res.json()
         assert "access_token" in data
         assert data["user"]["mobile"] == "+919876543210"
-        assert data["company"]["name"] == "Demo Construction Ltd"
-        print("[x] OTP Verify passed: User and Demo Company auto-onboarded successfully!")
+        assert data["onboarding"] is True
+        assert data["company"] is None
+        print("[x] OTP Verify passed: user session minted with no auto-created company!")
 
         # Calculators require auth too (added after this script was written) -
         # reuse the token from OTP verify above rather than minting a new one.

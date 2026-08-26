@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { HELP_CATEGORIES, HELP_MODULE_LINKS, FaqCategory } from "./helpContent";
@@ -8,9 +8,13 @@ import Icon from "@/components/marketing/Icon";
 
 export default function HelpPage() {
   const params = useParams();
-  const companyId =
-    (params?.company_id as string) ||
-    "e0000000-0000-0000-0000-000000000000";
+  const companyId = (params?.company_id as string) || "";
+
+  useEffect(() => {
+    if (!companyId || companyId === "e0000000-0000-0000-0000-000000000000") {
+      if (typeof window !== "undefined") window.location.replace("/login");
+    }
+  }, [companyId]);
 
   const [query, setQuery] = useState("");
   const [openCats, setOpenCats] = useState<Record<string, boolean>>({});

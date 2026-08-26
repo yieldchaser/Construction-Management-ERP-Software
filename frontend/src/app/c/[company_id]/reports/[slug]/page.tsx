@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import { getApiHost } from "@/lib/api";
 import { authHeaders } from "@/lib/siteflow";
 import Icon from "@/components/marketing/Icon";
+import { isMissingOrDemoTenant, redirectToLogin } from "@/lib/company-guard";
 
 const escapeHtml = (value: unknown) =>
   String(value)
@@ -490,8 +491,14 @@ const REPORT_METADATA: Record<string, ReportMeta> = {
 
 export default function DynamicReportViewPage() {
   const params = useParams();
-  const companyId = params?.company_id as string || "e0000000-0000-0000-0000-000000000000";
+  const companyId = params?.company_id as string;
   const slug = params?.slug as string;
+
+  useEffect(() => {
+    if (isMissingOrDemoTenant(companyId)) {
+      redirectToLogin();
+    }
+  }, [companyId]);
 
   const [toastMessage, setToastMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -560,6 +567,7 @@ export default function DynamicReportViewPage() {
   const [financePayments, setFinancePayments] = useState<any[]>([]);
 
   useEffect(() => {
+    if (isMissingOrDemoTenant(companyId)) return;
     const fetchReport = async () => {
       setLoading(true);
       try {

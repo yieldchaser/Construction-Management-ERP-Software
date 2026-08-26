@@ -6,10 +6,17 @@ import { useParams } from "next/navigation";
 import { getApiHost } from "@/lib/api";
 import { authHeaders } from "@/lib/siteflow";
 import Icon from "@/components/marketing/Icon";
+import { isMissingOrDemoTenant, redirectToLogin } from "@/lib/company-guard";
 
 export default function DPRReportPage() {
   const params = useParams();
-  const companyId = params?.company_id as string || "e0000000-0000-0000-0000-000000000000";
+  const companyId = params?.company_id as string;
+
+  useEffect(() => {
+    if (isMissingOrDemoTenant(companyId)) {
+      redirectToLogin();
+    }
+  }, [companyId]);
 
   const [selectedProject, setSelectedProject] = useState("All");
   const [selectedDateFilter, setSelectedDateFilter] = useState("This Week");
@@ -24,6 +31,7 @@ export default function DPRReportPage() {
   };
 
   const fetchReport = async () => {
+    if (isMissingOrDemoTenant(companyId)) return;
     setLoading(true);
     try {
       const res = await fetch(`${getApiHost()}/apis/v3/reports/data/dpr?company_id=${companyId}`, {

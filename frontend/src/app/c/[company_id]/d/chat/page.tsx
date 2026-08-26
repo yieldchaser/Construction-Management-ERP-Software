@@ -35,9 +35,15 @@ interface ChatMember {
 
 export default function ChatPage() {
   const params = useParams();
-  const companyId = params?.company_id as string || "e0000000-0000-0000-0000-000000000000";
+  const companyId = params?.company_id as string;
   const { activeProjectId } = useProject();
   const projectId = activeProjectId;
+
+  useEffect(() => {
+    if (!companyId || companyId === "e0000000-0000-0000-0000-000000000000") {
+      if (typeof window !== "undefined") window.location.replace("/login");
+    }
+  }, [companyId]);
 
   // State managers
   const [groups, setGroups] = useState<ChatGroup[]>([]);
@@ -105,6 +111,7 @@ export default function ChatPage() {
   };
 
   const fetchTeamOptions = async () => {
+    if (!companyId || companyId === "e0000000-0000-0000-0000-000000000000") return;
     try {
       const res = await fetch(`${getApiHost()}/apis/v3/crm/team-members/${companyId}`, { headers: authHeaders() });
       if (res.ok) {
@@ -129,9 +136,12 @@ export default function ChatPage() {
         }));
         setMembers(resolved);
 
-        // Resolve current user's role!
-        const currentLoggedUserId = typeof window !== "undefined" ? localStorage.getItem("user_id") || "e0000000-0000-0000-0000-000000000000" : "e0000000-0000-0000-0000-000000000000";
-        const currentMember = rawMembers.find((m: ChatMember) => m.user_id === currentLoggedUserId);
+        // Resolve current user's role! A missing stored user id simply means
+        // the default "member" role; no sentinel id is ever substituted.
+        const currentLoggedUserId = typeof window !== "undefined" ? localStorage.getItem("user_id") : null;
+        const currentMember = currentLoggedUserId
+          ? rawMembers.find((m: ChatMember) => m.user_id === currentLoggedUserId)
+          : undefined;
         if (currentMember) {
           setCurrentUserRole(currentMember.role);
         } else {

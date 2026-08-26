@@ -9,12 +9,20 @@ import Icon from "@/components/marketing/Icon";
 import { usePermissions } from "@/context/PermissionsContext";
 import { useSidebar } from "@/context/SidebarContext";
 import CompanySwitcher from "@/components/CompanySwitcher";
+import { isMissingOrDemoTenant, redirectToLogin } from "@/lib/company-guard";
 
 export default function Sidebar() {
   const params = useParams();
   const pathname = usePathname();
-  const rawCompanyId = params.company_id as string;
-  const companyId = rawCompanyId === "e0000000-0000-0000-0000-000000000000" ? "demo-construction" : (rawCompanyId || "demo-construction");
+  const companyId = params.company_id as string;
+
+  useEffect(() => {
+    // D-V1: a missing id (malformed route) or the removed demo tenant id never
+    // resolves into console data; both bounce to /login.
+    if (isMissingOrDemoTenant(companyId)) {
+      redirectToLogin();
+    }
+  }, [companyId]);
 
   const { activeProjectId, setActiveProjectId, projects, projectContext } = useProject();
   const { can } = usePermissions();
@@ -36,8 +44,7 @@ export default function Sidebar() {
       return;
     }
 
-    if (!companyId || companyId === "e0000000-0000-0000-0000-000000000000" || companyId === "demo-construction") {
-      setCompanyName("Demo Construction Ltd");
+    if (!companyId) {
       return;
     }
 
@@ -50,14 +57,14 @@ export default function Sidebar() {
         });
         if (res.ok) {
           const data = await res.json();
-          const resolvedCompanyName = data.name || "Demo Company Ltd";
+          const resolvedCompanyName = data.name || "Workspace";
           if (isActive) setCompanyName(resolvedCompanyName);
           if (typeof window !== "undefined") localStorage.setItem("company_name", resolvedCompanyName);
         } else if (isActive) {
-          setCompanyName("Demo Construction Ltd");
+          setCompanyName("Workspace");
         }
       } catch {
-        if (isActive) setCompanyName("Demo Construction Ltd");
+        if (isActive) setCompanyName("Workspace");
       }
     };
     load();

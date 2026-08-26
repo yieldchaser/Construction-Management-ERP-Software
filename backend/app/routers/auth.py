@@ -27,8 +27,6 @@ from app import models, sms, email_otp, security, firebase_auth
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
-DEMO_COMPANY_ID = "e0000000-0000-0000-0000-000000000000"
-
 
 def _auth_limit_key(request: Request) -> str:
     """Bucket key for the auth rate limits (R2-511).
@@ -185,72 +183,6 @@ def _add_provider(user: models.User, name: str) -> None:
 
 def _has_password(user: models.User) -> bool:
     return bool((user.password_hash or "").strip())
-
-
-# ── Demo company seeding (demo-allowlist only) ───────────────────────────────
-
-def _seed_demo_projects(db: Session, company_id: uuid.UUID):
-    PROJ_1 = uuid.UUID("d0000000-0000-0000-0000-000000000001")
-    PROJ_2 = uuid.UUID("d0000000-0000-0000-0000-000000000002")
-    PROJ_3 = uuid.UUID("d0000000-0000-0000-0000-000000000003")
-
-    project_data = [
-        (PROJ_1, "Metro Terminal (Phase 2)", "MET-02", "Mumbai", "Maharashtra"),
-        (PROJ_2, "Bypass Highway Flyover", "HWY-FLY", "Pune", "Maharashtra"),
-        (PROJ_3, "Alpha Premium Residences", "ALF-RES", "Delhi", "Delhi"),
-    ]
-
-    for pid, name, code, city, state in project_data:
-        proj = db.query(models.Project).filter(models.Project.id == pid).first()
-        if not proj:
-            proj = models.Project(
-                id=pid,
-                company_id=company_id,
-                name=name,
-                code=code,
-                city=city,
-                state=state,
-                status="Ongoing",
-            )
-            db.add(proj)
-    db.commit()
-
-
-# Flips to True after the showcase projects have been seeded once for the demo
-# tenant. The company row alone is not proof of seeding: it may pre-exist from
-# boot-time auto_seed_database, and a later deletion must not re-seed either.
-_demo_projects_seeded = False
-
-
-def _ensure_demo_company(db: Session) -> models.Company:
-    """Return the shared demo tenant, creating it on first use. Project seeding
-    is one-time by design: repeated allowlisted logins are pure reads."""
-    global _demo_projects_seeded
-
-    company = db.query(models.Company).filter(models.Company.id == uuid.UUID(DEMO_COMPANY_ID)).first()
-    if company:
-        return company
-
-    company = models.Company(
-        id=uuid.UUID(DEMO_COMPANY_ID),
-        name="Demo Construction Ltd",
-        legal_business_name="Demo Construction India Private Limited",
-        gstin="27AADCD2424B1ZP",
-        billing_address="101, Skyline Tower, Andheri East, Mumbai, MH - 400069",
-        currency_decimal_places=2,
-        quantity_decimal_places=3,
-        back_dated_limit_days=7,
-    )
-    db.add(company)
-    db.commit()
-    db.refresh(company)
-
-    # Idempotency guard: seed the showcase projects only on the first creation,
-    # never again on subsequent allowlisted logins.
-    if not _demo_projects_seeded:
-        _seed_demo_projects(db, company.id)
-        _demo_projects_seeded = True
-    return company
 
 
 def _is_demo_mobile(mobile: str) -> bool:
@@ -457,27 +389,10 @@ def verify_otp(request: Request, payload: OTPVerifyRequest, db: Session = Depend
         db.commit()
         db.refresh(user)
 
-    # Demo-allowlist number (and only it) may still land in the shared demo
-    # company for showcasing. Real signups never touch the demo tenant.
-    if _is_demo_mobile(mobile):
-        company = _ensure_demo_company(db)
-        membership = db.query(models.CompanyTeam).filter(
-            models.CompanyTeam.user_id == user.id,
-            models.CompanyTeam.company_id == company.id,
-        ).first()
-        if not membership:
-            membership = models.CompanyTeam(
-                id=uuid.uuid4(),
-                company_id=company.id,
-                user_id=user.id,
-                priority_type="partner",
-            )
-            db.add(membership)
-            db.commit()
-        _add_provider(user, "phone")
-        db.commit()
-        return _mint_session_response(db, user, company.id, onboarding=False)
-
+    # No special-cased tenant attachment: every phone login converges on the
+    # same post-auth path as every other method. An allowlisted demo number now
+    # gets exactly what any unknown login gets - an onboarding session and no
+    # company rows (D-V1 removed the shared demo tenant entirely).
     return _post_auth(db, user, provider="phone")
 
 

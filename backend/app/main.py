@@ -316,120 +316,10 @@ def ensure_postgres_schema_sync():
 
 
 
-import uuid
-from app.database import SessionLocal
-
-def auto_seed_database():
-    db = SessionLocal()
-    try:
-        # Check if company exists
-        company_exists = db.query(models.Company).filter(models.Company.id == uuid.UUID("e0000000-0000-0000-0000-000000000000")).first()
-        if company_exists:
-            # Update slug if not set for existing seeded db
-            if not company_exists.slug:
-                company_exists.slug = "demo-construction"
-                db.commit()
-            print("Database already seeded.")
-            return
-            
-        print("Database is empty. Seeding mock data...")
-        
-        # 1. Company
-        company = models.Company(
-            id=uuid.UUID("e0000000-0000-0000-0000-000000000000"),
-            name="Demo Construction Ltd",
-            slug="demo-construction",
-            legal_business_name="Demo Construction India Private Limited",
-            gstin="27AADCD2424B1ZP",
-            billing_address="101, Skyline Tower, Andheri East, Mumbai, MH - 400069",
-            currency_decimal_places=2,
-            quantity_decimal_places=3,
-            back_dated_limit_days=7,
-        )
-        db.add(company)
-        db.commit()
-        
-        # 2. User & Team
-        user = models.User(
-            id=uuid.UUID("e0000000-0000-0000-0000-000000000100"),
-            name="Demo Engineer",
-            mobile="+919876543210",
-            email="demo@siteflow.co"
-        )
-        db.add(user)
-        db.commit()
-        
-        team = models.CompanyTeam(
-            id=uuid.UUID("e0000000-0000-0000-0000-000000000200"),
-            company_id=company.id,
-            user_id=user.id,
-            priority_type="partner"
-        )
-        db.add(team)
-        db.commit()
-        
-        # 3. Projects
-        PROJ_1 = uuid.UUID("d0000000-0000-0000-0000-000000000001")
-        PROJ_2 = uuid.UUID("d0000000-0000-0000-0000-000000000002")
-        PROJ_3 = uuid.UUID("d0000000-0000-0000-0000-000000000003")
-        
-        project_data = [
-            (PROJ_1, "Metro Terminal (Phase 2)", "MET-02", "Mumbai", "Maharashtra"),
-            (PROJ_2, "Bypass Highway Flyover", "HWY-FLY", "Pune", "Maharashtra"),
-            (PROJ_3, "Alpha Premium Residences", "ALF-RES", "Delhi", "Delhi"),
-        ]
-        for pid, name, code, city, state in project_data:
-            proj = models.Project(
-                id=pid,
-                company_id=company.id,
-                name=name,
-                code=code,
-                city=city,
-                state=state,
-                status="Ongoing"
-            )
-            db.add(proj)
-        db.commit()
-        
-        # 4. Cost Codes
-        codes = [
-            ("CC-01", "Excavation Work"),
-            ("CC-02", "RCC Foundations"),
-            ("CC-03", "Masonry & Plaster"),
-            ("CC-04", "Electrical Cabling")
-        ]
-        for code, name in codes:
-            db.add(models.LibraryCostCode(company_id=company.id, code=code, name=name))
-            
-        # 5. Deductions
-        deductions = ["Retention Money 5%", "TDS Section 194C", "Labor Cess 1%"]
-        for name in deductions:
-            db.add(models.LibraryDeduction(company_id=company.id, name=name))
-            
-        # 6. Materials
-        materials = [
-            ("Cement M25", "bags", 18.0, "Cement", 420.0),
-            ("TMT Steel 12mm", "MT", 18.0, "Steel", 65000.0),
-            ("River Sand", "m3", 5.0, "Aggregates", 2500.0)
-        ]
-        for name, unit, gst, category, cost in materials:
-            db.add(models.LibraryMaterial(
-                company_id=company.id,
-                name=name,
-                unit=unit,
-                gst_rate=gst,
-                category=category,
-                unit_cost=cost
-            ))
-        db.commit()
-        print("Database auto-seeded successfully on boot!")
-    except Exception as e:
-        print(f"Error seeding database: {e}")
-    finally:
-        db.close()
-
-    # (call runs in lifespan)
-
+# NOTE (D-V1): the historical auto_seed_database() that created the shared demo
+# tenant ("Demo Construction Ltd", e0000000-...), a demo user and showcase
+# projects on EVERY boot was removed. No code path may create that tenant; a
+# demo, if ever needed again, is a real company seeded deliberately.
 
 # Initialize Sentry error tracking before the FastAPI app is constructed.
 # Gated on a non-empty DSN: calling sentry_sdk.init with an empty DSN is a
@@ -455,7 +345,7 @@ else:
     print("SENTRY_DSN not set; Sentry error tracking disabled.")
 
 # ── Startup lifecycle ─────────────────────────────────────────────────────────
-# All schema-sync / demo-seed side effects that historically ran at MODULE IMPORT
+# All schema-sync side effects that historically ran at MODULE IMPORT
 # time now live here. Running them in the FastAPI lifespan guarantees they
 # execute exactly once per process boot — and crucially NOT once per worker when
 # the app is served by Gunicorn/Uvicorn with --workers N (each worker re-imports
@@ -463,8 +353,8 @@ else:
 # (e.g. from pytest) no longer touches the database.
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # SQLite dev schema sync + demo seed (local/SQLite auto-fallback only; in
-    # production these run via Supabase SQL migrations).
+    # SQLite dev schema sync (local/SQLite auto-fallback only; in production
+    # schema changes run via Supabase SQL migrations).
     Base.metadata.create_all(bind=engine)
     ensure_sqlite_library_party_columns()
     ensure_sqlite_company_team_party_link()
@@ -481,7 +371,6 @@ async def lifespan(app: FastAPI):
     ensure_sqlite_task_columns()
     ensure_sqlite_schema_sync()
     ensure_postgres_schema_sync()  # Production PostgreSQL: add missing model columns
-    auto_seed_database()
     os.makedirs(os.path.join(STATIC_DIR, "reports"), exist_ok=True)
     yield
 

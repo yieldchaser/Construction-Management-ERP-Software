@@ -63,7 +63,8 @@ class Settings(BaseSettings):
     SMTP_USE_TLS: bool = True  # STARTTLS on the configured port
     # Comma-separated demo emails allowed to log in with OTP_DEMO_CODE when SMTP
     # is not configured (dev/demo only; never bypasses real delivery once set).
-    EMAIL_OTP_DEMO_ALLOWLIST: str = "demo@siteflow.co"
+    # Empty by default: with no env set, the email demo login path is disabled.
+    EMAIL_OTP_DEMO_ALLOWLIST: str = ""
 
     # --- Marketing lead notifications ---
     # Where the public contact-form / demo-request submissions (app/routers/

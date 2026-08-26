@@ -9,6 +9,7 @@ import { PermissionsProvider } from "@/context/PermissionsContext";
 import Sidebar from "@/components/Sidebar";
 import PageHeader from "@/components/PageHeader";
 import { SidebarProvider } from "@/context/SidebarContext";
+import { isMissingOrDemoTenant } from "@/lib/company-guard";
 
 export default function CompanyLayout({ children }: { children: React.ReactNode }) {
   const params = useParams();
@@ -41,10 +42,11 @@ export default function CompanyLayout({ children }: { children: React.ReactNode 
     return () => window.removeEventListener("storage", onStorage);
   }, []);
 
-  if (params?.company_id === "e0000000-0000-0000-0000-000000000000") {
+  // D-V1: a missing company id (malformed route) or the removed demo tenant id
+  // must never resolve into console data. Both bounce to /login.
+  if (isMissingOrDemoTenant(params?.company_id as string | undefined)) {
     if (typeof window !== "undefined") {
-      const newPath = window.location.pathname.replace("e0000000-0000-0000-0000-000000000000", "demo-construction");
-      window.location.replace(newPath);
+      window.location.replace("/login");
     }
     return (
       <div className="h-screen w-screen flex flex-col items-center justify-center bg-background text-foreground font-sans">

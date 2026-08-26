@@ -6,6 +6,7 @@ import { useProject } from "@/context/ProjectContext";
 import { getApiHost } from "@/lib/api";
 import { authHeaders } from "@/lib/siteflow";
 import Icon from "@/components/marketing/Icon";
+import { isMissingOrDemoTenant, redirectToLogin } from "@/lib/company-guard";
 
 interface WorkOrder {
   id: string;
@@ -28,7 +29,13 @@ export default function SubconPage() {
   const params = useParams();
   const router = useRouter();
   const { activeProjectId } = useProject();
-  const companyId = params?.company_id as string || "e0000000-0000-0000-0000-000000000000";
+  const companyId = params?.company_id as string;
+
+  useEffect(() => {
+    if (isMissingOrDemoTenant(companyId)) {
+      redirectToLogin();
+    }
+  }, [companyId]);
   const projectId = activeProjectId;
 
   // Real backend-backed data
@@ -61,7 +68,7 @@ export default function SubconPage() {
   });
 
   const fetchSubconData = async () => {
-    if (!projectId) return;
+    if (!projectId || isMissingOrDemoTenant(companyId)) return;
     setLoading(true);
     try {
       const [woRes, subRes] = await Promise.all([

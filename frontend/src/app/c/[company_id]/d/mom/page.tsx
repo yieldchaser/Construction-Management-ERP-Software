@@ -45,9 +45,15 @@ const badge = (label: string, cls: string) => (
 
 export default function MoMPage() {
   const params = useParams();
-  const companyId = (params?.company_id as string) || "e0000000-0000-0000-0000-000000000000";
+  const companyId = (params?.company_id as string) || "";
   const { activeProjectId } = useProject();
   const projectId = activeProjectId;
+
+  useEffect(() => {
+    if (!companyId || companyId === "e0000000-0000-0000-0000-000000000000") {
+      if (typeof window !== "undefined") window.location.replace("/login");
+    }
+  }, [companyId]);
 
   const [moms, setMoms] = useState<MoM[]>([]);
   const [projects, setProjects] = useState<ProjectOption[]>([]);
@@ -71,6 +77,7 @@ export default function MoMPage() {
   });
 
   const loadProjects = async () => {
+    if (!companyId || companyId === "e0000000-0000-0000-0000-000000000000") return;
     try {
       const res = await fetch(`${getApiHost()}/apis/v3/planning/projects?company_id=${companyId}`, { headers: authHeaders() });
       if (res.ok) {
@@ -83,6 +90,7 @@ export default function MoMPage() {
   };
 
   const loadMoms = async () => {
+    if (!companyId || companyId === "e0000000-0000-0000-0000-000000000000") return;
     const params2 = new URLSearchParams();
     if (filterProject !== "all") params2.set("project_id", filterProject);
     if (filterStatus !== "all") params2.set("status", filterStatus);

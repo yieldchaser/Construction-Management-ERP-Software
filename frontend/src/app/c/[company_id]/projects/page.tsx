@@ -65,11 +65,15 @@ async function readErrorDetail(res: Response): Promise<string> {
 export default function ProjectsPage() {
   const params = useParams();
   const router = useRouter();
-  const rawCompany = params.company_id as string;
-  const companyId =
-    rawCompany === "e0000000-0000-0000-0000-000000000000"
-      ? "demo-construction"
-      : rawCompany || "demo-construction";
+  const companyId = params.company_id as string;
+
+  useEffect(() => {
+    // D-V1: a missing id (malformed route) or the removed demo tenant id never
+    // resolves into console data; both bounce to /login.
+    if (!companyId || companyId === "e0000000-0000-0000-0000-000000000000") {
+      if (typeof window !== "undefined") window.location.replace("/login");
+    }
+  }, [companyId]);
 
   const authHeaders = () => {
     const token =
@@ -104,6 +108,7 @@ export default function ProjectsPage() {
     : false;
 
   const load = useCallback(async () => {
+    if (!companyId || companyId === "e0000000-0000-0000-0000-000000000000") return;
     setLoading(true);
     try {
       const [pRes, sRes, meRes] = await Promise.all([

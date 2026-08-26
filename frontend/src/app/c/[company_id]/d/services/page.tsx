@@ -1,8 +1,9 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Icon, { type IconName } from "@/components/marketing/Icon";
+import { isMissingOrDemoTenant, redirectToLogin } from "@/lib/company-guard";
 
 interface ServiceItem {
   icon: IconName;
@@ -17,7 +18,13 @@ const SALES_EMAIL = "sales@siteflow.in";
 export default function ServicesPage() {
   const params = useParams();
   const router = useRouter();
-  const companyId = params?.company_id as string || "e0000000-0000-0000-0000-000000000000";
+  const companyId = params?.company_id as string;
+
+  useEffect(() => {
+    if (isMissingOrDemoTenant(companyId)) {
+      redirectToLogin();
+    }
+  }, [companyId]);
 
   const services: ServiceItem[] = [
     {
