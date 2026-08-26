@@ -272,7 +272,7 @@ def list_projects(company_id: uuid.UUID, db: Session = Depends(get_db), _: None 
 def project_summary(company_id: uuid.UUID, user_id: Optional[uuid.UUID] = None, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     project_ids = [p.id for p in db.query(models.Project.id).filter(models.Project.company_id == company_id).all()]
 
-    # Approval (Pending) — drawing revisions + credit notes + payment requests
+    # Approval (Pending) - drawing revisions + credit notes + payment requests
     dr_pending = db.query(func.count(models.DrawingRevision.id)).join(
         models.Drawing, models.Drawing.id == models.DrawingRevision.drawing_id
     ).join(
@@ -291,13 +291,13 @@ def project_summary(company_id: uuid.UUID, user_id: Optional[uuid.UUID] = None, 
     ).scalar() or 0
     approvals_pending = int(dr_pending) + int(cn_pending) + int(pr_pending)
 
-    # Material (Pending) — pending material indents
+    # Material (Pending) - pending material indents
     materials_pending = db.query(func.count(models.MaterialIndent.id)).filter(
         models.MaterialIndent.company_id == company_id,
         models.MaterialIndent.status == "pending"
     ).scalar() or 0
 
-    # To Do (Pending) — assigned to user across the company
+    # To Do (Pending) - assigned to user across the company
     todo_q = db.query(func.count(models.Todo.id)).filter(
         models.Todo.company_id == company_id,
         models.Todo.status == "pending"
@@ -316,6 +316,7 @@ def project_summary(company_id: uuid.UUID, user_id: Optional[uuid.UUID] = None, 
     }
 
 
+# TODO(D-013): profile hook - measure first, trigger when any tenant exceeds 500 bills or 50 projects (whichever first). No perf work now; add timing/sampled logging near bill/project creation when threshold is crossed.
 @router.post("/")
 def create_project(payload: ProjectCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
     get_company_membership(db, current_user, payload.company_id)
@@ -325,7 +326,7 @@ def create_project(payload: ProjectCreate, db: Session = Depends(get_db), curren
     if not payload.state or not str(payload.state).strip():
         raise HTTPException(
             status_code=422,
-            detail="Project.state is required for invoicing — set the site state (GST state code or name) before creating invoices; place of supply derives from the site per IGST Act s.12(3)",
+            detail="Project.state is required for invoicing - set the site state (GST state code or name) before creating invoices; place of supply derives from the site per IGST Act s.12(3)",
         )
     try:
         from app.gst_utils import project_state_code as _psc
@@ -387,12 +388,12 @@ def update_project(project_id: uuid.UUID, payload: ProjectUpdate, db: Session = 
         if field in ("planned_start_date", "planned_end_date", "actual_start_date", "actual_end_date"):
             value = _parse_dt(value)
         setattr(p, field, value)
-    # D4: clearing site state is not allowed — POS would become indeterminate
+    # D4: clearing site state is not allowed - POS would become indeterminate
     if "state" in updates:
         if updates["state"] is None or not str(updates["state"]).strip():
             raise HTTPException(
                 status_code=422,
-                detail="Project.state is required — clearing the site state is not allowed; place of supply derives from the site per IGST Act s.12(3)",
+                detail="Project.state is required - clearing the site state is not allowed; place of supply derives from the site per IGST Act s.12(3)",
             )
         try:
             from app.gst_utils import project_state_code as _psc2
@@ -410,14 +411,14 @@ def update_project(project_id: uuid.UUID, payload: ProjectUpdate, db: Session = 
         # For simplicity, require state to be supplied alongside any update when blank,
         # mirroring the create requirement. If the caller is not touching state, we
         # still block until they set it, because the site is now invoiceable.
-        # Check if project has any bills — if so, definitely require state.
+        # Check if project has any bills - if so, definitely require state.
         try:
             from app.models import Bill as _BillCheck
             has_bills = db.query(_BillCheck.id).filter(_BillCheck.project_id == p.id).first() is not None
             if has_bills:
                 raise HTTPException(
                     status_code=422,
-                    detail="Project.state is required for invoicing — set the site state before updating this project; place of supply derives from the site per IGST Act s.12(3)",
+                    detail="Project.state is required for invoicing - set the site state before updating this project; place of supply derives from the site per IGST Act s.12(3)",
                 )
         except HTTPException:
             raise
@@ -615,7 +616,7 @@ def list_project_parties(project_id: uuid.UUID, db: Session = Depends(get_db), _
             "balance": round(adv - pay, 2),
             "advance_paid": adv,
             "to_pay": pay,
-            "status": link.status or "—",
+            "status": link.status or "-",
         })
     return result
 
@@ -661,7 +662,7 @@ def add_project_party(project_id: uuid.UUID, payload: ProjectPartyCreate, db: Se
         "balance": float(existing.balance),
         "advance_paid": float(existing.advance_paid),
         "to_pay": float(existing.to_pay),
-        "status": existing.status or "—",
+        "status": existing.status or "-",
     }
 
 

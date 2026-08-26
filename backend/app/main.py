@@ -314,6 +314,112 @@ def ensure_postgres_schema_sync():
     # (call runs in lifespan)
 
 
+def ensure_material_wastage_reported_by_uuid():
+    """R2-730: material_wastage.reported_by migration 20260816_000005 never ran on prod.
+
+    Live Supabase had ``reported_by`` as VARCHAR with 2 free-text rows; the model
+    declares UUID FK to company_team.id. The migration's USING clause nulls
+    non-UUID values and adds the FK. Boot sync only adds missing columns, so
+    this type mismatch stays silently wrong and SQLAlchemy raises
+    ``ValueError: badly formed hexadecimal UUID string`` on the wastage read path.
+
+    Fix is idempotent and covers both runtimes:
+      * SQLite (test/dev): clean non-UUID values to NULL so reads never 500.
+        SQLite cannot ALTER COLUMN TYPE in place without a table rebuild, but
+        nulling bad data prevents the ORM coercion failure.
+      * Postgres (prod): ALTER TYPE UUID USING CASE WHEN reported_by ~ uuid THEN
+        ::uuid ELSE NULL END, and add the FK if missing. Mirrors the repo
+        migration file exactly.
+    """
+    import re
+
+    if engine.url.drivername.startswith("sqlite"):
+        with engine.begin() as conn:
+            exists = conn.exec_driver_sql(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name='material_wastage'"
+            ).fetchone()
+            if not exists:
+                return
+            cols = {row[1] for row in conn.exec_driver_sql("PRAGMA table_info(material_wastage)").fetchall()}
+            if "reported_by" not in cols:
+                try:
+                    conn.exec_driver_sql('ALTER TABLE material_wastage ADD COLUMN "reported_by" CHAR(36)')
+                except Exception as e:
+                    print(f"ensure_material_wastage_reported_by_uuid sqlite add column skip: {e}")
+                return
+            uuid_re = re.compile(r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
+            try:
+                rows = conn.exec_driver_sql(
+                    "SELECT id, reported_by FROM material_wastage WHERE reported_by IS NOT NULL"
+                ).fetchall()
+            except Exception:
+                return
+            for rid, rb in rows:
+                if rb is None:
+                    continue
+                if not uuid_re.match(str(rb)):
+                    try:
+                        conn.exec_driver_sql(
+                            "UPDATE material_wastage SET reported_by = NULL WHERE id = ?", (str(rid),)
+                        )
+                    except Exception as e:
+                        print(f"ensure_material_wastage_reported_by_uuid sqlite null skip {rid}: {e}")
+        return
+
+    if engine.url.drivername.startswith("postgresql"):
+        from sqlalchemy import text
+        from sqlalchemy import inspect as sa_inspect
+
+        insp = sa_inspect(engine)
+        with engine.begin() as conn:
+            try:
+                col = next(
+                    (c for c in insp.get_columns("material_wastage") if c["name"] == "reported_by"),
+                    None,
+                )
+            except Exception:
+                return
+            if col is None:
+                try:
+                    conn.execute(text(
+                        'ALTER TABLE "material_wastage" ADD COLUMN IF NOT EXISTS "reported_by" UUID REFERENCES "company_team"("id") ON DELETE SET NULL'
+                    ))
+                    print("ensure_material_wastage_reported_by_uuid: added missing reported_by column (postgres)")
+                except Exception as e:
+                    print(f"ensure_material_wastage_reported_by_uuid postgres add column skip: {e}")
+                return
+            type_str = str(col["type"]).lower()
+            if "uuid" not in type_str:
+                try:
+                    conn.execute(text(
+                        """
+                        ALTER TABLE "material_wastage"
+                        ALTER COLUMN "reported_by" TYPE UUID
+                        USING (CASE WHEN "reported_by" ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN "reported_by"::uuid ELSE NULL END)
+                        """
+                    ))
+                    print("ensure_material_wastage_reported_by_uuid: converted reported_by to UUID (postgres)")
+                except Exception as e:
+                    print(f"ensure_material_wastage_reported_by_uuid postgres type conversion skip: {e}")
+            try:
+                fk_exists = conn.execute(text(
+                    """
+                    SELECT 1 FROM pg_constraint
+                    WHERE conname = 'material_wastage_reported_by_fkey'
+                    AND conrelid = 'material_wastage'::regclass
+                    """
+                )).fetchone()
+            except Exception:
+                fk_exists = None
+            if not fk_exists:
+                try:
+                    conn.execute(text(
+                        'ALTER TABLE "material_wastage" ADD CONSTRAINT "material_wastage_reported_by_fkey" FOREIGN KEY ("reported_by") REFERENCES "company_team"("id") ON DELETE SET NULL'
+                    ))
+                    print("ensure_material_wastage_reported_by_uuid: added FK material_wastage_reported_by_fkey")
+                except Exception as e:
+                    print(f"ensure_material_wastage_reported_by_uuid postgres FK skip: {e}")
+        return
 
 
 # NOTE (D-V1): the historical auto_seed_database() that created the shared demo
@@ -347,7 +453,7 @@ else:
 # ── Startup lifecycle ─────────────────────────────────────────────────────────
 # All schema-sync side effects that historically ran at MODULE IMPORT
 # time now live here. Running them in the FastAPI lifespan guarantees they
-# execute exactly once per process boot — and crucially NOT once per worker when
+# execute exactly once per process boot - and crucially NOT once per worker when
 # the app is served by Gunicorn/Uvicorn with --workers N (each worker re-imports
 # the module, so import-time code double-seeds/races). Importing this module
 # (e.g. from pytest) no longer touches the database.
@@ -371,6 +477,7 @@ async def lifespan(app: FastAPI):
     ensure_sqlite_task_columns()
     ensure_sqlite_schema_sync()
     ensure_postgres_schema_sync()  # Production PostgreSQL: add missing model columns
+    ensure_material_wastage_reported_by_uuid()  # R2-730: repair 20260816_000005 type mismatch (VARCHAR -> UUID FK)
     os.makedirs(os.path.join(STATIC_DIR, "reports"), exist_ok=True)
     yield
 
@@ -391,7 +498,7 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 @app.exception_handler(IntegrityError)
 async def integrity_error_handler(request, exc: IntegrityError):
-    # A referential or uniqueness constraint rejected the write — e.g. a
+    # A referential or uniqueness constraint rejected the write - e.g. a
     # delete whose parent is still referenced by an FK with no ondelete rule.
     # That is the client's conflict to resolve, not a server fault.
     if exc.orig is not None:

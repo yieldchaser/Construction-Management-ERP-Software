@@ -767,9 +767,9 @@ def get_bill_pdf(bill_id: UUID, db: Session = Depends(get_db), current_user=Depe
     type_label = type_label_map[bill.invoice_type]
 
     # D4 (R2-041/R2-125/R2-319): place of supply is the SITE (Project.state)
-    # per IGST Act s.12(3) for works contracts — not the party address.
+    # per IGST Act s.12(3) for works contracts - not the party address.
     # Compare site state vs supplier GSTIN prefix: same -> CGST+SGST halves,
-    # different -> IGST full. Forward-only — no rewrite of filed docs.
+    # different -> IGST full. Forward-only - no rewrite of filed docs.
     supplier_gstin = ""
     for ln in supplier_lines:
         if ln.startswith("GSTIN: "):
@@ -787,7 +787,7 @@ def get_bill_pdf(bill_id: UUID, db: Session = Depends(get_db), current_user=Depe
             place_of_supply = _site_code
             inter_state = bool(inter_val) if inter_val is not None else False
         else:
-            # Legacy fallback: site state missing — fall back to recipient-based POS
+            # Legacy fallback: site state missing - fall back to recipient-based POS
             # so that pre-D4 PDFs (and the R2-272 pin) remain honest. New writes
             # are gated by Project.state required 422, so this path only serves history.
             place_of_supply = recipient_state or ""
@@ -968,19 +968,20 @@ def _validate_bill_line_items(items_json: Optional[str], subtotal: float, invoic
         )
 
 
+# TODO(D-013): profile hook - measure first, trigger when any tenant exceeds 500 bills or 50 projects (whichever first). No perf work now; add timing/sampled logging here when threshold is crossed.
 @router.post("/bills", response_model=BillResponse, status_code=201)
 def create_bill(req: BillCreateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     # Tenant check: the caller must be a member of the company this bill belongs to.
     get_company_membership(db, current_user, req.company_id)
     verify_project_in_company(db, req.project_id, req.company_id)
     require_permission(db, current_user, req.company_id, "billing:edit")
-    # D4 (R2-041/R2-125/R2-319): site state is required for any invoiceable write —
+    # D4 (R2-041/R2-125/R2-319): site state is required for any invoiceable write -
     # place of supply derives from Project.state vs supplier GSTIN.
     _bill_proj = db.query(Project).filter(Project.id == req.project_id).first()
     if not _bill_proj or not str(getattr(_bill_proj, "state", "") or "").strip():
         raise HTTPException(
             status_code=422,
-            detail="Project.state is required for invoicing — set the site state (GST state code or name) before creating invoices; place of supply derives from the site per IGST Act s.12(3)",
+            detail="Project.state is required for invoicing - set the site state (GST state code or name) before creating invoices; place of supply derives from the site per IGST Act s.12(3)",
         )
     enforce_required_custom_fields(db, req.company_id, "invoice", [cf.model_dump() for cf in req.custom_fields])
     enforce_required_custom_fields(db, req.company_id, "bill", [cf.model_dump() for cf in req.custom_fields])
