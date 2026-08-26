@@ -4,6 +4,20 @@ from typing import Optional, List, Dict
 import math
 
 from app.auth import get_current_user
+from app.calc_shared import (
+    calc_steel_column_or_slab_or_stirrup,
+    calc_concrete_backend,
+    calc_rmc as shared_calc_rmc,
+    calc_house_cost as shared_calc_house_cost,
+    calc_brick_backend,
+    brick_mortar_share_ok,
+    calc_paint as shared_calc_paint,
+    calc_tile as shared_calc_tile,
+    calc_plaster as shared_calc_plaster,
+    calc_waterproofing as shared_calc_waterproofing,
+    calc_billing as shared_calc_billing,
+    calc_split_rate as shared_calc_split_rate,
+)
 
 router = APIRouter(prefix="/calculators", tags=["Calculators"], dependencies=[Depends(get_current_user)])
 
@@ -58,39 +72,21 @@ class SteelCalcRequest(BaseModel):
 
 @router.post("/steel")
 def calc_steel(req: SteelCalcRequest):
-    unit_weight = (req.diameter ** 2) / 162.0
-    
-    if req.is_column:
-        lap_length = 50 * (req.diameter / 1000.0)
-        total_length = req.length_or_height + req.slab_thickness + lap_length
-        total_weight = req.count * total_length * unit_weight * (1 + req.wastage_pct / 100.0)
-        return {
-            "unit_weight_kg_m": round(unit_weight, 4),
-            "total_weight_kg": round(total_weight, 2),
-            "total_length_m": round(total_length, 2)
-        }
-    elif req.spacing > 0 and req.span > 0:
-        bar_count = int(math.floor(req.span / req.spacing)) + 1
-        total_length = req.length_or_height
-        total_weight = bar_count * total_length * unit_weight * (1 + req.wastage_pct / 100.0)
-        return {
-            "unit_weight_kg_m": round(unit_weight, 4),
-            "bar_count": bar_count,
-            "total_weight_kg": round(total_weight, 2)
-        }
-    else:
-        # Stirrup
-        a = req.main_width - 2 * req.cover
-        b = req.main_height - 2 * req.cover
-        hook_len = req.hook_length_factor * (req.diameter / 1000.0)
-        bend_ded = req.bend_deduction_factor * (req.diameter / 1000.0)
-        cutting_length = 2 * (a + b) + 2 * hook_len - 2 * bend_ded
-        total_weight = req.count * cutting_length * unit_weight * (1 + req.wastage_pct / 100.0)
-        return {
-            "unit_weight_kg_m": round(unit_weight, 4),
-            "cutting_length_m": round(cutting_length, 4),
-            "total_weight_kg": round(total_weight, 2)
-        }
+    return calc_steel_column_or_slab_or_stirrup(
+        diameter=req.diameter,
+        count=req.count,
+        length_or_height=req.length_or_height,
+        slab_thickness=req.slab_thickness,
+        is_column=req.is_column,
+        spacing=req.spacing,
+        span=req.span,
+        hook_length_factor=req.hook_length_factor,
+        bend_deduction_factor=req.bend_deduction_factor,
+        cover=req.cover,
+        main_width=req.main_width,
+        main_height=req.main_height,
+        wastage_pct=req.wastage_pct,
+    )
 
 # 2. Concrete Volume & Mix
 class ConcreteCalcRequest(BaseModel):
@@ -114,44 +110,16 @@ class ConcreteCalcRequest(BaseModel):
 
 @router.post("/concrete")
 def calc_concrete(req: ConcreteCalcRequest):
-    wet_volume = req.wet_volume
-    if req.stairs_steps > 0:
-        steps_vol = req.stairs_steps * req.stairs_width * ((req.stairs_riser * req.stairs_tread) / 2.0)
-        waist_len = math.sqrt(req.stairs_riser**2 + req.stairs_tread**2)
-        waist_vol = req.stairs_waist * req.stairs_width * waist_len * req.stairs_steps
-        wet_volume = steps_vol + waist_vol
-        
-    dry_volume = wet_volume * 1.54 * (1 + req.wastage_pct / 100.0)
-    
-    mix_library = {
-        "M7.5": (1.0, 4.0, 8.0),
-        "M10": (1.0, 3.0, 6.0),
-        "M15": (1.0, 2.0, 4.0),
-        "M20": (1.0, 1.5, 3.0),
-        "M25": (1.0, 1.0, 2.0)
-    }
-
-    if req.grade not in mix_library:
-        return {
-            "wet_volume_m3": round(wet_volume, 3),
-            "dry_volume_m3": round(dry_volume, 3),
-            "engineered_design_mix_required": True
-        }
-
-    cement_parts, sand_parts, aggregate_parts = mix_library[req.grade]
-    total_parts = cement_parts + sand_parts + aggregate_parts
-    cement_bags = (dry_volume * (cement_parts / total_parts) * 1440.0) / 50.0
-    sand_m3 = dry_volume * (sand_parts / total_parts)
-    aggregate_m3 = dry_volume * (aggregate_parts / total_parts)
-    
-    return {
-        "wet_volume_m3": round(wet_volume, 3),
-        "dry_volume_m3": round(dry_volume, 3),
-        "cement_bags": round(cement_bags, 2),
-        "sand_m3": round(sand_m3, 3),
-        "aggregate_m3": round(aggregate_m3, 3),
-        "engineered_design_mix_required": False
-    }
+    return calc_concrete_backend(
+        wet_volume=req.wet_volume,
+        wastage_pct=req.wastage_pct,
+        grade=req.grade,
+        stairs_steps=req.stairs_steps,
+        stairs_width=req.stairs_width,
+        stairs_riser=req.stairs_riser,
+        stairs_tread=req.stairs_tread,
+        stairs_waist=req.stairs_waist,
+    )
 
 # 3. RMC Mixer Load
 class RMCCalcRequest(BaseModel):
@@ -161,12 +129,7 @@ class RMCCalcRequest(BaseModel):
 
 @router.post("/rmc")
 def calc_rmc(req: RMCCalcRequest):
-    total_volume = req.pour_volume * (1 + req.wastage_pct / 100.0)
-    mixer_loads = math.ceil(total_volume / req.mixer_size)
-    return {
-        "total_volume_m3": round(total_volume, 3),
-        "mixer_loads": mixer_loads
-    }
+    return shared_calc_rmc(pour_volume=req.pour_volume, mixer_size=req.mixer_size, wastage_pct=req.wastage_pct)
 
 # 4. House Construction Cost
 class HouseCalcRequest(BaseModel):
@@ -179,38 +142,14 @@ class HouseCalcRequest(BaseModel):
 
 @router.post("/house-cost")
 def calc_house_cost(req: HouseCalcRequest):
-    total_construction_cost = 0.0
-    for f in range(req.floors):
-        multiplier = 1.0 + (0.12 * f)
-        floor_rate = req.base_rate * multiplier
-        total_construction_cost += req.area_sqft * floor_rate
-        
-    if req.is_commercial:
-        total_construction_cost *= 1.10
-        
-    compound_wall_cost = req.compound_wall_length_ft * (req.base_rate * 0.35)
-    total_project_cost = total_construction_cost + compound_wall_cost
-    
-    structure = total_project_cost * 0.40
-    finishing = total_project_cost * 0.25
-    mep = total_project_cost * 0.15
-    interior = total_project_cost * 0.12
-    misc = total_project_cost * 0.08
-    contingency_buffer = total_project_cost * (req.contingency_pct / 100.0)
-    
-    return {
-        "base_construction_cost": round(total_construction_cost, 2),
-        "compound_wall_cost": round(compound_wall_cost, 2),
-        "total_project_cost": round(total_project_cost, 2),
-        "splits": {
-            "structure": round(structure, 2),
-            "finishing": round(finishing, 2),
-            "mep": round(mep, 2),
-            "interior": round(interior, 2),
-            "misc": round(misc, 2)
-        },
-        "contingency_buffer": round(contingency_buffer, 2)
-    }
+    return shared_calc_house_cost(
+        area_sqft=req.area_sqft,
+        base_rate=req.base_rate,
+        floors=req.floors,
+        is_commercial=req.is_commercial,
+        compound_wall_length_ft=req.compound_wall_length_ft,
+        contingency_pct=req.contingency_pct,
+    )
 
 # 5. Brick & Mortar
 class BrickCalcRequest(BaseModel):
@@ -240,49 +179,28 @@ class BrickCalcRequest(BaseModel):
 @router.post("/brick")
 @router.post("/brickwork")  # DEFECT-01 fix: spec-compatible alias
 def calc_brick(req: BrickCalcRequest):
-    # R2-279 fix: derive leaves from wall thickness so the brick count and the volume math describe the same
-    # wall. thickness_mm wins over any supplied leaves value and the derived count is reported in the response.
-    leaves = max(1, round(req.thickness_mm / (req.brick_width_mm + req.joint_mm)))
-
-    b_len = (req.brick_length_mm + req.joint_mm) / 1000.0
-    b_hgt = (req.brick_height_mm + req.joint_mm) / 1000.0
-
-    wall_area = req.length_m * req.height_m
-    single_brick_face_area = b_len * b_hgt
-    bricks_needed = (wall_area / single_brick_face_area) * leaves * (1 + req.wastage_pct / 100.0)
-
-    wall_volume = req.length_m * req.height_m * (req.thickness_mm / 1000.0)
-    brick_vol_actual = (req.brick_length_mm / 1000.0) * (req.brick_width_mm / 1000.0) * (req.brick_height_mm / 1000.0)
-    net_bricks_no_wastage = (wall_area / single_brick_face_area) * leaves
-    mortar_volume = wall_volume - (net_bricks_no_wastage * brick_vol_actual)
-
-    # R2-279 sanity guard: real masonry has roughly 20-35% mortar by volume. Anything else means the geometry is
-    # inconsistent, so fail loudly instead of quoting an impossible wall.
-    mortar_share = mortar_volume / wall_volume
-    if not (0.20 <= mortar_share <= 0.35):
+    result = calc_brick_backend(
+        length_m=req.length_m,
+        height_m=req.height_m,
+        thickness_mm=req.thickness_mm,
+        brick_length_mm=req.brick_length_mm,
+        brick_width_mm=req.brick_width_mm,
+        brick_height_mm=req.brick_height_mm,
+        joint_mm=req.joint_mm,
+        wastage_pct=req.wastage_pct,
+    )
+    # R2-279 sanity guard preserved at router layer for HTTP 422 semantics
+    if not brick_mortar_share_ok(result["mortar_volume_m3"], result["wall_volume_m3"]):
+        mortar_share = result["mortar_volume_m3"] / result["wall_volume_m3"] if result["wall_volume_m3"] else 0
         raise HTTPException(
             status_code=422,
             detail=(
                 f"Inconsistent brickwork geometry: mortar works out to {round(mortar_share * 100)}% of wall "
                 f"volume but should be between 20% and 35%. Check that thickness_mm matches the brick size "
-                f"(derived leaves: {leaves})."
+                f"(derived leaves: {result['leaves']})."
             ),
         )
-
-    dry_mortar_vol = mortar_volume * 1.33
-    cement_m3 = dry_mortar_vol * (1.0 / 7.0)
-    cement_bags = (cement_m3 * 1440.0) / 50.0
-    sand_m3 = dry_mortar_vol * (6.0 / 7.0)
-
-    return {
-        "wall_area_m2": round(wall_area, 2),
-        "wall_volume_m3": round(wall_volume, 3),
-        "leaves": leaves,
-        "bricks_needed": int(math.ceil(bricks_needed)),
-        "mortar_volume_m3": round(mortar_volume, 3),
-        "cement_bags": round(cement_bags, 2),
-        "sand_m3": round(sand_m3, 3)
-    }
+    return result
 
 # 6. Paint Quantity
 class PaintCalcRequest(BaseModel):
@@ -297,34 +215,19 @@ class PaintCalcRequest(BaseModel):
 
 @router.post("/paint")
 def calc_paint(req: PaintCalcRequest):
-    total_wall_area = 2 * (req.room_length_ft + req.room_width_ft) * req.ceiling_height_ft
-    if req.paint_ceiling:
-        total_wall_area += req.room_length_ft * req.room_width_ft
-        
-    single_door_area = 21.0
-    standard_window_area = 12.0
-    
-    paintable_area = total_wall_area - (req.doors_count * single_door_area) - (req.windows_count * standard_window_area)
-    if paintable_area <= 0:
-        raise HTTPException(status_code=422, detail="Total opening area exceeds the wall area")
-    
-    coverage_rates = {
-        "economy": 115.0,
-        "premium": 135.0,
-        "luxury": 155.0
-    }
-    
-    coverage = coverage_rates.get(req.quality.lower(), 135.0)
-    paint_litres = (paintable_area / coverage) * req.coats * 1.10
-    putty_kg = (paintable_area / 100.0) * 2.25 * 1.10
-    primer_litres = (paintable_area / 175.0) * 1.05
-    
-    return {
-        "paintable_area_sqft": round(paintable_area, 2),
-        "paint_litres": round(paint_litres, 2),
-        "putty_kg": round(putty_kg, 2),
-        "primer_litres": round(primer_litres, 2)
-    }
+    try:
+        return shared_calc_paint(
+            room_length_ft=req.room_length_ft,
+            room_width_ft=req.room_width_ft,
+            ceiling_height_ft=req.ceiling_height_ft,
+            paint_ceiling=req.paint_ceiling,
+            doors_count=req.doors_count,
+            windows_count=req.windows_count,
+            coats=req.coats,
+            quality=req.quality,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
 
 # 7. Tile Flooring
 class TileCalcRequest(BaseModel):
@@ -338,17 +241,14 @@ class TileCalcRequest(BaseModel):
 @router.post("/tile")
 @router.post("/flooring")  # DEFECT-01 fix: spec-compatible alias
 def calc_tile(req: TileCalcRequest):
-    room_area_sqft = req.length_ft * req.width_ft
-    grout_inch = req.grout_mm / 25.4
-    tile_len_ft = (req.tile_length_inch + grout_inch) / 12.0
-    tile_width_ft = (req.tile_width_inch + grout_inch) / 12.0
-    single_tile_area = tile_len_ft * tile_width_ft
-    
-    tiles_needed = (room_area_sqft / single_tile_area) * (1 + req.wastage_pct / 100.0)
-    return {
-        "room_area_sqft": round(room_area_sqft, 2),
-        "tiles_needed": int(math.ceil(tiles_needed))
-    }
+    return shared_calc_tile(
+        length_ft=req.length_ft,
+        width_ft=req.width_ft,
+        tile_length_inch=req.tile_length_inch,
+        tile_width_inch=req.tile_width_inch,
+        grout_mm=req.grout_mm,
+        wastage_pct=req.wastage_pct,
+    )
 
 # 8. Plastering
 class PlasterCalcRequest(BaseModel):
@@ -360,42 +260,15 @@ class PlasterCalcRequest(BaseModel):
 @router.post("/plaster")
 @router.post("/plastering")  # DEFECT-01 fix: spec-compatible alias
 def calc_plaster(req: PlasterCalcRequest):
-    thick_m = req.thickness_mm / 1000.0
-    wet_volume = req.wall_area_m2 * thick_m
-    dry_volume = wet_volume * 1.33 * (1 + req.wastage_pct / 100.0)
-
-    # DEFECT-05 fix: validate mix_ratio format before splitting to avoid IndexError / HTTP 500
-    parts = req.mix_ratio.split(":")
-    if len(parts) != 2:
-        raise HTTPException(
-            status_code=422,
-            detail=f"Invalid mix_ratio '{req.mix_ratio}'. Expected format 'cement:sand', e.g. '1:4' or '1:6'."
-        )
     try:
-        cement_parts = float(parts[0])
-        sand_parts = float(parts[1])
-    except ValueError:
-        raise HTTPException(
-            status_code=422,
-            detail=f"mix_ratio parts must be numeric, got '{req.mix_ratio}'."
+        return shared_calc_plaster(
+            wall_area_m2=req.wall_area_m2,
+            thickness_mm=req.thickness_mm,
+            mix_ratio=req.mix_ratio,
+            wastage_pct=req.wastage_pct,
         )
-    if cement_parts <= 0 or sand_parts <= 0:
-        raise HTTPException(
-            status_code=422,
-            detail="mix_ratio parts must both be positive numbers."
-        )
-    total_parts = cement_parts + sand_parts
-
-    cement_m3 = dry_volume * (cement_parts / total_parts)
-    cement_bags = (cement_m3 * 1440.0) / 50.0
-    sand_m3 = dry_volume * (sand_parts / total_parts)
-
-    return {
-        "wet_volume_m3": round(wet_volume, 4),
-        "dry_volume_m3": round(dry_volume, 4),
-        "cement_bags": round(cement_bags, 2),
-        "sand_m3": round(sand_m3, 3)
-    }
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
 
 # 9. Waterproofing
 class WaterproofingCalcRequest(BaseModel):
@@ -406,10 +279,12 @@ class WaterproofingCalcRequest(BaseModel):
 
 @router.post("/waterproofing")
 def calc_waterproofing(req: WaterproofingCalcRequest):
-    litres_needed = (req.area_sqft / req.coverage_sqft_per_litre) * req.coats * (1 + req.wastage_pct / 100.0)
-    return {
-        "litres_needed": round(litres_needed, 2)
-    }
+    return shared_calc_waterproofing(
+        area_sqft=req.area_sqft,
+        coverage_sqft_per_litre=req.coverage_sqft_per_litre,
+        coats=req.coats,
+        wastage_pct=req.wastage_pct,
+    )
 
 # 10. Billing Calculations
 class DeductionItem(BaseModel):
@@ -425,50 +300,13 @@ class BillingCalcRequest(BaseModel):
 
 @router.post("/billing")
 def calc_billing(req: BillingCalcRequest):
-    ded_amt = 0.0
-    ret_amt = 0.0
-    
-    if req.pre_tax_deductions:
-        for d in req.deductions:
-            if d.type in ["pct_item_subtotal", "pct_total"]:
-                ded_amt += req.subtotal * (d.val / 100.0)
-            else:
-                ded_amt += d.val
-        for r in req.retentions:
-            if r.type == "pct":
-                ret_amt += req.subtotal * (r.val / 100.0)
-            else:
-                ret_amt += r.val
-                
-        taxable_amount = req.subtotal - ded_amt - ret_amt
-        gst_amount = taxable_amount * (req.gst_pct / 100.0)
-        net_payable = taxable_amount + gst_amount
-    else:
-        gst_amount = req.subtotal * (req.gst_pct / 100.0)
-        total_amount = req.subtotal + gst_amount
-        
-        for d in req.deductions:
-            if d.type == "pct_item_subtotal":
-                ded_amt += req.subtotal * (d.val / 100.0)
-            elif d.type == "pct_total":
-                ded_amt += total_amount * (d.val / 100.0)
-            else:
-                ded_amt += d.val
-        for r in req.retentions:
-            if r.type == "pct":
-                ret_amt += total_amount * (r.val / 100.0)
-            else:
-                ret_amt += r.val
-                
-        net_payable = total_amount - ded_amt - ret_amt
-        
-    return {
-        "subtotal": round(req.subtotal, 2),
-        "gst_amount": round(gst_amount, 2),
-        "total_deductions": round(ded_amt, 2),
-        "total_retention": round(ret_amt, 2),
-        "net_payable": round(net_payable, 2)
-    }
+    return shared_calc_billing(
+        subtotal=req.subtotal,
+        gst_pct=req.gst_pct,
+        deductions=[{"type": d.type, "val": d.val} for d in req.deductions],
+        retentions=[{"type": r.type, "val": r.val} for r in req.retentions],
+        pre_tax_deductions=req.pre_tax_deductions,
+    )
 
 # 11. Split Rate
 class SplitRateRequest(BaseModel):
@@ -481,27 +319,11 @@ class SplitRateRequest(BaseModel):
 
 @router.post("/split-rate")
 def calc_split_rate(req: SplitRateRequest):
-    gross_supply = req.quantity * req.supply_rate
-    gross_installation = req.quantity * req.installation_rate
-    gross_combined = gross_supply + gross_installation
-    
-    if req.is_item_tax:
-        supply_tax = gross_supply * (req.supply_tax_pct / 100.0)
-        installation_tax = gross_installation * (req.installation_tax_pct / 100.0)
-        total_tax = supply_tax + installation_tax
-        total_amount = gross_combined + total_tax
-    else:
-        total_tax = gross_combined * 0.18
-        total_amount = gross_combined + total_tax
-        supply_tax = 0.0
-        installation_tax = 0.0
-        
-    return {
-        "gross_supply": round(gross_supply, 2),
-        "gross_installation": round(gross_installation, 2),
-        "gross_combined": round(gross_combined, 2),
-        "supply_tax": round(supply_tax, 2),
-        "installation_tax": round(installation_tax, 2),
-        "total_tax": round(total_tax, 2),
-        "total_amount": round(total_amount, 2)
-    }
+    return shared_calc_split_rate(
+        quantity=req.quantity,
+        supply_rate=req.supply_rate,
+        installation_rate=req.installation_rate,
+        supply_tax_pct=req.supply_tax_pct,
+        installation_tax_pct=req.installation_tax_pct,
+        is_item_tax=req.is_item_tax,
+    )
