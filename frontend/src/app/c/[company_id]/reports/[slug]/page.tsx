@@ -35,19 +35,19 @@ const REPORT_METADATA: Record<string, ReportMeta> = {
     title: "Company Sales Report",
     hasDownload: true,
     filters: [{ label: "Client Name", type: "select", options: ["All"] }, { label: "Project Name", type: "select", options: ["All"] }, { label: "Invoice Date", type: "date" }, { label: "Sale Type", type: "select", options: ["All"] }, { label: "Creator Name", type: "select", options: ["All"] }],
-    columns: ['Invoice Date', 'Sale Type', 'Client Name', 'Project Name', 'Invoice Number', 'Total Amount', 'Retention Amount', 'Post Tax Deduction', 'Net Amount', 'Due Date', 'Payment Received', 'Balance Due', 'Payment Status', 'Notes', 'Creator Name', 'Settlement Amounts', 'Payment Dates', 'Reference Numbers', 'Payment Total Amounts']
+    columns: ['Invoice Date', 'Sale Type', 'Client Name', 'Project Name', 'Invoice Number', 'Total Amount', 'Retention Amount', 'Due Date', 'Payment Status']
   },
   "sales-deduction-retention": {
     title: "Sales Deduction / Retention Report",
     hasDownload: false,
     filters: [{ label: "Entry Creation Date", type: "date"  }, { label: "Type", type: "select", options: ["All"] }, { label: "Project Name", type: "select", options: ["All"] }, { label: "Party Name", type: "select", options: ["All"] }],
-    columns: ['Item Name', 'Amount', 'Project Name', 'Party Name', 'Invoice Number', 'Creator Name', 'Type', 'Entry Creation Date', 'Due Date']
+    columns: ['Amount', 'Project Name', 'Party Name', 'Invoice Number', 'Type', 'Entry Creation Date', 'Due Date']
   },
   "crm-lead-detail": {
     title: "CRM Lead Detail Report",
     hasDownload: false,
     filters: [{ label: "Lead Date", type: "date"  }, { label: "Lead Name", type: "select", options: ["All"] }, { label: "Contact Name", type: "select", options: ["All"] }, { label: "Lead Status", type: "select", options: ["All"] }, { label: "Lead Priority", type: "select", options: ["All"] }, { label: "Lead Category", type: "select", options: ["All"] }],
-    columns: ['Lead Date', 'Lead Name', 'Contact Name', 'Contact No.', 'Lead Status', 'Lead Priority', 'Lead Source', 'Lead Category', 'Lead Company', 'Email', 'Budget', 'Last Contacted Date', 'Followup Date', 'Expected Closure Date', 'Remark', 'Assignees']
+    columns: ['Lead Date', 'Lead Name', 'Contact Name', 'Contact No.', 'Lead Status', 'Lead Priority', 'Lead Source', 'Lead Category', 'Lead Company', 'Email', 'Budget', 'Followup Date', 'Expected Closure Date', 'Remark', 'Assignees']
   },
   "lead-status-funnel": {
     title: "Lead Status Funnel Report",
@@ -65,13 +65,13 @@ const REPORT_METADATA: Record<string, ReportMeta> = {
     title: "Company Payments",
     hasDownload: true,
     filters: [{ label: "Payment Date", type: "date"  }, { label: "Creator Name", type: "select", options: ["All"] }, { label: "Party Name", type: "select", options: ["All"] }, { label: "Project Name", type: "select", options: ["All"] }, { label: "Payment Type", type: "select", options: ["All"] }, { label: "Payment Mode", type: "select", options: ["All"] }, { label: "Cost Code (+ Show more filters)", type: "select", options: ["All"] }],
-    columns: ['Project Name', 'Creator Name', 'Party Name', 'Amount', 'Unsettled Amount', 'Net Amount', 'Settlement Type', 'Remark', 'Payment Type', 'Payment Mode', 'Account Name', 'Cost Code', 'Sub Cost Code', 'Category', 'Created Date', 'Reference No.']
+    columns: ['Project Name', 'Amount', 'Unsettled Amount', 'Net Amount', 'Remark', 'Payment Type', 'Payment Mode', 'Account Name', 'Cost Code', 'Sub Cost Code', 'Category', 'Created Date', 'Reference No.']
   },
   "bank-statement": {
     title: "Bank Statement",
     hasDownload: false,
     filters: [{ label: "Account Name", type: "select", options: ["All"] }, { label: "Account Number", type: "select", options: ["All"] }, { label: "Bank Name", type: "select", options: ["All"] }, { label: "Project Name", type: "select", options: ["All"] }, { label: "Party Name", type: "select", options: ["All"] }, { label: "Payment Date", type: "date" }],
-    columns: ['Account Name', 'Account Number', 'Bank Name', 'Project Name', 'Party Name', 'Payment Date', 'Credit', 'Debit', 'Balance', 'Remarks']
+    columns: ['Account Name', 'Project Name', 'Party Name', 'Payment Date', 'Credit', 'Debit', 'Balance', 'Remarks']
   },
   "project-wise-payment-summary": {
     title: "Project Wise Payment Summary",
@@ -83,25 +83,25 @@ const REPORT_METADATA: Record<string, ReportMeta> = {
     title: "Project Payment Report",
     hasDownload: false,
     filters: [{ label: "Payment Date", type: "date"  }, { label: "Project Name", type: "select", options: ["All"] }, { label: "Payment Type", type: "select", options: ["All"] }, { label: "Party Name", type: "select", options: ["All"] }, { label: "Account Name", type: "select", options: ["All"] }],
-    columns: ['Payment Date', 'Project Name', 'Creator Name', 'Party Name', 'Amount', 'Remark', 'Reference No.', 'Payment Type', 'Payment Mode', 'Account Name', 'Category', 'Cost Code', 'Sub Cost Code', 'Created Date']
+    columns: ['Payment Date', 'Project Name', 'Party Name', 'Amount', 'Remark', 'Reference No.', 'Payment Type', 'Payment Mode', 'Account Name', 'Category', 'Cost Code', 'Sub Cost Code', 'Created Date']
   },
   "payment-request": {
     title: "Payment Request Report",
     hasDownload: false,
     filters: [{ label: "Party Name", type: "select", options: ["All"] }, { label: "Project Name", type: "select", options: ["All"] }, { label: "Approval Status", type: "select", options: ["All"] }, { label: "Payment Status", type: "select", options: ["All"] }, { label: "Payment Date", type: "date" }],
-    columns: ['Payment Request ID', 'Payment Request No.', 'Project Name', 'Party Name', 'Amount', 'Payment Date', 'Due Date', 'Creator Name', 'Request Type', 'Order/Bill No.', 'Approval Status', 'Payment Status', 'Remark', 'Account Name']
+    columns: ['Payment Request ID', 'Payment Request No.', 'Project Name', 'Party Name', 'Amount', 'Payment Date', 'Due Date', 'Creator Name', 'Request Type', 'Approval Status', 'Payment Status', 'Remark']
   },
   "task-report": {
     title: "Task Report",
     hasDownload: false,
     filters: [{ label: "Project Name", type: "select", options: ["All"] }, { label: "Main Task Name", type: "select", options: ["All"] }, { label: "Group Task Name", type: "select", options: ["All"] }, { label: "Task Name", type: "select", options: ["All"] }, { label: "Progress Date", type: "date" }, { label: "Task Status", type: "select", options: ["All"] }, { label: "Delay Status", type: "select", options: ["All"] }, { label: "Assigned To", type: "select", options: ["All"] }, { label: "Start Date (+ Show more filters)", type: "date" }],
-    columns: ['Project Name', 'Main Task Name', 'Group Task Name', 'Task Name', 'Assigned To', 'Start Date', 'End Date', 'Progress % (additional columns likely exist beyond captured scroll range)']
+    columns: ['Project Name', 'Task Name', 'Start Date', 'End Date']
   },
   "task-measurement-book": {
     title: "Task Measurement Book",
     hasDownload: false,
     filters: [{ label: "Project Name", type: "select", options: ["All"] }, { label: "Main Task Name", type: "select", options: ["All"] }, { label: "Group Task Name", type: "select", options: ["All"] }, { label: "Task Name", type: "select", options: ["All"] }, { label: "Progress Date", type: "date" }, { label: "Task Status", type: "select", options: ["All"] }],
-    columns: ['Project Name', 'Main Task Name', 'Group Task Name', 'Task Name', 'Progress Date', 'Unit', 'Estimated Quantity', 'Opening Quantity', 'Number', 'Length', 'Width', 'Height', 'Progress Quantity', 'Closing Quantity', 'Progress Notes']
+    columns: ['Project Name', 'Main Task Name', 'Group Task Name', 'Task Name', 'Progress Date', 'Unit', 'Estimated Quantity', 'Progress Quantity', 'Progress Notes']
   },
   "task-material": {
     title: "Task Material Report",
@@ -143,7 +143,7 @@ const REPORT_METADATA: Record<string, ReportMeta> = {
     title: "Task Attendance Report",
     hasDownload: false,
     filters: [{ label: "Project Name", type: "select", options: ["All"] }, { label: "Attendance Date", type: "date" }, { label: "Main Task Name", type: "select", options: ["All"] }, { label: "Group Task Name", type: "select", options: ["All"] }, { label: "Task Name", type: "select", options: ["All"] }],
-    columns: ['Party Name', 'Workforce Name', 'Project Name', 'Attendance Date', 'Attendance Status', 'Main Task Name', 'Group Task Name', 'Task Name', 'Workers on Task', 'Work Hours', 'Total Hours', 'Task Labour Cost']
+    columns: ['Workforce Name', 'Project Name', 'Attendance Date', 'Attendance Status', 'Work Hours']
   },
   "company-expense": {
     title: "Company Expense Report",
@@ -179,7 +179,7 @@ const REPORT_METADATA: Record<string, ReportMeta> = {
     title: "All Party Balances",
     hasDownload: false,
     filters: [{ label: "Party Name", type: "select", options: ["All"] }, { label: "Balance Type", type: "select", options: ["All"] }, { label: "Party Type", type: "select", options: ["All"] }],
-    columns: ['Party Name', 'Party Type', 'Balance Amount', 'Balance Type', 'Petty Cash Balance', 'Salary Balance']
+    columns: ['Party Name', 'Balance Amount', 'Balance Type']
   },
   "project-level-party-balance": {
     title: "Project level Party Balance Report",
@@ -197,13 +197,13 @@ const REPORT_METADATA: Record<string, ReportMeta> = {
     title: "Material Received & Used Report",
     hasDownload: false,
     filters: [{ label: "Material", type: "select", options: ["All"] }, { label: "Project Name", type: "select", options: ["All"] }, { label: "Entry Type", type: "select", options: ["All"] }, { label: "Date", type: "date" }, { label: "Task Name", type: "select", options: ["All"] }, { label: "Challan Number", type: "select", options: ["All"] }, { label: "Party Name", type: "select", options: ["All"] }, { label: "Created By", type: "select", options: ["All"] }, { label: "Material Category (+ Show more filters)", type: "select", options: ["All"] }],
-    columns: ['Material', 'Project Name', 'Party Name', 'Created By', 'GRN No.', 'Challan Number', 'Entry Type', 'Transfer Project', 'Purchase Done', 'Receiving Date', 'Unit', 'Quantity', 'Unit Price with Tax', 'Total Amount', 'Remark', 'Vehicle Number', 'PO Number', 'PO Quantity', 'PO Date', 'Main Task Name', 'Group Task Name', 'Task Name', 'Equipment Name', 'Equipment No.']
+    columns: ['Material', 'Project Name', 'Party Name', 'Created By', 'GRN No.', 'Receiving Date', 'Unit', 'Quantity', 'Unit Price with Tax', 'Total Amount', 'PO Number', 'PO Quantity', 'PO Date']
   },
   "material-stock": {
     title: "Material Stock Report",
     hasDownload: false,
     filters: [{ label: "Project Name", type: "select", options: ["All"] }, { label: "Material Name", type: "select", options: ["All"] }, { label: "Material Category", type: "select", options: ["All"] }],
-    columns: ['Project Name', 'Material Category', 'Material Name', 'Unit', 'Opening Stock', 'Received Stock', 'Used Stock', 'Available Stock']
+    columns: ['Project Name', 'Material Name', 'Unit', 'Available Stock']
   },
   "unbilled-item": {
     title: "Unbilled Item Report",
@@ -215,7 +215,7 @@ const REPORT_METADATA: Record<string, ReportMeta> = {
     title: "PO Summary Report",
     hasDownload: false,
     filters: [{ label: "Project Name", type: "select", options: ["All"] }, { label: "Vendor Name", type: "select", options: ["All"] }, { label: "Approval Status", type: "select", options: ["All"] }, { label: "Approved or Rejected", type: "select", options: ["All"] }, { label: "Creator Name", type: "select", options: ["All"] }],
-    columns: ['Project Name', 'Creator Name', 'PO Creation Date', 'PO Date', 'Vendor Name', 'PO Number', 'Material', 'Amount', 'Discount', 'Other Charges', 'Tax Amount', 'Total Amount', 'Approval Status', 'Approved or Rejected By']
+    columns: ['Project Name', 'PO Creation Date', 'PO Date', 'PO Number', 'Material', 'Amount', 'Tax Amount', 'Total Amount', 'Approval Status']
   },
   "material-received-without-po": {
     title: "Material Received without PO",
@@ -227,7 +227,7 @@ const REPORT_METADATA: Record<string, ReportMeta> = {
     title: "Purchase Order Item Report",
     hasDownload: false,
     filters: [{ label: "PO Number", type: "select", options: ["All"] }, { label: "PO Date", type: "date" }, { label: "Project Name", type: "select", options: ["All"] }, { label: "Vendor Name", type: "select", options: ["All"] }, { label: "Material Name", type: "select", options: ["All"] }, { label: "Approval Status", type: "select", options: ["All"] }, { label: "Material Category", type: "select", options: ["All"] }, { label: "Item Status", type: "select", options: ["All"] }, { label: "GRN No.", type: "select", options: ["All"] }],
-    columns: ['PO Date', 'PO Number', 'Project Name', 'Vendor Name', 'Material Category', 'Material Name', 'Unit', 'Unit Price', 'PO Qty', 'PO Received Qty', 'PO Pending Qty', 'Item Status', 'Approval Status', 'MR No.', 'Challan Number', 'GRN No.']
+    columns: ['PO Date', 'PO Number', 'Project Name', 'Material Name', 'Unit', 'Unit Price', 'PO Qty', 'PO Received Qty', 'PO Pending Qty', 'Item Status', 'Approval Status']
   },
   "production-material": {
     title: "Production Material Report",
@@ -251,7 +251,7 @@ const REPORT_METADATA: Record<string, ReportMeta> = {
     title: "Attendance & Salary Report",
     hasDownload: false,
     filters: [{ label: "Attendance Period", type: "select", options: ["All"] }, { label: "Custom Date", type: "date" }, { label: "Party Name", type: "select", options: ["All"] }, { label: "Project Name", type: "select", options: ["All"] }, { label: "Workforce Name", type: "select", options: ["All"] }, { label: "Payroll Type", type: "select", options: ["All"] }],
-    columns: ['Party Name', 'Project Name', 'Designation', 'Total Present Days', 'Daily Wage (INR)', 'Net Payable (INR)']
+    columns: ['Party Name', 'Project Name', 'Designation', 'Total Present Days', 'Net Payable (INR)']
   },
   "ot-shift": {
     title: "OT & Shift Report",
@@ -299,13 +299,13 @@ const REPORT_METADATA: Record<string, ReportMeta> = {
     title: "Sales (GSTR-1)",
     hasDownload: true,
     filters: [{ label: "Party Name", type: "select", options: ["All"] }, { label: "Invoice Date", type: "date" }, { label: "Project Name", type: "select", options: ["All"] }, { label: "Invoice Type", type: "select", options: ["All"] }, { label: "Party GST", type: "select", options: ["All"] }, { label: "Company GST", type: "select", options: ["All"] }],
-    columns: ['Party Name', 'Party GST', 'Project Name', 'Invoice Type', 'Invoice Date', 'Invoice Number', 'Invoice Amount', 'Tax Amount', 'CGST', 'SGST', 'IGST', 'UTGST', 'Company GST']
+    columns: ['Party Name', 'Project Name', 'Invoice Type', 'Invoice Date', 'Invoice Number', 'Invoice Amount', 'Tax Amount', 'CGST', 'SGST', 'IGST', 'UTGST', 'Company GST']
   },
   "gstr2-purchase": {
     title: "Purchase (GSTR-2)",
     hasDownload: false,
     filters: [{ label: "Party Name", type: "select", options: ["All"] }, { label: "Project Name", type: "select", options: ["All"] }, { label: "Expense Type", type: "select", options: ["All"] }, { label: "Expense Date", type: "date" }, { label: "Party Tax No.", type: "select", options: ["All"] }, { label: "Company Tax No.", type: "select", options: ["All"] }],
-    columns: ['Party Name', 'Party Tax No.', 'Project Name', 'Bill Number', 'Expense Type', 'Expense Date', 'Expense Amount', 'Tax Amount', 'CGST', 'SGST', 'IGST', 'UTGST', 'Company Tax No.']
+    columns: ['Party Name', 'Project Name', 'Expense Type', 'Expense Date', 'Expense Amount', 'CGST', 'SGST', 'IGST', 'UTGST']
   },
   "warehouse-stock-movement": {
     title: "Warehouse Stock Movement Report",

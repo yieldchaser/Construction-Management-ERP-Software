@@ -287,13 +287,9 @@ export default function DPRReportPage() {
                 <thead>
                   <tr className="border-b border-border-custom text-muted font-semibold text-[10px] uppercase">
                     <th className="pb-2">Project Name</th>
-                    <th className="pb-2">Main Task Name</th>
-                    <th className="pb-2">Group Task Name</th>
                     <th className="pb-2">Task Name</th>
                     <th className="pb-2">Start Date</th>
                     <th className="pb-2">End Date</th>
-                    <th className="pb-2">Unit</th>
-                    <th className="pb-2">Estimated Qty</th>
                     <th className="pb-2">Opening Qty</th>
                     <th className="pb-2">Progress Qty</th>
                     <th className="pb-2">Max % Complete</th>
@@ -302,18 +298,14 @@ export default function DPRReportPage() {
                 </thead>
                 <tbody>
                   {taskRows.length === 0 ? (
-                    emptyRow(12)
+                    emptyRow(8)
                   ) : (
                     taskRows.map((row, i) => (
                       <tr key={i} className="border-b border-border-custom/40 last:border-0 hover:bg-elevated/40">
                         <td className="py-2.5 font-medium text-foreground">{cell(row, "Project Name")}</td>
-                        <td className="py-2.5 text-muted">{cell(row, "Main Task Name")}</td>
-                        <td className="py-2.5 text-muted">{cell(row, "Group Task Name")}</td>
                         <td className="py-2.5 text-foreground">{cell(row, "Task Name")}</td>
                         <td className="py-2.5 text-muted">{cell(row, "Start Date")}</td>
                         <td className="py-2.5 text-muted">{cell(row, "End Date")}</td>
-                        <td className="py-2.5 text-muted">{cell(row, "Unit")}</td>
-                        <td className="py-2.5 text-foreground">{cell(row, "Estimated Qty")}</td>
                         <td className="py-2.5 text-muted">{cell(row, "Opening Qty")}</td>
                         <td className="py-2.5 text-success font-semibold">+{cell(row, "Progress Qty")}</td>
                         <td className="py-2.5 font-bold text-foreground">{cell(row, "Max % Complete")}</td>
@@ -368,7 +360,6 @@ export default function DPRReportPage() {
                   <tr className="border-b border-border-custom text-muted font-semibold text-[10px] uppercase">
                     <th className="pb-2">Project Name</th>
                     <th className="pb-2">Material</th>
-                    <th className="pb-2">Unit</th>
                     <th className="pb-2">Received Qty</th>
                     <th className="pb-2">Used Qty</th>
                   </tr>
@@ -381,7 +372,6 @@ export default function DPRReportPage() {
                       <tr key={i} className="border-b border-border-custom/40 last:border-0 hover:bg-elevated/40">
                         <td className="py-2.5 font-medium text-foreground">{cell(row, "Project Name")}</td>
                         <td className="py-2.5 text-foreground">{cell(row, "Material")}</td>
-                        <td className="py-2.5 text-muted">{cell(row, "Unit")}</td>
                         <td className="py-2.5 text-success font-semibold">{cell(row, "Received Qty")}</td>
                         <td className="py-2.5 text-orange-400 font-semibold">{cell(row, "Used Qty")}</td>
                       </tr>
@@ -402,7 +392,6 @@ export default function DPRReportPage() {
                     <th className="pb-2">Project Name</th>
                     <th className="pb-2">Equipment Name</th>
                     <th className="pb-2">Vehicle No</th>
-                    <th className="pb-2">Unit</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -414,7 +403,6 @@ export default function DPRReportPage() {
                         <td className="py-2.5 font-medium text-foreground">{cell(row, "Project Name")}</td>
                         <td className="py-2.5 text-foreground">{cell(row, "Equipment Name")}</td>
                         <td className="py-2.5 text-muted">{cell(row, "Vehicle No")}</td>
-                        <td className="py-2.5 font-semibold text-foreground">{cell(row, "Unit")}</td>
                       </tr>
                     ))
                   )}

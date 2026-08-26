@@ -351,15 +351,10 @@ def _rep_dpr(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
         rows.append({
             "Project Name": proj.name if proj else "",
             "DPR Date": _clean(d.dpr_date),
-            "Main Task Name": "",
-            "Group Task Name": "",
             "Task Name": task_name,
-            "Unit": "",
             "Progress Qty": _clean(d.executed_qty),
-            "Estimated Qty": "",
             "Workers Count": _clean(d.workers_deployed),
             "Material Used": mat_str,
-            "Equipment Used": "",
         })
     return rows
 
@@ -376,13 +371,9 @@ def _rep_task_report(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
         proj = db.query(Project).filter(Project.id == t.project_id).first()
         rows.append({
             "Project Name": proj.name if proj else "",
-            "Main Task Name": "",
-            "Group Task Name": "",
             "Task Name": t.name,
-            "Assigned To": "",
             "Start Date": _clean(t.start_date),
             "End Date": _clean(t.end_date),
-            "Progress % (additional columns likely exist beyond captured scroll range)": "",
         })
     return rows
 
@@ -413,8 +404,6 @@ def _rep_po_item(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
             "PO Date": _clean(po.po_date) if po else "",
             "PO Number": po.po_number if po else "",
             "Project Name": proj.name if proj else "",
-            "Vendor Name": "",
-            "Material Category": "",
             "Material Name": it.material_name,
             "Unit": it.unit,
             "Unit Price": _clean(it.rate),
@@ -423,9 +412,6 @@ def _rep_po_item(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
             "PO Pending Qty": _clean(max(0.0, ordered_qty - received_qty)),
             "Item Status": item_status,
             "Approval Status": po.approval_flag if po else "",
-            "MR No.": "",
-            "Challan Number": "",
-            "GRN No.": "",
         })
     return rows
 
@@ -441,19 +427,14 @@ def _rep_po_summary(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
         proj = db.query(Project).filter(Project.id == po.project_id).first()
         rows.append({
             "Project Name": proj.name if proj else "",
-            "Creator Name": "",
             "PO Creation Date": _clean(po.created_at),
             "PO Date": _clean(po.po_date),
-            "Vendor Name": "",
             "PO Number": po.po_number,
             "Material": material,
             "Amount": _clean(po.gross_amount),
-            "Discount": "",
-            "Other Charges": "",
             "Tax Amount": _clean(po.tax_amount),
             "Total Amount": _clean(po.total_amount),
             "Approval Status": po.approval_flag,
-            "Approved or Rejected By": "",
         })
     return rows
 
@@ -470,12 +451,8 @@ def _rep_material_stock(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
         proj = db.query(Project).filter(Project.id == w.project_id).first()
         rows.append({
             "Project Name": proj.name if proj else "",
-            "Material Category": "",
             "Material Name": w.material_name,
             "Unit": w.unit,
-            "Opening Stock": "",
-            "Received Stock": "",
-            "Used Stock": "",
             "Available Stock": _clean(w.on_hand_qty),
         })
     return rows
@@ -537,7 +514,6 @@ def _rep_attendance_salary(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]
             "Project Name": proj.name if proj else "",
             "Designation": emp.designation or "",
             "Total Present Days": present,
-            "Daily Wage (INR)": "",
             "Net Payable (INR)": net,
         })
     return rows
@@ -558,12 +534,9 @@ def _rep_company_payments(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID])
             net = ""
         rows.append({
             "Project Name": proj.name if proj else "",
-            "Creator Name": "",
-            "Party Name": "",
             "Amount": _clean(p.amount),
             "Unsettled Amount": _clean(p.unsettled_amount),
             "Net Amount": net,
-            "Settlement Type": "",
             "Remark": p.description or "",
             "Payment Type": p.payment_type,
             "Payment Mode": p.payment_method,
@@ -600,11 +573,9 @@ def _rep_payment_request(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
                 "Due Date": _clean(pr.due_date),
                 "Creator Name": creator,
                 "Request Type": pr.request_type or "",
-                "Order/Bill No.": "",
                 "Approval Status": pr.approval_status or "Pending",
                 "Payment Status": pr.status,
                 "Remark": pr.details or "",
-                "Account Name": "",
             })
         return rows
     except Exception:
@@ -798,7 +769,6 @@ def _build_party_ledger(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
             "Party Name": party_name,
             "Party Type": party_type,
             "Project Name": proj.name if proj else "",
-            "Creator Name": "",
             "Description": description,
             "Cost Code": cost_code,
             "Transaction Type": txn_type,
@@ -828,11 +798,8 @@ def _rep_all_party_balances(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID
         for _, (name, bal) in party_final.items():
             rows.append({
                 "Party Name": name,
-                "Party Type": "",
                 "Balance Amount": bal,
                 "Balance Type": "Receivable" if bal >= 0 else "Payable",
-                "Petty Cash Balance": "",
-                "Salary Balance": "",
             })
         return rows
     except Exception:
@@ -911,18 +878,8 @@ def _rep_company_sales(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
                 "Invoice Number": b.invoice_number,
                 "Total Amount": _clean(b.total_payable),
                 "Retention Amount": _clean(retention_by_bill.get(b.id, 0)),
-                "Post Tax Deduction": "",
-                "Net Amount": "",
                 "Due Date": _clean(b.due_date),
-                "Payment Received": "",
-                "Balance Due": "",
                 "Payment Status": b.status,
-                "Notes": "",
-                "Creator Name": "",
-                "Settlement Amounts": "",
-                "Payment Dates": "",
-                "Reference Numbers": "",
-                "Payment Total Amounts": "",
             })
         return rows
     except Exception:
@@ -950,7 +907,6 @@ def _rep_crm_lead_detail(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
                 "Lead Company": lead.client_company_name or "",
                 "Email": lead.email or "",
                 "Budget": _clean(lead.budget),
-                "Last Contacted Date": "",
                 "Followup Date": _clean(lead.next_follow_up),
                 "Expected Closure Date": _clean(lead.expected_closure),
                 "Remark": lead.description or "",
@@ -1008,13 +964,7 @@ def _rep_task_measurement_book(db: Session, cid: uuid.UUID, pid: Optional[uuid.U
                 "Progress Date": _clean(dpr.dpr_date) if dpr else "",
                 "Unit": boq.unit if boq else "",
                 "Estimated Quantity": _clean(boq.quantity) if boq else "",
-                "Opening Quantity": "",
-                "Number": "",
-                "Length": "",
-                "Width": "",
-                "Height": "",
                 "Progress Quantity": _clean(dpr.executed_qty) if dpr else "",
-                "Closing Quantity": "",
                 "Progress Notes": dpr.notes if dpr else "",
             })
         return rows
@@ -1100,25 +1050,14 @@ def _rep_material_received_used(db: Session, cid: uuid.UUID, pid: Optional[uuid.
                 "Party Name": party,
                 "Created By": created_by,
                 "GRN No.": grn.grn_number if grn else "",
-                "Challan Number": "",
-                "Entry Type": "",
-                "Transfer Project": "",
-                "Purchase Done": "",
                 "Receiving Date": _clean(grn.received_date) if grn else "",
                 "Unit": po_item.unit if po_item else "",
                 "Quantity": _clean(gi.received_qty),
                 "Unit Price with Tax": _clean(po_item.rate) if po_item else "",
                 "Total Amount": _clean(po_item.total_amount) if po_item else "",
-                "Remark": "",
-                "Vehicle Number": "",
                 "PO Number": po.po_number if po else "",
                 "PO Quantity": _clean(po_item.quantity) if po_item else "",
                 "PO Date": _clean(po.po_date) if po else "",
-                "Main Task Name": "",
-                "Group Task Name": "",
-                "Task Name": "",
-                "Equipment Name": "",
-                "Equipment No.": "",
             })
         return rows
     except Exception:
@@ -1139,18 +1078,11 @@ def _rep_task_attendance(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
             emp = db.query(StaffEmployee).filter(StaffEmployee.id == a.employee_id).first() if a.employee_id else None
             workforce = emp.name if emp else ""
             rows.append({
-                "Party Name": "",
                 "Workforce Name": workforce,
                 "Project Name": proj.name if proj else "",
                 "Attendance Date": _clean(a.attendance_date),
                 "Attendance Status": a.status,
-                "Main Task Name": "",
-                "Group Task Name": "",
-                "Task Name": "",
-                "Workers on Task": "",
                 "Work Hours": _clean(a.hours_worked),
-                "Total Hours": "",
-                "Task Labour Cost": "",
             })
         return rows
     except Exception:
@@ -1211,7 +1143,6 @@ def _rep_gstr1_sales(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
             cgst, sgst, igst, utgst = _gst_split(b.gst_amount, getattr(proj, "state", None) if proj else None, comp_gstin)
             rows.append({
                 "Party Name": party,
-                "Party GST": "",
                 "Project Name": proj.name if proj else "",
                 "Invoice Type": b.invoice_type,
                 "Invoice Date": _clean(b.invoice_date),
@@ -1254,7 +1185,6 @@ def _rep_gstr2_purchase(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
             cgst, sgst, igst, utgst = _gst_split(b.gst_amount, getattr(proj, "state", None) if proj else None, comp_gstin)
             rows.append({
                 "Party Name": party,
-                "Party Tax No.": "",
                 "Project Name": proj.name if proj else "",
                 "Bill Number": b.invoice_number,
                 "Expense Type": b.invoice_type,
@@ -1265,7 +1195,6 @@ def _rep_gstr2_purchase(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
                 "SGST": sgst,
                 "IGST": igst,
                 "UTGST": utgst,
-                "Company Tax No.": "",
             })
         pay_q = db.query(Payment).filter(Payment.company_id == cid, Payment.payment_type == "out")
         if pid:
@@ -1299,18 +1228,14 @@ def _rep_gstr2_purchase(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
             party = _team_user_name(db, p.party_company_user_id)
             rows.append({
                 "Party Name": party,
-                "Party Tax No.": "",
                 "Project Name": proj.name if proj else "",
-                "Bill Number": "",
                 "Expense Type": "Payment Out",
                 "Expense Date": _clean(p.payment_date),
                 "Expense Amount": _clean(outstanding),
-                "Tax Amount": "",
                 "CGST": 0.0,
                 "SGST": 0.0,
                 "IGST": 0.0,
                 "UTGST": 0.0,
-                "Company Tax No.": "",
             })
         return rows
     except Exception:
@@ -1331,12 +1256,10 @@ def _rep_sales_deduction_retention(db: Session, cid: uuid.UUID, pid: Optional[uu
             proj = db.query(Project).filter(Project.id == b.project_id).first() if b and b.project_id else None
             party = _team_user_name(db, b.party_company_user_id) if b else ""
             rows.append({
-                "Item Name": "",
                 "Amount": _clean(d.amount),
                 "Project Name": proj.name if proj else "",
                 "Party Name": party,
                 "Invoice Number": b.invoice_number if b else "",
-                "Creator Name": "",
                 "Type": d.deduction_type,
                 "Entry Creation Date": _clean(d.created_at),
                 "Due Date": _clean(d.release_due_date),
@@ -1381,8 +1304,6 @@ def _rep_bank_statement(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
                     running -= amt
                 rows.append({
                     "Account Name": p.account_name,
-                    "Account Number": "",
-                    "Bank Name": "",
                     "Project Name": proj.name if proj else "",
                     "Party Name": party,
                     "Payment Date": _clean(p.payment_date),
@@ -1447,7 +1368,6 @@ def _rep_project_payment(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
             rows.append({
                 "Payment Date": _clean(p.payment_date),
                 "Project Name": proj.name if proj else "",
-                "Creator Name": "",
                 "Party Name": party,
                 "Amount": _clean(p.amount),
                 "Remark": p.description or "",
