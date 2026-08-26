@@ -1,11 +1,11 @@
 /**
- * calculators-contract.test.ts — fixed-input contract tests for CD-2 (R2-010).
+ * calculators-contract.test.ts  -  fixed-input contract tests for CD-2 (R2-010).
  *
  * One shared module (frontend/src/lib/calc-shared.ts + backend/app/calc_shared.py)
  * is the single source of truth. These tests pin fixed inputs to expected
  * outputs so any drift (e.g. R2-521 steel 162.89 vs 162.0, or paint premium
  * 140 vs 135) fails the suite. Site engineers compute locally on patchy data,
- * no round-trip — the contract is the drift prevention.
+ * no round-trip  -  the contract is the drift prevention.
  *
  * Run:  npx tsc --noEmit  (typecheck)  or  node --loader ts-node/esm tests/calculators-contract.test.ts
  * Also compatible with vitest if installed:  npx vitest run tests/calculators-contract.test.ts
@@ -39,15 +39,15 @@ function expectClose(actual: number, expected: number, eps = 0.01) {
   }
 }
 
-// STEEL — single divisor is the drift that was patched manually before
+// STEEL  -  single divisor is the drift that was patched manually before
 {
-  assert.equal(STEEL_DIVISOR, 162.0, "steel divisor must be 162 — R2-521");
+  assert.equal(STEEL_DIVISOR, 162.0, "steel divisor must be 162  -  R2-521");
   expectClose(steelUnitWeightKgPerM(20), 2.4691, 0.0001);
   expectClose(steelUnitWeightKgPerM(12), 0.8889, 0.0001);
   expectClose(steelUnitWeightKgPerM(8), 0.3951, 0.0001);
 }
 
-// Backend steel — column branch
+// Backend steel  -  column branch
 {
   const r = calcSteelBackend({ diameter: 20, count: 4, lengthOrHeightM: 3.0, slabThicknessM: 0.15, isColumn: true, wastagePct: 5 }) as any;
   assert.equal(r.unit_weight_kg_m, 2.4691);
@@ -55,7 +55,7 @@ function expectClose(actual: number, expected: number, eps = 0.01) {
   assert.equal(r.total_weight_kg, 43.04);
 }
 
-// Backend steel — slab branch (spacing + span)
+// Backend steel  -  slab branch (spacing + span)
 {
   const r = calcSteelBackend({ diameter: 12, count: 1, lengthOrHeightM: 4.0, spacingM: 0.15, spanM: 4.0, wastagePct: 5 }) as any;
   assert.equal(r.unit_weight_kg_m, 0.8889);
@@ -63,7 +63,7 @@ function expectClose(actual: number, expected: number, eps = 0.01) {
   assert.equal(r.total_weight_kg, 100.8);
 }
 
-// Backend steel — stirrup branch
+// Backend steel  -  stirrup branch
 {
   const r = calcSteelBackend({ diameter: 8, count: 10, lengthOrHeightM: 3.0, mainWidthM: 0.3, mainHeightM: 0.4, coverM: 0.04, hookLengthFactor: 9, bendDeductionFactor: 2, wastagePct: 5 }) as any;
   // a=0.22 b=0.32 cutting=2*(0.54)+0.144-0.032=1.192
@@ -71,7 +71,7 @@ function expectClose(actual: number, expected: number, eps = 0.01) {
   expectClose(r.total_weight_kg, 4.95, 0.02);
 }
 
-// Frontend steel — column dual-zone
+// Frontend steel  -  column dual-zone
 {
   const r = calcSteelColumnFrontend({
     colHeightMm: 3000,
@@ -95,7 +95,7 @@ function expectClose(actual: number, expected: number, eps = 0.01) {
   assert.equal(r.stirrupCount, 19);
 }
 
-// Frontend slab steel — one-way
+// Frontend slab steel  -  one-way
 {
   const r = calcSlabSteelFrontend({
     slabLengthMm: 8000,
@@ -135,7 +135,7 @@ function expectClose(actual: number, expected: number, eps = 0.01) {
   expectClose(r.totalWeightKg, 251.896, 0.01);
 }
 
-// Concrete — backend canonical (1.54 dry factor)
+// Concrete  -  backend canonical (1.54 dry factor)
 {
   assert.equal(CONCRETE_DRY_FACTOR, 1.54);
   const r = calcConcreteBackend({ wetVolumeM3: 2.0, wastagePct: 5, grade: "M20" });
@@ -144,6 +144,16 @@ function expectClose(actual: number, expected: number, eps = 0.01) {
   assert.equal(r.cement_bags, 16.93);
   assert.equal(r.sand_m3, 0.882);
   assert.equal(r.aggregate_m3, 1.764);
+  assert.equal(r.engineered_design_mix_required, false);
+}
+
+{
+  const r = calcConcreteBackend({ wetVolumeM3: 2.0, wastagePct: 5, grade: "M7.5" });
+  assert.equal(r.wet_volume_m3, 2.0);
+  assert.equal(r.dry_volume_m3, 3.234);
+  assert.equal(r.cement_bags, 7.16);
+  assert.equal(r.sand_m3, 0.995);
+  assert.equal(r.aggregate_m3, 1.99);
   assert.equal(r.engineered_design_mix_required, false);
 }
 
@@ -159,7 +169,7 @@ function expectClose(actual: number, expected: number, eps = 0.01) {
   assert.equal(r.mixerLoads, 3);
 }
 
-// Brick — backend leaves derived, mortar 20-35% band
+// Brick  -  backend leaves derived, mortar 20-35% band
 {
   const r = calcBrickBackend({ lengthM: 5, heightM: 3, thicknessMm: 230, brickLengthMm: 190, brickWidthMm: 90, brickHeightMm: 90, jointMm: 10, wastagePct: 10 });
   assert.equal(r.leaves, 2);
@@ -171,7 +181,7 @@ function expectClose(actual: number, expected: number, eps = 0.01) {
   assert.equal(r.sandM3, 1.301);
 }
 
-// Paint — unified coverage premium 135 (frontend was 140 drift, backend 135)
+// Paint  -  unified coverage premium 135 (frontend was 140 drift, backend 135)
 {
   const r = calcPaint({ roomLengthFt: 12, roomWidthFt: 10, ceilingHeightFt: 10, paintCeiling: true, doorsCount: 1, windowsCount: 2, coats: 2, quality: "premium" });
   assert.equal(r.paintableAreaSqft, 515.0);
@@ -209,7 +219,7 @@ function expectClose(actual: number, expected: number, eps = 0.01) {
   assert.equal(r.litresNeeded, 7.0);
 }
 
-// House cost — commercial multiplier, 0.12 per floor, 0.35 compound, 12% contingency
+// House cost  -  commercial multiplier, 0.12 per floor, 0.35 compound, 12% contingency
 {
   const r = calcHouseCost({ areaSqft: 1000, baseRate: 2000, floors: 2, isCommercial: false, compoundWallLengthFt: 100, contingencyPct: 12 });
   assert.equal(r.baseConstructionCost, 4240000.0);
@@ -219,7 +229,7 @@ function expectClose(actual: number, expected: number, eps = 0.01) {
   assert.equal(r.splits.structure, 1724000.0);
 }
 
-// Billing — post-tax (default) and pre-tax
+// Billing  -  post-tax (default) and pre-tax
 {
   const r = calcBilling({ subtotal: 100000, gstPct: 18, deductions: [{ type: "pct_item_subtotal", val: 10 }], retentions: [{ type: "pct", val: 5 }], preTaxDeductions: false });
   // gst 18000 total 118000 ded 10000 ret 5900 net 102100
@@ -235,7 +245,7 @@ function expectClose(actual: number, expected: number, eps = 0.01) {
   assert.equal(r.netPayable, 100300.0);
 }
 
-// Split rate — item tax vs 18% flat
+// Split rate  -  item tax vs 18% flat
 {
   const r = calcSplitRate({ quantity: 10, supplyRate: 150, installationRate: 50, supplyTaxPct: 18, installationTaxPct: 12, isItemTax: true });
   assert.equal(r.grossSupply, 1500.0);
@@ -249,4 +259,4 @@ function expectClose(actual: number, expected: number, eps = 0.01) {
   assert.equal(r.totalAmount, 2360.0);
 }
 
-console.log("calculators-contract: all fixed-input assertions passed — shared module is drift-free");
+console.log("calculators-contract: all fixed-input assertions passed  -  shared module is drift-free");

@@ -1,5 +1,5 @@
 """
-calc_shared.py — single source of truth for construction quantity calculators.
+calc_shared.py  -  single source of truth for construction quantity calculators.
 Mirrors frontend/src/lib/calc-shared.ts. CD-2 (R2-010): one shared module
 consumed by both console and API. Drift is prevented by
 tests/calculators-contract.test.ts fixed-input contract tests.
