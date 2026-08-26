@@ -386,8 +386,30 @@ def toggle_pin(project_id: uuid.UUID, db: Session = Depends(get_db), current_use
     return {"id": str(p.id), "is_pinned": bool(p.is_pinned)}
 
 
+# R2-557: every table below hangs off projects.id with ondelete="CASCADE" -
+# one DELETE destroys all of their rows for this project in a single
+# unconfirmed transaction. The route counts them before touching anything.
+PROJECT_CASCADE_CHILDREN = [
+    models.BOQItem, models.BOQDocument, models.BOQRevision, models.ProjectBudget,
+    models.Task, models.ProjectMilestone, models.Drawing, models.MaterialIndent,
+    models.PurchaseOrder, models.GoodsReceiptNote, models.WarehouseInventory,
+    models.MaterialTransaction, models.ProductionRecipe, models.ProductionBatch,
+    models.WorkOrder, models.Bill, models.DebitNote, models.CreditNote,
+    models.StaffEmployee, models.AttendanceLog, models.Timesheet, models.PayrollRun,
+    models.SiteInspection, models.NCR, models.MaterialTestResult, models.ClientReport,
+    models.EquipmentDeployment, models.FuelLog, models.SafetyIncident,
+    models.ToolboxTalk, models.PPECheck, models.DailyProgressReport,
+    models.TallyCostCentreMapping, models.SubcontractorAttendance,
+    models.ThreeWayMatch, models.MaterialWastage, models.ChatGroup,
+    models.FaceRecognitionLog, models.SubcontractorPerformance,
+    models.VendorPerformance, models.RFQ, models.ProjectTower, models.BOCWRecord,
+    models.MusterRoll, models.MoM, models.ProjectMember, models.ProjectLocation,
+    models.ProjectParty, models.Todo, models.FileFolder, models.ProjectFile,
+]
+
+
 @router.delete("/{project_id}")
-def delete_project(project_id: uuid.UUID, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user), _: None = Depends(verify_project_access)):
+def delete_project(project_id: uuid.UUID, confirm: Optional[str] = None, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user), _: None = Depends(verify_project_access)):
     p = db.query(models.Project).filter(models.Project.id == project_id).first()
     if not p:
         raise HTTPException(status_code=404, detail="Project not found")
@@ -409,11 +431,29 @@ def delete_project(project_id: uuid.UUID, db: Session = Depends(get_db), current
             status_code=409,
             detail=f"Project has financial records that would be destroyed ({detail}). Close or archive it instead.",
         )
+    # R2-557: preflight the full cascade. The caller is shown exactly how many
+    # rows across the 51 child tables will be destroyed and must echo an
+    # explicit confirmation token - the project name, the same string the UI's
+    # delete modal makes you type. Without it nothing is deleted.
+    dependents = {
+        m.__tablename__: db.query(m).filter(m.project_id == p.id).count()
+        for m in PROJECT_CASCADE_CHILDREN
+    }
+    total = sum(dependents.values())
+    inventory = ", ".join(f"{k}: {v}" for k, v in dependents.items() if v)
+    if total and confirm != p.name:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                f"This permanently deletes {total} dependent record(s) ({inventory}) "
+                f"and cannot be undone. Retry with confirm={p.name!r} to proceed."
+            ),
+        )
     from app.routers.delete_logs import log_deletion
     log_deletion(db, p.company_id, "project", str(p.id), f"Project: {p.name}", party_name=p.name, deleted_by=current_user.name)
     db.delete(p)
     db.commit()
-    return {"success": True}
+    return {"success": True, "deleted_dependents": total}
 
 
 # ─── Members (Settings → Members) ───

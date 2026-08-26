@@ -171,7 +171,9 @@ export default function ProjectsPage() {
   const removeProject = async () => {
     if (!deleteTarget) return;
     try {
-      const res = await fetch(api(`/projects/${deleteTarget.id}`), {
+      // R2-557: the confirmation is enforced server-side - the name typed in
+      // the delete modal must be echoed as ?confirm= or the API refuses.
+      const res = await fetch(api(`/projects/${deleteTarget.id}?confirm=${encodeURIComponent(deleteConfirmName)}`), {
         method: "DELETE",
         headers: authHeaders(),
       });
