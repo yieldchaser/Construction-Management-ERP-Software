@@ -17,7 +17,16 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.auth import get_current_user, verify_company_access
-from app.constants import REVENUE_INVOICE_TYPES, EXPENSE_INVOICE_TYPES, SETTLEMENT_INVOICE_TYPES
+from app.constants import (
+    EXPENSE_INVOICE_TYPES,
+    REVENUE_INVOICE_TYPES,
+    SETTLEMENT_INVOICE_TYPES,
+    classify_invoice_type,
+    is_expense_invoice_type,
+    is_revenue_invoice_type,
+    is_settlement_money_in,
+    is_settlement_money_out,
+)
 from app.models import (
     AttendanceLog,
     Bill,
@@ -232,7 +241,7 @@ def get_company_analytics(company_id: uuid.UUID, db: Session = Depends(get_db), 
                 + _to_float(budget.equipment_budget)
             )
 
-        project_spend = sum(_to_float(bill.total_payable) for bill in bills_by_project.get(project.id, []) if bill.invoice_type in EXPENSE_INVOICE_TYPES and bill.status != "Cancelled")
+        project_spend = sum(_to_float(bill.total_payable) for bill in bills_by_project.get(project.id, []) if is_expense_invoice_type(bill.invoice_type) and bill.status != "Cancelled")
         project_variance = project_budget_total - project_spend
         total_tasks = len(tasks_by_project.get(project.id, []))
         completed_tasks = sum(
@@ -310,7 +319,7 @@ def get_company_analytics(company_id: uuid.UUID, db: Session = Depends(get_db), 
         month_spend = sum(
             _to_float(bill.total_payable)
             for bill in bills
-            if bill.invoice_type in EXPENSE_INVOICE_TYPES
+            if is_expense_invoice_type(bill.invoice_type)
             and bill.status != "Cancelled"
             and bill.invoice_date
             and _to_date(bill.invoice_date)
@@ -620,14 +629,16 @@ def get_company_financial_analytics(company_id: uuid.UUID, db: Session = Depends
 
     for b in bills:
         val = _to_float(b.total_payable) - _to_float(b.paid_amount)
-        if b.invoice_type in REVENUE_INVOICE_TYPES:
+        if is_revenue_invoice_type(b.invoice_type):
             to_receive += max(0.0, val)
             if b.status == "Paid" and _to_float(b.total_payable) == 0:
                 advance_received += _to_float(b.paid_amount)
-        elif b.invoice_type in EXPENSE_INVOICE_TYPES:
+        elif is_expense_invoice_type(b.invoice_type):
             to_pay += max(0.0, val)
             if b.status == "Paid" and _to_float(b.total_payable) == 0:
                 advance_paid += _to_float(b.paid_amount)
+        # settlement and movement bills do not contribute to payable/receivable
+        # totals - they are cash movements, not accruals (D3)
 
     project_summaries = []
     monthly_sales = defaultdict(float)
@@ -648,10 +659,13 @@ def get_company_financial_analytics(company_id: uuid.UUID, db: Session = Depends
             )
 
         p_bills = [b for b in bills if b.project_id == p.id]
-        total_expense = sum(_to_float(b.total_payable) for b in p_bills if b.invoice_type in EXPENSE_INVOICE_TYPES)
-        total_sales = sum(_to_float(b.total_payable) for b in p_bills if b.invoice_type in REVENUE_INVOICE_TYPES)
-        payment_in = sum(_to_float(b.paid_amount) for b in p_bills if b.invoice_type in REVENUE_INVOICE_TYPES or b.invoice_type in SETTLEMENT_INVOICE_TYPES)
-        payment_out = sum(_to_float(b.paid_amount) for b in p_bills if b.invoice_type in EXPENSE_INVOICE_TYPES or b.invoice_type in SETTLEMENT_INVOICE_TYPES)
+        total_expense = sum(_to_float(b.total_payable) for b in p_bills if is_expense_invoice_type(b.invoice_type))
+        total_sales = sum(_to_float(b.total_payable) for b in p_bills if is_revenue_invoice_type(b.invoice_type))
+        # D3: settlement money direction is explicit - payment_in / i_received are
+        # cash in, payment_out / i_paid are cash out. Do not mix all settlement
+        # types into both sides.
+        payment_in = sum(_to_float(b.paid_amount) for b in p_bills if is_revenue_invoice_type(b.invoice_type) or is_settlement_money_in(b.invoice_type))
+        payment_out = sum(_to_float(b.paid_amount) for b in p_bills if is_expense_invoice_type(b.invoice_type) or is_settlement_money_out(b.invoice_type))
 
         if p_status == "Completed":
             health = "Completed"
@@ -681,14 +695,18 @@ def get_company_financial_analytics(company_id: uuid.UUID, db: Session = Depends
 
     for b in bills:
         m_label = b.invoice_date.strftime("%b %Y") if b.invoice_date else "Jan 2026"
-        if b.invoice_type in REVENUE_INVOICE_TYPES:
+        if is_revenue_invoice_type(b.invoice_type):
             monthly_sales[m_label] += _to_float(b.total_payable)
-        elif b.invoice_type in EXPENSE_INVOICE_TYPES:
+        elif is_expense_invoice_type(b.invoice_type):
             monthly_expense[m_label] += _to_float(b.total_payable)
             t_label = "Subcontractor Bill" if b.invoice_type == "subcon" else "Purchase Invoice"
             expense_by_type[t_label] += _to_float(b.total_payable)
+        # settlement and movement do not book revenue or cost (D3)
 
-        party_balances[str(b.party_company_user_id)] += (_to_float(b.total_payable) - _to_float(b.paid_amount))
+        # D3: party outstanding is only revenue/expense accruals; settlement
+        # cash movements are not payables or receivables.
+        if is_revenue_invoice_type(b.invoice_type) or is_expense_invoice_type(b.invoice_type):
+            party_balances[str(b.party_company_user_id)] += (_to_float(b.total_payable) - _to_float(b.paid_amount))
 
     # R2-603: a company with no bills gets an honestly empty chart; the
     # fabricated demo months/points ("Jun 2026" + 1000 expense) are gone.

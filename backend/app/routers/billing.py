@@ -22,11 +22,14 @@ from app.utils.pdf_generator import generate_document_pdf
 from app.utils.document_pdf import resolve_pdf_branding, resolve_supplier_tax_details
 from pydantic import BaseModel, Field
 from app.constants import (
-    INVOICE_TYPE_PATTERN,
     CANONICAL_INVOICE_TYPES,
-    REVENUE_INVOICE_TYPES,
     EXPENSE_INVOICE_TYPES,
+    INVOICE_TYPE_PATTERN,
+    REVENUE_INVOICE_TYPES,
     SETTLEMENT_INVOICE_TYPES,
+    is_expense_invoice_type,
+    is_revenue_invoice_type,
+    is_settlement_invoice_type,
 )
 
 router = APIRouter(
@@ -633,7 +636,7 @@ def get_bill_zatca(bill_id: UUID, db: Session = Depends(get_db), current_user: U
     # Tenant check: the bill belongs to a company the caller is a member of.
     get_company_membership(db, current_user, bill.company_id)
     require_module_view(db, current_user, bill.company_id, "billing")
-    if bill.invoice_type not in REVENUE_INVOICE_TYPES:
+    if not is_revenue_invoice_type(bill.invoice_type):
         raise HTTPException(status_code=400, detail="ZATCA e-invoicing applies to revenue (taxable) invoices")
     company = db.query(Company).filter(Company.id == bill.company_id).first()
     if not company:
@@ -887,7 +890,7 @@ def _resolve_bill_match_id(db: Session, invoice_type: str, match_id, company_id:
     """
     if not match_id:
         return None
-    if invoice_type not in EXPENSE_INVOICE_TYPES:
+    if not is_expense_invoice_type(invoice_type):
         # 3-way matching is a purchase-side control; ignore for revenue, settlement, and movement invoices.
         return None
     match = db.query(ThreeWayMatch).filter(ThreeWayMatch.id == match_id).first()
@@ -923,7 +926,7 @@ def _validate_bill_line_items(items_json: Optional[str], subtotal: float, invoic
     to the bill subtotal, so the stated total cannot drift from the goods.
     """
     if items_json is None or not str(items_json).strip():
-        if invoice_type in REVENUE_INVOICE_TYPES:
+        if is_revenue_invoice_type(invoice_type):
             raise HTTPException(
                 status_code=422,
                 detail="Tax invoices require at least one line item describing what was supplied",
@@ -936,7 +939,7 @@ def _validate_bill_line_items(items_json: Optional[str], subtotal: float, invoic
     if not isinstance(items, list):
         raise HTTPException(status_code=422, detail="items_json must be a JSON array of line item objects")
     if not items:
-        if invoice_type in REVENUE_INVOICE_TYPES:
+        if is_revenue_invoice_type(invoice_type):
             raise HTTPException(
                 status_code=422,
                 detail="Tax invoices require at least one line item describing what was supplied",
@@ -1091,11 +1094,10 @@ def create_bill(req: BillCreateRequest, db: Session = Depends(get_db), current_u
     company = get_company(db, req.company_id)
     pretax_order = bool(company.pretax_deduction_retention) if company else False
 
-    # R2-211: settlement vouchers are cash movements against already-taxed
-    # invoices, not taxable supplies of their own. A non-zero GST rate on one
-    # inflates money-in/out by the tax rate and double-counts tax charged on
-    # the underlying invoice, so the create path refuses to book it.
-    if req.invoice_type in SETTLEMENT_INVOICE_TYPES and req.gst_pct > 0:
+    # R2-211 + D3: settlement vouchers are cash movements against
+    # already-taxed invoices, not taxable supplies of their own. Routed
+    # through the single shared classifier.
+    if is_settlement_invoice_type(req.invoice_type) and req.gst_pct > 0:
         raise HTTPException(
             status_code=422,
             detail=(
@@ -1257,7 +1259,7 @@ def link_bill_match(bill_id: UUID, req: BillMatchLinkRequest, db: Session = Depe
     verify_project_in_company(db, bill.project_id, bill.company_id)
     require_permission(db, current_user, bill.company_id, "billing:edit")
 
-    if bill.invoice_type in EXPENSE_INVOICE_TYPES:
+    if is_expense_invoice_type(bill.invoice_type):
         enforce_entry_editing_window(db, bill.company_id, bill.invoice_date)
         match_id = _resolve_bill_match_id(db, bill.invoice_type, req.match_id, bill.company_id, bill.project_id, total_payable=bill.total_payable)
         bill.match_id = match_id

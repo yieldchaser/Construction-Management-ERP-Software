@@ -32,7 +32,8 @@ def _utc(y, m, d, h=0, mi=0):
 
 def _mk_project(db, comp):
     project = models.Project(
-        id=uuid.uuid4(), company_id=comp.id, name="Proj", code="PRJ-1", status="Ongoing"
+        id=uuid.uuid4(), company_id=comp.id, name="Proj", code="PRJ-1", status="Ongoing",
+        state="Maharashtra",
     )
     db.add(project)
     db.commit()

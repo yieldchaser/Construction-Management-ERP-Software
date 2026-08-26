@@ -8,7 +8,12 @@ from app.database import get_db
 from app import models
 from app.auth import get_current_user, verify_company_access, verify_project_access, get_company_membership, require_permission
 from app.routers.custom_fields import CustomFieldValueInput, upsert_values_for_entity, enforce_required_custom_fields
-from app.constants import PROJECT_STATUS_PATTERN
+from app.constants import (
+    EXPENSE_INVOICE_TYPES,
+    PROJECT_STATUS_PATTERN,
+    REVENUE_INVOICE_TYPES,
+    is_expense_invoice_type,
+)
 import uuid
 
 router = APIRouter(prefix="/projects", tags=["Projects"], dependencies=[Depends(get_current_user)])
@@ -61,7 +66,10 @@ def _party_settlement(db, project_id, party_id, opening_adv, opening_pay):
             .all()
         )
         for b in bills:
-            net += (_to_float(b.paid_amount) - _to_float(b.total_payable))
+            # D3: only expense accruals affect payable ledger; settlement
+            # cash movements and revenue invoices do not.
+            if is_expense_invoice_type(b.invoice_type):
+                net += (_to_float(b.paid_amount) - _to_float(b.total_payable))
 
     advance_paid = round(max(0.0, net), 2)
     to_pay = round(max(0.0, -net), 2)
@@ -137,11 +145,12 @@ def _project_progress(db: Session, project_id: uuid.UUID) -> float:
 
 
 def _project_cash(db: Session, project_id: uuid.UUID):
+    # D3: billed revenue vs billed cost - settlement and movement never count
     cash_in = db.query(func.coalesce(func.sum(models.Bill.total_payable), 0)).filter(
-        models.Bill.project_id == project_id, models.Bill.invoice_type.in_(["sale", "material_sale"]), models.Bill.status != "Cancelled"
+        models.Bill.project_id == project_id, models.Bill.invoice_type.in_(REVENUE_INVOICE_TYPES), models.Bill.status != "Cancelled"
     ).scalar() or 0
     cash_out = db.query(func.coalesce(func.sum(models.Bill.total_payable), 0)).filter(
-        models.Bill.project_id == project_id, models.Bill.invoice_type.in_(["purchase", "subcon", "expense", "equipment"]), models.Bill.status != "Cancelled"
+        models.Bill.project_id == project_id, models.Bill.invoice_type.in_(EXPENSE_INVOICE_TYPES), models.Bill.status != "Cancelled"
     ).scalar() or 0
     return float(cash_in), float(cash_out)
 
