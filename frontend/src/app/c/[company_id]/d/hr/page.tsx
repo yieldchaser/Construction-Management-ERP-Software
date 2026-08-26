@@ -728,7 +728,7 @@ export default function HRPayrollPage() {
         const mappedPayslips = data.payslips.map((p: any) => ({
           employeeId: p.employee_id,
           employeeName: p.employee_name,
-          designation: p.designation || "Staff",
+          designation: p.designation || "—",
           daysPresent: p.days_present,
           daysInMonth: p.days_in_month,
           gross: p.gross_salary,
@@ -1141,7 +1141,7 @@ export default function HRPayrollPage() {
                     </thead>
                     <tbody className="divide-y divide-border-custom">
                       {timesheetLogs.map((log: any) => {
-                        const taskName = projectTasks.find(t => t.id === log.task_id)?.name || "General Work";
+                        const taskName = projectTasks.find(t => t.id === log.task_id)?.name || "—";
                         const formattedDate = new Date(log.entry_date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
                         
                         let durationStr = "—";
@@ -1159,7 +1159,7 @@ export default function HRPayrollPage() {
                         return (
                           <tr key={log.id} className="hover:bg-elevated transition-colors">
                             <td className="px-4 py-3 font-sans text-muted">{formattedDate}</td>
-                            <td className="px-4 py-3 font-semibold text-foreground">{log.employee_name || "Staff"}</td>
+                            <td className="px-4 py-3 font-semibold text-foreground">{log.employee_name || "—"}</td>
                             <td className="px-4 py-3 font-sans text-green-400">{fmtTime(log.start_time)}</td>
                             <td className="px-4 py-3 font-sans text-muted">{fmtTime(log.end_time)}</td>
                             <td className="px-4 py-3 text-foreground font-semibold font-sans">{durationStr}</td>

@@ -203,7 +203,7 @@ isCode: cl.is_code_reference || "—",
           return {
             id: insp.id,
             checklistId: insp.checklist_id,
-            zone: insp.zone || "General Site",
+            zone: insp.zone || "—",
             checklist: foundCl ? foundCl.title : "Unknown checklist",
             date: insp.inspection_date ? insp.inspection_date.split("T")[0] : "",
             status: insp.status,
@@ -252,7 +252,7 @@ isCode: cl.is_code_reference || "—",
         const mapped = data.map((t: any) => ({
           id: t.id,
           type: t.test_type,
-          material: t.material || "Concrete",
+          material: t.material || "—",
           sampleRef: t.sample_ref || "",
           date: t.test_date ? t.test_date.split("T")[0] : "",
           value: t.result_value,
@@ -260,7 +260,7 @@ isCode: cl.is_code_reference || "—",
           min: t.min_acceptable ?? null,
           max: t.max_acceptable ?? null,
           pass: t.is_pass,
-          zone: t.zone || "General Site"
+          zone: t.zone || "—"
         }));
         setLabTests(mapped);
       }

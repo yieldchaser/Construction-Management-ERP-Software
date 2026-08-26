@@ -36,7 +36,7 @@ export default function WOAmendmentsPage({ params }: { params: { wo_id: string }
   const [showModal, setShowModal] = useState(false);
   const [reason, setReason] = useState("");
   const [fieldsJson, setFieldsJson] = useState('{"rate": 1200.0, "quantity": 500.0}');
-  const [amendedBy, setAmendedBy] = useState("Project Manager");
+  const [amendedBy, setAmendedBy] = useState("—");
   const [error, setError] = useState<string | null>(null);
 
   const fetchAmendments = async () => {
@@ -107,7 +107,7 @@ export default function WOAmendmentsPage({ params }: { params: { wo_id: string }
                       <span className="text-xs font-bold text-secondary">Amendment #{am.amendment_number}</span>
                       <span className="text-[10px] text-muted ml-2">{am.amended_at?.split("T")[0]}</span>
                     </div>
-                    <span className="text-[10px] text-muted">{am.amended_by || "System"}</span>
+                    <span className="text-[10px] text-muted">{am.amended_by || "—"}</span>
                   </div>
                   {am.reason && <p className="text-xs text-muted mt-1 italic">Reason: {am.reason}</p>}
                   <div className="mt-2 flex flex-wrap gap-2">

@@ -80,7 +80,7 @@ export default function PartyPage() {
 
   const filtered = parties.filter((p) => {
     if (typeFilter !== "All" && p.party_type !== typeFilter) return false;
-    if (statusFilter !== "All" && (p.status || "Active") !== statusFilter) return false;
+    if (statusFilter !== "All" && (p.status || "—") !== statusFilter) return false;
     if (search && !p.name.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
@@ -103,7 +103,7 @@ export default function PartyPage() {
   };
 
   const toggleStatus = async (p: Party) => {
-    const next = (p.status || "Active") === "Active" ? "Inactive" : "Active";
+    const next = (p.status || "—") === "Active" ? "Inactive" : "Active";
     try {
       const res = await fetch(getApi(`/projects/${projectId}/parties/${p.party_id}`), {
         method: "PUT",
@@ -201,12 +201,12 @@ export default function PartyPage() {
                   <button
                     onClick={() => toggleStatus(p)}
                     className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs ${
-                      (p.status || "Active") === "Active"
+                      (p.status || "—") === "Active"
                         ? "bg-emerald-500/10 text-emerald-500"
                         : "bg-rose-500/10 text-rose-500"
                     }`}
                   >
-                    {p.status || "Active"}
+                    {p.status || "—"}
                   </button>
                 </td>
                 <td className="px-4 py-3 text-right">

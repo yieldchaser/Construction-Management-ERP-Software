@@ -76,10 +76,9 @@ export default function ItemWiseSalesReportPage() {
                 className="bg-card border border-border-custom rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-primary"
               >
                 <option value="All">All Clients</option>
-                <option value="L&T Construction">L&T Construction</option>
+                <option value="">L&T Construction</option>
                 <option value="Public Works">Public Works Dept</option>
-                <option value="Alpha Builders">Alpha Builders Ltd</option>
-              </select>
+</select>
             </div>
 
             {/* Invoice Date */}

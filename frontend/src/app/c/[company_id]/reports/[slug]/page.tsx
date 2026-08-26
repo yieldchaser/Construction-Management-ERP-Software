@@ -995,7 +995,7 @@ export default function DynamicReportViewPage() {
             const totalSpent = financePayments.reduce((acc, p) => acc + (Number(p.amount) || 0), 0);
             const groups: Record<string, number> = {};
             financePayments.forEach(p => {
-              const cc = p.cost_code || p.category || "General Expenses";
+              const cc = p.cost_code || p.category || "—";
               groups[cc] = (groups[cc] || 0) + (Number(p.amount) || 0);
             });
             const entries = Object.entries(groups).sort((a, b) => b[1] - a[1]);

@@ -162,7 +162,7 @@ export default function DrawingsPage() {
 
   const getNextRevCode = useCallback(() => {
     if (!activeDrawing) return "V1";
-    const latest = activeDrawing.revisions[0]?.version ?? "V0";
+    const latest = activeDrawing.revisions[0]?.version ?? "—";
     const num = parseInt(latest.replace(/\D/g, "")) || 0;
     return `V${num + 1}`;
   }, [activeDrawing]);
@@ -308,7 +308,7 @@ export default function DrawingsPage() {
         body: JSON.stringify({
           version_code: newRevCode.toUpperCase(),
           file_url: fileUrl,
-          comments: newRevComment || "New revision issued for construction.",
+          comments: newRevComment || "",
         }),
       });
       if (!res.ok) {

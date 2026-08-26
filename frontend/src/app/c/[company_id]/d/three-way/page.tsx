@@ -219,7 +219,7 @@ export default function ThreeWayPage() {
                       {fmtINR(m.variance_amount)}
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[m.match_status] || "bg-zinc-500/10 text-muted"}`}>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[m.match_status] || ""}`}>
                         {m.match_status}
                       </span>
                     </td>

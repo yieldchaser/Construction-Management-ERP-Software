@@ -493,7 +493,7 @@ def get_company_operational_analytics(company_id: uuid.UUID, db: Session = Depen
 
     for p in projects:
         # Determine status
-        p_status = p.status or "Ongoing"
+        p_status = p.status or "—"
         count_status = "On Hold" if p_status == "Onhold" else p_status
         if count_status in status_counts:
             status_counts[count_status] += 1
@@ -636,7 +636,7 @@ def get_company_financial_analytics(company_id: uuid.UUID, db: Session = Depends
     party_balances = defaultdict(float)
 
     for p in projects:
-        p_status = p.status or "Ongoing"
+        p_status = p.status or "—"
         budget = db.query(ProjectBudget).filter(ProjectBudget.project_id == p.id).first()
         budget_total = 0.0
         if budget:

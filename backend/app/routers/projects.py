@@ -606,7 +606,7 @@ def list_project_parties(project_id: uuid.UUID, db: Session = Depends(get_db), _
             "balance": round(adv - pay, 2),
             "advance_paid": adv,
             "to_pay": pay,
-            "status": link.status or "Active",
+            "status": link.status or "—",
         })
     return result
 
@@ -652,7 +652,7 @@ def add_project_party(project_id: uuid.UUID, payload: ProjectPartyCreate, db: Se
         "balance": float(existing.balance),
         "advance_paid": float(existing.advance_paid),
         "to_pay": float(existing.to_pay),
-        "status": existing.status or "Active",
+        "status": existing.status or "—",
     }
 
 

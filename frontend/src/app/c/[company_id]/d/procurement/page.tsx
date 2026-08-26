@@ -265,7 +265,7 @@ export default function ProcurementPage() {
   // Material usage form state
   const [useMaterialName, setUseMaterialName] = useState("");
   const [useQty, setUseQty] = useState(10);
-  const [useSourceRef, setUseSourceRef] = useState("DPR Column C-1 concrete pour");
+  const [useSourceRef, setUseSourceRef] = useState("");
 
   // Add Material Indent Submission
   const handleCreateIndent = async () => {
@@ -343,7 +343,7 @@ export default function ProcurementPage() {
     const newPO: PO = {
       id: `PO-${Date.now()}`,
       poNumber: newPONum,
-      vendor: vendorOptions.find((v) => v.id === newPOVendor)?.name || "Vendor",
+      vendor: vendorOptions.find((v) => v.id === newPOVendor)?.name || "—",
       items: poFormItems,
       grossAmount: gross,
       taxAmount: tax,

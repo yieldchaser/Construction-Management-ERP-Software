@@ -147,7 +147,7 @@ export default function FinancePage() {
   const [refInvoice, setRefInvoice] = useState("");
   const [desc, setDesc] = useState("");
   const [txnDate, setTxnDate] = useState(() => new Date().toISOString().slice(0, 10));
-  const [costCode, setCostCode] = useState("1.2.1 Site Conveyance");
+  const [costCode, setCostCode] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("Cash");
   const [submitting, setSubmitting] = useState(false);
   const [photoUrl, setPhotoUrl] = useState<string>("");
@@ -162,7 +162,7 @@ export default function FinancePage() {
   const [discount, setDiscount] = useState(0);
   const [addCharges, setAddCharges] = useState(0);
   const [roundOff, setRoundOff] = useState(false);
-  const [billToShipTo, setBillToShipTo] = useState("Pune Site Office Address");
+  const [billToShipTo, setBillToShipTo] = useState("");
   const [showBillShipModal, setShowBillShipModal] = useState(false);
   const [billShip, setBillShip] = useState({ billFrom: "", billTo: "", shipFrom: "", shipTo: "" });
   const [sameAsBillFrom, setSameAsBillFrom] = useState(false);
@@ -190,8 +190,8 @@ export default function FinancePage() {
 
   // Transfer & Sub-form state variables
   const [transferType, setTransferType] = useState<"Bank To Bank" | "Cash Deposit" | "Cash Withdraw">("Bank To Bank");
-  const [fromBank, setFromBank] = useState("Main Savings Account");
-  const [toBank, setToBank] = useState("Petty Cash Account");
+  const [fromBank, setFromBank] = useState("");
+  const [toBank, setToBank] = useState("");
   const [paymentFromParty, setPaymentFromParty] = useState("");
   const [paymentToParty, setPaymentToParty] = useState("");
   const [showAddItemForm, setShowAddItemForm] = useState(false);
@@ -314,7 +314,7 @@ export default function FinancePage() {
           setTallyConn(data);
           setTallyCompany(data.tally_company_name || "");
           setTallyMobile(data.registered_mobile || "");
-          setTallyVoucherTemplate(data.voucher_number_template || "SF-{year}-{number}");
+          setTallyVoucherTemplate(data.voucher_number_template || "");
           setTallyDefaultCash(data.default_cash_ledger || "");
           setTallyAutoCreate(Boolean(data.auto_create_missing_ledgers));
         }
@@ -461,14 +461,14 @@ export default function FinancePage() {
             receiver_company_user_id: paymentToParty,
             amount: amtVal,
             payment_date: new Date(txnDate + "T00:00:00").toISOString(),
-            description: desc || "Party to Party Wallet Transfer"
+            description: desc || ""
           }),
         });
         
         if (res.ok) {
           const data = await res.json();
-          const fromName = usersList.find((u: any) => u.id === paymentFromParty)?.name || "Sender";
-          const toName = usersList.find((u: any) => u.id === paymentToParty)?.name || "Receiver";
+          const fromName = usersList.find((u: any) => u.id === paymentFromParty)?.name || "—";
+          const toName = usersList.find((u: any) => u.id === paymentToParty)?.name || "—";
           
           const newTxn1: Transaction = {
             id: data.sender_payment_id || `TXN-${Date.now()}-1`,
@@ -478,7 +478,7 @@ export default function FinancePage() {
             description: desc || `Transfer to ${toName}`,
             amount: amtVal,
             party: fromName,
-            ref: refNum || "P2P-OUT",
+            ref: refNum || "",
             ledger: "Cashbook",
             status: "Approved",
             cost_code: costCode,
@@ -494,7 +494,7 @@ export default function FinancePage() {
             description: desc || `Transfer from ${fromName}`,
             amount: amtVal,
             party: toName,
-            ref: refNum || "P2P-IN",
+            ref: refNum || "",
             ledger: "Cashbook",
             status: "Approved",
             cost_code: costCode,
@@ -641,7 +641,7 @@ export default function FinancePage() {
         method: "POST",
         headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify({
-          name: newCash.name || "Cash Account",
+          name: newCash.name || "",
           opening_balance: parseFloat(newCash.opening) || 0.0,
         }),
       });
@@ -742,7 +742,7 @@ export default function FinancePage() {
   const openTallySetup = () => {
     setTallyCompany(tallyConn?.tally_company_name || "");
     setTallyMobile(tallyConn?.registered_mobile || "");
-    setTallyVoucherTemplate(tallyConn?.voucher_number_template || "SF-{year}-{number}");
+    setTallyVoucherTemplate(tallyConn?.voucher_number_template || "");
     setTallyDefaultCash(tallyConn?.default_cash_ledger || "");
     setTallyAutoCreate(Boolean(tallyConn?.auto_create_missing_ledgers));
     setTallySyncFrom(tallyConn?.sync_window_start_date ? String(tallyConn.sync_window_start_date).slice(0, 10) : fyStartIso());
@@ -766,7 +766,7 @@ export default function FinancePage() {
           tally_company_name: tallyCompany.trim(),
           registered_mobile: tallyMobile.trim(),
           sync_window_start_date: new Date(tallySyncFrom + "T00:00:00").toISOString(),
-          voucher_number_template: tallyVoucherTemplate.trim() || "SF-{year}-{number}",
+          voucher_number_template: tallyVoucherTemplate.trim() || "",
           auto_create_missing_ledgers: tallyAutoCreate,
           default_cash_ledger: tallyDefaultCash.trim() || null,
         }),
@@ -985,10 +985,10 @@ export default function FinancePage() {
     }).reverse();
   }, [sortedTxns]);
 
-  const totalRevenue = plData.find(r => r.head === "Revenue (Billed)")?.actual || 150000;
-  const totalCost = plData.filter(r => r.head !== "Revenue (Billed)").reduce((s, r) => s + r.actual, 0) || 62250;
+  const totalRevenue = plData.find(r => r.head === "Revenue (Billed)")?.actual || 0;
+  const totalCost = plData.filter(r => r.head !== "Revenue (Billed)").reduce((s, r) => s + r.actual, 0);
   const grossProfit = totalRevenue - totalCost;
-  const margin = totalRevenue > 0 ? ((grossProfit / totalRevenue) * 100).toFixed(1) : "58.5";
+  const margin = totalRevenue > 0 ? ((grossProfit / totalRevenue) * 100).toFixed(1) : "—";
 
   const handleCreateParty = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1107,7 +1107,7 @@ export default function FinancePage() {
                   <div>
                     <div className="text-[9px] font-bold text-success uppercase tracking-widest border-b border-border-custom pb-1 mb-2">Payment</div>
                     <div className="grid grid-cols-2 gap-1.5 text-[11px]">
-                      {["Payment In", "Payment Out", "Debit Note", "Credit Note", "Party to Party", "Internal Transfer", "Upload Payments"].map(type => (
+                      {["Payment In", "Payment Out", "Debit Note", "Credit Note", "Party to Party", "Upload Payments"].map(type => (
                         <button key={type} onClick={() => { setSelectedTxnType(type as any); setPartyName(""); setIsDropdownOpen(false); setShowAddModal(true); }}
                           className="py-1 px-2 text-left rounded-lg text-muted hover:text-success hover:bg-success/10 transition-all text-xs cursor-pointer font-semibold">
                           + {type}
@@ -1997,11 +1997,11 @@ export default function FinancePage() {
                     </div>
                     <div className="rounded-lg border border-border-custom p-3">
                       <div className="text-[10px] uppercase font-bold text-muted">Last export</div>
-                      <div className="text-foreground font-semibold">{tallyLastExport || "Not yet"}</div>
+                      <div className="text-foreground font-semibold">{tallyLastExport || "—"}</div>
                     </div>
                     <div className="rounded-lg border border-border-custom p-3">
                       <div className="text-[10px] uppercase font-bold text-muted">Last marked synced</div>
-                      <div className="text-foreground font-semibold">{tallyLastMarked || "Not yet"}</div>
+                      <div className="text-foreground font-semibold">{tallyLastMarked || "—"}</div>
                     </div>
                   </div>
 
@@ -2056,16 +2056,7 @@ export default function FinancePage() {
 
           {/* ── COST VARIANCE TAB ── */}
           {tab === "costvar" && (() => {
-            const BUDGET_LINES = [
-              { code: "1.1", head: "Site Labour", budget: 480000 },
-              { code: "1.2.1", head: "Site Conveyance", budget: 18000 },
-              { code: "2.1", head: "Raw Materials — Cement/Steel", budget: 650000 },
-              { code: "2.2", head: "Formwork & Shuttering", budget: 95000 },
-              { code: "3.1", head: "Subcontractor Civil", budget: 320000 },
-              { code: "3.5", head: "Subcontractor Labours", budget: 120000 },
-              { code: "4.1", head: "Equipment Hire", budget: 210000 },
-              { code: "5.0", head: "Overheads & Admin", budget: 55000 },
-            ];
+            const BUDGET_LINES: { code: string; head: string; budget: number }[] = [];
 
             const actuals: Record<string, number> = {};
             transactions.filter(t => t.status !== "Rejected").forEach(t => {
@@ -2957,7 +2948,7 @@ export default function FinancePage() {
                     <input
                       type="text"
                       readOnly
-                      value="Prestige Developers"
+                      value=""
                       className="w-full bg-background/50 border border-border-custom rounded-lg px-3 py-2 text-foreground text-xs"
                     />
                   </div>
@@ -2970,8 +2961,6 @@ export default function FinancePage() {
                       className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs"
                     >
                       <option value="">Select Project</option>
-                      <option value="Skyline Premium Towers">Skyline Premium Towers</option>
-                      <option value="Grand Orchard Villas">Grand Orchard Villas</option>
                     </select>
                   </div>
 
@@ -3098,8 +3087,8 @@ export default function FinancePage() {
                           onChange={e => setFromBank(e.target.value)}
                           className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs"
                         >
-                          <option value="Main Savings Account">Main Savings Account (HDFC)</option>
-                          <option value="Escrow Account">Escrow Account (SBI)</option>
+                          {bankAccounts.length > 0 ? bankAccounts.map((acct: any) => (<option key={acct.id} value={acct.id}>{acct.bank_name ? `${acct.bank_name} — ${acct.account_number || acct.name || "—"}` : (acct.name || "—")}</option>)) : <option value="" disabled>— No accounts configured</option>}
+                          
                         </select>
                       </div>
                       <div>
@@ -3109,8 +3098,8 @@ export default function FinancePage() {
                           onChange={e => setToBank(e.target.value)}
                           className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs"
                         >
-                          <option value="Petty Cash Account">Petty Cash Account (HDFC)</option>
-                          <option value="Escrow Account">Escrow Account (SBI)</option>
+                          
+                          
                         </select>
                       </div>
                     </>
@@ -3132,8 +3121,8 @@ export default function FinancePage() {
                           onChange={e => setToBank(e.target.value)}
                           className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs"
                         >
-                          <option value="Main Savings Account">Main Savings Account (HDFC)</option>
-                          <option value="Escrow Account">Escrow Account (SBI)</option>
+                          {bankAccounts.length > 0 ? bankAccounts.map((acct: any) => (<option key={acct.id} value={acct.id}>{acct.bank_name ? `${acct.bank_name} — ${acct.account_number || acct.name || "—"}` : (acct.name || "—")}</option>)) : <option value="" disabled>— No accounts configured</option>}
+                          
                         </select>
                       </div>
                     </>
@@ -3148,8 +3137,8 @@ export default function FinancePage() {
                           onChange={e => setFromBank(e.target.value)}
                           className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs"
                         >
-                          <option value="Main Savings Account">Main Savings Account (HDFC)</option>
-                          <option value="Escrow Account">Escrow Account (SBI)</option>
+                          {bankAccounts.length > 0 ? bankAccounts.map((acct: any) => (<option key={acct.id} value={acct.id}>{acct.bank_name ? `${acct.bank_name} — ${acct.account_number || acct.name || "—"}` : (acct.name || "—")}</option>)) : <option value="" disabled>— No accounts configured</option>}
+                          
                         </select>
                       </div>
                       <div>
@@ -3331,7 +3320,7 @@ export default function FinancePage() {
                     >
                       <option value="">Select party to debit...</option>
                       {usersList.map((u: any) => (
-                        <option key={u.id} value={u.id}>{u.name} ({u.role || "Staff"})</option>
+                        <option key={u.id} value={u.id}>{u.name} ({u.role || "—"})</option>
                       ))}
                     </select>
                   </div>
@@ -3346,7 +3335,7 @@ export default function FinancePage() {
                     >
                       <option value="">Select party to credit...</option>
                       {usersList.map((u: any) => (
-                        <option key={u.id} value={u.id}>{u.name} ({u.role || "Staff"})</option>
+                        <option key={u.id} value={u.id}>{u.name} ({u.role || "—"})</option>
                       ))}
                     </select>
                   </div>
@@ -3380,9 +3369,9 @@ export default function FinancePage() {
                       onChange={e => setCostCode(e.target.value)}
                       className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs"
                     >
-                      <option value="1.2.1 Site Conveyance">Select Cost Code</option>
-                      <option value="1.2.1 Site Conveyance">1.2.1 Site Conveyance</option>
-                      <option value="2.1 Raw Materials">2.1 Raw Materials</option>
+                      <option value="">Select Cost Code</option>
+                      {/* cost codes loaded from library_cost_codes */}
+                      <option value="" disabled>— No cost codes configured</option>
                     </select>
                   </div>
 
@@ -3459,10 +3448,9 @@ export default function FinancePage() {
                       onChange={e => setCostCode(e.target.value)}
                       className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs"
                     >
-                      <option value="1.2.1 Site Conveyance">Select Cost Code</option>
-                      <option value="1.2.1 Site Conveyance">1.2.1 Site Conveyance (Conveyance)</option>
-                      <option value="2.1 Raw Materials">2.1 Raw Materials (Cement/Steel)</option>
-                      <option value="3.5 Subcontractor Labours">3.5 Subcontractor Labours</option>
+                      <option value="">Select Cost Code</option>
+                      {/* cost codes loaded from library_cost_codes */}
+                      <option value="" disabled>— No cost codes configured</option>
                     </select>
                   </div>
 
@@ -3896,7 +3884,7 @@ export default function FinancePage() {
                     >
                       <option value="">Search or select party...</option>
                       {usersList.map((u: any) => (
-                        <option key={u.id} value={u.id}>{u.name} ({u.role || "Employee"})</option>
+                        <option key={u.id} value={u.id}>{u.name} ({u.role || "—"})</option>
                       ))}
                       {usersList.length === 0 && (Array.from(new Set(txnSummary.transactions.map((t: any) => t.party))) as any[]).map((p: any, idx) => (
                         <option key={idx} value="00000000-0000-0000-0000-000000000000">{p}</option>
@@ -3979,7 +3967,7 @@ export default function FinancePage() {
             <div className="flex justify-between items-start border-b border-border-custom pb-4 mb-5">
               <div>
                 <p className="text-[10px] text-muted font-sans">Voucher: {selectedPR.request_no || "—"}</p>
-                <h3 className="text-sm font-bold text-foreground uppercase tracking-wider mt-0.5">{selectedPR.request_type || "Payment Request"}</h3>
+                <h3 className="text-sm font-bold text-foreground uppercase tracking-wider mt-0.5">{selectedPR.request_type || "—"}</h3>
                 <p className="text-xs text-foreground mt-1">{selectedPR.party_name}</p>
               </div>
               <button onClick={() => setSelectedPR(null)} className="text-muted hover:text-foreground text-lg cursor-pointer">✕</button>

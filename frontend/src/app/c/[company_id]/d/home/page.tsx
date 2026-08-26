@@ -53,11 +53,11 @@ interface Leave {
 
 const normalizeText = (value: string) => value.toLowerCase().replace(/\s+/g, "");
 
-const getProjectName = (project: Project) => project.project_name || project.name || "Untitled Project";
+const getProjectName = (project: Project) => project.project_name || project.name || "—";
 
-const getProjectCode = (project: Project) => project.project_code || project.code || "No Code";
+const getProjectCode = (project: Project) => project.project_code || project.code || "—";
 
-const getProjectStatus = (project: Project) => project.project_status || project.status || "Ongoing";
+const getProjectStatus = (project: Project) => project.project_status || project.status || "—";
 
 const getProjectAddress = (project: Project) => {
   const address = project.project_address || project.address || "";
@@ -70,7 +70,7 @@ const getProjectAddress = (project: Project) => {
   return `${address} • ${city}`;
 };
 
-const getProjectHealth = (project: Project) => project.project_health || project.health || "Healthy";
+const getProjectHealth = (project: Project) => project.project_health || project.health || "—";
 
 const getProjectStatusBadgeClass = (status: string) => {
   const normalized = normalizeText(status);

@@ -255,7 +255,7 @@ export default function CompanySettingsPage() {
         material_request_restriction: settings.material_request_restriction ?? false,
         po_restriction: settings.po_restriction ?? false,
         bom_restriction: settings.bom_restriction ?? false,
-        grn_numbering: settings.grn_numbering ?? "Project Level",
+        grn_numbering: settings.grn_numbering ?? "—",
       });
     }
   }, [settings]);
@@ -715,7 +715,7 @@ export default function CompanySettingsPage() {
       const res = await fetch(`${apiHost}/apis/v3/integrations/bi/companies/${company_id}/keys`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
-        body: JSON.stringify({ label: biLabel || "BI export key" }),
+        body: JSON.stringify({ label: biLabel || "—" }),
       });
       if (!res.ok) { setBiMsg({ type: "err", text: "Failed to create API key" }); return; }
       const data = await res.json();

@@ -141,7 +141,7 @@ export default function DPRPage() {
         body: JSON.stringify({
           project_id: projectId,
           task_id: selectedTaskId && /^[0-9a-fA-F-]{36}$/.test(selectedTaskId) ? selectedTaskId : null,
-          reported_by: reportedBy || "Site Engineer",
+          reported_by: reportedBy || "—",
           dpr_date: new Date().toISOString(),
           executed_qty: parseFloat(executedQty) || 0.0,
           workers_deployed: parseInt(workersDeployed) || 0,

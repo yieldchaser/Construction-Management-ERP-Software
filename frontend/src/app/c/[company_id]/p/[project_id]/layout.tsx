@@ -103,9 +103,9 @@ export default function ProjectDetailLayout({ children }: { children: React.Reac
           id: data.id,
           name: data.name,
           code: data.code,
-          status: data.status || "Ongoing",
+          status: data.status || "—",
         });
-        setStatus(data.status || "Ongoing");
+        setStatus(data.status || "—");
       }
     } catch {
       /* ignore */
@@ -153,7 +153,7 @@ export default function ProjectDetailLayout({ children }: { children: React.Reac
       <div className="flex flex-wrap items-center gap-3 px-6 py-3 border-b border-border-custom bg-card">
         <div className="min-w-0">
           <div className="text-base font-semibold text-foreground truncate">
-            {project?.name || "Project"}
+            {project?.name || "—"}
             {project?.code ? <span className="ml-2 text-xs font-normal text-muted">({project.code})</span> : null}
           </div>
           <div className="text-[11px] uppercase tracking-wider text-muted">Project</div>

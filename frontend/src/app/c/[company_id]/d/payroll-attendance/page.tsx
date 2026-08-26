@@ -286,7 +286,7 @@ function SalaryBreakupModal({
 }) {
   const { currencyDecimalPlaces } = useCompanySettings();
   const [ctc, setCtc] = useState<number>(initial?.monthly_ctc ?? salaryAmount ?? 0);
-  const [dayOff, setDayOff] = useState<string>(initial?.day_off ?? "Sunday");
+  const [dayOff, setDayOff] = useState<string>(initial?.day_off ?? "—");
   const [basicPct, setBasicPct] = useState<number>(initial?.basic_pct ?? 40);
   const [allowances, setAllowances] = useState<{ name: string; amount: number }[]>(
     initial?.allowances ?? []
@@ -308,7 +308,7 @@ function SalaryBreakupModal({
     if (!t) return;
     const b = t.breakup;
     setCtc(b.monthly_ctc ?? 0);
-    setDayOff(b.day_off ?? "Sunday");
+    setDayOff(b.day_off ?? "—");
     setBasicPct(b.basic_pct ?? 40);
     setAllowances(b.allowances ?? []);
     setDeductions(b.deductions ?? []);
@@ -749,8 +749,8 @@ function PayrollDetailsDrawer({
 }) {
   const [designationName, setDesignationName] = useState<string>(emp.designation || "");
   const [salaryAmount, setSalaryAmount] = useState<number>(profile?.salary_amount ?? emp.basic_salary ?? 0);
-  const [shiftStart, setShiftStart] = useState<string>(profile?.shift_start ?? "09:00");
-  const [shiftEnd, setShiftEnd] = useState<string>(profile?.shift_end ?? "18:00");
+  const [shiftStart, setShiftStart] = useState<string>(profile?.shift_start ?? "");
+  const [shiftEnd, setShiftEnd] = useState<string>(profile?.shift_end ?? "");
   const [shiftHours, setShiftHours] = useState<number>(profile?.shift_hours ?? 8);
   const [otRate, setOtRate] = useState<number>(profile?.overtime_rate ?? 0);
   const [designationId, setDesignationId] = useState<string | null>(null);
@@ -762,8 +762,8 @@ function PayrollDetailsDrawer({
 
   useEffect(() => {
     setSalaryAmount(profile?.salary_amount ?? emp.basic_salary ?? 0);
-    setShiftStart(profile?.shift_start ?? "09:00");
-    setShiftEnd(profile?.shift_end ?? "18:00");
+    setShiftStart(profile?.shift_start ?? "");
+    setShiftEnd(profile?.shift_end ?? "");
     setShiftHours(profile?.shift_hours ?? 8);
     setOtRate(profile?.overtime_rate ?? 0);
     setLeaveTemplateId(profile?.leave_template_id ?? null);

@@ -85,7 +85,7 @@ export default function SubconPage() {
             progress: "0%",
             woValue: Number(wo.estimated_work_amount) || 0,
             billedValue: 0,
-            status: wo.status || "Draft",
+            status: wo.status || "—",
           }))
         );
       }
@@ -291,7 +291,7 @@ export default function SubconPage() {
                 {subcontractors.map(p => (
                   <li key={p.id} className="px-4 py-3 flex items-center justify-between text-xs">
                     <span className="font-semibold text-foreground">{p.name}</span>
-                    <span className="text-muted">{p.gstin ? `GSTIN ${p.gstin}` : (p.phone || "Subcontractor")}</span>
+                    <span className="text-muted">{p.gstin ? `GSTIN ${p.gstin}` : (p.phone || "—")}</span>
                   </li>
                 ))}
               </ul>

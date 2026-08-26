@@ -176,7 +176,7 @@ export default function AttendancePage() {
     category: "Residential",
     start_date: "2026-01-01",
     end_date: "2026-12-31",
-    company_branch: "Select Company Address",
+    company_branch: "",
     value: 0,
     orientation: "North-Facing",
     dimension: "50x120"
@@ -418,7 +418,7 @@ export default function AttendancePage() {
     }
     const finalEmpId = selectedEmpId;
     const empName = employees.find(e => e.id === finalEmpId)?.name || "Unknown";
-    const multiplier = punchMultiplier === 0 ? parseFloat(customMultiplierVal || "1.0") : punchMultiplier;
+    const multiplier = punchMultiplier === 0 ? parseFloat(customMultiplierVal || "") : punchMultiplier;
 
     const location = await captureLocation();
     if (!location) {
@@ -669,7 +669,7 @@ export default function AttendancePage() {
                             <option>No active employees found</option>
                           ) : (
                             employees.map((emp) => (
-                              <option key={emp.id} value={emp.id}>{emp.name} ({(emp.employee_code ?? emp.code) ? (emp.employee_code ?? emp.code) + ", " : ""}{emp.designation || "Labor"})</option>
+                              <option key={emp.id} value={emp.id}>{emp.name} ({(emp.employee_code ?? emp.code) ? (emp.employee_code ?? emp.code) + ", " : ""}{emp.designation || "—"})</option>
                             ))
                           )}
                         </select>
@@ -1271,9 +1271,9 @@ export default function AttendancePage() {
                         onChange={(e) => setProjectSettings({ ...projectSettings, company_branch: e.target.value })}
                         className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs"
                       >
-                        <option value="Select Company Address">Select Company Address</option>
-                        <option value="Pune Main Office">Pune Main Office (Branch #1)</option>
-                        <option value="Mumbai Central">Mumbai Central (Branch #2)</option>
+                        <option value="">Select Company Address</option>
+                        
+                        
                       </select>
                     </div>
 
@@ -1348,7 +1348,7 @@ export default function AttendancePage() {
                        teamMembers.map((m) => (
                          <div key={m.id} className="py-2 flex justify-between">
                            <span className="font-semibold text-foreground">{m.name}</span>
-                           <span className="text-muted">{m.role_name || m.priority_type || "Member"}</span>
+                           <span className="text-muted">{m.role_name || m.priority_type || "—"}</span>
                          </div>
                        ))
                      )}

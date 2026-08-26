@@ -80,7 +80,7 @@ export default function ToDoPage() {
           due_date: t.due_date ? t.due_date.split("T")[0] : "",
           assigned_to: assignedTo || "Unassigned",
           project_name: t.project_id ? (projectMap[t.project_id] ?? "") : "",
-          type: t.type || "General",
+          type: t.type || "—",
           is_completed: t.status === "done",
         };
       });

@@ -128,10 +128,10 @@ export default function DashboardPage() {
                 city: dbProj.city,
                 address: dbProj.address,
                 attendance_radius_meters: dbProj.attendance_radius_meters,
-                status: dbProj.status || "Ongoing",
-                health: uiHealth || "Healthy",
-                startDate: dbProj.start_date || new Date().toISOString().split('T')[0],
-                endDate: dbProj.end_date || "2027-12-31",
+                status: dbProj.status || "—",
+                health: uiHealth || "—",
+                startDate: dbProj.start_date || "",
+                endDate: dbProj.end_date || "",
                 category: dbProj.category || "—",
                 keyPersonnel: dbProj.key_personnel_id ? "Staff Member" : "Unassigned",
                 progress: dbProj.progress ?? 0.0,
@@ -288,7 +288,7 @@ export default function DashboardPage() {
   const activeProjDetails = projects.find(p => p.id === activeProject) || projects[0] || {};
   const normalizeText = (value: any) => (typeof value === "string" ? value.trim() : value == null ? "" : String(value).trim());
   const activeProjectName = normalizeText(activeProjDetails.name) || "Active Project";
-  const activeProjectStatus = normalizeText(activeProjDetails.status) || "Ongoing";
+  const activeProjectStatus = normalizeText(activeProjDetails.status) || "—";
   const formatMoney = (value: number) => `₹${value.toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
 
   const handleSyncTally = async () => {
@@ -301,7 +301,7 @@ export default function DashboardPage() {
       });
       if (res.ok) {
         const data = await res.json();
-        setTallySyncStatus(`Synced ${data.message || "Successfully"}`);
+        setTallySyncStatus(`Synced ${data.message || "—"}`);
       } else {
         setTallySyncStatus("Sync Failed");
       }
@@ -1881,8 +1881,8 @@ export default function DashboardPage() {
                     const newProj = {
                       id: newProjId,
                       name: wizardData.name,
-                      code: wizardData.code || "PRJ-NEW",
-                      city: wizardData.city || "Mumbai",
+                      code: wizardData.code || "",
+                      city: wizardData.city || "",
                       address: wizardData.address,
                       attendance_radius_meters: wizardData.attendance_radius_meters ?? 500,
                       status: "Ongoing",

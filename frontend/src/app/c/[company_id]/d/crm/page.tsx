@@ -492,7 +492,7 @@ export default function CRMPage() {
         address: form.address.trim() || null,
         source: form.source_name || null,
         category: form.category_name || null,
-        status: form.status_name || "New Lead",
+        status: form.status_name || "—",
         priority: form.priority,
         budget: parseFloat(form.budget || "0") || 0,
         lead_name: form.lead_name.trim() || null,

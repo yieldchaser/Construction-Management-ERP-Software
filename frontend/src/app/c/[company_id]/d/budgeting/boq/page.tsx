@@ -539,7 +539,7 @@ export default function BOQPage() {
                       </div>
                       <span className="text-[10px] text-muted">{rev.created_at ? new Date(rev.created_at).toLocaleDateString("en-IN") : ""}</span>
                     </div>
-                    <div className="text-xs text-muted">{rev.reason || "No reason provided."}</div>
+                    <div className="text-xs text-muted">{rev.reason || "—"}</div>
                     <div className="mt-2 flex items-center justify-between">
                       <div className="text-lg font-black text-primary">{fmt(rev.revised_amount)}</div>
                       <div className="text-[10px] text-muted text-right">

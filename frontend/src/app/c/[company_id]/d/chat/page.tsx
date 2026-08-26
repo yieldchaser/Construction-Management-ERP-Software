@@ -537,8 +537,8 @@ export default function ChatPage() {
                           )}
 
                           {/* Sender details */}
-                          {!isSystemMom && (msg.user_name || "SiteFlow") && (
-                            <div className="text-[10px] font-bold text-primary mb-1">{msg.user_name || "SiteFlow"}</div>
+                          {!isSystemMom && (msg.user_name || "—") && (
+                            <div className="text-[10px] font-bold text-primary mb-1">{msg.user_name || "—"}</div>
                           )}
 
                           {/* Message Body */}

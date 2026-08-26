@@ -40,7 +40,7 @@ const extractProjects = (data: unknown): Project[] => {
   return [];
 };
 
-const getProjectName = (project?: Project | null) => project?.project_name || project?.name || "Untitled Project";
+const getProjectName = (project?: Project | null) => project?.project_name || project?.name || "—";
 
 const getProjectCode = (project?: Project | null) => project?.project_code || project?.code || "";
 
@@ -227,7 +227,7 @@ export default function PaymentApprovalPage() {
                   </span>
                 </div>
                 
-                <p className="text-muted text-xs max-w-xl">{r.details || "No details provided"}</p>
+                <p className="text-muted text-xs max-w-xl">{r.details || "—"}</p>
                 
                 <div className="flex gap-4 text-[10px] text-muted">
                   <span className="inline-flex items-center gap-1"><Icon name="calendar" className="w-3 h-3" /> Submitted: {new Date(r.created_at).toLocaleDateString()}</span>

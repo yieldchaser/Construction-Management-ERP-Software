@@ -109,7 +109,7 @@ export default function SubcontractorBillingPage() {
           id: wo.id,
           woNumber: wo.wo_number,
           subcontractor: wo.subcontractor_name || nameMap[wo.subcontractor_id] || "Unassigned",
-          item: wo.items && wo.items.length > 0 ? wo.items[0].description || wo.terms : wo.terms || "Subcontractor Works",
+          item: wo.items && wo.items.length > 0 ? wo.items[0].description || wo.terms : wo.terms || "—",
           value: wo.estimated_work_amount,
           status: wo.status === "active" ? "Active" : wo.status,
           date: wo.wo_date ? wo.wo_date.split("T")[0] : "",
@@ -430,7 +430,7 @@ export default function SubcontractorBillingPage() {
       if (res.ok) {
         const bill = await res.json();
         setBills(prev => prev.map(b => b.id === id
-          ? { ...b, approvalFlag: bill.approval_flag || "approved" }
+          ? { ...b, approvalFlag: bill.approval_flag || "—" }
           : b));
       } else {
         const err = await res.json().catch(() => ({}));

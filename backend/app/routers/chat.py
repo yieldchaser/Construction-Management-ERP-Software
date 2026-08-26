@@ -244,7 +244,7 @@ def list_messages(
             "id": msg.id,
             "group_id": msg.group_id,
             "user_id": msg.user_id,
-            "user_name": resolved_name or msg.user_name or "SiteFlow",
+            "user_name": resolved_name or msg.user_name or "—",
             "message_text": msg.message_text,
             "image_urls": msg.image_urls or [],
             "is_mom": msg.is_mom,

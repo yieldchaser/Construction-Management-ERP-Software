@@ -623,10 +623,10 @@ function CreateProjectModal({
           <div className="text-xs uppercase tracking-wider text-muted mb-3">Live Preview</div>
           <div className="rounded-lg bg-card p-4 border border-border-custom">
             <div className="h-10 w-10 rounded-lg bg-primary/15 text-primary flex items-center justify-center font-semibold">
-              {initials(name || "New Project")}
+              {initials(name || "—")}
             </div>
-            <div className="mt-2 font-semibold text-foreground">{name || "Project Name"}</div>
-            <div className="text-xs text-muted">{city || "City"}</div>
+            <div className="mt-2 font-semibold text-foreground">{name || "—"}</div>
+            <div className="text-xs text-muted">{city || "—"}</div>
             {code && <div className="mt-1 text-xs text-muted">Code: {code}</div>}
             {stage && <div className="text-xs text-muted">Stage: {stage}</div>}
             <div className="mt-3 text-xs text-muted">
@@ -746,7 +746,7 @@ function CreateProjectModal({
                       />
                       <div>
                         <div className="text-sm text-foreground">{m.name}</div>
-                        <div className="text-xs text-muted">{m.role || "Member"}</div>
+                        <div className="text-xs text-muted">{m.role || "—"}</div>
                       </div>
                     </label>
                   ))}
@@ -1053,7 +1053,7 @@ function ProjectSettingsModal({
                     </div>
                     <div>
                       <div className="text-sm text-foreground">{m.name}</div>
-                      <div className="text-xs text-muted">{m.role || "Member"}</div>
+                      <div className="text-xs text-muted">{m.role || "—"}</div>
                     </div>
                   </div>
                   <span className="text-xs rounded-full bg-elevated px-2 py-0.5 text-muted">{m.mobile || ""}</span>
