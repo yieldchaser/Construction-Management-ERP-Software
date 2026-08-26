@@ -19,6 +19,38 @@ from sqlalchemy.orm import Session
 from app.models import ApprovalRule, ApprovalAction, User
 
 
+# ── Canonical Multi Level Approval categories (R2-179) ───────────────────────
+# Single source of truth for the Settings > Multi Level Approval category
+# labels. The settings router's Literal and every enforcement constant below
+# derive from this tuple, so the label that binds a stored rule to the code
+# that enforces it can no longer be typed independently per call site (a
+# rename there used to silently detach every rule already stored under the old
+# label). A contract test pins this tuple to the frontend APPROVAL_CATEGORIES.
+APPROVAL_FEATURE_TYPES = (
+    "Asset Transfer",
+    "Equipment Expense",
+    "GRN Material",
+    "Material Issue",
+    "Material Purchase",
+    "Material Transfer",
+    "Material Used",
+    "Other Expense",
+    "Payment Entries",
+    "Payment Request",
+    "Purchase Order",
+    "RFQ",
+)
+
+PO_FEATURE_TYPE = "Purchase Order"
+PAYMENT_REQUEST_FEATURE_TYPE = "Payment Request"
+PAYMENT_ENTRIES_FEATURE_TYPE = "Payment Entries"
+
+assert all(
+    t in APPROVAL_FEATURE_TYPES
+    for t in (PO_FEATURE_TYPE, PAYMENT_REQUEST_FEATURE_TYPE, PAYMENT_ENTRIES_FEATURE_TYPE)
+), "enforcement feature type outside APPROVAL_FEATURE_TYPES"
+
+
 def find_matching_rule(db: Session, company_id: uuid.UUID, feature_type: str, amount: float) -> Optional[ApprovalRule]:
     """Return the ApprovalRule whose min/max range covers `amount` for this
     company + feature_type, or None if nothing is configured (in which case

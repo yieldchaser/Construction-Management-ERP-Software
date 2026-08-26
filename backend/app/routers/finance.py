@@ -8,7 +8,15 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import Payment, PaymentSettlement, Bill, PayrollRun, PayrollLineItem, StaffEmployee, ProjectBudget, Project, CompanyTeam, User, Equipment, EquipmentDeployment, FuelLog, BankAccount, PaymentRequest, PaymentRequestPayment, CashAccount, LibraryParty, Company, ApprovalRule, LibraryCostCode, MaterialWastage
 from app.auth import get_current_user, verify_project_in_company, verify_company_access, verify_project_access, get_company_membership, require_permission, require_module_view
-from app.approvals import find_matching_rule, match_approver, levels_approved, user_already_acted, record_action
+from app.approvals import (
+    find_matching_rule,
+    match_approver,
+    levels_approved,
+    user_already_acted,
+    record_action,
+    PAYMENT_ENTRIES_FEATURE_TYPE,
+    PAYMENT_REQUEST_FEATURE_TYPE,
+)
 from pydantic import BaseModel, Field, field_validator
 from app.constants import REVENUE_INVOICE_TYPES, EXPENSE_INVOICE_TYPES, SETTLEMENT_INVOICE_TYPES
 from app.workflow_controls import enforce_entry_creation_window
@@ -626,7 +634,7 @@ def get_project_pl(project_id: uuid.UUID, db: Session = Depends(get_db), _: None
 # ApprovalAction row naming the approver (approver_user_id) and the time
 # (created_at). Bills have no matching category label today, so their manual
 # approval records the action ungated; wiring one for bills is CD-1 territory.
-PAYMENT_ENTRIES_FEATURE_TYPE = "Payment Entries"  # must match the Settings > Multi Level Approval category label exactly
+# R2-179: PAYMENT_ENTRIES_FEATURE_TYPE comes from app/approvals.py.
 
 _APPROVED_FLAGS = ("approved", "auto_approved")
 
@@ -1255,7 +1263,7 @@ def get_company_transactions(company_id: uuid.UUID, db: Session = Depends(get_db
     )
 
 
-PAYMENT_REQUEST_FEATURE_TYPE = "Payment Request"  # must match the Settings > Multi Level Approval category label exactly
+# R2-179: PAYMENT_REQUEST_FEATURE_TYPE comes from app/approvals.py.
 
 
 def _pr_response(db: Session, req: PaymentRequest, payment_row: Optional[PaymentRequestPayment] = None) -> PaymentRequestResponse:

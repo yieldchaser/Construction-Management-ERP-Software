@@ -13,7 +13,14 @@ from app.models import (
     WarehouseInventory, MaterialTransaction,
     Project, User, ApprovalRule, CompanyTeam, LibraryParty
 )
-from app.approvals import find_matching_rule, match_approver, levels_approved, user_already_acted, record_action
+from app.approvals import (
+    find_matching_rule,
+    match_approver,
+    levels_approved,
+    user_already_acted,
+    record_action,
+    PO_FEATURE_TYPE,
+)
 from app.workflow_controls import enforce_stock_availability, enforce_entry_creation_window, get_company, get_default_terms
 from app.utils.pdf_generator import generate_document_pdf
 from app.utils.document_pdf import resolve_pdf_branding, resolve_supplier_tax_details
@@ -436,7 +443,7 @@ def reject_indent(indent_id: UUID, db: Session = Depends(get_db), current_user: 
 
 # 2. Purchase Orders
 
-PO_FEATURE_TYPE = "Purchase Order"  # must match the Settings > Multi Level Approval category label exactly
+# R2-179: PO_FEATURE_TYPE comes from app/approvals.py.
 
 
 def _po_response(db: Session, po: PurchaseOrder) -> POResponse:

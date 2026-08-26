@@ -17,6 +17,7 @@ from app.permissions import (
     validate_permissions,
     default_view_permissions,
 )
+from app.approvals import APPROVAL_FEATURE_TYPES
 
 router = APIRouter(prefix="/settings", tags=["Settings & Configurations"], dependencies=[Depends(get_current_user)])
 
@@ -183,12 +184,10 @@ class BranchResponse(BaseModel):
 
 
 class ApprovalRuleCreate(BaseModel):
-    feature_type: Literal[
-        "Asset Transfer", "Equipment Expense", "GRN Material",
-        "Material Issue", "Material Purchase",
-        "Material Transfer", "Material Used", "Other Expense", "Payment Entries",
-        "Payment Request", "Purchase Order", "RFQ",
-    ]
+    # R2-179: derived from APPROVAL_FEATURE_TYPES in app/approvals.py - an
+    # unknown label is now rejected here (422) at creation/update time instead
+    # of being stored under a string no enforcement site will ever match.
+    feature_type: Literal[tuple(APPROVAL_FEATURE_TYPES)]
     min_amount: float = Field(..., ge=0)
     max_amount: Optional[float] = Field(None, ge=0)
     levels: int = Field(..., ge=1)
