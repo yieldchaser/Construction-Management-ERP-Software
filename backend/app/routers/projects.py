@@ -312,6 +312,20 @@ def create_project(payload: ProjectCreate, db: Session = Depends(get_db), curren
     get_company_membership(db, current_user, payload.company_id)
     require_permission(db, current_user, payload.company_id, "projects:edit")
     enforce_required_custom_fields(db, payload.company_id, "project", [cf.model_dump() for cf in payload.custom_fields])
+    # D4: site state is required for any invoiceable project (POS derives from site)
+    if not payload.state or not str(payload.state).strip():
+        raise HTTPException(
+            status_code=422,
+            detail="Project.state is required for invoicing — set the site state (GST state code or name) before creating invoices; place of supply derives from the site per IGST Act s.12(3)",
+        )
+    try:
+        from app.gst_utils import project_state_code as _psc
+        if _psc(payload.state) is None:
+            raise HTTPException(status_code=422, detail="Project.state must be a valid GST state code or name (e.g. 27, Maharashtra, KA)")
+    except HTTPException:
+        raise
+    except Exception:
+        pass
     proj = models.Project(
         company_id=payload.company_id,
         name=payload.name,
@@ -364,6 +378,42 @@ def update_project(project_id: uuid.UUID, payload: ProjectUpdate, db: Session = 
         if field in ("planned_start_date", "planned_end_date", "actual_start_date", "actual_end_date"):
             value = _parse_dt(value)
         setattr(p, field, value)
+    # D4: clearing site state is not allowed — POS would become indeterminate
+    if "state" in updates:
+        if updates["state"] is None or not str(updates["state"]).strip():
+            raise HTTPException(
+                status_code=422,
+                detail="Project.state is required — clearing the site state is not allowed; place of supply derives from the site per IGST Act s.12(3)",
+            )
+        try:
+            from app.gst_utils import project_state_code as _psc2
+            if _psc2(updates["state"]) is None:
+                raise HTTPException(status_code=422, detail="Project.state must be a valid GST state code or name (e.g. 27, Maharashtra, KA)")
+        except HTTPException:
+            raise
+        except Exception:
+            pass
+    # If the project currently has no state at all, any update that would leave it
+    # invoiceable (i.e. any update post-D4) must supply a state. Legacy rows with
+    # blank state can still be updated to add a state, but not left blank.
+    if not str(getattr(p, "state", "") or "").strip() and "state" not in updates:
+        # Allow non-state updates only if the project already has no bills yet?
+        # For simplicity, require state to be supplied alongside any update when blank,
+        # mirroring the create requirement. If the caller is not touching state, we
+        # still block until they set it, because the site is now invoiceable.
+        # Check if project has any bills — if so, definitely require state.
+        try:
+            from app.models import Bill as _BillCheck
+            has_bills = db.query(_BillCheck.id).filter(_BillCheck.project_id == p.id).first() is not None
+            if has_bills:
+                raise HTTPException(
+                    status_code=422,
+                    detail="Project.state is required for invoicing — set the site state before updating this project; place of supply derives from the site per IGST Act s.12(3)",
+                )
+        except HTTPException:
+            raise
+        except Exception:
+            pass
     if p.planned_start_date and p.planned_end_date and p.planned_end_date < p.planned_start_date:
         raise HTTPException(status_code=422, detail="planned_end_date cannot be before planned_start_date")
     if custom_fields:

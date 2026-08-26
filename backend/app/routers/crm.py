@@ -211,6 +211,9 @@ class QuotationCreateRequest(BaseModel):
     gst_pct: float = Field(18.00, ge=0, le=100)
     cgst_pct: Optional[float] = Field(None, ge=0, le=100)
     sgst_pct: Optional[float] = Field(None, ge=0, le=100)
+    # D4 — optional site for POS; when provided, GST head derives from
+    # Project.state vs supplier GSTIN (IGST inter-state, CGST/SGST halves intra-state)
+    project_id: Optional[uuid.UUID] = None
     discount: float = Field(0.0, ge=0)
     additional_charges: float = Field(0.0, ge=0)
     round_off: float = 0.0
@@ -257,6 +260,9 @@ class QuotationResponse(BaseModel):
     sgst_pct: float
     cgst_amount: float
     sgst_amount: float
+    # D4 — inter-state quotations carry IGST
+    igst_pct: float = 0.0
+    igst_amount: float = 0.0
     tax_amount: float
     discount: float
     additional_charges: float
@@ -522,9 +528,52 @@ def create_quotation(lead_id: uuid.UUID, req: QuotationCreateRequest, db: Sessio
     get_company_membership(db, current_user, lead.company_id)
     require_permission(db, current_user, lead.company_id, "crm:edit")
 
+    # D4: derive GST head from site state vs supplier GSTIN when project_id is supplied
+    _d4_inter = None
+    _d4_project_state = None
+    _d4_supplier_gstin = None
+    _d4_igst_pct = 0.0
     gst_pct = req.gst_pct
-    cgst_pct = req.cgst_pct if req.cgst_pct is not None else gst_pct / 2.0
-    sgst_pct = req.sgst_pct if req.sgst_pct is not None else gst_pct / 2.0
+    if getattr(req, "project_id", None):
+        try:
+            _proj = db.query(Project).filter(Project.id == req.project_id).first()
+            if not _proj or _proj.company_id != lead.company_id:
+                raise HTTPException(status_code=422, detail="project_id does not belong to the lead's company")
+            if not str(getattr(_proj, "state", "") or "").strip():
+                raise HTTPException(
+                    status_code=422,
+                    detail="Project.state is required for quotations — set the site state before quoting; place of supply derives from the site per IGST Act s.12(3)",
+                )
+            _d4_project_state = _proj.state
+            _comp = db.query(Company).filter(Company.id == lead.company_id).first()
+            _d4_supplier_gstin = getattr(_comp, "gstin", None)
+            if getattr(_proj, "branch_id", None):
+                from app.models import CompanyBranch as _CB
+                _br = db.query(_CB).filter(_CB.id == _proj.branch_id).first()
+                if _br and getattr(_br, "gstin", None):
+                    _d4_supplier_gstin = _br.gstin
+            from app.gst_utils import is_inter_state as _is_inter
+            _d4_inter = _is_inter(_d4_project_state, _d4_supplier_gstin)
+        except HTTPException:
+            raise
+        except Exception:
+            _d4_inter = None
+
+    if _d4_inter is True:
+        # Inter-state -> IGST
+        cgst_pct = 0.0
+        sgst_pct = 0.0
+        _d4_igst_pct = gst_pct
+    elif _d4_inter is False:
+        # Intra-state -> halves
+        cgst_pct = req.cgst_pct if req.cgst_pct is not None else gst_pct / 2.0
+        sgst_pct = req.sgst_pct if req.sgst_pct is not None else gst_pct / 2.0
+        _d4_igst_pct = 0.0
+    else:
+        # No project context — legacy halves (forward-only; new project quotes must provide project_id)
+        cgst_pct = req.cgst_pct if req.cgst_pct is not None else gst_pct / 2.0
+        sgst_pct = req.sgst_pct if req.sgst_pct is not None else gst_pct / 2.0
+        _d4_igst_pct = 0.0
 
     # Create quotation record
     quot = CRMQuotation(
@@ -536,6 +585,8 @@ def create_quotation(lead_id: uuid.UUID, req: QuotationCreateRequest, db: Sessio
         gst_pct=gst_pct,
         cgst_pct=cgst_pct,
         sgst_pct=sgst_pct,
+        igst_pct=_d4_igst_pct,
+        igst_amount=0.0,
         discount=req.discount,
         additional_charges=req.additional_charges,
         round_off=req.round_off,
@@ -635,13 +686,21 @@ def create_quotation(lead_id: uuid.UUID, req: QuotationCreateRequest, db: Sessio
 
     final_total = base_total + (req.additional_charges or 0.0) + (req.round_off or 0.0)
 
-    total_gst = (cgst_pct + sgst_pct) or 1.0
-    cgst_amount = total_tax * (cgst_pct / total_gst)
-    sgst_amount = total_tax * (sgst_pct / total_gst)
+    # D4 split — IGST when inter-state, otherwise CGST/SGST halves
+    if _d4_inter is True:
+        cgst_amount = 0.0
+        sgst_amount = 0.0
+        igst_amount = float(total_tax)
+    else:
+        total_gst = (cgst_pct + sgst_pct) or 1.0
+        cgst_amount = total_tax * (cgst_pct / total_gst)
+        sgst_amount = total_tax * (sgst_pct / total_gst)
+        igst_amount = 0.0
 
     quot.total_amount = max(final_total, 0.0)
     quot.cgst_amount = cgst_amount
     quot.sgst_amount = sgst_amount
+    quot.igst_amount = igst_amount
     db.add(quot)
     db.commit()
     db.refresh(quot)
@@ -658,7 +717,9 @@ def create_quotation(lead_id: uuid.UUID, req: QuotationCreateRequest, db: Sessio
         sgst_pct=float(quot.sgst_pct),
         cgst_amount=float(quot.cgst_amount),
         sgst_amount=float(quot.sgst_amount),
-        tax_amount=float(quot.cgst_amount + quot.sgst_amount),
+        igst_pct=float(getattr(quot, "igst_pct", 0.0) or 0.0),
+        igst_amount=float(getattr(quot, "igst_amount", 0.0) or 0.0),
+        tax_amount=float(float(quot.cgst_amount or 0) + float(quot.sgst_amount or 0) + float(getattr(quot, "igst_amount", 0) or 0)),
         discount=float(quot.discount),
         additional_charges=float(quot.additional_charges),
         round_off=float(quot.round_off),
@@ -693,6 +754,8 @@ def create_quotation(lead_id: uuid.UUID, req: QuotationCreateRequest, db: Sessio
             length=float(i.length) if i.length is not None else None,
             width=float(i.width) if i.width is not None else None,
             height=float(i.height) if i.height is not None else None,
+            billed_qty=float(i.billed_qty or 0.0),
+            unbilled_qty=float(i.unbilled_qty or 0.0),
         ) for i in persisted
     ]
     return res
@@ -721,7 +784,9 @@ def get_quotations(lead_id: uuid.UUID, db: Session = Depends(get_db), current_us
                 sgst_pct=float(q.sgst_pct),
                 cgst_amount=float(q.cgst_amount),
                 sgst_amount=float(q.sgst_amount),
-                tax_amount=float(q.cgst_amount + q.sgst_amount),
+                igst_pct=float(getattr(q, "igst_pct", 0.0) or 0.0),
+                igst_amount=float(getattr(q, "igst_amount", 0.0) or 0.0),
+                tax_amount=float(float(q.cgst_amount or 0) + float(q.sgst_amount or 0) + float(getattr(q, "igst_amount", 0) or 0)),
                 discount=float(q.discount),
                 additional_charges=float(q.additional_charges),
                 round_off=float(q.round_off),
@@ -752,6 +817,8 @@ def get_quotations(lead_id: uuid.UUID, db: Session = Depends(get_db), current_us
                         length=float(i.length) if i.length is not None else None,
                         width=float(i.width) if i.width is not None else None,
                         height=float(i.height) if i.height is not None else None,
+                        billed_qty=float(i.billed_qty or 0.0),
+                        unbilled_qty=float(i.unbilled_qty or 0.0),
                     ) for i in items
                 ]
             )
@@ -798,6 +865,12 @@ def convert_quotation_to_invoice(quotation_id: uuid.UUID, req: QuotationConvertR
     require_permission(db, current_user, lead.company_id, "billing:edit")
 
     project = verify_project_in_company(db, req.project_id, lead.company_id)
+    # D4: site state required for the resulting invoice
+    if not project or not str(getattr(project, "state", "") or "").strip():
+        raise HTTPException(
+            status_code=422,
+            detail="Project.state is required for invoicing — set the site state before converting quotations; place of supply derives from the site per IGST Act s.12(3)",
+        )
     party_row = db.query(CompanyTeam).filter(CompanyTeam.id == req.party_company_user_id).first()
     if not party_row or party_row.company_id != lead.company_id:
         raise HTTPException(status_code=400, detail="Invoice party does not belong to this company")

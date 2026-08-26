@@ -1181,6 +1181,11 @@ class CRMQuotation(Base):
     sgst_pct = Column(Numeric(5, 2), default=9.00, nullable=False)
     cgst_amount = Column(Numeric(18, 2), default=0.0, nullable=False)
     sgst_amount = Column(Numeric(18, 2), default=0.0, nullable=False)
+    # D4 (R2-041/R2-125/R2-319) — inter-state quotations carry IGST; intra-state split CGST/SGST.
+    # Additive nullable columns so SQLite boot-sync can add them without a migration script;
+    # backfill defaults to 0.0 for legacy rows that were always intra-state halves.
+    igst_pct = Column(Numeric(5, 2), default=0.00, nullable=True)
+    igst_amount = Column(Numeric(18, 2), default=0.0, nullable=True)
     discount = Column(Numeric(18, 2), default=0.0, nullable=False)
     additional_charges = Column(Numeric(18, 2), default=0.0, nullable=False)
     round_off = Column(Numeric(18, 2), default=0.0, nullable=False)

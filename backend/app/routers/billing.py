@@ -763,18 +763,38 @@ def get_bill_pdf(bill_id: UUID, db: Session = Depends(get_db), current_user=Depe
         raise HTTPException(status_code=400, detail=f"Invalid or unhandled invoice_type '{bill.invoice_type}'")
     type_label = type_label_map[bill.invoice_type]
 
-    # R2-272: place of supply is the destination state read from the recipient
-    # GSTIN prefix; inter-state supplies carry IGST while intra-state ones
-    # split CGST/SGST half each (same convention as reports._gst_split).
+    # D4 (R2-041/R2-125/R2-319): place of supply is the SITE (Project.state)
+    # per IGST Act s.12(3) for works contracts — not the party address.
+    # Compare site state vs supplier GSTIN prefix: same -> CGST+SGST halves,
+    # different -> IGST full. Forward-only — no rewrite of filed docs.
     supplier_gstin = ""
     for ln in supplier_lines:
         if ln.startswith("GSTIN: "):
             supplier_gstin = ln[len("GSTIN: "):].strip()
             break
-    supplier_state = supplier_gstin[:2] if len(supplier_gstin) >= 2 else ""
+    # Keep recipient prefix only as a legacy fallback when site state is absent
+    # so that invoices created before D4 (when state was nullable) still render.
     recipient_state = party_gstin[:2] if len(party_gstin) >= 2 else ""
-    place_of_supply = recipient_state or ""
-    inter_state = bool(supplier_state and place_of_supply and supplier_state != place_of_supply)
+    try:
+        from app.gst_utils import project_state_code as _proj_code, is_inter_state as _is_inter, supplier_state_code as _sup_code
+        _site_code = _proj_code(getattr(project, "state", None) if project else None)
+        _sup_code_val = _sup_code(supplier_gstin)
+        inter_val = _is_inter(getattr(project, "state", None) if project else None, supplier_gstin)
+        if _site_code:
+            place_of_supply = _site_code
+            inter_state = bool(inter_val) if inter_val is not None else False
+        else:
+            # Legacy fallback: site state missing — fall back to recipient-based POS
+            # so that pre-D4 PDFs (and the R2-272 pin) remain honest. New writes
+            # are gated by Project.state required 422, so this path only serves history.
+            place_of_supply = recipient_state or ""
+            inter_state = bool(_sup_code_val and place_of_supply and _sup_code_val != place_of_supply)
+    except Exception:
+        # Absolute fallback identical to pre-D4 behavior
+        supplier_state = supplier_gstin[:2] if len(supplier_gstin) >= 2 else ""
+        recipient_state = party_gstin[:2] if len(party_gstin) >= 2 else ""
+        place_of_supply = recipient_state or ""
+        inter_state = bool(supplier_state and place_of_supply and supplier_state != place_of_supply)
 
     party_lines = [
         f"Party: {party_name}",
@@ -951,6 +971,14 @@ def create_bill(req: BillCreateRequest, db: Session = Depends(get_db), current_u
     get_company_membership(db, current_user, req.company_id)
     verify_project_in_company(db, req.project_id, req.company_id)
     require_permission(db, current_user, req.company_id, "billing:edit")
+    # D4 (R2-041/R2-125/R2-319): site state is required for any invoiceable write —
+    # place of supply derives from Project.state vs supplier GSTIN.
+    _bill_proj = db.query(Project).filter(Project.id == req.project_id).first()
+    if not _bill_proj or not str(getattr(_bill_proj, "state", "") or "").strip():
+        raise HTTPException(
+            status_code=422,
+            detail="Project.state is required for invoicing — set the site state (GST state code or name) before creating invoices; place of supply derives from the site per IGST Act s.12(3)",
+        )
     enforce_required_custom_fields(db, req.company_id, "invoice", [cf.model_dump() for cf in req.custom_fields])
     enforce_required_custom_fields(db, req.company_id, "bill", [cf.model_dump() for cf in req.custom_fields])
 

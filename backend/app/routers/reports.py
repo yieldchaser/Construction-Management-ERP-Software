@@ -1133,15 +1133,32 @@ def _rep_task_attendance(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
         return _REPORT_FAILED
 
 
-def _gst_split(tax_amount):
-    """Clearly-labeled standard assumption: no place-of-supply data available,
-    so split the tax equally into CGST and SGST, IGST/UTGST = 0."""
+def _gst_split(tax_amount, project_state=None, supplier_gstin=None):
+    """
+    D4 (R2-041/R2-125/R2-319) — place of supply derives from Project.state.
+
+    POS = Project.state (site) vs supplier GSTIN prefix (first 2 chars).
+    Same state -> CGST+SGST halves. Different -> IGST full. Never unconditional 50/50.
+
+    When either side is missing the split falls back to legacy halves so that
+    legacy reports without site state remain renderable; write-time validation
+    (Project.state required 422) prevents new indeterminate rows.
+
+    Keeps the original ``_gst_split(tax)`` call shape for backward compat
+    (no project/gstin -> halves).
+    """
+    # Import here to avoid circular deps at module import time
     try:
-        tax = float(tax_amount) if tax_amount is not None else 0.0
+        from app.gst_utils import gst_split as _d4_split
+        return _d4_split(tax_amount, project_state, supplier_gstin)
     except Exception:
-        tax = 0.0
-    half = tax / 2.0
-    return half, half, 0.0, 0.0
+        # Fallback identical to pre-D4 halves if helper cannot be imported
+        try:
+            tax = float(tax_amount) if tax_amount is not None else 0.0
+        except Exception:
+            tax = 0.0
+        half = tax / 2.0
+        return half, half, 0.0, 0.0
 
 
 def _rep_gstr1_sales(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
@@ -1153,7 +1170,20 @@ def _rep_gstr1_sales(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
         for b in q.order_by(Bill.invoice_date.desc()).all():
             proj = db.query(Project).filter(Project.id == b.project_id).first() if b.project_id else None
             party = _team_user_name(db, b.party_company_user_id)
-            cgst, sgst, igst, utgst = _gst_split(b.gst_amount)
+            # D4: derive split from site state vs supplier GSTIN
+            comp_gstin = None
+            try:
+                comp = db.query(Company).filter(Company.id == cid).first()
+                comp_gstin = getattr(comp, "gstin", None)
+                # Branch GSTIN takes precedence when document masthead resolves to branch
+                if proj and getattr(proj, "branch_id", None):
+                    from app.models import CompanyBranch as _Br
+                    br = db.query(_Br).filter(_Br.id == proj.branch_id).first()
+                    if br and getattr(br, "gstin", None):
+                        comp_gstin = br.gstin
+            except Exception:
+                comp_gstin = None
+            cgst, sgst, igst, utgst = _gst_split(b.gst_amount, getattr(proj, "state", None) if proj else None, comp_gstin)
             rows.append({
                 "Party Name": party,
                 "Party GST": "",
@@ -1167,7 +1197,7 @@ def _rep_gstr1_sales(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
                 "SGST": sgst,
                 "IGST": igst,
                 "UTGST": utgst,
-                "Company GST": "",
+                "Company GST": comp_gstin or "",
             })
         return rows
     except Exception:
@@ -1185,7 +1215,18 @@ def _rep_gstr2_purchase(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
         for b in bills:
             proj = db.query(Project).filter(Project.id == b.project_id).first() if b.project_id else None
             party = _team_user_name(db, b.party_company_user_id)
-            cgst, sgst, igst, utgst = _gst_split(b.gst_amount)
+            comp_gstin = None
+            try:
+                comp = db.query(Company).filter(Company.id == cid).first()
+                comp_gstin = getattr(comp, "gstin", None)
+                if proj and getattr(proj, "branch_id", None):
+                    from app.models import CompanyBranch as _Br2
+                    br = db.query(_Br2).filter(_Br2.id == proj.branch_id).first()
+                    if br and getattr(br, "gstin", None):
+                        comp_gstin = br.gstin
+            except Exception:
+                comp_gstin = None
+            cgst, sgst, igst, utgst = _gst_split(b.gst_amount, getattr(proj, "state", None) if proj else None, comp_gstin)
             rows.append({
                 "Party Name": party,
                 "Party Tax No.": "",
