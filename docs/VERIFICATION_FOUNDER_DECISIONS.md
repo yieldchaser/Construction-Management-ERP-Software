@@ -1,5 +1,13 @@
 # Pending founder decisions — verification phase
 
+> **SUPERSEDED 2026-08-26 for the decisions themselves.** At the founder's instruction, every item
+> here has been **decided** in `docs/VERIFICATION_DECISIONS_RESOLVED.md`, alongside the fix
+> campaign's 17 gated rows. This file remains the evidence record for D-V1..D-V5; the resolved file
+> carries the decision, the reasoning, the blast radius and the sequence. Read that one to act.
+>
+> Two items are business policy and still want the founder's word before implementation:
+> **D2** (zero-attendance payroll) and **CD-4** (EPF wage ceiling). Both have a recommended default.
+
 **Nothing here blocks the verification pass.** Founder's instruction (2026-08-21): batch every
 decision to the end and take them in one sitting. Items are appended as they surface, with enough
 context to decide without re-reading the finding.
