@@ -467,7 +467,9 @@ class PurchaseOrder(Base):
     # Promised delivery date: the baseline vendor on-time delivery is measured
     # against. Null falls back to po_date for legacy rows.
     expected_delivery_date = Column(DateTime(timezone=True), nullable=True)
-    status = Column(String(50), default="draft", nullable=False) # draft, sent, partial, received, closed
+    status = Column(String(50), default="draft", nullable=False) # draft, sent, partial, received, closed, cancelled
+    cancelled_at = Column(DateTime(timezone=True), nullable=True)
+    cancelled_by = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     gross_amount = Column(Numeric(18, 2), default=0.0, nullable=False)
     tax_amount = Column(Numeric(18, 2), default=0.0, nullable=False)
     total_amount = Column(Numeric(18, 2), default=0.0, nullable=False)

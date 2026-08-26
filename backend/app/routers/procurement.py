@@ -642,6 +642,9 @@ def approve_po(po_id: UUID, db: Session = Depends(get_db), current_user: User = 
         raise HTTPException(status_code=404, detail="PO not found")
     get_company_membership(db, current_user, po.company_id)
     require_permission(db, current_user, po.company_id, "procurement:approve")
+    # CD-8 (R2-341): cancelled/closed POs are terminal — cannot be approved.
+    if (po.status or "").lower() in ("cancelled", "closed"):
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=f"Cannot approve a PO that is {po.status}")
     if po.approval_flag == "approved":
         raise HTTPException(status_code=400, detail="Purchase order is already fully approved")
     if po.approval_flag == "rejected":
@@ -681,6 +684,8 @@ def reject_po(po_id: UUID, db: Session = Depends(get_db), current_user: User = D
         raise HTTPException(status_code=404, detail="PO not found")
     get_company_membership(db, current_user, po.company_id)
     require_permission(db, current_user, po.company_id, "procurement:approve")
+    if (po.status or "").lower() in ("cancelled", "closed"):
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=f"Cannot reject a PO that is {po.status}")
     if po.approval_flag == "approved":
         raise HTTPException(status_code=400, detail="Purchase order is already fully approved")
     if po.approval_flag == "rejected":
@@ -697,6 +702,54 @@ def reject_po(po_id: UUID, db: Session = Depends(get_db), current_user: User = D
         )
 
     po.approval_flag = "rejected"
+    db.commit()
+    db.refresh(po)
+    return _po_response(db, po)
+
+
+@router.post("/pos/{po_id}/cancel", response_model=POResponse)
+def cancel_po(po_id: UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """CD-8 (R2-341) — PO cancel, replicated from R2-370 bill-cancel.
+
+    Guard: 409 if already cancelled or closed (terminal states). Sets
+    cancelled_at/cancelled_by and moves status to "cancelled" so every
+    committed-cost aggregation (which filters on status in sent/partial/received)
+    excludes it from the start — no missed call site like R2-723.
+    """
+    po = db.query(PurchaseOrder).filter(PurchaseOrder.id == po_id).first()
+    if not po:
+        raise HTTPException(status_code=404, detail="PO not found")
+    get_company_membership(db, current_user, po.company_id)
+    require_permission(db, current_user, po.company_id, "procurement:edit")
+    cur = (po.status or "").lower()
+    if cur in ("cancelled", "closed"):
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=f"Purchase order is already {cur}")
+    po.status = "cancelled"
+    po.cancelled_at = datetime.now(timezone.utc)
+    po.cancelled_by = current_user.id
+    db.add(po)
+    db.commit()
+    db.refresh(po)
+    return _po_response(db, po)
+
+
+@router.post("/pos/{po_id}/close", response_model=POResponse)
+def close_po(po_id: UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """CD-8 (R2-341) — PO close, terminal state sibling to cancel.
+
+    A closed PO is fulfilled and must also be excluded from open committed
+    sums; the guard mirrors cancel so a second close/cancel is 409.
+    """
+    po = db.query(PurchaseOrder).filter(PurchaseOrder.id == po_id).first()
+    if not po:
+        raise HTTPException(status_code=404, detail="PO not found")
+    get_company_membership(db, current_user, po.company_id)
+    require_permission(db, current_user, po.company_id, "procurement:edit")
+    cur = (po.status or "").lower()
+    if cur in ("cancelled", "closed"):
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=f"Purchase order is already {cur}")
+    po.status = "closed"
+    db.add(po)
     db.commit()
     db.refresh(po)
     return _po_response(db, po)
@@ -725,7 +778,9 @@ def _generate_grn_number(db: Session, company_id: UUID, project_id: UUID) -> str
 
 # Purchase order lifecycle ranks for forward-only status movement from goods
 # receipt (R2-239/R2-348): a GRN may advance a PO along draft -> sent ->
-# partial -> received, never rewind it, and "closed" outranks them all.
+# partial -> received, never rewind it, and "closed"/"cancelled" outrank them all.
+# CD-8 (R2-341): cancelled is terminal like closed — a cancelled PO must never
+# be revived by a later GRN or approval; rank 4 blocks forward movement.
 _PO_STATUS_RANK = {
     "draft": 0,
     "pending": 0,
@@ -735,6 +790,7 @@ _PO_STATUS_RANK = {
     "partially_received": 2,
     "received": 3,
     "closed": 4,
+    "cancelled": 4,
 }
 
 
@@ -815,6 +871,9 @@ def create_grn(req: GRNCreateRequest, db: Session = Depends(get_db), current_use
                 f"status='{po.status}'); goods receipt requires an approved PO"
             ),
         )
+    # CD-8 (R2-341): cancelled/closed POs are terminal — no further receipt.
+    if (po.status or "").lower() in ("cancelled", "closed"):
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=f"Cannot receive goods for a PO that is {po.status}")
 
     # R2-348: cap what this GRN may receive per line. Cumulative received
     # across every earlier GRN plus every earlier line of THIS request may
@@ -1021,12 +1080,19 @@ def get_stock(project_id: UUID, db: Session = Depends(get_db), _: None = Depends
     # ordered. Clamp the per-material ledger aggregate at the total ordered
     # across all of the project's POs; materials with no PO line (manual
     # receipts) are untouched. Over-consumption stays visible as a negative.
+    # CD-8 (R2-341): cancelled/closed POs never contribute to the ceiling — a
+    # cancelled PO's ordered quantity must not inflate the "received" cap, and
+    # the committed-cost aggregations below already exclude them via the
+    # sent/partial/received inclusion list.
     ordered_totals = {
         name: float(total or 0.0)
         for name, total in (
             db.query(PurchaseOrderItem.material_name, func.sum(PurchaseOrderItem.quantity))
             .join(PurchaseOrder, PurchaseOrder.id == PurchaseOrderItem.po_id)
-            .filter(PurchaseOrder.project_id == project_id)
+            .filter(
+                PurchaseOrder.project_id == project_id,
+                PurchaseOrder.status.notin_(["cancelled", "closed"]),
+            )
             .group_by(PurchaseOrderItem.material_name)
             .all()
         )
