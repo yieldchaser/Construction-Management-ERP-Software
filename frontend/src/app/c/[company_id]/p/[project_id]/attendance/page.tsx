@@ -1071,33 +1071,41 @@ export default function AttendancePage() {
                       </tr>
                     </thead>
                      <tbody className="divide-y divide-white/[0.03]">
-                       {payrollLoading ? (
-                         <tr>
-                           <td colSpan={8} className="py-6 text-center text-muted">Loading payroll compilation...</td>
-                         </tr>
-                       ) : payslips.length === 0 ? (
-                         <tr>
-                           <td colSpan={8} className="py-6 text-center text-muted">No payroll run yet for this company.</td>
-                         </tr>
-                       ) : (
-                         payslips.map((emp) => (
-                           <tr key={emp.id} className="hover:bg-elevated">
-                             <td className="py-3 pl-5 pr-3 font-semibold text-foreground">{emp.employee_name}</td>
-                             <td className="py-3 px-3 text-muted">{emp.employee_designation || "—"}</td>
-                             <td className="py-3 px-3 text-right font-sans text-foreground">₹{emp.gross_salary.toLocaleString("en-IN")}</td>
-                             <td className="py-3 px-3 text-right font-sans text-red-400">₹{emp.pf_employee.toLocaleString("en-IN")}</td>
-                             <td className="py-3 px-3 text-right font-sans text-red-400">₹{emp.esi_employee.toLocaleString("en-IN")}</td>
-                             <td className="py-3 px-3 text-right font-sans text-red-400">₹{emp.tds.toLocaleString("en-IN")}</td>
-                             <td className="py-3 px-3 text-right font-bold font-sans text-emerald-400">₹{emp.net_payable.toLocaleString("en-IN")}</td>
-                             <td className="py-3 pr-5 text-center">
-                               <button onClick={() => window.print()}
-                                 className="inline-flex items-center gap-1 px-2.5 py-1 text-[9px] font-bold bg-primary/10 border border-primary/20 text-primary rounded-lg hover:bg-primary/20 transition-all">
-                                 <Icon name="description" className="w-3.5 h-3.5" />Download
-                               </button>
-                             </td>
-                           </tr>
-                         ))
-                       )}
+                        {payrollLoading ? (
+                          <tr>
+                            <td colSpan={8} className="py-6 text-center text-muted">Loading payroll compilation...</td>
+                          </tr>
+                        ) : payslips.length === 0 ? (
+                          <tr>
+                            <td colSpan={8} className="py-6 text-center text-muted">No payroll run yet for this company.</td>
+                          </tr>
+                        ) : (
+                          payslips.map((emp) => (
+                            <tr key={emp.id} className="hover:bg-elevated">
+                              <td className="py-3 pl-5 pr-3 font-semibold text-foreground">
+                                <span className="inline-flex items-center gap-1.5">
+                                  {emp.employee_name}
+                                  {emp.attendance_source === "assumed" && (
+                                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30" title="Attendance was assumed (no punch/leave recorded) — not measured">Assumed</span>
+                                  )}
+                                </span>
+                                {emp.attendance_source === "assumed" && <div className="text-[8px] text-amber-400/70 font-normal">no punch on file</div>}
+                              </td>
+                              <td className="py-3 px-3 text-muted">{emp.employee_designation || "—"}</td>
+                              <td className="py-3 px-3 text-right font-sans text-foreground">₹{emp.gross_salary.toLocaleString("en-IN")}</td>
+                              <td className="py-3 px-3 text-right font-sans text-red-400">₹{emp.pf_employee.toLocaleString("en-IN")}</td>
+                              <td className="py-3 px-3 text-right font-sans text-red-400">₹{emp.esi_employee.toLocaleString("en-IN")}</td>
+                              <td className="py-3 px-3 text-right font-sans text-red-400">₹{emp.tds.toLocaleString("en-IN")}</td>
+                              <td className="py-3 px-3 text-right font-bold font-sans text-emerald-400">₹{emp.net_payable.toLocaleString("en-IN")}</td>
+                              <td className="py-3 pr-5 text-center">
+                                <button onClick={() => window.print()}
+                                  className="inline-flex items-center gap-1 px-2.5 py-1 text-[9px] font-bold bg-primary/10 border border-primary/20 text-primary rounded-lg hover:bg-primary/20 transition-all">
+                                  <Icon name="description" className="w-3.5 h-3.5" />Download
+                                </button>
+                              </td>
+                            </tr>
+                          ))
+                        )}
                      </tbody>
                      <tfoot>
                        <tr className="border-t-2 border-border-custom bg-background">

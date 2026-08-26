@@ -96,6 +96,13 @@ class Company(Base):
     # tenant when the global policy is "per_company". Nullable on purpose so
     # the boot schema sync can add it to existing databases.
     permissions_fail_closed = Column(Boolean, nullable=True)
+    # D2 (R2-033) zero-attendance payroll policy: False = no punch = zero pay
+    # (default). True = assume full month when no attendance recorded.
+    # ALWAYS returned as attendance_source badge. Nullable so boot sync handles
+    # existing databases without a migration.
+    assume_full_month_when_no_attendance = Column(Boolean, nullable=True, default=False, server_default="0")
+    # CD-4 EPF wage ceiling: default 15000 per month basic. Nullable for boot sync.
+    pf_wage_ceiling = Column(Numeric(14, 2), nullable=True, default=15000.0)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), default=func.now(), onupdate=func.now(), nullable=False)
 
@@ -268,6 +275,8 @@ class CompanyPayrollSettings(Base):
     esi_employer_pct = Column(Numeric(5, 2), default=3.25, nullable=False)
     tds_monthly = Column(Numeric(14, 2), default=0.0, nullable=False)
     is_esi_applicable = Column(Boolean, default=True, nullable=False)
+    # CD-4 EPF wage ceiling mirrored here for payroll settings consumers; nullable for boot sync.
+    pf_wage_ceiling = Column(Numeric(14, 2), nullable=True, default=15000.0)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 
 
@@ -876,6 +885,8 @@ class PayrollLineItem(Base):
     other_deductions = Column(Numeric(14, 2), default=0.0, nullable=False)
     total_deductions = Column(Numeric(14, 2), default=0.0, nullable=False)
     net_payable = Column(Numeric(14, 2), default=0.0, nullable=False)
+    # D2: whether this payslip's days_present was recorded punch/leave or assumed fallback
+    attendance_source = Column(String(20), nullable=True, default="recorded")
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 
 # ─────────────────────────────────────────────────────────────────────────────
