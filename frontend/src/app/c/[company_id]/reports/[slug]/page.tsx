@@ -586,11 +586,19 @@ export default function DynamicReportViewPage() {
     }
 
     if (slug === "cost-code-expense-analysis") {
-      fetch(`${getApiHost()}/apis/v3/finance/payments?company_id=${companyId}`, {
+      // R2-394: /finance/payments exposes POST only, so this GET always answered
+      // 405 and res.ok ? :[] rendered it as "no expenses recorded"; read the
+      // company ledger from GET /finance/transactions/{company_id} instead and
+      // keep the expense-side bill rows finance.py books under total_expense.
+      fetch(`${getApiHost()}/apis/v3/finance/transactions/${companyId}`, {
         headers: { ...(authHeaders() || {}) }
       })
-      .then(res => res.ok ? res.json() : [])
-      .then(data => setFinancePayments(Array.isArray(data) ? data : []))
+      .then(res => res.ok ? res.json() : null)
+      .then((data: any) => {
+        const txns: any[] = Array.isArray(data?.transactions) ? data.transactions : [];
+        const expenseTypes = ["Material Purchase", "Subcon Bill", "expense", "equipment"];
+        setFinancePayments(txns.filter(t => expenseTypes.includes(t.type)));
+      })
       .catch(() => setFinancePayments([]));
     }
   }, [slug, companyId, refreshTrigger]);
@@ -990,7 +998,7 @@ export default function DynamicReportViewPage() {
               <div className="max-w-4xl mx-auto bg-card border border-border-custom rounded-xl p-8 space-y-8">
                 <div className="border-b border-border-custom pb-4">
                   <h3 className="text-base font-bold text-white uppercase tracking-wider inline-flex items-center gap-2"><Icon name="bar_chart" className="w-5 h-5" /> Cost Code Expense Breakdown</h3>
-                  <p className="text-xs text-muted mt-1">Detailed analysis of project expenditures calculated from active accounting payments.</p>
+                  <p className="text-xs text-muted mt-1">Detailed analysis of company expenditures calculated from recorded expense bills.</p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
