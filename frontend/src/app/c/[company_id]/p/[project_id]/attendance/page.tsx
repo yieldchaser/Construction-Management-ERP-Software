@@ -33,6 +33,7 @@ const LOCALIZATION: Record<string, any> = {
     contractorSubTab: "Labour Contractor",
     queueTitle: "Mobile Punch Queue",
     gpsActive: "Geofence: Active",
+    gpsInactive: "Geofence: Not configured",
     workerLog: "Worker Attendance Log",
     syncStatus: "Backup (5:40 AM, 29 Aug)",
   },
@@ -45,6 +46,7 @@ const LOCALIZATION: Record<string, any> = {
     contractorSubTab: "Labour Contractor",
     queueTitle: "Mobile Punch Queue",
     gpsActive: "Geofence: Chalu Hai",
+    gpsInactive: "Geofence: Not configured",
     workerLog: "Worker Attendance Register",
     syncStatus: "Backup (5:40 AM, 29 Aug)",
   },
@@ -57,6 +59,7 @@ const LOCALIZATION: Record<string, any> = {
     contractorSubTab: "श्रम ठेकेदार",
     queueTitle: "मोबाइल पंच कतार",
     gpsActive: "जियोफेंस: सक्रिय",
+    gpsInactive: "Geofence: Not configured",
     workerLog: "कर्मचारी उपस्थिति रजिस्टर",
     syncStatus: "बैकअप (5:40 पूर्वाह्न, 29 अगस्त)",
   },
@@ -69,10 +72,22 @@ const LOCALIZATION: Record<string, any> = {
     contractorSubTab: "தொழிலாளர் ஒப்பந்தக்காரர்",
     queueTitle: "மொபைல் பஞ்ச் வரிசை",
     gpsActive: "ஜியோஃபென்ஸ்: செயலில் உள்ளது",
+    gpsInactive: "Geofence: Not configured",
     workerLog: "தொழிலாளர் வருகை பதிவு",
     syncStatus: "காப்புப்பிரதி (5:40 AM, 29 ஆகஸ்ட்)",
   }
 };
+
+function isGeofenceConfigured(settings: any): boolean {
+  const loc = settings?.location;
+  if (typeof loc !== "string" || !loc.trim()) return false;
+  const parts = loc.split(",");
+  if (parts.length < 2) return false;
+  const lat = parseFloat(parts[0].trim());
+  const lng = parseFloat(parts[1].trim());
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return false;
+  return true;
+}
 
 type PunchRecord = {
   id: string;
@@ -167,6 +182,7 @@ export default function AttendancePage() {
     code: "",
     address: "Pune, Pune",
     city: "Pune",
+    location: "",
     attendance_radius_meters: 500,
     stage: "Ongoing",
     category: "Residential",
@@ -297,6 +313,8 @@ export default function AttendancePage() {
   const [subconPhoto, setSubconPhoto] = useState<string>("");
   
   const strings = LOCALIZATION[lang] || LOCALIZATION.English;
+  const geofenceConfigured = isGeofenceConfigured(projectSettings);
+  const geofenceBadge = geofenceConfigured ? strings.gpsActive : (strings.gpsInactive || "Geofence: Not configured");
 
   // Load employees and logs
   const fetchEmpsAndLogs = async () => {
@@ -604,7 +622,7 @@ export default function AttendancePage() {
             <p className="text-[10px] text-muted">{strings.subtitle}</p>
           </div>
           <div className="flex items-center gap-3">
-            <span className="inline-flex items-center gap-1.5 text-xs text-muted bg-elevated border border-border-custom px-3 py-1.5 rounded-lg"><Icon name="location_pin" className="w-4 h-4" />{strings.gpsActive}</span>
+            <span className="inline-flex items-center gap-1.5 text-xs text-muted bg-elevated border border-border-custom px-3 py-1.5 rounded-lg"><Icon name="location_pin" className="w-4 h-4" />{geofenceBadge}</span>
             <button
               onClick={() => {
                 fetchProjectSettings();
