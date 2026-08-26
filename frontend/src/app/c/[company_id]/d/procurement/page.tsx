@@ -261,7 +261,7 @@ export default function ProcurementPage() {
   const [grnNum, setGrnNum] = useState("GRN-2026-010");
   const [grnItemsChecked, setGrnItemsChecked] = useState<Record<string, boolean>>({});
   const [grnReceivedQtys, setGrnReceivedQtys] = useState<Record<string, string>>({});
-  const [grnGatePhoto, setGrnGatePhoto] = useState("");
+  // D-010: gate photo upload removed until object storage exists
   // Material usage form state
   const [useMaterialName, setUseMaterialName] = useState("");
   const [useQty, setUseQty] = useState(10);
@@ -423,7 +423,6 @@ export default function ProcurementPage() {
     });
     setGrnItemsChecked(checks);
     setGrnReceivedQtys(qtys);
-    setGrnGatePhoto("");
     setShowGRNModal(true);
   };
 
@@ -1071,16 +1070,8 @@ export default function ProcurementPage() {
                 })}
               </div>
 
-              {/* Gate Entry Photo Upload */}
-              <div className="space-y-1">
-                <label className="text-muted font-bold block">GRN Gate Entry / Challan Photo</label>
-                <input type="file" accept="image/*"
-                  onChange={e => {
-                    const f = e.target.files?.[0];
-                    if (f) setGrnGatePhoto(URL.createObjectURL(f));
-                  }}
-                  className="w-full bg-input border border-border-custom rounded-lg p-2 text-muted text-xs" />
-                {grnGatePhoto && <span className="text-emerald-400 font-bold mt-1 block">✓ Photo Attached</span>}
+              <div className="rounded-lg border border-dashed border-border-custom bg-elevated/30 p-3 text-center">
+                <p className="text-[10px] text-muted">Gate photo upload is not available yet. Object storage is required and has not been configured. Photos are not stored.</p>
               </div>
             </div>
 
