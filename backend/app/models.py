@@ -1408,7 +1408,18 @@ class SubcontractorAttendance(Base):
 
 
 class TaskTodo(Base):
-    """Sub-task todos inside WBS execution tasks."""
+    """Checklist item belonging to a planning Task (WBS).
+
+    Boundary with Todo (CD-9 R2-385): TaskTodo is a subtask of a specific
+    Task, scoped by task_id, using is_completed boolean. It has no assignees,
+    repeat, or company/project scope. Todo is a standalone company or project
+    action item with status vocabulary pending/done, assignees via
+    TodoAssignee, due_date, repeat_type, and optional linked_task_id. The two
+    are different domain objects with distinct lifecycles; do not merge
+    vocabularies. Use TaskTodo only under planning tasks via
+    /planning/tasks/{task_id}/todos; use Todo for general company/project
+    to-dos via /todos. Both survive per CD-9.
+    """
     __tablename__ = "task_todos"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     task_id = Column(UUID(as_uuid=True), ForeignKey("tasks.id", ondelete="CASCADE"), nullable=False)
@@ -2202,7 +2213,18 @@ class MaterialCategory(Base):
 
 
 class Todo(Base):
-    """To Do items (company- or project-scoped), with optional task link."""
+    """Standalone company or project to-do item.
+
+    Boundary with TaskTodo (CD-9 R2-385): Todo is a company/project scoped
+    action item with status vocabulary pending/done, supporting assignees
+    via TodoAssignee, due_date, repeat_type, type, url, and optional
+    linked_task_id that references a Task without being a child of it.
+    TaskTodo is a checklist item strictly under a planning Task, scoped by
+    task_id, using is_completed boolean, with no assignees or repeat.
+    The two are different domain objects with distinct lifecycles; do not
+    merge vocabularies. Use Todo for general action items via /todos;
+    use TaskTodo only for per-task checklists. Both survive per CD-9.
+    """
     __tablename__ = "todos"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
