@@ -214,17 +214,16 @@ export default function TransactionPage() {
   // R2-490: one classification for every canonical invoice_type, mirroring
   // backend/app/constants.py, with a single declared basis per head. In/Out are
   // cash movements (settlement vouchers plus the Payment records folded in
-  // below); the margin legs are invoiced value incl. GST so they reconcile
-  // with the total_payable rows directly beneath instead of mixing tax bases
-  // on one card row. material_transfer / material_return move stock, not
-  // money, so they belong to no money head by design.
+  // below); D1 R2-021: margin legs are ex-GST subtotals per founder decision,
+  // so they reflect true revenue vs cost without pass-through GST. material_transfer
+  // / material_return move stock, not money, so they belong to no money head by design.
   const { totalIn, totalOut, sales, expense, balance, margin } = useMemo(() => {
     let totalIn = 0, totalOut = 0, sales = 0, expense = 0;
     for (const b of bills) {
-      const amt = Number(b.total_payable) || 0;
       const t = b.invoice_type;
 
       if (SETTLEMENT_TYPES.includes(t)) {
+        const amt = Number(b.total_payable) || 0;
         if (t === "payment_in" || t === "i_received") {
           totalIn += amt;
         } else {
@@ -232,10 +231,12 @@ export default function TransactionPage() {
         }
         continue;
       }
+      // D1: margin on ex-GST subtotals, not GST-inclusive total_payable
+      const exGst = Number(b.subtotal) || 0;
       if (REVENUE_TYPES.includes(t)) {
-        sales += amt;
+        sales += exGst;
       } else if (EXPENSE_TYPES.includes(t)) {
-        expense += amt;
+        expense += exGst;
       }
     }
     // R2-173: fold in the recorded payments fetched above. null means the
@@ -311,7 +312,7 @@ export default function TransactionPage() {
         <Card label="Total In (Cash Received)" value={fmtINR(totalIn, currencyDecimalPlaces)} tone="emerald" />
         <Card label="Total Out (Cash Paid)" value={fmtINR(totalOut, currencyDecimalPlaces)} tone="rose" />
         <Card label="Project Balance (In − Out)" value={fmtINR(balance, currencyDecimalPlaces)} tone={balance >= 0 ? "emerald" : "rose"} />
-        <Card label="Margin (Sales − Expense, incl. GST)" value={fmtINR(margin, currencyDecimalPlaces)} tone="violet" />
+        <Card label="Margin (Sales − Expense, ex-GST)" value={fmtINR(margin, currencyDecimalPlaces)} tone="violet" />
       </div>
 
       {/* R2-173: never present voucher-only cash tiles as if they were complete */}
