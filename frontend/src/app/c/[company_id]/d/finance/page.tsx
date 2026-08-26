@@ -4126,10 +4126,10 @@ export default function FinancePage() {
               </div>
 
               <div>
-                <label className="text-[10px] text-muted uppercase font-bold block mb-1">Reference / document name (file is not uploaded)</label>
-                <input type="file" onChange={e => setPrPayment({ ...prPayment, attachmentName: e.target.files?.[0]?.name || "" })}
-                  className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs file:mr-3 file:rounded file:border-0 file:bg-primary/20 file:px-3 file:py-1 file:text-primary" />
-                {prPayment.attachmentName && <p className="text-[9px] text-muted mt-1">{prPayment.attachmentName}</p>}
+                <label className="text-[10px] text-muted uppercase font-bold block mb-1">Reference / document name</label>
+                <input type="text" value={prPayment.attachmentName} onChange={e => setPrPayment({ ...prPayment, attachmentName: e.target.value })} placeholder="e.g. Receipt-2026-04"
+                  className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs" />
+                <p className="text-[9px] text-muted mt-1">File attachment is not available yet. Object storage is required and has not been configured.</p>
               </div>
 
               <div className="flex gap-3 pt-2">

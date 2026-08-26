@@ -1285,13 +1285,8 @@ export default function HRPayrollPage() {
                           />
                         </div>
 
-                        {/* File Upload Attachment Placeholder */}
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] text-muted font-bold uppercase block">Attachments</label>
-                          <div className="border border-dashed border-border-custom rounded-lg p-4 text-center cursor-pointer hover:bg-elevated transition-all">
-                            <Icon name="paperclip" className="w-5 h-5 mx-auto" />
-                            <span className="text-[10px] text-muted block mt-1">Upload files, logs or PDF proof</span>
-                          </div>
+                        <div className="rounded-lg border border-dashed border-border-custom bg-elevated/30 p-3 text-center">
+                          <p className="text-[10px] text-muted">File attachments are not available yet. Object storage is required and has not been configured.</p>
                         </div>
                       </div>
                     </div>
