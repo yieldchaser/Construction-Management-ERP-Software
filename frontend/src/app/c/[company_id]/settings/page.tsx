@@ -472,12 +472,10 @@ export default function CompanySettingsPage() {
     }
   };
 
-  // ─── Multi Level Approval (15 categories; flat chain or amount-range blocks) ──
+  // ─── Multi Level Approval (CD-1: only enforcement-wired categories offered) ──
+  // Mirrors APPROVAL_FEATURE_TYPES in backend/app/approvals.py (contract-pinned).
   const APPROVAL_CATEGORIES = [
-    "Asset Transfer", "Equipment Expense", "GRN Material",
-    "Material Issue", "Material Purchase",
-    "Material Transfer", "Material Used", "Other Expense", "Payment Entries",
-    "Payment Request", "Purchase Order", "RFQ",
+    "Payment Entries", "Payment Request", "Purchase Order",
   ];
   const emptyRuleDraft = () => ({ min_amount: 0, max_amount: "", levels: 1, approvers: "" });
   const [approvalCat, setApprovalCat] = useState(APPROVAL_CATEGORIES[0]);
@@ -2107,6 +2105,10 @@ export default function CompanySettingsPage() {
                   className="bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-foreground outline-none">
                   {APPROVAL_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
                 </select>
+              </div>
+
+              <div className="p-4 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs rounded-lg">
+                Only categories with active enforcement are offered today. More approval categories are coming.
               </div>
 
               {ruleMsg && (

@@ -19,26 +19,26 @@ from sqlalchemy.orm import Session
 from app.models import ApprovalRule, ApprovalAction, User
 
 
-# ── Canonical Multi Level Approval categories (R2-179) ───────────────────────
+# ── Canonical Multi Level Approval categories (R2-179, CD-1/R2-178) ──────────
 # Single source of truth for the Settings > Multi Level Approval category
 # labels. The settings router's Literal and every enforcement constant below
 # derive from this tuple, so the label that binds a stored rule to the code
 # that enforces it can no longer be typed independently per call site (a
 # rename there used to silently detach every rule already stored under the old
 # label). A contract test pins this tuple to the frontend APPROVAL_CATEGORIES.
+#
+# CD-1 (R2-178): this tuple lists ONLY the categories an enforcement constant
+# actually consults ("Payment Entries", "Payment Request", "Purchase Order").
+# Every former label without a call site was removed so the UI can no longer
+# offer a compliance chain nothing will ever read. Rules already stored under
+# removed labels are intentionally left untouched in the database (hidden from
+# the UI, rejected at create/update time) - wiring such a category later means
+# adding its call site and re-adding the label here, which reactivates the
+# stored rows as-is.
 APPROVAL_FEATURE_TYPES = (
-    "Asset Transfer",
-    "Equipment Expense",
-    "GRN Material",
-    "Material Issue",
-    "Material Purchase",
-    "Material Transfer",
-    "Material Used",
-    "Other Expense",
     "Payment Entries",
     "Payment Request",
     "Purchase Order",
-    "RFQ",
 )
 
 PO_FEATURE_TYPE = "Purchase Order"
