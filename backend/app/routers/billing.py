@@ -638,10 +638,22 @@ def get_bill_zatca(bill_id: UUID, db: Session = Depends(get_db), current_user: U
     company = db.query(Company).filter(Company.id == bill.company_id).first()
     if not company:
         raise HTTPException(status_code=404, detail="Company not found")
-    enabled = bool(getattr(company, "is_zatca_enable", False))
+    # R2-412: an official-looking e-invoice artefact is produced only when the
+    # operator has actually configured ZATCA for this company - never as a
+    # default document with a boolean apology attached.
+    if not bool(getattr(company, "is_zatca_enable", False)):
+        raise HTTPException(
+            status_code=409,
+            detail="ZATCA e-invoicing is not enabled for this company",
+        )
+    if not str(getattr(company, "vat_number", None) or "").strip():
+        raise HTTPException(
+            status_code=409,
+            detail="ZATCA seller VAT registration number is not configured for this company",
+        )
     payload = build_zatca_payload(company, bill)
     return {
-        "is_zatca_enabled": enabled,
+        "is_zatca_enabled": True,
         "qr_tlv_base64": payload["qr_tlv_base64"],
         "ubl_xml": payload["ubl_xml"],
         "invoice_number": payload["invoice_number"],

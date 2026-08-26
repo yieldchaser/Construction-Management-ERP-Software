@@ -112,7 +112,10 @@ def build_simplified_invoice_xml(
 def build_zatca_payload(company, bill) -> dict:
     """Assemble the ZATCA Phase 1 payload for a sale invoice (Bill)."""
     seller_name = company.name or company.legal_business_name or ""
-    vat_number = getattr(company, "vat_number", None) or company.gstin or ""
+    # R2-412: only a deliberately stored Saudi VAT registration number may be
+    # presented as the seller's tax identity; the Indian GSTIN must never
+    # masquerade as one in the QR or the UBL.
+    vat_number = str(getattr(company, "vat_number", None) or "").strip()
 
     if bill.invoice_date:
         timestamp_iso = bill.invoice_date.strftime("%Y-%m-%dT%H:%M:%SZ")
