@@ -968,3 +968,105 @@ and compare against `datetime.now(timezone.utc)`.
 - The remaining 21 sites are assignments into `TIMESTAMPTZ` columns. Correct today. Worth a
   standing preference for `datetime.now(timezone.utc)` in new code so the class stops recurring,
   but not worth 21 edits now.
+
+---
+---
+
+# RLS isolation test — 2026-08-27. The policies do not isolate anything.
+
+Run against production after the migrations landed. **This retracts the framing I gave earlier
+today** ("tenant isolation in your database is no longer 'any authenticated user'"). The policies
+did change. They were never load-bearing, and as written they cannot become so.
+
+## R2-738 · CRITICAL · `company_team_tenant_scoped` is self-referential — infinite recursion
+
+The simulation was one statement: `begin; set local role authenticated; select count(*) from
+projects, bills, companies; rollback;` — read-only, rolled back.
+
+```
+ERROR: 42P17: infinite recursion detected in policy for relation "company_team"
+```
+
+Not "zero rows". A hard error. The cause, read straight from `pg_policies`:
+
+```
+company_team_tenant_scoped  ON company_team  FOR ALL  TO authenticated
+USING (company_id IN (SELECT ct.company_id FROM company_team ct WHERE ct.user_id = auth.uid()))
+```
+
+**The policy on `company_team` queries `company_team`.** Evaluating it requires reading the table,
+which requires evaluating the policy. Postgres detects the cycle and aborts.
+
+And because ~108 tenant policies all subquery `company_team`, this is not confined to one table:
+**every tenant-scoped table errors for the `authenticated` role.** The classic Supabase fix is a
+`SECURITY DEFINER` helper function that reads the membership table outside RLS, with the
+`company_team` policy itself keyed directly on `user_id = auth.uid()` rather than on a subquery
+over itself.
+
+**Why this is CRITICAL rather than cosmetic.** Today nothing connects as `authenticated`, so nothing
+breaks. The moment anyone does the obvious hardening step — move the backend off the superuser role
+so RLS actually applies — **the entire API returns 500 on every tenant table.** The work that looks
+like a safety net is a tripwire under the next safety improvement.
+
+## R2-739 · HIGH · The policies cannot engage for application traffic, on two independent counts
+
+**1. The app bypasses RLS by role.** `pg_roles` reports `rolbypassrls` on: `service_role`,
+`supabase_admin`, `supabase_etl_admin`, `supabase_read_only_user`, **`postgres`**. Render's
+`DATABASE_URL` is a Supabase Postgres connection string, i.e. the `postgres` user, and the backend
+also holds `SUPABASE_SERVICE_ROLE_KEY`. Both bypass. `FORCE ROW LEVEL SECURITY` does not help —
+it forces policies on the table *owner*, not on `BYPASSRLS` roles.
+
+**2. The predicate is structurally unsatisfiable for this app.** Every policy keys on `auth.uid()`,
+which returns the **Supabase Auth** user id. Measured:
+
+| | |
+|---|---|
+| `auth.users` rows | **0** |
+| `public.users` rows | **8** |
+| ids overlapping between them | **0** |
+| `company_team.user_id` foreign key target | **`public.users`** |
+
+SiteFlow has its own authentication — OTP and password against `public.users`, signed with the
+app's own `SECRET_KEY`. It has never used Supabase Auth; that table is empty. So `auth.uid()` is
+`NULL` in every session, and `WHERE ct.user_id = auth.uid()` can never match. Even without the
+recursion bug, the policies would deny everything rather than scope anything.
+
+**Net effect: the 108 `_tenant_scoped` policies and 141 `FORCE ROW LEVEL SECURITY` tables provide
+zero protection today.** Tenant isolation in this product is enforced **entirely** by the
+`company_id` filters in the FastAPI query layer. That is the honest statement, and it is where audit
+attention belongs.
+
+**If database-level defence-in-depth is wanted**, the shape has to match the architecture: the
+backend sets a per-request session variable (`SET LOCAL app.current_user_id = ...`), policies read
+`current_setting('app.current_user_id', true)` instead of `auth.uid()`, and the backend connects as
+a role **without** `BYPASSRLS`. That is a real project, not a migration.
+
+## R2-740 · HIGH · `companies` and `users` are still `USING (true)`
+
+Of the 33 legacy `*_authenticated_all` policies left in place, two are on the tables that matter
+most:
+
+```
+companies_authenticated_all   ON companies  FOR ALL  TO authenticated  USING (true)
+users_authenticated_all       ON users      FOR ALL  TO authenticated  USING (true)
+```
+
+The migration tenant-scoped 108 tables and left the company registry and the user registry
+unrestricted. In a working RLS deployment, any authenticated principal could read **every company
+and every user row in the system** — names, emails, mobiles. They are inert today for the same two
+reasons above, which is the only thing keeping this from being an exposure.
+
+`company_team` is also the correct place to break the recursion, and `companies`/`users` are the
+correct place to scope by membership. All three want fixing together.
+
+## What was actually verified, stated precisely
+
+| claim | status |
+|---|---|
+| the 12 constraints exist in production | **verified true** |
+| 108 `_tenant_scoped` policies and 141 `FORCE RLS` tables exist | **verified true** |
+| those policies isolate tenant data | **verified FALSE** — inert by role, unsatisfiable by predicate, and recursive when reached |
+| the FastAPI layer isolates tenants by `company_id` | **still untested** — needs two live sessions against the API |
+
+The last row is now the highest-value open item in the project. It requires two logins, which needs
+either the Firebase test-number code or a password account in two test tenants.
