@@ -1423,3 +1423,44 @@ anything still missing"), counts are sufficient; for a rename audit they would n
   resolved.
 - **The API-layer tenant isolation probe** is still the one substantive untested claim, and still
   needs one live session in the Browser pane.
+
+---
+
+## Sentry triage, 2026-08-27 18:10 — R2-741/742 resolved; 7 older issues assessed
+
+Resolved both at the founder's request. `ProgrammingError` last-seen 55 min before the click, i.e.
+**~30 minutes before the ALTER ran** - no events after the fix. `UnboundLocalError` last-seen 6d.
+
+**Widening the window from 14d to 30d revealed 7 more unresolved issues** the default filter was
+hiding. That is worth noting on its own: "0 unresolved in 14d" is not the same statement as "0
+unresolved", and the standing rule should specify the window.
+
+| issue | route | events | age | assessment |
+|---|---|---|---|---|
+| `AttributeError: FaceRecognitionLog has no attribute created_at` | `/face/logs/{company_id}` | 5 | 3wk | **stale** - `models.py:1891` now defines it, and migration `20260815_000001` added the column |
+| `IntegrityError` FK violation x4 (`chat_groups`, `credit_notes`, `bills`, `site_inspections`) | various | - | 3wk | **stale** - the R2-558 handler now exists at `main.py:568` and renders these as a constraint-named response instead of a 500 |
+| `ValueError: badly formed hexadecimal UUID string` x2 | `/apis/v3/{company_id}` | 7 | 3wk | **still live, minor** - see below |
+| `ValueError: Invalid isoformat string: "not-a-date"` | - | - | 3wk | same class |
+| `HTTPException: Import failed: File is not a zip file` | - | - | 3wk | noise - an intentional 4xx being reported as an issue |
+
+**Provenance matters here:** the malformed-UUID, `not-a-date` and not-a-zip-file events are almost
+certainly **my own probes from the Rounds 6-9 browser audit**, not user traffic. They are not
+evidence of a user-facing problem.
+
+### The one class still worth a cheap fix
+
+A malformed path or query parameter surfaces as **500, not 422**. `main.py` registers exactly two
+handlers - `IntegrityError` (568) and a catch-all `Exception` (582) - and no `ValueError` handler,
+so a hand-rolled `uuid.UUID(str(x))` or `date.fromisoformat(x)` inside a handler escapes as a server
+error. FastAPI would have returned 422 automatically had the parameter been typed; these routes take
+it as `str` and convert manually.
+
+Not a data risk and not urgent with no real users. But it means a client sending a bad id cannot
+tell "I sent something malformed" from "the server is broken", and it pollutes Sentry with events
+that look like outages. One `@app.exception_handler(ValueError)` returning 422 closes it.
+
+### Recommendation
+
+Resolve the six stale ones - they were fixed weeks ago and only persist because nobody clicked. If
+any genuinely recurs, Sentry reopens it as a regression, which is the signal worth having. Leaving
+them open makes the "0 unresolved issues" rule unmeetable, and an unmeetable rule gets ignored.
