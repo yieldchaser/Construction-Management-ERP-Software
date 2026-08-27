@@ -904,3 +904,67 @@ The policy **count** is a schema fact. It is not yet proof that a user of compan
 company B's rows — that needs a session-level test against the live API with two tenants. That is
 the next thing worth doing, and it is now worth doing, because before today there was nothing to
 test.
+
+---
+
+## R2-737 · MEDIUM · CRM `expected_closure` validator 500s on any timezone-aware date
+
+**The naive/aware datetime sweep I promised after R2-728.** Swept `backend/app` at `origin/main`
+`2a34f76`: **35 naive `utcnow()` / `datetime.now()` call sites**, of which **24** participate in
+arithmetic or comparison. Most of those 24 are *writes* — a naive value assigned into a
+`TIMESTAMPTZ` column. Those are fragile but not defects today (Supabase's session `TimeZone` is UTC
+and the value is `utcnow()`, so it lands correctly).
+
+**Two are the R2-728 mechanism proper**, and they are the same two lines duplicated:
+
+- `backend/app/routers/crm.py:121` — `LeadCreateRequest._reject_past_closure`
+- `backend/app/routers/crm.py:152` — `LeadUpdateRequest._reject_past_closure`
+
+```python
+@field_validator("expected_closure")
+@classmethod
+def _reject_past_closure(cls, v: Optional[datetime]) -> Optional[datetime]:
+    if v is not None and v < datetime.utcnow():
+        raise ValueError("expected_closure must not be in the past")
+    return v
+```
+
+`v` is parsed by Pydantic from the request body. If the caller sends an offset-bearing ISO string —
+`"2027-03-01T00:00:00+05:30"`, which is what any correct Indian client would send — Pydantic
+produces an **aware** `datetime`. Comparing it to naive `datetime.utcnow()` raises
+`TypeError: can't compare offset-naive and offset-aware datetimes`.
+
+**And a `TypeError` is not a validation failure.** Pydantic v2 converts `ValueError` and
+`AssertionError` inside a validator into a `ValidationError` (HTTP 422). Anything else propagates,
+so FastAPI returns **500**. The caller gets a server error instead of "expected_closure must not be
+in the past", and the request is indistinguishable from an outage.
+
+**Why it has not been noticed.** The console almost certainly posts a naive or date-only value, so
+the app itself never trips it. It fires for any other API consumer — and the product ships BI API
+keys (`bi_api_keys`), so third-party callers are an intended surface. It is also invisible to the
+test suite for the same structural reason R2-728 was: nothing in the suite sends an offset-bearing
+datetime to this endpoint.
+
+**The fix is already in the codebase, three files away.** `routers/todos.py:57-61` does it correctly:
+
+```python
+now = datetime.utcnow()
+if t.due_date.tzinfo is not None:
+    now = now.replace(tzinfo=timezone.utc)
+is_overdue = t.due_date < now
+```
+
+Apply the same normalisation in both CRM validators — or better, normalise `v` to UTC-aware once
+and compare against `datetime.now(timezone.utc)`.
+
+**Gate.** A test that POSTs a lead with `expected_closure` carrying a `+05:30` offset and asserts
+**422, not 500**. Both the create and the update path.
+
+### Cleared by the same sweep
+
+- `routers/hr.py:1517` — `now = datetime.utcnow()` is used only for `.year`; never compared to a
+  column value. Safe.
+- `routers/todos.py:59` — already handles the aware case explicitly, as quoted above.
+- The remaining 21 sites are assignments into `TIMESTAMPTZ` columns. Correct today. Worth a
+  standing preference for `datetime.now(timezone.utc)` in new code so the class stops recurring,
+  but not worth 21 edits now.
