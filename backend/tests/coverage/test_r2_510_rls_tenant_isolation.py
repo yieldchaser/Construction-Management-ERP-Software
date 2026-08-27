@@ -171,6 +171,7 @@ import pytest as _pytest
 from sqlalchemy import text as _text
 
 CORRECTNESS = MIGRATIONS / "20260825_000007_rls_correctness.sql"
+CORRECTNESS_FOLLOWUP = MIGRATIONS / "20260825_000008_rls_tenant_member_ids.sql"
 
 
 def _is_postgres_engine() -> bool:
@@ -254,6 +255,37 @@ def test_r2_739_740_correctness_migration_exists_and_fixes_predicates():
     # No check on count here -- just that the two critical tables are not in that set
     for block in legacy_remaining:
         assert '"companies_authenticated_all"' not in block and '"users_authenticated_all"' not in block
+
+
+def test_r2_740_followup_tenant_member_ids_fixes_self_only():
+    """Follow-up 1: users directory was self-only because the policy's second
+    clause queried company_team under RLS (which now restricts to own row).
+    The fix adds SECURITY DEFINER helper tenant_member_user_ids() and rewrites
+    users policy to use it. This static gate verifies the helper and policy."""
+    assert CORRECTNESS_FOLLOWUP.exists(), f"follow-up migration missing: {CORRECTNESS_FOLLOWUP}"
+    txt = CORRECTNESS_FOLLOWUP.read_text(encoding="utf-8")
+
+    assert "CREATE OR REPLACE FUNCTION public.tenant_member_user_ids()" in txt
+    assert "SECURITY DEFINER" in txt
+    assert "SET search_path = public" in txt
+    assert "SELECT ct.user_id FROM company_team ct WHERE ct.company_id IN (SELECT public.current_company_ids())" in txt
+    assert "REVOKE EXECUTE ON FUNCTION public.tenant_member_user_ids() FROM PUBLIC" in txt
+    assert "GRANT EXECUTE ON FUNCTION public.tenant_member_user_ids() TO authenticated" in txt
+
+    # Users policy must exist and use the helper, not a direct company_team subquery
+    assert 'CREATE POLICY "users_authenticated_all" ON "users"' in txt
+    m = re.search(r'CREATE POLICY "users_authenticated_all".*?;\n', txt, flags=re.S)
+    assert m, "missing users_authenticated_all policy in follow-up"
+    block = m.group(0)
+    assert "public.tenant_member_user_ids()" in block, "users policy must use tenant_member_user_ids() helper"
+    assert "public.current_app_user_id()" in block
+    assert "USING (true)" not in block
+    # Must not directly query company_team (that would be RLS-filtered and collapse to self-only)
+    assert "FROM company_team" not in block, (
+        "users policy must not directly query company_team; use tenant_member_user_ids() SECURITY DEFINER helper"
+    )
+    # Both USING and WITH CHECK should use the helper
+    assert block.count("tenant_member_user_ids()") >= 2, "both USING and WITH CHECK should reference tenant_member_user_ids()"
 
 
 def test_r2_738_backend_wiring_flag_defaults_off_and_sets_context():
@@ -395,4 +427,44 @@ def test_r2_739_740_tenant_isolation_as_authenticated(db, make_tenant):
         ct_ids = {str(r[0]) for r in ct_rows}
         assert str(team_a.id) in ct_ids, f"own company_team row not visible: {ct_ids}"
         assert str(team_b.id) not in ct_ids, f"cross-tenant team leaked: {ct_ids}"
+
+
+@_pytest.mark.skipif(
+    not _is_postgres_engine(),
+    reason="Postgres-only: users directory must show tenant peers via SECURITY DEFINER helper, not just self",
+)
+def test_r2_740_users_directory_shows_tenant_peers(db, make_tenant):
+    """Follow-up 1: users directory must show all tenant members, not just self.
+
+    Before the fix the second clause queried company_team under RLS and collapsed
+    to self-only. With tenant_member_user_ids() SECURITY DEFINER, a second user
+    in the same company must be visible."""
+    from app import models as _models
+    from app.database import engine as _eng
+
+    sfx = _uuid.uuid4().hex[:6]
+    comp_a, user_a1, team_a1 = make_tenant(
+        company_name=f"R740A-{sfx}", user_name=f"UA740a{sfx}", mobile=f"+91901{sfx}01", email=f"a740a-{sfx}@test.com"
+    )
+    # Second user in same company
+    user_a2 = _models.User(id=_uuid.uuid4(), name=f"UA740b{sfx}", mobile=f"+91901{sfx}02", email=f"a740b-{sfx}@test.com")
+    db.add(user_a2)
+    db.flush()
+    team_a2 = _models.CompanyTeam(id=_uuid.uuid4(), company_id=comp_a.id, user_id=user_a2.id, priority_type="member")
+    db.add(team_a2)
+    db.commit()
+
+    comp_b, user_b, _team_b = make_tenant(
+        company_name=f"R740B-{sfx}", user_name=f"UB740{sfx}", mobile=f"+91901{sfx}03", email=f"b740b-{sfx}@test.com"
+    )
+
+    with _eng.begin() as conn:
+        conn.execute(_text("SET LOCAL ROLE authenticated"))
+        conn.execute(_text("SELECT set_config('app.current_user_id', :uid, true)"), {"uid": str(user_a1.id)})
+
+        user_rows = conn.execute(_text("SELECT id FROM users")).fetchall()
+        user_ids = {str(r[0]) for r in user_rows}
+        assert str(user_a1.id) in user_ids, f"self not visible: {user_ids}"
+        assert str(user_a2.id) in user_ids, f"tenant peer not visible (self-only collapse not fixed): {user_ids}"
+        assert str(user_b.id) not in user_ids, f"cross-tenant user leaked: {user_ids}"
 
