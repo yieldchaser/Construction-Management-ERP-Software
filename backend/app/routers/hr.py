@@ -50,7 +50,7 @@ def _esi_applicable(basic_salary: float, hra: float, other_allowances: float) ->
     return (float(basic_salary) + float(hra) + float(other_allowances)) <= ESI_GROSS_WAGE_CEILING
 
 
-# R2-210/R2-262/R2-220: DateTime(timezone=True) columns round-trip aware on
+# R2-210/R2-262/R2-220/R2-728: DateTime(timezone=True) columns round-trip aware on
 # Postgres but naive on SQLite; normalize every operand to aware UTC before
 # arithmetic or comparison so the two flavors never mix.
 def _aware_utc(dt: datetime) -> datetime:
@@ -342,7 +342,7 @@ def punch(payload: PunchRequest, db: Session = Depends(get_db), current_user: Us
         # No site coords configured → allow punch without GPS enforcement
         within_geofence = True
 
-    # R2-210/R2-262: aware UTC clock so stored/loaded punch values (aware on
+    # R2-210/R2-262/R2-728: aware UTC clock so stored/loaded punch values (aware on
     # Postgres) are always compared against the same flavor.
     now = datetime.now(timezone.utc)
     today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -387,6 +387,7 @@ def punch(payload: PunchRequest, db: Session = Depends(get_db), current_user: Us
         if not log:
             raise HTTPException(status_code=400, detail="No open punch-in found for today.")
 
+        # R2-728: punch-out clock must be aware UTC as well; naive - aware raises TypeError on Postgres.
         now = datetime.now(timezone.utc)
         log.punch_out = now
         log.lat_out = Decimal(str(payload.lat))
@@ -397,9 +398,9 @@ def punch(payload: PunchRequest, db: Session = Depends(get_db), current_user: Us
         log.location_verified = within_geofence
 
         # Compute hours worked
-        # R2-210/R2-262: normalize BOTH operands to aware UTC; punch_in comes
+        # R2-210/R2-262/R2-728: normalize BOTH operands to aware UTC; punch_in comes
         # back aware from Postgres (naive from SQLite), and mixing flavors
-        # raised TypeError, 500ing punch-out and leaving the row open.
+        # raised TypeError, 500ing punch-out and leaving the row open (R2-728).
         if log.punch_in:
             delta = (now - _aware_utc(log.punch_in)).total_seconds() / 3600
             log.hours_worked = Decimal(str(round(delta, 2)))
