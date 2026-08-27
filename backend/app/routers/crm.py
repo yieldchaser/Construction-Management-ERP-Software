@@ -1,6 +1,6 @@
 import json
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -118,8 +118,14 @@ class LeadCreateRequest(BaseModel):
     @field_validator("expected_closure")
     @classmethod
     def _reject_past_closure(cls, v: Optional[datetime]) -> Optional[datetime]:
-        if v is not None and v < datetime.utcnow():
-            raise ValueError("expected_closure must not be in the past")
+        if v is not None:
+            # R2-737: normalize to aware UTC before comparison — copy todos.py:57-61
+            # pattern (make naive aware, use aware now) so +05:30 does not raise
+            # TypeError: can't compare offset-naive and offset-aware datetimes.
+            if v.tzinfo is None:
+                v = v.replace(tzinfo=timezone.utc)
+            if v < datetime.now(timezone.utc):
+                raise ValueError("expected_closure must not be in the past")
         return v
 
 class LeadUpdateRequest(BaseModel):
@@ -149,8 +155,14 @@ class LeadUpdateRequest(BaseModel):
         # R2-438: the create path has rejected past closures since R2-273;
         # the update path silently accepted them, so a closure date in 2020
         # could still be written after the fact.
-        if v is not None and v < datetime.utcnow():
-            raise ValueError("expected_closure must not be in the past")
+        # R2-737: normalize to aware UTC before comparison — copy todos.py:57-61
+        # pattern (make naive aware, use aware now) so +05:30 does not raise
+        # TypeError: can't compare offset-naive and offset-aware datetimes.
+        if v is not None:
+            if v.tzinfo is None:
+                v = v.replace(tzinfo=timezone.utc)
+            if v < datetime.now(timezone.utc):
+                raise ValueError("expected_closure must not be in the past")
         return v
 
 
