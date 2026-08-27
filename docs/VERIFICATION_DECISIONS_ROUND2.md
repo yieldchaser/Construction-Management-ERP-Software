@@ -1138,3 +1138,106 @@ branch first, not on production.
 The **API-layer isolation test** — whether the FastAPI query filters keep tenant A out of tenant B's
 data — remains the highest-value untested claim, because it is the layer actually protecting the
 product today. It needs two live logins in different test tenants.
+
+---
+
+## API-layer tenant isolation — static audit, 2026-08-27, `origin/main` `9b1a5d6`
+
+No login required. This does not replace the live probe, but it narrows what the live probe has to
+prove from "does the whole API leak" to "does a specific guard behave as written".
+
+### Every company-scoped surface is guarded
+
+Swept all 49 router modules, matching each `@router.*` decorator to its handler body.
+
+**Endpoints with `{company_id}` in the path — 108 total:**
+
+| | count | how |
+|---|---|---|
+| membership-guarded | **103** | `require_module_view` / `require_permission` / `verify_company_access` / `get_company_membership` / `get_verified_company_user` |
+| BI feed | 3 | `_resolve_key`, see below |
+| admin migrations | 2 | `_require_admin_secret` (`X-Admin-Secret`, 403 when the secret is unset) |
+| **unguarded** | **0** | — |
+
+**Endpoints taking `company_id` from query or body rather than the path — 267 total:**
+
+| | count |
+|---|---|
+| guarded | **260** |
+| exempt by design, each verified individually | **7** |
+
+The seven exemptions are `auth.py /my-companies`, `/oauth/exchange`, `/onboarding/create-company`,
+and the four OAuth `/callback` routes. None of them accept a caller-supplied `company_id`:
+`/my-companies` derives the list from `current_user.id`; `/oauth/exchange` resolves a single-use
+hashed handoff code and burns it; the callbacks run before any company context exists.
+
+### The BI feed was the one worth checking, and it is correct
+
+`bi_export.py` exposes `/feed/{company_id}/projects`, `/budget-variance` and `/labour-productivity`
+to third-party API keys — the one surface deliberately reachable without a user session. It is the
+natural place for a cross-tenant leak, and `_resolve_key` (`bi_export.py:60-78`) closes it:
+
+```python
+key = db.query(models.BiApiKey).filter(
+    models.BiApiKey.company_id == company_id,     # from the URL path
+    models.BiApiKey.key_hash == _hash_key(raw),
+    models.BiApiKey.revoked == False,
+).first()
+if not key:
+    raise HTTPException(401, "Invalid or revoked API key")
+```
+
+The lookup is keyed on the path `company_id` **and** the hash together, so a key issued for company
+A returns no row when pointed at company B, and 401s. Revocation is honoured in the same query.
+
+### The guards themselves are correctly written
+
+Presence is not correctness, so I read all four implementations in `auth.py`. Each filters on both
+sides of the relationship and fails closed:
+
+- `get_company_membership` (`:118`) — `user_id == user.id AND company_id == company_id`, else 403.
+- `verify_company_access` (`:332`) — same pair as a FastAPI dependency, else 403.
+- `verify_project_in_company` (`:132`) — loads the project, 404 if absent, **403 if
+  `project.company_id != company_id`**.
+- `verify_project_access` (`:350`) — resolves the project's owning company, then checks membership
+  against *that*, not against a caller-supplied value.
+
+None of them trusts a company id from the request without joining it to the caller's membership row.
+
+### Standing, stated honestly
+
+**Verified:** every company-scoped endpoint invokes an authorisation guard, and the guards are
+written correctly.
+
+**Not verified:** that each of the 363 call sites passes the *right* company id into its guard. A
+handler could guard `company_id` and then query on a different variable. Static analysis cannot see
+that; only a live cross-tenant probe can.
+
+**Context that lowers the stakes:** the founder confirms there are no real customer companies yet —
+all five tenants are test data. A leak found now costs nothing, which is the right time to look.
+
+### The live probe, and why it needs only one login
+
+The attack is not "log in as tenant B". It is **"log in as tenant A and ask for tenant B's data by
+id"** — and all five company UUIDs are already known. One session is sufficient.
+
+Method, which keeps credentials out of my hands entirely: the founder logs into the live app **in
+the Browser pane**, types the OTP themselves, and I then drive `fetch()` from the page origin using
+the session already in that tab. I never see the password, the OTP or the token. This is the same
+method used in the Rounds 6-9 browser audit.
+
+Probe list, once a session exists — for each, substitute a company id the session does **not**
+belong to and assert **403**, not 200:
+
+```
+GET /apis/v3/finance/transactions/{other_company_id}
+GET /apis/v3/finance/parties/{other_company_id}
+GET /apis/v3/billing/bills/{other_company_id}
+GET /apis/v3/procurement/purchase-orders/{other_company_id}
+GET /apis/v3/hr/employees/{other_company_id}
+GET /apis/v3/settings/company/{other_company_id}
+GET /apis/v3/projects/{other_company_id}
+```
+
+Plus one project-scoped probe using a `project_id` owned by another tenant, to exercise
+`verify_project_access` rather than `verify_company_access`.
