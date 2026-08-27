@@ -674,3 +674,74 @@ database that already has the change. The runner replays everything not in the l
 ledger is new, so "it worked when I pasted it by hand" is no longer sufficient. A grep for
 `ADD COLUMN` / `ADD CONSTRAINT` / `ALTER COLUMN ... TYPE` without a guard is a cheap CI check and
 would have caught both of these before the merge.
+
+---
+
+## Run #2 (`26c6cc4`) — the replay fixes worked; a runner bug is now the blocker
+
+**The two migration fixes are correct.** `20260815_000001` is now `ADD COLUMN IF NOT EXISTS`, and
+`20260816_000005` wraps both operations in `DO` blocks that check `information_schema.columns` for
+`data_type <> 'uuid'` and `pg_constraint` for the FK, with a safe `::text` cast inside the `USING`.
+Both replay cleanly now and would also work on a fresh database.
+
+**Measured progress.** Ledger went **27 → 36 rows**; **9 of the 21 August migrations applied**.
+`tally_connections.voucher_number_template` now has its default — the first August migration to
+actually change production. The advisory lock was acquired again.
+
+**Then it failed again**, exit 1, and this time it is not a migration:
+
+```
+[apply_migrations] run failed:
+sqlalchemy.cyextension.immutabledict.immutabledict is not a sequence
+```
+
+### Root cause: `%` in the SQL is being read as a psycopg2 parameter placeholder
+
+`apply_pending_migrations` executes each file with `conn.exec_driver_sql(content)`. SQLAlchemy hands
+psycopg2 its empty `immutabledict` as the parameter set; psycopg2 sees a `%` in the statement,
+decides interpolation is required, and rejects the parameter object. The fallback
+`conn.execute(text(content))` fails for its own reasons, and the handler re-raises the original —
+so the message names the symptom and not the `%`.
+
+**Verified, not inferred.** Counting `%` across the 21 August migrations in filename order:
+
+| position | file | `%` count |
+|---|---|---|
+| 1-9 | `20260815_000001` … `20260821_000002` | **0 each** |
+| **10** | **`20260821_000003_three_way_match_unique_pair.sql`** | **1** |
+| 13 | `20260823_000002_orphan_unique_constraints.sql` | 7 |
+| 17 | `20260825_000002_payment_request_party_fk_repoint.sql` | 2 |
+| 18 | `20260825_000003_duplicate_purge_and_constraints.sql` | 16 |
+| 19 | `20260825_000004_missing_unique_constraints.sql` | 4 |
+
+Exactly nine files applied. The tenth is the first one containing a `%`. Every `%` is inside a
+`RAISE NOTICE '... % ...', var` format string — ordinary, correct PL/pgSQL.
+
+**This is why the constraint work specifically is blocked.** The files carrying the unique
+constraints and the duplicate purge are the `%`-heavy ones. The RLS migration
+(`20260824_000001`) has no `%` at all and is not failing — it is simply queued behind
+`20260823_000002`, which has seven.
+
+### Fix — one function, in `backend/app/migration_runner.py`
+
+Bypass DBAPI parameter interpolation entirely. Replace the execute-with-fallback block with the raw
+cursor, called with a **single argument**, which makes psycopg2 skip interpolation altogether:
+
+```python
+raw = conn.connection            # SQLAlchemy connection fairy
+cur = raw.cursor()
+cur.execute(content)             # one arg -> no % interpolation, no params
+```
+
+Do **not** fix this by escaping `%` to `%%` in the migration files. The `%` is legitimate PL/pgSQL,
+escaping it means every future migration author must remember an invisible rule, and it would need
+undoing the day the runner is fixed properly. Fix the runner, leave the SQL alone.
+
+Keep the `text(content)` fallback if you like, but it must not mask the real error — the current
+`raise first_err` is what turned a `%`-quoting problem into a message about immutabledicts.
+
+### Worth saying plainly
+
+`--strict` has now caught two distinct real failures on its first two runs, and both would have gone
+green under the old behaviour: a non-replayable migration, and a runner that cannot execute
+`RAISE NOTICE`. M-2 has already paid for itself twice.
