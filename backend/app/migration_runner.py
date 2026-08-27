@@ -141,19 +141,33 @@ def _ensure_migrations_table(engine) -> None:
         conn.exec_driver_sql(create_sql)
 
 
-def _get_applied_filenames(engine) -> set:
-    """Return set of filenames already recorded as applied."""
-    # Ensure table exists first.
+def _get_applied_map(engine) -> dict:
+    """Return mapping filename -> stored checksum (None if missing). M-5/M-6."""
     _ensure_migrations_table(engine)
     with engine.connect() as conn:
         try:
-            rows = conn.exec_driver_sql("SELECT filename FROM supabase_migrations").fetchall()
-            return {r[0] for r in rows}
+            rows = conn.exec_driver_sql("SELECT filename, checksum FROM supabase_migrations").fetchall()
+            out: dict = {}
+            for r in rows:
+                try:
+                    fname = r[0]
+                    cs = r[1] if len(r) > 1 else None
+                except Exception:
+                    continue
+                out[fname] = cs
+            return out
         except Exception as e:
-            # Table may not exist yet on first run before creation (race), or
-            # permission issue; treat as empty and let caller proceed.
-            print(f"[migration_runner] warning: could not read supabase_migrations: {e}")
-            return set()
+            print(f"[migration_runner] ERROR: failed to read applied migrations: {e}", file=sys.stderr)
+            print("[migration_runner] ERROR: could not read supabase_migrations - empty result would re-run every migration", file=sys.stderr)
+            if _is_strict_mode():
+                raise
+            print("[migration_runner] WARNING: returning empty applied set in non-strict mode - all migrations will appear pending (re-run risk)", file=sys.stderr)
+            return {}
+
+
+def _get_applied_filenames(engine) -> set:
+    """Return set of filenames already recorded as applied. Wrapper over _get_applied_map for compatibility."""
+    return set(_get_applied_map(engine).keys())
 
 
 def _file_checksum(content: str) -> str:
@@ -333,30 +347,43 @@ def apply_pending_migrations(engine_override=None) -> List[str]:
 
     # Wrap whole migration pass so advisory lock covers read-applied + execute + record.
     try:
-        # Ensure tracking table exists and load applied set (inside lock).
+        # Ensure tracking table exists and load applied set (inside lock). M-5/M-6.
         try:
-            applied = _get_applied_filenames(engine)
+            applied_map = _get_applied_map(engine)
+            applied = set(applied_map.keys())
         except Exception as e:
-            print(f"[migration_runner] could not load applied set: {e}")
+            print(f"[migration_runner] ERROR: could not load applied set: {e}", file=sys.stderr)
+            if _is_strict_mode():
+                raise
+            print("[migration_runner] WARNING: proceeding with empty applied set - re-run risk", file=sys.stderr)
             applied = set()
+            applied_map = {}
 
         newly_applied: List[str] = []
 
         for path in files:
             fname = path.name
-            if fname in applied:
-                continue
-
+            # M-5: read and checksum even for already-applied files to detect edits.
             try:
                 content = path.read_text(encoding="utf-8", errors="ignore")
             except Exception as e:
                 print(f"[migration_runner] could not read {fname}: {e}")
                 continue
 
+            checksum = _file_checksum(content)
+
+            if fname in applied:
+                stored = applied_map.get(fname)
+                if stored is not None and stored != "" and stored != checksum:
+                    msg = f"[migration_runner] ERROR: checksum mismatch for {fname}: stored {stored} vs current {checksum} -- migration was edited after application"
+                    print(msg, file=sys.stderr)
+                    if _is_strict_mode():
+                        raise ValueError(msg)
+                continue
+
             if not content.strip():
                 print(f"[migration_runner] skipping empty {fname}")
                 # Still mark as applied to avoid infinite loop on empty file.
-                checksum = _file_checksum(content)
                 try:
                     with engine.begin() as conn:
                         conn.exec_driver_sql(
@@ -365,7 +392,6 @@ def apply_pending_migrations(engine_override=None) -> List[str]:
                             (fname, checksum) if is_sqlite else (fname, checksum),
                         )
                 except Exception:
-                    # Postgres uses %s placeholder via driver; fallback to text.
                     try:
                         with engine.begin() as conn:
                             conn.execute(text("INSERT INTO supabase_migrations (filename, checksum) VALUES (:fname, :cs) ON CONFLICT (filename) DO NOTHING"),
@@ -375,7 +401,7 @@ def apply_pending_migrations(engine_override=None) -> List[str]:
                 newly_applied.append(fname)
                 continue
 
-            checksum = _file_checksum(content)
+            # checksum already computed above; reuse for SQLite and Postgres paths
 
             if is_sqlite:
                 # SQLite dev: do NOT attempt to execute Postgres-flavored SQL
