@@ -1345,3 +1345,31 @@ better first stop than any static sweep for "what is actually breaking in produc
 It also **dates R2-741 precisely**: first seen ~7 hours before 17:14 IST, so ~10:14 - not the 14:19
 merge. 7 events, 0 users affected. My earlier assumption that the merge caused it was wrong; the
 columns were already missing before today.
+
+### R2-741 — outage remediated in production, 2026-08-27 ~17:40
+
+Founder authorised the four `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` statements. Run in the
+Supabase SQL editor: **"Success. No rows returned."** Verified immediately after:
+
+```
+companies.assume_full_month_when_no_attendance = PRESENT
+companies.pf_wage_ceiling                      = PRESENT
+company_payroll_settings.pf_wage_ceiling        = PRESENT
+payroll_line_items.attendance_source            = PRESENT
+companies.no_such_col_sanity                    = STILL MISSING   <- sanity row behaved
+```
+
+Backend `/health` returns `{"status":"ok"}`.
+
+**Two things the boot logs confirmed while waiting:**
+
+1. **M-1 is fixed and live** — `[lifespan] skipping startup migration_runner on Postgres --
+   migrations via CI workflow .github/workflows/migrate.yml`. The startup runner no longer pretends
+   to apply migrations from an image that does not contain them.
+2. **F-8 measured itself.** The instance was spun down; waking it took roughly **90 seconds** across
+   three attempts before `/health` answered. That is the free-tier cold start, experienced exactly
+   as a first user would experience it at 7am. The earlier estimate of "50 seconds or more" was
+   Render being generous.
+
+The `ADD COLUMN IF NOT EXISTS` form means the agent's migration for the same four columns will apply
+cleanly on top of this - no conflict, and a fresh database still gets them from the migration.
