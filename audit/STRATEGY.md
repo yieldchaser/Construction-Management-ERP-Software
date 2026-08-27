@@ -40,6 +40,7 @@ POST-FIX
   [ ] Read the function signature back to confirm shape unchanged.
   [ ] npm run build (only if you touched a frontend file).
   [ ] pytest tests/coverage/ -q (only if you touched a backend file).
+  [ ] Sentry 90-day window (standing rule 16): check Sentry at 90-day window before and after every deploy -- '0 unresolved' at 14d is not '0 unresolved'. 0 unresolved at 90 days is definition of done.
   [ ] Update the register STATUS → FIXED, add the commit hash + blast-radius count + test added? in Notes.
   [ ] Append to SESSION_LOG.md.
   [ ] Commit.
@@ -88,6 +89,12 @@ Refs: docs/audit/AUDIT_FIX_REGISTER.md L<row>
 ```
 
 If you have to scope down a finding (e.g. "fixed the 5 of 7 sites, the other 2 need a separate migration"), commit with `fix(R2-XXX): partial — n/m sites` and add `PARTIAL: n/m` to the Notes column.
+
+---
+
+## Deployment verification -- Sentry 90-day window (standing rule 16)
+
+SENTRY_DSN configured. Check Sentry at 90-day window before and after every deploy -- '0 unresolved' at default 14d is not '0 unresolved' (six were sitting just outside it, and two from outage would have aged out within a fortnight while still being real). 0 unresolved at 90 days is definition of done. If a deploy introduces new issues, they appear in the 90-day stream within the deploy window.
 
 ---
 

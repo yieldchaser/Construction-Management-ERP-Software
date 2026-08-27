@@ -298,6 +298,7 @@ Copy `.env.example` to `.env` for the backend. Frontend variables are build-time
 - **Database & Storage**: Supabase (PostgreSQL + Object Storage).
 - **Automated Deployments**: Vercel and Render deploy automatically on pushes to `main`.
 - **Keep-Alive Worker**: A GitHub Actions workflow (`.github/workflows/keep_alive.yml`) pings the Render backend every 10 minutes to mitigate free-tier cold starts.
+- **Sentry deploy check (standing rule 16)**: SENTRY_DSN configured. Check Sentry at 90-day window before and after every deploy -- '0 unresolved' at default 14d is not '0 unresolved' (six were sitting just outside it, and two from outage would have aged out within a fortnight while still being real). 0 unresolved at 90 days is definition of done.
 
 ### 📊 Free-Tier Capacity & Infrastructure Scaling Roadmap
 

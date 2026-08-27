@@ -13,7 +13,7 @@ Ordering is **severity-ascending**, with founder-gates and live-only work last. 
 | **H** | 184 HIGHs (minus gated), wave order | Phase M green | all closed, pins added |
 | **C** | 98 CRITICALs (minus gated), wave order | Phase H green | all closed, pins added |
 | **G** | 14 founder-gated (D1–D7, CD-1…CD-6, D-008/010/011/012/013) + schema/high-risk | founder answers in DECISIONS.md | decided + closed |
-| **V** | live-only items (Render/Vercel/Supabase/browser/Sentry) | anything unreachable | founder agent verifies → FIX_VERIFIED |
+| **V** | live-only items (Render/Vercel/Supabase/browser/Sentry) | anything unreachable | founder agent verifies → FIX_VERIFIED. Standing rule 16: Check Sentry at 90-day window before and after every deploy -- '0 unresolved' at 14d is not '0 unresolved' (six were sitting just outside it, two from outage would have aged out within a fortnight). 0 unresolved at 90 days is definition of done. |
 
 **Interconnection rules:**
 - Fix-before orderings (dependency map): R2-042 before the D1-(a) option; R2-114 before D4; additive migrations before any dependent read; a LOW in a file with later CRITICALs is fixed now, pinned, and the file is re-read fresh in its CRITICAL wave.
@@ -147,3 +147,4 @@ Worked in waves (one primary file per wave), severity-first. The register is wav
 2. Every fix: read `STRATEGY.md` (7 anti-regression rules), copy `BLAST_RADIUS_TEMPLATE.md`, delegate to the coder, verify with the verifier, update the register + `SESSION_LOG.md` + counts, and **add a pin to `test_regression_pins.py`**.
 3. After every wave: `npm run build` (frontend) and `pytest tests/coverage/` (backend) — pins included.
 4. Anything needing the founder: mark `DEFERRED:<reason>` in the Notes, ensure `DECISIONS.md` carries the question, move on.
+5. Standing rule 16 -- Sentry 90-day window: SENTRY_DSN configured. Check Sentry at 90-day window before and after every deploy -- '0 unresolved' at default 14d is not '0 unresolved' (six were sitting just outside it, and two from outage would have aged out within a fortnight while still being real). 0 unresolved at 90 days is definition of done.
