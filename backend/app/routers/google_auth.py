@@ -16,6 +16,7 @@ Founder note: in Google Cloud Console you must (1) add the redirect URI
 consent screen lists the openid/email/profile scopes. Set GOOGLE_LOGIN_CLIENT_ID
 / GOOGLE_LOGIN_CLIENT_SECRET (or reuse the Sheets client by leaving them empty).
 """
+import logging
 import uuid
 from datetime import timedelta
 from typing import Optional
@@ -37,6 +38,8 @@ from app.routers.auth import (
     _has_password,
     _resolve_company_context,
 )
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/auth/google", tags=["Authentication - Google"])
 
@@ -138,12 +141,22 @@ def callback(
         timeout=30,
     )
     if token_resp.status_code != 200:
+        logger.error(
+            "Google token exchange failed: status=%s body=%s",
+            token_resp.status_code,
+            token_resp.text[:500],
+        )
         return RedirectResponse(
             url=f"{fe}/auth/callback?error=google_token",
             status_code=status.HTTP_307_TEMPORARY_REDIRECT,
         )
     access_token = token_resp.json().get("access_token")
     if not access_token:
+        logger.error(
+            "Google token exchange missing access_token: status=%s body=%s",
+            token_resp.status_code,
+            token_resp.text[:500],
+        )
         return RedirectResponse(
             url=f"{fe}/auth/callback?error=google_token",
             status_code=status.HTTP_307_TEMPORARY_REDIRECT,
