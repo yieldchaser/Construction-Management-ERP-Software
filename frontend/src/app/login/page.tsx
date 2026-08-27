@@ -130,12 +130,12 @@ export default function LoginPage() {
     }
     window.location.href = shouldOnboard
       ? "/profile/onboarding"
-      : `/c/${companyId}/reports`;
+      : `/c/${companyId}/d/home`;
   };
 
   const pickCompany = (companyId: string) => {
     localStorage.setItem("company_id", companyId);
-    window.location.href = `/c/${companyId}/reports`;
+    window.location.href = `/c/${companyId}/d/home`;
   };
 
   // ── Handlers ────────────────────────────────────────────────────────────
