@@ -275,3 +275,156 @@ In this order. F-1 first and it is not close — everything else can wait behind
    prefix, replace the D-V4 file-existence gate.
 
 **Nothing here is decision-gated any more.** Every item above has a decision attached.
+
+---
+---
+
+# Founder answers, 2026-08-27 — resolutions
+
+The founder answered all four asks. Three close. One turned up something the question was not
+looking for.
+
+## F-7 · RESOLVED, and it found a real past exposure — bounded to the demo tenant
+
+**Founder:** neither `OTP_DEMO_ALLOWLIST` nor `MSG91_AUTH_KEY` exists on Render.
+
+That closes the question I asked. The **SMS** demo path was never live: `OTP_DEMO_ALLOWLIST`
+defaulted to `""` even before `847ba45`, so an unset env meant an empty allowlist meant no bypass.
+
+**But checking it surfaced the sibling I had not asked about.** Pre-fix,
+`EMAIL_OTP_DEMO_ALLOWLIST` defaulted to **`"demo@siteflow.co"`** (`config.py:66` at `847ba45^`), not
+to empty. And with SMTP unconfigured, `_deliver_email_code` (`auth.py:564-586`) takes the
+`use_demo_code` branch and **returns the code in the HTTP response body** as `mock_code`. So any
+unauthenticated caller could `POST /auth/email-otp/send` with `demo@siteflow.co`, read the code
+straight out of the JSON, and verify it.
+
+Measured in production:
+
+| fact | value |
+|---|---|
+| `users` row for `demo@siteflow.co` | **exists** — "Demo Engineer", created 2026-07-10 |
+| its company memberships | **1** — Demo Construction Ltd only |
+| `otp_codes` rows for that identifier | **1** — the path was exercised at least once |
+| is `847ba45` (the fix) deployed? | **yes** — it is an ancestor of `376eeeb`, which Render runs |
+
+**Decision: no customer disclosure, no incident.** The credential led to one user whose only
+membership is the demo tenant, which holds five seeded projects and no customer data. The window is
+closed — the fix is live. Two things follow, neither urgent:
+
+1. The demo user goes in the launch cleanup (F-5), which now removes its `otp_codes` row too.
+2. **Add a test that fails if any `*_DEMO_*` setting has a non-empty default.** That is the class,
+   and it is one assertion. The SMS pair was safe by luck of a different default, not by design.
+
+**One caveat I will not paper over.** A session as that user was an *authenticated* session, and
+production RLS is still the permissive `*_authenticated_all` shape with no `FORCE ROW LEVEL
+SECURITY`. So the boundary that kept this inside the demo tenant was the application's own company
+scoping, not the database. That is the argument for F-1's RLS predicates, stated concretely.
+
+## F-6 · REVISED DOWN to MEDIUM — and the founder's guess was wrong in a useful way
+
+**Founder:** it fails only for `upadhyayprateek574@gmail.com`, which may have been deleted; new
+accounts sign in fine.
+
+**The account is not deleted.** Verified in production: one `users` row, created 2026-07-11, with
+**2 company memberships**. So a missing user is not the cause — and it could not have been anyway:
+`error=google_token` is raised at `google_auth.py:140-148`, during the **token exchange with
+Google**, which happens before any user lookup. Nothing about the local database can reach it.
+
+That leaves a re-used or expired authorization `code` (Google returns `invalid_grant`), or a
+redirect-URI mismatch. A mismatch would break every account, and new accounts work — so **the
+leading explanation is a replayed callback**, which fits an account whose sign-in the founder has
+retried many times in one browser.
+
+**Decision.** Not an outage; new signups work. Downgrade to MEDIUM. The fix is still F-6 part 1 and
+it is now the whole of it: **log `token_resp.status_code` and `token_resp.text` server-side before
+redirecting.** Right now the handler throws away the only sentence Google sends that would name the
+cause. Reproduce once with that logging in place and the answer is a one-line read. The founder does
+not need to check the Google console yet.
+
+## F-8 · ACCEPTED AS DEFERRED — with the trigger written down
+
+**Founder:** not needed now; will pay when a real company signs up.
+
+Correct call, and I withdraw the urgency. The cost of a cold start is zero while the only user is
+the person who built it. **Recorded trigger: provision the paid instance before the first
+non-founder user logs in, not after they report the app is broken.** Same decision, one step
+earlier, and it costs nothing to hold.
+
+## F-5 · DECIDED — the demo tenant serves no testing purpose, so it goes in the cleanup
+
+**Founder:** keep it if it is still needed for testing until launch; otherwise remove it from the
+code and everything.
+
+**It is not needed, and it cannot serve that purpose even if wanted.** Three reasons:
+
+1. Its code paths are already gone. `_ensure_demo_company` and `_seed_demo_projects` were deleted
+   and the 11 sentinel fallbacks are now guards. **Nothing in the application can reach that
+   tenant**, so it cannot be logged into or demoed.
+2. Two working test tenants already exist — `ZZ R8 Throwaway` and `Test Claude B2 Construction`.
+3. Leaving it costs the one thing that matters: it is a row in `companies` next to real customers,
+   and until F-1's RLS lands the database itself does not separate them.
+
+**Decision: it goes into the launch cleanup script, not before, and not as a separate action.**
+Written now, held until launch, as requested.
+
+## The combined cleanup script — written and preview-tested
+
+`scripts/verification/launch_cleanup.sql`. One file. Two parts: a **read-only preview** that counts
+what would go, and a delete pass that **ends in `ROLLBACK`** until the founder changes one line.
+
+**Why it is a loop and not a list of deletes.** Measured: 142 tables, **81 carrying `company_id`**,
+267 foreign keys of which only **200 are `ON DELETE CASCADE`** — 67 are not. A hand-written delete
+list would need exact reverse-topological order and would rot the next time a table is added. The
+script instead retries every `company_id`-bearing table, swallowing FK violations, until a full pass
+deletes nothing. It converges on the right order by construction, and aborts if it has not converged
+in 25 passes rather than looping forever.
+
+**The preview was run against production. It works.** Read-only, nothing written:
+
+```
+tables carrying company_id        81
+demo projects                      5
+demo company_team rows             2
+users ONLY in demo company         2     <- two, not one
+demo otp_codes                     1
+SANITY companies total (expect 5)  5
+```
+
+Two demo-only users, not one — the user-scoping clause is doing real work rather than passing
+trivially. Users with any other membership are deliberately left alone.
+
+The two audit test companies are in the file **commented out**. Uncomment them at launch when the
+scratch tenants are no longer wanted.
+
+## NEW · The default login tab may be dead in production — needs one answer
+
+Raised by the founder's own remark that MSG91 was dropped for Firebase, which "is not yet done".
+
+`login/page.tsx:46` sets the default method to **`"phone"`**. `:155` routes it to Firebase
+`signInWithPhoneNumber` **when the public Firebase config is present**, and otherwise falls back to
+the backend `/auth/otp/send` (`:160`) — which, with MSG91 unset, returns a 503 for every
+non-allowlisted number.
+
+So if `NEXT_PUBLIC_FIREBASE_*` is not set on Vercel, **the tab every visitor lands on cannot
+succeed**, and they have to notice the email or password tab themselves. I could not check the live
+page — navigation to the Vercel domain is blocked for me.
+
+**Decision, which does not depend on the answer:** the login page must not default to a method it
+can detect it cannot perform. If the Firebase config is absent at build time, default to email OTP
+and either hide the phone tab or label it unavailable. Failing silently into a 503 on the default
+tab is the worst of the three options. **Founder: is `NEXT_PUBLIC_FIREBASE_API_KEY` set on Vercel?**
+That decides whether this is theoretical or live.
+
+## Updated instruction for the fixing agent
+
+Unchanged order, with two additions:
+
+1. **F-1** — batch ordering, `RAISE EXCEPTION` on skip, `verify.sql`. Still first, still blocking.
+2. **F-4** — R2-728 punch-out, Postgres-backed test.
+3. **F-6** — log the Google token-exchange status and body server-side. **Now the whole of F-6.**
+4. **F-2 + F-3** — ledger, runner, renumber the colliding prefix, replace the D-V4 gate.
+5. **NEW** — a test asserting no `*_DEMO_*` setting has a non-empty default (from F-7).
+6. **NEW** — login page must not default to phone when the Firebase config is absent.
+
+**F-5 and F-8 are held deliberately**: the cleanup script waits for launch, the paid instance waits
+for the first real signup.
