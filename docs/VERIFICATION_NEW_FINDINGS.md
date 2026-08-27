@@ -1097,6 +1097,97 @@ URL.
 Gantt view and should be deleted.
 
 
+---
+
+## R2-731 · E0 RESULT — measured against production, 2026-08-27
+
+The probe in `scripts/verification/probe_migrations_ran.sql` was run against the live database
+(Supabase project `ujdxgiqafaobhrskzkmr`, `siteflow`, branch `main`). **Both sanity rows behaved:**
+`companies.id` returned 1, `companies.no_such_col` returned 0.
+
+**Eight migrations dated 2026-08-16 to 2026-08-25 have never taken effect. Eighteen objects are
+absent.**
+
+| migration | absent in production |
+|---|---|
+| `20260816_000004` tally voucher template | `tally_connections.voucher_number_template` default is `<NONE>` |
+| `20260821_000003` | `uq_three_way_matches_po_grn` |
+| `20260821_000005` BOQ cost-code width | `boq_items.cost_code` is still **`varchar(50)`**, not 100 |
+| `20260823_000001` | `uq_payroll_runs_company_project_month` |
+| `20260824_000001` **RLS tenant predicates** | **0 `_tenant_scoped` policies, 0 tables with FORCE RLS** |
+| `20260825_000002` | `fk_payment_requests_party_company_user_id` |
+| `20260825_000003` duplicate purge + constraints | all **seven**: `uq_bills_…invoice_number`, `uq_goods_receipt_notes_…grn_number`, `uq_material_indents_…indent_number`, `uq_ncrs_project_id_ncr_number`, `uq_payments_…reference_number`, `uq_purchase_orders_…po_number`, `uq_work_orders_…wo_number` |
+| `20260825_000004` | `uq_company_team_company_id_user_id`, `uq_library_cost_codes_company_id_code` |
+| `20260825_000004` (the second file with that prefix — R2-732) | `purchase_orders.cancelled_at`, `purchase_orders.cancelled_by` |
+
+**The negatives were verified before being believed** (trap 1). Three ways they could have been
+false, all checked:
+
+1. *"The constraints exist as unique indexes, not constraints, so `pg_constraint` missed them."*
+   `select indexname from pg_indexes where schemaname='public' and indexname like 'uq%'` returns
+   **`<NONE>`**. There is not a single `uq_`-named index in the database.
+2. *"The RLS policies exist under different names."* `pg_policies` for `public` holds **139
+   policies and 140 tables have `rowsecurity` enabled** — so RLS is on, but every policy sampled is
+   of the legacy permissive shape: `drawing_pins_authenticated_all`,
+   `purchase_orders_authenticated_all`, `companies_authenticated_all`, … The 2026-08-24 migration
+   would have added `*_tenant_scoped` predicates **and** `FORCE ROW LEVEL SECURITY`. Neither is
+   there. Tenant isolation in production is still "any authenticated user", the state the migration
+   was written to end.
+3. *"The width change did apply and I mis-typed the column."* `character_maximum_length` for
+   `boq_items.cost_code` reads **50**, the pre-migration value.
+
+**What did run.** `20260815_000001`, `20260816_000001/2/3/6`, `20260821_000001/000002/000004` are
+all present. **Including `20260816_000005` — `material_wastage_reported_by_fkey` now exists, so
+R2-730's migration has been applied since it was filed.** R2-730 can be closed against production.
+That one file getting applied is the exception that shows the mechanism is manual: somebody ran the
+migration a finding named, and not the eight nobody had named yet.
+
+### The duplicate window D-V2 was racing has begun to close
+
+D-V2 was decided "migrate now, this week" on the explicit premise that **the duplicate count is
+zero today**. Measured now:
+
+| pair | duplicate groups |
+|---|---|
+| `bills(company_id, invoice_number)` | 0 |
+| `purchase_orders(company_id, po_number)` | 0 |
+| **`company_team(company_id, user_id)`** | **1** |
+| **`three_way_matches(po_id, grn_id)`** | **2** |
+
+`20260825_000003` and `20260825_000004` are `DO` blocks that `RAISE NOTICE` and `RETURN` when
+duplicates are present. So even when somebody does run them, **`uq_company_team_company_id_user_id`
+and `uq_three_way_matches_po_grn` will silently skip** and the run will look successful. The purge
+step in `7e8b54d` is what handles this, and it is exactly the part that has not executed.
+
+**Severity holds at CRITICAL and the RLS row is the reason.** A tenant-isolation control that
+exists only as a file in a repository is not a control.
+
+---
+
+## R2-735 · HIGH · D-V1 step 3 was never executed — the demo tenant is still in production
+
+Measured in the same session. `companies` holds **five** rows:
+
+```
+e0000000-0000-0000-0000-000000000000 = Demo Construction Ltd
+fcf53673-3bec-49b9-9b85-c03226127fb9 = pranjal ltd
+1776c887-5552-4611-aad5-f4899aad0f87 = Test Claude B2 Construction
+1fa705a4-7aa6-42f2-9906-65902c96916f = ZZ R8 Throwaway
+d3724ec3-edac-4b5f-b296-fc6a013b7b5d = AK Construction
+```
+
+- demo company row present = **1**
+- demo user `e0000000-…-100` present = **1**
+- projects under the demo company = **5**
+
+D-V1 had three steps: delete the code path, replace the 11 fallbacks, **then delete the rows and
+their 5 projects**. Steps 1 and 2 are done and verified (see the R2-024 verdict). Step 3 has not
+happened. The rows are now unreachable from application code, which is a real improvement — but the
+decision as written is not complete, and `audit/` records D-V1 as closed.
+
+**Fix.** Cascade-check, then delete the 5 projects, the demo user and the demo company.
+
+
 ## Summary
 
 | id | sev | class | from |
@@ -1135,8 +1226,9 @@ Gantt view and should be deleted.
 | **R2-732** | **LOW** | **two migrations share the prefix `20260825_000004`** | migration sweep |
 | **R2-733** | **MEDIUM** | **login still lands on the report catalogue — R2-047's own "Also:" sub-claim, untracked** | verifying R2-047 |
 | **R2-734** | **MEDIUM** | **`/d/planning` missing from the R2-046 overflow menu — 27 of 28 routes covered** | verifying R2-046 |
+| **R2-735** | **HIGH** | **D-V1 step 3 never executed — Demo Construction Ltd, its user and 5 projects are still live rows** | E0 probe |
 
-**Twenty-nine live findings** (R2-724 retracted). R2-713..R2-716 were filed separately first and are struck through, not
+**Thirty live findings** (R2-724 retracted). R2-713..R2-716 were filed separately first and are struck through, not
 deleted, so the history stays traceable.
 
 Three to act on first, for different reasons:

@@ -117,6 +117,10 @@ EVIDENCE_CLOSE = {"R2-001", "R2-118", "R2-428"}
 # Verdicts reached by hand, one finding at a time. E1 = code read, E3 = live product.
 # NOT_IN_PROD is a FIFTH verdict, added deliberately - see the header note in the emitted file.
 VERDICTS = {
+    "R2-730": ("CONFIRMED", "E0 2026-08-27: material_wastage_reported_by_fkey IS now present in "
+               "production, so migration 20260816_000005 has been applied since this was filed. "
+               "The finding is resolved against the live database. Note it is the ONLY late "
+               "migration that ran - see R2-731's E0 result."),
     "R2-024": ("UNVERIFIED", "E1 PASS: _ensure_demo_company and _seed_demo_projects are gone from "
                "auth.py (grep = 0 hits outside backend/scripts/seed_demo_data.py, which is a "
                "deliberate manual script); OTP_DEMO_ALLOWLIST and OTP_DEMO_CODE both default to "
@@ -124,7 +128,8 @@ VERDICTS = {
                "The 11 sentinel fallbacks are now guards of the D-V1 shape (chat/page.tsx:43 "
                "'if (!companyId || companyId === sentinel) bail'). E0 OUTSTANDING: D-V1 step 3 "
                "was to DELETE the demo company row and its 5 projects from production. Needs "
-               "Supabase; not yet checked."),
+               "Supabase. E0 2026-08-27 ANSWERED: NOT done - Demo Construction Ltd, the demo user "
+               "and 5 projects are all still live rows. Filed as R2-735."),
     "R2-025": ("UNVERIFIED", "E1 PASS: finance.py:890-894 now has a shared _net_balance helper "
                "returning advance_paid + to_receive - advance_received - to_pay, i.e. assets "
                "minus liabilities. The sign error is gone and all three call sites use the "
