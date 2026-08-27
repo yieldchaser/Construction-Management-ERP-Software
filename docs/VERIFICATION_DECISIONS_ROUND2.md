@@ -1241,3 +1241,60 @@ GET /apis/v3/projects/{other_company_id}
 
 Plus one project-scoped probe using a `project_id` owned by another tenant, to exercise
 `verify_project_access` rather than `verify_company_access`.
+
+---
+
+## R2-741 · CRITICAL · LIVE OUTAGE — 4 model columns have no migration; every login 500s
+
+**Reported by the founder 2026-08-27 ~17:10: every account, new or old, returns
+`{"detail":"Internal server error"}` at `/apis/v3/auth/google/callback`.**
+
+Not a Google problem. From the Render logs:
+
+```
+sqlalchemy.exc.ProgrammingError: (psycopg2.errors.UndefinedColumn)
+column companies.assume_full_month_when_no_attendance does not exist
+[SQL: SELECT companies.id, companies.name, ... ]
+```
+
+Any query that selects `Company` fails. Every login path resolves company context, so
+**all authentication is down**, not just Google.
+
+### The four columns, confirmed missing in production
+
+| table | column | model line | type |
+|---|---|---|---|
+| `companies` | `assume_full_month_when_no_attendance` | 103 | `Boolean, nullable=True, server_default="0"` |
+| `companies` | `pf_wage_ceiling` | 105 | `Numeric(14,2), nullable=True, default=15000` |
+| `company_payroll_settings` | `pf_wage_ceiling` | 279 | `Numeric(14,2), nullable=True, default=15000` |
+| `payroll_line_items` | `attendance_source` | 889 | `String(20), nullable=True, default="recorded"` |
+
+All four were added by `4418a54` (D2/CD-4, the zero-attendance payroll work). **No migration
+under `supabase/migrations/` mentions any of them** - grep for `assume_full_month` returns nothing.
+
+### Why nothing caught it
+
+1. **No migration.** This is R2-711 exactly: a model column with no migration. The D-V4 gate
+   asserts named *constraints* appear in a migration file; it says nothing about columns.
+2. **`ensure_postgres_schema_sync()` should have covered it** (`main.py:271`) - it walks
+   `Base.metadata` and issues `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` for nullable/defaulted
+   columns, which all four are. It did not. Its per-table body is wrapped in `try/except: continue`,
+   so a failure is silent. That swallow is now the second-order defect worth fixing.
+3. **SQLite cannot see it.** The test suite builds the schema from `Base.metadata`, so the column
+   always exists locally. Same structural blindness as R2-728 and R2-737.
+
+### Fix
+
+Immediate unblock (additive, nullable, defaulted, reversible):
+
+```sql
+ALTER TABLE companies                ADD COLUMN IF NOT EXISTS assume_full_month_when_no_attendance BOOLEAN DEFAULT false;
+ALTER TABLE companies                ADD COLUMN IF NOT EXISTS pf_wage_ceiling NUMERIC(14,2) DEFAULT 15000;
+ALTER TABLE company_payroll_settings ADD COLUMN IF NOT EXISTS pf_wage_ceiling NUMERIC(14,2) DEFAULT 15000;
+ALTER TABLE payroll_line_items       ADD COLUMN IF NOT EXISTS attendance_source VARCHAR(20) DEFAULT 'recorded';
+```
+
+Proper fix: the same statements as a numbered migration so a fresh database gets them, plus
+(a) find out why the boot sync skipped them and stop it swallowing exceptions, and (b) a gate that
+fails when a `Base.metadata` column is absent from both the migrations and the live DB - the column
+equivalent of the D-V4 constraint gate.
