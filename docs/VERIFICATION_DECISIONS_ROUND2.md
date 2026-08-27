@@ -428,3 +428,102 @@ Unchanged order, with two additions:
 
 **F-5 and F-8 are held deliberately**: the cleanup script waits for launch, the paid instance waits
 for the first real signup.
+
+---
+---
+
+# Review of `7428b14` (R2-731 migration runner) + merge assessment — 2026-08-27
+
+## The headline: the startup runner cannot work in production
+
+`backend/Dockerfile` is built with **Docker Build Context Directory = `backend/`** (confirmed in the
+Render dashboard, service `srv-d92lidfavr4c738i29kg`; there is no `render.yaml`). The Dockerfile is
+`WORKDIR /app` + `COPY . .`, so the image contains `backend/`'s contents at `/app` — and
+**`supabase/migrations/` lives at the repo root, outside the build context. It is not in the image.**
+
+At runtime `_resolve_migrations_dir()` probes, in order: `$SUPABASE_MIGRATIONS_DIR`,
+`parents[2]` → `/supabase/migrations`, `parents[1]` → `/app/supabase/migrations`, `parents[3]`,
+then CWD variants → `/app/supabase/migrations`, `/app/backend/../supabase/migrations`,
+`/supabase/migrations`. **None of them exist in the container.** The runner then:
+
+```
+print(f"[migration_runner] migrations dir not found: {migrations_dir} (skipping)")
+return []
+```
+
+Boot continues, the service reports healthy, and no migration is ever applied. **This is R2-730's
+exact failure mode reproduced one level up** — the mechanism exists, is committed, is even tested,
+and does nothing where it matters.
+
+**The CI workflow is the path that actually works.** `.github/workflows/migrate.yml` does
+`actions/checkout@v4` (full repo, so the directory is present), then
+`python scripts/apply_migrations.py --strict` with `MIGRATION_RUNNER_STRICT=1` and
+`DATABASE_URL: ${{ secrets.DATABASE_URL }}`. That design is right. Two consequences:
+
+1. **The startup hook should be removed from the Postgres path**, or at minimum must log the
+   "directory not found" case as an error rather than an info line. As written it creates the
+   impression of coverage it does not provide. Keep it for SQLite, where it also does the
+   `_ensure_sqlite_unique_constraints()` dev remediation.
+2. **`secrets.DATABASE_URL` must exist on the GitHub repo** or the workflow runs against nothing.
+   Founder action — I cannot see repository secrets.
+
+## Defects in the runner itself
+
+| id | sev | what |
+|---|---|---|
+| **M-1** | CRITICAL | Startup runner silently no-ops in production — migrations dir absent from the image (above) |
+| **M-2** | CRITICAL | Failure is swallowed **twice**. The runner catches per-file exceptions and `continue`s unless `MIGRATION_RUNNER_STRICT`; `main.py:481-488` then wraps the whole call in `try/except` printing "non-fatal". A migration that errors on a production boot leaves the schema missing and the API up. This directly contradicts F-1 |
+| **M-3** | CRITICAL | No lock. Render overlaps old and new instances during deploy, and a free instance cold-boots on demand. Two boots read the same `applied` set and execute the same file concurrently. `IF NOT EXISTS` files survive it; bare `ALTER TABLE ... ADD CONSTRAINT` and `DO` blocks do not. Needs `pg_advisory_lock(<key>)` around the whole pass |
+| **M-4** | HIGH | The ledger records F-1's skip-on-duplicate migrations as **applied**. `20260825_000003/4` `RAISE NOTICE` + `RETURN` when duplicates exist, so the file *succeeds*, the runner writes the row, and it is never retried. Without the runner you would re-paste and notice. With it, the constraint is skipped permanently and the ledger says done. **F-1 must land before or with this** |
+| **M-5** | MEDIUM | `checksum` is computed and stored but never compared. A migration edited after application is undetectable — the one thing a checksum column exists to catch |
+| **M-6** | MEDIUM | `_get_applied_filenames` catches every exception and returns an **empty set**. A transient read failure means "nothing applied", so the next pass re-runs every migration from the beginning |
+| **M-7** | LOW | SQLite path marks files applied without executing them. Correct for dev, but it means the D-V4 live-DB gate is satisfied on SQLite by rows the runner wrote itself |
+
+## Merge assessment: `campaign/waves` → `main`
+
+Tested in a throwaway detached worktree, then aborted and removed. Nothing was pushed.
+
+**24 commits ahead. 11 conflicts. All of them are trivial.**
+
+Four are add/add — the same work landed independently on both branches:
+
+| file | difference |
+|---|---|
+| `backend/app/calc_shared.py` | 609 vs 609 lines. **Differs only in em-dash → " - "** (the campaign ran the no-em-dash pass) |
+| `frontend/src/lib/calc-shared.ts` | 903 vs 903 lines. Same, em-dash only |
+| `tests/calculators-contract.test.ts` | waves is +10 lines |
+| `backend/tests/coverage/test_dv4_constraint_migration_gate.py` | waves is +182 lines — the live-DB gate replacing the file-existence one |
+
+Six are code, and every hunk is a pure addition or a comment:
+
+| file | hunks | content |
+|---|---|---|
+| `backend/app/main.py` | 1 | the runner call block; HEAD side is empty |
+| `backend/app/models.py` | 2 | CD-9 docstring wording only |
+| `backend/app/routers/billing.py` | 1 | one D-013 comment line |
+| `backend/app/routers/projects.py` | 1 | one D-013 comment line |
+| `.../d/attendance/page.tsx` | 1 | adds `if (lat < -90 \|\| lat > 90 \|\| lng < -180 \|\| lng > 180) return false;` |
+| `.../p/[project_id]/attendance/page.tsx` | 1 | same bounds check |
+
+Plus `audit/AUDIT_FIX_REGISTER.md`, which is register bookkeeping.
+
+**Resolution is `--theirs` on all eleven.** In every case the `campaign/waves` side is a strict
+superset or a cosmetic reformat of `main`'s. There is no semantic divergence to adjudicate — the two
+`calc_shared` implementations are byte-identical apart from punctuation, which was the one outcome
+that could have made this merge dangerous.
+
+**I did not perform the merge.** Two reasons: resolving conflicts is the fixing agent's file
+ownership, and merging to `main` **auto-deploys to both Vercel and Render**, which is a production
+deploy that needs the founder's explicit go-ahead rather than being a side effect of a review.
+
+## Ordering that matters
+
+`7428b14` should not reach production before F-1. The runner turns F-1's silent skip into a
+*permanent* silent skip by recording it as applied. Correct order:
+
+1. F-1 — purge before constraints, `RAISE EXCEPTION` on skip, `verify.sql`
+2. M-2 / M-3 — strict-by-default in production, `pg_advisory_lock`
+3. M-1 — drop the Postgres startup hook or make its absent-directory case loud
+4. Merge to `main`, which deploys
+5. Confirm `secrets.DATABASE_URL` is set, then let the workflow run
+6. Re-run my probe to confirm the objects actually landed
