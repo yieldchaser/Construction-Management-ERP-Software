@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
+import logging
 import os
 import sys
 from contextlib import asynccontextmanager
@@ -20,6 +21,8 @@ from app.routers import (
 )
 from app.database import engine, Base, SessionLocal
 from app import models
+
+logger = logging.getLogger(__name__)
 
 # Anchor the static mount to the repo's backend/static directory (the same
 # location reports.py writes PDFs to) so it never depends on the process CWD.
@@ -578,6 +581,21 @@ async def integrity_error_handler(request, exc: IntegrityError):
         status_code=409,
         content={"detail": f"Record is still referenced by another row: {detail}"},
     )
+
+
+@app.exception_handler(ValueError)
+async def value_error_handler(request: Request, exc: ValueError):
+    # Malformed path/query params that were taken as str and converted manually
+    # via uuid.UUID(str(x)) or date.fromisoformat(x) raise ValueError. Without
+    # this handler they escape to the catch-all Exception handler as 500 and
+    # pollute Sentry (malformed UUID, not-a-date, not-a-zip). Return 422 so
+    # they are correctly classified as client errors.
+    logger.warning("ValueError: %s", exc)
+    return JSONResponse(
+        status_code=422,
+        content={"detail": str(exc) if str(exc) else "Invalid value"},
+    )
+
 
 @app.exception_handler(Exception)
 async def unhandled_exception_handler(request: Request, exc: Exception):
