@@ -478,6 +478,16 @@ async def lifespan(app: FastAPI):
     ensure_sqlite_schema_sync()
     ensure_postgres_schema_sync()  # Production PostgreSQL: add missing model columns
     ensure_material_wastage_reported_by_uuid()  # R2-730: repair 20260816_000005 type mismatch (VARCHAR -> UUID FK)
+    # R2-731: apply pending supabase/migrations/*.sql (idempotent, tracked in
+    # supabase_migrations). Handles both SQLite (tracked no-op + unique-index
+    # remediation) and Postgres (real execution). Safe to run on every boot.
+    try:
+        from app.migration_runner import apply_pending_migrations
+        apply_pending_migrations()
+    except Exception as e:
+        # Never crash boot on migration runner error; log loud and continue.
+        # In CI strict mode (MIGRATION_RUNNER_STRICT=1) the runner itself re-raises.
+        print(f"[lifespan] migration_runner error (non-fatal): {e}")
     os.makedirs(os.path.join(STATIC_DIR, "reports"), exist_ok=True)
     yield
 
