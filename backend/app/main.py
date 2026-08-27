@@ -244,6 +244,10 @@ def ensure_sqlite_schema_sync():
     missing from an existing table. Only nullable columns (or columns with a
     default) are added, so data already present is preserved. This keeps the
     local SQLite schema aligned with models.py without manual per-column ALTERs.
+
+    R2-741: previously swallowed every error via bare except: continue / print
+    without context. Now logs to stderr with table and column so a failing
+    column (e.g. type mismatch) is loud and actionable instead of silent.
     """
     if not engine.url.drivername.startswith("sqlite"):
         return
@@ -252,7 +256,8 @@ def ensure_sqlite_schema_sync():
         for tname, tmeta in _models.Base.metadata.tables.items():
             try:
                 existing = {row[1] for row in conn.exec_driver_sql(f'PRAGMA table_info("{tname}")').fetchall()}
-            except Exception:
+            except Exception as e:
+                print(f"[schema_sync] failed for {tname}: {e}", file=sys.stderr)
                 continue
             for col in tmeta.columns:
                 if col.name in existing:
@@ -263,7 +268,8 @@ def ensure_sqlite_schema_sync():
                     col_type = col.type.compile(dialect=engine.dialect)
                     conn.exec_driver_sql(f'ALTER TABLE "{tname}" ADD COLUMN "{col.name}" {col_type}')
                 except Exception as e:
-                    print(f"schema_sync skipped {tname}.{col.name}: {e}")
+                    print(f"[schema_sync] failed for {tname}.{col.name}: {e}", file=sys.stderr)
+                    continue
 
     # (call runs in lifespan)
 
@@ -279,6 +285,16 @@ def ensure_postgres_schema_sync():
 
     This avoids Alembic complexity while keeping the production Postgres schema
     in sync with models.py across deploys.
+
+    R2-741: the original per-table body was try/except: continue which swallowed
+    the reason a column failed to be added (e.g. type mismatch, permission).
+    The silent swallow is what made the D2/CD-4 outage invisible: boot sync
+    tried and failed to add pf_wage_ceiling / assume_full_month_when_no_attendance
+    / attendance_source but never logged the exception, so Sentry only saw the
+    downstream UndefinedColumn on login. Now every failure is logged to stderr
+    with table and column context, and the loop continues so one bad column does
+    not block the rest. Strict re-raise is left to the lifespan's M-2 guard if
+    the whole sync path fails.
     """
     if not engine.url.drivername.startswith("postgresql"):
         return
@@ -290,15 +306,15 @@ def ensure_postgres_schema_sync():
         for tname, tmeta in _models.Base.metadata.tables.items():
             try:
                 existing_cols = {c["name"] for c in insp.get_columns(tname)}
-            except Exception:
-                # Table may not exist yet (create_all handles that separately).
+            except Exception as e:
+                print(f"[schema_sync] failed for {tname}: {e}", file=sys.stderr)
                 continue
             for col in tmeta.columns:
                 if col.name in existing_cols:
                     continue
                 # Only add nullable columns or those with a default value.
                 if not (col.nullable or col.default is not None or col.server_default is not None):
-                    print(f"postgres_schema_sync: skipping non-nullable no-default column {tname}.{col.name}")
+                    print(f"[schema_sync] skipping non-nullable no-default column {tname}.{col.name}", file=sys.stderr)
                     continue
                 try:
                     col_type = col.type.compile(dialect=engine.dialect)
@@ -308,9 +324,10 @@ def ensure_postgres_schema_sync():
                         default_clause = f" DEFAULT {col.server_default.arg}"
                     stmt = f'ALTER TABLE "{tname}" ADD COLUMN IF NOT EXISTS "{col.name}" {col_type}{default_clause}'
                     conn.execute(text(stmt))
-                    print(f"postgres_schema_sync: added {tname}.{col.name} ({col_type})")
+                    print(f"[schema_sync] added {tname}.{col.name} ({col_type})", file=sys.stderr)
                 except Exception as e:
-                    print(f"postgres_schema_sync: skipped {tname}.{col.name}: {e}")
+                    print(f"[schema_sync] failed for {tname}.{col.name}: {e}", file=sys.stderr)
+                    continue
 
     # (call runs in lifespan)
 
