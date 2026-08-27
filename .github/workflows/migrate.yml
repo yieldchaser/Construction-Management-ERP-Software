@@ -1,0 +1,36 @@
+name: Apply Supabase Migrations
+
+on:
+  push:
+    branches: [main, campaign/waves]
+    paths:
+      - 'supabase/migrations/**'
+      - 'backend/app/migration_runner.py'
+      - 'scripts/apply_migrations.py'
+      - 'backend/app/main.py'
+      - 'backend/requirements.txt'
+  workflow_dispatch:
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    # Don't block deploy if this fails in fork without secrets; allow manual rerun.
+    if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/campaign/waves'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install backend deps
+        run: pip install -r backend/requirements.txt
+
+      - name: Apply pending supabase/migrations/*.sql
+        run: python scripts/apply_migrations.py --strict
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          # Runner resolves supabase/migrations relative to repo root; no extra config needed.
+          MIGRATION_RUNNER_STRICT: '1'

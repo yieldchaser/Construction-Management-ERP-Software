@@ -38,6 +38,7 @@ type Bill = {
   invoice_date: string;
   invoice_type: string;
   status: string;
+  subtotal: number;
   total_payable: number;
   paid_amount: number;
   items_json?: string | null;
@@ -232,8 +233,6 @@ export default function ProjectDashboardPage() {
   if (loading) return <div className="p-6 text-muted">Loading project dashboard…</div>;
   if (!project) return <div className="p-6 text-muted">Project not found.</div>;
 
-  const margin0 = (project.cash_in || 0) - (project.cash_out || 0);
-
   // ── Real financial computations (per spec) ───────────────────────────────────
   const boqValue = docs.reduce((s, d) => s + (d.boq_value || 0), 0);
   const workDone = docs.reduce((s, d) => s + (d.boq_value || 0) * ((d.physical_progress || 0) / 100), 0);
@@ -244,6 +243,12 @@ export default function ProjectDashboardPage() {
 
   const saleTotal = sale.reduce((s, b) => s + (b.total_payable || 0), 0);
   const expense = purchase.reduce((s, b) => s + (b.total_payable || 0), 0); // Total Expense (Till Date)
+
+  // D1 R2-021: margin on ex-GST subtotals, not GST-inclusive total_payable.
+  // Billed In/Out remain accrual incl GST for display, margin is ex-GST.
+  const saleExGst = sale.reduce((s, b) => s + (Number((b as unknown as { subtotal: number }).subtotal) || 0), 0);
+  const expenseExGst = purchase.reduce((s, b) => s + (Number((b as unknown as { subtotal: number }).subtotal) || 0), 0);
+  const margin0 = saleExGst - expenseExGst;
 
   const cashIn = bills
     .filter((b) => REVENUE_INVOICE_TYPES.includes(b.invoice_type) || MONEY_IN_VOUCHER_TYPES.includes(b.invoice_type))
@@ -333,11 +338,11 @@ export default function ProjectDashboardPage() {
         </p>
       </div>
 
-      {/* Basic snapshot (existing) */}
+      {/* Basic snapshot - D1 R2-021: accrual is Billed In/Out, margin is ex-GST */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card label="Progress" value={`${project.progress ?? 0}%`} tone="violet" />
-        <Card label="Cash In" value={fmtINR(project.cash_in, currencyDecimalPlaces)} tone="emerald" />
-        <Card label="Cash Out" value={fmtINR(project.cash_out, currencyDecimalPlaces)} tone="rose" />
+        <Card label="Billed In" value={fmtINR(project.cash_in, currencyDecimalPlaces)} tone="emerald" />
+        <Card label="Billed Out" value={fmtINR(project.cash_out, currencyDecimalPlaces)} tone="rose" />
         <Card label="Net Margin" value={fmtINR(margin0, currencyDecimalPlaces)} tone={margin0 >= 0 ? "emerald" : "rose"} />
       </div>
 

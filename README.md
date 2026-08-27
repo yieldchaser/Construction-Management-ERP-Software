@@ -289,7 +289,7 @@ Copy `.env.example` to `.env` for the backend. Frontend variables are build-time
 
 ## 🗄️ Database and migrations
 
-`supabase/migrations/` holds hand-authored, additive SQL migrations. There is no ORM migration tool (no Alembic). In local dev the schema is created from the models via `Base.metadata.create_all`. In production, apply the migration SQL to the Supabase database (via the Supabase SQL editor or your migration workflow). New migrations should be additive and backward-compatible; do not drop or rename columns in place without a backfill plan.
+`supabase/migrations/` holds hand-authored, additive SQL migrations. There is no ORM migration tool (no Alembic). In local dev the schema is created from the models via `Base.metadata.create_all`. In production, migrations are now auto-applied on startup by `backend/app/migration_runner.py` (invoked from `backend/app/main.py` lifespan): it discovers `supabase/migrations/*.sql` in sorted order, tracks applied files in the `supabase_migrations` table (created if missing via `CREATE TABLE IF NOT EXISTS`), and executes pending files via raw SQL in a per-file transaction (idempotent — migrations themselves use `IF NOT EXISTS` / `DO $$` guards plus the tracking table, and checksum + `ON CONFLICT DO NOTHING` prevents re-runs). Both SQLite (dev, tracked no-op + unique-index backfill) and Postgres (prod, real execution) are handled; each file is logged on apply. For manual or CI invocation, run `python scripts/apply_migrations.py` (supports `--strict` to fail on error and `SUPABASE_MIGRATIONS_DIR` override). New migrations should be additive and backward-compatible; do not drop or rename columns in place without a backfill plan.
 
 ## ☁️ Deployment & Infrastructure Scaling
 

@@ -2,8 +2,8 @@
 -- same-named column on bills/debit_notes/credit_notes/payments references
 -- company_team(id). Repoint the constraint to company_team and map legacy rows
 -- that carry a login-user id onto that user's company_team row. Guarded and
--- re-runnable; never destructive to data (constraint swap only, with NOTICE +
--- skip when orphaned values would fail the new FK).
+-- re-runnable; never destructive to data (F-1: orphaned values now RAISE
+-- EXCEPTION and fail the batch rather than silently skipping).
 
 DO $$
 DECLARE
@@ -39,8 +39,7 @@ BEGIN
      );
 
     IF orphans > 0 THEN
-        RAISE NOTICE 'R2-052: skipping company_team FK on payment_requests: % orphaned party value(s)', orphans;
-        RETURN;
+        RAISE EXCEPTION 'constraint fk_payment_requests_party_company_user_id missing: % orphaned party value(s) present - remap required', orphans;
     END IF;
 
     ALTER TABLE payment_requests

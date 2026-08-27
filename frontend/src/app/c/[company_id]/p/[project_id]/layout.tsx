@@ -39,6 +39,7 @@ const MORE_TABS = [
   { label: "Finance", path: "/d/finance", withProject: true },
   { label: "HR & Payroll", path: "/d/hr", withProject: true },
   { label: "Labour", path: "/d/labour", withProject: true },
+  { label: "Planning", path: "/d/planning", withProject: true },
   { label: "Planning Gantt", path: "/d/planning/gantt", withProject: false },
   { label: "Procurement", path: "/d/procurement", withProject: true },
   { label: "Procurement RFQ", path: "/d/procurement/rfq", withProject: false },

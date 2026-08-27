@@ -194,7 +194,7 @@ export default function ProjectsPage() {
   };
 
   const exportCsv = () => {
-    const headers = ["Name", "Code", "City", "Stage", "Category", "Progress %", "Cash In", "Cash Out", "To Do"];
+    const headers = ["Name", "Code", "City", "Stage", "Category", "Progress %", "Billed In", "Billed Out", "To Do"];
     const rows = filtered.map((p) => [
       p.name,
       p.code || "",

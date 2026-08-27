@@ -969,6 +969,7 @@ def _validate_bill_line_items(items_json: Optional[str], subtotal: float, invoic
 
 
 # TODO(D-013): profile hook - measure first, trigger when any tenant exceeds 500 bills or 50 projects (whichever first). No perf work now; add timing/sampled logging here when threshold is crossed.
+# D-013 trigger: profile when tenant >500 bills or >50 projects
 @router.post("/bills", response_model=BillResponse, status_code=201)
 def create_bill(req: BillCreateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     # Tenant check: the caller must be a member of the company this bill belongs to.

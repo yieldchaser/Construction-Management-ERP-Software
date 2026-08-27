@@ -1,10 +1,10 @@
 -- R2-353: one payroll run per (company_id, project_id, payroll_month).
 -- Additive-only: no rows are deleted or modified. If historical duplicate
--- months exist (R2-353 was proven live), the constraint is skipped with a
--- NOTICE and the rule stays enforced at the application layer (hr.py
--- run_payroll 409 guard); collapse the duplicates manually to enable the
--- database-level constraint. NULL project_id rows are never grouped
--- together, matching the endpoint's IS NULL lookup.
+-- months exist (R2-353 was proven live), the migration now RAISEs EXCEPTION
+-- (F-1) and fails the batch rather than silently skipping; purge duplicates
+-- manually then re-run. The application layer (hr.py run_payroll 409 guard)
+-- remains. NULL project_id rows are never grouped together, matching the
+-- endpoint's IS NULL lookup.
 DO $$
 DECLARE
     dup_months integer;
@@ -24,8 +24,7 @@ BEGIN
     ) d;
 
     IF dup_months > 0 THEN
-        RAISE NOTICE 'skipping uq_payroll_runs_company_project_month: % duplicate (company_id, project_id, payroll_month) group(s) present', dup_months;
-        RETURN;
+        RAISE EXCEPTION 'constraint uq_payroll_runs_company_project_month missing: % duplicate (company_id, project_id, payroll_month) group(s) present - purge required', dup_months;
     END IF;
 
     ALTER TABLE payroll_runs

@@ -317,6 +317,7 @@ def project_summary(company_id: uuid.UUID, user_id: Optional[uuid.UUID] = None, 
 
 
 # TODO(D-013): profile hook - measure first, trigger when any tenant exceeds 500 bills or 50 projects (whichever first). No perf work now; add timing/sampled logging near bill/project creation when threshold is crossed.
+# D-013 trigger: profile when tenant >500 bills or >50 projects
 @router.post("/")
 def create_project(payload: ProjectCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
     get_company_membership(db, current_user, payload.company_id)

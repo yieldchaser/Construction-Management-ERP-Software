@@ -6,10 +6,10 @@
 -- and R2-543 (payments).
 --
 -- Additive-only: no rows are deleted or modified. Each block is duplicate-safe
--- (same idiom as uq_three_way_matches_po_grn / payroll_runs_unique_month): if
--- historical duplicate groups exist, that constraint is skipped with a NOTICE
--- and the rule stays enforced at the application layer's friendly 409 guard;
--- collapse the duplicates manually to enable the database-level constraint.
+-- (F-1): if historical duplicate groups exist, that constraint now RAISEs
+-- EXCEPTION and fails the batch rather than silently skipping with NOTICE;
+-- purge duplicates via 20260825_000003_duplicate_purge_and_constraints.sql
+-- first, then re-run. The application layer's friendly 409 guard remains.
 
 -- uq_material_indents_company_id_indent_number (models.py MaterialIndent;
 -- earlier campaign wave, orphaned until this sweep).
@@ -32,8 +32,7 @@ BEGIN
     ) d;
 
     IF dup_groups > 0 THEN
-        RAISE NOTICE 'skipping uq_material_indents_company_id_indent_number: % duplicate (company_id, indent_number) group(s) present', dup_groups;
-        RETURN;
+        RAISE EXCEPTION 'constraint uq_material_indents_company_id_indent_number missing: % duplicate (company_id, indent_number) group(s) present - purge required', dup_groups;
     END IF;
 
     ALTER TABLE material_indents
@@ -61,8 +60,7 @@ BEGIN
     ) d;
 
     IF dup_groups > 0 THEN
-        RAISE NOTICE 'skipping uq_purchase_orders_company_id_po_number: % duplicate (company_id, po_number) group(s) present', dup_groups;
-        RETURN;
+        RAISE EXCEPTION 'constraint uq_purchase_orders_company_id_po_number missing: % duplicate (company_id, po_number) group(s) present - purge required', dup_groups;
     END IF;
 
     ALTER TABLE purchase_orders
@@ -90,8 +88,7 @@ BEGIN
     ) d;
 
     IF dup_groups > 0 THEN
-        RAISE NOTICE 'skipping uq_goods_receipt_notes_company_id_grn_number: % duplicate (company_id, grn_number) group(s) present', dup_groups;
-        RETURN;
+        RAISE EXCEPTION 'constraint uq_goods_receipt_notes_company_id_grn_number missing: % duplicate (company_id, grn_number) group(s) present - purge required', dup_groups;
     END IF;
 
     ALTER TABLE goods_receipt_notes
@@ -119,8 +116,7 @@ BEGIN
     ) d;
 
     IF dup_groups > 0 THEN
-        RAISE NOTICE 'skipping uq_work_orders_company_id_wo_number: % duplicate (company_id, wo_number) group(s) present', dup_groups;
-        RETURN;
+        RAISE EXCEPTION 'constraint uq_work_orders_company_id_wo_number missing: % duplicate (company_id, wo_number) group(s) present - purge required', dup_groups;
     END IF;
 
     ALTER TABLE work_orders
@@ -148,8 +144,7 @@ BEGIN
     ) d;
 
     IF dup_groups > 0 THEN
-        RAISE NOTICE 'skipping uq_bills_company_id_invoice_number: % duplicate (company_id, invoice_number) group(s) present', dup_groups;
-        RETURN;
+        RAISE EXCEPTION 'constraint uq_bills_company_id_invoice_number missing: % duplicate (company_id, invoice_number) group(s) present - purge required', dup_groups;
     END IF;
 
     ALTER TABLE bills
@@ -178,8 +173,7 @@ BEGIN
     ) d;
 
     IF dup_groups > 0 THEN
-        RAISE NOTICE 'skipping uq_ncrs_project_id_ncr_number: % duplicate (project_id, ncr_number) group(s) present', dup_groups;
-        RETURN;
+        RAISE EXCEPTION 'constraint uq_ncrs_project_id_ncr_number missing: % duplicate (project_id, ncr_number) group(s) present - purge required', dup_groups;
     END IF;
 
     ALTER TABLE ncrs
@@ -210,8 +204,7 @@ BEGIN
     ) d;
 
     IF dup_groups > 0 THEN
-        RAISE NOTICE 'skipping uq_payments_company_id_reference_number: % duplicate (company_id, reference_number) group(s) present', dup_groups;
-        RETURN;
+        RAISE EXCEPTION 'constraint uq_payments_company_id_reference_number missing: % duplicate (company_id, reference_number) group(s) present - purge required', dup_groups;
     END IF;
 
     ALTER TABLE payments
