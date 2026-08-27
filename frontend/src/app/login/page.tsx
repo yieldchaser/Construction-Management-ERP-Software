@@ -125,8 +125,8 @@ export default function LoginPage() {
         const c = await r.json();
         if (c.onboarding_completed) shouldOnboard = false;
       }
-    } catch {
-      /* non-fatal */
+    } catch (err: any) {
+      console.error("company settings fetch failed", err?.code, err?.message, err);
     }
     window.location.href = shouldOnboard
       ? "/profile/onboarding"
@@ -163,7 +163,8 @@ export default function LoginPage() {
         setTimer(30);
         setMessage(data.demo_mode ? `Demo code: ${data.mock_code}` : "Code sent to your phone.");
       } else setError(data.detail || "Failed to send code.");
-    } catch {
+    } catch (err: any) {
+      console.error("login failed", err?.code, err?.message, err);
       setError("Could not reach the server. Is the backend running?");
     } finally {
       setLoading(false);
@@ -200,11 +201,15 @@ export default function LoginPage() {
       // Reset the verifier so a retry gets a fresh challenge.
       try {
         recaptchaRef.current?.clear();
-      } catch {
+      } catch (_e: any) {
         /* ignore */
       }
       recaptchaRef.current = null;
-      setError("Could not send the code. Please check the number and try again.");
+      if (err?.code === "auth/too-many-requests") {
+        setError("Too many attempts. Please try again later.");
+      } else {
+        setError("Could not send the code. Please check the number and try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -224,7 +229,8 @@ export default function LoginPage() {
         setTimer(30);
         setMessage(data.demo_mode ? `Demo code: ${data.mock_code}` : "Code sent to your email.");
       } else setError(data.detail || "Failed to send code.");
-    } catch {
+    } catch (err: any) {
+      console.error("login failed", err?.code, err?.message, err);
       setError("Could not reach the server.");
     } finally {
       setLoading(false);
@@ -252,7 +258,8 @@ export default function LoginPage() {
       } else {
         setError(data.detail || "Invalid code.");
       }
-    } catch {
+    } catch (err: any) {
+      console.error("login failed", err?.code, err?.message, err);
       setError("Verification failed.");
     } finally {
       setLoading(false);
@@ -281,8 +288,18 @@ export default function LoginPage() {
       } else {
         setError(data.detail || "Could not complete sign-in.");
       }
-    } catch {
-      setError("Invalid code. Please try again.");
+    } catch (err: any) {
+      console.error("login failed", err?.code, err?.message, err);
+      const code = err?.code as string | undefined;
+      if (code === "auth/invalid-verification-code") {
+        setError("Invalid code. Please request a new one.");
+      } else if (code === "auth/code-expired") {
+        setError("Code expired. Please request a new one.");
+      } else if (code === "auth/too-many-requests") {
+        setError("Too many attempts. Please try again later.");
+      } else {
+        setError("Invalid code. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -304,7 +321,8 @@ export default function LoginPage() {
       } else {
         setError(data.detail || "Invalid email or password.");
       }
-    } catch {
+    } catch (err: any) {
+      console.error("login failed", err?.code, err?.message, err);
       setError("Could not reach the server.");
     } finally {
       setLoading(false);
@@ -331,7 +349,8 @@ export default function LoginPage() {
       } else {
         setError(data.detail || "Could not create the account.");
       }
-    } catch {
+    } catch (err: any) {
+      console.error("login failed", err?.code, err?.message, err);
       setError("Could not reach the server.");
     } finally {
       setLoading(false);
@@ -354,7 +373,8 @@ export default function LoginPage() {
       } else {
         setError(data.detail || "Invalid code.");
       }
-    } catch {
+    } catch (err: any) {
+      console.error("login failed", err?.code, err?.message, err);
       setError("Verification failed.");
     } finally {
       setLoading(false);
@@ -369,7 +389,8 @@ export default function LoginPage() {
         setTimer(30);
         setMessage(data.demo_mode ? `Demo code: ${data.mock_code}` : "Code sent to your email.");
       } else setError(data.detail || "Failed to send code.");
-    } catch {
+    } catch (err: any) {
+      console.error("login failed", err?.code, err?.message, err);
       setError("Could not reach the server.");
     } finally {
       setLoading(false);
@@ -390,7 +411,8 @@ export default function LoginPage() {
         setTimer(30);
         setMessage("If an account exists, a reset code has been sent to your email.");
       } else setError(data.detail || "Could not send a reset code.");
-    } catch {
+    } catch (err: any) {
+      console.error("login failed", err?.code, err?.message, err);
       setError("Could not reach the server.");
     } finally {
       setLoading(false);
@@ -414,7 +436,8 @@ export default function LoginPage() {
       } else {
         setError(data.detail || "Could not reset the password.");
       }
-    } catch {
+    } catch (err: any) {
+      console.error("login failed", err?.code, err?.message, err);
       setError("Could not reach the server.");
     } finally {
       setLoading(false);

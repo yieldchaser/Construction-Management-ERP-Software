@@ -168,6 +168,11 @@ def callback(
         timeout=30,
     )
     if userinfo_resp.status_code != 200:
+        logger.error(
+            "Google userinfo failed: status=%s body=%s",
+            userinfo_resp.status_code,
+            userinfo_resp.text[:500],
+        )
         return RedirectResponse(
             url=f"{fe}/auth/callback?error=google_userinfo",
             status_code=status.HTTP_307_TEMPORARY_REDIRECT,

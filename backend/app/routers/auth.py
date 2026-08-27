@@ -1,6 +1,7 @@
 import hashlib
 import hmac
 import json
+import logging
 import secrets as pysecrets
 import uuid
 from datetime import datetime, timedelta, timezone
@@ -26,6 +27,8 @@ from app.routers.settings import _validate_gstin
 from app import models, sms, email_otp, security, firebase_auth
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
+
+logger = logging.getLogger(__name__)
 
 
 def _auth_limit_key(request: Request) -> str:
@@ -353,7 +356,8 @@ def send_otp(request: Request, payload: OTPSendRequest, db: Session = Depends(ge
     if provider_ready:
         try:
             sms.send_otp_sms(mobile, code)
-        except Exception:
+        except Exception as exc:
+            logger.error("SMS send failed for %s: %s", mobile, exc)
             db.query(models.OTPCode).filter(
                 models.OTPCode.identifier == mobile,
                 models.OTPCode.purpose == "login",
@@ -421,7 +425,8 @@ def verify_firebase(request: Request, payload: FirebaseVerifyRequest, db: Sessio
 
     try:
         claims = firebase_auth.verify_id_token(payload.id_token)
-    except ValueError:
+    except ValueError as exc:
+        logger.error("Firebase verify failed: %s", exc)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired verification. Please try again.",
@@ -484,7 +489,8 @@ def _deliver_email_code(db: Session, email: str, purpose: str) -> dict:
     if provider_ready:
         try:
             email_otp.send_otp_email(email, code)
-        except Exception:
+        except Exception as exc:
+            logger.error("Email OTP send failed for %s: %s", email, exc)
             db.query(models.OTPCode).filter(
                 models.OTPCode.identifier == email,
                 models.OTPCode.purpose == purpose,
