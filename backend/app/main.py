@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 import os
+import sys
 from contextlib import asynccontextmanager
 from sqlalchemy import DateTime, String, Numeric, Boolean, Text, func
 from sqlalchemy.exc import IntegrityError
@@ -478,10 +479,29 @@ async def lifespan(app: FastAPI):
     ensure_sqlite_schema_sync()
     ensure_postgres_schema_sync()  # Production PostgreSQL: add missing model columns
     ensure_material_wastage_reported_by_uuid()  # R2-730: repair 20260816_000005 type mismatch (VARCHAR -> UUID FK)
-    # R2-731 / M-2+M-3: apply pending migrations. M-2 strict-by-default in production.
+    # M-1: Render's Docker context is backend/ so supabase/migrations is not in the image.
+    # The startup runner cannot work in production and would silently pretend it did (R2-730).
+    # Production migrations run ONLY via CI workflow .github/workflows/migrate.yml (full checkout,
+    # apply_migrations.py --strict). Keep the startup hook only for SQLite dev where it also
+    # remediates unique constraints via _ensure_sqlite_unique_constraints().
+    # R2-731 / M-2+M-3: strict-by-default in production + pg_advisory_lock still applies when invoked.
     try:
-        from app.migration_runner import apply_pending_migrations
-        apply_pending_migrations()
+        from app.migration_runner import apply_pending_migrations, _is_sqlite as _migration_is_sqlite
+
+        try:
+            _is_sqlite_lifespan = _migration_is_sqlite(engine)
+        except Exception:
+            _is_sqlite_lifespan = str(getattr(getattr(engine, "url", ""), "drivername", "")).startswith("sqlite") or "sqlite" in str(
+                getattr(engine, "url", "")
+            ).lower()
+        if _is_sqlite_lifespan:
+            apply_pending_migrations()
+        else:
+            print(
+                "[lifespan] skipping startup migration_runner on Postgres -- migrations via CI workflow "
+                ".github/workflows/migrate.yml (M-1: Render backend/ context has no supabase/migrations)",
+                file=sys.stderr,
+            )
     except Exception as e:
         # M-2: crash boot in production/strict mode so missing schema does not leave API up.
         # Only swallow in dev. Runner's own per-file strict handles most cases; this

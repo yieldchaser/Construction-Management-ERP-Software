@@ -28,6 +28,7 @@ from __future__ import annotations
 import hashlib
 import os
 import pathlib
+import sys
 import time
 from typing import List, Optional
 
@@ -260,7 +261,29 @@ def apply_pending_migrations(engine_override=None) -> List[str]:
 
     migrations_dir = _resolve_migrations_dir()
     if not migrations_dir.is_dir():
-        print(f"[migration_runner] migrations dir not found: {migrations_dir} (skipping)")
+        # M-1: Render's Docker context is backend/ so supabase/migrations is absent
+        # in the image. On Postgres (production) the runner cannot work via startup
+        # hook -- the only supported path is CI workflow .github/workflows/migrate.yml
+        # which has a full checkout. Make missing dir a loud error, not an info line.
+        is_sqlite = _is_sqlite(engine)
+        if is_sqlite:
+            print(
+                f"[migration_runner] migrations dir not found: {migrations_dir} (skipping) -- "
+                f"will still apply SQLite unique-constraint remediation"
+            )
+            try:
+                _ensure_sqlite_unique_constraints(engine)
+            except Exception as e:
+                print(f"[migration_runner] sqlite remediation after missing dir failed: {e}", file=sys.stderr)
+            return []
+        msg = (
+            f"[migration_runner] ERROR: migrations dir not found in container: {migrations_dir} "
+            f"(expected via CI workflow .github/workflows/migrate.yml -- not via startup hook; "
+            f"Render Docker context is backend/ so supabase/migrations is not in image)"
+        )
+        print(msg, file=sys.stderr)
+        if _is_strict_mode():
+            raise FileNotFoundError(msg)
         return []
 
     try:
