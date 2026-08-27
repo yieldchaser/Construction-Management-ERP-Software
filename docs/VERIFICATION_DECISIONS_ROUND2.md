@@ -1070,3 +1070,71 @@ correct place to scope by membership. All three want fixing together.
 
 The last row is now the highest-value open item in the project. It requires two logins, which needs
 either the Firebase test-number code or a password account in two test tenants.
+
+---
+
+## RLS re-test after `9b1a5d6` — R2-738, R2-739, R2-740 all verified fixed in production
+
+`origin/main` `9b1a5d6`. Both migrations applied — ledger **50 rows**, `20260825_000007_rls_correctness`
+and `20260825_000008_rls_tenant_member_ids` recorded.
+
+**Schema state:**
+
+| check | result |
+|---|---|
+| helper functions | `current_app_user_id` [invoker], `current_company_ids` [SECDEF], `tenant_member_user_ids` [SECDEF] |
+| `company_team` policy | `USING (user_id = current_app_user_id())` — no self-subquery |
+| policies still `USING (true)` for `authenticated` | **31** (was 33; `companies` and `users` now scoped) |
+
+**Behavioural test.** One `DO` block: pick a user with a membership, `set_config('app.current_user_id', …, true)`,
+`SET LOCAL ROLE authenticated`, count what is visible, then `RAISE EXCEPTION` so the whole thing
+rolls back. Nothing was written.
+
+```
+user=de7193b6-59fa-4485-bb24-6f34c9169020  company=Demo Construction Ltd
+company_team readable (no 42P17) = 1
+projects: sees 5 of 7 total, expected 5
+FOREIGN projects visible = 0
+companies: sees 1 of 5
+users visible = 2
+bills visible = 0
+```
+
+Every line is what it should be:
+
+- **R2-738 fixed** — `company_team` is readable as `authenticated`. The 42P17 recursion that
+  previously aborted every tenant-scoped query is gone, confirmed against production rather than
+  against the migration text.
+- **Isolation is real** — 5 of 7 projects visible, and **0 foreign projects**. The two projects
+  belonging to other tenants are invisible to this session.
+- **R2-740 fixed** — `companies` returns 1 of 5, not all 5.
+- **The `users` directory works** — 2 users visible, which is the demo tenant's membership, not
+  self-only. That confirms `20260825_000008`'s `tenant_member_user_ids()` SECURITY DEFINER helper
+  actually solved the collapse I flagged before the push. Had it not, this would read 1.
+
+### What this does and does not prove
+
+**Proved:** the policies are correct. Given a session whose identity is set and whose role is
+subject to RLS, the database enforces tenant isolation.
+
+**Not proved, and still true:** RLS is **inert for application traffic**. Render connects as a
+`BYPASSRLS` role and `RLS_SESSION_CONTEXT` defaults to `False`, both deliberately. So today the
+database is not enforcing anything for real requests — the FastAPI `company_id` filters still carry
+the entire load.
+
+The difference from this morning is that the safety net now exists and is known to work. Turning it
+on is a separate, sequenced change:
+
+1. Create a database role **without** `BYPASSRLS`, granted the same table privileges.
+2. Set `RLS_SESSION_CONTEXT=1` on Render.
+3. Point `DATABASE_URL` at the new role.
+4. Re-run this exact test, plus a full smoke pass of the console.
+
+Steps 1-3 in the wrong order, or without step 4, take the API down. I would do it on a Supabase
+branch first, not on production.
+
+### Still open
+
+The **API-layer isolation test** — whether the FastAPI query filters keep tenant A out of tenant B's
+data — remains the highest-value untested claim, because it is the layer actually protecting the
+product today. It needs two live logins in different test tenants.
