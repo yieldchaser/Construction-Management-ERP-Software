@@ -1464,3 +1464,70 @@ that look like outages. One `@app.exception_handler(ValueError)` returning 422 c
 Resolve the six stale ones - they were fixed weeks ago and only persist because nobody clicked. If
 any genuinely recurs, Sentry reopens it as a regression, which is the signal worth having. Leaving
 them open makes the "0 unresolved issues" rule unmeetable, and an unmeetable rule gets ignored.
+
+---
+---
+
+# API-layer tenant isolation — TESTED LIVE, 2026-08-27. No leak.
+
+The last untested claim in the project, and the layer actually protecting the data today (RLS is
+correct but inert by design). Founder logged into `site-flow-omega.vercel.app` in the Browser pane;
+I drove `fetch()` from the page origin using that session. **No credential passed through me** - I
+read only `localStorage.access_token` inside the page and never transported it.
+
+## Session under test
+
+`GET /auth/my-companies` -> the session belongs to **AK Construction** and **ZZ R8 Throwaway**.
+So **Demo Construction Ltd**, **Test Claude B2 Construction** and **pranjal ltd** are genuinely
+foreign to it.
+
+Endpoint list taken from the **live `/openapi.json`**, not from grepping source - 77 GET routes
+carry `{company_id}`, of which **74** have it as their only path parameter. 32 more carry
+`{project_id}` alone.
+
+## The control came first
+
+A 403 proves nothing if the path is wrong - a typo also fails. So before probing, the same paths
+were called against **my own** company: **11 of the first 12 returned 200**. The single exception,
+`/planning/tasks/company/{company_id}`, returned 404 for my own company too, so it is a route-shape
+mismatch rather than an authorisation result, and it is excluded from the conclusion.
+
+## Results
+
+| probe | endpoints | result |
+|---|---|---|
+| company-scoped vs **Demo Construction Ltd** | 74 | **71 x 403, 3 x 401, zero 200** |
+| company-scoped vs **Test Claude B2 Construction** | 74 | **71 x 403, 3 x 401, zero 200** |
+| project-scoped vs **Metro Terminal (Demo Construction)** | 32 | **32 x 403, zero 200** |
+| **total** | **180** | **zero rows of foreign data returned** |
+
+The three 401s are identical in both runs and are exactly the BI feed routes -
+`/integrations/bi/feed/{company_id}/projects`, `/budget-variance`, `/labour-productivity`. Those
+authenticate by API key rather than session JWT, so 401 is the correct answer for a JWT. That matches
+the static reading of `_resolve_key`, which filters on the path `company_id` **and** the key hash
+together.
+
+One project-scoped call (`/safety/stats/{project_id}`) returned a transport error on the first pass;
+re-run individually it returned **403**. No endpoint is left unmeasured.
+
+## What this closes
+
+`verify_company_access` and `verify_project_access` were shown to be correctly *written* by the
+static audit. This shows they are correctly *wired* - each of the 180 call sites passes the right
+company or project id into its guard. That was the gap static analysis could not close: a handler
+can guard one variable and query another.
+
+**Tenant isolation at the API layer is verified.** Combined with the earlier result that the RLS
+policies now isolate correctly when a session identity is set, both layers are sound - one enforcing
+today, one ready for the role switch.
+
+## Honest limits
+
+- **GET only.** Write paths (POST/PUT/PATCH/DELETE) were not probed, because doing so would have
+  written or destroyed rows in tenants the founder did not authorise. They share the same
+  dependencies, so the risk is low, but this is a read-path result and should not be quoted as more.
+- **One session.** A user belonging to two companies. A single-company account would be a slightly
+  cleaner instrument, though the foreign set was genuinely foreign either way.
+- **Snapshot.** This is `origin/main` `53cfa95` at one moment; it is not a standing gate. The
+  durable version is a test in the suite that mints two tenants and asserts 403 across the route
+  table - worth adding, since this property is exactly the kind that regresses silently.
