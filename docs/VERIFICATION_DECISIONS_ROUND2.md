@@ -527,3 +527,57 @@ deploy that needs the founder's explicit go-ahead rather than being a side effec
 4. Merge to `main`, which deploys
 5. Confirm `secrets.DATABASE_URL` is set, then let the workflow run
 6. Re-run my probe to confirm the objects actually landed
+
+---
+
+## R2-736 · HIGH · Firebase OTP verify collapses every failure into "Invalid code"
+
+**Observed live 2026-08-27** by the founder, on `site-flow-omega.vercel.app/login`, with the one
+number approved in Firebase (`+917667359544`): no SMS arrived, and `123456` returned
+**"Invalid code. Please try again."**
+
+**What the screen proves.** The page reached the code-entry stage with a running "Resend in 9s"
+timer. That stage is only entered at `login/page.tsx:190-192`, *after*
+`signInWithPhoneNumber(auth, fmtMobile(), recaptchaRef.current)` resolves. Had the send failed, the
+catch at `:199-206` would have shown "Could not send the code" and left the user on the input
+stage. **So Firebase accepted the send request.** The reCAPTCHA badge visible in the corner
+confirms the Firebase path, not the MSG91 fallback.
+
+That narrows the cause to two, and neither is a code defect:
+
+1. The number is registered in Firebase Console under **Authentication → Sign-in method → Phone →
+   "Phone numbers for testing"**. Firebase never sends a real SMS for those; only the preset code
+   works, and there is no reason for it to be `123456`. Given the founder's account that "one
+   number has been approved", this is the leading explanation.
+2. A real SMS was attempted and not delivered — plausible for Indian numbers, where carrier
+   delivery is subject to DLT registration and Spark-plan quota.
+
+**The actual defect is that this could not be told apart from the outside.**
+`handleFirebaseOtpVerify` (`login/page.tsx:284-286`) ends in:
+
+```js
+} catch {
+  setError("Invalid code. Please try again.");
+}
+```
+
+A bare catch with no binding and no logging. Wrong code, expired code, exhausted quota, network
+failure, misconfigured Firebase project, and an already-consumed confirmation all render as the
+same four words. Note the asymmetry: the *send* path deliberately logs the real Firebase
+`err.code`/`err.message` to the console (`:199`, with a comment explaining exactly why swallowing it
+was bad) — and the *verify* path, added in the same file, does not.
+
+**Fix.** Bind the error and `console.error("[firebase otp] confirm failed:", err?.code,
+err?.message)` exactly as the send path does. Then map the codes users can act on:
+`auth/invalid-verification-code` → "That code is not right", `auth/code-expired` → "That code has
+expired, request a new one", `auth/too-many-requests` → "Too many attempts, try again later".
+Keep the detail out of the URL and out of the response body.
+
+**Same class as F-6** (`google_auth.py:140-148` discarding `token_resp.text`). Two auth paths, two
+discarded upstream diagnoses, two live incidents that took a founder's manual test to notice. Worth
+one sweep across every auth handler rather than two point fixes.
+
+**Founder action, 30 seconds, definitive:** open Firebase Console → Authentication → Sign-in method
+→ Phone → "Phone numbers for testing" and read the code set against `+91 7667359544`. If the number
+is listed, that code is the only one that will ever work and no SMS will ever arrive - which is
+correct behaviour, not a bug.
