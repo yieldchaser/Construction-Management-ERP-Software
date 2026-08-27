@@ -999,6 +999,62 @@ not taken from the note.
 The four closures are accurate about what they claim. R2-712 exists anyway, because three of them
 were scoped to the files a finding named rather than to the defect class.
 
+---
+
+## R2-731 · CRITICAL · Nothing applies `supabase/migrations/*.sql` — the whole directory is hope, not process
+
+**Generalises R2-730 from one file to the entire migration mechanism.**
+
+**What is true.**
+
+- There is no Alembic and no other ORM migration tool. `README.md:292` and `backend/README.md:53`
+  both say so explicitly: local dev builds the schema from `Base.metadata.create_all`, and
+  production is expected to have the SQL applied "via the Supabase SQL editor or your migration
+  workflow".
+- `git grep supabase/migrations` over `campaign/waves`, excluding `docs/` and `audit/`, returns
+  only READMEs, two comments in `models.py`, two test files and the migration files themselves.
+  **No application, script, container entrypoint or job ever reads that directory.**
+- `.github/workflows/` contains exactly one file, `keep_alive.yml`. There is no CI step that
+  applies migrations.
+- `backend/app/routers/admin_migrations.py` is *not* a runner. It is a set of hand-written data
+  backfills (`_backfill_company_files`, `_backfill_project_files`, RBAC backfill) behind
+  `X-Admin-Secret`. It never opens a `.sql` file.
+- The D-V4 gate, `backend/tests/coverage/test_dv4_constraint_migration_gate.py:106`, asserts that
+  every named `UniqueConstraint`/`Index` in `Base.metadata` **"must appear in
+  supabase/migrations/"** — that is, that a *file exists containing the name*. A file existing is
+  precisely the condition that was already true for `20260816_000005` when R2-730 was found.
+
+**Why this is CRITICAL rather than process hygiene.** Twenty migrations are dated 2026-08-15 or
+later, and the campaign's own decision batch adds more (`7e8b54d` for D-V2/R2-613, the eight
+constraints with purge). Every one of them is closed in the register on the strength of the file
+being committed. The single case anybody actually checked against production — R2-730 — had not
+run. There is currently **no evidence, and no mechanism that could produce evidence**, that any of
+the other nineteen ran.
+
+**Blast radius.** Every closure whose fix is "add a migration" is unverified by construction. That
+includes D-V2's seven unique constraints (R2-701/R2-702), `revoked_tokens` (token revocation — a
+security control), the 2026-08-24 RLS tenant-predicate migration, and the payment-request FK
+repoint.
+
+**The gate that would actually close this** is not a source-text assertion. It is a probe run
+against the production database that enumerates the objects each migration creates and reports
+which are absent — the same shape as the query in
+`scratchpad/probe.sql`, which is written and waiting on a Supabase session.
+
+**Status.** E1 complete (code read, above). **E0 blocked** — needs the Supabase SQL editor, which
+is logged out. The probe covers 32 objects from the 20 late migrations plus two sanity rows.
+
+---
+
+## R2-732 · LOW · Two migrations share the sequence prefix `20260825_000004`
+
+`20260825_000004_missing_unique_constraints.sql` and `20260825_000004_po_cancelled_columns.sql`
+carry the same date and sequence number. With no runner (R2-731) nothing breaks today, because
+ordering is whatever a human types. The moment a runner is introduced and keys on the prefix — the
+normal fix for R2-731 — one of the two is silently skipped or the pair sorts non-deterministically.
+Renumber before building the runner, not after.
+
+
 ## Summary
 
 | id | sev | class | from |
@@ -1033,8 +1089,10 @@ were scoped to the files a finding named rather than to the defect class.
 | **R2-728** | **CRITICAL** | **attendance punch-out raises TypeError on Postgres; passes on SQLite so the suite cannot see it** | orphan-lineage sweep |
 | **R2-729** | **CRITICAL** | **Delete Logs fetches in an unbounded loop — proved live at ~3.4 req/s against the production pool** | orphan-lineage sweep |
 | **R2-730** | **HIGH** | **material_wastage.reported_by still free text; migration 20260816_000005 exists but never ran** | live schema sweep |
+| **R2-731** | **CRITICAL** | **nothing applies `supabase/migrations/*.sql` — no runner, no CI, no entrypoint; the D-V4 gate asserts only that a file exists** | generalised from R2-730 |
+| **R2-732** | **LOW** | **two migrations share the prefix `20260825_000004`** | migration sweep |
 
-**Twenty-five live findings** (R2-724 retracted). R2-713..R2-716 were filed separately first and are struck through, not
+**Twenty-seven live findings** (R2-724 retracted). R2-713..R2-716 were filed separately first and are struck through, not
 deleted, so the history stays traceable.
 
 Three to act on first, for different reasons:
