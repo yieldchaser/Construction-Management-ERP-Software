@@ -581,3 +581,96 @@ one sweep across every auth handler rather than two point fixes.
 → Phone → "Phone numbers for testing" and read the code set against `+91 7667359544`. If the number
 is listed, that code is the only one that will ever work and no SMS will ever arrive - which is
 correct behaviour, not a bug.
+
+---
+---
+
+# Post-merge verification — 2026-08-27, `origin/main` @ `378c13c`
+
+## What landed correctly
+
+Verified by reading `origin/main`, not by trusting the report:
+
+- **F-1 is fixed, and better than I specified.** I asked for `RAISE NOTICE` → `RAISE EXCEPTION`.
+  The agent instead restructured each block: the "constraint already exists" guard still returns
+  early (correct idempotency), the duplicate branch now **backs up to a timestamped table and
+  collapses to the earliest row inline**, and `ALTER TABLE ... ADD CONSTRAINT` sits *after* `END IF`,
+  unconditionally. There is no longer any path that declines to add the constraint — if duplicates
+  survive the purge, `ADD CONSTRAINT` itself throws. That is the right shape, and my prescription is
+  moot. `supabase/migrations/20260825_000006_verify.sql` exists.
+- **M-3 fixed.** The CI log shows `[migration_runner] acquired pg_advisory_lock 727310731`.
+- **M-2 fixed.** The workflow failed loudly — `Status: Failure`, exit code 1 — instead of printing
+  a warning and going green. This is the single most important behavioural change of the batch, and
+  it worked on its first real run.
+- **F-3** landed (`20260825_000005_po_cancelled_columns.sql`, prefix collision gone).
+
+## What did not land: the migrations still have not applied
+
+Probed production immediately after the deploy. Ground truth:
+
+| check | result |
+|---|---|
+| the 11 `uq_*` constraints | **all still missing** |
+| `_tenant_scoped` RLS policies | **0** |
+| tables with `FORCE ROW LEVEL SECURITY` | **0** |
+| `purchase_orders.cancelled_at` | absent |
+| `boq_items.cost_code` | still `varchar(50)` |
+| `tally_connections.voucher_number_template` default | still unset |
+| duplicate-purge backup tables | none created |
+| `fk_payment_requests_party_company_user_id` | **now present** |
+| `supabase_migrations` ledger | **27 rows, every one dated before 2026-08-15. Zero August files.** |
+| sanity: `companies` | 5 |
+
+## Root cause — confirmed from the CI log, not inferred
+
+```
+[apply_migrations] run failed: (psycopg2.errors.DuplicateColumn)
+column "created_at" of relation "face_recognition_logs" already exists
+[SQL: ALTER TABLE face_recognition_logs ADD COLUMN created_at TIMESTAMPTZ;]
+```
+
+That is `20260815_000001_face_recognition_log_created_at.sql`, and the statement has **no
+`IF NOT EXISTS`**.
+
+**The ledger started empty against a database that already had most of the schema.** Every
+migration before 2026-08-15 happens to be written idempotently, so replaying all 27 of them was
+harmless — they applied, recorded, and cost 38 seconds. The first *non-idempotent* file then hit a
+column that `ensure_postgres_schema_sync()` had already created at boot, threw, and `--strict`
+correctly aborted the run. Everything after it — including the RLS migration — never got a chance.
+
+**So the run order is the whole story.** `20260824_000001_rls_tenant_predicates_and_force.sql` is
+not failing. It is queued behind a file from nine days earlier that cannot replay.
+
+## The remaining landmines, audited across all 21 August migrations
+
+Every `ADD CONSTRAINT` is wrapped in a `DO` block with an existence guard — except one. Two files
+need work; the rest will apply or no-op cleanly:
+
+| file | problem | why it fires |
+|---|---|---|
+| **`20260815_000001_face_recognition_log_created_at.sql`** | `ALTER TABLE ... ADD COLUMN created_at TIMESTAMPTZ;` with no `IF NOT EXISTS` | the column already exists in production. **This is the current failure** |
+| **`20260816_000005_material_wastage_reported_by_team.sql`** | bare `ADD CONSTRAINT material_wastage_reported_by_fkey` (no `DO` guard) **and** `ALTER COLUMN reported_by TYPE UUID USING (CASE WHEN reported_by ~ '^[0-9a-f]{8}-...' ...)` | I verified on 2026-08-27 that this FK is **already present** and the column is already `uuid`. The FK add will throw "already exists"; the `USING` clause applies the regex operator `~` to a column that is now `uuid`, which has no such operator. **This is the next failure once the first is fixed** |
+
+`20260816_000004` (`SET DEFAULT`) and `20260821_000005` (`ALTER COLUMN ... TYPE VARCHAR(100)`) are
+naturally idempotent and safe to replay.
+
+## Fix — for the agent, two files, then re-run
+
+Do **not** baseline the ledger by inserting rows for already-applied files. That unblocks
+production but leaves both migrations broken for any fresh database — a new customer instance, a
+staging copy, a restore. Make them replay-safe instead; it fixes both cases at once.
+
+1. `20260815_000001`: `ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ;`
+2. `20260816_000005`: wrap both statements in a `DO` block — skip the `ALTER COLUMN ... TYPE` when
+   `information_schema.columns` already reports `uuid`, and skip the FK when `pg_constraint`
+   already holds `material_wastage_reported_by_fkey`. Same guard shape the other files already use.
+3. Re-run **Apply Supabase Migrations** (it has a `workflow_dispatch` trigger, so it can be started
+   from the Actions tab without another push).
+4. I re-probe and confirm the objects — especially the RLS predicates and `FORCE ROW LEVEL
+   SECURITY`, which are the reason any of this matters.
+
+**Add a standing rule while the runner is young:** every migration must be safe to replay against a
+database that already has the change. The runner replays everything not in the ledger, and the
+ledger is new, so "it worked when I pasted it by hand" is no longer sufficient. A grep for
+`ADD COLUMN` / `ADD CONSTRAINT` / `ALTER COLUMN ... TYPE` without a guard is a cheap CI check and
+would have caught both of these before the merge.
