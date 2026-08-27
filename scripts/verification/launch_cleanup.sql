@@ -2,108 +2,78 @@
 -- SiteFlow — LAUNCH CLEANUP
 -- Removes the demo/test tenants and everything hanging off them.
 --
--- Written 2026-08-27 by the verification agent. HOLD THIS UNTIL LAUNCH.
+-- Written 2026-08-27 by the verification agent. HOLD UNTIL LAUNCH.
+-- DRY-RUN VERIFIED against production 2026-08-27 (rolled back, nothing changed).
 --
--- READ BEFORE RUNNING
---   * Run PART 1 (preview) first. It only counts. Nothing is deleted.
---   * PART 2 deletes. It runs inside an explicit transaction and ENDS WITH
---     ROLLBACK. Change the last line to COMMIT only when the preview counts
---     look right to you.
---   * Take a Supabase backup/snapshot first regardless.
+-- HOW TO RUN
+--   1. Take a Supabase snapshot first. Non-negotiable.
+--   2. Run PART 1 as-is. It ends in RAISE EXCEPTION, so Postgres rolls the
+--      whole thing back. It deletes NOTHING. Read its report.
+--   3. Only if the report looks right: comment out the RAISE EXCEPTION line
+--      marked ">>> DRY RUN GUARD <<<" and run again. That run commits.
+--   4. Supabase will show a "destructive operations" warning both times.
+--      Confirm it - the guard, not the warning, is what protects you on run 2.
 --
--- WHY A LOOP INSTEAD OF A LIST OF DELETES
---   The schema has 142 tables, 81 of them carrying company_id, and 267 foreign
---   keys of which only 200 are ON DELETE CASCADE. 67 are not. A hand-written
---   delete list would have to be in exact reverse-topological order and would
---   rot the moment a table is added. The loop below repeatedly attempts every
---   company_id-bearing table, swallowing FK violations, until a whole pass
---   deletes nothing new. That converges on the correct order by construction.
+-- WHY A RETRY LOOP AND NOT AN ORDERED DELETE LIST
+--   Measured on this schema: 142 tables, 81 carrying company_id, and only 200
+--   of 267 foreign keys are ON DELETE CASCADE. 67 are not. A hand-written list
+--   would need exact reverse-topological order and would rot the next time a
+--   table is added. This retries every company_id table, swallowing FK
+--   violations, until a full pass deletes nothing. It converges by
+--   construction, and aborts rather than looping if it has not converged in 25.
+--
+-- THE BUG THE DRY RUN CAUGHT (do not reintroduce)
+--   The first version deleted company_team inside the loop and only afterwards
+--   looked for "users whose only membership is the demo tenant". By then the
+--   memberships were gone, so it matched zero users and would have left two
+--   orphaned user rows behind. The doomed-user ids are now captured BEFORE the
+--   loop runs. This is why the report prints captured_users.
+--
+-- DRY RUN RESULT, 2026-08-27, demo tenant only:
+--   captured_users=2 | PASS1=43 PASS2=0 | user_otps=4 users=2 companies=1
+--   | LEFT companies=4 demo_user=0 demo_otp=0   (grand total 50 rows)
 -- ============================================================================
 
-
--- ---------------------------------------------------------------------------
--- CONFIGURE: which tenants are being removed.
---
--- Row 1 is the demo tenant (D-V1 step 3 / R2-735). Its application code paths
--- were already deleted, so it is unreachable and serves no demo purpose today.
---
--- Rows 2 and 3 are the audit's test companies. UNCOMMENT them only when you no
--- longer need a scratch tenant to test against.
--- ---------------------------------------------------------------------------
-create temporary table _purge_companies (id uuid primary key, label text);
-
-insert into _purge_companies (id, label) values
-  ('e0000000-0000-0000-0000-000000000000', 'Demo Construction Ltd')
---, ('1776c887-5552-4611-aad5-f4899aad0f87', 'Test Claude B2 Construction')
---, ('1fa705a4-7aa6-42f2-9906-65902c96916f', 'ZZ R8 Throwaway')
-;
-
-
--- ===========================================================================
--- PART 1 — PREVIEW. Read-only. Run this alone first.
--- ===========================================================================
 do $$
 declare
-  t   record;
-  n   bigint;
-  tot bigint := 0;
-  rpt text := '';
-begin
-  for t in
-    select c.table_name
-      from information_schema.columns c
-      join information_schema.tables tb
-        on tb.table_schema = c.table_schema and tb.table_name = c.table_name
-     where c.table_schema = 'public'
-       and c.column_name  = 'company_id'
-       and tb.table_type  = 'BASE TABLE'
-     order by c.table_name
-  loop
-    execute format(
-      'select count(*) from %I where company_id in (select id from _purge_companies)',
-      t.table_name
-    ) into n;
-    if n > 0 then
-      rpt := rpt || format('%-40s %s', t.table_name, n) || E'\n';
-      tot := tot + n;
-    end if;
-  end loop;
+  t          record;
+  pass       int    := 0;
+  n          bigint;
+  pass_total bigint;
+  grand      bigint := 0;
+  rpt        text   := '';
+  doomed     uuid[];
 
-  -- users are not company-scoped by a company_id column; they hang off company_team
-  select count(*) into n
+  -- ---------------------------------------------------------------------
+  -- CONFIGURE: which tenants are being removed.
+  --
+  -- Demo Construction Ltd is D-V1 step 3 / R2-735. Its application code
+  -- paths were already deleted, so it is unreachable and cannot serve as a
+  -- demo. It is safe to remove.
+  --
+  -- The two test tenants are listed but commented. Add them at launch when
+  -- you no longer want a scratch company to test against.
+  -- ---------------------------------------------------------------------
+  targets uuid[] := array[
+      'e0000000-0000-0000-0000-000000000000'   -- Demo Construction Ltd
+--  , '1776c887-5552-4611-aad5-f4899aad0f87'   -- Test Claude B2 Construction
+--  , '1fa705a4-7aa6-42f2-9906-65902c96916f'   -- ZZ R8 Throwaway
+  ]::uuid[];
+begin
+  -- Capture users whose ONLY membership is in a target company, BEFORE the
+  -- loop deletes company_team. A user with any other membership is left alone.
+  select array_agg(u.id) into doomed
     from users u
    where exists (
-     select 1 from company_team ct
-      where ct.user_id = u.id
-        and ct.company_id in (select id from _purge_companies)
-   )
+           select 1 from company_team ct
+            where ct.user_id = u.id and ct.company_id = any(targets))
      and not exists (
-     select 1 from company_team ct2
-      where ct2.user_id = u.id
-        and ct2.company_id not in (select id from _purge_companies)
-   );
-  rpt := rpt || format('%-40s %s', 'users (ONLY in purged companies)', n) || E'\n';
-  tot := tot + n;
+           select 1 from company_team c2
+            where c2.user_id = u.id and not (c2.company_id = any(targets)));
+  rpt := rpt || 'captured_users=' || coalesce(array_length(doomed, 1), 0) || ' || ';
 
-  raise notice E'\n--- ROWS THAT WOULD BE DELETED ---\n%\nTOTAL: %', rpt, tot;
-end $$;
-
-
--- ===========================================================================
--- PART 2 — THE DELETE. Ends in ROLLBACK. Change to COMMIT deliberately.
--- ===========================================================================
-begin;
-
-do $$
-declare
-  t         record;
-  pass      int := 0;
-  deleted   bigint;
-  pass_total bigint;
-  grand     bigint := 0;
-begin
   loop
-    pass       := pass + 1;
+    pass := pass + 1;
     pass_total := 0;
 
     for t in
@@ -117,72 +87,57 @@ begin
        order by c.table_name
     loop
       begin
-        execute format(
-          'delete from %I where company_id in (select id from _purge_companies)',
-          t.table_name
-        );
-        get diagnostics deleted = row_count;
-        pass_total := pass_total + deleted;
+        execute format('delete from %I where company_id = any($1)', t.table_name)
+          using targets;
+        get diagnostics n = row_count;
+        pass_total := pass_total + n;
       exception
         when foreign_key_violation then
-          -- a child in another table still references these rows; a later
-          -- pass will clear the child first. Not an error, just ordering.
+          -- a child elsewhere still references these rows; a later pass clears
+          -- the child first. Ordering, not an error.
           null;
       end;
     end loop;
 
     grand := grand + pass_total;
-    raise notice 'pass % deleted % rows', pass, pass_total;
-
+    rpt   := rpt || 'PASS' || pass || '=' || pass_total || ' ';
     exit when pass_total = 0;
+
     if pass > 25 then
       raise exception 'cleanup did not converge after 25 passes - stop and inspect';
     end if;
   end loop;
 
-  -- Users that belonged ONLY to the purged tenants. A user with any other
-  -- membership is left alone.
-  delete from users u
-   where exists (
-     select 1 from company_team ct
-      where ct.user_id = u.id
-        and ct.company_id in (select id from _purge_companies)
-   )
-     and not exists (
-     select 1 from company_team ct2
-      where ct2.user_id = u.id
-        and ct2.company_id not in (select id from _purge_companies)
-   );
-  get diagnostics deleted = row_count;
-  raise notice 'deleted % orphaned users', deleted;
-  grand := grand + deleted;
+  if doomed is not null then
+    -- OTP codes are keyed by email/mobile, not by company_id, so the loop
+    -- above never sees them.
+    delete from otp_codes o
+     using users u
+     where u.id = any(doomed)
+       and o.identifier in (u.email, u.mobile);
+    get diagnostics n = row_count; grand := grand + n;
+    rpt := rpt || '|| user_otps=' || n || ' ';
 
-  -- Any OTP codes issued to the demo identifiers. These are not company-scoped.
-  delete from otp_codes where identifier in ('demo@siteflow.co');
-  get diagnostics deleted = row_count;
-  raise notice 'deleted % demo otp_codes', deleted;
-  grand := grand + deleted;
+    delete from users where id = any(doomed);
+    get diagnostics n = row_count; grand := grand + n;
+    rpt := rpt || 'users=' || n || ' ';
+  end if;
 
-  delete from companies where id in (select id from _purge_companies);
-  get diagnostics deleted = row_count;
-  raise notice 'deleted % companies', deleted;
-  grand := grand + deleted;
+  delete from companies where id = any(targets);
+  get diagnostics n = row_count; grand := grand + n;
+  rpt := rpt || 'companies=' || n || ' ';
 
-  raise notice 'GRAND TOTAL: % rows', grand;
+  -- Post-state, still inside the transaction. Every "left" count must be 0.
+  rpt := rpt
+      || '|| LEFT companies='  || (select count(*) from companies where id = any(targets))
+      || ' projects='          || (select count(*) from projects  where company_id = any(targets))
+      || ' demo_user='         || (select count(*) from users     where lower(email) = 'demo@siteflow.co')
+      || ' demo_otp='          || (select count(*) from otp_codes where identifier   = 'demo@siteflow.co')
+      || ' || companies_remaining=' || (select count(*) from companies);
+
+  -- >>> DRY RUN GUARD <<<
+  -- This aborts the transaction, so nothing above is persisted.
+  -- COMMENT OUT THE NEXT LINE (and uncomment the RAISE NOTICE) to run for real.
+  raise exception 'DRY RUN - ROLLED BACK. grand=% :: %', grand, rpt;
+--raise notice    'CLEANUP COMMITTED. grand=% :: %', grand, rpt;
 end $$;
-
-
--- ---------------------------------------------------------------------------
--- VERIFY inside the same transaction, before you decide to commit.
--- Every count below must be 0.
--- ---------------------------------------------------------------------------
-select
-  (select count(*) from companies where id in (select id from _purge_companies))          as companies_left,
-  (select count(*) from users where lower(email) = 'demo@siteflow.co')                    as demo_user_left,
-  (select count(*) from otp_codes where identifier = 'demo@siteflow.co')                  as demo_otps_left,
-  (select count(*) from projects where company_id in (select id from _purge_companies))   as demo_projects_left,
-  (select count(*) from companies)                                                        as companies_remaining;
-
-
--- CHANGE THIS TO commit; WHEN THE COUNTS ABOVE READ 0 AND YOU ARE READY.
-rollback;
