@@ -12,6 +12,39 @@ from app.permissions import has_permission, has_module_access, VIEWER_GRANTS
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token", auto_error=False)
 
+
+def _set_rls_session_context(db: Session, user_id: uuid.UUID) -> None:
+    """R2-739: pluggable RLS identity, behind flag RLS_SESSION_CONTEXT (default OFF).
+
+    When the flag is enabled, sets `app.current_user_id` on the current DB
+    transaction via `set_config(..., true)` which is equivalent to
+    `SET LOCAL app.current_user_id = '<uid>'` -- transaction-scoped, pooler-safe.
+    No DATABASE_URL change and no non-BYPASSRLS role is created here; RLS remains
+    inert until explicit rollout (see migration 20260825_000007_rls_correctness).
+    On SQLite (tests) this is a no-op because SQLite has no RLS/GUC.
+    """
+    if not getattr(settings, "RLS_SESSION_CONTEXT", False):
+        return
+    try:
+        bind = db.get_bind() if hasattr(db, "get_bind") else getattr(db, "bind", None)
+        if bind is not None:
+            dialect = getattr(getattr(bind, "dialect", None), "name", "") or ""
+            url_str = str(getattr(bind, "url", "") or "")
+            if "sqlite" in dialect.lower() or "sqlite" in url_str.lower():
+                return
+    except Exception:
+        return
+    try:
+        from sqlalchemy import text
+
+        # is_local=true => SET LOCAL semantics (transaction-scoped, pooler-safe)
+        db.execute(text("SELECT set_config('app.current_user_id', :uid, true)"), {"uid": str(user_id)})
+    except Exception:
+        import logging
+
+        logging.getLogger(__name__).debug("RLS session context set failed", exc_info=True)
+
+
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
     to_encode = data.copy()
     now = datetime.now(timezone.utc)
@@ -63,7 +96,24 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
         if datetime.fromtimestamp(issued_at, tz=timezone.utc) < tokens_revoked_at:
             raise credentials_exception
 
+    # R2-739: when flag enabled, bind this DB transaction to the authenticated app user
+    # for RLS (SET LOCAL / set_config is_local=true, pooler-safe). No-op on SQLite or when OFF.
+    try:
+        _set_rls_session_context(db, user.id)
+    except Exception:
+        pass
     return user
+
+
+# Optional explicit dependency for routes that want to ensure RLS context is set
+# even when they do not go through get_current_user (e.g., future anon + RLS).
+# Usage: `_: None = Depends(set_rls_context)` alongside `current_user = Depends(get_current_user)`.
+# Currently get_current_user already sets the context, so this is additive.
+def set_rls_context(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+) -> None:
+    _set_rls_session_context(db, current_user.id)
 
 def get_company_membership(db: Session, user: models.User, company_id: uuid.UUID) -> models.CompanyTeam:
     """Verify the user actually belongs to the given company; raise 403 otherwise."""
@@ -261,6 +311,15 @@ def get_current_active_company_user(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="User is not associated with any company team context"
         )
+
+    # Ensure RLS context is also bound to the db session used for subsequent queries
+    # in this request (same transaction, pooler-safe). Already set in get_current_user
+    # on its db, but this covers the case where the two Depends(get_db) resolve to
+    # different Session instances.
+    try:
+        _set_rls_session_context(db, current_user.id)
+    except Exception:
+        pass
 
     return {
         "user": current_user,

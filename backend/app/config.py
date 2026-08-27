@@ -172,6 +172,13 @@ class Settings(BaseSettings):
     # would let callers rotate keys to dodge limits entirely.
     RATE_LIMIT_TRUST_PROXY_HEADERS: bool = False
 
+    # R2-739: pluggable RLS identity. When true, per-request DB session sets
+    # app.current_user_id via SET LOCAL (transaction-scoped, pooler-safe).
+    # Default OFF (0): backend still connects as BYPASSRLS role (postgres /
+    # service_role) so RLS remains inert. Do NOT change DATABASE_URL to a
+    # non-BYPASSRLS role or create such role here -- rollout is separate.
+    RLS_SESSION_CONTEXT: bool = False
+
     # Encryption key for OAuth tokens stored at rest (currently
     # GoogleSheetsConnection.access_token / refresh_token; see app/crypto.py).
     # Must be 32 url-safe base64-encoded bytes, e.g.:
