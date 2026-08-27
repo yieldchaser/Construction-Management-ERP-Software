@@ -425,16 +425,26 @@ def apply_pending_migrations(engine_override=None) -> List[str]:
                 with engine.begin() as conn:
                     # Execute the entire file as one operation. Postgres can handle
                     # multi-statement strings and DO blocks this way.
-                    # Use exec_driver_sql for raw passthrough; fallback to text().
+                    # Bypass DBAPI interpolation: use raw DBAPI cursor single-arg
+                    # execute so psycopg2 does not try to interpolate % in PL/pgSQL.
                     try:
-                        conn.exec_driver_sql(content)
+                        raw = conn.connection
+                        # conn.connection is a PoolProxiedConnection / _ConnectionFairy;
+                        # its cursor() proxies to the underlying DBAPI connection.
+                        cur = raw.cursor()
+                        cur.execute(content)
+                        try:
+                            cur.close()
+                        except Exception:
+                            pass
                     except Exception as first_err:
-                        # Some drivers need text() wrapper for large DO blocks.
+                        # Fallback for drivers where raw cursor is unavailable.
                         try:
                             conn.execute(text(content))
-                        except Exception:
-                            # Re-raise the original to preserve context.
-                            raise first_err
+                        except Exception as fallback_err:
+                            raise RuntimeError(
+                                f"migration failed: {first_err} (fallback also failed: {fallback_err})"
+                            ) from first_err
 
                     # Record in tracking table in same transaction.
                     try:
