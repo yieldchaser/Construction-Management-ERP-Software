@@ -821,3 +821,86 @@ company rather than the test tenants, a duplicated payroll run is a double-count
 The purge keeps the earliest row of each pair, which is the right default, but the *reason* two runs
 exist for the same month is worth knowing before it is collapsed. Check which company they belong to
 first.
+
+---
+
+## Run #4 (`2a34f76`) — GREEN. All 21 August migrations applied to production.
+
+Probed immediately after the run. This is the measurement the whole verification pass was driving
+at, and it is the first time production has matched the repository.
+
+| check | before (2026-08-27 morning) | after run #4 |
+|---|---|---|
+| the 12 named constraints | **all 12 missing** | **all 12 present** |
+| `_tenant_scoped` RLS policies | **0** | **108** |
+| tables with `FORCE ROW LEVEL SECURITY` | **0** | **141** |
+| legacy `*_authenticated_all` policies | 139 | 33 |
+| `purchase_orders.cancelled_at` / `cancelled_by` | absent | both present |
+| `boq_items.cost_code` | `varchar(50)` | **`varchar(100)`** |
+| ledger: total / August | 27 / 0 | **48 / 21** |
+| sanity: `companies` | 5 | 5 |
+
+**R2-701, R2-702, R2-703's constraint family, and the 2026-08-24 RLS migration are now closed
+against production, not against a file.** Tenant isolation in the database is no longer "any
+authenticated user".
+
+Policy arithmetic checks out: 108 tenant-scoped + 33 deliberately-permissive = 141 total, matching
+141 RLS-enabled tables exactly. The remaining 33 `*_authenticated_all` are the ones the migration
+deliberately left non-tenant-scoped (chat, checklists, drawing pins and similar), not residue.
+
+### The purge did real work, and it is recoverable
+
+Four backup tables were created, all timestamped `20260827_0939`:
+
+```
+_audit_backup_payroll_runs_20260827_093903773508
+_audit_backup_ncrs_20260827_093908167991
+_audit_backup_payments_20260827_093908174143
+_audit_backup_three_way_matches_20260827_093908183946
+```
+
+So `ncrs` and `payments` also carried duplicates — I had not measured those two, and would have
+reported "duplicates only in three_way_matches and payroll_runs" had the purge not surfaced them.
+Every collapsed row is retrievable from its backup table. Do not drop these until the founder has
+looked at them.
+
+Duplicate groups after the purge: `three_way_matches` **0**, `payroll_runs` **0**.
+
+### Correction to something I told the founder earlier
+
+I reported `company_team(company_id, user_id)` as having **1 duplicate group**, and used it as
+evidence that D-V2's zero-duplicate window had begun to close. **That was my query's fault, not the
+data's.**
+
+```
+dup_groups_naive   = 1     <- my original GROUP BY, counts NULLs as equal
+dup_groups_nonnull = 0     <- excluding NULL user_id
+null_user_rows     = 2
+constraint_present = 1     <- uq_company_team_company_id_user_id exists
+```
+
+The "duplicate" is two rows with `user_id IS NULL`. Postgres `UNIQUE` permits multiple NULLs, so
+there was never a conflict — which is why the constraint created cleanly. The claim that
+`company_team` had a real duplicate was wrong and is withdrawn. `three_way_matches` (2 groups) was
+genuine and is now purged.
+
+Two `company_team` rows with a NULL `user_id` are a separate, minor question — a team member record
+with no linked user. Worth a look, not urgent, not a blocker.
+
+### What this closes
+
+- **F-1** — verified working end to end: the purge ran, backups exist, constraints created.
+- **F-2 / M-1** — the ledger is real and populated (48 rows), and the CI path is the one that
+  applied them.
+- **M-2** — `--strict` caught **three** distinct real failures across runs #1-#3, every one of
+  which would have gone green under the old swallow-and-continue behaviour: a non-replayable
+  migration, a runner that could not execute `%`, and an ordering deadlock.
+- **M-3** — advisory lock acquired on every run.
+- **R2-731** — closed. The mechanism now exists *and* demonstrably applies to production.
+
+### Still open
+
+The policy **count** is a schema fact. It is not yet proof that a user of company A cannot read
+company B's rows — that needs a session-level test against the live API with two tenants. That is
+the next thing worth doing, and it is now worth doing, because before today there was nothing to
+test.
