@@ -1,0 +1,3332 @@
+[
+ {
+  "id": "R2-172",
+  "sev": "CRITICAL",
+  "wave": "W86",
+  "f1": "`RolePermissionsModal.tsx`",
+  "f2": "`rbac.ts`",
+  "status": "FIXED",
+  "notes": " | reg L6507 S33-C FIXED aa17f72: WORKFLOW_MODULES extended (7 modules) in permissions.py + rbac.ts mirror - presets round-trip without silent stripping."
+ },
+ {
+  "id": "R2-271",
+  "sev": "CRITICAL",
+  "wave": "W02",
+  "f1": "`UNMAPPED`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L11831 S33-C EVIDENCE: line-items gate + explicit (No line items) row + 422 mismatch pin all live (R2-401/R2-241 era)."
+ },
+ {
+  "id": "R2-399",
+  "sev": "CRITICAL",
+  "wave": "W02",
+  "f1": "`UNMAPPED`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L19749 S33-C FIXED 399bf40: last three Rule-46 elements (amount in words, reverse-charge declaration, signatory block) on tax invoice PDF."
+ },
+ {
+  "id": "R2-407",
+  "sev": "CRITICAL",
+  "wave": "W02",
+  "f1": "`UNMAPPED`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L20082 S33-C FIXED 74b64ce: payslip CSV neutralizes formula cells (last raw-text exporter)."
+ },
+ {
+  "id": "R2-410",
+  "sev": "CRITICAL",
+  "wave": "W02",
+  "f1": "`UNMAPPED`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L20196 S33-C FIXED c6f2dfb: Tally export posts GST split (sale/purchase legs, Duties&Taxes parent, balanced vouchers)."
+ },
+ {
+  "id": "R2-418",
+  "sev": "CRITICAL",
+  "wave": "W02",
+  "f1": "`UNMAPPED`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L20858 S33-C FIXED f18ee2b: party rows show Pay x / Receive y beside net balance."
+ },
+ {
+  "id": "R2-444",
+  "sev": "CRITICAL",
+  "wave": "W02",
+  "f1": "`UNMAPPED`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L22245 S33 FIXED 51c5df7: DPR summary tiles count real used/received from ledger rows (fields never existed on payload before)."
+ },
+ {
+  "id": "R2-080",
+  "sev": "CRITICAL",
+  "wave": "W08",
+  "f1": "`analytics.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L3397 S33-C FIXED 45b0358: /health endpoint + keep-alive workflow (RESIDUAL DEFERRED-LIVE: Actions cron throttling needs external pinger or paid tier - founder)."
+ },
+ {
+  "id": "R2-081",
+  "sev": "CRITICAL",
+  "wave": "W08",
+  "f1": "`analytics.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L3510 S33-C EVIDENCE 30a90f3: all total_payable aggregates filter EXPENSE_INVOICE_TYPES + Cancelled; exploit-replay pin added."
+ },
+ {
+  "id": "R2-303",
+  "sev": "CRITICAL",
+  "wave": "W08",
+  "f1": "`analytics.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L13489 S33-C FIXED f87ba34: burn curve no longer compounds (flat series when spend flat)."
+ },
+ {
+  "id": "R2-304",
+  "sev": "CRITICAL",
+  "wave": "W08",
+  "f1": "`analytics.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L13529 S33-C FIXED 2ea19d3: null-hours logs contribute zero + surface as logs_without_hours (no fabricated 8h)."
+ },
+ {
+  "id": "R2-497",
+  "sev": "CRITICAL",
+  "wave": "W08",
+  "f1": "`analytics.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L24947 S33-C FIXED f87ba34: same atomic change as R2-303 (duplicate row, same site)."
+ },
+ {
+  "id": "R2-503",
+  "sev": "CRITICAL",
+  "wave": "W65",
+  "f1": "`assets.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L25164 S33-C FIXED 917f8bf: depreciation per-entry amount bounded by one year under declared method; naive-vs-aware second-entry 500 fixed."
+ },
+ {
+  "id": "R2-113",
+  "sev": "CRITICAL",
+  "wave": "W14",
+  "f1": "`auth.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L4430 | S33 FIXED 2f3e63f (D7): same commit as R2-073."
+ },
+ {
+  "id": "R2-138",
+  "sev": "CRITICAL",
+  "wave": "W14",
+  "f1": "`auth.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L5567 S33-C FIXED f9b55eb: /auth/me capped 120/min (runaway tab gets bounded 429s, pool survives)."
+ },
+ {
+  "id": "R2-169",
+  "sev": "CRITICAL",
+  "wave": "W14",
+  "f1": "`auth.py`",
+  "f2": "`permissions.py`",
+  "status": "FIXED",
+  "notes": " | reg L6384 | S33 FIXED 2f3e63f (D7): same commit as R2-073; role_id NULL -> Viewer."
+ },
+ {
+  "id": "R2-181",
+  "sev": "CRITICAL",
+  "wave": "W14",
+  "f1": "`auth.py`",
+  "f2": "`permissions.py`, `billing.py`, `main.py`",
+  "status": "FIXED",
+  "notes": " | reg L6857 S33-C FIXED 03430b2: real team invite flow (settings:manage-gated invite + hashed single-use TTL claim + accept sets password/mints session)."
+ },
+ {
+  "id": "R2-308",
+  "sev": "CRITICAL",
+  "wave": "W14",
+  "f1": "`auth.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L13823 S33-C FIXED 98423c6: pool fail-fast/self-heal (timeout 15, recycle 1800, pre_ping) via testable build_engine."
+ },
+ {
+  "id": "R2-511",
+  "sev": "CRITICAL",
+  "wave": "W14",
+  "f1": "`auth.py`",
+  "f2": "`rate_limit.py`, `bi_export.py`, `public_leads.py`",
+  "status": "FIXED",
+  "notes": " | reg L25601 S33-C FIXED 2d48e13: uvicorn forwarded-allow-ips + per-identifier auth limiter keys (8 routes)."
+ },
+ {
+  "id": "R2-028",
+  "sev": "CRITICAL",
+  "wave": "W07",
+  "f1": "`billing.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L1330 S33 EVIDENCE 21d85ef: full models binding live at billing.py:14; all four sites valid; binding test added."
+ },
+ {
+  "id": "R2-131",
+  "sev": "CRITICAL",
+  "wave": "W07",
+  "f1": "`billing.py`",
+  "f2": "`labour.py`, `finance.py`, `subcon_performance.py`",
+  "status": "FIXED",
+  "notes": " | reg L5051 S33 FIXED 8de21ee: shared resolve_party_name rewires labour/subcon/finance/payment-request sites (kills Unknown Party/login-name storage)."
+ },
+ {
+  "id": "R2-140",
+  "sev": "CRITICAL",
+  "wave": "W17",
+  "f1": "`chat.py`",
+  "f2": "`backend/app/models.py`, `models.py`, `d/chat/page.tsx`",
+  "status": "FIXED",
+  "notes": " | reg L5691 S33-C FIXED dcfc3d1 (+behavioral 5986794): chat identity gate resolved via company_team_for - permanent deadlock dead."
+ },
+ {
+  "id": "R2-468",
+  "sev": "CRITICAL",
+  "wave": "W17",
+  "f1": "`chat.py`",
+  "f2": "`models.py`",
+  "status": "FIXED",
+  "notes": " | reg L23554 S33-C FIXED 1188311: canonical company_team resolver at creator lookup; batched predicate kept."
+ },
+ {
+  "id": "R2-470",
+  "sev": "CRITICAL",
+  "wave": "W17",
+  "f1": "`chat.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L23651 S33-C FIXED 53c4e02: add_member admits recorded creator on empty member table; legacy zero-member rows need ops cleanup."
+ },
+ {
+  "id": "R2-326",
+  "sev": "CRITICAL",
+  "wave": "W90",
+  "f1": "`constants.py`",
+  "f2": "`finance.py`",
+  "status": "FIXED",
+  "notes": " | reg L15019 S33-C FIXED 10d36cf: finance.py bare ==sale branches use canonical buckets; settlements/movements in neither head."
+ },
+ {
+  "id": "R2-157",
+  "sev": "CRITICAL",
+  "wave": "W32",
+  "f1": "`custom_fields.py`",
+  "f2": "`page.tsx`, `chat.py`",
+  "status": "FIXED",
+  "notes": " | reg L6057 S33-C FIXED 31bca13: custom-field read path derives tenant from parent entity, membership-checked, poisoned-row isolated."
+ },
+ {
+  "id": "R2-266",
+  "sev": "CRITICAL",
+  "wave": "W58",
+  "f1": "`dpr.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L11595 S33-C FIXED beb5823: DPR CSV export neutralizes formula cells (R2-185 pattern)."
+ },
+ {
+  "id": "R2-599",
+  "sev": "CRITICAL",
+  "wave": "W58",
+  "f1": "`dpr.py`",
+  "f2": "`custom_fields.py`, `ownsweep.py`",
+  "status": "FIX_VERIFIED",
+  "notes": "`bef6c73` | reg L31644; wave 0; suite RC-002"
+ },
+ {
+  "id": "R2-365",
+  "sev": "CRITICAL",
+  "wave": "W42",
+  "f1": "`drawings.py`",
+  "f2": "`models.py`",
+  "status": "FIXED",
+  "notes": " | reg L17078 S33-C FIXED e1dd303: superseded_at column + supersede-on-approve + latest-first ordering - current revision identifiable."
+ },
+ {
+  "id": "R2-431",
+  "sev": "CRITICAL",
+  "wave": "W91",
+  "f1": "`errors.py`",
+  "f2": "`hr.py`",
+  "status": "FIXED",
+  "notes": " | reg L21423 S33-C FIXED 7be4739: payroll-attendance swallow removed; assume_full_month gate restored on this lineage (D2 option-a flag - founder to confirm default); attendance fetch no longer catch-to-empty."
+ },
+ {
+  "id": "R2-052",
+  "sev": "CRITICAL",
+  "wave": "W01",
+  "f1": "`finance.py`",
+  "f2": "`models.py`, `backend/app/models.py`, `p/[project_id]/transaction/page.tsx`",
+  "status": "FIX_VERIFIED",
+  "notes": "`35069ae` | reg L2390; wave W01a; suite RC-017"
+ },
+ {
+  "id": "R2-198",
+  "sev": "CRITICAL",
+  "wave": "W01",
+  "f1": "`finance.py`",
+  "f2": "\u2014",
+  "status": "FIX_VERIFIED",
+  "notes": "`c5bdcd3` | reg L7530; wave W01a; suite RC-018 S33 SWEEP: backend clause HOLDS (all company-scoped finance routes UUID-typed -> FastAPI 422s literal 'undefined'; 403 via verify_company_access). Frontend redirect-wrapper clause unverifiable in this file."
+ },
+ {
+  "id": "R2-221",
+  "sev": "CRITICAL",
+  "wave": "W01",
+  "f1": "`finance.py`",
+  "f2": "`d/finance/page.tsx`",
+  "status": "FIX_VERIFIED",
+  "notes": "`7a47131` | reg L9068; wave W01a; suite RC-011 S33 SWEEP: drift CONFIRMED live (naive utcnow fallback minus aware column) -> re-fixed f1a4c43 with dual-backend tz normalization (SQLite round-trips aware as naive); class sites budget.py+bi_export.py fixed same commit."
+ },
+ {
+  "id": "R2-231",
+  "sev": "CRITICAL",
+  "wave": "W01",
+  "f1": "`finance.py`",
+  "f2": "`frontend/src/app/c/[company_id]/d/finance/page.tsx`, `frontend/src/app/c/[company_id]/p/[project_id]/transaction/page.tsx`, `constants.py`",
+  "status": "FIX_VERIFIED",
+  "notes": "`8b9a378` | reg L9544; wave 0; suite RC-006 S33 SWEEP: drift CONFIRMED live (FIFO gate unreachable; UI never sends party field) -> re-fixed e9dba8b (party-less payments scope FIFO by company/project/direction; review gate kept; reversal intact). Watch: no-party settlements persist NULL party_company_user_id."
+ },
+ {
+  "id": "R2-235",
+  "sev": "CRITICAL",
+  "wave": "W01",
+  "f1": "`finance.py`",
+  "f2": "\u2014",
+  "status": "FIX_VERIFIED",
+  "notes": "`3f65098` | reg L9859; wave W01a; suite RC-015 S33 SWEEP: duplicate of the R2-726 defect family -> fixed by bbb6d51 _net_balance (same helper covers per-party, per-company and enterprise rollup)."
+ },
+ {
+  "id": "R2-236",
+  "sev": "CRITICAL",
+  "wave": "W01",
+  "f1": "`finance.py`",
+  "f2": "\u2014",
+  "status": "FIX_VERIFIED",
+  "notes": "`7a47131` | reg L9920; wave W01a; suite RC-019 (fix mis-attributed into 7a47131)"
+ },
+ {
+  "id": "R2-243",
+  "sev": "CRITICAL",
+  "wave": "W01",
+  "f1": "`finance.py`",
+  "f2": "`constants.py`",
+  "status": "FIX_VERIFIED",
+  "notes": "`2ac8113` | reg L10340; wave W01a; suite RC-016 S33 SWEEP: drift CONFIRMED live (subcon in EXPENSE bucket double-counted) -> re-fixed 2803dad (material_actual excludes subcon); reports.py sites checked - disjoint reports, no change needed."
+ },
+ {
+  "id": "R2-244",
+  "sev": "CRITICAL",
+  "wave": "W01",
+  "f1": "`finance.py`",
+  "f2": "\u2014",
+  "status": "FIX_VERIFIED",
+  "notes": "`7a47131` | reg L10396; wave W01a; suite RC-011"
+ },
+ {
+  "id": "R2-315",
+  "sev": "CRITICAL",
+  "wave": "W01",
+  "f1": "`finance.py`",
+  "f2": "`models.py`",
+  "status": "FIX_VERIFIED",
+  "notes": "`dc85e34` | reg L14604; wave W01a; suite RC-012"
+ },
+ {
+  "id": "R2-327",
+  "sev": "CRITICAL",
+  "wave": "W01",
+  "f1": "`finance.py`",
+  "f2": "\u2014",
+  "status": "FIX_VERIFIED",
+  "notes": "`e918b72` | reg L15066; wave W01b; suite RC-022"
+ },
+ {
+  "id": "R2-342",
+  "sev": "CRITICAL",
+  "wave": "W01",
+  "f1": "`finance.py`",
+  "f2": "`models.py`, `procurement.py`",
+  "status": "FIX_VERIFIED",
+  "notes": "`4b7add4` | reg L15935; direct-fix pass; suite RC-036"
+ },
+ {
+  "id": "R2-344",
+  "sev": "CRITICAL",
+  "wave": "W01",
+  "f1": "`finance.py`",
+  "f2": "\u2014",
+  "status": "FIX_VERIFIED",
+  "notes": "`3ac2694` | reg L16091; wave W01b; suite RC-020"
+ },
+ {
+  "id": "R2-356",
+  "sev": "CRITICAL",
+  "wave": "W01",
+  "f1": "`finance.py`",
+  "f2": "`models.py`",
+  "status": "FIX_VERIFIED",
+  "notes": "`d5564d7` | reg L16605; wave W01b; suite RC-031 \u2014 own gate added 2026-08-06"
+ },
+ {
+  "id": "R2-509",
+  "sev": "CRITICAL",
+  "wave": "W01",
+  "f1": "`finance.py`",
+  "f2": "\u2014",
+  "status": "FIX_VERIFIED",
+  "notes": "`f32ca77+3f65098` | reg L25450; wave W01b; suite RC-032 \u2014 own gate added 2026-08-06"
+ },
+ {
+  "id": "R2-533",
+  "sev": "CRITICAL",
+  "wave": "W01",
+  "f1": "`finance.py`",
+  "f2": "\u2014",
+  "status": "FIX_VERIFIED",
+  "notes": "`4b7add4` | reg L27145; direct-fix pass; suite RC-038"
+ },
+ {
+  "id": "R2-544",
+  "sev": "CRITICAL",
+  "wave": "W01",
+  "f1": "`finance.py`",
+  "f2": "\u2014",
+  "status": "FIX_VERIFIED",
+  "notes": "`41ebbf1` | reg L28090; wave W01b; suite RC-021"
+ },
+ {
+  "id": "R2-549",
+  "sev": "CRITICAL",
+  "wave": "W01",
+  "f1": "`finance.py`",
+  "f2": "\u2014",
+  "status": "FIX_VERIFIED",
+  "notes": "`41ebbf1` | reg L28469; wave W01b; suite RC-023 \u2014 same root cause as R2-544, closed by its fix"
+ },
+ {
+  "id": "R2-568",
+  "sev": "CRITICAL",
+  "wave": "W01",
+  "f1": "`finance.py`",
+  "f2": "\u2014",
+  "status": "FIX_VERIFIED",
+  "notes": "`e3866c9` | reg L29770; wave W01b; suite RC-024"
+ },
+ {
+  "id": "R2-726",
+  "sev": "CRITICAL",
+  "wave": "V-VERIFY",
+  "f1": "`finance.py`",
+  "f2": "`models.py`",
+  "status": "FIXED",
+  "notes": " | Definition: docs/VERIFICATION_NEW_FINDINGS.md (founder block). S33 FIXED bbb6d51: Enterprise Rollup net balance had two inverted terms (added liability advance_received, subtracted asset to_receive); correct expression existed 150 lines up (R2-096 party balance) - extracted shared _net_balance helper used by all THREE sites so they cannot drift again; red/green test proves +70,000 where live co"
+ },
+ {
+  "id": "R2-074",
+  "sev": "CRITICAL",
+  "wave": "W03",
+  "f1": "`hr.py`",
+  "f2": "`drawings.py`, `reports.py`, `permissions.py`",
+  "status": "FIX_VERIFIED",
+  "notes": "`acee51f` | reg L3151; hr.py direct-fix pass; suite RC-052"
+ },
+ {
+  "id": "R2-201",
+  "sev": "CRITICAL",
+  "wave": "W03",
+  "f1": "`hr.py`",
+  "f2": "`three_way.py`, `safety.py`, `d/hr/page.tsx`",
+  "status": "FIX_VERIFIED",
+  "notes": "`e2e449d` | reg L7675; hr.py direct-fix pass; suite RC-047"
+ },
+ {
+  "id": "R2-210",
+  "sev": "CRITICAL",
+  "wave": "W03",
+  "f1": "`hr.py`",
+  "f2": "`models.py`, `zoho_books.py`, `d/hr/page.tsx`",
+  "status": "FIX_VERIFIED",
+  "notes": "`e2e449d` | reg L8405; hr.py direct-fix pass; suite RC-045"
+ },
+ {
+  "id": "R2-222",
+  "sev": "CRITICAL",
+  "wave": "W03",
+  "f1": "`hr.py`",
+  "f2": "`finance.py`, `bi_export.py`, `models.py`",
+  "status": "FIX_VERIFIED",
+  "notes": "`e2e449d` | reg L9123; hr.py direct-fix pass; suite RC-045"
+ },
+ {
+  "id": "R2-262",
+  "sev": "CRITICAL",
+  "wave": "W03",
+  "f1": "`hr.py`",
+  "f2": "`finance.py`, `safety.py`",
+  "status": "FIX_VERIFIED",
+  "notes": "`e2e449d` | reg L11354; hr.py direct-fix pass; suite RC-045"
+ },
+ {
+  "id": "R2-352",
+  "sev": "CRITICAL",
+  "wave": "W03",
+  "f1": "`hr.py`",
+  "f2": "\u2014",
+  "status": "FIX_VERIFIED",
+  "notes": "`e2e449d` | reg L16437; hr.py direct-fix pass; suite RC-047"
+ },
+ {
+  "id": "R2-353",
+  "sev": "CRITICAL",
+  "wave": "W03",
+  "f1": "`hr.py`",
+  "f2": "`reports.py`, `models.py`, `subcon_attendance.py`",
+  "status": "FIX_VERIFIED",
+  "notes": "`e2e449d` | reg L16473; hr.py direct-fix pass; suite RC-048"
+ },
+ {
+  "id": "R2-430",
+  "sev": "CRITICAL",
+  "wave": "W03",
+  "f1": "`hr.py`",
+  "f2": "\u2014",
+  "status": "FIX_VERIFIED",
+  "notes": "`05a41e9` | reg L21389; hr.py direct-fix pass; suite RC-049"
+ },
+ {
+  "id": "R2-474",
+  "sev": "CRITICAL",
+  "wave": "W03",
+  "f1": "`hr.py`",
+  "f2": "`attendance/page.tsx`",
+  "status": "FIX_VERIFIED",
+  "notes": "`ff2a2fc` | reg L23791; hr.py direct-fix pass; suite RC-061"
+ },
+ {
+  "id": "R2-540",
+  "sev": "CRITICAL",
+  "wave": "W03",
+  "f1": "`hr.py`",
+  "f2": "`models.py`",
+  "status": "FIX_VERIFIED",
+  "notes": "`e2e449d` | reg L27683; hr.py direct-fix pass; suite RC-046"
+ },
+ {
+  "id": "R2-123",
+  "sev": "CRITICAL",
+  "wave": "W30",
+  "f1": "`library.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L4774 S33-C EVIDENCE: all three dropdowns wire real library endpoints with ids; invented lists extinct."
+ },
+ {
+  "id": "R2-139",
+  "sev": "CRITICAL",
+  "wave": "W57",
+  "f1": "`main.py`",
+  "f2": "`delete_logs.py`, `d/delete-logs/page.tsx`",
+  "status": "FIXED",
+  "notes": " | reg L5602 S33-C EVIDENCE: prefix mount + UUID-typed ids + frontend updated (R2-291 wave); wildcard gone."
+ },
+ {
+  "id": "R2-194",
+  "sev": "CRITICAL",
+  "wave": "W57",
+  "f1": "`main.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L7277 S33-C FIXED 4a7b8a5: global Exception handler renders escaped generic 500 with whitelist-checked CORS headers (legs 1+2 pre-landed via R2-291)."
+ },
+ {
+  "id": "R2-300",
+  "sev": "CRITICAL",
+  "wave": "W15",
+  "f1": "`models.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L13346 S33-C FIXED 8ad5672: project delete 409s with per-type inventory while bills/payments/POs/payroll exist."
+ },
+ {
+  "id": "R2-042",
+  "sev": "CRITICAL",
+  "wave": "W27",
+  "f1": "`frontend/src/app/c/[company_id]/d/finance/page.tsx`",
+  "f2": "`finance.py`, `dashboard/page.tsx`",
+  "status": "FIX_VERIFIED",
+  "notes": "`db9cfbd` | reg L1784; wave 0; suite RC-004/RC-005"
+ },
+ {
+  "id": "R2-116",
+  "sev": "CRITICAL",
+  "wave": "W49",
+  "f1": "`frontend/src/app/c/[company_id]/d/delete-logs/page.tsx`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L4500 S33-C EVIDENCE: refetch loop structurally impossible post-R2-310 useMemo."
+ },
+ {
+  "id": "R2-137",
+  "sev": "CRITICAL",
+  "wave": "W85",
+  "f1": "`d/face-recognition/page.tsx`",
+  "f2": "`d/payroll-attendance/page.tsx`, `d/crm/page.tsx`",
+  "status": "FIXED",
+  "notes": " | reg L5505; CLASS finding (219 of 307 `if (res.ok)` checks have no else) \u2014 STILL OPEN as a class. The face-recognition page instance was closed by `f30fffe` (loadError states distinguish failure from empty); the class sweep across the remaining ~200 sites is a dedicated pass (register this finding as the tracking row). S33-C EVIDENCE: face page distinguishes failure from empty via loadError (f30"
+ },
+ {
+  "id": "R2-173",
+  "sev": "CRITICAL",
+  "wave": "W87",
+  "f1": "`p/[project_id]/transaction/page.tsx`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L6552 S33 FIXED 5692d6d: cash tiles fold /finance/transactions Payment rows by project_id (honest caveat on feed failure) - was Rs 0 vs Rs 90,000."
+ },
+ {
+  "id": "R2-214",
+  "sev": "CRITICAL",
+  "wave": "W88",
+  "f1": "`d/billing/page.tsx`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L8847 S33-C FIXED b5b9437: real bill approval endpoint (approval_flag only, 409 cancelled, billing:approve) + button/badge/KPI wired to server flag."
+ },
+ {
+  "id": "R2-215",
+  "sev": "CRITICAL",
+  "wave": "W39",
+  "f1": "`d/procurement/page.tsx`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L8859 S33-C EVIDENCE: usage loop live since 2525cab (R2-094); register row never flipped."
+ },
+ {
+  "id": "R2-270",
+  "sev": "CRITICAL",
+  "wave": "W89",
+  "f1": "`frontend/src/app/c/[company_id]/d/chat/page.tsx`",
+  "f2": "`models.py`",
+  "status": "FIXED",
+  "notes": " | reg L11773 S33-C FIXED d3d221e: chat create-group payload drops client created_by (server stamps team id)."
+ },
+ {
+  "id": "R2-310",
+  "sev": "CRITICAL",
+  "wave": "W49",
+  "f1": "`frontend/src/app/c/[company_id]/d/delete-logs/page.tsx`",
+  "f2": "`siteflow.ts`, `d/delete-logs/page.tsx`, `CompanySettingsContext.tsx`",
+  "status": "FIX_VERIFIED",
+  "notes": "`af04f74` | reg L13927; wave 0; suite RC-007"
+ },
+ {
+  "id": "R2-396",
+  "sev": "CRITICAL",
+  "wave": "W09",
+  "f1": "`page.tsx`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L19622 S33-C FIXED 88f9af5: report CSV export neutralizes formula cells client-side (mirror of backend _csv_safe_cell)."
+ },
+ {
+  "id": "R2-416",
+  "sev": "CRITICAL",
+  "wave": "W43",
+  "f1": "`finance/page.tsx`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L20647 S33-C EVIDENCE: companyId-gated effect live since R2-022 5fda93e (+R2-099 loading/error states)."
+ },
+ {
+  "id": "R2-423",
+  "sev": "CRITICAL",
+  "wave": "W34",
+  "f1": "`dashboard/page.tsx`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L21023 S33-C EVIDENCE: fabricated projects gone (bd928e7/f5f6749); projects init []."
+ },
+ {
+  "id": "R2-426",
+  "sev": "CRITICAL",
+  "wave": "W60",
+  "f1": "`d/payment-approval/page.tsx`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L21170 S33-C EVIDENCE: Create Demo Request button/handler/CTA removed by cd01b15 (also closes R2-406/422-425/427/428/434)."
+ },
+ {
+  "id": "R2-434",
+  "sev": "CRITICAL",
+  "wave": "W44",
+  "f1": "`d/quality/page.tsx`",
+  "f2": "`models.py`, `p/[project_id]/quality/page.tsx`",
+  "status": "FIXED",
+  "notes": " | reg L21684 S33-C FIXED fda5bd0: inspected_by server-owned and exposed to both quality pages."
+ },
+ {
+  "id": "R2-435",
+  "sev": "CRITICAL",
+  "wave": "W45",
+  "f1": "`d/drawings/page.tsx`",
+  "f2": "`models.py`, `drawings.py`",
+  "status": "FIXED",
+  "notes": " | reg L21762 S33-C FIXED 3103f5f: pin created_by server-owned; failed saves alert instead of rendering local-only pins."
+ },
+ {
+  "id": "R2-437",
+  "sev": "CRITICAL",
+  "wave": "W51",
+  "f1": "`reports/[slug]/page.tsx`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L21871 S33-C FIXED 03673ef: funnel filters reconciled to crm DEFAULT_STATUSES (Proposal Stage/Converted present)."
+ },
+ {
+  "id": "R2-447",
+  "sev": "CRITICAL",
+  "wave": "W34",
+  "f1": "`dashboard/page.tsx`",
+  "f2": "`projects.py`, `delete-logs/page.tsx`, `main.py`",
+  "status": "FIXED",
+  "notes": " | reg L22443 S33-C EVIDENCE: 500 root cause fixed by 664b430 CPM timedelta; loader gates res.ok + loadingTasks."
+ },
+ {
+  "id": "R2-448",
+  "sev": "CRITICAL",
+  "wave": "W34",
+  "f1": "`dashboard/page.tsx`",
+  "f2": "`projects.py`",
+  "status": "FIXED",
+  "notes": " | reg L22733 S33 FIXED 1a5f4fd: project dashboard classifies all canonical invoice types (revenue/expense/settlement directional) - totals reconcile."
+ },
+ {
+  "id": "R2-455",
+  "sev": "CRITICAL",
+  "wave": "W61",
+  "f1": "`d/planning/gantt/page.tsx`",
+  "f2": "`planning.py`",
+  "status": "FIXED",
+  "notes": " | reg L23074 S33-C FIXED ea1ad88: comments signed by authenticated caller (server-owned actor, no fictional identity)."
+ },
+ {
+  "id": "R2-459",
+  "sev": "CRITICAL",
+  "wave": "W62",
+  "f1": "`gantt/page.tsx`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L23204 S33-C FIXED af85499: gantt card renders progress/status/end_date/critical (was dropped JSX)."
+ },
+ {
+  "id": "R2-464",
+  "sev": "CRITICAL",
+  "wave": "W45",
+  "f1": "`d/drawings/page.tsx`",
+  "f2": "`drawings.py`",
+  "status": "FIXED",
+  "notes": " | reg L23379 S33 FIXED 9290a54: revision register carries real uploaded sheets (file picker + /files/upload + stored link)."
+ },
+ {
+  "id": "R2-469",
+  "sev": "CRITICAL",
+  "wave": "W46",
+  "f1": "`d/chat/page.tsx`",
+  "f2": "`chat.py`",
+  "status": "FIXED",
+  "notes": " | reg L23615 S33 EVIDENCE b1bb802: frontend stopped POSTing created_by under R2-270; probe test at API level added."
+ },
+ {
+  "id": "R2-473",
+  "sev": "CRITICAL",
+  "wave": "W63",
+  "f1": "`p/[project_id]/attendance/page.tsx`",
+  "f2": "`d/attendance/page.tsx`, `d/hr/page.tsx`, `d/todo/page.tsx`",
+  "status": "FIXED",
+  "notes": " | reg L23751 S33-C EVIDENCE: all five hardcoded date literals dead (7ffa1c9 + new Date() defaults)."
+ },
+ {
+  "id": "R2-476",
+  "sev": "CRITICAL",
+  "wave": "W92",
+  "f1": "`attendance/page.tsx`",
+  "f2": "`hr.py`",
+  "status": "FIXED",
+  "notes": " | reg L23875 S33 FIXED beb2cbd: subcon crew attendance starts empty, inspects every res.ok, reports true saved/failed counts."
+ },
+ {
+  "id": "R2-482",
+  "sev": "CRITICAL",
+  "wave": "W93",
+  "f1": "`calculators/page.tsx`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L24159 S33-C FIXED fba2f80: client M5 cement factor 3.2->2.77 (last outlier vs server ratio math)."
+ },
+ {
+  "id": "R2-490",
+  "sev": "CRITICAL",
+  "wave": "W64",
+  "f1": "`transaction/page.tsx`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L24621 S33 FIXED a44acaa: transaction totals classify all canonical types (settlements to cash heads, post-GST margin legs) - was TOTAL OUT Rs 0."
+ },
+ {
+  "id": "R2-515",
+  "sev": "CRITICAL",
+  "wave": "W63",
+  "f1": "`p/[project_id]/attendance/page.tsx`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L26127 S33-C EVIDENCE: covered by W84 flushQueue fix on the p/[project_id] copy."
+ },
+ {
+  "id": "R2-588",
+  "sev": "CRITICAL",
+  "wave": "W29",
+  "f1": "`d/hr/page.tsx`",
+  "f2": "`hr.py`",
+  "status": "FIX_VERIFIED",
+  "notes": "`a99715e` | reg L30505; wave 0; suite RC-003"
+ },
+ {
+  "id": "R2-171",
+  "sev": "CRITICAL",
+  "wave": "W48",
+  "f1": "`permissions.py`",
+  "f2": "`auth.py`, `RolePermissionsModal.tsx`",
+  "status": "FIXED",
+  "notes": " | reg L6423 S33 EVIDENCE a6ca960: root fix pre-landed (WORKFLOW_MODULES complete + rbac mirror); API round-trip probe test added."
+ },
+ {
+  "id": "R2-456",
+  "sev": "CRITICAL",
+  "wave": "W11",
+  "f1": "`planning.py`",
+  "f2": "`gantt/page.tsx`, `p/[project_id]/task/page.tsx`",
+  "status": "FIXED",
+  "notes": " | reg L23123 S33-C FIXED 5598631: Log Progress divides booked qty by linked BOQ item quantity -> Task.progress (cap 100, completes at full qty)."
+ },
+ {
+  "id": "R2-458",
+  "sev": "CRITICAL",
+  "wave": "W11",
+  "f1": "`planning.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L23168 S33-C FIXED 153d11a: lookahead separates overdue-open from completed-overdue."
+ },
+ {
+  "id": "R2-477",
+  "sev": "CRITICAL",
+  "wave": "W11",
+  "f1": "`planning.py`",
+  "f2": "`billing.py`, `dpr.py`",
+  "status": "FIXED",
+  "notes": " | reg L23964 S33-C FIXED f63c2cf: entry-creation window sweep across subcon-attendance/quality/equipment/leaves/GRN (11 tests)."
+ },
+ {
+  "id": "R2-565",
+  "sev": "CRITICAL",
+  "wave": "W11",
+  "f1": "`planning.py`",
+  "f2": "`gantt/page.tsx`",
+  "status": "FIX_VERIFIED",
+  "notes": "`b612f73` | reg L29573; wave 0; suite RC-001"
+ },
+ {
+  "id": "R2-049",
+  "sev": "CRITICAL",
+  "wave": "W05",
+  "f1": "`procurement.py`",
+  "f2": "`billing.py`, `backend/app/models.py`, `equipment.py`",
+  "status": "FIX_VERIFIED",
+  "notes": "`e9e3308` | reg L2286; procurement.py direct-fix pass; suite RC-086"
+ },
+ {
+  "id": "R2-178",
+  "sev": "CRITICAL",
+  "wave": "W05",
+  "f1": "`procurement.py`",
+  "f2": "`finance.py`, `approvals.py`, `models.py`",
+  "status": "FIXED",
+  "notes": " | reg L6719 | S33 FIXED 8b9d322 (CD-1): cut to wired categories, legacy preserved hidden."
+ },
+ {
+  "id": "R2-219",
+  "sev": "CRITICAL",
+  "wave": "W05",
+  "f1": "`procurement.py`",
+  "f2": "`production.py`, `settings.py`, `d/hr/page.tsx`",
+  "status": "FIX_VERIFIED",
+  "notes": "`e9e3308` | reg L8931; procurement.py direct-fix pass; suite RC-085"
+ },
+ {
+  "id": "R2-239",
+  "sev": "CRITICAL",
+  "wave": "W05",
+  "f1": "`procurement.py`",
+  "f2": "\u2014",
+  "status": "FIX_VERIFIED",
+  "notes": "`e9e3308` | reg L10127; procurement.py direct-fix pass; suite RC-084"
+ },
+ {
+  "id": "R2-348",
+  "sev": "CRITICAL",
+  "wave": "W05",
+  "f1": "`procurement.py`",
+  "f2": "`three_way.py`",
+  "status": "FIX_VERIFIED",
+  "notes": "`e9e3308` | reg L16257; procurement.py direct-fix pass; suite RC-083"
+ },
+ {
+  "id": "R2-380",
+  "sev": "CRITICAL",
+  "wave": "W05",
+  "f1": "`procurement.py`",
+  "f2": "`dpr.py`",
+  "status": "FIX_VERIFIED",
+  "notes": "`03db7a3` | reg L17779; procurement.py direct-fix pass; suite RC-089"
+ },
+ {
+  "id": "R2-432",
+  "sev": "CRITICAL",
+  "wave": "W05",
+  "f1": "`procurement.py`",
+  "f2": "\u2014",
+  "status": "FIX_VERIFIED",
+  "notes": "`e9e3308` | reg L21581; procurement.py direct-fix pass; suite RC-084 \u2014 same defect as R2-239"
+ },
+ {
+  "id": "R2-543",
+  "sev": "CRITICAL",
+  "wave": "W05",
+  "f1": "`procurement.py`",
+  "f2": "`finance.py`, `billing.py`",
+  "status": "FIX_VERIFIED",
+  "notes": "`03db7a3` | reg L28036; procurement.py direct-fix pass; suite RC-088"
+ },
+ {
+  "id": "R2-226",
+  "sev": "CRITICAL",
+  "wave": "W10",
+  "f1": "`projects.py`",
+  "f2": "`projects/page.tsx`",
+  "status": "FIXED",
+  "notes": " | reg L9269 S33-C FIXED 1c849c7: project delete requires exact name match to confirm."
+ },
+ {
+  "id": "R2-487",
+  "sev": "CRITICAL",
+  "wave": "W10",
+  "f1": "`projects.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L24473 S33-C FIXED d93e876: quotation-to-invoice project-side link written; no duplicates, no fabricated link."
+ },
+ {
+  "id": "R2-557",
+  "sev": "CRITICAL",
+  "wave": "W10",
+  "f1": "`projects.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L28985 S33 FIXED 4ee8129: project delete requires ?confirm=<name> server-side; counts all 51 CASCADE children with per-table inventory in the 400."
+ },
+ {
+  "id": "R2-246",
+  "sev": "CRITICAL",
+  "wave": "W18",
+  "f1": "`quality.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L10477 S33-C FIXED 9ab8619: NCR close requires under_review + rejects past-due at birth."
+ },
+ {
+  "id": "R2-362",
+  "sev": "CRITICAL",
+  "wave": "W18",
+  "f1": "`quality.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L16914 S33-C FIXED e44edf4: inspection summary recounted from responses after flush (mixed=partial)."
+ },
+ {
+  "id": "R2-337",
+  "sev": "CRITICAL",
+  "wave": "W59",
+  "f1": "`rate_limit.py`",
+  "f2": "`proxy_headers.py`",
+  "status": "FIXED",
+  "notes": " | reg L15583 S33-C EVIDENCE: both halves live (forwarded-allow-ips + proxy-headers default; shared storage URI + trust-flag key). Pinned by R2-511/R2-311 tests."
+ },
+ {
+  "id": "R2-039",
+  "sev": "CRITICAL",
+  "wave": "W04",
+  "f1": "`reports.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L1672; PARTIAL: 5 of 91 closed with R2-321; rest deferred per D-012 | S33 FIXED 71b5b92 (D-012): 80 empty report columns removed."
+ },
+ {
+  "id": "R2-043",
+  "sev": "CRITICAL",
+  "wave": "W04",
+  "f1": "`reports.py`",
+  "f2": "`tally.py`, `finance.py`, `analytics.py`",
+  "status": "FIX_VERIFIED",
+  "notes": "`d5b628a` | reg L1827; reports.py direct-fix pass; suite RC-075"
+ },
+ {
+  "id": "R2-075",
+  "sev": "CRITICAL",
+  "wave": "W04",
+  "f1": "`reports.py`",
+  "f2": "`frontend/src/app/c/[company_id]/reports/page.tsx`, `reports/[slug]/page.tsx`, `reports/page.tsx`",
+  "status": "FIX_VERIFIED",
+  "notes": "`d5b628a` | reg L3225; reports.py direct-fix pass; suite RC-074"
+ },
+ {
+  "id": "R2-076",
+  "sev": "CRITICAL",
+  "wave": "W04",
+  "f1": "`reports.py`",
+  "f2": "\u2014",
+  "status": "FIX_VERIFIED",
+  "notes": "`723af26` | reg L3285; reports.py direct-fix pass; suite RC-068 \u2014 same mechanism as R2-312"
+ },
+ {
+  "id": "R2-184",
+  "sev": "CRITICAL",
+  "wave": "W04",
+  "f1": "`reports.py`",
+  "f2": "`main.py`, `supabase_storage.py`, `files.py`",
+  "status": "FIXED",
+  "notes": "`ab9623e` | reg L6929; D-010 - de-escalated to feature needing object storage; defect half (false affordance, CRITICAL) closed by ab9623e removing 5 upload controls; storage feature moved to docs/BACKLOG.md"
+ },
+ {
+  "id": "R2-312",
+  "sev": "CRITICAL",
+  "wave": "W04",
+  "f1": "`reports.py`",
+  "f2": "`finance.py`, `delete-logs/page.tsx`, `main.py`",
+  "status": "FIX_VERIFIED",
+  "notes": "`723af26` | reg L14268; reports.py direct-fix pass; suite RC-068"
+ },
+ {
+  "id": "R2-313",
+  "sev": "CRITICAL",
+  "wave": "W04",
+  "f1": "`reports.py`",
+  "f2": "\u2014",
+  "status": "FIX_VERIFIED",
+  "notes": "`723af26` | reg L14529; reports.py direct-fix pass; suite RC-069"
+ },
+ {
+  "id": "R2-339",
+  "sev": "CRITICAL",
+  "wave": "W04",
+  "f1": "`reports.py`",
+  "f2": "`dpr.py`, `projects.py`",
+  "status": "FIX_VERIFIED",
+  "notes": "`2ddc411` | reg L15796; reports.py direct-fix pass; suite RC-076"
+ },
+ {
+  "id": "R2-371",
+  "sev": "CRITICAL",
+  "wave": "W04",
+  "f1": "`reports.py`",
+  "f2": "`models.py`",
+  "status": "FIX_VERIFIED",
+  "notes": "`1b841a8` | reg L17366; reports.py direct-fix pass; suite RC-082"
+ },
+ {
+  "id": "R2-252",
+  "sev": "CRITICAL",
+  "wave": "W22",
+  "f1": "`safety.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L10839 S33-C FIXED 7343c28: incident_type pattern-matched to UI vocabulary; legacy Fatality rows read as LTIF."
+ },
+ {
+  "id": "R2-073",
+  "sev": "CRITICAL",
+  "wave": "W06",
+  "f1": "`settings.py`",
+  "f2": "`auth.py`, `permissions.py`",
+  "status": "FIXED",
+  "notes": " | reg L3112 | S33 FIXED 2f3e63f (D7): backfill + fail-closed behind per-company flag."
+ },
+ {
+  "id": "R2-288",
+  "sev": "CRITICAL",
+  "wave": "W06",
+  "f1": "`settings.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L12645 S33-C FIXED e9139f1: statutory payroll rates bounded (pf 0-12, esi 0-1/0-5, tds >=0) + confirm_changes gate on rate edits."
+ },
+ {
+  "id": "R2-389",
+  "sev": "CRITICAL",
+  "wave": "W06",
+  "f1": "`settings.py`",
+  "f2": "`models.py`, `finance.py`, `reports.py`",
+  "status": "FIXED",
+  "notes": " | reg L18662 S33-C EVIDENCE-CLOSED abdd36c: team list reads mobile (R2-390 side effect); GET crash site now pinned."
+ },
+ {
+  "id": "R2-462",
+  "sev": "CRITICAL",
+  "wave": "W06",
+  "f1": "`settings.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L23322 S33-C FIXED adb2b3c: remaining 8 stubs await params (zero raw params interpolations left app-wide) - /c/undefined mechanism extinct."
+ },
+ {
+  "id": "R2-541",
+  "sev": "CRITICAL",
+  "wave": "W06",
+  "f1": "`settings.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L27736 S33 FIXED 4ad5792: five ungated settings writes now require settings:manage (roles/seed, payroll PUT, salary templates, company-file upload)."
+ },
+ {
+  "id": "R2-547",
+  "sev": "CRITICAL",
+  "wave": "W06",
+  "f1": "`settings.py`",
+  "f2": "`hr.py`",
+  "status": "FIXED",
+  "notes": " | reg L28332 S33-C EVIDENCE: remedy landed as R2-288 e9139f1 (statutory bounds + confirm gate); probes 422."
+ },
+ {
+  "id": "R2-126",
+  "sev": "CRITICAL",
+  "wave": "W12",
+  "f1": "`statutory.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L4900 S33-C FIXED 545e20e: GSTR summary sourced from payslip totals incl. leavers; raise-after-period invisible; no-run 409."
+ },
+ {
+  "id": "R2-127",
+  "sev": "CRITICAL",
+  "wave": "W12",
+  "f1": "`statutory.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L4936 S33-C FIXED a1481c4: exempt colleague contributes 0 ESI both halves; applicability flows from payroll per-employee."
+ },
+ {
+  "id": "R2-128",
+  "sev": "CRITICAL",
+  "wave": "W12",
+  "f1": "`statutory.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L4963 S33-C FIXED 52fc958: BOCW cess = 1% of period live purchase/subcon subtotals (revenue/cancelled/out-of-period excluded)."
+ },
+ {
+  "id": "R2-283",
+  "sev": "CRITICAL",
+  "wave": "W12",
+  "f1": "`statutory.py`",
+  "f2": "`models.py`",
+  "status": "FIXED",
+  "notes": " | reg L12433 S33-C FIXED 7767751: auto-populate ValidationError dead - nullable filed/acknowledgment fields, create->list roundtrip."
+ },
+ {
+  "id": "R2-522",
+  "sev": "CRITICAL",
+  "wave": "W12",
+  "f1": "`statutory.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L26557 S33-C FIXED 976e504: GSTR-1 from sales ledger (invoice-wise taxable/GST, party GSTIN, due 11th next month, finance gate)."
+ },
+ {
+  "id": "R2-523",
+  "sev": "CRITICAL",
+  "wave": "W12",
+  "f1": "`statutory.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L26605 S33-C FIXED a050b90: ECR EPS/EPF split at 15k cap, earned wages, month-scoped; RESIDUAL: UAN column does not exist (schema + HR write path needed)."
+ },
+ {
+  "id": "R2-524",
+  "sev": "CRITICAL",
+  "wave": "W12",
+  "f1": "`statutory.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L26650 S33-C FIXED 4b61a06: 26Q from TransactionDeduction x Bill in real quarters; PAN = NOPANAVAIL only where genuinely absent."
+ },
+ {
+  "id": "R2-257",
+  "sev": "CRITICAL",
+  "wave": "W41",
+  "f1": "`team_schedule.py`",
+  "f2": "`frontend/src/app/c/[company_id]/d/team-action/page.tsx`, `drawings/page.tsx`",
+  "status": "FIXED",
+  "notes": " | reg L11102 S33-C FIXED 6b378ef: timesheet file_url scheme allowlist server-side + safeHref render guard."
+ },
+ {
+  "id": "R2-132",
+  "sev": "CRITICAL",
+  "wave": "W16",
+  "f1": "`three_way.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L5140 S33-C EVIDENCE e68160e: satisfied by R2-241 5c73713 (match_status/matched_by deleted from create schema); proof test added."
+ },
+ {
+  "id": "R2-133",
+  "sev": "CRITICAL",
+  "wave": "W16",
+  "f1": "`three_way.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L5165 S33-C EVIDENCE 5a796ce: verdict server-owned (5c73713) + approver session-stamped (a76823c/R2-539); replay test added."
+ },
+ {
+  "id": "R2-240",
+  "sev": "CRITICAL",
+  "wave": "W16",
+  "f1": "`three_way.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L10172 S33-C FIXED a1ad81e: three-way baseline capped at ordered-qty (cumulative-aware), tax-inclusive both branches; ordered/received/po_total surfaced."
+ },
+ {
+  "id": "R2-538",
+  "sev": "CRITICAL",
+  "wave": "W16",
+  "f1": "`three_way.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L27457 S33-C EVIDENCE 432cbf2: same defect as R2-133 half 1; stored-verdict replay test added."
+ },
+ {
+  "id": "R2-228",
+  "sev": "CRITICAL",
+  "wave": "W33",
+  "f1": "`towers.py`",
+  "f2": "`budget.py`",
+  "status": "FIXED",
+  "notes": " | reg L9319 S33-C FIXED eca532e: consolidated-pnl returns ONE honest Overall row (no project-dressed-as-tower echo)."
+ },
+ {
+  "id": "R2-248",
+  "sev": "CRITICAL",
+  "wave": "W33",
+  "f1": "`towers.py`",
+  "f2": "`budget.py`, `models.py`",
+  "status": "FIXED",
+  "notes": " | reg L10557 S33-C FIXED ee3eac8: committed-towers single Overall row; scopes equal project-level endpoint."
+ },
+ {
+  "id": "R2-374",
+  "sev": "CRITICAL",
+  "wave": "W33",
+  "f1": "`towers.py`",
+  "f2": "`budget.py`, `models.py`",
+  "status": "FIXED",
+  "notes": " | reg L17487 S33-C FIXED b877246: budget Overall row prefers ProjectBudget over tower-sum; per-tower schema stays CD-5-gated."
+ },
+ {
+  "id": "R2-205",
+  "sev": "CRITICAL",
+  "wave": "W50",
+  "f1": "`wastage.py`",
+  "f2": "`procurement.py`",
+  "status": "FIXED",
+  "notes": " | reg L7890 S33 VERIFIED: W83 production wave (R2-206 cluster) covered wastage_type enum + reported_by + estimated_value on this lineage."
+ },
+ {
+  "id": "R2-187",
+  "sev": "CRITICAL",
+  "wave": "W20",
+  "f1": "`zoho_books.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L7012 S33-C EVIDENCE: zoho_bill_id column + pre-flight 409 + duplicate-code mapping live."
+ },
+ {
+  "id": "R2-209",
+  "sev": "CRITICAL",
+  "wave": "W20",
+  "f1": "`zoho_books.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L8295 S33-C FIXED 5096c8a: Zoho bill push retries once without gst_treatment on non-GST orgs (code 8); zoho_bill_id persists."
+ },
+ {
+  "id": "R2-392",
+  "sev": "CRITICAL",
+  "wave": "W20",
+  "f1": "`zoho_books.py`",
+  "f2": "`errors.py`, `cors.py`, `settings.py`",
+  "status": "FIXED",
+  "notes": " | reg L19238 S33 EVIDENCE: duplicate of R2-209 (5096c8a gst_treatment retry) - same file/element/failure mode."
+ },
+ {
+  "id": "R2-611",
+  "sev": "HIGH",
+  "wave": "W21",
+  "f1": "`CalculatorTools.tsx`",
+  "f2": "-",
+  "status": "FIXED",
+  "notes": " | filed S33 from R2-279 closure: public brick calculator (frontend/src/components/resources/CalculatorTools.tsx ~:433) keeps leaves independent of thickness; same under-order bug R2-279 fixed server-side; console page twin covered by R2-519 scope when landed. reg - S33 FIXED acd097e: public brick calculator derives leaves from thickness (server formula) + honest geometry-band error."
+ },
+ {
+  "id": "R2-199",
+  "sev": "HIGH",
+  "wave": "W100",
+  "f1": "`PwaControls.tsx`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L7624 S33 FIXED de9793c: PWA push claims relabeled honest (Enable Notifications; no subscription loop exists - option B)."
+ },
+ {
+  "id": "R2-166",
+  "sev": "HIGH",
+  "wave": "W02",
+  "f1": "`UNMAPPED`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L6267 S33 FIXED 6061e32: attendance header band wraps at mobile widths (no more 494px overflow clip)."
+ },
+ {
+  "id": "R2-189",
+  "sev": "HIGH",
+  "wave": "W02",
+  "f1": "`UNMAPPED`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L7044 S33 EVIDENCE-CLOSE: prescribed gate already live via R2-192 136a82f (zoho push_bill billing:edit)."
+ },
+ {
+  "id": "R2-245",
+  "sev": "HIGH",
+  "wave": "W02",
+  "f1": "`UNMAPPED`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L10447 S33 FIXED b993298: MaterialWastage.estimated_value reaches Budget material_actual and P&L Material Cost (stock halves pre-closed by e99fac7/83c32c2)."
+ },
+ {
+  "id": "R2-314",
+  "sev": "HIGH",
+  "wave": "W02",
+  "f1": "`UNMAPPED`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L14579 S33 FIXED 58c68ab: party ledger/all-party-balances keyed by stable identity (CompanyTeam/StaffEmployee id), names display-only."
+ },
+ {
+  "id": "R2-408",
+  "sev": "HIGH",
+  "wave": "W02",
+  "f1": "`UNMAPPED`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L20115 S33 FIXED 9ee09fe: DPR reported_by stamped server-side from session user; free-text field removed from create schema."
+ },
+ {
+  "id": "R2-419",
+  "sev": "HIGH",
+  "wave": "W02",
+  "f1": "`UNMAPPED`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L20884 S33 FIXED a11f45c evidence: subcon bill name resolution chain live since R2-174 4d06017; proof test added."
+ },
+ {
+  "id": "R2-438",
+  "sev": "HIGH",
+  "wave": "W02",
+  "f1": "`UNMAPPED`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L21904 S33 FIXED 7164694: lead update rejects past expected_closure; phone dialable-only; priority vocabulary normalized."
+ },
+ {
+  "id": "R2-479",
+  "sev": "HIGH",
+  "wave": "W02",
+  "f1": "`UNMAPPED`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L24035 S33 PARTIAL-CLOSED b83f08e: two-level PO approval chain verified enforced via existing engine (test); remaining inert categories = CD-1 founder gate, not guessed."
+ },
+ {
+  "id": "R2-294",
+  "sev": "HIGH",
+  "wave": "W70",
+  "f1": "`admin_migrations.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L12969 S33 FIXED b78c8e6: duplicate /backfill-rbac already removed (487f564); app-wide duplicate-route guard test added (445 routes)."
+ },
+ {
+  "id": "R2-305",
+  "sev": "HIGH",
+  "wave": "W08",
+  "f1": "`analytics.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L13573 S33 FIXED f0bd000 (H-analytics): material wastage reads recorded MaterialWastage events; stock_variance_qty reported unclamped; test added."
+ },
+ {
+  "id": "R2-306",
+  "sev": "HIGH",
+  "wave": "W08",
+  "f1": "`analytics.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L13606 S33 EVIDENCE-CLOSE: spend filters already landed via R2-036 (9234220) + R2-036-bis (4ee3856); pinned by test_analytics_spend_excludes_sales."
+ },
+ {
+  "id": "R2-329",
+  "sev": "HIGH",
+  "wave": "W08",
+  "f1": "`analytics.py`",
+  "f2": "`wastage.py`",
+  "status": "FIXED",
+  "notes": " | reg L15229 S33 FIXED 5b178e4 (H-analytics): stock reconciliation computed per material+unit so mixed-unit scalars cannot mask over-consumption; test added."
+ },
+ {
+  "id": "R2-498",
+  "sev": "HIGH",
+  "wave": "W08",
+  "f1": "`analytics.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L24992 S33 FIXED 6726e1b (H-analytics): Material Leakage tile raises explicit over-consumption warning instead of a clean pct over a glaring gap."
+ },
+ {
+  "id": "R2-499",
+  "sev": "HIGH",
+  "wave": "W08",
+  "f1": "`analytics.py`",
+  "f2": "`projects.py`",
+  "status": "FIXED",
+  "notes": " | reg L25018 S33 EVIDENCE-CLOSE: fixed by 248c809 (_resolve_team_name resolves LibraryParty.name); residual Team-{uuid} terminal fallback noted as sibling R2-603-family."
+ },
+ {
+  "id": "R2-603",
+  "sev": "HIGH",
+  "wave": "W08",
+  "f1": "`analytics.py`",
+  "f2": "-",
+  "status": "FIXED",
+  "notes": " | filed S33 from R2-305/R2-499 closures: /financial fabricates demo chart data (fixed Jun-2026 labels + 1000 expense) when a company has no bills; fabricated-data class. Also _resolve_team_name terminal fallback emits Team-{uuid[:8]}. reg - S33 FIXED a9a113c: /financial chart honestly empty without bills (fabrication block deleted)."
+ },
+ {
+  "id": "R2-722",
+  "sev": "HIGH",
+  "wave": "V-VERIFY",
+  "f1": "`auth.py`",
+  "f2": "`config.py`",
+  "status": "FIXED",
+  "notes": " | Definition: docs/VERIFICATION_NEW_FINDINGS.md (founder block). S33 FIXED 80e5065 (H-auth-demo): OTP_DEMO_ALLOWLIST/OTP_DEMO_CODE defaults now empty strings (unset env disables the known credential); _seed_demo_projects wrapped in one-time guard so repeated allowlisted logins cannot re-seed; feature retained (D6/R2-024 stays founder-gated). Tests updated to pin settings explicitly (3f014c6)."
+ },
+ {
+  "id": "R2-289",
+  "sev": "HIGH",
+  "wave": "W36",
+  "f1": "`bi_export.py`",
+  "f2": "`budget.py`",
+  "status": "FIXED",
+  "notes": " | reg L12691 S33 FIXED 79890c1: BI budget-variance partitions EXPENSE_INVOICE_TYPES per head like Budget (other_actual added); omission/cancel/tz parts pre-landed."
+ },
+ {
+  "id": "R2-177",
+  "sev": "HIGH",
+  "wave": "W07",
+  "f1": "`billing.py`",
+  "f2": "`procurement.py`, `equipment.py`",
+  "status": "FIXED",
+  "notes": " | reg L6660 S33 FIXED ff20153 (H-billing): POST /billing/work-orders/{id}/cancel void path (409 double-cancel/open linked bills; editing window honoured); no schema change; test added."
+ },
+ {
+  "id": "R2-346",
+  "sev": "HIGH",
+  "wave": "W07",
+  "f1": "`billing.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L16161 S33 FIXED bdec878 (H-billing): FIFO settlement only settles bills past review; ledger-integrity tests updated; gate test added. NOTE: engine lives in finance.py (register primary-file misattribution)."
+ },
+ {
+  "id": "R2-350",
+  "sev": "HIGH",
+  "wave": "W07",
+  "f1": "`billing.py`",
+  "f2": "`three_way.py`",
+  "status": "FIXED",
+  "notes": " | reg L16338 S33 EVIDENCE-CLOSE: both caller-controlled paths unreachable after R2-241 (5c73713) + R2-539 (a76823c); covered by test_r2_241/test_r2_539 suites."
+ },
+ {
+  "id": "R2-377",
+  "sev": "HIGH",
+  "wave": "W07",
+  "f1": "`billing.py`",
+  "f2": "`models.py`, `reports.py`",
+  "status": "FIXED",
+  "notes": " | reg L17640 S33 FIXED 21c681d (H-billing): retention release endpoint stamps released_at/amount with TDS/cancelled/unreviewed/double/over-release gates; 3 nullable lifecycle cols WITH additive migration; two hardcoded-empty sales-report columns now computed; test added."
+ },
+ {
+  "id": "R2-381",
+  "sev": "HIGH",
+  "wave": "W07",
+  "f1": "`billing.py`",
+  "f2": "`dpr.py`, `planning.py`",
+  "status": "FIXED",
+  "notes": " | reg L17832 S33 FIXED e2ae07e (H-billing): restrict-entry window gates create_payment/record_payment_request/p2p_transfer in finance.py (register file column said billing.py); backdated writes 400 when flag on; test added."
+ },
+ {
+  "id": "R2-400",
+  "sev": "HIGH",
+  "wave": "W07",
+  "f1": "`billing.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L19780 S33 FIXED 54db876 (H-billing): bill PDF addressee resolves CompanyTeam.library_party_id -> LibraryParty.name first; never login name or bare N/A for userless vendors; test added."
+ },
+ {
+  "id": "R2-401",
+  "sev": "HIGH",
+  "wave": "W07",
+  "f1": "`billing.py`",
+  "f2": "`models.py`",
+  "status": "FIXED",
+  "notes": " | reg L19815 S33 FIXED 2be273f (H-billing): tax invoices require non-empty described line items reconciling to subtotal (422); sibling payload tests repaired; test added."
+ },
+ {
+  "id": "R2-403",
+  "sev": "HIGH",
+  "wave": "W07",
+  "f1": "`billing.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L19905 S33 FIXED 4e71ebb (H-billing): bill PDF prints registered supplier identity (legal name/GSTIN/phone/address; branch masthead precedence) via resolve_supplier_tax_details(); PO/BOQ/report siblings filed R2-607; test added."
+ },
+ {
+  "id": "R2-480",
+  "sev": "HIGH",
+  "wave": "W07",
+  "f1": "`billing.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L24052 S33 FIXED 518afa5 (H-billing): internal engineering notes in Settings replaced with honest customer copy; false no-server-PDF claim corrected; approval scope stated plainly (Payment Request + PO today)."
+ },
+ {
+  "id": "R2-151",
+  "sev": "HIGH",
+  "wave": "W13",
+  "f1": "`budget.py`",
+  "f2": "`safety.py`, `d/budget/page.tsx`",
+  "status": "FIXED",
+  "notes": " | reg L5923 S33 EVIDENCE-CLOSE: actuals already computed from real data by 241f76c (R2-067 wave); behaviour gate exists at test_domain_formula_fixes.py:512 + pin."
+ },
+ {
+  "id": "R2-152",
+  "sev": "HIGH",
+  "wave": "W13",
+  "f1": "`budget.py`",
+  "f2": "`budgeting.py`",
+  "status": "FIXED",
+  "notes": " | reg L5947 S33 FIXED dfca772 (H-budget): GET /budget/committed no longer persists ProjectBudget rows; missing budgets report zeros in memory; test added."
+ },
+ {
+  "id": "R2-153",
+  "sev": "HIGH",
+  "wave": "W13",
+  "f1": "`budget.py`",
+  "f2": "`constants.py`",
+  "status": "FIXED",
+  "notes": " | reg L5964 S33 FIXED b9c0a20 (H-budget): committed costs bucket ALL expense invoice types (material/subcon/equipment) via EXPENSE_INVOICE_TYPES with other_actual fallthrough; test added."
+ },
+ {
+  "id": "R2-233",
+  "sev": "HIGH",
+  "wave": "W13",
+  "f1": "`budget.py`",
+  "f2": "`constants.py`, `finance.py`, `analytics.py`",
+  "status": "FIXED",
+  "notes": " | reg L9699 S33 FIXED 5c0ef9b (H-budget): budget actuals count only approval_flag=approved, status!=Cancelled bills; fixtures aligned; test added."
+ },
+ {
+  "id": "R2-237",
+  "sev": "HIGH",
+  "wave": "W13",
+  "f1": "`budget.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L10016 S33 EVIDENCE-CLOSE: subsumed by R2-153 bucketing (b9c0a20) + 241f76c; covered by test_r2_153_budget_expense_bucket.py."
+ },
+ {
+  "id": "R2-242",
+  "sev": "HIGH",
+  "wave": "W13",
+  "f1": "`budget.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L10285 S33 EVIDENCE-CLOSE: PO committed whitelist (sent/partial/received) already landed via R2-154 (bd41ec7); behavior test added 51384d6."
+ },
+ {
+  "id": "R2-249",
+  "sev": "HIGH",
+  "wave": "W13",
+  "f1": "`budget.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L10623 S33 FIXED 57e5a7d (H-budget): tower Committed derived from status-whitelisted POs like the no-towers branch (project-level figure until CD-5 tower schema; honest limitation noted); test added."
+ },
+ {
+  "id": "R2-250",
+  "sev": "HIGH",
+  "wave": "W13",
+  "f1": "`budget.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L10647 S33 EVIDENCE-CLOSE: tower actual expense-only filter landed via R2-036 (9234220); behavior test added 465f287."
+ },
+ {
+  "id": "R2-375",
+  "sev": "HIGH",
+  "wave": "W13",
+  "f1": "`budget.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L17543 S33 EVIDENCE-CLOSE: duplicate of R2-249; closed by 57e5a7d; pinned by test_r2_249_tower_budget_committed_from_pos.py."
+ },
+ {
+  "id": "R2-604",
+  "sev": "HIGH",
+  "wave": "W13",
+  "f1": "`budget.py`",
+  "f2": "-",
+  "status": "FIXED",
+  "notes": " | filed S33 from R2-249/R2-250/R2-233 closures: no-towers branch (~:172) sums ALL PO statuses without the sent/partial/received whitelist, and neither budget branch applies the approved/non-cancelled bill gates the main endpoint has. reg - S33 FIXED 393055b: budget no-tower PO whitelist + tower approved/cancelled gates aligned."
+ },
+ {
+  "id": "R2-723",
+  "sev": "HIGH",
+  "wave": "V-VERIFY",
+  "f1": "`budget.py`",
+  "f2": "`towers.py`, `bi_export.py`, `bill_scope.py`",
+  "status": "FIXED",
+  "notes": " | Definition: docs/VERIFICATION_NEW_FINDINGS.md (founder block). S33 FIXED 55af851 (H-cancelsweep): shared backend/app/bill_scope.py _active_bills helper (status != Cancelled + type filter); live-code truth was 5 unguarded sites (budget tower branch x2, towers x2, bi_export equipment actual) - budget.py:86/98/108 were already guarded by R2-233's approved-only chain; full census of the other guard"
+ },
+ {
+  "id": "R2-274",
+  "sev": "HIGH",
+  "wave": "W19",
+  "f1": "`budgeting.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L11993 S33 FIXED c7c2828 (H-budgeting): first BOQ revision records previous_amount/delta from the value replaced; revised amount in BOQ PDF; test added."
+ },
+ {
+  "id": "R2-275",
+  "sev": "HIGH",
+  "wave": "W19",
+  "f1": "`budgeting.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L12030 S33 FIXED fbc3f20 (H-budgeting): milestone_done > milestone_total rejected on create/patch (400) and PDF clamps legacy rows; test added."
+ },
+ {
+  "id": "R2-334",
+  "sev": "HIGH",
+  "wave": "W19",
+  "f1": "`budgeting.py`",
+  "f2": "`finance.py`, `models.py`",
+  "status": "FIXED",
+  "notes": " | reg L15424 S33 FIXED 3175e8b (H-budgeting): BOQ cost codes must exist in company Cost Code Library (import + item create, atomic 400 naming unknown codes); cost_code widened 50->100 WITH additive migration; test added."
+ },
+ {
+  "id": "R2-449",
+  "sev": "HIGH",
+  "wave": "W19",
+  "f1": "`budgeting.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L22833 S33 FIXED 4df11c2 (H-budgeting): BOQ items gain PATCH (amount+rounding recompute, library gate parity) and DELETE (204, FKs SET NULL by design); test added."
+ },
+ {
+  "id": "R2-450",
+  "sev": "HIGH",
+  "wave": "W19",
+  "f1": "`budgeting.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L22871 S33 FIXED 9be3e98 (H-budgeting): Excel import reports skipped_count + row-numbered warnings (ValueError/TypeError rows skipped, not 500); d/budgeting page renders them; test added."
+ },
+ {
+  "id": "R2-451",
+  "sev": "HIGH",
+  "wave": "W19",
+  "f1": "`budgeting.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L22899 S33 FIXED a73965f (H-budgeting): _effective_unit_rate() composite-wins across import/item-create/PATCH/amount fallbacks so split rates no longer double-count; test added."
+ },
+ {
+  "id": "R2-453",
+  "sev": "HIGH",
+  "wave": "W19",
+  "f1": "`budgeting.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L22944 S33 FIXED c2af10a (H-budgeting): fake xlsx/zero-row sheets return clean 400s (BadZipFile/InvalidFileException/StopIteration handled), real header errors keep actionable detail; test added."
+ },
+ {
+  "id": "R2-279",
+  "sev": "HIGH",
+  "wave": "W21",
+  "f1": "`calculators.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L12267 S33 FIXED 649476b (H-calculators): brickwork derives leaves from thickness_mm/(brick_width+joint), reports derived leaves, 422 outside 20-35% mortar band; client-side twins filed R2-611; test added."
+ },
+ {
+  "id": "R2-280",
+  "sev": "HIGH",
+  "wave": "W21",
+  "f1": "`calculators.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L12310 S33 FIXED eed18dd (H-calculators): paint calculator rejects openings larger than walls (422 naming the rule) instead of returning negative quantities."
+ },
+ {
+  "id": "R2-281",
+  "sev": "HIGH",
+  "wave": "W21",
+  "f1": "`calculators.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L12344 S33 FIXED 8798662 (H-calculators): concrete materials derive from dry_volume via grade true ratios (bags x1440/50); wastage_pct scales ordered materials; mix_library now true ratios; test added."
+ },
+ {
+  "id": "R2-519",
+  "sev": "HIGH",
+  "wave": "W21",
+  "f1": "`calculators.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L26418 S33 FIXED d3c13b6 (H-calculators): client concrete factors corrected against server ratio math (M7.5 4.0->3.41, M20 8.2->8.06, M25 agg 0.76->0.77); engine consolidation remains CD-2-gated."
+ },
+ {
+  "id": "R2-520",
+  "sev": "HIGH",
+  "wave": "W21",
+  "f1": "`calculators.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L26464 S33 FIXED 8798662 (H-calculators): same defect/lines as R2-281, one inseparable diff naming both ids."
+ },
+ {
+  "id": "R2-284",
+  "sev": "HIGH",
+  "wave": "W103",
+  "f1": "`cashbook.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": "FIXED 8dd6afd; p2p transfers reject sender == receiver (422) covering both /cashbook/p2p and /finance/cashbook/p2p."
+ },
+ {
+  "id": "R2-141",
+  "sev": "HIGH",
+  "wave": "W17",
+  "f1": "`chat.py`",
+  "f2": "`frontend/src/app/c/[company_id]/d/chat/page.tsx`",
+  "status": "FIXED",
+  "notes": "FIXED fbbb93a; DELETE /chat/groups/{id} archives the group behind the group-admin guard instead of answering 405."
+ },
+ {
+  "id": "R2-142",
+  "sev": "HIGH",
+  "wave": "W17",
+  "f1": "`chat.py`",
+  "f2": "`models.py`, `d/chat/page.tsx`, `page.tsx`",
+  "status": "FIXED",
+  "notes": "FIXED f311485; chat group member mutations require server-side group-admin role; role values constrained to admin/member/viewer; last admin cannot be removed or demoted."
+ },
+ {
+  "id": "R2-143",
+  "sev": "HIGH",
+  "wave": "W17",
+  "f1": "`chat.py`",
+  "f2": "`d/chat/page.tsx`, `page.tsx`",
+  "status": "FIXED",
+  "notes": "FIXED 696216e; create_group ignores client-supplied created_by, stamps the creator CompanyTeam row and inserts the admin member in the same transaction."
+ },
+ {
+  "id": "R2-471",
+  "sev": "HIGH",
+  "wave": "W17",
+  "f1": "`chat.py`",
+  "f2": "`page.tsx`",
+  "status": "FIXED",
+  "notes": " | reg L23671 S33 FIXED e74e46e: chat list_groups membership-filtered (colleagues see only their own groups)."
+ },
+ {
+  "id": "R2-359",
+  "sev": "HIGH",
+  "wave": "W52",
+  "f1": "`crm.py`",
+  "f2": "`models.py`, `reports.py`",
+  "status": "FIXED",
+  "notes": " | reg L16756 S33 FIXED d13efa8: lead source/category/status resolve against company lookups, unknowns 400."
+ },
+ {
+  "id": "R2-360",
+  "sev": "HIGH",
+  "wave": "W52",
+  "f1": "`crm.py`",
+  "f2": "`models.py`",
+  "status": "FIXED",
+  "notes": " | reg L16805 S33 FIXED ea6d6e0: Bill.quotation_id FK + convert-to-invoice endpoint with double-conversion 409."
+ },
+ {
+  "id": "R2-158",
+  "sev": "HIGH",
+  "wave": "W32",
+  "f1": "`custom_fields.py`",
+  "f2": "`d/custom-fields/page.tsx`",
+  "status": "FIXED",
+  "notes": "FIXED 4d1b3d1; Set Value dispatches on field type - date values sent as value_date, number 0 no longer dropped into text rows."
+ },
+ {
+  "id": "R2-180",
+  "sev": "HIGH",
+  "wave": "W32",
+  "f1": "`custom_fields.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L6781 S33 FIXED 6127791: custom-fields write models extra=forbid -> 422 naming unknown keys, atomic."
+ },
+ {
+  "id": "R2-260",
+  "sev": "HIGH",
+  "wave": "W32",
+  "f1": "`custom_fields.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": "FIXED c92b707; custom field values validated against declared type/typed column, target entity must exist inside authorised company, is_required enforced on project+bill create/update with 422 naming missing fields."
+ },
+ {
+  "id": "R2-301",
+  "sev": "HIGH",
+  "wave": "W72",
+  "f1": "`delete_logs.py`",
+  "f2": "`models.py`, `finance.py`",
+  "status": "FIXED",
+  "notes": " | reg L13400 S33 FIXED c30bdd9: payment delete-log row carries deleted_by."
+ },
+ {
+  "id": "R2-536",
+  "sev": "HIGH",
+  "wave": "W72",
+  "f1": "`delete_logs.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L27350 S33 FIXED 869c297: all 30 log_deletion call sites pass actor; deleted_by keyword-only required; AST-scanned."
+ },
+ {
+  "id": "R2-259",
+  "sev": "HIGH",
+  "wave": "W42",
+  "f1": "`drawings.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L11191 S33 FIXED 873dc06: drawing approvals append-only ledger w/ terminal approved state + actor from caller (+model)."
+ },
+ {
+  "id": "R2-366",
+  "sev": "HIGH",
+  "wave": "W42",
+  "f1": "`drawings.py`",
+  "f2": "`supabase_storage.py`",
+  "status": "FIXED",
+  "notes": " | reg L17132 S33 FIXED-FULLY 23b3482: cross-revision file reuse blocked (duplicate_file check); R2-466 closed schemes/hosts."
+ },
+ {
+  "id": "R2-357",
+  "sev": "HIGH",
+  "wave": "W37",
+  "f1": "`equipment.py`",
+  "f2": "`models.py`",
+  "status": "FIXED",
+  "notes": " | reg L16652 S33 FIXED 0520005: EquipmentDeployment.hours_used recorded; P&L bills recorded hours (wall-clock legacy fallback)."
+ },
+ {
+  "id": "R2-531",
+  "sev": "HIGH",
+  "wave": "W37",
+  "f1": "`equipment.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L26989 S33 FIXED 020ddc6: availability derived from open schedules vs today; aware clock."
+ },
+ {
+  "id": "R2-556",
+  "sev": "HIGH",
+  "wave": "W37",
+  "f1": "`equipment.py`",
+  "f2": "`models.py`",
+  "status": "FIXED",
+  "notes": " | reg L28885 S33 FIXED b68fe92: all equipment write-path refs resolve-and-404 named."
+ },
+ {
+  "id": "R2-570",
+  "sev": "HIGH",
+  "wave": "W37",
+  "f1": "`equipment.py`",
+  "f2": "`finance.py`",
+  "status": "FIXED",
+  "notes": " | reg L29839 S33 FIXED abadbf7: fuel bounds date, requires covering deployment, monotonic odometer."
+ },
+ {
+  "id": "R2-513",
+  "sev": "HIGH",
+  "wave": "W26",
+  "f1": "`face_recognition.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L25769 S33-C FIXED 5456481: face logs legacy NULL created_at rows serialize honestly (no listing 500)."
+ },
+ {
+  "id": "R2-175",
+  "sev": "HIGH",
+  "wave": "W35",
+  "f1": "`files.py`",
+  "f2": "`models.py`",
+  "status": "FIXED",
+  "notes": " | reg L6610 S33 FIXED be15612: DELETE file (tenant+data:delete+storage removal+audit log) and folder delete 409-while-nonempty."
+ },
+ {
+  "id": "R2-265",
+  "sev": "HIGH",
+  "wave": "W35",
+  "f1": "`files.py`",
+  "f2": "`hr.py`, `finance.py`, `assets.py`",
+  "status": "FIXED",
+  "notes": "FIXED 873d065 (top-up); first depreciation entry requires accumulated == depreciation_amount (parts a-chain and c rate-vs-life closed by a32d60e/a853932)."
+ },
+ {
+  "id": "R2-179",
+  "sev": "HIGH",
+  "wave": "W01",
+  "f1": "`finance.py`",
+  "f2": "`procurement.py`, `settings/page.tsx`",
+  "status": "FIXED",
+  "notes": " | reg L6746 S33 FIXED 1b1f22c: APPROVAL_FEATURE_TYPES canonical tuple + Literal in settings + enforcement constants imported by finance/procurement."
+ },
+ {
+  "id": "R2-238",
+  "sev": "HIGH",
+  "wave": "W01",
+  "f1": "`finance.py`",
+  "f2": "`constants.py`, `transaction/page.tsx`",
+  "status": "FIX_VERIFIED",
+  "notes": "`de6815f` | reg L10055; wave W01c; suite RC-025 S33 SWEEP: drift CONFIRMED live (settlement vouchers booked Material Bill/Cost, inverted sign) -> re-fixed 125ebfa (Settlement/Cash Movement signed by direction; frontend untouched - /finance/ledger has no consumers)."
+ },
+ {
+  "id": "R2-276",
+  "sev": "HIGH",
+  "wave": "W01",
+  "f1": "`finance.py`",
+  "f2": "\u2014",
+  "status": "FIX_VERIFIED",
+  "notes": "`b998d8a` | reg L12064; wave W01c; suite RC-029; all surfaces closed"
+ },
+ {
+  "id": "R2-311",
+  "sev": "HIGH",
+  "wave": "W01",
+  "f1": "`finance.py`",
+  "f2": "`routing.py`, `errors.py`, `cors.py`",
+  "status": "FIXED",
+  "notes": " | reg L14081 S33 FIXED 5440cc7 evidence: rate limiter storage URI + proxy-aware key already wired by campaign rework; wiring tests added."
+ },
+ {
+  "id": "R2-316",
+  "sev": "HIGH",
+  "wave": "W01",
+  "f1": "`finance.py`",
+  "f2": "`reports.py`",
+  "status": "FIX_VERIFIED",
+  "notes": "`b998d8a` | reg L14645; wave W01c; suite RC-030; all surfaces closed"
+ },
+ {
+  "id": "R2-328",
+  "sev": "HIGH",
+  "wave": "W01",
+  "f1": "`finance.py`",
+  "f2": "`models.py`, `errors.py`, `cors.py`",
+  "status": "FIXED",
+  "notes": " | reg L15113 S33 FIXED 5b231f8: company transactions scope by company_id (project-less payments no longer vanish; cash_balance agrees)."
+ },
+ {
+  "id": "R2-343",
+  "sev": "HIGH",
+  "wave": "W01",
+  "f1": "`finance.py`",
+  "f2": "`models.py`, `reports.py`, `projects.py`",
+  "status": "FIX_VERIFIED",
+  "notes": "`d63c2db` | reg L16005; wave W01c; suite RC-026"
+ },
+ {
+  "id": "R2-345",
+  "sev": "HIGH",
+  "wave": "W01",
+  "f1": "`finance.py`",
+  "f2": "`models.py`",
+  "status": "FIX_VERIFIED",
+  "notes": "`a245605` | reg L16125; ESCALATED to founder - cross-project FIFO allocation is a product decision; direct-fix pass; suite RC-040"
+ },
+ {
+  "id": "R2-417",
+  "sev": "HIGH",
+  "wave": "W01",
+  "f1": "`finance.py`",
+  "f2": "`reports.py`, `models.py`, `finance/page.tsx`",
+  "status": "FIX_VERIFIED",
+  "notes": "`a245605` | reg L20688; direct-fix pass; suite RC-041"
+ },
+ {
+  "id": "R2-534",
+  "sev": "HIGH",
+  "wave": "W01",
+  "f1": "`finance.py`",
+  "f2": "\u2014",
+  "status": "FIX_VERIFIED",
+  "notes": "`4b7add4` | reg L27209; direct-fix pass; suite RC-039"
+ },
+ {
+  "id": "R2-550",
+  "sev": "HIGH",
+  "wave": "W01",
+  "f1": "`finance.py`",
+  "f2": "`settings.py`, `safety.py`, `projects.py`",
+  "status": "FIX_VERIFIED",
+  "notes": "`4b7add4` | reg L28510; direct-fix pass; suite RC-037"
+ },
+ {
+  "id": "R2-192",
+  "sev": "HIGH",
+  "wave": "W67",
+  "f1": "`google_drive.py`",
+  "f2": "`zoho_books.py`, `google_sheets.py`, `auth.py`",
+  "status": "FIXED",
+  "notes": " | reg L7114 S33 FIXED 136a82f: Sheets authorize settings:manage, payroll export module gate, Zoho push_bill billing:edit; google_drive verified compliant."
+ },
+ {
+  "id": "R2-033",
+  "sev": "HIGH",
+  "wave": "W03",
+  "f1": "`hr.py`",
+  "f2": "\u2014",
+  "status": "FIX_VERIFIED",
+  "notes": "`e2e449d` | reg L1471; hr.py direct-fix pass; suite RC-047"
+ },
+ {
+  "id": "R2-197",
+  "sev": "HIGH",
+  "wave": "W03",
+  "f1": "`hr.py`",
+  "f2": "`billing.py`, `budget.py`, `d/hr/page.tsx`",
+  "status": "FIX_VERIFIED",
+  "notes": "`acee51f` | reg L7438; hr.py direct-fix pass; suite RC-053 (frontend ESI ceiling; static)"
+ },
+ {
+  "id": "R2-211",
+  "sev": "HIGH",
+  "wave": "W03",
+  "f1": "`hr.py`",
+  "f2": "`transaction/page.tsx`, `zoho_books.py`, `d/safety/page.tsx`",
+  "status": "FIX_VERIFIED",
+  "notes": "`034bc1e` | reg L8530; hr.py direct-fix pass; suite RC-065"
+ },
+ {
+  "id": "R2-220",
+  "sev": "HIGH",
+  "wave": "W03",
+  "f1": "`hr.py`",
+  "f2": "\u2014",
+  "status": "FIX_VERIFIED",
+  "notes": "`29a1bdb` | reg L9046; hr.py direct-fix pass; suite RC-063"
+ },
+ {
+  "id": "R2-325",
+  "sev": "HIGH",
+  "wave": "W03",
+  "f1": "`hr.py`",
+  "f2": "`models.py`, `reports.py`",
+  "status": "FIX_VERIFIED",
+  "notes": "`70f9750` | reg L14907; hr.py direct-fix pass; suite RC-057"
+ },
+ {
+  "id": "R2-354",
+  "sev": "HIGH",
+  "wave": "W03",
+  "f1": "`hr.py`",
+  "f2": "`models.py`",
+  "status": "FIX_VERIFIED",
+  "notes": "`05a41e9` | reg L16516; hr.py direct-fix pass; suite RC-050"
+ },
+ {
+  "id": "R2-429",
+  "sev": "HIGH",
+  "wave": "W03",
+  "f1": "`hr.py`",
+  "f2": "`models.py`",
+  "status": "FIX_VERIFIED",
+  "notes": "`034bc1e` | reg L21329; hr.py direct-fix pass; suite RC-067"
+ },
+ {
+  "id": "R2-475",
+  "sev": "HIGH",
+  "wave": "W03",
+  "f1": "`hr.py`",
+  "f2": "`attendance/page.tsx`",
+  "status": "FIX_VERIFIED",
+  "notes": "`4134a11` | reg L23841; hr.py direct-fix pass; suite RC-054"
+ },
+ {
+  "id": "R2-527",
+  "sev": "HIGH",
+  "wave": "W03",
+  "f1": "`hr.py`",
+  "f2": "\u2014",
+  "status": "FIX_VERIFIED",
+  "notes": "`05a53c9` | reg L26813; hr.py direct-fix pass; suite RC-059"
+ },
+ {
+  "id": "R2-528",
+  "sev": "HIGH",
+  "wave": "W03",
+  "f1": "`hr.py`",
+  "f2": "\u2014",
+  "status": "FIX_VERIFIED",
+  "notes": "`4134a11` | reg L26861; hr.py direct-fix pass; suite RC-055"
+ },
+ {
+  "id": "R2-561",
+  "sev": "HIGH",
+  "wave": "W03",
+  "f1": "`hr.py`",
+  "f2": "`hr/page.tsx`",
+  "status": "FIX_VERIFIED",
+  "notes": "`4134a11` | reg L29446; hr.py direct-fix pass; suite RC-056"
+ },
+ {
+  "id": "R2-564",
+  "sev": "HIGH",
+  "wave": "W03",
+  "f1": "`hr.py`",
+  "f2": "`hr/page.tsx`",
+  "status": "FIX_VERIFIED",
+  "notes": "`ff2a2fc` | reg L29517; hr.py direct-fix pass; suite RC-062"
+ },
+ {
+  "id": "R2-593",
+  "sev": "HIGH",
+  "wave": "W03",
+  "f1": "`hr.py`",
+  "f2": "`models.py`, `face_recognition.py`, `towers.py`",
+  "status": "FIX_VERIFIED",
+  "notes": "`05a53c9` | reg L31102; hr.py direct-fix pass; suite RC-060"
+ },
+ {
+  "id": "R2-606",
+  "sev": "HIGH",
+  "wave": "W07",
+  "f1": "`hr.py`",
+  "f2": "-",
+  "status": "FIXED",
+  "notes": " | filed S33 from R2-381 closure: run_payroll period-based write still unguarded by the restrict-entry-creation window (same class as gated payments). reg - S33 FIXED 2df4a20: run_payroll obeys the restrict-entry window (period closing boundary; backdated 400, zero rows)."
+ },
+ {
+  "id": "R2-185",
+  "sev": "HIGH",
+  "wave": "W24",
+  "f1": "`labour.py`",
+  "f2": "`dpr.py`, `hr.py`, `bi_export.py`",
+  "status": "FIXED",
+  "notes": " | reg L6958 S33 FIXED b3d3a77: BOCW CSV export neutralizes formula cells."
+ },
+ {
+  "id": "R2-263",
+  "sev": "HIGH",
+  "wave": "W24",
+  "f1": "`labour.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": "FIXED 6884efe; muster roll hours bounded by workers_present x 24, overtime by hours_worked, BOCW wages require positive workers_count."
+ },
+ {
+  "id": "R2-333",
+  "sev": "HIGH",
+  "wave": "W24",
+  "f1": "`labour.py`",
+  "f2": "`models.py`, `subcon_attendance.py`, `reports/page.tsx`",
+  "status": "FIXED",
+  "notes": " | reg L15364 S33 FIXED be0db97: muster roll upsert (project+contractor+day+role) - replay updates in place."
+ },
+ {
+  "id": "R2-415",
+  "sev": "HIGH",
+  "wave": "W24",
+  "f1": "`labour.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L20535 S33 FIXED d81c0a8: BOCW return month validated, contractor resolved from store, figures derived from attendance/payroll/bills."
+ },
+ {
+  "id": "R2-507",
+  "sev": "HIGH",
+  "wave": "W24",
+  "f1": "`labour.py`",
+  "f2": "`models.py`, `hr.py`",
+  "status": "FIXED",
+  "notes": " | reg L25354 S33 FIXED 7cde59f: omitted muster figures derive from attendance/crew data; empty day -> 422."
+ },
+ {
+  "id": "R2-440",
+  "sev": "HIGH",
+  "wave": "W30",
+  "f1": "`library.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L21996 S33 FIXED 533fd3e: next_party_id_custom wired into subcontractor-create and CRM won-lead paths (no ID-less parties)."
+ },
+ {
+  "id": "R2-384",
+  "sev": "HIGH",
+  "wave": "W105",
+  "f1": "`mailer.py`",
+  "f2": "`models.py`, `public_leads.py`, `auth.py`",
+  "status": "FIXED",
+  "notes": " | reg L17950 S33 FIXED fe94455: assignment notification resolution fail-closed across five shapes + best-effort fan-out."
+ },
+ {
+  "id": "R2-291",
+  "sev": "HIGH",
+  "wave": "W69",
+  "f1": "`backend/app/main.py`",
+  "f2": "`delete_logs.py`",
+  "status": "FIXED",
+  "notes": "FIXED aeb5642; delete-logs router moved to /apis/v3/delete-logs, path ids UUID-typed (422 not ValueError-500), catch-all /apis/v3/{path} 404 handler added."
+ },
+ {
+  "id": "R2-055",
+  "sev": "HIGH",
+  "wave": "W96",
+  "f1": "`projects/page.tsx`",
+  "f2": "`ProjectSettingsModal.tsx`, `p/[project_id]/layout.tsx`, `p/[project_id]/party/page.tsx`",
+  "status": "FIXED",
+  "notes": " | reg L2473 S33 FIXED 67a18c1: all 8 unchecked project-surface writes gate res.ok + surface detail; optimistic status reverts on failure."
+ },
+ {
+  "id": "R2-059",
+  "sev": "HIGH",
+  "wave": "W60",
+  "f1": "`d/payment-approval/page.tsx`",
+  "f2": "`finance.py`",
+  "status": "FIXED",
+  "notes": " | reg L2596 S33 FIXED 51ebadc: payment approve/reject/mark-paid surface server detail on non-2xx + network-failure alert."
+ },
+ {
+  "id": "R2-087",
+  "sev": "HIGH",
+  "wave": "W23",
+  "f1": "`d/finance/page.tsx`",
+  "f2": "`finance.py`",
+  "status": "FIXED",
+  "notes": " | reg L3692 S33 EVIDENCE-CLOSE: all prescribed components verified live (gst_treatment handling, account mapping, error surfacing); no change needed."
+ },
+ {
+  "id": "R2-155",
+  "sev": "HIGH",
+  "wave": "W66",
+  "f1": "`d/custom-fields/page.tsx`",
+  "f2": "`custom_fields.py`",
+  "status": "FIXED",
+  "notes": "FIXED 0f6ba71; Set Value screen parses stored custom-field values into state and renders current value per field card."
+ },
+ {
+  "id": "R2-156",
+  "sev": "HIGH",
+  "wave": "W66",
+  "f1": "`d/custom-fields/page.tsx`",
+  "f2": "`c/[company_id]/projects/page.tsx`, `p/[project_id]/transaction/page.tsx`, `projects.py`",
+  "status": "FIXED",
+  "notes": "FIXED b2955f1; field builder select cut to project/invoice (the wired entity types); list follows user-controlled entity-type filter."
+ },
+ {
+  "id": "R2-160",
+  "sev": "HIGH",
+  "wave": "W99",
+  "f1": "`d/reports/calculators/page.tsx`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L6133 S33 FIXED 8ef468b: concrete tab has own column state (no steel-column bleed)."
+ },
+ {
+  "id": "R2-161",
+  "sev": "HIGH",
+  "wave": "W09",
+  "f1": "`page.tsx`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L6156 S33 FIXED f48dfb7: house-cost base rate editable input; fabricated CITY_MAP multipliers dropped; wall length/contingency exposed."
+ },
+ {
+  "id": "R2-163",
+  "sev": "HIGH",
+  "wave": "W09",
+  "f1": "`page.tsx`",
+  "f2": "`calculators.py`",
+  "status": "FIXED",
+  "notes": " | reg L6189 S33 FIXED 73e3cb6: console mirrors /calculators/house-cost math exactly (pre-contingency headline, no double-count)."
+ },
+ {
+  "id": "R2-165",
+  "sev": "HIGH",
+  "wave": "W46",
+  "f1": "`d/chat/page.tsx`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": "FIXED 35c756b; chat collapses to single pane below md with conversation list as drawer."
+ },
+ {
+  "id": "R2-203",
+  "sev": "HIGH",
+  "wave": "W101",
+  "f1": "`d/safety/page.tsx`",
+  "f2": "`safety.py`, `quality.py`",
+  "status": "FIXED",
+  "notes": " | reg L7843 S33 FIXED 5c7d445: safety caption renders API total_manhours_used instead of literal 50,000."
+ },
+ {
+  "id": "R2-216",
+  "sev": "HIGH",
+  "wave": "W39",
+  "f1": "`d/procurement/page.tsx`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L8874 S33 FIXED 5de540c: isBilled derived from server three-way matches (survives refresh); mark-billed alerts honestly - no endpoint exists."
+ },
+ {
+  "id": "R2-224",
+  "sev": "HIGH",
+  "wave": "W102",
+  "f1": "`d/team-action/page.tsx`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L9223 S33 FIXED cc07d3a: timesheet POST carries real UTC offset instead of fabricating Z on wall-clock values."
+ },
+ {
+  "id": "R2-393",
+  "sev": "HIGH",
+  "wave": "W51",
+  "f1": "`reports/[slug]/page.tsx`",
+  "f2": "`crm/page.tsx`",
+  "status": "FIXED",
+  "notes": " | reg L19461 S33 EVIDENCE: funnel stages reconciled by R2-437 03673ef; custom-status mapping left founder decision."
+ },
+ {
+  "id": "R2-394",
+  "sev": "HIGH",
+  "wave": "W51",
+  "f1": "`reports/[slug]/page.tsx`",
+  "f2": "`reports.py`",
+  "status": "FIXED",
+  "notes": " | reg L19509 S33 FIXED dd87dd9: Total Spent now sums expense-type rows from GET /finance/transactions (was POST-only 405 swallowed to empty)."
+ },
+ {
+  "id": "R2-395",
+  "sev": "HIGH",
+  "wave": "W09",
+  "f1": "`page.tsx`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L19597 S33 FIXED 3d10926: phantom xlsx menu entry removed; only producible formats offered."
+ },
+ {
+  "id": "R2-397",
+  "sev": "HIGH",
+  "wave": "W09",
+  "f1": "`page.tsx`",
+  "f2": "`pdf_generator.py`",
+  "status": "FIXED",
+  "notes": " | reg L19653 S33 FIXED 96f6ffe: popup-blocked print fails honestly; HTML/print exports escapeHtml at all interpolation sites."
+ },
+ {
+  "id": "R2-422",
+  "sev": "HIGH",
+  "wave": "W34",
+  "f1": "`dashboard/page.tsx`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L20993 S33-C EVIDENCE: fabricated dashboard state gone (bd928e7/f5f6749); projects init []."
+ },
+ {
+  "id": "R2-424",
+  "sev": "HIGH",
+  "wave": "W106",
+  "f1": "`reports/dpr/page.tsx`",
+  "f2": "`reports/item-wise-sales/page.tsx`",
+  "status": "FIXED",
+  "notes": " | reg L21077 S33 FIXED f1f581a: DPR project filter derives options from real fetched rows (fictional options long gone via cd01b15)."
+ },
+ {
+  "id": "R2-425",
+  "sev": "HIGH",
+  "wave": "W29",
+  "f1": "`d/hr/page.tsx`",
+  "f2": "`dashboard/page.tsx`, `models.py`, `reports/dpr/page.tsx`",
+  "status": "FIXED",
+  "notes": " | reg L21108 S33-C EVIDENCE: invented workers/PostGIS caption/site name gone; real geofence columns consumed."
+ },
+ {
+  "id": "R2-427",
+  "sev": "HIGH",
+  "wave": "W74",
+  "f1": "`d/equipment/page.tsx`",
+  "f2": "`d/budgeting/boq/page.tsx`",
+  "status": "FIXED",
+  "notes": " | reg L21214 S33 EVIDENCE-CLOSE: honest catch + empty states live via cd01b15/89839c9; no mock rows remain."
+ },
+ {
+  "id": "R2-445",
+  "sev": "HIGH",
+  "wave": "W107",
+  "f1": "`delete-logs/page.tsx`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L22276 S33 FIXED ab7cb76: fetch errors render a named error row instead of the all-clear empty state (post-R2-310)."
+ },
+ {
+  "id": "R2-454",
+  "sev": "HIGH",
+  "wave": "W108",
+  "f1": "`boq/page.tsx`",
+  "f2": "`siteflow.ts`, `billing/page.tsx`, `procurement/page.tsx`",
+  "status": "FIXED",
+  "notes": " | reg L22978 S33 FIXED 024e3fd: shared downloadWithAuth (fetch+blob+anchor, non-2xx throws) for BOQ/Billing/Procurement PDFs - no more 401 tabs."
+ },
+ {
+  "id": "R2-463",
+  "sev": "HIGH",
+  "wave": "W109",
+  "f1": "`frontend/src/app/c/[company_id]/d/page.tsx`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L23348 S33 FIXED e3ecaee: all 21 module redirect stubs await params, carry ?project=<id>, and ProjectContext prefers route/query id over stored."
+ },
+ {
+  "id": "R2-465",
+  "sev": "HIGH",
+  "wave": "W45",
+  "f1": "`d/drawings/page.tsx`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L23416 S33 EVIDENCE-CLOSE: publish failure already alerts + returns before setDrawings (3257e0a/7fa1131)."
+ },
+ {
+  "id": "R2-466",
+  "sev": "HIGH",
+  "wave": "W09",
+  "f1": "`page.tsx`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L23437 S33 FIXED ffe4f5f: drawings file URLs validated same-origin/https (blocks javascript:/data://host); seeded malicious rows need ops cleanup."
+ },
+ {
+  "id": "R2-483",
+  "sev": "HIGH",
+  "wave": "W09",
+  "f1": "`page.tsx`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L24208 S33 FIXED aafe230: brick thickness derives from leaves x width + joints - controls cannot disagree."
+ },
+ {
+  "id": "R2-484",
+  "sev": "HIGH",
+  "wave": "W09",
+  "f1": "`page.tsx`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L24254 S33 FIXED fb67016: stirrup cut length 14d->6d matching the documented arithmetic."
+ },
+ {
+  "id": "R2-485",
+  "sev": "HIGH",
+  "wave": "W09",
+  "f1": "`page.tsx`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L24287 S33 EVIDENCE-CLOSE: remedies already at HEAD via f48dfb7/590560f/73e3cb6 (inputs exposed, inert selector removed, honest split lines)."
+ },
+ {
+  "id": "R2-494",
+  "sev": "HIGH",
+  "wave": "W110",
+  "f1": "`subcon/page.tsx`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L24772 S33 FIXED ad8712f: subcon register renders honest em-dash (no fabricated 0%/Rs 0)."
+ },
+ {
+  "id": "R2-502",
+  "sev": "HIGH",
+  "wave": "W111",
+  "f1": "`production/page.tsx`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L25119 S33 FIXED f5e859d: output progress unclamped (200% shows 200%; bar cap preserved)."
+ },
+ {
+  "id": "R2-506",
+  "sev": "HIGH",
+  "wave": "W112",
+  "f1": "`safety/page.tsx`",
+  "f2": "`safety.py`",
+  "status": "FIXED",
+  "notes": " | reg L25316 S33 EVIDENCE-CLOSE: manhours caption already renders API value via R2-203 5c7d445."
+ },
+ {
+  "id": "R2-516",
+  "sev": "HIGH",
+  "wave": "W09",
+  "f1": "`page.tsx`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L26195 S33 FIXED 6918efc: queued punches persist ISO capture time (server replay stamping still server-now - backend accepts no client ts)."
+ },
+ {
+  "id": "R2-562",
+  "sev": "HIGH",
+  "wave": "W76",
+  "f1": "`hr/page.tsx`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L29482 S33 EVIDENCE-CLOSE: negative durations impossible since 0977492 guard."
+ },
+ {
+  "id": "R2-589",
+  "sev": "HIGH",
+  "wave": "W44",
+  "f1": "`d/quality/page.tsx`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L30544 S33 FIXED 9f294a5: is_pass null renders Not evaluated (no FAIL fabrication); tiles exclude it."
+ },
+ {
+  "id": "R2-590",
+  "sev": "HIGH",
+  "wave": "W44",
+  "f1": "`d/quality/page.tsx`",
+  "f2": "`d/equipment/page.tsx`, `/boq/page.tsx`",
+  "status": "FIX_VERIFIED",
+  "notes": "`dabbcd8` | reg L30611; wave 0; suite RC-008/009/010"
+ },
+ {
+  "id": "R2-601",
+  "sev": "HIGH",
+  "wave": "W23",
+  "f1": "`d/finance/page.tsx`",
+  "f2": "`page.tsx`, `finance.py`, `d/reports/calculators/page.tsx`",
+  "status": "FIXED",
+  "notes": " | reg L32163 S33 FIXED 590fb02: steel price no longer hardcoded 62/kg - editable Steel Rate + Aggregate Rate inputs, zero-guarded memos; real file calculators page."
+ },
+ {
+  "id": "R2-610",
+  "sev": "HIGH",
+  "wave": "W19",
+  "f1": "`p/[project_id]/boq/page.tsx`",
+  "f2": "-",
+  "status": "FIXED",
+  "notes": " | filed S33 from R2-450/R2-451 closures: project BOQ page ignores import response body (:250, no skip visibility) and recomputes qty x (rate+supply+install) client-side (:140), double-counting composite rates the server now guards. reg - S33 FIXED a4a93c5: BOQ page mirrors _effective_unit_rate (composite wins) + renders import skipped_count/warnings."
+ },
+ {
+  "id": "R2-170",
+  "sev": "HIGH",
+  "wave": "W48",
+  "f1": "`permissions.py`",
+  "f2": "`hr.py`, `drawings.py`, `reports.py`",
+  "status": "FIXED",
+  "notes": " | reg L6399 S33 FIXED eda6dc4: attendance/drawings/reports in WORKFLOW_MODULES (re-added after a concurrent-write clobber lost 8c4c496 lines; mechanical scan asserts all 57 require_permission keys in taxonomy)."
+ },
+ {
+  "id": "R2-254",
+  "sev": "HIGH",
+  "wave": "W05",
+  "f1": "`procurement.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L10940 S33 FIXED 5b0a14d: negative_stock_lock armed on production usage (completed batch over stock -> 400, zero txns); live site was production.py not procurement.py."
+ },
+ {
+  "id": "R2-297",
+  "sev": "HIGH",
+  "wave": "W05",
+  "f1": "`procurement.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": "FIXED ef5f171; unit change refused (422) while on_hand_qty/reserved_qty non-zero."
+ },
+ {
+  "id": "R2-372",
+  "sev": "HIGH",
+  "wave": "W05",
+  "f1": "`procurement.py`",
+  "f2": "`models.py`",
+  "status": "FIXED",
+  "notes": " | reg L17397 S33 FIXED 4984fec: PO with indent_id flips indent to ordered; second PO 422; over-indent-qty 422 naming material."
+ },
+ {
+  "id": "R2-386",
+  "sev": "HIGH",
+  "wave": "W05",
+  "f1": "`procurement.py`",
+  "f2": "`billing.py`, `models.py`, `rfq.py`",
+  "status": "FIX_VERIFIED",
+  "notes": "`03db7a3` | reg L18068; procurement.py direct-fix pass; suite RC-087"
+ },
+ {
+  "id": "R2-387",
+  "sev": "HIGH",
+  "wave": "W05",
+  "f1": "`procurement.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L18282 S33 FIXED 17d5ef9: stock adjustment type requires reason; adjustments never move received/consumed; /stock.adjusted folds into current_stock."
+ },
+ {
+  "id": "R2-478",
+  "sev": "HIGH",
+  "wave": "W05",
+  "f1": "`procurement.py`",
+  "f2": "`main.py`, `auth.py`, `production.py`",
+  "status": "FIXED",
+  "notes": " | reg L24006 S33 FIXED 5d44289: po_restriction=on blocks unlinked POs (403); approved-indent path 201. Inert settings (bom_restriction etc.) left founder-gated per R2-479 precedent."
+ },
+ {
+  "id": "R2-488",
+  "sev": "HIGH",
+  "wave": "W05",
+  "f1": "`procurement.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L24517 S33 FIXED 93582b4: material page renders per-unit breakdown, never a cross-unit sum; rows keep non-null unit."
+ },
+ {
+  "id": "R2-607",
+  "sev": "HIGH",
+  "wave": "W07",
+  "f1": "`procurement.py`",
+  "f2": "-",
+  "status": "FIXED",
+  "notes": " | filed S33 from R2-403 closure: supplier identity stored but unprinted in PO PDF (:998), BOQ PDF (budgeting.py ~:649) and client report PDF (reports.py ~:157); same class as fixed bill PDF. reg - S33 FIXED 9a9f656: supplier identity printed on PO/BOQ/client-report PDFs via resolve_supplier_tax_details (R2-403 machinery)."
+ },
+ {
+  "id": "R2-021",
+  "sev": "HIGH",
+  "wave": "W10",
+  "f1": "`projects.py`",
+  "f2": "`frontend/src/app/c/[company_id]/p/[project_id]/dashboard/page.tsx`",
+  "status": "FIXED",
+  "notes": " | reg L964 | S33 FIXED e6170aa (D1): Billed In/Out rename + margin ex-GST."
+ },
+ {
+  "id": "R2-421",
+  "sev": "HIGH",
+  "wave": "W10",
+  "f1": "`projects.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L20967 S33 FIXED 0a2f9f1: PROJECT_STATUS_PATTERN shared by projects PUT + planning PATCH (off-vocab 422)."
+ },
+ {
+  "id": "R2-299",
+  "sev": "HIGH",
+  "wave": "W71",
+  "f1": "`public_leads.py`",
+  "f2": "`rate_limit.py`",
+  "status": "FIXED",
+  "notes": " | reg L13242 S33 FIXED b1d4968: rate limiter fleet-wide (storage URI documented + startup warning), proxy-aware bucket key behind explicit trust flag; burst test 5x200 then 429."
+ },
+ {
+  "id": "R2-545",
+  "sev": "HIGH",
+  "wave": "W71",
+  "f1": "`public_leads.py`",
+  "f2": "`models.py`",
+  "status": "FIXED",
+  "notes": " | reg L28210 S33 FIXED f5ecf88: operator console read for captured leads (newest-first, email_sent), fail-closed ADMIN_MIGRATION_SECRET gate."
+ },
+ {
+  "id": "R2-041",
+  "sev": "HIGH",
+  "wave": "W04",
+  "f1": "`reports.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L1745; DEFERRED per D-011 \u2014 needs place-of-supply schema S33 FIXED 520fb87 (D4): POS derives from Project.state (IGST s.12(3)); IGST inter-state, CGST+SGST intra-state; state required 422; would-change report; forward-only, no rewrite."
+ },
+ {
+  "id": "R2-317",
+  "sev": "HIGH",
+  "wave": "W04",
+  "f1": "`reports.py`",
+  "f2": "`models.py`, `finance.py`",
+  "status": "FIX_VERIFIED",
+  "notes": "`723af26` | reg L14673; reports.py direct-fix pass; suite RC-070"
+ },
+ {
+  "id": "R2-318",
+  "sev": "HIGH",
+  "wave": "W04",
+  "f1": "`reports.py`",
+  "f2": "`models.py`",
+  "status": "FIX_VERIFIED",
+  "notes": "`723af26` | reg L14704; reports.py direct-fix pass; suite RC-071"
+ },
+ {
+  "id": "R2-320",
+  "sev": "HIGH",
+  "wave": "W04",
+  "f1": "`reports.py`",
+  "f2": "\u2014",
+  "status": "FIX_VERIFIED",
+  "notes": "`723af26` | reg L14765; reports.py direct-fix pass; suite RC-072"
+ },
+ {
+  "id": "R2-323",
+  "sev": "HIGH",
+  "wave": "W04",
+  "f1": "`reports.py`",
+  "f2": "`models.py`, `procurement.py`",
+  "status": "FIX_VERIFIED",
+  "notes": "`723af26` | reg L14840; reports.py direct-fix pass; suite RC-073 \u2014 weaker evidence, see suite note"
+ },
+ {
+  "id": "R2-324",
+  "sev": "HIGH",
+  "wave": "W04",
+  "f1": "`reports.py`",
+  "f2": "\u2014",
+  "status": "FIX_VERIFIED",
+  "notes": "`723af26` | reg L14875; reports.py direct-fix pass; suite RC-068"
+ },
+ {
+  "id": "R2-560",
+  "sev": "HIGH",
+  "wave": "W04",
+  "f1": "`reports.py`",
+  "f2": "`models.py`, `page.tsx`, `chat.py`",
+  "status": "FIX_VERIFIED",
+  "notes": "`723af26` | reg L29155; reports.py direct-fix pass; suite RC-068/RC-069 \u2014 the swallow and the ledger accumulator"
+ },
+ {
+  "id": "R2-598",
+  "sev": "HIGH",
+  "wave": "W56",
+  "f1": "`rfq.py`",
+  "f2": "`models.py`, `gantt/page.tsx`, `planning.py`",
+  "status": "FIXED",
+  "notes": " | reg L31550 S33 FIXED d3b9bf8: RFQ send/close transitions added (draft->sent->closed, 409 invalid); CD-7 direction (a) implemented - founder to confirm."
+ },
+ {
+  "id": "R2-530",
+  "sev": "HIGH",
+  "wave": "W22",
+  "f1": "`safety.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L26956 S33 FIXED ecdac7c: PPE checks reject negative worker counts."
+ },
+ {
+  "id": "R2-390",
+  "sev": "HIGH",
+  "wave": "W06",
+  "f1": "`settings.py`",
+  "f2": "`quality.py`",
+  "status": "FIXED",
+  "notes": " | reg L18719 S33 FIXED 6e58eec (H-3way-settings): team-role assignment resolves user once, missing backing user answers 200 not 500, so privilege change never lands while reporting failure; test added."
+ },
+ {
+  "id": "R2-404",
+  "sev": "HIGH",
+  "wave": "W06",
+  "f1": "`settings.py`",
+  "f2": "`models.py`, `admin_migrations.py`, `google_drive.py`",
+  "status": "FIXED",
+  "notes": " | reg L19932 S33 FIXED ac9c310 (H-3way-settings): uploaded logo/signature/stamp decoded and embedded in bill/PO/BOQ/client-report PDFs (watermark behind pages, letterhead p1, signature band last page); undecodable bytes skipped honestly; test added."
+ },
+ {
+  "id": "R2-546",
+  "sev": "HIGH",
+  "wave": "W06",
+  "f1": "`settings.py`",
+  "f2": "`procurement.py`, `siteflow.ts`",
+  "status": "FIXED",
+  "notes": " | reg L28243 S33 EVIDENCE-CLOSE 0dac2f2: bounds landed in 6e2f696 reject decimals 7/9 and unknown grn_numbering/name-display with 422; tripwire test added."
+ },
+ {
+  "id": "R2-264",
+  "sev": "HIGH",
+  "wave": "W68",
+  "f1": "`subcon.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": "FIXED 5df994e; subcon attendance shift_multiplier bounded 0.5-3.0, workers required when OT/allowance logged, OT capped at 12h per worker."
+ },
+ {
+  "id": "R2-296",
+  "sev": "HIGH",
+  "wave": "W68",
+  "f1": "`subcon.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": "FIXED f2e276a; work-order amendments whitelist amendable fields {estimated_work_amount, terms}, applied in same transaction, amended_by from authenticated user."
+ },
+ {
+  "id": "R2-332",
+  "sev": "HIGH",
+  "wave": "W104",
+  "f1": "`subcon_attendance.py`",
+  "f2": "`models.py`",
+  "status": "FIXED",
+  "notes": " | reg L15329 S33 FIXED d0ef1b5: subcon attendance idempotency key matches role trim/lower; inserts store trimmed role."
+ },
+ {
+  "id": "R2-597",
+  "sev": "HIGH",
+  "wave": "W113",
+  "f1": "`subcon_performance.py`",
+  "f2": "`vendor_performance.py`",
+  "status": "FIXED",
+  "notes": " | reg L31481 S33 FIXED 768796a: scorecard empty history -> 0.0 metrics, never fabricated 100%."
+ },
+ {
+  "id": "R2-510",
+  "sev": "HIGH",
+  "wave": "W75",
+  "f1": "`supabase_storage.py`",
+  "f2": "`services/page.tsx`",
+  "status": "FIXED",
+  "notes": " | reg L25505 S33 FIXED d6edc4c: RLS tenant predicates on 108 tables + FORCE ROW LEVEL SECURITY + missing-table coverage (migration 20260824_000001); 33 no-tenancy tables allowlisted."
+ },
+ {
+  "id": "R2-517",
+  "sev": "HIGH",
+  "wave": "W75",
+  "f1": "`supabase_storage.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L26217 S33 FIXED 402c5ad: signed URL joins /storage/v1 base (relative signedURL no longer produces broken host)."
+ },
+ {
+  "id": "R2-267",
+  "sev": "HIGH",
+  "wave": "W25",
+  "f1": "`tally.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": "FIXED 4c3e02b; Tally export books settlement bills as Receipt/Payment vouchers instead of Purchase."
+ },
+ {
+  "id": "R2-369",
+  "sev": "HIGH",
+  "wave": "W25",
+  "f1": "`tally.py`",
+  "f2": "`models.py`",
+  "status": "FIXED",
+  "notes": " | reg L17270 S33 FIXED 1e717ca: export holds voucher sequence (re-downloads byte-identical); mark-synced consumes."
+ },
+ {
+  "id": "R2-409",
+  "sev": "HIGH",
+  "wave": "W25",
+  "f1": "`tally.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L20131 S33 FIXED 19cef93: payslip CSV identity block (pay period/run id/company/project) appended; lives in hr.py not tally.py."
+ },
+ {
+  "id": "R2-542",
+  "sev": "HIGH",
+  "wave": "W25",
+  "f1": "`tally.py`",
+  "f2": "`chat.py`, `budgeting/page.tsx`",
+  "status": "FIXED",
+  "notes": "FIXED 12346aa; mark-synced requires settings:manage, unmark-synced route restores vouchers, /tally/pending reports pre-window exclusions."
+ },
+ {
+  "id": "R2-595",
+  "sev": "HIGH",
+  "wave": "W25",
+  "f1": "`tally.py`",
+  "f2": "`models.py`, `finance.py`",
+  "status": "FIXED",
+  "notes": "FIXED 937d984; Tally export resolves bank/cash ledger from its own account via bank mappings; /tally/mappings/bank gives the mapping table a writer."
+ },
+ {
+  "id": "R2-258",
+  "sev": "HIGH",
+  "wave": "W41",
+  "f1": "`team_schedule.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": "FIXED 521d887; same-day timesheets with end_time not after start_time rejected with 422 instead of wrapping into phantom 23-hour shift."
+ },
+ {
+  "id": "R2-241",
+  "sev": "HIGH",
+  "wave": "W16",
+  "f1": "`three_way.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L10228 S33 FIXED 5c73713 (H-3way-settings): match verdict server-computed from variance; match_status/matched_by removed from create schema; aware-UTC matched_at; test added."
+ },
+ {
+  "id": "R2-349",
+  "sev": "HIGH",
+  "wave": "W16",
+  "f1": "`three_way.py`",
+  "f2": "`models.py`",
+  "status": "FIXED",
+  "notes": " | reg L16310 S33 FIXED 1961a62 (H-3way-settings): reconciliation reads identified bill total_payable; invoice_id required on create; console form picks vendor bill; test added."
+ },
+ {
+  "id": "R2-539",
+  "sev": "HIGH",
+  "wave": "W16",
+  "f1": "`three_way.py`",
+  "f2": "`models.py`, `calculators.py`",
+  "status": "FIXED",
+  "notes": " | reg L27497 S33 FIXED a76823c (H-3way-settings): approve/reject stamp session user + timestamp; caller approved_by ignored; rejected joins model vocabulary; test added."
+ },
+ {
+  "id": "R2-594",
+  "sev": "HIGH",
+  "wave": "W16",
+  "f1": "`three_way.py`",
+  "f2": "`relsweep.py`, `billing.py`, `drawings.py`",
+  "status": "FIXED",
+  "notes": " | reg L31194 S33 FIXED 1fb4a64 (H-3way-settings): one match per PO/GRN pair (409 + unique constraint WITH additive dedupe-aware migration per live-schema rule); bill-link amount agreement gate; test added."
+ },
+ {
+  "id": "R2-613",
+  "sev": "HIGH",
+  "wave": "W16",
+  "f1": "`three_way.py`",
+  "f2": "-",
+  "status": "FIXED",
+  "notes": " | filed S33 from R2-594 closure: legacy duplicate three-way rows keep the additive unique constraint from enabling on prod (migration skips with NOTICE while duplicates exist); needs founder-approved data cleanup then re-run. reg -"
+ },
+ {
+  "id": "R2-383",
+  "sev": "HIGH",
+  "wave": "W31",
+  "f1": "`todos.py`",
+  "f2": "`models.py`, `main.py`",
+  "status": "FIXED",
+  "notes": " | reg L17913 S33 FIXED a3adb74: completion-time recurrence spawn (daily/weekly/monthly, month-end clamped, assignees copied)."
+ },
+ {
+  "id": "R2-442",
+  "sev": "HIGH",
+  "wave": "W31",
+  "f1": "`todos.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L22154 S33 FIXED e9a586b: legacy non-http(s) todo urls serialize null + clearable via PUT null; write allowlist e59316f."
+ },
+ {
+  "id": "R2-229",
+  "sev": "HIGH",
+  "wave": "W33",
+  "f1": "`towers.py`",
+  "f2": "`budgeting.py`",
+  "status": "FIXED",
+  "notes": " | reg L9346 S33 FIXED 9a5685e evidence: towers Billed already revenue-only via _active_bills/REVENUE_INVOICE_TYPES; behavior test locks it."
+ },
+ {
+  "id": "R2-330",
+  "sev": "HIGH",
+  "wave": "W50",
+  "f1": "`wastage.py`",
+  "f2": "`models.py`",
+  "status": "FIXED",
+  "notes": " | reg L15266 S33 FIXED e99fac7: wastage gates stock availability, decrements inventory, writes used MaterialTransaction linked by source_ref_id."
+ },
+ {
+  "id": "R2-412",
+  "sev": "HIGH",
+  "wave": "W73",
+  "f1": "`zatca.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L20303 S33 FIXED 28e8c0f: Zatca QR 409s unless enabled + VAT stored; GSTIN never fills tax slots."
+ },
+ {
+  "id": "R2-413",
+  "sev": "HIGH",
+  "wave": "W73",
+  "f1": "`zatca.py`",
+  "f2": "`models.py`, `reports.py`, `billing.py`",
+  "status": "FIXED",
+  "notes": " | reg L20329 S33 FIXED 34ec614: Zatca lines read real desc keys, derive qty x rate, 409 on unreconciled totals - fabricated Item line dead."
+ },
+ {
+  "id": "R2-188",
+  "sev": "HIGH",
+  "wave": "W20",
+  "f1": "`zoho_books.py`",
+  "f2": "`billing.py`",
+  "status": "FIXED",
+  "notes": "FIXED b6bf9e8; Zoho push resolves vendor from linked library party instead of inventing a contact named Vendor."
+ },
+ {
+  "id": "R2-272",
+  "sev": "HIGH",
+  "wave": "W20",
+  "f1": "`zoho_books.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L11876 S33 FIXED c6e4b9d: tax-invoice PDF fields (title, recipient GSTIN, place of supply, HSN/SAC, IGST split) - real file billing.py not zoho_books.py."
+ },
+ {
+  "id": "R2-368",
+  "sev": "HIGH",
+  "wave": "W20",
+  "f1": "`zoho_books.py`",
+  "f2": "`models.py`",
+  "status": "FIXED",
+  "notes": "FIXED 52179b9; Zoho push persists bills.zoho_bill_id, short-circuits re-pushes with 409, maps duplicate codes 13011/3062 to 409."
+ },
+ {
+  "id": "R2-125",
+  "sev": "MEDIUM",
+  "wave": "W02",
+  "f1": "`UNMAPPED`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": "NEEDS-DECISION -> D4; quotation structure is CGST/SGST-only (crm.py:585-587); adding IGST is a schema + tax-model change routed through D4 (OPEN, blocks R2-041). No code changed. | S33 FIXED 520fb87 (D4): quotation POS same site-state rule (IGST vs halves), project linkage optional; forward-only."
+ },
+ {
+  "id": "R2-218",
+  "sev": "MEDIUM",
+  "wave": "W02",
+  "f1": "`UNMAPPED`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": "FIXED (evidence); handleCreateBill already refetches the bills list on success (billing page)."
+ },
+ {
+  "id": "R2-537",
+  "sev": "MEDIUM",
+  "wave": "W02",
+  "f1": "`UNMAPPED`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": "FIXED d9f99b3; log_deletion no longer commits or swallows - the audit row lands in the caller transaction (all-or-nothing); redundant try/except:pass removed at all 30 call sites across 14 files. Sibling: R2-536 (deleted_by still omitted at all call sites)."
+ },
+ {
+  "id": "R2-602",
+  "sev": "MEDIUM",
+  "wave": "W08",
+  "f1": "`analytics.py`",
+  "f2": "-",
+  "status": "FIXED",
+  "notes": " | filed S33 from R2-305 closure: project_spend (~:234) does not exclude Cancelled bills while operational spend (~:453) does; R2-370 sweep miss. reg - S33 FIXED 3e6fa7d: project_spend/month_spend//financial bill loads exclude Cancelled like operational spend."
+ },
+ {
+  "id": "R2-053",
+  "sev": "MEDIUM",
+  "wave": "W01",
+  "f1": "`finance.py`",
+  "f2": "`backend/app/models.py`, `/p/[project_id]/transaction/page.tsx`, `transaction/page.tsx`",
+  "status": "FIX_VERIFIED",
+  "notes": "`a6bfdb4` | reg L2426; direct-fix pass; suite RC-033 S33 SWEEP: drift confirmed (schema required details vs nullable model) -> re-fixed b290d51 (Optional[str], U+2014 glyph on None). UI half (Ship-To mislabel transaction/page.tsx:557) still open."
+ },
+ {
+  "id": "R2-100",
+  "sev": "MEDIUM",
+  "wave": "W01",
+  "f1": "`finance.py`",
+  "f2": "\u2014",
+  "status": "FIX_VERIFIED",
+  "notes": "`a6bfdb4` | reg L4040; direct-fix pass; suite RC-035"
+ },
+ {
+  "id": "R2-347",
+  "sev": "MEDIUM",
+  "wave": "W01",
+  "f1": "`finance.py`",
+  "f2": "\u2014",
+  "status": "FIX_VERIFIED",
+  "notes": "`e69bcae` | reg L16181; direct-fix pass; suite RC-043"
+ },
+ {
+  "id": "R2-358",
+  "sev": "MEDIUM",
+  "wave": "W01",
+  "f1": "`finance.py`",
+  "f2": "`models.py`",
+  "status": "FIXED",
+  "notes": "FIXED (evidence, PARTIAL stands); (b) per-company Equipment.code uniqueness already landed (a245605 + migration); (a) zero-rate report explicitly deferred as feature (D-008/D-009)."
+ },
+ {
+  "id": "R2-592",
+  "sev": "MEDIUM",
+  "wave": "W01",
+  "f1": "`finance.py`",
+  "f2": "`d/hr/page.tsx`, `procurement.py`, `planning.py`",
+  "status": "FIX_VERIFIED",
+  "notes": "`e69bcae` | reg L30680; direct-fix pass; suite RC-044"
+ },
+ {
+  "id": "R2-608",
+  "sev": "MEDIUM",
+  "wave": "W01",
+  "f1": "`finance.py`",
+  "f2": "-",
+  "status": "FIXED",
+  "notes": " | filed S33 from R2-453 closure: generic except Exception -> 500 wrappers swallow user errors at finance.py:1407, hr.py:929, billing.py:663, procurement.py:788. reg - S33 FIXED 0bc12c1: CSV upload wrapper narrowed to UnicodeDecodeError -> honest 400; residual logged per R2-076 pattern."
+ },
+ {
+  "id": "R2-609",
+  "sev": "MEDIUM",
+  "wave": "W13",
+  "f1": "`finance.py`",
+  "f2": "-",
+  "status": "FIXED",
+  "notes": " | filed S33 from R2-334 closure: free-text cost_code fields written without library validation outside budgeting: finance.py Payment.cost_code/sub_cost_code (~:125), crm.py quotation items (~:569/:643/:702), library.py LibraryMaterial.cost_code (~:443), hr.py PayrollProfile (~:1230). reg - S33 FIXED 0bc12c1: payment cost_code/sub_cost_code gated against Cost Code Library (422 naming unknowns, ato"
+ },
+ {
+  "id": "R2-200",
+  "sev": "MEDIUM",
+  "wave": "W03",
+  "f1": "`hr.py`",
+  "f2": "\u2014",
+  "status": "FIX_VERIFIED",
+  "notes": "`29a1bdb` | reg L7643; hr.py direct-fix pass; suite RC-066"
+ },
+ {
+  "id": "R2-302",
+  "sev": "MEDIUM",
+  "wave": "W03",
+  "f1": "`hr.py`",
+  "f2": "\u2014",
+  "status": "FIX_VERIFIED",
+  "notes": "`acee51f` | reg L13433; hr.py direct-fix pass; suite RC-053"
+ },
+ {
+  "id": "R2-355",
+  "sev": "MEDIUM",
+  "wave": "W03",
+  "f1": "`hr.py`",
+  "f2": "\u2014",
+  "status": "FIX_VERIFIED",
+  "notes": "`05a41e9` | reg L16554; hr.py direct-fix pass; suite RC-051"
+ },
+ {
+  "id": "R2-481",
+  "sev": "MEDIUM",
+  "wave": "W03",
+  "f1": "`hr.py`",
+  "f2": "\u2014",
+  "status": "FIX_VERIFIED",
+  "notes": "`29a1bdb` | reg L24087; hr.py direct-fix pass; suite RC-064"
+ },
+ {
+  "id": "R2-529",
+  "sev": "MEDIUM",
+  "wave": "W03",
+  "f1": "`hr.py`",
+  "f2": "`models.py`",
+  "status": "FIX_VERIFIED",
+  "notes": "`70f9750` | reg L26891; hr.py direct-fix pass; suite RC-058"
+ },
+ {
+  "id": "R2-385",
+  "sev": "MEDIUM",
+  "wave": "W15",
+  "f1": "`models.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | NEEDS-DECISION \u2192 CD-9 (see DECISIONS.md): TaskTodo vs Todo are both live and console-reachable; merging requires a surviving-vocabulary choice (is_completed vs status) with console/API blast radius. No code changed."
+ },
+ {
+  "id": "R2-010",
+  "sev": "MEDIUM",
+  "wave": "W77",
+  "f1": "`frontend/src/app/c/[company_id]/d/reports/calculators/page.tsx`",
+  "f2": "`calculators.py`, `library/page.tsx`",
+  "status": "FIXED",
+  "notes": " | reg L522 | S33 FIXED dbea13e (CD-2): one shared calc module + contract tests."
+ },
+ {
+  "id": "R2-030",
+  "sev": "MEDIUM",
+  "wave": "W116",
+  "f1": "`/boq/page.tsx`",
+  "f2": "`budgeting.py`",
+  "status": "FIXED",
+  "notes": " | reg L1417 | S33 FIXED b6c948f (D5): inline BOQ row + POST /boq-documents/{doc_id}/items."
+ },
+ {
+  "id": "R2-406",
+  "sev": "MEDIUM",
+  "wave": "W125",
+  "f1": "`settings/page.tsx`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": "FIXED (evidence, 34d44b9); placeholder already reads \"This section is not available yet.\""
+ },
+ {
+  "id": "R2-428",
+  "sev": "MEDIUM",
+  "wave": "W23",
+  "f1": "`d/finance/page.tsx`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": "FIXED (evidence, cd01b15); finance CSV import template is header-only since the demo-data purge - no sample rows remain."
+ },
+ {
+  "id": "R2-518",
+  "sev": "MEDIUM",
+  "wave": "W09",
+  "f1": "`page.tsx`",
+  "f2": "`PwaControls.tsx`, `d/reports/calculators/page.tsx`, `calculators.py`",
+  "status": "FIXED",
+  "notes": "FIXED (evidence, 287db85); geolocation failure already blocks punches with an alert (R2-060) - no fabricated coordinates anywhere."
+ },
+ {
+  "id": "R2-612",
+  "sev": "MEDIUM",
+  "wave": "W16",
+  "f1": "`three_way/page.tsx`",
+  "f2": "-",
+  "status": "FIXED",
+  "notes": " | filed S33 from R2-594 closure: three-way page approve/reject handlers show no error message on non-2xx (success-toast discipline class). reg - S33 FIXED 6e8fec8: three-way page approve/reject surface server detail on non-2xx; state untouched on failure."
+ },
+ {
+  "id": "R2-605",
+  "sev": "MEDIUM",
+  "wave": "W05",
+  "f1": "`procurement.py`",
+  "f2": "-",
+  "status": "FIXED",
+  "notes": " | filed S33 from R2-242 closure: reject_po (~:586-606) shows no visible assignment of approval_flag=rejected nor commit; possible dead rejection path. Needs audit look. reg - S33 FIXED 23fff1f: reject_po was a dead path (no persist + response-model 500); now persists approval_flag=rejected, double-reject refused."
+ },
+ {
+  "id": "R2-286",
+  "sev": "MEDIUM",
+  "wave": "W04",
+  "f1": "`reports.py`",
+  "f2": "\u2014",
+  "status": "FIX_VERIFIED",
+  "notes": "`2ddc411` | reg L12577; reports.py direct-fix pass; suite RC-077"
+ },
+ {
+  "id": "R2-319",
+  "sev": "MEDIUM",
+  "wave": "W04",
+  "f1": "`reports.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": " | reg L14735; DEFERRED per D-011 \u2014 needs place-of-supply schema S33 FIXED 520fb87 (D4): state-required gate + site-derived IGST; completes D-011."
+ },
+ {
+  "id": "R2-321",
+  "sev": "MEDIUM",
+  "wave": "W04",
+  "f1": "`reports.py`",
+  "f2": "\u2014",
+  "status": "FIX_VERIFIED",
+  "notes": "`d4db32f` | reg L14796; reports.py direct-fix pass; suite RC-078"
+ },
+ {
+  "id": "R2-322",
+  "sev": "MEDIUM",
+  "wave": "W04",
+  "f1": "`reports.py`",
+  "f2": "\u2014",
+  "status": "FIX_VERIFIED",
+  "notes": "`d4db32f` | reg L14818; reports.py direct-fix pass; suite RC-079"
+ },
+ {
+  "id": "R2-414",
+  "sev": "MEDIUM",
+  "wave": "W04",
+  "f1": "`reports.py`",
+  "f2": "\u2014",
+  "status": "FIX_VERIFIED",
+  "notes": "`d4db32f` | reg L20452; reports.py direct-fix pass; suite RC-080"
+ },
+ {
+  "id": "R2-505",
+  "sev": "MEDIUM",
+  "wave": "W12",
+  "f1": "`statutory.py`",
+  "f2": "\u2014",
+  "status": "FIXED",
+  "notes": "FIXED (evidence, 6ef2cc8); PHASE 16 eyebrow already removed from d/production by the R2-023 sweep; zero PHASE matches in frontend/src."
+ },
+ {
+  "id": "R2-721",
+  "sev": "MEDIUM",
+  "wave": "V-VERIFY",
+  "f1": "`statutory.py`",
+  "f2": "`models.py`",
+  "status": "FIXED",
+  "notes": " | Definition: docs/VERIFICATION_NEW_FINDINGS.md (founder block). S33 FIXED 25cdada (H-statutory-gate): report_type Literal allowlist + case normalization at all comparison sites; unknown types 422 naming valid values; BONUS pre-existing blocker fixed - StatutoryReport had NO due_date column so every POST /statutory 500'd; nullable column added via boot schema-sync (columns are safe per verificati"
+ },
+ {
+  "id": "R2-614",
+  "sev": "LOW",
+  "wave": "W75",
+  "f1": "`supabase_storage.py`",
+  "f2": "-",
+  "status": "FIXED",
+  "notes": " | filed S33 from R2-404 closure: company branding upload validates asset_type but not bytes/content-type (harmless post-R2-404 since renderer skips junk; tighten when touched). reg - S33 FIXED fedb387: branding upload validates PNG/JPEG magic bytes + 5MB cap (422 naming problem)."
+ }
+]

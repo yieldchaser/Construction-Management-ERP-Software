@@ -1531,3 +1531,30 @@ today, one ready for the role switch.
 - **Snapshot.** This is `origin/main` `53cfa95` at one moment; it is not a standing gate. The
   durable version is a test in the suite that mints two tenants and asserts 403 across the route
   table - worth adding, since this property is exactly the kind that regresses silently.
+
+---
+
+## Round 2 closed — handover to round 3, 2026-08-27
+
+**Item 17 shipped** (`2991091`): `main.py:586` adds a `ValueError` handler returning 422, correctly
+ordered `IntegrityError` (571) -> `ValueError` (586) -> catch-all `Exception` (600). That was the
+last open engineering item and it closes the final three Sentry issues.
+
+**Final state of the fixing:** 599 register rows — 502 FIXED, 93 FIX_VERIFIED, 3 WONTFIX, 1
+RETRACTED, **0 TODO**. Nothing is queued for the fixing agent.
+
+**Final state of the verification:** 225 of 595 closed rows opened individually, **370 not**. The
+founder was offered three options — accept the sample, verify the 144 CRITICALs only, or verify all
+370 — and chose **all 370**, starting 2026-08-28.
+
+Handover written to `docs/VERIFICATION_RESUME_R3.md`; worklist to
+`docs/VERIFICATION_WORKLIST_R3.md` and `scripts/verification/worklist_r3.json`, sorted CRITICAL
+first then by file cluster. Memory updated.
+
+**What round 3 must not redo:** schema (1458 columns / 139 tables match), migrations (ledger 51,
+all applied), RLS (correct, recursion fixed, isolation proven, deliberately inert), API tenant
+isolation (180 live probes / 106 routes / two foreign tenants / zero leaks), Sentry (0 unresolved at
+90 days).
+
+**What round 3 must not pretend:** the isolation probes were **GET only**. Write-path cross-tenant
+access is unproven. Same guards, so low risk — but it is a coverage limit, not a clean bill.
