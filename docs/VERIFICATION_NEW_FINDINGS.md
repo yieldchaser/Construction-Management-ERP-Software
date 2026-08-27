@@ -1055,6 +1055,48 @@ normal fix for R2-731 — one of the two is silently skipped or the pair sorts n
 Renumber before building the runner, not after.
 
 
+---
+
+## R2-733 · MEDIUM · Every successful login still lands on the report catalogue
+
+**Residual of R2-047, which is closed FIXED.** R2-047 named two things: nine unreachable
+company routes, and — under "Also:" — that `app/login/page.tsx:133, 139` sends users to
+`/c/{companyId}/reports`, "the *report catalogue*, not any dashboard". The reachability half was
+fixed properly (see the R2-047 verdict). The redirect was not touched:
+
+- `login/page.tsx:131-133` — `window.location.href = shouldOnboard ? "/profile/onboarding" : ``/c/${companyId}/reports```
+- `login/page.tsx:138` — `pickCompany` does the same for the multi-company chooser.
+
+Now that `/d/home` (Project Hub) is a primary-nav entry (`Sidebar.tsx:102`), there is a dashboard
+to land on and no reason to open on a list of report types. Nothing in the register or in
+`VERIFICATION_DECISIONS_RESOLVED.md` tracks this — an instance of the R2-717 class, found while
+verifying the row that disclosed it.
+
+**Fix.** Point both redirects at the page the founder considers the company dashboard.
+
+---
+
+## R2-734 · MEDIUM · `/d/planning` is the one route R2-046's overflow menu does not carry
+
+**Residual of R2-046, which is closed FIXED.** The fix adds `MORE_TABS` at
+`c/[company_id]/p/[project_id]/layout.tsx:28`, rendered at `:231`. It is a good fix — each entry
+mirrors the module's legacy redirect stub and appends `?project=` where the company page is
+project-aware. It carries **27 entries**; R2-046 named **28** unreachable routes.
+
+The missing one is bare **`planning`**. `MORE_TABS` has "Planning Gantt" → `/d/planning/gantt` but
+no entry for `/d/planning`, and `Sidebar.tsx` has no planning entry either — its only
+`permission: "planning:view"` item is "Team Schedule", pointing at `/d/team-action`
+(`Sidebar.tsx:134-136`).
+
+`frontend/src/app/c/[company_id]/d/planning/page.tsx` exists and renders. Its sole inbound link in
+all of `frontend/src` is a Help-page hyperlink at `d/help/helpContent.tsx:194` — and R2-046's own
+criterion excluded Help links. So one module out of the 28 is still navigable only by typing the
+URL.
+
+**Fix.** One line in `MORE_TABS`, or a deliberate decision that `/d/planning` is superseded by the
+Gantt view and should be deleted.
+
+
 ## Summary
 
 | id | sev | class | from |
@@ -1091,8 +1133,10 @@ Renumber before building the runner, not after.
 | **R2-730** | **HIGH** | **material_wastage.reported_by still free text; migration 20260816_000005 exists but never ran** | live schema sweep |
 | **R2-731** | **CRITICAL** | **nothing applies `supabase/migrations/*.sql` — no runner, no CI, no entrypoint; the D-V4 gate asserts only that a file exists** | generalised from R2-730 |
 | **R2-732** | **LOW** | **two migrations share the prefix `20260825_000004`** | migration sweep |
+| **R2-733** | **MEDIUM** | **login still lands on the report catalogue — R2-047's own "Also:" sub-claim, untracked** | verifying R2-047 |
+| **R2-734** | **MEDIUM** | **`/d/planning` missing from the R2-046 overflow menu — 27 of 28 routes covered** | verifying R2-046 |
 
-**Twenty-seven live findings** (R2-724 retracted). R2-713..R2-716 were filed separately first and are struck through, not
+**Twenty-nine live findings** (R2-724 retracted). R2-713..R2-716 were filed separately first and are struck through, not
 deleted, so the history stays traceable.
 
 Three to act on first, for different reasons:

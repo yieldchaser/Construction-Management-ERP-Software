@@ -117,6 +117,52 @@ EVIDENCE_CLOSE = {"R2-001", "R2-118", "R2-428"}
 # Verdicts reached by hand, one finding at a time. E1 = code read, E3 = live product.
 # NOT_IN_PROD is a FIFTH verdict, added deliberately - see the header note in the emitted file.
 VERDICTS = {
+    "R2-024": ("UNVERIFIED", "E1 PASS: _ensure_demo_company and _seed_demo_projects are gone from "
+               "auth.py (grep = 0 hits outside backend/scripts/seed_demo_data.py, which is a "
+               "deliberate manual script); OTP_DEMO_ALLOWLIST and OTP_DEMO_CODE both default to "
+               "\"\" in config.py:44-45, so with no env set the demo login path is disabled. "
+               "The 11 sentinel fallbacks are now guards of the D-V1 shape (chat/page.tsx:43 "
+               "'if (!companyId || companyId === sentinel) bail'). E0 OUTSTANDING: D-V1 step 3 "
+               "was to DELETE the demo company row and its 5 projects from production. Needs "
+               "Supabase; not yet checked."),
+    "R2-025": ("UNVERIFIED", "E1 PASS: finance.py:890-894 now has a shared _net_balance helper "
+               "returning advance_paid + to_receive - advance_received - to_pay, i.e. assets "
+               "minus liabilities. The sign error is gone and all three call sites use the "
+               "helper (951 per-party, 1103 per-project, 1122 totals), so the rollup cannot "
+               "diverge from the per-row maths. On the finding's own numbers the card now reads "
+               "+94,400 rather than -1,41,600. E3 PENDING: needs the Enterprise page live."),
+    "R2-046": ("UNVERIFIED", "E1 PARTIAL: p/[project_id]/layout.tsx:28 gains MORE_TABS, an "
+               "overflow menu rendered at :231, each entry mirroring that module's legacy "
+               "redirect stub and appending ?project= where the company page is project-aware. "
+               "It carries 27 entries. The finding named 28 unreachable routes. The missing one "
+               "is bare /d/planning - see R2-734. The other 27 are covered."),
+    "R2-047": ("UNVERIFIED", "E1 PARTIAL: all nine routes are now reachable - eight via the "
+               "Sidebar 'More Modules' collapsible (Sidebar.tsx:245 moreNavItems: analytics, "
+               "budget, custom-fields, depreciation, drawings, statutory, towers, wastage) and "
+               "/d/home as a Project Hub primary-nav entry at Sidebar.tsx:102. The finding's "
+               "'Also:' sub-claim is NOT addressed: login/page.tsx:133 and :138 still send every "
+               "successful login to /c/{id}/reports. Filed as R2-733."),
+    "R2-099": ("UNVERIFIED", "E1 PASS, and it is a real fix not a cosmetic one. The loader gate "
+               "at finance/page.tsx:382 is now 'if (companyId) fetchData()' on [companyId, "
+               "projectId]; only the project-scoped P&L call stays behind 'if (projectId)' "
+               "(:302), which is correct. txnLoad drives a loading pulse (:1166), an error state "
+               "with a working Retry that re-invokes fetchData (:1173-1176), and a truthful "
+               "empty string (:1233). The all-zero-with-no-request state cannot recur. E3 "
+               "PENDING: live load of the company Finance page."),
+    "R2-105": ("UNVERIFIED", "E1 PASS: flushQueue (attendance/page.tsx:495) now POSTs each punch "
+               "to /hr/attendance/punch (:512), counts failures, pushes them onto `remaining` "
+               "and persists that back (:536, :541), and reports 'Synced N of M; K failed and "
+               "remain queued' when anything failed (:545). The silent-destroy path is gone. "
+               "CAVEAT worth carrying: R2-728 makes the punch endpoint 500 on Postgres for "
+               "punch-OUT, so queued OUT punches will always fail - they are retained rather than "
+               "destroyed, so this fix degrades honestly, but offline OUT sync cannot succeed "
+               "in production until R2-728 is fixed. E3 PENDING."),
+    "R2-112": ("UNVERIFIED", "E1 PASS: backend permissions.py:46 WORKFLOW_MODULES and frontend "
+               "lib/rbac.ts:34 WORKFLOW_MODULES are now identical 16-element sets, both "
+               "including attendance, drawings and reports - the three keys hr.py:503, "
+               "drawings.py:237 and reports.py:201 demand. MATRIX_ROWS (rbac.ts:131-135) emits "
+               "the approve row from that same set, so the UI cannot render an em dash for a key "
+               "the backend enforces. E3 PENDING: Settings -> Roles & Access matrix live."),
     "R2-017": ("CONFIRMED", "E1: the four files it names are free of fabricated strings. Claim "
                             "holds exactly as written. The defect CLASS survives elsewhere - "
                             "raised as R2-712, which does not detract from this closure."),
