@@ -745,3 +745,79 @@ Keep the `text(content)` fallback if you like, but it must not mask the real err
 `--strict` has now caught two distinct real failures on its first two runs, and both would have gone
 green under the old behaviour: a non-replayable migration, and a runner that cannot execute
 `RAISE NOTICE`. M-2 has already paid for itself twice.
+
+---
+
+## Run #3 (`1568092`) — the `%` fix worked; an ordering deadlock is the blocker
+
+**The runner bug is fixed.** Run #3 got past `RAISE NOTICE` and reached the `DO` block's own logic,
+which is what the raw-cursor change was for. It now fails with a real message from the migration
+rather than a SQLAlchemy internal:
+
+```
+[migration_runner] FAILED to apply 20260821_000003_three_way_match_unique_pair.sql:
+migration failed: constraint uq_three_way_matches_po_grn missing:
+2 duplicate (po_id, grn_id) group(s) present - purge required
+```
+
+Ledger unchanged at **36 total / 9 August** — run #3 applied nothing new, but it failed for an
+honest reason and the new fallback message surfaces both errors as asked.
+
+### The deadlock
+
+The file's own comment says: *"purge duplicates via
+`20260825_000003_duplicate_purge_and_constraints.sql` first, then re-run."*
+
+**That file runs four days later in filename order.** The runner applies in sorted order, so
+`20260821_000003` is always reached first, always throws, and `20260825_000003` can never run. The
+instruction in the comment is unreachable by construction.
+
+Measured across the five constraint-bearing migrations:
+
+| file | `RAISE EXCEPTION` | inline purge | constraints | runs |
+|---|---|---|---|---|
+| `20260821_000003_three_way_match_unique_pair` | 1 | **none** | 1 | 1st |
+| `20260823_000001_payroll_runs_unique_month` | 1 | **none** | 1 | 2nd |
+| `20260823_000002_orphan_unique_constraints` | 7 | **none** | 7 | 3rd |
+| `20260825_000003_duplicate_purge_and_constraints` | 0 | **yes (32 refs)** | 8 | 4th |
+| `20260825_000004_missing_unique_constraints` | 0 | **yes (8 refs)** | 2 | 5th |
+
+F-1's restructure was applied to the two `20260825` files, which now purge inline and therefore need
+no exception. The three earlier files got the *other* half of F-1 — `RAISE EXCEPTION` instead of a
+silent skip — without a purge to make the exception avoidable. Correct individually, deadlocked
+together.
+
+### Duplicate counts, measured now
+
+| pair | groups | note |
+|---|---|---|
+| `three_way_matches(po_id, grn_id)` | **2** | blocks `20260821_000003` |
+| `payroll_runs(company_id, project_id, payroll_month)` | **2** | blocks `20260823_000001` — and the table has only **4 rows total**, so every row is part of a duplicate pair |
+| `company_team(company_id, user_id)` | 1 | handled inline by `20260825_000004` |
+| `library_cost_codes(company_id, code)` | 0 | fine |
+| bills, purchase_orders, GRN, work_orders, NCRs, payments, material_indents | 0 | fine |
+
+### The overlap that makes the fix cheap
+
+`20260825_000003` re-declares **8** constraints, and they cover **8 of the 9** in the three early
+files — all 7 from `20260823_000002` plus `uq_three_way_matches_po_grn` from `20260821_000003`.
+Only `uq_payroll_runs_company_project_month` is unique to `20260823_000001`.
+
+**Fix.**
+
+1. `20260821_000003` and `20260823_000002` are **superseded** by `20260825_000003`. Reduce them to
+   no-ops with a comment naming the owner file. Keep the files so the ledger stays stable. This is
+   *not* the silent-skip antipattern F-1 removed: the later migration in the same batch creates
+   those constraints and fails loudly if it cannot.
+2. `20260823_000001` (payroll) is the one nothing else owns. Give it the same inline purge shape as
+   `20260825_000003` — back the duplicate rows into a timestamped table, collapse to earliest, then
+   `ADD CONSTRAINT` unconditionally after `END IF`.
+
+### Separately, worth the founder's eye
+
+`payroll_runs` holds **4 rows forming 2 duplicate `(company_id, project_id, payroll_month)`
+groups** — i.e. every payroll run in the database is duplicated. If any of those belong to a real
+company rather than the test tenants, a duplicated payroll run is a double-counted salary figure.
+The purge keeps the earliest row of each pair, which is the right default, but the *reason* two runs
+exist for the same month is worth knowing before it is collapsed. Check which company they belong to
+first.
