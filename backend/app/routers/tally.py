@@ -653,6 +653,8 @@ def pending_vouchers(company_id: uuid.UUID, db: Session = Depends(get_db), _: No
     bill_ids: List[str] = []
     payment_ids: List[str] = []
     vouchers = []
+    excluded_bills = 0
+    excluded_payments = 0
 
     if conn:
         bills = db.query(Bill).filter(
