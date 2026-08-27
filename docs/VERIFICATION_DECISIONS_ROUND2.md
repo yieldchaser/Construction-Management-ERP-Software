@@ -1373,3 +1373,53 @@ Backend `/health` returns `{"status":"ok"}`.
 
 The `ADD COLUMN IF NOT EXISTS` form means the agent's migration for the same four columns will apply
 cleanly on top of this - no conflict, and a fresh database still gets them from the migration.
+
+---
+
+## Verification of `e8313ae` — R2-741 and R2-742 closed against production
+
+**R2-742 fixed.** `tally.py:653-657` now pre-initialises `excluded_bills = 0` and
+`excluded_payments = 0` alongside `bill_ids` / `payment_ids` / `vouchers`, before the `if conn:`
+branch. The UnboundLocalError path is gone.
+
+**R2-737 fixed.** `crm.py:118` normalises `v.tzinfo is None` to UTC before comparing, copying the
+`todos.py:57-61` pattern exactly as specified. A `+05:30` value now yields 422, not 500.
+
+**R2-741 fixed at three levels**, which is the part worth noting - the agent did not just add the
+columns:
+
+1. `supabase/migrations/20260825_000009_policy_columns.sql` — the four columns as a proper
+   migration, so a fresh database gets them.
+2. `main.py:242` — `ensure_postgres_schema_sync` no longer swallows. Every per-table and
+   per-column failure now prints table and column context to stderr. Its own docstring names the
+   silent swallow as what made the outage invisible.
+3. `test_r2_741_column_coverage_gate.py` — a gate that checks the **live DB**, not the file text.
+
+**Ledger: 51 rows**, with `20260825_000008_rls_tenant_member_ids` and
+`20260825_000009_policy_columns` both recorded. The CI workflow applied them.
+
+### The independent check that matters most
+
+Rather than re-verify the four columns the agent already knew about, I enumerated **every** column
+in `Base.metadata` — 139 tables, 1458 columns — and compared each table against
+`information_schema` in production:
+
+```
+ALL 139 TABLES MATCH
+```
+
+No table has fewer live columns than model columns. So the R2-741 class is closed across the whole
+schema, not just where the outage happened to surface.
+
+**Honest limit of that check:** it compares counts per table, so a rename — one column added and
+one removed in the same table — would pass. Names were not compared. For the question asked ("is
+anything still missing"), counts are sufficient; for a rename audit they would not be.
+
+### Outstanding
+
+- **Sentry not re-checked.** It requires a login in the Browser pane, which I do not have. Per
+  standing item 16, "0 unresolved issues" is part of the definition of done — the founder should
+  confirm the `ProgrammingError` stopped climbing past 7 events and that `UnboundLocalError` is
+  resolved.
+- **The API-layer tenant isolation probe** is still the one substantive untested claim, and still
+  needs one live session in the Browser pane.
