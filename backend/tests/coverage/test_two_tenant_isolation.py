@@ -5,8 +5,11 @@ every GET route carrying {company_id} or {project_id} as its sole
 path param, enumerated from the OpenAPI schema so new routes are
 covered automatically.
 
-At 53cfa95 a manual pass verified 180 such routes with zero leaks.
-This test automates the same gate dynamically via app.openapi().
+At 53cfa95 a manual pass verified 106 total GET routes with sole
+{company_id}/{project_id} (102 JWT-protected, 4 non-JWT skipped),
+180 probes (74 company_id x2 foreign companies + 32 project_id)
+with zero leaks. This test automates the same gate dynamically via
+app.openapi().
 """
 
 import re
@@ -138,10 +141,12 @@ def test_two_tenant_get_routes_isolation(client, db, make_tenant, auth_headers):
     routes = _enumerate_get_sole_routes()
 
     # Sanity: we must have discovered a non-trivial set. At 53cfa95
-    # the manual count was 180; the current OpenAPI enumeration at
-    # this commit is 102 JWT-protected sole-param GET routes (106
-    # including unauthenticated feed/admin which are intentionally
-    # skipped). Assert the gate is not vacuous.
+    # the manual count was 106 total GET routes with sole
+    # {company_id}/{project_id} (102 JWT-protected, 4 non-JWT skipped),
+    # 180 probes (74 company_id x2 foreign companies + 32 project_id).
+    # The current OpenAPI enumeration is 102 JWT-protected sole-param
+    # GET routes (106 including unauthenticated feed/admin which are
+    # intentionally skipped). Assert the gate is not vacuous.
     assert len(routes) >= 90, f"Expected at least 90 tenant-checked GET sole-param routes, got {len(routes)}: {routes}"
     # Provide visibility in -v output
     print(f"\n[two-tenant gate] discovered {len(routes)} GET sole-param routes (JWT-protected)")
