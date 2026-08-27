@@ -3,7 +3,7 @@ R2-731: Real migration runner that applies supabase/migrations/*.sql on startup.
 
 Prior to this, supabase/migrations/*.sql were never executed by app code; README
 instructed hand-pasting into Supabase editor. No Alembic, no script read that
-directory, and D-V4 gate only checked file existence — so R2-730 proved file
+directory, and D-V4 gate only checked file existence -- so R2-730 proved file
 existence could be true while prod DB never received the change.
 
 This runner closes the gap:
@@ -82,6 +82,32 @@ def _resolve_migrations_dir() -> pathlib.Path:
         return (this_file.parents[2] / "supabase" / "migrations").resolve()
     except Exception:
         return pathlib.Path("supabase/migrations").resolve()
+
+
+_PG_ADVISORY_LOCK_KEY = 727310731
+
+
+def _is_strict_mode() -> bool:
+    """M-2: strict-by-default when ENVIRONMENT=production.
+
+    Explicit MIGRATION_RUNNER_STRICT env takes precedence (1/true/yes/on = strict,
+    0/false/no/off/empty = not strict is handled via explicit check). When not
+    set, default to strict if ENVIRONMENT == production, otherwise non-strict
+    (dev/test). Falls back to app.config.Settings.ENVIRONMENT when the env var
+    is unset (e.g., config is the source of truth).
+    """
+    raw = os.getenv("MIGRATION_RUNNER_STRICT")
+    if raw is not None and raw.strip() != "":
+        return raw.strip().lower() in ("1", "true", "yes", "on")
+    env = os.getenv("ENVIRONMENT", "")
+    if not env.strip():
+        try:
+            from app.config import settings as _settings  # lazy to avoid circular import
+
+            env = _settings.ENVIRONMENT or ""
+        except Exception:
+            env = ""
+    return env.strip().lower() == "production"
 
 
 def _is_sqlite(engine) -> bool:
@@ -247,128 +273,175 @@ def apply_pending_migrations(engine_override=None) -> List[str]:
         print(f"[migration_runner] no .sql files in {migrations_dir}")
         return []
 
-    # Ensure tracking table exists and load applied set.
-    try:
-        applied = _get_applied_filenames(engine)
-    except Exception as e:
-        print(f"[migration_runner] could not load applied set: {e}")
-        applied = set()
-
+    # M-2/M-3: determine dialect before acquiring lock.
     is_sqlite = _is_sqlite(engine)
-    newly_applied: List[str] = []
 
-    for path in files:
-        fname = path.name
-        if fname in applied:
-            continue
-
+    # --- M-3: pg_advisory_lock to serialize concurrent boots (Render overlap / cold-boot) ---
+    # Advisory lock is Postgres-only; skip gracefully on SQLite or non-Postgres.
+    _lock_conn = None
+    _lock_acquired = False
+    _is_pg = False
+    if not is_sqlite:
         try:
-            content = path.read_text(encoding="utf-8", errors="ignore")
-        except Exception as e:
-            print(f"[migration_runner] could not read {fname}: {e}")
-            continue
-
-        if not content.strip():
-            print(f"[migration_runner] skipping empty {fname}")
-            # Still mark as applied to avoid infinite loop on empty file.
-            checksum = _file_checksum(content)
+            _is_pg = engine.dialect.name == "postgresql" or engine.url.drivername.startswith("postgresql")
+        except Exception:
+            url_str = str(getattr(engine, "url", "")).lower()
+            _is_pg = "postgres" in url_str or "supabase" in url_str
+        if _is_pg:
             try:
-                with engine.begin() as conn:
-                    conn.exec_driver_sql(
-                        "INSERT OR IGNORE INTO supabase_migrations (filename, checksum) VALUES (?, ?)" if is_sqlite
-                        else "INSERT INTO supabase_migrations (filename, checksum) VALUES (%s, %s) ON CONFLICT (filename) DO NOTHING",
-                        (fname, checksum) if is_sqlite else (fname, checksum),
-                    )
-            except Exception:
-                # Postgres uses %s placeholder via driver; fallback to text.
+                _lock_conn = engine.connect()
+                _lock_conn.exec_driver_sql(f"SELECT pg_advisory_lock({_PG_ADVISORY_LOCK_KEY})")
+                try:
+                    _lock_conn.commit()
+                except Exception:
+                    pass
+                _lock_acquired = True
+                print(f"[migration_runner] acquired pg_advisory_lock {_PG_ADVISORY_LOCK_KEY}")
+            except Exception as e:
+                # Not Postgres, permission issue, or lock unavailable -- proceed without lock but log.
+                print(f"[migration_runner] advisory lock unavailable, proceeding without lock: {e}")
+                if _lock_conn is not None:
+                    try:
+                        _lock_conn.close()
+                    except Exception:
+                        pass
+                    _lock_conn = None
+                    _lock_acquired = False
+
+    # Wrap whole migration pass so advisory lock covers read-applied + execute + record.
+    try:
+        # Ensure tracking table exists and load applied set (inside lock).
+        try:
+            applied = _get_applied_filenames(engine)
+        except Exception as e:
+            print(f"[migration_runner] could not load applied set: {e}")
+            applied = set()
+
+        newly_applied: List[str] = []
+
+        for path in files:
+            fname = path.name
+            if fname in applied:
+                continue
+
+            try:
+                content = path.read_text(encoding="utf-8", errors="ignore")
+            except Exception as e:
+                print(f"[migration_runner] could not read {fname}: {e}")
+                continue
+
+            if not content.strip():
+                print(f"[migration_runner] skipping empty {fname}")
+                # Still mark as applied to avoid infinite loop on empty file.
+                checksum = _file_checksum(content)
                 try:
                     with engine.begin() as conn:
-                        conn.execute(text("INSERT INTO supabase_migrations (filename, checksum) VALUES (:fname, :cs) ON CONFLICT (filename) DO NOTHING"),
-                                     {"fname": fname, "cs": checksum})
-                except Exception as ie:
-                    print(f"[migration_runner] could not track {fname}: {ie}")
-            newly_applied.append(fname)
-            continue
+                        conn.exec_driver_sql(
+                            "INSERT OR IGNORE INTO supabase_migrations (filename, checksum) VALUES (?, ?)" if is_sqlite
+                            else "INSERT INTO supabase_migrations (filename, checksum) VALUES (%s, %s) ON CONFLICT (filename) DO NOTHING",
+                            (fname, checksum) if is_sqlite else (fname, checksum),
+                        )
+                except Exception:
+                    # Postgres uses %s placeholder via driver; fallback to text.
+                    try:
+                        with engine.begin() as conn:
+                            conn.execute(text("INSERT INTO supabase_migrations (filename, checksum) VALUES (:fname, :cs) ON CONFLICT (filename) DO NOTHING"),
+                                         {"fname": fname, "cs": checksum})
+                    except Exception as ie:
+                        print(f"[migration_runner] could not track {fname}: {ie}")
+                newly_applied.append(fname)
+                continue
 
-        checksum = _file_checksum(content)
+            checksum = _file_checksum(content)
 
-        if is_sqlite:
-            # SQLite dev: do NOT attempt to execute Postgres-flavored SQL
-            # (DO $$, pg_constraint, UUID type, etc. will error). Just track.
+            if is_sqlite:
+                # SQLite dev: do NOT attempt to execute Postgres-flavored SQL
+                # (DO $$, pg_constraint, UUID type, etc. will error). Just track.
+                try:
+                    with engine.begin() as conn:
+                        # Use OR IGNORE for SQLite idempotency.
+                        conn.exec_driver_sql(
+                            "INSERT OR IGNORE INTO supabase_migrations (filename, checksum) VALUES (?, ?)",
+                            (fname, checksum),
+                        )
+                    print(f"[migration_runner] sqlite: marked {fname} as applied (no exec, SQLite dev)")
+                    newly_applied.append(fname)
+                except Exception as e:
+                    print(f"[migration_runner] sqlite tracking failed for {fname}: {e}")
+                continue
+
+            # Postgres path: execute the SQL then record.
+            start = time.time()
             try:
                 with engine.begin() as conn:
-                    # Use OR IGNORE for SQLite idempotency.
-                    conn.exec_driver_sql(
-                        "INSERT OR IGNORE INTO supabase_migrations (filename, checksum) VALUES (?, ?)",
-                        (fname, checksum),
-                    )
-                print(f"[migration_runner] sqlite: marked {fname} as applied (no exec, SQLite dev)")
-                newly_applied.append(fname)
-            except Exception as e:
-                print(f"[migration_runner] sqlite tracking failed for {fname}: {e}")
-            continue
-
-        # Postgres path: execute the SQL then record.
-        start = time.time()
-        try:
-            with engine.begin() as conn:
-                # Execute the entire file as one operation. Postgres can handle
-                # multi-statement strings and DO blocks this way.
-                # Use exec_driver_sql for raw passthrough; fallback to text().
-                try:
-                    conn.exec_driver_sql(content)
-                except Exception as first_err:
-                    # Some drivers need text() wrapper for large DO blocks.
+                    # Execute the entire file as one operation. Postgres can handle
+                    # multi-statement strings and DO blocks this way.
+                    # Use exec_driver_sql for raw passthrough; fallback to text().
                     try:
-                        conn.execute(text(content))
+                        conn.exec_driver_sql(content)
+                    except Exception as first_err:
+                        # Some drivers need text() wrapper for large DO blocks.
+                        try:
+                            conn.execute(text(content))
+                        except Exception:
+                            # Re-raise the original to preserve context.
+                            raise first_err
+
+                    # Record in tracking table in same transaction.
+                    try:
+                        conn.execute(
+                            text("INSERT INTO supabase_migrations (filename, checksum) VALUES (:fname, :cs) ON CONFLICT (filename) DO NOTHING"),
+                            {"fname": fname, "cs": checksum},
+                        )
                     except Exception:
-                        # Re-raise the original to preserve context.
-                        raise first_err
+                        # Fallback for psycopg2 %s style via exec_driver_sql
+                        conn.exec_driver_sql(
+                            "INSERT INTO supabase_migrations (filename, checksum) VALUES (%s, %s) ON CONFLICT (filename) DO NOTHING",
+                            (fname, checksum),
+                        )
 
-                # Record in tracking table in same transaction.
-                try:
-                    conn.execute(
-                        text("INSERT INTO supabase_migrations (filename, checksum) VALUES (:fname, :cs) ON CONFLICT (filename) DO NOTHING"),
-                        {"fname": fname, "cs": checksum},
-                    )
-                except Exception:
-                    # Fallback for psycopg2 %s style via exec_driver_sql
-                    conn.exec_driver_sql(
-                        "INSERT INTO supabase_migrations (filename, checksum) VALUES (%s, %s) ON CONFLICT (filename) DO NOTHING",
-                        (fname, checksum),
-                    )
+                elapsed = int((time.time() - start) * 1000)
+                print(f"[migration_runner] applied {fname} ({elapsed}ms, checksum {checksum})")
+                newly_applied.append(fname)
 
-            elapsed = int((time.time() - start) * 1000)
-            print(f"[migration_runner] applied {fname} ({elapsed}ms, checksum {checksum})")
-            newly_applied.append(fname)
+            except Exception as e:
+                # Do not mark as applied; next boot will retry.
+                # M-2: strict-by-default in production -> raise so boot crashes.
+                # In dev, log and continue (non-fatal).
+                print(f"[migration_runner] FAILED to apply {fname}: {e}")
+                if _is_strict_mode():
+                    raise
+                continue
 
-        except Exception as e:
-            # Do not mark as applied; next boot will retry.
-            # Log but do not crash the entire app boot — migrations are
-            # additive and a single bad file shouldn't bring down the API.
-            # However, for CI/scripts we want visibility, so we print loud.
-            print(f"[migration_runner] FAILED to apply {fname}: {e}")
-            # For defect detection, re-raise in test/CI when env indicates strict mode.
-            if os.getenv("MIGRATION_RUNNER_STRICT", "").lower() in ("1", "true", "yes"):
-                raise
-            # In production boot, continue to next file only if this file's
-            # error was not a hard constraint violation? We continue regardless
-            # but log.
-            continue
-
-    if not newly_applied:
-        # For SQLite, also ensure unique constraints are backfilled even when
-        # no new files were pending (stale DB file case).
-        if is_sqlite:
-            _ensure_sqlite_unique_constraints(engine)
+        if not newly_applied:
+            # For SQLite, also ensure unique constraints are backfilled even when
+            # no new files were pending (stale DB file case).
+            if is_sqlite:
+                _ensure_sqlite_unique_constraints(engine)
+            else:
+                print(f"[migration_runner] no pending migrations ({len(files)} total, {len(applied)} already applied)")
         else:
-            print(f"[migration_runner] no pending migrations ({len(files)} total, {len(applied)} already applied)")
-    else:
-        print(f"[migration_runner] applied {len(newly_applied)}/{len(files)} pending: {', '.join(newly_applied)}")
-        if is_sqlite:
-            _ensure_sqlite_unique_constraints(engine)
+            print(f"[migration_runner] applied {len(newly_applied)}/{len(files)} pending: {', '.join(newly_applied)}")
+            if is_sqlite:
+                _ensure_sqlite_unique_constraints(engine)
 
-    return newly_applied
+        return newly_applied
+    finally:
+        if _lock_acquired and _lock_conn is not None:
+            try:
+                _lock_conn.exec_driver_sql(f"SELECT pg_advisory_unlock({_PG_ADVISORY_LOCK_KEY})")
+                try:
+                    _lock_conn.commit()
+                except Exception:
+                    pass
+                print(f"[migration_runner] released pg_advisory_lock {_PG_ADVISORY_LOCK_KEY}")
+            except Exception as e:
+                print(f"[migration_runner] advisory unlock failed: {e}")
+            finally:
+                try:
+                    _lock_conn.close()
+                except Exception:
+                    pass
 
 
 # Convenience alias for lifespan import.

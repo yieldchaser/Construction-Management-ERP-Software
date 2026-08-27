@@ -478,16 +478,38 @@ async def lifespan(app: FastAPI):
     ensure_sqlite_schema_sync()
     ensure_postgres_schema_sync()  # Production PostgreSQL: add missing model columns
     ensure_material_wastage_reported_by_uuid()  # R2-730: repair 20260816_000005 type mismatch (VARCHAR -> UUID FK)
-    # R2-731: apply pending supabase/migrations/*.sql (idempotent, tracked in
-    # supabase_migrations). Handles both SQLite (tracked no-op + unique-index
-    # remediation) and Postgres (real execution). Safe to run on every boot.
+    # R2-731 / M-2+M-3: apply pending migrations. M-2 strict-by-default in production.
     try:
         from app.migration_runner import apply_pending_migrations
         apply_pending_migrations()
     except Exception as e:
-        # Never crash boot on migration runner error; log loud and continue.
-        # In CI strict mode (MIGRATION_RUNNER_STRICT=1) the runner itself re-raises.
-        print(f"[lifespan] migration_runner error (non-fatal): {e}")
+        # M-2: crash boot in production/strict mode so missing schema does not leave API up.
+        # Only swallow in dev. Runner's own per-file strict handles most cases; this
+        # outer guard catches whole-pass failures (e.g., lock, tracking table).
+        # Reuse runner's strict helper so prod default and explicit overrides stay consistent.
+        try:
+            from app.migration_runner import _is_strict_mode as _lifespan_is_strict
+
+            _is_strict = _lifespan_is_strict()
+        except Exception:
+            _env = os.getenv("ENVIRONMENT", "")
+            if not _env.strip():
+                try:
+                    from app.config import settings as _lifespan_settings
+
+                    _env = _lifespan_settings.ENVIRONMENT or ""
+                except Exception:
+                    _env = ""
+            _env = _env.strip().lower()
+            _strict_raw = os.getenv("MIGRATION_RUNNER_STRICT", "")
+            if _strict_raw is not None and _strict_raw.strip() != "":
+                _is_strict = _strict_raw.strip().lower() in ("1", "true", "yes", "on")
+            else:
+                _is_strict = _env == "production"
+        if _is_strict:
+            print(f"[lifespan] migration_runner FAILED in strict/production mode -- aborting boot: {e}")
+            raise
+        print(f"[lifespan] migration_runner error (non-fatal, dev): {e}")
     os.makedirs(os.path.join(STATIC_DIR, "reports"), exist_ok=True)
     yield
 
