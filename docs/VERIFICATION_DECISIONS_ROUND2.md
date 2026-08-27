@@ -1298,3 +1298,50 @@ Proper fix: the same statements as a numbered migration so a fresh database gets
 (a) find out why the boot sync skipped them and stop it swallowing exceptions, and (b) a gate that
 fails when a `Base.metadata` column is absent from both the migrations and the live DB - the column
 equivalent of the D-V4 constraint gate.
+
+---
+
+## R2-742 · HIGH · `/tally/pending` UnboundLocalError for any company without a Tally connection
+
+Surfaced by **Sentry** (`mit-manipal-u5.sentry.io`), not by my sweeps:
+`UnboundLocalError: cannot access local variable "excluded_bills" where it is not associated with a value`
+at `/apis/v3/tally/pending`. Age 6 days, 1 event, unresolved.
+
+`routers/tally.py:649-691`. Three locals are pre-initialised before the branch:
+
+```python
+bill_ids: List[str] = []      # 653
+payment_ids: List[str] = []   # 654
+vouchers = []                 # 655
+if conn:
+    ...
+    excluded_bills = ...      # 669  <-- assigned ONLY inside the branch
+    excluded_payments = ...   # 675  <-- same
+```
+
+and the return references all five:
+
+```python
+"excluded_before_window": {"bills": excluded_bills, "payments": excluded_payments}   # 690
+```
+
+So the endpoint raises `UnboundLocalError` -> 500 whenever `conn` is falsy, i.e. **for every company
+that has not configured Tally** - which is the default state for a new tenant. The three locals that
+were pre-initialised prove the author knew the branch could be skipped; the two counters added later
+with the sync-window feature were simply missed.
+
+**Fix.** Initialise `excluded_bills = 0` and `excluded_payments = 0` alongside the other three at
+line 655. One line each.
+
+**Gate.** Call `/tally/pending` for a company with no `TallyConnection` row and assert 200 with
+`excluded_before_window == {"bills": 0, "payments": 0}`.
+
+### Sentry is configured, working, and I should have looked at it sooner
+
+`SENTRY_DSN` is set on Render and the project is live. Two unresolved issues in 14 days across the
+whole backend - this one and R2-741. That is a genuinely good runtime-stability signal, and it is a
+better first stop than any static sweep for "what is actually breaking in production".
+
+It also **dates R2-741 precisely**: first seen ~7 hours before 17:14 IST, so ~10:14 - not the 14:19
+merge. 7 events, 0 users affected. My earlier assumption that the merge caused it was wrong; the
+columns were already missing before today.
