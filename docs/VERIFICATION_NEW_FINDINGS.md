@@ -1806,3 +1806,35 @@ commit is absent from `origin/main` (`git merge-base --is-ancestor`, never `git 
 Rows whose fix content did land independently are CONFIRMED with the substitute commit named. Rows
 where it did not are REGRESSED, and — as with R2-599 — need their register status corrected rather
 than a duplicate finding number.
+
+### Orphan-subset calibration after the first 6 rows
+
+`scripts/verification/mainlineage.py` (self-tested against a known-positive and known-negative before
+use) re-asked the lineage question against **origin/main** rather than `campaign/waves`, because
+production ships from main. Result: **87 closed rows cite a fix commit that is not an ancestor of
+origin/main** — 43 CRITICAL, 28 HIGH, 16 MEDIUM; 83 of them recorded FIX_VERIFIED.
+
+Triage on whether the row's id appears in live source and tests split them: 42 annotated in both, 8 in
+one, **37 in neither** (23 CRITICAL). Six of the 37 have now been hand-read:
+
+| row | outcome | how the fix reached main |
+|---|---|---|
+| R2-042 | CONFIRMED | `e9dba8b`, landed under R2-231 — settlement no longer needs the party |
+| R2-074 | CONFIRMED | the R2-170/R2-172 taxonomy work |
+| R2-198 | CONFIRMED | present on main; all 29 wrappers await params |
+| R2-244 | CONFIRMED | re-landed by the R2-727 sweep, annotated `R2-727` |
+| R2-310 | CONFIRMED | present on main |
+| **R2-599** | **REGRESSED** | **never re-landed; defect live** |
+
+**Calibration: 1 of 6, not 6 of 6.** The orphan subset is materially riskier than an ordinary row but
+it is not uniformly broken — the R2-727 sweep and the H-verify-sweep genuinely re-landed most of this
+content on main, just under other commits and other ids. That is precisely why the cheap signals fail
+here and each row needs reading:
+
+- **A missing id annotation does not mean a missing fix.** R2-244's fix sits on main under an
+  `R2-727:` comment; R2-042's under R2-231's commit. Both scored 0/0 on annotation.
+- **An off-main commit citation does not mean a missing fix.** 5 of 6 were fixed anyway.
+- **Only the live tree answers it.** Read the code against the finding as filed.
+
+The remaining 31 zero-annotation rows (17 CRITICAL) stay the highest-priority queue, followed by the
+50 annotated off-main rows as a lighter confirm.
