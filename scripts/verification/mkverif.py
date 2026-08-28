@@ -117,6 +117,47 @@ EVIDENCE_CLOSE = {"R2-001", "R2-118", "R2-428"}
 # Verdicts reached by hand, one finding at a time. E1 = code read, E3 = live product.
 # NOT_IN_PROD is a FIFTH verdict, added deliberately - see the header note in the emitted file.
 VERDICTS = {
+    "R2-222": ("CONFIRMED", "Off-main CLASS row, verified as a class rather than by sampling one "
+               "site. The finding's mechanism was naive datetime.utcnow() subtracted from an "
+               "aware DateTime(timezone=True) column, crashing five endpoints. Enumerated every "
+               "surviving utcnow() in backend/app/routers - 29 of them - and read each in "
+               "context: ALL are in positions where naivety cannot raise. They are column "
+               "assignments (crm.py:934, equipment.py:211, quality.py:422/448, reports.py:220/264, "
+               "statutory.py:201-218, production.py:347-348/471, safety.py:160, rfq.py:230, "
+               "tally.py:793, vendor_performance.py:129), or derived scalars via .date() / "
+               ".year / .strftime() / .isoformat() (analytics.py:295/568, dpr.py:208/314, "
+               "hr.py:1012, reports.py:1425, tally.py:231/391/725, finance.py:1694). The only two "
+               "that bind 'now' for comparison are safe: hr.py:1517 uses now.year only, and "
+               "todos.py:59-62 explicitly normalizes - 'if t.due_date.tzinfo is not None: now = "
+               "now.replace(tzinfo=timezone.utc)' - before comparing. No naive/aware arithmetic "
+               "remains. OBSERVATION, not filed: writing a naive value into an aware column is "
+               "still stylistically inconsistent, but Postgres interprets it as UTC and the read "
+               "paths normalize, so it cannot raise."),
+    "R2-210": ("CONFIRMED", "Off-main row, fix present on main. The punch handler now takes an "
+               "aware clock - hr.py:346-347, 'now = datetime.now(timezone.utc)' under a comment "
+               "citing R2-210/R2-262/R2-728 and stating the reason (stored punch values are aware "
+               "on Postgres, so both operands must be the same flavor). hours_worked is written "
+               "at :406 from that comparison, so the punch-out path that always 500'd completes "
+               "and the column the finding said was 'never written for anybody' is populated."),
+    "R2-262": ("CONFIRMED", "Off-main row, same defect and same fix as R2-210 - it was filed as "
+               "the confirmation of R2-210 with a wider blast radius (the open record locking the "
+               "worker out for the rest of the day). The aware clock at hr.py:346-347 closes the "
+               "500, so punch-out completes and the record no longer stays open. This also "
+               "retires the interaction R2-304 depended on: with hours_worked now writable, the "
+               "analytics labour figures have real data rather than nulls to report."),
+    "R2-219": ("CONFIRMED", "Off-main row, fix present on main. The approval endpoint no longer "
+               "writes the fulfilment field: procurement.py:668 and :672 set po.approval_flag = "
+               "'approved' and nothing in the approve path assigns po.status. A PO already at "
+               "'received' therefore keeps that status when approved, so the finding's sequence - "
+               "a fully-received PO reset to 'sent' with goods receipt re-opened - cannot recur. "
+               "A duplicate-decision guard (:660) also rejects a second decision on the same PO."),
+    "R2-239": ("CONFIRMED", "Off-main row, BOTH halves of the finding are closed, verified "
+               "separately. Over-receipt: procurement.py:908-916 computes remaining = ordered - "
+               "received_so_far and rejects when item.received_qty exceeds it, naming the "
+               "requested and remaining quantities in the error - so booking 300 units against a "
+               "100-unit PO is refused. Unapproved receipt: create_grn (:866-874) rejects with "
+               "422 unless approval_flag is 'approved', the same gate verified under R2-432, "
+               "annotated R2-239/R2-348."),
     "R2-033": ("CONFIRMED", "Off-main row and the only one of the 48 annotated rows with no test "
                "file of its own - but the defect is the same line as R2-201 / R2-352 / R2-431, "
                "all verified this round. hr.py:855-860 no longer pays default_days when "
