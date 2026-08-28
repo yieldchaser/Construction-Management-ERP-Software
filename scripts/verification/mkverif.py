@@ -158,7 +158,7 @@ VERDICTS = {
                "hierarchy, while the geofence reads Project.location - and the geofence's real "
                "problem is filed as R2-750."),
     "R2-592": ("CONFIRMED", "Off-main row, class fixed. Re-ran the finding's OWN command - "
-               "grep -rE '\w+:\s*\w+\.\w+\s*\|\|\s*[0-9]+' over "
+               "the finding's regex for an invented numeric default over "
                "frontend/src/app - and it returns 0 where the finding measured 9. Calibrated "
                "before trusting the null: the same regex matches a planted sample "
                "('radius: t.attendance_radius_meters || 500'), so the zero is the codebase, not a "
