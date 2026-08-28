@@ -1,0 +1,123 @@
+import subprocess
+import time
+import requests
+import sys
+import os
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+BACKEND_ROOT = os.path.dirname(HERE)
+
+def test_backend():
+    print("Starting FastAPI backend server...")
+    db_path = os.path.join(HERE, "test.db")
+    if os.path.exists(db_path):
+        try:
+            os.remove(db_path)
+        except Exception:
+            pass
+    env = os.environ.copy()
+    env["PYTHONPATH"] = BACKEND_ROOT
+    env["DATABASE_URL"] = f"sqlite:///{db_path}"
+    proc = subprocess.Popen(
+        ["python", "-m", "uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", "8020"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        env=env
+    )
+    
+    # Wait for the server to spin up. A flat sleep(5) was too short in some
+    # environments; poll instead.
+    base_url = "http://127.0.0.1:8020"
+    for _ in range(30):
+        time.sleep(1)
+        try:
+            if requests.get(f"{base_url}/").status_code == 200:
+                break
+        except Exception:
+            pass
+    else:
+        proc.terminate()
+        raise RuntimeError("Server failed to start within 30s")
+
+    try:
+        # 1. Health Check
+        print("Testing health check endpoint...")
+        res = requests.get(f"{base_url}/")
+        assert res.status_code == 200
+        print("[x] Health check passed:", res.json())
+        
+        # 2. Send OTP
+        print("\nTesting OTP Send...")
+        res = requests.post(
+            f"{base_url}/apis/v3/auth/otp/send",
+            json={"mobile": "+919876543210"}
+        )
+        assert res.status_code == 200
+        assert res.json()["success"] is True
+        print("[x] OTP Send passed:", res.json())
+        
+        # 3. Verify OTP (creates the user; no tenant is auto-attached)
+        print("\nTesting OTP Verify...")
+        res = requests.post(
+            f"{base_url}/apis/v3/auth/otp/verify",
+            json={"mobile": "+919876543210", "code": "123456"}
+        )
+        assert res.status_code == 200
+        data = res.json()
+        assert "access_token" in data
+        assert data["user"]["mobile"] == "+919876543210"
+        assert data["onboarding"] is True
+        assert data["company"] is None
+        print("[x] OTP Verify passed: user session minted with no auto-created company!")
+
+        # Calculators require auth too (added after this script was written) -
+        # reuse the token from OTP verify above rather than minting a new one.
+        HEADERS = {"Authorization": f"Bearer {data['access_token']}"}
+
+        # 4. Steel Calculator
+        print("\nTesting Steel Calculator API...")
+        res = requests.post(
+            f"{base_url}/apis/v3/calculators/steel",
+            json={
+                "diameter": 12.0,
+                "count": 10,
+                "length_or_height": 3.0,
+                "is_column": True,
+                "slab_thickness": 0.15
+            },
+            headers=HEADERS
+        )
+        assert res.status_code == 200
+        print("[x] Steel Calculator API passed:", res.json())
+
+        # 5. Concrete Calculator
+        print("\nTesting Concrete Calculator API...")
+        res = requests.post(
+            f"{base_url}/apis/v3/calculators/concrete",
+            json={
+                "wet_volume": 2.0,
+                "grade": "M20"
+            },
+            headers=HEADERS
+        )
+        assert res.status_code == 200
+        print("[x] Concrete Calculator API passed:", res.json())
+        
+        print("\nALL BACKEND API TESTS PASSED SUCCESSFULLY!")
+        
+    except Exception as e:
+        print(f"\nTEST FAILED: {e}")
+        # Print subprocess logs
+        out, err = proc.communicate(timeout=2)
+        print("stdout:", out)
+        print("stderr:", err)
+        sys.exit(1)
+        
+    finally:
+        print("Stopping backend server...")
+        proc.terminate()
+        proc.wait()
+
+if __name__ == "__main__":
+    test_backend()
