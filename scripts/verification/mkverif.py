@@ -117,6 +117,34 @@ EVIDENCE_CLOSE = {"R2-001", "R2-118", "R2-428"}
 # Verdicts reached by hand, one finding at a time. E1 = code read, E3 = live product.
 # NOT_IN_PROD is a FIFTH verdict, added deliberately - see the header note in the emitted file.
 VERDICTS = {
+    "R2-593": ("REGRESSED", "THE DEFECT IS LIVE, recorded FIX_VERIFIED against an off-main "
+               "commit. The finding's own test still returns the same answer: grep -rn "
+               "'AttendanceLog(' over backend/app yields exactly ONE construction site, hr.py:361 "
+               "inside the punch endpoint, and it is not the face endpoint. face_punch "
+               "(face_recognition.py:68-74) writes a FaceRecognitionLog and returns it - that is "
+               "the whole handler - so a face-recognition punch lands in a parallel table that "
+               "payroll never reads (run_payroll counts AttendanceLog rows). Checked that it does "
+               "not delegate rather than construct: the module imports only FaceRecognitionLog "
+               "and StaffEmployee (:10) and calls nothing in hr.py. A face punch therefore never "
+               "becomes attendance and never reaches pay. No new finding number: the defect is "
+               "R2-593 and needs its STATUS corrected. Separately, verifying this row surfaced an "
+               "unrelated authorization gap on the same endpoint - filed as R2-751."),
+    "R2-534": ("REGRESSED", "THE DEFECT IS LIVE, and it is the same unfixed handler as R2-533 - "
+               "the cashbook CSV importer, whose fix commit is off-main and whose content never "
+               "re-landed. finance.py:1673 still reads db.query(User).filter(User.name == "
+               "party_name).first() with NO company scope, exactly as filed: the global users "
+               "table is searched by display name, first match wins, and only afterwards is a "
+               "CompanyTeam row looked up for THAT user in this company. So a name collision with "
+               "any user anywhere resolves to the wrong person, and when that person has no "
+               "membership in the importing company the row is written with party_team_id None - "
+               "unattributed - even though a legitimate member of the same name exists. No new "
+               "finding number: the defect is R2-534."),
+    "R2-550": ("CONFIRMED", "Off-main row, fix present on main. perform_p2p_transfer now compares "
+               "the two ids before writing: after resolving both CompanyTeam rows within the "
+               "company, finance.py raises 422 'Sender and receiver must be different parties' "
+               "when sender_uuid == receiver_uuid. The finding's proved sequence - both ids "
+               "e9db5738 returning 201 Success and writing a matched out/in pair for the same "
+               "party - is no longer constructible."),
     "R2-317": ("REGRESSED", "THE DEFECT IS LIVE, recorded FIX_VERIFIED against an off-main "
                "commit, and in production the report is not merely lossy but EMPTY. "
                "_rep_bank_statement (reports.py:1273-1290) is unchanged in both respects the "

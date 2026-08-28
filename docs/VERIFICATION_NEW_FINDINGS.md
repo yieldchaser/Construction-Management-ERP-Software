@@ -1257,6 +1257,7 @@ finding read **as filed** rather than from its register note.
 | **R2-748** | **MEDIUM** | **invoice PDF and the shared party-name resolver use opposite precedence — one party, two printed names (latent: 0 live instances)** | worklist row 21 (R2-131) |
 | **R2-749** | **HIGH** | **project P&L misallocates 3 of 6 heads — equipment bills never reach Plant & Machinery, Overhead hardcoded 0.0 (R2-327 partial)** | off-main subset (R2-327) |
 | **R2-750** | **HIGH** | **project API has no `location` field, so all 7 projects lack coordinates and the attendance geofence is inert — R2-474's fix has nothing to measure against** | off-main subset (R2-475) |
+| **R2-751** | **HIGH** | **`POST /face/punch` has no company check — any authenticated user can write attendance evidence into another tenant (2nd write-path tenancy gap after R2-049)** | off-main subset (R2-593) |
 
 ## FINDING R2-743 — 🔴 CRITICAL: the BI export feed writes user-controlled text straight into CSV cells, so the one export built for external consumption is the one still formula-injectable
 
@@ -1982,3 +1983,70 @@ worse; it belongs in the same family as the invented-default sites swept by R2-7
 A test asserting that a punch against a project with `location` null is NOT recorded as
 `location_verified=True`, plus a round-trip test that a coordinate supplied to the project API is
 readable back. Neither is expressible today, because the field does not exist.
+
+## FINDING R2-751 — 🟠 HIGH: `POST /face/punch` is the only endpoint in its router with no company check, so any authenticated user can write attendance evidence into another tenant
+
+Found while verifying R2-593. The face-recognition router is authenticated at router level —
+`APIRouter(..., dependencies=[Depends(get_current_user)])` (`face_recognition.py:12`), which R2-027's
+closure note correctly established against an earlier "no auth" claim. **Authentication is not the
+gap. Authorization is.**
+
+Every endpoint in the file and its guard:
+
+| endpoint | method | company guard |
+|---|---|---|
+| `/face/logs/{company_id}` | GET | `verify_company_access` |
+| `/face/employees/{company_id}` | GET | `verify_company_access` |
+| `/face/summary/{company_id}` | GET | `verify_company_access` |
+| **`/face/punch`** | **POST** | **none** |
+
+```python
+@router.post("/punch", response_model=FacePunchResponse, status_code=201)
+def face_punch(payload: FacePunchRequest, db: Session = Depends(get_db)):
+    log = FaceRecognitionLog(**payload.model_dump())
+    db.add(log); db.commit(); db.refresh(log)
+    return log
+```
+
+`FacePunchRequest` carries `company_id` and `project_id` as client-supplied fields, and the handler
+persists them verbatim. There is no `verify_company_access`, no `get_company_membership`, and no check
+that `project_id` belongs to `company_id`. The three read paths in the same file are all guarded, so
+this is an omission on the one write rather than a module-wide convention.
+
+**Consequence.** Any authenticated user of any tenant can POST a punch naming another tenant's
+`company_id` and `project_id`. It is written and is then visible to that tenant through
+`GET /face/logs/{company_id}`, which *is* guarded — so the victim sees a legitimate-looking punch
+record for one of their projects that no one in their company created. Attendance is the input to
+payroll, and a face-recognition log is presented as biometric evidence of presence, so injected rows
+are evidence-shaped.
+
+The direct payroll impact is currently limited by R2-593 (the face punch never becomes an
+`AttendanceLog`, so it does not reach payroll today) — but those two findings cancel each other's
+severity only by accident, and fixing R2-593 as filed, without this, would connect an unguarded
+cross-tenant write directly to payroll.
+
+### Why the isolation sweep did not catch it
+The 180 cross-tenant probes over 106 routes were **GET only** — a limitation the round-2 handover
+states explicitly and parks as "write-path isolation unproven". This is the second confirmed instance
+of that gap in round 3, after R2-049's global equipment-code constraint. Two independent write-path
+tenancy defects in the first 60 rows suggests the parked item deserves promoting to a sweep of its
+own: every POST/PUT/PATCH/DELETE that accepts a `company_id` in its body rather than its path.
+
+### Fix
+Add the same guard the file's read endpoints already use, and validate the project against the
+company:
+
+```python
+def face_punch(payload: FacePunchRequest, db: Session = Depends(get_db),
+               current_user: User = Depends(get_current_user)):
+    get_company_membership(db, current_user, payload.company_id)
+    verify_project_in_company(db, payload.project_id, payload.company_id)
+```
+
+`verify_project_in_company` already exists (`auth.py:132`) and is the established helper for exactly
+this pairing.
+
+### Gate this needs
+A test asserting that a member of company A posting `/face/punch` with company B's `company_id`
+receives 403 and that no `FaceRecognitionLog` row is created. More broadly, the write-path sweep above
+would gate the class rather than this instance.
